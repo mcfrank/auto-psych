@@ -23,3 +23,4 @@ Written by the pipeline to your run directory (e.g. `projects/<project_id>/run<N
 
 - `aggregate.csv`: One row per stimulus (or equivalent) with aggregated response statistics.
 - `summary_stats.json`: Key summary statistics for the interpreter.
+- `model_correlations.yaml`: Pearson correlation between each model's predicted P(left) and the observed proportion chose left, item by item (per stimulus). The interpreter reads this to compare models to data.

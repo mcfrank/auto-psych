@@ -1,0 +1,42 @@
+# Secrets (never commit)
+.secrets
+*.env
+.env.*
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.venv/
+env/
+*.egg-info/
+.eggs/
+dist/
+build/
+
+# R
+.Rhistory
+.RData
+.Rproj.user
+
+# IDE / OS
+.idea/
+.vscode/
+.DS_Store
+*.swp
+*.swo
+
+# Project run artifacts (optional: uncomment to ignore generated runs)
+# projects/*/run*/
+
+# Node (for jsPsych Builder when used)
+node_modules/
+npm-debug.log
+
+# Firebase: local CLI state/cache (do not commit)
+.firebase/
+
+# Firebase Hosting deploy target (copy of implementer output)
+public/

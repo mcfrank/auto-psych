@@ -255,7 +255,7 @@ NODE_TO_AGENT_KEY = {
 def run_validation(state: Dict[str, Any], agent_key: str) -> Dict[str, Any]:
     """
     Run the validator for the given agent on the current run directory.
-    Return state with validation_ok, validation_feedback, and validation_retry_count updated.
+    Return state with validation_ok, validation_feedback, validation_retry_count, and last_validated_agent updated.
     """
     from src.config import run_dir
     project_id = state.get("project_id", "")
@@ -268,6 +268,7 @@ def run_validation(state: Dict[str, Any], agent_key: str) -> Dict[str, Any]:
             "validation_ok": True,
             "validation_feedback": "",
             "validation_retry_count": 0,
+            "last_validated_agent": agent_key,
         }
     v = validator_fn(rdir)
     retry_count = state.get("validation_retry_count", 0)
@@ -277,10 +278,12 @@ def run_validation(state: Dict[str, Any], agent_key: str) -> Dict[str, Any]:
             "validation_ok": True,
             "validation_feedback": "",
             "validation_retry_count": 0,
+            "last_validated_agent": agent_key,
         }
     return {
         **state,
         "validation_ok": False,
         "validation_feedback": v.message + (f" Details: {v.details}" if v.details else ""),
         "validation_retry_count": retry_count + 1,
+        "last_validated_agent": agent_key,
     }
