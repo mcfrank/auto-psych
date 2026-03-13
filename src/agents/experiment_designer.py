@@ -47,10 +47,10 @@ def run_experiment_designer(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     project_id = state["project_id"]
     run_id = state["run_id"]
-    agent_header("2experiment_designer", run_id, state.get("total_runs"), state.get("mode"))
+    agent_header("2_design", run_id, state.get("total_runs"), state.get("mode"))
     if state.get("validation_retry_count", 0) > 0:
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
-    out_dir = agent_dir(project_id, run_id, "2experiment_designer")
+    out_dir = agent_dir(project_id, run_id, "2_design")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     manifest_path = Path(state["theorist_manifest_path"])
@@ -72,7 +72,7 @@ def run_experiment_designer(state: Dict[str, Any]) -> Dict[str, Any]:
     prob_path = Path(state["problem_definition_path"])
     problem_text = prob_path.read_text(encoding="utf-8") if prob_path.exists() else ""
 
-    prompt = load_prompt_for_run(project_id, run_id, "2experiment_designer")
+    prompt = load_prompt_for_run(project_id, run_id, "2_design")
     validation_feedback = (state.get("validation_feedback") or "").strip()
     user_content = ""
     if validation_feedback:
@@ -89,7 +89,7 @@ Please fix the design script so it produces valid stimuli.json with sequence_a, 
 This is **Run {run_id}** of the pipeline.
 """
     if run_id >= 2:
-        prev_design_dir = agent_dir(project_id, run_id - 1, "2experiment_designer")
+        prev_design_dir = agent_dir(project_id, run_id - 1, "2_design")
         user_content += f"""The previous run's design is in: `{prev_design_dir}` (stimuli.json, design_rationale.md). You may reuse or adapt it if the theory set is unchanged or similar, so experiments stay comparable across runs.
 
 """

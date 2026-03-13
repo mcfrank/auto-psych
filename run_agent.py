@@ -3,9 +3,9 @@
 Run a single agent in isolation for debugging. Does not trigger the next agent.
 
 Usage:
-  python run_agent.py --project subjective_randomness --run 1 --agent 1theorist
-  python run_agent.py --project subjective_randomness --run 2 --agent 2experiment_designer --state-from-run 1
-  python run_agent.py --project subjective_randomness --run 1 --agent 1theorist --use-fixtures
+  python run_agent.py --project subjective_randomness --run 1 --agent 1_theory
+  python run_agent.py --project subjective_randomness --run 2 --agent 2_design --state-from-run 1
+  python run_agent.py --project subjective_randomness --run 1 --agent 1_theory --use-fixtures
 """
 
 import argparse
@@ -21,20 +21,18 @@ from src.state_loader import load_state_from_run, minimal_state_for_agent
 from src.agents.theorist import run_theorist
 from src.agents.experiment_designer import run_experiment_designer
 from src.agents.experiment_implementer import run_experiment_implementer
-from src.agents.deployer import run_deployer
 from src.agents.simulated_participant import run_simulated_participant
 from src.agents.data_analyst import run_data_analyst
 from src.agents.interpreter import run_interpreter
 
 
 AGENT_FUNCS = {
-    "1theorist": run_theorist,
-    "2experiment_designer": run_experiment_designer,
-    "3experiment_implementer": run_experiment_implementer,
-    "4deployer": run_deployer,
-    "5simulated_participant": run_simulated_participant,
-    "6data_analyst": run_data_analyst,
-    "7interpreter": run_interpreter,
+    "1_theory": run_theorist,
+    "2_design": run_experiment_designer,
+    "3_implement": run_experiment_implementer,
+    "4_collect": run_simulated_participant,
+    "5_analyze": run_data_analyst,
+    "6_interpret": run_interpreter,
 }
 
 
@@ -42,7 +40,7 @@ def main() -> None:
     parser = argparse.ArgumentParser(description="Run a single pipeline agent (no next agent)")
     parser.add_argument("--project", required=True, help="Project id")
     parser.add_argument("--run", type=int, required=True, help="Run number")
-    parser.add_argument("--agent", required=True, choices=list(AGENT_FUNCS), help="Agent to run (e.g. 1theorist)")
+    parser.add_argument("--agent", required=True, choices=list(AGENT_FUNCS), help="Agent to run (e.g. 1_theory)")
     parser.add_argument(
         "--state-from-run",
         type=int,
@@ -107,25 +105,23 @@ def main() -> None:
 
 def _inputs_for_agent(agent_key: str) -> list:
     return {
-        "1theorist": ["problem_definition_path", "interpreter_report_path"],
-        "2experiment_designer": ["problem_definition_path", "theorist_manifest_path"],
-        "3experiment_implementer": ["problem_definition_path", "stimuli_path"],
-        "4deployer": ["experiment_path"],
-        "5simulated_participant": ["stimuli_path", "theorist_manifest_path", "deployment_config_path"],
-        "6data_analyst": ["simulated_data_path", "deployment_config_path", "theorist_manifest_path"],
-        "7interpreter": ["summary_stats_path", "aggregate_csv_path", "theorist_manifest_path"],
+        "1_theory": ["problem_definition_path", "interpreter_report_path"],
+        "2_design": ["problem_definition_path", "theorist_manifest_path"],
+        "3_implement": ["problem_definition_path", "stimuli_path"],
+        "4_collect": ["stimuli_path", "theorist_manifest_path", "deployment_config_path"],
+        "5_analyze": ["simulated_data_path", "deployment_config_path", "theorist_manifest_path"],
+        "6_interpret": ["summary_stats_path", "aggregate_csv_path", "theorist_manifest_path"],
     }.get(agent_key, [])
 
 
 def _outputs_for_agent(agent_key: str) -> list:
     return {
-        "1theorist": ["theorist_manifest_path", "theorist_rationale_path"],
-        "2experiment_designer": ["stimuli_path", "design_rationale_path"],
-        "3experiment_implementer": ["experiment_path"],
-        "4deployer": ["deployment_config_path"],
-        "5simulated_participant": ["simulated_data_path"],
-        "6data_analyst": ["summary_stats_path", "aggregate_csv_path"],
-        "7interpreter": ["interpreter_report_path"],
+        "1_theory": ["theorist_manifest_path", "theorist_rationale_path"],
+        "2_design": ["stimuli_path", "design_rationale_path"],
+        "3_implement": ["experiment_path", "deployment_config_path"],
+        "4_collect": ["simulated_data_path"],
+        "5_analyze": ["summary_stats_path", "aggregate_csv_path"],
+        "6_interpret": ["interpreter_report_path"],
     }.get(agent_key, [])
 
 

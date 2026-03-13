@@ -25,16 +25,16 @@ def test_theorist_run_with_fixtures_then_validate(tmp_path, project_id):
     run_id = 1
     run_dir = projects_dir / "run1"
     run_dir.mkdir()
-    (run_dir / "1theorist").mkdir()
+    (run_dir / "1_theory").mkdir()
     (run_dir / "prompts_used").mkdir()
-    (run_dir / "prompts_used" / "1theorist.md").write_text("You are the theorist. Output YAML with models and rationale.")
+    (run_dir / "prompts_used" / "1_theory.md").write_text("You are the theory agent. Output YAML with models and rationale.")
 
     # We need to patch config to use tmp_path as REPO_ROOT so paths resolve
     import src.config as config
     orig_projects = config.PROJECTS_DIR
     config.PROJECTS_DIR = tmp_path / "projects"
     try:
-        state = minimal_state_for_agent("1theorist", project_id, run_id, fixtures_dir=FIXTURES_DIR)
+        state = minimal_state_for_agent("1_theory", project_id, run_id, fixtures_dir=FIXTURES_DIR)
         state["problem_definition_path"] = str(projects_dir / "problem_definition.md")
         # Run theorist (may call LLM; if no key, fallback will write default manifest)
         result = run_theorist(state)

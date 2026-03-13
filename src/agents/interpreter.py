@@ -29,7 +29,7 @@ def _merge_aggregates_and_summary(project_id: str, run_id: int) -> Tuple[str, Li
     total_responses = 0
     total_left = 0.0
     for r in range(1, run_id + 1):
-        agg_path = run_dir(project_id, r) / "6data_analyst" / "aggregate.csv"
+        agg_path = run_dir(project_id, r) / "5_analyze" / "aggregate.csv"
         if not agg_path.exists():
             continue
         lines = agg_path.read_text(encoding="utf-8").strip().split("\n")
@@ -89,14 +89,14 @@ Run with GOOGLE_API_KEY set for an LLM-generated interpretation.
 def run_interpreter(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     Read summary stats and aggregate CSV (merged over runs 1..run_id); compare to model predictions;
-    write plain-language report to 7interpreter/report.md.
+    write plain-language report to 6_interpret/report.md.
     """
     project_id = state["project_id"]
     run_id = state["run_id"]
-    agent_header("7interpreter", run_id, state.get("total_runs"), state.get("mode"))
+    agent_header("6_interpret", run_id, state.get("total_runs"), state.get("mode"))
     if state.get("validation_retry_count", 0) > 0:
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
-    out_dir = agent_dir(project_id, run_id, "7interpreter")
+    out_dir = agent_dir(project_id, run_id, "6_interpret")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # Merge data from runs 1..run_id so interpreter sees all data
@@ -135,7 +135,7 @@ def run_interpreter(state: Dict[str, Any]) -> Dict[str, Any]:
             for m, probs in preds.items():
                 model_predictions.setdefault(m, []).append(probs.get("left", 0.5))
 
-    prompt = load_prompt_for_run(project_id, run_id, "7interpreter")
+    prompt = load_prompt_for_run(project_id, run_id, "6_interpret")
     validation_feedback = (state.get("validation_feedback") or "").strip()
     user_content = ""
     if validation_feedback:

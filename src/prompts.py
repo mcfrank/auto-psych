@@ -7,13 +7,12 @@ from .config import PROMPTS_DIR, project_prompts_dir, prompts_used_dir
 
 
 AGENT_KEYS = [
-    "1theorist",
-    "2experiment_designer",
-    "3experiment_implementer",
-    "4deployer",
-    "5simulated_participant",
-    "6data_analyst",
-    "7interpreter",
+    "1_theory",
+    "2_design",
+    "3_implement",
+    "4_collect",
+    "5_analyze",
+    "6_interpret",
 ]
 
 

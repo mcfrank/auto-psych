@@ -14,7 +14,6 @@
     .jspsych-btn-auto { padding: 12px 28px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; background: #4a90d9; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
     .jspsych-btn-auto:hover { background: #3a7bc8; }
   </style>
-  <script src="/jatos.js"></script>
 </head>
 <body>
   <div id="progress-wrap"><div id="progress-fill"></div></div>
@@ -35,28 +34,26 @@
   var urlParticipantId = getUrlParam('participant_id');
   if (urlParticipantId && typeof window !== 'undefined') window.__participantId = urlParticipantId;
 
-  const onFinish = typeof jatos !== 'undefined'
-    ? function() { jatos.startNextComponent(jsPsych.data.get().json()); }
-    : function() {
-        var data = jsPsych.data.get().values();
-        console.log(data);
-        if (typeof window !== 'undefined') window.__experimentData = data;
-        fetch('/auto_psych_config.json').then(function(r){
-          if (!r.ok) { console.warn('[auto-psych] /auto_psych_config.json failed:', r.status); return null; }
-          return r.json();
-        }).then(function(cfg){
-          if (cfg && cfg.project_id != null && cfg.run_id != null) {
-            var payload = { run_id: cfg.run_id, project_id: cfg.project_id,
-              participant_id: (typeof window !== 'undefined' && window.__participantId != null) ? window.__participantId : Date.now(),
-              trials: data };
-            fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-              .then(function(res){ console.log('[auto-psych] POST /submit', res.status, res.ok ? 'OK' : 'FAIL'); })
-              .catch(function(e){ console.warn('[auto-psych] POST /submit error', e); });
-          } else {
-            console.log('[auto-psych] No Firebase config (project_id/run_id); skipping POST /submit');
-          }
-        }).catch(function(e){ console.warn('[auto-psych] Config fetch error', e); });
-      };
+  const onFinish = function() {
+    var data = jsPsych.data.get().values();
+    console.log(data);
+    if (typeof window !== 'undefined') window.__experimentData = data;
+    fetch('/auto_psych_config.json').then(function(r){
+      if (!r.ok) { console.warn('[auto-psych] /auto_psych_config.json failed:', r.status); return null; }
+      return r.json();
+    }).then(function(cfg){
+      if (cfg && cfg.project_id != null && cfg.run_id != null) {
+        var payload = { run_id: cfg.run_id, project_id: cfg.project_id,
+          participant_id: (typeof window !== 'undefined' && window.__participantId != null) ? window.__participantId : Date.now(),
+          trials: data };
+        fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+          .then(function(res){ console.log('[auto-psych] POST /submit', res.status, res.ok ? 'OK' : 'FAIL'); })
+          .catch(function(e){ console.warn('[auto-psych] POST /submit error', e); });
+      } else {
+        console.log('[auto-psych] No Firebase config (project_id/run_id); skipping POST /submit');
+      }
+    }).catch(function(e){ console.warn('[auto-psych] Config fetch error', e); });
+  };
 
   const jsPsych = initJsPsych({ on_finish: onFinish });
   if (typeof window !== 'undefined' && window.__participantId) jsPsych.data.addProperties({ participant_id: window.__participantId });
@@ -87,15 +84,15 @@
     stimulus: instructionsHtml,
     choices: ['Next'],
     button_html: styledButtonHtml,
-    post_trial_gap: 1000
+    post_trial_gap: 400
   });
 
-  // 3. Trials: for each stimulus, [fixation 500ms, then main trial] (keyboard)
+  // 3. Trials: for each stimulus, [fixation 150ms, then main trial] (keyboard) — short fixation to reduce collect-step latency
   const fixation = {
     type: jsPsychHtmlKeyboardResponse,
     stimulus: '<div style="text-align:center; font-size:48px;">+</div>',
     choices: 'NO_KEYS',
-    trial_duration: 500
+    trial_duration: 150
   };
   const trial = {
     type: jsPsychHtmlKeyboardResponse,

@@ -15,10 +15,10 @@ def test_load_state_from_run_with_fixture_run_dir():
     import shutil
     run_dir = Path(tempfile.mkdtemp())
     try:
-        (run_dir / "1theorist").mkdir()
-        (run_dir / "1theorist" / "models_manifest.yaml").write_text("models: []")
-        (run_dir / "2experiment_designer").mkdir()
-        (run_dir / "2experiment_designer" / "stimuli.json").write_text("[]")
+        (run_dir / "1_theory").mkdir()
+        (run_dir / "1_theory" / "models_manifest.yaml").write_text("models: []")
+        (run_dir / "2_design").mkdir()
+        (run_dir / "2_design" / "stimuli.json").write_text("[]")
         # We need a project dir that contains this run
         project_id = "test_project"
         run_id = 99
@@ -40,13 +40,13 @@ def test_load_state_from_run_with_fixture_run_dir():
 
 
 def test_minimal_state_for_agent_theorist():
-    state = minimal_state_for_agent("1theorist", "subjective_randomness", 1, fixtures_dir=FIXTURES_DIR)
+    state = minimal_state_for_agent("1_theory", "subjective_randomness", 1, fixtures_dir=FIXTURES_DIR)
     assert state["project_id"] == "subjective_randomness"
     assert state["run_id"] == 1
     assert "problem_definition_path" in state
 
 
 def test_minimal_state_for_agent_designer():
-    state = minimal_state_for_agent("2experiment_designer", "subjective_randomness", 1, fixtures_dir=FIXTURES_DIR)
+    state = minimal_state_for_agent("2_design", "subjective_randomness", 1, fixtures_dir=FIXTURES_DIR)
     assert state["theorist_manifest_path"]
     assert Path(state["theorist_manifest_path"]).exists()

@@ -23,12 +23,12 @@ class Validated:
 def validate_theorist_output(run_dir: Path) -> Validated:
     """
     (1) models_manifest.yaml exists and is valid YAML;
-    (2) every model name is loadable: either <name>.py exists in 1theorist/ or name is in MODEL_LIBRARY;
+    (2) every model name is loadable: either <name>.py exists in 1_theory/ or name is in MODEL_LIBRARY;
     (3) for each model, call with a test stimulus and check it returns a dict
         mapping response options to probabilities that sum to 1.
     """
     run_dir = Path(run_dir)
-    theorist_dir = run_dir / "1theorist"
+    theorist_dir = run_dir / "1_theory"
     manifest_path = theorist_dir / "models_manifest.yaml"
     details: Dict[str, Any] = {}
 
@@ -62,7 +62,7 @@ def validate_theorist_output(run_dir: Path) -> Validated:
         if name not in loadable:
             return Validated(
                 False,
-                f"Model '{name}' has no 1theorist/{name}.py and is not in MODEL_LIBRARY",
+                f"Model '{name}' has no 1_theory/{name}.py and is not in MODEL_LIBRARY",
                 details,
             )
 
@@ -90,7 +90,7 @@ def validate_theorist_output(run_dir: Path) -> Validated:
 def validate_designer_output(run_dir: Path) -> Validated:
     """stimuli.json exists, is a list, each item has sequence_a and sequence_b."""
     run_dir = Path(run_dir)
-    path = run_dir / "2experiment_designer" / "stimuli.json"
+    path = run_dir / "2_design" / "stimuli.json"
     details: Dict[str, Any] = {}
 
     if not path.exists():
@@ -126,7 +126,7 @@ def validate_designer_output(run_dir: Path) -> Validated:
     if max(eig_values) <= 0:
         return Validated(False, "All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions)", details)
     # Treat fallback design as validation failure so the pipeline retries the designer with feedback
-    rationale_path = run_dir / "2experiment_designer" / "design_rationale.md"
+    rationale_path = run_dir / "2_design" / "design_rationale.md"
     if rationale_path.exists():
         rationale_preview = rationale_path.read_text(encoding="utf-8").strip()[:200]
         if rationale_preview.startswith("Fallback design:"):
@@ -142,51 +142,33 @@ def validate_designer_output(run_dir: Path) -> Validated:
 
 
 def validate_implementer_output(run_dir: Path) -> Validated:
-    """index.html (or experiment file) exists; contains expected strings (jsPsych, stimuli, jatos)."""
+    """index.html exists with jsPsych; config.json exists (deploy step bundled)."""
     run_dir = Path(run_dir)
-    agent_dir = run_dir / "3experiment_implementer"
-    index_path = agent_dir / "index.html"
+    impl_dir = run_dir / "3_implement"
+    index_path = impl_dir / "index.html"
+    config_path = impl_dir / "config.json"
     details: Dict[str, Any] = {}
 
     if not index_path.exists():
         return Validated(False, "index.html not found", {"path": str(index_path)})
-
     text = index_path.read_text(encoding="utf-8")
     if "jsPsych" not in text and "jspsych" not in text.lower():
         return Validated(False, "index.html does not mention jsPsych", details)
-    if "jatos" not in text.lower():
-        return Validated(False, "index.html does not mention jatos", details)
-
-    return Validated(True, "Implementer output valid", details)
-
-
-def validate_deployer_output(run_dir: Path) -> Validated:
-    """config.json exists and is valid JSON with run_mode."""
-    run_dir = Path(run_dir)
-    path = run_dir / "4deployer" / "config.json"
-    details: Dict[str, Any] = {}
-
-    if not path.exists():
-        return Validated(False, "config.json not found", {"path": str(path)})
-
+    if not config_path.exists():
+        return Validated(False, "config.json not found (deploy step)", {"path": str(config_path)})
     try:
-        raw = path.read_text(encoding="utf-8")
-        data = __import__("json").loads(raw)
+        data = __import__("json").loads(config_path.read_text(encoding="utf-8"))
     except Exception as e:
-        return Validated(False, f"Invalid JSON: {e}", {"path": str(path)})
-
-    if not isinstance(data, dict):
-        return Validated(False, "config.json is not a dict", details)
-    if "run_mode" not in data and "mode" not in data:
-        return Validated(False, "config missing run_mode/mode", details)
-
-    return Validated(True, "Deployer output valid", details)
+        return Validated(False, f"Invalid config.json: {e}", {"path": str(config_path)})
+    if not isinstance(data, dict) or ("run_mode" not in data and "mode" not in data):
+        return Validated(False, "config.json missing run_mode/mode", details)
+    return Validated(True, "Implement output valid", details)
 
 
-def validate_simulated_participant_output(run_dir: Path) -> Validated:
+def validate_collect_output(run_dir: Path) -> Validated:
     """responses.csv exists and has expected columns."""
     run_dir = Path(run_dir)
-    path = run_dir / "5simulated_participant" / "responses.csv"
+    path = run_dir / "4_collect" / "responses.csv"
     details: Dict[str, Any] = {}
 
     if not path.exists():
@@ -202,13 +184,13 @@ def validate_simulated_participant_output(run_dir: Path) -> Validated:
         return Validated(False, f"responses.csv missing columns: {missing}", details)
 
     details["n_rows"] = len(lines) - 1
-    return Validated(True, f"Simulated participant output valid; {len(lines)-1} rows", details)
+    return Validated(True, f"Collect output valid; {len(lines)-1} rows", details)
 
 
 def validate_analyst_output(run_dir: Path) -> Validated:
     """aggregate.csv exists with expected columns; summary_stats.json is valid JSON with expected keys."""
     run_dir = Path(run_dir)
-    agent_dir = run_dir / "6data_analyst"
+    agent_dir = run_dir / "5_analyze"
     agg_path = agent_dir / "aggregate.csv"
     summary_path = agent_dir / "summary_stats.json"
     details: Dict[str, Any] = {}
@@ -237,7 +219,7 @@ def validate_analyst_output(run_dir: Path) -> Validated:
 def validate_interpreter_output(run_dir: Path) -> Validated:
     """report.md exists and is non-empty."""
     run_dir = Path(run_dir)
-    path = run_dir / "7interpreter" / "report.md"
+    path = run_dir / "6_interpret" / "report.md"
     details: Dict[str, Any] = {}
 
     if not path.exists():
@@ -251,24 +233,22 @@ def validate_interpreter_output(run_dir: Path) -> Validated:
 
 # Map agent_key -> validator function for critic CLI
 AGENT_VALIDATORS = {
-    "1theorist": validate_theorist_output,
-    "2experiment_designer": validate_designer_output,
-    "3experiment_implementer": validate_implementer_output,
-    "4deployer": validate_deployer_output,
-    "5simulated_participant": validate_simulated_participant_output,
-    "6data_analyst": validate_analyst_output,
-    "7interpreter": validate_interpreter_output,
+    "1_theory": validate_theorist_output,
+    "2_design": validate_designer_output,
+    "3_implement": validate_implementer_output,
+    "4_collect": validate_collect_output,
+    "5_analyze": validate_analyst_output,
+    "6_interpret": validate_interpreter_output,
 }
 
 # Map graph node name -> agent_key for validation loop
 NODE_TO_AGENT_KEY = {
-    "theorist": "1theorist",
-    "experiment_designer": "2experiment_designer",
-    "experiment_implementer": "3experiment_implementer",
-    "deployer": "4deployer",
-    "simulated_participant": "5simulated_participant",
-    "data_analyst": "6data_analyst",
-    "interpreter": "7interpreter",
+    "theory": "1_theory",
+    "design": "2_design",
+    "implement": "3_implement",
+    "collect": "4_collect",
+    "analyze": "5_analyze",
+    "interpret": "6_interpret",
 }
 
 

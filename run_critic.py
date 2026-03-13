@@ -5,7 +5,7 @@ Exits with non-zero status if any validation fails.
 
 Usage:
   python run_critic.py --project subjective_randomness --run 1
-  python run_critic.py --project subjective_randomness --run 1 --agent 1theorist
+  python run_critic.py --project subjective_randomness --run 1 --agent 1_theory
 """
 
 import argparse

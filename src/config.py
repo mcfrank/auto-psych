@@ -25,7 +25,7 @@ def run_dir(project_id: str, run_id: int) -> Path:
 
 
 def agent_dir(project_id: str, run_id: int, agent_key: str) -> Path:
-    """Return path to agent output directory (e.g. run1/1theorist)."""
+    """Return path to agent output directory (e.g. run1/1_theory)."""
     return run_dir(project_id, run_id) / agent_key
 
 

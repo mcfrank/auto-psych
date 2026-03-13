@@ -27,10 +27,10 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     project_id = state["project_id"]
     run_id = state["run_id"]
-    agent_header("1theorist", run_id, state.get("total_runs"), state.get("mode"))
+    agent_header("1_theory", run_id, state.get("total_runs"), state.get("mode"))
     if state.get("validation_retry_count", 0) > 0:
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
-    out_dir = agent_dir(project_id, run_id, "1theorist")
+    out_dir = agent_dir(project_id, run_id, "1_theory")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     prob_path = Path(state["problem_definition_path"])
@@ -43,7 +43,7 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
         if p.exists():
             interpreter_text = p.read_text(encoding="utf-8")
 
-    prompt = load_prompt_for_run(project_id, run_id, "1theorist")
+    prompt = load_prompt_for_run(project_id, run_id, "1_theory")
     available_models = list(MODEL_LIBRARY.keys())
 
     validation_feedback = (state.get("validation_feedback") or "").strip()
@@ -61,7 +61,7 @@ Please fix the output so it passes validation. Then output your YAML and code bl
 This is **Run {run_id}** of the pipeline.
 """
     if run_id >= 2:
-        user_content += f"""For Run 2 and later you must **build on the previous run**. Use the interpreter report and (if provided) the previous run's theory probabilities below to decide which models to retain, drop, or add. Consider adding new theories if the evidence suggests them.
+        user_content += f"""For Run 2 and later you must **not overwrite the old theories**: retain the previous run's theories (list them in your manifest and provide their code), and **add at least one new theory**. New theories can be clones or variants with modifications; name them so the relationship is clear (e.g. bayesian_fair_coin_v2, representativeness_alternating_bias). Use the interpreter report and theory probabilities below to decide what to retain and what new theory or theories to add.
 
 """
     user_content += f"""## Problem definition
@@ -78,7 +78,7 @@ This is **Run {run_id}** of the pipeline.
             probs_str = "\n".join(f"  {k}: {v}" for k, v in sorted(prev_theories.items()))
             user_content += f"""## Previous run's theory probabilities (Run {run_id - 1})
 
-The interpreter from Run {run_id - 1} left these probabilities. Use them to inform your model set and to consider new theories.
+The interpreter from Run {run_id - 1} left these probabilities. Use them to inform which theories to retain and which new theory (or theories) to add. You must add at least one new theory; name derived or variant theories clearly (e.g. <base>_v2 or <base>_<modification>).
 
 ```yaml
 {probs_str}

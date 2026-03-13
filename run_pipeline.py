@@ -20,8 +20,7 @@ from src.prompts import resolve_prompts, archive_prompts_for_run
 from src.graph import build_graph
 
 AGENT_SUBDIRS = [
-    "1theorist", "2experiment_designer", "3experiment_implementer", "4deployer",
-    "5simulated_participant", "6data_analyst", "7interpreter",
+    "1_theory", "2_design", "3_implement", "4_collect", "5_analyze", "6_interpret",
 ]
 
 
@@ -63,7 +62,7 @@ def _run_single(
     archive_prompts_for_run(project_id, run_id, resolved)
     prev_report = None
     if run_id > 1:
-        prev = run_dir(project_id, run_id - 1) / "7interpreter" / "report.md"
+        prev = run_dir(project_id, run_id - 1) / "6_interpret" / "report.md"
         if prev.exists():
             prev_report = str(prev)
     if interpreter_report:
