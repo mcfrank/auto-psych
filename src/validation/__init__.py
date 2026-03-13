@@ -5,8 +5,7 @@ from .validators import (
     validate_theorist_output,
     validate_designer_output,
     validate_implementer_output,
-    validate_deployer_output,
-    validate_simulated_participant_output,
+    validate_collect_output,
     validate_analyst_output,
     validate_interpreter_output,
 )
@@ -16,8 +15,7 @@ __all__ = [
     "validate_theorist_output",
     "validate_designer_output",
     "validate_implementer_output",
-    "validate_deployer_output",
-    "validate_simulated_participant_output",
+    "validate_collect_output",
     "validate_analyst_output",
     "validate_interpreter_output",
 ]

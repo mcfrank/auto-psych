@@ -4,13 +4,12 @@ import sys
 from typing import Optional
 
 AGENT_DISPLAY_NAMES = {
-    "1theorist": "Theorist",
-    "2experiment_designer": "Experiment designer",
-    "3experiment_implementer": "Experiment implementer",
-    "4deployer": "Deployer",
-    "5simulated_participant": "Simulated participant",
-    "6data_analyst": "Data analyst",
-    "7interpreter": "Interpreter",
+    "1_theory": "Theory",
+    "2_design": "Design",
+    "3_implement": "Implement",
+    "4_collect": "Collect data",
+    "5_analyze": "Analyze",
+    "6_interpret": "Interpret",
 }
 
 

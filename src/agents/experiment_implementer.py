@@ -1,4 +1,4 @@
-"""Experiment implementer: fill generic jsPsych template with consent, instructions, and stimuli."""
+"""Experiment implementer: fill jsPsych template and run deploy (local server or Firebase)."""
 
 from pathlib import Path
 from typing import Any, Dict, List
@@ -6,6 +6,7 @@ import json
 
 from src.config import REPO_ROOT, agent_dir
 from src.console_log import agent_header, log_status
+from src.agents.deployer import run_deploy_logic
 
 
 TEMPLATES_DIR = REPO_ROOT / "templates"
@@ -56,10 +57,10 @@ def run_experiment_implementer(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     project_id = state["project_id"]
     run_id = state["run_id"]
-    agent_header("3experiment_implementer", run_id, state.get("total_runs"), state.get("mode"))
+    agent_header("3_implement", run_id, state.get("total_runs"), state.get("mode"))
     if state.get("validation_retry_count", 0) > 0:
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
-    out_dir = agent_dir(project_id, run_id, "3experiment_implementer")
+    out_dir = agent_dir(project_id, run_id, "3_implement")
     out_dir.mkdir(parents=True, exist_ok=True)
 
     stimuli_path = Path(state["stimuli_path"])
@@ -105,10 +106,10 @@ def run_experiment_implementer(state: Dict[str, Any]) -> Dict[str, Any]:
         (out_dir / "index.html").write_text(template_html, encoding="utf-8")
 
     (out_dir / "stimuli.json").write_text(json.dumps(stimuli_for_experiment, indent=2), encoding="utf-8")
-    return {
-        **state,
-        "experiment_path": str(out_dir),
-    }
+    state = {**state, "experiment_path": str(out_dir)}
+    # Bundle deploy: deterministic step writes config.json to same dir
+    state = run_deploy_logic(state, out_dir)
+    return state
 
 
 def _write_minimal_experiment(out_dir: Path, stimuli: list, task_instruction: str) -> None:
@@ -127,12 +128,11 @@ def _write_minimal_experiment(out_dir: Path, stimuli: list, task_instruction: st
   <script src="https://unpkg.com/jspsych@8.2.3"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
   <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" />
-  <script src="/jatos.js"></script>
 </head>
 <body></body>
 <script>
   const trialVariables = {stimuli_esc};
-  const jsPsych = initJsPsych({{ on_finish: () => typeof jatos !== 'undefined' ? jatos.startNextComponent(jsPsych.data.get().json()) : console.log(jsPsych.data.get().json()) }});
+  const jsPsych = initJsPsych({{ on_finish: () => {{ var data = jsPsych.data.get().values(); console.log(data); if (typeof window !== 'undefined') window.__experimentData = data; }} }});
   const timeline = [];
   timeline.push({{ type: jsPsychHtmlKeyboardResponse, stimulus: {consent_esc}, choices: "ALL_KEYS" }});
   timeline.push({{ type: jsPsychHtmlKeyboardResponse, stimulus: '<p>' + {task_esc} + '</p><p>F/Left = left, J/Right = right. Press any key to begin.</p>', choices: "ALL_KEYS" }});

@@ -3,6 +3,7 @@
 import csv
 import io
 import json
+import multiprocessing
 import re
 import subprocess
 import sys
@@ -20,12 +21,17 @@ from src.models.randomness import MODEL_LIBRARY, get_model_predictions
 
 RESPONSE_OPTIONS = ["left", "right"]
 
+# Max concurrent browser participants (avoids LLM rate limits and memory)
+MAX_PARALLEL_PARTICIPANTS = 3
+
 # How often we try to advance the experiment (click button or press key)
 _DRIVE_INTERVAL_MS = 1200
 # Total time we allow one participant run to complete
 _DRIVE_TIMEOUT_MS = 180_000
 # Max number of screen/action pairs to keep in LLM context (to avoid token limit)
 _LLM_CONTEXT_MAX_SCREENS = 20
+# Fixation screen auto-advances in template (150ms); we sleep slightly longer then skip LLM for it
+_FIXATION_WAIT_SEC = 0.25
 
 
 def _get_screen_content(page) -> str:
@@ -95,10 +101,10 @@ def _drive_experiment_with_llm(
         llm = get_llm()
     except Exception:
         return (False, False)
-    steering_prompt = load_prompt_for_run(project_id, run_id, "5simulated_participant_steering")
+    steering_prompt = load_prompt_for_run(project_id, run_id, "4_collect_steering")
     if not steering_prompt.strip():
         from src.config import PROMPTS_DIR
-        fallback = PROMPTS_DIR / "5simulated_participant_steering.md"
+        fallback = PROMPTS_DIR / "4_collect_steering.md"
         if fallback.exists():
             steering_prompt = fallback.read_text(encoding="utf-8")
     if not steering_prompt.strip():
@@ -115,11 +121,11 @@ def _drive_experiment_with_llm(
         screen_text = _get_screen_content(page)
         if not screen_text.strip():
             screen_text = "(loading or empty screen)"
-        # Fixation screen is just "+" and auto-advances after 500ms; do not ask LLM for a key
+        # Fixation screen is just "+" and auto-advances (150ms in template); do not ask LLM for a key
         # or that key will be applied to the next screen (the real trial) and we get all "f"
         is_fixation = screen_text.strip() in ("+", "")
         if is_fixation:
-            time.sleep(0.6)  # let fixation auto-advance to the trial screen
+            time.sleep(_FIXATION_WAIT_SEC)  # let fixation auto-advance to the trial screen
             continue
         context_parts.append("=== CURRENT SCREEN ===")
         context_parts.append(screen_text)
@@ -155,7 +161,7 @@ def _drive_experiment_with_llm(
         if len(context_parts) > _LLM_CONTEXT_MAX_SCREENS * 4:
             context_parts = context_parts[-(_LLM_CONTEXT_MAX_SCREENS * 4) :]
         step += 1
-        time.sleep(0.2)
+        time.sleep(0.1)  # brief pause so page updates before next poll
     try:
         return (bool(page.evaluate("typeof window.__experimentData !== 'undefined'")), True)
     except Exception:
@@ -193,6 +199,109 @@ def _drive_experiment_to_finish(page, timeout_ms: int = _DRIVE_TIMEOUT_MS) -> bo
         return False
 
 
+def _run_one_participant_browser(args: Tuple) -> Tuple[int, Optional[List[Dict[str, Any]]], Optional[str]]:
+    """
+    Run one participant in a browser (for parallel collect). Runs in a subprocess.
+    Returns (participant_index, list of row dicts or None, error_message or None).
+    """
+    (
+        participant_index,
+        participant_id_str,
+        experiment_url,
+        project_id,
+        run_id,
+        timeout_ms,
+        logs_dir_path,
+    ) = args
+    logs_dir = Path(logs_dir_path) if logs_dir_path else None
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return (participant_index, None, "playwright not installed")
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                goto_url = experiment_url + ("&" if "?" in experiment_url else "?") + "participant_id=" + urllib.parse.quote(participant_id_str)
+                page.goto(goto_url, wait_until="load", timeout=timeout_ms)
+                done, _ = _drive_experiment_with_llm(
+                    page, min(timeout_ms, _DRIVE_TIMEOUT_MS), project_id, run_id, logs_dir
+                )
+                if not done:
+                    done = _drive_experiment_to_finish(page, min(timeout_ms, _DRIVE_TIMEOUT_MS))
+                if not done:
+                    return (participant_index, None, "timed out before experiment finished")
+                data = page.evaluate("window.__experimentData")
+            finally:
+                browser.close()
+        if data is None or not isinstance(data, list):
+            return (participant_index, None, "no __experimentData")
+        rows = []
+        for i, trial in enumerate(data):
+            if "sequence_a" not in trial or "sequence_b" not in trial:
+                continue
+            chose_left = trial.get("chose_left")
+            if chose_left is None:
+                continue
+            rows.append({
+                "participant_id": participant_index,
+                "participant_id_str": participant_id_str,
+                "trial_index": i,
+                "sequence_a": str(trial["sequence_a"]),
+                "sequence_b": str(trial["sequence_b"]),
+                "chose_left": int(bool(chose_left)),
+                "chose_right": 1 - int(bool(chose_left)),
+                "model": "",
+            })
+        return (participant_index, rows, None)
+    except Exception as e:
+        if logs_dir:
+            (logs_dir / f"p{participant_index}_error.txt").write_text(str(e), encoding="utf-8")
+        return (participant_index, None, str(e))
+
+
+def _run_one_participant_firebase(args: Tuple) -> Tuple[int, bool, Optional[str]]:
+    """
+    Run one participant against Firebase-hosted experiment (for parallel collect). Runs in a subprocess.
+    Returns (participant_index, success, error_message or None).
+    """
+    (
+        participant_index,
+        participant_id_str,
+        experiment_url,
+        project_id,
+        run_id,
+        nav_timeout_ms,
+        drive_timeout_ms,
+        logs_dir_path,
+    ) = args
+    logs_dir = Path(logs_dir_path) if logs_dir_path else None
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        return (participant_index, False, "playwright not installed")
+    try:
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+            try:
+                page = browser.new_page()
+                goto_url = experiment_url + ("&" if "?" in experiment_url else "?") + "participant_id=" + urllib.parse.quote(participant_id_str)
+                page.goto(goto_url, wait_until="load", timeout=nav_timeout_ms)
+                done, _ = _drive_experiment_with_llm(page, drive_timeout_ms, project_id, run_id, logs_dir)
+                if not done:
+                    done = _drive_experiment_to_finish(page, drive_timeout_ms)
+                if done:
+                    page.wait_for_timeout(1500)
+            finally:
+                browser.close()
+        return (participant_index, done, None)
+    except Exception as e:
+        if logs_dir:
+            (logs_dir / f"p{participant_index}_error.txt").write_text(str(e), encoding="utf-8")
+        return (participant_index, False, str(e))
+
+
 def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     If deployer set experiment_url: visit it N times with a headless browser, collect
@@ -201,10 +310,10 @@ def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     project_id = state["project_id"]
     run_id = state["run_id"]
-    agent_header("5simulated_participant", run_id, state.get("total_runs"), state.get("mode"))
+    agent_header("4_collect", run_id, state.get("total_runs"), state.get("mode"))
     if state.get("validation_retry_count", 0) > 0:
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
-    out_dir = agent_dir(project_id, run_id, "5simulated_participant")
+    out_dir = agent_dir(project_id, run_id, "4_collect")
     out_dir.mkdir(parents=True, exist_ok=True)
     logs_dir = out_dir / "logs"
     logs_dir.mkdir(exist_ok=True)
@@ -279,49 +388,77 @@ def _collect_from_firebase(
             print(msg, file=sys.stderr, flush=True)
             (logs_dir / "browser_error.txt").write_text(msg, encoding="utf-8")
             return []
-        log_status(f"Running {n_participants} browser participant(s) (Firebase)...")
         nav_timeout_ms = 60_000
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
-            try:
-                for run_idx in range(n_participants):
-                    pid = participant_ids[run_idx]
-                    goto_url = experiment_url + ("&" if "?" in experiment_url else "?") + "participant_id=" + urllib.parse.quote(pid)
-                    log_status(f"Participant {run_idx + 1}/{n_participants} in progress...")
-                    page = browser.new_page()
-                    try:
-                        page.goto(goto_url, wait_until="networkidle", timeout=nav_timeout_ms)
-                        # Prefer LLM-driven steering (model makes participant judgments); fallback to blind drive
-                        done, llm_used = _drive_experiment_with_llm(
-                            page, _DRIVE_TIMEOUT_MS, project_id, run_id, logs_dir
-                        )
-                        if llm_used:
-                            log_status("Steering: LLM (Gemini)")
-                        else:
-                            log_status("Steering: blind (LLM unavailable or prompt missing)")
-                        if not done:
-                            if llm_used:
-                                log_status("LLM did not finish in time; falling back to blind steering.")
-                            done = _drive_experiment_to_finish(page, _DRIVE_TIMEOUT_MS)
-                        if done:
-                            page.wait_for_timeout(3000)  # allow POST /submit to complete
-                        else:
-                            print(
-                                f"  Run {run_idx + 1}/{n_participants}: timed out before experiment finished (no POST).",
-                                file=sys.stderr,
-                                flush=True,
+        n_parallel = min(n_participants, MAX_PARALLEL_PARTICIPANTS) if MAX_PARALLEL_PARTICIPANTS >= 2 else 1
+        if n_parallel >= 2 and n_participants >= 2:
+            log_status(f"Running {n_participants} browser participant(s) (Firebase, {n_parallel} in parallel)...")
+            worker_args = [
+                (
+                    run_idx,
+                    participant_ids[run_idx],
+                    experiment_url,
+                    project_id,
+                    run_id,
+                    nav_timeout_ms,
+                    _DRIVE_TIMEOUT_MS,
+                    str(logs_dir),
+                )
+                for run_idx in range(n_participants)
+            ]
+            with multiprocessing.Pool(processes=n_parallel) as pool:
+                results = pool.map(_run_one_participant_firebase, worker_args)
+            for _idx, success, err in sorted(results, key=lambda r: r[0]):
+                if err:
+                    print(f"  Participant {_idx + 1}/{n_participants}: {err}", file=sys.stderr, flush=True)
+                elif not success:
+                    print(
+                        f"  Run {_idx + 1}/{n_participants}: timed out before experiment finished (no POST).",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+            log_status("Steering: LLM (Gemini)" if n_participants else "")
+        else:
+            log_status(f"Running {n_participants} browser participant(s) (Firebase)...")
+            with sync_playwright() as p:
+                browser = p.chromium.launch(headless=True)
+                try:
+                    for run_idx in range(n_participants):
+                        pid = participant_ids[run_idx]
+                        goto_url = experiment_url + ("&" if "?" in experiment_url else "?") + "participant_id=" + urllib.parse.quote(pid)
+                        log_status(f"Participant {run_idx + 1}/{n_participants} in progress...")
+                        page = browser.new_page()
+                        try:
+                            page.goto(goto_url, wait_until="load", timeout=nav_timeout_ms)
+                            done, llm_used = _drive_experiment_with_llm(
+                                page, _DRIVE_TIMEOUT_MS, project_id, run_id, logs_dir
                             )
-                    except Exception as e:
-                        err_msg = f"Run {run_idx + 1}/{n_participants} error: {e}"
-                        print(err_msg, file=sys.stderr, flush=True)
-                        (logs_dir / "browser_error.txt").write_text(
-                            err_msg,
-                            encoding="utf-8",
-                        )
-                    finally:
-                        page.close()
-            finally:
-                browser.close()
+                            if llm_used:
+                                log_status("Steering: LLM (Gemini)")
+                            else:
+                                log_status("Steering: blind (LLM unavailable or prompt missing)")
+                            if not done:
+                                if llm_used:
+                                    log_status("LLM did not finish in time; falling back to blind steering.")
+                                done = _drive_experiment_to_finish(page, _DRIVE_TIMEOUT_MS)
+                            if done:
+                                page.wait_for_timeout(1500)  # allow POST /submit to complete
+                            else:
+                                print(
+                                    f"  Run {run_idx + 1}/{n_participants}: timed out before experiment finished (no POST).",
+                                    file=sys.stderr,
+                                    flush=True,
+                                )
+                        except Exception as e:
+                            err_msg = f"Run {run_idx + 1}/{n_participants} error: {e}"
+                            print(err_msg, file=sys.stderr, flush=True)
+                            (logs_dir / "browser_error.txt").write_text(
+                                err_msg,
+                                encoding="utf-8",
+                            )
+                        finally:
+                            page.close()
+                finally:
+                    browser.close()
         log_status("Fetching /results...")
     # 2) GET /results and parse CSV
     base = results_api_url.rstrip("/")
@@ -425,74 +562,99 @@ def _collect_from_browser(
 
     rows = []
     timeout_ms = 120_000  # 2 min per run
-    log_status(f"Running {n_participants} browser participant(s) (local)...")
-
+    n_parallel = min(n_participants, MAX_PARALLEL_PARTICIPANTS) if MAX_PARALLEL_PARTICIPANTS >= 2 else 1
     try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch(headless=True)
+        if n_parallel >= 2 and n_participants >= 2:
+            log_status(f"Running {n_participants} browser participant(s) (local, {n_parallel} in parallel)...")
+            worker_args = [
+                (
+                    participant_id,
+                    participant_ids[participant_id],
+                    experiment_url,
+                    project_id,
+                    run_id,
+                    timeout_ms,
+                    str(logs_dir),
+                )
+                for participant_id in range(n_participants)
+            ]
+            with multiprocessing.Pool(processes=n_parallel) as pool:
+                results = pool.map(_run_one_participant_browser, worker_args)
+            for _idx, participant_rows, err in sorted(results, key=lambda r: r[0]):
+                if err:
+                    print(f"  Participant {_idx + 1}/{n_participants}: {err}", file=sys.stderr, flush=True)
+                elif participant_rows:
+                    rows.extend(participant_rows)
+            log_status(f"Steering: LLM (Gemini)" if n_participants else "")
+            log_status(f"Done. Got {len(rows)} response rows.")
+        else:
+            log_status(f"Running {n_participants} browser participant(s) (local)...")
             try:
-                for participant_id in range(n_participants):
-                    pid = participant_ids[participant_id]
-                    goto_url = experiment_url + ("&" if "?" in experiment_url else "?") + "participant_id=" + urllib.parse.quote(pid)
-                    log_status(f"Participant {participant_id + 1}/{n_participants} in progress...")
-                    page = browser.new_page()
-                    data = None
+                with sync_playwright() as p:
+                    browser = p.chromium.launch(headless=True)
                     try:
-                        page.goto(goto_url, wait_until="networkidle", timeout=timeout_ms)
-                        done, llm_used = _drive_experiment_with_llm(
-                            page,
-                            min(timeout_ms, _DRIVE_TIMEOUT_MS),
-                            config.get("project_id", ""),
-                            config.get("run_id", 0),
-                            logs_dir,
-                        )
-                        if llm_used:
-                            log_status("Steering: LLM (Gemini)")
-                        else:
-                            log_status("Steering: blind (LLM unavailable or prompt missing)")
-                        if not done:
-                            if llm_used:
-                                log_status("LLM did not finish in time; falling back to blind steering.")
-                            done = _drive_experiment_to_finish(
-                                page, min(timeout_ms, _DRIVE_TIMEOUT_MS)
-                            )
-                        if done:
-                            data = page.evaluate("window.__experimentData")
-                        else:
-                            print(
-                                f"  Run {participant_id + 1}/{n_participants}: timed out before experiment finished.",
-                                file=sys.stderr,
-                                flush=True,
-                            )
-                    except Exception as e:
-                        print(f"  Run {participant_id + 1}/{n_participants} error: {e}", file=sys.stderr, flush=True)
+                        for participant_id in range(n_participants):
+                            pid = participant_ids[participant_id]
+                            goto_url = experiment_url + ("&" if "?" in experiment_url else "?") + "participant_id=" + urllib.parse.quote(pid)
+                            log_status(f"Participant {participant_id + 1}/{n_participants} in progress...")
+                            page = browser.new_page()
+                            data = None
+                            try:
+                                page.goto(goto_url, wait_until="load", timeout=timeout_ms)
+                                done, llm_used = _drive_experiment_with_llm(
+                                    page,
+                                    min(timeout_ms, _DRIVE_TIMEOUT_MS),
+                                    config.get("project_id", ""),
+                                    config.get("run_id", 0),
+                                    logs_dir,
+                                )
+                                if llm_used:
+                                    log_status("Steering: LLM (Gemini)")
+                                else:
+                                    log_status("Steering: blind (LLM unavailable or prompt missing)")
+                                if not done:
+                                    if llm_used:
+                                        log_status("LLM did not finish in time; falling back to blind steering.")
+                                    done = _drive_experiment_to_finish(
+                                        page, min(timeout_ms, _DRIVE_TIMEOUT_MS)
+                                    )
+                                if done:
+                                    data = page.evaluate("window.__experimentData")
+                                else:
+                                    print(
+                                        f"  Run {participant_id + 1}/{n_participants}: timed out before experiment finished.",
+                                        file=sys.stderr,
+                                        flush=True,
+                                    )
+                            except Exception as e:
+                                print(f"  Run {participant_id + 1}/{n_participants} error: {e}", file=sys.stderr, flush=True)
+                            finally:
+                                try:
+                                    page.close()
+                                except Exception:
+                                    pass
+                            if data is None or not isinstance(data, list):
+                                continue
+                            # Filter to judgment trials (have sequence_a, sequence_b, chose_left)
+                            for i, trial in enumerate(data):
+                                if "sequence_a" not in trial or "sequence_b" not in trial:
+                                    continue
+                                chose_left = trial.get("chose_left")
+                                if chose_left is None:
+                                    continue
+                                rows.append({
+                                    "participant_id": participant_id,
+                                    "participant_id_str": pid,
+                                    "trial_index": i,
+                                    "sequence_a": str(trial["sequence_a"]),
+                                    "sequence_b": str(trial["sequence_b"]),
+                                    "chose_left": int(bool(chose_left)),
+                                    "chose_right": 1 - int(bool(chose_left)),
+                                    "model": "",  # no model when from browser
+                                })
                     finally:
-                        try:
-                            page.close()
-                        except Exception:
-                            pass
-                    if data is None or not isinstance(data, list):
-                        continue
-                    # Filter to judgment trials (have sequence_a, sequence_b, chose_left)
-                    for i, trial in enumerate(data):
-                        if "sequence_a" not in trial or "sequence_b" not in trial:
-                            continue
-                        chose_left = trial.get("chose_left")
-                        if chose_left is None:
-                            continue
-                        rows.append({
-                            "participant_id": participant_id,
-                            "participant_id_str": pid,
-                            "trial_index": i,
-                            "sequence_a": str(trial["sequence_a"]),
-                            "sequence_b": str(trial["sequence_b"]),
-                            "chose_left": int(bool(chose_left)),
-                            "chose_right": 1 - int(bool(chose_left)),
-                            "model": "",  # no model when from browser
-                        })
-            finally:
-                browser.close()
-        log_status(f"Done. Got {len(rows)} response rows.")
+                        browser.close()
+            log_status(f"Done. Got {len(rows)} response rows.")
     finally:
         if server_proc is not None and server_proc.poll() is None:
             server_proc.terminate()

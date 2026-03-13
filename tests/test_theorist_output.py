@@ -12,8 +12,8 @@ FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures"
 def test_validate_theorist_output_with_fixture_manifest(tmp_path):
     # Copy fixture manifest into a run dir and validate
     run_dir = tmp_path
-    (run_dir / "1theorist").mkdir()
-    (run_dir / "1theorist" / "models_manifest.yaml").write_text((FIXTURES_DIR / "models_manifest.yaml").read_text())
+    (run_dir / "1_theory").mkdir()
+    (run_dir / "1_theory" / "models_manifest.yaml").write_text((FIXTURES_DIR / "models_manifest.yaml").read_text())
     result = validate_theorist_output(run_dir)
     assert result.ok, result.message
     assert "model_names" in (result.details or {})
@@ -30,8 +30,8 @@ def test_validate_theorist_output_missing_manifest():
 def test_validate_theorist_output_invalid_model_name():
     import tempfile
     with tempfile.TemporaryDirectory() as d:
-        (Path(d) / "1theorist").mkdir()
-        (Path(d) / "1theorist" / "models_manifest.yaml").write_text("models:\n  - name: not_a_real_model\n")
+        (Path(d) / "1_theory").mkdir()
+        (Path(d) / "1_theory" / "models_manifest.yaml").write_text("models:\n  - name: not_a_real_model\n")
         result = validate_theorist_output(Path(d))
         assert not result.ok
         assert "not in MODEL_LIBRARY" in result.message

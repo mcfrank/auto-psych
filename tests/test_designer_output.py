@@ -11,8 +11,8 @@ FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures"
 
 
 def test_validate_designer_output_with_fixture(tmp_path):
-    (tmp_path / "2experiment_designer").mkdir()
-    (tmp_path / "2experiment_designer" / "stimuli.json").write_text((FIXTURES_DIR / "stimuli.json").read_text())
+    (tmp_path / "2_design").mkdir()
+    (tmp_path / "2_design" / "stimuli.json").write_text((FIXTURES_DIR / "stimuli.json").read_text())
     result = validate_designer_output(tmp_path)
     assert result.ok, result.message
     assert result.details and result.details.get("n_stimuli") == 2
@@ -30,8 +30,8 @@ def test_validate_designer_output_invalid_stimulus_missing_keys():
     import tempfile
     import json
     with tempfile.TemporaryDirectory() as d:
-        (Path(d) / "2experiment_designer").mkdir()
-        (Path(d) / "2experiment_designer" / "stimuli.json").write_text(json.dumps([{"wrong": "key"}]))
+        (Path(d) / "2_design").mkdir()
+        (Path(d) / "2_design" / "stimuli.json").write_text(json.dumps([{"wrong": "key"}]))
         result = validate_designer_output(Path(d))
         assert not result.ok
         assert "sequence_a" in result.message or "sequence_b" in result.message
@@ -53,8 +53,8 @@ def test_validate_designer_output_missing_eig():
     import tempfile
     import json
     with tempfile.TemporaryDirectory() as d:
-        (Path(d) / "2experiment_designer").mkdir()
-        (Path(d) / "2experiment_designer" / "stimuli.json").write_text(
+        (Path(d) / "2_design").mkdir()
+        (Path(d) / "2_design" / "stimuli.json").write_text(
             json.dumps([{"sequence_a": "HHTHTTHT", "sequence_b": "HTHTHTHT"}])
         )
         result = validate_designer_output(Path(d))

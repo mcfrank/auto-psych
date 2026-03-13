@@ -117,21 +117,14 @@ def _deploy_to_firebase(exp_dir: Path, project_id: str, run_id: int) -> tuple[Op
             firebase_json.write_text(original_firebase_json, encoding="utf-8")
 
 
-def run_deployer(state: Dict[str, Any]) -> Dict[str, Any]:
+def run_deploy_logic(state: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
     """
-    Simulated participants mode: use local HTTP server (or Firebase when configured),
-    write experiment_url and optional results_api_url to config so agent 5 can collect data.
-    Live mode: placeholder for future Prolific + experiment URL.
+    Deterministic deploy step: write config.json to out_dir (experiment_url, etc.).
+    Called from implement step (3_implement) so deploy is bundled with implement.
     """
     project_id = state["project_id"]
     run_id = state["run_id"]
     mode = state["mode"]
-    agent_header("4deployer", run_id, state.get("total_runs"), mode)
-    if state.get("validation_retry_count", 0) > 0:
-        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
-    out_dir = agent_dir(project_id, run_id, "4deployer")
-    out_dir.mkdir(parents=True, exist_ok=True)
-
     experiment_path = state.get("experiment_path", "")
     config = {
         "run_mode": mode,
@@ -156,7 +149,6 @@ def run_deployer(state: Dict[str, Any]) -> Dict[str, Any]:
             else:
                 # Local server fallback
                 log_status(deploy_error or "Using local server (Firebase not configured or deploy failed).")
-                _ensure_jatos_stub(exp_dir)
                 _ensure_experiment_data_exposed(exp_dir)
                 experiment_url = f"http://{BIND_ADDRESS}:{LOCAL_SERVER_PORT}"
                 results_api_url = None
@@ -177,11 +169,16 @@ def run_deployer(state: Dict[str, Any]) -> Dict[str, Any]:
         config["experiment_url"] = None
 
     (out_dir / "config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
+    return {**state, "deployment_config_path": str(out_dir / "config.json")}
 
-    return {
-        **state,
-        "deployment_config_path": str(out_dir / "config.json"),
-    }
+
+def run_deployer(state: Dict[str, Any]) -> Dict[str, Any]:
+    """Standalone deployer (legacy); prefer run_deploy_logic from implement step."""
+    project_id = state["project_id"]
+    run_id = state["run_id"]
+    out_dir = agent_dir(project_id, run_id, "3_implement")  # same dir as implement
+    out_dir.mkdir(parents=True, exist_ok=True)
+    return run_deploy_logic(state, out_dir)
 
 
 def _ensure_firebase_submit_in_index(index_path: Path) -> None:
@@ -208,24 +205,13 @@ def _ensure_firebase_submit_in_index(index_path: Path) -> None:
         index_path.write_text(text.replace(old, new, 1), encoding="utf-8")
 
 
-def _ensure_jatos_stub(experiment_dir: Path) -> None:
-    """Write a minimal jatos.js stub so the experiment page does not 404 when served locally."""
-    stub = experiment_dir / "jatos.js"
-    if not stub.exists():
-        stub.write_text(
-            "// Stub for local run (no JATOS); experiment uses typeof jatos !== 'undefined' to branch.\n"
-            "if (typeof window !== 'undefined') { window.jatos = undefined; }\n",
-            encoding="utf-8",
-        )
-
-
 def _ensure_experiment_data_exposed(experiment_dir: Path) -> None:
     """Patch index.html so onFinish sets window.__experimentData for Playwright (agent 5)."""
     index = experiment_dir / "index.html"
     if not index.exists() or "__experimentData" in index.read_text(encoding="utf-8"):
         return
     text = index.read_text(encoding="utf-8")
-    # Replace old non-JATOS onFinish that only console.logs with one that sets __experimentData
+    # Replace onFinish that only console.logs with one that sets __experimentData for Playwright
     old = "function() { console.log(jsPsych.data.get().json()); }"
     new = (
         "function() { var data = jsPsych.data.get().getData(); console.log(data); "

@@ -1,4 +1,4 @@
-"""LangGraph workflow: 7-agent pipeline with conditional deployer -> analyst path."""
+"""LangGraph workflow: 6-agent pipeline (theory → design → implement → collect → analyze → interpret)."""
 
 from typing import Literal
 
@@ -8,7 +8,6 @@ from src.state import PipelineState
 from src.agents.theorist import run_theorist
 from src.agents.experiment_designer import run_experiment_designer
 from src.agents.experiment_implementer import run_experiment_implementer
-from src.agents.deployer import run_deployer
 from src.agents.simulated_participant import run_simulated_participant
 from src.agents.data_analyst import run_data_analyst
 from src.agents.interpreter import run_interpreter
@@ -24,92 +23,82 @@ def _validator_node(agent_key: str):
     return _run
 
 
-def _after_validate_theorist(state: PipelineState) -> Literal["theorist", "experiment_designer"]:
+def _after_validate_theory(state: PipelineState) -> Literal["theory", "design"]:
     if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
-        return "theorist"
-    return "experiment_designer"
+        return "theory"
+    return "design"
 
 
-def _after_validate_designer(state: PipelineState) -> Literal["experiment_designer", "experiment_implementer"]:
+def _after_validate_design(state: PipelineState) -> Literal["design", "implement"]:
     if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
-        return "experiment_designer"
-    return "experiment_implementer"
+        return "design"
+    return "implement"
 
 
-def _after_validate_implementer(state: PipelineState) -> Literal["experiment_implementer", "deployer"]:
+def _after_validate_implement(state: PipelineState) -> Literal["implement", "collect", "analyze"]:
     if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
-        return "experiment_implementer"
-    return "deployer"
-
-
-def _after_validate_deployer(state: PipelineState) -> Literal["deployer", "simulated_participant", "data_analyst"]:
-    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
-        return "deployer"
+        return "implement"
     if state.get("mode") == "simulated_participants":
-        return "simulated_participant"
-    return "data_analyst"
+        return "collect"
+    return "analyze"
 
 
-def _after_validate_simulated_participant(state: PipelineState) -> Literal["simulated_participant", "data_analyst"]:
+def _after_validate_collect(state: PipelineState) -> Literal["collect", "analyze"]:
     if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
-        return "simulated_participant"
-    return "data_analyst"
+        return "collect"
+    return "analyze"
 
 
-def _after_validate_analyst(state: PipelineState) -> Literal["data_analyst", "interpreter"]:
+def _after_validate_analyst(state: PipelineState) -> Literal["analyze", "interpret"]:
     if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
-        return "data_analyst"
-    return "interpreter"
+        return "analyze"
+    return "interpret"
 
 
-def _after_validate_interpreter(state: PipelineState) -> Literal["interpreter", "end"]:
+def _after_validate_interpret(state: PipelineState) -> Literal["interpret", "end"]:
     if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
-        return "interpreter"
+        return "interpret"
     return "end"
 
 
 def build_graph(checkpoint_dir: str | None = None):
     """
-    Build the 7-agent graph with validation loop after each agent.
-    Each agent -> validate_* -> conditional: retry agent (up to 3x) or next node.
+    Build the 6-agent graph with validation loop after each agent.
+    Implement step includes deploy (config.json). Collect has modes: simulated, real (real not implemented).
     """
     graph = StateGraph(PipelineState)
 
-    graph.add_node("theorist", run_theorist)
-    graph.add_node("experiment_designer", run_experiment_designer)
-    graph.add_node("experiment_implementer", run_experiment_implementer)
-    graph.add_node("deployer", run_deployer)
-    graph.add_node("simulated_participant", run_simulated_participant)
-    graph.add_node("data_analyst", run_data_analyst)
-    graph.add_node("interpreter", run_interpreter)
+    graph.add_node("theory", run_theorist)
+    graph.add_node("design", run_experiment_designer)
+    graph.add_node("implement", run_experiment_implementer)
+    graph.add_node("collect", run_simulated_participant)
+    graph.add_node("analyze", run_data_analyst)
+    graph.add_node("interpret", run_interpreter)
 
-    graph.add_node("validate_theorist", _validator_node(NODE_TO_AGENT_KEY["theorist"]))
-    graph.add_node("validate_designer", _validator_node(NODE_TO_AGENT_KEY["experiment_designer"]))
-    graph.add_node("validate_implementer", _validator_node(NODE_TO_AGENT_KEY["experiment_implementer"]))
-    graph.add_node("validate_deployer", _validator_node(NODE_TO_AGENT_KEY["deployer"]))
-    graph.add_node("validate_simulated_participant", _validator_node(NODE_TO_AGENT_KEY["simulated_participant"]))
-    graph.add_node("validate_analyst", _validator_node(NODE_TO_AGENT_KEY["data_analyst"]))
-    graph.add_node("validate_interpreter", _validator_node(NODE_TO_AGENT_KEY["interpreter"]))
+    graph.add_node("validate_theory", _validator_node(NODE_TO_AGENT_KEY["theory"]))
+    graph.add_node("validate_design", _validator_node(NODE_TO_AGENT_KEY["design"]))
+    graph.add_node("validate_implement", _validator_node(NODE_TO_AGENT_KEY["implement"]))
+    graph.add_node("validate_collect", _validator_node(NODE_TO_AGENT_KEY["collect"]))
+    graph.add_node("validate_analyst", _validator_node(NODE_TO_AGENT_KEY["analyze"]))
+    graph.add_node("validate_interpret", _validator_node(NODE_TO_AGENT_KEY["interpret"]))
 
-    graph.set_entry_point("theorist")
-    graph.add_edge("theorist", "validate_theorist")
-    graph.add_conditional_edges("validate_theorist", _after_validate_theorist, {"theorist": "theorist", "experiment_designer": "experiment_designer"})
-    graph.add_edge("experiment_designer", "validate_designer")
-    graph.add_conditional_edges("validate_designer", _after_validate_designer, {"experiment_designer": "experiment_designer", "experiment_implementer": "experiment_implementer"})
-    graph.add_edge("experiment_implementer", "validate_implementer")
-    graph.add_conditional_edges("validate_implementer", _after_validate_implementer, {"experiment_implementer": "experiment_implementer", "deployer": "deployer"})
-    graph.add_edge("deployer", "validate_deployer")
+    graph.set_entry_point("theory")
+    graph.add_edge("theory", "validate_theory")
+    graph.add_conditional_edges("validate_theory", _after_validate_theory, {"theory": "theory", "design": "design"})
+    graph.add_edge("design", "validate_design")
+    graph.add_conditional_edges("validate_design", _after_validate_design, {"design": "design", "implement": "implement"})
+    graph.add_edge("implement", "validate_implement")
     graph.add_conditional_edges(
-        "validate_deployer",
-        _after_validate_deployer,
-        {"deployer": "deployer", "simulated_participant": "simulated_participant", "data_analyst": "data_analyst"},
+        "validate_implement",
+        _after_validate_implement,
+        {"implement": "implement", "collect": "collect", "analyze": "analyze"},
     )
-    graph.add_edge("simulated_participant", "validate_simulated_participant")
-    graph.add_conditional_edges("validate_simulated_participant", _after_validate_simulated_participant, {"simulated_participant": "simulated_participant", "data_analyst": "data_analyst"})
-    graph.add_edge("data_analyst", "validate_analyst")
-    graph.add_conditional_edges("validate_analyst", _after_validate_analyst, {"data_analyst": "data_analyst", "interpreter": "interpreter"})
-    graph.add_edge("interpreter", "validate_interpreter")
-    graph.add_conditional_edges("validate_interpreter", _after_validate_interpreter, {"interpreter": "interpreter", "end": END})
+    graph.add_edge("collect", "validate_collect")
+    graph.add_conditional_edges("validate_collect", _after_validate_collect, {"collect": "collect", "analyze": "analyze"})
+    graph.add_edge("analyze", "validate_analyst")
+    graph.add_conditional_edges("validate_analyst", _after_validate_analyst, {"analyze": "analyze", "interpret": "interpret"})
+    graph.add_edge("interpret", "validate_interpret")
+    graph.add_conditional_edges("validate_interpret", _after_validate_interpret, {"interpret": "interpret", "end": END})
 
     if checkpoint_dir:
         try:
