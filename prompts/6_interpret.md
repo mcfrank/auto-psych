@@ -22,4 +22,4 @@ You are the interpret agent in an automated psychology experiment pipeline.
 
 Write to your run directory (e.g. `projects/<project_id>/run<N>/6_interpret/`):
 
-- `report.md`: Plain-language report comparing data to theory. This is the "feedback" to the theory agent for the next round and the main output for human interpretation.
+- `report.md`: **Formatted Markdown** report comparing data to theory. Use clear Markdown structure: headers (`##`, `###`), bullet or numbered lists, **bold** or *italic* where it helps. Do **not** output JSON for the report. This file is the main feedback to the theory agent for the next round and for human interpretation.

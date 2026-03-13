@@ -1,0 +1,14 @@
+{
+  "hosting": {
+    "site": "auto-psych-2c5da",
+    "public": "public",
+    "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
+    "rewrites": [
+      { "source": "/submit", "function": { "functionId": "submit", "region": "us-central1" } },
+      { "source": "/results", "function": { "functionId": "results", "region": "us-central1" } }
+    ]
+  },
+  "functions": {
+    "source": "functions"
+  }
+}

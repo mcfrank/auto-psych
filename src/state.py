@@ -26,10 +26,11 @@ class PipelineState(TypedDict, total=False):
     # Set by simulated_participant for data_analyst to read
     simulated_data_path: str
 
-    # Validation loop: feedback for retry, result of last validation, retry count for current agent
+    # Validation loop: feedback for retry, result of last validation, retry count per agent
     validation_feedback: str
     validation_ok: bool
     validation_retry_count: int
+    last_validated_agent: str  # agent_key of last validator run; used to reset retry count when switching agents
 
     # Multi-run: current run's model registry; merged data for interpreter
     registry_path: str

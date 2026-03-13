@@ -27,6 +27,9 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     project_id = state["project_id"]
     run_id = state["run_id"]
+    # Reset validation retry state when this agent is entered from a different agent's validation
+    if state.get("last_validated_agent") != "1_theory":
+        state = {**state, "validation_retry_count": 0, "validation_feedback": ""}
     agent_header("1_theory", run_id, state.get("total_runs"), state.get("mode"))
     if state.get("validation_retry_count", 0) > 0:
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")

@@ -20,6 +20,68 @@ from src.registry import (
 RESPONSE_OPTIONS = ["left", "right"]
 
 
+def _pearson_r(x: List[float], y: List[float]) -> float:
+    """Pearson correlation between two lists. Returns 0.0 if undefined (e.g. constant input)."""
+    n = len(x)
+    if n != len(y) or n < 2:
+        return 0.0
+    mean_x = sum(x) / n
+    mean_y = sum(y) / n
+    var_x = sum((v - mean_x) ** 2 for v in x)
+    var_y = sum((v - mean_y) ** 2 for v in y)
+    if var_x == 0 or var_y == 0:
+        return 0.0
+    cov = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
+    return cov / (var_x * var_y) ** 0.5
+
+
+def _correlations_from_aggregate_and_predictions(
+    model_predictions: Dict[str, List[float]], aggregate_lines: List[str]
+) -> Dict[str, float]:
+    """Compute Pearson r between each model's predicted P(left) and observed chose_left_pct per stimulus."""
+    # aggregate_lines[0] is header; rest are "seq_a,seq_b,pct,n"
+    observed = []
+    for line in aggregate_lines[1:]:
+        parts = line.strip().split(",")
+        if len(parts) >= 3:
+            try:
+                observed.append(float(parts[2]))
+            except ValueError:
+                continue
+    if len(observed) == 0:
+        return {m: 0.0 for m in model_predictions}
+    correlations = {}
+    for model, preds in model_predictions.items():
+        if len(preds) != len(observed):
+            preds = preds[: len(observed)] if len(preds) > len(observed) else preds + [0.5] * (len(observed) - len(preds))
+        correlations[model] = round(_pearson_r(preds, observed), 4)
+    return correlations
+
+
+def _format_correlations_for_prompt(
+    model_predictions: Dict[str, List[float]], aggregate_lines: List[str]
+) -> str:
+    """Format model–data correlations as readable text for the LLM prompt."""
+    corr = _correlations_from_aggregate_and_predictions(model_predictions, aggregate_lines)
+    return "\n".join(f"- {m}: {r}" for m, r in sorted(corr.items()))
+
+
+def _analyst_correlations_section(project_id: str, run_id: int) -> str:
+    """If the analyze step wrote model_correlations.yaml for this run, include it in the prompt."""
+    corr_path = run_dir(project_id, run_id) / "5_analyze" / "model_correlations.yaml"
+    if not corr_path.exists():
+        return ""
+    try:
+        data = yaml.safe_load(corr_path.read_text()) or {}
+        corr = data.get("correlations") or {}
+        if not corr:
+            return ""
+        lines = ["\n## Correlations from analyze step (this run)", "\n".join(f"- {m}: {r}" for m, r in sorted(corr.items()))]
+        return "\n".join(lines)
+    except Exception:
+        return ""
+
+
 def _merge_aggregates_and_summary(project_id: str, run_id: int) -> Tuple[str, List[str], dict]:
     """
     Merge aggregate.csv and summary_stats from runs 1..run_id.
@@ -93,6 +155,9 @@ def run_interpreter(state: Dict[str, Any]) -> Dict[str, Any]:
     """
     project_id = state["project_id"]
     run_id = state["run_id"]
+    # Reset validation retry state when this agent is entered from a different agent's validation
+    if state.get("last_validated_agent") != "6_interpret":
+        state = {**state, "validation_retry_count": 0, "validation_feedback": ""}
     agent_header("6_interpret", run_id, state.get("total_runs"), state.get("mode"))
     if state.get("validation_retry_count", 0) > 0:
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
@@ -135,6 +200,13 @@ def run_interpreter(state: Dict[str, Any]) -> Dict[str, Any]:
             for m, probs in preds.items():
                 model_predictions.setdefault(m, []).append(probs.get("left", 0.5))
 
+    # Pearson correlation per model (predicted P(left) vs observed proportion chose left)
+    correlations = _correlations_from_aggregate_and_predictions(model_predictions, aggregate_lines)
+    (out_dir / "model_correlations.yaml").write_text(
+        yaml.dump({"correlations": correlations}, default_flow_style=False, sort_keys=False),
+        encoding="utf-8",
+    )
+
     prompt = load_prompt_for_run(project_id, run_id, "6_interpret")
     validation_feedback = (state.get("validation_feedback") or "").strip()
     user_content = ""
@@ -166,7 +238,12 @@ This is **Run {run_id}** of the pipeline. Your report and the theory probabiliti
 
 {json.dumps({m: (sum(v)/len(v) if v else 0) for m, v in model_predictions.items()}, indent=2)}
 
-Write a short plain-language report (2–4 paragraphs) that:
+## Model–data correlations (Pearson r: predicted P(left) vs observed proportion chose left, per stimulus)
+
+{_format_correlations_for_prompt(model_predictions, aggregate_lines)}
+{_analyst_correlations_section(project_id, run_id)}
+
+Write the report in **formatted Markdown** (use headers, bullet lists, bold/italic). Do not output JSON for the report body. Write a short report (2–4 paragraphs) that:
 1. Summarizes what was tested (subjective randomness: which sequence looks more random).
 2. Describes the data (e.g. mean proportion chose left, number of stimuli and responses; data spans runs 1–{run_id}).
 3. Compares the data to the model predictions and states which model(s) fit best or worst.
