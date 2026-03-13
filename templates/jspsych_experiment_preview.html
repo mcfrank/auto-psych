@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Experiment (Preview)</title>
+  <script src="https://unpkg.com/jspsych@8.2.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
+  <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+</head>
+<body></body>
+<script>
+  // Sample data: same structure as pipeline-injected content (precomputed stimulus_display, no .split() in browser)
+  const consentHtml = "<p><strong>Consent</strong></p><p>This experiment is part of a research study. By continuing, you confirm that you have read the information sheet and agree to participate.</p><p>Press any key to continue.</p>";
+  const instructionsHtml = "<p><strong>Instructions</strong></p><p>Which sequence looks more random?</p><p>On each trial you will see two sequences of coin flips (H and T).</p><p><strong>Press F or Left arrow</strong> for the left sequence.</p><p><strong>Press J or Right arrow</strong> for the right sequence.</p><p>Press any key to begin.</p>";
+  const trialVariables = [
+    { stimulus_display: '<div style="display: flex; justify-content: space-around; align-items: center; gap: 3em; margin: 2em auto; max-width: 800px;"><div style="flex: 1; text-align: center;"><p style="font-family: monospace; font-size: 22px; margin: 0.5em 0;">H H T H T T H T</p><p style="font-size: 14px; color: #555;">Left</p></div><div style="flex: 1; text-align: center;"><p style="font-family: monospace; font-size: 22px; margin: 0.5em 0;">T H T H T H T H</p><p style="font-size: 14px; color: #555;">Right</p></div></div><p style="margin-top: 2em;">Which looks more random? Press <strong>F</strong> or <strong>Left</strong> for left, <strong>J</strong> or <strong>Right</strong> for right.</p>', sequence_a: "HHTHTTHT", sequence_b: "THTHTHTH" },
+    { stimulus_display: '<div style="display: flex; justify-content: space-around; align-items: center; gap: 3em; margin: 2em auto; max-width: 800px;"><div style="flex: 1; text-align: center;"><p style="font-family: monospace; font-size: 22px; margin: 0.5em 0;">T T T T T T T T</p><p style="font-size: 14px; color: #555;">Left</p></div><div style="flex: 1; text-align: center;"><p style="font-family: monospace; font-size: 22px; margin: 0.5em 0;">H H H H H H H H</p><p style="font-size: 14px; color: #555;">Right</p></div></div><p style="margin-top: 2em;">Which looks more random? Press <strong>F</strong> or <strong>Left</strong> for left, <strong>J</strong> or <strong>Right</strong> for right.</p>', sequence_a: "TTTTTTTT", sequence_b: "HHHHHHHH" },
+    { stimulus_display: '<div style="display: flex; justify-content: space-around; align-items: center; gap: 3em; margin: 2em auto; max-width: 800px;"><div style="flex: 1; text-align: center;"><p style="font-family: monospace; font-size: 22px; margin: 0.5em 0;">H T H T H T H T</p><p style="font-size: 14px; color: #555;">Left</p></div><div style="flex: 1; text-align: center;"><p style="font-family: monospace; font-size: 22px; margin: 0.5em 0;">T H T H T H T H</p><p style="font-size: 14px; color: #555;">Right</p></div></div><p style="margin-top: 2em;">Which looks more random? Press <strong>F</strong> or <strong>Left</strong> for left, <strong>J</strong> or <strong>Right</strong> for right.</p>', sequence_a: "HTHTHTHT", sequence_b: "THTHTHTH" }
+  ];
+  const trialChoices = ['f', 'j', 'ArrowLeft', 'ArrowRight'];
+  const debriefHtml = "<p>Thank you for participating.</p><p>Press any key to finish.</p>";
+
+  const onFinish = function() { console.log(jsPsych.data.get().json()); };
+  const jsPsych = initJsPsych({ on_finish: onFinish });
+  const timeline = [];
+
+  timeline.push({ type: jsPsychHtmlKeyboardResponse, stimulus: consentHtml, choices: "ALL_KEYS" });
+  timeline.push({ type: jsPsychHtmlKeyboardResponse, stimulus: instructionsHtml, choices: "ALL_KEYS", post_trial_gap: 1000 });
+
+  const trial = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: jsPsych.timelineVariable('stimulus_display'),
+    choices: trialChoices,
+    data: {
+      sequence_a: jsPsych.timelineVariable('sequence_a'),
+      sequence_b: jsPsych.timelineVariable('sequence_b'),
+      task: 'judgment'
+    },
+    on_finish: function(data) {
+      data.chose_left = (data.response === 'f' || data.response === 'ArrowLeft');
+    }
+  };
+  timeline.push({
+    timeline: [trial],
+    timeline_variables: trialVariables,
+    randomize_order: true
+  });
+
+  timeline.push({ type: jsPsychHtmlKeyboardResponse, stimulus: debriefHtml, choices: "ALL_KEYS" });
+  jsPsych.run(timeline);
+</script>
+</html>

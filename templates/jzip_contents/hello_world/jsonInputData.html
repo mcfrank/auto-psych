@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<script src="libs/jquery-1.11.1.min.js"></script>
+<script src="jatos.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+
+<body>
+	<div style="text-align: center">
+		<h1>Component's Properties:</h1>
+		<p id="studyId"></p>
+		<p id="componentId"></p>
+		<p id="jsonInputData"></p>
+		<p>Press any key to continue</p>
+	</div>
+	<script>
+		// What todo when jatos.js is finished initializing
+		jatos.onLoad(function() {
+			// Set text with string from component's properties
+			$('#studyId').text("Study ID: " + jatos.studyId);
+			$('#componentId').text("Component ID: " + jatos.componentId);
+			$('#jsonInputData').text("Object 'someText' from JSON input data: " + jatos.componentJsonInput.someText);
+			// Wait for any key press and start next component
+			$(document).keydown(function(event) {
+				jatos.startNextComponent();
+			});
+			jatos.addAbortButton();
+		});
+	</script>
+</body>
+</html>

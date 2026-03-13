@@ -1,0 +1,4 @@
+[
+  {"sequence_a": "HHTHTTHT", "sequence_b": "HTHTHTHT", "eig": 0.12},
+  {"sequence_a": "TTTTTTTT", "sequence_b": "HHHHHHHH", "eig": 0.25}
+]

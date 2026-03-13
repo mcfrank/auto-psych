@@ -1,0 +1,17 @@
+# LangChain / LangGraph
+langchain>=0.3.0
+langgraph>=0.2.0
+langchain-google-genai>=2.0.0
+
+# Google Gemini
+google-generativeai>=0.8.0
+
+# Utilities
+pydantic>=2.0.0
+pyyaml>=6.0.0
+
+# Optional: PDF reading for problem definition references
+pypdf>=4.0.0
+
+# Browser automation for simulated participants (visit deployed experiment)
+playwright>=1.40.0

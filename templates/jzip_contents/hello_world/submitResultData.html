@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+
+<html>
+<head>
+<script src="libs/jquery-1.11.1.min.js"></script>
+<script src="jatos.js"></script>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head>
+
+<body>
+	<p>Hello World! We submit data!</p>
+	<p>Press any key to continue</p>
+	<script>
+		// What todo when jatos.js is finished initializing
+		jatos.onLoad(function() {
+			// Wait for any key press and start next component
+			$(document).keydown(function(event) {
+				// Send back some result data to JATOS
+				var componentResultData = "These are some very scientific result data.";
+				jatos.startNextComponent(componentResultData);
+			});
+			jatos.addAbortButton();
+		});
+	</script>
+</body>
+</html>

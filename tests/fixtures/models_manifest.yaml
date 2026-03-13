@@ -1,0 +1,4 @@
+models:
+  - name: bayesian_fair_coin
+  - name: representativeness
+rationale: Fixture for tests.

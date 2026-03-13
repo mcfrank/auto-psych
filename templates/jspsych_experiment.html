@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Experiment</title>
+  <script src="https://unpkg.com/jspsych@8.2.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+  <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <style>
+    #progress-wrap { position: fixed; top: 0; left: 0; right: 0; height: 6px; background: #e0e0e0; z-index: 10000; }
+    #progress-fill { height: 100%; width: 0%; background: #4a90d9; transition: width 0.2s ease; }
+    .jspsych-btn-auto { padding: 12px 28px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; background: #4a90d9; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .jspsych-btn-auto:hover { background: #3a7bc8; }
+  </style>
+  <script src="/jatos.js"></script>
+</head>
+<body>
+  <div id="progress-wrap"><div id="progress-fill"></div></div>
+</body>
+<script>
+  // Injected by pipeline
+  const consentHtml = {{CONSENT_HTML}};
+  const instructionsHtml = {{INSTRUCTIONS_HTML}};
+  const trialVariables = {{STIMULI_JSON}};
+  const trialChoices = {{TRIAL_CHOICES_JSON}};
+  const debriefHtml = {{DEBRIEF_HTML}};
+
+  // Capture participant_id from URL (?participant_id=xxx) for Prolific/simulated participants
+  function getUrlParam(name) {
+    var m = new RegExp('[?&]' + name + '=([^&]*)').exec(typeof window !== 'undefined' && window.location ? window.location.search : '');
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  var urlParticipantId = getUrlParam('participant_id');
+  if (urlParticipantId && typeof window !== 'undefined') window.__participantId = urlParticipantId;
+
+  const onFinish = typeof jatos !== 'undefined'
+    ? function() { jatos.startNextComponent(jsPsych.data.get().json()); }
+    : function() {
+        var data = jsPsych.data.get().values();
+        console.log(data);
+        if (typeof window !== 'undefined') window.__experimentData = data;
+        fetch('/auto_psych_config.json').then(function(r){
+          if (!r.ok) { console.warn('[auto-psych] /auto_psych_config.json failed:', r.status); return null; }
+          return r.json();
+        }).then(function(cfg){
+          if (cfg && cfg.project_id != null && cfg.run_id != null) {
+            var payload = { run_id: cfg.run_id, project_id: cfg.project_id,
+              participant_id: (typeof window !== 'undefined' && window.__participantId != null) ? window.__participantId : Date.now(),
+              trials: data };
+            fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+              .then(function(res){ console.log('[auto-psych] POST /submit', res.status, res.ok ? 'OK' : 'FAIL'); })
+              .catch(function(e){ console.warn('[auto-psych] POST /submit error', e); });
+          } else {
+            console.log('[auto-psych] No Firebase config (project_id/run_id); skipping POST /submit');
+          }
+        }).catch(function(e){ console.warn('[auto-psych] Config fetch error', e); });
+      };
+
+  const jsPsych = initJsPsych({ on_finish: onFinish });
+  if (typeof window !== 'undefined' && window.__participantId) jsPsych.data.addProperties({ participant_id: window.__participantId });
+  const timeline = [];
+
+  var totalTrials = trialVariables.length;
+  var completedTrials = 0;
+  function updateProgress() {
+    var el = document.getElementById('progress-fill');
+    if (el && totalTrials > 0) el.style.width = (100 * completedTrials / totalTrials) + '%';
+  }
+
+  function styledButtonHtml(choice) {
+    return '<button class="jspsych-btn jspsych-btn-auto">' + choice + '</button>';
+  }
+
+  // 1. Consent – button "I agree"
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: consentHtml,
+    choices: ['I agree'],
+    button_html: styledButtonHtml
+  });
+
+  // 2. Instructions – button "Next"
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: instructionsHtml,
+    choices: ['Next'],
+    button_html: styledButtonHtml,
+    post_trial_gap: 1000
+  });
+
+  // 3. Trials: for each stimulus, [fixation 500ms, then main trial] (keyboard)
+  const fixation = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '<div style="text-align:center; font-size:48px;">+</div>',
+    choices: 'NO_KEYS',
+    trial_duration: 500
+  };
+  const trial = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: jsPsych.timelineVariable('stimulus_display'),
+    choices: trialChoices,
+    data: {
+      sequence_a: jsPsych.timelineVariable('sequence_a'),
+      sequence_b: jsPsych.timelineVariable('sequence_b'),
+      task: 'judgment'
+    },
+    on_finish: function(data) {
+      data.chose_left = (data.response === 'f' || data.response === 'ArrowLeft');
+      completedTrials++;
+      updateProgress();
+    }
+  };
+  timeline.push({
+    timeline: [fixation, trial],
+    timeline_variables: trialVariables,
+    randomize_order: true
+  });
+
+  // 4. Debrief – button "End"
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: debriefHtml,
+    choices: ['End'],
+    button_html: styledButtonHtml
+  });
+
+  jsPsych.run(timeline);
+</script>
+</html>
