@@ -654,7 +654,8 @@ def _collect_from_browser(
                                 })
                     finally:
                         browser.close()
-            log_status(f"Done. Got {len(rows)} response rows.")
+            finally:
+                log_status(f"Done. Got {len(rows)} response rows.")
     finally:
         if server_proc is not None and server_proc.poll() is None:
             server_proc.terminate()
