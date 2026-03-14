@@ -1,14 +1,15 @@
-"""Theorist agent: select models and generate one .py file per model."""
+"""Theorist agent: add one theory per LLM call; iterate until 2–3 (run 1) or 1+ new (run 2+)."""
 
-import re
+import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
-from src.config import agent_dir, run_dir
-from src.agents.base import get_llm, load_prompt_for_run, invoke_llm
+from src.config import agent_dir, run_dir, DEFAULT_MAX_VALIDATION_RETRIES
+from src.agents.base import load_prompt_for_run, invoke_llm
 from src.console_log import agent_header, log_status
+from src.observability import agent_log, write_transcript
 from src.registry import load_registry
 from src.agents.llm_output_parsing import (
     ensure_str,
@@ -18,151 +19,153 @@ from src.agents.llm_output_parsing import (
 from src.models.randomness import MODEL_LIBRARY
 from src.registry import load_registry, write_registry, DEFAULT_RESERVED_FOR_NEW
 
+# Run 1: need 2–3 theories total (2–3 calls). Run 2+: need at least 1 new theory.
+MIN_THEORIES_RUN1 = 2
+MAX_ITERATIONS_RUN1 = 3
+MIN_NEW_THEORIES_RUN2_PLUS = 1
+MAX_ITERATIONS_RUN2_PLUS = 5
+
 
 def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
     """
-    Read problem definition and optional interpreter report; use LLM to produce
-    a model manifest and one Python file per model; write models_manifest.yaml,
-    rationale.md, and <model_name>.py for each model.
+    Iteratively call the LLM to add one theory per turn. Run 1: add 2–3 theories
+    (2–3 calls). Run 2+: copy previous run's theories and add at least 1 new (1+ calls).
+    Write models_manifest.yaml, rationale.md, and <model_name>.py for each model.
     """
     project_id = state["project_id"]
     run_id = state["run_id"]
-    # Reset validation retry state when this agent is entered from a different agent's validation
     if state.get("last_validated_agent") != "1_theory":
         state = {**state, "validation_retry_count": 0, "validation_feedback": ""}
-    agent_header("1_theory", run_id, state.get("total_runs"), state.get("mode"))
-    if state.get("validation_retry_count", 0) > 0:
-        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
+    if state.get("validation_retry_count", 0) == 0:
+        agent_header("1_theory", run_id, state.get("total_runs"), state.get("mode"))
+    elif state.get("validation_retry_count", 0) > 0:
+        max_r = state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
+        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})")
     out_dir = agent_dir(project_id, run_id, "1_theory")
     out_dir.mkdir(parents=True, exist_ok=True)
+    attempt = (state.get("validation_retry_count") or 0) + 1
+    validation_feedback = (state.get("validation_feedback") or "").strip()
+    agent_log(out_dir, "=== 1_theory start (iterative) ===")
+    agent_log(out_dir, f"project_id={project_id!r} run_id={run_id} attempt={attempt}")
+    if validation_feedback:
+        agent_log(out_dir, f"Validation feedback: {validation_feedback[:500]}")
 
     prob_path = Path(state["problem_definition_path"])
     problem_text = prob_path.read_text(encoding="utf-8") if prob_path.exists() else ""
-
     interpreter_path = state.get("interpreter_report_path")
     interpreter_text = ""
     if interpreter_path:
         p = Path(interpreter_path)
         if p.exists():
             interpreter_text = p.read_text(encoding="utf-8")
-
     prompt = load_prompt_for_run(project_id, run_id, "1_theory")
     available_models = list(MODEL_LIBRARY.keys())
 
-    validation_feedback = (state.get("validation_feedback") or "").strip()
-    user_content = ""
-    if validation_feedback:
-        user_content += f"""## Validation feedback (previous attempt failed)
-
-{validation_feedback}
-
-Please fix the output so it passes validation. Then output your YAML and code blocks as below.
-
-"""
-    user_content += f"""## Run context
-
-This is **Run {run_id}** of the pipeline.
-"""
+    # Run 2+: copy previous run's 1_theory into out_dir so we retain existing theories
+    current_models: List[Dict[str, Any]] = []
+    new_models_this_run = 0
     if run_id >= 2:
-        user_content += f"""For Run 2 and later you must **not overwrite the old theories**: retain the previous run's theories (list them in your manifest and provide their code), and **add at least one new theory**. New theories can be clones or variants with modifications; name them so the relationship is clear (e.g. bayesian_fair_coin_v2, representativeness_alternating_bias). Use the interpreter report and theory probabilities below to decide what to retain and what new theory or theories to add.
+        _copy_previous_run_theories(project_id, run_id, out_dir)
+        current_models = _load_current_manifest(out_dir)
+        agent_log(out_dir, f"loaded {len(current_models)} existing models from previous run")
 
-"""
-    user_content += f"""## Problem definition
+    min_new = MIN_NEW_THEORIES_RUN2_PLUS if run_id >= 2 else 0
+    min_total_run1 = MIN_THEORIES_RUN1
+    max_iterations = MAX_ITERATIONS_RUN2_PLUS if run_id >= 2 else MAX_ITERATIONS_RUN1
 
-{problem_text}
+    iteration = 0
+    rationales: List[str] = []
 
-"""
-    # Previous run's theory probabilities (so theorist sees what interpreter left)
-    if run_id >= 2:
-        prev_registry_path = run_dir(project_id, run_id - 1) / "model_registry.yaml"
-        prev_reg = load_registry(prev_registry_path)
-        prev_theories = prev_reg.get("theories") or {}
-        if prev_theories:
-            probs_str = "\n".join(f"  {k}: {v}" for k, v in sorted(prev_theories.items()))
-            user_content += f"""## Previous run's theory probabilities (Run {run_id - 1})
-
-The interpreter from Run {run_id - 1} left these probabilities. Use them to inform which theories to retain and which new theory (or theories) to add. You must add at least one new theory; name derived or variant theories clearly (e.g. <base>_v2 or <base>_<modification>).
-
-```yaml
-{probs_str}
-```
-
-"""
-    if interpreter_text:
-        user_content += f"""## Interpreter report from Run {run_id - 1}
-
-{interpreter_text}
-
-"""
-    user_content += f"""## Available models in the library (for reference; you may implement these or your own)
-
-{chr(10).join('- ' + m for m in available_models)}
-
-You must output two things. The pipeline extracts your response and writes files; if you do not output the code blocks below, no .py files will be created and the run will fail.
-
-1) A YAML block (between ---BEGIN YAML--- and ---END YAML---) with the list of models and a short rationale.
-2) For EVERY model in that list, a separate fenced Python code block. Each block must start with a line ```python and the first line inside must be: # file: <model_name>.py (same name as in the YAML). Then the full Python code for that model: a function(stimulus, response_options) that returns a dict mapping each response option to a probability (sum to 1).
-
-Example for one model named bayesian_fair_coin:
-
----BEGIN YAML---
-models:
-  - name: bayesian_fair_coin
-rationale: |
-  Short rationale.
----END YAML---
-
-```python
-# file: bayesian_fair_coin.py
-def bayesian_fair_coin(stimulus, response_options):
-    seq_a, seq_b = stimulus
-    # ... compute probs ...
-    return {{response_options[0]: p_a, response_options[1]: p_b}}
-```
-
-Output your YAML block first, then one ```python ... ``` block per model (same order as in the YAML). Every model in the manifest must have a corresponding code block.
-"""
-
-    try:
-        response = invoke_llm(system=prompt, user=user_content)
-    except Exception:
-        response = ""
-    response = ensure_str(response)
-    # Parse YAML from response (shared helper handles literal \n and fence variants)
-    manifest = extract_yaml_from_response(response) or _default_manifest(available_models, response)
-    model_names = [m.get("name") for m in manifest.get("models", []) if m.get("name")]
-
-    (out_dir / "models_manifest.yaml").write_text(yaml.dump(manifest, default_flow_style=False), encoding="utf-8")
-    rationale = manifest.get("rationale", response)
-    if isinstance(rationale, str):
-        (out_dir / "rationale.md").write_text(rationale, encoding="utf-8")
-    else:
-        (out_dir / "rationale.md").write_text(str(rationale), encoding="utf-8")
-
-    # Extract Python code blocks (shared helper normalizes literal \n) and write <model_name>.py
-    extracted = _extract_python_blocks_with_names(response, model_names)
-    for model_name, code in extracted:
-        if code and model_name:
-            (out_dir / f"{model_name}.py").write_text(code, encoding="utf-8")
-    # If we expected code but got none, save raw response for debugging
-    if model_names and not extracted:
-        (out_dir / "_last_theorist_response.txt").write_text(
-            str(response)[:50000], encoding="utf-8"
+    while iteration < max_iterations:
+        iteration += 1
+        user_content = _build_theorist_user_message(
+            run_id=run_id,
+            current_models=current_models,
+            problem_text=problem_text,
+            interpreter_text=interpreter_text,
+            validation_feedback=validation_feedback if iteration == 1 else "",
+            state=state,
+            available_models=available_models,
+            iteration=iteration,
+            new_models_this_run=new_models_this_run,
         )
 
-    # Create or update this run's model registry (per-run; probabilities sum to 1)
+        agent_log(out_dir, f"invoking LLM (theory iteration {iteration})...")
+        try:
+            response = invoke_llm(system=prompt, user=user_content, timeout=300)
+        except Exception as e:
+            agent_log(out_dir, f"LLM invoke error: {type(e).__name__}: {e}")
+            response = ""
+        response = ensure_str(response)
+        agent_log(out_dir, f"LLM response length={len(response)} chars")
+        write_transcript(
+            out_dir, iteration,
+            system=prompt, user=user_content, response=response[:100_000],
+            validation_feedback=validation_feedback if iteration == 1 else "",
+        )
+
+        model_name, rationale, code, done = _parse_single_model_response(response)
+        if model_name and code:
+            current_models.append({"name": model_name, "rationale": rationale or ""})
+            if run_id >= 2:
+                new_models_this_run += 1
+            # File must match manifest name so validators find it
+            (out_dir / f"{model_name}.py").write_text(code, encoding="utf-8")
+            agent_log(out_dir, f"added model {model_name!r} ({model_name}.py)")
+            if rationale:
+                rationales.append(f"- **{model_name}**: {rationale}")
+        else:
+            agent_log(out_dir, "no model or code extracted; saving raw response")
+            if response:
+                (out_dir / f"_last_response_iteration_{iteration}.txt").write_text(
+                    response[:50000], encoding="utf-8"
+                )
+
+        # Stop when agent says DONE and we have enough
+        if run_id == 1:
+            enough = len(current_models) >= min_total_run1
+        else:
+            enough = new_models_this_run >= min_new
+        if done and enough:
+            agent_log(out_dir, f"DONE with {len(current_models)} models (new this run: {new_models_this_run})")
+            break
+        if done and not enough and iteration >= max_iterations:
+            break
+        if not done and iteration >= max_iterations:
+            agent_log(out_dir, f"reached max iterations {max_iterations}")
+            break
+
+    model_names = [m["name"] for m in current_models if m.get("name")]
+    # Ensure we have at least one model for validation (fallback to library)
+    if not model_names:
+        model_names = available_models[:2]
+        current_models = [{"name": n, "rationale": "Fallback (no model extracted)"} for n in model_names]
+        agent_log(out_dir, f"fallback manifest: {model_names}")
+
+    manifest = {
+        "models": current_models,
+        "rationale": "\n".join(rationales) if rationales else "Theories added iteratively.",
+    }
+    (out_dir / "models_manifest.yaml").write_text(
+        yaml.dump(manifest, default_flow_style=False), encoding="utf-8"
+    )
+    (out_dir / "rationale.md").write_text(
+        manifest.get("rationale", ""), encoding="utf-8"
+    )
+    agent_log(out_dir, f"wrote manifest (models={model_names})")
+    agent_log(out_dir, "=== 1_theory end ===")
+
+    # Registry (unchanged logic)
     registry_path = Path(state.get("registry_path", ""))
     if not registry_path or not str(registry_path).strip() or registry_path.resolve().is_dir():
         registry_path = run_dir(project_id, run_id) / "model_registry.yaml"
     if registry_path:
         if run_id == 1:
-            # Run 1: uniform prior over current models, reserve 0.25 for new
             k = len(model_names) or 1
             prob_each = (1.0 - DEFAULT_RESERVED_FOR_NEW) / k
             theories = {m: prob_each for m in model_names}
             write_registry(registry_path, theories, reserved_for_new=DEFAULT_RESERVED_FOR_NEW)
         else:
-            # Run n >= 2: merge previous run's registry with current model set; renormalize
             prev_registry = run_dir(project_id, run_id - 1) / "model_registry.yaml"
             prev = load_registry(prev_registry)
             prev_theories = prev.get("theories") or {}
@@ -181,7 +184,6 @@ Output your YAML block first, then one ```python ... ``` block per model (same o
                 for m in new_in_current:
                     theories[m] = each_new
             elif theories and abs(sum(theories.values()) - 1.0) > 1e-6:
-                # No new models; scale existing to sum to 1
                 s = sum(theories.values())
                 if s > 0:
                     theories = {m: p / s for m, p in theories.items()}
@@ -194,37 +196,133 @@ Output your YAML block first, then one ```python ... ``` block per model (same o
     }
 
 
-def _default_manifest(available_models: List[str], response: str) -> Dict[str, Any]:
-    """Fallback when YAML cannot be parsed."""
-    return {
-        "models": [{"name": n} for n in available_models[:2]],
-        "rationale": (response or "")[:500],
-    }
+def _copy_previous_run_theories(project_id: str, run_id: int, out_dir: Path) -> None:
+    """Copy previous run's 1_theory/*.py and models_manifest.yaml into out_dir."""
+    prev_dir = run_dir(project_id, run_id - 1) / "1_theory"
+    if not prev_dir.exists():
+        return
+    manifest_path = prev_dir / "models_manifest.yaml"
+    if manifest_path.exists():
+        shutil.copy2(manifest_path, out_dir / "models_manifest.yaml")
+    for py_file in prev_dir.glob("*.py"):
+        if not py_file.name.startswith("_"):
+            shutil.copy2(py_file, out_dir / py_file.name)
 
 
-def _extract_python_blocks_with_names(
-    response: str, model_names: List[str]
-) -> List[Tuple[str, str]]:
+def _load_current_manifest(out_dir: Path) -> List[Dict[str, Any]]:
+    """Load current models list from models_manifest.yaml if it exists."""
+    path = out_dir / "models_manifest.yaml"
+    if not path.exists():
+        return []
+    try:
+        data = yaml.safe_load(path.read_text(encoding="utf-8"))
+        if isinstance(data, dict) and "models" in data and isinstance(data["models"], list):
+            return list(data["models"])
+    except Exception:
+        pass
+    return []
+
+
+def _build_theorist_user_message(
+    run_id: int,
+    current_models: List[Dict[str, Any]],
+    problem_text: str,
+    interpreter_text: str,
+    validation_feedback: str,
+    state: Dict[str, Any],
+    available_models: List[str],
+    iteration: int,
+    new_models_this_run: int,
+) -> str:
+    """Build the user message for one iteration."""
+    parts = []
+    if validation_feedback:
+        parts.append(f"""## Validation feedback (previous attempt failed)
+
+{validation_feedback}
+
+Please fix the output so it passes validation. Output one YAML block, one Python block, then ---DONE--- or ---ADD_ANOTHER---.
+
+""")
+    parts.append(f"""## Run context
+
+This is **Run {run_id}** of the pipeline. This is **iteration {iteration}** (one theory per turn).
+
+""")
+    if run_id >= 2:
+        parts.append(f"So far this run you have added **{new_models_this_run}** new theory/theories. You must add at least one; say ---ADD_ANOTHER--- to add one more, or ---DONE--- when finished.\n\n")
+    else:
+        parts.append("You must add 2–3 theories total. Say ---ADD_ANOTHER--- to add one more, or ---DONE--- when you have added at least 2.\n\n")
+
+    if current_models:
+        names = [m.get("name", "") for m in current_models if m.get("name")]
+        parts.append(f"""## Current manifest (already in this run)
+
+{chr(10).join('- ' + n for n in names)}
+
+""")
+    if run_id >= 2:
+        prev_registry_path = run_dir(state["project_id"], run_id - 1) / "model_registry.yaml"
+        prev_reg = load_registry(prev_registry_path)
+        prev_theories = prev_reg.get("theories") or {}
+        if prev_theories:
+            probs_str = "\n".join(f"  {k}: {v}" for k, v in sorted(prev_theories.items()))
+            parts.append(f"""## Previous run's theory probabilities (Run {run_id - 1})
+
+```yaml
+{probs_str}
+```
+
+""")
+    if interpreter_text:
+        parts.append(f"""## Interpreter report from Run {run_id - 1}
+
+{interpreter_text}
+
+""")
+    parts.append(f"""## Problem definition
+
+{problem_text}
+
+## Available models in the library (for reference)
+
+{chr(10).join('- ' + m for m in available_models)}
+
+Output exactly: (1) one YAML block with one model (name + optional rationale), (2) one ```python block with # file: <model_name>.py and the function, (3) then ---DONE--- or ---ADD_ANOTHER---.
+""")
+    return "".join(parts)
+
+
+def _parse_single_model_response(response: str) -> Tuple[Optional[str], str, str, bool]:
     """
-    Extract fenced Python blocks (via shared helper) and pair each with a filename.
-    If a block's first line is `# file: <name>.py`, use that name; else use model_names by order.
-    Returns [(model_name, code), ...].
+    Parse one model name, rationale, one code block, and DONE vs ADD_ANOTHER.
+    Returns (model_name, rationale, code, done).
     """
+    data = extract_yaml_from_response(response)
+    model_name = None
+    rationale = ""
+    if data:
+        if "models" in data and isinstance(data["models"], list) and data["models"]:
+            first = data["models"][0]
+            if isinstance(first, dict):
+                model_name = first.get("name")
+                rationale = first.get("rationale", "") or ""
+            elif isinstance(first, str):
+                model_name = first
+        elif data.get("name"):
+            model_name = data["name"]
+            rationale = data.get("rationale", "") or ""
+
     blocks = extract_fenced_blocks(
-        response, language="python", normalize=True, min_length=20
+        ensure_str(response), language="python", normalize=True, min_length=20
     )
-    result = []
-    for i, code in enumerate(blocks):
-        first_line, _, _ = code.partition("\n")
-        match = re.match(
-            r"#\s*file\s*:\s*([^\s.]+)(?:\.py)?\s*$",
-            first_line.strip(),
-            re.IGNORECASE,
-        )
-        if match:
-            name = match.group(1).strip()
-        else:
-            name = model_names[i] if i < len(model_names) else ""
-        if name:
-            result.append((name, code))
-    return result
+    code = blocks[0] if blocks else ""
+
+    # Prefer filename from code block for the actual .py name
+    resp_upper = (response or "").upper()
+    done = "---DONE---" in resp_upper
+    if "---ADD_ANOTHER---" in resp_upper:
+        done = False
+    return (model_name, rationale, code, done)
+
+

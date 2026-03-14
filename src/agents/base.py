@@ -11,14 +11,21 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from src.config import PROMPTS_DIR, project_prompts_dir, prompts_used_dir
 
 
-def get_llm():
+# Default request timeout (seconds); theorist and other heavy agents can override
+DEFAULT_LLM_TIMEOUT = 300
+
+
+def get_llm(timeout: int | None = None):
     """Return ChatGoogleGenerativeAI configured for gemini-3.1-pro-preview."""
     api_key = os.environ.get("GOOGLE_API_KEY") or _read_secret("GOOGLE_API_KEY")
-    return ChatGoogleGenerativeAI(
+    kwargs = dict(
         model="gemini-3.1-pro-preview",
         google_api_key=api_key,
         temperature=0.2,
     )
+    if timeout is not None:
+        kwargs["request_timeout"] = timeout
+    return ChatGoogleGenerativeAI(**kwargs)
 
 
 def _read_secret(key: str) -> str | None:
@@ -56,15 +63,18 @@ def load_prompt_for_run(project_id: str, run_id: int, agent_key: str) -> str:
     return ""
 
 
-def invoke_llm(system: str, user: str, llm=None) -> str:
-    """Send system + user to LLM and return content string."""
+def invoke_llm(system: str, user: str, llm=None, timeout: int | None = None) -> str:
+    """Send system + user to LLM and return content string. timeout: seconds (default from get_llm)."""
     if llm is None:
-        llm = get_llm()
+        llm = get_llm(timeout=timeout or DEFAULT_LLM_TIMEOUT)
     messages = [
         SystemMessage(content=system),
         HumanMessage(content=user),
     ]
-    response = llm.invoke(messages)
+    invoke_kwargs = {}
+    if timeout is not None:
+        invoke_kwargs["timeout"] = timeout
+    response = llm.invoke(messages, **invoke_kwargs)
     content = response.content if hasattr(response, "content") else response
     if isinstance(content, list):
         return " ".join(

@@ -26,6 +26,10 @@ class PipelineState(TypedDict, total=False):
     # Set by simulated_participant for data_analyst to read
     simulated_data_path: str
 
+    # Pipeline defaults (overridable via CLI)
+    simulated_n_participants: int
+    max_validation_retries: int
+
     # Validation loop: feedback for retry, result of last validation, retry count per agent
     validation_feedback: str
     validation_ok: bool

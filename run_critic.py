@@ -4,8 +4,8 @@ Run validators on a run (or a single agent) and write results to the run directo
 Exits with non-zero status if any validation fails.
 
 Usage:
-  python run_critic.py --project subjective_randomness --run 1
-  python run_critic.py --project subjective_randomness --run 1 --agent 1_theory
+  python3 run_critic.py --project subjective_randomness --run 1
+  python3 run_critic.py --project subjective_randomness --run 1 --agent 1_theory
 """
 
 import argparse

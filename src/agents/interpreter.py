@@ -6,9 +6,10 @@ import json
 import yaml
 from collections import defaultdict
 
-from src.config import agent_dir, run_dir
-from src.agents.base import get_llm, load_prompt_for_run, invoke_llm
+from src.config import agent_dir, run_dir, DEFAULT_MAX_VALIDATION_RETRIES
+from src.agents.base import load_prompt_for_run, invoke_llm
 from src.console_log import agent_header, log_status
+from src.observability import agent_log, write_transcript
 from src.agents.llm_output_parsing import extract_yaml_from_response, ensure_str
 from src.models.loader import get_model_names_from_manifest
 from src.models.randomness import MODEL_LIBRARY, get_model_predictions
@@ -158,11 +159,19 @@ def run_interpreter(state: Dict[str, Any]) -> Dict[str, Any]:
     # Reset validation retry state when this agent is entered from a different agent's validation
     if state.get("last_validated_agent") != "6_interpret":
         state = {**state, "validation_retry_count": 0, "validation_feedback": ""}
-    agent_header("6_interpret", run_id, state.get("total_runs"), state.get("mode"))
-    if state.get("validation_retry_count", 0) > 0:
-        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
+    if state.get("validation_retry_count", 0) == 0:
+        agent_header("6_interpret", run_id, state.get("total_runs"), state.get("mode"))
+    elif state.get("validation_retry_count", 0) > 0:
+        max_r = state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
+        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})")
     out_dir = agent_dir(project_id, run_id, "6_interpret")
     out_dir.mkdir(parents=True, exist_ok=True)
+    attempt = (state.get("validation_retry_count") or 0) + 1
+    validation_feedback = (state.get("validation_feedback") or "").strip()
+    agent_log(out_dir, "=== 6_interpret start ===")
+    agent_log(out_dir, f"project_id={project_id!r} run_id={run_id} attempt={attempt}")
+    if validation_feedback:
+        agent_log(out_dir, f"Validation feedback: {validation_feedback[:500]}")
 
     # Merge data from runs 1..run_id so interpreter sees all data
     merged_csv, aggregate_lines, summary = _merge_aggregates_and_summary(project_id, run_id)
@@ -261,11 +270,19 @@ reserved_for_new: 0.25
 The probabilities should sum to (1 - reserved_for_new). Reserve 0.25 for new theories the theorist may add. Use the model names listed under "Models used" above.
 """
 
+    agent_log(out_dir, "invoking LLM (interpret)...")
     try:
         full_response = invoke_llm(system=prompt, user=user_content)
-    except Exception:
+    except Exception as e:
+        agent_log(out_dir, f"LLM invoke error: {type(e).__name__}: {e}")
         full_response = _fallback_report(summary, aggregate_lines, model_names)
     full_response = ensure_str(full_response)
+    agent_log(out_dir, f"LLM response length={len(full_response)} chars")
+    write_transcript(
+        out_dir, attempt,
+        system=prompt, user=user_content, response=full_response[:100_000],
+        validation_feedback=validation_feedback,
+    )
     # Strip out the YAML block for the report body
     report = full_response
     if "---BEGIN THEORY PROBABILITIES---" in full_response and "---END THEORY PROBABILITIES---" in full_response:
@@ -298,6 +315,8 @@ The probabilities should sum to (1 - reserved_for_new). Reserve 0.25 for new the
             )
             write_registry(registry_path, probs, reserved_for_new=reserved)
 
+    agent_log(out_dir, "wrote report.md, theory_probabilities.yaml")
+    agent_log(out_dir, "=== 6_interpret end ===")
     return {
         **state,
         "interpreter_report_path": str(out_dir / "report.md"),

@@ -15,8 +15,9 @@ import urllib.request
 import urllib.parse
 from datetime import datetime
 
-from src.config import agent_dir, run_dir
+from src.config import agent_dir, run_dir, DEFAULT_MAX_VALIDATION_RETRIES
 from src.console_log import agent_header, log_status
+from src.observability import agent_log
 from src.models.randomness import MODEL_LIBRARY, get_model_predictions
 
 RESPONSE_OPTIONS = ["left", "right"]
@@ -313,11 +314,20 @@ def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
     # Reset validation retry state when this agent is entered from a different agent's validation
     if state.get("last_validated_agent") != "4_collect":
         state = {**state, "validation_retry_count": 0, "validation_feedback": ""}
-    agent_header("4_collect", run_id, state.get("total_runs"), state.get("mode"))
-    if state.get("validation_retry_count", 0) > 0:
-        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
+    if state.get("validation_retry_count", 0) == 0:
+        agent_header("4_collect", run_id, state.get("total_runs"), state.get("mode"))
+    elif state.get("validation_retry_count", 0) > 0:
+        max_r = state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
+        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})")
     out_dir = agent_dir(project_id, run_id, "4_collect")
     out_dir.mkdir(parents=True, exist_ok=True)
+    attempt = (state.get("validation_retry_count") or 0) + 1
+    validation_feedback = (state.get("validation_feedback") or "").strip()
+    agent_log(out_dir, "=== 4_collect start ===")
+    agent_log(out_dir, f"project_id={project_id!r} run_id={run_id} attempt={attempt}")
+    if validation_feedback:
+        agent_log(out_dir, f"Validation feedback: {validation_feedback[:500]}")
+
     logs_dir = out_dir / "logs"
     logs_dir.mkdir(exist_ok=True)
 
@@ -336,6 +346,7 @@ def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
     experiment_url = config.get("experiment_url")
     results_api_url = config.get("results_api_url")
 
+    agent_log(out_dir, f"n_participants={n_participants} experiment_url={bool(experiment_url)} results_api_url={bool(results_api_url)}")
     if results_api_url:
         rows = _collect_from_firebase(config, results_api_url, n_participants, out_dir, logs_dir)
     elif experiment_url:
@@ -344,6 +355,7 @@ def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
         rows = _generate_from_models(stimuli, model_names, n_participants)
 
     csv_path = out_dir / "responses.csv"
+    agent_log(out_dir, f"collected n_rows={len(rows) if rows else 0}")
     if rows:
         fieldnames = list(rows[0].keys())
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
@@ -353,6 +365,8 @@ def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
 
     (logs_dir / "n_participants.txt").write_text(str(n_participants), encoding="utf-8")
     (logs_dir / "model_names.txt").write_text("\n".join(model_names), encoding="utf-8")
+    agent_log(out_dir, f"wrote {csv_path.name}")
+    agent_log(out_dir, "=== 4_collect end ===")
 
     return {
         **state,

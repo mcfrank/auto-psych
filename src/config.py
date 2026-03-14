@@ -4,6 +4,10 @@ from pathlib import Path
 
 # Repo root (parent of src/)
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+# Top-level pipeline defaults (overridable via run_pipeline.py CLI)
+DEFAULT_SIMULATED_N_PARTICIPANTS = 5
+DEFAULT_MAX_VALIDATION_RETRIES = 3
 PROJECTS_DIR = REPO_ROOT / "projects"
 PROMPTS_DIR = REPO_ROOT / "prompts"
 SECRETS_PATH = REPO_ROOT / ".secrets"

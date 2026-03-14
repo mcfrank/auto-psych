@@ -6,7 +6,7 @@ A 6-agent pipeline for psychology experiments: theory → design → implement (
 
 | # | Agent | Role | Key outputs |
 |---|-------|------|-------------|
-| 1 | **Theory** | Proposes models (theories) and implements them as Python callables; run 1 uses a uniform prior, run n ≥ 2 reads run n−1 interpreter and adds/renormalizes theories in the run’s model registry. | `1_theory/models_manifest.yaml`, `1_theory/*.py`, `model_registry.yaml` (run dir) |
+| 1 | **Theory** | Adds **one theory per LLM call**. Run 1: 2–3 calls to add 2–3 models; run 2+: copies previous run’s theories and adds at least one new (1+ calls). Each call outputs one YAML model + one Python file, then ---DONE--- or ---ADD_ANOTHER---. | `1_theory/models_manifest.yaml`, `1_theory/*.py`, `model_registry.yaml` (run dir) |
 | 2 | **Design** | Generates a design script that scores stimuli by expected information gain (EIG) using the registry’s theory probabilities; selects top stimuli. | `2_design/stimuli.json`, `design_rationale.md` |
 | 3 | **Implement** | Fills the jsPsych template; then runs deploy step (local server or Firebase), writes config. | `3_implement/index.html`, `stimuli.json`, `config.json` |
 | 4 | **Collect data** | Simulated mode: opens the experiment in a browser (or Firebase), collects responses and writes CSV. Real mode not yet implemented. | `4_collect/responses.csv` |
@@ -14,6 +14,15 @@ A 6-agent pipeline for psychology experiments: theory → design → implement (
 | 6 | **Interpret** | Compares data (merged over runs 1..n) to model predictions; writes a report and updates theory probabilities in the run's registry. | `6_interpret/report.md`, `theory_probabilities.yaml`, `model_registry.yaml` (updated) |
 
 After each agent runs, a **validation** step runs automatically. If validation fails, the agent is re-invoked with feedback (up to 3 retries), then the pipeline continues to the next agent.
+
+### Observability and debugging
+
+Each agent writes to its run directory:
+
+- **`observability.log`** — Timestamped log of what the agent did: start/end, validation feedback (on retries), LLM invocation, file writes, and any errors. When validation fails, the validator also appends the failure reason here.
+- **`transcripts/`** — For agents that call the LLM (theory, design, interpret), one Markdown file per attempt: `transcripts/attempt_001.md`, etc. Each file contains the system prompt, user message, and full LLM response (and any validation feedback for that attempt), so you can see exactly what was sent and why it might have failed or timed out.
+
+The theory agent is called iteratively (one model per call) to reduce validation failures; each call has a 5-minute timeout.
 
 ## Requirements
 
@@ -75,42 +84,48 @@ If Firebase is not configured (no real project in `.firebaserc`), the deploy ste
 
 ```bash
 source venv/bin/activate
-python run_pipeline.py --project subjective_randomness --run 1 --mode simulated_participants
-python run_pipeline.py --project subjective_randomness --runs 3 --mode simulated_participants
+python3 run_pipeline.py --project subjective_randomness --run 1 --mode simulated_participants
+python3 run_pipeline.py --project subjective_randomness --runs 3 --mode simulated_participants
+python3 run_pipeline.py --project subjective_randomness --runs 2 --n-participants 10 --max-retries 5
 ```
 
 - `--project`: Project id (e.g. `subjective_randomness`); must have a `problem_definition.md` under `projects/<project>/`.
 - `--run`: Single run number (creates `projects/<project>/run<N>/`). Use this or `--runs`.
 - `--runs`: Number of runs to execute (1 through N). Each run gets its own directory; the theory agent in run n reads run n−1’s interpreter report and registry; the interpreter in run n sees merged data from runs 1..n.
 - `--mode`: `simulated_participants` or `live`.
+- `--n-participants`: Number of simulated participants per run (default: 5). Default is in `src/config.py` as `DEFAULT_SIMULATED_N_PARTICIPANTS`.
+- `--max-retries`: Max validation retries per agent before moving on (default: 3). Default in `src/config.py` as `DEFAULT_MAX_VALIDATION_RETRIES`.
 
-Validation runs **inside** the pipeline after each agent: if an agent’s output fails validation, the agent is re-run with the failure message (up to 3 retries), then execution continues.
+Validation runs **inside** the pipeline after each agent: if an agent’s output fails validation, the agent is re-run with the failure message (up to `--max-retries`), then execution continues.
 
 Prompts are resolved from `prompts/` with optional overrides in `projects/<project>/prompts/`. The resolved prompts used for each run are copied to `projects/<project>/run<N>/prompts_used/` for reproducibility.
 
 ## Running a single agent (debugging)
 
-To run one agent in isolation and observe its outputs without triggering the next agent:
+To run one agent in isolation (no validation loop, no next agent), use **`run_pipeline.py --agent`** or the convenience script **`run_agent.py`** (same options):
 
 ```bash
-python run_agent.py --project subjective_randomness --run 1 --agent 1_theory
-python run_agent.py --project subjective_randomness --run 2 --agent 2_design --state-from-run 1
-python run_agent.py --project subjective_randomness --run 1 --agent 1_theory --use-fixtures
+python3 run_pipeline.py --project subjective_randomness --run 1 --agent 1_theory
+python3 run_agent.py --project subjective_randomness --run 2 --agent 2_design --state-from-run 1
+python3 run_agent.py --project subjective_randomness --run 1 --agent 1_theory --use-fixtures
 ```
 
 - `--agent`: Agent to run (e.g. `1_theory`, `2_design`, `3_implement`, `4_collect`, `5_analyze`, `6_interpret`).
 - `--state-from-run R`: Load artifact paths from run `R` so you can re-run or run a downstream agent using outputs from a previous run.
 - `--use-fixtures`: Use minimal state with `tests/fixtures/` for missing inputs (no prior full run required).
+- `--n-participants`, `--max-retries`: Same as pipeline (used when running implement or for consistency).
 
-The script prints paths read and paths written to stderr.
+Use `python3` in the examples; on many systems `python` points to Python 2 or is missing. After `source venv/bin/activate`, `python` usually works too (venv’s `python` is Python 3).
+
+`run_agent.py` is a thin wrapper that calls `run_pipeline.py`; all parameters are defined in `run_pipeline.py`.
 
 ## Validating outputs (standalone critic)
 
 Validation is **built into the pipeline**: after each agent, the same checks run automatically and failed agents are re-invoked with feedback (see Agents above). You can also run the validators **standalone** (e.g. to audit a past run without re-running agents):
 
 ```bash
-python run_critic.py --project subjective_randomness --run 1
-python run_critic.py --project subjective_randomness --run 1 --agent 1_theory
+python3 run_critic.py --project subjective_randomness --run 1
+python3 run_critic.py --project subjective_randomness --run 1 --agent 1_theory
 ```
 
 - Exits 0 if all validations pass, 1 if any fail.
