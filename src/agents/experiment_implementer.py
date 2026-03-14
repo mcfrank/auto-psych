@@ -4,8 +4,9 @@ from pathlib import Path
 from typing import Any, Dict, List
 import json
 
-from src.config import REPO_ROOT, agent_dir
+from src.config import REPO_ROOT, agent_dir, DEFAULT_MAX_VALIDATION_RETRIES
 from src.console_log import agent_header, log_status
+from src.observability import agent_log
 from src.agents.deployer import run_deploy_logic
 
 
@@ -60,11 +61,19 @@ def run_experiment_implementer(state: Dict[str, Any]) -> Dict[str, Any]:
     # Reset validation retry state when this agent is entered from a different agent's validation
     if state.get("last_validated_agent") != "3_implement":
         state = {**state, "validation_retry_count": 0, "validation_feedback": ""}
-    agent_header("3_implement", run_id, state.get("total_runs"), state.get("mode"))
-    if state.get("validation_retry_count", 0) > 0:
-        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
+    if state.get("validation_retry_count", 0) == 0:
+        agent_header("3_implement", run_id, state.get("total_runs"), state.get("mode"))
+    elif state.get("validation_retry_count", 0) > 0:
+        max_r = state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
+        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})")
     out_dir = agent_dir(project_id, run_id, "3_implement")
     out_dir.mkdir(parents=True, exist_ok=True)
+    attempt = (state.get("validation_retry_count") or 0) + 1
+    validation_feedback = (state.get("validation_feedback") or "").strip()
+    agent_log(out_dir, "=== 3_implement start ===")
+    agent_log(out_dir, f"project_id={project_id!r} run_id={run_id} attempt={attempt}")
+    if validation_feedback:
+        agent_log(out_dir, f"Validation feedback: {validation_feedback[:500]}")
 
     stimuli_path = Path(state["stimuli_path"])
     raw_stimuli = json.loads(stimuli_path.read_text()) if stimuli_path.exists() else []
@@ -109,9 +118,12 @@ def run_experiment_implementer(state: Dict[str, Any]) -> Dict[str, Any]:
         (out_dir / "index.html").write_text(template_html, encoding="utf-8")
 
     (out_dir / "stimuli.json").write_text(json.dumps(stimuli_for_experiment, indent=2), encoding="utf-8")
+    agent_log(out_dir, f"wrote index.html, stimuli.json (n_stimuli={len(stimuli_for_experiment)})")
     state = {**state, "experiment_path": str(out_dir)}
     # Bundle deploy: deterministic step writes config.json to same dir
     state = run_deploy_logic(state, out_dir)
+    agent_log(out_dir, "deploy logic completed")
+    agent_log(out_dir, "=== 3_implement end ===")
     return state
 
 

@@ -4,6 +4,7 @@ from typing import Literal
 
 from langgraph.graph import StateGraph, END
 
+from src.config import DEFAULT_MAX_VALIDATION_RETRIES
 from src.state import PipelineState
 from src.agents.theorist import run_theorist
 from src.agents.experiment_designer import run_experiment_designer
@@ -13,7 +14,9 @@ from src.agents.data_analyst import run_data_analyst
 from src.agents.interpreter import run_interpreter
 from src.validation.validators import run_validation, NODE_TO_AGENT_KEY
 
-MAX_VALIDATION_RETRIES = 3
+def _max_retries(state: PipelineState) -> int:
+    """Max validation retries per agent (from state or default)."""
+    return state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
 
 
 def _validator_node(agent_key: str):
@@ -24,19 +27,19 @@ def _validator_node(agent_key: str):
 
 
 def _after_validate_theory(state: PipelineState) -> Literal["theory", "design"]:
-    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
+    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < _max_retries(state):
         return "theory"
     return "design"
 
 
 def _after_validate_design(state: PipelineState) -> Literal["design", "implement"]:
-    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
+    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < _max_retries(state):
         return "design"
     return "implement"
 
 
 def _after_validate_implement(state: PipelineState) -> Literal["implement", "collect", "analyze"]:
-    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
+    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < _max_retries(state):
         return "implement"
     if state.get("mode") == "simulated_participants":
         return "collect"
@@ -44,19 +47,19 @@ def _after_validate_implement(state: PipelineState) -> Literal["implement", "col
 
 
 def _after_validate_collect(state: PipelineState) -> Literal["collect", "analyze"]:
-    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
+    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < _max_retries(state):
         return "collect"
     return "analyze"
 
 
 def _after_validate_analyst(state: PipelineState) -> Literal["analyze", "interpret"]:
-    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
+    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < _max_retries(state):
         return "analyze"
     return "interpret"
 
 
 def _after_validate_interpret(state: PipelineState) -> Literal["interpret", "end"]:
-    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < MAX_VALIDATION_RETRIES:
+    if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < _max_retries(state):
         return "interpret"
     return "end"
 

@@ -280,6 +280,16 @@ def run_validation(state: Dict[str, Any], agent_key: str) -> Dict[str, Any]:
             "validation_retry_count": 0,
             "last_validated_agent": agent_key,
         }
+    # Log failure to agent's observability.log so it's visible in one place
+    try:
+        from src.observability import append_validation_failure
+        rdir_path = Path(rdir)
+        append_validation_failure(
+            rdir_path, agent_key, attempt=retry_count + 1,
+            message=v.message, details=v.details,
+        )
+    except Exception:
+        pass
     return {
         **state,
         "validation_ok": False,

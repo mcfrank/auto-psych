@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from src.config import REPO_ROOT, agent_dir
+from src.config import REPO_ROOT, agent_dir, DEFAULT_SIMULATED_N_PARTICIPANTS
 from src.console_log import agent_header, log_status
 
 # Port for local experiment server (so you can open experiment_url in a browser and agent 5 can visit it)
@@ -134,7 +134,7 @@ def run_deploy_logic(state: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
     }
 
     if mode == "simulated_participants":
-        config["simulated_n_participants"] = 5  # default
+        config["simulated_n_participants"] = state.get("simulated_n_participants", DEFAULT_SIMULATED_N_PARTICIPANTS)
         exp_dir = Path(experiment_path)
 
         experiment_url = None

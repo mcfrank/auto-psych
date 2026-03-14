@@ -11,27 +11,15 @@ import itertools
 import json
 import math
 import random
-from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
-OBSERVABILITY_LOG = "designer_observability.log"
-
-
-def _log(out_dir: Path, *lines: str) -> None:
-    """Append timestamped lines to designer_observability.log in out_dir."""
-    log_path = out_dir / OBSERVABILITY_LOG
-    ts = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    with open(log_path, "a", encoding="utf-8") as f:
-        for line in lines:
-            f.write(f"[{ts}] {line}\n")
-        f.flush()
-
-from src.config import agent_dir
+from src.config import agent_dir, DEFAULT_MAX_VALIDATION_RETRIES
 from src.agents.base import load_prompt_for_run, invoke_llm
 from src.console_log import agent_header, log_status
+from src.observability import agent_log, write_transcript
 from src.agents.llm_output_parsing import ensure_str, extract_fenced_blocks
 from src.models.loader import get_model_names_from_manifest
 from src.models.randomness import get_model_predictions, Stimulus
@@ -50,11 +38,19 @@ def run_experiment_designer(state: Dict[str, Any]) -> Dict[str, Any]:
     # Reset validation retry state when this agent is entered from a different agent's validation
     if state.get("last_validated_agent") != "2_design":
         state = {**state, "validation_retry_count": 0, "validation_feedback": ""}
-    agent_header("2_design", run_id, state.get("total_runs"), state.get("mode"))
-    if state.get("validation_retry_count", 0) > 0:
-        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/3)")
+    if state.get("validation_retry_count", 0) == 0:
+        agent_header("2_design", run_id, state.get("total_runs"), state.get("mode"))
+    elif state.get("validation_retry_count", 0) > 0:
+        max_r = state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
+        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})")
     out_dir = agent_dir(project_id, run_id, "2_design")
     out_dir.mkdir(parents=True, exist_ok=True)
+    attempt = (state.get("validation_retry_count") or 0) + 1
+    validation_feedback = (state.get("validation_feedback") or "").strip()
+    agent_log(out_dir, "=== 2_design start ===")
+    agent_log(out_dir, f"project_id={project_id!r} run_id={run_id} attempt={attempt}")
+    if validation_feedback:
+        agent_log(out_dir, f"Validation feedback: {validation_feedback[:500]}")
 
     manifest_path = Path(state["theorist_manifest_path"])
     manifest = yaml.safe_load(manifest_path.read_text()) if manifest_path.exists() else {}
@@ -66,17 +62,14 @@ def run_experiment_designer(state: Dict[str, Any]) -> Dict[str, Any]:
     registry_path = Path(state.get("registry_path", ""))
     model_weights = get_model_weights(registry_path) if registry_path and registry_path.exists() else {}
 
-    _log(out_dir, "=== experiment designer start ===")
-    _log(out_dir, f"project_id={project_id!r} run_id={run_id}")
-    _log(out_dir, f"registry_path={registry_path!s} exists={registry_path.exists() if registry_path else False}")
-    _log(out_dir, f"model_names={model_names}")
-    _log(out_dir, f"model_weights={model_weights if model_weights else '(uniform prior)'}")
+    agent_log(out_dir, f"registry_path={registry_path!s} exists={registry_path.exists() if registry_path else False}")
+    agent_log(out_dir, f"model_names={model_names}")
+    agent_log(out_dir, f"model_weights={model_weights if model_weights else '(uniform prior)'}")
 
     prob_path = Path(state["problem_definition_path"])
     problem_text = prob_path.read_text(encoding="utf-8") if prob_path.exists() else ""
 
     prompt = load_prompt_for_run(project_id, run_id, "2_design")
-    validation_feedback = (state.get("validation_feedback") or "").strip()
     user_content = ""
     if validation_feedback:
         user_content += f"""## Validation feedback (previous attempt failed)
@@ -120,30 +113,35 @@ You **must** use the provided expected_information_gain((sequence_a, sequence_b)
     n_blocks = 0
     script_written = False
     try:
-        _log(out_dir, "invoking LLM...")
+        agent_log(out_dir, "invoking LLM...")
         response = invoke_llm(system=prompt, user=user_content)
         response = ensure_str(response)
-        _log(out_dir, f"LLM response length={len(response)} chars")
+        agent_log(out_dir, f"LLM response length={len(response)} chars")
+        write_transcript(
+            out_dir, attempt,
+            system=prompt, user=user_content, response=response[:100_000],
+            validation_feedback=validation_feedback,
+        )
         blocks = extract_fenced_blocks(response, "python", normalize=True, min_length=50)
         n_blocks = len(blocks)
-        _log(out_dir, f"extract_fenced_blocks: n_blocks={n_blocks}" + (f" first_block_len={len(blocks[0])}" if blocks else ""))
+        agent_log(out_dir, f"extract_fenced_blocks: n_blocks={n_blocks}" + (f" first_block_len={len(blocks[0])}" if blocks else ""))
         if not blocks:
             # Save a sample of the response for debugging extraction (e.g. fence format)
             sample = (response[:8000] + "\n...[truncated]") if len(response) > 8000 else response
             (out_dir / "last_llm_response_sample.txt").write_text(sample, encoding="utf-8")
-            _log(out_dir, "wrote last_llm_response_sample.txt for debugging (no fenced block extracted)")
+            agent_log(out_dir, "wrote last_llm_response_sample.txt for debugging (no fenced block extracted)")
         if blocks:
             script_code = blocks[0]
             (out_dir / "design_script.py").write_text(script_code, encoding="utf-8")
             script_written = True
-            _log(out_dir, "wrote design_script.py; running script...")
+            agent_log(out_dir, "wrote design_script.py; running script...")
             design_script_ok = _run_design_script(out_dir, theorist_dir, model_names, model_weights)
-            _log(out_dir, f"_run_design_script returned {design_script_ok}; stimuli.json exists={(out_dir / 'stimuli.json').exists()}")
+            agent_log(out_dir, f"_run_design_script returned {design_script_ok}; stimuli.json exists={(out_dir / 'stimuli.json').exists()}")
         else:
-            _log(out_dir, "no python block >= 50 chars; skipping script run")
+            agent_log(out_dir, "no python block >= 50 chars; skipping script run")
     except Exception as e:
         llm_error = f"{type(e).__name__}: {e}"
-        _log(out_dir, f"LLM or extraction failed: {llm_error}")
+        agent_log(out_dir, f"LLM or extraction failed: {llm_error}")
 
     if not design_script_ok or not (out_dir / "stimuli.json").exists():
         reason_parts = []
@@ -155,13 +153,13 @@ You **must** use the provided expected_information_gain((sequence_a, sequence_b)
             reason_parts.append("script ran but failed or did not write stimuli.json (see design_script_log.txt)")
         elif not (out_dir / "stimuli.json").exists():
             reason_parts.append("stimuli.json missing after script run")
-        _log(out_dir, "using FALLBACK design: " + "; ".join(reason_parts))
+        agent_log(out_dir, "using FALLBACK design: " + "; ".join(reason_parts))
         _fallback_design(out_dir, theorist_dir, model_names, model_weights)
     else:
-        _log(out_dir, "outcome: used LLM-generated script; stimuli.json present")
+        agent_log(out_dir, "outcome: used LLM-generated script; stimuli.json present")
         if (out_dir / "design_script_log.txt").exists():
-            _log(out_dir, "script stdout/stderr in design_script_log.txt")
-    _log(out_dir, "=== experiment designer end ===")
+            agent_log(out_dir, "script stdout/stderr in design_script_log.txt")
+    agent_log(out_dir, "=== 2_design end ===")
 
     return {
         **state,
@@ -202,14 +200,14 @@ def _run_design_script(
         log_lines = ["=== stdout ===\n", out_capture.getvalue(), "\n=== stderr ===\n", err_capture.getvalue()]
         (out_dir / "design_script_log.txt").write_text("".join(log_lines), encoding="utf-8")
     except Exception as e:
-        _log(out_dir, f"script exec failed: {type(e).__name__}: {e}")
+        agent_log(out_dir, f"script exec failed: {type(e).__name__}: {e}")
         (out_dir / "design_script_log.txt").write_text(
             f"Script failed: {type(e).__name__}: {e}\n\n=== stdout ===\n{out_capture.getvalue()}\n=== stderr ===\n{err_capture.getvalue()}",
             encoding="utf-8",
         )
         return False
     if not (out_dir / "stimuli.json").exists():
-        _log(out_dir, "script ran but did not write stimuli.json")
+        agent_log(out_dir, "script ran but did not write stimuli.json")
         return False
     # Patch missing "eig" so validation passes and we use pipeline's weighted EIG
     _patch_stimuli_eig(out_dir, model_names, theorist_dir, model_weights)
@@ -238,7 +236,7 @@ def _patch_stimuli_eig(
             n_patched += 1
     if n_patched:
         path.write_text(json.dumps(data, indent=2), encoding="utf-8")
-        _log(out_dir, f"patched {n_patched} stimuli with missing 'eig'")
+        agent_log(out_dir, f"patched {n_patched} stimuli with missing 'eig'")
 
 
 def _fallback_design(
