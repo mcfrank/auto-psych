@@ -150,7 +150,7 @@ def main() -> None:
     )
     parser.add_argument(
         "--mode",
-        choices=["simulated_participants", "live"],
+        choices=["simulated_participants", "live", "test_prolific"],
         default="simulated_participants",
         help="Run mode",
     )

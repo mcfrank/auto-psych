@@ -59,11 +59,13 @@ Three different things are involved; only one holds API keys.
 **What to put in `.secrets`**
 
 - **`GOOGLE_API_KEY`** (required for theory, design, implement, collect steering, interpret): Get an API key for Gemini from [Google AI Studio](https://aistudio.google.com/apikey). The pipeline reads this from the `.secrets` file or from the `GOOGLE_API_KEY` environment variable.
+- **`PROLIFIC_API_TOKEN`** (required for `--mode test_prolific` or live Prolific): Create a token in [Prolific Researcher Settings](https://app.prolific.com/researcher/). Used to create test participants and studies via the [Prolific API](https://docs.prolific.com/api-reference/).
 
 Example `.secrets` (do not commit):
 
 ```
 GOOGLE_API_KEY=your_gemini_api_key_here
+PROLIFIC_API_TOKEN=your_prolific_token_here
 ```
 
 You can use a `.secrets` directory with one file per key (e.g. `.secrets/GOOGLE_API_KEY`) if you prefer.
@@ -80,6 +82,14 @@ To run simulated participants against a **deployed experiment** (no local server
 
 If Firebase is not configured (no real project in `.firebaserc`), the deploy step uses the **local server** at `http://127.0.0.1:8765` and the collect step gathers data from `window.__experimentData` in the browser.
 
+### 5. (Optional) Test Prolific end-to-end
+
+To test the Prolific flow with a single test participant (no real recruitment):
+
+1. **Prolific API token**: Add `PROLIFIC_API_TOKEN` to `.secrets` (see above). The [test participant API](https://docs.prolific.com/api-reference/users/create-test-participant-for-researcher) must be enabled for your Prolific workspace.
+2. **Project config**: Create `projects/<project_id>/prolific_config.yaml` (or copy from `prolific_config.yaml.example`). Set **`test_participant_email`** to an email that is **not** already registered on Prolific; this account will be created as a test participant and used as the only place in the study.
+3. **Run**: `python3 run_pipeline.py --project <project_id> --run 1 --mode test_prolific`. The implement step deploys to Firebase, creates the test participant, creates a 1-place study with that participant on a custom allowlist, and publishes it. The collect step polls Prolific until the study is complete, then fetches results from Firebase. After the participant finishes the experiment, the page redirects to Prolific’s completion URL.
+
 ## Running the pipeline
 
 ```bash
@@ -92,7 +102,7 @@ python3 run_pipeline.py --project subjective_randomness --runs 2 --n-participant
 - `--project`: Project id (e.g. `subjective_randomness`); must have a `problem_definition.md` under `projects/<project>/`.
 - `--run`: Single run number (creates `projects/<project>/run<N>/`). Use this or `--runs`.
 - `--runs`: Number of runs to execute (1 through N). Each run gets its own directory; the theory agent in run n reads run n−1’s interpreter report and registry; the interpreter in run n sees merged data from runs 1..n.
-- `--mode`: `simulated_participants` or `live`.
+- `--mode`: `simulated_participants`, `live`, or `test_prolific`. Use `test_prolific` to run the full Prolific flow with one test participant (Firebase deploy + Prolific test participant + study + collect).
 - `--n-participants`: Number of simulated participants per run (default: 5). Default is in `src/config.py` as `DEFAULT_SIMULATED_N_PARTICIPANTS`.
 - `--max-retries`: Max validation retries per agent before moving on (default: 3). Default in `src/config.py` as `DEFAULT_MAX_VALIDATION_RETRIES`.
 
@@ -150,6 +160,7 @@ prompts/                 # Canonical agent prompts (one file per agent)
 projects/
   <project_id>/
     problem_definition.md   # Human-authored: task + stimulus schema
+    prolific_config.yaml    # Optional; for test_prolific/live (completion_code, test_participant_email, etc.)
     references/             # Optional PDFs referenced by problem_definition.md
     prompts/                # Optional project-specific prompt overrides
     run<N>/

@@ -47,7 +47,10 @@
           participant_id: (typeof window !== 'undefined' && window.__participantId != null) ? window.__participantId : Date.now(),
           trials: data };
         fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-          .then(function(res){ console.log('[auto-psych] POST /submit', res.status, res.ok ? 'OK' : 'FAIL'); })
+          .then(function(res){
+            console.log('[auto-psych] POST /submit', res.status, res.ok ? 'OK' : 'FAIL');
+            if (res.ok && cfg.prolific_redirect_url && typeof window !== 'undefined') window.location = cfg.prolific_redirect_url;
+          })
           .catch(function(e){ console.warn('[auto-psych] POST /submit error', e); });
       } else {
         console.log('[auto-psych] No Firebase config (project_id/run_id); skipping POST /submit');

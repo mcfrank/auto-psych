@@ -358,7 +358,7 @@ def run_collect(state: Dict[str, Any]) -> Dict[str, Any]:
             w.writeheader()
             w.writerows(rows)
 
-    n_participants = config.get("simulated_n_participants", 5) if not (state.get("mode") == "live") else (len(rows) if rows else 0)
+    n_participants = config.get("simulated_n_participants", 5) if state.get("mode") not in ("live", "test_prolific") else (len(rows) if rows else 0)
     (logs_dir / "n_participants.txt").write_text(str(n_participants), encoding="utf-8")
     (logs_dir / "model_names.txt").write_text("\n".join(model_names), encoding="utf-8")
     agent_log(out_dir, f"wrote {csv_path.name}")
@@ -377,7 +377,7 @@ def _collect_live(
     logs_dir: Path,
 ) -> List[Dict[str, Any]]:
     """
-    Live (Prolific) flow: poll Prolific until study complete, then fetch results from Firebase.
+    Live / test_prolific (Prolific) flow: poll Prolific until study complete, then fetch results from Firebase.
     Observability: log each poll and fetch so we can track what goes wrong.
     """
     project_id = state["project_id"]
@@ -394,12 +394,43 @@ def _collect_live(
         agent_log(out_dir, "Collect (live): error - no results_api_url/experiment_url to fetch results")
         return []
 
-    # Stub: Prolific API client and poll loop not yet implemented.
-    # When implemented: poll GET studies/{id}/submissions/counts every 30s;
-    # when completed >= target, GET results_api_url/results?project_id=&run_id= and parse CSV.
-    agent_log(out_dir, f"Prolific poll: study_id={study_id!r} status=(not implemented) completed=0 target={target_places}")
-    agent_log(out_dir, "Collect (live): Prolific integration not yet implemented; returning no data")
-    return []
+    try:
+        from src.prolific_client import get_submission_counts
+    except ImportError:
+        agent_log(out_dir, "Collect (live): prolific_client not available")
+        return []
+
+    completed = 0
+    while completed < target_places:
+        counts, err = get_submission_counts(study_id)
+        if err:
+            agent_log(out_dir, f"Prolific poll: study_id={study_id!r} error={err!r}")
+            time.sleep(_PROLIFIC_POLL_INTERVAL_SEC)
+            continue
+        # Prolific returns status keys like COMPLETED, RETURNED, etc.
+        completed = int(counts.get("COMPLETED") or counts.get("completed") or 0)
+        agent_log(out_dir, f"Prolific poll: study_id={study_id!r} completed={completed} target={target_places}")
+        if completed >= target_places:
+            break
+        time.sleep(_PROLIFIC_POLL_INTERVAL_SEC)
+
+    agent_log(out_dir, "Collect (live): fetching results from Firebase")
+    base = results_api_url.rstrip("/")
+    url = f"{base}/results?run_id={run_id}&project_id={project_id}"
+    try:
+        req = urllib.request.Request(url, headers={"User-Agent": "auto-psych"})
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            body = resp.read().decode("utf-8")
+    except Exception as e:
+        agent_log(out_dir, f"Collect (live): results fetch failed: {e}")
+        return []
+    rows = []
+    if body.strip():
+        reader = csv.DictReader(io.StringIO(body))
+        for r in reader:
+            rows.append(dict(r))
+    agent_log(out_dir, f"Collect (live): got {len(rows)} rows from /results")
+    return rows
 
 
 def _collect_simulated(

@@ -220,7 +220,6 @@ def run_deploy_logic(state: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
                         config["experiment_url"] = base_url
                         config["results_api_url"] = base_url
                     else:
-                        researcher_id = user.get("id")
                         email = pconfig.get("test_participant_email")
                         if not email:
                             agent_log(out_dir, "Prolific: error - test_participant_email not set in prolific_config.yaml")
