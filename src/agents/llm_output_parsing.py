@@ -13,12 +13,22 @@ import yaml
 
 
 def ensure_str(response: Any) -> str:
-    """Normalize LLM response to a single string (handles list content from API)."""
+    """Normalize LLM response to a single string (handles list/dict content from API)."""
+    if response is None:
+        return ""
     if isinstance(response, list):
-        return " ".join(
-            (getattr(part, "text", None) or str(part)) for part in response
-        )
-    return str(response or "")
+        parts = []
+        for part in response:
+            if isinstance(part, dict) and "text" in part:
+                parts.append(ensure_str(part["text"]))
+            elif hasattr(part, "text") and part.text is not None:
+                parts.append(str(part.text))
+            else:
+                parts.append(str(part))
+        return "\n".join(p for p in parts if p.strip()) or " ".join(parts)
+    if isinstance(response, dict) and "text" in response:
+        return ensure_str(response["text"])
+    return str(response)
 
 
 def normalize_escaped_newlines(text: str) -> str:

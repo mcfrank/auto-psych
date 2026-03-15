@@ -5,12 +5,14 @@ Entrypoint for the auto-psych pipeline. Run full graph or a single agent.
 Usage:
   python3 run_pipeline.py --project subjective_randomness --run 1 --mode simulated_participants
   python3 run_pipeline.py --project subjective_randomness --runs 3 --mode simulated_participants
+  python3 run_pipeline.py --project subjective_randomness --runs 4-6 --mode simulated_participants
   python3 run_pipeline.py --project subjective_randomness --run 1 --agent 1_theory   # single agent
   python3 run_pipeline.py --project X --run 1 --agent 2_design --state-from-run 1
   python3 run_pipeline.py --project X --run 1 --n-participants 10 --max-retries 5
 """
 
 import argparse
+import re
 import sys
 from pathlib import Path
 
@@ -31,6 +33,30 @@ from src.state_loader import load_state_from_run, minimal_state_for_agent
 AGENT_SUBDIRS = [
     "1_theory", "2_design", "3_implement", "4_collect", "5_analyze", "6_interpret",
 ]
+
+def _parse_runs(value: str) -> list[int]:
+    """
+    Parse --runs value: either N (runs 1..N) or A-B (runs A through B inclusive).
+    Returns list of run IDs.
+    """
+    value = value.strip()
+    # Range: one or more digits, optional hyphen, one or more digits
+    m = re.match(r"^(\d+)-(\d+)$", value)
+    if m:
+        start, end = int(m.group(1)), int(m.group(2))
+        if start < 1 or end < 1:
+            raise ValueError("--runs range bounds must be >= 1")
+        if start > end:
+            raise ValueError("--runs range must be start-end with start <= end")
+        return list(range(start, end + 1))
+    # Single number N → runs 1..N
+    if value.isdigit():
+        n = int(value)
+        if n < 1:
+            raise ValueError("--runs must be >= 1")
+        return list(range(1, n + 1))
+    raise ValueError("--runs must be a number N (runs 1..N) or a range A-B (e.g. 4-6)")
+
 
 def _get_agent_fn(agent_key: str):
     """Resolve agent key to runnable function (lazy import)."""
@@ -105,8 +131,9 @@ def _run_full_pipeline(
     total_runs: int | None,
     simulated_n_participants: int,
     max_validation_retries: int,
+    run_index: int | None = None,
 ) -> None:
-    run_banner(run_id, total_runs)
+    run_banner(run_id, total_runs, run_index)
     rdir = run_dir(project_id, run_id)
     rdir.mkdir(parents=True, exist_ok=True)
     for key in AGENT_SUBDIRS:
@@ -138,9 +165,10 @@ def main() -> None:
     parser.add_argument("--run", type=int, default=None, help="Run number (e.g. 1). Required unless --runs set.")
     parser.add_argument(
         "--runs",
-        type=int,
+        type=str,
         default=None,
-        help="Execute runs 1 through N. Overrides --run.",
+        metavar="N|A-B",
+        help="Runs to execute: N (runs 1..N) or A-B (runs A through B, e.g. 4-6). Overrides --run.",
     )
     parser.add_argument(
         "--agent",
@@ -225,16 +253,19 @@ def main() -> None:
 
     # Full pipeline
     if args.runs is not None:
-        num_runs = args.runs
-        if num_runs < 1:
-            print("Error: --runs must be >= 1", file=sys.stderr)
+        try:
+            run_ids = _parse_runs(args.runs)
+        except ValueError as e:
+            print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
-        for run_id in range(1, num_runs + 1):
+        total_runs = len(run_ids)
+        for run_index, run_id in enumerate(run_ids, start=1):
             _run_full_pipeline(
                 project_id, run_id, mode, prob_path,
-                interpreter_report=None, total_runs=num_runs,
+                interpreter_report=None, total_runs=total_runs,
                 simulated_n_participants=args.n_participants,
                 max_validation_retries=args.max_retries,
+                run_index=run_index,
             )
         print("All runs completed.", file=sys.stderr, flush=True)
         return

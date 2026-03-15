@@ -96,12 +96,13 @@ To test the Prolific flow with a single test participant (no real recruitment):
 source venv/bin/activate
 python3 run_pipeline.py --project subjective_randomness --run 1 --mode simulated_participants
 python3 run_pipeline.py --project subjective_randomness --runs 3 --mode simulated_participants
+python3 run_pipeline.py --project subjective_randomness --runs 4-6 --mode simulated_participants
 python3 run_pipeline.py --project subjective_randomness --runs 2 --n-participants 10 --max-retries 5
 ```
 
 - `--project`: Project id (e.g. `subjective_randomness`); must have a `problem_definition.md` under `projects/<project>/`.
 - `--run`: Single run number (creates `projects/<project>/run<N>/`). Use this or `--runs`.
-- `--runs`: Number of runs to execute (1 through N). Each run gets its own directory; the theory agent in run n reads run n−1’s interpreter report and registry; the interpreter in run n sees merged data from runs 1..n.
+- `--runs`: Runs to execute: **N** (runs 1 through N) or **A-B** (runs A through B inclusive, e.g. `4-6`). Each run gets its own directory; the theory agent in run n reads run n−1’s interpreter report and registry; the interpreter in run n sees merged data from runs 1..n.
 - `--mode`: `simulated_participants`, `live`, or `test_prolific`. Use `test_prolific` to run the full Prolific flow with one test participant (Firebase deploy + Prolific test participant + study + collect).
 - `--n-participants`: Number of simulated participants per run (default: 5). Default is in `src/config.py` as `DEFAULT_SIMULATED_N_PARTICIPANTS`.
 - `--max-retries`: Max validation retries per agent before moving on (default: 3). Default in `src/config.py` as `DEFAULT_MAX_VALIDATION_RETRIES`.
