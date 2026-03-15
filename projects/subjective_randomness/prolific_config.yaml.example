@@ -1,0 +1,11 @@
+# Prolific settings for test_prolific and (future) live mode.
+# Copy to prolific_config.yaml and set test_participant_email.
+# The test participant email must NOT already be registered on Prolific.
+
+estimated_completion_time: 5   # minutes
+completion_code: AUTO_PSYCH_COMPLETE
+test_participant_email: "your-test@example.com"   # required for --mode test_prolific
+total_available_places: 1
+reward: 50   # cents
+name: "Auto-psych test"
+description: "Test run (test participant)."
