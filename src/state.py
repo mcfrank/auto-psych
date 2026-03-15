@@ -9,7 +9,7 @@ class PipelineState(TypedDict, total=False):
 
     project_id: str
     run_id: int
-    mode: str  # "simulated_participants" | "live"
+    mode: str  # "simulated_participants" | "live" | "test_prolific"
 
     # Paths to latest artifacts from each stage
     problem_definition_path: str
