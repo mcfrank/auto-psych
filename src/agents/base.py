@@ -76,8 +76,23 @@ def invoke_llm(system: str, user: str, llm=None, timeout: int | None = None) -> 
         invoke_kwargs["timeout"] = timeout
     response = llm.invoke(messages, **invoke_kwargs)
     content = response.content if hasattr(response, "content") else response
+    return _content_to_str(content)
+
+
+def _content_to_str(content) -> str:
+    """Normalize LLM response content to a single string (handles list/dict from API)."""
+    if content is None:
+        return ""
     if isinstance(content, list):
-        return " ".join(
-            (getattr(part, "text", None) or str(part)) for part in content
-        )
-    return str(content) if content is not None else ""
+        parts = []
+        for part in content:
+            if isinstance(part, dict) and "text" in part:
+                parts.append(str(part["text"]))
+            elif hasattr(part, "text") and part.text is not None:
+                parts.append(str(part.text))
+            else:
+                parts.append(str(part))
+        return "\n".join(p for p in parts if p.strip()) or " ".join(parts)
+    if isinstance(content, dict) and "text" in content:
+        return str(content["text"])
+    return str(content)

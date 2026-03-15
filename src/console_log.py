@@ -13,9 +13,13 @@ AGENT_DISPLAY_NAMES = {
 }
 
 
-def run_banner(run_id: int, total_runs: Optional[int] = None) -> None:
-    """Print a very visible run header. Call once per run before any agents."""
-    if total_runs is not None:
+def run_banner(run_id: int, total_runs: Optional[int] = None, run_index: Optional[int] = None) -> None:
+    """Print a very visible run header. Call once per run before any agents.
+    If total_runs and run_index are set, label is RUN {run_id} (run_index/total_runs), e.g. RUN 5 (1/4).
+    """
+    if total_runs is not None and run_index is not None:
+        label = f"RUN {run_id} ({run_index}/{total_runs})"
+    elif total_runs is not None:
         label = f"RUN {run_id} / {total_runs}"
     else:
         label = f"RUN {run_id}"
