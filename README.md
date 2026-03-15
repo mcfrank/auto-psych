@@ -76,7 +76,7 @@ To run simulated participants against a **deployed experiment** (no local server
 
 1. **Firebase project**: Create a project at [Firebase Console](https://console.firebase.google.com/), enable Hosting and Firestore.
 2. **CLI**: `npm install -g firebase-tools` then `firebase login`. In the repo root, set your project in `.firebaserc`: `"default": "your-project-id"` (or set env `FIREBASE_PROJECT`). If you deploy with `firebase deploy` manually, set the same project ID in `firebase.json` under `hosting.site` (the implement step sets this for you).
-3. **Deploy**: Run the pipeline with `--mode simulated_participants`. The implement step copies the experiment to `public/`, deploys with `firebase deploy --only hosting,functions`, and writes `experiment_url` and `results_api_url` in `3_implement/config.json`. The collect step opens the experiment URL N times (each run POSTs to `/submit`), then fetches GET `/results` and writes `responses.csv`.
+3. **Deploy**: Run the pipeline with `--mode simulated_participants`. The implement step copies the experiment to `public/`, deploys with `firebase deploy --only hosting,functions`, and writes `experiment_url` and `results_api_url` in `3_implement/config.json`. The collect step runs simulated (browser or model sampling) or live (Prolific + Firebase when implemented); in simulated mode it opens the experiment URL N times (each run POSTs to `/submit`), then fetches GET `/results` and writes `responses.csv`.
 
 If Firebase is not configured (no real project in `.firebaserc`), the deploy step uses the **local server** at `http://127.0.0.1:8765` and the collect step gathers data from `window.__experimentData` in the browser.
 

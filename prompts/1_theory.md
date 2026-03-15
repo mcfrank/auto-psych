@@ -9,7 +9,7 @@ You are the theory agent. You are called **once per theory**: each time you must
 
 ## Your turn (single addition)
 
-1. **Read the problem definition** (and, if present, the current manifest and interpreter report).
+1. **Read the problem definition** (and, if present, the current manifest and interpreter report). If the problem definition includes a **"Suggested theories to consider"** section, take those suggestions into account when proposing models (e.g. include or favor the suggested theory types).
 2. Propose **one** implementable probabilistic model: a function that takes a stimulus and response options and returns a dict mapping each option to a probability (sum to 1.0).
 3. Output **exactly**:
    - One YAML block with **one** model (see format below).

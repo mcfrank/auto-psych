@@ -38,7 +38,7 @@ def _get_agent_fn(agent_key: str):
         "1_theory": ("src.agents.theorist", "run_theorist"),
         "2_design": ("src.agents.experiment_designer", "run_experiment_designer"),
         "3_implement": ("src.agents.experiment_implementer", "run_experiment_implementer"),
-        "4_collect": ("src.agents.simulated_participant", "run_simulated_participant"),
+        "4_collect": ("src.agents.collect", "run_collect"),
         "5_analyze": ("src.agents.data_analyst", "run_data_analyst"),
         "6_interpret": ("src.agents.interpreter", "run_interpreter"),
     }

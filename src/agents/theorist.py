@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import yaml
 
 from src.config import agent_dir, run_dir, DEFAULT_MAX_VALIDATION_RETRIES
+from src.references import load_references
 from src.agents.base import load_prompt_for_run, invoke_llm
 from src.console_log import agent_header, log_status
 from src.observability import agent_log, write_transcript
@@ -52,6 +53,9 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
 
     prob_path = Path(state["problem_definition_path"])
     problem_text = prob_path.read_text(encoding="utf-8") if prob_path.exists() else ""
+    reference_text = load_references(project_id)
+    if reference_text:
+        agent_log(out_dir, f"loaded {len(reference_text)} chars of reference material")
     interpreter_path = state.get("interpreter_report_path")
     interpreter_text = ""
     if interpreter_path:
@@ -82,6 +86,7 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
             run_id=run_id,
             current_models=current_models,
             problem_text=problem_text,
+            reference_text=reference_text,
             interpreter_text=interpreter_text,
             validation_feedback=validation_feedback if iteration == 1 else "",
             state=state,
@@ -227,6 +232,7 @@ def _build_theorist_user_message(
     run_id: int,
     current_models: List[Dict[str, Any]],
     problem_text: str,
+    reference_text: str,
     interpreter_text: str,
     validation_feedback: str,
     state: Dict[str, Any],
@@ -278,6 +284,12 @@ This is **Run {run_id}** of the pipeline. This is **iteration {iteration}** (one
         parts.append(f"""## Interpreter report from Run {run_id - 1}
 
 {interpreter_text}
+
+""")
+    if reference_text:
+        parts.append(f"""## Reference material (from references/)
+
+{reference_text}
 
 """)
     parts.append(f"""## Problem definition
