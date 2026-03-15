@@ -24,6 +24,7 @@ from src.agents.llm_output_parsing import ensure_str, extract_fenced_blocks
 from src.models.loader import get_model_names_from_manifest
 from src.models.randomness import get_model_predictions, Stimulus
 from src.registry import get_model_weights
+from src.problem_definition import parse_problem_definition
 
 RESPONSE_OPTIONS = ["left", "right"]
 
@@ -68,6 +69,10 @@ def run_experiment_designer(state: Dict[str, Any]) -> Dict[str, Any]:
 
     prob_path = Path(state["problem_definition_path"])
     problem_text = prob_path.read_text(encoding="utf-8") if prob_path.exists() else ""
+    spec = parse_problem_definition(project_id)
+    total_trials = spec["total_trials"]
+    allowed_lengths = spec["allowed_sequence_lengths"]
+    agent_log(out_dir, f"total_trials={total_trials} allowed_sequence_lengths={allowed_lengths}")
 
     prompt = load_prompt_for_run(project_id, run_id, "2_design")
     user_content = ""
@@ -96,16 +101,18 @@ This is **Run {run_id}** of the pipeline.
 ## Your task
 
 Output a single Python script (one fenced ```python block) that:
-1. Generates candidate stimuli per the problem definition.
+1. Generates candidate stimuli per the problem definition (you may use different sequence lengths as specified; allowed lengths: {allowed_lengths}). Pairs can be same-length or mixed-length (e.g. sequence_a length 4, sequence_b length 6).
 2. Scores each by expected information gain using the provided expected_information_gain(stimulus_tuple) (EIG uses the current theory probabilities).
-3. Selects the top N stimuli and writes stimuli.json and design_rationale.md to out_dir.
+3. Selects **exactly** total_trials stimuli and writes stimuli.json and design_rationale.md to out_dir.
 
-You have access to: theorist_dir (Path), model_names (list), expected_information_gain(stimulus_tuple), get_model_predictions(...), RESPONSE_OPTIONS, out_dir (Path).
+Consider diversity: include stimuli that have high EIG for distinguishing different subsets of theories (e.g. some that best distinguish theory A vs B, others that best distinguish B vs C), so the experiment collectively discriminates across all theories. The total number of stimuli must be exactly total_trials.
+
+You have access to: theorist_dir (Path), model_names (list), expected_information_gain(stimulus_tuple), get_model_predictions(...), RESPONSE_OPTIONS, out_dir (Path), total_trials (int, must be exactly {total_trials}), allowed_sequence_lengths (list, {allowed_lengths}).
 
 Model names for this run: {model_names}
 """ + (f"\nCurrent run's theory probabilities (used by expected_information_gain): {model_weights}" if model_weights else "\n(Uniform prior over models for this run.)") + """
 
-You **must** use the provided expected_information_gain((sequence_a, sequence_b)) to score each candidate — do not implement EIG yourself (the pipeline's EIG uses the theory probabilities above). Call it with exactly one argument: the tuple (sequence_a, sequence_b). Each item in stimuli.json **must** include the key "eig" with the float returned by expected_information_gain for that stimulus. Use only the variables provided: theorist_dir, model_names, expected_information_gain, out_dir, Path, json. Output only the script in a single fenced ```python block.
+You **must** use the provided expected_information_gain((sequence_a, sequence_b)) to score each candidate — do not implement EIG yourself. You **must** output exactly total_trials stimuli in stimuli.json. Each item must include "sequence_a", "sequence_b", and "eig". Use only the variables provided: theorist_dir, model_names, expected_information_gain, out_dir, total_trials, allowed_sequence_lengths, Path, json. Output only the script in a single fenced ```python block.
 """
 
     design_script_ok = False
@@ -135,7 +142,7 @@ You **must** use the provided expected_information_gain((sequence_a, sequence_b)
             (out_dir / "design_script.py").write_text(script_code, encoding="utf-8")
             script_written = True
             agent_log(out_dir, "wrote design_script.py; running script...")
-            design_script_ok = _run_design_script(out_dir, theorist_dir, model_names, model_weights)
+            design_script_ok = _run_design_script(out_dir, theorist_dir, model_names, model_weights, total_trials, allowed_lengths)
             agent_log(out_dir, f"_run_design_script returned {design_script_ok}; stimuli.json exists={(out_dir / 'stimuli.json').exists()}")
         else:
             agent_log(out_dir, "no python block >= 50 chars; skipping script run")
@@ -154,7 +161,7 @@ You **must** use the provided expected_information_gain((sequence_a, sequence_b)
         elif not (out_dir / "stimuli.json").exists():
             reason_parts.append("stimuli.json missing after script run")
         agent_log(out_dir, "using FALLBACK design: " + "; ".join(reason_parts))
-        _fallback_design(out_dir, theorist_dir, model_names, model_weights)
+        _fallback_design(out_dir, theorist_dir, model_names, model_weights, total_trials, allowed_lengths)
     else:
         agent_log(out_dir, "outcome: used LLM-generated script; stimuli.json present")
         if (out_dir / "design_script_log.txt").exists():
@@ -173,11 +180,15 @@ def _run_design_script(
     theorist_dir: Path,
     model_names: List[str],
     model_weights: Optional[Dict[str, float]] = None,
+    total_trials: int = 30,
+    allowed_sequence_lengths: Optional[List[int]] = None,
 ) -> bool:
     """Execute design_script.py with the required namespace. Return True if it wrote stimuli.json."""
     script_path = out_dir / "design_script.py"
     if not script_path.exists():
         return False
+    if allowed_sequence_lengths is None:
+        allowed_sequence_lengths = [8]
     # Bind EIG so script can call expected_information_gain(stimulus) only
     def _eig(stimulus: Tuple[str, str]) -> float:
         return expected_information_gain(stimulus, model_names, theorist_dir, model_weights)
@@ -190,6 +201,8 @@ def _run_design_script(
         "out_dir": out_dir,
         "Path": Path,
         "json": json,
+        "total_trials": total_trials,
+        "allowed_sequence_lengths": allowed_sequence_lengths,
     }
     out_capture = io.StringIO()
     err_capture = io.StringIO()
@@ -244,56 +257,136 @@ def _fallback_design(
     theorist_dir: Path,
     model_names: List[str],
     model_weights: Optional[Dict[str, float]] = None,
+    total_trials: int = 30,
+    allowed_lengths: Optional[List[int]] = None,
 ) -> None:
-    """Built-in EIG design when no script or script failed."""
-    seq_length = 8
-    candidate_stimuli = _sample_stimulus_pairs(seq_length, max_pairs=30)
+    """Built-in EIG design when no script or script failed. Uses diversity across theory pairs when possible."""
+    if allowed_lengths is None:
+        allowed_lengths = [8]
+    candidate_stimuli = _sample_stimulus_pairs(allowed_lengths, max_pairs=max(150, total_trials * 3))
     scored = []
     for stim in candidate_stimuli:
         eig = expected_information_gain(stim, model_names, theorist_dir, model_weights)
         scored.append((stim, eig))
     scored.sort(key=lambda x: -x[1])
-    n_select = min(15, len(scored))
+
+    # Diversity: prefer stimuli that discriminate different theory pairs (round-robin by best theory-pair)
+    selected = _select_diverse_stimuli(scored, model_names, theorist_dir, total_trials, model_weights)
+    if len(selected) < total_trials:
+        # Backfill from top by global EIG
+        seen = {s for s, _ in selected}
+        for s, eig in scored:
+            if s not in seen:
+                selected.append((s, eig))
+                seen.add(s)
+                if len(selected) >= total_trials:
+                    break
+    selected = selected[:total_trials]
+
     stimuli_payload = [
         {"sequence_a": s[0], "sequence_b": s[1], "eig": round(eig, 6)}
-        for s, eig in scored[:n_select]
+        for s, eig in selected
     ]
     (out_dir / "stimuli.json").write_text(
         json.dumps(stimuli_payload, indent=2), encoding="utf-8"
     )
-    top_stim = scored[0][0] if scored else None
-    top_eig = scored[0][1] if scored else 0.0
-    rationale = f"""Fallback design: selected {n_select} stimulus pairs by EIG for models {model_names}.
+    top_stim = selected[0][0] if selected else None
+    top_eig = selected[0][1] if selected else 0.0
+    rationale = f"""Fallback design: selected {len(stimuli_payload)} stimulus pairs (total_trials={total_trials}, allowed_lengths={allowed_lengths}) with EIG diversity for models {model_names}.
 Top pair: {top_stim} with EIG = {top_eig:.4f}.
 """
     (out_dir / "design_rationale.md").write_text(rationale, encoding="utf-8")
 
 
-def _sample_stimulus_pairs(seq_length: int, max_pairs: int) -> List[Stimulus]:
-    """Sample diverse pairs of H/T sequences."""
-    sequences = []
-    for n_heads in range(0, seq_length + 1):
-        base = ["H"] * n_heads + ["T"] * (seq_length - n_heads)
-        random.shuffle(base)
-        sequences.append("".join(base))
-    for _ in range(20):
-        seq = "".join(random.choice("HT") for _ in range(seq_length))
-        if seq not in sequences:
-            sequences.append(seq)
-    pairs = []
+def _select_diverse_stimuli(
+    scored: List[Tuple[Stimulus, float]],
+    model_names: List[str],
+    theorist_dir: Path,
+    total_trials: int,
+    model_weights: Optional[Dict[str, float]],
+) -> List[Tuple[Stimulus, float]]:
+    """Select stimuli so that different theory pairs are discriminated (round-robin by pairwise EIG)."""
+    if len(model_names) < 2 or not scored:
+        return [(s, e) for s, e in scored[:total_trials]]
+    # For each theory pair (i, j), rank stimuli by EIG under prior only on i and j
+    pair_ranks: Dict[Tuple[str, str], List[Tuple[Stimulus, float]]] = {}
+    for i, j in itertools.combinations(model_names, 2):
+        pair_prior = {m: 0.0 for m in model_names}
+        pair_prior[i] = 0.5
+        pair_prior[j] = 0.5
+        pair_scored = [(s, expected_information_gain(s, model_names, theorist_dir, pair_prior)) for s, _ in scored]
+        pair_scored.sort(key=lambda x: -x[1])
+        pair_ranks[(i, j)] = pair_scored
+    # Round-robin: take best remaining from each pair in turn
+    selected: List[Tuple[Stimulus, float]] = []
+    seen_stim = set()
+    indices = {k: 0 for k in pair_ranks}
+    pairs_cycle = list(pair_ranks.keys())
+    while len(selected) < total_trials:
+        made_progress = False
+        for pair in pairs_cycle:
+            rank_list = pair_ranks[pair]
+            while indices[pair] < len(rank_list):
+                s, eig = rank_list[indices[pair]]
+                indices[pair] += 1
+                if s not in seen_stim:
+                    seen_stim.add(s)
+                    selected.append((s, expected_information_gain(s, model_names, theorist_dir, model_weights)))
+                    made_progress = True
+                    break
+            if len(selected) >= total_trials:
+                return selected
+        if not made_progress:
+            break
+    return selected
+
+
+def _sample_stimulus_pairs(
+    allowed_lengths: List[int],
+    max_pairs: int,
+) -> List[Stimulus]:
+    """Sample diverse pairs of H/T sequences; lengths can vary (same or mixed per pair)."""
+    sequences_by_len: Dict[int, List[str]] = {}
+    for seq_length in allowed_lengths:
+        seqs = []
+        for n_heads in range(0, seq_length + 1):
+            base = ["H"] * n_heads + ["T"] * (seq_length - n_heads)
+            random.shuffle(base)
+            seqs.append("".join(base))
+        for _ in range(15):
+            seq = "".join(random.choice("HT") for _ in range(seq_length))
+            if seq not in seqs:
+                seqs.append(seq)
+        sequences_by_len[seq_length] = seqs
+
+    pairs: List[Stimulus] = []
     seen = set()
-    for a, b in itertools.combinations(sequences, 2):
-        if a != b and (a, b) not in seen and (b, a) not in seen:
-            seen.add((a, b))
-            pairs.append((a, b))
-            if len(pairs) >= max_pairs:
-                break
-    if len(pairs) < max_pairs:
-        while len(pairs) < max_pairs:
-            a, b = random.sample(sequences, 2)
-            if a != b and (a, b) not in seen:
+    # Same-length pairs
+    for length in allowed_lengths:
+        seqs = sequences_by_len[length]
+        for a, b in itertools.combinations(seqs, 2):
+            if a != b and (a, b) not in seen and (b, a) not in seen:
                 seen.add((a, b))
                 pairs.append((a, b))
+                if len(pairs) >= max_pairs:
+                    return pairs
+    # Mixed-length pairs (unordered length pairs)
+    for len_a, len_b in itertools.combinations(allowed_lengths, 2):
+        for a in sequences_by_len[len_a][:20]:
+            for b in sequences_by_len[len_b][:20]:
+                if (a, b) not in seen and (b, a) not in seen:
+                    seen.add((a, b))
+                    pairs.append((a, b))
+                    if len(pairs) >= max_pairs:
+                        return pairs
+    while len(pairs) < max_pairs:
+        len_a, len_b = random.sample(allowed_lengths, 2)
+        seqs_a = sequences_by_len[len_a]
+        seqs_b = sequences_by_len[len_b]
+        a, b = random.choice(seqs_a), random.choice(seqs_b)
+        if (a, b) not in seen and (b, a) not in seen:
+            seen.add((a, b))
+            pairs.append((a, b))
     return pairs
 
 

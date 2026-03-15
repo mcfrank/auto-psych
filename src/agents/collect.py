@@ -1,4 +1,4 @@
-"""Simulated participant: visit deployed experiment in a browser or generate from models."""
+"""Collect: simulated (browser/model) or live (Prolific + Firebase) depending on mode."""
 
 import csv
 import io
@@ -14,6 +14,7 @@ import random
 import urllib.request
 import urllib.parse
 from datetime import datetime
+import yaml
 
 from src.config import agent_dir, run_dir, DEFAULT_MAX_VALIDATION_RETRIES
 from src.console_log import agent_header, log_status
@@ -33,6 +34,9 @@ _DRIVE_TIMEOUT_MS = 180_000
 _LLM_CONTEXT_MAX_SCREENS = 20
 # Fixation screen auto-advances in template (150ms); we sleep slightly longer then skip LLM for it
 _FIXATION_WAIT_SEC = 0.25
+
+# Live (Prolific) poll interval in seconds
+_PROLIFIC_POLL_INTERVAL_SEC = 30
 
 
 def _get_screen_content(page) -> str:
@@ -303,15 +307,13 @@ def _run_one_participant_firebase(args: Tuple) -> Tuple[int, bool, Optional[str]
         return (participant_index, False, str(e))
 
 
-def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
+def run_collect(state: Dict[str, Any]) -> Dict[str, Any]:
     """
-    If deployer set experiment_url: visit it N times with a headless browser, collect
-    jsPsych data from each run, and write responses.csv. Otherwise: generate N
-    participants by sampling from theorist models and write CSV.
+    Collect step: simulated (browser or model sampling) or live (Prolific + Firebase)
+    depending on state["mode"]. Writes 4_collect/responses.csv and sets simulated_data_path.
     """
     project_id = state["project_id"]
     run_id = state["run_id"]
-    # Reset validation retry state when this agent is entered from a different agent's validation
     if state.get("last_validated_agent") != "4_collect":
         state = {**state, "validation_retry_count": 0, "validation_feedback": ""}
     if state.get("validation_retry_count", 0) == 0:
@@ -324,7 +326,7 @@ def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
     attempt = (state.get("validation_retry_count") or 0) + 1
     validation_feedback = (state.get("validation_feedback") or "").strip()
     agent_log(out_dir, "=== 4_collect start ===")
-    agent_log(out_dir, f"project_id={project_id!r} run_id={run_id} attempt={attempt}")
+    agent_log(out_dir, f"project_id={project_id!r} run_id={run_id} attempt={attempt} mode={state.get('mode')!r}")
     if validation_feedback:
         agent_log(out_dir, f"Validation feedback: {validation_feedback[:500]}")
 
@@ -334,7 +336,6 @@ def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
     stimuli_path = Path(state["stimuli_path"])
     stimuli = json.loads(stimuli_path.read_text()) if stimuli_path.exists() else []
     manifest_path = Path(state["theorist_manifest_path"])
-    import yaml
     manifest = yaml.safe_load(manifest_path.read_text()) if manifest_path.exists() else {}
     model_names = [m["name"] for m in manifest.get("models", []) if m.get("name") in MODEL_LIBRARY]
     if not model_names:
@@ -342,17 +343,11 @@ def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
 
     config_path = Path(state["deployment_config_path"])
     config = json.loads(config_path.read_text()) if config_path.exists() else {}
-    n_participants = config.get("simulated_n_participants", 5)
-    experiment_url = config.get("experiment_url")
-    results_api_url = config.get("results_api_url")
 
-    agent_log(out_dir, f"n_participants={n_participants} experiment_url={bool(experiment_url)} results_api_url={bool(results_api_url)}")
-    if results_api_url:
-        rows = _collect_from_firebase(config, results_api_url, n_participants, out_dir, logs_dir)
-    elif experiment_url:
-        rows = _collect_from_browser(config, experiment_url, n_participants, out_dir, logs_dir)
+    if state.get("mode") in ("live", "test_prolific"):
+        rows = _collect_live(state, config, out_dir, logs_dir)
     else:
-        rows = _generate_from_models(stimuli, model_names, n_participants)
+        rows = _collect_simulated(state, config, out_dir, logs_dir, stimuli, model_names)
 
     csv_path = out_dir / "responses.csv"
     agent_log(out_dir, f"collected n_rows={len(rows) if rows else 0}")
@@ -363,6 +358,7 @@ def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
             w.writeheader()
             w.writerows(rows)
 
+    n_participants = config.get("simulated_n_participants", 5) if not (state.get("mode") == "live") else (len(rows) if rows else 0)
     (logs_dir / "n_participants.txt").write_text(str(n_participants), encoding="utf-8")
     (logs_dir / "model_names.txt").write_text("\n".join(model_names), encoding="utf-8")
     agent_log(out_dir, f"wrote {csv_path.name}")
@@ -372,6 +368,59 @@ def run_simulated_participant(state: Dict[str, Any]) -> Dict[str, Any]:
         **state,
         "simulated_data_path": str(csv_path),
     }
+
+
+def _collect_live(
+    state: Dict[str, Any],
+    config: Dict[str, Any],
+    out_dir: Path,
+    logs_dir: Path,
+) -> List[Dict[str, Any]]:
+    """
+    Live (Prolific) flow: poll Prolific until study complete, then fetch results from Firebase.
+    Observability: log each poll and fetch so we can track what goes wrong.
+    """
+    project_id = state["project_id"]
+    run_id = state["run_id"]
+    study_id = config.get("prolific_study_id")
+    results_api_url = config.get("experiment_url") or config.get("results_api_url")
+    target_places = config.get("total_available_places") or config.get("simulated_n_participants") or 1
+
+    agent_log(out_dir, "Collect (live): waiting for Prolific study (poll every 30s)")
+    if not study_id:
+        agent_log(out_dir, "Collect (live): error - no prolific_study_id in config; Prolific flow not configured")
+        return []
+    if not results_api_url:
+        agent_log(out_dir, "Collect (live): error - no results_api_url/experiment_url to fetch results")
+        return []
+
+    # Stub: Prolific API client and poll loop not yet implemented.
+    # When implemented: poll GET studies/{id}/submissions/counts every 30s;
+    # when completed >= target, GET results_api_url/results?project_id=&run_id= and parse CSV.
+    agent_log(out_dir, f"Prolific poll: study_id={study_id!r} status=(not implemented) completed=0 target={target_places}")
+    agent_log(out_dir, "Collect (live): Prolific integration not yet implemented; returning no data")
+    return []
+
+
+def _collect_simulated(
+    state: Dict[str, Any],
+    config: Dict[str, Any],
+    out_dir: Path,
+    logs_dir: Path,
+    stimuli: List[Dict[str, Any]],
+    model_names: List[str],
+) -> List[Dict[str, Any]]:
+    """Simulated flow: browser(s) or model sampling. Same logic as former run_simulated_participant."""
+    n_participants = config.get("simulated_n_participants", 5)
+    experiment_url = config.get("experiment_url")
+    results_api_url = config.get("results_api_url")
+
+    agent_log(out_dir, f"n_participants={n_participants} experiment_url={bool(experiment_url)} results_api_url={bool(results_api_url)}")
+    if results_api_url:
+        return _collect_from_firebase(config, results_api_url, n_participants, out_dir, logs_dir)
+    if experiment_url:
+        return _collect_from_browser(config, experiment_url, n_participants, out_dir, logs_dir)
+    return _generate_from_models(stimuli, model_names, n_participants)
 
 
 def _collect_from_firebase(

@@ -23,6 +23,11 @@ def problem_definition_path(project_id: str) -> Path:
     return project_dir(project_id) / "problem_definition.md"
 
 
+def references_dir(project_id: str) -> Path:
+    """Return path to project references directory (PDFs, .md, .txt)."""
+    return project_dir(project_id) / "references"
+
+
 def run_dir(project_id: str, run_id: int) -> Path:
     """Return path to run directory (e.g. projects/subjective_randomness/run1)."""
     return project_dir(project_id) / f"run{run_id}"

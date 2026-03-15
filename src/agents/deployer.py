@@ -8,6 +8,7 @@ from typing import Any, Dict, Optional
 
 from src.config import REPO_ROOT, agent_dir, DEFAULT_SIMULATED_N_PARTICIPANTS
 from src.console_log import agent_header, log_status
+from src.observability import agent_log
 
 # Port for local experiment server (so you can open experiment_url in a browser and agent 5 can visit it)
 LOCAL_SERVER_PORT = 8765
@@ -35,9 +36,16 @@ def _firebase_project_id() -> Optional[str]:
         return None
 
 
-def _deploy_to_firebase(exp_dir: Path, project_id: str, run_id: int) -> tuple[Optional[str], Optional[str]]:
+def _deploy_to_firebase(
+    exp_dir: Path,
+    project_id: str,
+    run_id: int,
+    *,
+    extra_config: Optional[Dict[str, Any]] = None,
+) -> tuple[Optional[str], Optional[str]]:
     """
     Copy implementer output to public/, write run config for POST /submit, run firebase deploy.
+    extra_config: optional dict merged into auto_psych_config.json (e.g. prolific_redirect_url).
     Returns (Hosting base URL on success, None) or (None, error_message on failure).
     """
     fb_project = _firebase_project_id()
@@ -65,8 +73,11 @@ def _deploy_to_firebase(exp_dir: Path, project_id: str, run_id: int) -> tuple[Op
         else:
             shutil.copy2(src, dst)
     # Config for experiment onFinish POST /submit (read by experiment via /auto_psych_config.json)
+    cfg = {"project_id": project_id, "run_id": run_id}
+    if extra_config:
+        cfg.update(extra_config)
     (public / "auto_psych_config.json").write_text(
-        json.dumps({"project_id": project_id, "run_id": run_id}, indent=0),
+        json.dumps(cfg, indent=0),
         encoding="utf-8",
     )
     # Ensure index.html POSTs to /submit when run on Firebase (patch if built from older template)
@@ -133,6 +144,8 @@ def run_deploy_logic(state: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
         "run_id": run_id,
     }
 
+    agent_log(out_dir, f"Deploy: mode={mode!r}")
+
     if mode == "simulated_participants":
         config["simulated_n_participants"] = state.get("simulated_n_participants", DEFAULT_SIMULATED_N_PARTICIPANTS)
         exp_dir = Path(experiment_path)
@@ -141,14 +154,17 @@ def run_deploy_logic(state: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
         results_api_url = None
 
         if exp_dir.exists():
+            agent_log(out_dir, "Deploy: attempting Firebase deploy")
             base_url, deploy_error = _deploy_to_firebase(exp_dir, project_id, run_id)
             if base_url:
                 experiment_url = base_url
                 results_api_url = base_url  # same origin for /submit and /results
                 _ensure_experiment_data_exposed(exp_dir)
+                agent_log(out_dir, f"Deploy: Firebase deploy OK -> {base_url}")
             else:
                 # Local server fallback
                 log_status(deploy_error or "Using local server (Firebase not configured or deploy failed).")
+                agent_log(out_dir, f"Deploy: Firebase failed or skipped; using local server. {deploy_error or ''}")
                 _ensure_experiment_data_exposed(exp_dir)
                 experiment_url = f"http://{BIND_ADDRESS}:{LOCAL_SERVER_PORT}"
                 results_api_url = None
@@ -157,6 +173,7 @@ def run_deploy_logic(state: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
                 _write_start_server_script(exp_dir, out_dir, LOCAL_SERVER_PORT)
         else:
             config["experiment_url"] = None
+            agent_log(out_dir, "Deploy: experiment_path does not exist; no experiment_url")
 
         if experiment_url:
             config["experiment_url"] = experiment_url
@@ -164,11 +181,111 @@ def run_deploy_logic(state: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
             config["results_api_url"] = results_api_url
         if not config.get("experiment_url"):
             config["experiment_url"] = None
+    elif mode == "test_prolific":
+        # Test Prolific: Firebase deploy + create test participant + study (1 place, allowlist) + publish
+        exp_dir = Path(experiment_path)
+        base_url = None
+        if not exp_dir.exists():
+            agent_log(out_dir, "Deploy: test_prolific; experiment_path does not exist")
+            config["experiment_url"] = None
+            config["results_api_url"] = None
+        else:
+            try:
+                from src.prolific_client import (
+                    load_prolific_config,
+                    get_me,
+                    create_test_participant,
+                    create_study,
+                    publish_study,
+                )
+                pconfig = load_prolific_config(project_id)
+                completion_code = pconfig.get("completion_code", "AUTO_PSYCH_COMPLETE")
+                redirect_url = f"https://app.prolific.com/submissions/complete?cc={completion_code}"
+                agent_log(out_dir, "Deploy: attempting Firebase deploy (test_prolific)")
+                base_url, deploy_error = _deploy_to_firebase(
+                    exp_dir, project_id, run_id,
+                    extra_config={"prolific_redirect_url": redirect_url},
+                )
+                if not base_url:
+                    agent_log(out_dir, f"Deploy: test_prolific Firebase failed: {deploy_error}")
+                    config["experiment_url"] = None
+                    config["results_api_url"] = None
+                else:
+                    _ensure_experiment_data_exposed(exp_dir)
+                    agent_log(out_dir, f"Deploy: Firebase OK -> {base_url}")
+                    agent_log(out_dir, "Prolific: fetching researcher id")
+                    user, err = get_me()
+                    if err:
+                        agent_log(out_dir, f"Prolific: error get_me: {err}")
+                        config["experiment_url"] = base_url
+                        config["results_api_url"] = base_url
+                    else:
+                        researcher_id = user.get("id")
+                        email = pconfig.get("test_participant_email")
+                        if not email:
+                            agent_log(out_dir, "Prolific: error - test_participant_email not set in prolific_config.yaml")
+                            config["experiment_url"] = base_url
+                            config["results_api_url"] = base_url
+                        else:
+                            agent_log(out_dir, f"Prolific: creating test participant (email={email!r})")
+                            participant_id, err = create_test_participant(email)
+                            if err:
+                                agent_log(out_dir, f"Prolific: error create_test_participant: {err}")
+                                config["experiment_url"] = base_url
+                                config["results_api_url"] = base_url
+                            else:
+                                agent_log(out_dir, f"Prolific: test participant created id={participant_id!r}")
+                                external_url = base_url + "/?participant_id={{%PROLIFIC_PID%}}"
+                                est_min = pconfig.get("estimated_completion_time", 5)
+                                payload = {
+                                    "name": pconfig.get("name", "Auto-psych test"),
+                                    "description": pconfig.get("description", "Test run (test participant)."),
+                                    "external_study_url": external_url,
+                                    "estimated_completion_time": int(est_min),
+                                    "total_available_places": 1,
+                                    "reward": int(pconfig.get("reward", 50)),
+                                    "prolific_id_option": "url_parameters",
+                                    "completion_codes": [
+                                        {
+                                            "code": completion_code,
+                                            "code_type": "COMPLETED",
+                                            "actions": [{"action": "AUTOMATICALLY_APPROVE"}],
+                                        }
+                                    ],
+                                    "filters": [
+                                        {"filter_id": "custom_allowlist", "selected_values": [participant_id]}
+                                    ],
+                                    "device_compatibility": ["desktop", "mobile", "tablet"],
+                                }
+                                agent_log(out_dir, f"Prolific: creating study (external_study_url={base_url}/..., estimated_completion_time={est_min})")
+                                study_id, err = create_study(payload)
+                                if err:
+                                    agent_log(out_dir, f"Prolific: error create_study: {err}")
+                                else:
+                                    agent_log(out_dir, f"Prolific: study created id={study_id!r}")
+                                    ok, err = publish_study(study_id)
+                                    if err:
+                                        agent_log(out_dir, f"Prolific: publish failed: {err}")
+                                    else:
+                                        agent_log(out_dir, "Prolific: study published")
+                                config["experiment_url"] = base_url
+                                config["results_api_url"] = base_url
+                                config["prolific_study_id"] = study_id if study_id else None
+                                config["total_available_places"] = 1
+            except Exception as e:
+                agent_log(out_dir, f"Deploy: test_prolific error: {type(e).__name__}: {e}")
+                config["experiment_url"] = base_url if base_url else (f"https://{_firebase_project_id()}.web.app" if _firebase_project_id() else None)
+                config["results_api_url"] = config.get("experiment_url")
+                config["prolific_study_id"] = None
+                config["total_available_places"] = 1
     else:
+        # Live mode: Firebase deploy first, then Prolific (when implemented)
+        agent_log(out_dir, "Deploy: mode=live; Prolific flow not yet implemented")
         config["note"] = "Live mode: configure experiment URL and Prolific when implemented."
         config["experiment_url"] = None
 
     (out_dir / "config.json").write_text(json.dumps(config, indent=2), encoding="utf-8")
+    agent_log(out_dir, "Deploy: wrote config.json")
     return {**state, "deployment_config_path": str(out_dir / "config.json")}
 
 

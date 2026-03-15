@@ -23,7 +23,7 @@ class PipelineState(TypedDict, total=False):
     aggregate_csv_path: str
     interpreter_report_path: str
 
-    # Set by simulated_participant for data_analyst to read
+    # Set by collect step for data_analyst to read
     simulated_data_path: str
 
     # Pipeline defaults (overridable via CLI)

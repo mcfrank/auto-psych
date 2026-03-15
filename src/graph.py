@@ -9,7 +9,7 @@ from src.state import PipelineState
 from src.agents.theorist import run_theorist
 from src.agents.experiment_designer import run_experiment_designer
 from src.agents.experiment_implementer import run_experiment_implementer
-from src.agents.simulated_participant import run_simulated_participant
+from src.agents.collect import run_collect
 from src.agents.data_analyst import run_data_analyst
 from src.agents.interpreter import run_interpreter
 from src.validation.validators import run_validation, NODE_TO_AGENT_KEY
@@ -41,9 +41,7 @@ def _after_validate_design(state: PipelineState) -> Literal["design", "implement
 def _after_validate_implement(state: PipelineState) -> Literal["implement", "collect", "analyze"]:
     if not state.get("validation_ok", True) and state.get("validation_retry_count", 0) < _max_retries(state):
         return "implement"
-    if state.get("mode") == "simulated_participants":
-        return "collect"
-    return "analyze"
+    return "collect"
 
 
 def _after_validate_collect(state: PipelineState) -> Literal["collect", "analyze"]:
@@ -74,7 +72,7 @@ def build_graph(checkpoint_dir: str | None = None):
     graph.add_node("theory", run_theorist)
     graph.add_node("design", run_experiment_designer)
     graph.add_node("implement", run_experiment_implementer)
-    graph.add_node("collect", run_simulated_participant)
+    graph.add_node("collect", run_collect)
     graph.add_node("analyze", run_data_analyst)
     graph.add_node("interpret", run_interpreter)
 
