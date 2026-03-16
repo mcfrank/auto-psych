@@ -1,0 +1,42 @@
+# Cloud Run Job spec for auto-psych pipeline.
+# Deploy: gcloud run jobs replace job.yaml --region=REGION
+# Or create with gcloud and inject GOOGLE_API_KEY from Secret Manager:
+#   gcloud run jobs create pipeline-job --image=IMAGE --region=REGION \
+#     --set-secrets=GOOGLE_API_KEY=google-api-key:latest \
+#     --args="--project=subjective_randomness,--runs=3,--mode=simulated_participants" \
+#     --memory=4Gi --cpu=2 --task-timeout=7200 --max-retries=0
+# Execute: gcloud run jobs execute pipeline-job --region=REGION --args="--project=X,--runs=N,..."
+
+apiVersion: run.googleapis.com/v1
+kind: Job
+metadata:
+  name: pipeline-job
+  labels:
+    cloud.googleapis.com/location: us-central1
+spec:
+  template:
+    spec:
+      taskCount: 1
+      parallelism: 1
+      template:
+        spec:
+          maxRetries: 0
+          timeoutSeconds: 7200
+          serviceAccountName: default
+          containers:
+            - image: IMAGE
+              args:
+                - "--project=subjective_randomness"
+                - "--runs=3"
+                - "--mode=simulated_participants"
+                - "--n-participants=5"
+                - "--max-retries=3"
+              env:
+                - name: PIPELINE_FIRESTORE_DATABASE
+                  value: "(default)"
+                - name: PIPELINE_GCS_BUCKET
+                  value: ""
+              resources:
+                limits:
+                  cpu: "2"
+                  memory: 4Gi

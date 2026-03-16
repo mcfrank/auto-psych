@@ -1,0 +1,25 @@
+# Keep Cloud Build context small; project state comes from Firestore at runtime.
+.git
+.gitignore
+.gcloudignore
+.venv
+venv
+env
+__pycache__
+*.pyc
+.pytest_cache
+.coverage
+htmlcov
+.DS_Store
+.idea
+.vscode
+.secrets
+*.env
+.env.*
+# Exclude project run data from image
+projects/
+# Firebase / Node (not needed for pipeline job image)
+.firebase
+node_modules
+public
+functions/node_modules
