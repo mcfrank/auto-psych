@@ -15,3 +15,7 @@ pypdf>=4.0.0
 
 # Browser automation for simulated participants (visit deployed experiment)
 playwright>=1.40.0
+
+# Cloud Run / Firestore sync (pipeline state)
+google-cloud-firestore>=2.13.0
+google-cloud-storage>=2.14.0

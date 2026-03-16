@@ -1,5 +1,6 @@
 """Configuration and paths for the auto-psych pipeline."""
 
+import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
@@ -9,7 +10,8 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 # Top-level pipeline defaults (overridable via run_pipeline.py CLI)
 DEFAULT_SIMULATED_N_PARTICIPANTS = 5
 DEFAULT_MAX_VALIDATION_RETRIES = 3
-PROJECTS_DIR = REPO_ROOT / "projects"
+# Override via PIPELINE_PROJECTS_DIR for Cloud Run (e.g. /app/projects)
+PROJECTS_DIR = Path(os.environ.get("PIPELINE_PROJECTS_DIR", REPO_ROOT / "projects"))
 PROMPTS_DIR = REPO_ROOT / "prompts"
 SECRETS_PATH = REPO_ROOT / ".secrets"
 
