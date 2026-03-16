@@ -1,7 +1,7 @@
 """Prompt resolution: canonical + project overrides, and run archive."""
 
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Optional
 
 from .config import PROMPTS_DIR, project_prompts_dir, prompts_used_dir
 
@@ -35,9 +35,11 @@ def resolve_prompts(project_id: str) -> Dict[str, str]:
     return result
 
 
-def archive_prompts_for_run(project_id: str, run_id: int, resolved: Dict[str, str]) -> None:
+def archive_prompts_for_run(
+    project_id: str, run_id: int, resolved: Dict[str, str], run_dir_base: Optional[Path] = None
+) -> None:
     """Copy resolved prompts to run's prompts_used/ for reproducibility."""
-    archive_dir = prompts_used_dir(project_id, run_id)
+    archive_dir = (run_dir_base / "prompts_used") if run_dir_base is not None else prompts_used_dir(project_id, run_id)
     archive_dir.mkdir(parents=True, exist_ok=True)
     for key, text in resolved.items():
         (archive_dir / f"{key}.md").write_text(text, encoding="utf-8")

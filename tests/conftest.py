@@ -1,12 +1,15 @@
 """Shared pytest fixtures for auto-psych tests."""
 
+import sys
 import tempfile
 from pathlib import Path
 
 import pytest
 
-# Repo root
+# Ensure project root is on path so "import src..." works when running pytest
 REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures"
 
 

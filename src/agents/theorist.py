@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
-from src.config import agent_dir, run_dir, DEFAULT_MAX_VALIDATION_RETRIES
+from src.config import agent_dir_for_state, run_dir_for_state, DEFAULT_MAX_VALIDATION_RETRIES
 from src.references import load_references
 from src.agents.base import load_prompt_for_run, invoke_llm
 from src.console_log import agent_header, log_status
@@ -42,7 +42,7 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
     elif state.get("validation_retry_count", 0) > 0:
         max_r = state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})")
-    out_dir = agent_dir(project_id, run_id, "1_theory")
+    out_dir = agent_dir_for_state(project_id, run_id, "1_theory", state)
     out_dir.mkdir(parents=True, exist_ok=True)
     attempt = (state.get("validation_retry_count") or 0) + 1
     validation_feedback = (state.get("validation_feedback") or "").strip()
@@ -69,7 +69,7 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
     current_models: List[Dict[str, Any]] = []
     new_models_this_run = 0
     if run_id >= 2:
-        _copy_previous_run_theories(project_id, run_id, out_dir)
+        _copy_previous_run_theories(project_id, run_id, out_dir, state)
         current_models = _load_current_manifest(out_dir)
         agent_log(out_dir, f"loaded {len(current_models)} existing models from previous run")
 
@@ -163,7 +163,7 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
     # Registry (unchanged logic)
     registry_path = Path(state.get("registry_path", ""))
     if not registry_path or not str(registry_path).strip() or registry_path.resolve().is_dir():
-        registry_path = run_dir(project_id, run_id) / "model_registry.yaml"
+        registry_path = run_dir_for_state(project_id, run_id, state) / "model_registry.yaml"
     if registry_path:
         if run_id == 1:
             k = len(model_names) or 1
@@ -171,7 +171,7 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
             theories = {m: prob_each for m in model_names}
             write_registry(registry_path, theories, reserved_for_new=DEFAULT_RESERVED_FOR_NEW)
         else:
-            prev_registry = run_dir(project_id, run_id - 1) / "model_registry.yaml"
+            prev_registry = run_dir_for_state(project_id, run_id - 1, state) / "model_registry.yaml"
             prev = load_registry(prev_registry)
             prev_theories = prev.get("theories") or {}
             reserved = prev.get("reserved_for_new", DEFAULT_RESERVED_FOR_NEW)
@@ -201,9 +201,9 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _copy_previous_run_theories(project_id: str, run_id: int, out_dir: Path) -> None:
+def _copy_previous_run_theories(project_id: str, run_id: int, out_dir: Path, state: Dict[str, Any]) -> None:
     """Copy previous run's 1_theory/*.py and models_manifest.yaml into out_dir."""
-    prev_dir = run_dir(project_id, run_id - 1) / "1_theory"
+    prev_dir = run_dir_for_state(project_id, run_id - 1, state) / "1_theory"
     if not prev_dir.exists():
         return
     manifest_path = prev_dir / "models_manifest.yaml"
@@ -268,7 +268,7 @@ This is **Run {run_id}** of the pipeline. This is **iteration {iteration}** (one
 
 """)
     if run_id >= 2:
-        prev_registry_path = run_dir(state["project_id"], run_id - 1) / "model_registry.yaml"
+        prev_registry_path = run_dir_for_state(state["project_id"], run_id - 1, state) / "model_registry.yaml"
         prev_reg = load_registry(prev_registry_path)
         prev_theories = prev_reg.get("theories") or {}
         if prev_theories:

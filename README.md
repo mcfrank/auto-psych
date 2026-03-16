@@ -102,14 +102,25 @@ python3 run_pipeline.py --project subjective_randomness --runs 2 --n-participant
 
 - `--project`: Project id (e.g. `subjective_randomness`); must have a `problem_definition.md` under `projects/<project>/`.
 - `--run`: Single run number (creates `projects/<project>/run<N>/`). Use this or `--runs`.
-- `--runs`: Runs to execute: **N** (runs 1 through N) or **A-B** (runs A through B inclusive, e.g. `4-6`). Each run gets its own directory; the theory agent in run n reads run n−1’s interpreter report and registry; the interpreter in run n sees merged data from runs 1..n.
+- `--runs`: Runs to execute: **N** (runs 1 through N) or **A-B** (runs A through B inclusive, e.g. `4-6`). Each run gets its own directory; the theory agent in run n reads run n−1’s interpreter report and registry; the interpreter in run n sees merged data from runs 1..n. When you use `--runs`, runs are stored in a **batch** directory (see Batch archiving below).
+- `--append`: Add runs to the **latest** batch instead of creating a new one. Use with `--run N` or `--runs A-B`. Run IDs are those you specify (e.g. if the batch already has run1–3, use `--append --runs 4-5` to add run4 and run5). Cannot be used with `--agent`.
 - `--mode`: `simulated_participants`, `live`, or `test_prolific`. Use `test_prolific` to run the full Prolific flow with one test participant (Firebase deploy + Prolific test participant + study + collect).
 - `--n-participants`: Number of simulated participants per run (default: 5). Default is in `src/config.py` as `DEFAULT_SIMULATED_N_PARTICIPANTS`.
 - `--max-retries`: Max validation retries per agent before moving on (default: 3). Default in `src/config.py` as `DEFAULT_MAX_VALIDATION_RETRIES`.
 
 Validation runs **inside** the pipeline after each agent: if an agent’s output fails validation, the agent is re-run with the failure message (up to `--max-retries`), then execution continues.
 
-Prompts are resolved from `prompts/` with optional overrides in `projects/<project>/prompts/`. The resolved prompts used for each run are copied to `projects/<project>/run<N>/prompts_used/` for reproducibility.
+Prompts are resolved from `prompts/` with optional overrides in `projects/<project>/prompts/`. The resolved prompts used for each run are copied to `projects/<project>/run<N>/prompts_used/` (or, when using a batch, to the batch run directory) for reproducibility.
+
+### Batch archiving
+
+When you use **`--runs`** (e.g. `--runs 3` or `--runs 4-6`), the pipeline creates a **batch** directory so that all runs are stored under a timestamp and codebase hash:
+
+- **Path:** `projects/<project_id>/batches/batch_<YYYYMMDD>-<HHMM>_<short_hash>/`
+  - Example: `batch_20260316-0923_a1b2c3d`. The short hash is from `git rev-parse HEAD` (or `nogit` / `nogit_dirty` if not a repo).
+- **Contents:** `commit_hash.txt` (full commit, timestamp, dirty flag), `run1/`, `run2/`, … (same layout as `projects/<project>/run<N>/`), plus `correlations.csv` (model–data correlation per run) and `correlations_by_run.png` (line plot: x = run, y = correlation, one line per theory).
+
+Use **`--append`** with `--run` or `--runs` to add more runs to the most recent batch instead of creating a new one. The correlation CSV and plot are updated after each run. The plot is the main convergence diagnostic (no separate metric).
 
 ## Running a single agent (debugging)
 
@@ -145,14 +156,14 @@ python3 run_critic.py --project subjective_randomness --run 1 --agent 1_theory
 
 ## Tests
 
-Install dev dependencies and run pytest:
+Tests are run **manually**. Install dev dependencies and run pytest:
 
 ```bash
 pip install -r requirements-dev.txt
 pytest tests/ -v
 ```
 
-Tests include: model library (each model returns a probability distribution), theory/design output validators, state loader, and a single-agent run (theory with fixtures) followed by validation.
+Tests include: model library (each model returns a probability distribution), EIG bounds and analytic cases, correlation helpers (Pearson r, model–data correlations), theory/design output validators, state loader, and a single-agent run (theory with fixtures) followed by validation. You can add CI (e.g. GitHub Actions) to run `pytest` on push or PR.
 
 ## Project layout
 

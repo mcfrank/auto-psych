@@ -257,10 +257,10 @@ def run_validation(state: Dict[str, Any], agent_key: str) -> Dict[str, Any]:
     Run the validator for the given agent on the current run directory.
     Return state with validation_ok, validation_feedback, validation_retry_count, and last_validated_agent updated.
     """
-    from src.config import run_dir
+    from src.config import run_dir_for_state
     project_id = state.get("project_id", "")
     run_id = state.get("run_id", 0)
-    rdir = run_dir(project_id, run_id)
+    rdir = run_dir_for_state(project_id, run_id, state)
     validator_fn = AGENT_VALIDATORS.get(agent_key)
     if not validator_fn:
         return {

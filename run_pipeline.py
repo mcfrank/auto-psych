@@ -13,15 +13,20 @@ Usage:
 
 import argparse
 import re
+import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 
 # Ensure src is on path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src.config import (
+    REPO_ROOT,
+    batches_dir,
     problem_definition_path,
     run_dir,
+    run_dir_for_state,
     DEFAULT_SIMULATED_N_PARTICIPANTS,
     DEFAULT_MAX_VALIDATION_RETRIES,
 )
@@ -29,10 +34,59 @@ from src.console_log import run_banner, agent_header, log_status
 from src.prompts import resolve_prompts, archive_prompts_for_run
 from src.graph import build_graph
 from src.state_loader import load_state_from_run, minimal_state_for_agent
+from src.batch_plots import append_correlations_to_batch_csv, plot_correlations_by_run
 
 AGENT_SUBDIRS = [
     "1_theory", "2_design", "3_implement", "4_collect", "5_analyze", "6_interpret",
 ]
+
+def _git_commit_hash() -> tuple[str | None, str]:
+    """Return (full_hash, short_for_dir). short is 7 chars or 'nogit'/'nogit_dirty'."""
+    r = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+    )
+    full = r.stdout.strip() if r.returncode == 0 and r.stdout else None
+    d = subprocess.run(
+        ["git", "status", "--porcelain"],
+        capture_output=True,
+        text=True,
+        cwd=REPO_ROOT,
+    )
+    dirty = d.returncode == 0 and bool(d.stdout.strip())
+    if not full:
+        return None, "nogit_dirty" if dirty else "nogit"
+    short = full[:7] + ("_dirty" if dirty else "")
+    return full, short
+
+
+def _create_batch_dir(project_id: str) -> Path:
+    """Create batch_YYYYMMDD-HHMM_shortHash under project batches; write commit_hash.txt. Return batch path."""
+    bdir = batches_dir(project_id)
+    bdir.mkdir(parents=True, exist_ok=True)
+    full_hash, short = _git_commit_hash()
+    stamp = datetime.now().strftime("%Y%m%d-%H%M")
+    name = f"batch_{stamp}_{short}"
+    path = bdir / name
+    path.mkdir(parents=True, exist_ok=True)
+    meta = f"commit={full_hash or 'none'}\ndirty={full_hash is None or '_dirty' in short}\ntimestamp={stamp}\n"
+    (path / "commit_hash.txt").write_text(meta, encoding="utf-8")
+    return path
+
+
+def _latest_batch_dir(project_id: str) -> Path | None:
+    """Return path to the latest batch directory (by name sort), or None if none exist."""
+    bdir = batches_dir(project_id)
+    if not bdir.exists():
+        return None
+    subdirs = [d for d in bdir.iterdir() if d.is_dir() and d.name.startswith("batch_")]
+    if not subdirs:
+        return None
+    subdirs.sort(key=lambda d: d.name, reverse=True)
+    return subdirs[0]
+
 
 def _parse_runs(value: str) -> list[int]:
     """
@@ -81,10 +135,12 @@ def _build_initial_state(
     interpreter_report_path: str | None = None,
     simulated_n_participants: int = DEFAULT_SIMULATED_N_PARTICIPANTS,
     max_validation_retries: int = DEFAULT_MAX_VALIDATION_RETRIES,
+    batch_dir: Path | str | None = None,
 ) -> dict:
-    rdir = run_dir(project_id, run_id)
+    state = {"batch_dir": str(batch_dir) if batch_dir else None}
+    rdir = run_dir_for_state(project_id, run_id, state) if state.get("batch_dir") else run_dir(project_id, run_id)
     registry_path = rdir / "model_registry.yaml"
-    state = {
+    state.update({
         "project_id": project_id,
         "run_id": run_id,
         "mode": mode,
@@ -92,7 +148,9 @@ def _build_initial_state(
         "registry_path": str(registry_path),
         "simulated_n_participants": simulated_n_participants,
         "max_validation_retries": max_validation_retries,
-    }
+    })
+    if not state.get("batch_dir"):
+        del state["batch_dir"]
     if interpreter_report_path:
         state["interpreter_report_path"] = interpreter_report_path
     return state
@@ -132,30 +190,50 @@ def _run_full_pipeline(
     simulated_n_participants: int,
     max_validation_retries: int,
     run_index: int | None = None,
+    batch_dir: Path | None = None,
 ) -> None:
     run_banner(run_id, total_runs, run_index)
-    rdir = run_dir(project_id, run_id)
+    initial_state = _build_initial_state(
+        project_id, run_id, mode, prob_path, None,
+        simulated_n_participants=simulated_n_participants,
+        max_validation_retries=max_validation_retries,
+        batch_dir=batch_dir,
+    )
+    rdir = run_dir_for_state(project_id, run_id, initial_state)
     rdir.mkdir(parents=True, exist_ok=True)
     for key in AGENT_SUBDIRS:
         (rdir / key).mkdir(exist_ok=True)
     resolved = resolve_prompts(project_id)
-    archive_prompts_for_run(project_id, run_id, resolved)
+    archive_prompts_for_run(project_id, run_id, resolved, run_dir_base=rdir)
     prev_report = None
     if run_id > 1:
-        prev = run_dir(project_id, run_id - 1) / "6_interpret" / "report.md"
+        prev_dir = run_dir_for_state(project_id, run_id - 1, initial_state)
+        prev = prev_dir / "6_interpret" / "report.md"
         if prev.exists():
             prev_report = str(prev)
     if interpreter_report:
         prev_report = interpreter_report
-    initial_state = _build_initial_state(
-        project_id, run_id, mode, prob_path, prev_report,
-        simulated_n_participants=simulated_n_participants,
-        max_validation_retries=max_validation_retries,
-    )
+    initial_state["interpreter_report_path"] = prev_report or ""
     if total_runs is not None:
         initial_state["total_runs"] = total_runs
+    if batch_dir:
+        log_status(f"batch_dir={batch_dir}", indent=False)
     graph = build_graph()
     graph.invoke(initial_state)
+    if batch_dir:
+        corr_path = rdir / "6_interpret" / "model_correlations.yaml"
+        if corr_path.exists():
+            import yaml
+            try:
+                data = yaml.safe_load(corr_path.read_text(encoding="utf-8")) or {}
+                corr = data.get("correlations") or {}
+                if corr:
+                    append_correlations_to_batch_csv(batch_dir, run_id, corr)
+            except Exception:
+                pass
+        plot_path = plot_correlations_by_run(batch_dir)
+        if plot_path.exists():
+            log_status(f"Updated {plot_path}", indent=False)
     print(f"Run {run_id} completed.", file=sys.stderr, flush=True)
 
 
@@ -213,7 +291,19 @@ def main() -> None:
         default=None,
         help="Path to interpreter report from previous run (theorist context; single-run only)",
     )
+    parser.add_argument(
+        "--append",
+        action="store_true",
+        help="Add runs to the latest batch (use with --run or --runs). Do not create a new batch.",
+    )
     args = parser.parse_args()
+
+    if args.append and args.agent is not None:
+        print("Error: --append cannot be used with --agent.", file=sys.stderr)
+        sys.exit(1)
+    if args.append and args.run is None and args.runs is None:
+        print("Error: --append requires --run N or --runs N.", file=sys.stderr)
+        sys.exit(1)
 
     project_id = args.project
     mode = args.mode
@@ -251,7 +341,7 @@ def main() -> None:
         _run_single_agent(project_id, run_id, args.agent, state)
         return
 
-    # Full pipeline
+    # Full pipeline (multi-run with optional batch)
     if args.runs is not None:
         try:
             run_ids = _parse_runs(args.runs)
@@ -259,6 +349,17 @@ def main() -> None:
             print(f"Error: {e}", file=sys.stderr)
             sys.exit(1)
         total_runs = len(run_ids)
+        batch_dir = None
+        if args.append:
+            batch_dir = _latest_batch_dir(project_id)
+            if batch_dir is None:
+                print("Error: --append used but no existing batch found.", file=sys.stderr)
+                sys.exit(1)
+            log_status(f"Appending to batch: {batch_dir}", indent=False)
+        else:
+            batch_dir = _create_batch_dir(project_id)
+            full_hash, short = _git_commit_hash()
+            log_status(f"Batch: {batch_dir} (commit {short})", indent=False)
         for run_index, run_id in enumerate(run_ids, start=1):
             _run_full_pipeline(
                 project_id, run_id, mode, prob_path,
@@ -266,19 +367,29 @@ def main() -> None:
                 simulated_n_participants=args.n_participants,
                 max_validation_retries=args.max_retries,
                 run_index=run_index,
+                batch_dir=batch_dir,
             )
         print("All runs completed.", file=sys.stderr, flush=True)
         return
 
+    # Full pipeline (single run, optionally in latest batch with --append)
     run_id = args.run
     if run_id is None:
         print("Error: specify --run N or --runs N", file=sys.stderr)
         sys.exit(1)
+    batch_dir = None
+    if args.append:
+        batch_dir = _latest_batch_dir(project_id)
+        if batch_dir is None:
+            print("Error: --append used but no existing batch found.", file=sys.stderr)
+            sys.exit(1)
+        log_status(f"Appending to batch: {batch_dir}", indent=False)
     _run_full_pipeline(
         project_id, run_id, mode, prob_path,
         args.interpreter_report, total_runs=None,
         simulated_n_participants=args.n_participants,
         max_validation_retries=args.max_retries,
+        batch_dir=batch_dir,
     )
 
 

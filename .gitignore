@@ -29,7 +29,7 @@ build/
 *.swo
 
 # Project run artifacts (optional: uncomment to ignore generated runs)
-# projects/*/run*/
+projects/*/run*/
 
 # Node (for jsPsych Builder when used)
 node_modules/

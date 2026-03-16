@@ -6,7 +6,7 @@ import subprocess
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-from src.config import REPO_ROOT, agent_dir, DEFAULT_SIMULATED_N_PARTICIPANTS
+from src.config import REPO_ROOT, agent_dir_for_state, DEFAULT_SIMULATED_N_PARTICIPANTS
 from src.console_log import agent_header, log_status
 from src.observability import agent_log
 
@@ -292,7 +292,7 @@ def run_deployer(state: Dict[str, Any]) -> Dict[str, Any]:
     """Standalone deployer (legacy); prefer run_deploy_logic from implement step."""
     project_id = state["project_id"]
     run_id = state["run_id"]
-    out_dir = agent_dir(project_id, run_id, "3_implement")  # same dir as implement
+    out_dir = agent_dir_for_state(project_id, run_id, "3_implement", state)  # same dir as implement
     out_dir.mkdir(parents=True, exist_ok=True)
     return run_deploy_logic(state, out_dir)
 

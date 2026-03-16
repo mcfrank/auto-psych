@@ -1,6 +1,7 @@
 """Configuration and paths for the auto-psych pipeline."""
 
 from pathlib import Path
+from typing import Any, Dict, Optional
 
 # Repo root (parent of src/)
 REPO_ROOT = Path(__file__).resolve().parent.parent
@@ -33,9 +34,26 @@ def run_dir(project_id: str, run_id: int) -> Path:
     return project_dir(project_id) / f"run{run_id}"
 
 
+def run_dir_for_state(project_id: str, run_id: int, state: Optional[Dict[str, Any]] = None) -> Path:
+    """Return run directory; when state has 'batch_dir', runs live under that batch."""
+    if state and state.get("batch_dir"):
+        return Path(state["batch_dir"]) / f"run{run_id}"
+    return run_dir(project_id, run_id)
+
+
 def agent_dir(project_id: str, run_id: int, agent_key: str) -> Path:
     """Return path to agent output directory (e.g. run1/1_theory)."""
     return run_dir(project_id, run_id) / agent_key
+
+
+def agent_dir_for_state(project_id: str, run_id: int, agent_key: str, state: Optional[Dict[str, Any]] = None) -> Path:
+    """Return agent directory; when state has 'batch_dir', runs live under that batch."""
+    return run_dir_for_state(project_id, run_id, state) / agent_key
+
+
+def batches_dir(project_id: str) -> Path:
+    """Return path to project batches directory (e.g. projects/subjective_randomness/batches)."""
+    return project_dir(project_id) / "batches"
 
 
 def prompts_used_dir(project_id: str, run_id: int) -> Path:
