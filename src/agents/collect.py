@@ -349,6 +349,11 @@ def run_collect(state: Dict[str, Any]) -> Dict[str, Any]:
     else:
         rows = _collect_simulated(state, config, out_dir, logs_dir, stimuli, model_names)
 
+    # Inject batch_id for book-keeping (pipeline batch directory name when in batch mode; empty when not)
+    batch_id_val = Path(state["batch_dir"]).name if state.get("batch_dir") else ""
+    for r in rows:
+        r["batch_id"] = batch_id_val
+
     csv_path = out_dir / "responses.csv"
     agent_log(out_dir, f"collected n_rows={len(rows) if rows else 0}")
     if rows:
