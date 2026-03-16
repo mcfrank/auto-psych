@@ -90,6 +90,140 @@ To test the Prolific flow with a single test participant (no real recruitment):
 2. **Project config**: Create `projects/<project_id>/prolific_config.yaml` (or copy from `prolific_config.yaml.example`). Set **`test_participant_email`** to an email that is **not** already registered on Prolific; this account will be created as a test participant and used as the only place in the study.
 3. **Run**: `python3 run_pipeline.py --project <project_id> --run 1 --mode test_prolific`. The implement step deploys to Firebase, creates the test participant, creates a 1-place study with that participant on a custom allowlist, and publishes it. The collect step polls Prolific until the study is complete, then fetches results from Firebase. After the participant finishes the experiment, the page redirects to Prolific’s completion URL.
 
+### 6. (Optional) Cloud Run Job deployment
+
+You can run the full pipeline as a **Cloud Run Job** with state stored in a **Firestore** database (and optional GCS for large artifacts). The job syncs project and batch data from Firestore before running, runs `run_pipeline.py` with the same CLI args, then syncs results back. No `.secrets` in the image — use Secret Manager for `GOOGLE_API_KEY`.
+
+**Setup checklist (secrets, IDs, parameters)**
+
+Use one GCP project for both **participant results** (Firebase Hosting + Cloud Functions + Firestore) and **pipeline state** (Cloud Run Job + Firestore). With two Firestore databases, use one for pipeline state and the **(default)** database for participant results (the existing Cloud Functions use the default DB).
+
+| What | Where / value |
+|------|----------------|
+| **GCP Project ID** | Your project ID (e.g. `my-auto-psych`). Use this everywhere below. |
+| **Firestore for participant results** | Use the **(default)** database. The `functions` (submit/results) use `admin.firestore()` with no database id, so they always write/read the default DB. Enable Firestore in Native mode if you haven’t. |
+| **Firestore for pipeline state** | Your second database (e.g. `pipeline-state`). Set as job env: `PIPELINE_FIRESTORE_DATABASE=pipeline-state` (omit or use `(default)` if you use the default DB for pipeline instead). |
+| **Secret Manager** | Create secret **name** `GOOGLE_API_KEY`, value = your Gemini API key. The Cloud Run Job references it as `GOOGLE_API_KEY:latest`. |
+| **`.firebaserc`** (repo root) | `{"projects": {"default": "YOUR_GCP_PROJECT_ID"}}` so the deploy step uses this project for Hosting + Functions. |
+| **`firebase.json`** → `hosting.site` | Set to your **Firebase Hosting site** (usually the same as GCP Project ID). Example: `"site": "my-auto-psych"`. |
+| **Cloud Run Job env (optional)** | `PIPELINE_FIRESTORE_DATABASE` = your pipeline Firestore database id (e.g. `pipeline-state`). `PIPELINE_GCS_BUCKET` = bucket name if you use GCS for large artifacts (optional). |
+| **Service account (Cloud Run Job)** | The job runs as an identity that needs **Secret Manager Secret Accessor**, **Cloud Datastore User** (Firestore), and (if using GCS) **Storage Object Admin**. You don’t put this in the repo — see below. |
+
+**Service account: where it’s set**
+
+You don’t specify a service account in the codebase. By default, a Cloud Run Job runs as the project’s **default compute service account** (`PROJECT_NUMBER-compute@developer.gserviceaccount.com`). When you run `gcloud run jobs create ...` without `--service-account`, Cloud Run uses that default. You only need to **grant that account** the roles above (Console: **IAM & Admin → IAM**, find “Compute Engine default service account”, add the roles; or use `gcloud projects add-iam-policy-binding` with `--member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com"`). If you prefer a dedicated service account, create one in **IAM & Admin → Service Accounts**, grant it the same roles, then pass it when creating the job: `--service-account=your-sa@PROJECT_ID.iam.gserviceaccount.com`.
+
+After deploy, the experiment URL is `https://YOUR_GCP_PROJECT_ID.web.app` (or your custom domain). The collect step uses `experiment_url` and `results_api_url` from `config.json` (same origin for `/submit` and `/results`).
+
+**Prerequisites**
+
+- A GCP project with **Cloud Run**, **Firestore**, and (optional) **Cloud Storage** enabled. Enable Cloud Storage if you use a GCS bucket for references and large artifacts (recommended).
+- Two Firestore databases: **(default)** for participant results (submit/results), and a second (e.g. `pipeline-state`) for pipeline state if you want them separate.
+- **Secret Manager**: Create a secret named `GOOGLE_API_KEY` with your Gemini API key (e.g. in [Secret Manager](https://console.cloud.google.com/security/secret-manager)).
+- A **service account** for the job with the roles in the table above.
+
+**1. Build and push the image**
+
+From the repo root:
+
+```bash
+gcloud builds submit --tag gcr.io/PROJECT_ID/auto-psych-job
+```
+
+Replace `PROJECT_ID` with your GCP project ID. The build uses `.gcloudignore`, so `projects/`, `.git`, and other unneeded paths are excluded; project state is loaded from Firestore at run time.
+
+**Troubleshooting: "Permission artifactregistry.repositories.uploadArtifacts denied"**
+
+- **Who pushes the image:** Your `gcloud` login is only used to *submit* the build to Cloud Build. The actual *push* of the image is done by the **Cloud Build service account** in your project (e.g. `PROJECT_NUMBER@cloudbuild.gserviceaccount.com`), not your user account. The denial means that service account doesn’t have permission to upload to the image registry.
+- **Check your gcloud:** Run `gcloud auth list` to see which account is active and `gcloud config get-value project` to see the current project. Log in with `gcloud auth login` and set the project with `gcloud config set project PROJECT_ID`.
+- **Fix the push permission:** Grant the Cloud Build service account permission to write to the registry. For `gcr.io` (and when Cloud Build uses Artifact Registry under the hood), grant **Artifact Registry Writer** to the Cloud Build default service account:
+
+  ```bash
+  # Get your project number (not the project ID)
+  gcloud projects describe PROJECT_ID --format="value(projectNumber)"
+  # Grant Artifact Registry Writer to the Cloud Build service account
+  gcloud projects add-iam-policy-binding PROJECT_ID \
+    --member="serviceAccount:PROJECT_NUMBER@cloudbuild.gserviceaccount.com" \
+    --role="roles/artifactregistry.writer"
+  ```
+
+  Replace `PROJECT_ID` and `PROJECT_NUMBER`. If the image lives in a specific Artifact Registry repo (e.g. you switched to `REGION-docker.pkg.dev/PROJECT_ID/REPO_NAME/...`), you can limit the role to that repository in the IAM page instead of project-wide.
+
+**2. Create the Cloud Run Job**
+
+Create the job with `GOOGLE_API_KEY` injected from Secret Manager (do not put the key in an env value):
+
+```bash
+gcloud run jobs create pipeline-job \
+  --image gcr.io/auto-psych/auto-psych-job \
+  --region us-central1 \
+  --set-secrets=GOOGLE_API_KEY=GOOGLE_API_KEY:latest \
+  --memory 4Gi --cpu 2 \
+  --task-timeout 7200 \
+  --max-retries 0
+```
+
+Adjust `--region` if needed. If you use a second Firestore database for pipeline state (see checklist above), add e.g. `--set-env-vars=PIPELINE_FIRESTORE_DATABASE=pipeline-state`. Other optional env:
+
+- `PIPELINE_FIRESTORE_DATABASE` — Firestore database id for pipeline state (default: `(default)`).
+- `PIPELINE_GCS_BUCKET` — GCS bucket name for large artifacts (references, run outputs); recommended so large reference files and run artifacts are stored in GCS instead of hitting Firestore’s 1MB doc limit.
+
+**2b. Create a GCS bucket for references and large artifacts (recommended)**
+
+Create a bucket and grant the Cloud Run job’s service account access so large reference files and run artifacts can be stored in GCS. Replace `auto-psych` with your actual GCP project ID.
+
+```bash
+# Set your project ID (required — do not leave as PROJECT_ID)
+export PROJECT_ID=auto-psych
+export PIPELINE_GCS_BUCKET=auto-psych-results-docs
+gsutil mb -p $PROJECT_ID -l us-central1 gs://${PIPELINE_GCS_BUCKET}/
+
+# Grant the default compute SA (used by the Cloud Run Job) write/read to the bucket
+PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
+gsutil iam ch serviceAccount:${PROJECT_NUMBER}-compute@developer.gserviceaccount.com:objectAdmin gs://${PIPELINE_GCS_BUCKET}
+```
+
+When you run the populate script (step 3), set the same bucket so large references are uploaded to GCS: `export PIPELINE_GCS_BUCKET=auto-psych-pipeline-YOUR_PROJECT_ID` (or your bucket name). When creating or updating the job, add `--set-env-vars=PIPELINE_GCS_BUCKET=your-bucket-name`.
+
+**3. Populate Firestore with a project (one-time)**
+
+Before the first run, the project must exist in Firestore so the job can sync it down. From your machine you need **Application Default Credentials** so the script can write to Firestore: run `gcloud auth application-default login` (and choose the account that has access to the project). If you created a GCS bucket (step 2b), set `export PIPELINE_GCS_BUCKET=your-bucket-name` so large reference files are uploaded to GCS. Then run:
+
+```bash
+source venv/bin/activate
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.insert(0, '.')
+from src.firestore_sync import ensure_project_in_firestore
+ensure_project_in_firestore('subjective_randomness', Path('projects/subjective_randomness'))
+"
+```
+
+Use your project id and path. This writes `problem_definition.md` and `references/` from the local `projects/` tree into Firestore (and uploads large reference files to GCS when `PIPELINE_GCS_BUCKET` is set).
+
+**4. Execute the job**
+
+Pass pipeline arguments as job args (comma-separated). Examples:
+
+```bash
+# Multiple runs (creates a batch), 10 simulated participants per run
+gcloud run jobs execute pipeline-job --region us-central1 \
+  --args="--project=subjective_randomness,--runs=3,--mode=simulated_participants,--n-participants=10,--max-retries=5"
+
+# Single run
+gcloud run jobs execute pipeline-job --region us-central1 \
+  --args="--project=subjective_randomness,--run=1,--mode=simulated_participants"
+
+# Append runs to the latest batch
+gcloud run jobs execute pipeline-job --region us-central1 \
+  --args="--project=subjective_randomness,--append,--runs=4-6,--mode=simulated_participants"
+```
+
+The job runs to completion (theory → design → implement → collect → analyze → interpret for each run). Batch and run outputs are synced back to Firestore (and optionally GCS). Each batch document stores full job metadata: `mode`, `n_participants`, `max_retries`, `append`, `runs_spec`, and codebase `commit_hash` / `dirty`.
+
+For more detail (YAML spec, updating the job), see [cloudrun/README.md](cloudrun/README.md).
+
 ## Running the pipeline
 
 ```bash
