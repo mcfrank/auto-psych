@@ -6,7 +6,7 @@ import json
 import yaml
 from collections import defaultdict
 
-from src.config import agent_dir, run_dir, DEFAULT_MAX_VALIDATION_RETRIES
+from src.config import agent_dir_for_state, run_dir_for_state, DEFAULT_MAX_VALIDATION_RETRIES
 from src.agents.base import load_prompt_for_run, invoke_llm
 from src.console_log import agent_header, log_status
 from src.observability import agent_log, write_transcript
@@ -17,59 +17,19 @@ from src.registry import (
     DEFAULT_RESERVED_FOR_NEW,
     write_registry,
 )
+from src.stats.correlations import model_data_correlations
 
 RESPONSE_OPTIONS = ["left", "right"]
 
 
-def _pearson_r(x: List[float], y: List[float]) -> float:
-    """Pearson correlation between two lists. Returns 0.0 if undefined (e.g. constant input)."""
-    n = len(x)
-    if n != len(y) or n < 2:
-        return 0.0
-    mean_x = sum(x) / n
-    mean_y = sum(y) / n
-    var_x = sum((v - mean_x) ** 2 for v in x)
-    var_y = sum((v - mean_y) ** 2 for v in y)
-    if var_x == 0 or var_y == 0:
-        return 0.0
-    cov = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
-    return cov / (var_x * var_y) ** 0.5
+def _format_correlations_for_prompt(correlations: Dict[str, float]) -> str:
+    """Format precomputed model–data correlations as readable text for the LLM prompt."""
+    return "\n".join(f"- {m}: {r}" for m, r in sorted(correlations.items()))
 
 
-def _correlations_from_aggregate_and_predictions(
-    model_predictions: Dict[str, List[float]], aggregate_lines: List[str]
-) -> Dict[str, float]:
-    """Compute Pearson r between each model's predicted P(left) and observed chose_left_pct per stimulus."""
-    # aggregate_lines[0] is header; rest are "seq_a,seq_b,pct,n"
-    observed = []
-    for line in aggregate_lines[1:]:
-        parts = line.strip().split(",")
-        if len(parts) >= 3:
-            try:
-                observed.append(float(parts[2]))
-            except ValueError:
-                continue
-    if len(observed) == 0:
-        return {m: 0.0 for m in model_predictions}
-    correlations = {}
-    for model, preds in model_predictions.items():
-        if len(preds) != len(observed):
-            preds = preds[: len(observed)] if len(preds) > len(observed) else preds + [0.5] * (len(observed) - len(preds))
-        correlations[model] = round(_pearson_r(preds, observed), 4)
-    return correlations
-
-
-def _format_correlations_for_prompt(
-    model_predictions: Dict[str, List[float]], aggregate_lines: List[str]
-) -> str:
-    """Format model–data correlations as readable text for the LLM prompt."""
-    corr = _correlations_from_aggregate_and_predictions(model_predictions, aggregate_lines)
-    return "\n".join(f"- {m}: {r}" for m, r in sorted(corr.items()))
-
-
-def _analyst_correlations_section(project_id: str, run_id: int) -> str:
+def _analyst_correlations_section(project_id: str, run_id: int, state: Dict[str, Any]) -> str:
     """If the analyze step wrote model_correlations.yaml for this run, include it in the prompt."""
-    corr_path = run_dir(project_id, run_id) / "5_analyze" / "model_correlations.yaml"
+    corr_path = run_dir_for_state(project_id, run_id, state) / "5_analyze" / "model_correlations.yaml"
     if not corr_path.exists():
         return ""
     try:
@@ -83,7 +43,7 @@ def _analyst_correlations_section(project_id: str, run_id: int) -> str:
         return ""
 
 
-def _merge_aggregates_and_summary(project_id: str, run_id: int) -> Tuple[str, List[str], dict]:
+def _merge_aggregates_and_summary(project_id: str, run_id: int, state: Dict[str, Any]) -> Tuple[str, List[str], dict]:
     """
     Merge aggregate.csv and summary_stats from runs 1..run_id.
     Returns (merged_aggregate_csv_string, aggregate_lines for prompt, merged_summary_dict).
@@ -92,7 +52,7 @@ def _merge_aggregates_and_summary(project_id: str, run_id: int) -> Tuple[str, Li
     total_responses = 0
     total_left = 0.0
     for r in range(1, run_id + 1):
-        agg_path = run_dir(project_id, r) / "5_analyze" / "aggregate.csv"
+        agg_path = run_dir_for_state(project_id, r, state) / "5_analyze" / "aggregate.csv"
         if not agg_path.exists():
             continue
         lines = agg_path.read_text(encoding="utf-8").strip().split("\n")
@@ -164,7 +124,7 @@ def run_interpreter(state: Dict[str, Any]) -> Dict[str, Any]:
     elif state.get("validation_retry_count", 0) > 0:
         max_r = state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})")
-    out_dir = agent_dir(project_id, run_id, "6_interpret")
+    out_dir = agent_dir_for_state(project_id, run_id, "6_interpret", state)
     out_dir.mkdir(parents=True, exist_ok=True)
     attempt = (state.get("validation_retry_count") or 0) + 1
     validation_feedback = (state.get("validation_feedback") or "").strip()
@@ -174,7 +134,7 @@ def run_interpreter(state: Dict[str, Any]) -> Dict[str, Any]:
         agent_log(out_dir, f"Validation feedback: {validation_feedback[:500]}")
 
     # Merge data from runs 1..run_id so interpreter sees all data
-    merged_csv, aggregate_lines, summary = _merge_aggregates_and_summary(project_id, run_id)
+    merged_csv, aggregate_lines, summary = _merge_aggregates_and_summary(project_id, run_id, state)
     merged_aggregate_path = out_dir / "aggregate_merged.csv"
     merged_aggregate_path.write_text(merged_csv, encoding="utf-8")
     merged_summary_path = out_dir / "summary_merged.json"
@@ -209,8 +169,8 @@ def run_interpreter(state: Dict[str, Any]) -> Dict[str, Any]:
             for m, probs in preds.items():
                 model_predictions.setdefault(m, []).append(probs.get("left", 0.5))
 
-    # Pearson correlation per model (predicted P(left) vs observed proportion chose left)
-    correlations = _correlations_from_aggregate_and_predictions(model_predictions, aggregate_lines)
+    # Correlations are computed in code (merged aggregate); interpreter prompt receives these numbers only—no hand computation by LLM.
+    correlations = model_data_correlations(aggregate_lines, model_names, theorist_dir, RESPONSE_OPTIONS)
     (out_dir / "model_correlations.yaml").write_text(
         yaml.dump({"correlations": correlations}, default_flow_style=False, sort_keys=False),
         encoding="utf-8",
@@ -249,8 +209,8 @@ This is **Run {run_id}** of the pipeline. Your report and the theory probabiliti
 
 ## Model–data correlations (Pearson r: predicted P(left) vs observed proportion chose left, per stimulus)
 
-{_format_correlations_for_prompt(model_predictions, aggregate_lines)}
-{_analyst_correlations_section(project_id, run_id)}
+{_format_correlations_for_prompt(correlations)}
+{_analyst_correlations_section(project_id, run_id, state)}
 
 Write the report in **formatted Markdown** (use headers, bullet lists, bold/italic). Do not output JSON for the report body. Write a short report (2–4 paragraphs) that:
 1. Summarizes what was tested (subjective randomness: which sequence looks more random).

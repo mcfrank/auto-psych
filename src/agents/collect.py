@@ -16,7 +16,7 @@ import urllib.parse
 from datetime import datetime
 import yaml
 
-from src.config import agent_dir, run_dir, DEFAULT_MAX_VALIDATION_RETRIES
+from src.config import agent_dir_for_state, DEFAULT_MAX_VALIDATION_RETRIES
 from src.console_log import agent_header, log_status
 from src.observability import agent_log
 from src.models.randomness import MODEL_LIBRARY, get_model_predictions
@@ -321,7 +321,7 @@ def run_collect(state: Dict[str, Any]) -> Dict[str, Any]:
     elif state.get("validation_retry_count", 0) > 0:
         max_r = state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})")
-    out_dir = agent_dir(project_id, run_id, "4_collect")
+    out_dir = agent_dir_for_state(project_id, run_id, "4_collect", state)
     out_dir.mkdir(parents=True, exist_ok=True)
     attempt = (state.get("validation_retry_count") or 0) + 1
     validation_feedback = (state.get("validation_feedback") or "").strip()

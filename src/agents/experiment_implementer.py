@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Any, Dict, List
 import json
 
-from src.config import REPO_ROOT, agent_dir, DEFAULT_MAX_VALIDATION_RETRIES
+from src.config import REPO_ROOT, agent_dir_for_state, DEFAULT_MAX_VALIDATION_RETRIES
 from src.console_log import agent_header, log_status
 from src.observability import agent_log
 from src.agents.deployer import run_deploy_logic
@@ -66,7 +66,7 @@ def run_experiment_implementer(state: Dict[str, Any]) -> Dict[str, Any]:
     elif state.get("validation_retry_count", 0) > 0:
         max_r = state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})")
-    out_dir = agent_dir(project_id, run_id, "3_implement")
+    out_dir = agent_dir_for_state(project_id, run_id, "3_implement", state)
     out_dir.mkdir(parents=True, exist_ok=True)
     attempt = (state.get("validation_retry_count") or 0) + 1
     validation_feedback = (state.get("validation_feedback") or "").strip()

@@ -16,7 +16,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
-from src.config import agent_dir, DEFAULT_MAX_VALIDATION_RETRIES
+from src.config import agent_dir_for_state, DEFAULT_MAX_VALIDATION_RETRIES
 from src.agents.base import load_prompt_for_run, invoke_llm
 from src.console_log import agent_header, log_status
 from src.observability import agent_log, write_transcript
@@ -44,7 +44,7 @@ def run_experiment_designer(state: Dict[str, Any]) -> Dict[str, Any]:
     elif state.get("validation_retry_count", 0) > 0:
         max_r = state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
         log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})")
-    out_dir = agent_dir(project_id, run_id, "2_design")
+    out_dir = agent_dir_for_state(project_id, run_id, "2_design", state)
     out_dir.mkdir(parents=True, exist_ok=True)
     attempt = (state.get("validation_retry_count") or 0) + 1
     validation_feedback = (state.get("validation_feedback") or "").strip()
@@ -90,7 +90,7 @@ Please fix the design script so it produces valid stimuli.json with sequence_a, 
 This is **Run {run_id}** of the pipeline.
 """
     if run_id >= 2:
-        prev_design_dir = agent_dir(project_id, run_id - 1, "2_design")
+        prev_design_dir = agent_dir_for_state(project_id, run_id - 1, "2_design", state)
         user_content += f"""The previous run's design is in: `{prev_design_dir}` (stimuli.json, design_rationale.md). You may reuse or adapt it if the theory set is unchanged or similar, so experiments stay comparable across runs.
 
 """
@@ -396,7 +396,12 @@ def expected_information_gain(
     theorist_dir: Optional[Path] = None,
     model_weights: Optional[Dict[str, float]] = None,
 ) -> float:
-    """EIG = H(M) - H(M|R). Uses model_weights if provided, else uniform prior over models."""
+    """Expected information gain (EIG) of the stimulus about the model identity.
+
+    Formula: EIG = H(M) - E_R[H(M|R)] = H(M) - (p_left * H(M|left) + p_right * H(M|right)).
+    Entropy is base-2 (bits). Predictions are P(left) and P(right)=1-P(left) per model.
+    Uses model_weights as prior over models if provided, else uniform prior.
+    """
     preds = get_model_predictions(stimulus, RESPONSE_OPTIONS, model_names, theorist_dir)
     if not preds:
         return 0.0
