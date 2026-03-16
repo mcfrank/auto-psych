@@ -1,6 +1,6 @@
 # Cloud Run Job (pipeline)
 
-Run the auto-psych pipeline as a Cloud Run Job with state in Firestore.
+Run the auto-psych pipeline as a Cloud Run Job with state in Firestore. **For full setup, checklist, GCS bucket, Firestore populate, and troubleshooting, see [CLOUDRUN_README.md](../CLOUDRUN_README.md)** in the repo root.
 
 ## Prerequisites
 

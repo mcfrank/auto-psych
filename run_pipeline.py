@@ -42,20 +42,24 @@ AGENT_SUBDIRS = [
 
 def _git_commit_hash() -> tuple[str | None, str]:
     """Return (full_hash, short_for_dir). short is 7 chars or 'nogit'/'nogit_dirty'."""
-    r = subprocess.run(
-        ["git", "rev-parse", "HEAD"],
-        capture_output=True,
-        text=True,
-        cwd=REPO_ROOT,
-    )
-    full = r.stdout.strip() if r.returncode == 0 and r.stdout else None
-    d = subprocess.run(
-        ["git", "status", "--porcelain"],
-        capture_output=True,
-        text=True,
-        cwd=REPO_ROOT,
-    )
-    dirty = d.returncode == 0 and bool(d.stdout.strip())
+    try:
+        r = subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            capture_output=True,
+            text=True,
+            cwd=REPO_ROOT,
+        )
+        full = r.stdout.strip() if r.returncode == 0 and r.stdout else None
+        d = subprocess.run(
+            ["git", "status", "--porcelain"],
+            capture_output=True,
+            text=True,
+            cwd=REPO_ROOT,
+        )
+        dirty = d.returncode == 0 and bool(d.stdout.strip())
+    except (FileNotFoundError, OSError):
+        # No git in PATH (e.g. Cloud Run container) or not a repo
+        return None, "nogit"
     if not full:
         return None, "nogit_dirty" if dirty else "nogit"
     short = full[:7] + ("_dirty" if dirty else "")
