@@ -1,0 +1,5 @@
+reserved_for_new: 0.15
+theories:
+  alternation: 0.1
+  griffiths_representativeness: 0.1
+  representativeness: 0.65
