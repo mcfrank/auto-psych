@@ -12,7 +12,7 @@ from src.console_log import agent_header, log_status
 from src.observability import agent_log, write_transcript
 from src.agents.llm_output_parsing import extract_yaml_from_response, ensure_str
 from src.models.loader import get_model_names_from_manifest
-from src.models.randomness import MODEL_LIBRARY, get_model_predictions
+from src.models.randomness import get_model_predictions
 from src.registry import (
     DEFAULT_RESERVED_FOR_NEW,
     write_registry,
@@ -155,8 +155,7 @@ def run_interpreter(state: Dict[str, Any]) -> Dict[str, Any]:
     if not model_names and manifest_path and manifest_path.exists():
         manifest = yaml.safe_load(manifest_path.read_text()) or {}
         model_names = get_model_names_from_manifest(manifest, theorist_dir)
-    if not model_names:
-        model_names = list(MODEL_LIBRARY.keys())
+    # model_names from manifest (theorist's models only); no fallback
 
     # Compute model predictions for each stimulus in aggregate
     model_predictions = {}
@@ -176,7 +175,7 @@ def run_interpreter(state: Dict[str, Any]) -> Dict[str, Any]:
         encoding="utf-8",
     )
 
-    prompt = load_prompt_for_run(project_id, run_id, "6_interpret")
+    prompt = load_prompt_for_run(project_id, run_id, "6_interpret", state)
     validation_feedback = (state.get("validation_feedback") or "").strip()
     user_content = ""
     if validation_feedback:

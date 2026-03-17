@@ -19,7 +19,9 @@ import yaml
 from src.config import agent_dir_for_state, DEFAULT_MAX_VALIDATION_RETRIES
 from src.console_log import agent_header, log_status
 from src.observability import agent_log
-from src.models.randomness import MODEL_LIBRARY, get_model_predictions
+from src.models.randomness import get_model_predictions
+from src.models.loader import get_model_names_from_manifest
+from src.models.ground_truth import get_ground_truth_models
 
 RESPONSE_OPTIONS = ["left", "right"]
 
@@ -91,6 +93,7 @@ def _drive_experiment_with_llm(
     project_id: str,
     run_id: int,
     logs_dir: Path,
+    state: dict | None = None,
 ) -> Tuple[bool, bool]:
     """
     Advance the experiment by sending each screen to the LLM and executing its
@@ -106,7 +109,7 @@ def _drive_experiment_with_llm(
         llm = get_llm()
     except Exception:
         return (False, False)
-    steering_prompt = load_prompt_for_run(project_id, run_id, "4_collect_steering")
+    steering_prompt = load_prompt_for_run(project_id, run_id, "4_collect_steering", state)
     if not steering_prompt.strip():
         from src.config import PROMPTS_DIR
         fallback = PROMPTS_DIR / "4_collect_steering.md"
@@ -337,17 +340,30 @@ def run_collect(state: Dict[str, Any]) -> Dict[str, Any]:
     stimuli = json.loads(stimuli_path.read_text()) if stimuli_path.exists() else []
     manifest_path = Path(state["theorist_manifest_path"])
     manifest = yaml.safe_load(manifest_path.read_text()) if manifest_path.exists() else {}
-    model_names = [m["name"] for m in manifest.get("models", []) if m.get("name") in MODEL_LIBRARY]
-    if not model_names:
-        model_names = list(MODEL_LIBRARY.keys())
+    theorist_dir = manifest_path.parent if manifest_path.exists() else None
+    # Use only the theorist's models (1_theory/<name>.py); no global library.
+    model_names = get_model_names_from_manifest(manifest, theorist_dir) if theorist_dir else []
 
     config_path = Path(state["deployment_config_path"])
     config = json.loads(config_path.read_text()) if config_path.exists() else {}
 
+    ground_truth_model = state.get("ground_truth_model")
     if state.get("mode") in ("live", "test_prolific"):
         rows = _collect_live(state, config, out_dir, logs_dir)
+    elif ground_truth_model:
+        # Ground-truth mode: use project's ground-truth models only (no theorist, no browser).
+        n_participants = config.get("simulated_n_participants", 5)
+        registry = get_ground_truth_models(project_id)
+        if ground_truth_model not in registry:
+            agent_log(out_dir, f"Ground-truth model {ground_truth_model!r} not in project registry {list(registry.keys())}; skipping data generation.")
+            rows = []
+        else:
+            agent_log(out_dir, f"Ground-truth model={ground_truth_model!r}; generating data from project ground-truth only (no browser).")
+            rows = _generate_from_models(stimuli, [ground_truth_model], n_participants, model_registry=registry)
+        model_names = [ground_truth_model]
+        (logs_dir / "ground_truth_model.txt").write_text(ground_truth_model, encoding="utf-8")
     else:
-        rows = _collect_simulated(state, config, out_dir, logs_dir, stimuli, model_names)
+        rows = _collect_simulated(state, config, out_dir, logs_dir, stimuli, model_names, theorist_dir)
 
     # Inject batch_id for book-keeping (pipeline batch directory name when in batch mode; empty when not)
     batch_id_val = Path(state["batch_dir"]).name if state.get("batch_dir") else ""
@@ -445,8 +461,9 @@ def _collect_simulated(
     logs_dir: Path,
     stimuli: List[Dict[str, Any]],
     model_names: List[str],
+    theorist_dir: Optional[Path] = None,
 ) -> List[Dict[str, Any]]:
-    """Simulated flow: browser(s) or model sampling. Same logic as former run_simulated_participant."""
+    """Simulated flow: browser(s) or model sampling from theorist's models only."""
     n_participants = config.get("simulated_n_participants", 5)
     experiment_url = config.get("experiment_url")
     results_api_url = config.get("results_api_url")
@@ -456,7 +473,10 @@ def _collect_simulated(
         return _collect_from_firebase(config, results_api_url, n_participants, out_dir, logs_dir)
     if experiment_url:
         return _collect_from_browser(config, experiment_url, n_participants, out_dir, logs_dir)
-    return _generate_from_models(stimuli, model_names, n_participants)
+    if not model_names:
+        agent_log(out_dir, "no theorist models loadable; cannot generate data without URL")
+        return []
+    return _generate_from_models(stimuli, model_names, n_participants, theorist_dir=theorist_dir)
 
 
 def _collect_from_firebase(
@@ -532,7 +552,7 @@ def _collect_from_firebase(
                         try:
                             page.goto(goto_url, wait_until="load", timeout=nav_timeout_ms)
                             done, llm_used = _drive_experiment_with_llm(
-                                page, _DRIVE_TIMEOUT_MS, project_id, run_id, logs_dir
+                                page, _DRIVE_TIMEOUT_MS, project_id, run_id, logs_dir, state
                             )
                             if llm_used:
                                 log_status("Steering: LLM (Gemini)")
@@ -770,16 +790,25 @@ def _collect_from_browser(
 
 
 def _generate_from_models(
-    stimuli: List[Dict[str, Any]], model_names: List[str], n_participants: int
+    stimuli: List[Dict[str, Any]],
+    model_names: List[str],
+    n_participants: int,
+    theorist_dir: Optional[Path] = None,
+    model_registry: Optional[Dict[str, Any]] = None,
 ) -> List[Dict[str, Any]]:
-    """Generate responses by sampling from theorist models (no browser)."""
+    """Generate responses by sampling from model(s) (no browser). Use model_registry (e.g. ground truth) or theorist_dir (theorist's .py files)."""
     rows = []
     for p in range(n_participants):
         model_name = random.choice(model_names)
         for i, stim in enumerate(stimuli):
             seq_a = stim["sequence_a"]
             seq_b = stim["sequence_b"]
-            preds = get_model_predictions((seq_a, seq_b), RESPONSE_OPTIONS, [model_name])
+            stimulus_tuple = (seq_a, seq_b)
+            if model_registry is not None and model_name in model_registry:
+                fn = model_registry[model_name]
+                preds = {model_name: fn(stimulus_tuple, RESPONSE_OPTIONS)}
+            else:
+                preds = get_model_predictions(stimulus_tuple, RESPONSE_OPTIONS, [model_name], theorist_dir)
             if not preds:
                 chose_left = random.choice([True, False])
             else:

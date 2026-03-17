@@ -34,4 +34,4 @@ def test_validate_theorist_output_invalid_model_name():
         (Path(d) / "1_theory" / "models_manifest.yaml").write_text("models:\n  - name: not_a_real_model\n")
         result = validate_theorist_output(Path(d))
         assert not result.ok
-        assert "not in MODEL_LIBRARY" in result.message
+        assert "1_theory" in result.message and ("not in" in result.message or "has no" in result.message or "must provide" in result.message)

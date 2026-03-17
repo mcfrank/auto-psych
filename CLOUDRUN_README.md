@@ -2,35 +2,96 @@
 
 This document describes how to run the auto-psych pipeline as a **Cloud Run Job** with state in **Firestore** and optional **GCS** for large artifacts. The job syncs project and batch data from Firestore before running, runs `run_pipeline.py` with the same CLI args, then syncs results back. No `.secrets` in the image — use Secret Manager for `GOOGLE_API_KEY`.
 
+## Quick relaunch
+
+**Same project for pipeline and hosting** (e.g. everything in `auto-psych-2c5da`):
+
+```bash
+gcloud config set project auto-psych-2c5da
+gcloud builds submit --tag gcr.io/auto-psych-2c5da/auto-psych-job
+gcloud run jobs update pipeline-job --region us-central1 --set-env-vars=FIREBASE_PROJECT=auto-psych-2c5da
+```
+
+**Pipeline in one project, hosting in another** (e.g. pipeline in `auto-psych`, experiments on `auto-psych-2c5da`):
+
+```bash
+gcloud config set project auto-psych
+gcloud builds submit --tag gcr.io/auto-psych/auto-psych-job
+gcloud run jobs update pipeline-job --region us-central1 --set-env-vars=FIREBASE_PROJECT=auto-psych-2c5da
+```
+
 ## Setup checklist (secrets, IDs, parameters)
 
-Use one GCP project for both **participant results** (Firebase Hosting + Cloud Functions + Firestore) and **pipeline state** (Cloud Run Job + Firestore). With two Firestore databases, use one for pipeline state and the **(default)** database for participant results (the existing Cloud Functions use the default DB).
+You can run the **pipeline** (Cloud Run Job, pipeline Firestore, GCS) in one GCP project and deploy **experiments** (Hosting + Cloud Functions) to a **different** Firebase project. Or use one project for both.
 
 | What | Where / value |
 |------|----------------|
-| **GCP Project ID** | Your project ID (e.g. `my-auto-psych`). Use this everywhere below. |
-| **Firestore for participant results** | Use the **(default)** database. The `functions` (submit/results) use `admin.firestore()` with no database id, so they always write/read the default DB. Enable Firestore in Native mode if you haven’t. |
-| **Firestore for pipeline state** | Your second database (e.g. `pipeline-state`). Set as job env: `PIPELINE_FIRESTORE_DATABASE=pipeline-state` (omit or use `(default)` if you use the default DB for pipeline instead). |
-| **Secret Manager** | Create secret **name** `GOOGLE_API_KEY`, value = your Gemini API key. The Cloud Run Job references it as `GOOGLE_API_KEY:latest`. |
-| **`.firebaserc`** (repo root) | `{"projects": {"default": "YOUR_GCP_PROJECT_ID"}}` so the deploy step uses this project for Hosting + Functions. |
-| **`firebase.json`** → `hosting.site` | Set to your **Firebase Hosting site** (usually the same as GCP Project ID). Example: `"site": "my-auto-psych"`. |
-| **Cloud Run Job env** | `FIREBASE_PROJECT` = your GCP project ID (required for deploy/collect: implement step deploys to Firebase, collect uses the deployed URL). `PIPELINE_FIRESTORE_DATABASE`, `PIPELINE_GCS_BUCKET` as needed. |
-| **Service account (Cloud Run Job)** | The job runs as an identity that needs **Secret Manager Secret Accessor**, **Cloud Datastore User** (Firestore), (if using GCS) **Storage Object Admin**, and (for Firebase deploy) **Firebase Hosting Admin** + **Cloud Functions Admin** (or **Firebase Admin**). See below. |
+| **Pipeline GCP project** | Where the Cloud Run Job and pipeline Firestore/GCS live (e.g. `auto-psych`). Build and push the image to this project’s registry: `gcr.io/auto-psych/auto-psych-job`. |
+| **Firebase / Hosting project** | Where the web experiment is deployed (Hosting + Cloud Functions for `/submit`, `/results`). Can be the same as the pipeline project or separate (e.g. `auto-psych-2c5da`). |
+| **Firestore for participant results** | In the **Hosting** project (default database). The `functions` use that project’s Firestore. Enable Firestore Native mode there if needed. |
+| **Firestore for pipeline state** | In the **pipeline** project. Set job env: `PIPELINE_FIRESTORE_DATABASE=pipeline-state` (or `(default)`). |
+| **Secret Manager** | In the **pipeline** project. Create secret `GOOGLE_API_KEY`; the job reads it from there. |
+| **`.firebaserc`** (repo root) | `{"projects": {"default": "HOSTING_PROJECT_ID"}}` — the Firebase project you deploy to (e.g. `auto-psych-2c5da`). |
+| **`firebase.json`** → `hosting.site` | Your **Hosting** project ID (site ID), e.g. `"site": "auto-psych-2c5da"`. |
+| **Cloud Run Job env** | `FIREBASE_PROJECT` = **Hosting** project ID (where the implement step deploys; collect uses that experiment URL). `PIPELINE_FIRESTORE_DATABASE`, `PIPELINE_GCS_BUCKET` refer to the **pipeline** project. |
+| **Service account (Cloud Run Job)** | Pipeline project’s identity. Needs **Secret Manager**, **Firestore**, (optional) **GCS** in the **pipeline** project. For deploy: **Firebase Hosting Admin** + **Cloud Functions Admin** in the **Hosting** project (same project if hosting there; if hosting is a different project, grant these roles in the Hosting project — see “Pipeline in one project, Hosting in another”). |
 
 ### Service account: where it’s set
 
-You don’t specify a service account in the codebase. By default, a Cloud Run Job runs as the project’s **default compute service account** (`PROJECT_NUMBER-compute@developer.gserviceaccount.com`). When you run `gcloud run jobs create ...` without `--service-account`, Cloud Run uses that default. You only need to **grant that account** the roles above (Console: **IAM & Admin → IAM**, find “Compute Engine default service account”, add the roles; or use `gcloud projects add-iam-policy-binding` with `--member="serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com"`). If you prefer a dedicated service account, create one in **IAM & Admin → Service Accounts**, grant it the same roles, then pass it when creating the job: `--service-account=your-sa@PROJECT_ID.iam.gserviceaccount.com`.
+You don’t specify a service account in the codebase. By default, a Cloud Run Job runs as the **pipeline project’s** default compute service account (`PIPELINE_PROJECT_NUMBER-compute@developer.gserviceaccount.com`). Grant that account: (1) in the **pipeline** project — Secret Manager Secret Accessor, Cloud Datastore User (Firestore), optional Storage Object Admin; (2) in the **Hosting** project — Firebase Hosting Admin and Cloud Functions Admin (if Hosting is a different project, add the pipeline SA as a member in the Hosting project’s IAM with those roles). See “Pipeline in one project, Hosting in another” below.
 
-After deploy, the experiment URL is `https://YOUR_GCP_PROJECT_ID.web.app` (or your custom domain). The collect step uses `experiment_url` and `results_api_url` from `config.json` (same origin for `/submit` and `/results`).
+After deploy, the experiment URL is `https://HOSTING_PROJECT_ID.web.app` (e.g. `https://auto-psych-2c5da.web.app`). The collect step uses `experiment_url` and `results_api_url` from `config.json`.
 
 ### Firebase deploy in the job
 
 The image includes the Firebase CLI, `firebase.json`, and `functions/` so the **implement** step can run `firebase deploy --only hosting,functions`. For that to run inside the job you must:
 
-1. **Set `FIREBASE_PROJECT`** in the Cloud Run Job environment to your GCP project ID (the deployer reads this when `.firebaserc` is not present in the container). Without it you get "Firebase skipped: no project" and collect runs against a non-existent "local" URL.
-2. **Grant the job’s service account** permission to deploy: e.g. **Firebase Hosting Admin** and **Cloud Functions Admin** (or the broader **Firebase Admin**). The CLI uses Application Default Credentials (the job’s service account) when running in Cloud Run.
+1. **Set `FIREBASE_PROJECT`** in the Cloud Run Job environment to the **Hosting** project ID (the project where you want the experiment URL). Without it you get "Firebase skipped: no project" and collect runs against a non-existent "local" URL.
+2. **Grant the job’s service account** permission to deploy to that Hosting project: **Firebase Hosting Admin** and **Cloud Functions Admin** (or **Firebase Admin**). If the Hosting project is the same as the pipeline project, grant these in that project. If Hosting is a **different** project (e.g. pipeline in `auto-psych`, Hosting in `auto-psych-2c5da`), grant the **pipeline** job’s service account these roles **in the Hosting project** — see next subsection.
+3. **“No Hosting site” error:** That message refers to the **project the deploy is targeting**. If you’re already hosting from the Hosting project (e.g. `auto-psych-2c5da`), the site exists — the error usually means the job was targeting the **wrong** project (e.g. `FIREBASE_PROJECT` or `.firebaserc` in the image pointed at `auto-psych`, which has no Hosting). Fix: set `FIREBASE_PROJECT` to the Hosting project ID (`auto-psych-2c5da`) and grant the job’s SA deploy rights there; no need to create a site. Only if the Hosting project has **never** had Hosting set up, create the site once: `firebase hosting:sites:create auto-psych-2c5da --project auto-psych-2c5da`.
 
 If you omit `FIREBASE_PROJECT`, the deploy step skips Firebase and the collect step will try "local" mode (browser to a local server), which does not work in the container.
+
+### Pipeline in one project, Hosting in another
+
+If the **pipeline** runs in GCP project `auto-psych` and you want to deploy experiments to a **separate** Firebase project `auto-psych-2c5da`:
+
+1. **Hosting site:** If you already host from `auto-psych-2c5da`, the site exists — skip this. Only if that project has never had Hosting, create it once:  
+   `firebase hosting:sites:create auto-psych-2c5da --project auto-psych-2c5da`
+
+2. **Grant the pipeline job’s service account permission to deploy in the Hosting project.** The job runs as the pipeline project’s default compute SA (e.g. `AUTO_PSYCH_PROJECT_NUMBER-compute@developer.gserviceaccount.com`). In the **Hosting** project you need three things:
+   - **Firebase Hosting Admin** and **Cloud Functions Admin** (project-level).
+   - **Service Account User** on the Hosting project’s *default App Engine/Cloud Functions* service account (`HOSTING_PROJECT_ID@appspot.gserviceaccount.com`). Without this, you get: *"Missing permissions required for functions deploy. You must have permission iam.serviceAccounts.ActAs on service account ...@appspot.gserviceaccount.com"*.
+
+   In Cloud Console (Hosting project): IAM → add the pipeline SA with “Firebase Hosting Admin” and “Cloud Functions Admin”. Then go to **IAM & Admin → Service Accounts**, open `auto-psych-2c5da@appspot.gserviceaccount.com` (App Engine default), **Permissions** tab → Grant access → add the pipeline SA with role **Service Account User**.
+
+   Or with gcloud (run with a principal that can edit the Hosting project):
+
+   ```bash
+   # Pipeline project (where the job runs)
+   export PIPELINE_PROJECT=auto-psych
+   export HOSTING_PROJECT=auto-psych-2c5da
+   PIPELINE_NUMBER=$(gcloud projects describe $PIPELINE_PROJECT --format="value(projectNumber)")
+   SA_EMAIL="${PIPELINE_NUMBER}-compute@developer.gserviceaccount.com"
+
+   # Project-level: Hosting + Functions deploy
+   gcloud projects add-iam-policy-binding $HOSTING_PROJECT \
+     --member="serviceAccount:${SA_EMAIL}" \
+     --role="roles/firebasehosting.admin"
+   gcloud projects add-iam-policy-binding $HOSTING_PROJECT \
+     --member="serviceAccount:${SA_EMAIL}" \
+     --role="roles/cloudfunctions.admin"
+
+   # ActAs the default App Engine SA (required for functions deploy)
+   gcloud iam service-accounts add-iam-policy-binding ${HOSTING_PROJECT}@appspot.gserviceaccount.com \
+     --project=$HOSTING_PROJECT \
+     --member="serviceAccount:${SA_EMAIL}" \
+     --role="roles/iam.serviceAccountUser"
+   ```
+
+3. **Job env:** Set `FIREBASE_PROJECT=auto-psych-2c5da` so the deployer targets the Hosting project. Build and run the job in the pipeline project: `gcr.io/auto-psych/auto-psych-job`, job created in `auto-psych`.
+
+**Alternative:** You can instead enable Firebase in the **pipeline** project (`auto-psych`), create a Hosting site there, and set `FIREBASE_PROJECT=auto-psych`. Then the job deploys to the same project it runs in; no cross-project IAM. Use that if you prefer to keep pipeline and experiments in one project.
 
 ## Prerequisites
 
@@ -41,26 +102,31 @@ If you omit `FIREBASE_PROJECT`, the deploy step skips Firebase and the collect s
 
 ## 1. Build and push the image
 
-From the repo root:
+From the repo root, use the **pipeline** project (where the job runs). Set gcloud to that project so the build and push both happen there:
 
 ```bash
-gcloud builds submit --tag gcr.io/PROJECT_ID/auto-psych-job
+gcloud config set project auto-psych   # or your pipeline project
+gcloud builds submit --tag gcr.io/auto-psych/auto-psych-job
 ```
 
-Replace `PROJECT_ID` with your GCP project ID. The build uses `.gcloudignore`, so `projects/`, `.git`, and other unneeded paths are excluded; project state is loaded from Firestore at run time.
+The build uses `.gcloudignore`, so `projects/`, `.git`, and other unneeded paths are excluded; project state is loaded from Firestore at run time.
 
-### Troubleshooting: "Permission artifactregistry.repositories.uploadArtifacts denied"
+### Troubleshooting: "Permission artifactregistry.repositories.uploadArtifacts denied" or push denied
 
-- **Who pushes the image:** Your `gcloud` login is only used to *submit* the build to Cloud Build. The actual *push* of the image is done by the **Cloud Build service account** in your project (e.g. `PROJECT_NUMBER@cloudbuild.gserviceaccount.com`), not your user account. The denial means that service account doesn’t have permission to upload to the image registry.
-- **Check your gcloud:** Run `gcloud auth list` to see which account is active and `gcloud config get-value project` to see the current project. Log in with `gcloud auth login` and set the project with `gcloud config set project PROJECT_ID`.
-- **Fix the push permission:** Grant the Cloud Build service account permission to write to the registry. Replace `PROJECT_ID` and `PROJECT_NUMBER` with your values:
+- **Build runs in your default project, push goes to the project in the image tag.** If you run `gcloud builds submit --tag gcr.io/auto-psych-2c5da/auto-psych-job` but your default project is `auto-psych`, the build runs in **auto-psych** and then tries to push to **auto-psych-2c5da**’s registry. The Cloud Build service account in auto-psych cannot push to another project’s registry → permission denied.
+- **Fix: use one project.** Set gcloud to the same project as the image tag (and as Firebase):  
+  `gcloud config set project auto-psych-2c5da`  
+  Then run:  
+  `gcloud builds submit --tag gcr.io/auto-psych-2c5da/auto-psych-job`  
+  The build and push now both happen in auto-psych-2c5da. Create/update the Cloud Run Job in that project too.
+- **If you really use only one project** and still see push denied: the **Cloud Build service account** in that project (e.g. `PROJECT_NUMBER@cloudbuild.gserviceaccount.com`) needs permission to write to the registry. Grant **Storage Admin** (for gcr.io) or **Artifact Registry Writer** (for Artifact Registry) in that same project:
 
   ```bash
-  export PROJECT_ID=auto-psych
+  export PROJECT_ID=auto-psych-2c5da   # or your single project ID
   PROJECT_NUMBER=$(gcloud projects describe $PROJECT_ID --format="value(projectNumber)")
   gcloud projects add-iam-policy-binding $PROJECT_ID \
     --member="serviceAccount:${PROJECT_NUMBER}@cloudbuild.gserviceaccount.com" \
-    --role="roles/artifactregistry.writer"
+    --role="roles/storage.admin"
   ```
 
 ### Troubleshooting: "PERMISSION_DENIED" when running gcloud builds submit
@@ -145,7 +211,7 @@ Pass pipeline arguments as job args (comma-separated). Examples:
 ```bash
 # Multiple runs (creates a batch), 10 simulated participants per run
 gcloud run jobs execute pipeline-job --region us-central1 \
-  --args="--project=subjective_randomness,--runs=3,--mode=simulated_participants,--n-participants=10,--max-retries=5"
+  --args="--project=subjective_randomness,--runs=12,--mode=simulated_participants,--n-participants=3,--max-retries=5"
 
 # Single run
 gcloud run jobs execute pipeline-job --region us-central1 \

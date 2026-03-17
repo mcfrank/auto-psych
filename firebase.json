@@ -1,6 +1,6 @@
 {
   "hosting": {
-    "site": "auto-psych",
+    "site": "auto-psych-2c5da",
     "public": "public",
     "ignore": ["firebase.json", "**/.*", "**/node_modules/**"],
     "rewrites": [
