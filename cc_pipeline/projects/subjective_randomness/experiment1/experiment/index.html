@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Randomness Experiment</title>
+  <script src="https://unpkg.com/jspsych@8.2.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+  <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <style>
+    #progress-wrap { position: fixed; top: 0; left: 0; right: 0; height: 6px; background: #e0e0e0; z-index: 10000; }
+    #progress-fill { height: 100%; width: 0%; background: #4a90d9; transition: width 0.2s ease; }
+    .jspsych-btn-auto { padding: 12px 28px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; background: #4a90d9; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .jspsych-btn-auto:hover { background: #3a7bc8; }
+    .seq-display { font-family: monospace; font-size: 28px; letter-spacing: 6px; }
+    .seq-label { font-size: 14px; color: #666; margin-bottom: 4px; }
+    .seq-box { display: inline-block; padding: 16px 28px; border: 2px solid #ccc; border-radius: 8px; margin: 0 20px; background: #f9f9f9; text-align: center; min-width: 160px; }
+    .trial-prompt { font-size: 20px; margin-bottom: 30px; }
+    .key-hint { font-size: 13px; color: #999; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div id="progress-wrap"><div id="progress-fill"></div></div>
+</body>
+<script>
+  const STIMULI = [{"sequence_a":"HTHHTH","sequence_b":"TTTHHH","eig":0.266562},{"sequence_a":"TTTHHH","sequence_b":"THTTHT","eig":0.266562},{"sequence_a":"THTHTH","sequence_b":"HTTTHH","eig":0.118773},{"sequence_a":"TTTHHH","sequence_b":"TTHTHT","eig":0.266562},{"sequence_a":"TTTHTH","sequence_b":"TTTHHH","eig":0.193896},{"sequence_a":"THTHTH","sequence_b":"TTTHHT","eig":0.055748},{"sequence_a":"TTTHTT","sequence_b":"TTTHHH","eig":0.165556},{"sequence_a":"TTTHHH","sequence_b":"THHTHH","eig":0.193896},{"sequence_a":"THTHTH","sequence_b":"THHTTT","eig":0.055748},{"sequence_a":"THTTTT","sequence_b":"TTTHHH","eig":0.165556},{"sequence_a":"TTTHHH","sequence_b":"HTHHHT","eig":0.193896},{"sequence_a":"THTHTH","sequence_b":"TTHHTT","eig":0.055748},{"sequence_a":"TTTHHH","sequence_b":"TTHTTT","eig":0.165556},{"sequence_a":"TTTHHH","sequence_b":"HTTHTT","eig":0.193896},{"sequence_a":"THTHTH","sequence_b":"HTTTTH","eig":0.055748},{"sequence_a":"TTTHHH","sequence_b":"HHHHTH","eig":0.165556},{"sequence_a":"TTTHHH","sequence_b":"THTTTH","eig":0.193896},{"sequence_a":"TTTHTT","sequence_b":"THTHTH","eig":0.055127},{"sequence_a":"TTTHHH","sequence_b":"HHTHHH","eig":0.165556},{"sequence_a":"TTTHHH","sequence_b":"HTTTHT","eig":0.193896},{"sequence_a":"THTHTH","sequence_b":"THTTTT","eig":0.055127},{"sequence_a":"TTTHHH","sequence_b":"TTTTHT","eig":0.165556},{"sequence_a":"TTTHHH","sequence_b":"THHHTH","eig":0.193896},{"sequence_a":"THTHTH","sequence_b":"TTHTTT","eig":0.055127},{"sequence_a":"TTTHHH","sequence_b":"HHHTHH","eig":0.165556},{"sequence_a":"HTTTHH","sequence_b":"HTHHTH","eig":0.188336},{"sequence_a":"THTHTH","sequence_b":"HHHHTH","eig":0.055127},{"sequence_a":"HTTTHH","sequence_b":"THTTHT","eig":0.188336},{"sequence_a":"HTTTHH","sequence_b":"TTHTHT","eig":0.188336},{"sequence_a":"THTHTH","sequence_b":"HHTHHH","eig":0.055127}];
+
+  const consentHtml = `
+    <div style="max-width:600px; margin:auto; text-align:left;">
+      <h2>Consent Form</h2>
+      <p>In this study, you will view pairs of coin-flip sequences and judge which looks more random. The task takes about 5 minutes.</p>
+      <p>Your responses are anonymous and will be used for scientific research. You may stop at any time.</p>
+      <p>By clicking <strong>I agree</strong>, you consent to participate.</p>
+    </div>`;
+
+  const instructionsHtml = `
+    <div style="max-width:600px; margin:auto; text-align:left;">
+      <h2>Instructions</h2>
+      <p>On each trial you will see two sequences of coin flips (H = Heads, T = Tails).</p>
+      <p><strong>Your task:</strong> choose the sequence that looks <em>more random</em> to you.</p>
+      <ul>
+        <li>Press <strong>F</strong> to choose the sequence on the <strong>left</strong>.</li>
+        <li>Press <strong>J</strong> to choose the sequence on the <strong>right</strong>.</li>
+      </ul>
+      <p>There are 30 trials. Work at your own pace — there is no time limit per trial.</p>
+    </div>`;
+
+  const debriefHtml = `
+    <div style="max-width:600px; margin:auto; text-align:left;">
+      <h2>Thank you!</h2>
+      <p>You have completed the experiment. Your responses will help us understand how people perceive randomness in sequences of events.</p>
+      <p>You may now close this window.</p>
+    </div>`;
+
+  function getUrlParam(name) {
+    var m = new RegExp('[?&]' + name + '=([^&]*)').exec(typeof window !== 'undefined' && window.location ? window.location.search : '');
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  var urlParticipantId = getUrlParam('participant_id');
+  if (urlParticipantId && typeof window !== 'undefined') window.__participantId = urlParticipantId;
+
+  const onFinish = function() {
+    var data = jsPsych.data.get().values();
+    if (typeof window !== 'undefined') window.__experimentData = data;
+    fetch('/auto_psych_config.json').then(function(r){
+      if (!r.ok) { return null; }
+      return r.json();
+    }).then(function(cfg){
+      if (cfg && cfg.project_id != null && cfg.run_id != null) {
+        var payload = { run_id: cfg.run_id, project_id: cfg.project_id,
+          participant_id: (typeof window !== 'undefined' && window.__participantId != null) ? window.__participantId : Date.now(),
+          trials: data };
+        fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+          .then(function(res){
+            if (res.ok && cfg.prolific_redirect_url && typeof window !== 'undefined') window.location = cfg.prolific_redirect_url;
+          })
+          .catch(function(e){ console.warn('[auto-psych] POST /submit error', e); });
+      }
+    }).catch(function(e){ console.warn('[auto-psych] Config fetch error', e); });
+  };
+
+  const jsPsych = initJsPsych({ on_finish: onFinish });
+  if (typeof window !== 'undefined' && window.__participantId) jsPsych.data.addProperties({ participant_id: window.__participantId });
+
+  var totalTrials = STIMULI.length;
+  var completedTrials = 0;
+  function updateProgress() {
+    var el = document.getElementById('progress-fill');
+    if (el && totalTrials > 0) el.style.width = (100 * completedTrials / totalTrials) + '%';
+  }
+
+  function styledButtonHtml(choice) {
+    return '<button class="jspsych-btn jspsych-btn-auto">' + choice + '</button>';
+  }
+
+  const timeline = [];
+
+  // 1. Consent
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: consentHtml,
+    choices: ['I agree'],
+    button_html: styledButtonHtml
+  });
+
+  // 2. Instructions
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: instructionsHtml,
+    choices: ['Next'],
+    button_html: styledButtonHtml,
+    post_trial_gap: 400
+  });
+
+  // 3. Build trial variables
+  const trialVariables = STIMULI.map(function(s) {
+    return {
+      sequence_a: s.sequence_a,
+      sequence_b: s.sequence_b,
+      stimulus_display: `
+        <div class="trial-prompt">Which sequence looks <strong>more random</strong>?</div>
+        <div style="display:flex; justify-content:center; align-items:center; gap:40px;">
+          <div class="seq-box">
+            <div class="seq-label">Left &nbsp;(press F)</div>
+            <div class="seq-display">${s.sequence_a}</div>
+          </div>
+          <div class="seq-box">
+            <div class="seq-label">Right (press J)</div>
+            <div class="seq-display">${s.sequence_b}</div>
+          </div>
+        </div>
+        <div class="key-hint">F = Left &nbsp;&nbsp;&nbsp; J = Right</div>`
+    };
+  });
+
+  const fixation = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '<div style="text-align:center; font-size:48px;">+</div>',
+    choices: 'NO_KEYS',
+    trial_duration: 150
+  };
+
+  const trial = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: jsPsych.timelineVariable('stimulus_display'),
+    choices: ['f', 'j'],
+    data: {
+      sequence_a: jsPsych.timelineVariable('sequence_a'),
+      sequence_b: jsPsych.timelineVariable('sequence_b'),
+      task: 'judgment'
+    },
+    on_finish: function(data) {
+      data.chose_left = (data.response === 'f');
+      data.chosen_sequence = data.chose_left ? data.sequence_a : data.sequence_b;
+      completedTrials++;
+      updateProgress();
+    }
+  };
+
+  timeline.push({
+    timeline: [fixation, trial],
+    timeline_variables: trialVariables,
+    randomize_order: true
+  });
+
+  // 4. Debrief
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: debriefHtml,
+    choices: ['End'],
+    button_html: styledButtonHtml
+  });
+
+  jsPsych.run(timeline);
+</script>
+</html>
