@@ -74,7 +74,7 @@ def test_eig_zero_when_single_model_prior():
 
 
 def test_eig_positive_for_discriminating_stimulus():
-    """EIG is positive when models disagree (using real MODEL_LIBRARY)."""
+    """EIG is positive when models disagree (using mocked get_model_predictions)."""
     model_names = ["bayesian_fair_coin", "representativeness", "alternation"]
     stimulus = ("HTHTHTHT", "HHHHHHHH")
     eig = expected_information_gain(stimulus, model_names, theorist_dir=None)

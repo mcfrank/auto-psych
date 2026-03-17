@@ -143,6 +143,8 @@ def run_deploy_logic(state: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
         "project_id": project_id,
         "run_id": run_id,
     }
+    if state.get("ground_truth_model"):
+        config["ground_truth_model"] = state["ground_truth_model"]
 
     agent_log(out_dir, f"Deploy: mode={mode!r}")
 
@@ -153,7 +155,12 @@ def run_deploy_logic(state: Dict[str, Any], out_dir: Path) -> Dict[str, Any]:
         experiment_url = None
         results_api_url = None
 
-        if exp_dir.exists():
+        # Ground-truth mode: collect uses model-only generation; skip deploy to avoid unnecessary Firebase/local server.
+        if state.get("ground_truth_model"):
+            agent_log(out_dir, f"Deploy: ground_truth_model={state['ground_truth_model']!r}; skipping Firebase and local server.")
+            config["experiment_url"] = None
+            config["results_api_url"] = None
+        elif exp_dir.exists():
             agent_log(out_dir, "Deploy: attempting Firebase deploy")
             base_url, deploy_error = _deploy_to_firebase(exp_dir, project_id, run_id)
             if base_url:

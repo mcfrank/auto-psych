@@ -11,6 +11,9 @@ class PipelineState(TypedDict, total=False):
     run_id: int
     mode: str  # "simulated_participants" | "live" | "test_prolific"
 
+    # When set, run outputs go under this batch dir (projects/.../batches/batch_XXX); agents use run_dir_for_state.
+    batch_dir: str
+
     # Paths to latest artifacts from each stage
     problem_definition_path: str
     theorist_manifest_path: str
@@ -29,6 +32,9 @@ class PipelineState(TypedDict, total=False):
     # Pipeline defaults (overridable via CLI)
     simulated_n_participants: int
     max_validation_retries: int
+
+    # Ground-truth convergence: when set, collect uses only this model (no browser deploy).
+    ground_truth_model: str
 
     # Validation loop: feedback for retry, result of last validation, retry count per agent
     validation_feedback: str

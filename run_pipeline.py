@@ -13,6 +13,7 @@ Usage:
 
 import argparse
 import re
+import shutil
 import subprocess
 import sys
 from datetime import datetime
@@ -34,7 +35,8 @@ from src.console_log import run_banner, agent_header, log_status
 from src.prompts import resolve_prompts, archive_prompts_for_run
 from src.graph import build_graph
 from src.state_loader import load_state_from_run, minimal_state_for_agent
-from src.batch_plots import append_correlations_to_batch_csv, plot_correlations_by_run
+from src.batch_plots import append_correlations_to_batch_csv, plot_correlations_by_run, write_batch_runs_summary
+from src.models.ground_truth import get_ground_truth_model_names
 
 AGENT_SUBDIRS = [
     "1_theory", "2_design", "3_implement", "4_collect", "5_analyze", "6_interpret",
@@ -67,12 +69,15 @@ def _git_commit_hash() -> tuple[str | None, str]:
 
 
 def _create_batch_dir(project_id: str) -> Path:
-    """Create batch_YYYYMMDD-HHMM_shortHash under project batches; write commit_hash.txt. Return batch path."""
+    """Create batch_YYYYMMDD-HHMM_shortHash under project batches; write commit_hash.txt. Return batch path.
+    Batch directory name uses 7-char commit hash only (no '_dirty' suffix); dirty is still recorded in commit_hash.txt."""
     bdir = batches_dir(project_id)
     bdir.mkdir(parents=True, exist_ok=True)
     full_hash, short = _git_commit_hash()
     stamp = datetime.now().strftime("%Y%m%d-%H%M")
-    name = f"batch_{stamp}_{short}"
+    # Directory name: 7-char hash or 'nogit' only (no _dirty)
+    dir_short = full_hash[:7] if full_hash else "nogit"
+    name = f"batch_{stamp}_{dir_short}"
     path = bdir / name
     path.mkdir(parents=True, exist_ok=True)
     meta = f"commit={full_hash or 'none'}\ndirty={full_hash is None or '_dirty' in short}\ntimestamp={stamp}\n"
@@ -140,6 +145,7 @@ def _build_initial_state(
     simulated_n_participants: int = DEFAULT_SIMULATED_N_PARTICIPANTS,
     max_validation_retries: int = DEFAULT_MAX_VALIDATION_RETRIES,
     batch_dir: Path | str | None = None,
+    ground_truth_model: str | None = None,
 ) -> dict:
     state = {"batch_dir": str(batch_dir) if batch_dir else None}
     rdir = run_dir_for_state(project_id, run_id, state) if state.get("batch_dir") else run_dir(project_id, run_id)
@@ -157,6 +163,8 @@ def _build_initial_state(
         del state["batch_dir"]
     if interpreter_report_path:
         state["interpreter_report_path"] = interpreter_report_path
+    if ground_truth_model is not None:
+        state["ground_truth_model"] = ground_truth_model
     return state
 
 
@@ -195,6 +203,7 @@ def _run_full_pipeline(
     max_validation_retries: int,
     run_index: int | None = None,
     batch_dir: Path | None = None,
+    ground_truth_model: str | None = None,
 ) -> None:
     run_banner(run_id, total_runs, run_index)
     initial_state = _build_initial_state(
@@ -202,13 +211,23 @@ def _run_full_pipeline(
         simulated_n_participants=simulated_n_participants,
         max_validation_retries=max_validation_retries,
         batch_dir=batch_dir,
+        ground_truth_model=ground_truth_model,
     )
     rdir = run_dir_for_state(project_id, run_id, initial_state)
     rdir.mkdir(parents=True, exist_ok=True)
     for key in AGENT_SUBDIRS:
         (rdir / key).mkdir(exist_ok=True)
     resolved = resolve_prompts(project_id)
-    archive_prompts_for_run(project_id, run_id, resolved, run_dir_base=rdir)
+    # Archive prompts once per batch (batch root only). Never archive into run dir when in batch mode.
+    if batch_dir:
+        if not (batch_dir / "prompts_used").exists():
+            archive_prompts_for_run(project_id, run_id, resolved, run_dir_base=batch_dir)
+        # Remove redundant per-run prompts_used if present (legacy or from sync); agents read from batch root.
+        run_prompts = rdir / "prompts_used"
+        if run_prompts.is_dir():
+            shutil.rmtree(run_prompts, ignore_errors=True)
+    else:
+        archive_prompts_for_run(project_id, run_id, resolved, run_dir_base=rdir)
     prev_report = None
     if run_id > 1:
         prev_dir = run_dir_for_state(project_id, run_id - 1, initial_state)
@@ -225,19 +244,21 @@ def _run_full_pipeline(
     graph = build_graph()
     graph.invoke(initial_state)
     if batch_dir:
-        corr_path = rdir / "6_interpret" / "model_correlations.yaml"
-        if corr_path.exists():
-            import yaml
-            try:
-                data = yaml.safe_load(corr_path.read_text(encoding="utf-8")) or {}
-                corr = data.get("correlations") or {}
-                if corr:
-                    append_correlations_to_batch_csv(batch_dir, run_id, corr)
-            except Exception:
-                pass
+        import yaml
+        corr = {}
+        for subdir in ("6_interpret", "5_analyze"):
+            corr_path = rdir / subdir / "model_correlations.yaml"
+            if corr_path.exists():
+                try:
+                    data = yaml.safe_load(corr_path.read_text(encoding="utf-8")) or {}
+                    corr = data.get("correlations") or {}
+                    break
+                except Exception:
+                    pass
+        append_correlations_to_batch_csv(batch_dir, run_id, corr)
+        summary_path = write_batch_runs_summary(batch_dir)
         plot_path = plot_correlations_by_run(batch_dir)
-        if plot_path.exists():
-            log_status(f"Updated {plot_path}", indent=False)
+        log_status(f"Batch root: {summary_path.name}, {plot_path.name}", indent=False)
     print(f"Run {run_id} completed.", file=sys.stderr, flush=True)
 
 
@@ -300,6 +321,13 @@ def main() -> None:
         action="store_true",
         help="Add runs to the latest batch (use with --run or --runs). Do not create a new batch.",
     )
+    parser.add_argument(
+        "--ground-truth-model",
+        type=str,
+        default=None,
+        metavar="NAME",
+        help="Use only this model for simulated participant data (e.g. alternation). Must be in project's ground_truth_models.py. Skips browser; data generated from that model.",
+    )
     args = parser.parse_args()
 
     if args.append and args.agent is not None:
@@ -310,6 +338,14 @@ def main() -> None:
         sys.exit(1)
 
     project_id = args.project
+    if args.ground_truth_model is not None:
+        allowed = get_ground_truth_model_names(project_id)
+        if args.ground_truth_model not in allowed:
+            print(
+                f"Error: --ground-truth-model must be one of {allowed} (from project); got {args.ground_truth_model!r}.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
     mode = args.mode
     prob_path = problem_definition_path(project_id)
 
@@ -342,6 +378,8 @@ def main() -> None:
         state["mode"] = mode
         state["simulated_n_participants"] = args.n_participants
         state["max_validation_retries"] = args.max_retries
+        if args.ground_truth_model is not None:
+            state["ground_truth_model"] = args.ground_truth_model
         _run_single_agent(project_id, run_id, args.agent, state)
         return
 
@@ -372,28 +410,33 @@ def main() -> None:
                 max_validation_retries=args.max_retries,
                 run_index=run_index,
                 batch_dir=batch_dir,
+                ground_truth_model=args.ground_truth_model,
             )
         print("All runs completed.", file=sys.stderr, flush=True)
         return
 
-    # Full pipeline (single run, optionally in latest batch with --append)
+    # Full pipeline (single run): always use a batch (create new or append to latest)
     run_id = args.run
     if run_id is None:
         print("Error: specify --run N or --runs N", file=sys.stderr)
         sys.exit(1)
-    batch_dir = None
     if args.append:
         batch_dir = _latest_batch_dir(project_id)
         if batch_dir is None:
             print("Error: --append used but no existing batch found.", file=sys.stderr)
             sys.exit(1)
         log_status(f"Appending to batch: {batch_dir}", indent=False)
+    else:
+        batch_dir = _create_batch_dir(project_id)
+        full_hash, short = _git_commit_hash()
+        log_status(f"Batch: {batch_dir} (commit {short})", indent=False)
     _run_full_pipeline(
         project_id, run_id, mode, prob_path,
         args.interpreter_report, total_runs=None,
         simulated_n_participants=args.n_participants,
         max_validation_retries=args.max_retries,
         batch_dir=batch_dir,
+        ground_truth_model=args.ground_truth_model,
     )
 
 

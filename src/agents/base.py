@@ -48,9 +48,15 @@ def _read_secret(key: str) -> str | None:
     return None
 
 
-def load_prompt_for_run(project_id: str, run_id: int, agent_key: str) -> str:
-    """Load the archived prompt used for this run (from prompts_used/)."""
-    path = prompts_used_dir(project_id, run_id) / f"{agent_key}.md"
+def load_prompt_for_run(
+    project_id: str, run_id: int, agent_key: str, state: Dict | None = None
+) -> str:
+    """Load the archived prompt used for this run (from prompts_used/). When state has batch_dir, reads from batch root (one archive per batch)."""
+    if state and state.get("batch_dir"):
+        prompts_dir = Path(state["batch_dir"]) / "prompts_used"
+    else:
+        prompts_dir = prompts_used_dir(project_id, run_id)
+    path = prompts_dir / f"{agent_key}.md"
     if path.exists():
         return path.read_text(encoding="utf-8")
     # Fallback: resolve from canonical/project

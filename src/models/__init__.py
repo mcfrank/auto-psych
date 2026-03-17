@@ -1,17 +1,9 @@
-# Model library for theorist agent
+# Model types and prediction API (theorist's models only; ground truth per project).
 
-from .randomness import (
-    MODEL_LIBRARY,
-    bayesian_fair_coin,
-    representativeness,
-    alternation,
-    subjective_generator,
-)
+from .randomness import Stimulus, StimulusLike, get_model_predictions
 
 __all__ = [
-    "MODEL_LIBRARY",
-    "bayesian_fair_coin",
-    "representativeness",
-    "alternation",
-    "subjective_generator",
+    "Stimulus",
+    "StimulusLike",
+    "get_model_predictions",
 ]

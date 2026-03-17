@@ -58,8 +58,7 @@ def run_experiment_designer(state: Dict[str, Any]) -> Dict[str, Any]:
     theorist_dir = manifest_path.parent
     model_names = get_model_names_from_manifest(manifest, theorist_dir)
     if not model_names:
-        from src.models.randomness import MODEL_LIBRARY
-        model_names = list(MODEL_LIBRARY.keys())
+        agent_log(out_dir, "no theorist models loadable (need 1_theory/<name>.py for each manifest name); design may fail")
     registry_path = Path(state.get("registry_path", ""))
     model_weights = get_model_weights(registry_path) if registry_path and registry_path.exists() else {}
 
@@ -74,7 +73,7 @@ def run_experiment_designer(state: Dict[str, Any]) -> Dict[str, Any]:
     allowed_lengths = spec["allowed_sequence_lengths"]
     agent_log(out_dir, f"total_trials={total_trials} allowed_sequence_lengths={allowed_lengths}")
 
-    prompt = load_prompt_for_run(project_id, run_id, "2_design")
+    prompt = load_prompt_for_run(project_id, run_id, "2_design", state)
     user_content = ""
     if validation_feedback:
         user_content += f"""## Validation feedback (previous attempt failed)

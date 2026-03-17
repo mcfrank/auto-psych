@@ -10,7 +10,6 @@ from typing import Any, Dict, List, Optional
 import yaml
 
 from src.models.loader import get_model_callable, get_model_names_from_manifest
-from src.models.randomness import MODEL_LIBRARY
 
 
 @dataclass
@@ -23,7 +22,7 @@ class Validated:
 def validate_theorist_output(run_dir: Path) -> Validated:
     """
     (1) models_manifest.yaml exists and is valid YAML;
-    (2) every model name is loadable: either <name>.py exists in 1_theory/ or name is in MODEL_LIBRARY;
+    (2) every model name is loadable: <name>.py exists in 1_theory/ (theorist's models only, no global library);
     (3) for each model, call with a test stimulus and check it returns a dict
         mapping response options to probabilities that sum to 1.
     """
@@ -56,13 +55,13 @@ def validate_theorist_output(run_dir: Path) -> Validated:
             names.append(m)
     details["model_names"] = names
 
-    # Resolve loadable names: run-dir .py or MODEL_LIBRARY
+    # Resolve loadable names: only 1_theory/<name>.py (theorist's outputs)
     loadable = get_model_names_from_manifest(data, theorist_dir)
     for name in names:
         if name not in loadable:
             return Validated(
                 False,
-                f"Model '{name}' has no 1_theory/{name}.py and is not in MODEL_LIBRARY",
+                f"Model '{name}' has no 1_theory/{name}.py (theorist must provide each model file)",
                 details,
             )
 

@@ -17,7 +17,6 @@ from src.agents.llm_output_parsing import (
     extract_fenced_blocks,
     extract_yaml_from_response,
 )
-from src.models.randomness import MODEL_LIBRARY
 from src.registry import load_registry, write_registry, DEFAULT_RESERVED_FOR_NEW
 
 # Run 1: need 2–3 theories total (2–3 calls). Run 2+: need at least 1 new theory.
@@ -62,8 +61,9 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
         p = Path(interpreter_path)
         if p.exists():
             interpreter_text = p.read_text(encoding="utf-8")
-    prompt = load_prompt_for_run(project_id, run_id, "1_theory")
-    available_models = list(MODEL_LIBRARY.keys())
+    prompt = load_prompt_for_run(project_id, run_id, "1_theory", state)
+    # No fixed model library: theorist invents models from the problem definition.
+    available_models: List[str] = []
 
     # Run 2+: copy previous run's 1_theory into out_dir so we retain existing theories
     current_models: List[Dict[str, Any]] = []
@@ -141,11 +141,8 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
             break
 
     model_names = [m["name"] for m in current_models if m.get("name")]
-    # Ensure we have at least one model for validation (fallback to library)
     if not model_names:
-        model_names = available_models[:2]
-        current_models = [{"name": n, "rationale": "Fallback (no model extracted)"} for n in model_names]
-        agent_log(out_dir, f"fallback manifest: {model_names}")
+        agent_log(out_dir, "no models extracted from LLM; manifest will have no models (validation may fail)")
 
     manifest = {
         "models": current_models,
@@ -296,9 +293,9 @@ This is **Run {run_id}** of the pipeline. This is **iteration {iteration}** (one
 
 {problem_text}
 
-## Available models in the library (for reference)
+## Model implementation
 
-{chr(10).join('- ' + m for m in available_models)}
+Invent one probabilistic model (or implement one suggested by the problem definition). There is no fixed library; implement the function from scratch.
 
 Output exactly: (1) one YAML block with one model (name + optional rationale), (2) one ```python block with # file: <model_name>.py and the function, (3) then ---DONE--- or ---ADD_ANOTHER---.
 """)

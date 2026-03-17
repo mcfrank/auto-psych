@@ -11,7 +11,6 @@ from src.config import agent_dir_for_state, DEFAULT_MAX_VALIDATION_RETRIES
 from src.console_log import agent_header, log_status
 from src.observability import agent_log
 from src.models.loader import get_model_names_from_manifest
-from src.models.randomness import MODEL_LIBRARY
 from src.stats.correlations import model_data_correlations
 
 RESPONSE_OPTIONS = ["left", "right"]
@@ -54,8 +53,6 @@ def run_data_analyst(state: Dict[str, Any]) -> Dict[str, Any]:
         if manifest_path and manifest_path.exists():
             manifest = yaml.safe_load(manifest_path.read_text()) or {}
             model_names = get_model_names_from_manifest(manifest, theorist_dir)
-        if not model_names:
-            model_names = list(MODEL_LIBRARY.keys())
         agg_lines = aggregate.strip().split("\n")
         if agg_lines:
             correlations = model_data_correlations(agg_lines, model_names, theorist_dir, RESPONSE_OPTIONS)
