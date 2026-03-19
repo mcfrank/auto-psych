@@ -34,8 +34,27 @@ def cc_projects_dir() -> Path:
     return REPO_ROOT / "cc_pipeline" / "projects"
 
 
+def cc_project_dir(project_id: str) -> Path:
+    return cc_projects_dir() / project_id
+
+
 def experiment_dir(project_id: str, exp_num: int) -> Path:
     return cc_projects_dir() / project_id / f"experiment{exp_num}"
+
+
+def get_ground_truth_models(project_id: str) -> Dict:
+    """Load GROUND_TRUTH_MODELS from cc_pipeline/projects/<project>/ground_truth_models.py."""
+    import importlib.util
+    path = cc_project_dir(project_id) / "ground_truth_models.py"
+    if not path.exists():
+        return {}
+    spec = importlib.util.spec_from_file_location(f"gt_{project_id}", path)
+    if spec is None or spec.loader is None:
+        return {}
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    registry = getattr(mod, "GROUND_TRUTH_MODELS", None)
+    return dict(registry) if isinstance(registry, dict) else {}
 
 
 def ensure_experiment_dirs(exp_dir: Path, critique: bool = False) -> None:
@@ -236,7 +255,6 @@ def run_collect_programmatic(
     data_dir.mkdir(parents=True, exist_ok=True)
 
     if ground_truth_model and project_id:
-        from src.models.ground_truth import get_ground_truth_models  # type: ignore
         model_registry = get_ground_truth_models(project_id)
         if ground_truth_model not in model_registry:
             print(f"  [collect] Warning: ground truth model {ground_truth_model!r} not found in registry", flush=True)
