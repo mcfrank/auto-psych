@@ -28,6 +28,7 @@ from cc_pipeline.orchestrator import (
     cc_projects_dir,
     ensure_experiment_dirs,
     experiment_dir,
+    get_ground_truth_models,
     init_registry,
     run_analyze_programmatic,
     run_collect_programmatic,
@@ -112,11 +113,16 @@ def _run_experiment(
     n_participants: int,
     validate: bool,
     critique: bool,
+    resume: bool = False,
     ground_truth_model: Optional[str] = None,
     agent_filter: Optional[str] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
+    if exp_dir_path.exists() and not resume:
+        print(f"Error: experiment directory already exists: {exp_dir_path}", file=sys.stderr)
+        print("Use --resume to run into an existing directory.", file=sys.stderr)
+        sys.exit(1)
     ensure_experiment_dirs(exp_dir_path, critique=critique)
     init_registry(exp_dir_path)
 
@@ -196,6 +202,11 @@ def main() -> None:
         action="store_true",
         help="Validate each agent's output; error and stop on failure.",
     )
+    parser.add_argument(
+        "--resume",
+        action="store_true",
+        help="Allow running into an existing experiment directory (skip the exists-check).",
+    )
     args = parser.parse_args()
 
     project_id = args.project
@@ -205,9 +216,7 @@ def main() -> None:
         sys.exit(1)
 
     if args.ground_truth_model is not None:
-        sys.path.insert(0, str(REPO_ROOT))
-        from src.models.ground_truth import get_ground_truth_model_names  # type: ignore
-        allowed = get_ground_truth_model_names(project_id)
+        allowed = list(get_ground_truth_models(project_id).keys())
         if args.ground_truth_model not in allowed:
             print(f"Error: --ground-truth-model must be one of {allowed}; got {args.ground_truth_model!r}", file=sys.stderr)
             sys.exit(1)
@@ -237,6 +246,7 @@ def main() -> None:
             n_participants=args.n_participants,
             validate=args.validate,
             critique=args.critique,
+            resume=args.resume,
             ground_truth_model=args.ground_truth_model,
             agent_filter=args.agent,
         )
