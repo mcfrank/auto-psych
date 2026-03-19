@@ -35,7 +35,7 @@ def <model_name>(stimulus, response_options):
     return {"left": p_left, "right": 1.0 - p_left}
 ```
 
-Keep models **short and parsimonious** — a prior/likelihood or simple heuristic formula.
+Keep models **short and parsimonious**.
 
 ## models_manifest.yaml format
 
@@ -53,7 +53,7 @@ models:
 
 Before finishing, verify:
 - [ ] `cognitive_models/models_manifest.yaml` exists and is valid YAML
-- [ ] **Every model listed in the manifest has a `.py` file in `cognitive_models/`** — there is no global model library fallback; every model must have its own file
+- [ ] **Every model listed in the manifest has a `.py` file in `cognitive_models/`**
 - [ ] Each `.py` file defines a function with the same name as the file (without `.py`)
 - [ ] Each function returns a dict with keys matching `response_options` (["left", "right"]) and values summing to 1.0
 - [ ] For experiment 2+: all previous models are included in the manifest
