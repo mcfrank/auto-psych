@@ -37,7 +37,8 @@ from cc_pipeline.orchestrator import (
     write_context,
 )
 
-AGENT_KEYS = ["1_theory", "2_design", "3_implement", "4_collect", "5_analyze", "6_interpret"]
+AGENT_KEYS_STANDARD = ["1_theory", "2_design", "3_implement", "4_collect", "5_analyze", "6_interpret"]
+AGENT_KEYS_CRITIQUE = ["1_theory", "2_design", "3_implement", "4_collect", "5_critique"]
 PROGRAMMATIC_KEYS = {"4_collect", "5_analyze"}
 
 DEFAULT_N_PARTICIPANTS = 5
@@ -107,18 +108,20 @@ def _run_experiment(
     mode: str,
     n_participants: int,
     validate: bool,
+    critique: bool,
     agent_filter: Optional[str] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
-    ensure_experiment_dirs(exp_dir_path)
+    ensure_experiment_dirs(exp_dir_path, critique=critique)
     init_registry(exp_dir_path)
 
     prev_exp_dir = experiment_dir(project_id, exp_num - 1) if exp_num > 1 else None
     if prev_exp_dir and not prev_exp_dir.exists():
         prev_exp_dir = None
 
-    keys_to_run = [agent_filter] if agent_filter else AGENT_KEYS
+    agent_keys = AGENT_KEYS_CRITIQUE if critique else AGENT_KEYS_STANDARD
+    keys_to_run = [agent_filter] if agent_filter else agent_keys
 
     for agent_key in keys_to_run:
         _run_agent(
@@ -133,7 +136,9 @@ def _run_experiment(
         )
 
     if "6_interpret" in keys_to_run:
-        update_registry_from_interpretation(exp_dir_path)
+        update_registry_from_interpretation(exp_dir_path, critique=False)
+    elif "5_critique" in keys_to_run:
+        update_registry_from_interpretation(exp_dir_path, critique=True)
 
     print(f"\nExperiment {exp_num} complete. Outputs: {exp_dir_path}", flush=True)
 
@@ -153,9 +158,14 @@ def main() -> None:
     )
     parser.add_argument(
         "--agent",
-        choices=AGENT_KEYS,
+        choices=sorted(set(AGENT_KEYS_STANDARD) | set(AGENT_KEYS_CRITIQUE)),
         default=None,
-        help="Run only this agent (e.g. 1_theory). Omit for full pipeline.",
+        help="Run only this agent. Omit for full pipeline.",
+    )
+    parser.add_argument(
+        "--critique",
+        action="store_true",
+        help="Use critique pipeline (5_critique) instead of standard analyze+interpret.",
     )
     parser.add_argument(
         "--mode",
@@ -194,7 +204,8 @@ def main() -> None:
         print("Error: specify --experiment N or --experiments N", file=sys.stderr)
         sys.exit(1)
 
-    print(f"CC Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} validate={args.validate}", flush=True)
+    pipeline = "critique" if args.critique else "standard"
+    print(f"CC Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} pipeline={pipeline} validate={args.validate}", flush=True)
     print(f"Outputs: {cc_projects_dir() / project_id}", flush=True)
 
     for exp_num in exp_ids:
@@ -204,6 +215,7 @@ def main() -> None:
             mode=args.mode,
             n_participants=args.n_participants,
             validate=args.validate,
+            critique=args.critique,
             agent_filter=args.agent,
         )
 

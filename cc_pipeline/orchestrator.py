@@ -38,8 +38,10 @@ def experiment_dir(project_id: str, exp_num: int) -> Path:
     return cc_projects_dir() / project_id / f"experiment{exp_num}"
 
 
-def ensure_experiment_dirs(exp_dir: Path) -> None:
-    for sub in ("cognitive_models", "design", "experiment", "data", "analysis", "interpretation"):
+def ensure_experiment_dirs(exp_dir: Path, critique: bool = False) -> None:
+    subdirs = ["cognitive_models", "design", "experiment", "data"]
+    subdirs += ["critique"] if critique else ["analysis", "interpretation"]
+    for sub in subdirs:
         (exp_dir / sub).mkdir(parents=True, exist_ok=True)
 
 
@@ -58,6 +60,8 @@ def write_context(
     """Write CONTEXT.md into exp_dir for the given agent. Return path."""
     prob_path = REPO_ROOT / "projects" / project_id / "problem_definition.md"
 
+    is_critique = agent_key == "5_critique"
+
     lines: List[str] = [
         f"# CONTEXT — experiment {exp_num}, agent {agent_key}",
         "",
@@ -73,47 +77,60 @@ def write_context(
         f"- Design dir: `{exp_dir / 'design'}`",
         f"- Experiment dir: `{exp_dir / 'experiment'}`",
         f"- Data dir: `{exp_dir / 'data'}`",
-        f"- Analysis dir: `{exp_dir / 'analysis'}`",
-        f"- Interpretation dir: `{exp_dir / 'interpretation'}`",
+        f"- Responses: `{exp_dir / 'data' / 'responses.csv'}`",
         f"- Model registry: `{exp_dir / 'model_registry.yaml'}`",
     ]
 
-    if prev_exp_dir and prev_exp_dir.exists():
+    if is_critique:
         lines += [
-            "",
-            "## Previous experiment paths",
-            "",
-            f"- Previous cognitive models: `{prev_exp_dir / 'cognitive_models'}`",
-            f"- Previous interpretation report: `{prev_exp_dir / 'interpretation' / 'report.md'}`",
-            f"- Previous theory probabilities: `{prev_exp_dir / 'interpretation' / 'theory_probabilities.yaml'}`",
-            f"- Previous model registry: `{prev_exp_dir / 'model_registry.yaml'}`",
-            f"- Previous analysis aggregate: `{prev_exp_dir / 'analysis' / 'aggregate.csv'}`",
-            f"- Previous analysis summary: `{prev_exp_dir / 'analysis' / 'summary_stats.json'}`",
+            f"- Critique output dir: `{exp_dir / 'critique'}`",
+        ]
+    else:
+        lines += [
+            f"- Analysis dir: `{exp_dir / 'analysis'}`",
+            f"- Interpretation dir: `{exp_dir / 'interpretation'}`",
         ]
 
-    # Gather all prior experiment analysis paths for interpreter
-    if agent_key == "6_interpret":
+    if prev_exp_dir and prev_exp_dir.exists():
+        lines += ["", "## Previous experiment paths", ""]
+        lines += [
+            f"- Previous cognitive models: `{prev_exp_dir / 'cognitive_models'}`",
+            f"- Previous model registry: `{prev_exp_dir / 'model_registry.yaml'}`",
+        ]
+        if is_critique:
+            lines += [
+                f"- Previous critique report: `{prev_exp_dir / 'critique' / 'report.md'}`",
+                f"- Previous theory probabilities: `{prev_exp_dir / 'critique' / 'theory_probabilities.yaml'}`",
+                f"- Previous aggregate: `{prev_exp_dir / 'critique' / 'aggregate.csv'}`",
+            ]
+        else:
+            lines += [
+                f"- Previous interpretation report: `{prev_exp_dir / 'interpretation' / 'report.md'}`",
+                f"- Previous theory probabilities: `{prev_exp_dir / 'interpretation' / 'theory_probabilities.yaml'}`",
+                f"- Previous analysis aggregate: `{prev_exp_dir / 'analysis' / 'aggregate.csv'}`",
+                f"- Previous analysis summary: `{prev_exp_dir / 'analysis' / 'summary_stats.json'}`",
+            ]
+
+    # Gather all prior experiment paths for interpreter / critique agent
+    if agent_key in ("6_interpret", "5_critique"):
+        agg_subdir = "critique" if is_critique else "analysis"
         project_dir = exp_dir.parent
         all_agg = []
         all_summary = []
         for n in range(1, exp_num + 1):
-            agg = project_dir / f"experiment{n}" / "analysis" / "aggregate.csv"
-            summ = project_dir / f"experiment{n}" / "analysis" / "summary_stats.json"
+            agg = project_dir / f"experiment{n}" / agg_subdir / "aggregate.csv"
+            summ = project_dir / f"experiment{n}" / agg_subdir / "summary_stats.json"
             if agg.exists():
                 all_agg.append(str(agg))
             if summ.exists():
                 all_summary.append(str(summ))
-        lines += [
-            "",
-            "## All experiments (for merged analysis)",
-            "",
-            "Aggregate CSVs (experiments 1 through N):",
-        ]
+        lines += ["", "## All experiments (aggregate data)", "", "Aggregate CSVs (experiments 1 through N):"]
         for p in all_agg:
             lines.append(f"- `{p}`")
-        lines += ["", "Summary stats:"]
-        for p in all_summary:
-            lines.append(f"- `{p}`")
+        if all_summary:
+            lines += ["", "Summary stats:"]
+            for p in all_summary:
+                lines.append(f"- `{p}`")
 
     if extra:
         lines += ["", "## Additional context", ""]
@@ -316,6 +333,8 @@ def validate_cc_output(agent_key: str, exp_dir: Path) -> tuple[bool, str]:
         return _validate_analyze(exp_dir)
     elif agent_key == "6_interpret":
         return _validate_interpret(exp_dir)
+    elif agent_key == "5_critique":
+        return _validate_critique(exp_dir)
     return True, "No validator for this agent"
 
 
@@ -437,6 +456,32 @@ def _validate_interpret(exp_dir: Path) -> tuple[bool, str]:
     return True, f"Interpretation valid ({len(text)} chars)"
 
 
+def _validate_critique(exp_dir: Path) -> tuple[bool, str]:
+    critique_dir = exp_dir / "critique"
+    report = critique_dir / "report.md"
+    probs = critique_dir / "theory_probabilities.yaml"
+    ppc = critique_dir / "ppc_results.json"
+    agg = critique_dir / "aggregate.csv"
+    stats_dir = critique_dir / "test_stats"
+
+    if not report.exists():
+        return False, f"critique/report.md not found"
+    if not report.read_text(encoding="utf-8").strip():
+        return False, "critique/report.md is empty"
+    if not probs.exists():
+        return False, "critique/theory_probabilities.yaml not found"
+    try:
+        yaml.safe_load(probs.read_text(encoding="utf-8"))
+    except Exception as e:
+        return False, f"Invalid theory_probabilities.yaml: {e}"
+    if not ppc.exists():
+        return False, "critique/ppc_results.json not found"
+    if not agg.exists():
+        return False, "critique/aggregate.csv not found"
+    n_stats = len(list(stats_dir.glob("*.py"))) if stats_dir.exists() else 0
+    return True, f"Critique valid ({n_stats} test stats, {len(report.read_text())} char report)"
+
+
 # ─────────────────────────────────────────────
 # Registry helpers
 # ─────────────────────────────────────────────
@@ -451,15 +496,15 @@ def init_registry(exp_dir: Path) -> None:
         write_registry(registry_path, {})
 
 
-def update_registry_from_interpretation(exp_dir: Path) -> None:
+def update_registry_from_interpretation(exp_dir: Path, critique: bool = False) -> None:
     """
-    After interpretation, update model_registry.yaml from theory_probabilities.yaml
-    if it was written by the interpreter.
+    After interpretation or critique, update model_registry.yaml from theory_probabilities.yaml.
     """
     sys.path.insert(0, str(REPO_ROOT))
     from src.registry import write_registry  # type: ignore
 
-    prob_path = exp_dir / "interpretation" / "theory_probabilities.yaml"
+    subdir = "critique" if critique else "interpretation"
+    prob_path = exp_dir / subdir / "theory_probabilities.yaml"
     registry_path = exp_dir / "model_registry.yaml"
 
     if not prob_path.exists():
