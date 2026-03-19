@@ -53,7 +53,7 @@ models:
 
 Before finishing, verify:
 - [ ] `cognitive_models/models_manifest.yaml` exists and is valid YAML
-- [ ] Each model listed in the manifest has a corresponding `.py` file in `cognitive_models/` (or is in the built-in MODEL_LIBRARY: check `src/models/randomness.py` for the list)
+- [ ] **Every model listed in the manifest has a `.py` file in `cognitive_models/`** — there is no global model library fallback; every model must have its own file
 - [ ] Each `.py` file defines a function with the same name as the file (without `.py`)
 - [ ] Each function returns a dict with keys matching `response_options` (["left", "right"]) and values summing to 1.0
 - [ ] For experiment 2+: all previous models are included in the manifest

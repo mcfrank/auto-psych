@@ -21,6 +21,9 @@ from typing import Any, Dict, List, Optional
 import yaml
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
+
+# MODEL_LIBRARY was removed from src/models/randomness.py — models must now
+# be .py files written by the theorist. No global library fallback.
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 # ─────────────────────────────────────────────
@@ -211,10 +214,11 @@ def run_collect_programmatic(
     """
     sys.path.insert(0, str(REPO_ROOT))
     from src.agents.collect import _generate_from_models  # type: ignore
-    from src.models.randomness import MODEL_LIBRARY  # type: ignore
+    from src.models.loader import get_model_names_from_manifest  # type: ignore
 
     stimuli_path = exp_dir / "design" / "stimuli.json"
     manifest_path = exp_dir / "cognitive_models" / "models_manifest.yaml"
+    theorist_dir = exp_dir / "cognitive_models"
 
     stimuli: List[Dict[str, Any]] = []
     if stimuli_path.exists():
@@ -223,17 +227,15 @@ def run_collect_programmatic(
     model_names: List[str] = []
     if manifest_path.exists():
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-        for m in manifest.get("models", []):
-            name = m["name"] if isinstance(m, dict) else m
-            if name in MODEL_LIBRARY:
-                model_names.append(name)
+        model_names = get_model_names_from_manifest(manifest, theorist_dir)
+
     if not model_names:
-        model_names = list(MODEL_LIBRARY.keys())
+        print(f"  [collect] Warning: no loadable models in {theorist_dir} — responses will be random", flush=True)
 
     data_dir = exp_dir / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    rows = _generate_from_models(stimuli, model_names, n_participants)
+    rows = _generate_from_models(stimuli, model_names, n_participants, theorist_dir=theorist_dir)
 
     csv_path = data_dir / "responses.csv"
     if rows:
@@ -266,11 +268,11 @@ def run_analyze_programmatic(exp_dir: Path) -> tuple[Path, Path]:
     sys.path.insert(0, str(REPO_ROOT))
     from src.agents.data_analyst import _aggregate_csv  # type: ignore
     from src.models.loader import get_model_names_from_manifest  # type: ignore
-    from src.models.randomness import MODEL_LIBRARY  # type: ignore
     from src.stats.correlations import model_data_correlations  # type: ignore
 
     responses_path = exp_dir / "data" / "responses.csv"
     manifest_path = exp_dir / "cognitive_models" / "models_manifest.yaml"
+    theorist_dir = exp_dir / "cognitive_models"
     analysis_dir = exp_dir / "analysis"
     analysis_dir.mkdir(parents=True, exist_ok=True)
 
@@ -288,14 +290,11 @@ def run_analyze_programmatic(exp_dir: Path) -> tuple[Path, Path]:
     (analysis_dir / "aggregate.csv").write_text(aggregate, encoding="utf-8")
     (analysis_dir / "summary_stats.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
 
-    # Model correlations
-    theorist_dir = exp_dir / "cognitive_models"
+    # Model correlations — only theorist's .py files, no library fallback
     model_names: List[str] = []
     if manifest_path.exists():
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
         model_names = get_model_names_from_manifest(manifest, theorist_dir)
-    if not model_names:
-        model_names = list(MODEL_LIBRARY.keys())
 
     agg_lines = aggregate.strip().split("\n")
     if agg_lines:
@@ -354,7 +353,7 @@ def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
     loadable = get_model_names_from_manifest(data, theorist_dir)
     for name in names:
         if name not in loadable:
-            return False, f"Model '{name}' has no {name}.py and is not in MODEL_LIBRARY"
+            return False, f"Model '{name}' has no {theorist_dir}/{name}.py (theorist must provide each model file)"
     # Test call each model
     test_stimulus = ("HHTHTTHT", "HTHTHTHT")
     response_options = ["left", "right"]
