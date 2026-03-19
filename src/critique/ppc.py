@@ -77,12 +77,10 @@ def run_ppc(
     stat_file: Path,
     n_samples: int = 500,
     theorist_dir: Optional[Path] = None,
-    project_id: Optional[str] = None,
 ) -> Dict[str, Any]:
     """
     Run a posterior predictive check for one model × one test statistic.
-    The model is assumed to be a theorist model in theorist_dir (cognitive_models/).
-    Pass project_id if the model might be in the project's ground_truth_models.py instead.
+    The model must be a theorist model in theorist_dir (cognitive_models/).
     Returns a dict with t_observed, p_value, etc.
     """
     from src.agents.collect import _generate_from_models  # type: ignore
@@ -90,15 +88,6 @@ def run_ppc(
     exp_dir = Path(exp_dir)
     if theorist_dir is None:
         theorist_dir = exp_dir / "cognitive_models"
-
-    # Resolve model registry: theorist dir (default) or project ground truth
-    model_registry = None
-    if project_id:
-        from src.models.ground_truth import get_ground_truth_models  # type: ignore
-        gt = get_ground_truth_models(project_id)
-        if model_name in gt:
-            model_registry = gt
-            theorist_dir = None  # use registry, not .py files
 
     # Load test statistic
     test_stat_fn = load_test_stat(Path(stat_file))
@@ -131,7 +120,6 @@ def run_ppc(
             model_names=[model_name],
             n_participants=n_participants,
             theorist_dir=theorist_dir,
-            model_registry=model_registry,
         )
         synthetic_agg = aggregate_rows(synthetic_rows)
         t_synthetic = float(test_stat_fn(synthetic_agg))
@@ -165,7 +153,6 @@ def main() -> None:
     parser.add_argument("--stat-file", required=True, help="Path to test statistic .py file")
     parser.add_argument("--n-samples", type=int, default=500, help="Number of resamples (default: 500)")
     parser.add_argument("--theorist-dir", default=None, help="Override path to cognitive_models/ dir")
-    parser.add_argument("--project-id", default=None, help="Project ID for ground truth model lookup")
     args = parser.parse_args()
 
     theorist_dir = Path(args.theorist_dir) if args.theorist_dir else None
@@ -175,7 +162,6 @@ def main() -> None:
         stat_file=Path(args.stat_file),
         n_samples=args.n_samples,
         theorist_dir=theorist_dir,
-        project_id=args.project_id,
     )
     print(json.dumps(result, indent=2))
 
