@@ -20,12 +20,10 @@ You are the **experiment implementer** in an automated cognitive psychology expe
 5. **Write `experiment/config.json`**:
    ```json
    {
-     "mode": "simulated_participants",
-     "experiment_url": null,
-     "simulated_n_participants": 5
+     "experiment_url": null
    }
    ```
-   Set `mode` to match the current mode from CONTEXT.md. If mode is `simulated_participants` and there's no deployment, set `experiment_url` to `null` — the collect step will generate responses from models directly.
+   The collect step reads this file. Leave `experiment_url` as `null` unless you have deployed the experiment to a URL.
 
 6. **Optionally write `experiment/stimuli.json`** as a copy of `design/stimuli.json`.
 
@@ -63,6 +61,6 @@ Look at `templates/jspsych_experiment.html` in the repo for a reference implemen
 
 Before finishing, verify:
 - [ ] `experiment/index.html` exists and contains "jsPsych" (or "jspsych")
-- [ ] `experiment/config.json` exists, is valid JSON, and has a `mode` or `run_mode` key
+- [ ] `experiment/config.json` exists and is valid JSON
 - [ ] The HTML is self-contained (stimuli embedded, no missing local file references)
 - [ ] One response is collected per trial

@@ -52,8 +52,6 @@ def write_context(
     agent_key: str,
     project_id: str,
     exp_num: int,
-    mode: str,
-    n_participants: int,
     prev_exp_dir: Optional[Path] = None,
     extra: Optional[Dict[str, Any]] = None,
 ) -> Path:
@@ -65,8 +63,6 @@ def write_context(
         "",
         f"**Project:** {project_id}",
         f"**Experiment number:** {exp_num}",
-        f"**Mode:** {mode}",
-        f"**N participants:** {n_participants}",
         f"**Repo root:** {REPO_ROOT}",
         f"**This experiment directory:** {exp_dir}",
         "",
@@ -405,11 +401,9 @@ def _validate_implement(exp_dir: Path) -> tuple[bool, str]:
     if not config_path.exists():
         return False, f"config.json not found at {config_path}"
     try:
-        data = json.loads(config_path.read_text(encoding="utf-8"))
+        json.loads(config_path.read_text(encoding="utf-8"))
     except Exception as e:
         return False, f"Invalid config.json: {e}"
-    if not isinstance(data, dict) or ("run_mode" not in data and "mode" not in data):
-        return False, "config.json missing run_mode/mode key"
     return True, "Implement valid"
 
 

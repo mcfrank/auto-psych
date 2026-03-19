@@ -98,8 +98,6 @@ def _run_agent(
         agent_key=agent_key,
         project_id=project_id,
         exp_num=exp_num,
-        mode=mode,
-        n_participants=n_participants,
         prev_exp_dir=prev_exp_dir,
     )
 
