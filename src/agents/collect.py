@@ -1,5 +1,7 @@
 """Collect: simulated (browser/model) or live (Prolific + Firebase) depending on mode."""
 
+from __future__ import annotations
+
 import csv
 import io
 import json
@@ -795,11 +797,13 @@ def _generate_from_models(
     n_participants: int,
     theorist_dir: Optional[Path] = None,
     model_registry: Optional[Dict[str, Any]] = None,
+    fixed_model: Optional[str] = None,
 ) -> List[Dict[str, Any]]:
-    """Generate responses by sampling from model(s) (no browser). Use model_registry (e.g. ground truth) or theorist_dir (theorist's .py files)."""
+    """Generate responses by sampling from model(s) (no browser). Use model_registry (e.g. ground truth) or theorist_dir (theorist's .py files).
+    If fixed_model is set, all participants use that model (useful for PPC resampling)."""
     rows = []
     for p in range(n_participants):
-        model_name = random.choice(model_names)
+        model_name = fixed_model if fixed_model else random.choice(model_names)
         for i, stim in enumerate(stimuli):
             seq_a = stim["sequence_a"]
             seq_b = stim["sequence_b"]
