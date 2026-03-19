@@ -38,13 +38,9 @@ from cc_pipeline.orchestrator import (
 )
 
 AGENT_KEYS = ["1_theory", "2_design", "3_implement", "4_collect", "5_analyze", "6_interpret"]
-# These agents run as CC agents (Claude Code CLI)
-CC_AGENT_KEYS = {"1_theory", "2_design", "3_implement", "6_interpret"}
-# These run programmatically (existing Python logic)
 PROGRAMMATIC_KEYS = {"4_collect", "5_analyze"}
 
 DEFAULT_N_PARTICIPANTS = 5
-DEFAULT_MAX_RETRIES = 3
 
 
 def _parse_experiments(value: str) -> list[int]:
@@ -71,60 +67,38 @@ def _run_agent(
     exp_num: int,
     mode: str,
     n_participants: int,
-    max_retries: int,
-    prev_exp_dir: Path | None,
-) -> bool:
-    """
-    Run one agent. Returns True if successful (or retries exhausted — pipeline continues).
-    """
+    prev_exp_dir: Optional[Path],
+    validate: bool,
+) -> None:
+    """Run one agent. Raises SystemExit if --validate and output is invalid."""
     print(f"\n{'='*60}", flush=True)
     print(f"  Experiment {exp_num} / Agent {agent_key}", flush=True)
     print(f"{'='*60}", flush=True)
 
     if agent_key in PROGRAMMATIC_KEYS:
-        # Run programmatically, no CC agent needed
         if agent_key == "4_collect":
             run_collect_programmatic(exp_dir, mode, n_participants)
         elif agent_key == "5_analyze":
             run_analyze_programmatic(exp_dir)
-        ok, msg = validate_cc_output(agent_key, exp_dir)
-        if not ok:
-            print(f"  [warn] Validation failed for {agent_key}: {msg}", flush=True)
-        return True
-
-    # CC agent path
-    write_context(
-        exp_dir=exp_dir,
-        agent_key=agent_key,
-        project_id=project_id,
-        exp_num=exp_num,
-        prev_exp_dir=prev_exp_dir,
-    )
-
-    validation_feedback = ""
-    for attempt in range(1, max_retries + 2):
-        ok_spawn, output = spawn_cc_agent(
-            agent_key=agent_key,
+    else:
+        write_context(
             exp_dir=exp_dir,
-            validation_feedback=validation_feedback,
+            agent_key=agent_key,
+            project_id=project_id,
+            exp_num=exp_num,
+            prev_exp_dir=prev_exp_dir,
         )
+        ok_spawn, output = spawn_cc_agent(agent_key=agent_key, exp_dir=exp_dir)
         if not ok_spawn:
-            print(f"  [warn] Agent {agent_key} spawn failed (attempt {attempt}): {output[:200]}", flush=True)
+            print(f"  [warn] Agent {agent_key} exited with non-zero status", flush=True)
 
-        ok_val, val_msg = validate_cc_output(agent_key, exp_dir)
-        if ok_val:
-            print(f"  [ok] {agent_key} validated: {val_msg}", flush=True)
-            return True
-
-        if attempt > max_retries:
-            print(f"  [warn] {agent_key} failed validation after {max_retries} retries: {val_msg}", flush=True)
-            print(f"  [warn] Continuing pipeline despite validation failure.", flush=True)
-            return False
-
-        print(f"  [retry] {agent_key} attempt {attempt}/{max_retries} failed: {val_msg}", flush=True)
-        validation_feedback = val_msg
-
-    return False
+    if validate:
+        ok, msg = validate_cc_output(agent_key, exp_dir)
+        if ok:
+            print(f"  [ok] {agent_key}: {msg}", flush=True)
+        else:
+            print(f"  [error] Validation failed for {agent_key}: {msg}", file=sys.stderr)
+            sys.exit(1)
 
 
 def _run_experiment(
@@ -132,7 +106,7 @@ def _run_experiment(
     exp_num: int,
     mode: str,
     n_participants: int,
-    max_retries: int,
+    validate: bool,
     agent_filter: Optional[str] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
@@ -154,11 +128,10 @@ def _run_experiment(
             exp_num=exp_num,
             mode=mode,
             n_participants=n_participants,
-            max_retries=max_retries,
             prev_exp_dir=prev_exp_dir,
+            validate=validate,
         )
 
-    # After interpretation, sync registry
     if "6_interpret" in keys_to_run:
         update_registry_from_interpretation(exp_dir_path)
 
@@ -196,10 +169,9 @@ def main() -> None:
         metavar="N",
     )
     parser.add_argument(
-        "--max-retries",
-        type=int,
-        default=DEFAULT_MAX_RETRIES,
-        metavar="N",
+        "--validate",
+        action="store_true",
+        help="Validate each agent's output; error and stop on failure.",
     )
     args = parser.parse_args()
 
@@ -222,7 +194,7 @@ def main() -> None:
         print("Error: specify --experiment N or --experiments N", file=sys.stderr)
         sys.exit(1)
 
-    print(f"CC Pipeline: project={project_id} experiments={exp_ids} mode={args.mode}", flush=True)
+    print(f"CC Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} validate={args.validate}", flush=True)
     print(f"Outputs: {cc_projects_dir() / project_id}", flush=True)
 
     for exp_num in exp_ids:
@@ -231,7 +203,7 @@ def main() -> None:
             exp_num=exp_num,
             mode=args.mode,
             n_participants=args.n_participants,
-            max_retries=args.max_retries,
+            validate=args.validate,
             agent_filter=args.agent,
         )
 

@@ -134,7 +134,6 @@ def spawn_cc_agent(
     exp_dir: Path,
     project_root: Path = REPO_ROOT,
     timeout_secs: int = 900,
-    validation_feedback: str = "",
 ) -> tuple[bool, str]:
     """
     Spawn a Claude Code agent for the given agent_key.
@@ -146,21 +145,13 @@ def spawn_cc_agent(
     if not prompt_path.exists():
         return False, f"Prompt not found: {prompt_path}"
 
-    prompt_template = prompt_path.read_text(encoding="utf-8")
     context_path = exp_dir / "CONTEXT.md"
-
     prompt = (
-        f"{prompt_template}\n\n"
+        f"{prompt_path.read_text(encoding='utf-8')}\n\n"
         f"---\n\n"
         f"Read your task context from: `{context_path}`\n\n"
         f"Start by reading that file, then follow the instructions above.\n"
     )
-
-    if validation_feedback:
-        prompt += (
-            f"\n\n**VALIDATION FAILED on previous attempt.**\n"
-            f"Fix the following before finishing:\n\n{validation_feedback}\n"
-        )
 
     cmd = [
         "claude",
