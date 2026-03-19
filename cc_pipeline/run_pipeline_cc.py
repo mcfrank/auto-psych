@@ -70,6 +70,7 @@ def _run_agent(
     n_participants: int,
     prev_exp_dir: Optional[Path],
     validate: bool,
+    ground_truth_model: Optional[str] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output is invalid."""
     print(f"\n{'='*60}", flush=True)
@@ -78,7 +79,9 @@ def _run_agent(
 
     if agent_key in PROGRAMMATIC_KEYS:
         if agent_key == "4_collect":
-            run_collect_programmatic(exp_dir, mode, n_participants)
+            run_collect_programmatic(exp_dir, mode, n_participants,
+                                     project_id=project_id,
+                                     ground_truth_model=ground_truth_model)
         elif agent_key == "5_analyze":
             run_analyze_programmatic(exp_dir)
     else:
@@ -109,6 +112,7 @@ def _run_experiment(
     n_participants: int,
     validate: bool,
     critique: bool,
+    ground_truth_model: Optional[str] = None,
     agent_filter: Optional[str] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
@@ -133,6 +137,7 @@ def _run_experiment(
             n_participants=n_participants,
             prev_exp_dir=prev_exp_dir,
             validate=validate,
+            ground_truth_model=ground_truth_model,
         )
 
     if "6_interpret" in keys_to_run:
@@ -179,6 +184,14 @@ def main() -> None:
         metavar="N",
     )
     parser.add_argument(
+        "--ground-truth-model",
+        default=None,
+        metavar="MODEL",
+        help="Generate synthetic participant data from this ground-truth model "
+             "(must be in projects/<project>/ground_truth_models.py). "
+             "If omitted, data is sampled from the theorist's models.",
+    )
+    parser.add_argument(
         "--validate",
         action="store_true",
         help="Validate each agent's output; error and stop on failure.",
@@ -190,6 +203,14 @@ def main() -> None:
     if not prob_path.exists():
         print(f"Error: problem definition not found at {prob_path}", file=sys.stderr)
         sys.exit(1)
+
+    if args.ground_truth_model is not None:
+        sys.path.insert(0, str(REPO_ROOT))
+        from src.models.ground_truth import get_ground_truth_model_names  # type: ignore
+        allowed = get_ground_truth_model_names(project_id)
+        if args.ground_truth_model not in allowed:
+            print(f"Error: --ground-truth-model must be one of {allowed}; got {args.ground_truth_model!r}", file=sys.stderr)
+            sys.exit(1)
 
     # Resolve experiment IDs
     if args.experiments is not None:
@@ -216,6 +237,7 @@ def main() -> None:
             n_participants=args.n_participants,
             validate=args.validate,
             critique=args.critique,
+            ground_truth_model=args.ground_truth_model,
             agent_filter=args.agent,
         )
 

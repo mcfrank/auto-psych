@@ -210,10 +210,14 @@ def run_collect_programmatic(
     exp_dir: Path,
     mode: str,
     n_participants: int,
+    project_id: Optional[str] = None,
+    ground_truth_model: Optional[str] = None,
 ) -> Path:
     """
-    Run data collection for simulated_participants mode directly (no CC agent).
-    Uses existing _generate_from_models from src.agents.collect.
+    Run data collection directly (no CC agent).
+    If ground_truth_model is set, samples all participants from that model
+    (loaded from projects/<project_id>/ground_truth_models.py).
+    Otherwise samples from the theorist's models.
     Writes exp_dir/data/responses.csv. Returns path to CSV.
     """
     sys.path.insert(0, str(REPO_ROOT))
@@ -228,18 +232,27 @@ def run_collect_programmatic(
     if stimuli_path.exists():
         stimuli = json.loads(stimuli_path.read_text(encoding="utf-8"))
 
-    model_names: List[str] = []
-    if manifest_path.exists():
-        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-        model_names = get_model_names_from_manifest(manifest, theorist_dir)
-
-    if not model_names:
-        print(f"  [collect] Warning: no loadable models in {theorist_dir} — responses will be random", flush=True)
-
     data_dir = exp_dir / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    rows = _generate_from_models(stimuli, model_names, n_participants, theorist_dir=theorist_dir)
+    if ground_truth_model and project_id:
+        from src.models.ground_truth import get_ground_truth_models  # type: ignore
+        model_registry = get_ground_truth_models(project_id)
+        if ground_truth_model not in model_registry:
+            print(f"  [collect] Warning: ground truth model {ground_truth_model!r} not found in registry", flush=True)
+        print(f"  [collect] Using ground truth model: {ground_truth_model}", flush=True)
+        rows = _generate_from_models(
+            stimuli, [ground_truth_model], n_participants,
+            model_registry=model_registry,
+        )
+    else:
+        model_names: List[str] = []
+        if manifest_path.exists():
+            manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+            model_names = get_model_names_from_manifest(manifest, theorist_dir)
+        if not model_names:
+            print(f"  [collect] Warning: no loadable models in {theorist_dir} — responses will be random", flush=True)
+        rows = _generate_from_models(stimuli, model_names, n_participants, theorist_dir=theorist_dir)
 
     csv_path = data_dir / "responses.csv"
     if rows:
