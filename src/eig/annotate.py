@@ -48,26 +48,26 @@ def _eig(
 
     # ── likelihood: P(R | M, stimulus) ───────────────────────────────────────
     preds = get_model_predictions(stimulus, RESPONSE_OPTIONS, model_names, models_dir)
-    if not preds:
-        return 0.0
 
-    # Validate: each model must return a proper probability distribution
+    # ── validate all inputs before touching any math ──────────────────────────
+    if not preds:
+        raise ValueError("No predictions returned.")
     for m, pred in preds.items():
         if any(p < 0 for p in pred.values()):
             raise ValueError(f"Model {m!r} returned a negative probability: {pred}")
         total = sum(pred.values())
         if abs(total - 1.0) > 1e-6:
             raise ValueError(f"Model {m!r} predictions sum to {total:.6f}, expected 1")
+    if any(w < 0 for w in model_weights.values()):
+        raise ValueError(f"Negative model weight in: {model_weights}")
+    raw_weights = {m: model_weights.get(m, 0.0) for m in preds} if model_weights else {}
+    if raw_weights and sum(raw_weights.values()) <= 0:
+        raise ValueError(f"Model weights (for models in preds) sum to 0; at least one must be positive")
 
     # ── prior: P(M) ──────────────────────────────────────────────────────────
-    if model_weights:
-        raw = {m: model_weights.get(m, 0.0) for m in preds}
-        if any(w < 0 for w in raw.values()):
-            raise ValueError(f"Negative model weight: {raw}")
-        total_w = sum(raw.values())
-        if total_w <= 0:
-            raise ValueError(f"Model weights sum to {total_w}; at least one must be positive")
-        p_model = {m: raw[m] / total_w for m in preds}
+    if raw_weights:
+        total_w = sum(raw_weights.values())
+        p_model = {m: raw_weights[m] / total_w for m in preds}
     else:
         p_model = {m: 1.0 / len(preds) for m in preds}
 
