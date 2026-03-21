@@ -1,18 +1,17 @@
 models:
-  - name: representativeness
-    rationale: |
-      Prefer the sequence whose proportion of heads is closer to 50/50.
-      Captures the balance heuristic: people judge sequences with near-equal
-      H and T counts as more representative of a random process.
-  - name: alternation
-    rationale: |
-      Prefer the sequence with more H-T and T-H transitions.
-      Captures the well-documented alternation bias: people expect random
-      sequences to switch frequently between outcomes.
   - name: griffiths_representativeness
     rationale: |
-      Prefer the sequence with higher likelihood under a subjective alternating
-      Markov chain (alternation probability = 0.7). Implements the rational
-      basis of representativeness (Griffiths & Tenenbaum): participants use an
-      internally calibrated generator that over-weights alternations, making
-      such sequences 'look' more random to them.
+      Rational representativeness (Griffiths & Tenenbaum 2001): a sequence looks more
+      random when both its alternation rate and H/T balance are close to 0.5, the
+      statistics expected from a fair-coin generator. Combines both dimensions via
+      squared deviation from 0.5.
+  - name: alternation_bias
+    rationale: |
+      Gambler's fallacy / negative recency bias: people expect random sequences to
+      alternate frequently, so they judge sequences with more H→T and T→H transitions
+      as "more random," independent of overall balance.
+  - name: balance_heuristic
+    rationale: |
+      Balance heuristic: people expect random sequences to contain roughly equal H and T,
+      so they choose whichever sequence is closer to 50/50 balance, ignoring the
+      pattern or ordering of flips.

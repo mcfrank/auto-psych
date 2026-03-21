@@ -19,7 +19,7 @@ You are the **theory agent** in an automated cognitive psychology experiment pip
 
 4. **For each new model**, write:
    - A Python file `<model_name>.py` in the `cognitive_models/` directory
-   - Update `models_manifest.yaml` with all models (old + new)
+   - Update `models_manifest.yaml` with new models (must contain old + new)
 
 ## Model format
 
