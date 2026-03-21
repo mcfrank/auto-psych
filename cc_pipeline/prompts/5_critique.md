@@ -19,6 +19,8 @@ cd REPO_ROOT && python3 -m src.model_comparison.posterior \
 
 (Replace the `--responses` list with the actual paths from CONTEXT.md. Use only the current experiment's `cognitive_models/` — it contains all models from previous experiments plus any new ones.)
 
+**Optional complexity prior**: add `--complexity-prior CONST` to apply a prior proportional to `exp(CONST × complexity)`, where complexity = non-blank non-comment lines in the model's `.py` file. Negative CONST penalises complex models (Occam's razor). Example: `--complexity-prior -0.01`. Omit for a uniform prior.
+
 Read `critique/model_posterior.json`. It contains:
 - `posteriors`: P(model | data) for each model (uniform prior, pooled across all experiments)
 - `log_likelihoods`: log P(data | model) for each model
