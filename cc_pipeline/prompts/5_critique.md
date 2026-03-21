@@ -124,23 +124,6 @@ If no significant critiques: "No significant failures detected."]
 
 ---
 
-### Step 5 — Update theory probabilities
-
-Write `critique/theory_probabilities.yaml` using the Bayesian posterior as the base:
-
-1. Start with `posteriors` from `critique/model_posterior.json`
-2. Penalise each significant PPC failure: multiply that model's weight by 0.7 per failure
-3. Renormalise so all theories sum to exactly `1.0`
-
-```yaml
-theories:
-  model_name_1: 0.55
-  model_name_2: 0.30
-  model_name_3: 0.15
-```
-
----
-
 ## Self-validation checklist
 
 Before finishing, verify:
@@ -148,4 +131,3 @@ Before finishing, verify:
 - [ ] `critique/test_stats/` contains at least 3 `.py` files, each defining `test_stat(rows)`
 - [ ] `critique/ppc_results.json` contains results for every model × test stat combination
 - [ ] `critique/report.md` exists, is non-empty, includes the model fit table, only claims PPC significance where p < 0.05/k
-- [ ] `critique/theory_probabilities.yaml` exists with valid YAML, `theories` values sum to 1.0
