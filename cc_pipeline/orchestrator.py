@@ -70,6 +70,7 @@ def write_context(
     exp_num: int,
     prev_exp_dir: Optional[Path] = None,
     extra: Optional[Dict[str, Any]] = None,
+    complexity_prior_const: float = 0.0,
 ) -> Path:
     """Write CONTEXT.md into exp_dir for the given agent. Return path."""
     prob_path = REPO_ROOT / "projects" / project_id / "problem_definition.md"
@@ -122,6 +123,20 @@ def write_context(
         lines += ["", "Stimuli files (all experiments, pass all to --stimuli):"]
         for p in all_stimuli:
             lines.append(f"- `{p}`")
+        # Embed the exact posterior command so the agent doesn't have to construct it
+        responses_str = " \\\n        ".join(all_responses)
+        complexity_flag = (
+            f" \\\n    --complexity-prior {complexity_prior_const}"
+            if complexity_prior_const != 0.0 else ""
+        )
+        posterior_cmd = (
+            f"cd {REPO_ROOT} && python3 -m src.model_comparison.posterior \\\n"
+            f"    --responses \\\n        {responses_str} \\\n"
+            f"    --models-dir {exp_dir / 'cognitive_models'} \\\n"
+            f"    --out {exp_dir / 'critique' / 'model_posterior.json'}"
+            f"{complexity_flag}"
+        )
+        lines += ["", "## Posterior command (run this exactly)", "", "```bash", posterior_cmd, "```"]
 
     if extra:
         lines += ["", "## Additional context", ""]
