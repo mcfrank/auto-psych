@@ -25,12 +25,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 from cc_pipeline.orchestrator import (
+    cc_project_dir,
     cc_projects_dir,
     ensure_experiment_dirs,
     experiment_dir,
     get_ground_truth_models,
     init_registry,
-    run_analyze_programmatic,
     run_collect_programmatic,
     spawn_cc_agent,
     update_registry_from_interpretation,
@@ -38,9 +38,7 @@ from cc_pipeline.orchestrator import (
     write_context,
 )
 
-AGENT_KEYS_STANDARD = ["1_theory", "2_design", "3_implement", "4_collect", "5_analyze", "6_interpret"]
-AGENT_KEYS_CRITIQUE = ["1_theory", "2_design", "3_implement", "4_collect", "5_critique"]
-PROGRAMMATIC_KEYS = {"4_collect", "5_analyze"}
+AGENT_KEYS = ["1_theory", "2_design", "3_implement", "4_collect", "5_critique"]
 
 DEFAULT_N_PARTICIPANTS = 5
 
@@ -78,13 +76,10 @@ def _run_agent(
     print(f"  Experiment {exp_num} / Agent {agent_key}", flush=True)
     print(f"{'='*60}", flush=True)
 
-    if agent_key in PROGRAMMATIC_KEYS:
-        if agent_key == "4_collect":
-            run_collect_programmatic(exp_dir, mode, n_participants,
-                                     project_id=project_id,
-                                     ground_truth_model=ground_truth_model)
-        elif agent_key == "5_analyze":
-            run_analyze_programmatic(exp_dir)
+    if agent_key == "4_collect":
+        run_collect_programmatic(exp_dir, mode, n_participants,
+                                 project_id=project_id,
+                                 ground_truth_model=ground_truth_model)
     else:
         write_context(
             exp_dir=exp_dir,
@@ -93,7 +88,10 @@ def _run_agent(
             exp_num=exp_num,
             prev_exp_dir=prev_exp_dir,
         )
-        ok_spawn, output = spawn_cc_agent(agent_key=agent_key, exp_dir=exp_dir)
+        allowed_dirs = [exp_dir, cc_project_dir(project_id)]
+        if prev_exp_dir:
+            allowed_dirs.append(prev_exp_dir)
+        ok_spawn, output = spawn_cc_agent(agent_key=agent_key, exp_dir=exp_dir, allowed_dirs=allowed_dirs)
         if not ok_spawn:
             print(f"  [warn] Agent {agent_key} exited with non-zero status", flush=True)
 
@@ -112,7 +110,6 @@ def _run_experiment(
     mode: str,
     n_participants: int,
     validate: bool,
-    critique: bool,
     resume: bool = False,
     ground_truth_model: Optional[str] = None,
     agent_filter: Optional[str] = None,
@@ -123,15 +120,14 @@ def _run_experiment(
         print(f"Error: experiment directory already exists: {exp_dir_path}", file=sys.stderr)
         print("Use --resume to run into an existing directory.", file=sys.stderr)
         sys.exit(1)
-    ensure_experiment_dirs(exp_dir_path, critique=critique)
+    ensure_experiment_dirs(exp_dir_path)
     init_registry(exp_dir_path)
 
     prev_exp_dir = experiment_dir(project_id, exp_num - 1) if exp_num > 1 else None
     if prev_exp_dir and not prev_exp_dir.exists():
         prev_exp_dir = None
 
-    agent_keys = AGENT_KEYS_CRITIQUE if critique else AGENT_KEYS_STANDARD
-    keys_to_run = [agent_filter] if agent_filter else agent_keys
+    keys_to_run = [agent_filter] if agent_filter else AGENT_KEYS
 
     for agent_key in keys_to_run:
         _run_agent(
@@ -146,10 +142,8 @@ def _run_experiment(
             ground_truth_model=ground_truth_model,
         )
 
-    if "6_interpret" in keys_to_run:
-        update_registry_from_interpretation(exp_dir_path, critique=False)
-    elif "5_critique" in keys_to_run:
-        update_registry_from_interpretation(exp_dir_path, critique=True)
+    if "5_critique" in keys_to_run:
+        update_registry_from_interpretation(exp_dir_path)
 
     print(f"\nExperiment {exp_num} complete. Outputs: {exp_dir_path}", flush=True)
 
@@ -169,14 +163,9 @@ def main() -> None:
     )
     parser.add_argument(
         "--agent",
-        choices=sorted(set(AGENT_KEYS_STANDARD) | set(AGENT_KEYS_CRITIQUE)),
+        choices=AGENT_KEYS,
         default=None,
         help="Run only this agent. Omit for full pipeline.",
-    )
-    parser.add_argument(
-        "--critique",
-        action="store_true",
-        help="Use critique pipeline (5_critique) instead of standard analyze+interpret.",
     )
     parser.add_argument(
         "--mode",
@@ -194,7 +183,7 @@ def main() -> None:
         default=None,
         metavar="MODEL",
         help="Generate synthetic participant data from this ground-truth model "
-             "(must be in projects/<project>/ground_truth_models.py). "
+             "(must be in cc_pipeline/projects/<project>/ground_truth_models.py). "
              "If omitted, data is sampled from the theorist's models.",
     )
     parser.add_argument(
@@ -234,8 +223,7 @@ def main() -> None:
         print("Error: specify --experiment N or --experiments N", file=sys.stderr)
         sys.exit(1)
 
-    pipeline = "critique" if args.critique else "standard"
-    print(f"CC Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} pipeline={pipeline} validate={args.validate}", flush=True)
+    print(f"CC Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} validate={args.validate}", flush=True)
     print(f"Outputs: {cc_projects_dir() / project_id}", flush=True)
 
     for exp_num in exp_ids:
@@ -245,7 +233,6 @@ def main() -> None:
             mode=args.mode,
             n_participants=args.n_participants,
             validate=args.validate,
-            critique=args.critique,
             resume=args.resume,
             ground_truth_model=args.ground_truth_model,
             agent_filter=args.agent,

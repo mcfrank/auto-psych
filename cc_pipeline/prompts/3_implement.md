@@ -11,7 +11,7 @@ You are the **experiment implementer** in an automated cognitive psychology expe
 3. **Read `design/stimuli.json`** for the stimulus set.
 
 4. **Write a jsPsych experiment** to `experiment/index.html`:
-   - One stimulus per trial (or one stimulus pair for comparison tasks)
+   - One stimulus per trial
    - Collect participant response (key press, button, or rating)
    - On finish, expose data as `window.__experimentData` for local collection
    - Load stimuli from an inline JSON array (embed the stimuli data directly in the HTML)
