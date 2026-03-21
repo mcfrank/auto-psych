@@ -144,6 +144,41 @@ def write_context(
 # Claude Code agent spawner
 # ─────────────────────────────────────────────
 
+def _summarise_event(event: Dict[str, Any]) -> Optional[str]:
+    """Return a one-line human-readable summary of a stream-json event, or None to skip."""
+    t = event.get("type")
+    if t == "assistant":
+        parts = event.get("message", {}).get("content", [])
+        lines = []
+        for part in parts if isinstance(parts, list) else []:
+            if part.get("type") == "tool_use":
+                name = part.get("name", "?")
+                inp = part.get("input", {})
+                # Show the most informative field from the input
+                detail = ""
+                for key in ("command", "file_path", "pattern", "path", "query"):
+                    if key in inp:
+                        val = str(inp[key])
+                        detail = f" {val[:120]}" if len(val) > 120 else f" {val}"
+                        break
+                lines.append(f"  → {name}{detail}")
+            elif part.get("type") == "text":
+                text = part.get("text", "").strip()
+                if text:
+                    # Print first non-empty line of any text block
+                    first = text.splitlines()[0][:120]
+                    lines.append(f"  … {first}")
+        return "\n".join(lines) if lines else None
+    if t == "result":
+        subtype = event.get("subtype", "")
+        cost = event.get("cost_usd")
+        cost_str = f"  cost=${cost:.4f}" if cost is not None else ""
+        turns = event.get("num_turns", "?")
+        result_text = str(event.get("result", ""))[:200]
+        return f"  [result] {subtype}{cost_str}  turns={turns}\n  {result_text}"
+    return None
+
+
 def spawn_cc_agent(
     agent_key: str,
     exp_dir: Path,
@@ -156,7 +191,8 @@ def spawn_cc_agent(
     Tells the agent to read CONTEXT.md and complete the task.
     File tool access is restricted to allowed_dirs (defaults to exp_dir only).
     Bash still runs from REPO_ROOT so python3 -m src.* imports work.
-    Returns (success, output_or_error).
+    Streams output to exp_dir/logs/<agent_key>.jsonl and prints live summaries.
+    Returns (success, final_result_text).
     """
     prompt_path = PROMPTS_DIR / f"{agent_key}.md"
     if not prompt_path.exists():
@@ -177,32 +213,71 @@ def spawn_cc_agent(
 
     cmd = [
         "claude",
-        "--print",
+        "--output-format", "stream-json",
         "--dangerously-skip-permissions",
         *add_dir_args,
         "--model", "claude-sonnet-4-6",
         prompt,
     ]
 
-    print(f"  [cc] Spawning agent {agent_key} ...", flush=True)
+    log_dir = exp_dir / "logs"
+    log_dir.mkdir(exist_ok=True)
+    log_path = log_dir / f"{agent_key}.jsonl"
+
+    print(f"  [cc] Spawning agent {agent_key} (log: {log_path})", flush=True)
+    final_result = ""
+    success = False
     try:
-        result = subprocess.run(
-            cmd,
-            cwd=str(REPO_ROOT),
-            capture_output=True,
-            text=True,
-            timeout=timeout_secs,
-        )
-        output = result.stdout + result.stderr
-        if result.returncode != 0:
-            print(f"  [cc] Agent {agent_key} exited with code {result.returncode}", flush=True)
-            return False, output
-        print(f"  [cc] Agent {agent_key} completed.", flush=True)
-        return True, output
-    except subprocess.TimeoutExpired:
-        msg = f"Agent {agent_key} timed out after {timeout_secs}s"
-        print(f"  [cc] {msg}", flush=True)
-        return False, msg
+        with open(log_path, "w", encoding="utf-8") as log_file:
+            proc = subprocess.Popen(
+                cmd,
+                cwd=str(REPO_ROOT),
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )
+            import threading
+            timed_out = threading.Event()
+
+            def _kill_after():
+                timed_out.set()
+                proc.kill()
+
+            timer = threading.Timer(timeout_secs, _kill_after)
+            timer.start()
+            try:
+                for raw_line in proc.stdout:
+                    log_file.write(raw_line)
+                    log_file.flush()
+                    raw_line = raw_line.strip()
+                    if not raw_line:
+                        continue
+                    try:
+                        event = json.loads(raw_line)
+                    except json.JSONDecodeError:
+                        print(f"  [cc] {raw_line}", flush=True)
+                        continue
+                    summary = _summarise_event(event)
+                    if summary:
+                        print(summary, flush=True)
+                    if event.get("type") == "result":
+                        final_result = str(event.get("result", ""))
+                        success = event.get("subtype") == "success"
+            finally:
+                timer.cancel()
+                proc.wait()
+
+        if timed_out.is_set():
+            msg = f"Agent {agent_key} timed out after {timeout_secs}s"
+            print(f"  [cc] {msg}", flush=True)
+            return False, msg
+
+        if not success:
+            print(f"  [cc] Agent {agent_key} finished with non-success result.", flush=True)
+        else:
+            print(f"  [cc] Agent {agent_key} completed.", flush=True)
+        return success, final_result
+
     except Exception as e:
         return False, str(e)
 
