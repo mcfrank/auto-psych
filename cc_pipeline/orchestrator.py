@@ -101,7 +101,6 @@ def write_context(
             f"- Previous cognitive models: `{prev_exp_dir / 'cognitive_models'}`",
             f"- Previous model registry: `{prev_exp_dir / 'model_registry.yaml'}`",
             f"- Previous critique report: `{prev_exp_dir / 'critique' / 'report.md'}`",
-            f"- Previous theory probabilities: `{prev_exp_dir / 'critique' / 'theory_probabilities.yaml'}`",
             f"- Previous model posterior: `{prev_exp_dir / 'critique' / 'model_posterior.json'}`",
         ]
 
@@ -391,7 +390,6 @@ def _validate_collect(exp_dir: Path) -> tuple[bool, str]:
 def _validate_critique(exp_dir: Path) -> tuple[bool, str]:
     critique_dir = exp_dir / "critique"
     report = critique_dir / "report.md"
-    probs = critique_dir / "theory_probabilities.yaml"
     ppc = critique_dir / "ppc_results.json"
     posterior = critique_dir / "model_posterior.json"
     stats_dir = critique_dir / "test_stats"
@@ -408,12 +406,6 @@ def _validate_critique(exp_dir: Path) -> tuple[bool, str]:
         return False, "critique/report.md not found"
     if not report.read_text(encoding="utf-8").strip():
         return False, "critique/report.md is empty"
-    if not probs.exists():
-        return False, "critique/theory_probabilities.yaml not found"
-    try:
-        yaml.safe_load(probs.read_text(encoding="utf-8"))
-    except Exception as e:
-        return False, f"Invalid theory_probabilities.yaml: {e}"
     if not ppc.exists():
         return False, "critique/ppc_results.json not found"
     n_stats = len(list(stats_dir.glob("*.py"))) if stats_dir.exists() else 0
@@ -435,22 +427,22 @@ def init_registry(exp_dir: Path) -> None:
 
 
 def update_registry_from_interpretation(exp_dir: Path) -> None:
-    """Update model_registry.yaml from critique/theory_probabilities.yaml."""
+    """Update model_registry.yaml from critique/model_posterior.json posteriors."""
     sys.path.insert(0, str(REPO_ROOT))
     from src.registry import write_registry  # type: ignore
 
-    prob_path = exp_dir / "critique" / "theory_probabilities.yaml"
+    posterior_path = exp_dir / "critique" / "model_posterior.json"
     registry_path = exp_dir / "model_registry.yaml"
 
-    if not prob_path.exists():
+    if not posterior_path.exists():
         return
     try:
-        data = yaml.safe_load(prob_path.read_text(encoding="utf-8")) or {}
+        data = json.loads(posterior_path.read_text(encoding="utf-8"))
     except Exception:
         return
 
-    theories = data.get("theories") or data.get("probabilities") or {}
-    if not isinstance(theories, dict):
+    posteriors = data.get("posteriors") or {}
+    if not isinstance(posteriors, dict):
         return
-    write_registry(registry_path, theories, reserved_for_new=0.0)
-    print(f"  [registry] Updated model_registry.yaml from theory_probabilities.yaml", flush=True)
+    write_registry(registry_path, posteriors, reserved_for_new=0.0)
+    print(f"  [registry] Updated model_registry.yaml from model_posterior.json", flush=True)

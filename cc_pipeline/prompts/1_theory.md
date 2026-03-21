@@ -14,7 +14,7 @@ You are the **theory agent** in an automated cognitive psychology experiment pip
    **If this is experiment 2+**:
    - Copy all `.py` files from the previous experiment's `cognitive_models/` directory into this experiment's `cognitive_models/` directory
    - Copy `models_manifest.yaml` from the previous experiment's `cognitive_models/` directory
-   - Read the previous interpretation report and `theory_probabilities.yaml`
+   - Read the previous critique report (`critique/report.md`) — it contains Bayesian model posteriors, per-experiment log-likelihoods, and PPC failure summaries
    - Propose at least 1 **new or variant** model (e.g., `bayesian_v2`) informed by what worked/failed
 
 4. **For each new model**, write:
