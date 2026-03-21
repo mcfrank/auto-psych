@@ -73,7 +73,7 @@ def write_context(
     complexity_prior_const: float = 0.0,
 ) -> Path:
     """Write CONTEXT.md into exp_dir for the given agent. Return path."""
-    prob_path = REPO_ROOT / "projects" / project_id / "problem_definition.md"
+    prob_path = cc_project_dir(project_id) / "problem_definition.md"
 
     lines: List[str] = [
         f"# CONTEXT — experiment {exp_num}, agent {agent_key}",
