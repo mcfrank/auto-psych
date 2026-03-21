@@ -1,0 +1,45 @@
+{
+  "posteriors": {
+    "alternation_bias": 0.0,
+    "balance_heuristic": 0.0,
+    "griffiths_representativeness": 0.0,
+    "weighted_balance_alternation": 0.002697,
+    "run_aversion": 0.997303
+  },
+  "log_likelihoods": {
+    "alternation_bias": -195.021,
+    "balance_heuristic": -161.8152,
+    "griffiths_representativeness": -280.5483,
+    "weighted_balance_alternation": -130.2172,
+    "run_aversion": -134.2044
+  },
+  "log_likelihoods_by_experiment": {
+    "experiment1": {
+      "alternation_bias": -100.7497,
+      "balance_heuristic": -80.174,
+      "griffiths_representativeness": -134.7859,
+      "weighted_balance_alternation": -67.7815,
+      "run_aversion": -67.9197
+    },
+    "experiment2": {
+      "alternation_bias": -94.2714,
+      "balance_heuristic": -81.6412,
+      "griffiths_representativeness": -145.7624,
+      "weighted_balance_alternation": -62.4357,
+      "run_aversion": -66.2848
+    }
+  },
+  "n_trials": 200,
+  "n_trials_by_experiment": {
+    "experiment1": 100,
+    "experiment2": 100
+  },
+  "complexity_prior_const": 0.1,
+  "complexities": {
+    "alternation_bias": 588,
+    "balance_heuristic": 525,
+    "griffiths_representativeness": 776,
+    "weighted_balance_alternation": 746,
+    "run_aversion": 845
+  }
+}

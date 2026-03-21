@@ -1,5 +1,5 @@
-reserved_for_new: 0.25
+reserved_for_new: 0.0
 theories:
-  alternation_bias: 0.22
-  balance_heuristic: 0.22
-  griffiths_representativeness: 0.31
+  alternation_bias: 1.0e-06
+  balance_heuristic: 0.999999
+  griffiths_representativeness: 0.0

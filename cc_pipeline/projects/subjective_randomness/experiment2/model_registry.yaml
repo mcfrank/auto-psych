@@ -1,2 +1,7 @@
-reserved_for_new: 0.25
-theories: {}
+reserved_for_new: 0.0
+theories:
+  alternation_bias: 0.0
+  balance_heuristic: 0.0
+  griffiths_representativeness: 0.0
+  run_aversion: 0.997303
+  weighted_balance_alternation: 0.002697

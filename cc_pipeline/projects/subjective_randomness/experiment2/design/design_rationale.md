@@ -1,44 +1,52 @@
 # Design Rationale — Experiment 2
 
-## Stimulus selection
+## Overview
 
-**30 trials** selected from ~56,000 candidates (all same-length and mixed-length pairs of sequences with lengths 4, 6, 8) using Expected Information Gain (EIG) under a uniform prior over five cognitive models.
+Experiment 2 extends the three-model setup from experiment 1 (alternation_bias, balance_heuristic, griffiths_representativeness) with two new models: **run_aversion** and **weighted_balance_alternation**. The design targets pairs that maximally discriminate between all five models.
 
-## EIG results
+## Candidate Generation
 
-All 30 selected stimuli achieve the **maximum attainable EIG of 0.2887 bits** under the five models
-(`griffiths_representativeness`, `alternation_bias`, `balance_heuristic`, `griffiths_v2`,
-`weighted_balance_alternation`).
+110 candidate pairs were generated covering the following contrast types:
 
-## Structure of selected stimuli
+### 1. run_aversion vs alternation_bias divergent pairs
+The key theoretical prediction unique to experiment 2: `run_aversion` scores sequences by the inverse of their maximum run length, while `alternation_bias` scores by total alternation rate. These can diverge when a sequence has many small runs (low max_run, moderate alt) vs. fewer but clustered alternations (higher alt, longer max run). Example: HHTTHHTT (max_run=2, alt≈0.43) vs HHHTHTHT (max_run=3, alt≈0.71).
 
-Every selected trial is a **length-8 pair** in which:
-- One sequence is maximally alternating and perfectly balanced: `HTHTHTHT` or `THTHTHTH`
-  (alternation rate = 1.0, balance = 0.5)
-- The other sequence is **also perfectly balanced** (4H/4T) but with lower alternation rate
-  (18 distinct patterns with alternation rates ranging from 3/7 to 5/7)
+### 2. griffiths_representativeness vs alternation_bias pairs
+GR uniquely penalizes *over-alternation*: sequences with alt_rate near 1.0 are judged *less* random than those near 0.5. Pairs like HTHTH vs HHTTH (both 3H2T, but HHTTH has alt=0.5) produce large GR-vs-AB disagreements.
 
-This contrast structure is optimal because:
-1. **Balance is held constant** — both sequences in each pair have equal H/T counts (4:4),
-   so balance-only models (`balance_heuristic`) predict chance (p=0.5). This creates maximal
-   spread across models: the alternation-sensitive models differ from the balance-only model.
-2. **Alternation is maximally varied** — one sequence alternates every flip; the other varies.
-   `alternation_bias` strongly prefers the alternating sequence; `griffiths_representativeness`
-   penalizes the extreme alternation rate (deviation from 0.5); `griffiths_v2` and
-   `weighted_balance_alternation` are intermediate.
-3. **All five models make meaningfully different predictions** on these pairs, maximizing the
-   information each response provides about which model is correct.
+### 3. balance_heuristic vs weighted_balance_alternation
+WBA combines balance and alternation equally; BH ignores alternation. Pairs where one sequence is imbalanced-but-alternating vs. balanced-but-streaky expose this difference.
 
-## Why length-8 pairs dominate
+### 4. Cross-length pairs
+Pairs of different lengths (e.g., 5 vs 6, 4 vs 8) to test whether model predictions generalize across sequence lengths.
 
-Shorter sequences (length 4 or 6) have fewer possible statistics, causing more model predictions
-to coincide. Length-8 sequences allow fine-grained alternation-rate differences while keeping
-both sequences balanced — the combination that best separates the five models.
+### 5. Anchors
+Pairs with near-universal model agreement (e.g., HTHTHTHT vs HHHHHHHH) to verify participants understand the task.
 
-## Experiment 1 context
+## EIG Scoring and Top-20 Selection
 
-Experiment 1 found that balance explains most variance (r = 0.63) while alternation showed no
-predictive power (r = −0.056). Experiment 2 focuses on pairs where balance cannot distinguish
-models, forcing participants to rely on (or ignore) alternation structure. This will directly
-test whether experiment 1's balance dominance reflects a genuine balance-only heuristic or
-whether alternation matters when balance is equated.
+All 110 candidates were scored by Expected Information Gain under a uniform prior over the 5 models. The EIG quantifies how much each stimulus reduces posterior uncertainty across models.
+
+- **EIG range selected**: 0.2803 – 0.3799
+- **Top 20 stimuli** were retained for the experiment
+
+The highest-EIG pairs are cross-length GR-vs-AB contrasts (e.g., HTHTH vs HHHTTT, EIG=0.380; HTHTH vs HTTTH, EIG=0.357), indicating that moderate-alternation sequences near the 0.5 ideal are the most discriminative. Key run_aversion contrasts appear in the selected set (e.g., HHTHTTTH vs HTHTHTH, EIG=0.310), and WBA vs BH pairs appear near the bottom of the selection (e.g., HTHTHTHH vs TTTTHHHH and HTHHTHTH vs HHHHTTTT, EIG≈0.280).
+
+## Model-Coverage Summary
+
+| Primary contrast | Example pair | EIG |
+|---|---|---|
+| GR vs AB (over-alternation) | HTHTH vs HHHTTT | 0.380 |
+| GR vs AB (alt=0.5 ideal) | HTHTH vs HTTTH | 0.357 |
+| GR/RA vs AB (cross-length) | HTHTH vs HHTTHHTT | 0.343 |
+| GR/RA vs AB | HTHTHTH vs HHHHTTTT | 0.338 |
+| RA vs AB (max-run divergent) | HHTHTTTH vs HTHTHTH | 0.310 |
+| GR vs AB (long length) | HTHTHTHT vs HHHTTTTH | 0.307 |
+| GR vs AB/WBA (short) | HTHTH vs HHTTH | 0.303 |
+| GR vs AB (length 4) | HTHT vs HHTT | 0.301 |
+| GR vs AB (length 7) | HTHTHTH vs HHTTHHT | 0.289 |
+| GR vs AB/RA (8-len) | HTHTHTHT vs HHTTHHTT | 0.285 |
+| WBA vs BH | HTHTHTHH vs TTTTHHHH | 0.280 |
+| WBA vs BH | HTHHTHTH vs HHHHTTTT | 0.280 |
+
+The design provides good coverage across all five model contrasts, with particular strength on the GR-vs-AB and RA-vs-AB distinctions that are new to experiment 2.

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Coin Flip Sequences</title>
+  <title>Randomness Judgment Experiment</title>
   <script src="https://unpkg.com/jspsych@8.2.3"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
@@ -11,22 +11,36 @@
   <style>
     #progress-wrap { position: fixed; top: 0; left: 0; right: 0; height: 6px; background: #e0e0e0; z-index: 10000; }
     #progress-fill { height: 100%; width: 0%; background: #4a90d9; transition: width 0.2s ease; }
-    .seq-display {
-      display: inline-block;
+    .sequence-display {
       font-family: monospace;
-      font-size: 26px;
+      font-size: 28px;
       letter-spacing: 6px;
-      padding: 18px 28px;
-      border: 2px solid #ccc;
+      padding: 16px 24px;
+      background: #f5f5f5;
       border-radius: 8px;
-      background: #f9f9f9;
-      margin: 0 20px;
+      display: inline-block;
+      margin: 8px 0;
     }
-    .seq-label { font-size: 16px; color: #555; margin-bottom: 6px; text-align: center; }
-    .seq-wrapper { display: inline-block; text-align: center; vertical-align: middle; }
-    .trial-question { font-size: 20px; margin-bottom: 30px; color: #222; }
-    .sequences-row { display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 30px; }
-    .jspsych-btn-auto { padding: 12px 32px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; background: #4a90d9; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .sequence-label {
+      font-size: 16px;
+      font-weight: bold;
+      color: #555;
+      margin-bottom: 4px;
+    }
+    .sequence-box {
+      margin: 12px 0;
+    }
+    .jspsych-btn-auto {
+      padding: 12px 28px;
+      font-size: 18px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      background: #4a90d9;
+      color: white;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+      margin: 8px;
+    }
     .jspsych-btn-auto:hover { background: #3a7bc8; }
   </style>
 </head>
@@ -36,154 +50,104 @@
 <script>
   const STIMULI = [
   {
-    "sequence_a": "HHHTHTTT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
+    "sequence_a": "HTHTH",
+    "sequence_b": "HHHTTT",
+    "eig": 0.379894
   },
   {
-    "sequence_a": "HHHTHTTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
+    "sequence_a": "HTHTH",
+    "sequence_b": "HTTTH",
+    "eig": 0.356981
   },
   {
-    "sequence_a": "HHHTTHTT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
+    "sequence_a": "HTHTH",
+    "sequence_b": "HHTTHHTT",
+    "eig": 0.342657
   },
   {
-    "sequence_a": "HHHTTHTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
+    "sequence_a": "HTHTH",
+    "sequence_b": "HHTTHHTT",
+    "eig": 0.342657
   },
   {
-    "sequence_a": "HHHTTTHT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
+    "sequence_a": "HTHTHTH",
+    "sequence_b": "HHHHTTTT",
+    "eig": 0.337671
   },
   {
-    "sequence_a": "HHHTTTHT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
+    "sequence_a": "HTHTHTH",
+    "sequence_b": "HHHHTTTT",
+    "eig": 0.337671
   },
   {
-    "sequence_a": "HHTHHTTT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HHTHHTTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HHTTHHTT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HHTTHHTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HHTTTHHT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HHTTTHHT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHHHTTT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHHHTTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
+    "sequence_a": "HHTHTTTH",
+    "sequence_b": "HTHTHTH",
+    "eig": 0.309588
   },
   {
     "sequence_a": "HTHTHTHT",
-    "sequence_b": "HTTHHHTT",
-    "eig": 0.288713
+    "sequence_b": "HHHTTTTH",
+    "eig": 0.30706
+  },
+  {
+    "sequence_a": "HTHTH",
+    "sequence_b": "HHTTH",
+    "eig": 0.303211
+  },
+  {
+    "sequence_a": "HTHTH",
+    "sequence_b": "THHTT",
+    "eig": 0.303211
+  },
+  {
+    "sequence_a": "HTHT",
+    "sequence_b": "HHTT",
+    "eig": 0.301332
+  },
+  {
+    "sequence_a": "HHTT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.301332
+  },
+  {
+    "sequence_a": "HTHTHTH",
+    "sequence_b": "HHTTHHT",
+    "eig": 0.288921
   },
   {
     "sequence_a": "HTHTHTHT",
-    "sequence_b": "HTTTHHHT",
-    "eig": 0.288713
+    "sequence_b": "HHTTHHTT",
+    "eig": 0.285291
   },
   {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "THHHTTTH",
-    "eig": 0.288713
+    "sequence_a": "THTHTHTH",
+    "sequence_b": "TTHHTTHH",
+    "eig": 0.285291
   },
   {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "THHTTTHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "THTTTHHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "TTHHHTTH",
-    "eig": 0.288713
+    "sequence_a": "HTHTHT",
+    "sequence_b": "HHTTHHTT",
+    "eig": 0.285291
   },
   {
     "sequence_a": "HTHTHTHT",
     "sequence_b": "TTHHTTHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "TTHTTHHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "TTTHHHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "TTTHHTHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "TTTHTHHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTTHHHTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTTTHHHT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "THHHTTTH",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "THHTTTHH",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
+    "eig": 0.285291
   },
   {
     "sequence_a": "THTHTHTH",
-    "sequence_b": "THTTTHHH",
-    "eig": 0.288713
+    "sequence_b": "HHTTHHTT",
+    "eig": 0.285291
+  },
+  {
+    "sequence_a": "HTHTHTHH",
+    "sequence_b": "TTTTHHHH",
+    "eig": 0.28035
+  },
+  {
+    "sequence_a": "HTHHTHTH",
+    "sequence_b": "HHHHTTTT",
+    "eig": 0.28035
   }
 ];
 
@@ -197,27 +161,30 @@
   const onFinish = function() {
     var data = jsPsych.data.get().values();
     if (typeof window !== 'undefined') window.__experimentData = data;
-    fetch('/auto_psych_config.json').then(function(r) {
+    fetch('/auto_psych_config.json').then(function(r){
       if (!r.ok) { return null; }
       return r.json();
-    }).then(function(cfg) {
+    }).then(function(cfg){
       if (cfg && cfg.project_id != null && cfg.run_id != null) {
         var payload = {
-          run_id: cfg.run_id, project_id: cfg.project_id,
+          run_id: cfg.run_id,
+          project_id: cfg.project_id,
           participant_id: (typeof window !== 'undefined' && window.__participantId != null) ? window.__participantId : Date.now(),
           trials: data
         };
         fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-          .then(function(res) {
+          .then(function(res){
             if (res.ok && cfg.prolific_redirect_url && typeof window !== 'undefined') window.location = cfg.prolific_redirect_url;
           })
-          .catch(function(e) { console.warn('[auto-psych] POST /submit error', e); });
+          .catch(function(e){ console.warn('[auto-psych] POST /submit error', e); });
       }
-    }).catch(function(e) { console.warn('[auto-psych] Config fetch error', e); });
+    }).catch(function(e){ console.warn('[auto-psych] Config fetch error', e); });
   };
 
   const jsPsych = initJsPsych({ on_finish: onFinish });
-  if (typeof window !== 'undefined' && window.__participantId) jsPsych.data.addProperties({ participant_id: window.__participantId });
+  if (typeof window !== 'undefined' && window.__participantId) {
+    jsPsych.data.addProperties({ participant_id: window.__participantId });
+  }
 
   var totalTrials = STIMULI.length;
   var completedTrials = 0;
@@ -236,11 +203,11 @@
   timeline.push({
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-      <div style="max-width:600px; margin:auto; text-align:left;">
+      <div style="max-width:600px; margin:0 auto; text-align:left;">
         <h2>Consent to Participate</h2>
-        <p>You are invited to take part in a study about how people judge randomness in sequences of coin flips. The study takes approximately 5 minutes.</p>
-        <p>Your participation is voluntary. Your responses will be recorded anonymously and used for research purposes only.</p>
-        <p>By clicking "I agree" you confirm that you are 18 or older and consent to participate.</p>
+        <p>This study investigates how people judge the randomness of sequences. You will be shown pairs of coin-flip sequences and asked to choose which looks more random.</p>
+        <p>The study takes approximately 5 minutes. Your responses are anonymous.</p>
+        <p>By clicking "I agree" you consent to participate.</p>
       </div>`,
     choices: ['I agree'],
     button_html: styledButtonHtml
@@ -250,12 +217,12 @@
   timeline.push({
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-      <div style="max-width:600px; margin:auto; text-align:left;">
+      <div style="max-width:600px; margin:0 auto; text-align:left;">
         <h2>Instructions</h2>
-        <p>On each screen you will see <strong>two sequences</strong> of coin flips, labelled <strong>Sequence A</strong> and <strong>Sequence B</strong>. Each flip is either H (heads) or T (tails).</p>
-        <p>Your task: <strong>click the button for whichever sequence looks more random to you.</strong></p>
-        <p>There are no right or wrong answers — we want your intuitive judgment. Work at your own pace.</p>
-        <p>You will complete <strong>30 trials</strong>.</p>
+        <p>On each trial, you will see two sequences of coin flips (H = Heads, T = Tails).</p>
+        <p><strong>Your task:</strong> Choose which sequence looks <em>more random</em> to you.</p>
+        <p>Press <strong>F</strong> to choose the <strong>Left</strong> sequence, or <strong>J</strong> to choose the <strong>Right</strong> sequence.</p>
+        <p>Trust your instincts — there are no right or wrong answers.</p>
       </div>`,
     choices: ['Start'],
     button_html: styledButtonHtml,
@@ -263,24 +230,24 @@
   });
 
   // 3. Trials
-  const trialVariables = STIMULI.map(function(s) {
-    return {
-      sequence_a: s.sequence_a,
-      sequence_b: s.sequence_b,
-      stimulus_display: `
-        <div class="trial-question">Which sequence looks <strong>more random</strong>?</div>
-        <div class="sequences-row">
-          <div class="seq-wrapper">
-            <div class="seq-label">Sequence A</div>
-            <div class="seq-display">${s.sequence_a}</div>
+  const trialVariables = STIMULI.map(s => ({
+    sequence_a: s.sequence_a,
+    sequence_b: s.sequence_b,
+    stimulus_display: `
+      <div style="text-align:center; max-width:700px; margin:0 auto;">
+        <p style="font-size:20px; margin-bottom:24px;">Which sequence looks <strong>more random</strong>?</p>
+        <div style="display:flex; justify-content:center; gap:60px; align-items:center;">
+          <div style="text-align:center;">
+            <div class="sequence-label">Left (press F)</div>
+            <div class="sequence-display">${s.sequence_a}</div>
           </div>
-          <div class="seq-wrapper">
-            <div class="seq-label">Sequence B</div>
-            <div class="seq-display">${s.sequence_b}</div>
+          <div style="text-align:center;">
+            <div class="sequence-label">Right (press J)</div>
+            <div class="sequence-display">${s.sequence_b}</div>
           </div>
-        </div>`
-    };
-  });
+        </div>
+      </div>`
+  }));
 
   const fixation = {
     type: jsPsychHtmlKeyboardResponse,
@@ -290,18 +257,17 @@
   };
 
   const trial = {
-    type: jsPsychHtmlButtonResponse,
+    type: jsPsychHtmlKeyboardResponse,
     stimulus: jsPsych.timelineVariable('stimulus_display'),
-    choices: ['Sequence A', 'Sequence B'],
-    button_html: styledButtonHtml,
+    choices: ['f', 'j'],
     data: {
       sequence_a: jsPsych.timelineVariable('sequence_a'),
       sequence_b: jsPsych.timelineVariable('sequence_b'),
       task: 'judgment'
     },
     on_finish: function(data) {
-      data.chose_a = (data.response === 0);
-      data.chosen_sequence = data.response === 0 ? data.sequence_a : data.sequence_b;
+      data.chose_left = (data.response === 'f');
+      data.response_label = data.response === 'f' ? 'left' : 'right';
       completedTrials++;
       updateProgress();
     }
@@ -317,10 +283,10 @@
   timeline.push({
     type: jsPsychHtmlButtonResponse,
     stimulus: `
-      <div style="max-width:600px; margin:auto; text-align:left;">
+      <div style="max-width:600px; margin:0 auto; text-align:left;">
         <h2>Thank you!</h2>
-        <p>You have completed all 30 trials. Thank you for participating in this study.</p>
-        <p>This experiment investigates how people perceive randomness in sequences of coin flips, and how those perceptions relate to different theories of human judgment.</p>
+        <p>You have completed the study. Your responses have been recorded.</p>
+        <p>This study investigates how humans perceive randomness in sequences. Research shows people have systematic biases — for example, alternating sequences (HTHTH) often feel "more random" than streaky ones (HHHTT), even though both are equally likely.</p>
       </div>`,
     choices: ['End'],
     button_html: styledButtonHtml
