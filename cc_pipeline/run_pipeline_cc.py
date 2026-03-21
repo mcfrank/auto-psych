@@ -214,7 +214,7 @@ def main() -> None:
     args = parser.parse_args()
 
     project_id = args.project
-    prob_path = REPO_ROOT / "projects" / project_id / "problem_definition.md"
+    prob_path = cc_project_dir(project_id) / "problem_definition.md"
     if not prob_path.exists():
         print(f"Error: problem definition not found at {prob_path}", file=sys.stderr)
         sys.exit(1)
