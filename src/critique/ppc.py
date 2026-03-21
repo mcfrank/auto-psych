@@ -6,11 +6,22 @@ model and computes an empirical p-value:
 
     p = #{resamples where T(synthetic) >= T(observed)} / n_samples
 
+Stimuli are derived directly from the responses file(s) — no separate stimuli
+argument is needed.
+
 Usage (CLI):
     python3 -m src.critique.ppc \\
         --exp-dir cc_pipeline/projects/subjective_randomness/experiment1 \\
         --model representativeness \\
         --stat-file critique/test_stats/balance_residual.py \\
+        --n-samples 500
+
+    # Pool responses across experiments:
+    python3 -m src.critique.ppc \\
+        --exp-dir cc_pipeline/projects/subjective_randomness/experiment2 \\
+        --model representativeness \\
+        --stat-file critique/test_stats/balance_residual.py \\
+        --responses exp1/data/responses.csv exp2/data/responses.csv \\
         --n-samples 500
 
 Prints a JSON object to stdout:
@@ -78,7 +89,6 @@ def run_ppc(
     n_samples: int = 500,
     theorist_dir: Optional[Path] = None,
     responses_paths: Optional[List[Path]] = None,
-    stimuli_paths: Optional[List[Path]] = None,
 ) -> Dict[str, Any]:
     """
     Run a posterior predictive check for one model × one test statistic.
@@ -86,8 +96,9 @@ def run_ppc(
 
     responses_paths: if provided, pool these response CSVs instead of
                      exp_dir/data/responses.csv (use to pool across experiments).
-    stimuli_paths:   if provided, use the union of stimuli from these JSON files
-                     instead of exp_dir/design/stimuli.json.
+    Stimuli are derived from the unique (sequence_a, sequence_b) pairs present
+    in the observed responses — no separate stimuli file is needed.
+
     Returns a dict with t_observed, p_value, etc.
     """
     from src.agents.collect import _generate_from_models  # type: ignore
@@ -113,23 +124,14 @@ def run_ppc(
         observed_rows = list(csv.DictReader(open(responses_path, encoding="utf-8")))
     observed_agg = aggregate_rows(observed_rows)
 
-    # Load and pool stimuli (deduplicated by sequence_a, sequence_b)
-    if stimuli_paths:
-        seen = set()
-        stimuli = []
-        for p in stimuli_paths:
-            if not Path(p).exists():
-                raise FileNotFoundError(f"stimuli.json not found at {p}")
-            for s in json.loads(Path(p).read_text(encoding="utf-8")):
-                key = (s["sequence_a"], s["sequence_b"])
-                if key not in seen:
-                    seen.add(key)
-                    stimuli.append(s)
-    else:
-        stimuli_path = exp_dir / "design" / "stimuli.json"
-        if not stimuli_path.exists():
-            raise FileNotFoundError(f"stimuli.json not found at {stimuli_path}")
-        stimuli = json.loads(stimuli_path.read_text(encoding="utf-8"))
+    # Derive unique stimuli from responses (preserves all stimuli seen across experiments)
+    seen = set()
+    stimuli = []
+    for r in observed_rows:
+        key = (r["sequence_a"], r["sequence_b"])
+        if key not in seen:
+            seen.add(key)
+            stimuli.append({"sequence_a": r["sequence_a"], "sequence_b": r["sequence_b"]})
 
     # Infer n_participants as average responses per stimulus (handles pooled data)
     n_participants = max(1, len(observed_rows) // len(stimuli)) if stimuli else 1
@@ -182,10 +184,6 @@ def main() -> None:
         "--responses", nargs="+", default=None,
         help="Response CSV(s) to use instead of exp-dir/data/responses.csv (pooled if multiple)",
     )
-    parser.add_argument(
-        "--stimuli", nargs="+", default=None,
-        help="Stimuli JSON(s) to use instead of exp-dir/design/stimuli.json (unioned if multiple)",
-    )
     args = parser.parse_args()
 
     theorist_dir = Path(args.theorist_dir) if args.theorist_dir else None
@@ -196,7 +194,6 @@ def main() -> None:
         n_samples=args.n_samples,
         theorist_dir=theorist_dir,
         responses_paths=[Path(p) for p in args.responses] if args.responses else None,
-        stimuli_paths=[Path(p) for p in args.stimuli] if args.stimuli else None,
     )
     print(json.dumps(result, indent=2))
 

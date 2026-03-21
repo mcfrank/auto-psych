@@ -65,7 +65,6 @@ cd REPO_ROOT && python3 -m src.critique.ppc \
     --model MODEL_NAME \
     --stat-file EXP_DIR/critique/test_stats/STAT_NAME.py \
     --responses EXP1/data/responses.csv EXP2/data/responses.csv ... \
-    --stimuli   EXP1/design/stimuli.json EXP2/design/stimuli.json ... \
     --n-samples 500
 ```
 

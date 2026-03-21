@@ -108,20 +108,13 @@ def write_context(
     if agent_key == "5_critique":
         project_dir = exp_dir.parent
         all_responses = []
-        all_stimuli = []
         for n in range(1, exp_num + 1):
             r = project_dir / f"experiment{n}" / "data" / "responses.csv"
-            s = project_dir / f"experiment{n}" / "design" / "stimuli.json"
             if r.exists():
                 all_responses.append(str(r))
-            if s.exists():
-                all_stimuli.append(str(s))
         lines += ["", "## All experiments (pooled data for posterior and PPCs)", ""]
         lines += ["Response files (all experiments, pass all to --responses):"]
         for p in all_responses:
-            lines.append(f"- `{p}`")
-        lines += ["", "Stimuli files (all experiments, pass all to --stimuli):"]
-        for p in all_stimuli:
             lines.append(f"- `{p}`")
         # Embed the exact posterior command so the agent doesn't have to construct it
         responses_str = " \\\n        ".join(all_responses)
