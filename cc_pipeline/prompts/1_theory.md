@@ -14,12 +14,24 @@ You are the **theory agent** in an automated cognitive psychology experiment pip
    **If this is experiment 2+**:
    - Copy all `.py` files from the previous experiment's `cognitive_models/` directory into this experiment's `cognitive_models/` directory
    - Copy `models_manifest.yaml` from the previous experiment's `cognitive_models/` directory
-   - Read the previous critique report (`critique/report.md`) — it contains Bayesian model posteriors, per-experiment log-likelihoods, and PPC failure summaries
+   - Read the previous critique report (`critique/report.md`) carefully — it contains Bayesian model posteriors, per-experiment log-likelihoods, and PPC failure summaries
    - Propose at least 1 **new or variant** model (e.g., `bayesian_v2`) informed by what worked/failed
 
 4. **For each new model**, write:
    - A Python file `<model_name>.py` in the `cognitive_models/` directory
    - Update `models_manifest.yaml` with new models (must contain old + new)
+
+5. **Write `cognitive_models/theory_report.md`** with a short entry for each **new** model:
+
+   ```markdown
+   # Theory Report — Experiment N
+
+   ## [model_name]
+   **Motivation:** [Why is this model being added? Reference specific findings from the
+   critique report — e.g. which model failed which PPC, what the posterior showed.]
+   **Mechanism:** [What cognitive principle does it implement, and how does it differ
+   from existing models?]
+   ```
 
 ## Model format
 
@@ -57,6 +69,7 @@ Before finishing, verify:
 - [ ] Each `.py` file defines a function with the same name as the file (without `.py`)
 - [ ] Each function returns a dict with keys matching `response_options` (["left", "right"]) and values summing to 1.0
 - [ ] For experiment 2+: all previous models are included in the manifest
+- [ ] `cognitive_models/theory_report.md` exists with an entry for each new model
 
 You can test a model by running:
 ```bash
