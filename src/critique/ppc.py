@@ -77,10 +77,17 @@ def run_ppc(
     stat_file: Path,
     n_samples: int = 500,
     theorist_dir: Optional[Path] = None,
+    responses_paths: Optional[List[Path]] = None,
+    stimuli_paths: Optional[List[Path]] = None,
 ) -> Dict[str, Any]:
     """
     Run a posterior predictive check for one model × one test statistic.
     The model must be a theorist model in theorist_dir (cognitive_models/).
+
+    responses_paths: if provided, pool these response CSVs instead of
+                     exp_dir/data/responses.csv (use to pool across experiments).
+    stimuli_paths:   if provided, use the union of stimuli from these JSON files
+                     instead of exp_dir/design/stimuli.json.
     Returns a dict with t_observed, p_value, etc.
     """
     from src.agents.collect import _generate_from_models  # type: ignore
@@ -92,22 +99,40 @@ def run_ppc(
     # Load test statistic
     test_stat_fn = load_test_stat(Path(stat_file))
 
-    # Load observed aggregate
-    responses_path = exp_dir / "data" / "responses.csv"
-    if not responses_path.exists():
-        raise FileNotFoundError(f"responses.csv not found at {responses_path}")
-    observed_rows = list(csv.DictReader(open(responses_path, encoding="utf-8")))
+    # Load and pool observed responses
+    if responses_paths:
+        observed_rows = []
+        for p in responses_paths:
+            if not Path(p).exists():
+                raise FileNotFoundError(f"responses.csv not found at {p}")
+            observed_rows.extend(csv.DictReader(open(p, encoding="utf-8")))
+    else:
+        responses_path = exp_dir / "data" / "responses.csv"
+        if not responses_path.exists():
+            raise FileNotFoundError(f"responses.csv not found at {responses_path}")
+        observed_rows = list(csv.DictReader(open(responses_path, encoding="utf-8")))
     observed_agg = aggregate_rows(observed_rows)
 
-    # Infer n_participants from observed data
-    participant_ids = {r["participant_id"] for r in observed_rows}
-    n_participants = len(participant_ids)
+    # Load and pool stimuli (deduplicated by sequence_a, sequence_b)
+    if stimuli_paths:
+        seen = set()
+        stimuli = []
+        for p in stimuli_paths:
+            if not Path(p).exists():
+                raise FileNotFoundError(f"stimuli.json not found at {p}")
+            for s in json.loads(Path(p).read_text(encoding="utf-8")):
+                key = (s["sequence_a"], s["sequence_b"])
+                if key not in seen:
+                    seen.add(key)
+                    stimuli.append(s)
+    else:
+        stimuli_path = exp_dir / "design" / "stimuli.json"
+        if not stimuli_path.exists():
+            raise FileNotFoundError(f"stimuli.json not found at {stimuli_path}")
+        stimuli = json.loads(stimuli_path.read_text(encoding="utf-8"))
 
-    # Load stimuli
-    stimuli_path = exp_dir / "design" / "stimuli.json"
-    if not stimuli_path.exists():
-        raise FileNotFoundError(f"stimuli.json not found at {stimuli_path}")
-    stimuli = json.loads(stimuli_path.read_text(encoding="utf-8"))
+    # Infer n_participants as average responses per stimulus (handles pooled data)
+    n_participants = max(1, len(observed_rows) // len(stimuli)) if stimuli else 1
 
     # Compute observed test statistic
     t_observed = float(test_stat_fn(observed_agg))
@@ -153,6 +178,14 @@ def main() -> None:
     parser.add_argument("--stat-file", required=True, help="Path to test statistic .py file")
     parser.add_argument("--n-samples", type=int, default=500, help="Number of resamples (default: 500)")
     parser.add_argument("--theorist-dir", default=None, help="Override path to cognitive_models/ dir")
+    parser.add_argument(
+        "--responses", nargs="+", default=None,
+        help="Response CSV(s) to use instead of exp-dir/data/responses.csv (pooled if multiple)",
+    )
+    parser.add_argument(
+        "--stimuli", nargs="+", default=None,
+        help="Stimuli JSON(s) to use instead of exp-dir/design/stimuli.json (unioned if multiple)",
+    )
     args = parser.parse_args()
 
     theorist_dir = Path(args.theorist_dir) if args.theorist_dir else None
@@ -162,6 +195,8 @@ def main() -> None:
         stat_file=Path(args.stat_file),
         n_samples=args.n_samples,
         theorist_dir=theorist_dir,
+        responses_paths=[Path(p) for p in args.responses] if args.responses else None,
+        stimuli_paths=[Path(p) for p in args.stimuli] if args.stimuli else None,
     )
     print(json.dumps(result, indent=2))
 
