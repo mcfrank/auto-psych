@@ -70,6 +70,7 @@ def _run_agent(
     prev_exp_dir: Optional[Path],
     validate: bool,
     ground_truth_model: Optional[str] = None,
+    complexity_prior_const: float = 0.0,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output is invalid."""
     print(f"\n{'='*60}", flush=True)
@@ -87,6 +88,7 @@ def _run_agent(
             project_id=project_id,
             exp_num=exp_num,
             prev_exp_dir=prev_exp_dir,
+            complexity_prior_const=complexity_prior_const,
         )
         allowed_dirs = [exp_dir, cc_project_dir(project_id)]
         if prev_exp_dir:
@@ -113,6 +115,7 @@ def _run_experiment(
     resume: bool = False,
     ground_truth_model: Optional[str] = None,
     agent_filter: Optional[str] = None,
+    complexity_prior_const: float = 0.0,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
@@ -140,6 +143,7 @@ def _run_experiment(
             prev_exp_dir=prev_exp_dir,
             validate=validate,
             ground_truth_model=ground_truth_model,
+            complexity_prior_const=complexity_prior_const,
         )
 
     if "5_critique" in keys_to_run:
@@ -196,6 +200,17 @@ def main() -> None:
         action="store_true",
         help="Allow running into an existing experiment directory (skip the exists-check).",
     )
+    parser.add_argument(
+        "--complexity-prior",
+        type=float,
+        default=0.0,
+        metavar="CONST",
+        help=(
+            "Apply a complexity prior to the model posterior: prior ∝ exp(CONST × complexity), "
+            "where complexity = non-whitespace non-comment characters in the model's .py file. "
+            "Negative CONST penalises complex models (Occam's razor). Default: 0.0 (uniform prior)."
+        ),
+    )
     args = parser.parse_args()
 
     project_id = args.project
@@ -236,6 +251,7 @@ def main() -> None:
             resume=args.resume,
             ground_truth_model=args.ground_truth_model,
             agent_filter=args.agent,
+            complexity_prior_const=args.complexity_prior,
         )
 
     print("\nAll experiments complete.", flush=True)

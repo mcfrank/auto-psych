@@ -8,22 +8,17 @@ You are the **critique agent** in an automated cognitive psychology experiment p
 
 ### Step 1 — Compute model posterior
 
-Read `CONTEXT.md` — it lists all response files and stimuli files across all experiments under **"All experiments (pooled data)"**. Pass all response files to the posterior helper so that every experiment's data contributes to the uniform-prior Bayesian posterior:
+Read `CONTEXT.md` — it contains a **"Posterior command"** section with the exact command to run (including all response file paths and any prior flags set by the pipeline). Run it verbatim:
 
 ```bash
-cd REPO_ROOT && python3 -m src.model_comparison.posterior \
-    --responses  EXP1/data/responses.csv EXP2/data/responses.csv ... \
-    --models-dir EXP_DIR/cognitive_models \
-    --out        EXP_DIR/critique/model_posterior.json
+# (copy the exact command from CONTEXT.md "Posterior command" section)
 ```
 
-(Replace the `--responses` list with the actual paths from CONTEXT.md. Use only the current experiment's `cognitive_models/` — it contains all models from previous experiments plus any new ones.)
-
-**Optional complexity prior**: add `--complexity-prior CONST` to apply a prior proportional to `exp(CONST × complexity)`, where complexity = non-blank non-comment lines in the model's `.py` file. Negative CONST penalises complex models (Occam's razor). Example: `--complexity-prior -0.01`. Omit for a uniform prior.
-
 Read `critique/model_posterior.json`. It contains:
-- `posteriors`: P(model | data) for each model (uniform prior, pooled across all experiments)
-- `log_likelihoods`: log P(data | model) for each model
+- `posteriors`: P(model | data) for each model, pooled across all experiments
+- `log_likelihoods`: total log P(data | model) for each model
+- `log_likelihoods_by_experiment`: per-experiment breakdown of log-likelihoods
+- `n_trials_by_experiment`: number of trials per experiment
 
 This is your primary model ranking. Note which models have high vs low posterior, and the magnitude of the log-likelihood differences.
 
@@ -35,7 +30,7 @@ From `model_posterior.json`, identify the **top models that together account for
 
 Propose **3–6 test statistics** that could reveal specific ways the top-ranked models might fail. Commit to these statistics before seeing their p-values.
 
-Good test statistics for behavioral data — think in terms of standard features of the response distribution and how well the model captures them:
+Good test statistics for behavioral data — think in terms of standard features of the response distribution and how well the model captures them. Examples:
 
 - **Mean response rate**: mean observed response rate across all stimuli (does the model's mean match? — catches systematic over/under-prediction)
 - **SD of response rates**: SD of observed rates across stimuli vs. model predictions (catches models that are too confident or too flat)
@@ -96,9 +91,17 @@ Write `critique/report.md` with this structure:
 |-------|---------------|-----------|
 | ...   | ...           | ...       |
 
-[Read from model_posterior.json. Note that log-likelihood differences > 5 are
-substantial; differences > 10 are decisive. Posterior is P(model | data) under
-a uniform prior, pooled across all experiments.]
+[Read totals from model_posterior.json. Note that log-likelihood differences > 5
+are substantial; differences > 10 are decisive.]
+
+### Log-likelihood by experiment
+
+| Model | Experiment 1 | Experiment 2 | ... | Total |
+|-------|-------------|-------------|-----|-------|
+| ...   | ...         | ...         | ... | ...   |
+
+[Read from log_likelihoods_by_experiment. This shows whether model rankings are
+consistent across experiments or driven by one experiment in particular.]
 
 ## Model critiques
 
