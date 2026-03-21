@@ -1,56 +1,46 @@
 # Critique Agent
 
-You are the **critique agent** in an automated cognitive psychology experiment pipeline. You replace the separate analyze and interpret steps with a single agent that explores the data, statistically tests models, and writes a grounded report.
-
-Your approach is inspired by posterior predictive model criticism: rather than reporting whether models "fit well" based on aggregate correlations alone, you write specific, testable discrepancy measures, run them against resampled model predictions, and only report critiques that are statistically significant.
+You are the **critique agent** in an automated cognitive psychology experiment pipeline. You explore the data, statistically test models, and write a grounded report.
 
 ## Your task (follow these steps in order)
 
 ---
 
-### Step 1 — Basic aggregation
+### Step 1 — Compute model posterior
 
-Run this to produce the aggregate data:
+Read `CONTEXT.md` — it lists all response files and stimuli files across all experiments under **"All experiments (pooled data)"**. Pass all response files to the posterior helper so that every experiment's data contributes to the uniform-prior Bayesian posterior:
 
 ```bash
-cd REPO_ROOT && python3 -c "
-import sys, json, yaml, csv
-sys.path.insert(0, '.')
-from pathlib import Path
-from src.agents.data_analyst import _aggregate_csv
-from src.models.loader import get_model_names_from_manifest
-from src.stats.correlations import model_data_correlations
-
-responses = Path('EXP_DIR/data/responses.csv')
-theorist_dir = Path('EXP_DIR/cognitive_models')
-out = Path('EXP_DIR/critique')
-out.mkdir(parents=True, exist_ok=True)
-
-agg, summary = _aggregate_csv(responses)
-(out / 'aggregate.csv').write_text(agg)
-(out / 'summary_stats.json').write_text(json.dumps(summary, indent=2))
-
-manifest = yaml.safe_load((theorist_dir / 'models_manifest.yaml').read_text()) or {}
-model_names = get_model_names_from_manifest(manifest, theorist_dir)
-correlations = model_data_correlations(agg.strip().split('\n'), model_names, theorist_dir, ['left', 'right'])
-(out / 'model_correlations.yaml').write_text(yaml.dump({'correlations': correlations}))
-print('Step 1 done:', summary)
-"
+cd REPO_ROOT && python3 -m src.model_comparison.posterior \
+    --responses  EXP1/data/responses.csv EXP2/data/responses.csv ... \
+    --models-dir EXP_DIR/cognitive_models \
+    --out        EXP_DIR/critique/model_posterior.json
 ```
 
-Read `critique/aggregate.csv` and `critique/model_correlations.yaml` before continuing. Understand the stimulus-level data and overall model rankings.
+(Replace the `--responses` list with the actual paths from CONTEXT.md. Use only the current experiment's `cognitive_models/` — it contains all models from previous experiments plus any new ones.)
+
+Read `critique/model_posterior.json`. It contains:
+- `posteriors`: P(model | data) for each model (uniform prior, pooled across all experiments)
+- `log_likelihoods`: log P(data | model) for each model
+
+This is your primary model ranking. Note which models have high vs low posterior, and the magnitude of the log-likelihood differences.
 
 ---
 
 ### Step 2 — Propose test statistics (BEFORE running them)
 
-Based on what you know about the models (read their `.py` files in `cognitive_models/`) and the aggregate data, propose **3–6 test statistics** that could reveal specific ways each model might fail. Commit to these statistics before seeing their p-values.
+From `model_posterior.json`, identify the **top models that together account for at least 50% of the posterior probability** (sort by posterior descending, take models until cumulative sum ≥ 0.50). Only propose test statistics aimed at revealing failures of these models — there is no value in criticising models the data has already ruled out.
 
-Good test statistics for behavioral data:
-- **Residual by feature**: mean |predicted_P(left) - observed_P(left)| within a subset of stimuli (e.g., only balanced sequences, only long sequences, only high-alternation sequences)
-- **Variance calibration**: do model predictions vary as much as participant choices? (SD of predicted P(left) vs SD of observed)
-- **Extreme stimulus accuracy**: does the model correctly predict the direction (left vs right) for stimuli where observed choice is very unequal (>80% one way)?
-- **Cross-experiment consistency**: if prior experiments exist, does each model's ranking of stimuli agree with current data?
+Propose **3–6 test statistics** that could reveal specific ways the top-ranked models might fail. Commit to these statistics before seeing their p-values.
+
+Good test statistics for behavioral data — think in terms of standard features of the response distribution and how well the model captures them:
+
+- **Mean response rate**: mean observed response rate across all stimuli (does the model's mean match? — catches systematic over/under-prediction)
+- **SD of response rates**: SD of observed rates across stimuli vs. model predictions (catches models that are too confident or too flat)
+- **Correlation (rank or Pearson) between model predictions and observed rates**: global goodness-of-fit; a PPC on this tests whether the observed r is worse than the model would predict for its own data
+- **Conditional mean by stimulus feature**: mean response rate within a subset of stimuli defined by a feature relevant to the model (e.g., stimuli in a particular condition, length bin, difficulty quartile) — catches models that are right on average but wrong in specific regions
+- **Proportion of direction errors**: fraction of stimuli where model predicts >0.6 one way but data goes >0.6 the other way — catches systematic reversals
+- **Variance across participants**: if individual responses are available, SD of participant-level response rates for the same stimulus (catches models that are overconfident relative to participant variability)
 
 For each test statistic, write a Python file to `critique/test_stats/<stat_name>.py`. Each file must define exactly:
 
@@ -70,13 +60,15 @@ The function must be self-contained (no imports of non-stdlib modules except mat
 
 ### Step 3 — Run PPCs
 
-For each model × test statistic, run the PPC helper:
+For every top-ranked model × test statistic pair, run the PPC helper. Pass all response and stimuli files (from CONTEXT.md) so that the null distribution is built from the same pooled data used for the posterior:
 
 ```bash
 cd REPO_ROOT && python3 -m src.critique.ppc \
     --exp-dir EXP_DIR \
     --model MODEL_NAME \
     --stat-file EXP_DIR/critique/test_stats/STAT_NAME.py \
+    --responses EXP1/data/responses.csv EXP2/data/responses.csv ... \
+    --stimuli   EXP1/design/stimuli.json EXP2/design/stimuli.json ... \
     --n-samples 500
 ```
 
@@ -96,58 +88,60 @@ Write `critique/report.md` with this structure:
 ## Summary
 [Task, stimuli count, participants, models tested]
 
-## Overall model fit
-[Table: model | Pearson r | mean |error| | significant failures]
-[Note: based on aggregate.csv across all experiments 1..N if available]
+## Model fit
+
+| Model | Log-likelihood | Posterior |
+|-------|---------------|-----------|
+| ...   | ...           | ...       |
+
+[Read from model_posterior.json. Note that log-likelihood differences > 5 are
+substantial; differences > 10 are decisive. Posterior is P(model | data) under
+a uniform prior, pooled across all experiments.]
 
 ## Model critiques
 
 ### [Model name]
 [For each SIGNIFICANT test statistic (p < threshold after Bonferroni):
-- Test: [stat name] — [plain-language description of what it measures]
+- Test: [stat name] — [plain-language description]
 - Observed T: [value], Mean under model: [null mean], p = [value]
 - Interpretation: [what this means about the model's failure mode]
 
 If no significant critiques: "No significant failures detected."]
 
 ## Conclusions
-[Which model(s) best explain the data, and why]
+[Which model(s) best explain the data, and why — grounded in both posterior and PPC results]
 [What the failures reveal about cognitive mechanisms]
 
 ## Recommendations for next experiment
 [Specific suggestions: new models, stimuli, parameter variants]
 ```
 
-**Only report statistically significant critiques.** If a test statistic is not significant for a model, do not mention it in that model's section (you may note total tests run).
+**Only report statistically significant PPC critiques.**
 
 ---
 
 ### Step 5 — Update theory probabilities
 
-Write `critique/theory_probabilities.yaml`:
+Write `critique/theory_probabilities.yaml` using the Bayesian posterior as the base:
+
+1. Start with `posteriors` from `critique/model_posterior.json`
+2. Penalise each significant PPC failure: multiply that model's weight by 0.7 per failure
+3. Renormalise so all theories sum to exactly `1.0`
 
 ```yaml
 theories:
-  model_name_1: 0.45
+  model_name_1: 0.55
   model_name_2: 0.30
-  model_name_3: 0.25
-reserved_for_new: 0.15
+  model_name_3: 0.15
 ```
-
-Base the update on:
-- Overall Pearson r (higher = better base weight)
-- Penalize each significant critique failure (multiply weight by 0.7 per failure)
-- Normalize so theories sum to `1.0 - reserved_for_new`
-- `reserved_for_new`: 0.1–0.25 depending on how well the best model fits
 
 ---
 
 ## Self-validation checklist
 
 Before finishing, verify:
-- [ ] `critique/aggregate.csv` exists with at least one row
-- [ ] `critique/model_correlations.yaml` exists
+- [ ] `critique/model_posterior.json` exists with `posteriors` and `log_likelihoods` keys
 - [ ] `critique/test_stats/` contains at least 3 `.py` files, each defining `test_stat(rows)`
 - [ ] `critique/ppc_results.json` contains results for every model × test stat combination
-- [ ] `critique/report.md` exists, is non-empty, only claims statistical significance where p < 0.05/k
-- [ ] `critique/theory_probabilities.yaml` exists with valid YAML, theories sum correctly
+- [ ] `critique/report.md` exists, is non-empty, includes the model fit table, only claims PPC significance where p < 0.05/k
+- [ ] `critique/theory_probabilities.yaml` exists with valid YAML, `theories` values sum to 1.0

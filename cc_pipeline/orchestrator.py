@@ -101,27 +101,27 @@ def write_context(
             f"- Previous model registry: `{prev_exp_dir / 'model_registry.yaml'}`",
             f"- Previous critique report: `{prev_exp_dir / 'critique' / 'report.md'}`",
             f"- Previous theory probabilities: `{prev_exp_dir / 'critique' / 'theory_probabilities.yaml'}`",
-            f"- Previous aggregate: `{prev_exp_dir / 'critique' / 'aggregate.csv'}`",
+            f"- Previous model posterior: `{prev_exp_dir / 'critique' / 'model_posterior.json'}`",
         ]
 
     if agent_key == "5_critique":
         project_dir = exp_dir.parent
-        all_agg = []
-        all_summary = []
+        all_responses = []
+        all_stimuli = []
         for n in range(1, exp_num + 1):
-            agg = project_dir / f"experiment{n}" / "critique" / "aggregate.csv"
-            summ = project_dir / f"experiment{n}" / "critique" / "summary_stats.json"
-            if agg.exists():
-                all_agg.append(str(agg))
-            if summ.exists():
-                all_summary.append(str(summ))
-        lines += ["", "## All experiments (aggregate data)", "", "Aggregate CSVs (experiments 1 through N):"]
-        for p in all_agg:
+            r = project_dir / f"experiment{n}" / "data" / "responses.csv"
+            s = project_dir / f"experiment{n}" / "design" / "stimuli.json"
+            if r.exists():
+                all_responses.append(str(r))
+            if s.exists():
+                all_stimuli.append(str(s))
+        lines += ["", "## All experiments (pooled data for posterior and PPCs)", ""]
+        lines += ["Response files (all experiments, pass all to --responses):"]
+        for p in all_responses:
             lines.append(f"- `{p}`")
-        if all_summary:
-            lines += ["", "Summary stats:"]
-            for p in all_summary:
-                lines.append(f"- `{p}`")
+        lines += ["", "Stimuli files (all experiments, pass all to --stimuli):"]
+        for p in all_stimuli:
+            lines.append(f"- `{p}`")
 
     if extra:
         lines += ["", "## Additional context", ""]
@@ -385,11 +385,19 @@ def _validate_critique(exp_dir: Path) -> tuple[bool, str]:
     report = critique_dir / "report.md"
     probs = critique_dir / "theory_probabilities.yaml"
     ppc = critique_dir / "ppc_results.json"
-    agg = critique_dir / "aggregate.csv"
+    posterior = critique_dir / "model_posterior.json"
     stats_dir = critique_dir / "test_stats"
 
+    if not posterior.exists():
+        return False, "critique/model_posterior.json not found"
+    try:
+        data = json.loads(posterior.read_text(encoding="utf-8"))
+        if "posteriors" not in data or "log_likelihoods" not in data:
+            return False, "critique/model_posterior.json missing 'posteriors' or 'log_likelihoods'"
+    except Exception as e:
+        return False, f"Invalid model_posterior.json: {e}"
     if not report.exists():
-        return False, f"critique/report.md not found"
+        return False, "critique/report.md not found"
     if not report.read_text(encoding="utf-8").strip():
         return False, "critique/report.md is empty"
     if not probs.exists():
@@ -400,8 +408,6 @@ def _validate_critique(exp_dir: Path) -> tuple[bool, str]:
         return False, f"Invalid theory_probabilities.yaml: {e}"
     if not ppc.exists():
         return False, "critique/ppc_results.json not found"
-    if not agg.exists():
-        return False, "critique/aggregate.csv not found"
     n_stats = len(list(stats_dir.glob("*.py"))) if stats_dir.exists() else 0
     return True, f"Critique valid ({n_stats} test stats, {len(report.read_text())} char report)"
 
@@ -438,6 +444,5 @@ def update_registry_from_interpretation(exp_dir: Path) -> None:
     theories = data.get("theories") or data.get("probabilities") or {}
     if not isinstance(theories, dict):
         return
-    reserved = data.get("reserved_for_new", 0.25)
-    write_registry(registry_path, theories, reserved_for_new=reserved)
+    write_registry(registry_path, theories, reserved_for_new=0.0)
     print(f"  [registry] Updated model_registry.yaml from theory_probabilities.yaml", flush=True)
