@@ -39,35 +39,61 @@ def _eig(
     models_dir: Path,
     model_weights: Dict[str, float],
 ) -> float:
-    """EIG of a stimulus about model identity (bits). Uniform prior if model_weights is empty."""
+    """
+    EIG = H(M) − E_R[H(M|R)] in bits.
+    M is the discrete model-identity variable; R ∈ {left, right}.
+    model_weights is the prior P(M); uniform over models if empty.
+    """
     from src.models.randomness import get_model_predictions  # type: ignore
 
+    # ── likelihood: P(R | M, stimulus) ───────────────────────────────────────
     preds = get_model_predictions(stimulus, RESPONSE_OPTIONS, model_names, models_dir)
     if not preds:
         return 0.0
 
+    # Validate: each model must return a proper probability distribution
+    for m, pred in preds.items():
+        if any(p < 0 for p in pred.values()):
+            raise ValueError(f"Model {m!r} returned a negative probability: {pred}")
+        total = sum(pred.values())
+        if abs(total - 1.0) > 1e-6:
+            raise ValueError(f"Model {m!r} predictions sum to {total:.6f}, expected 1")
+
+    # ── prior: P(M) ──────────────────────────────────────────────────────────
     if model_weights:
-        total_w = sum(model_weights.get(m, 0.0) for m in preds)
+        raw = {m: model_weights.get(m, 0.0) for m in preds}
+        if any(w < 0 for w in raw.values()):
+            raise ValueError(f"Negative model weight: {raw}")
+        total_w = sum(raw.values())
         if total_w <= 0:
-            p_model = {m: 1.0 / len(preds) for m in preds}
-        else:
-            p_model = {m: model_weights.get(m, 0.0) / total_w for m in preds}
+            raise ValueError(f"Model weights sum to {total_w}; at least one must be positive")
+        p_model = {m: raw[m] / total_w for m in preds}
     else:
         p_model = {m: 1.0 / len(preds) for m in preds}
 
-    p_left = sum(preds[m].get("left", 0.5) * p_model[m] for m in preds)
+    # ── marginal: P(R) = Σ_m P(R | M=m) · P(M=m) ───────────────────────────
+    p_left = sum(preds[m]["left"] * p_model[m] for m in preds)
     p_right = 1.0 - p_left
-    if p_left <= 0 or p_right <= 0:
+
+    # Degenerate stimulus: all models agree on the response, so observing it
+    # gives no information about model identity → EIG = 0
+    if p_left == 0.0 or p_right == 0.0:
         return 0.0
 
-    def h_given_response(response: str) -> float:
-        denom = p_left if response == "left" else p_right
-        posteriors = [preds[m].get(response, 0.0) * p_model[m] / denom for m in preds]
-        return -sum(p * math.log2(p) for p in posteriors if p > 0)
-
+    # ── prior entropy: H(M) ──────────────────────────────────────────────────
+    # 0·log₂(0) ≡ 0 by convention; skip those terms
     h_prior = -sum(p * math.log2(p) for p in p_model.values() if p > 0)
-    h_posterior = p_left * h_given_response("left") + p_right * h_given_response("right")
-    return max(0.0, h_prior - h_posterior)
+
+    # ── posterior entropy: H(M | R=r) ────────────────────────────────────────
+    # P(M | R=r) ∝ P(R=r | M) · P(M), normalised by the marginal P(R=r)
+    def h_posterior_given(response: str, p_r: float) -> float:
+        p_m_given_r = [preds[m][response] * p_model[m] / p_r for m in preds]
+        return -sum(p * math.log2(p) for p in p_m_given_r if p > 0)
+
+    # ── EIG = H(M) − E_R[H(M|R)] ────────────────────────────────────────────
+    e_h_posterior = (p_left  * h_posterior_given("left",  p_left) +
+                     p_right * h_posterior_given("right", p_right))
+    return max(0.0, h_prior - e_h_posterior)
 
 
 def annotate(
