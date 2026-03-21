@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Coin Flip Sequences</title>
+  <script src="https://unpkg.com/jspsych@8.2.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+  <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <style>
+    #progress-wrap { position: fixed; top: 0; left: 0; right: 0; height: 6px; background: #e0e0e0; z-index: 10000; }
+    #progress-fill { height: 100%; width: 0%; background: #4a90d9; transition: width 0.2s ease; }
+    .seq-display {
+      display: inline-block;
+      font-family: monospace;
+      font-size: 26px;
+      letter-spacing: 6px;
+      padding: 18px 28px;
+      border: 2px solid #ccc;
+      border-radius: 8px;
+      background: #f9f9f9;
+      margin: 0 20px;
+    }
+    .seq-label { font-size: 16px; color: #555; margin-bottom: 6px; text-align: center; }
+    .seq-wrapper { display: inline-block; text-align: center; vertical-align: middle; }
+    .trial-question { font-size: 20px; margin-bottom: 30px; color: #222; }
+    .sequences-row { display: flex; justify-content: center; align-items: center; gap: 40px; margin-bottom: 30px; }
+    .jspsych-btn-auto { padding: 12px 32px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; background: #4a90d9; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .jspsych-btn-auto:hover { background: #3a7bc8; }
+  </style>
+</head>
+<body>
+  <div id="progress-wrap"><div id="progress-fill"></div></div>
+</body>
+<script>
+  const STIMULI = [
+  {
+    "sequence_a": "HHHTHTTT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HHHTHTTT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HHHTTHTT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HHHTTHTT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HHHTTTHT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HHHTTTHT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HHTHHTTT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HHTHHTTT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HHTTHHTT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HHTTHHTT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HHTTTHHT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HHTTTHHT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHHHTTT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHHHTTT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "HTTHHHTT",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "HTTTHHHT",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "THHHTTTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "THHTTTHH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "THTTTHHH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "TTHHHTTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "TTHHTTHH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "TTHTTHHH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "TTTHHHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "TTTHHTHH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "TTTHTHHH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTTHHHTT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "HTTTHHHT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "THHHTTTH",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "THHTTTHH",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.288713
+  },
+  {
+    "sequence_a": "THTHTHTH",
+    "sequence_b": "THTTTHHH",
+    "eig": 0.288713
+  }
+];
+
+  function getUrlParam(name) {
+    var m = new RegExp('[?&]' + name + '=([^&]*)').exec(typeof window !== 'undefined' && window.location ? window.location.search : '');
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  var urlParticipantId = getUrlParam('participant_id');
+  if (urlParticipantId && typeof window !== 'undefined') window.__participantId = urlParticipantId;
+
+  const onFinish = function() {
+    var data = jsPsych.data.get().values();
+    if (typeof window !== 'undefined') window.__experimentData = data;
+    fetch('/auto_psych_config.json').then(function(r) {
+      if (!r.ok) { return null; }
+      return r.json();
+    }).then(function(cfg) {
+      if (cfg && cfg.project_id != null && cfg.run_id != null) {
+        var payload = {
+          run_id: cfg.run_id, project_id: cfg.project_id,
+          participant_id: (typeof window !== 'undefined' && window.__participantId != null) ? window.__participantId : Date.now(),
+          trials: data
+        };
+        fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+          .then(function(res) {
+            if (res.ok && cfg.prolific_redirect_url && typeof window !== 'undefined') window.location = cfg.prolific_redirect_url;
+          })
+          .catch(function(e) { console.warn('[auto-psych] POST /submit error', e); });
+      }
+    }).catch(function(e) { console.warn('[auto-psych] Config fetch error', e); });
+  };
+
+  const jsPsych = initJsPsych({ on_finish: onFinish });
+  if (typeof window !== 'undefined' && window.__participantId) jsPsych.data.addProperties({ participant_id: window.__participantId });
+
+  var totalTrials = STIMULI.length;
+  var completedTrials = 0;
+  function updateProgress() {
+    var el = document.getElementById('progress-fill');
+    if (el && totalTrials > 0) el.style.width = (100 * completedTrials / totalTrials) + '%';
+  }
+
+  function styledButtonHtml(choice) {
+    return '<button class="jspsych-btn jspsych-btn-auto">' + choice + '</button>';
+  }
+
+  const timeline = [];
+
+  // 1. Consent
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="max-width:600px; margin:auto; text-align:left;">
+        <h2>Consent to Participate</h2>
+        <p>You are invited to take part in a study about how people judge randomness in sequences of coin flips. The study takes approximately 5 minutes.</p>
+        <p>Your participation is voluntary. Your responses will be recorded anonymously and used for research purposes only.</p>
+        <p>By clicking "I agree" you confirm that you are 18 or older and consent to participate.</p>
+      </div>`,
+    choices: ['I agree'],
+    button_html: styledButtonHtml
+  });
+
+  // 2. Instructions
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="max-width:600px; margin:auto; text-align:left;">
+        <h2>Instructions</h2>
+        <p>On each screen you will see <strong>two sequences</strong> of coin flips, labelled <strong>Sequence A</strong> and <strong>Sequence B</strong>. Each flip is either H (heads) or T (tails).</p>
+        <p>Your task: <strong>click the button for whichever sequence looks more random to you.</strong></p>
+        <p>There are no right or wrong answers — we want your intuitive judgment. Work at your own pace.</p>
+        <p>You will complete <strong>30 trials</strong>.</p>
+      </div>`,
+    choices: ['Start'],
+    button_html: styledButtonHtml,
+    post_trial_gap: 400
+  });
+
+  // 3. Trials
+  const trialVariables = STIMULI.map(function(s) {
+    return {
+      sequence_a: s.sequence_a,
+      sequence_b: s.sequence_b,
+      stimulus_display: `
+        <div class="trial-question">Which sequence looks <strong>more random</strong>?</div>
+        <div class="sequences-row">
+          <div class="seq-wrapper">
+            <div class="seq-label">Sequence A</div>
+            <div class="seq-display">${s.sequence_a}</div>
+          </div>
+          <div class="seq-wrapper">
+            <div class="seq-label">Sequence B</div>
+            <div class="seq-display">${s.sequence_b}</div>
+          </div>
+        </div>`
+    };
+  });
+
+  const fixation = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '<div style="text-align:center; font-size:48px;">+</div>',
+    choices: 'NO_KEYS',
+    trial_duration: 150
+  };
+
+  const trial = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: jsPsych.timelineVariable('stimulus_display'),
+    choices: ['Sequence A', 'Sequence B'],
+    button_html: styledButtonHtml,
+    data: {
+      sequence_a: jsPsych.timelineVariable('sequence_a'),
+      sequence_b: jsPsych.timelineVariable('sequence_b'),
+      task: 'judgment'
+    },
+    on_finish: function(data) {
+      data.chose_a = (data.response === 0);
+      data.chosen_sequence = data.response === 0 ? data.sequence_a : data.sequence_b;
+      completedTrials++;
+      updateProgress();
+    }
+  };
+
+  timeline.push({
+    timeline: [fixation, trial],
+    timeline_variables: trialVariables,
+    randomize_order: true
+  });
+
+  // 4. Debrief
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <div style="max-width:600px; margin:auto; text-align:left;">
+        <h2>Thank you!</h2>
+        <p>You have completed all 30 trials. Thank you for participating in this study.</p>
+        <p>This experiment investigates how people perceive randomness in sequences of coin flips, and how those perceptions relate to different theories of human judgment.</p>
+      </div>`,
+    choices: ['End'],
+    button_html: styledButtonHtml
+  });
+
+  jsPsych.run(timeline);
+</script>
+</html>

@@ -1,152 +1,152 @@
 [
   {
-    "sequence_a": "HTHHTH",
-    "sequence_b": "TTTHHH",
-    "eig": 0.266562
+    "sequence_a": "HTHT",
+    "sequence_b": "HTHTTTTT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "THTTHT",
-    "eig": 0.266562
+    "sequence_a": "HTHT",
+    "sequence_b": "HTTHTTTT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "THTHTH",
-    "sequence_b": "HTTTHH",
-    "eig": 0.118773
+    "sequence_a": "HTHT",
+    "sequence_b": "HTTTHTTT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "TTHTHT",
-    "eig": 0.266562
+    "sequence_a": "HTHT",
+    "sequence_b": "HTTTTHTT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHTH",
-    "sequence_b": "TTTHHH",
-    "eig": 0.193896
+    "sequence_a": "HTHT",
+    "sequence_b": "HTTTTTHT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "THTHTH",
-    "sequence_b": "TTTHHT",
-    "eig": 0.055748
+    "sequence_a": "HTHT",
+    "sequence_b": "HHHHHTHT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHTT",
-    "sequence_b": "TTTHHH",
-    "eig": 0.165556
+    "sequence_a": "HTHT",
+    "sequence_b": "HHHHTHHT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "THHTHH",
-    "eig": 0.193896
+    "sequence_a": "HTHT",
+    "sequence_b": "HHHTHHHT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "THTHTH",
-    "sequence_b": "THHTTT",
-    "eig": 0.055748
+    "sequence_a": "HTHT",
+    "sequence_b": "HHTHHHHT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "THTTTT",
-    "sequence_b": "TTTHHH",
-    "eig": 0.165556
+    "sequence_a": "HTHT",
+    "sequence_b": "HTHHHHHT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "HTHHHT",
-    "eig": 0.193896
+    "sequence_a": "HTHT",
+    "sequence_b": "THTTTTTH",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "THTHTH",
-    "sequence_b": "TTHHTT",
-    "eig": 0.055748
+    "sequence_a": "HTHT",
+    "sequence_b": "TTHTTTTH",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "TTHTTT",
-    "eig": 0.165556
+    "sequence_a": "HTHT",
+    "sequence_b": "TTTHTTTH",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "HTTHTT",
-    "eig": 0.193896
+    "sequence_a": "HTHT",
+    "sequence_b": "TTTTHTTH",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "THTHTH",
-    "sequence_b": "HTTTTH",
-    "eig": 0.055748
+    "sequence_a": "HTHT",
+    "sequence_b": "TTTTTHTH",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "HHHHTH",
-    "eig": 0.165556
+    "sequence_a": "HTHT",
+    "sequence_b": "THHHHHTH",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "THTTTH",
-    "eig": 0.193896
+    "sequence_a": "HTHT",
+    "sequence_b": "THHHHTHH",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHTT",
-    "sequence_b": "THTHTH",
-    "eig": 0.055127
+    "sequence_a": "HTHT",
+    "sequence_b": "THHHTHHH",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "HHTHHH",
-    "eig": 0.165556
+    "sequence_a": "HTHT",
+    "sequence_b": "THHTHHHH",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "HTTTHT",
-    "eig": 0.193896
+    "sequence_a": "HTHT",
+    "sequence_b": "THTHHHHH",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "THTHTH",
-    "sequence_b": "THTTTT",
-    "eig": 0.055127
+    "sequence_a": "THTH",
+    "sequence_b": "HTHTTTTT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "TTTTHT",
-    "eig": 0.165556
+    "sequence_a": "THTH",
+    "sequence_b": "HTTHTTTT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "THHHTH",
-    "eig": 0.193896
+    "sequence_a": "THTH",
+    "sequence_b": "HTTTHTTT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "THTHTH",
-    "sequence_b": "TTHTTT",
-    "eig": 0.055127
+    "sequence_a": "THTH",
+    "sequence_b": "HTTTTHTT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "TTTHHH",
-    "sequence_b": "HHHTHH",
-    "eig": 0.165556
+    "sequence_a": "THTH",
+    "sequence_b": "HTTTTTHT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "HTTTHH",
-    "sequence_b": "HTHHTH",
-    "eig": 0.188336
+    "sequence_a": "THTH",
+    "sequence_b": "HHHHHTHT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "THTHTH",
-    "sequence_b": "HHHHTH",
-    "eig": 0.055127
+    "sequence_a": "THTH",
+    "sequence_b": "HHHHTHHT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "HTTTHH",
-    "sequence_b": "THTTHT",
-    "eig": 0.188336
+    "sequence_a": "THTH",
+    "sequence_b": "HHHTHHHT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "HTTTHH",
-    "sequence_b": "TTHTHT",
-    "eig": 0.188336
+    "sequence_a": "THTH",
+    "sequence_b": "HHTHHHHT",
+    "eig": 0.403179
   },
   {
-    "sequence_a": "THTHTH",
-    "sequence_b": "HHTHHH",
-    "eig": 0.055127
+    "sequence_a": "THTH",
+    "sequence_b": "HTHHHHHT",
+    "eig": 0.403179
   }
 ]

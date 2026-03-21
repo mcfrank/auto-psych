@@ -1,9 +1,7 @@
-# CONTEXT — experiment 1, agent 6_interpret
+# CONTEXT — experiment 1, agent 5_critique
 
 **Project:** subjective_randomness
 **Experiment number:** 1
-**Mode:** simulated_participants
-**N participants:** 5
 **Repo root:** /Users/ndg/auto-psych
 **This experiment directory:** /Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1
 
@@ -14,14 +12,10 @@
 - Design dir: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/design`
 - Experiment dir: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/experiment`
 - Data dir: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/data`
-- Analysis dir: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/analysis`
-- Interpretation dir: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/interpretation`
+- Responses: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/data/responses.csv`
 - Model registry: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/model_registry.yaml`
+- Critique output dir: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/critique`
 
-## All experiments (for merged analysis)
+## All experiments (aggregate data)
 
 Aggregate CSVs (experiments 1 through N):
-- `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/analysis/aggregate.csv`
-
-Summary stats:
-- `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/analysis/summary_stats.json`
