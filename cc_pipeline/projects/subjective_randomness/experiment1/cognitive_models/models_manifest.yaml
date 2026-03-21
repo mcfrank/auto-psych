@@ -1,17 +1,17 @@
 models:
-  - name: griffiths_representativeness
-    rationale: |
-      Rational representativeness (Griffiths & Tenenbaum 2001): a sequence looks more
-      random when both its alternation rate and H/T balance are close to 0.5, the
-      statistics expected from a fair-coin generator. Combines both dimensions via
-      squared deviation from 0.5.
   - name: alternation_bias
     rationale: |
-      Gambler's fallacy / negative recency bias: people expect random sequences to
-      alternate frequently, so they judge sequences with more H→T and T→H transitions
-      as "more random," independent of overall balance.
+      People expect random sequences to alternate more than probability theory predicts.
+      This model scores sequences by their alternation rate (fraction of adjacent pairs
+      that differ), giving higher probability to whichever sequence alternates more.
   - name: balance_heuristic
     rationale: |
-      Balance heuristic: people expect random sequences to contain roughly equal H and T,
-      so they choose whichever sequence is closer to 50/50 balance, ignoring the
-      pattern or ordering of flips.
+      People expect random sequences to have roughly equal numbers of H and T.
+      This model scores sequences by how close they are to 50% heads, giving higher
+      probability to whichever sequence is more balanced.
+  - name: griffiths_representativeness
+    rationale: |
+      Based on Griffiths & Tenenbaum's representativeness framework: a sequence seems
+      random if its statistics (both alternation rate and H/T balance) are close to
+      what a fair coin would produce (0.5 each). Deviations on either dimension reduce
+      perceived randomness.

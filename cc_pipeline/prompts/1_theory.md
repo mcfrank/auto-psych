@@ -10,7 +10,7 @@ You are the **theory agent** in an automated cognitive psychology experiment pip
 
 2. **Read the problem definition** at the path given in CONTEXT.md.
 
-3. **If this is experiment 1**: Propose 2–3 new cognitive models.
+3. **If this is experiment 1**: Propose 2–3 new cognitive models. PDFs or papers in `references/` may be consulted for scientific background.
    **If this is experiment 2+**:
    - Copy all `.py` files from the previous experiment's `cognitive_models/` directory into this experiment's `cognitive_models/` directory
    - Copy `models_manifest.yaml` from the previous experiment's `cognitive_models/` directory

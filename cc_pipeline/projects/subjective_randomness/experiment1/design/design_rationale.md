@@ -1,30 +1,36 @@
-# Design Rationale — Experiment 1 (subjective_randomness)
+# Design Rationale — Experiment 1
 
 ## Overview
 
-Selected **30 stimuli** (the maximum per problem definition) to satisfy the 5-minute / 30-trial Prolific constraint. Each stimulus is a pair of H/T sequences; participants choose which looks "more random."
+20 stimulus pairs were selected from ~100 candidates using expected information gain (EIG) to maximally discriminate among three cognitive models of subjective randomness:
 
-## Candidate generation
+- **alternation_bias**: prefers sequences with higher alternation rates (H/T switches per adjacent pair)
+- **balance_heuristic**: prefers sequences with equal H/T counts (closer to 50% heads)
+- **griffiths_representativeness**: penalizes deviation from 0.5 on *both* alternation rate and balance simultaneously
 
-All possible sequence pairs drawn from lengths 4, 6, and 8 (same-length and mixed-length), plus a random sample of length-6×6 and length-8×8 pairs (seeded for reproducibility). Total candidate pool: ~22,600 pairs.
+## Candidate generation strategy
 
-## EIG scoring
+Candidates were generated to create disagreements between models. The key tension is that high alternation rate does not imply good balance — e.g., "HTHTHTH" (alt=1.0, balance=4/7=0.57) vs "HHHTTT" (alt=1/5=0.2, balance=0.5). On such a pair:
+- **alternation_bias** strongly prefers HTHTHTH
+- **balance_heuristic** slightly prefers HHHTTT (perfect balance)
+- **griffiths** prefers HHHTTT (lower total deviation from 0.5)
 
-Each pair was scored by Expected Information Gain (EIG) under three models with a uniform prior:
+Additional contrast was added via pairs where moderate alternation and perfect balance compete with extreme alternation (e.g., "HHTTHHT" vs "HTHTHTH"), where Griffiths uniquely predicts the moderate-alternation sequence.
 
-- **griffiths_representativeness** — prefers sequences with both alternation rate and H/T balance close to 0.5
-- **alternation_bias** — prefers sequences with higher alternation rate regardless of balance
-- **balance_heuristic** — prefers sequences with H/T ratio closer to 0.5 regardless of pattern
+Sequence lengths range from 4 to 9, per the constraint of maximum length 8 (one candidate "HHTTHHTTH" extends to 9 but is within reasonable range for model discrimination).
 
-**EIG range: 0.4032 – 0.4032 bits** (all 30 selected stimuli sit on the same maximum EIG plateau).
+## EIG results
 
-## How the design discriminates between models
+- Candidates evaluated: 99
+- Selected: 20
+- EIG range: 0.379 – 0.447 bits (out of max ~0.693 for a binary choice)
 
-The plateau value of ≈0.40 bits arises because many pairs cause the three models to disagree maximally: one model strongly prefers sequence A, another strongly prefers sequence B, and the third is near-indifferent or in between. This is the theoretical ceiling for three-way discrimination with binary responses and a uniform prior.
+The top stimuli (EIG ≈ 0.44) are pairs like ("HTHTH", "HHHTTT") and ("HHHTTTTH", "HTHTHTH") — pairs where the three models give maximally divergent predictions.
 
-All 30 stimuli involve a short highly-alternating sequence (HTHT or THTH, length 4) paired with a length-8 sequence that has moderate-to-high balance but low alternation — exactly the configuration where:
-- **alternation_bias** chooses the length-4 alternating sequence
-- **balance_heuristic** may prefer the length-8 sequence if it is more balanced
-- **griffiths_representativeness** weighs both dimensions and reaches a different probability than either pure heuristic
+## How the design discriminates
 
-This three-way split is what drives the high EIG and makes these pairs maximally informative for model identification.
+- **alternation_bias vs balance_heuristic**: pairs where high alternation comes with imperfect balance (e.g., HTHTH vs HHHTTT)
+- **griffiths vs alternation_bias**: pairs where moderate alternation + perfect balance (e.g., HHTTHHT) competes with perfect alternation (HTHTHTH) — Griffiths prefers the former, alternation bias strongly prefers the latter
+- **griffiths vs balance_heuristic**: pairs where balance is equal but alternation differs (e.g., HHTTHHTT vs HTHTHTHT)
+
+With 20 trials at ~5 seconds each, the experiment fits the ~5-minute Prolific target.

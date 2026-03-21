@@ -1,152 +1,102 @@
 [
   {
-    "sequence_a": "HHHTHTTT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
+    "sequence_a": "HTHTH",
+    "sequence_b": "HHHTTT",
+    "eig": 0.379894
   },
   {
-    "sequence_a": "HHHTHTTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
+    "sequence_a": "HTHTH",
+    "sequence_b": "HTTTH",
+    "eig": 0.356981
   },
   {
-    "sequence_a": "HHHTTHTT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
+    "sequence_a": "HTHTH",
+    "sequence_b": "HHTTHHTT",
+    "eig": 0.342657
   },
   {
-    "sequence_a": "HHHTTHTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
+    "sequence_a": "HTHTH",
+    "sequence_b": "HHTTHHTT",
+    "eig": 0.342657
   },
   {
-    "sequence_a": "HHHTTTHT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
+    "sequence_a": "HTHTHTH",
+    "sequence_b": "HHHHTTTT",
+    "eig": 0.337671
   },
   {
-    "sequence_a": "HHHTTTHT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
+    "sequence_a": "HTHTHTH",
+    "sequence_b": "HHHHTTTT",
+    "eig": 0.337671
   },
   {
-    "sequence_a": "HHTHHTTT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HHTHHTTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HHTTHHTT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HHTTHHTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HHTTTHHT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HHTTTHHT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHHHTTT",
-    "sequence_b": "HTHTHTHT",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHHHTTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
+    "sequence_a": "HHTHTTTH",
+    "sequence_b": "HTHTHTH",
+    "eig": 0.309588
   },
   {
     "sequence_a": "HTHTHTHT",
-    "sequence_b": "HTTHHHTT",
-    "eig": 0.288713
+    "sequence_b": "HHHTTTTH",
+    "eig": 0.30706
+  },
+  {
+    "sequence_a": "HTHTH",
+    "sequence_b": "HHTTH",
+    "eig": 0.303211
+  },
+  {
+    "sequence_a": "HTHTH",
+    "sequence_b": "THHTT",
+    "eig": 0.303211
+  },
+  {
+    "sequence_a": "HTHT",
+    "sequence_b": "HHTT",
+    "eig": 0.301332
+  },
+  {
+    "sequence_a": "HHTT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.301332
+  },
+  {
+    "sequence_a": "HTHTHTH",
+    "sequence_b": "HHTTHHT",
+    "eig": 0.288921
   },
   {
     "sequence_a": "HTHTHTHT",
-    "sequence_b": "HTTTHHHT",
-    "eig": 0.288713
+    "sequence_b": "HHTTHHTT",
+    "eig": 0.285291
   },
   {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "THHHTTTH",
-    "eig": 0.288713
+    "sequence_a": "THTHTHTH",
+    "sequence_b": "TTHHTTHH",
+    "eig": 0.285291
   },
   {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "THHTTTHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "THTTTHHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "TTHHHTTH",
-    "eig": 0.288713
+    "sequence_a": "HTHTHT",
+    "sequence_b": "HHTTHHTT",
+    "eig": 0.285291
   },
   {
     "sequence_a": "HTHTHTHT",
     "sequence_b": "TTHHTTHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "TTHTTHHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "TTTHHHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "TTTHHTHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTHTHTHT",
-    "sequence_b": "TTTHTHHH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTTHHHTT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "HTTTHHHT",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "THHHTTTH",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
-  },
-  {
-    "sequence_a": "THHTTTHH",
-    "sequence_b": "THTHTHTH",
-    "eig": 0.288713
+    "eig": 0.285291
   },
   {
     "sequence_a": "THTHTHTH",
-    "sequence_b": "THTTTHHH",
-    "eig": 0.288713
+    "sequence_b": "HHTTHHTT",
+    "eig": 0.285291
+  },
+  {
+    "sequence_a": "HTHTHTHH",
+    "sequence_b": "TTTTHHHH",
+    "eig": 0.28035
+  },
+  {
+    "sequence_a": "HTHHTHTH",
+    "sequence_b": "HHHHTTTT",
+    "eig": 0.28035
   }
 ]

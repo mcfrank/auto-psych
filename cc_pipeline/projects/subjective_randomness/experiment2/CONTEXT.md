@@ -7,7 +7,7 @@
 
 ## Key paths
 
-- Problem definition: `/Users/ndg/auto-psych/projects/subjective_randomness/problem_definition.md`
+- Problem definition: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/problem_definition.md`
 - Cognitive models dir: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment2/cognitive_models`
 - Design dir: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment2/design`
 - Experiment dir: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment2/experiment`
@@ -21,13 +21,22 @@
 - Previous cognitive models: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/cognitive_models`
 - Previous model registry: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/model_registry.yaml`
 - Previous critique report: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/critique/report.md`
-- Previous theory probabilities: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/critique/theory_probabilities.yaml`
-- Previous aggregate: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/critique/aggregate.csv`
+- Previous model posterior: `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/critique/model_posterior.json`
 
-## All experiments (aggregate data)
+## All experiments (pooled data for posterior and PPCs)
 
-Aggregate CSVs (experiments 1 through N):
-- `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/critique/aggregate.csv`
+Response files (all experiments, pass all to --responses):
+- `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/data/responses.csv`
+- `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment2/data/responses.csv`
 
-Summary stats:
-- `/Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/critique/summary_stats.json`
+## Posterior command (run this exactly)
+
+```bash
+cd /Users/ndg/auto-psych && python3 -m src.model_comparison.posterior \
+    --responses \
+        /Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment1/data/responses.csv \
+        /Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment2/data/responses.csv \
+    --models-dir /Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment2/cognitive_models \
+    --out /Users/ndg/auto-psych/cc_pipeline/projects/subjective_randomness/experiment2/critique/model_posterior.json \
+    --complexity-prior 0.1
+```
