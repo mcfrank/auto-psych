@@ -46,14 +46,20 @@ def log_likelihood(
     response_rows: List[Dict[str, Any]],
     models_dir: Path,
     model_registry: Optional[Dict] = None,
+    stimulus_col_a: str = "sequence_a",
+    stimulus_col_b: str = "sequence_b",
+    response_col: str = "chose_left",
 ) -> float:
     """
     Compute log P(responses | model) by summing log P(response_i | model, stimulus_i)
     across all individual trials.
 
-    response_rows: list of dicts with sequence_a, sequence_b, chose_left (0 or 1)
+    response_rows: list of dicts with stimulus_col_a, stimulus_col_b, response_col (0 or 1)
     models_dir: cognitive_models/ directory
     model_registry: optional {name: callable} dict (e.g. ground-truth models)
+    stimulus_col_a: name of stimulus A column (default: "sequence_a")
+    stimulus_col_b: name of stimulus B column (default: "sequence_b")
+    response_col: name of response column (default: "chose_left")
     """
     from src.models.randomness import get_model_predictions  # type: ignore
 
@@ -62,7 +68,7 @@ def log_likelihood(
     ll = 0.0
 
     for row in response_rows:
-        stimulus = (row["sequence_a"], row["sequence_b"])
+        stimulus = (row[stimulus_col_a], row[stimulus_col_b])
         if stimulus not in pred_cache:
             if model_registry and model_name in model_registry:
                 preds = {model_name: model_registry[model_name](stimulus, RESPONSE_OPTIONS)}
@@ -72,7 +78,7 @@ def log_likelihood(
             pred_cache[stimulus] = max(_CLIP, min(1 - _CLIP, p))
 
         p_left = pred_cache[stimulus]
-        chose_left = int(row["chose_left"])
+        chose_left = int(row[response_col])
         ll += math.log(p_left) if chose_left else math.log(1 - p_left)
 
     return ll
@@ -85,6 +91,9 @@ def main() -> None:
     parser.add_argument("--responses", required=True, help="Path to responses.csv")
     parser.add_argument("--model", required=True, help="Model name")
     parser.add_argument("--models-dir", required=True, help="Path to cognitive_models/ directory")
+    parser.add_argument("--stimulus-col-a", default="sequence_a", help="Name of stimulus A column")
+    parser.add_argument("--stimulus-col-b", default="sequence_b", help="Name of stimulus B column")
+    parser.add_argument("--response-col", default="chose_left", help="Name of response column")
     args = parser.parse_args()
 
     responses_path = Path(args.responses)
@@ -98,6 +107,9 @@ def main() -> None:
         model_name=args.model,
         response_rows=rows,
         models_dir=Path(args.models_dir),
+        stimulus_col_a=args.stimulus_col_a,
+        stimulus_col_b=args.stimulus_col_b,
+        response_col=args.response_col,
     )
 
     print(json.dumps({
