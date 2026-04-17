@@ -256,6 +256,7 @@ def spawn_cc_agent(
     cmd = [
         "claude",
         "--output-format", "stream-json",
+        "--verbose",
         "--dangerously-skip-permissions",
         *add_dir_args,
         "--model", "claude-sonnet-4-6",
