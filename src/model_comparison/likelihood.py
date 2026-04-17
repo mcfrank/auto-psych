@@ -61,6 +61,15 @@ def log_likelihood(
     stimulus_col_b: name of stimulus B column (default: "sequence_b")
     response_col: name of response column (default: "chose_left")
     """
+    if response_rows:
+        first_row = response_rows[0]
+        missing = [c for c in [stimulus_col_a, stimulus_col_b, response_col] if c not in first_row]
+        if missing:
+            raise ValueError(
+                f"Column(s) not found in response data: {missing}. "
+                f"Configure with stimulus_col_a, stimulus_col_b, response_col."
+            )
+
     from src.models.randomness import get_model_predictions  # type: ignore
 
     # Cache predictions per stimulus to avoid redundant model calls
