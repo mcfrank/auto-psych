@@ -74,10 +74,10 @@ def _successors(nums):
         rest = [nums[k] for k in range(len(nums)) if k != i and k != j]
         ops = [(a + b, f"{a}+{b}={a+b}"), (a * b, f"{a}*{b}={a*b}"),
                (b - a, f"{b}-{a}={b-a}"), (a - b, f"{a}-{b}={a-b}")]
-        if a != 0 and b % a == 0:
-            ops.append((b // a, f"{b}/{a}={b//a}"))
         if b != 0 and a % b == 0:
             ops.append((a // b, f"{a}/{b}={a//b}"))
+        if a != 0 and b % a == 0:
+            ops.append((b // a, f"{b}/{a}={b//a}"))
         for r, op in ops:
             if isinstance(r, int) and r >= 0:
                 result.append((sorted(rest + [r]), op))
