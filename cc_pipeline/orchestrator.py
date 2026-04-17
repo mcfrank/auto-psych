@@ -71,9 +71,18 @@ def write_context(
     prev_exp_dir: Optional[Path] = None,
     extra: Optional[Dict[str, Any]] = None,
     complexity_prior_const: float = 0.0,
+    existing_data: Optional[Path] = None,
 ) -> Path:
     """Write CONTEXT.md into exp_dir for the given agent. Return path."""
     prob_path = cc_project_dir(project_id) / "problem_definition.md"
+
+    project_config_path = cc_project_dir(project_id) / "project_config.yaml"
+    col_cfg: Dict[str, str] = {}
+    if project_config_path.exists():
+        col_cfg = yaml.safe_load(project_config_path.read_text(encoding="utf-8")) or {}
+    stimulus_col_a = col_cfg.get("stimulus_col_a", "sequence_a")
+    stimulus_col_b = col_cfg.get("stimulus_col_b", "sequence_b")
+    response_col = col_cfg.get("response_col", "chose_left")
 
     lines: List[str] = [
         f"# CONTEXT — experiment {exp_num}, agent {agent_key}",
@@ -106,11 +115,14 @@ def write_context(
 
     if agent_key == "5_critique":
         project_dir = exp_dir.parent
-        all_responses = []
-        for n in range(1, exp_num + 1):
-            r = project_dir / f"experiment{n}" / "data" / "responses.csv"
-            if r.exists():
-                all_responses.append(str(r))
+        if existing_data is not None:
+            all_responses = [str(existing_data)]
+        else:
+            all_responses = []
+            for n in range(1, exp_num + 1):
+                r = project_dir / f"experiment{n}" / "data" / "responses.csv"
+                if r.exists():
+                    all_responses.append(str(r))
         lines += ["", "## All experiments (pooled data for posterior and PPCs)", ""]
         lines += ["Response files (all experiments, pass all to --responses):"]
         for p in all_responses:
@@ -121,14 +133,32 @@ def write_context(
             f" \\\n    --complexity-prior {complexity_prior_const}"
             if complexity_prior_const != 0.0 else ""
         )
+        col_flags = ""
+        if stimulus_col_a != "sequence_a" or stimulus_col_b != "sequence_b" or response_col != "chose_left":
+            col_flags = (
+                f" \\\n    --stimulus-col-a {stimulus_col_a}"
+                f" \\\n    --stimulus-col-b {stimulus_col_b}"
+                f" \\\n    --response-col {response_col}"
+            )
         posterior_cmd = (
             f"cd {REPO_ROOT} && python3 -m src.model_comparison.posterior \\\n"
             f"    --responses \\\n        {responses_str} \\\n"
             f"    --models-dir {exp_dir / 'cognitive_models'} \\\n"
             f"    --out {exp_dir / 'critique' / 'model_posterior.json'}"
+            f"{col_flags}"
             f"{complexity_flag}"
         )
         lines += ["", "## Posterior command (run this exactly)", "", "```bash", posterior_cmd, "```"]
+        if stimulus_col_a != "sequence_a" or stimulus_col_b != "sequence_b" or response_col != "chose_left":
+            lines += [
+                "",
+                "## Column config (use these flags in all PPC commands too)",
+                "",
+                f"- stimulus_col_a: `{stimulus_col_a}`",
+                f"- stimulus_col_b: `{stimulus_col_b}`",
+                f"- response_col: `{response_col}`",
+                f"- PPC flags: `--stimulus-col-a {stimulus_col_a} --stimulus-col-b {stimulus_col_b} --response-col {response_col}`",
+            ]
 
     if extra:
         lines += ["", "## Additional context", ""]
@@ -194,7 +224,9 @@ def spawn_cc_agent(
     Streams output to exp_dir/logs/<agent_key>.jsonl and prints live summaries.
     Returns (success, final_result_text).
     """
-    prompt_path = PROMPTS_DIR / f"{agent_key}.md"
+    project_id = exp_dir.parent.name  # exp_dir = projects/{project_id}/experimentN
+    project_prompt = cc_project_dir(project_id) / "prompts" / f"{agent_key}.md"
+    prompt_path = project_prompt if project_prompt.exists() else PROMPTS_DIR / f"{agent_key}.md"
     if not prompt_path.exists():
         return False, f"Prompt not found: {prompt_path}"
 
@@ -391,7 +423,11 @@ def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
         if name not in loadable:
             return False, f"Model '{name}' has no {theorist_dir}/{name}.py (theorist must provide each model file)"
     # Test call each model
-    test_stimulus = ("HHTHTTHT", "HTHTHTHT")
+    test_stim_file = exp_dir.parent / "test_stimulus.json"
+    if test_stim_file.exists():
+        test_stimulus = tuple(json.loads(test_stim_file.read_text(encoding="utf-8")))
+    else:
+        test_stimulus = ("HHTHTTHT", "HTHTHTHT")
     response_options = ["left", "right"]
     for name in names:
         try:
