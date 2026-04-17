@@ -126,7 +126,7 @@ def write_context(
     if agent_key == "5_critique":
         project_dir = exp_dir.parent
         if existing_data is not None:
-            all_responses = [str(existing_data)]
+            all_responses = [str(exp_dir / "data" / "responses.csv")]
         else:
             all_responses = []
             for n in range(1, exp_num + 1):

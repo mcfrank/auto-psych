@@ -158,6 +158,15 @@ def run_ppc(
             n_participants=n_participants,
             theorist_dir=theorist_dir,
         )
+        # Rename collect.py's hardcoded keys to the configured column names
+        if stimulus_col_a != "sequence_a" or stimulus_col_b != "sequence_b" or response_col != "chose_left":
+            synthetic_rows = [
+                {**row,
+                 stimulus_col_a: row["sequence_a"],
+                 stimulus_col_b: row["sequence_b"],
+                 response_col: row["chose_left"]}
+                for row in synthetic_rows
+            ]
         synthetic_agg = aggregate_rows(synthetic_rows, stimulus_col_a, stimulus_col_b, response_col)
         t_synthetic = float(test_stat_fn(synthetic_agg))
         null_values.append(t_synthetic)
