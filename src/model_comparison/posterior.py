@@ -74,6 +74,9 @@ def model_posterior(
     labeled_responses: List[Tuple[str, List[Dict[str, Any]]]],
     models_dir: Path,
     complexity_prior_const: float = 0.0,
+    stimulus_col_a: str = "sequence_a",
+    stimulus_col_b: str = "sequence_b",
+    response_col: str = "chose_left",
 ) -> Dict[str, Any]:
     """
     Compute the Bayesian posterior over models given individual response data.
@@ -109,7 +112,11 @@ def model_posterior(
     n_by_exp: Dict[str, int] = {}
     for label, rows in labeled_responses:
         ll_by_exp[label] = {
-            m: log_likelihood(m, rows, models_dir) for m in model_names
+            m: log_likelihood(m, rows, models_dir,
+                              stimulus_col_a=stimulus_col_a,
+                              stimulus_col_b=stimulus_col_b,
+                              response_col=response_col)
+            for m in model_names
         }
         n_by_exp[label] = len(rows)
 
@@ -171,6 +178,12 @@ def main() -> None:
             "models (Occam's razor). Default: 0.0 (uniform prior)."
         ),
     )
+    parser.add_argument("--stimulus-col-a", default="sequence_a",
+                        help="Name of stimulus A column (default: sequence_a)")
+    parser.add_argument("--stimulus-col-b", default="sequence_b",
+                        help="Name of stimulus B column (default: sequence_b)")
+    parser.add_argument("--response-col", default="chose_left",
+                        help="Name of response column (default: chose_left)")
     args = parser.parse_args()
 
     labeled_responses: List[Tuple[str, List[Dict[str, Any]]]] = []
@@ -188,6 +201,9 @@ def main() -> None:
         labeled_responses=labeled_responses,
         models_dir=Path(args.models_dir),
         complexity_prior_const=args.complexity_prior,
+        stimulus_col_a=args.stimulus_col_a,
+        stimulus_col_b=args.stimulus_col_b,
+        response_col=args.response_col,
     )
 
     output = json.dumps(result, indent=2)
