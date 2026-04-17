@@ -64,20 +64,27 @@ def load_test_stat(stat_file: Path):
     return fn
 
 
-def aggregate_rows(response_rows: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    """Aggregate response rows by (sequence_a, sequence_b) — mirrors _aggregate_csv."""
+def aggregate_rows(
+    response_rows: List[Dict[str, Any]],
+    stimulus_col_a: str = "sequence_a",
+    stimulus_col_b: str = "sequence_b",
+    response_col: str = "chose_left",
+) -> List[Dict[str, Any]]:
+    """Aggregate response rows by (stimulus_col_a, stimulus_col_b) — mirrors _aggregate_csv."""
     from collections import defaultdict
-    key_to_lefts: Dict[tuple, list] = defaultdict(list)
+    key_to_rows: Dict[tuple, list] = defaultdict(list)
     for r in response_rows:
-        key = (r["sequence_a"], r["sequence_b"])
-        key_to_lefts[key].append(int(r.get("chose_left", 0)))
+        key = (r[stimulus_col_a], r[stimulus_col_b])
+        key_to_rows[key].append(r)
     result = []
-    for (sa, sb), lefts in sorted(key_to_lefts.items()):
+    for (sa, sb), group in sorted(key_to_rows.items()):
+        lefts = [int(r.get(response_col, 0)) for r in group]
         result.append({
             "sequence_a": sa,
             "sequence_b": sb,
             "chose_left_pct": sum(lefts) / len(lefts) if lefts else 0.0,
             "n": len(lefts),
+            "lm_code_translation_list": [r["lm_code_translation"] for r in group if r.get("lm_code_translation")],
         })
     return result
 
@@ -89,6 +96,9 @@ def run_ppc(
     n_samples: int = 500,
     theorist_dir: Optional[Path] = None,
     responses_paths: Optional[List[Path]] = None,
+    stimulus_col_a: str = "sequence_a",
+    stimulus_col_b: str = "sequence_b",
+    response_col: str = "chose_left",
 ) -> Dict[str, Any]:
     """
     Run a posterior predictive check for one model × one test statistic.
@@ -122,16 +132,16 @@ def run_ppc(
         if not responses_path.exists():
             raise FileNotFoundError(f"responses.csv not found at {responses_path}")
         observed_rows = list(csv.DictReader(open(responses_path, encoding="utf-8")))
-    observed_agg = aggregate_rows(observed_rows)
+    observed_agg = aggregate_rows(observed_rows, stimulus_col_a, stimulus_col_b, response_col)
 
     # Derive unique stimuli from responses (preserves all stimuli seen across experiments)
     seen = set()
     stimuli = []
     for r in observed_rows:
-        key = (r["sequence_a"], r["sequence_b"])
+        key = (r[stimulus_col_a], r[stimulus_col_b])
         if key not in seen:
             seen.add(key)
-            stimuli.append({"sequence_a": r["sequence_a"], "sequence_b": r["sequence_b"]})
+            stimuli.append({"sequence_a": r[stimulus_col_a], "sequence_b": r[stimulus_col_b]})
 
     # Infer n_participants as average responses per stimulus (handles pooled data)
     n_participants = max(1, len(observed_rows) // len(stimuli)) if stimuli else 1
@@ -148,7 +158,7 @@ def run_ppc(
             n_participants=n_participants,
             theorist_dir=theorist_dir,
         )
-        synthetic_agg = aggregate_rows(synthetic_rows)
+        synthetic_agg = aggregate_rows(synthetic_rows, stimulus_col_a, stimulus_col_b, response_col)
         t_synthetic = float(test_stat_fn(synthetic_agg))
         null_values.append(t_synthetic)
 
@@ -184,6 +194,9 @@ def main() -> None:
         "--responses", nargs="+", default=None,
         help="Response CSV(s) to use instead of exp-dir/data/responses.csv (pooled if multiple)",
     )
+    parser.add_argument("--stimulus-col-a", default="sequence_a")
+    parser.add_argument("--stimulus-col-b", default="sequence_b")
+    parser.add_argument("--response-col", default="chose_left")
     args = parser.parse_args()
 
     theorist_dir = Path(args.theorist_dir) if args.theorist_dir else None
@@ -194,6 +207,9 @@ def main() -> None:
         n_samples=args.n_samples,
         theorist_dir=theorist_dir,
         responses_paths=[Path(p) for p in args.responses] if args.responses else None,
+        stimulus_col_a=args.stimulus_col_a,
+        stimulus_col_b=args.stimulus_col_b,
+        response_col=args.response_col,
     )
     print(json.dumps(result, indent=2))
 
