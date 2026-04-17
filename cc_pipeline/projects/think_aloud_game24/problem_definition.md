@@ -78,7 +78,7 @@ def model_name(stimulus, response_options):
     N = 50  # Monte Carlo simulations
     solved = 0
     for _ in range(N):
-        if simulate_once(choices, target):
+        if _simulate_once(choices, target):
             solved += 1
     p_solved = solved / N
     return {"left": p_solved, "right": 1.0 - p_solved}

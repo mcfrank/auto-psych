@@ -4,36 +4,26 @@ Preprocess raw Game of 24 think-aloud experiment CSV into the pipeline's respons
 Usage:
     python3 preprocess_data.py --input PATH_TO_RAW_CSV [--output PATH]
 
-Default output: <script_dir>/data/responses.csv
+Default output: <project>/data/responses.csv
 """
 
-import argparse
 import csv
-import pathlib
 import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+import tyro
+from pyprojroot import here
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(
-        description="Convert raw think-aloud Game of 24 CSV to pipeline responses.csv"
-    )
-    parser.add_argument("--input", required=True, help="Path to raw experiment CSV")
-    parser.add_argument(
-        "--output",
-        default=None,
-        help="Output path (default: <script_dir>/data/responses.csv)",
-    )
-    return parser.parse_args()
-
-
-def is_true(val):
+def is_true(val: object) -> bool:
     """Return True if val represents a truthy boolean (handles both string and bool)."""
     if isinstance(val, bool):
         return val
     return str(val).strip().lower() == "true"
 
 
-def is_nonempty(val):
+def is_nonempty(val: object) -> bool:
     """Return True if val is a non-empty, non-NaN string."""
     if val is None:
         return False
@@ -41,19 +31,20 @@ def is_nonempty(val):
     return s != "" and s.lower() != "nan"
 
 
-def main():
-    args = parse_args()
+@dataclass
+class Args:
+    """Command-line arguments for preprocess_data."""
+    input_csv: Path
+    output_csv: Path = here() / "cc_pipeline" / "projects" / "think_aloud_game24" / "data" / "responses.csv"
 
-    input_path = pathlib.Path(args.input)
+
+def main(args: Args) -> None:
+    input_path = args.input_csv
     if not input_path.exists():
         print(f"Error: input file not found: {input_path}", file=sys.stderr)
         sys.exit(1)
 
-    script_dir = pathlib.Path(__file__).parent
-    if args.output is None:
-        output_path = script_dir / "data" / "responses.csv"
-    else:
-        output_path = pathlib.Path(args.output)
+    output_path = args.output_csv
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -111,4 +102,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    args = tyro.cli(Args)
+    main(args)

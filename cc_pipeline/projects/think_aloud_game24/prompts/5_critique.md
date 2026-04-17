@@ -35,7 +35,7 @@ Propose **3–6 test statistics** that could reveal specific ways the top-ranked
 Aggregated rows have the following keys:
 - `sequence_a`: choices JSON string, e.g. `"[5, 5, 12, 12]"`
 - `sequence_b`: target string, e.g. `"24.0"`
-- `chose_left_pct`: observed solve rate for this stimulus (fraction of participants who got it right)
+- `chose_left_pct`: observed solve rate for this stimulus (fraction of participants who got it right). Each row in the aggregated data represents one unique stimulus (problem). `chose_left_pct` is pre-computed as the fraction of participants who solved that problem correctly, pooled across all experiments.
 - `lm_code_translation_list`: list of `lm_code_translation` Python code strings for all participants who attempted this stimulus. **When this list is empty (e.g. in synthetic resamples), return 0.0 to skip gracefully.**
 
 Good test statistics for this domain:
