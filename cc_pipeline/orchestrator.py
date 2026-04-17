@@ -54,6 +54,19 @@ def get_ground_truth_models(project_id: str) -> Dict:
     return dict(registry) if isinstance(registry, dict) else {}
 
 
+def _load_column_config(project_id: str) -> Dict[str, str]:
+    """Load column name config from project_config.yaml, with defaults."""
+    project_config_path = cc_project_dir(project_id) / "project_config.yaml"
+    col_cfg: Dict[str, str] = {}
+    if project_config_path.exists():
+        col_cfg = yaml.safe_load(project_config_path.read_text(encoding="utf-8")) or {}
+    return {
+        "stimulus_col_a": col_cfg.get("stimulus_col_a", "sequence_a"),
+        "stimulus_col_b": col_cfg.get("stimulus_col_b", "sequence_b"),
+        "response_col": col_cfg.get("response_col", "chose_left"),
+    }
+
+
 def ensure_experiment_dirs(exp_dir: Path) -> None:
     for sub in ["cognitive_models", "design", "experiment", "data", "critique"]:
         (exp_dir / sub).mkdir(parents=True, exist_ok=True)
@@ -76,13 +89,10 @@ def write_context(
     """Write CONTEXT.md into exp_dir for the given agent. Return path."""
     prob_path = cc_project_dir(project_id) / "problem_definition.md"
 
-    project_config_path = cc_project_dir(project_id) / "project_config.yaml"
-    col_cfg: Dict[str, str] = {}
-    if project_config_path.exists():
-        col_cfg = yaml.safe_load(project_config_path.read_text(encoding="utf-8")) or {}
-    stimulus_col_a = col_cfg.get("stimulus_col_a", "sequence_a")
-    stimulus_col_b = col_cfg.get("stimulus_col_b", "sequence_b")
-    response_col = col_cfg.get("response_col", "chose_left")
+    col = _load_column_config(project_id)
+    stimulus_col_a = col["stimulus_col_a"]
+    stimulus_col_b = col["stimulus_col_b"]
+    response_col = col["response_col"]
 
     lines: List[str] = [
         f"# CONTEXT — experiment {exp_num}, agent {agent_key}",
@@ -425,7 +435,11 @@ def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
     # Test call each model
     test_stim_file = exp_dir.parent / "test_stimulus.json"
     if test_stim_file.exists():
-        test_stimulus = tuple(json.loads(test_stim_file.read_text(encoding="utf-8")))
+        try:
+            test_stimulus = tuple(json.loads(test_stim_file.read_text(encoding="utf-8")))
+        except (json.JSONDecodeError, ValueError) as e:
+            print(f"  [warn] Invalid test_stimulus.json: {e}; using defaults", flush=True)
+            test_stimulus = ("HHTHTTHT", "HTHTHTHT")
     else:
         test_stimulus = ("HHTHTTHT", "HTHTHTHT")
     response_options = ["left", "right"]
