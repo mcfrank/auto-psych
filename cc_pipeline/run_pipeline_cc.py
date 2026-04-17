@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import re
+import shutil
 import sys
 from pathlib import Path
 from typing import Optional
@@ -71,6 +72,7 @@ def _run_agent(
     validate: bool,
     ground_truth_model: Optional[str] = None,
     complexity_prior_const: float = 0.0,
+    existing_data: Optional[Path] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output is invalid."""
     print(f"\n{'='*60}", flush=True)
@@ -89,6 +91,7 @@ def _run_agent(
             exp_num=exp_num,
             prev_exp_dir=prev_exp_dir,
             complexity_prior_const=complexity_prior_const,
+            existing_data=existing_data,
         )
         allowed_dirs = [exp_dir, cc_project_dir(project_id)]
         if prev_exp_dir:
@@ -116,6 +119,7 @@ def _run_experiment(
     ground_truth_model: Optional[str] = None,
     agent_filter: Optional[str] = None,
     complexity_prior_const: float = 0.0,
+    existing_data: Optional[Path] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
@@ -131,6 +135,10 @@ def _run_experiment(
         prev_exp_dir = None
 
     keys_to_run = [agent_filter] if agent_filter else AGENT_KEYS
+    if existing_data is not None:
+        keys_to_run = ["1_theory", "5_critique"]
+        shutil.copy(str(existing_data), str(exp_dir_path / "data" / "responses.csv"))
+        print(f"  [data] Copied existing data from {existing_data}", flush=True)
 
     for agent_key in keys_to_run:
         _run_agent(
@@ -144,6 +152,7 @@ def _run_experiment(
             validate=validate,
             ground_truth_model=ground_truth_model,
             complexity_prior_const=complexity_prior_const,
+            existing_data=existing_data,
         )
 
     if "5_critique" in keys_to_run:
@@ -211,6 +220,15 @@ def main() -> None:
             "Negative CONST penalises complex models (Occam's razor). Default: 0.0 (uniform prior)."
         ),
     )
+    parser.add_argument(
+        "--existing-data",
+        default=None,
+        metavar="PATH",
+        help=(
+            "Path to an existing responses.csv. When set, skips agents 2_design, "
+            "3_implement, and 4_collect, running only 1_theory and 5_critique."
+        ),
+    )
     args = parser.parse_args()
 
     project_id = args.project
@@ -225,6 +243,11 @@ def main() -> None:
             print(f"Error: --ground-truth-model must be one of {allowed}; got {args.ground_truth_model!r}", file=sys.stderr)
             sys.exit(1)
 
+    existing_data = Path(args.existing_data) if args.existing_data else None
+    if existing_data is not None and not existing_data.exists():
+        print(f"Error: --existing-data file not found: {existing_data}", file=sys.stderr)
+        sys.exit(1)
+
     # Resolve experiment IDs
     if args.experiments is not None:
         try:
@@ -238,7 +261,12 @@ def main() -> None:
         print("Error: specify --experiment N or --experiments N", file=sys.stderr)
         sys.exit(1)
 
-    print(f"CC Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} validate={args.validate}", flush=True)
+    print(
+        f"CC Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} "
+        f"validate={args.validate}"
+        + (f" existing_data={existing_data}" if existing_data else ""),
+        flush=True,
+    )
     print(f"Outputs: {cc_projects_dir() / project_id}", flush=True)
 
     for exp_num in exp_ids:
@@ -252,6 +280,7 @@ def main() -> None:
             ground_truth_model=args.ground_truth_model,
             agent_filter=args.agent,
             complexity_prior_const=args.complexity_prior,
+            existing_data=existing_data,
         )
 
     print("\nAll experiments complete.", flush=True)
