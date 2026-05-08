@@ -16,8 +16,10 @@ set -euo pipefail
 
 cd "${REMOTE_PROJECT_DIR:-$HOME/auto-psych}"
 
+# Match pipeline.slurm's module-loading convention.
+PYTHON_MODULE="${PYTHON_MODULE:-python/3.12.1}"
 if command -v module >/dev/null 2>&1 || command -v ml >/dev/null 2>&1; then
-  ml python/3.11 || module load python/3.11 || true
+  ml "$PYTHON_MODULE" 2>/dev/null || module load "$PYTHON_MODULE" 2>/dev/null || true
 fi
 
 # shellcheck disable=SC1091
