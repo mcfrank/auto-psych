@@ -83,10 +83,15 @@ def _git(*args: str) -> str:
 
 
 def _git_state() -> Dict[str, Any]:
-    """Capture commit, dirty flag, branch, upstream sync state for the experiments.md entry."""
+    """Capture commit, dirty flag, branch, upstream sync state for the experiments.md entry.
+
+    We only care about tracked-but-modified files for the dirty check: those are the changes
+    that won't be visible on the cluster after `git pull`. Untracked files are excluded with
+    --untracked-files=no since they aren't part of any commit and so cannot drift remote-side.
+    """
     head_full = _git("rev-parse", "HEAD") or ""
     head_short = head_full[:7] if head_full else "nogit"
-    porcelain = _git("status", "--porcelain")
+    porcelain = _git("status", "--porcelain", "--untracked-files=no")
     dirty = bool(porcelain.strip())
     branch = _git("rev-parse", "--abbrev-ref", "HEAD") or "DETACHED"
     upstream = _git("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}") or ""
