@@ -61,13 +61,46 @@ if [ -f .secrets ]; then
 fi
 
 # ---- Tell run_pipeline to write all run artifacts to scratch ----------------
+# The pipeline reads BOTH source files (problem_definition.md, ground_truth_models.py,
+# prompts, references) AND writes outputs (batches/<...>/runN/) under PROJECTS_DIR.
+# We want writes in scratch (so they survive after the job ends without polluting the
+# repo), but reads still need to see the project's tracked source files. Solution:
+# stage the source-only files from the repo into the scratch projects tree before
+# launching the pipeline, then point PROJECTS_DIR at scratch.
 export PIPELINE_PROJECTS_DIR="$RESULTS_DIR/projects"
+mkdir -p "$PIPELINE_PROJECTS_DIR"
+
+# Extract --project NAME from the pipeline args so we can stage just that project's source.
+PROJECT_NAME=""
+prev=""
+for arg in "$@"; do
+  if [ "$prev" = "--project" ]; then
+    PROJECT_NAME="$arg"
+    break
+  fi
+  prev="$arg"
+done
+
+if [ -n "$PROJECT_NAME" ] && [ -d "$(pwd)/projects/$PROJECT_NAME" ]; then
+  STAGE_DIR="$PIPELINE_PROJECTS_DIR/$PROJECT_NAME"
+  mkdir -p "$STAGE_DIR"
+  # Mirror source files (problem_definition.md, ground_truth_models.py, prompts/,
+  # references/, etc) but exclude anything that's an output directory or cache.
+  rsync -a \
+    --exclude='batches/' \
+    --exclude='run*/' \
+    --exclude='__pycache__/' \
+    --exclude='.DS_Store' \
+    "$(pwd)/projects/$PROJECT_NAME/" "$STAGE_DIR/"
+  echo "Staged: $(pwd)/projects/$PROJECT_NAME -> $STAGE_DIR (source files only)"
+fi
 
 echo "===== SLURM job ${SLURM_JOB_ID:-unknown} (auto-psych pipeline) ====="
 echo "Host:       $(hostname)"
 echo "Repo:       $(pwd) ($(git rev-parse --short HEAD 2>/dev/null || echo 'nogit'))"
 echo "Scratch:    $RESULTS_DIR"
 echo "Projects:   $PIPELINE_PROJECTS_DIR"
+echo "Project:    ${PROJECT_NAME:-<not parsed>}"
 echo "Args:       $*"
 echo "Start:      $(date -u +%Y-%m-%dT%H:%M:%SZ)"
 echo
