@@ -75,6 +75,39 @@ def run_experiment_implementer(state: Dict[str, Any]) -> Dict[str, Any]:
     if validation_feedback:
         agent_log(out_dir, f"Validation feedback: {validation_feedback[:500]}")
 
+    # Short-circuit: no-browser modes (simulated_participants_nobrowser, or any --ground-truth-model run)
+    # don't deploy an experiment. Skip template fill and run_deploy_logic; write a minimal config.json
+    # so the collect step has the metadata it needs (simulated_n_participants, mode, project/run ids).
+    mode = state.get("mode", "")
+    skip_deploy = mode == "simulated_participants_nobrowser" or bool(state.get("ground_truth_model"))
+    if skip_deploy:
+        from src.config import DEFAULT_SIMULATED_N_PARTICIPANTS
+        skip_reason = "mode=simulated_participants_nobrowser" if mode == "simulated_participants_nobrowser" else f"ground_truth_model={state.get('ground_truth_model')!r}"
+        agent_log(out_dir, f"Skipping implement+deploy ({skip_reason}); writing minimal config.json only.")
+        minimal_config = {
+            "run_mode": mode,
+            "mode": mode,
+            "project_id": project_id,
+            "run_id": run_id,
+            "experiment_path": str(out_dir),
+            "experiment_url": "",
+            "results_api_url": "",
+            "simulated_n_participants": int(state.get("simulated_n_participants", DEFAULT_SIMULATED_N_PARTICIPANTS)),
+            "skipped": True,
+            "skip_reason": skip_reason,
+        }
+        if state.get("ground_truth_model"):
+            minimal_config["ground_truth_model"] = state["ground_truth_model"]
+        config_path = out_dir / "config.json"
+        config_path.write_text(json.dumps(minimal_config, indent=2), encoding="utf-8")
+        agent_log(out_dir, f"wrote {config_path.name} (skipped=true)")
+        agent_log(out_dir, "=== 3_implement end ===")
+        return {
+            **state,
+            "experiment_path": str(out_dir),
+            "deployment_config_path": str(config_path),
+        }
+
     stimuli_path = Path(state["stimuli_path"])
     raw_stimuli = json.loads(stimuli_path.read_text()) if stimuli_path.exists() else []
     stimuli_for_experiment = [
