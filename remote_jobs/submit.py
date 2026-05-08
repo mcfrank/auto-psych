@@ -88,11 +88,27 @@ def _git_state() -> Dict[str, Any]:
     We only care about tracked-but-modified files for the dirty check: those are the changes
     that won't be visible on the cluster after `git pull`. Untracked files are excluded with
     --untracked-files=no since they aren't part of any commit and so cannot drift remote-side.
+
+    We also exempt files this submitter writes itself (`remote_jobs/experiments.md`), since
+    appending to that journal would otherwise immediately make the next submission appear
+    dirty (a chicken-and-egg problem). The user is expected to commit the journal periodically.
     """
     head_full = _git("rev-parse", "HEAD") or ""
     head_short = head_full[:7] if head_full else "nogit"
     porcelain = _git("status", "--porcelain", "--untracked-files=no")
-    dirty = bool(porcelain.strip())
+    # Filter out submitter-managed files from the dirty signal.
+    submitter_managed = {"remote_jobs/experiments.md"}
+    significant_lines = []
+    for line in porcelain.splitlines():
+        # Porcelain format: "XY filename" (XY is two-char status code, then space, then path).
+        if len(line) <= 3:
+            continue
+        path = line[3:].strip()
+        if path in submitter_managed:
+            continue
+        significant_lines.append(line)
+    dirty = bool(significant_lines)
+    porcelain = "\n".join(significant_lines)
     branch = _git("rev-parse", "--abbrev-ref", "HEAD") or "DETACHED"
     upstream = _git("rev-parse", "--abbrev-ref", "--symbolic-full-name", "@{u}") or ""
     upstream_ahead = ""
