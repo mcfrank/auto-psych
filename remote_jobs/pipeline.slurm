@@ -20,8 +20,10 @@
 # All args after `pipeline.slurm` are passed straight through to run_pipeline.py.
 #
 # Cluster-specific bits (flagged here so a new cluster only needs to edit a couple of lines):
-#   1) Module load: `ml python/3.11` is Sherlock-flavored. Other clusters may use
-#      `module load python/3.11`, `module load anaconda`, or have python already on PATH.
+#   1) Module load: PYTHON_MODULE defaults to python/3.12.1 (Sherlock's name as of 2026-05).
+#      Other clusters use different names (Della: python/3.11.4, TACC: python3/3.11, etc).
+#      To override per-cluster without editing this file, export PYTHON_MODULE in
+#      remote_jobs/.env.local; the submitter forwards it through the sbatch environment.
 #   2) Scratch dir: this script reads $REMOTE_SCRATCH_DIR if exported by submit.py
 #      (preferred), else falls back to $SCRATCH/auto-psych. On Sherlock $SCRATCH is
 #      defined automatically; on other clusters use $WORK, $GROUP_HOME, etc. and set
@@ -35,8 +37,9 @@ set -euo pipefail
 cd "${REMOTE_PROJECT_DIR:-$HOME/auto-psych}"
 
 # ---- Cluster-specific: load Python module -----------------------------------
+PYTHON_MODULE="${PYTHON_MODULE:-python/3.12.1}"
 if command -v module >/dev/null 2>&1 || command -v ml >/dev/null 2>&1; then
-  ml python/3.11 || module load python/3.11 || true
+  ml "$PYTHON_MODULE" 2>/dev/null || module load "$PYTHON_MODULE" 2>/dev/null || true
 fi
 
 # ---- Scratch tree (results land here, then sync_from_remote.sh pulls back) --

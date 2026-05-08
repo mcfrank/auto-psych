@@ -145,8 +145,8 @@ flowchart LR
 The directory and env-var names are cluster-agnostic. To target a second cluster:
 
 1. **`.env.local`** -- set `REMOTE_HOST` to the new SSH alias, `REMOTE_PROJECT_DIR` to wherever you cloned auto-psych on it, and `REMOTE_SCRATCH_DIR` to whichever scratch path the cluster exposes (`$WORK`, `$GROUP_HOME`, `$SLURM_TMPDIR/...`, etc.).
-2. **`pipeline.slurm`** -- the only Sherlock-flavored line is the `ml python/3.11` near the top. Swap to whatever your cluster needs (`module load python/3.11.4`, `module load anaconda3 && conda activate auto-psych`, or remove the load entirely if Python 3.11 is on `$PATH`).
-3. **`setup_remote.sh`** -- same module-load consideration as `pipeline.slurm`.
+2. **Python module** -- defaults to `python/3.12.1` (Sherlock as of 2026-05). For a different cluster, edit the `PYTHON_MODULE=` default near the top of `pipeline.slurm`, `setup_remote.sh`, and `smoke_infra.slurm`. (You can also set `PYTHON_MODULE` in your shell before running `setup_remote.sh` interactively the first time.)
+3. **`setup_remote.sh`** -- run interactively the first time so you can confirm the chosen module loads cleanly.
 4. **Manifest `slurm:` block** -- partition names vary across clusters (`normal` on Sherlock, `cpu` on Della, etc.); update the partition in your manifests as needed. Time/cpu/mem syntax is the same SLURM standard everywhere.
 
 That's it. No multi-site config layer, no profile files. If you find yourself supporting two clusters routinely we can promote those four edits to a profiles directory; for one cluster it's overkill.

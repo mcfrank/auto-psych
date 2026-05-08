@@ -17,12 +17,26 @@ REPO_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$REPO_DIR"
 
 # ---- Cluster-specific: pick a Python module --------------------------------
-# Sherlock has `ml python/3.11`. On other clusters, swap this for the right
-# module name (e.g. `module load python/3.11.4` on Della) or skip if Python
-# is on $PATH already.
+# Sherlock provides python/3.12.1 (`module avail python`); other clusters use
+# different names (Della: python/3.11.4; Della-GPU: anaconda3 + conda env;
+# TACC: python3/3.11; etc). Edit just this line for a new cluster.
+PYTHON_MODULE="${PYTHON_MODULE:-python/3.12.1}"
 if command -v module >/dev/null 2>&1 || command -v ml >/dev/null 2>&1; then
-  ml python/3.11 || module load python/3.11 || true
+  ml "$PYTHON_MODULE" 2>/dev/null || module load "$PYTHON_MODULE" 2>/dev/null || {
+    echo "setup_remote.sh: failed to load module '$PYTHON_MODULE'." >&2
+    echo "  Run 'ml avail python' on this cluster, then set PYTHON_MODULE=<name> and re-run." >&2
+    exit 1
+  }
 fi
+# Sanity check: we need >=3.10 for the langchain stack.
+PY_VER="$(python3 -c 'import sys; print(f"{sys.version_info.major}.{sys.version_info.minor}")' 2>/dev/null || echo '0.0')"
+PY_MAJOR="${PY_VER%%.*}"
+PY_MINOR="${PY_VER##*.}"
+if [ "$PY_MAJOR" -lt 3 ] || { [ "$PY_MAJOR" -eq 3 ] && [ "$PY_MINOR" -lt 10 ]; }; then
+  echo "setup_remote.sh: python3 reports version $PY_VER; need >=3.10. Fix PYTHON_MODULE and re-run." >&2
+  exit 1
+fi
+echo "setup_remote.sh: using python $PY_VER from $(command -v python3)"
 
 # Create venv at REPO_DIR/venv (reuse if it already exists).
 if [ ! -x "$REPO_DIR/venv/bin/python" ]; then
