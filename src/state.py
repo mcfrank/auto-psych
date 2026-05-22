@@ -9,7 +9,7 @@ class PipelineState(TypedDict, total=False):
 
     project_id: str
     run_id: int
-    mode: str  # "simulated_participants" | "live" | "test_prolific"
+    mode: str  # "simulated_participants" | "simulated_participants_nobrowser" | "live" | "test_prolific"
 
     # When set, run outputs go under this batch dir (projects/.../batches/batch_XXX); agents use run_dir_for_state.
     batch_dir: str
