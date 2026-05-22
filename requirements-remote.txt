@@ -1,0 +1,23 @@
+# Slim requirements for SLURM-cluster runs (no browser, no Firebase, no GCS).
+# Used by remote_jobs/setup_remote.sh. Mirror requirements.txt minus the heavy
+# browser + Google Cloud packages, which the no-browser/ground-truth pipeline
+# never imports at runtime.
+#
+# If you ever exercise the legacy --mode simulated_participants browser path
+# on a cluster, install the full requirements.txt instead and run
+# `playwright install chromium` after.
+
+# LangChain / LangGraph
+langchain>=0.3.0
+langgraph>=0.2.0
+langchain-google-genai>=2.0.0
+
+# Google Gemini
+google-generativeai>=0.8.0
+
+# Utilities
+pydantic>=2.0.0
+pyyaml>=6.0.0
+
+# Optional: PDF reading for problem definition references
+pypdf>=4.0.0

@@ -364,6 +364,11 @@ def run_collect(state: Dict[str, Any]) -> Dict[str, Any]:
             rows = _generate_from_models(stimuli, [ground_truth_model], n_participants, model_registry=registry)
         model_names = [ground_truth_model]
         (logs_dir / "ground_truth_model.txt").write_text(ground_truth_model, encoding="utf-8")
+    elif state.get("mode") == "simulated_participants_nobrowser":
+        # No-browser mode: LLM is the participant. One Gemini call per (participant, stimulus).
+        agent_log(out_dir, "Mode=simulated_participants_nobrowser; using LLM-as-participant (no browser, no Firebase).")
+        rows = _collect_llm_participant(state, config, out_dir, logs_dir, stimuli)
+        model_names = ["llm_participant"]
     else:
         rows = _collect_simulated(state, config, out_dir, logs_dir, stimuli, model_names, theorist_dir)
 
@@ -788,6 +793,135 @@ def _collect_from_browser(
             except subprocess.TimeoutExpired:
                 server_proc.kill()
 
+    return rows
+
+
+def _parse_participant_answer(text: str) -> Optional[str]:
+    """Parse 'ANSWER: left|right' from an LLM-participant reply (case-insensitive).
+    Falls back to a bare 'left'/'right' anywhere in the text. Returns 'left'/'right' or None.
+    """
+    if not text or not isinstance(text, str):
+        return None
+    m = re.search(r"ANSWER\s*:\s*(left|right)\b", text, re.IGNORECASE)
+    if m:
+        return m.group(1).lower()
+    s = text.strip().lower()
+    if s in ("left", "right"):
+        return s
+    has_left = bool(re.search(r"\bleft\b", s))
+    has_right = bool(re.search(r"\bright\b", s))
+    if has_left and not has_right:
+        return "left"
+    if has_right and not has_left:
+        return "right"
+    return None
+
+
+def _collect_llm_participant(
+    state: Dict[str, Any],
+    config: Dict[str, Any],
+    out_dir: Path,
+    logs_dir: Path,
+    stimuli: List[Dict[str, Any]],
+) -> List[Dict[str, Any]]:
+    """LLM-as-participant collect path: one Gemini call per (participant, stimulus); no browser.
+
+    Reads the system prompt from the resolved 4_collect_participant.md (project override or canonical).
+    Parses 'ANSWER: left|right' replies into rows matching the schema used by _generate_from_models,
+    so the analyze/interpret agents see the same CSV structure regardless of collect mode.
+    """
+    project_id = state["project_id"]
+    run_id = state["run_id"]
+    n_participants = int(config.get("simulated_n_participants", 5))
+
+    try:
+        from src.agents.base import get_llm, invoke_llm, load_prompt_for_run
+    except ImportError as e:
+        agent_log(out_dir, f"LLM-participant: base imports unavailable: {e}")
+        return []
+
+    # Resolve participant prompt: archived (per run) -> project override -> canonical.
+    participant_prompt = load_prompt_for_run(project_id, run_id, "4_collect_participant", state)
+    if not participant_prompt.strip():
+        from src.config import PROMPTS_DIR
+        canonical = PROMPTS_DIR / "4_collect_participant.md"
+        if canonical.exists():
+            participant_prompt = canonical.read_text(encoding="utf-8")
+    if not participant_prompt.strip():
+        agent_log(out_dir, "LLM-participant: no 4_collect_participant.md prompt found; cannot run.")
+        return []
+
+    try:
+        llm = get_llm()
+    except Exception as e:
+        agent_log(out_dir, f"LLM-participant: failed to initialize LLM: {e}")
+        return []
+
+    transcripts_dir = out_dir / "transcripts"
+    transcripts_dir.mkdir(exist_ok=True)
+    rows: List[Dict[str, Any]] = []
+    n_unparseable = 0
+    n_errors = 0
+
+    for participant_id in range(n_participants):
+        transcript_path = transcripts_dir / f"participant_{participant_id:03d}.md"
+        with transcript_path.open("w", encoding="utf-8") as transcript:
+            transcript.write(f"# Participant {participant_id} transcript\n\n")
+            for trial_index, stim in enumerate(stimuli):
+                seq_a = stim.get("sequence_a", "")
+                seq_b = stim.get("sequence_b", "")
+                user_msg = (
+                    "Stimulus pair (left vs right):\n"
+                    f"  Left:  {seq_a}\n"
+                    f"  Right: {seq_b}\n\n"
+                    "Reply with exactly one line: `ANSWER: left` or `ANSWER: right`."
+                )
+                try:
+                    response = invoke_llm(system=participant_prompt, user=user_msg, llm=llm)
+                except Exception as e:
+                    n_errors += 1
+                    agent_log(
+                        out_dir,
+                        f"LLM-participant: invoke failed (p={participant_id}, trial={trial_index}): {e}",
+                    )
+                    transcript.write(
+                        f"## Trial {trial_index}\n- left: `{seq_a}`\n- right: `{seq_b}`\n\n"
+                        f"**LLM error:** {e}\n\n"
+                    )
+                    continue
+                choice = _parse_participant_answer(response)
+                transcript.write(
+                    f"## Trial {trial_index}\n- left: `{seq_a}`\n- right: `{seq_b}`\n\n"
+                    f"**LLM reply:**\n```\n{response.strip()}\n```\n\n"
+                    f"**Parsed:** {choice if choice else 'UNPARSEABLE'}\n\n"
+                )
+                if choice is None:
+                    n_unparseable += 1
+                    continue
+                chose_left = (choice == "left")
+                rows.append({
+                    "participant_id": participant_id,
+                    "trial_index": trial_index,
+                    "sequence_a": str(seq_a),
+                    "sequence_b": str(seq_b),
+                    "chose_left": int(chose_left),
+                    "chose_right": int(not chose_left),
+                    "model": "llm_participant",
+                })
+
+    agent_log(
+        out_dir,
+        f"LLM-participant: emitted {len(rows)} rows from {n_participants} participants over "
+        f"{len(stimuli)} stimuli (unparseable={n_unparseable}, errors={n_errors})",
+    )
+    (logs_dir / "llm_participant_summary.txt").write_text(
+        f"n_participants={n_participants}\n"
+        f"n_stimuli={len(stimuli)}\n"
+        f"n_rows={len(rows)}\n"
+        f"n_unparseable={n_unparseable}\n"
+        f"n_errors={n_errors}\n",
+        encoding="utf-8",
+    )
     return rows
 
 

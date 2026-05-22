@@ -281,9 +281,13 @@ def main() -> None:
     )
     parser.add_argument(
         "--mode",
-        choices=["simulated_participants", "live", "test_prolific"],
+        choices=["simulated_participants", "simulated_participants_nobrowser", "live", "test_prolific"],
         default="simulated_participants",
-        help="Run mode",
+        help=(
+            "Run mode. 'simulated_participants_nobrowser' runs a fully self-contained pipeline "
+            "with an LLM acting as the participant for each stimulus (no browser, no Firebase, "
+            "no local server) — used for SLURM cluster deployment."
+        ),
     )
     parser.add_argument(
         "--n-participants",
