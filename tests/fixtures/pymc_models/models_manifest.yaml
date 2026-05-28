@@ -1,0 +1,9 @@
+models:
+  - name: bayesian_fair_coin
+    rationale: |
+      Bayesian comparison of fair-coin (theta=0.5) vs. biased-coin (theta free)
+      hypotheses for each sequence; softmax on the log Bayes factor difference.
+  - name: representativeness
+    rationale: |
+      Representativeness heuristic: prefer the sequence whose head-proportion is
+      closer to 0.5; softmax on the deviation-difference.

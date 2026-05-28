@@ -1,0 +1,23 @@
+{
+  "posteriors": {
+    "random_walk": 0.0,
+    "dfs_sum_heuristic": 1.0,
+    "factor_biased_search": 0.0
+  },
+  "log_likelihoods": {
+    "random_walk": -32138.5569,
+    "dfs_sum_heuristic": -7117.6403,
+    "factor_biased_search": -23379.6244
+  },
+  "log_likelihoods_by_experiment": {
+    "experiment1": {
+      "random_walk": -32138.5569,
+      "dfs_sum_heuristic": -7117.6403,
+      "factor_biased_search": -23379.6244
+    }
+  },
+  "n_trials": 5143,
+  "n_trials_by_experiment": {
+    "experiment1": 5143
+  }
+}

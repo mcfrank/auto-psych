@@ -385,6 +385,10 @@ def run_collect(state: Dict[str, Any]) -> Dict[str, Any]:
     (logs_dir / "n_participants.txt").write_text(str(n_participants), encoding="utf-8")
     (logs_dir / "model_names.txt").write_text("\n".join(model_names), encoding="utf-8")
     agent_log(out_dir, f"wrote {csv_path.name}")
+
+    if rows and csv_path.exists():
+        _run_project_preprocess(project_id, csv_path, out_dir)
+
     agent_log(out_dir, "=== 4_collect end ===")
 
     return {
@@ -791,6 +795,33 @@ def _collect_from_browser(
     return rows
 
 
+def _run_project_preprocess(project_id: str, csv_path: Path, out_dir: Path) -> None:
+    """If `projects/<project_id>/preprocess_data.py` exists, run it on the
+    collected CSV to add numeric feature columns (for PyMC theorist models).
+
+    The preprocessor writes back to `csv_path` (in-place rewrite). Failures
+    are logged but non-fatal — projects without a preprocessor still work
+    with callable theorist models.
+    """
+    import subprocess
+    from src.config import project_dir  # type: ignore
+    pp_path = project_dir(project_id) / "preprocess_data.py"
+    if not pp_path.exists():
+        agent_log(out_dir, f"no preprocess_data.py at {pp_path}; skipping featurization")
+        return
+    try:
+        result = subprocess.run(
+            ["python3", str(pp_path), "--input-csv", str(csv_path), "--output-csv", str(csv_path)],
+            capture_output=True, text=True, timeout=120,
+        )
+        if result.returncode != 0:
+            agent_log(out_dir, f"preprocess_data.py failed (rc={result.returncode}): {result.stderr.strip()[:500]}")
+            return
+        agent_log(out_dir, f"preprocess_data.py ok: {result.stdout.strip().splitlines()[-1] if result.stdout.strip() else '(no output)'}")
+    except Exception as e:
+        agent_log(out_dir, f"preprocess_data.py error: {type(e).__name__}: {e}")
+
+
 def _generate_from_models(
     stimuli: List[Dict[str, Any]],
     model_names: List[str],
@@ -811,7 +842,13 @@ def _generate_from_models(
                 fn = model_registry[model_name]
                 preds = {model_name: fn(stimulus_tuple, RESPONSE_OPTIONS)}
             else:
-                preds = get_model_predictions(stimulus_tuple, RESPONSE_OPTIONS, [model_name], theorist_dir)
+                raise NotImplementedError(
+                    "_generate_from_models cannot synthesize from theorist (PyMC) models in the "
+                    "full-collect path yet. Theorist models are now PyMC objects fit via MCMC; the "
+                    "regular collect path has been deferred from the PyMC migration first cut. "
+                    "Use --existing-data mode (which skips collect) or supply a ground-truth "
+                    "callable in `model_registry`."
+                )
             if not preds:
                 chose_left = random.choice([True, False])
             else:

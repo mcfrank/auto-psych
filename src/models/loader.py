@@ -1,7 +1,10 @@
 """
 Resolve model callables from the theorist run directory (1_theory/<name>.py only).
-No global model library: we assess the theorist's models only. Ground-truth models
-are loaded per-project via src.models.ground_truth.
+
+DEPRECATED for theorist models: theorist models are now PyMC models (see
+`src.models.pymc_inference.load_pymc_model`). This loader is retained for
+ground-truth callable models and as a transitional shim for not-yet-migrated
+call sites (EIG, full-collect path).
 """
 
 import importlib.util

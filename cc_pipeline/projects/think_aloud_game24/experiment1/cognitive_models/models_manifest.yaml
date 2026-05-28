@@ -1,0 +1,16 @@
+models:
+  - name: random_walk
+    rationale: |
+      Baseline model: uniformly random selection of number pairs and operations with no
+      heuristic guidance. Establishes a lower bound on puzzle difficulty independent of
+      any search strategy.
+  - name: dfs_sum_heuristic
+    rationale: |
+      Stochastic depth-first search where child nodes are selected via softmax-weighted
+      sampling over sum-distance to target. Models participants who prefer states that
+      feel "numerically closer" to 24.
+  - name: factor_biased_search
+    rationale: |
+      Greedy stochastic search biased toward states containing factors or multiples of
+      the target. Captures the human tendency to work toward known "intermediate goals"
+      (e.g., 8×3=24) by preferring numbers that cleanly divide or multiply to 24.

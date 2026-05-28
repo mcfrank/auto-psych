@@ -1,6 +1,12 @@
 """
 Annotate a list of candidate stimuli with Expected Information Gain (EIG).
 
+DEFERRED: not yet PyMC-aware. Currently calls the deprecated
+`get_model_predictions` (callable-model API). Theorist models are now PyMC
+models; rewriting EIG to use prior- or posterior-predictive `p_left` samples
+from `src.models.pymc_inference.FittedModel.predict_p_left` is follow-up work.
+Calling this module against a directory of PyMC theorist models will raise.
+
 Each stimulus must have "sequence_a" and "sequence_b" keys. EIG is added as a
 float field on each item. Stimuli are sorted by EIG descending on output.
 

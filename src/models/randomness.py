@@ -1,8 +1,11 @@
 """
 Shared types and prediction API for subjective-randomness-style models.
-Models are implemented by the theorist (1_theory/<name>.py) or by the project
-(projects/<project>/ground_truth_models.py for --ground-truth-model only).
-No global model library in src.
+
+DEPRECATED for theorist models: theorist models are now PyMC models, fitted
+via MCMC; use `src.models.pymc_inference.fit_models_cached` and
+`FittedModel.predict_p_left(...)` instead of `get_model_predictions(...)`.
+This module is retained for ground-truth callable models and for not-yet-migrated
+call sites (EIG, full-collect path).
 """
 
 from __future__ import annotations

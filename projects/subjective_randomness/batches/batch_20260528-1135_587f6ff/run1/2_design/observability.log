@@ -1,0 +1,10 @@
+[2026-05-28T18:39:45Z] === 2_design start ===
+[2026-05-28T18:39:45Z] project_id='subjective_randomness' run_id=1 attempt=1
+[2026-05-28T18:39:45Z] registry_path=/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260528-1135_587f6ff/run1/model_registry.yaml exists=True
+[2026-05-28T18:39:45Z] model_names=['rational_markov', 'alternation_heuristic', 'proportion_heuristic']
+[2026-05-28T18:39:45Z] model_weights={'alternation_heuristic': 0.25, 'proportion_heuristic': 0.25, 'rational_markov': 0.25}
+[2026-05-28T18:39:45Z] total_trials=30 allowed_sequence_lengths=[4, 6, 8]
+[2026-05-28T18:39:45Z] invoking LLM...
+[2026-05-28T18:40:25Z] LLM response length=3362 chars
+[2026-05-28T18:40:25Z] extract_fenced_blocks: n_blocks=1 first_block_len=3348
+[2026-05-28T18:40:25Z] wrote design_script.py; running script...

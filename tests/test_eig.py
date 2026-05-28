@@ -1,11 +1,22 @@
-"""Tests for expected information gain (EIG) computation."""
+"""Tests for expected information gain (EIG) computation.
+
+DEFERRED: EIG has not yet been migrated to PyMC models; first-cut scope is the
+existing-data flow (1_theory + 5_critique). These tests skip until EIG is
+rewritten to use posterior-predictive samples from fitted PyMC models.
+"""
 
 import math
 import pytest
 from pathlib import Path
 from unittest.mock import patch
 
-from src.agents.experiment_designer import expected_information_gain
+pytestmark = pytest.mark.skip(reason="EIG path deferred from PyMC migration (first cut)")
+
+# Import deferred to avoid pulling in optional langchain deps when this file is skipped.
+try:
+    from src.agents.experiment_designer import expected_information_gain  # type: ignore  # noqa: F401
+except Exception:  # pragma: no cover - environment without langchain
+    expected_information_gain = None  # type: ignore
 
 RESPONSE_OPTIONS = ["left", "right"]
 

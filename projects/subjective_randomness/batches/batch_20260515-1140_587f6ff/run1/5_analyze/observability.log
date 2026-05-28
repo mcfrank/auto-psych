@@ -1,0 +1,10 @@
+[2026-05-15T18:40:22Z] === 5_analyze start ===
+[2026-05-15T18:40:22Z] project_id='subjective_randomness' run_id=1 attempt=1
+[2026-05-15T18:40:22Z] data_path='/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1140_587f6ff/run1/4_collect/responses.csv'
+[2026-05-15T18:40:22Z] wrote aggregate.csv, summary_stats.json, model_correlations.yaml (n_stimuli=30)
+[2026-05-15T18:40:22Z] === 5_analyze end ===
+[2026-05-15T18:40:49Z] === 5_analyze start ===
+[2026-05-15T18:40:49Z] project_id='subjective_randomness' run_id=1 attempt=1
+[2026-05-15T18:40:49Z] data_path='/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1140_587f6ff/run1/4_collect/responses.csv'
+[2026-05-15T18:40:49Z] wrote aggregate.csv, summary_stats.json, model_correlations.yaml (n_stimuli=30)
+[2026-05-15T18:40:49Z] === 5_analyze end ===

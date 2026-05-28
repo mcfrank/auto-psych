@@ -1,10 +1,13 @@
 """Tests for shared correlation utilities (pearson_r, model_data_correlations)."""
 
-import pytest
+import csv
 from pathlib import Path
 from unittest.mock import patch
 
-from src.stats.correlations import pearson_r, model_data_correlations
+import numpy as np
+import pytest
+
+from src.stats.correlations import model_data_correlations, pearson_r
 
 
 def test_pearson_r_perfect_positive():
@@ -22,60 +25,71 @@ def test_pearson_r_perfect_negative():
 
 
 def test_pearson_r_uncorrelated():
-    """Uncorrelated (orthogonal) => r ≈ 0."""
+    """Constant input => r = 0 (undefined)."""
     x = [1.0, 2.0, 3.0, 4.0, 5.0]
-    y = [1.0, 1.0, 1.0, 1.0, 1.0]  # constant
+    y = [1.0, 1.0, 1.0, 1.0, 1.0]
     assert pearson_r(x, y) == 0.0
 
 
 def test_pearson_r_constant_input():
-    """Constant input => r = 0 (undefined)."""
     assert pearson_r([1.0, 1.0, 1.0], [2.0, 3.0, 4.0]) == 0.0
     assert pearson_r([1.0, 2.0], [1.0, 1.0]) == 0.0
 
 
 def test_pearson_r_length_mismatch():
-    """Length mismatch => 0."""
     assert pearson_r([1.0, 2.0], [1.0, 2.0, 3.0]) == 0.0
 
 
 def test_pearson_r_too_short():
-    """n < 2 => 0."""
     assert pearson_r([1.0], [2.0]) == 0.0
 
 
-def test_model_data_correlations_empty_aggregate():
-    """Empty aggregate => all correlations 0."""
-    lines = ["sequence_a,sequence_b,chose_left_pct,n\n"]
-    result = model_data_correlations(lines, ["m1", "m2"], None, ["left", "right"])
-    assert result == {"m1": 0.0, "m2": 0.0}
+def test_model_data_correlations_empty_models_returns_empty(tmp_path):
+    csv_path = tmp_path / "responses.csv"
+    csv_path.write_text("a,b,chose_left\n1,2,0\n")
+    assert model_data_correlations([], tmp_path, csv_path) == {}
 
 
-def test_model_data_correlations_synthetic():
-    """Synthetic aggregate and mocked predictions => consistent correlations."""
-    # Three stimuli; we mock get_model_predictions so m1 predicts [1,0,1], m2 [0,1,0]; observed [1,0,1] => m1 r=1, m2 r=-1
-    lines = [
-        "sequence_a,sequence_b,chose_left_pct,n\n",
-        "A,B,1.0,10\n",
-        "C,D,0.0,10\n",
-        "E,F,1.0,10\n",
+def test_model_data_correlations_with_mocked_fits(tmp_path):
+    """Stub fit_models_cached + a fake FittedModel so we can assert the
+    correlation logic without running MCMC."""
+    csv_path = tmp_path / "responses.csv"
+    rows = [
+        {"x": "0", "chose_left": "1"},
+        {"x": "0", "chose_left": "1"},  # stimulus 0: observed = 1.0
+        {"x": "1", "chose_left": "0"},
+        {"x": "1", "chose_left": "0"},  # stimulus 1: observed = 0.0
+        {"x": "2", "chose_left": "1"},
+        {"x": "2", "chose_left": "1"},  # stimulus 2: observed = 1.0
     ]
-    aggregate_lines = [l.strip() for l in lines]
+    with csv_path.open("w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["x", "chose_left"])
+        w.writeheader()
+        w.writerows(rows)
 
-    def mock_predictions(stimulus, response_options, model_names, theorist_dir):
-        # Return fixed predictions per stimulus index (we don't have index, so use stimulus as key)
-        key = stimulus
-        if key == ("A", "B"):
-            return {"m1": {"left": 1.0, "right": 0.0}, "m2": {"left": 0.0, "right": 1.0}}
-        if key == ("C", "D"):
-            return {"m1": {"left": 0.0, "right": 1.0}, "m2": {"left": 1.0, "right": 0.0}}
-        if key == ("E", "F"):
-            return {"m1": {"left": 1.0, "right": 0.0}, "m2": {"left": 0.0, "right": 1.0}}
-        return {"m1": {"left": 0.5, "right": 0.5}, "m2": {"left": 0.5, "right": 0.5}}
+    import pymc as pm
+    with pm.Model() as fake_model:
+        x_data = pm.Data("x", np.zeros(1, dtype="int64"))
+        y_data = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+        pm.Bernoulli("response", p=0.5, observed=y_data)
 
-    with patch("src.stats.correlations.get_model_predictions", side_effect=mock_predictions):
-        result = model_data_correlations(aggregate_lines, ["m1", "m2"], None, ["left", "right"])
+    class FakeFitted:
+        def __init__(self, model, preds):
+            self.model = model
+            self._preds = preds
 
-    # Observed = [1, 0, 1]. m1 preds = [1, 0, 1] => r = 1. m2 preds = [0, 1, 0] => r = -1.
+        def predict_p_left(self, stim_data, **kwargs):
+            xs = list(stim_data["x"])
+            return np.array([self._preds[int(v)] for v in xs])
+
+    fake_m1 = FakeFitted(fake_model, {0: 1.0, 1: 0.0, 2: 1.0})  # matches observed → r=+1
+    fake_m2 = FakeFitted(fake_model, {0: 0.0, 1: 1.0, 2: 0.0})  # anti-correlated → r=-1
+
+    with patch(
+        "src.models.pymc_inference.fit_models_cached",
+        return_value={"m1": fake_m1, "m2": fake_m2},
+    ):
+        result = model_data_correlations(["m1", "m2"], tmp_path, csv_path)
+
     assert abs(result["m1"] - 1.0) < 1e-5
     assert abs(result["m2"] + 1.0) < 1e-5
