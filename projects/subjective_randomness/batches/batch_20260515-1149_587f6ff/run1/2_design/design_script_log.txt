@@ -1,0 +1,96 @@
+Script failed: CompileError: Compilation failed (return status=1):
+/Users/ben/mambaforge/envs/analysis/bin/clang++ -dynamiclib -g -O3 -fno-math-errno -Wno-unused-label -Wno-unused-variable -Wno-write-strings -Wno-c++11-narrowing -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -fPIC -undefined dynamic_lookup -ld64 -I/Users/ben/mambaforge/envs/analysis/lib/python3.11/site-packages/numpy/_core/include -I/Users/ben/mambaforge/envs/analysis/include/python3.11 -I/Users/ben/mambaforge/envs/analysis/lib/python3.11/site-packages/pytensor/link/c/c_code -L/Users/ben/mambaforge/envs/analysis/lib -fvisibility=hidden -o /Users/ben/.pytensor/compiledir_macOS-26.3.1-arm64-arm-64bit-arm-3.11.5-64/tmpczchno8d/mc5d88e8dc18faeba04f18b2ae819007d68babe6da825f68b5dc6bede633fc176.so /Users/ben/.pytensor/compiledir_macOS-26.3.1-arm64-arm-64bit-arm-3.11.5-64/tmpczchno8d/mod.cpp
+ld: -lto_library library filename must be 'libLTO.dylib'
+clang-16: error: linker command failed with exit code 1 (use -v to see invocation)
+
+Apply node that caused the error: ExpandDims{axis=0}(tau)
+Toposort index: 1
+Inputs types: [TensorType(float64, shape=())]
+
+Backtrace when the node is created (use PyTensor flag traceback__limit=N to make it longer):
+  File "/Users/ben/Documents/auto-psych/src/agents/experiment_designer.py", line 144, in run_experiment_designer
+    design_script_ok = _run_design_script(out_dir, theorist_dir, model_names, model_weights, total_trials, allowed_lengths, project_id=project_id)
+  File "/Users/ben/Documents/auto-psych/src/agents/experiment_designer.py", line 254, in _run_design_script
+    eig_fn = _make_eig_dispatch(theorist_dir, model_names, project_id)
+  File "/Users/ben/Documents/auto-psych/src/agents/experiment_designer.py", line 222, in _make_eig_dispatch
+    response_col = observed_response_data(load_pymc_model_cached(model_names[0], theorist_dir))
+  File "/Users/ben/Documents/auto-psych/src/models/pymc_inference.py", line 207, in load_pymc_model_cached
+    _MODEL_CACHE[key] = load_pymc_model(name, Path(models_dir))
+  File "/Users/ben/Documents/auto-psych/src/models/pymc_inference.py", line 65, in load_pymc_model
+    spec.loader.exec_module(mod)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1149_587f6ff/run1/1_theory/rational_representativeness.py", line 42, in <module>
+
+HINT: Use a linker other than the C linker to print the inputs' shapes and strides.
+HINT: Use the PyTensor flag `exception_verbosity=high` for a debug print-out and storage map footprint of this Apply node.
+
+=== stdout ===
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_7hox_e7q
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_3snbtvc5
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_0rl483i4
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_5c6q7gjh
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_s214s16a
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_cezv7qcx
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_53qvvbhx
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_itcn_njx
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_q2ied0rn
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_w00siw09
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_vnwyx82h
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_gkx71eyj
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_y820kh8u
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_tg3y_3k1
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_oaj79aok
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_uyh0pdgi
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_m_p802g0
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_65afv0x0
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error__11o3get
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_3j74ms4j
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_35jquq35
+library to_library is not found.
+
+You can find the C code in this temporary file: /var/folders/j2/m8twlxj12xdg_b0wm25qx_x40000gn/T/pytensor_compilation_error_94q1lyq7
+library to_library is not found.
+
+=== stderr ===

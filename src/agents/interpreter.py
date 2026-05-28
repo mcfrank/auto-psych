@@ -12,7 +12,6 @@ from src.console_log import agent_header, log_status
 from src.observability import agent_log, write_transcript
 from src.agents.llm_output_parsing import extract_yaml_from_response, ensure_str
 from src.models.loader import get_model_names_from_manifest
-from src.models.randomness import get_model_predictions
 from src.registry import (
     DEFAULT_RESERVED_FOR_NEW,
     write_registry,
@@ -157,19 +156,50 @@ def run_interpreter(state: Dict[str, Any]) -> Dict[str, Any]:
         model_names = get_model_names_from_manifest(manifest, theorist_dir)
     # model_names from manifest (theorist's models only); no fallback
 
-    # Compute model predictions for each stimulus in aggregate
-    model_predictions = {}
-    for line in aggregate_lines[1:]:  # skip header
-        parts = line.split(",")
-        if len(parts) >= 3:
-            seq_a, seq_b = parts[0], parts[1]
-            stim = (seq_a, seq_b)
-            preds = get_model_predictions(stim, RESPONSE_OPTIONS, model_names, theorist_dir)
-            for m, probs in preds.items():
-                model_predictions.setdefault(m, []).append(probs.get("left", 0.5))
-
-    # Correlations are computed in code (merged aggregate); interpreter prompt receives these numbers only—no hand computation by LLM.
-    correlations = model_data_correlations(aggregate_lines, model_names, theorist_dir, RESPONSE_OPTIONS)
+    # Restore correlations and per-model predictions via the PyMC bridge,
+    # using the most recently collected (preprocessed) responses CSV. Pooling
+    # across runs for fitting is a future enhancement; we currently fit on the
+    # current run's data only.
+    model_predictions: Dict[str, List[float]] = {}
+    correlations: Dict[str, float] = {m: 0.0 for m in model_names}
+    responses_path_str = state.get("simulated_data_path")
+    if responses_path_str and model_names and theorist_dir is not None:
+        responses_path = Path(responses_path_str)
+        if responses_path.exists():
+            try:
+                from src.stats.correlations import model_data_correlations  # type: ignore
+                from src.models.pymc_inference import (  # type: ignore
+                    fit_models_cached,
+                    make_stim_data,
+                    observed_response_data,
+                    pm_data_inputs,
+                )
+                correlations = model_data_correlations(
+                    model_names=model_names,
+                    models_dir=theorist_dir,
+                    responses_path=responses_path,
+                )
+                fits = fit_models_cached(
+                    model_names, models_dir=theorist_dir, responses_path=responses_path,
+                )
+                if fits:
+                    first_model = next(iter(fits.values())).model
+                    response_col = observed_response_data(first_model)
+                    feature_cols = [c for c in pm_data_inputs(first_model) if c != response_col]
+                    rows = list(__import__("csv").DictReader(responses_path.open(encoding="utf-8")))
+                    seen_keys = set()
+                    unique_rows = []
+                    for r in rows:
+                        key = tuple(r[c] for c in feature_cols)
+                        if key not in seen_keys:
+                            seen_keys.add(key)
+                            unique_rows.append({**{c: r[c] for c in feature_cols}, response_col: "0"})
+                    for m, fitted in fits.items():
+                        stim_data = make_stim_data(fitted.model, unique_rows)
+                        p_arr = fitted.predict_p_left(stim_data)
+                        model_predictions[m] = [float(x) for x in p_arr]
+            except Exception as e:  # pragma: no cover - log and continue with empty preds
+                agent_log(out_dir, f"PyMC correlation/prediction step failed: {type(e).__name__}: {e}")
     (out_dir / "model_correlations.yaml").write_text(
         yaml.dump({"correlations": correlations}, default_flow_style=False, sort_keys=False),
         encoding="utf-8",

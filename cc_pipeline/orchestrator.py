@@ -137,32 +137,29 @@ def write_context(
         lines += ["Response files (all experiments, pass all to --responses):"]
         for p in all_responses:
             lines.append(f"- `{p}`")
-        # Embed the exact posterior command so the agent doesn't have to construct it
+        # Embed the exact posterior command so the agent doesn't have to construct it.
+        # PyMC bridge auto-detects feature columns and response from pm.Data names;
+        # the legacy --stimulus-col-a/-b/--response-col flags are no longer used
+        # for posterior (only PPC still needs them for aggregation keys).
         responses_str = " \\\n        ".join(all_responses)
         complexity_flag = (
             f" \\\n    --complexity-prior {complexity_prior_const}"
             if complexity_prior_const != 0.0 else ""
         )
-        col_flags = ""
-        if stimulus_col_a != "sequence_a" or stimulus_col_b != "sequence_b" or response_col != "chose_left":
-            col_flags = (
-                f" \\\n    --stimulus-col-a {stimulus_col_a}"
-                f" \\\n    --stimulus-col-b {stimulus_col_b}"
-                f" \\\n    --response-col {response_col}"
-            )
+        cache_dir = exp_dir / "cognitive_models"
         posterior_cmd = (
             f"cd {REPO_ROOT} && python3 -m src.model_comparison.posterior \\\n"
             f"    --responses \\\n        {responses_str} \\\n"
             f"    --models-dir {exp_dir / 'cognitive_models'} \\\n"
-            f"    --out {exp_dir / 'critique' / 'model_posterior.json'}"
-            f"{col_flags}"
+            f"    --out {exp_dir / 'critique' / 'model_posterior.json'} \\\n"
+            f"    --cache-dir {cache_dir}"
             f"{complexity_flag}"
         )
         lines += ["", "## Posterior command (run this exactly)", "", "```bash", posterior_cmd, "```"]
         if stimulus_col_a != "sequence_a" or stimulus_col_b != "sequence_b" or response_col != "chose_left":
             lines += [
                 "",
-                "## Column config (use these flags in all PPC commands too)",
+                "## Column config (PPC aggregation only — posterior is auto-detected from pm.Data names)",
                 "",
                 f"- stimulus_col_a: `{stimulus_col_a}`",
                 f"- stimulus_col_b: `{stimulus_col_b}`",
@@ -413,7 +410,14 @@ def validate_cc_output(agent_key: str, exp_dir: Path) -> tuple[bool, str]:
 
 def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
     sys.path.insert(0, str(REPO_ROOT))
-    from src.models.loader import get_model_callable, get_model_names_from_manifest  # type: ignore
+    import numpy as np
+    import pymc as pm
+    from src.models.loader import get_model_names_from_manifest  # type: ignore
+    from src.models.pymc_inference import (  # type: ignore
+        load_pymc_model,
+        observed_response_data,
+        pm_data_inputs,
+    )
 
     theorist_dir = exp_dir / "cognitive_models"
     manifest_path = theorist_dir / "models_manifest.yaml"
@@ -433,31 +437,48 @@ def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
     for name in names:
         if name not in loadable:
             return False, f"Model '{name}' has no {theorist_dir}/{name}.py (theorist must provide each model file)"
-    # Test call each model
-    test_stim_file = exp_dir.parent / "test_stimulus.json"
-    if test_stim_file.exists():
-        try:
-            test_stimulus = tuple(json.loads(test_stim_file.read_text(encoding="utf-8")))
-        except (json.JSONDecodeError, ValueError) as e:
-            print(f"  [warn] Invalid test_stimulus.json: {e}; using defaults", flush=True)
-            test_stimulus = ("HHTHTTHT", "HTHTHTHT")
-    else:
-        test_stimulus = ("HHTHTTHT", "HTHTHTHT")
-    response_options = ["left", "right"]
+
     for name in names:
         try:
-            fn = get_model_callable(name, theorist_dir)
-            preds = fn(test_stimulus, response_options)
+            model = load_pymc_model(name, theorist_dir)
         except Exception as e:
-            return False, f"Model '{name}' raised: {e}"
-        if not isinstance(preds, dict):
-            return False, f"Model '{name}' did not return a dict"
-        for k in response_options:
-            if k not in preds:
-                return False, f"Model '{name}' missing key '{k}'"
-        total = sum(preds[k] for k in response_options)
-        if abs(total - 1.0) > 1e-5:
-            return False, f"Model '{name}' probabilities sum to {total}"
+            return False, f"Model '{name}' failed to import: {e}"
+
+        inputs = pm_data_inputs(model)
+        if not inputs:
+            return False, f"Model '{name}' has no pm.Data containers (need at least stimulus inputs + observed response)"
+        if "p_left" not in model.named_vars:
+            return False, f"Model '{name}' missing required `pm.Deterministic('p_left', ...)`"
+
+        try:
+            response_col = observed_response_data(model)
+        except Exception as e:
+            return False, f"Model '{name}' observed-response check failed: {e}"
+
+        # Smoke check: prior-predictive on tiny dummy data (no MCMC, just shape/dtype validation).
+        # Use non-zero dummies so models with divisions or logs don't hit 0/0 or log(0).
+        dummy = {}
+        for col in inputs:
+            placeholder = model.named_vars[col].get_value()
+            dtype = placeholder.dtype
+            if col == response_col:
+                if np.issubdtype(dtype, np.integer):
+                    dummy[col] = np.array([0, 1, 0, 1], dtype=dtype)
+                else:
+                    dummy[col] = np.array([0.0, 1.0, 0.0, 1.0], dtype=dtype)
+            else:
+                # Sane non-zero values: positive integers / mid-range floats.
+                if np.issubdtype(dtype, np.integer):
+                    dummy[col] = np.array([4, 3, 2, 5], dtype=dtype)
+                else:
+                    dummy[col] = np.array([0.5, 0.3, 0.7, 0.4], dtype=dtype)
+        try:
+            with model:
+                pm.set_data(dummy)
+                pm.sample_prior_predictive(draws=10, random_seed=0)
+        except Exception as e:
+            return False, f"Model '{name}' prior-predictive smoke check failed: {e}"
+
     return True, f"Theory valid: {names}"
 
 

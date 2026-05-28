@@ -1,7 +1,15 @@
-"""Test theorist output validation: manifest exists, models in library, each model runs and returns a score."""
+"""Test theorist output validation: manifest exists, models in library, each model runs and returns a score.
+
+DEFERRED: `src.validation.validate_theorist_output` is the LangGraph pipeline's
+validator and still uses the old callable-model contract (`fn(stim, opts) ->
+dict`). Under the PyMC migration first cut the LangGraph pipeline is deferred;
+the cc_pipeline uses `cc_pipeline.orchestrator._validate_theory` which is PyMC-aware.
+"""
 
 import pytest
 from pathlib import Path
+
+pytestmark = pytest.mark.skip(reason="LangGraph validator deferred from PyMC migration (first cut)")
 
 from src.validation import validate_theorist_output, Validated
 

@@ -16,8 +16,25 @@ DEFAULT_LLM_TIMEOUT = 300
 
 
 def get_llm(timeout: int | None = None):
-    """Return ChatGoogleGenerativeAI configured for gemini-3.1-pro-preview."""
-    api_key = os.environ.get("GOOGLE_API_KEY") or _read_secret("GOOGLE_API_KEY")
+    """Return ChatGoogleGenerativeAI configured for gemini-3.1-pro-preview.
+
+    Picks the API key from the first env var that is set, in order:
+    GOOGLE_API_KEY, GEMINI_API_KEY, COCOLAB_GEMINI_API_KEY. Falls back to the
+    `.secrets` file (any of those three keys).
+    """
+    env_var_candidates = ("GOOGLE_API_KEY", "GEMINI_API_KEY", "COCOLAB_GEMINI_API_KEY")
+    api_key = None
+    for var in env_var_candidates:
+        v = os.environ.get(var)
+        if v:
+            api_key = v
+            break
+    if api_key is None:
+        for var in env_var_candidates:
+            v = _read_secret(var)
+            if v:
+                api_key = v
+                break
     kwargs = dict(
         model="gemini-3.1-pro-preview",
         google_api_key=api_key,

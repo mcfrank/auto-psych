@@ -99,30 +99,36 @@ def run_ppc(
     stimulus_col_a: str = "sequence_a",
     stimulus_col_b: str = "sequence_b",
     response_col: str = "chose_left",
+    cache_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
-    """
-    Run a posterior predictive check for one model × one test statistic.
-    The model must be a theorist model in theorist_dir (cognitive_models/).
+    """Posterior predictive check for one PyMC model × one test statistic.
 
-    responses_paths: if provided, pool these response CSVs instead of
-                     exp_dir/data/responses.csv (use to pool across experiments).
-    Stimuli are derived from the unique (sequence_a, sequence_b) pairs present
-    in the observed responses — no separate stimuli file is needed.
+    1. Fit the model (MCMC) on the pooled observed responses.
+    2. Sample `n_samples` posterior-predictive datasets — one synthetic
+       response array per draw, attached to the observed rows so the
+       stimulus identifier columns (stimulus_col_a, stimulus_col_b) are
+       preserved for aggregation.
+    3. Compute the test statistic on each synthetic aggregate; empirical
+       one-tailed p-value compares to t_observed.
 
-    Returns a dict with t_observed, p_value, etc.
+    `n_samples` must be ≤ chains × draws of the fitted model's posterior;
+    raises if more are requested.
     """
-    from src.agents.collect import _generate_from_models  # type: ignore
+    from src.models.pymc_inference import (  # type: ignore
+        fit_models_cached,
+        make_stim_data,
+        observed_response_data,
+    )
 
     exp_dir = Path(exp_dir)
     if theorist_dir is None:
         theorist_dir = exp_dir / "cognitive_models"
 
-    # Load test statistic
     test_stat_fn = load_test_stat(Path(stat_file))
 
-    # Load and pool observed responses
+    # Load and pool observed responses (write a single pooled CSV for the fitter)
     if responses_paths:
-        observed_rows = []
+        observed_rows: List[Dict[str, Any]] = []
         for p in responses_paths:
             if not Path(p).exists():
                 raise FileNotFoundError(f"responses.csv not found at {p}")
@@ -132,48 +138,51 @@ def run_ppc(
         if not responses_path.exists():
             raise FileNotFoundError(f"responses.csv not found at {responses_path}")
         observed_rows = list(csv.DictReader(open(responses_path, encoding="utf-8")))
+    if not observed_rows:
+        raise ValueError("No observed responses; cannot run PPC.")
+
     observed_agg = aggregate_rows(observed_rows, stimulus_col_a, stimulus_col_b, response_col)
-
-    # Derive unique stimuli from responses (preserves all stimuli seen across experiments)
-    seen = set()
-    stimuli = []
-    for r in observed_rows:
-        key = (r[stimulus_col_a], r[stimulus_col_b])
-        if key not in seen:
-            seen.add(key)
-            stimuli.append({"sequence_a": r[stimulus_col_a], "sequence_b": r[stimulus_col_b]})
-
-    # Infer n_participants as average responses per stimulus (handles pooled data)
-    n_participants = max(1, len(observed_rows) // len(stimuli)) if stimuli else 1
-
-    # Compute observed test statistic
     t_observed = float(test_stat_fn(observed_agg))
 
-    # Resample: pass single-element list to pin all participants to this model
-    null_values = []
-    for _ in range(n_samples):
-        synthetic_rows = _generate_from_models(
-            stimuli=stimuli,
-            model_names=[model_name],
-            n_participants=n_participants,
-            theorist_dir=theorist_dir,
-        )
-        # Rename collect.py's hardcoded keys to the configured column names
-        if stimulus_col_a != "sequence_a" or stimulus_col_b != "sequence_b" or response_col != "chose_left":
-            synthetic_rows = [
-                {**row,
-                 stimulus_col_a: row["sequence_a"],
-                 stimulus_col_b: row["sequence_b"],
-                 response_col: row["chose_left"]}
-                for row in synthetic_rows
-            ]
-        synthetic_agg = aggregate_rows(synthetic_rows, stimulus_col_a, stimulus_col_b, response_col)
-        t_synthetic = float(test_stat_fn(synthetic_agg))
-        null_values.append(t_synthetic)
+    # If multiple response files, write a pooled CSV for the fitter.
+    if responses_paths and len(responses_paths) > 1:
+        import tempfile
+        pooled_path = Path(tempfile.mkstemp(prefix="ppc_pooled_", suffix=".csv")[1])
+        fieldnames = list(observed_rows[0].keys())
+        with pooled_path.open("w", encoding="utf-8", newline="") as f:
+            w = csv.DictWriter(f, fieldnames=fieldnames)
+            w.writeheader()
+            w.writerows(observed_rows)
+        fit_csv = pooled_path
+    elif responses_paths:
+        fit_csv = Path(responses_paths[0])
+    else:
+        fit_csv = exp_dir / "data" / "responses.csv"
 
-    # Empirical p-value (one-tailed: how often does the model produce values >= observed)
+    fits = fit_models_cached(
+        [model_name], models_dir=theorist_dir, responses_path=fit_csv, cache_dir=cache_dir,
+    )
+    fitted = fits[model_name]
+    pymc_response_col = observed_response_data(fitted.model)
+
+    # Build stim_data for posterior-predictive sampling: one row per observed trial,
+    # so synthetic responses align 1:1 with observed_rows and inherit their
+    # stimulus_col_a/b values for aggregation.
+    stim_data = make_stim_data(fitted.model, observed_rows)
+    synthetic = fitted.sample_synthetic_responses(stim_data, n_datasets=n_samples)
+    # shape: (n_samples, n_observed_trials)
+
+    null_values = []
+    for i in range(n_samples):
+        synth_responses = synthetic[i]
+        synthetic_rows = [
+            {**observed_rows[j], response_col: int(synth_responses[j])}
+            for j in range(len(observed_rows))
+        ]
+        synthetic_agg = aggregate_rows(synthetic_rows, stimulus_col_a, stimulus_col_b, response_col)
+        null_values.append(float(test_stat_fn(synthetic_agg)))
+
     n_extreme = sum(1 for t in null_values if t >= t_observed)
-    # +1 in numerator and denominator avoids p=0 with finite samples
     p_value = (n_extreme + 1) / (n_samples + 1)
 
     return {
@@ -189,6 +198,7 @@ def run_ppc(
         "n_samples": n_samples,
         "n_extreme": n_extreme,
         "significant_at_0.05": p_value < 0.05,
+        "pymc_response_col": pymc_response_col,
     }
 
 
@@ -206,6 +216,7 @@ def main() -> None:
     parser.add_argument("--stimulus-col-a", default="sequence_a")
     parser.add_argument("--stimulus-col-b", default="sequence_b")
     parser.add_argument("--response-col", default="chose_left")
+    parser.add_argument("--cache-dir", default=None, help="Directory to persist .nc model fits (optional)")
     args = parser.parse_args()
 
     theorist_dir = Path(args.theorist_dir) if args.theorist_dir else None
@@ -219,6 +230,7 @@ def main() -> None:
         stimulus_col_a=args.stimulus_col_a,
         stimulus_col_b=args.stimulus_col_b,
         response_col=args.response_col,
+        cache_dir=Path(args.cache_dir) if args.cache_dir else None,
     )
     print(json.dumps(result, indent=2))
 

@@ -46,16 +46,20 @@ def run_data_analyst(state: Dict[str, Any]) -> Dict[str, Any]:
         aggregate, summary = _aggregate_csv(Path(data_path))
         (out_dir / "aggregate.csv").write_text(aggregate, encoding="utf-8")
         (out_dir / "summary_stats.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
-        # Model–data correlations: Pearson r per model (predicted P(left) vs observed proportion per stimulus)
+        # Model–data correlations: Pearson r per model (posterior-mean P(response==1)
+        # per unique stimulus vs observed response rate per unique stimulus).
         manifest_path = Path(state.get("theorist_manifest_path", ""))
         theorist_dir = manifest_path.parent if manifest_path else None
         model_names = []
         if manifest_path and manifest_path.exists():
             manifest = yaml.safe_load(manifest_path.read_text()) or {}
             model_names = get_model_names_from_manifest(manifest, theorist_dir)
-        agg_lines = aggregate.strip().split("\n")
-        if agg_lines:
-            correlations = model_data_correlations(agg_lines, model_names, theorist_dir, RESPONSE_OPTIONS)
+        if model_names and theorist_dir is not None:
+            correlations = model_data_correlations(
+                model_names=model_names,
+                models_dir=theorist_dir,
+                responses_path=Path(data_path),
+            )
             (out_dir / "model_correlations.yaml").write_text(
                 yaml.dump({"correlations": correlations}, default_flow_style=False, sort_keys=False),
                 encoding="utf-8",
