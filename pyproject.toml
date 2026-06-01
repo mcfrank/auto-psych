@@ -40,3 +40,6 @@ pymc = [
 [tool.pytest.ini_options]
 testpaths = ["tests", "src/pipelines/inner_loop/tests"]
 pythonpath = ["."]
+markers = [
+    "slow: tests that run MCMC (PyMC NUTS) — deselect with '-m \"not slow\"'",
+]

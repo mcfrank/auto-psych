@@ -1,40 +1,57 @@
-import csv
-import json
+"""Integration test: the outer loop's inner-model-loop step, PyMC contract.
 
+`run_inner_model_loop_programmatic` pools responses, fits the experiment's PyMC
+models by MCMC, scores them by ELPD-LOO, and exports the best model back into
+`cognitive_models/`. Slow (MCMC) — run with ``-m slow``.
+"""
+import json
+import shutil
+from pathlib import Path
+
+import pytest
 import yaml
 
 from src.pipelines.outer_loop.orchestrator import run_inner_model_loop_programmatic
 
+FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pymc_models"
 
-def test_inner_model_loop_exports_outer_pipeline_artifacts(tmp_path):
+
+@pytest.mark.slow
+def test_inner_model_loop_exports_best_pymc_model(tmp_path):
     exp_dir = tmp_path / "project" / "experiment1"
+
+    # Seed the experiment's model set with the two fixture PyMC models.
+    models_dir = exp_dir / "cognitive_models"
+    models_dir.mkdir(parents=True)
+    for name in ("bayesian_fair_coin", "representativeness"):
+        shutil.copyfile(FIXTURE_DIR / f"{name}.py", models_dir / f"{name}.py")
+    shutil.copyfile(FIXTURE_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml")
+
+    # Pooled responses already carry the feature columns the models read.
     data_dir = exp_dir / "data"
     data_dir.mkdir(parents=True)
-    with (data_dir / "responses.csv").open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(
-            f,
-            fieldnames=["participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"],
-        )
-        writer.writeheader()
-        writer.writerows(
-            [
-                {"participant_id": "p1", "trial_index": 0, "sequence_a": "HTHT", "sequence_b": "HHHH", "chose_left": 1},
-                {"participant_id": "p1", "trial_index": 1, "sequence_a": "HHHH", "sequence_b": "HTHT", "chose_left": 0},
-            ]
-        )
+    shutil.copyfile(FIXTURE_DIR / "responses.csv", data_dir / "responses.csv")
 
     loop_dir = run_inner_model_loop_programmatic(
         exp_dir,
         max_iterations=0,
         candidate_count=0,
+        fit_kwargs={"draws": 300, "tune": 300, "chains": 2},
     )
 
-    model_path = exp_dir / "cognitive_models" / "inner_loop_model.py"
-    manifest = yaml.safe_load((exp_dir / "cognitive_models" / "models_manifest.yaml").read_text())
-    posterior = json.loads((exp_dir / "model_loop" / "model_posterior.json").read_text())
-
     assert loop_dir == exp_dir / "model_loop"
-    assert model_path.exists()
-    assert manifest["models"][0]["name"] == "inner_loop_model"
-    assert (exp_dir / "model_loop" / "report.md").exists()
+
+    posterior = json.loads((loop_dir / "model_posterior.json").read_text())
     assert "posteriors" in posterior
+    assert set(posterior["posteriors"]) == {"bayesian_fair_coin", "representativeness"}
+    # Data were simulated from bayesian_fair_coin → it wins.
+    assert posterior["posteriors"]["bayesian_fair_coin"] > 0.7
+    assert (loop_dir / "report.md").read_text().strip()
+
+    # Best model exported verbatim as a PyMC model + listed in the manifest.
+    exported = models_dir / "inner_loop_model.py"
+    assert exported.exists()
+    assert "pm.Model" in exported.read_text()
+    manifest = yaml.safe_load((models_dir / "models_manifest.yaml").read_text())
+    names = [m["name"] if isinstance(m, dict) else m for m in manifest["models"]]
+    assert "inner_loop_model" in names

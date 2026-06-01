@@ -11,11 +11,13 @@ Responsibilities:
 from __future__ import annotations
 
 import csv
+import importlib.util
 import json
+import shutil
 import sys
 import time
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional
 
 import yaml
 
@@ -249,22 +251,66 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict]:
     return rows
 
 
-def _export_inner_loop_model(exp_dir: Path, loop_dir: Path, model_name: str = "inner_loop_model") -> Path:
-    from src.pipelines.inner_loop.history import _load_fit_result
+def _load_project_featurizer(project_dir: Path) -> Optional[Callable[[str, str], Dict[str, Any]]]:
+    """Return `featurize_stimulus` from `<project_dir>/preprocess.py` if present.
 
+    A project supplies this to turn raw stimulus fields (e.g. H/T sequences)
+    into the numeric feature columns its PyMC models read via `pm.Data`. Returns
+    None if the project has no preprocess module — then responses are assumed to
+    already carry the feature columns.
+    """
+    path = project_dir / "preprocess.py"
+    if not path.exists():
+        return None
+    spec = importlib.util.spec_from_file_location(f"_preprocess_{project_dir.name}", path)
+    if spec is None or spec.loader is None:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return getattr(mod, "featurize_stimulus", None)
+
+
+def _write_feature_csv(
+    rows: List[Dict[str, Any]],
+    featurize: Optional[Callable[[str, str], Dict[str, Any]]],
+    out_path: Path,
+) -> Path:
+    """Write pooled responses to `out_path`, merging in derived feature columns.
+
+    If `featurize` is given and a row has `sequence_a`/`sequence_b`, its numeric
+    features are added; otherwise the row is written as-is (already featurized).
+    """
+    out_rows: List[Dict[str, Any]] = []
+    for r in rows:
+        row = dict(r)
+        if featurize is not None and "sequence_a" in r and "sequence_b" in r:
+            row.update(featurize(r["sequence_a"], r["sequence_b"]))
+        out_rows.append(row)
+    if not out_rows:
+        raise ValueError("No rows to write to feature CSV")
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fieldnames = list(out_rows[0].keys())
+    with out_path.open("w", newline="", encoding="utf-8") as f:
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(out_rows)
+    return out_path
+
+
+def _export_inner_loop_model(exp_dir: Path, loop_dir: Path, model_name: str = "inner_loop_model") -> Path:
+    """Copy the inner loop's best PyMC model into `cognitive_models/` + manifest.
+
+    The exported file is the winning PyMC model verbatim (a module-level
+    `model: pm.Model`), so the next experiment's theorist and the comparison
+    machinery consume it under the same contract as any other model.
+    """
     best_model = loop_dir / "best_model.py"
-    best_fit = _load_fit_result(loop_dir / "best_fit.json")
+    if not best_model.exists():
+        raise FileNotFoundError(f"Inner loop did not produce {best_model}")
     out_dir = exp_dir / "cognitive_models"
     out_dir.mkdir(parents=True, exist_ok=True)
     model_path = out_dir / f"{model_name}.py"
-    model_path.write_text(
-        best_model.read_text(encoding="utf-8")
-        + "\n\n"
-        + f"FITTED_PARAMS = {best_fit.params!r}\n\n"
-        + f"def {model_name}(stimulus, response_options):\n"
-        + "    return cognitive_model(stimulus, response_options, FITTED_PARAMS)\n",
-        encoding="utf-8",
-    )
+    shutil.copyfile(best_model, model_path)
 
     manifest_path = out_dir / "models_manifest.yaml"
     manifest = {"models": []}
@@ -275,7 +321,7 @@ def _export_inner_loop_model(exp_dir: Path, loop_dir: Path, model_name: str = "i
     models.append(
         {
             "name": model_name,
-            "rationale": "Best model found by the inner model-improvement loop.",
+            "rationale": "Best PyMC model found by the inner model-improvement loop.",
         }
     )
     manifest["models"] = models
@@ -288,43 +334,38 @@ def run_inner_model_loop_programmatic(
     *,
     max_iterations: int,
     candidate_count: int,
-    api_key: str | None = None,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+    backend: Optional[str] = None,
 ) -> Path:
-    """Run the abstract inner cognitive-model loop over pooled outer-loop data."""
-    from src.pipelines.inner_loop.adapters import subjective_randomness_dataset
-    from src.pipelines.inner_loop.orchestrator import run_pipeline as run_inner_loop
+    """Run the PyMC inner model loop over pooled outer-loop data.
+
+    Pools responses across experiments, featurizes them (via the project's
+    `preprocess.py` if present), seeds the model set from this experiment's
+    `cognitive_models/` (the theorist's PyMC models), fits and compares them by
+    ELPD-LOO, and exports the best model back into `cognitive_models/`.
+    """
+    from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 
     rows = _pooled_response_rows(exp_dir)
     if not rows:
         raise ValueError(f"No response rows found for inner loop under {exp_dir.parent}")
 
     loop_dir = exp_dir / "model_loop"
-    data = subjective_randomness_dataset(rows, label=f"{exp_dir.parent.name}:{exp_dir.name}")
-    fit = run_inner_loop(
-        data,
+    loop_dir.mkdir(parents=True, exist_ok=True)
+    featurize = _load_project_featurizer(exp_dir.parent)
+    responses_path = _write_feature_csv(rows, featurize, loop_dir / "responses.csv")
+
+    seed_models_dir = exp_dir / "cognitive_models"
+    run_pymc_inner_loop(
+        responses_path,
         loop_dir,
+        seed_models_dir=seed_models_dir,
         max_iterations=max_iterations,
         candidate_count=candidate_count,
-        api_key=api_key,
+        backend=backend,
+        fit_kwargs=fit_kwargs,
     )
     model_path = _export_inner_loop_model(exp_dir, loop_dir)
-
-    from src.pipelines.inner_loop.bmc import compute_bmc
-
-    bmc_path = loop_dir / "model_posterior.json"
-    if not bmc_path.exists():
-        bmc_path.write_text(
-            json.dumps(compute_bmc(loop_dir / "model_zoo"), indent=2),
-            encoding="utf-8",
-        )
-    (loop_dir / "report.md").write_text(
-        "# Inner Model Loop Report\n\n"
-        f"- Trials: {len(rows)}\n"
-        f"- Best log likelihood: {fit.log_likelihood:.4f}\n"
-        f"- Exported model: `{model_path}`\n"
-        f"- Loop artifacts: `{loop_dir}`\n",
-        encoding="utf-8",
-    )
     print(f"  [inner-loop] Exported {model_path}", flush=True)
     return loop_dir
 
