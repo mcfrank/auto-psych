@@ -187,7 +187,7 @@ def run_collect_programmatic(
     Writes exp_dir/data/responses.csv. Returns path to CSV.
     """
     sys.path.insert(0, str(REPO_ROOT))
-    from src.pipelines.outer_loop.collect import _generate_from_models
+    from src.pipelines.outer_loop.collect import _generate_from_models, _generate_from_pymc_models
     from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
 
     stimuli_path = exp_dir / "design" / "stimuli.json"
@@ -202,6 +202,8 @@ def run_collect_programmatic(
     data_dir.mkdir(parents=True, exist_ok=True)
 
     if ground_truth_model and project_id:
+        # Ground-truth models are simple callables (data-generation tool used to
+        # verify the loop recovers a known process); keep the callable path.
         model_registry = get_ground_truth_models(project_id)
         if ground_truth_model not in model_registry:
             print(f"  [collect] Warning: ground truth model {ground_truth_model!r} not found in registry", flush=True)
@@ -211,13 +213,24 @@ def run_collect_programmatic(
             model_registry=model_registry,
         )
     else:
+        # Theorist models are PyMC models: sample synthetic responses from their
+        # prior-predictive p_left, featurizing each stimulus first.
         model_names: List[str] = []
         if manifest_path.exists():
             manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
             model_names = get_model_names_from_manifest(manifest, theorist_dir)
         if not model_names:
-            print(f"  [collect] Warning: no loadable models in {theorist_dir} — responses will be random", flush=True)
-        rows = _generate_from_models(stimuli, model_names, n_participants, theorist_dir=theorist_dir)
+            print(f"  [collect] Warning: no loadable models in {theorist_dir} — cannot generate data", flush=True)
+            rows = []
+        else:
+            featurize_path = exp_dir.parent / "preprocess.py"
+            rows = _generate_from_pymc_models(
+                stimuli,
+                model_names,
+                n_participants,
+                models_dir=theorist_dir,
+                featurize_path=featurize_path if featurize_path.exists() else None,
+            )
 
     csv_path = data_dir / "responses.csv"
     if rows:
@@ -389,8 +402,14 @@ def validate_cc_output(agent_key: str, exp_dir: Path) -> tuple[bool, str]:
 
 
 def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
+    """Validate that every manifest model is a loadable PyMC model.
+
+    Each `<name>.py` must define a module-level `model: pm.Model` with exactly
+    one observed-response container (so the inner loop can fit it). Validation
+    only builds the model graph — it never samples.
+    """
     sys.path.insert(0, str(REPO_ROOT))
-    from src.models.theorist.loader import get_model_callable, get_model_names_from_manifest  # type: ignore
+    from src.models.pymc_inference import load_pymc_model, observed_response_data  # type: ignore
 
     theorist_dir = exp_dir / "cognitive_models"
     manifest_path = theorist_dir / "models_manifest.yaml"
@@ -406,27 +425,18 @@ def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
     names = [m["name"] if isinstance(m, dict) else m for m in models]
     if not names:
         return False, "models_manifest.yaml has no models"
-    loadable = get_model_names_from_manifest(data, theorist_dir)
+
     for name in names:
-        if name not in loadable:
+        if not (theorist_dir / f"{name}.py").exists():
             return False, f"Model '{name}' has no {theorist_dir}/{name}.py (theorist must provide each model file)"
-    # Test call each model
-    test_stimulus = ("HHTHTTHT", "HTHTHTHT")
-    response_options = ["left", "right"]
-    for name in names:
         try:
-            fn = get_model_callable(name, theorist_dir)
-            preds = fn(test_stimulus, response_options)
+            model = load_pymc_model(name, theorist_dir)
         except Exception as e:
-            return False, f"Model '{name}' raised: {e}"
-        if not isinstance(preds, dict):
-            return False, f"Model '{name}' did not return a dict"
-        for k in response_options:
-            if k not in preds:
-                return False, f"Model '{name}' missing key '{k}'"
-        total = sum(preds[k] for k in response_options)
-        if abs(total - 1.0) > 1e-5:
-            return False, f"Model '{name}' probabilities sum to {total}"
+            return False, f"Model '{name}' is not a loadable PyMC model: {e}"
+        try:
+            observed_response_data(model)
+        except Exception as e:
+            return False, f"Model '{name}' has no usable observed-response pm.Data container: {e}"
     return True, f"Theory valid: {names}"
 
 
