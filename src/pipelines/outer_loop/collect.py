@@ -773,6 +773,86 @@ def _collect_llm_participant(
     return rows
 
 
+def _load_featurizer(featurize_path: Path | None):
+    """Return featurize_stimulus(seq_a, seq_b) from a module path, or None."""
+    if featurize_path is None:
+        return None
+    import importlib.util
+
+    featurize_path = Path(featurize_path)
+    if not featurize_path.exists():
+        raise FileNotFoundError(f"featurize module not found: {featurize_path}")
+    spec = importlib.util.spec_from_file_location("_collect_featurize", featurize_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load featurize module from {featurize_path}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return getattr(mod, "featurize_stimulus", None)
+
+
+def _generate_from_pymc_models(
+    stimuli: list[dict[str, Any]],
+    model_names: list[str],
+    n_participants: int,
+    *,
+    models_dir: Path,
+    featurize_path: Path | None = None,
+    n_samples: int = 200,
+    seed: int = 0,
+) -> list[dict[str, Any]]:
+    """Generate synthetic responses by sampling each model's prior-predictive p_left.
+
+    Each participant is assigned a random theorist model; for every stimulus the
+    model's prior-predictive mean p_left is the choice probability for a binary
+    draw. Raw stimuli are featurized so the PyMC `pm.Data` columns are present.
+    No MCMC fit — the prior is the generative process for synthetic participants.
+    """
+    from src.models.pymc_inference import prior_predict_p_left
+
+    featurize = _load_featurizer(featurize_path)
+    rng = random.Random(seed)
+
+    # Cache prior-predictive p_left per (model, stimulus) — it is deterministic
+    # given the engine seed, and stimuli repeat across participants.
+    p_left_cache: dict[tuple[str, int], float] = {}
+
+    def _p_left(model_name: str, stim_idx: int, feature_row: dict[str, Any]) -> float:
+        key = (model_name, stim_idx)
+        if key not in p_left_cache:
+            preds = prior_predict_p_left(
+                [model_name], models_dir, feature_row, n_samples=n_samples, seed=seed
+            )
+            p_left_cache[key] = preds[model_name]
+        return p_left_cache[key]
+
+    feature_rows: list[dict[str, Any]] = []
+    for stimulus in stimuli:
+        row = dict(stimulus)
+        if featurize is not None:
+            row.update(featurize(stimulus["sequence_a"], stimulus["sequence_b"]))
+        row.setdefault("chose_left", 0)  # dummy observed value; unused for p_left
+        feature_rows.append(row)
+
+    rows: list[dict[str, Any]] = []
+    for participant_id in range(n_participants):
+        model_name = rng.choice(model_names)
+        for trial_index, stimulus in enumerate(stimuli):
+            p_left = _p_left(model_name, trial_index, feature_rows[trial_index])
+            chose_left = rng.random() < p_left
+            rows.append(
+                {
+                    "participant_id": participant_id,
+                    "trial_index": trial_index,
+                    "sequence_a": stimulus["sequence_a"],
+                    "sequence_b": stimulus["sequence_b"],
+                    "chose_left": int(chose_left),
+                    "chose_right": int(not chose_left),
+                    "model": model_name,
+                }
+            )
+    return rows
+
+
 def _generate_from_models(
     stimuli: list[dict[str, Any]],
     model_names: list[str],
