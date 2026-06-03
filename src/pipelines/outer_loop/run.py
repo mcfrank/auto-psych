@@ -75,6 +75,7 @@ def _run_agent(
     ground_truth_model: Optional[str] = None,
     inner_loop_iterations: int = 2,
     inner_loop_candidates: int = 3,
+    fit_kwargs: Optional[dict] = None,
     backend: Optional[str] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output is invalid."""
@@ -91,6 +92,7 @@ def _run_agent(
             exp_dir,
             max_iterations=inner_loop_iterations,
             candidate_count=inner_loop_candidates,
+            fit_kwargs=fit_kwargs,
         )
     else:
         write_context(
@@ -127,6 +129,7 @@ def _run_experiment(
     agent_filter: Optional[str] = None,
     inner_loop_iterations: int = 2,
     inner_loop_candidates: int = 3,
+    fit_kwargs: Optional[dict] = None,
     backend: Optional[str] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
@@ -157,6 +160,7 @@ def _run_experiment(
             ground_truth_model=ground_truth_model,
             inner_loop_iterations=inner_loop_iterations,
             inner_loop_candidates=inner_loop_candidates,
+            fit_kwargs=fit_kwargs,
             backend=backend,
         )
 
@@ -235,6 +239,18 @@ def main() -> None:
         help="Coding-agent backend for outer and inner loops. "
              "Defaults to the CODING_AGENT env var, then 'claude'.",
     )
+    parser.add_argument(
+        "--draws", type=int, default=2000, metavar="N",
+        help="MCMC posterior draws per chain for inner-loop model fits.",
+    )
+    parser.add_argument(
+        "--tune", type=int, default=2000, metavar="N",
+        help="MCMC tuning (warmup) steps per chain for inner-loop model fits.",
+    )
+    parser.add_argument(
+        "--chains", type=int, default=4, metavar="N",
+        help="MCMC chains for inner-loop model fits.",
+    )
     args = parser.parse_args()
 
     project_id = args.project
@@ -267,7 +283,10 @@ def main() -> None:
     backend = select_backend(args.coding_agent)
     os.environ["CODING_AGENT"] = backend
 
+    fit_kwargs = {"draws": args.draws, "tune": args.tune, "chains": args.chains}
+
     print(f"Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} agent={backend} validate={args.validate}", flush=True)
+    print(f"Inner-loop MCMC: draws={args.draws} tune={args.tune} chains={args.chains}", flush=True)
     print(f"Outputs: {outer_projects_dir() / project_id}", flush=True)
 
     for exp_num in exp_ids:
@@ -282,6 +301,7 @@ def main() -> None:
             agent_filter=args.agent,
             inner_loop_iterations=args.inner_loop_iterations,
             inner_loop_candidates=args.inner_loop_candidates,
+            fit_kwargs=fit_kwargs,
             backend=backend,
         )
 

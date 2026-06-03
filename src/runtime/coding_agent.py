@@ -58,7 +58,8 @@ def build_command(
     if backend == "claude":
         cmd = [
             "claude",
-            "--output-format", "stream-json",
+            "--output-format",
+            "stream-json",
             "--verbose",
             "--dangerously-skip-permissions",
         ]

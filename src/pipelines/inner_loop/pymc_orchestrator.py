@@ -33,7 +33,7 @@ from typing import Any, Dict, List, Optional
 import yaml
 
 from src.models.pymc_inference import load_pymc_model
-from src.model_comparison.posterior import model_posterior
+from src.model_comparison.posterior import compare_table, model_posterior
 
 _PKG_DIR = Path(__file__).resolve().parent
 _THEORY_PROMPT = _PKG_DIR / "prompts" / "pymc_theory.md"
@@ -260,7 +260,8 @@ def run_pymc_inner_loop(
             )
         posterior = _score(responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs)
 
-    return _export(results_dir, models_dir, posterior)
+    comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
+    return _export(results_dir, models_dir, posterior, comparison)
 
 
 def _score(
@@ -279,9 +280,28 @@ def _score(
     )
 
 
-def _export(results_dir: Path, models_dir: Path, posterior: Dict[str, Any]) -> Dict[str, Any]:
+def _compare(
+    responses_path: Path,
+    models_dir: Path,
+    cache_dir: Optional[Path],
+    fit_kwargs: Dict[str, Any],
+) -> Dict[str, Dict[str, float]]:
+    """ELPD-LOO distinguishability table (reuses cached fits — no new MCMC)."""
+    return compare_table(
+        responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs
+    )
+
+
+def _export(
+    results_dir: Path,
+    models_dir: Path,
+    posterior: Dict[str, Any],
+    comparison: Optional[Dict[str, Dict[str, float]]] = None,
+) -> Dict[str, Any]:
+    comparison = comparison or {}
+    payload = {**posterior, "comparison": comparison}
     (results_dir / "model_posterior.json").write_text(
-        json.dumps(posterior, indent=2), encoding="utf-8"
+        json.dumps(payload, indent=2), encoding="utf-8"
     )
 
     best_model = max(posterior["posteriors"], key=lambda m: posterior["posteriors"][m])
@@ -308,12 +328,42 @@ def _export(results_dir: Path, models_dir: Path, posterior: Dict[str, Any]) -> D
         f"| {name} | {p:.4f} | {posterior['elpd_loo'][name]:.2f} |"
         for name, p in ranked
     ]
+
+    if comparison:
+        # Ordered by az.compare rank (0 = best). elpd_diff/dse are relative to
+        # the top model; a model is distinguishable from the best only when
+        # elpd_diff is large vs dse (rule of thumb: elpd_diff > 2*dse).
+        by_rank = sorted(comparison.items(), key=lambda kv: kv[1]["rank"])
+        lines += [
+            "",
+            "## Distinguishability (arviz.compare, PSIS-LOO)",
+            "",
+            "`elpd_diff` and `dse` are relative to the best model. A model is "
+            "only clearly worse than the best when `elpd_diff > 2 * dse`; "
+            "models within ~2·dse of the top are statistically indistinguishable.",
+            "",
+            "| model | elpd_diff | dse | distinguishable from best | weight |",
+            "| --- | --- | --- | --- | --- |",
+        ]
+        for name, row in by_rank:
+            if row["rank"] == 0:
+                verdict = "— (best)"
+            elif row["dse"] > 0 and row["elpd_diff"] > 2 * row["dse"]:
+                verdict = "yes"
+            else:
+                verdict = "no (within ~2·dse)"
+            lines.append(
+                f"| {name} | {row['elpd_diff']:.2f} | {row['dse']:.2f} | "
+                f"{verdict} | {row['weight']:.3f} |"
+            )
+
     (results_dir / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     return {
         "best_model": best_model,
         "posteriors": posterior["posteriors"],
         "elpd_loo": posterior["elpd_loo"],
+        "comparison": comparison,
         "model_posterior_path": str(results_dir / "model_posterior.json"),
         "best_model_path": str(results_dir / "best_model.py"),
         "report_path": str(results_dir / "report.md"),
