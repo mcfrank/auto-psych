@@ -20,6 +20,28 @@ python3 -m cc_pipeline.projects.subjective_randomness.parameter_recovery.recover
 The optimizer is intentionally dependency-free. It uses random restarts plus a
 bounded coordinate search, which is enough for first-pass design diagnostics.
 
+## PyMC Recovery
+
+The PyMC bridge simulates choices from the pure-Python reference model, converts
+the simulated rows to numeric feature columns, fits the matching PyMC adapter in
+`../pymc_model_families/`, and reports posterior means/intervals against the
+known true parameters.
+
+Quick smoke run:
+
+```bash
+python3 -m cc_pipeline.projects.subjective_randomness.parameter_recovery.pymc_recover \
+  --config cc_pipeline/projects/subjective_randomness/parameter_recovery/configs/prototype_similarity.yaml \
+  --out /tmp/prototype_pymc_recovery.json \
+  --n-repeats 1 \
+  --draws 50 \
+  --tune 50 \
+  --chains 1
+```
+
+For debugging, add `--work-dir /tmp/prototype_pymc_recovery_rows` to keep the
+simulated, featurized CSVs used by PyMC.
+
 ## Model Families
 
 All three model families use the same forced-choice observation model. For a

@@ -14,6 +14,9 @@ Feature columns per sequence (`a` and `b`):
     alts_<x>          alternation count (transitions between H and T)
     p_alts_<x>        alternation proportion (alts / (length - 1))
     max_run_<x>       length of the longest constant run
+    max_run_norm_<x>  max_run scaled to [0, 1]
+    imbalance_<x>     distance from 50/50 heads/tails
+    periodicity_<x>   simple repeating-template score
 
 The `chose_left` column is preserved (binary 0/1) for the observed response.
 
@@ -25,12 +28,12 @@ Usage (run from repo root or anywhere):
 
 import csv
 import sys
+import argparse
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict
 
-import tyro
-from pyprojroot import here
+REPO_ROOT = Path(__file__).resolve().parents[3]
 
 
 def sequence_features(seq: str, suffix: str) -> Dict[str, int]:
@@ -59,26 +62,48 @@ def sequence_features(seq: str, suffix: str) -> Dict[str, int]:
     }
 
 
-def sequence_features_float(seq: str, suffix: str, n: int, alts: int, h: int) -> Dict[str, float]:
+def sequence_features_float(seq: str, suffix: str, n: int, alts: int, h: int, max_run: int) -> Dict[str, float]:
     """Float features (proportions) derived alongside the integer features."""
     return {
         f"p_{suffix}": (h / n) if n > 0 else 0.0,
         f"p_alts_{suffix}": (alts / (n - 1)) if n > 1 else 0.0,
+        f"max_run_norm_{suffix}": ((max_run - 1) / (n - 1)) if n > 1 else 0.0,
+        f"imbalance_{suffix}": 2.0 * abs((h / n) - 0.5) if n > 0 else 0.0,
+        f"periodicity_{suffix}": periodicity_score(seq),
     }
+
+
+def periodicity_score(seq: str) -> float:
+    """Degree to which a sequence matches a short repeating template."""
+    s = seq.strip().upper()
+    n = len(s)
+    if n <= 2:
+        return 0.0
+    best_match = 0.5
+    for period in range(1, (n // 2) + 1):
+        template = s[:period]
+        matches = sum(1 for i, c in enumerate(s) if c == template[i % period])
+        best_match = max(best_match, matches / n)
+    return max(0.0, min(1.0, 2.0 * (best_match - 0.5)))
 
 
 def featurize_stimulus(sequence_a: str, sequence_b: str) -> Dict[str, float]:
     """Return the full feature-column dict for a single candidate stimulus pair.
 
     Keys match the pm.Data container names theorist PyMC models use:
-    n_a, h_a, p_a, alts_a, p_alts_a, max_run_a and the _b counterparts. The
-    design step uses this to convert raw (sequence_a, sequence_b) tuples into
-    pm.Data inputs for EIG scoring.
+    n_a, h_a, p_a, alts_a, p_alts_a, max_run_a, max_run_norm_a,
+    imbalance_a, periodicity_a and the _b counterparts. The design step uses
+    this to convert raw (sequence_a, sequence_b) tuples into pm.Data inputs for
+    EIG scoring.
     """
     feats_a = sequence_features(sequence_a, "a")
     feats_b = sequence_features(sequence_b, "b")
-    floats_a = sequence_features_float(sequence_a, "a", feats_a["n_a"], feats_a["alts_a"], feats_a["h_a"])
-    floats_b = sequence_features_float(sequence_b, "b", feats_b["n_b"], feats_b["alts_b"], feats_b["h_b"])
+    floats_a = sequence_features_float(
+        sequence_a, "a", feats_a["n_a"], feats_a["alts_a"], feats_a["h_a"], feats_a["max_run_a"]
+    )
+    floats_b = sequence_features_float(
+        sequence_b, "b", feats_b["n_b"], feats_b["alts_b"], feats_b["h_b"], feats_b["max_run_b"]
+    )
     return {**feats_a, **feats_b, **floats_a, **floats_b}
 
 
@@ -86,7 +111,7 @@ def featurize_stimulus(sequence_a: str, sequence_b: str) -> Dict[str, float]:
 class Args:
     """Command-line arguments for preprocess_data."""
     input_csv: Path
-    output_csv: Path = here() / "cc_pipeline" / "projects" / "subjective_randomness" / "data" / "responses.csv"
+    output_csv: Path = REPO_ROOT / "cc_pipeline" / "projects" / "subjective_randomness" / "data" / "responses.csv"
 
 
 def main(args: Args) -> None:
@@ -115,7 +140,10 @@ def main(args: Args) -> None:
         "n_a", "h_a", "alts_a", "max_run_a",
         "n_b", "h_b", "alts_b", "max_run_b",
     ]
-    float_feature_cols = ["p_a", "p_alts_a", "p_b", "p_alts_b"]
+    float_feature_cols = [
+        "p_a", "p_alts_a", "max_run_norm_a", "imbalance_a", "periodicity_a",
+        "p_b", "p_alts_b", "max_run_norm_b", "imbalance_b", "periodicity_b",
+    ]
     passthrough = ["participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"]
     out_cols = passthrough + int_feature_cols + float_feature_cols
 
@@ -126,15 +154,19 @@ def main(args: Args) -> None:
         seq_b = r["sequence_b"]
         feats_a = sequence_features(seq_a, "a")
         feats_b = sequence_features(seq_b, "b")
-        floats_a = sequence_features_float(seq_a, "a", feats_a["n_a"], feats_a["alts_a"], feats_a["h_a"])
-        floats_b = sequence_features_float(seq_b, "b", feats_b["n_b"], feats_b["alts_b"], feats_b["h_b"])
+        floats_a = sequence_features_float(
+            seq_a, "a", feats_a["n_a"], feats_a["alts_a"], feats_a["h_a"], feats_a["max_run_a"]
+        )
+        floats_b = sequence_features_float(
+            seq_b, "b", feats_b["n_b"], feats_b["alts_b"], feats_b["h_b"], feats_b["max_run_b"]
+        )
         out_rows.append({
             **{k: r.get(k, "") for k in passthrough},
             **feats_a, **feats_b, **floats_a, **floats_b,
         })
 
     with output_path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=out_cols)
+        writer = csv.DictWriter(f, fieldnames=out_cols, lineterminator="\n")
         writer.writeheader()
         writer.writerows(out_rows)
 
@@ -145,5 +177,8 @@ def main(args: Args) -> None:
 
 
 if __name__ == "__main__":
-    args = tyro.cli(Args)
-    main(args)
+    parser = argparse.ArgumentParser(description="Preprocess subjective_randomness responses.csv")
+    parser.add_argument("--input-csv", required=True, type=Path)
+    parser.add_argument("--output-csv", default=Args.output_csv, type=Path)
+    cli_args = parser.parse_args()
+    main(Args(input_csv=cli_args.input_csv, output_csv=cli_args.output_csv))
