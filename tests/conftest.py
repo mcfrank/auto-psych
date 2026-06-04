@@ -13,6 +13,10 @@ if str(REPO_ROOT) not in sys.path:
 FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures"
 
 
+def pytest_configure(config):
+    config.addinivalue_line("markers", "slow: slow tests (NUTS sampling); skipped by default with -m 'not slow'")
+
+
 @pytest.fixture
 def fixtures_dir():
     """Path to tests/fixtures."""

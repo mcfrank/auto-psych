@@ -1,15 +1,17 @@
-"""
-Bayesian model posterior from individual response data.
+"""Bayesian model posterior over PyMC cognitive models.
 
-With a uniform prior the posterior is the normalised likelihood:
-P(model | data) ∝ P(data | model).
+For each model, ELPD-LOO is computed on the pooled observed responses; these
+log-scores are softmaxed (with an optional complexity prior) to form the
+posterior over models.
 
-With --complexity-prior CONST the prior is:
-P(model) ∝ exp(CONST * complexity(model))
-where complexity = non-whitespace, non-comment characters in the model's .py file.
-Negative CONST penalises complex models (Occam's razor); positive CONST
-favours richer models. Log-sum-exp is used throughout for numerical stability.
-Pass multiple response files to pool data across experiments.
+    P(model | data) ∝ exp(elpd_loo(model)) * P(model)
+
+With --complexity-prior CONST, log-prior = CONST * complexity(model), where
+complexity = non-whitespace, non-comment chars in the model's .py file.
+Negative CONST penalises complex models (Occam's razor).
+
+Multiple --responses files are pooled into a single observed set before
+fitting (one MCMC run per model on pooled data).
 
 Usage (CLI):
     python3 -m src.model_comparison.posterior \\
@@ -17,26 +19,14 @@ Usage (CLI):
         --models-dir EXP_DIR/cognitive_models \\
         --out        EXP_DIR/critique/model_posterior.json
 
-    # With complexity prior (penalise complex models):
-    python3 -m src.model_comparison.posterior \\
-        --responses  EXP1/data/responses.csv EXP2/data/responses.csv \\
-        --models-dir EXP_DIR/cognitive_models \\
-        --complexity-prior -0.01 \\
-        --out        EXP_DIR/critique/model_posterior.json
-
-Prints (and optionally writes) JSON:
+Output JSON:
     {
       "posteriors":      {"alternation": 0.82, "representativeness": 0.18},
-      "log_likelihoods": {"alternation": -38.1, "representativeness": -45.7},
-      "log_likelihoods_by_experiment": {
-        "experiment1": {"alternation": -20.5, "representativeness": -30.1},
-        "experiment2": {"alternation": -17.6, "representativeness": -15.6}
-      },
-      "n_trials": 300,
-      "n_trials_by_experiment": {"experiment1": 150, "experiment2": 150}
+      "elpd_loo":        {"alternation": -38.1, "representativeness": -45.7},
+      "n_trials":        300,
       // if --complexity-prior is non-zero:
       "complexity_prior_const": -0.01,
-      "complexities": {"alternation": 312, "representativeness": 748}
+      "complexities":    {"alternation": 312, "representativeness": 748}
     }
 """
 
@@ -47,54 +37,87 @@ import csv
 import json
 import math
 import sys
+import tempfile
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
 
 
 def model_complexity(model_name: str, models_dir: Path) -> int:
-    """
-    Count non-whitespace, non-comment characters in a model's .py file.
-    Strips everything after '#' on each line before counting, so inline
-    comments are excluded too.
-    """
+    """Non-whitespace, non-comment character count in `<model_name>.py`."""
     model_file = models_dir / f"{model_name}.py"
     if not model_file.exists():
         return 0
     count = 0
     for line in model_file.read_text(encoding="utf-8").splitlines():
-        code_part = line.split("#")[0]  # drop inline comment
+        code_part = line.split("#")[0]
         count += sum(1 for c in code_part if not c.isspace())
     return count
 
 
-def model_posterior(
-    labeled_responses: List[Tuple[str, List[Dict[str, Any]]]],
-    models_dir: Path,
-    complexity_prior_const: float = 0.0,
-) -> Dict[str, Any]:
+def _pool_response_csvs(paths: List[Path]) -> Path:
+    """Concatenate multiple CSVs into one temporary file with a single header.
+
+    Returns the path to the pooled CSV. All inputs must share the same header.
     """
-    Compute the Bayesian posterior over models given individual response data.
+    if len(paths) == 1:
+        return paths[0]
+    header: Optional[List[str]] = None
+    pooled_rows: List[List[str]] = []
+    for p in paths:
+        with p.open(encoding="utf-8", newline="") as f:
+            reader = csv.reader(f)
+            this_header = next(reader)
+            if header is None:
+                header = this_header
+            elif this_header != header:
+                raise ValueError(
+                    f"Cannot pool {p}: header {this_header} differs from first file's header {header}"
+                )
+            for row in reader:
+                pooled_rows.append(row)
+    if header is None:
+        raise ValueError("No response files provided")
+    tmp = Path(tempfile.mkstemp(prefix="pooled_responses_", suffix=".csv")[1])
+    with tmp.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(header)
+        w.writerows(pooled_rows)
+    return tmp
 
-    labeled_responses: list of (label, rows) pairs — one per experiment.
-        label is a short string (e.g. "experiment1") used in the breakdown.
-        rows: list of dicts with sequence_a, sequence_b, chose_left (0 or 1).
-    models_dir: cognitive_models/ directory for the current experiment.
-    complexity_prior_const: if non-zero, log-prior for each model is
-        complexity_prior_const * complexity(model), where complexity is the
-        number of non-whitespace non-comment characters in the model's .py file.
-        Negative values penalise complex models; 0.0 gives a uniform prior.
 
-    Returns a dict with posteriors, log_likelihoods,
-    log_likelihoods_by_experiment, n_trials, n_trials_by_experiment.
-    If complexity_prior_const != 0, also includes complexity_prior_const and
-    complexities.
+def compare_table(
+    responses_path: Path,
+    models_dir: Path,
+    *,
+    cache_dir: Optional[Path] = None,
+    **fit_kwargs: Any,
+) -> Dict[str, Dict[str, float]]:
+    """Distinguishability diagnostic via ``arviz.compare`` (PSIS-LOO).
+
+    Fits each manifest model (reusing the in-process / on-disk fit cache, so this
+    adds no MCMC when called after ``model_posterior``), then runs
+    ``az.compare`` to rank them and report, per model:
+
+    - ``rank``: 0 = best by ELPD-LOO
+    - ``elpd_loo``: the model's ELPD
+    - ``elpd_diff``: ELPD difference from the best model (0 for the best)
+    - ``dse``: standard error of that difference (0 for the best). Two models are
+      only meaningfully distinguishable when ``elpd_diff`` is large relative to
+      ``dse`` (a rough rule of thumb is ``elpd_diff > 2 * dse``).
+    - ``weight``: Akaike-style stacking weight from ``az.compare``.
+
+    Returns a plain dict keyed by model name (JSON-serialisable).
     """
     import yaml  # type: ignore
-    from src.models.loader import get_model_names_from_manifest  # type: ignore
-    from src.model_comparison.likelihood import log_likelihood  # type: ignore
+    import arviz as az  # type: ignore
+    from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
+    from src.models.pymc_inference import fit_models_cached  # type: ignore
+
+    responses_path = Path(responses_path)
+    models_dir = Path(models_dir)
 
     manifest_path = models_dir / "models_manifest.yaml"
     if not manifest_path.exists():
@@ -104,23 +127,72 @@ def model_posterior(
     if not model_names:
         raise ValueError(f"No loadable models found in {models_dir}")
 
-    # Per-experiment log-likelihoods
-    ll_by_exp: Dict[str, Dict[str, float]] = {}
-    n_by_exp: Dict[str, int] = {}
-    for label, rows in labeled_responses:
-        ll_by_exp[label] = {
-            m: log_likelihood(m, rows, models_dir) for m in model_names
-        }
-        n_by_exp[label] = len(rows)
+    fits = fit_models_cached(
+        model_names,
+        models_dir=models_dir,
+        responses_path=responses_path,
+        cache_dir=cache_dir,
+        **fit_kwargs,
+    )
+    idata_map = {name: fits[name].idata for name in model_names}
 
-    # Total log-likelihoods (sum across experiments)
-    log_liks: Dict[str, float] = {
-        m: sum(ll_by_exp[label][m] for label, _ in labeled_responses)
+    cmp = az.compare(idata_map, ic="loo")
+
+    out: Dict[str, Dict[str, float]] = {}
+    for rank, (name, row) in enumerate(cmp.iterrows()):
+        out[name] = {
+            "rank": rank,
+            "elpd_loo": float(row["elpd_loo"]),
+            "elpd_diff": float(row["elpd_diff"]),
+            "dse": float(row["dse"]),
+            "weight": float(row["weight"]),
+        }
+    return out
+
+
+def model_posterior(
+    responses_path: Path,
+    models_dir: Path,
+    *,
+    complexity_prior_const: float = 0.0,
+    cache_dir: Optional[Path] = None,
+    **fit_kwargs: Any,
+) -> Dict[str, Any]:
+    """Compute the Bayesian posterior over PyMC cognitive models.
+
+    Fits each model in `<models_dir>/models_manifest.yaml` to the pooled
+    responses at `responses_path` (MCMC), scores each by ELPD-LOO, and
+    softmaxes the scores (with optional complexity prior) to produce a
+    normalized posterior.
+
+    Extra ``fit_kwargs`` (e.g. ``draws``, ``tune``, ``chains``) are forwarded
+    to the MCMC fit of every model.
+
+    Returns a dict with `posteriors`, `elpd_loo`, `n_trials`, and (if
+    complexity_prior_const != 0) `complexity_prior_const` + `complexities`.
+    """
+    import yaml  # type: ignore
+    from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
+    from src.model_comparison import likelihood as _likelihood  # type: ignore
+
+    responses_path = Path(responses_path)
+    models_dir = Path(models_dir)
+
+    manifest_path = models_dir / "models_manifest.yaml"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"models_manifest.yaml not found at {manifest_path}")
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+    model_names = get_model_names_from_manifest(manifest, models_dir)
+    if not model_names:
+        raise ValueError(f"No loadable models found in {models_dir}")
+
+    elpd: Dict[str, float] = {
+        m: _likelihood.log_likelihood(
+            m, responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs
+        )
         for m in model_names
     }
-    n_trials = sum(len(rows) for _, rows in labeled_responses)
 
-    # Compute log-priors
     if complexity_prior_const != 0.0:
         complexities: Optional[Dict[str, int]] = {
             m: model_complexity(m, models_dir) for m in model_names
@@ -130,22 +202,18 @@ def model_posterior(
         complexities = None
         log_priors = {m: 0.0 for m in model_names}
 
-    # Posterior ∝ likelihood × prior; normalise with log-sum-exp
-    log_scores = {m: log_liks[m] + log_priors[m] for m in model_names}
+    log_scores = {m: elpd[m] + log_priors[m] for m in model_names}
     max_score = max(log_scores.values())
     sum_exp = sum(math.exp(s - max_score) for s in log_scores.values())
     log_norm = max_score + math.log(sum_exp)
     posteriors = {m: round(math.exp(log_scores[m] - log_norm), 6) for m in model_names}
 
+    n_trials = sum(1 for _ in csv.DictReader(responses_path.open(encoding="utf-8")))
+
     result: Dict[str, Any] = {
         "posteriors": posteriors,
-        "log_likelihoods": {m: round(log_liks[m], 4) for m in model_names},
-        "log_likelihoods_by_experiment": {
-            label: {m: round(ll_by_exp[label][m], 4) for m in model_names}
-            for label in ll_by_exp
-        },
+        "elpd_loo": {m: round(elpd[m], 4) for m in model_names},
         "n_trials": n_trials,
-        "n_trials_by_experiment": n_by_exp,
     }
     if complexities is not None:
         result["complexity_prior_const"] = complexity_prior_const
@@ -155,11 +223,11 @@ def model_posterior(
 
 def main() -> None:
     parser = argparse.ArgumentParser(
-        description="Bayesian model posterior from individual response data"
+        description="Bayesian posterior over PyMC cognitive models"
     )
     parser.add_argument(
         "--responses", required=True, nargs="+",
-        help="Path(s) to responses.csv — multiple files are pooled",
+        help="Path(s) to responses.csv — multiple files are pooled (must share header)",
     )
     parser.add_argument("--models-dir", required=True, help="Path to cognitive_models/ directory")
     parser.add_argument("--out", default=None, help="Write JSON to this file (default: stdout)")
@@ -167,27 +235,29 @@ def main() -> None:
         "--complexity-prior", type=float, default=0.0, metavar="CONST",
         help=(
             "Log-prior per model = CONST * complexity, where complexity = non-whitespace "
-            "non-comment characters in the model .py file. Negative CONST penalises complex "
+            "non-comment chars in the model .py file. Negative CONST penalises complex "
             "models (Occam's razor). Default: 0.0 (uniform prior)."
         ),
     )
+    parser.add_argument(
+        "--cache-dir", default=None,
+        help="Optional directory to persist .nc fits (default: in-process cache only)",
+    )
     args = parser.parse_args()
 
-    labeled_responses: List[Tuple[str, List[Dict[str, Any]]]] = []
-    for p in args.responses:
-        path = Path(p)
-        if not path.exists():
-            print(f"Error: {path} not found", file=sys.stderr)
+    paths = [Path(p) for p in args.responses]
+    for p in paths:
+        if not p.exists():
+            print(f"Error: {p} not found", file=sys.stderr)
             sys.exit(1)
-        # Label = parent experiment dir name (e.g. "experiment1" from experiment1/data/responses.csv)
-        label = path.parent.parent.name
-        rows = list(csv.DictReader(path.open(encoding="utf-8")))
-        labeled_responses.append((label, rows))
+
+    pooled = _pool_response_csvs(paths)
 
     result = model_posterior(
-        labeled_responses=labeled_responses,
+        responses_path=pooled,
         models_dir=Path(args.models_dir),
         complexity_prior_const=args.complexity_prior,
+        cache_dir=Path(args.cache_dir) if args.cache_dir else None,
     )
 
     output = json.dumps(result, indent=2)
@@ -201,7 +271,7 @@ def main() -> None:
         print(
             f"Wrote model_posterior.json — best: {best} "
             f"(posterior={result['posteriors'][best]:.3f}, "
-            f"log_lik={result['log_likelihoods'][best]:.1f}, "
+            f"elpd_loo={result['elpd_loo'][best]:.1f}, "
             f"n_trials={result['n_trials']}{prior_note})",
             flush=True,
         )

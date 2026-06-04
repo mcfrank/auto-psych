@@ -1,0 +1,3 @@
+- **rational_markov**: A rational model of representativeness where subjects compare the likelihood of the sequence under a random generative process (fair coin) versus a regular generative process (a Markov model with an inferred transition probability).
+- **alternation_heuristic**: A simple heuristic model where participants judge randomness based on the rate of alternations, preferring sequences with a higher proportion of H↔T transitions.
+- **proportion_heuristic**: A representativeness heuristic model where observers prefer sequences whose head proportion is closer to 0.5, ignoring sequence length and transition probabilities.

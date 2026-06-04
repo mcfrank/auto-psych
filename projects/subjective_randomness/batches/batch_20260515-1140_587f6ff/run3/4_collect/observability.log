@@ -1,0 +1,7 @@
+[2026-05-15T18:40:50Z] === 4_collect start ===
+[2026-05-15T18:40:50Z] project_id='subjective_randomness' run_id=3 attempt=1 mode='simulated_participants'
+[2026-05-15T18:40:50Z] Ground-truth model='alternation'; generating data from project ground-truth only (no browser).
+[2026-05-15T18:40:50Z] collected n_rows=150
+[2026-05-15T18:40:50Z] wrote responses.csv
+[2026-05-15T18:40:50Z] preprocess_data.py ok: Written to:  /Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1140_587f6ff/run3/4_collect/responses.csv
+[2026-05-15T18:40:50Z] === 4_collect end ===
