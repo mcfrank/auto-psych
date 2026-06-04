@@ -43,3 +43,10 @@ npm-debug.log
 
 # Firebase Hosting deploy target (copy of implementer output)
 public/
+
+# remote_jobs (SLURM cluster deployment): per-submission JSON, fetched logs, local env
+remote_jobs/.runs/
+remote_jobs/logs/
+remote_jobs/.env.local
+# Allow the .env.example template to be tracked (overrides the top-level .env.* rule).
+!remote_jobs/.env.example
