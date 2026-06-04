@@ -92,7 +92,10 @@ def observed_response_data(model) -> str:
     one observed RV, or if its observed tensor has zero or multiple shared
     ancestors.
     """
-    from pytensor.graph.basic import ancestors
+    try:
+        from pytensor.graph.traversal import ancestors
+    except ImportError:  # pytensor < 2.31 kept it in graph.basic
+        from pytensor.graph.basic import ancestors
     from pytensor.tensor.sharedvar import TensorSharedVariable
 
     if len(model.observed_RVs) == 0:
@@ -404,9 +407,9 @@ def fit_model(
     responses_path: Path,
     *,
     cache_dir: Optional[Path] = None,
-    draws: int = 500,
-    tune: int = 500,
-    chains: int = 2,
+    draws: int = 2000,
+    tune: int = 2000,
+    chains: int = 4,
     cores: int = 1,
     random_seed: int = 42,
 ) -> FittedModel:

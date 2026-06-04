@@ -6,7 +6,7 @@ import pytest
 import yaml
 
 from cc_pipeline.projects.subjective_randomness.preprocess_data import featurize_stimulus
-from src.models.loader import get_model_names_from_manifest
+from src.models.theorist.loader import get_model_names_from_manifest
 from src.models.pymc_inference import (
     load_pymc_model,
     make_stim_data,

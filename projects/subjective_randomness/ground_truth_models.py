@@ -34,7 +34,9 @@ def alternation(stimulus: Stimulus, response_options: List[str]) -> Dict[str, fl
     return {response_options[0]: sa / total, response_options[1]: sb / total}
 
 
-def prefer_more_heads(stimulus: Stimulus, response_options: List[str]) -> Dict[str, float]:
+def prefer_more_heads(
+    stimulus: Stimulus, response_options: List[str]
+) -> Dict[str, float]:
     """
     Prefer sequence with more heads.
     P(choose A) proportional to number of H in A.

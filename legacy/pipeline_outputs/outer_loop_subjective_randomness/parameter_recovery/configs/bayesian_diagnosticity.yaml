@@ -1,0 +1,17 @@
+model_module: cc_pipeline.projects.subjective_randomness.model_families.bayesian_diagnosticity
+stimuli_path: cc_pipeline/projects/subjective_randomness/experiment2/design/stimuli.json
+
+true_params:
+  alt_prior: 0.40
+  bias_share: 0.45
+  beta: 4.0
+  side_bias: 0.0
+
+simulation:
+  n_participants: 30
+  n_repeats: 20
+  seed: 101
+
+fit:
+  n_starts: 28
+  max_iters: 180

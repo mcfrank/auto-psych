@@ -40,6 +40,7 @@ def log_likelihood(
     models_dir: Path,
     *,
     cache_dir: Optional[Path] = None,
+    **fit_kwargs: object,
 ) -> float:
     """Return ELPD-LOO of `model_name` fit on `responses_path`.
 
@@ -47,6 +48,8 @@ def log_likelihood(
     softmaxing across models for Bayesian model comparison is meaningful.
     Cached in-process per (model file content, CSV content); if `cache_dir`
     is given, also persisted to `<cache_dir>/<name>.<fingerprint>.nc`.
+    Extra ``fit_kwargs`` (e.g. ``draws``, ``tune``, ``chains``) are forwarded
+    to the MCMC fit.
     """
     from src.models.pymc_inference import fit_models_cached  # type: ignore
 
@@ -55,6 +58,7 @@ def log_likelihood(
         models_dir=models_dir,
         responses_path=responses_path,
         cache_dir=cache_dir,
+        **fit_kwargs,
     )
     return fits[model_name].elpd_loo()
 

@@ -9,7 +9,7 @@ import pytest
 REPO = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(REPO))
 
-from src.models.randomness import Stimulus
+from src.models.theorist.predictions import Stimulus
 
 RESPONSE_OPTIONS = ["left", "right"]
 TEST_STIMULI: list[Stimulus] = [
@@ -21,7 +21,7 @@ TEST_STIMULI: list[Stimulus] = [
 
 def _get_ground_truth_models():
     """Load subjective_randomness ground-truth models for testing."""
-    from src.models.ground_truth import get_ground_truth_models
+    from src.models.project.ground_truth import get_ground_truth_models
     return get_ground_truth_models("subjective_randomness")
 
 

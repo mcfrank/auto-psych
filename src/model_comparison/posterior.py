@@ -88,12 +88,75 @@ def _pool_response_csvs(paths: List[Path]) -> Path:
     return tmp
 
 
+def compare_table(
+    responses_path: Path,
+    models_dir: Path,
+    *,
+    cache_dir: Optional[Path] = None,
+    **fit_kwargs: Any,
+) -> Dict[str, Dict[str, float]]:
+    """Distinguishability diagnostic via ``arviz.compare`` (PSIS-LOO).
+
+    Fits each manifest model (reusing the in-process / on-disk fit cache, so this
+    adds no MCMC when called after ``model_posterior``), then runs
+    ``az.compare`` to rank them and report, per model:
+
+    - ``rank``: 0 = best by ELPD-LOO
+    - ``elpd_loo``: the model's ELPD
+    - ``elpd_diff``: ELPD difference from the best model (0 for the best)
+    - ``dse``: standard error of that difference (0 for the best). Two models are
+      only meaningfully distinguishable when ``elpd_diff`` is large relative to
+      ``dse`` (a rough rule of thumb is ``elpd_diff > 2 * dse``).
+    - ``weight``: Akaike-style stacking weight from ``az.compare``.
+
+    Returns a plain dict keyed by model name (JSON-serialisable).
+    """
+    import yaml  # type: ignore
+    import arviz as az  # type: ignore
+    from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
+    from src.models.pymc_inference import fit_models_cached  # type: ignore
+
+    responses_path = Path(responses_path)
+    models_dir = Path(models_dir)
+
+    manifest_path = models_dir / "models_manifest.yaml"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"models_manifest.yaml not found at {manifest_path}")
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+    model_names = get_model_names_from_manifest(manifest, models_dir)
+    if not model_names:
+        raise ValueError(f"No loadable models found in {models_dir}")
+
+    fits = fit_models_cached(
+        model_names,
+        models_dir=models_dir,
+        responses_path=responses_path,
+        cache_dir=cache_dir,
+        **fit_kwargs,
+    )
+    idata_map = {name: fits[name].idata for name in model_names}
+
+    cmp = az.compare(idata_map, ic="loo")
+
+    out: Dict[str, Dict[str, float]] = {}
+    for rank, (name, row) in enumerate(cmp.iterrows()):
+        out[name] = {
+            "rank": rank,
+            "elpd_loo": float(row["elpd_loo"]),
+            "elpd_diff": float(row["elpd_diff"]),
+            "dse": float(row["dse"]),
+            "weight": float(row["weight"]),
+        }
+    return out
+
+
 def model_posterior(
     responses_path: Path,
     models_dir: Path,
     *,
     complexity_prior_const: float = 0.0,
     cache_dir: Optional[Path] = None,
+    **fit_kwargs: Any,
 ) -> Dict[str, Any]:
     """Compute the Bayesian posterior over PyMC cognitive models.
 
@@ -102,12 +165,15 @@ def model_posterior(
     softmaxes the scores (with optional complexity prior) to produce a
     normalized posterior.
 
+    Extra ``fit_kwargs`` (e.g. ``draws``, ``tune``, ``chains``) are forwarded
+    to the MCMC fit of every model.
+
     Returns a dict with `posteriors`, `elpd_loo`, `n_trials`, and (if
     complexity_prior_const != 0) `complexity_prior_const` + `complexities`.
     """
     import yaml  # type: ignore
-    from src.models.loader import get_model_names_from_manifest  # type: ignore
-    from src.model_comparison.likelihood import log_likelihood  # type: ignore
+    from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
+    from src.model_comparison import likelihood as _likelihood  # type: ignore
 
     responses_path = Path(responses_path)
     models_dir = Path(models_dir)
@@ -121,7 +187,9 @@ def model_posterior(
         raise ValueError(f"No loadable models found in {models_dir}")
 
     elpd: Dict[str, float] = {
-        m: log_likelihood(m, responses_path, models_dir, cache_dir=cache_dir)
+        m: _likelihood.log_likelihood(
+            m, responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs
+        )
         for m in model_names
     }
 
