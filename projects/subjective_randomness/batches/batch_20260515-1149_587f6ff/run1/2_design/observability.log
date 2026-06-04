@@ -1,0 +1,38 @@
+[2026-05-15T18:54:08Z] === 2_design start ===
+[2026-05-15T18:54:08Z] project_id='subjective_randomness' run_id=1 attempt=1
+[2026-05-15T18:54:08Z] registry_path=/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1149_587f6ff/run1/model_registry.yaml exists=True
+[2026-05-15T18:54:08Z] model_names=['rational_representativeness', 'alternation_heuristic', 'proportion_heuristic']
+[2026-05-15T18:54:08Z] model_weights={'alternation_heuristic': 0.25, 'proportion_heuristic': 0.25, 'rational_representativeness': 0.25}
+[2026-05-15T18:54:08Z] total_trials=30 allowed_sequence_lengths=[4, 6, 8]
+[2026-05-15T18:54:08Z] invoking LLM...
+[2026-05-15T18:54:49Z] LLM response length=3140 chars
+[2026-05-15T18:54:49Z] extract_fenced_blocks: n_blocks=1 first_block_len=3126
+[2026-05-15T18:54:49Z] wrote design_script.py; running script...
+[2026-05-15T18:54:54Z] script exec failed: CompileError: Compilation failed (return status=1):
+/Users/ben/mambaforge/envs/analysis/bin/clang++ -dynamiclib -g -O3 -fno-math-errno -Wno-unused-label -Wno-unused-variable -Wno-write-strings -Wno-c++11-narrowing -fno-exceptions -fno-unwind-tables -fno-asynchronous-unwind-tables -DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION -fPIC -undefined dynamic_lookup -ld64 -I/Users/ben/mambaforge/envs/analysis/lib/python3.11/site-packages/numpy/_core/include -I/Users/ben/mambaforge/envs/analysis/include/python3.11 -I/Users/ben/mambaforge/envs/analysis/lib/python3.11/site-packages/pytensor/link/c/c_code -L/Users/ben/mambaforge/envs/analysis/lib -fvisibility=hidden -o /Users/ben/.pytensor/compiledir_macOS-26.3.1-arm64-arm-64bit-arm-3.11.5-64/tmpczchno8d/mc5d88e8dc18faeba04f18b2ae819007d68babe6da825f68b5dc6bede633fc176.so /Users/ben/.pytensor/compiledir_macOS-26.3.1-arm64-arm-64bit-arm-3.11.5-64/tmpczchno8d/mod.cpp
+ld: -lto_library library filename must be 'libLTO.dylib'
+clang-16: error: linker command failed with exit code 1 (use -v to see invocation)
+
+Apply node that caused the error: ExpandDims{axis=0}(tau)
+Toposort index: 1
+Inputs types: [TensorType(float64, shape=())]
+
+Backtrace when the node is created (use PyTensor flag traceback__limit=N to make it longer):
+  File "/Users/ben/Documents/auto-psych/src/agents/experiment_designer.py", line 144, in run_experiment_designer
+    design_script_ok = _run_design_script(out_dir, theorist_dir, model_names, model_weights, total_trials, allowed_lengths, project_id=project_id)
+  File "/Users/ben/Documents/auto-psych/src/agents/experiment_designer.py", line 254, in _run_design_script
+    eig_fn = _make_eig_dispatch(theorist_dir, model_names, project_id)
+  File "/Users/ben/Documents/auto-psych/src/agents/experiment_designer.py", line 222, in _make_eig_dispatch
+    response_col = observed_response_data(load_pymc_model_cached(model_names[0], theorist_dir))
+  File "/Users/ben/Documents/auto-psych/src/models/pymc_inference.py", line 207, in load_pymc_model_cached
+    _MODEL_CACHE[key] = load_pymc_model(name, Path(models_dir))
+  File "/Users/ben/Documents/auto-psych/src/models/pymc_inference.py", line 65, in load_pymc_model
+    spec.loader.exec_module(mod)
+  File "<frozen importlib._bootstrap_external>", line 940, in exec_module
+  File "<frozen importlib._bootstrap>", line 241, in _call_with_frames_removed
+  File "/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1149_587f6ff/run1/1_theory/rational_representativeness.py", line 42, in <module>
+
+HINT: Use a linker other than the C linker to print the inputs' shapes and strides.
+HINT: Use the PyTensor flag `exception_verbosity=high` for a debug print-out and storage map footprint of this Apply node.
+[2026-05-15T18:54:54Z] _run_design_script returned False; stimuli.json exists=False
+[2026-05-15T18:54:54Z] using FALLBACK design: script ran but failed or did not write stimuli.json (see design_script_log.txt)

@@ -1,0 +1,8 @@
+[2026-05-15T18:40:50Z] === 3_implement start ===
+[2026-05-15T18:40:50Z] project_id='subjective_randomness' run_id=2 attempt=1
+[2026-05-15T18:40:50Z] wrote index.html, stimuli.json (n_stimuli=30)
+[2026-05-15T18:40:50Z] Deploy: mode='simulated_participants'
+[2026-05-15T18:40:50Z] Deploy: ground_truth_model='alternation'; skipping Firebase and local server.
+[2026-05-15T18:40:50Z] Deploy: wrote config.json
+[2026-05-15T18:40:50Z] deploy logic completed
+[2026-05-15T18:40:50Z] === 3_implement end ===

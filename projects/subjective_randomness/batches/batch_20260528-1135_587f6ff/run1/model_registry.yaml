@@ -1,0 +1,5 @@
+reserved_for_new: 0.25
+theories:
+  alternation_heuristic: 0.25
+  proportion_heuristic: 0.25
+  rational_markov: 0.25

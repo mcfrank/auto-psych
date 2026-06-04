@@ -1,0 +1,5 @@
+[2026-05-15T18:40:50Z] === 5_analyze start ===
+[2026-05-15T18:40:50Z] project_id='subjective_randomness' run_id=2 attempt=1
+[2026-05-15T18:40:50Z] data_path='/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1140_587f6ff/run2/4_collect/responses.csv'
+[2026-05-15T18:40:50Z] wrote aggregate.csv, summary_stats.json, model_correlations.yaml (n_stimuli=30)
+[2026-05-15T18:40:50Z] === 5_analyze end ===

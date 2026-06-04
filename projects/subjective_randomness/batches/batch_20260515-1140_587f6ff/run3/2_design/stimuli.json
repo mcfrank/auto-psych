@@ -1,0 +1,152 @@
+[
+  {
+    "sequence_a": "TTTT",
+    "sequence_b": "TTTH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTT",
+    "sequence_b": "THTH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTT",
+    "sequence_b": "HTHH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTT",
+    "sequence_b": "HHHH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTT",
+    "sequence_b": "HTHT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTT",
+    "sequence_b": "THHT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTT",
+    "sequence_b": "TTHH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTT",
+    "sequence_b": "HTTT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTT",
+    "sequence_b": "TTHT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTH",
+    "sequence_b": "THTH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTH",
+    "sequence_b": "HTHH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTH",
+    "sequence_b": "HHHH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTH",
+    "sequence_b": "HTHT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTH",
+    "sequence_b": "THHT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTH",
+    "sequence_b": "TTHH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTH",
+    "sequence_b": "HTTT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "TTTH",
+    "sequence_b": "TTHT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "THTH",
+    "sequence_b": "HTHH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "THTH",
+    "sequence_b": "HHHH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "THTH",
+    "sequence_b": "HTHT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "THTH",
+    "sequence_b": "THHT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "THTH",
+    "sequence_b": "TTHH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "THTH",
+    "sequence_b": "HTTT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "THTH",
+    "sequence_b": "TTHT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "HTHH",
+    "sequence_b": "HHHH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "HTHH",
+    "sequence_b": "HTHT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "HTHH",
+    "sequence_b": "THHT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "HTHH",
+    "sequence_b": "TTHH",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "HTHH",
+    "sequence_b": "HTTT",
+    "eig": 0.0
+  },
+  {
+    "sequence_a": "HTHH",
+    "sequence_b": "TTHT",
+    "eig": 0.0
+  }
+]

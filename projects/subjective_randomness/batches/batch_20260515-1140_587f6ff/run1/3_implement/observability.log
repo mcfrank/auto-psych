@@ -1,0 +1,16 @@
+[2026-05-15T18:40:22Z] === 3_implement start ===
+[2026-05-15T18:40:22Z] project_id='subjective_randomness' run_id=1 attempt=1
+[2026-05-15T18:40:22Z] wrote index.html, stimuli.json (n_stimuli=30)
+[2026-05-15T18:40:22Z] Deploy: mode='simulated_participants'
+[2026-05-15T18:40:22Z] Deploy: ground_truth_model='alternation'; skipping Firebase and local server.
+[2026-05-15T18:40:22Z] Deploy: wrote config.json
+[2026-05-15T18:40:22Z] deploy logic completed
+[2026-05-15T18:40:22Z] === 3_implement end ===
+[2026-05-15T18:40:49Z] === 3_implement start ===
+[2026-05-15T18:40:49Z] project_id='subjective_randomness' run_id=1 attempt=1
+[2026-05-15T18:40:49Z] wrote index.html, stimuli.json (n_stimuli=30)
+[2026-05-15T18:40:49Z] Deploy: mode='simulated_participants'
+[2026-05-15T18:40:49Z] Deploy: ground_truth_model='alternation'; skipping Firebase and local server.
+[2026-05-15T18:40:49Z] Deploy: wrote config.json
+[2026-05-15T18:40:49Z] deploy logic completed
+[2026-05-15T18:40:49Z] === 3_implement end ===

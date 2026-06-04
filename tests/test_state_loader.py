@@ -3,8 +3,8 @@
 import pytest
 from pathlib import Path
 
-from src.state_loader import load_state_from_run, minimal_state_for_agent
-from src.config import REPO_ROOT
+from src.experiments.state_loader import load_state_from_run, minimal_state_for_agent
+from src.runtime.config import REPO_ROOT
 
 FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures"
 

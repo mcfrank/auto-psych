@@ -1,1 +1,1 @@
-# Auto-psych: LangGraph agentic experiment loop
+# Shared support modules for the active auto-psych pipelines.
