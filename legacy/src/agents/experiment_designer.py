@@ -141,7 +141,7 @@ You **must** use the provided expected_information_gain((sequence_a, sequence_b)
             (out_dir / "design_script.py").write_text(script_code, encoding="utf-8")
             script_written = True
             agent_log(out_dir, "wrote design_script.py; running script...")
-            design_script_ok = _run_design_script(out_dir, theorist_dir, model_names, model_weights, total_trials, allowed_lengths)
+            design_script_ok = _run_design_script(out_dir, theorist_dir, model_names, model_weights, total_trials, allowed_lengths, project_id=project_id)
             agent_log(out_dir, f"_run_design_script returned {design_script_ok}; stimuli.json exists={(out_dir / 'stimuli.json').exists()}")
         else:
             agent_log(out_dir, "no python block >= 50 chars; skipping script run")
@@ -160,7 +160,7 @@ You **must** use the provided expected_information_gain((sequence_a, sequence_b)
         elif not (out_dir / "stimuli.json").exists():
             reason_parts.append("stimuli.json missing after script run")
         agent_log(out_dir, "using FALLBACK design: " + "; ".join(reason_parts))
-        _fallback_design(out_dir, theorist_dir, model_names, model_weights, total_trials, allowed_lengths)
+        _fallback_design(out_dir, theorist_dir, model_names, model_weights, total_trials, allowed_lengths, project_id=project_id)
     else:
         agent_log(out_dir, "outcome: used LLM-generated script; stimuli.json present")
         if (out_dir / "design_script_log.txt").exists():
@@ -174,6 +174,67 @@ You **must** use the provided expected_information_gain((sequence_a, sequence_b)
     }
 
 
+def _detect_pymc_theorist(theorist_dir: Path, model_names: List[str]) -> bool:
+    """True if at least one named model file exposes a module-level pm.Model."""
+    if not model_names:
+        return False
+    try:
+        from src.models.pymc_inference import load_pymc_model  # type: ignore
+        load_pymc_model(model_names[0], theorist_dir)
+        return True
+    except Exception:
+        return False
+
+
+def _load_project_featurizer(project_id: str):
+    """Import project's preprocess_data.featurize_stimulus, or None if absent."""
+    import importlib.util
+    from src.config import project_dir  # type: ignore
+    pp_path = project_dir(project_id) / "preprocess_data.py"
+    if not pp_path.exists():
+        return None
+    spec = importlib.util.spec_from_file_location(f"_pp_{project_id}", pp_path)
+    if spec is None or spec.loader is None:
+        return None
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return getattr(mod, "featurize_stimulus", None)
+
+
+def _make_eig_dispatch(
+    theorist_dir: Path,
+    model_names: List[str],
+    project_id: Optional[str],
+):
+    """Return an `eig(stim_tuple, weights_override) -> float` that dispatches
+    to the PyMC prior-predictive implementation when theorist outputs are
+    PyMC models, or to the legacy callable EIG otherwise."""
+    use_pymc = _detect_pymc_theorist(theorist_dir, model_names)
+    featurizer = _load_project_featurizer(project_id) if (use_pymc and project_id) else None
+
+    if use_pymc and featurizer is not None:
+        from src.models.pymc_inference import (  # type: ignore
+            expected_information_gain_prior_pymc,
+            load_pymc_model_cached,
+            observed_response_data,
+        )
+        try:
+            response_col = observed_response_data(load_pymc_model_cached(model_names[0], theorist_dir))
+        except Exception:
+            response_col = "chose_left"
+
+        def _eig(stim, weights=None):
+            feature_row = dict(featurizer(stim[0], stim[1]))
+            feature_row.setdefault(response_col, 0)
+            return expected_information_gain_prior_pymc(
+                feature_row, model_names, theorist_dir, model_weights=weights,
+            )
+    else:
+        def _eig(stim, weights=None):
+            return expected_information_gain(stim, model_names, theorist_dir, weights)
+    return _eig
+
+
 def _run_design_script(
     out_dir: Path,
     theorist_dir: Path,
@@ -181,6 +242,7 @@ def _run_design_script(
     model_weights: Optional[Dict[str, float]] = None,
     total_trials: int = 30,
     allowed_sequence_lengths: Optional[List[int]] = None,
+    project_id: Optional[str] = None,
 ) -> bool:
     """Execute design_script.py with the required namespace. Return True if it wrote stimuli.json."""
     script_path = out_dir / "design_script.py"
@@ -188,9 +250,12 @@ def _run_design_script(
         return False
     if allowed_sequence_lengths is None:
         allowed_sequence_lengths = [8]
-    # Bind EIG so script can call expected_information_gain(stimulus) only
+
+    eig_fn = _make_eig_dispatch(theorist_dir, model_names, project_id)
+
     def _eig(stimulus: Tuple[str, str]) -> float:
-        return expected_information_gain(stimulus, model_names, theorist_dir, model_weights)
+        return eig_fn(stimulus, model_weights)
+
     namespace: Dict[str, Any] = {
         "theorist_dir": theorist_dir,
         "model_names": model_names,
@@ -222,7 +287,7 @@ def _run_design_script(
         agent_log(out_dir, "script ran but did not write stimuli.json")
         return False
     # Patch missing "eig" so validation passes and we use pipeline's weighted EIG
-    _patch_stimuli_eig(out_dir, model_names, theorist_dir, model_weights)
+    _patch_stimuli_eig(out_dir, model_names, theorist_dir, model_weights, project_id=project_id)
     return True
 
 
@@ -231,6 +296,7 @@ def _patch_stimuli_eig(
     model_names: List[str],
     theorist_dir: Path,
     model_weights: Optional[Dict[str, float]] = None,
+    project_id: Optional[str] = None,
 ) -> None:
     """If any stimulus in stimuli.json is missing 'eig', set it from pipeline's expected_information_gain."""
     path = out_dir / "stimuli.json"
@@ -240,11 +306,12 @@ def _patch_stimuli_eig(
         return
     if not isinstance(data, list):
         return
+    eig_fn = _make_eig_dispatch(theorist_dir, model_names, project_id)
     n_patched = 0
     for item in data:
         if isinstance(item, dict) and "sequence_a" in item and "sequence_b" in item and "eig" not in item:
             stim = (item["sequence_a"], item["sequence_b"])
-            item["eig"] = round(expected_information_gain(stim, model_names, theorist_dir, model_weights), 6)
+            item["eig"] = round(eig_fn(stim, model_weights), 6)
             n_patched += 1
     if n_patched:
         path.write_text(json.dumps(data, indent=2), encoding="utf-8")
@@ -258,19 +325,21 @@ def _fallback_design(
     model_weights: Optional[Dict[str, float]] = None,
     total_trials: int = 30,
     allowed_lengths: Optional[List[int]] = None,
+    project_id: Optional[str] = None,
 ) -> None:
     """Built-in EIG design when no script or script failed. Uses diversity across theory pairs when possible."""
     if allowed_lengths is None:
         allowed_lengths = [8]
+    eig_fn = _make_eig_dispatch(theorist_dir, model_names, project_id)
     candidate_stimuli = _sample_stimulus_pairs(allowed_lengths, max_pairs=max(150, total_trials * 3))
     scored = []
     for stim in candidate_stimuli:
-        eig = expected_information_gain(stim, model_names, theorist_dir, model_weights)
+        eig = eig_fn(stim, model_weights)
         scored.append((stim, eig))
     scored.sort(key=lambda x: -x[1])
 
     # Diversity: prefer stimuli that discriminate different theory pairs (round-robin by best theory-pair)
-    selected = _select_diverse_stimuli(scored, model_names, theorist_dir, total_trials, model_weights)
+    selected = _select_diverse_stimuli(scored, model_names, theorist_dir, total_trials, model_weights, eig_fn=eig_fn)
     if len(selected) < total_trials:
         # Backfill from top by global EIG
         seen = {s for s, _ in selected}
@@ -303,17 +372,21 @@ def _select_diverse_stimuli(
     theorist_dir: Path,
     total_trials: int,
     model_weights: Optional[Dict[str, float]],
+    eig_fn=None,
 ) -> List[Tuple[Stimulus, float]]:
     """Select stimuli so that different theory pairs are discriminated (round-robin by pairwise EIG)."""
     if len(model_names) < 2 or not scored:
         return [(s, e) for s, e in scored[:total_trials]]
+    if eig_fn is None:
+        def eig_fn(stim, weights):
+            return expected_information_gain(stim, model_names, theorist_dir, weights)
     # For each theory pair (i, j), rank stimuli by EIG under prior only on i and j
     pair_ranks: Dict[Tuple[str, str], List[Tuple[Stimulus, float]]] = {}
     for i, j in itertools.combinations(model_names, 2):
         pair_prior = {m: 0.0 for m in model_names}
         pair_prior[i] = 0.5
         pair_prior[j] = 0.5
-        pair_scored = [(s, expected_information_gain(s, model_names, theorist_dir, pair_prior)) for s, _ in scored]
+        pair_scored = [(s, eig_fn(s, pair_prior)) for s, _ in scored]
         pair_scored.sort(key=lambda x: -x[1])
         pair_ranks[(i, j)] = pair_scored
     # Round-robin: take best remaining from each pair in turn

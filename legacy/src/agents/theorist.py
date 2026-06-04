@@ -6,18 +6,21 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import yaml
 
-from src.config import agent_dir_for_state, run_dir_for_state, DEFAULT_MAX_VALIDATION_RETRIES
-from src.references import load_references
-from src.agents.base import load_prompt_for_run, invoke_llm
-from src.console_log import agent_header, log_status
-from src.observability import agent_log, write_transcript
-from src.registry import load_registry
+from src.agents.base import invoke_llm, load_prompt_for_run
 from src.agents.llm_output_parsing import (
     ensure_str,
     extract_fenced_blocks,
     extract_yaml_from_response,
 )
-from src.registry import load_registry, write_registry, DEFAULT_RESERVED_FOR_NEW
+from src.config import (
+    DEFAULT_MAX_VALIDATION_RETRIES,
+    agent_dir_for_state,
+    run_dir_for_state,
+)
+from src.console_log import agent_header, log_status
+from src.observability import agent_log, write_transcript
+from src.references import load_references
+from src.registry import DEFAULT_RESERVED_FOR_NEW, load_registry, write_registry
 
 # Run 1: need 2–3 theories total (2–3 calls). Run 2+: need at least 1 new theory.
 MIN_THEORIES_RUN1 = 2
@@ -40,7 +43,9 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
         agent_header("1_theory", run_id, state.get("total_runs"), state.get("mode"))
     elif state.get("validation_retry_count", 0) > 0:
         max_r = state.get("max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES)
-        log_status(f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})")
+        log_status(
+            f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_r})"
+        )
     out_dir = agent_dir_for_state(project_id, run_id, "1_theory", state)
     out_dir.mkdir(parents=True, exist_ok=True)
     attempt = (state.get("validation_retry_count") or 0) + 1
@@ -71,7 +76,9 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
     if run_id >= 2:
         _copy_previous_run_theories(project_id, run_id, out_dir, state)
         current_models = _load_current_manifest(out_dir)
-        agent_log(out_dir, f"loaded {len(current_models)} existing models from previous run")
+        agent_log(
+            out_dir, f"loaded {len(current_models)} existing models from previous run"
+        )
 
     min_new = MIN_NEW_THEORIES_RUN2_PLUS if run_id >= 2 else 0
     min_total_run1 = MIN_THEORIES_RUN1
@@ -104,8 +111,11 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
         response = ensure_str(response)
         agent_log(out_dir, f"LLM response length={len(response)} chars")
         write_transcript(
-            out_dir, iteration,
-            system=prompt, user=user_content, response=response[:100_000],
+            out_dir,
+            iteration,
+            system=prompt,
+            user=user_content,
+            response=response[:100_000],
             validation_feedback=validation_feedback if iteration == 1 else "",
         )
 
@@ -132,7 +142,10 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
         else:
             enough = new_models_this_run >= min_new
         if done and enough:
-            agent_log(out_dir, f"DONE with {len(current_models)} models (new this run: {new_models_this_run})")
+            agent_log(
+                out_dir,
+                f"DONE with {len(current_models)} models (new this run: {new_models_this_run})",
+            )
             break
         if done and not enough and iteration >= max_iterations:
             break
@@ -142,11 +155,16 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
 
     model_names = [m["name"] for m in current_models if m.get("name")]
     if not model_names:
-        agent_log(out_dir, "no models extracted from LLM; manifest will have no models (validation may fail)")
+        agent_log(
+            out_dir,
+            "no models extracted from LLM; manifest will have no models (validation may fail)",
+        )
 
     manifest = {
         "models": current_models,
-        "rationale": "\n".join(rationales) if rationales else "Theories added iteratively.",
+        "rationale": "\n".join(rationales)
+        if rationales
+        else "Theories added iteratively.",
     }
     (out_dir / "models_manifest.yaml").write_text(
         yaml.dump(manifest, default_flow_style=False), encoding="utf-8"
@@ -159,16 +177,26 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
 
     # Registry (unchanged logic)
     registry_path = Path(state.get("registry_path", ""))
-    if not registry_path or not str(registry_path).strip() or registry_path.resolve().is_dir():
-        registry_path = run_dir_for_state(project_id, run_id, state) / "model_registry.yaml"
+    if (
+        not registry_path
+        or not str(registry_path).strip()
+        or registry_path.resolve().is_dir()
+    ):
+        registry_path = (
+            run_dir_for_state(project_id, run_id, state) / "model_registry.yaml"
+        )
     if registry_path:
         if run_id == 1:
             k = len(model_names) or 1
             prob_each = (1.0 - DEFAULT_RESERVED_FOR_NEW) / k
             theories = {m: prob_each for m in model_names}
-            write_registry(registry_path, theories, reserved_for_new=DEFAULT_RESERVED_FOR_NEW)
+            write_registry(
+                registry_path, theories, reserved_for_new=DEFAULT_RESERVED_FOR_NEW
+            )
         else:
-            prev_registry = run_dir_for_state(project_id, run_id - 1, state) / "model_registry.yaml"
+            prev_registry = (
+                run_dir_for_state(project_id, run_id - 1, state) / "model_registry.yaml"
+            )
             prev = load_registry(prev_registry)
             prev_theories = prev.get("theories") or {}
             reserved = prev.get("reserved_for_new", DEFAULT_RESERVED_FOR_NEW)
@@ -189,7 +217,9 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
                 s = sum(theories.values())
                 if s > 0:
                     theories = {m: p / s for m, p in theories.items()}
-            write_registry(registry_path, theories, reserved_for_new=DEFAULT_RESERVED_FOR_NEW)
+            write_registry(
+                registry_path, theories, reserved_for_new=DEFAULT_RESERVED_FOR_NEW
+            )
 
     return {
         **state,
@@ -198,7 +228,9 @@ def run_theorist(state: Dict[str, Any]) -> Dict[str, Any]:
     }
 
 
-def _copy_previous_run_theories(project_id: str, run_id: int, out_dir: Path, state: Dict[str, Any]) -> None:
+def _copy_previous_run_theories(
+    project_id: str, run_id: int, out_dir: Path, state: Dict[str, Any]
+) -> None:
     """Copy previous run's 1_theory/*.py and models_manifest.yaml into out_dir."""
     prev_dir = run_dir_for_state(project_id, run_id - 1, state) / "1_theory"
     if not prev_dir.exists():
@@ -218,7 +250,11 @@ def _load_current_manifest(out_dir: Path) -> List[Dict[str, Any]]:
         return []
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8"))
-        if isinstance(data, dict) and "models" in data and isinstance(data["models"], list):
+        if (
+            isinstance(data, dict)
+            and "models" in data
+            and isinstance(data["models"], list)
+        ):
             return list(data["models"])
     except Exception:
         pass
@@ -253,23 +289,32 @@ This is **Run {run_id}** of the pipeline. This is **iteration {iteration}** (one
 
 """)
     if run_id >= 2:
-        parts.append(f"So far this run you have added **{new_models_this_run}** new theory/theories. You must add at least one; say ---ADD_ANOTHER--- to add one more, or ---DONE--- when finished.\n\n")
+        parts.append(
+            f"So far this run you have added **{new_models_this_run}** new theory/theories. You must add at least one; say ---ADD_ANOTHER--- to add one more, or ---DONE--- when finished.\n\n"
+        )
     else:
-        parts.append("You must add 2–3 theories total. Say ---ADD_ANOTHER--- to add one more, or ---DONE--- when you have added at least 2.\n\n")
+        parts.append(
+            "You must add 2–3 theories total. Say ---ADD_ANOTHER--- to add one more, or ---DONE--- when you have added at least 2.\n\n"
+        )
 
     if current_models:
         names = [m.get("name", "") for m in current_models if m.get("name")]
         parts.append(f"""## Current manifest (already in this run)
 
-{chr(10).join('- ' + n for n in names)}
+{chr(10).join("- " + n for n in names)}
 
 """)
     if run_id >= 2:
-        prev_registry_path = run_dir_for_state(state["project_id"], run_id - 1, state) / "model_registry.yaml"
+        prev_registry_path = (
+            run_dir_for_state(state["project_id"], run_id - 1, state)
+            / "model_registry.yaml"
+        )
         prev_reg = load_registry(prev_registry_path)
         prev_theories = prev_reg.get("theories") or {}
         if prev_theories:
-            probs_str = "\n".join(f"  {k}: {v}" for k, v in sorted(prev_theories.items()))
+            probs_str = "\n".join(
+                f"  {k}: {v}" for k, v in sorted(prev_theories.items())
+            )
             parts.append(f"""## Previous run's theory probabilities (Run {run_id - 1})
 
 ```yaml
@@ -333,5 +378,3 @@ def _parse_single_model_response(response: str) -> Tuple[Optional[str], str, str
     if "---ADD_ANOTHER---" in resp_upper:
         done = False
     return (model_name, rationale, code, done)
-
-

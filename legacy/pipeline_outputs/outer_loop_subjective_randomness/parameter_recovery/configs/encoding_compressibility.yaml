@@ -1,0 +1,17 @@
+model_module: cc_pipeline.projects.subjective_randomness.model_families.encoding_compressibility
+stimuli_path: cc_pipeline/projects/subjective_randomness/experiment2/design/stimuli.json
+
+true_params:
+  longrun_weight: 0.40
+  periodic_share: 0.50
+  beta: 4.0
+  side_bias: 0.0
+
+simulation:
+  n_participants: 30
+  n_repeats: 20
+  seed: 303
+
+fit:
+  n_starts: 28
+  max_iters: 180
