@@ -1,0 +1,10 @@
+{
+  "run_mode": "simulated_participants",
+  "experiment_path": "/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1140_587f6ff/run2/3_implement",
+  "project_id": "subjective_randomness",
+  "run_id": 2,
+  "ground_truth_model": "alternation",
+  "simulated_n_participants": 5,
+  "experiment_url": null,
+  "results_api_url": null
+}

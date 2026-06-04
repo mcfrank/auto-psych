@@ -1,0 +1,100 @@
+[2026-05-15T18:40:22Z] === 2_design start ===
+[2026-05-15T18:40:22Z] project_id='subjective_randomness' run_id=1 attempt=1
+[2026-05-15T18:40:22Z] no theorist models loadable (need 1_theory/<name>.py for each manifest name); design may fail
+[2026-05-15T18:40:22Z] registry_path=/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1140_587f6ff/run1/model_registry.yaml exists=True
+[2026-05-15T18:40:22Z] model_names=[]
+[2026-05-15T18:40:22Z] model_weights=(uniform prior)
+[2026-05-15T18:40:22Z] total_trials=30 allowed_sequence_lengths=[4, 6, 8]
+[2026-05-15T18:40:22Z] invoking LLM...
+[2026-05-15T18:40:22Z] LLM or extraction failed: ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error
+[2026-05-15T18:40:22Z] using FALLBACK design: llm_error=ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error; no script written (no fenced block)
+[2026-05-15T18:40:22Z] === 2_design end ===
+[2026-05-15T18:40:22Z] Validation failed (attempt 1): All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions) | details={'n_stimuli': 30, 'eig_min': 0.0, 'eig_max': 0.0}
+[2026-05-15T18:40:22Z] === 2_design start ===
+[2026-05-15T18:40:22Z] project_id='subjective_randomness' run_id=1 attempt=2
+[2026-05-15T18:40:22Z] Validation feedback: All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions) Details: {'n_stimuli': 30, 'eig_min': 0.0, 'eig_max': 0.0}
+[2026-05-15T18:40:22Z] no theorist models loadable (need 1_theory/<name>.py for each manifest name); design may fail
+[2026-05-15T18:40:22Z] registry_path=/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1140_587f6ff/run1/model_registry.yaml exists=True
+[2026-05-15T18:40:22Z] model_names=[]
+[2026-05-15T18:40:22Z] model_weights=(uniform prior)
+[2026-05-15T18:40:22Z] total_trials=30 allowed_sequence_lengths=[4, 6, 8]
+[2026-05-15T18:40:22Z] invoking LLM...
+[2026-05-15T18:40:22Z] LLM or extraction failed: ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error
+[2026-05-15T18:40:22Z] using FALLBACK design: llm_error=ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error; no script written (no fenced block)
+[2026-05-15T18:40:22Z] === 2_design end ===
+[2026-05-15T18:40:22Z] Validation failed (attempt 2): All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions) | details={'n_stimuli': 30, 'eig_min': 0.0, 'eig_max': 0.0}
+[2026-05-15T18:40:22Z] === 2_design start ===
+[2026-05-15T18:40:22Z] project_id='subjective_randomness' run_id=1 attempt=3
+[2026-05-15T18:40:22Z] Validation feedback: All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions) Details: {'n_stimuli': 30, 'eig_min': 0.0, 'eig_max': 0.0}
+[2026-05-15T18:40:22Z] no theorist models loadable (need 1_theory/<name>.py for each manifest name); design may fail
+[2026-05-15T18:40:22Z] registry_path=/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1140_587f6ff/run1/model_registry.yaml exists=True
+[2026-05-15T18:40:22Z] model_names=[]
+[2026-05-15T18:40:22Z] model_weights=(uniform prior)
+[2026-05-15T18:40:22Z] total_trials=30 allowed_sequence_lengths=[4, 6, 8]
+[2026-05-15T18:40:22Z] invoking LLM...
+[2026-05-15T18:40:22Z] LLM or extraction failed: ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error
+[2026-05-15T18:40:22Z] using FALLBACK design: llm_error=ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error; no script written (no fenced block)
+[2026-05-15T18:40:22Z] === 2_design end ===
+[2026-05-15T18:40:22Z] Validation failed (attempt 3): All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions) | details={'n_stimuli': 30, 'eig_min': 0.0, 'eig_max': 0.0}
+[2026-05-15T18:40:49Z] === 2_design start ===
+[2026-05-15T18:40:49Z] project_id='subjective_randomness' run_id=1 attempt=1
+[2026-05-15T18:40:49Z] no theorist models loadable (need 1_theory/<name>.py for each manifest name); design may fail
+[2026-05-15T18:40:49Z] registry_path=/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1140_587f6ff/run1/model_registry.yaml exists=True
+[2026-05-15T18:40:49Z] model_names=[]
+[2026-05-15T18:40:49Z] model_weights=(uniform prior)
+[2026-05-15T18:40:49Z] total_trials=30 allowed_sequence_lengths=[4, 6, 8]
+[2026-05-15T18:40:49Z] invoking LLM...
+[2026-05-15T18:40:49Z] LLM or extraction failed: ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error
+[2026-05-15T18:40:49Z] using FALLBACK design: llm_error=ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error; no script written (no fenced block)
+[2026-05-15T18:40:49Z] === 2_design end ===
+[2026-05-15T18:40:49Z] Validation failed (attempt 1): All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions) | details={'n_stimuli': 30, 'eig_min': 0.0, 'eig_max': 0.0}
+[2026-05-15T18:40:49Z] === 2_design start ===
+[2026-05-15T18:40:49Z] project_id='subjective_randomness' run_id=1 attempt=2
+[2026-05-15T18:40:49Z] Validation feedback: All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions) Details: {'n_stimuli': 30, 'eig_min': 0.0, 'eig_max': 0.0}
+[2026-05-15T18:40:49Z] no theorist models loadable (need 1_theory/<name>.py for each manifest name); design may fail
+[2026-05-15T18:40:49Z] registry_path=/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1140_587f6ff/run1/model_registry.yaml exists=True
+[2026-05-15T18:40:49Z] model_names=[]
+[2026-05-15T18:40:49Z] model_weights=(uniform prior)
+[2026-05-15T18:40:49Z] total_trials=30 allowed_sequence_lengths=[4, 6, 8]
+[2026-05-15T18:40:49Z] invoking LLM...
+[2026-05-15T18:40:49Z] LLM or extraction failed: ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error
+[2026-05-15T18:40:49Z] using FALLBACK design: llm_error=ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error; no script written (no fenced block)
+[2026-05-15T18:40:49Z] === 2_design end ===
+[2026-05-15T18:40:49Z] Validation failed (attempt 2): All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions) | details={'n_stimuli': 30, 'eig_min': 0.0, 'eig_max': 0.0}
+[2026-05-15T18:40:49Z] === 2_design start ===
+[2026-05-15T18:40:49Z] project_id='subjective_randomness' run_id=1 attempt=3
+[2026-05-15T18:40:49Z] Validation feedback: All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions) Details: {'n_stimuli': 30, 'eig_min': 0.0, 'eig_max': 0.0}
+[2026-05-15T18:40:49Z] no theorist models loadable (need 1_theory/<name>.py for each manifest name); design may fail
+[2026-05-15T18:40:49Z] registry_path=/Users/ben/Documents/auto-psych/projects/subjective_randomness/batches/batch_20260515-1140_587f6ff/run1/model_registry.yaml exists=True
+[2026-05-15T18:40:49Z] model_names=[]
+[2026-05-15T18:40:49Z] model_weights=(uniform prior)
+[2026-05-15T18:40:49Z] total_trials=30 allowed_sequence_lengths=[4, 6, 8]
+[2026-05-15T18:40:49Z] invoking LLM...
+[2026-05-15T18:40:49Z] LLM or extraction failed: ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error
+[2026-05-15T18:40:49Z] using FALLBACK design: llm_error=ValidationError: 1 validation error for ChatGoogleGenerativeAI
+  Value error, API key required for Gemini Developer API. Provide api_key parameter or set GOOGLE_API_KEY/GEMINI_API_KEY environment variable. [type=value_error, input_value={'model': 'gemini-3.1-pro...300, 'model_kwargs': {}}, input_type=dict]
+    For further information visit https://errors.pydantic.dev/2.11/v/value_error; no script written (no fenced block)
+[2026-05-15T18:40:49Z] === 2_design end ===
+[2026-05-15T18:40:49Z] Validation failed (attempt 3): All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions) | details={'n_stimuli': 30, 'eig_min': 0.0, 'eig_max': 0.0}
