@@ -42,6 +42,11 @@ def experiment_dir(project_id: str, exp_num: int) -> Path:
     return outer_projects_dir() / project_id / f"experiment{exp_num}"
 
 
+def project_seed_models_dir(project_id: str) -> Path:
+    """Return the optional project seed-model directory."""
+    return outer_project_dir(project_id) / "seed_models"
+
+
 def get_ground_truth_models(project_id: str) -> Dict:
     """Load GROUND_TRUTH_MODELS from src/pipelines/outer_loop/projects/<project>/ground_truth_models.py."""
     import importlib.util
@@ -60,6 +65,42 @@ def get_ground_truth_models(project_id: str) -> Dict:
 def ensure_experiment_dirs(exp_dir: Path) -> None:
     for sub in ["cognitive_models", "design", "experiment", "data", "model_loop"]:
         (exp_dir / sub).mkdir(parents=True, exist_ok=True)
+
+
+def seed_experiment_models_from_project(exp_dir: Path, project_id: str) -> bool:
+    """Copy project-level seed models into an empty experiment model directory.
+
+    Projects can define ``seed_models/<name>.py`` plus ``models_manifest.yaml`` to
+    specify the model set experiment 1 should start from. The copy is skipped if
+    the experiment already has a manifest, which keeps ``--resume`` from
+    overwriting models a user or previous agent created.
+    """
+    seed_dir = project_seed_models_dir(project_id)
+    seed_manifest = seed_dir / "models_manifest.yaml"
+    if not seed_manifest.exists():
+        return False
+
+    dest_dir = exp_dir / "cognitive_models"
+    dest_manifest = dest_dir / "models_manifest.yaml"
+    if dest_manifest.exists():
+        return False
+
+    manifest = yaml.safe_load(seed_manifest.read_text(encoding="utf-8")) or {}
+    entries = manifest.get("models") or []
+    if not entries:
+        raise ValueError(f"Seed manifest has no models: {seed_manifest}")
+
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    for entry in entries:
+        name = entry.get("name") if isinstance(entry, dict) else entry
+        if not name:
+            continue
+        src = seed_dir / f"{name}.py"
+        if not src.exists():
+            raise FileNotFoundError(f"Seed model {name!r} has no file at {src}")
+        shutil.copyfile(src, dest_dir / f"{name}.py")
+    shutil.copyfile(seed_manifest, dest_manifest)
+    return True
 
 
 # ─────────────────────────────────────────────
