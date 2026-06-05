@@ -1,4 +1,4 @@
-model_module: cc_pipeline.projects.subjective_randomness.model_families.prototype_similarity
+model_module: src.subjective_randomness.model_families.prototype_similarity
 stimuli_path: data/subjective_randomness/parameter_recovery/stimuli.json
 
 true_params:

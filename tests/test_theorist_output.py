@@ -3,7 +3,7 @@
 DEFERRED: `src.validation.validate_theorist_output` is the LangGraph pipeline's
 validator and still uses the old callable-model contract (`fn(stim, opts) ->
 dict`). Under the PyMC migration first cut the LangGraph pipeline is deferred;
-the cc_pipeline uses `cc_pipeline.orchestrator._validate_theory` which is PyMC-aware.
+the active outer loop uses a PyMC-aware theory validator instead.
 """
 
 import pytest
