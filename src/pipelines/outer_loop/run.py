@@ -35,6 +35,7 @@ from src.pipelines.outer_loop.orchestrator import (
     run_inner_model_loop_programmatic,
     run_collect_programmatic,
     spawn_cc_agent,
+    seed_experiment_models_from_project,
     update_registry_from_interpretation,
     validate_cc_output,
     write_context,
@@ -147,12 +148,29 @@ def _run_experiment(
         sys.exit(1)
     ensure_experiment_dirs(exp_dir_path)
     init_registry(exp_dir_path)
+    seeded_models = False
+    if exp_num == 1:
+        seeded_models = seed_experiment_models_from_project(exp_dir_path, project_id)
+        if seeded_models:
+            print(
+                f"  [seed] Copied project seed models into {exp_dir_path / 'cognitive_models'}",
+                flush=True,
+            )
+            if validate:
+                ok, msg = validate_cc_output("1_theory", exp_dir_path)
+                if ok:
+                    print(f"  [ok] seeded theory: {msg}", flush=True)
+                else:
+                    print(f"  [error] Seed validation failed: {msg}", file=sys.stderr)
+                    sys.exit(1)
 
     prev_exp_dir = experiment_dir(project_id, exp_num - 1) if exp_num > 1 else None
     if prev_exp_dir and not prev_exp_dir.exists():
         prev_exp_dir = None
 
     keys_to_run = [agent_filter] if agent_filter else AGENT_KEYS
+    if seeded_models and agent_filter is None:
+        keys_to_run = [key for key in keys_to_run if key != "1_theory"]
 
     for agent_key in keys_to_run:
         # No-browser mode never uses the jsPsych experiment, so skip building it
