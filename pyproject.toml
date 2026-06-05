@@ -36,6 +36,16 @@ pymc = [
     "arviz>=0.17.0",
     "pymc>=5.10.0",
 ]
+# Open-weight participant models (LLM-as-participant, --participant-backend open).
+# Heavy; install only when needed: `uv sync --group open-models`.
+# CPU/Apple-MPS torch resolves by default. For an NVIDIA GPU, install the torch
+# wheel matching your CUDA version (https://pytorch.org/get-started/locally/)
+# before syncing this group.
+open-models = [
+    "torch>=2.2.0",
+    "transformers>=4.40.0",
+    "accelerate>=0.30.0",
+]
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "src/pipelines/inner_loop/tests"]
