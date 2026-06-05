@@ -7,7 +7,7 @@ from pathlib import Path
 
 import numpy as np
 
-from cc_pipeline.projects.subjective_randomness.parameter_recovery import pymc_recover
+from src.subjective_randomness import pymc_recover
 
 
 class _FakeParam:

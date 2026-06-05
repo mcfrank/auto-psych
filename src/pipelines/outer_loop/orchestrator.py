@@ -31,6 +31,7 @@ PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 # ─────────────────────────────────────────────
 
 def outer_projects_dir() -> Path:
+    """Project *assets* (problem_definition.md, ground_truth_models.py, preprocess.py)."""
     return REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects"
 
 
@@ -38,8 +39,13 @@ def outer_project_dir(project_id: str) -> Path:
     return outer_projects_dir() / project_id
 
 
+def outer_data_dir() -> Path:
+    """Generated experiment *outputs* (one subtree per project)."""
+    return REPO_ROOT / "data" / "outer_loop"
+
+
 def experiment_dir(project_id: str, exp_num: int) -> Path:
-    return outer_projects_dir() / project_id / f"experiment{exp_num}"
+    return outer_data_dir() / project_id / f"experiment{exp_num}"
 
 
 def get_ground_truth_models(project_id: str) -> Dict:
@@ -223,7 +229,10 @@ def run_collect_programmatic(
             print(f"  [collect] Warning: no loadable models in {theorist_dir} — cannot generate data", flush=True)
             rows = []
         else:
-            featurize_path = exp_dir.parent / "preprocess.py"
+            # The featurizer is a project *asset* (src assets dir), not under the
+            # data tree where exp_dir now lives.
+            assets_dir = outer_project_dir(project_id or exp_dir.parent.name)
+            featurize_path = assets_dir / "preprocess.py"
             rows = _generate_from_pymc_models(
                 stimuli,
                 model_names,
@@ -365,7 +374,9 @@ def run_inner_model_loop_programmatic(
 
     loop_dir = exp_dir / "model_loop"
     loop_dir.mkdir(parents=True, exist_ok=True)
-    featurize = _load_project_featurizer(exp_dir.parent)
+    # The featurizer is a project *asset* (src assets dir), not under the data
+    # tree where exp_dir now lives. exp_dir.parent.name is the project id.
+    featurize = _load_project_featurizer(outer_project_dir(exp_dir.parent.name))
     responses_path = _write_feature_csv(rows, featurize, loop_dir / "responses.csv")
 
     seed_models_dir = exp_dir / "cognitive_models"

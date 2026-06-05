@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Randomness Judgment</title>
+  <script src="https://unpkg.com/jspsych@8.2.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
+  <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <style>
+    #progress-wrap { position: fixed; top: 0; left: 0; right: 0; height: 6px; background: #e0e0e0; z-index: 10000; }
+    #progress-fill { height: 100%; width: 0%; background: #4a90d9; transition: width 0.2s ease; }
+
+    .seq-display {
+      display: flex;
+      justify-content: center;
+      gap: 60px;
+      margin: 30px 0;
+    }
+    .seq-box {
+      text-align: center;
+      padding: 20px 32px;
+      background: #f5f5f5;
+      border: 2px solid #ccc;
+      border-radius: 10px;
+      min-width: 160px;
+    }
+    .seq-label {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    .seq-text {
+      font-family: monospace;
+      font-size: 32px;
+      font-weight: bold;
+      letter-spacing: 4px;
+      color: #222;
+    }
+    .trial-prompt {
+      font-size: 20px;
+      text-align: center;
+      margin-bottom: 10px;
+      color: #333;
+    }
+    .jspsych-btn-auto {
+      padding: 12px 36px;
+      font-size: 17px;
+      border-radius: 8px;
+      border: 2px solid #4a90d9;
+      cursor: pointer;
+      background: white;
+      color: #4a90d9;
+      font-weight: 600;
+      margin: 0 12px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .jspsych-btn-auto:hover {
+      background: #4a90d9;
+      color: white;
+    }
+    .jspsych-content { max-width: 720px; }
+  </style>
+</head>
+<body>
+  <div id="progress-wrap"><div id="progress-fill"></div></div>
+</body>
+<script>
+  const STIMULI = [
+    {"sequence_a": "TTT", "sequence_b": "HTTTTTTH", "eig": 0.206148},
+    {"sequence_a": "HTTTTTTH", "sequence_b": "TTT", "eig": 0.206148},
+    {"sequence_a": "TTT", "sequence_b": "TTTTTTTT", "eig": 0.176123},
+    {"sequence_a": "TTTTTTTT", "sequence_b": "TTT", "eig": 0.176123},
+    {"sequence_a": "HHH", "sequence_b": "TTTTTTTT", "eig": 0.175449},
+    {"sequence_a": "TTTTTTTT", "sequence_b": "HHH", "eig": 0.175449},
+    {"sequence_a": "HHH", "sequence_b": "HTTTTTTH", "eig": 0.168856},
+    {"sequence_a": "HTTTTTTH", "sequence_b": "HHH", "eig": 0.168856},
+    {"sequence_a": "HTH", "sequence_b": "TTTTTTTT", "eig": 0.168093},
+    {"sequence_a": "TTTTTTTT", "sequence_b": "HTH", "eig": 0.168093},
+    {"sequence_a": "HTHT", "sequence_b": "TTTTTTTT", "eig": 0.167165},
+    {"sequence_a": "THTH", "sequence_b": "TTTTTTTT", "eig": 0.167165},
+    {"sequence_a": "TTTTTTTT", "sequence_b": "HTHT", "eig": 0.167165},
+    {"sequence_a": "TTTTTTTT", "sequence_b": "THTH", "eig": 0.167165},
+    {"sequence_a": "HHH", "sequence_b": "HHHHHHTH", "eig": 0.16695},
+    {"sequence_a": "HHHHHHTH", "sequence_b": "HHH", "eig": 0.16695},
+    {"sequence_a": "HTHTHT", "sequence_b": "TTTTTTTT", "eig": 0.165712},
+    {"sequence_a": "THTHTH", "sequence_b": "TTTTTTTT", "eig": 0.165712},
+    {"sequence_a": "TTTTTTTT", "sequence_b": "HTHTHT", "eig": 0.165712},
+    {"sequence_a": "TTTTTTTT", "sequence_b": "THTHTH", "eig": 0.165712}
+  ];
+
+  function makeStimDisplay(seq_a, seq_b) {
+    return `
+      <p class="trial-prompt">Which sequence looks <strong>more random</strong>?</p>
+      <div class="seq-display">
+        <div class="seq-box">
+          <div class="seq-label">Sequence A</div>
+          <div class="seq-text">${seq_a}</div>
+        </div>
+        <div class="seq-box">
+          <div class="seq-label">Sequence B</div>
+          <div class="seq-text">${seq_b}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  const trialVariables = STIMULI.map(s => ({
+    sequence_a: s.sequence_a,
+    sequence_b: s.sequence_b,
+    eig: s.eig,
+    stimulus_display: makeStimDisplay(s.sequence_a, s.sequence_b)
+  }));
+
+  var totalTrials = trialVariables.length;
+  var completedTrials = 0;
+  function updateProgress() {
+    var el = document.getElementById('progress-fill');
+    if (el && totalTrials > 0) el.style.width = (100 * completedTrials / totalTrials) + '%';
+  }
+
+  function styledBtn(label) {
+    return '<button class="jspsych-btn jspsych-btn-auto">' + label + '</button>';
+  }
+
+  const jsPsych = initJsPsych({
+    on_finish: function() {
+      window.__experimentData = jsPsych.data.get().values();
+      console.log('[auto-psych] experiment finished', window.__experimentData.length, 'trials');
+    }
+  });
+
+  const timeline = [];
+
+  // Consent
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <h2>Research Study Consent</h2>
+      <p style="max-width:560px; text-align:left; margin:auto;">
+        You are invited to participate in a short study about how people perceive randomness.
+        On each trial you will see two short sequences of coin flip outcomes (H = Heads, T = Tails)
+        and choose which one looks more random to you. The study takes about 5 minutes.
+        Your participation is voluntary and your responses are anonymous.
+      </p>
+    `,
+    choices: ['I agree — start the study'],
+    button_html: styledBtn
+  });
+
+  // Instructions
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <h2>Instructions</h2>
+      <p style="max-width:560px; text-align:left; margin:auto;">
+        On each screen you will see two sequences of coin flip outcomes, labeled <strong>Sequence A</strong>
+        and <strong>Sequence B</strong>. Each flip is shown as <strong>H</strong> (Heads) or <strong>T</strong> (Tails).
+      </p>
+      <p style="max-width:560px; text-align:left; margin:auto;">
+        Your task is to choose which sequence looks <strong>more random</strong> to you.
+        Click the button for the sequence that seems more like a genuine random coin flip.
+        There are no right or wrong answers — we are interested in your intuitions.
+      </p>
+      <p style="max-width:560px; text-align:left; margin:auto;">
+        There will be <strong>${totalTrials} trials</strong> in total. Please work at your own pace.
+      </p>
+    `,
+    choices: ['Begin'],
+    button_html: styledBtn,
+    post_trial_gap: 400
+  });
+
+  // Fixation cross
+  const fixation = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '<div style="text-align:center; font-size:48px; color:#999;">+</div>',
+    choices: 'NO_KEYS',
+    trial_duration: 400
+  };
+
+  // Main trial
+  const trial = {
+    type: jsPsychHtmlButtonResponse,
+    stimulus: jsPsych.timelineVariable('stimulus_display'),
+    choices: ['Sequence A', 'Sequence B'],
+    button_html: styledBtn,
+    data: {
+      sequence_a: jsPsych.timelineVariable('sequence_a'),
+      sequence_b: jsPsych.timelineVariable('sequence_b'),
+      eig: jsPsych.timelineVariable('eig'),
+      task: 'randomness_judgment'
+    },
+    on_finish: function(data) {
+      // response 0 = chose A (left), 1 = chose B (right)
+      data.chose_a = (data.response === 0);
+      data.chosen_sequence = data.chose_a ? data.sequence_a : data.sequence_b;
+      completedTrials++;
+      updateProgress();
+    }
+  };
+
+  timeline.push({
+    timeline: [fixation, trial],
+    timeline_variables: trialVariables,
+    randomize_order: true
+  });
+
+  // Debrief
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: `
+      <h2>Thank you!</h2>
+      <p style="max-width:560px; text-align:left; margin:auto;">
+        You have completed the study. Your responses have been recorded.
+      </p>
+      <p style="max-width:560px; text-align:left; margin:auto;">
+        This study examines how people perceive randomness in sequences of coin flips.
+        People often have systematic intuitions about what random sequences look like — for example,
+        expecting frequent alternations between heads and tails — even when true randomness
+        does not follow any such pattern. Your responses help us understand these intuitions.
+      </p>
+    `,
+    choices: ['Finish'],
+    button_html: styledBtn
+  });
+
+  jsPsych.run(timeline);
+</script>
+</html>

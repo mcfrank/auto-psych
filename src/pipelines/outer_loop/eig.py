@@ -25,12 +25,14 @@ Usage (CLI):
 
 from __future__ import annotations
 
-import argparse
 import importlib.util
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
+
+import tyro
 
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
@@ -115,38 +117,37 @@ def annotate(
     return results
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Annotate candidate stimuli with EIG over PyMC models and sort descending"
-    )
-    parser.add_argument(
-        "--candidates", required=True,
-        help="JSON file with list of {sequence_a, sequence_b} dicts",
-    )
-    parser.add_argument("--models-dir", required=True, help="Path to cognitive_models/ directory")
-    parser.add_argument(
-        "--featurize", default=None,
-        help="Path to a module exposing featurize_stimulus() (e.g. projects/<project>/preprocess.py)",
-    )
-    parser.add_argument(
-        "--registry", default=None,
-        help="Path to model_registry.yaml (optional; uniform prior if omitted)",
-    )
-    parser.add_argument("--out", default=None, help="Output JSON file path (default: stdout)")
-    parser.add_argument("--top", type=int, default=None, help="Keep only the top N stimuli by EIG")
-    parser.add_argument("--n-samples", type=int, default=200, help="Prior-predictive draws per model per stimulus")
-    args = parser.parse_args()
+@dataclass
+class Args:
+    """Annotate candidate stimuli with EIG over PyMC models and sort descending."""
 
-    candidates = json.loads(Path(args.candidates).read_text(encoding="utf-8"))
+    candidates: Path
+    """JSON file with a list of {sequence_a, sequence_b} dicts."""
+    models_dir: Path
+    """Path to the cognitive_models/ directory."""
+    featurize: Optional[Path] = None
+    """Path to a module exposing featurize_stimulus() (e.g. projects/<project>/preprocess.py)."""
+    registry: Optional[Path] = None
+    """Path to model_registry.yaml (optional; uniform prior if omitted)."""
+    out: Optional[Path] = None
+    """Output JSON file path (default: stdout)."""
+    top: Optional[int] = None
+    """Keep only the top N stimuli by EIG."""
+    n_samples: int = 200
+    """Prior-predictive draws per model per stimulus."""
+
+
+def main(args: Args) -> None:
+    candidates = json.loads(args.candidates.read_text(encoding="utf-8"))
     if not isinstance(candidates, list):
         print("Error: candidates file must contain a JSON list", file=sys.stderr)
         sys.exit(1)
 
     annotated = annotate(
         candidates=candidates,
-        models_dir=Path(args.models_dir),
-        registry_path=Path(args.registry) if args.registry else None,
-        featurize_path=Path(args.featurize) if args.featurize else None,
+        models_dir=args.models_dir,
+        registry_path=args.registry,
+        featurize_path=args.featurize,
         n_samples=args.n_samples,
     )
 
@@ -155,7 +156,7 @@ def main() -> None:
 
     output = json.dumps(annotated, indent=2)
     if args.out:
-        Path(args.out).write_text(output, encoding="utf-8")
+        args.out.write_text(output, encoding="utf-8")
         eig_vals = [s["eig"] for s in annotated]
         print(
             f"Wrote {len(annotated)} stimuli to {args.out} "
@@ -167,4 +168,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(tyro.cli(Args))

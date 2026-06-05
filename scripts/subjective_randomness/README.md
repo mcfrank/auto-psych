@@ -4,16 +4,16 @@ This directory contains the project-level machinery for checking whether a
 subjective-randomness design can recover known parameters from simulated
 choices.
 
-The canonical model families live in `../model_families/`. Generated
-`experimentN/` directories should remain generated artifacts; use their stimuli
-as inputs when useful, but do not treat them as the source of truth for the
-models.
+The importable library code lives in `src/subjective_randomness/`; these are the
+runnable command-line entry points. The canonical model families live in
+`cc_pipeline/projects/subjective_randomness/model_families/`. Data (stimuli and
+responses) lives under `data/subjective_randomness/`.
 
 Typical use from the repo root:
 
 ```bash
-python3 -m cc_pipeline.projects.subjective_randomness.parameter_recovery.recover \
-  --config cc_pipeline/projects/subjective_randomness/parameter_recovery/configs/prototype_similarity.yaml \
+uv run python scripts/subjective_randomness/recover.py \
+  --config scripts/subjective_randomness/configs/prototype_similarity.yaml \
   --out /tmp/prototype_recovery.json
 ```
 
@@ -24,14 +24,14 @@ bounded coordinate search, which is enough for first-pass design diagnostics.
 
 The PyMC bridge simulates choices from the pure-Python reference model, converts
 the simulated rows to numeric feature columns, fits the matching PyMC adapter in
-`../pymc_model_families/`, and reports posterior means/intervals against the
-known true parameters.
+`cc_pipeline/projects/subjective_randomness/pymc_model_families/`, and reports
+posterior means/intervals against the known true parameters.
 
 Quick smoke run:
 
 ```bash
-python3 -m cc_pipeline.projects.subjective_randomness.parameter_recovery.pymc_recover \
-  --config cc_pipeline/projects/subjective_randomness/parameter_recovery/configs/prototype_similarity.yaml \
+uv run python scripts/subjective_randomness/pymc_recover.py \
+  --config scripts/subjective_randomness/configs/prototype_similarity.yaml \
   --out /tmp/prototype_pymc_recovery.json \
   --n-repeats 1 \
   --draws 50 \
@@ -65,7 +65,7 @@ sequence, independent of its content.
 
 ### 1. Bayesian Diagnosticity
 
-Source: `../model_families/bayesian_diagnosticity.py`
+Source: `cc_pipeline/projects/subjective_randomness/model_families/bayesian_diagnosticity.py`
 
 This model is the closest implementation of the Tenenbaum & Griffiths
 representativeness account. A sequence looks random when it is better evidence
@@ -154,7 +154,7 @@ alternating, biased, or streaky process.
 
 ### 2. Prototype Similarity
 
-Source: `../model_families/prototype_similarity.py`
+Source: `cc_pipeline/projects/subjective_randomness/model_families/prototype_similarity.py`
 
 This model treats subjective randomness as similarity to an internal prototype:
 random-looking sequences should be close to 50/50 heads/tails and close to an
@@ -199,7 +199,7 @@ sequences if they exceed the ideal.
 
 ### 3. Encoding Compressibility
 
-Source: `../model_families/encoding_compressibility.py`
+Source: `cc_pipeline/projects/subjective_randomness/model_families/encoding_compressibility.py`
 
 This model says that sequences look non-random when they have a short, simple
 description. Examples like `HHHHHHHH`, `HTHTHTHT`, and `HHHHTTTT` are easy to
