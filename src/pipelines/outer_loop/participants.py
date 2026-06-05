@@ -27,6 +27,11 @@ CLOSED = "closed"
 OPEN = "open"
 PARTICIPANT_BACKENDS = (CLOSED, OPEN)
 
+# Default Hugging Face model for the open backend. ~9B params (~18 GB in
+# bf16, 4 safetensors shards) — needs a GPU or a lot of RAM. Override with a
+# smaller id (e.g. Qwen/Qwen2.5-0.5B-Instruct) for quick local checks.
+DEFAULT_OPEN_MODEL = "Qwen/Qwen3.5-9B"
+
 
 @runtime_checkable
 class ParticipantModel(Protocol):

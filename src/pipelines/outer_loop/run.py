@@ -40,6 +40,7 @@ from src.pipelines.outer_loop.orchestrator import (
     write_context,
 )
 from src.runtime.coding_agent import select_backend
+from src.pipelines.outer_loop.participants import DEFAULT_OPEN_MODEL
 
 AGENT_KEYS = ["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]
 
@@ -223,10 +224,11 @@ def main() -> None:
     )
     parser.add_argument(
         "--hf-model",
-        default=None,
+        default=DEFAULT_OPEN_MODEL,
         metavar="HUB_ID",
-        help="Hugging Face model id for --participant-backend open "
-             "(e.g. 'Qwen/Qwen2.5-0.5B-Instruct'). Required when backend=open.",
+        help=f"Hugging Face model id for --participant-backend open "
+             f"(default: {DEFAULT_OPEN_MODEL}). Use a smaller id "
+             f"(e.g. Qwen/Qwen2.5-0.5B-Instruct) for quick local runs.",
     )
     parser.add_argument(
         "--closed-model",
@@ -319,11 +321,14 @@ def main() -> None:
         print("Error: specify --experiment N or --experiments N", file=sys.stderr)
         sys.exit(1)
 
-    # Resolve the participant-model backend for no-browser collection.
-    if args.participant_backend == "open" and not args.hf_model:
-        print("Error: --participant-backend open requires --hf-model <hub id>", file=sys.stderr)
-        sys.exit(1)
-    participant_model = args.hf_model if args.participant_backend == "open" else args.closed_model
+    # Resolve the participant-model id for no-browser collection. The open
+    # backend has a default model; the closed backend uses the project default
+    # unless --closed-model overrides it.
+    participant_model = (
+        (args.hf_model or DEFAULT_OPEN_MODEL)
+        if args.participant_backend == "open"
+        else args.closed_model
+    )
 
     # Resolve the backend once and export it so the programmatic inner loop
     # (which spawns its own agents) inherits the same choice.
