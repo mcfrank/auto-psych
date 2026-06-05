@@ -18,6 +18,6 @@ Run model comparison:
 ```bash
 uv run python -m src.model_comparison.posterior \
   --responses data/subjective_randomness/responses.csv \
-  --models-dir cc_pipeline/projects/subjective_randomness/pymc_model_families
+  --models-dir src/subjective_randomness/pymc_model_families
 ```
 

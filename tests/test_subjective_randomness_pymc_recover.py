@@ -65,7 +65,7 @@ def test_run_pymc_recovery_writes_featurized_rows_and_report(tmp_path, monkeypat
     stimuli_path.write_text('[{"sequence_a": "HTHT", "sequence_b": "HHHT"}]', encoding="utf-8")
     config_path = tmp_path / "config.yaml"
     config = {
-        "model_module": "cc_pipeline.projects.subjective_randomness.model_families.prototype_similarity",
+        "model_module": "src.subjective_randomness.model_families.prototype_similarity",
         "stimuli_path": str(stimuli_path),
         "true_params": {
             "theta_alt": 0.65,

@@ -7,17 +7,23 @@ lists, optionality, defaults) cannot silently regress.
 
 from __future__ import annotations
 
+import os
+import subprocess
+import sys
 from pathlib import Path
 
 import pytest
 import tyro
 
+from src.pipelines.outer_loop.orchestrator import experiment_dir, outer_data_dir
 from src.pipelines.outer_loop.run import Args as OuterArgs
 from src.pipelines.outer_loop.run import _parse_experiments
 from src.pipelines.outer_loop.eig import Args as EigArgs
 from src.pipelines.inner_loop.run import Args as InnerArgs
 from src.model_comparison.likelihood import Args as LikelihoodArgs
 from src.model_comparison.posterior import Args as PosteriorArgs
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 # ── _parse_experiments ──────────────────────────────────────────────
@@ -101,3 +107,37 @@ def test_inner_run_cli_required_paths():
     assert args.seed_models == Path("s")
     assert args.results == Path("out")
     assert args.max_iterations == 0
+
+
+# ── full-stack --help smoke (catches import-time errors + arg wiring) ─
+
+@pytest.mark.parametrize(
+    "module,expected_flag",
+    [
+        ("src.model_comparison.likelihood", "--model"),
+        ("src.model_comparison.posterior", "--models-dir"),
+        ("src.pipelines.outer_loop.run", "--project"),
+        ("src.pipelines.outer_loop.eig", "--candidates"),
+        ("src.pipelines.inner_loop.run", "--seed-models"),
+    ],
+)
+def test_cli_module_help_runs(module, expected_flag):
+    env = {**os.environ, "PYTENSOR_FLAGS": "cxx="}
+    result = subprocess.run(
+        [sys.executable, "-m", module, "--help"],
+        cwd=REPO_ROOT, env=env, capture_output=True, text=True, timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    assert expected_flag in result.stdout
+
+
+# ── output-path contract (the `Outputs:` line printed by outer run) ──
+
+def test_experiment_outputs_resolve_under_data_outer_loop():
+    # run.py prints f"Outputs: {outer_data_dir() / project_id}"; pin that target.
+    project = "subjective_randomness"
+    out_root = outer_data_dir() / project
+    assert out_root == REPO_ROOT / "data" / "outer_loop" / project
+    # experiment dirs live under that data root, not under src/.
+    assert experiment_dir(project, 1) == out_root / "experiment1"
+    assert "src" not in experiment_dir(project, 1).relative_to(REPO_ROOT).parts

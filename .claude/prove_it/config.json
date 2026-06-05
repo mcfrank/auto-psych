@@ -69,7 +69,7 @@
         {
           "name": "fast-tests",
           "type": "script",
-          "command": "./script/test_fast",
+          "command": "./scripts/test_fast",
           "when": {
             "sourcesModifiedSinceLastRun": true,
             "sourceFilesEdited": true
@@ -78,7 +78,7 @@
         {
           "name": "full-tests",
           "type": "script",
-          "command": "./script/test",
+          "command": "./scripts/test",
           "parallel": true,
           "when": {
             "signal": "done",
@@ -155,7 +155,7 @@
         {
           "name": "full-tests",
           "type": "script",
-          "command": "./script/test",
+          "command": "./scripts/test",
           "when": {
             "sourcesModifiedSinceLastRun": true
           }

@@ -18,8 +18,7 @@ from src.models.pymc_inference import (
 
 MODEL_DIR = (
     Path(__file__).resolve().parent.parent
-    / "cc_pipeline"
-    / "projects"
+    / "src"
     / "subjective_randomness"
     / "pymc_model_families"
 )

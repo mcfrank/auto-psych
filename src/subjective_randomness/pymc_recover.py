@@ -3,10 +3,10 @@
 This bridges the pure-Python model families and the PyMC adapters:
 
 1. Simulate choices from the pure-Python reference model in
-   ``cc_pipeline/projects/subjective_randomness/model_families/``.
+   :mod:`src.subjective_randomness.model_families`.
 2. Featurize those rows with :mod:`src.subjective_randomness.features`.
 3. Fit the matching PyMC adapter in
-   ``cc_pipeline/projects/subjective_randomness/pymc_model_families/``.
+   ``src/subjective_randomness/pymc_model_families/``.
 4. Compare posterior parameter summaries to the known true parameters.
 """
 
@@ -21,7 +21,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
 import numpy as np
 
-from src.subjective_randomness.config import REPO_ROOT, resolve_path
+from src.subjective_randomness.config import resolve_path
 from src.subjective_randomness.features import (
     FLOAT_FEATURE_COLS,
     INT_FEATURE_COLS,
@@ -29,9 +29,7 @@ from src.subjective_randomness.features import (
 )
 from src.subjective_randomness.simulate import RESPONSE_COLUMNS, generate_rows, load_stimuli
 
-PYMC_MODELS_DIR = (
-    REPO_ROOT / "cc_pipeline" / "projects" / "subjective_randomness" / "pymc_model_families"
-)
+PYMC_MODELS_DIR = Path(__file__).resolve().parent / "pymc_model_families"
 
 
 def model_name_from_module(module_path: str, model_module: Any | None = None) -> str:
