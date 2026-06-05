@@ -69,7 +69,21 @@ uv run python -m src.pipelines.outer_loop.run --project subjective_randomness \
 ```
 
 The closed backend needs `GOOGLE_API_KEY` (env or `.secrets`); `--closed-model`
-overrides the default model id. The open backend loads the named model locally.
+overrides the default model id. The open backend loads the named model locally;
+`--hf-model` defaults to `Qwen/Qwen3.5-9B` (large — pass a smaller id for quick
+runs).
+
+**This participant model is separate from the coding-agent backend.** The
+theory / design / implement stages (and inner-loop candidate generation) are
+driven by `--coding-agent` (Claude Code by default); `--participant-backend` /
+`--hf-model` only choose the model that *answers trials* during `4_collect`.
+
+Smoke-test just the open participant path (no PyMC, no API key, tiny model):
+
+```bash
+uv sync --group open-models
+uv run python scripts/smoke_open_participant.py
+```
 
 ### Coding-agent backend
 
