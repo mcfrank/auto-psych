@@ -1,6 +1,6 @@
-"""Smoke tests for hand-authored cc_pipeline subjective-randomness model families."""
+"""Smoke tests for hand-authored subjective-randomness model families."""
 
-from cc_pipeline.projects.subjective_randomness.model_families import (
+from src.subjective_randomness.model_families import (
     bayesian_diagnosticity,
     encoding_compressibility,
     prototype_similarity,

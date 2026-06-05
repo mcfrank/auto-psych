@@ -14,12 +14,14 @@ Usage:
 
 from __future__ import annotations
 
-import argparse
 import os
 import re
 import sys
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Literal, Optional
+
+import tyro
 
 # Ensure repo root on path
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -27,7 +29,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from src.pipelines.outer_loop.orchestrator import (
     outer_project_dir,
-    outer_projects_dir,
+    outer_data_dir,
     ensure_experiment_dirs,
     experiment_dir,
     get_ground_truth_models,
@@ -206,114 +208,46 @@ def _run_experiment(
     print(f"\nExperiment {exp_num} complete. Outputs: {exp_dir_path}", flush=True)
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Claude Code agent pipeline for auto-psych"
-    )
-    parser.add_argument("--project", required=True, help="Project ID (e.g. subjective_randomness)")
-    parser.add_argument("--experiment", type=int, default=None, help="Single experiment number")
-    parser.add_argument(
-        "--experiments",
-        type=str,
-        default=None,
-        metavar="N|A-B",
-        help="Experiments to run: N (1..N) or A-B (e.g. 4-6). Overrides --experiment.",
-    )
-    parser.add_argument(
-        "--agent",
-        choices=AGENT_KEYS,
-        default=None,
-        help="Run only this agent. Omit for full pipeline.",
-    )
-    parser.add_argument(
-        "--mode",
-        choices=["simulated_participants", "simulated_participants_nobrowser", "live"],
-        default="simulated_participants",
-        help="Collection mode. 'simulated_participants_nobrowser' runs an "
-             "LLM-as-participant (no browser). 'simulated_participants' (browser) "
-             "and 'live' (Prolific) are not yet implemented in this runner.",
-    )
-    parser.add_argument(
-        "--participant-backend",
-        choices=["closed", "open"],
-        default="closed",
-        help="Participant-model backend for no-browser mode: 'closed' (hosted "
-             "API, e.g. Gemini) or 'open' (local Hugging Face transformers).",
-    )
-    parser.add_argument(
-        "--hf-model",
-        default=DEFAULT_OPEN_MODEL,
-        metavar="HUB_ID",
-        help=f"Hugging Face model id for --participant-backend open "
-             f"(default: {DEFAULT_OPEN_MODEL}). Use a smaller id "
-             f"(e.g. Qwen/Qwen2.5-0.5B-Instruct) for quick local runs.",
-    )
-    parser.add_argument(
-        "--closed-model",
-        default=None,
-        metavar="MODEL",
-        help="Override the closed (hosted API) participant model id; "
-             "defaults to the project's configured model.",
-    )
-    parser.add_argument(
-        "--n-participants",
-        type=int,
-        default=DEFAULT_N_PARTICIPANTS,
-        metavar="N",
-    )
-    parser.add_argument(
-        "--ground-truth-model",
-        default=None,
-        metavar="MODEL",
-        help="Generate synthetic participant data from this ground-truth model "
-             "(must be in src/pipelines/outer_loop/projects/<project>/ground_truth_models.py). "
-             "If omitted, data is sampled from the theorist's models.",
-    )
-    parser.add_argument(
-        "--validate",
-        action="store_true",
-        help="Validate each agent's output; error and stop on failure.",
-    )
-    parser.add_argument(
-        "--resume",
-        action="store_true",
-        help="Allow running into an existing experiment directory (skip the exists-check).",
-    )
-    parser.add_argument(
-        "--inner-loop-iterations",
-        type=int,
-        default=2,
-        metavar="N",
-        help="Max inner-loop model-improvement iterations for 5_model_loop.",
-    )
-    parser.add_argument(
-        "--inner-loop-candidates",
-        type=int,
-        default=3,
-        metavar="N",
-        help="Candidate models per inner-loop iteration for 5_model_loop.",
-    )
-    parser.add_argument(
-        "--coding-agent",
-        choices=["claude", "opencode"],
-        default=None,
-        help="Coding-agent backend for outer and inner loops. "
-             "Defaults to the CODING_AGENT env var, then 'claude'.",
-    )
-    parser.add_argument(
-        "--draws", type=int, default=2000, metavar="N",
-        help="MCMC posterior draws per chain for inner-loop model fits.",
-    )
-    parser.add_argument(
-        "--tune", type=int, default=2000, metavar="N",
-        help="MCMC tuning (warmup) steps per chain for inner-loop model fits.",
-    )
-    parser.add_argument(
-        "--chains", type=int, default=4, metavar="N",
-        help="MCMC chains for inner-loop model fits.",
-    )
-    args = parser.parse_args()
+@dataclass
+class Args:
+    """Claude Code agent pipeline for auto-psych."""
 
+    project: str
+    """Project ID (e.g. subjective_randomness)."""
+    experiment: Optional[int] = None
+    """Single experiment number."""
+    experiments: Optional[str] = None
+    """Experiments to run: N (1..N) or A-B (e.g. 4-6). Overrides --experiment."""
+    agent: Optional[Literal["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]] = None
+    """Run only this agent. Omit for full pipeline."""
+    mode: Literal["simulated_participants", "live"] = "simulated_participants"
+    """Data-collection mode."""
+    n_participants: int = DEFAULT_N_PARTICIPANTS
+    """Number of (simulated) participants to collect."""
+    ground_truth_model: Optional[str] = None
+    """Generate synthetic participant data from this ground-truth model (must be in
+    src/pipelines/outer_loop/projects/<project>/ground_truth_models.py). If omitted,
+    data is sampled from the theorist's models."""
+    validate: bool = False
+    """Validate each agent's output; error and stop on failure."""
+    resume: bool = False
+    """Allow running into an existing experiment directory (skip the exists-check)."""
+    inner_loop_iterations: int = 2
+    """Max inner-loop model-improvement iterations for 5_model_loop."""
+    inner_loop_candidates: int = 3
+    """Candidate models per inner-loop iteration for 5_model_loop."""
+    coding_agent: Optional[Literal["claude", "opencode"]] = None
+    """Coding-agent backend for outer and inner loops. Defaults to the CODING_AGENT
+    env var, then 'claude'."""
+    draws: int = 2000
+    """MCMC posterior draws per chain for inner-loop model fits."""
+    tune: int = 2000
+    """MCMC tuning (warmup) steps per chain for inner-loop model fits."""
+    chains: int = 4
+    """MCMC chains for inner-loop model fits."""
+
+
+def main(args: Args) -> None:
     project_id = args.project
     prob_path = outer_project_dir(project_id) / "problem_definition.md"
     if not prob_path.exists():
@@ -357,7 +291,7 @@ def main() -> None:
 
     print(f"Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} agent={backend} validate={args.validate}", flush=True)
     print(f"Inner-loop MCMC: draws={args.draws} tune={args.tune} chains={args.chains}", flush=True)
-    print(f"Outputs: {outer_projects_dir() / project_id}", flush=True)
+    print(f"Outputs: {outer_data_dir() / project_id}", flush=True)
 
     for exp_num in exp_ids:
         _run_experiment(
@@ -381,4 +315,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(tyro.cli(Args))

@@ -67,8 +67,14 @@ to use them all — only the ones the theory commits to.
 ## Running the active outer loop
 
 ```bash
+# 1. Preprocess a raw responses CSV (adds the feature columns above)
+uv run python scripts/subjective_randomness/preprocess.py \
+    --input-csv data/subjective_randomness/experiment1/responses.csv \
+    --output-csv data/subjective_randomness/responses.csv
+
+# 2. Run the outer loop (theory → design → collect → model loop)
 uv run python -m src.pipelines.outer_loop.run \
     --project subjective_randomness \
-    --experiments 3 \
+    --experiment 1 \
     --ground-truth-model length_sensitive_alternation
 ```

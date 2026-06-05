@@ -101,10 +101,12 @@ opencode runs headless via `opencode run`; grant it edit/bash permission in
 and confirm its default model id (`anthropic/claude-sonnet-4-6`) is valid for
 your install or override it with `--model`.
 
-Outputs are written under:
+Project *assets* (problem definition, ground-truth models, featurizer) live under
+`src/pipelines/outer_loop/projects/<project>/`. Generated experiment *outputs* are
+written under:
 
 ```text
-src/pipelines/outer_loop/projects/<project>/experiment<N>/
+data/outer_loop/<project>/experiment<N>/
 ```
 
 The inner loop writes:

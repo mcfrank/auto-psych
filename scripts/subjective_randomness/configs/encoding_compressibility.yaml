@@ -1,5 +1,5 @@
-model_module: cc_pipeline.projects.subjective_randomness.model_families.encoding_compressibility
-stimuli_path: cc_pipeline/projects/subjective_randomness/experiment2/design/stimuli.json
+model_module: src.subjective_randomness.model_families.encoding_compressibility
+stimuli_path: data/subjective_randomness/parameter_recovery/stimuli.json
 
 true_params:
   longrun_weight: 0.40
