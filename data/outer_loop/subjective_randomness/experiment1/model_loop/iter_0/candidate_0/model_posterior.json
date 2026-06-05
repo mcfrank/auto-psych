@@ -1,0 +1,13 @@
+{
+  "posteriors": {
+    "bayesian_fair_coin": 0.000541,
+    "alternation_bias": 0.996452,
+    "runs_penalty": 0.003007
+  },
+  "elpd_loo": {
+    "bayesian_fair_coin": -68.9509,
+    "alternation_bias": -61.4319,
+    "runs_penalty": -67.2351
+  },
+  "n_trials": 100
+}

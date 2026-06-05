@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from cc_pipeline.projects.subjective_randomness.preprocess_data import featurize_stimulus
+from src.subjective_randomness.features import featurize_stimulus
 from src.models.theorist.loader import get_model_names_from_manifest
 from src.models.pymc_inference import (
     load_pymc_model,

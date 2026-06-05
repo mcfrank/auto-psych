@@ -1,0 +1,90 @@
+{
+  "posteriors": {
+    "bayesian_fair_coin": 8.6e-05,
+    "alternation_bias": 0.158074,
+    "runs_penalty": 0.000477,
+    "iter0_candidate0": 0.066286,
+    "iter0_candidate1": 0.277068,
+    "iter0_candidate2": 0.175899,
+    "iter1_candidate0": 0.22237,
+    "iter1_candidate1": 0.097829,
+    "iter1_candidate2": 0.00191
+  },
+  "elpd_loo": {
+    "bayesian_fair_coin": -68.9509,
+    "alternation_bias": -61.4319,
+    "runs_penalty": -67.2351,
+    "iter0_candidate0": -62.3009,
+    "iter0_candidate1": -60.8707,
+    "iter0_candidate2": -61.325,
+    "iter1_candidate0": -61.0906,
+    "iter1_candidate1": -61.9117,
+    "iter1_candidate2": -65.8476
+  },
+  "n_trials": 100,
+  "comparison": {
+    "iter0_candidate1": {
+      "rank": 0,
+      "elpd_loo": -60.87066297570749,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.9999999999999989
+    },
+    "iter1_candidate0": {
+      "rank": 1,
+      "elpd_loo": -61.09058218422983,
+      "elpd_diff": 0.21991920852233804,
+      "dse": 0.16438047742051481,
+      "weight": 0.0
+    },
+    "iter0_candidate2": {
+      "rank": 2,
+      "elpd_loo": -61.32501468918264,
+      "elpd_diff": 0.4543517134751518,
+      "dse": 0.7110634961658904,
+      "weight": 8.18385742511539e-16
+    },
+    "alternation_bias": {
+      "rank": 3,
+      "elpd_loo": -61.43185844761643,
+      "elpd_diff": 0.561195471908924,
+      "dse": 0.31851516914747025,
+      "weight": 1.1172046404717478e-16
+    },
+    "iter1_candidate1": {
+      "rank": 4,
+      "elpd_loo": -61.911698795895575,
+      "elpd_diff": 1.0410358201880676,
+      "dse": 1.135806861845387,
+      "weight": 0.0
+    },
+    "iter0_candidate0": {
+      "rank": 5,
+      "elpd_loo": -62.30094457793112,
+      "elpd_diff": 1.4302816022236264,
+      "dse": 0.685840762515823,
+      "weight": 4.391797781469521e-16
+    },
+    "iter1_candidate2": {
+      "rank": 6,
+      "elpd_loo": -65.84758922862767,
+      "elpd_diff": 4.976926252920146,
+      "dse": 2.406128555566951,
+      "weight": 7.255676870652699e-16
+    },
+    "runs_penalty": {
+      "rank": 7,
+      "elpd_loo": -67.23513702659812,
+      "elpd_diff": 6.364474050890593,
+      "dse": 2.7977281776497143,
+      "weight": 0.0
+    },
+    "bayesian_fair_coin": {
+      "rank": 8,
+      "elpd_loo": -68.95092017148295,
+      "elpd_diff": 8.080257195775435,
+      "dse": 3.1409780387898403,
+      "weight": 0.0
+    }
+  }
+}

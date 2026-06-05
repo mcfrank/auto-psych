@@ -32,14 +32,16 @@ Output JSON:
 
 from __future__ import annotations
 
-import argparse
 import csv
 import json
 import math
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
+
+import tyro
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -221,48 +223,45 @@ def model_posterior(
     return result
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Bayesian posterior over PyMC cognitive models"
-    )
-    parser.add_argument(
-        "--responses", required=True, nargs="+",
-        help="Path(s) to responses.csv — multiple files are pooled (must share header)",
-    )
-    parser.add_argument("--models-dir", required=True, help="Path to cognitive_models/ directory")
-    parser.add_argument("--out", default=None, help="Write JSON to this file (default: stdout)")
-    parser.add_argument(
-        "--complexity-prior", type=float, default=0.0, metavar="CONST",
-        help=(
-            "Log-prior per model = CONST * complexity, where complexity = non-whitespace "
-            "non-comment chars in the model .py file. Negative CONST penalises complex "
-            "models (Occam's razor). Default: 0.0 (uniform prior)."
-        ),
-    )
-    parser.add_argument(
-        "--cache-dir", default=None,
-        help="Optional directory to persist .nc fits (default: in-process cache only)",
-    )
-    args = parser.parse_args()
+@dataclass
+class Args:
+    """Bayesian posterior over PyMC cognitive models."""
 
-    paths = [Path(p) for p in args.responses]
-    for p in paths:
+    responses: List[Path]
+    """Path(s) to responses.csv — multiple files are pooled (must share header)."""
+    models_dir: Path
+    """Path to the cognitive_models/ directory."""
+    out: Optional[Path] = None
+    """Write JSON to this file (default: stdout)."""
+    complexity_prior: float = 0.0
+    """Log-prior per model = CONST * complexity, where complexity = non-whitespace
+    non-comment chars in the model .py file. Negative CONST penalises complex
+    models (Occam's razor). Default: 0.0 (uniform prior)."""
+    cache_dir: Optional[Path] = None
+    """Optional directory to persist .nc fits (default: in-process cache only)."""
+
+
+def main(args: Args) -> None:
+    if not args.responses:
+        print("Error: at least one --responses path is required", file=sys.stderr)
+        sys.exit(1)
+    for p in args.responses:
         if not p.exists():
             print(f"Error: {p} not found", file=sys.stderr)
             sys.exit(1)
 
-    pooled = _pool_response_csvs(paths)
+    pooled = _pool_response_csvs(args.responses)
 
     result = model_posterior(
         responses_path=pooled,
-        models_dir=Path(args.models_dir),
+        models_dir=args.models_dir,
         complexity_prior_const=args.complexity_prior,
-        cache_dir=Path(args.cache_dir) if args.cache_dir else None,
+        cache_dir=args.cache_dir,
     )
 
     output = json.dumps(result, indent=2)
     if args.out:
-        Path(args.out).write_text(output, encoding="utf-8")
+        args.out.write_text(output, encoding="utf-8")
         best = max(result["posteriors"], key=lambda m: result["posteriors"][m])
         prior_note = (
             f", complexity_prior_const={result['complexity_prior_const']}"
@@ -280,4 +279,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(tyro.cli(Args))

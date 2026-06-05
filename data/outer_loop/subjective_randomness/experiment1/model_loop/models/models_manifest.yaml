@@ -1,0 +1,11 @@
+models:
+- name: bayesian_fair_coin
+- name: alternation_bias
+- name: runs_penalty
+- name: iter0_candidate0
+- name: iter0_candidate1
+- name: iter0_candidate2
+- name: iter1_candidate0
+- name: iter1_candidate1
+- name: iter1_candidate2
+  rationale: Inner-loop candidate from round 1.

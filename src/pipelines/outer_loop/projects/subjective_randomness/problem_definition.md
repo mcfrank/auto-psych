@@ -64,12 +64,12 @@ to use them all — only the ones the theory commits to.
 
 ```bash
 # 1. Preprocess a raw responses CSV (adds the feature columns above)
-python3 cc_pipeline/projects/subjective_randomness/preprocess_data.py \
-    --input-csv cc_pipeline/projects/subjective_randomness/experiment1/data/responses.csv
+uv run python scripts/subjective_randomness/preprocess.py \
+    --input-csv data/subjective_randomness/experiment1/responses.csv \
+    --output-csv data/subjective_randomness/responses.csv
 
-# 2. Run the theory → critique loop with the preprocessed data
-python3 cc_pipeline/run_pipeline_cc.py \
+# 2. Run the outer loop (theory → design → collect → model loop)
+uv run python -m src.pipelines.outer_loop.run \
     --project subjective_randomness \
-    --experiment 3 \
-    --existing-data cc_pipeline/projects/subjective_randomness/data/responses.csv
+    --experiment 1
 ```

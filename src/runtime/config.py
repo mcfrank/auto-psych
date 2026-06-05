@@ -54,8 +54,8 @@ def agent_dir_for_state(project_id: str, run_id: int, agent_key: str, state: Opt
 
 
 def batches_dir(project_id: str) -> Path:
-    """Return path to project batches directory (e.g. projects/subjective_randomness/batches)."""
-    return project_dir(project_id) / "batches"
+    """Return path to project batches output directory (e.g. data/subjective_randomness/batches)."""
+    return REPO_ROOT / "data" / project_id / "batches"
 
 
 def prompts_used_dir(project_id: str, run_id: int) -> Path:
