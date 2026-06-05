@@ -684,38 +684,41 @@ def _parse_participant_answer(text: str) -> str | None:
     return None
 
 
-def _collect_llm_participant(
-    state: dict[str, Any],
-    config: dict[str, Any],
-    out_dir: Path,
-    logs_dir: Path,
+def generate_llm_participant_rows(
     stimuli: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    project_id = state["project_id"]
-    run_id = state["run_id"]
-    n_participants = int(config.get("simulated_n_participants", 5))
+    n_participants: int,
+    *,
+    participant_model: Any,
+    prompt_text: str,
+    transcripts_dir: Path | None = None,
+) -> tuple[list[dict[str, Any]], dict[str, int]]:
+    """Run an LLM-as-participant over ``stimuli`` and return ``(rows, stats)``.
 
-    participant_prompt = load_prompt_for_run(project_id, run_id, "4_collect_participant", state)
-    if not participant_prompt.strip():
-        agent_log(out_dir, "LLM-participant: no 4_collect_participant.md prompt found; cannot run.")
-        return []
+    Model-agnostic: ``participant_model`` is any object exposing
+    ``.answer(system, user) -> str`` and a ``.name`` (see
+    ``participants.ParticipantModel``), so the closed (API) and open (Hugging
+    Face) backends share this one loop. Each participant answers every stimulus;
+    unparseable replies and per-trial errors are counted but never abort the run.
+    If ``transcripts_dir`` is given, one Markdown transcript per participant is
+    written there.
 
-    try:
-        llm = get_llm()
-    except Exception as exc:
-        agent_log(out_dir, f"LLM-participant: failed to initialize LLM: {exc}")
-        return []
-
-    transcripts_dir = out_dir / "transcripts"
-    transcripts_dir.mkdir(exist_ok=True)
+    ``stats`` carries ``n_participants``, ``n_stimuli``, ``n_rows``,
+    ``n_unparseable``, ``n_errors``.
+    """
+    model_name = getattr(participant_model, "name", "llm_participant")
     rows: list[dict[str, Any]] = []
     n_unparseable = 0
     n_errors = 0
 
     for participant_id in range(n_participants):
-        transcript_path = transcripts_dir / f"participant_{participant_id:03d}.md"
-        with transcript_path.open("w", encoding="utf-8") as transcript:
-            transcript.write(f"# Participant {participant_id} transcript\n\n")
+        transcript = None
+        if transcripts_dir is not None:
+            transcripts_dir.mkdir(parents=True, exist_ok=True)
+            transcript = (transcripts_dir / f"participant_{participant_id:03d}.md").open(
+                "w", encoding="utf-8"
+            )
+            transcript.write(f"# Participant {participant_id} transcript ({model_name})\n\n")
+        try:
             for trial_index, stimulus in enumerate(stimuli):
                 seq_a = stimulus.get("sequence_a", "")
                 seq_b = stimulus.get("sequence_b", "")
@@ -726,21 +729,22 @@ def _collect_llm_participant(
                     "Reply with exactly one line: `ANSWER: left` or `ANSWER: right`."
                 )
                 try:
-                    response = invoke_llm(system=participant_prompt, user=user_msg, llm=llm)
+                    response = participant_model.answer(prompt_text, user_msg)
                 except Exception as exc:
                     n_errors += 1
-                    agent_log(out_dir, f"LLM-participant: invoke failed (p={participant_id}, trial={trial_index}): {exc}")
-                    transcript.write(
-                        f"## Trial {trial_index}\n- left: `{seq_a}`\n- right: `{seq_b}`\n\n"
-                        f"**LLM error:** {exc}\n\n"
-                    )
+                    if transcript is not None:
+                        transcript.write(
+                            f"## Trial {trial_index}\n- left: `{seq_a}`\n- right: `{seq_b}`\n\n"
+                            f"**Model error:** {exc}\n\n"
+                        )
                     continue
                 choice = _parse_participant_answer(response)
-                transcript.write(
-                    f"## Trial {trial_index}\n- left: `{seq_a}`\n- right: `{seq_b}`\n\n"
-                    f"**LLM reply:**\n```\n{response.strip()}\n```\n\n"
-                    f"**Parsed:** {choice if choice else 'UNPARSEABLE'}\n\n"
-                )
+                if transcript is not None:
+                    transcript.write(
+                        f"## Trial {trial_index}\n- left: `{seq_a}`\n- right: `{seq_b}`\n\n"
+                        f"**Reply:**\n```\n{response.strip()}\n```\n\n"
+                        f"**Parsed:** {choice if choice else 'UNPARSEABLE'}\n\n"
+                    )
                 if choice is None:
                     n_unparseable += 1
                     continue
@@ -753,21 +757,67 @@ def _collect_llm_participant(
                         "sequence_b": str(seq_b),
                         "chose_left": int(chose_left),
                         "chose_right": int(not chose_left),
-                        "model": "llm_participant",
+                        "model": model_name,
                     }
                 )
+        finally:
+            if transcript is not None:
+                transcript.close()
+
+    stats = {
+        "n_participants": n_participants,
+        "n_stimuli": len(stimuli),
+        "n_rows": len(rows),
+        "n_unparseable": n_unparseable,
+        "n_errors": n_errors,
+    }
+    return rows, stats
+
+
+def _collect_llm_participant(
+    state: dict[str, Any],
+    config: dict[str, Any],
+    out_dir: Path,
+    logs_dir: Path,
+    stimuli: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    from src.pipelines.outer_loop.participants import get_participant_model
+
+    project_id = state["project_id"]
+    run_id = state["run_id"]
+    n_participants = int(config.get("simulated_n_participants", 5))
+    backend = config.get("participant_backend", "closed")
+    model_name = config.get("participant_model")
+
+    participant_prompt = load_prompt_for_run(project_id, run_id, "4_collect_participant", state)
+    if not participant_prompt.strip():
+        agent_log(out_dir, "LLM-participant: no 4_collect_participant.md prompt found; cannot run.")
+        return []
+
+    try:
+        participant_model = get_participant_model(backend, model_name)
+    except Exception as exc:
+        agent_log(out_dir, f"LLM-participant: failed to initialize participant model ({backend}): {exc}")
+        return []
+
+    rows, stats = generate_llm_participant_rows(
+        stimuli,
+        n_participants,
+        participant_model=participant_model,
+        prompt_text=participant_prompt,
+        transcripts_dir=out_dir / "transcripts",
+    )
 
     agent_log(
         out_dir,
-        f"LLM-participant: emitted {len(rows)} rows from {n_participants} participants over "
-        f"{len(stimuli)} stimuli (unparseable={n_unparseable}, errors={n_errors})",
+        f"LLM-participant ({participant_model.name}): emitted {stats['n_rows']} rows from "
+        f"{stats['n_participants']} participants over {stats['n_stimuli']} stimuli "
+        f"(unparseable={stats['n_unparseable']}, errors={stats['n_errors']})",
     )
     (logs_dir / "llm_participant_summary.txt").write_text(
-        f"n_participants={n_participants}\n"
-        f"n_stimuli={len(stimuli)}\n"
-        f"n_rows={len(rows)}\n"
-        f"n_unparseable={n_unparseable}\n"
-        f"n_errors={n_errors}\n",
+        f"participant_model={participant_model.name}\n"
+        + "\n".join(f"{k}={v}" for k, v in stats.items())
+        + "\n",
         encoding="utf-8",
     )
     return rows

@@ -39,10 +39,11 @@ response_options)` functions — that is the old contract and is no longer used.
 
 ## Preprocessed data schema
 
-`data/responses.csv` is produced by `preprocess_data.py`. It carries the raw
-columns (`participant_id`, `trial_index`, `sequence_a`, `sequence_b`,
-`chose_left`) **plus** the following numeric feature columns, one per sequence
-(`_a` and `_b`). Use these names verbatim in your `pm.Data(...)` containers.
+`model_loop/responses.csv` is produced by the project's `preprocess.py` helper.
+It carries the raw columns (`participant_id`, `trial_index`, `sequence_a`,
+`sequence_b`, `chose_left`) **plus** the following numeric feature columns, one
+per sequence (`_a` and `_b`). Use these names verbatim in your `pm.Data(...)`
+containers.
 
 | Column           | Type  | Meaning                                          |
 | ---------------- | ----- | ------------------------------------------------ |
@@ -52,6 +53,9 @@ columns (`participant_id`, `trial_index`, `sequence_a`, `sequence_b`,
 | `alts_a`, `alts_b`     | int   | Alternation count (transitions H↔T)        |
 | `p_alts_a`, `p_alts_b` | float | Alternation proportion (`alts / (n-1)`)    |
 | `max_run_a`, `max_run_b` | int | Longest constant-character run                |
+| `max_run_norm_a`, `max_run_norm_b` | float | Longest run scaled to `[0, 1]`      |
+| `imbalance_a`, `imbalance_b` | float | Distance from balanced H/T counts          |
+| `periodicity_a`, `periodicity_b` | float | Match to a short repeating template       |
 
 And the observed response: `chose_left` ∈ {0, 1} — 1 means the participant
 chose sequence A. Use `chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))`
@@ -60,7 +64,7 @@ in every model and pass it to `pm.Bernoulli(..., observed=chose_left)`.
 You may pick any subset of these feature columns per theory. You do not need
 to use them all — only the ones the theory commits to.
 
-## Running the analysis (existing-data flow)
+## Running the active outer loop
 
 ```bash
 # 1. Preprocess a raw responses CSV (adds the feature columns above)
@@ -71,5 +75,6 @@ uv run python scripts/subjective_randomness/preprocess.py \
 # 2. Run the outer loop (theory → design → collect → model loop)
 uv run python -m src.pipelines.outer_loop.run \
     --project subjective_randomness \
-    --experiment 1
+    --experiment 1 \
+    --ground-truth-model length_sensitive_alternation
 ```

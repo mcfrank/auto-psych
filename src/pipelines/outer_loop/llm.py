@@ -10,15 +10,16 @@ from src.runtime.config import PROMPTS_DIR, project_prompts_dir, prompts_used_di
 
 
 DEFAULT_LLM_TIMEOUT = 300
+DEFAULT_CLOSED_MODEL = "gemini-3.1-pro-preview"
 
 
-def get_llm(timeout: int | None = None) -> Any:
-    """Return the configured Gemini client."""
+def get_llm(timeout: int | None = None, model: str | None = None) -> Any:
+    """Return the configured Gemini client. ``model`` overrides the default id."""
     from langchain_google_genai import ChatGoogleGenerativeAI
 
     api_key = os.environ.get("GOOGLE_API_KEY") or _read_secret("GOOGLE_API_KEY")
     kwargs = {
-        "model": "gemini-3.1-pro-preview",
+        "model": model or DEFAULT_CLOSED_MODEL,
         "google_api_key": api_key,
         "temperature": 0.2,
     }
