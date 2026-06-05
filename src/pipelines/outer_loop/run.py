@@ -40,6 +40,7 @@ from src.pipelines.outer_loop.orchestrator import (
     write_context,
 )
 from src.runtime.coding_agent import select_backend
+from src.pipelines.outer_loop.participants import DEFAULT_OPEN_MODEL
 
 AGENT_KEYS = ["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]
 
@@ -77,6 +78,8 @@ def _run_agent(
     inner_loop_candidates: int = 3,
     fit_kwargs: Optional[dict] = None,
     backend: Optional[str] = None,
+    participant_backend: str = "closed",
+    participant_model: Optional[str] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output is invalid."""
     print(f"\n{'='*60}", flush=True)
@@ -86,7 +89,9 @@ def _run_agent(
     if agent_key == "4_collect":
         run_collect_programmatic(exp_dir, mode, n_participants,
                                  project_id=project_id,
-                                 ground_truth_model=ground_truth_model)
+                                 ground_truth_model=ground_truth_model,
+                                 participant_backend=participant_backend,
+                                 participant_model=participant_model)
     elif agent_key == "5_model_loop":
         run_inner_model_loop_programmatic(
             exp_dir,
@@ -131,6 +136,8 @@ def _run_experiment(
     inner_loop_candidates: int = 3,
     fit_kwargs: Optional[dict] = None,
     backend: Optional[str] = None,
+    participant_backend: str = "closed",
+    participant_model: Optional[str] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
@@ -148,6 +155,15 @@ def _run_experiment(
     keys_to_run = [agent_filter] if agent_filter else AGENT_KEYS
 
     for agent_key in keys_to_run:
+        # No-browser mode never uses the jsPsych experiment, so skip building it
+        # in a full run (still runnable explicitly via --agent 3_implement).
+        if (
+            agent_key == "3_implement"
+            and mode == "simulated_participants_nobrowser"
+            and not agent_filter
+        ):
+            print("  [skip] 3_implement not needed in no-browser mode", flush=True)
+            continue
         _run_agent(
             agent_key=agent_key,
             exp_dir=exp_dir_path,
@@ -162,6 +178,8 @@ def _run_experiment(
             inner_loop_candidates=inner_loop_candidates,
             fit_kwargs=fit_kwargs,
             backend=backend,
+            participant_backend=participant_backend,
+            participant_model=participant_model,
         )
 
     if "5_model_loop" in keys_to_run:
@@ -191,8 +209,33 @@ def main() -> None:
     )
     parser.add_argument(
         "--mode",
-        choices=["simulated_participants", "live"],
+        choices=["simulated_participants", "simulated_participants_nobrowser", "live"],
         default="simulated_participants",
+        help="Collection mode. 'simulated_participants_nobrowser' runs an "
+             "LLM-as-participant (no browser). 'simulated_participants' (browser) "
+             "and 'live' (Prolific) are not yet implemented in this runner.",
+    )
+    parser.add_argument(
+        "--participant-backend",
+        choices=["closed", "open"],
+        default="closed",
+        help="Participant-model backend for no-browser mode: 'closed' (hosted "
+             "API, e.g. Gemini) or 'open' (local Hugging Face transformers).",
+    )
+    parser.add_argument(
+        "--hf-model",
+        default=DEFAULT_OPEN_MODEL,
+        metavar="HUB_ID",
+        help=f"Hugging Face model id for --participant-backend open "
+             f"(default: {DEFAULT_OPEN_MODEL}). Use a smaller id "
+             f"(e.g. Qwen/Qwen2.5-0.5B-Instruct) for quick local runs.",
+    )
+    parser.add_argument(
+        "--closed-model",
+        default=None,
+        metavar="MODEL",
+        help="Override the closed (hosted API) participant model id; "
+             "defaults to the project's configured model.",
     )
     parser.add_argument(
         "--n-participants",
@@ -278,6 +321,15 @@ def main() -> None:
         print("Error: specify --experiment N or --experiments N", file=sys.stderr)
         sys.exit(1)
 
+    # Resolve the participant-model id for no-browser collection. The open
+    # backend has a default model; the closed backend uses the project default
+    # unless --closed-model overrides it.
+    participant_model = (
+        (args.hf_model or DEFAULT_OPEN_MODEL)
+        if args.participant_backend == "open"
+        else args.closed_model
+    )
+
     # Resolve the backend once and export it so the programmatic inner loop
     # (which spawns its own agents) inherits the same choice.
     backend = select_backend(args.coding_agent)
@@ -303,6 +355,8 @@ def main() -> None:
             inner_loop_candidates=args.inner_loop_candidates,
             fit_kwargs=fit_kwargs,
             backend=backend,
+            participant_backend=args.participant_backend,
+            participant_model=participant_model,
         )
 
     print("\nAll experiments complete.", flush=True)
