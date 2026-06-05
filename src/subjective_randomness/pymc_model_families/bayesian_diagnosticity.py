@@ -29,9 +29,7 @@ def _normalized_markov_log_prob(n, alts, switch_prob):
     stays_f = pt.maximum(n_f - 1.0, 0.0) - alts_f
     denom = pt.maximum(n_f, 1.0)
     return (
-        np.log(0.5)
-        + alts_f * np.log(switch_prob)
-        + stays_f * np.log(1.0 - switch_prob)
+        np.log(0.5) + alts_f * np.log(switch_prob) + stays_f * np.log(1.0 - switch_prob)
     ) / denom
 
 
@@ -78,4 +76,3 @@ with pm.Model() as model:
         pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
     )
     pm.Bernoulli("response", p=p_left, observed=chose_left)
-

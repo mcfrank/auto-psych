@@ -7,7 +7,9 @@ from typing import Any, Callable, Dict, List
 from src.runtime.config import project_dir
 
 
-def get_ground_truth_models(project_id: str) -> Dict[str, Callable[..., Dict[str, float]]]:
+def get_ground_truth_models(
+    project_id: str,
+) -> Dict[str, Callable[..., Dict[str, float]]]:
     """
     Load GROUND_TRUTH_MODELS from projects/<project_id>/ground_truth_models.py.
     Returns name -> callable (stimulus, response_options) -> dict.

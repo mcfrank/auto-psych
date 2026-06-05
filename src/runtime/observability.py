@@ -71,7 +71,9 @@ def write_transcript(
         "",
     ]
     if validation_feedback:
-        parts.extend(["## Validation feedback (previous attempt)", "", validation_feedback, ""])
+        parts.extend(
+            ["## Validation feedback (previous attempt)", "", validation_feedback, ""]
+        )
     if system:
         parts.extend(["## System prompt", "", system, ""])
     if user:

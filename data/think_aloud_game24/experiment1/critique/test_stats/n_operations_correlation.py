@@ -25,7 +25,9 @@ def test_stat(rows):
     n = len(difficulties)
     mean_d = sum(difficulties) / n
     mean_o = sum(mean_ops_list) / n
-    cov = sum((difficulties[i] - mean_d) * (mean_ops_list[i] - mean_o) for i in range(n))
+    cov = sum(
+        (difficulties[i] - mean_d) * (mean_ops_list[i] - mean_o) for i in range(n)
+    )
     sd_d = math.sqrt(sum((x - mean_d) ** 2 for x in difficulties))
     sd_o = math.sqrt(sum((x - mean_o) ** 2 for x in mean_ops_list))
     if sd_d == 0 or sd_o == 0:

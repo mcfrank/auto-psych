@@ -33,11 +33,15 @@ def aggregate_choice_rows(rows: Iterable[Mapping[str, Any]]) -> List[Dict[str, A
     return list(counts.values())
 
 
-def negative_log_likelihood(model_module, rows: Iterable[Mapping[str, Any]], params: Mapping[str, float]) -> float:
+def negative_log_likelihood(
+    model_module, rows: Iterable[Mapping[str, Any]], params: Mapping[str, float]
+) -> float:
     nll = 0.0
     for row in rows:
         stimulus = (str(row["sequence_a"]), str(row["sequence_b"]))
-        p_left = max(1e-9, min(1.0 - 1e-9, float(model_module.predict_left(stimulus, params))))
+        p_left = max(
+            1e-9, min(1.0 - 1e-9, float(model_module.predict_left(stimulus, params)))
+        )
         if "left_count" in row or "right_count" in row:
             left_count = int(row.get("left_count", 0))
             right_count = int(row.get("right_count", 0))
@@ -49,7 +53,9 @@ def negative_log_likelihood(model_module, rows: Iterable[Mapping[str, Any]], par
     return nll
 
 
-def _random_params(bounds: Mapping[str, tuple[float, float]], rng: random.Random) -> Dict[str, float]:
+def _random_params(
+    bounds: Mapping[str, tuple[float, float]], rng: random.Random
+) -> Dict[str, float]:
     return {k: rng.uniform(lo, hi) if hi > lo else lo for k, (lo, hi) in bounds.items()}
 
 
@@ -110,7 +116,9 @@ def fit_rows(
     fit_data = aggregate_choice_rows(rows)
     fixed = {k: float(v) for k, v in (fixed_params or {}).items()}
     raw_bounds = getattr(model_module, "PARAM_BOUNDS")
-    bounds = {k: (float(v[0]), float(v[1])) for k, v in raw_bounds.items() if k not in fixed}
+    bounds = {
+        k: (float(v[0]), float(v[1])) for k, v in raw_bounds.items() if k not in fixed
+    }
     defaults = dict(getattr(model_module, "DEFAULT_PARAMS", {}))
 
     def with_fixed(params: Mapping[str, float]) -> Dict[str, float]:
@@ -119,7 +127,9 @@ def fit_rows(
         return merged
 
     starts: List[Dict[str, float]] = []
-    default_start = {k: float(defaults.get(k, (lo + hi) / 2.0)) for k, (lo, hi) in bounds.items()}
+    default_start = {
+        k: float(defaults.get(k, (lo + hi) / 2.0)) for k, (lo, hi) in bounds.items()
+    }
     starts.append(default_start)
     for _ in range(max(0, n_starts - 1)):
         starts.append(_random_params(bounds, rng))
@@ -127,7 +137,9 @@ def fit_rows(
     best_params: Dict[str, float] | None = None
     best_nll = math.inf
     for start in starts:
-        candidate, nll = _coordinate_search(model_module, fit_data, bounds, start, max_iters, rng)
+        candidate, nll = _coordinate_search(
+            model_module, fit_data, bounds, start, max_iters, rng
+        )
         full_candidate = with_fixed(candidate)
         full_nll = negative_log_likelihood(model_module, fit_data, full_candidate)
         if full_nll < best_nll:
@@ -135,7 +147,9 @@ def fit_rows(
             best_params = full_candidate
     assert best_params is not None
     return {
-        "model": getattr(model_module, "MODEL_NAME", model_module.__name__.split(".")[-1]),
+        "model": getattr(
+            model_module, "MODEL_NAME", model_module.__name__.split(".")[-1]
+        ),
         "params": {k: round(v, 6) for k, v in sorted(best_params.items())},
         "negative_log_likelihood": round(best_nll, 6),
         "n_trials": len(rows),

@@ -265,7 +265,8 @@ def main(args: Args) -> None:
         best = max(result["posteriors"], key=lambda m: result["posteriors"][m])
         prior_note = (
             f", complexity_prior_const={result['complexity_prior_const']}"
-            if "complexity_prior_const" in result else ""
+            if "complexity_prior_const" in result
+            else ""
         )
         print(
             f"Wrote model_posterior.json — best: {best} "

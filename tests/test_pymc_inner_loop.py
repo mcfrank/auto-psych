@@ -5,6 +5,7 @@ model set from ``seed_models_dir``, fits each model to the responses via MCMC,
 scores them by ELPD-LOO, and exports the best. Slow (two NUTS fits) — runs in
 ~20 s. Mark ``slow``.
 """
+
 from __future__ import annotations
 
 import json

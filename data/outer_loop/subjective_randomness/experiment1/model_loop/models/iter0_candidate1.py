@@ -18,7 +18,9 @@ with pm.Model() as model:
     norm_run_b = pt.cast(max_run_b, "float64") / pt.cast(n_b, "float64")
 
     # Prefer the sequence with the shorter length-corrected max run (more random-looking).
-    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (norm_run_b - norm_run_a)))
+    p_left = pm.Deterministic(
+        "p_left", pm.math.sigmoid(tau * (norm_run_b - norm_run_a))
+    )
 
     # Observed response.
     chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))

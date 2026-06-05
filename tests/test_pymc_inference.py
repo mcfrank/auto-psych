@@ -1,4 +1,5 @@
 """Unit tests for src/models/pymc_inference.py — fast, no MCMC."""
+
 from __future__ import annotations
 
 import csv
@@ -14,6 +15,7 @@ FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pymc_models"
 
 def test_load_pymc_model_returns_pm_model():
     import pymc as pm
+
     model = pi.load_pymc_model("bayesian_fair_coin", FIXTURE_DIR)
     assert isinstance(model, pm.Model)
 
@@ -45,7 +47,9 @@ def test_extract_observed_pulls_columns_by_name_and_dtype(tmp_path):
     with csv_path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["n_a", "h_a", "n_b", "h_b", "chose_left"])
         w.writeheader()
-        w.writerow({"n_a": "10", "h_a": "5", "n_b": "10", "h_b": "5", "chose_left": "1"})
+        w.writerow(
+            {"n_a": "10", "h_a": "5", "n_b": "10", "h_b": "5", "chose_left": "1"}
+        )
         w.writerow({"n_a": "12", "h_a": "8", "n_b": "8", "h_b": "4", "chose_left": "0"})
 
     observed = pi.extract_observed(csv_path, model)
@@ -69,6 +73,7 @@ def test_extract_observed_missing_column_raises(tmp_path):
 def test_observed_response_data_zero_obs_rvs_raises():
     """A model with no observed RVs should fail loudly."""
     import pymc as pm
+
     with pm.Model() as bad:
         pm.Data("x", np.zeros(1, dtype="int64"))
         pm.Normal("z", mu=0, sigma=1)  # not observed
@@ -78,6 +83,7 @@ def test_observed_response_data_zero_obs_rvs_raises():
 
 def test_observed_response_data_two_obs_rvs_raises():
     import pymc as pm
+
     with pm.Model() as bad:
         y1 = pm.Data("y1", np.zeros(1, dtype="int64"))
         y2 = pm.Data("y2", np.zeros(1, dtype="int64"))
@@ -102,7 +108,10 @@ def test_prior_predict_p_left_returns_per_model_means():
     feature_row = {"n_a": 10, "h_a": 5, "n_b": 10, "h_b": 5, "chose_left": 0}
     pi.clear_model_cache()
     preds = pi.prior_predict_p_left(
-        ["bayesian_fair_coin", "representativeness"], FIXTURE_DIR, feature_row, n_samples=50,
+        ["bayesian_fair_coin", "representativeness"],
+        FIXTURE_DIR,
+        feature_row,
+        n_samples=50,
     )
     assert set(preds.keys()) == {"bayesian_fair_coin", "representativeness"}
     # Balanced stimulus → both models near 0.5 under their priors.
@@ -115,7 +124,10 @@ def test_expected_information_gain_prior_pymc_nonneg():
     feature_row = {"n_a": 10, "h_a": 7, "n_b": 10, "h_b": 3, "chose_left": 0}
     pi.clear_model_cache()
     eig = pi.expected_information_gain_prior_pymc(
-        feature_row, ["bayesian_fair_coin", "representativeness"], FIXTURE_DIR, n_samples=50,
+        feature_row,
+        ["bayesian_fair_coin", "representativeness"],
+        FIXTURE_DIR,
+        n_samples=50,
     )
     assert eig >= 0.0
     assert eig <= 1.0  # EIG over 2 models is at most log2(2) = 1 bit

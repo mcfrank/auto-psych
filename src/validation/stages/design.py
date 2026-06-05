@@ -27,9 +27,15 @@ def validate_designer_output(run_dir: Path) -> Validated:
         if not isinstance(item, dict):
             return Validated(False, f"Stimulus {i} is not a dict", {"index": i})
         if "sequence_a" not in item or "sequence_b" not in item:
-            return Validated(False, f"Stimulus {i} missing sequence_a or sequence_b", {"index": i})
+            return Validated(
+                False, f"Stimulus {i} missing sequence_a or sequence_b", {"index": i}
+            )
         if "eig" not in item:
-            return Validated(False, f"Stimulus {i} missing required 'eig' field (EIG value for observability)", {"index": i})
+            return Validated(
+                False,
+                f"Stimulus {i} missing required 'eig' field (EIG value for observability)",
+                {"index": i},
+            )
         try:
             eig_values.append(float(item["eig"]))
         except (TypeError, ValueError):
@@ -37,11 +43,17 @@ def validate_designer_output(run_dir: Path) -> Validated:
 
     details["n_stimuli"] = len(data)
     if not eig_values:
-        return Validated(True, f"Designer output valid; {len(data)} stimuli (no eig)", details)
+        return Validated(
+            True, f"Designer output valid; {len(data)} stimuli (no eig)", details
+        )
     details["eig_min"] = min(eig_values)
     details["eig_max"] = max(eig_values)
     if max(eig_values) <= 0:
-        return Validated(False, "All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions)", details)
+        return Validated(
+            False,
+            "All EIG values are <= 0; check design script (stimulus must be tuple for get_model_predictions)",
+            details,
+        )
 
     rationale_path = run_dir / "2_design" / "design_rationale.md"
     if rationale_path.exists():
@@ -55,4 +67,8 @@ def validate_designer_output(run_dir: Path) -> Validated:
                 "Each stimulus in stimuli.json must include an 'eig' field.",
                 {**details, "fallback_used": True},
             )
-    return Validated(True, f"Designer output valid; {len(data)} stimuli, EIG range [{min(eig_values):.4f}, {max(eig_values):.4f}]", details)
+    return Validated(
+        True,
+        f"Designer output valid; {len(data)} stimuli, EIG range [{min(eig_values):.4f}, {max(eig_values):.4f}]",
+        details,
+    )

@@ -12,7 +12,9 @@ from src.subjective_randomness.fit import fit_rows
 from src.subjective_randomness.simulate import generate_rows, load_stimuli
 
 
-def _summarize(true_params: Mapping[str, float], estimates: List[Mapping[str, float]]) -> Dict[str, Any]:
+def _summarize(
+    true_params: Mapping[str, float], estimates: List[Mapping[str, float]]
+) -> Dict[str, Any]:
     summary: Dict[str, Any] = {}
     for name, true_value in true_params.items():
         values = [float(est[name]) for est in estimates if name in est]
@@ -20,7 +22,9 @@ def _summarize(true_params: Mapping[str, float], estimates: List[Mapping[str, fl
             continue
         mean_est = sum(values) / len(values)
         bias = mean_est - float(true_value)
-        rmse = math.sqrt(sum((v - float(true_value)) ** 2 for v in values) / len(values))
+        rmse = math.sqrt(
+            sum((v - float(true_value)) ** 2 for v in values) / len(values)
+        )
         summary[name] = {
             "true": float(true_value),
             "mean_estimate": round(mean_est, 6),
@@ -32,13 +36,19 @@ def _summarize(true_params: Mapping[str, float], estimates: List[Mapping[str, fl
     return summary
 
 
-def run_recovery(config: Mapping[str, Any], config_path: Path, repeats_override: int | None = None) -> Dict[str, Any]:
+def run_recovery(
+    config: Mapping[str, Any], config_path: Path, repeats_override: int | None = None
+) -> Dict[str, Any]:
     model = importlib.import_module(config["model_module"])
     stimuli = load_stimuli(resolve_path(config["stimuli_path"], config_path))
     true_params = {k: float(v) for k, v in (config.get("true_params") or {}).items()}
     sim_cfg = config.get("simulation") or {}
     fit_cfg = config.get("fit") or {}
-    n_repeats = repeats_override if repeats_override is not None else int(sim_cfg.get("n_repeats", 20))
+    n_repeats = (
+        repeats_override
+        if repeats_override is not None
+        else int(sim_cfg.get("n_repeats", 20))
+    )
     n_participants = int(sim_cfg.get("n_participants", 20))
     seed = int(sim_cfg.get("seed", 1))
 

@@ -28,13 +28,17 @@ def parse_problem_definition(project_id: str) -> Dict[str, Any]:
 
     total_trials = DEFAULT_TOTAL_TRIALS
     # e.g. "Total trials per experiment: 30" or "total_trials: 30"
-    m = re.search(r"(?:Total trials per experiment|total_trials)\s*:\s*(\d+)", text, re.IGNORECASE)
+    m = re.search(
+        r"(?:Total trials per experiment|total_trials)\s*:\s*(\d+)", text, re.IGNORECASE
+    )
     if m:
         total_trials = int(m.group(1))
 
     allowed_lengths = DEFAULT_ALLOWED_SEQUENCE_LENGTHS
     # e.g. "Allowed sequence lengths: 4, 6, 8" or "Sequence lengths: 4, 6, 8"
-    m = re.search(r"(?:Allowed )?sequence lengths?\s*:\s*([\d,\s\-]+)", text, re.IGNORECASE)
+    m = re.search(
+        r"(?:Allowed )?sequence lengths?\s*:\s*([\d,\s\-]+)", text, re.IGNORECASE
+    )
     if m:
         raw = m.group(1)
         lengths = []

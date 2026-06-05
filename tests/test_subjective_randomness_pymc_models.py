@@ -25,16 +25,29 @@ MODEL_DIR = (
 
 EXPECTED_INPUTS = {
     "prototype_similarity": {
-        "imbalance_a", "imbalance_b", "p_alts_a", "p_alts_b", "chose_left",
+        "imbalance_a",
+        "imbalance_b",
+        "p_alts_a",
+        "p_alts_b",
+        "chose_left",
     },
     "encoding_compressibility": {
-        "max_run_norm_a", "max_run_norm_b",
-        "periodicity_a", "periodicity_b",
-        "imbalance_a", "imbalance_b",
+        "max_run_norm_a",
+        "max_run_norm_b",
+        "periodicity_a",
+        "periodicity_b",
+        "imbalance_a",
+        "imbalance_b",
         "chose_left",
     },
     "bayesian_diagnosticity": {
-        "n_a", "h_a", "alts_a", "n_b", "h_b", "alts_b", "chose_left",
+        "n_a",
+        "h_a",
+        "alts_a",
+        "n_b",
+        "h_b",
+        "alts_b",
+        "chose_left",
     },
 }
 

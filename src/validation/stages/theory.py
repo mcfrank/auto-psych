@@ -16,7 +16,9 @@ def validate_theorist_output(run_dir: Path) -> Validated:
     details: Dict[str, Any] = {}
 
     if not manifest_path.exists():
-        return Validated(False, "models_manifest.yaml not found", {"path": str(manifest_path)})
+        return Validated(
+            False, "models_manifest.yaml not found", {"path": str(manifest_path)}
+        )
 
     try:
         data = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
@@ -62,6 +64,10 @@ def validate_theorist_output(run_dir: Path) -> Validated:
                 return Validated(False, f"Model '{name}' missing key '{key}'", details)
         total = sum(preds[key] for key in response_options)
         if abs(total - 1.0) > 1e-5:
-            return Validated(False, f"Model '{name}' probabilities sum to {total}", details)
+            return Validated(
+                False, f"Model '{name}' probabilities sum to {total}", details
+            )
 
-    return Validated(True, "Theorist output valid; all models run and return scores", details)
+    return Validated(
+        True, "Theorist output valid; all models run and return scores", details
+    )

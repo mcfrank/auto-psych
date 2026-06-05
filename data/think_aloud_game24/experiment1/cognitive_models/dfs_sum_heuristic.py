@@ -43,7 +43,9 @@ def dfs_sum_heuristic(stimulus, response_options):
             heuristics = [sum_heuristic(s, target) for s in successors]
             weights = softmax_weights(heuristics)
             # shuffle in heuristic-weighted order for stochastic DFS
-            order = random.choices(range(len(successors)), weights=weights, k=len(successors))
+            order = random.choices(
+                range(len(successors)), weights=weights, k=len(successors)
+            )
             seen = set()
             ordered = []
             for idx in order:

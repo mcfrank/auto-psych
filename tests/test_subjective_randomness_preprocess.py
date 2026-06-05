@@ -1,4 +1,5 @@
 """Fast unit tests for the subjective_randomness featurizer (no PyMC)."""
+
 from __future__ import annotations
 
 import importlib.util
@@ -8,8 +9,7 @@ import pytest
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 PREPROCESS = (
-    REPO_ROOT
-    / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
+    REPO_ROOT / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
 )
 
 
@@ -26,8 +26,8 @@ def test_featurize_stimulus_counts_heads_alternations_runs():
 
     assert feats["n_a"] == 4 and feats["n_b"] == 4
     assert feats["h_a"] == 3 and feats["h_b"] == 2
-    assert feats["alts_a"] == 1   # HHHT: one H→T transition
-    assert feats["alts_b"] == 3   # HTHT: H-T-H-T, three transitions
+    assert feats["alts_a"] == 1  # HHHT: one H→T transition
+    assert feats["alts_b"] == 3  # HTHT: H-T-H-T, three transitions
     assert feats["max_run_a"] == 3  # "HHH"
     assert feats["max_run_b"] == 1
     assert feats["p_a"] == pytest.approx(0.75)
@@ -44,10 +44,24 @@ def test_featurize_stimulus_keys_match_pm_data_names():
     pp = _load()
     feats = pp.featurize_stimulus("HT", "TH")
     expected = {
-        "n_a", "h_a", "alts_a", "max_run_a",
-        "p_a", "p_alts_a", "max_run_norm_a", "imbalance_a", "periodicity_a",
-        "n_b", "h_b", "alts_b", "max_run_b",
-        "p_b", "p_alts_b", "max_run_norm_b", "imbalance_b", "periodicity_b",
+        "n_a",
+        "h_a",
+        "alts_a",
+        "max_run_a",
+        "p_a",
+        "p_alts_a",
+        "max_run_norm_a",
+        "imbalance_a",
+        "periodicity_a",
+        "n_b",
+        "h_b",
+        "alts_b",
+        "max_run_b",
+        "p_b",
+        "p_alts_b",
+        "max_run_norm_b",
+        "imbalance_b",
+        "periodicity_b",
     }
     assert set(feats) == expected
 

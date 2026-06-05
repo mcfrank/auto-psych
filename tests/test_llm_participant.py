@@ -4,6 +4,7 @@ These exercise the participant-model abstraction and the wiring into the active
 programmatic collector *offline* — a fake participant model stands in for any
 real backend (Gemini / Hugging Face), so no API calls or model downloads happen.
 """
+
 from __future__ import annotations
 
 import csv
@@ -33,7 +34,13 @@ STIMULI = [
     {"sequence_a": "HHHHH", "sequence_b": "HTHTT"},
 ]
 
-REQUIRED_COLUMNS = {"participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"}
+REQUIRED_COLUMNS = {
+    "participant_id",
+    "trial_index",
+    "sequence_a",
+    "sequence_b",
+    "chose_left",
+}
 
 
 def test_generate_rows_shape_and_schema(tmp_path):
@@ -98,11 +105,15 @@ def test_run_collect_programmatic_nobrowser_writes_csv(tmp_path, monkeypatch):
     from src.pipelines.outer_loop import orchestrator
 
     # Patch the factory so no real backend is constructed.
-    monkeypatch.setattr(participants, "get_participant_model", lambda b, m=None: FakeParticipantModel())
+    monkeypatch.setattr(
+        participants, "get_participant_model", lambda b, m=None: FakeParticipantModel()
+    )
 
     exp_dir = tmp_path / "experiment1"
     (exp_dir / "design").mkdir(parents=True)
-    (exp_dir / "design" / "stimuli.json").write_text(json.dumps(STIMULI), encoding="utf-8")
+    (exp_dir / "design" / "stimuli.json").write_text(
+        json.dumps(STIMULI), encoding="utf-8"
+    )
 
     csv_path = orchestrator.run_collect_programmatic(
         exp_dir,

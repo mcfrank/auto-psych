@@ -5,6 +5,7 @@ model can estimate their relative importance.
 
 Extends alternation_bias by adding the max-run cue with an independent
 weight, allowing partial credit for both signals."""
+
 import numpy as np
 import pymc as pm
 

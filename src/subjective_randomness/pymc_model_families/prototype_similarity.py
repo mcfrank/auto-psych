@@ -19,12 +19,10 @@ with pm.Model() as model:
 
     balance_weight = 1.0 - alt_weight
     score_a = -(
-        balance_weight * imbalance_a
-        + alt_weight * pt.abs(p_alts_a - theta_alt)
+        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
     )
     score_b = -(
-        balance_weight * imbalance_b
-        + alt_weight * pt.abs(p_alts_b - theta_alt)
+        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
     )
 
     p_left = pm.Deterministic(
@@ -32,4 +30,3 @@ with pm.Model() as model:
         pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
     )
     pm.Bernoulli("response", p=p_left, observed=chose_left)
-

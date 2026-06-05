@@ -26,9 +26,18 @@ def load_stimuli(path: Path) -> List[Dict[str, str]]:
         raise ValueError(f"Stimuli file must contain a list: {path}")
     stimuli = []
     for item in data:
-        if not isinstance(item, Mapping) or "sequence_a" not in item or "sequence_b" not in item:
+        if (
+            not isinstance(item, Mapping)
+            or "sequence_a" not in item
+            or "sequence_b" not in item
+        ):
             raise ValueError(f"Invalid stimulus item: {item!r}")
-        stimuli.append({"sequence_a": str(item["sequence_a"]), "sequence_b": str(item["sequence_b"])})
+        stimuli.append(
+            {
+                "sequence_a": str(item["sequence_a"]),
+                "sequence_b": str(item["sequence_b"]),
+            }
+        )
     return stimuli
 
 
@@ -41,7 +50,9 @@ def generate_rows(
 ) -> List[Dict[str, Any]]:
     rng = random.Random(seed)
     rows: List[Dict[str, Any]] = []
-    model_name = getattr(model_module, "MODEL_NAME", model_module.__name__.split(".")[-1])
+    model_name = getattr(
+        model_module, "MODEL_NAME", model_module.__name__.split(".")[-1]
+    )
     params_json = json.dumps(dict(params), sort_keys=True)
     stimuli_list = list(stimuli)
     for participant_id in range(n_participants):

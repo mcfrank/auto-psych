@@ -4,13 +4,14 @@ with known parameters. Reproducible via numpy seed=42.
 Run from repo root:
     python3 tests/fixtures/pymc_models/simulate.py
 """
+
 import csv
 from pathlib import Path
 
 import numpy as np
 
-THETA = 0.7   # bias of the alternative hypothesis
-TAU = 2.0     # softmax temperature
+THETA = 0.7  # bias of the alternative hypothesis
+TAU = 2.0  # softmax temperature
 N_TRIALS = 30
 SEED = 42
 
@@ -34,7 +35,9 @@ def simulate():
 
         p_left = 1.0 / (1.0 + np.exp(-TAU * (lbf_a - lbf_b)))
         chose_left = int(rng.uniform() < p_left)
-        rows.append({"n_a": n_a, "h_a": h_a, "n_b": n_b, "h_b": h_b, "chose_left": chose_left})
+        rows.append(
+            {"n_a": n_a, "h_a": h_a, "n_b": n_b, "h_b": h_b, "chose_left": chose_left}
+        )
     return rows
 
 
@@ -42,7 +45,9 @@ if __name__ == "__main__":
     out_path = Path(__file__).parent / "responses.csv"
     rows = simulate()
     with out_path.open("w", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=["n_a", "h_a", "n_b", "h_b", "chose_left"])
+        writer = csv.DictWriter(
+            f, fieldnames=["n_a", "h_a", "n_b", "h_b", "chose_left"]
+        )
         writer.writeheader()
         writer.writerows(rows)
     print(f"Wrote {len(rows)} trials to {out_path}")

@@ -8,7 +8,9 @@ from typing import Callable, List, Optional
 ModelCallable = Callable[..., dict]
 
 
-def get_model_callable(model_name: str, theorist_dir: Optional[Path] = None) -> ModelCallable:
+def get_model_callable(
+    model_name: str, theorist_dir: Optional[Path] = None
+) -> ModelCallable:
     """
     Return the model function for the given name from the theorist run dir only.
     theorist_dir must be set and must contain <model_name>.py. Raises if not found.
@@ -16,7 +18,9 @@ def get_model_callable(model_name: str, theorist_dir: Optional[Path] = None) -> 
     """
     theorist_dir = Path(theorist_dir) if theorist_dir else None
     if not theorist_dir:
-        raise KeyError(f"theorist_dir required to load model '{model_name}' (no global library)")
+        raise KeyError(
+            f"theorist_dir required to load model '{model_name}' (no global library)"
+        )
     py_path = theorist_dir / f"{model_name}.py"
     if not py_path.exists():
         raise FileNotFoundError(f"Model '{model_name}' has no {py_path}")
@@ -37,10 +41,14 @@ def get_model_callable(model_name: str, theorist_dir: Optional[Path] = None) -> 
         obj = getattr(mod, name)
         if callable(obj):
             return obj
-    raise ValueError(f"No callable found in {py_path} (expected function '{model_name}')")
+    raise ValueError(
+        f"No callable found in {py_path} (expected function '{model_name}')"
+    )
 
 
-def get_model_names_from_manifest(manifest: dict, theorist_dir: Optional[Path] = None) -> List[str]:
+def get_model_names_from_manifest(
+    manifest: dict, theorist_dir: Optional[Path] = None
+) -> List[str]:
     """
     Return model names from manifest that are loadable: <name>.py exists in theorist_dir.
     No global library fallback; we only use the theorist's run outputs.
@@ -49,7 +57,11 @@ def get_model_names_from_manifest(manifest: dict, theorist_dir: Optional[Path] =
     models = manifest.get("models") or []
     names = []
     for m in models:
-        name = m.get("name") if isinstance(m, dict) else (m if isinstance(m, str) else None)
+        name = (
+            m.get("name")
+            if isinstance(m, dict)
+            else (m if isinstance(m, str) else None)
+        )
         if not name:
             continue
         if theorist_dir and (theorist_dir / f"{name}.py").exists():

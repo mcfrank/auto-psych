@@ -30,6 +30,7 @@ PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 # Directory helpers
 # ─────────────────────────────────────────────
 
+
 def outer_projects_dir() -> Path:
     """Project *assets* (problem_definition.md, ground_truth_models.py, preprocess.py)."""
     return REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects"
@@ -56,6 +57,7 @@ def project_seed_models_dir(project_id: str) -> Path:
 def get_ground_truth_models(project_id: str) -> Dict:
     """Load GROUND_TRUTH_MODELS from src/pipelines/outer_loop/projects/<project>/ground_truth_models.py."""
     import importlib.util
+
     path = outer_project_dir(project_id) / "ground_truth_models.py"
     if not path.exists():
         return {}
@@ -113,6 +115,7 @@ def seed_experiment_models_from_project(exp_dir: Path, project_id: str) -> bool:
 # CONTEXT.md writer
 # ─────────────────────────────────────────────
 
+
 def write_context(
     exp_dir: Path,
     agent_key: str,
@@ -167,6 +170,7 @@ def write_context(
 # Coding-agent spawner
 # ─────────────────────────────────────────────
 
+
 def spawn_cc_agent(
     agent_key: str,
     exp_dir: Path,
@@ -219,6 +223,7 @@ def spawn_cc_agent(
 # Programmatic: collect
 # ─────────────────────────────────────────────
 
+
 def _collect_llm_participant_programmatic(
     stimuli: List[Dict[str, Any]],
     n_participants: int,
@@ -240,21 +245,35 @@ def _collect_llm_participant_programmatic(
     from src.pipelines.outer_loop.participants import get_participant_model
 
     if not stimuli:
-        print("  [collect] no stimuli (design/stimuli.json missing or empty); nothing to collect", flush=True)
+        print(
+            "  [collect] no stimuli (design/stimuli.json missing or empty); nothing to collect",
+            flush=True,
+        )
         return []
 
-    prompt_text = load_prompt_for_run(project_id or "", 1, "4_collect_participant", None)
+    prompt_text = load_prompt_for_run(
+        project_id or "", 1, "4_collect_participant", None
+    )
     if not prompt_text.strip():
-        print("  [collect] no 4_collect_participant.md prompt found; cannot run no-browser mode", flush=True)
+        print(
+            "  [collect] no 4_collect_participant.md prompt found; cannot run no-browser mode",
+            flush=True,
+        )
         return []
 
     try:
         model = get_participant_model(participant_backend, participant_model)
     except Exception as exc:
-        print(f"  [collect] failed to init participant model ({participant_backend}, {participant_model}): {exc}", flush=True)
+        print(
+            f"  [collect] failed to init participant model ({participant_backend}, {participant_model}): {exc}",
+            flush=True,
+        )
         return []
 
-    print(f"  [collect] LLM participants via {model.name}: {n_participants} participant(s) x {len(stimuli)} stimuli", flush=True)
+    print(
+        f"  [collect] LLM participants via {model.name}: {n_participants} participant(s) x {len(stimuli)} stimuli",
+        flush=True,
+    )
     rows, stats = generate_llm_participant_rows(
         stimuli,
         n_participants,
@@ -293,7 +312,10 @@ def run_collect_programmatic(
     Writes exp_dir/data/responses.csv. Returns path to CSV.
     """
     sys.path.insert(0, str(REPO_ROOT))
-    from src.pipelines.outer_loop.collect import _generate_from_models, _generate_from_pymc_models
+    from src.pipelines.outer_loop.collect import (
+        _generate_from_models,
+        _generate_from_pymc_models,
+    )
     from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
 
     stimuli_path = exp_dir / "design" / "stimuli.json"
@@ -309,7 +331,10 @@ def run_collect_programmatic(
 
     if mode == "simulated_participants_nobrowser":
         rows = _collect_llm_participant_programmatic(
-            stimuli, n_participants, project_id, data_dir,
+            stimuli,
+            n_participants,
+            project_id,
+            data_dir,
             participant_backend=participant_backend,
             participant_model=participant_model,
         )
@@ -318,10 +343,15 @@ def run_collect_programmatic(
         # verify the loop recovers a known process); keep the callable path.
         model_registry = get_ground_truth_models(project_id)
         if ground_truth_model not in model_registry:
-            print(f"  [collect] Warning: ground truth model {ground_truth_model!r} not found in registry", flush=True)
+            print(
+                f"  [collect] Warning: ground truth model {ground_truth_model!r} not found in registry",
+                flush=True,
+            )
         print(f"  [collect] Using ground truth model: {ground_truth_model}", flush=True)
         rows = _generate_from_models(
-            stimuli, [ground_truth_model], n_participants,
+            stimuli,
+            [ground_truth_model],
+            n_participants,
             model_registry=model_registry,
         )
     else:
@@ -332,7 +362,10 @@ def run_collect_programmatic(
             manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
             model_names = get_model_names_from_manifest(manifest, theorist_dir)
         if not model_names:
-            print(f"  [collect] Warning: no loadable models in {theorist_dir} — cannot generate data", flush=True)
+            print(
+                f"  [collect] Warning: no loadable models in {theorist_dir} — cannot generate data",
+                flush=True,
+            )
             rows = []
         else:
             # The featurizer is a project *asset* (src assets dir), not under the
@@ -368,6 +401,7 @@ def run_collect_programmatic(
 # Programmatic: inner cognitive-model loop
 # ─────────────────────────────────────────────
 
+
 def _pooled_response_rows(exp_dir: Path) -> list[dict]:
     project_dir = exp_dir.parent
     current_num = int(exp_dir.name.removeprefix("experiment"))
@@ -379,7 +413,9 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict]:
     return rows
 
 
-def _load_project_featurizer(project_dir: Path) -> Optional[Callable[[str, str], Dict[str, Any]]]:
+def _load_project_featurizer(
+    project_dir: Path,
+) -> Optional[Callable[[str, str], Dict[str, Any]]]:
     """Return `featurize_stimulus` from `<project_dir>/preprocess.py` if present.
 
     A project supplies this to turn raw stimulus fields (e.g. H/T sequences)
@@ -390,7 +426,9 @@ def _load_project_featurizer(project_dir: Path) -> Optional[Callable[[str, str],
     path = project_dir / "preprocess.py"
     if not path.exists():
         return None
-    spec = importlib.util.spec_from_file_location(f"_preprocess_{project_dir.name}", path)
+    spec = importlib.util.spec_from_file_location(
+        f"_preprocess_{project_dir.name}", path
+    )
     if spec is None or spec.loader is None:
         return None
     mod = importlib.util.module_from_spec(spec)
@@ -425,7 +463,9 @@ def _write_feature_csv(
     return out_path
 
 
-def _export_inner_loop_model(exp_dir: Path, loop_dir: Path, model_name: str = "inner_loop_model") -> Path:
+def _export_inner_loop_model(
+    exp_dir: Path, loop_dir: Path, model_name: str = "inner_loop_model"
+) -> Path:
     """Copy the inner loop's best PyMC model into `cognitive_models/` + manifest.
 
     The exported file is the winning PyMC model verbatim (a module-level
@@ -445,7 +485,9 @@ def _export_inner_loop_model(exp_dir: Path, loop_dir: Path, model_name: str = "i
     if manifest_path.exists():
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or manifest
     models = manifest.setdefault("models", [])
-    models = [m for m in models if not (isinstance(m, dict) and m.get("name") == model_name)]
+    models = [
+        m for m in models if not (isinstance(m, dict) and m.get("name") == model_name)
+    ]
     models.append(
         {
             "name": model_name,
@@ -453,7 +495,9 @@ def _export_inner_loop_model(exp_dir: Path, loop_dir: Path, model_name: str = "i
         }
     )
     manifest["models"] = models
-    manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
+    manifest_path.write_text(
+        yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8"
+    )
     return model_path
 
 
@@ -476,7 +520,9 @@ def run_inner_model_loop_programmatic(
 
     rows = _pooled_response_rows(exp_dir)
     if not rows:
-        raise ValueError(f"No response rows found for inner loop under {exp_dir.parent}")
+        raise ValueError(
+            f"No response rows found for inner loop under {exp_dir.parent}"
+        )
 
     loop_dir = exp_dir / "model_loop"
     loop_dir.mkdir(parents=True, exist_ok=True)
@@ -500,10 +546,10 @@ def run_inner_model_loop_programmatic(
     return loop_dir
 
 
-
 # ─────────────────────────────────────────────
 # Validation (adapted for new directory structure)
 # ─────────────────────────────────────────────
+
 
 def validate_cc_output(agent_key: str, exp_dir: Path) -> tuple[bool, str]:
     """Validate agent output. Returns (ok, message)."""
@@ -545,7 +591,10 @@ def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
 
     for name in names:
         if not (theorist_dir / f"{name}.py").exists():
-            return False, f"Model '{name}' has no {theorist_dir}/{name}.py (theorist must provide each model file)"
+            return (
+                False,
+                f"Model '{name}' has no {theorist_dir}/{name}.py (theorist must provide each model file)",
+            )
         try:
             model = load_pymc_model(name, theorist_dir)
         except Exception as e:
@@ -553,7 +602,10 @@ def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
         try:
             observed_response_data(model)
         except Exception as e:
-            return False, f"Model '{name}' has no usable observed-response pm.Data container: {e}"
+            return (
+                False,
+                f"Model '{name}' has no usable observed-response pm.Data container: {e}",
+            )
     return True, f"Theory valid: {names}"
 
 
@@ -602,11 +654,17 @@ def _validate_collect(exp_dir: Path) -> tuple[bool, str]:
     if len(lines) < 2:
         return False, "responses.csv has no data rows"
     header = {h.strip() for h in lines[0].split(",")}
-    required = {"participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"}
+    required = {
+        "participant_id",
+        "trial_index",
+        "sequence_a",
+        "sequence_b",
+        "chose_left",
+    }
     missing = required - header
     if missing:
         return False, f"responses.csv missing columns: {missing}"
-    return True, f"Collect valid: {len(lines)-1} rows"
+    return True, f"Collect valid: {len(lines) - 1} rows"
 
 
 def _validate_model_loop(exp_dir: Path) -> tuple[bool, str]:
@@ -635,6 +693,7 @@ def _validate_model_loop(exp_dir: Path) -> tuple[bool, str]:
 # ─────────────────────────────────────────────
 # Registry helpers
 # ─────────────────────────────────────────────
+
 
 def init_registry(exp_dir: Path) -> None:
     """Write a fresh model_registry.yaml for this experiment."""

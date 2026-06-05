@@ -40,19 +40,19 @@ seq_counts = {}
 for eig, seq_a, seq_b in scored:
     # Use frozenset to treat (A, B) and (B, A) as the same pair
     pair_set = frozenset([seq_a, seq_b])
-    
+
     if pair_set in seen_pairs:
         continue
-        
+
     # Enforce diversity: don't overuse any single sequence
     if seq_counts.get(seq_a, 0) >= 3 or seq_counts.get(seq_b, 0) >= 3:
         continue
-        
+
     selected.append({"sequence_a": seq_a, "sequence_b": seq_b, "eig": float(eig)})
     seen_pairs.add(pair_set)
     seq_counts[seq_a] = seq_counts.get(seq_a, 0) + 1
     seq_counts[seq_b] = seq_counts.get(seq_b, 0) + 1
-    
+
     if len(selected) == total_trials:
         break
 
@@ -61,7 +61,9 @@ if len(selected) < total_trials:
     for eig, seq_a, seq_b in scored:
         pair_set = frozenset([seq_a, seq_b])
         if pair_set not in seen_pairs:
-            selected.append({"sequence_a": seq_a, "sequence_b": seq_b, "eig": float(eig)})
+            selected.append(
+                {"sequence_a": seq_a, "sequence_b": seq_b, "eig": float(eig)}
+            )
             seen_pairs.add(pair_set)
         if len(selected) == total_trials:
             break
@@ -80,7 +82,7 @@ rationale = f"""# Design Rationale
 - **EIG range**: {min_eig:.4f} to {max_eig:.4f}
 - **Candidate generation**: Generated all possible sequences of lengths {allowed_sequence_lengths} (H/T). Randomly sampled 2500 unique pairs to evaluate.
 - **Selection**: Scored each pair using the provided `expected_information_gain` function. Selected the top {total_trials} pairs with the highest EIG.
-- **Diversity**: To ensure a diverse set of stimuli, a constraint was added so that no single sequence appears more than 3 times in the final design, and symmetric duplicate pairs were excluded. This prevents the design from being dominated by slight variations of a single highly informative comparison, allowing it to broadly discriminate across all models ({', '.join(model_names)}).
+- **Diversity**: To ensure a diverse set of stimuli, a constraint was added so that no single sequence appears more than 3 times in the final design, and symmetric duplicate pairs were excluded. This prevents the design from being dominated by slight variations of a single highly informative comparison, allowing it to broadly discriminate across all models ({", ".join(model_names)}).
 """
 
 with open(out_dir / "design_rationale.md", "w") as f:

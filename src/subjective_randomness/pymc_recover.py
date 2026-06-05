@@ -27,7 +27,11 @@ from src.subjective_randomness.features import (
     INT_FEATURE_COLS,
     featurize_stimulus,
 )
-from src.subjective_randomness.simulate import RESPONSE_COLUMNS, generate_rows, load_stimuli
+from src.subjective_randomness.simulate import (
+    RESPONSE_COLUMNS,
+    generate_rows,
+    load_stimuli,
+)
 
 PYMC_MODELS_DIR = Path(__file__).resolve().parent / "pymc_model_families"
 

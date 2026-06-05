@@ -40,4 +40,3 @@ with pm.Model() as model:
         pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
     )
     pm.Bernoulli("response", p=p_left, observed=chose_left)
-

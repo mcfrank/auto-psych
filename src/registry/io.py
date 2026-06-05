@@ -50,7 +50,9 @@ def get_model_weights(registry_path: Path) -> Dict[str, float]:
     return dict(reg.get("theories") or {})
 
 
-def normalize_theories(theories: Dict[str, float], reserved: float = 0.0) -> Dict[str, float]:
+def normalize_theories(
+    theories: Dict[str, float], reserved: float = 0.0
+) -> Dict[str, float]:
     """Scale theory probabilities so they sum to (1 - reserved)."""
     total = sum(theories.values()) or 1.0
     target = max(0.0, 1.0 - reserved)

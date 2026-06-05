@@ -75,7 +75,8 @@ def run_validation(state: Dict[str, Any], agent_key: str) -> Dict[str, Any]:
     return {
         **state,
         "validation_ok": False,
-        "validation_feedback": v.message + (f" Details: {v.details}" if v.details else ""),
+        "validation_feedback": v.message
+        + (f" Details: {v.details}" if v.details else ""),
         "validation_retry_count": retry_count + 1,
         "last_validated_agent": agent_key,
     }

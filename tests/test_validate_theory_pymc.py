@@ -5,6 +5,7 @@ agent-written **PyMC models** (module-level `model: pm.Model`) and reject ones
 that are missing, unloadable, or lack a proper observed-response container.
 Validation only builds the model graph — it never samples.
 """
+
 from __future__ import annotations
 
 import shutil

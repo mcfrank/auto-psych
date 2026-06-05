@@ -34,6 +34,7 @@ def is_nonempty(val: object) -> bool:
 @dataclass
 class Args:
     """Command-line arguments for preprocess_data."""
+
     input_csv: Path
     output_csv: Path = here() / "data" / "think_aloud_game24" / "responses.csv"
 
@@ -65,7 +66,9 @@ def main(args: Args) -> None:
     print(f"Rows input: {n_input}")
 
     # Filter 1: trial_type == "GameOfN-audio-recording"
-    rows = [r for r in rows if r.get("trial_type", "").strip() == "GameOfN-audio-recording"]
+    rows = [
+        r for r in rows if r.get("trial_type", "").strip() == "GameOfN-audio-recording"
+    ]
     print(f"Rows after trial_type filter: {len(rows)}")
 
     # Filter 2: practice is not True (handle both string and bool)
