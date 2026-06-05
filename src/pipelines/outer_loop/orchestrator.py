@@ -48,6 +48,11 @@ def experiment_dir(project_id: str, exp_num: int) -> Path:
     return outer_data_dir() / project_id / f"experiment{exp_num}"
 
 
+def project_seed_models_dir(project_id: str) -> Path:
+    """Return the optional project seed-model directory."""
+    return outer_project_dir(project_id) / "seed_models"
+
+
 def get_ground_truth_models(project_id: str) -> Dict:
     """Load GROUND_TRUTH_MODELS from src/pipelines/outer_loop/projects/<project>/ground_truth_models.py."""
     import importlib.util
@@ -66,6 +71,42 @@ def get_ground_truth_models(project_id: str) -> Dict:
 def ensure_experiment_dirs(exp_dir: Path) -> None:
     for sub in ["cognitive_models", "design", "experiment", "data", "model_loop"]:
         (exp_dir / sub).mkdir(parents=True, exist_ok=True)
+
+
+def seed_experiment_models_from_project(exp_dir: Path, project_id: str) -> bool:
+    """Copy project-level seed models into an empty experiment model directory.
+
+    Projects can define ``seed_models/<name>.py`` plus ``models_manifest.yaml`` to
+    specify the model set experiment 1 should start from. The copy is skipped if
+    the experiment already has a manifest, which keeps ``--resume`` from
+    overwriting models a user or previous agent created.
+    """
+    seed_dir = project_seed_models_dir(project_id)
+    seed_manifest = seed_dir / "models_manifest.yaml"
+    if not seed_manifest.exists():
+        return False
+
+    dest_dir = exp_dir / "cognitive_models"
+    dest_manifest = dest_dir / "models_manifest.yaml"
+    if dest_manifest.exists():
+        return False
+
+    manifest = yaml.safe_load(seed_manifest.read_text(encoding="utf-8")) or {}
+    entries = manifest.get("models") or []
+    if not entries:
+        raise ValueError(f"Seed manifest has no models: {seed_manifest}")
+
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    for entry in entries:
+        name = entry.get("name") if isinstance(entry, dict) else entry
+        if not name:
+            continue
+        src = seed_dir / f"{name}.py"
+        if not src.exists():
+            raise FileNotFoundError(f"Seed model {name!r} has no file at {src}")
+        shutil.copyfile(src, dest_dir / f"{name}.py")
+    shutil.copyfile(seed_manifest, dest_manifest)
+    return True
 
 
 # ─────────────────────────────────────────────
@@ -178,18 +219,77 @@ def spawn_cc_agent(
 # Programmatic: collect
 # ─────────────────────────────────────────────
 
+def _collect_llm_participant_programmatic(
+    stimuli: List[Dict[str, Any]],
+    n_participants: int,
+    project_id: Optional[str],
+    data_dir: Path,
+    *,
+    participant_backend: str,
+    participant_model: Optional[str],
+) -> List[Dict[str, Any]]:
+    """LLM-as-participant collection for the active (programmatic) outer loop.
+
+    Resolves the participant prompt and the participant-model backend, then runs
+    the shared generation loop. Failures (no stimuli, missing prompt, model init
+    error) degrade to an empty result with a logged reason rather than raising,
+    so one bad run does not abort the experiment.
+    """
+    from src.pipelines.outer_loop.collect import generate_llm_participant_rows
+    from src.pipelines.outer_loop.llm import load_prompt_for_run
+    from src.pipelines.outer_loop.participants import get_participant_model
+
+    if not stimuli:
+        print("  [collect] no stimuli (design/stimuli.json missing or empty); nothing to collect", flush=True)
+        return []
+
+    prompt_text = load_prompt_for_run(project_id or "", 1, "4_collect_participant", None)
+    if not prompt_text.strip():
+        print("  [collect] no 4_collect_participant.md prompt found; cannot run no-browser mode", flush=True)
+        return []
+
+    try:
+        model = get_participant_model(participant_backend, participant_model)
+    except Exception as exc:
+        print(f"  [collect] failed to init participant model ({participant_backend}, {participant_model}): {exc}", flush=True)
+        return []
+
+    print(f"  [collect] LLM participants via {model.name}: {n_participants} participant(s) x {len(stimuli)} stimuli", flush=True)
+    rows, stats = generate_llm_participant_rows(
+        stimuli,
+        n_participants,
+        participant_model=model,
+        prompt_text=prompt_text,
+        transcripts_dir=data_dir / "transcripts",
+    )
+    print(
+        f"  [collect] {stats['n_rows']} rows (unparseable={stats['n_unparseable']}, errors={stats['n_errors']})",
+        flush=True,
+    )
+    return rows
+
+
 def run_collect_programmatic(
     exp_dir: Path,
     mode: str,
     n_participants: int,
     project_id: Optional[str] = None,
     ground_truth_model: Optional[str] = None,
+    participant_backend: str = "closed",
+    participant_model: Optional[str] = None,
 ) -> Path:
     """
     Run data collection directly (no CC agent).
-    If ground_truth_model is set, samples all participants from that model
-    (loaded from projects/<project_id>/ground_truth_models.py).
-    Otherwise samples from the theorist's models.
+
+    Collection source, in priority order:
+      - mode == "simulated_participants_nobrowser": LLM-as-participant. Each
+        synthetic participant answers every stimulus via a participant model
+        (``participant_backend`` "closed"=hosted API, "open"=Hugging Face;
+        ``participant_model`` names the model). No browser, no Firebase.
+      - ground_truth_model set: sample all participants from that project
+        ground-truth callable (no browser).
+      - otherwise: sample from the theorist's PyMC models' prior-predictive.
+
     Writes exp_dir/data/responses.csv. Returns path to CSV.
     """
     sys.path.insert(0, str(REPO_ROOT))
@@ -207,7 +307,13 @@ def run_collect_programmatic(
     data_dir = exp_dir / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    if ground_truth_model and project_id:
+    if mode == "simulated_participants_nobrowser":
+        rows = _collect_llm_participant_programmatic(
+            stimuli, n_participants, project_id, data_dir,
+            participant_backend=participant_backend,
+            participant_model=participant_model,
+        )
+    elif ground_truth_model and project_id:
         # Ground-truth models are simple callables (data-generation tool used to
         # verify the loop recovers a known process); keep the callable path.
         model_registry = get_ground_truth_models(project_id)

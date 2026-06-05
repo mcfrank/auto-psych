@@ -37,11 +37,13 @@ from src.pipelines.outer_loop.orchestrator import (
     run_inner_model_loop_programmatic,
     run_collect_programmatic,
     spawn_cc_agent,
+    seed_experiment_models_from_project,
     update_registry_from_interpretation,
     validate_cc_output,
     write_context,
 )
 from src.runtime.coding_agent import select_backend
+from src.pipelines.outer_loop.participants import DEFAULT_OPEN_MODEL
 
 AGENT_KEYS = ["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]
 
@@ -79,6 +81,8 @@ def _run_agent(
     inner_loop_candidates: int = 3,
     fit_kwargs: Optional[dict] = None,
     backend: Optional[str] = None,
+    participant_backend: str = "closed",
+    participant_model: Optional[str] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output is invalid."""
     print(f"\n{'='*60}", flush=True)
@@ -88,7 +92,9 @@ def _run_agent(
     if agent_key == "4_collect":
         run_collect_programmatic(exp_dir, mode, n_participants,
                                  project_id=project_id,
-                                 ground_truth_model=ground_truth_model)
+                                 ground_truth_model=ground_truth_model,
+                                 participant_backend=participant_backend,
+                                 participant_model=participant_model)
     elif agent_key == "5_model_loop":
         run_inner_model_loop_programmatic(
             exp_dir,
@@ -133,6 +139,8 @@ def _run_experiment(
     inner_loop_candidates: int = 3,
     fit_kwargs: Optional[dict] = None,
     backend: Optional[str] = None,
+    participant_backend: str = "closed",
+    participant_model: Optional[str] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
@@ -142,14 +150,40 @@ def _run_experiment(
         sys.exit(1)
     ensure_experiment_dirs(exp_dir_path)
     init_registry(exp_dir_path)
+    seeded_models = False
+    if exp_num == 1:
+        seeded_models = seed_experiment_models_from_project(exp_dir_path, project_id)
+        if seeded_models:
+            print(
+                f"  [seed] Copied project seed models into {exp_dir_path / 'cognitive_models'}",
+                flush=True,
+            )
+            if validate:
+                ok, msg = validate_cc_output("1_theory", exp_dir_path)
+                if ok:
+                    print(f"  [ok] seeded theory: {msg}", flush=True)
+                else:
+                    print(f"  [error] Seed validation failed: {msg}", file=sys.stderr)
+                    sys.exit(1)
 
     prev_exp_dir = experiment_dir(project_id, exp_num - 1) if exp_num > 1 else None
     if prev_exp_dir and not prev_exp_dir.exists():
         prev_exp_dir = None
 
     keys_to_run = [agent_filter] if agent_filter else AGENT_KEYS
+    if seeded_models and agent_filter is None:
+        keys_to_run = [key for key in keys_to_run if key != "1_theory"]
 
     for agent_key in keys_to_run:
+        # No-browser mode never uses the jsPsych experiment, so skip building it
+        # in a full run (still runnable explicitly via --agent 3_implement).
+        if (
+            agent_key == "3_implement"
+            and mode == "simulated_participants_nobrowser"
+            and not agent_filter
+        ):
+            print("  [skip] 3_implement not needed in no-browser mode", flush=True)
+            continue
         _run_agent(
             agent_key=agent_key,
             exp_dir=exp_dir_path,
@@ -164,6 +198,8 @@ def _run_experiment(
             inner_loop_candidates=inner_loop_candidates,
             fit_kwargs=fit_kwargs,
             backend=backend,
+            participant_backend=participant_backend,
+            participant_model=participant_model,
         )
 
     if "5_model_loop" in keys_to_run:
@@ -237,6 +273,15 @@ def main(args: Args) -> None:
         print("Error: specify --experiment N or --experiments N", file=sys.stderr)
         sys.exit(1)
 
+    # Resolve the participant-model id for no-browser collection. The open
+    # backend has a default model; the closed backend uses the project default
+    # unless --closed-model overrides it.
+    participant_model = (
+        (args.hf_model or DEFAULT_OPEN_MODEL)
+        if args.participant_backend == "open"
+        else args.closed_model
+    )
+
     # Resolve the backend once and export it so the programmatic inner loop
     # (which spawns its own agents) inherits the same choice.
     backend = select_backend(args.coding_agent)
@@ -262,6 +307,8 @@ def main(args: Args) -> None:
             inner_loop_candidates=args.inner_loop_candidates,
             fit_kwargs=fit_kwargs,
             backend=backend,
+            participant_backend=args.participant_backend,
+            participant_model=participant_model,
         )
 
     print("\nAll experiments complete.", flush=True)
