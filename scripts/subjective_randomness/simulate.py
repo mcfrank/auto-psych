@@ -50,7 +50,11 @@ def main(args: Args) -> None:
         params.update(json.loads(args.params))
     params = {k: float(v) for k, v in params.items()}
 
-    n_participants = args.n_participants if args.n_participants is not None else int(sim_cfg.get("n_participants", 20))
+    n_participants = (
+        args.n_participants
+        if args.n_participants is not None
+        else int(sim_cfg.get("n_participants", 20))
+    )
     seed = args.seed if args.seed is not None else int(sim_cfg.get("seed", 1))
     rows = generate_rows(model, stimuli, params, n_participants, seed)
     out_path = resolve_path(args.out)

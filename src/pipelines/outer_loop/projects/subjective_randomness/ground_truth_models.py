@@ -62,7 +62,9 @@ def alternation(stimulus: Stimulus, response_options: List[str]) -> Dict[str, fl
     return {response_options[0]: sa / total, response_options[1]: sb / total}
 
 
-def prefer_more_heads(stimulus: Stimulus, response_options: List[str]) -> Dict[str, float]:
+def prefer_more_heads(
+    stimulus: Stimulus, response_options: List[str]
+) -> Dict[str, float]:
     """
     Prefer sequence with more heads.
     P(choose A) proportional to number of H in A.
@@ -93,9 +95,7 @@ def length_sensitive_alternation(
         n = len(seq)
         length_bonus = math.log(max(n, 1)) / math.log(8)
         return (
-            1.20 * _alternation_rate(seq)
-            - 0.85 * _imbalance(seq)
-            + 0.35 * length_bonus
+            1.20 * _alternation_rate(seq) - 0.85 * _imbalance(seq) + 0.35 * length_bonus
         )
 
     p_left = _sigmoid(4.0 * (score(seq_a) - score(seq_b)))

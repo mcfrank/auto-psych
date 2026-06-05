@@ -38,7 +38,10 @@ seq_counts = {}
 max_occurrences = 3
 
 for eig, seq_a, seq_b in scored:
-    if seq_counts.get(seq_a, 0) < max_occurrences and seq_counts.get(seq_b, 0) < max_occurrences:
+    if (
+        seq_counts.get(seq_a, 0) < max_occurrences
+        and seq_counts.get(seq_b, 0) < max_occurrences
+    ):
         selected.append((eig, seq_a, seq_b))
         seq_counts[seq_a] = seq_counts.get(seq_a, 0) + 1
         seq_counts[seq_b] = seq_counts.get(seq_b, 0) + 1

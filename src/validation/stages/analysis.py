@@ -20,10 +20,14 @@ def validate_analyst_output(run_dir: Path) -> Validated:
         return Validated(False, "aggregate.csv is empty", details)
     header = set(lines[0].split(","))
     if "chose_left_pct" not in header and "sequence_a" not in header:
-        return Validated(False, "aggregate.csv missing expected columns", {"header": list(header)})
+        return Validated(
+            False, "aggregate.csv missing expected columns", {"header": list(header)}
+        )
 
     if not summary_path.exists():
-        return Validated(False, "summary_stats.json not found", {"path": str(summary_path)})
+        return Validated(
+            False, "summary_stats.json not found", {"path": str(summary_path)}
+        )
     try:
         data = __import__("json").loads(summary_path.read_text(encoding="utf-8"))
     except Exception as exc:

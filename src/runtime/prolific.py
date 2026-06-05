@@ -103,7 +103,10 @@ def create_test_participant(email: str) -> Tuple[Optional[str], Optional[str]]:
             timeout=30,
         )
         if r.status_code not in (200, 201):
-            return (None, f"POST /researchers/participants/ {r.status_code}: {r.text[:500]}")
+            return (
+                None,
+                f"POST /researchers/participants/ {r.status_code}: {r.text[:500]}",
+            )
         data = r.json()
         return (data.get("participant_id") or data.get("id"), None)
     except Exception as e:
@@ -117,7 +120,9 @@ def create_study(payload: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]
     Returns (study_id, error_message).
     """
     try:
-        r = requests.post(f"{_BASE}/studies/", headers=_headers(), json=payload, timeout=60)
+        r = requests.post(
+            f"{_BASE}/studies/", headers=_headers(), json=payload, timeout=60
+        )
         if r.status_code not in (200, 201):
             return (None, f"POST /studies/ {r.status_code}: {r.text[:500]}")
         data = r.json()
@@ -153,7 +158,9 @@ def get_study(study_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
         return (None, str(e))
 
 
-def get_submission_counts(study_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
+def get_submission_counts(
+    study_id: str,
+) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
     """GET /studies/{id}/submissions/counts/ . Returns (counts_dict, error_message)."""
     try:
         r = requests.get(
@@ -162,7 +169,10 @@ def get_submission_counts(study_id: str) -> Tuple[Optional[Dict[str, Any]], Opti
             timeout=30,
         )
         if r.status_code != 200:
-            return (None, f"GET /studies/{id}/submissions/counts/ {r.status_code}: {r.text[:500]}")
+            return (
+                None,
+                f"GET /studies/{id}/submissions/counts/ {r.status_code}: {r.text[:500]}",
+            )
         return (r.json(), None)
     except Exception as e:
         return (None, str(e))

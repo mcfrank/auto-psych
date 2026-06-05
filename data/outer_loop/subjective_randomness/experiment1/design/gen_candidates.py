@@ -4,6 +4,7 @@ Creates all ordered (A, B) pairs from a hand-curated set of sequences that span
 the feature space of the three cognitive models: alternation_bias (p_alts),
 runs_penalty (max_run), and bayesian_fair_coin (h/n, n).
 """
+
 import itertools
 import json
 from pathlib import Path

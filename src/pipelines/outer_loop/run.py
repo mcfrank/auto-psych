@@ -85,16 +85,20 @@ def _run_agent(
     participant_model: Optional[str] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output is invalid."""
-    print(f"\n{'='*60}", flush=True)
+    print(f"\n{'=' * 60}", flush=True)
     print(f"  Experiment {exp_num} / Agent {agent_key}", flush=True)
-    print(f"{'='*60}", flush=True)
+    print(f"{'=' * 60}", flush=True)
 
     if agent_key == "4_collect":
-        run_collect_programmatic(exp_dir, mode, n_participants,
-                                 project_id=project_id,
-                                 ground_truth_model=ground_truth_model,
-                                 participant_backend=participant_backend,
-                                 participant_model=participant_model)
+        run_collect_programmatic(
+            exp_dir,
+            mode,
+            n_participants,
+            project_id=project_id,
+            ground_truth_model=ground_truth_model,
+            participant_backend=participant_backend,
+            participant_model=participant_model,
+        )
     elif agent_key == "5_model_loop":
         run_inner_model_loop_programmatic(
             exp_dir,
@@ -113,7 +117,12 @@ def _run_agent(
         allowed_dirs = [exp_dir, outer_project_dir(project_id)]
         if prev_exp_dir:
             allowed_dirs.append(prev_exp_dir)
-        ok_spawn, output = spawn_cc_agent(agent_key=agent_key, exp_dir=exp_dir, allowed_dirs=allowed_dirs, backend=backend)
+        ok_spawn, output = spawn_cc_agent(
+            agent_key=agent_key,
+            exp_dir=exp_dir,
+            allowed_dirs=allowed_dirs,
+            backend=backend,
+        )
         if not ok_spawn:
             print(f"  [warn] Agent {agent_key} exited with non-zero status", flush=True)
 
@@ -122,7 +131,9 @@ def _run_agent(
         if ok:
             print(f"  [ok] {agent_key}: {msg}", flush=True)
         else:
-            print(f"  [error] Validation failed for {agent_key}: {msg}", file=sys.stderr)
+            print(
+                f"  [error] Validation failed for {agent_key}: {msg}", file=sys.stderr
+            )
             sys.exit(1)
 
 
@@ -145,7 +156,10 @@ def _run_experiment(
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
     if exp_dir_path.exists() and not resume:
-        print(f"Error: experiment directory already exists: {exp_dir_path}", file=sys.stderr)
+        print(
+            f"Error: experiment directory already exists: {exp_dir_path}",
+            file=sys.stderr,
+        )
         print("Use --resume to run into an existing directory.", file=sys.stderr)
         sys.exit(1)
     ensure_experiment_dirs(exp_dir_path)
@@ -218,7 +232,9 @@ class Args:
     """Single experiment number."""
     experiments: Optional[str] = None
     """Experiments to run: N (1..N) or A-B (e.g. 4-6). Overrides --experiment."""
-    agent: Optional[Literal["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]] = None
+    agent: Optional[
+        Literal["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]
+    ] = None
     """Run only this agent. Omit for full pipeline."""
     mode: Literal["simulated_participants", "live"] = "simulated_participants"
     """Data-collection mode."""
@@ -257,7 +273,10 @@ def main(args: Args) -> None:
     if args.ground_truth_model is not None:
         allowed = list(get_ground_truth_models(project_id).keys())
         if args.ground_truth_model not in allowed:
-            print(f"Error: --ground-truth-model must be one of {allowed}; got {args.ground_truth_model!r}", file=sys.stderr)
+            print(
+                f"Error: --ground-truth-model must be one of {allowed}; got {args.ground_truth_model!r}",
+                file=sys.stderr,
+            )
             sys.exit(1)
 
     # Resolve experiment IDs
@@ -289,8 +308,14 @@ def main(args: Args) -> None:
 
     fit_kwargs = {"draws": args.draws, "tune": args.tune, "chains": args.chains}
 
-    print(f"Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} agent={backend} validate={args.validate}", flush=True)
-    print(f"Inner-loop MCMC: draws={args.draws} tune={args.tune} chains={args.chains}", flush=True)
+    print(
+        f"Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} agent={backend} validate={args.validate}",
+        flush=True,
+    )
+    print(
+        f"Inner-loop MCMC: draws={args.draws} tune={args.tune} chains={args.chains}",
+        flush=True,
+    )
     print(f"Outputs: {outer_data_dir() / project_id}", flush=True)
 
     for exp_num in exp_ids:

@@ -25,11 +25,34 @@ import csv
 from pathlib import Path
 from typing import Dict, List
 
-PASSTHROUGH_COLS = ["participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"]
-INT_FEATURE_COLS = ["n_a", "h_a", "alts_a", "max_run_a", "n_b", "h_b", "alts_b", "max_run_b"]
+PASSTHROUGH_COLS = [
+    "participant_id",
+    "trial_index",
+    "sequence_a",
+    "sequence_b",
+    "chose_left",
+]
+INT_FEATURE_COLS = [
+    "n_a",
+    "h_a",
+    "alts_a",
+    "max_run_a",
+    "n_b",
+    "h_b",
+    "alts_b",
+    "max_run_b",
+]
 FLOAT_FEATURE_COLS = [
-    "p_a", "p_alts_a", "max_run_norm_a", "imbalance_a", "periodicity_a",
-    "p_b", "p_alts_b", "max_run_norm_b", "imbalance_b", "periodicity_b",
+    "p_a",
+    "p_alts_a",
+    "max_run_norm_a",
+    "imbalance_a",
+    "periodicity_a",
+    "p_b",
+    "p_alts_b",
+    "max_run_norm_b",
+    "imbalance_b",
+    "periodicity_b",
 ]
 REQUIRED_INPUT_COLS = {"sequence_a", "sequence_b", "chose_left"}
 
@@ -60,7 +83,9 @@ def sequence_features(seq: str, suffix: str) -> Dict[str, int]:
     }
 
 
-def sequence_features_float(seq: str, suffix: str, n: int, alts: int, h: int, max_run: int) -> Dict[str, float]:
+def sequence_features_float(
+    seq: str, suffix: str, n: int, alts: int, h: int, max_run: int
+) -> Dict[str, float]:
     """Float features (proportions) derived alongside the integer features."""
     return {
         f"p_{suffix}": (h / n) if n > 0 else 0.0,
@@ -95,10 +120,20 @@ def featurize_stimulus(sequence_a: str, sequence_b: str) -> Dict[str, float]:
     feats_a = sequence_features(sequence_a, "a")
     feats_b = sequence_features(sequence_b, "b")
     floats_a = sequence_features_float(
-        sequence_a, "a", feats_a["n_a"], feats_a["alts_a"], feats_a["h_a"], feats_a["max_run_a"]
+        sequence_a,
+        "a",
+        feats_a["n_a"],
+        feats_a["alts_a"],
+        feats_a["h_a"],
+        feats_a["max_run_a"],
     )
     floats_b = sequence_features_float(
-        sequence_b, "b", feats_b["n_b"], feats_b["alts_b"], feats_b["h_b"], feats_b["max_run_b"]
+        sequence_b,
+        "b",
+        feats_b["n_b"],
+        feats_b["alts_b"],
+        feats_b["h_b"],
+        feats_b["max_run_b"],
     )
     return {**feats_a, **feats_b, **floats_a, **floats_b}
 
@@ -125,10 +160,12 @@ def featurize_responses_csv(input_path: Path, output_path: Path) -> int:
     out_cols = PASSTHROUGH_COLS + INT_FEATURE_COLS + FLOAT_FEATURE_COLS
     out_rows: List[Dict[str, object]] = []
     for r in rows:
-        out_rows.append({
-            **{k: r.get(k, "") for k in PASSTHROUGH_COLS},
-            **featurize_stimulus(r["sequence_a"], r["sequence_b"]),
-        })
+        out_rows.append(
+            {
+                **{k: r.get(k, "") for k in PASSTHROUGH_COLS},
+                **featurize_stimulus(r["sequence_a"], r["sequence_b"]),
+            }
+        )
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     with output_path.open("w", encoding="utf-8", newline="") as f:

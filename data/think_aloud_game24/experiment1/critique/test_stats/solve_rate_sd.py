@@ -10,4 +10,4 @@ def test_stat(rows):
     rates = [r["chose_left_pct"] for r in rows]
     mean = sum(rates) / len(rates)
     variance = sum((x - mean) ** 2 for x in rates) / len(rates)
-    return variance ** 0.5
+    return variance**0.5

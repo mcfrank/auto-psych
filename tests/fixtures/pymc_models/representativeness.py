@@ -1,6 +1,7 @@
 # file: representativeness.py
 """Observers prefer the sequence whose head-proportion is closer to 0.5
 (simple representativeness heuristic), with a softmax decision rule."""
+
 import numpy as np
 import pymc as pm
 import pytensor.tensor as pt

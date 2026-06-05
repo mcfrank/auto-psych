@@ -41,8 +41,14 @@ PARAM_BOUNDS: Dict[str, tuple[float, float]] = {
 
 
 def feature_weights(params: Mapping[str, float]) -> Dict[str, float]:
-    longrun = max(0.0, min(1.0, float(params.get("longrun_weight", DEFAULT_PARAMS["longrun_weight"]))))
-    periodic_share = max(0.0, min(1.0, float(params.get("periodic_share", DEFAULT_PARAMS["periodic_share"]))))
+    longrun = max(
+        0.0,
+        min(1.0, float(params.get("longrun_weight", DEFAULT_PARAMS["longrun_weight"]))),
+    )
+    periodic_share = max(
+        0.0,
+        min(1.0, float(params.get("periodic_share", DEFAULT_PARAMS["periodic_share"]))),
+    )
     remaining = 1.0 - longrun
     return {
         "longrun": longrun,
@@ -62,7 +68,9 @@ def score_sequence(seq: str, params: Mapping[str, float] | None = None) -> float
     return -compressibility_penalty
 
 
-def predict_left(stimulus: Stimulus | Mapping[str, str], params: Mapping[str, float] | None = None) -> float:
+def predict_left(
+    stimulus: Stimulus | Mapping[str, str], params: Mapping[str, float] | None = None
+) -> float:
     seq_a, seq_b = normalize_stimulus(stimulus)
     p = merge_params(DEFAULT_PARAMS, params)
     return choice_probability(score_sequence(seq_a, p), score_sequence(seq_b, p), p)

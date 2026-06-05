@@ -13,6 +13,7 @@ def test_load_state_from_run_with_fixture_run_dir():
     """With a run dir that has fixture-like structure, load_state_from_run returns expected keys."""
     import tempfile
     import shutil
+
     run_dir = Path(tempfile.mkdtemp())
     try:
         (run_dir / "1_theory").mkdir()
@@ -40,13 +41,17 @@ def test_load_state_from_run_with_fixture_run_dir():
 
 
 def test_minimal_state_for_agent_theorist():
-    state = minimal_state_for_agent("1_theory", "subjective_randomness", 1, fixtures_dir=FIXTURES_DIR)
+    state = minimal_state_for_agent(
+        "1_theory", "subjective_randomness", 1, fixtures_dir=FIXTURES_DIR
+    )
     assert state["project_id"] == "subjective_randomness"
     assert state["run_id"] == 1
     assert "problem_definition_path" in state
 
 
 def test_minimal_state_for_agent_designer():
-    state = minimal_state_for_agent("2_design", "subjective_randomness", 1, fixtures_dir=FIXTURES_DIR)
+    state = minimal_state_for_agent(
+        "2_design", "subjective_randomness", 1, fixtures_dir=FIXTURES_DIR
+    )
     assert state["theorist_manifest_path"]
     assert Path(state["theorist_manifest_path"]).exists()

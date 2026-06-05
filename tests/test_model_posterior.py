@@ -4,6 +4,7 @@ The ELPD-LOO scoring (which needs MCMC) is monkeypatched out so these tests
 exercise only the softmax/posterior arithmetic and the complexity prior — no
 PyMC sampling required.
 """
+
 from __future__ import annotations
 
 import math
@@ -19,7 +20,9 @@ def _make_models_dir(tmp_path, names):
     models_dir = tmp_path / "cognitive_models"
     models_dir.mkdir()
     for name in names:
-        (models_dir / f"{name}.py").write_text("# placeholder model\n", encoding="utf-8")
+        (models_dir / f"{name}.py").write_text(
+            "# placeholder model\n", encoding="utf-8"
+        )
     manifest = "models:\n" + "".join(f"  - name: {n}\n" for n in names)
     (models_dir / "models_manifest.yaml").write_text(manifest, encoding="utf-8")
     return models_dir
@@ -53,7 +56,9 @@ def test_posteriors_softmax_elpd_and_sum_to_one(tmp_path, monkeypatch):
 def test_complexity_prior_penalises_longer_models(tmp_path, monkeypatch):
     models_dir = _make_models_dir(tmp_path, ["simple", "complex"])
     # Make "complex" genuinely longer so model_complexity differs.
-    (models_dir / "complex.py").write_text("x = 1\ny = 2\nz = 3\n" * 50, encoding="utf-8")
+    (models_dir / "complex.py").write_text(
+        "x = 1\ny = 2\nz = 3\n" * 50, encoding="utf-8"
+    )
     responses = _make_responses(tmp_path, 3)
     # Equal fit; only the complexity prior should break the tie.
     monkeypatch.setattr(ll, "log_likelihood", lambda m, *a, **k: -10.0)

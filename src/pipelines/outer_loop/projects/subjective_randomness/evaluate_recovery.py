@@ -36,7 +36,9 @@ Stimulus = Tuple[str, str]
 
 def _load_featurizer():
     path = Path(__file__).resolve().parent / "preprocess.py"
-    spec = importlib.util.spec_from_file_location("_subjective_randomness_preprocess", path)
+    spec = importlib.util.spec_from_file_location(
+        "_subjective_randomness_preprocess", path
+    )
     if spec is None or spec.loader is None:
         raise ImportError(f"Cannot load featurizer from {path}")
     mod = importlib.util.module_from_spec(spec)
@@ -92,7 +94,10 @@ def ground_truth_p_left(
     stimuli: List[Stimulus],
 ) -> np.ndarray:
     return np.array(
-        [float(fn(stimulus, RESPONSE_OPTIONS)[RESPONSE_OPTIONS[0]]) for stimulus in stimuli],
+        [
+            float(fn(stimulus, RESPONSE_OPTIONS)[RESPONSE_OPTIONS[0]])
+            for stimulus in stimuli
+        ],
         dtype="float64",
     )
 
@@ -117,7 +122,9 @@ def metrics(p_true: np.ndarray, p_pred: np.ndarray) -> Dict[str, float]:
     return {
         "rmse": float(np.sqrt(np.mean((pred - true) ** 2))),
         "mae": float(np.mean(np.abs(pred - true))),
-        "cross_entropy": float(-np.mean(true * np.log(pred) + (1.0 - true) * np.log(1.0 - pred))),
+        "cross_entropy": float(
+            -np.mean(true * np.log(pred) + (1.0 - true) * np.log(1.0 - pred))
+        ),
         "kl": float(
             np.mean(
                 true * np.log(true / pred)
@@ -193,7 +200,9 @@ def main() -> None:
     )
     parser.add_argument("--project", default="subjective_randomness")
     parser.add_argument("--ground-truth-model", required=True)
-    parser.add_argument("--experiments", default="1-3", help="N, A-B, or comma-separated ids")
+    parser.add_argument(
+        "--experiments", default="1-3", help="N, A-B, or comma-separated ids"
+    )
     parser.add_argument("--n-heldout", type=int, default=200)
     parser.add_argument("--min-length", type=int, default=4)
     parser.add_argument("--max-length", type=int, default=8)

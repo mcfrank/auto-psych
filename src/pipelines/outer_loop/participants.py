@@ -163,7 +163,7 @@ class OpenParticipantModel:
                 temperature=self._temperature,
                 pad_token_id=self._tokenizer.pad_token_id,
             )
-        new_tokens = output[0][inputs["input_ids"].shape[1]:]
+        new_tokens = output[0][inputs["input_ids"].shape[1] :]
         return self._tokenizer.decode(new_tokens, skip_special_tokens=True)
 
 

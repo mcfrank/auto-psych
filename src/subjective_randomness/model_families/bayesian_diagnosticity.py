@@ -104,7 +104,9 @@ def score_sequence(seq: str, params: Mapping[str, float] | None = None) -> float
     return fair - alternatives
 
 
-def predict_left(stimulus: Stimulus | Mapping[str, str], params: Mapping[str, float] | None = None) -> float:
+def predict_left(
+    stimulus: Stimulus | Mapping[str, str], params: Mapping[str, float] | None = None
+) -> float:
     seq_a, seq_b = normalize_stimulus(stimulus)
     p = merge_params(DEFAULT_PARAMS, params)
     return choice_probability(score_sequence(seq_a, p), score_sequence(seq_b, p), p)

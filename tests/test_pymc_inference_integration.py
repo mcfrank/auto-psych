@@ -6,6 +6,7 @@ model with >0.7 posterior mass.
 
 Slow (two NUTS fits on ~30 trials): ~10-30 s. Run with `pytest -m slow`.
 """
+
 from __future__ import annotations
 
 from pathlib import Path

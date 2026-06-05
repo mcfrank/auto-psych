@@ -52,7 +52,9 @@ def load_prompt_for_run(
     return ""
 
 
-def invoke_llm(system: str, user: str, llm: Any = None, timeout: int | None = None) -> str:
+def invoke_llm(
+    system: str, user: str, llm: Any = None, timeout: int | None = None
+) -> str:
     """Send a system + user message pair to the LLM and normalize the reply to text."""
     from langchain_core.messages import HumanMessage, SystemMessage
 

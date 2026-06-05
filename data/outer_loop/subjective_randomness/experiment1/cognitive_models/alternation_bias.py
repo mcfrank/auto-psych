@@ -6,6 +6,7 @@ sequence as more random. Softmax decision rule with a single temperature paramet
 Captures the classic gambler's-fallacy / negative recency bias documented by
 Kahneman & Tversky (1972) and operationalised in the similarity model of
 Griffiths & Tenenbaum (2001)."""
+
 import numpy as np
 import pymc as pm
 

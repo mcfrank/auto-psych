@@ -13,7 +13,9 @@ with pm.Model() as model:
 
     # Sensitivity and mixing weight between the two randomness cues.
     tau = pm.HalfNormal("tau", sigma=2.0)
-    w = pm.Beta("w", alpha=1.0, beta=1.0)  # w=1 → pure normalized-run; w=0 → pure alternation
+    w = pm.Beta(
+        "w", alpha=1.0, beta=1.0
+    )  # w=1 → pure normalized-run; w=0 → pure alternation
 
     # Cue 1: shorter length-normalized max run → more random-looking.
     norm_run_a = pt.cast(max_run_a, "float64") / pt.cast(n_a, "float64")

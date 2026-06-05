@@ -15,9 +15,15 @@ def _normalize_stimulus(stimulus: Stimulus | dict) -> Stimulus:
     """Accept (seq_a, seq_b) or dict with sequence_a, sequence_b; return (seq_a, seq_b)."""
     if isinstance(stimulus, (list, tuple)) and len(stimulus) >= 2:
         return (str(stimulus[0]), str(stimulus[1]))
-    if isinstance(stimulus, dict) and "sequence_a" in stimulus and "sequence_b" in stimulus:
+    if (
+        isinstance(stimulus, dict)
+        and "sequence_a" in stimulus
+        and "sequence_b" in stimulus
+    ):
         return (str(stimulus["sequence_a"]), str(stimulus["sequence_b"]))
-    raise ValueError(f"Stimulus must be (seq_a, seq_b) or dict with sequence_a, sequence_b; got {type(stimulus)}")
+    raise ValueError(
+        f"Stimulus must be (seq_a, seq_b) or dict with sequence_a, sequence_b; got {type(stimulus)}"
+    )
 
 
 def get_model_predictions(

@@ -5,6 +5,7 @@ PyMC models' prior-predictive p_left (no MCMC fit — the prior is the generativ
 distribution for synthetic participants). Each raw stimulus is featurized first
 so the models can read their `pm.Data` columns.
 """
+
 from __future__ import annotations
 
 import shutil
@@ -26,7 +27,9 @@ def _seed(tmp_path):
     models_dir.mkdir(parents=True)
     for name in ("bayesian_fair_coin", "representativeness"):
         shutil.copyfile(FIXTURE_DIR / f"{name}.py", models_dir / f"{name}.py")
-    shutil.copyfile(FIXTURE_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml")
+    shutil.copyfile(
+        FIXTURE_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
+    )
     return models_dir
 
 
@@ -60,9 +63,7 @@ def test_generate_from_pymc_models_shapes_and_columns(tmp_path):
 def test_generate_is_deterministic_under_fixed_seed(tmp_path):
     models_dir = _seed(tmp_path)
     stimuli = [{"sequence_a": "HHHT", "sequence_b": "HTHT"}]
-    kw = dict(
-        models_dir=models_dir, featurize_path=FEATURIZE, n_samples=100, seed=7
-    )
+    kw = dict(models_dir=models_dir, featurize_path=FEATURIZE, n_samples=100, seed=7)
     rows_a = _generate_from_pymc_models(stimuli, ["bayesian_fair_coin"], 2, **kw)
     rows_b = _generate_from_pymc_models(stimuli, ["bayesian_fair_coin"], 2, **kw)
     assert [r["chose_left"] for r in rows_a] == [r["chose_left"] for r in rows_b]

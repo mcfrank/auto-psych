@@ -23,6 +23,7 @@ Exit codes: 0 = ran and produced parseable rows; 4 = ran but every reply was
 unparseable (plumbing works, model just didn't follow the format); 2 = deps
 missing; 3 = model failed to load.
 """
+
 from __future__ import annotations
 
 import argparse
@@ -49,11 +50,15 @@ STIMULI = [
 
 def main() -> None:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--hf-model", default=SMOKE_MODEL, help=f"HF model id (default: {SMOKE_MODEL})")
+    ap.add_argument(
+        "--hf-model", default=SMOKE_MODEL, help=f"HF model id (default: {SMOKE_MODEL})"
+    )
     ap.add_argument("-n", "--n-participants", type=int, default=2)
     args = ap.parse_args()
 
-    prompt = load_prompt_for_run("subjective_randomness", 1, "4_collect_participant", None)
+    prompt = load_prompt_for_run(
+        "subjective_randomness", 1, "4_collect_participant", None
+    )
     if not prompt.strip():
         print("FAIL: could not load the 4_collect_participant prompt", file=sys.stderr)
         sys.exit(1)
@@ -69,8 +74,13 @@ def main() -> None:
         print(f"FAIL (load): {type(exc).__name__}: {exc}", file=sys.stderr)
         sys.exit(3)
 
-    print(f"Loaded {model.name} on device '{getattr(model, '_device', '?')}'", flush=True)
-    print(f"Running {args.n_participants} participant(s) x {len(STIMULI)} stimuli ...\n", flush=True)
+    print(
+        f"Loaded {model.name} on device '{getattr(model, '_device', '?')}'", flush=True
+    )
+    print(
+        f"Running {args.n_participants} participant(s) x {len(STIMULI)} stimuli ...\n",
+        flush=True,
+    )
 
     rows, stats = generate_llm_participant_rows(
         STIMULI, args.n_participants, participant_model=model, prompt_text=prompt
@@ -79,8 +89,10 @@ def main() -> None:
     print("stats:", stats)
     print("\nrows:")
     for row in rows:
-        print(f"  p{row['participant_id']} t{row['trial_index']}: "
-              f"chose_left={row['chose_left']}  ({row['sequence_a']} vs {row['sequence_b']})")
+        print(
+            f"  p{row['participant_id']} t{row['trial_index']}: "
+            f"chose_left={row['chose_left']}  ({row['sequence_a']} vs {row['sequence_b']})"
+        )
 
     if stats["n_rows"] > 0 and stats["n_errors"] == 0:
         print("\nPASS: open LLM-as-participant produced parseable rows.")
@@ -88,8 +100,11 @@ def main() -> None:
     if stats["n_errors"] > 0:
         print("\nFAIL: the model raised during generation.", file=sys.stderr)
         sys.exit(3)
-    print("\nPARTIAL: model ran but produced no parseable answers "
-          "(plumbing OK; try a stronger model).", file=sys.stderr)
+    print(
+        "\nPARTIAL: model ran but produced no parseable answers "
+        "(plumbing OK; try a stronger model).",
+        file=sys.stderr,
+    )
     sys.exit(4)
 
 

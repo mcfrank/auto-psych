@@ -28,6 +28,7 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 
 # ── _parse_experiments ──────────────────────────────────────────────
 
+
 def test_parse_experiments_single_number_expands_to_range():
     assert _parse_experiments("5") == [1, 2, 3, 4, 5]
 
@@ -57,6 +58,7 @@ def test_parse_experiments_rejects_bad_input(value, fragment):
 
 # ── tyro dataclass parsing ──────────────────────────────────────────
 
+
 def test_posterior_cli_pools_multiple_responses():
     args = tyro.cli(
         PosteriorArgs,
@@ -81,8 +83,15 @@ def test_likelihood_cli_required_fields_and_optional_cache():
 def test_outer_run_cli_literal_choice_and_bool_flag():
     args = tyro.cli(
         OuterArgs,
-        args=["--project", "subjective_randomness", "--experiment", "1",
-              "--agent", "2_design", "--validate"],
+        args=[
+            "--project",
+            "subjective_randomness",
+            "--experiment",
+            "1",
+            "--agent",
+            "2_design",
+            "--validate",
+        ],
     )
     assert args.project == "subjective_randomness"
     assert args.experiment == 1
@@ -111,6 +120,7 @@ def test_inner_run_cli_required_paths():
 
 # ── full-stack --help smoke (catches import-time errors + arg wiring) ─
 
+
 @pytest.mark.parametrize(
     "module,expected_flag",
     [
@@ -125,13 +135,18 @@ def test_cli_module_help_runs(module, expected_flag):
     env = {**os.environ, "PYTENSOR_FLAGS": "cxx="}
     result = subprocess.run(
         [sys.executable, "-m", module, "--help"],
-        cwd=REPO_ROOT, env=env, capture_output=True, text=True, timeout=120,
+        cwd=REPO_ROOT,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
     assert result.returncode == 0, result.stderr
     assert expected_flag in result.stdout
 
 
 # ── output-path contract (the `Outputs:` line printed by outer run) ──
+
 
 def test_experiment_outputs_resolve_under_data_outer_loop():
     # run.py prints f"Outputs: {outer_data_dir() / project_id}"; pin that target.

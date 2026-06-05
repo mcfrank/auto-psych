@@ -4,6 +4,7 @@
 models by MCMC, scores them by ELPD-LOO, and exports the best model back into
 `cognitive_models/`. Slow (MCMC) — run with ``-m slow``.
 """
+
 import json
 import shutil
 from pathlib import Path
@@ -25,7 +26,9 @@ def test_inner_model_loop_exports_best_pymc_model(tmp_path):
     models_dir.mkdir(parents=True)
     for name in ("bayesian_fair_coin", "representativeness"):
         shutil.copyfile(FIXTURE_DIR / f"{name}.py", models_dir / f"{name}.py")
-    shutil.copyfile(FIXTURE_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml")
+    shutil.copyfile(
+        FIXTURE_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
+    )
 
     # Pooled responses already carry the feature columns the models read.
     data_dir = exp_dir / "data"

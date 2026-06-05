@@ -66,12 +66,8 @@ def test_recovery_eval_helpers_are_deterministic_and_metric_sensitive():
     assert ev.parse_experiments("1-3") == [1, 2, 3]
     assert ev.parse_experiments("1,3") == [1, 3]
 
-    stimuli_a = ev.make_heldout_stimuli(
-        n_pairs=5, min_length=4, max_length=5, seed=10
-    )
-    stimuli_b = ev.make_heldout_stimuli(
-        n_pairs=5, min_length=4, max_length=5, seed=10
-    )
+    stimuli_a = ev.make_heldout_stimuli(n_pairs=5, min_length=4, max_length=5, seed=10)
+    stimuli_b = ev.make_heldout_stimuli(n_pairs=5, min_length=4, max_length=5, seed=10)
     assert stimuli_a == stimuli_b
     assert len(stimuli_a) == 5
 

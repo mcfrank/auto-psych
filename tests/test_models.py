@@ -22,6 +22,7 @@ TEST_STIMULI: list[Stimulus] = [
 def _get_ground_truth_models():
     """Load subjective_randomness ground-truth models for testing."""
     from src.models.project.ground_truth import get_ground_truth_models
+
     return get_ground_truth_models("subjective_randomness")
 
 

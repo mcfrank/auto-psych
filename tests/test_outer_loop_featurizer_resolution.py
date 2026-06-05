@@ -27,9 +27,11 @@ def test_inner_loop_resolves_featurizer_from_assets_dir(tmp_path, monkeypatch):
         captured["dir"] = project_dir
         return None
 
-    monkeypatch.setattr(orch, "_pooled_response_rows", lambda e: [
-        {"sequence_a": "HT", "sequence_b": "TH", "chose_left": "1"}
-    ])
+    monkeypatch.setattr(
+        orch,
+        "_pooled_response_rows",
+        lambda e: [{"sequence_a": "HT", "sequence_b": "TH", "chose_left": "1"}],
+    )
     monkeypatch.setattr(orch, "_load_project_featurizer", fake_loader)
     monkeypatch.setattr(orch, "_write_feature_csv", lambda rows, fz, out: out)
     monkeypatch.setattr(orch, "_export_inner_loop_model", lambda e, l: e)

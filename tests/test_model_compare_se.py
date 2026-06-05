@@ -5,6 +5,7 @@ ELPD difference from the best model and the standard error of that difference
 (`dse`) — so a reader can tell whether the top models are genuinely
 distinguishable or within noise. MCMC is monkeypatched out.
 """
+
 from __future__ import annotations
 
 from pathlib import Path
@@ -66,7 +67,9 @@ def test_compare_table_reports_elpd_diff_and_dse(tmp_path, monkeypatch):
         def __init__(self, name):
             self.idata = idata[name]
 
-    def _fake_fit_models_cached(model_names, models_dir, responses_path, cache_dir=None, **kw):
+    def _fake_fit_models_cached(
+        model_names, models_dir, responses_path, cache_dir=None, **kw
+    ):
         return {m: _FakeFit(m) for m in model_names}
 
     monkeypatch.setattr(

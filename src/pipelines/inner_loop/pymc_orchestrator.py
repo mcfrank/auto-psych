@@ -241,14 +241,21 @@ def run_pymc_inner_loop(
     _seed_model_set(Path(seed_models_dir), models_dir)
     fit_kwargs = fit_kwargs or {}
 
-    posterior = _score(responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs)
+    posterior = _score(
+        responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
+    )
 
     for iteration in range(max_iterations):
         round_dir = results_dir / f"iter_{iteration}"
         for idx in range(candidate_count):
             candidate_dir = round_dir / f"candidate_{idx}"
             _write_candidate_context(
-                candidate_dir, responses_path, iteration, idx, candidate_count, posterior
+                candidate_dir,
+                responses_path,
+                iteration,
+                idx,
+                candidate_count,
+                posterior,
             )
             if not _spawn_candidate_agent(candidate_dir, agent_timeout_sec, backend):
                 continue
@@ -258,7 +265,9 @@ def run_pymc_inner_loop(
                 model_name=f"iter{iteration}_candidate{idx}",
                 rationale=f"Inner-loop candidate from round {iteration}.",
             )
-        posterior = _score(responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs)
+        posterior = _score(
+            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
+        )
 
     comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
     return _export(results_dir, models_dir, posterior, comparison)
@@ -287,9 +296,7 @@ def _compare(
     fit_kwargs: Dict[str, Any],
 ) -> Dict[str, Dict[str, float]]:
     """ELPD-LOO distinguishability table (reuses cached fits — no new MCMC)."""
-    return compare_table(
-        responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs
-    )
+    return compare_table(responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs)
 
 
 def _export(
@@ -307,9 +314,7 @@ def _export(
     best_model = max(posterior["posteriors"], key=lambda m: posterior["posteriors"][m])
     shutil.copyfile(models_dir / f"{best_model}.py", results_dir / "best_model.py")
 
-    ranked = sorted(
-        posterior["posteriors"].items(), key=lambda kv: kv[1], reverse=True
-    )
+    ranked = sorted(posterior["posteriors"].items(), key=lambda kv: kv[1], reverse=True)
     lines = [
         "# Inner Model Loop Report",
         "",

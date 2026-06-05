@@ -18,10 +18,16 @@ def validate_collect_output(run_dir: Path) -> Validated:
     if len(lines) < 2:
         return Validated(False, "responses.csv has no data rows", details)
     header = lines[0].split(",")
-    required = {"participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"}
+    required = {
+        "participant_id",
+        "trial_index",
+        "sequence_a",
+        "sequence_b",
+        "chose_left",
+    }
     missing = required - set(h.strip() for h in header)
     if missing:
         return Validated(False, f"responses.csv missing columns: {missing}", details)
 
     details["n_rows"] = len(lines) - 1
-    return Validated(True, f"Collect output valid; {len(lines)-1} rows", details)
+    return Validated(True, f"Collect output valid; {len(lines) - 1} rows", details)

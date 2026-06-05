@@ -9,7 +9,9 @@ the active outer loop uses a PyMC-aware theory validator instead.
 import pytest
 from pathlib import Path
 
-pytestmark = pytest.mark.skip(reason="LangGraph validator deferred from PyMC migration (first cut)")
+pytestmark = pytest.mark.skip(
+    reason="LangGraph validator deferred from PyMC migration (first cut)"
+)
 
 from src.validation import validate_theorist_output, Validated
 
@@ -22,7 +24,9 @@ def test_validate_theorist_output_with_fixture_manifest(tmp_path):
     run_dir = tmp_path
     theory_dir = run_dir / "1_theory"
     theory_dir.mkdir()
-    (theory_dir / "models_manifest.yaml").write_text((FIXTURES_DIR / "models_manifest.yaml").read_text())
+    (theory_dir / "models_manifest.yaml").write_text(
+        (FIXTURES_DIR / "models_manifest.yaml").read_text()
+    )
     model_code = (
         "def {name}(stimulus, response_options):\n"
         "    return {{response_options[0]: 0.5, response_options[1]: 0.5}}\n"
@@ -36,6 +40,7 @@ def test_validate_theorist_output_with_fixture_manifest(tmp_path):
 
 def test_validate_theorist_output_missing_manifest():
     import tempfile
+
     with tempfile.TemporaryDirectory() as d:
         result = validate_theorist_output(Path(d))
         assert not result.ok
@@ -44,9 +49,16 @@ def test_validate_theorist_output_missing_manifest():
 
 def test_validate_theorist_output_invalid_model_name():
     import tempfile
+
     with tempfile.TemporaryDirectory() as d:
         (Path(d) / "1_theory").mkdir()
-        (Path(d) / "1_theory" / "models_manifest.yaml").write_text("models:\n  - name: not_a_real_model\n")
+        (Path(d) / "1_theory" / "models_manifest.yaml").write_text(
+            "models:\n  - name: not_a_real_model\n"
+        )
         result = validate_theorist_output(Path(d))
         assert not result.ok
-        assert "1_theory" in result.message and ("not in" in result.message or "has no" in result.message or "must provide" in result.message)
+        assert "1_theory" in result.message and (
+            "not in" in result.message
+            or "has no" in result.message
+            or "must provide" in result.message
+        )

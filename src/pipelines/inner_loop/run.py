@@ -83,7 +83,10 @@ def main(args: Args) -> None:
         print(f"Error: responses CSV not found: {responses_path}", file=sys.stderr)
         sys.exit(1)
     if not (seed_models_dir / "models_manifest.yaml").exists():
-        print(f"Error: seed-models dir has no models_manifest.yaml: {seed_models_dir}", file=sys.stderr)
+        print(
+            f"Error: seed-models dir has no models_manifest.yaml: {seed_models_dir}",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     backend = select_backend(args.coding_agent) if args.max_iterations > 0 else None

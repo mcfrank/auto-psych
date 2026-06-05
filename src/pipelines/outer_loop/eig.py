@@ -38,7 +38,9 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
 
-def _load_featurizer(featurize_path: Optional[Path]) -> Optional[Callable[[str, str], Dict[str, Any]]]:
+def _load_featurizer(
+    featurize_path: Optional[Path],
+) -> Optional[Callable[[str, str], Dict[str, Any]]]:
     if featurize_path is None:
         return None
     featurize_path = Path(featurize_path)
@@ -76,8 +78,11 @@ def annotate(
     n_samples: prior-predictive draws per model per stimulus.
     """
     import yaml
+
+    from src.models.pymc_inference import (
+        expected_information_gain_prior_pymc,  # type: ignore
+    )
     from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
-    from src.models.pymc_inference import expected_information_gain_prior_pymc  # type: ignore
 
     models_dir = Path(models_dir)
     manifest_path = models_dir / "models_manifest.yaml"

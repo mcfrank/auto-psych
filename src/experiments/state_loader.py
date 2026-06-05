@@ -106,7 +106,9 @@ def minimal_state_for_agent(
         "project_id": project_id,
         "run_id": run_id,
         "mode": "simulated_participants",
-        "problem_definition_path": str(prob_path) if prob_path.exists() else str(fixtures_dir / "problem_definition.md"),
+        "problem_definition_path": str(prob_path)
+        if prob_path.exists()
+        else str(fixtures_dir / "problem_definition.md"),
     }
 
     rdir = run_dir(project_id, run_id)
@@ -121,38 +123,65 @@ def minimal_state_for_agent(
         return ""
 
     if agent_key == "1_theory":
-        if not state["problem_definition_path"] or not Path(state["problem_definition_path"]).exists():
-            state["problem_definition_path"] = str(fixtures_dir / "problem_definition.md")
+        if (
+            not state["problem_definition_path"]
+            or not Path(state["problem_definition_path"]).exists()
+        ):
+            state["problem_definition_path"] = str(
+                fixtures_dir / "problem_definition.md"
+            )
         state["registry_path"] = str(rdir / "model_registry.yaml")
         return state
 
     if agent_key == "2_design":
-        state["theorist_manifest_path"] = _path("1_theory", "models_manifest.yaml") or str(fixtures_dir / "models_manifest.yaml")
+        state["theorist_manifest_path"] = _path(
+            "1_theory", "models_manifest.yaml"
+        ) or str(fixtures_dir / "models_manifest.yaml")
         return state
 
     if agent_key == "3_implement":
-        state["theorist_manifest_path"] = _path("1_theory", "models_manifest.yaml") or str(fixtures_dir / "models_manifest.yaml")
-        state["stimuli_path"] = _path("2_design", "stimuli.json") or str(fixtures_dir / "stimuli.json")
+        state["theorist_manifest_path"] = _path(
+            "1_theory", "models_manifest.yaml"
+        ) or str(fixtures_dir / "models_manifest.yaml")
+        state["stimuli_path"] = _path("2_design", "stimuli.json") or str(
+            fixtures_dir / "stimuli.json"
+        )
         return state
 
     if agent_key == "4_collect":
-        state["stimuli_path"] = _path("2_design", "stimuli.json") or str(fixtures_dir / "stimuli.json")
-        state["theorist_manifest_path"] = _path("1_theory", "models_manifest.yaml") or str(fixtures_dir / "models_manifest.yaml")
-        state["deployment_config_path"] = _path("3_implement", "config.json") or str(rdir / "3_implement" / "config.json")
+        state["stimuli_path"] = _path("2_design", "stimuli.json") or str(
+            fixtures_dir / "stimuli.json"
+        )
+        state["theorist_manifest_path"] = _path(
+            "1_theory", "models_manifest.yaml"
+        ) or str(fixtures_dir / "models_manifest.yaml")
+        state["deployment_config_path"] = _path("3_implement", "config.json") or str(
+            rdir / "3_implement" / "config.json"
+        )
         return state
 
     if agent_key == "5_analyze":
-        state["deployment_config_path"] = _path("3_implement", "config.json") or str(rdir / "3_implement" / "config.json")
-        state["theorist_manifest_path"] = _path("1_theory", "models_manifest.yaml") or str(fixtures_dir / "models_manifest.yaml")
+        state["deployment_config_path"] = _path("3_implement", "config.json") or str(
+            rdir / "3_implement" / "config.json"
+        )
+        state["theorist_manifest_path"] = _path(
+            "1_theory", "models_manifest.yaml"
+        ) or str(fixtures_dir / "models_manifest.yaml")
         resp = rdir / "4_collect" / "responses.csv"
         if resp.exists():
             state["simulated_data_path"] = str(resp)
         return state
 
     if agent_key == "6_interpret":
-        state["summary_stats_path"] = _path("5_analyze", "summary_stats.json") or str(rdir / "5_analyze" / "summary_stats.json")
-        state["aggregate_csv_path"] = _path("5_analyze", "aggregate.csv") or str(rdir / "5_analyze" / "aggregate.csv")
-        state["theorist_manifest_path"] = _path("1_theory", "models_manifest.yaml") or str(fixtures_dir / "models_manifest.yaml")
+        state["summary_stats_path"] = _path("5_analyze", "summary_stats.json") or str(
+            rdir / "5_analyze" / "summary_stats.json"
+        )
+        state["aggregate_csv_path"] = _path("5_analyze", "aggregate.csv") or str(
+            rdir / "5_analyze" / "aggregate.csv"
+        )
+        state["theorist_manifest_path"] = _path(
+            "1_theory", "models_manifest.yaml"
+        ) or str(fixtures_dir / "models_manifest.yaml")
         return state
 
     return state

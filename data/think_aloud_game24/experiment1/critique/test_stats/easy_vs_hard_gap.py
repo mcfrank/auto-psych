@@ -10,7 +10,7 @@ def test_stat(rows):
     rates = sorted(r["chose_left_pct"] for r in rows)
     n = len(rates)
     q1 = n // 4
-    easy = rates[n - q1:] if q1 > 0 else rates[-1:]
+    easy = rates[n - q1 :] if q1 > 0 else rates[-1:]
     hard = rates[:q1] if q1 > 0 else rates[:1]
     if not easy or not hard:
         return 0.0

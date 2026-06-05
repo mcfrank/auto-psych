@@ -13,10 +13,18 @@ _EPS = 1e-9
 def normalize_stimulus(stimulus: object) -> Stimulus:
     """Accept a tuple/list or JSON-like dict and return (sequence_a, sequence_b)."""
     if isinstance(stimulus, Mapping):
-        return clean_sequence(str(stimulus["sequence_a"])), clean_sequence(str(stimulus["sequence_b"]))
-    if isinstance(stimulus, Sequence) and not isinstance(stimulus, (str, bytes)) and len(stimulus) >= 2:
+        return clean_sequence(str(stimulus["sequence_a"])), clean_sequence(
+            str(stimulus["sequence_b"])
+        )
+    if (
+        isinstance(stimulus, Sequence)
+        and not isinstance(stimulus, (str, bytes))
+        and len(stimulus) >= 2
+    ):
         return clean_sequence(str(stimulus[0])), clean_sequence(str(stimulus[1]))
-    raise ValueError(f"Stimulus must be (sequence_a, sequence_b) or a dict; got {type(stimulus)!r}")
+    raise ValueError(
+        f"Stimulus must be (sequence_a, sequence_b) or a dict; got {type(stimulus)!r}"
+    )
 
 
 def clean_sequence(seq: str) -> str:
@@ -51,14 +59,18 @@ def distribution(p_left: float, response_options: Sequence[str]) -> Dict[str, fl
     return {left: p, right: 1.0 - p}
 
 
-def choice_probability(score_left: float, score_right: float, params: Mapping[str, float]) -> float:
+def choice_probability(
+    score_left: float, score_right: float, params: Mapping[str, float]
+) -> float:
     """Softmax/logistic choice rule for a left-vs-right forced choice."""
     beta = float(params.get("beta", 1.0))
     side_bias = float(params.get("side_bias", 0.0))
     return sigmoid(beta * (score_left - score_right) + side_bias)
 
 
-def merge_params(defaults: Mapping[str, float], params: Mapping[str, float] | None) -> Dict[str, float]:
+def merge_params(
+    defaults: Mapping[str, float], params: Mapping[str, float] | None
+) -> Dict[str, float]:
     merged = dict(defaults)
     if params:
         merged.update({k: float(v) for k, v in params.items()})

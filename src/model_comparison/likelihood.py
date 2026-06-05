@@ -92,11 +92,16 @@ def main(args: Args) -> None:
     )
     n_trials = sum(1 for _ in csv.DictReader(args.responses.open(encoding="utf-8")))
 
-    print(json.dumps({
-        "model": args.model,
-        "elpd_loo": round(elpd, 4),
-        "n_trials": n_trials,
-    }, indent=2))
+    print(
+        json.dumps(
+            {
+                "model": args.model,
+                "elpd_loo": round(elpd, 4),
+                "n_trials": n_trials,
+            },
+            indent=2,
+        )
+    )
 
 
 if __name__ == "__main__":

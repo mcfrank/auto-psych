@@ -5,6 +5,7 @@ patterns like HHHHHH or TTTTTT "feel" deterministic, not random.
 
 Complements alternation_bias: both predict the same direction for extreme
 sequences but can diverge on sequences with moderate alternation and no long runs."""
+
 import numpy as np
 import pymc as pm
 import pytensor.tensor as pt

@@ -62,7 +62,9 @@ def test_featurize_response_rows_adds_pymc_columns():
 
 def test_run_pymc_recovery_writes_featurized_rows_and_report(tmp_path, monkeypatch):
     stimuli_path = tmp_path / "stimuli.json"
-    stimuli_path.write_text('[{"sequence_a": "HTHT", "sequence_b": "HHHT"}]', encoding="utf-8")
+    stimuli_path.write_text(
+        '[{"sequence_a": "HTHT", "sequence_b": "HHHT"}]', encoding="utf-8"
+    )
     config_path = tmp_path / "config.yaml"
     config = {
         "model_module": "src.subjective_randomness.model_families.prototype_similarity",
