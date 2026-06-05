@@ -19,6 +19,17 @@ Optional PyMC support:
 uv sync --group pymc
 ```
 
+Optional open-weight participant models (for `--participant-backend open`; pulls
+in `torch` + `transformers`, so install only when needed):
+
+```bash
+uv sync --group open-models
+```
+
+`open-models` resolves CPU / Apple-MPS `torch` by default. For an NVIDIA GPU,
+install the `torch` wheel matching your CUDA version from
+<https://pytorch.org/get-started/locally/> first, then run the sync above.
+
 ## Run The Active Outer Loop
 
 ```bash
@@ -32,6 +43,33 @@ uv run python -m src.pipelines.outer_loop.run --project subjective_randomness --
 uv run python -m src.pipelines.outer_loop.run --project subjective_randomness --experiment 1 --agent 5_model_loop
 uv run python -m src.pipelines.outer_loop.run --project subjective_randomness --experiment 1 --inner-loop-iterations 2 --inner-loop-candidates 3
 ```
+
+### Collection modes
+
+`--mode` selects how stage `4_collect` gathers responses:
+
+- `simulated_participants` (default): synthetic data from the theorist's PyMC
+  models (or a `--ground-truth-model`). No browser.
+- `simulated_participants_nobrowser`: **LLM-as-participant** — each synthetic
+  participant answers every stimulus directly via a language model. The jsPsych
+  `3_implement` stage is skipped in a full run.
+- `live`: real participants via Prolific (not yet wired into this runner).
+
+For `simulated_participants_nobrowser`, choose the participant-model backend:
+
+```bash
+# Closed / hosted API (default: the project's Gemini client)
+uv run python -m src.pipelines.outer_loop.run --project subjective_randomness \
+    --experiment 1 --mode simulated_participants_nobrowser --participant-backend closed
+
+# Open-weight, local Hugging Face model (needs the open-models group)
+uv run python -m src.pipelines.outer_loop.run --project subjective_randomness \
+    --experiment 1 --mode simulated_participants_nobrowser \
+    --participant-backend open --hf-model Qwen/Qwen2.5-0.5B-Instruct
+```
+
+The closed backend needs `GOOGLE_API_KEY` (env or `.secrets`); `--closed-model`
+overrides the default model id. The open backend loads the named model locally.
 
 ### Coding-agent backend
 

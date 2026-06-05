@@ -172,18 +172,77 @@ def spawn_cc_agent(
 # Programmatic: collect
 # ─────────────────────────────────────────────
 
+def _collect_llm_participant_programmatic(
+    stimuli: List[Dict[str, Any]],
+    n_participants: int,
+    project_id: Optional[str],
+    data_dir: Path,
+    *,
+    participant_backend: str,
+    participant_model: Optional[str],
+) -> List[Dict[str, Any]]:
+    """LLM-as-participant collection for the active (programmatic) outer loop.
+
+    Resolves the participant prompt and the participant-model backend, then runs
+    the shared generation loop. Failures (no stimuli, missing prompt, model init
+    error) degrade to an empty result with a logged reason rather than raising,
+    so one bad run does not abort the experiment.
+    """
+    from src.pipelines.outer_loop.collect import generate_llm_participant_rows
+    from src.pipelines.outer_loop.llm import load_prompt_for_run
+    from src.pipelines.outer_loop.participants import get_participant_model
+
+    if not stimuli:
+        print("  [collect] no stimuli (design/stimuli.json missing or empty); nothing to collect", flush=True)
+        return []
+
+    prompt_text = load_prompt_for_run(project_id or "", 1, "4_collect_participant", None)
+    if not prompt_text.strip():
+        print("  [collect] no 4_collect_participant.md prompt found; cannot run no-browser mode", flush=True)
+        return []
+
+    try:
+        model = get_participant_model(participant_backend, participant_model)
+    except Exception as exc:
+        print(f"  [collect] failed to init participant model ({participant_backend}, {participant_model}): {exc}", flush=True)
+        return []
+
+    print(f"  [collect] LLM participants via {model.name}: {n_participants} participant(s) x {len(stimuli)} stimuli", flush=True)
+    rows, stats = generate_llm_participant_rows(
+        stimuli,
+        n_participants,
+        participant_model=model,
+        prompt_text=prompt_text,
+        transcripts_dir=data_dir / "transcripts",
+    )
+    print(
+        f"  [collect] {stats['n_rows']} rows (unparseable={stats['n_unparseable']}, errors={stats['n_errors']})",
+        flush=True,
+    )
+    return rows
+
+
 def run_collect_programmatic(
     exp_dir: Path,
     mode: str,
     n_participants: int,
     project_id: Optional[str] = None,
     ground_truth_model: Optional[str] = None,
+    participant_backend: str = "closed",
+    participant_model: Optional[str] = None,
 ) -> Path:
     """
     Run data collection directly (no CC agent).
-    If ground_truth_model is set, samples all participants from that model
-    (loaded from projects/<project_id>/ground_truth_models.py).
-    Otherwise samples from the theorist's models.
+
+    Collection source, in priority order:
+      - mode == "simulated_participants_nobrowser": LLM-as-participant. Each
+        synthetic participant answers every stimulus via a participant model
+        (``participant_backend`` "closed"=hosted API, "open"=Hugging Face;
+        ``participant_model`` names the model). No browser, no Firebase.
+      - ground_truth_model set: sample all participants from that project
+        ground-truth callable (no browser).
+      - otherwise: sample from the theorist's PyMC models' prior-predictive.
+
     Writes exp_dir/data/responses.csv. Returns path to CSV.
     """
     sys.path.insert(0, str(REPO_ROOT))
@@ -201,7 +260,13 @@ def run_collect_programmatic(
     data_dir = exp_dir / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
 
-    if ground_truth_model and project_id:
+    if mode == "simulated_participants_nobrowser":
+        rows = _collect_llm_participant_programmatic(
+            stimuli, n_participants, project_id, data_dir,
+            participant_backend=participant_backend,
+            participant_model=participant_model,
+        )
+    elif ground_truth_model and project_id:
         # Ground-truth models are simple callables (data-generation tool used to
         # verify the loop recovers a known process); keep the callable path.
         model_registry = get_ground_truth_models(project_id)
