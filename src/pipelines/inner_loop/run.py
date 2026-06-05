@@ -29,10 +29,13 @@ Usage:
 
 from __future__ import annotations
 
-import argparse
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
+from typing import Literal, Optional
+
+import tyro
 
 # Ensure repo root on path so "import src..." works when run as a module/script.
 REPO_ROOT = Path(__file__).resolve().parents[3]
@@ -42,54 +45,40 @@ from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from src.runtime.coding_agent import select_backend
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="PyMC inner model loop: fit, compare (ELPD-LOO), and export the best model."
-    )
-    parser.add_argument(
-        "--responses", required=True,
-        help="Path to a featurized responses CSV (columns match the models' pm.Data names).",
-    )
-    parser.add_argument(
-        "--seed-models", required=True,
-        help="Directory of seed PyMC models (<name>.py + models_manifest.yaml).",
-    )
-    parser.add_argument(
-        "--results", required=True,
-        help="Output directory for the loop (models/, model_posterior.json, best_model.py, report.md).",
-    )
-    parser.add_argument(
-        "--max-iterations", type=int, default=0, metavar="N",
-        help="Candidate-generation rounds. 0 = fit/compare the seed set only (no agent spawned).",
-    )
-    parser.add_argument(
-        "--candidate-count", type=int, default=3, metavar="N",
-        help="Candidate models proposed per round (only used when --max-iterations > 0).",
-    )
-    parser.add_argument(
-        "--complexity-prior", type=float, default=0.0, metavar="CONST",
-        help="Log-prior per model = CONST * complexity (negative penalises complex models).",
-    )
-    parser.add_argument("--draws", type=int, default=500, help="MCMC posterior draws per chain.")
-    parser.add_argument("--tune", type=int, default=500, help="MCMC tuning (warmup) steps per chain.")
-    parser.add_argument("--chains", type=int, default=2, help="MCMC chains.")
-    parser.add_argument(
-        "--cache-dir", default=None,
-        help="Optional directory to persist .nc fits across runs.",
-    )
-    parser.add_argument(
-        "--coding-agent", choices=["claude", "opencode"], default=None,
-        help="Coding-agent backend for candidate generation. Defaults to CODING_AGENT env, then 'claude'.",
-    )
-    parser.add_argument(
-        "--agent-timeout-sec", type=int, default=900,
-        help="Per-candidate coding-agent timeout in seconds.",
-    )
-    args = parser.parse_args()
+@dataclass
+class Args:
+    """PyMC inner model loop: fit, compare (ELPD-LOO), and export the best model."""
 
-    responses_path = Path(args.responses)
-    seed_models_dir = Path(args.seed_models)
-    results_dir = Path(args.results)
+    responses: Path
+    """Path to a featurized responses CSV (columns match the models' pm.Data names)."""
+    seed_models: Path
+    """Directory of seed PyMC models (<name>.py + models_manifest.yaml)."""
+    results: Path
+    """Output directory for the loop (models/, model_posterior.json, best_model.py, report.md)."""
+    max_iterations: int = 0
+    """Candidate-generation rounds. 0 = fit/compare the seed set only (no agent spawned)."""
+    candidate_count: int = 3
+    """Candidate models proposed per round (only used when --max-iterations > 0)."""
+    complexity_prior: float = 0.0
+    """Log-prior per model = CONST * complexity (negative penalises complex models)."""
+    draws: int = 500
+    """MCMC posterior draws per chain."""
+    tune: int = 500
+    """MCMC tuning (warmup) steps per chain."""
+    chains: int = 2
+    """MCMC chains."""
+    cache_dir: Optional[Path] = None
+    """Optional directory to persist .nc fits across runs."""
+    coding_agent: Optional[Literal["claude", "opencode"]] = None
+    """Coding-agent backend for candidate generation. Defaults to CODING_AGENT env, then 'claude'."""
+    agent_timeout_sec: int = 900
+    """Per-candidate coding-agent timeout in seconds."""
+
+
+def main(args: Args) -> None:
+    responses_path = args.responses
+    seed_models_dir = args.seed_models
+    results_dir = args.results
     if not responses_path.exists():
         print(f"Error: responses CSV not found: {responses_path}", file=sys.stderr)
         sys.exit(1)
@@ -106,7 +95,7 @@ def main() -> None:
         max_iterations=args.max_iterations,
         candidate_count=args.candidate_count,
         complexity_prior_const=args.complexity_prior,
-        cache_dir=Path(args.cache_dir) if args.cache_dir else None,
+        cache_dir=args.cache_dir,
         agent_timeout_sec=args.agent_timeout_sec,
         backend=backend,
         fit_kwargs={"draws": args.draws, "tune": args.tune, "chains": args.chains},
@@ -123,4 +112,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(tyro.cli(Args))

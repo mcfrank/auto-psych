@@ -1,0 +1,19 @@
+{
+  "posteriors": {
+    "bayesian_fair_coin": 0.000127,
+    "alternation_bias": 0.233186,
+    "runs_penalty": 0.000704,
+    "iter0_candidate0": 0.097783,
+    "iter0_candidate1": 0.408721,
+    "iter0_candidate2": 0.25948
+  },
+  "elpd_loo": {
+    "bayesian_fair_coin": -68.9509,
+    "alternation_bias": -61.4319,
+    "runs_penalty": -67.2351,
+    "iter0_candidate0": -62.3009,
+    "iter0_candidate1": -60.8707,
+    "iter0_candidate2": -61.325
+  },
+  "n_trials": 100
+}

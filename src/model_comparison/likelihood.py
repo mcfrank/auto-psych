@@ -23,12 +23,14 @@ Prints JSON:
 
 from __future__ import annotations
 
-import argparse
 import csv
 import json
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
+
+import tyro
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 sys.path.insert(0, str(REPO_ROOT))
@@ -63,28 +65,32 @@ def log_likelihood(
     return fits[model_name].elpd_loo()
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="ELPD-LOO of a PyMC cognitive model on observed responses"
-    )
-    parser.add_argument("--responses", required=True, help="Path to responses.csv")
-    parser.add_argument("--model", required=True, help="Model name")
-    parser.add_argument("--models-dir", required=True, help="Path to cognitive_models/ directory")
-    parser.add_argument("--cache-dir", default=None, help="Optional directory to persist .nc fits")
-    args = parser.parse_args()
+@dataclass
+class Args:
+    """ELPD-LOO of a PyMC cognitive model on observed responses."""
 
-    responses_path = Path(args.responses)
-    if not responses_path.exists():
-        print(f"Error: {responses_path} not found", file=sys.stderr)
+    responses: Path
+    """Path to responses.csv."""
+    model: str
+    """Model name."""
+    models_dir: Path
+    """Path to the cognitive_models/ directory."""
+    cache_dir: Optional[Path] = None
+    """Optional directory to persist .nc fits."""
+
+
+def main(args: Args) -> None:
+    if not args.responses.exists():
+        print(f"Error: {args.responses} not found", file=sys.stderr)
         sys.exit(1)
 
     elpd = log_likelihood(
         model_name=args.model,
-        responses_path=responses_path,
-        models_dir=Path(args.models_dir),
-        cache_dir=Path(args.cache_dir) if args.cache_dir else None,
+        responses_path=args.responses,
+        models_dir=args.models_dir,
+        cache_dir=args.cache_dir,
     )
-    n_trials = sum(1 for _ in csv.DictReader(responses_path.open(encoding="utf-8")))
+    n_trials = sum(1 for _ in csv.DictReader(args.responses.open(encoding="utf-8")))
 
     print(json.dumps({
         "model": args.model,
@@ -94,4 +100,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(tyro.cli(Args))
