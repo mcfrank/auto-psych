@@ -1,0 +1,31 @@
+# EIG-optimized vs. random stimulus sets, compared on the same sampled ground
+# truths with the exact grid-posterior recovery (no MCMC). Every pool stimulus
+# is scored by its expected information gain under the prior (parameter-EIG
+# per family; model-discrimination EIG for model recovery); the "eig" arm uses
+# the top-`n_stimuli` set, the "random" arm a uniform same-size draw from the
+# same pool. Within a repeat both arms recover the same truth, so the gap
+# isolates the value of the EIG-optimized design.
+
+model_names:
+  - prototype_similarity
+  - encoding_compressibility
+  - bayesian_diagnosticity
+
+# Auto-generated candidate pool both sets are drawn from.
+pool:
+  n_pairs: 200
+  lengths: [6, 8]
+
+n_stimuli: 25         # stimuli per set (both arms)
+points_per_dim: 7     # grid resolution per parameter (7**4 = 2401 grid points)
+seed: 0
+
+# Keep the data budgets small: with many responses per run both sets saturate
+# the grid posterior and the set choice stops mattering. The comparison is
+# informative only in the data-limited regime, where each stimulus choice
+# carries real weight. Model identity carries far less information per
+# response than parameters do, so it gets a larger budget.
+parameter_repeats: 20       # sampled ground truths per model family
+parameter_participants: 3   # responses per stimulus (parameter comparison)
+model_repeats: 5            # sampled truths per generating model
+model_participants: 10      # responses per stimulus (model comparison)

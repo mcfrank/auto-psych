@@ -1,17 +1,22 @@
 model_module: src.subjective_randomness.model_families.encoding_compressibility
 stimuli_path: data/subjective_randomness/parameter_recovery/stimuli.json
 
-true_params:
-  longrun_weight: 0.40
-  periodic_share: 0.50
-  beta: 4.0
-  side_bias: 0.0
+# No `true_params`: each repeat samples a fresh ground-truth parameter vector
+# uniformly from the model family's PARAM_BOUNDS. Narrow individual parameters
+# with `param_ranges` (e.g. `param_ranges: {beta: [1.0, 8.0]}`), or pin every
+# repeat to one vector by giving `true_params` instead.
 
 simulation:
   n_participants: 30
-  n_repeats: 20
+  n_repeats: 40
   seed: 303
 
-fit:
-  n_starts: 28
-  max_iters: 180
+# Parameter fitting is Bayesian (PyMC) only. NUTS needs ≥1000 tuning steps
+# here (hard Uniform bounds, beta correlated with the structural weights) or
+# r-hat exceeds 1.01; 4 chains on 4 cores cost the same wall-clock as 2
+# sequential ones.
+mcmc:
+  draws: 1000
+  tune: 1000
+  chains: 4
+  cores: 4

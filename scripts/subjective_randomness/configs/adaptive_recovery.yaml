@@ -1,0 +1,36 @@
+# Adaptive (sequential) EIG-driven recovery on the pure-Python reference
+# families. The loop auto-generates a diverse candidate pool, then chooses each
+# stimulus to maximize expected information gain under the current posterior —
+# the experiment designs itself. Runs with an exact grid posterior (no MCMC).
+
+mode: model  # "model" (which model generated the data?) or "parameter"
+
+# Candidate model set (default: all reference families).
+model_names:
+  - prototype_similarity
+  - encoding_compressibility
+  - bayesian_diagnosticity
+
+# Auto-generated candidate pool to mine for discriminating stimuli.
+pool:
+  n_pairs: 200
+  lengths: [6, 8]
+
+n_rounds: 40          # adaptive stimuli to select
+n_participants: 40    # simulated responses per selected stimulus
+points_per_dim: 7     # grid resolution per parameter (7**4 = 2401 grid points)
+seed: 0
+
+# ── model mode ──────────────────────────────────────────────────────
+# Which models generate data, and their true parameters (null -> family
+# defaults). Omit the key to use every model in `model_names` at its defaults.
+generating_models:
+  prototype_similarity: null
+  encoding_compressibility: null
+  bayesian_diagnosticity: null
+
+# ── parameter mode ──────────────────────────────────────────────────
+# Used only when mode: parameter. Recover this model's parameters; `true_params:
+# null` uses the family's default parameters.
+model: bayesian_diagnosticity
+true_params: null

@@ -1,0 +1,69 @@
+Subjective-randomness recovery pipeline — key results
+
+Parameter recovery — model: prototype_similarity
+  repeats: 40
+       parameter      true_value   mean_estimate            bias            rmse       pearson_r  ci_coverage_95
+       theta_alt             n/a          0.6413       -0.004798         0.07598          0.9037               1
+      alt_weight             n/a          0.5047       -0.006322          0.1366           0.822           0.975
+            beta             n/a           6.311         -0.2481           1.305          0.9314           0.925
+       side_bias             n/a         -0.1134        0.006796           0.193          0.9868           0.925
+
+Parameter recovery — model: encoding_compressibility
+  repeats: 40
+       parameter      true_value   mean_estimate            bias            rmse       pearson_r  ci_coverage_95
+  longrun_weight             n/a          0.4442        -0.02883          0.1001          0.9383               1
+  periodic_share             n/a           0.497        -0.04259          0.1818          0.7333               1
+            beta             n/a           5.596         -0.5418           1.376          0.9213           0.975
+       side_bias             n/a         -0.1457        0.007925          0.1275          0.9949            0.95
+
+Parameter recovery — model: bayesian_diagnosticity
+  repeats: 40
+       parameter      true_value   mean_estimate            bias            rmse       pearson_r  ci_coverage_95
+       alt_prior             n/a          0.4536        0.003999          0.1356          0.8915           0.925
+      bias_share             n/a          0.4538       -0.002051          0.2541          0.5482           0.975
+            beta             n/a           6.677           0.431            1.66          0.8505            0.95
+       side_bias             n/a         -0.1476         0.03774          0.5144          0.8523               1
+
+Closed-ended model recovery — generator: pymc
+  3 models | posterior accuracy: 0.67 (2/3) | ELPD-LOO accuracy: 0.67 | mean posterior on true model: 0.644 | clearly recovered: 0.33 (1/3)
+      generating_model        true_posterior          best_by_elpd         winner_margin
+  prototype_similarity                0.6448  prototype_similarity                0.5966   <- recovered, but tied with runner-up
+  encoding_compressibility                     1  encoding_compressibility                 11.69
+  bayesian_diagnosticity                0.2879  prototype_similarity                0.9057   <- mis-recovered (but tied: not distinguishable)
+
+  note: `winner_margin` is the runner-up's elpd_diff (with dse). A recovery is only 'clear' when that margin exceeds ~2·dse; smaller margins mean the top models are statistically tied.
+
+Stimulus-selection comparison — model: prototype_similarity (EIG-optimized vs. random stimulus set; grid-posterior recovery)
+  repeats: 20 | stimuli/set: 25 | participants/stimulus: 3
+  mean EIG of the chosen set (bits): eig 0.3428 vs. random 0.2709
+       parameter           r_eig        r_random        rmse_eig     rmse_random
+       theta_alt          0.8101           0.705          0.1165          0.1442
+      alt_weight          0.7883          0.7757          0.1766          0.1887
+            beta          0.9008          0.9346           2.238           1.463
+       side_bias          0.9689          0.9386          0.2851          0.3998
+
+Stimulus-selection comparison — model: encoding_compressibility (EIG-optimized vs. random stimulus set; grid-posterior recovery)
+  repeats: 20 | stimuli/set: 25 | participants/stimulus: 3
+  mean EIG of the chosen set (bits): eig 0.3378 vs. random 0.2644
+       parameter           r_eig        r_random        rmse_eig     rmse_random
+  longrun_weight          0.8921          0.7761          0.1446          0.1983
+  periodic_share          0.6806          0.5538          0.2086          0.2386
+            beta          0.9309          0.9674           1.535           1.018
+       side_bias          0.9358          0.9583          0.4067          0.3447
+
+Stimulus-selection comparison — model: bayesian_diagnosticity (EIG-optimized vs. random stimulus set; grid-posterior recovery)
+  repeats: 20 | stimuli/set: 25 | participants/stimulus: 3
+  mean EIG of the chosen set (bits): eig 0.5041 vs. random 0.3584
+       parameter           r_eig        r_random        rmse_eig     rmse_random
+       alt_prior          0.9192          0.8672          0.1245          0.1559
+      bias_share          0.5921          0.4727          0.2305          0.2713
+            beta          0.8727          0.8766           1.938           1.931
+       side_bias          0.8962          0.9442          0.5189          0.3791
+
+Model-recovery stimulus-selection comparison (EIG-optimized vs. random stimulus set; grid-posterior recovery)
+  5 repeats x 3 generating models | stimuli/set: 25 | participants/stimulus: 10
+  accuracy: eig 0.80, random 0.67 | mean posterior on true model: eig 0.764, random 0.694
+      generating_model           P(true)_eig        P(true)_random
+  prototype_similarity                 0.666                 0.642
+  encoding_compressibility                 0.712                 0.578
+  bayesian_diagnosticity                 0.915                 0.862

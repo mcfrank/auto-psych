@@ -1,0 +1,4 @@
+generating_model,true_posterior,best_by_posterior,best_by_elpd,correct_posterior,correct_elpd,winner_by_elpd,winner_margin,winner_margin_dse,winner_distinguishable,true_model_elpd_diff,true_model_dse,recovery_clear
+prototype_similarity,0.644821,prototype_similarity,prototype_similarity,True,True,,,,,,,
+encoding_compressibility,0.999991,encoding_compressibility,encoding_compressibility,True,True,,,,,,,
+bayesian_diagnosticity,0.287871,prototype_similarity,prototype_similarity,False,False,,,,,,,

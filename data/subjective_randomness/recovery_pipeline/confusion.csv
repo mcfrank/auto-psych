@@ -1,0 +1,10 @@
+generating_model,recovered_model,posterior,elpd_loo,is_true_model,is_best_model
+prototype_similarity,prototype_similarity,0.644821,-545.3557,True,True
+prototype_similarity,encoding_compressibility,7.7e-05,-554.3867,False,False
+prototype_similarity,bayesian_diagnosticity,0.355102,-545.9522,False,False
+encoding_compressibility,prototype_similarity,0.0,-545.5789,False,False
+encoding_compressibility,encoding_compressibility,0.999991,-530.0716,True,True
+encoding_compressibility,bayesian_diagnosticity,8e-06,-541.7645,False,False
+bayesian_diagnosticity,prototype_similarity,0.712129,-420.1955,False,True
+bayesian_diagnosticity,encoding_compressibility,0.0,-457.876,False,False
+bayesian_diagnosticity,bayesian_diagnosticity,0.287871,-421.1012,True,False

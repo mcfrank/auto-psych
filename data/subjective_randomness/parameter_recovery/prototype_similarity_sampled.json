@@ -1,0 +1,986 @@
+{
+  "model": "prototype_similarity",
+  "model_module": "src.subjective_randomness.model_families.prototype_similarity",
+  "stimuli_path": "data/subjective_randomness/parameter_recovery/stimuli.json",
+  "n_stimuli": 20,
+  "n_participants": 30,
+  "n_repeats": 40,
+  "param_ranges": {
+    "theta_alt": [
+      0.35,
+      0.95
+    ],
+    "alt_weight": [
+      0.01,
+      0.99
+    ],
+    "beta": [
+      0.2,
+      12.0
+    ],
+    "side_bias": [
+      -2.0,
+      2.0
+    ]
+  },
+  "summary": {
+    "alt_weight": {
+      "true": null,
+      "mean_estimate": 0.515709,
+      "bias": 0.004652,
+      "rmse": 0.165476,
+      "min_estimate": 0.01,
+      "max_estimate": 0.99,
+      "pearson_r": 0.793849
+    },
+    "beta": {
+      "true": null,
+      "mean_estimate": 6.721493,
+      "bias": 0.162595,
+      "rmse": 1.466361,
+      "min_estimate": 0.524457,
+      "max_estimate": 12.0,
+      "pearson_r": 0.921314
+    },
+    "side_bias": {
+      "true": null,
+      "mean_estimate": -0.112948,
+      "bias": 0.007269,
+      "rmse": 0.227789,
+      "min_estimate": -2.0,
+      "max_estimate": 2.0,
+      "pearson_r": 0.982469
+    },
+    "theta_alt": {
+      "true": null,
+      "mean_estimate": 0.623446,
+      "bias": -0.022686,
+      "rmse": 0.114352,
+      "min_estimate": 0.35,
+      "max_estimate": 0.95,
+      "pearson_r": 0.820515
+    }
+  },
+  "runs": [
+    {
+      "repeat": 0,
+      "true_params": {
+        "theta_alt": 0.783397,
+        "alt_weight": 0.270864,
+        "beta": 11.460132,
+        "side_bias": -1.866245
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.247926,
+          "beta": 12.0,
+          "side_bias": -1.937648,
+          "theta_alt": 0.8117
+        },
+        "negative_log_likelihood": 250.52148,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 1,
+      "true_params": {
+        "theta_alt": 0.520833,
+        "alt_weight": 0.456589,
+        "beta": 4.237372,
+        "side_bias": 0.159748
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.638948,
+          "beta": 1.731157,
+          "side_bias": 0.075887,
+          "theta_alt": 0.367353
+        },
+        "negative_log_likelihood": 394.302444,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 2,
+      "true_params": {
+        "theta_alt": 0.532372,
+        "alt_weight": 0.618027,
+        "beta": 7.599921,
+        "side_bias": -1.642313
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.394278,
+          "beta": 9.889074,
+          "side_bias": -2.0,
+          "theta_alt": 0.5
+        },
+        "negative_log_likelihood": 95.621938,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 3,
+      "true_params": {
+        "theta_alt": 0.895211,
+        "alt_weight": 0.32886,
+        "beta": 8.895197,
+        "side_bias": -0.704655
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.310837,
+          "beta": 8.31286,
+          "side_bias": -0.675351,
+          "theta_alt": 0.894775
+        },
+        "negative_log_likelihood": 396.247103,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 4,
+      "true_params": {
+        "theta_alt": 0.894006,
+        "alt_weight": 0.735304,
+        "beta": 9.487338,
+        "side_bias": -1.744625
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.71336,
+          "beta": 10.787518,
+          "side_bias": -1.901943,
+          "theta_alt": 0.881024
+        },
+        "negative_log_likelihood": 297.278897,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 5,
+      "true_params": {
+        "theta_alt": 0.423649,
+        "alt_weight": 0.322145,
+        "beta": 3.760721,
+        "side_bias": 1.352128
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.615672,
+          "beta": 4.013356,
+          "side_bias": 2.0,
+          "theta_alt": 0.377335
+        },
+        "negative_log_likelihood": 347.721335,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 6,
+      "true_params": {
+        "theta_alt": 0.388375,
+        "alt_weight": 0.55417,
+        "beta": 11.606582,
+        "side_bias": 1.809474
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.592588,
+          "beta": 10.966672,
+          "side_bias": 2.0,
+          "theta_alt": 0.35
+        },
+        "negative_log_likelihood": 235.710677,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 7,
+      "true_params": {
+        "theta_alt": 0.803326,
+        "alt_weight": 0.793909,
+        "beta": 4.925288,
+        "side_bias": -1.191642
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.99,
+          "beta": 2.886935,
+          "side_bias": -0.997676,
+          "theta_alt": 0.819839
+        },
+        "negative_log_likelihood": 386.934704,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 8,
+      "true_params": {
+        "theta_alt": 0.47782,
+        "alt_weight": 0.276947,
+        "beta": 5.003336,
+        "side_bias": -0.440438
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.434918,
+          "beta": 4.710875,
+          "side_bias": -0.687403,
+          "theta_alt": 0.567175
+        },
+        "negative_log_likelihood": 318.76656,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 9,
+      "true_params": {
+        "theta_alt": 0.615833,
+        "alt_weight": 0.731879,
+        "beta": 7.282279,
+        "side_bias": 1.440036
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.956343,
+          "beta": 5.915317,
+          "side_bias": 1.250028,
+          "theta_alt": 0.627798
+        },
+        "negative_log_likelihood": 333.435337,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 10,
+      "true_params": {
+        "theta_alt": 0.392124,
+        "alt_weight": 0.169048,
+        "beta": 8.040784,
+        "side_bias": -0.534822
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.161135,
+          "beta": 8.24959,
+          "side_bias": -0.608855,
+          "theta_alt": 0.35
+        },
+        "negative_log_likelihood": 260.866648,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 11,
+      "true_params": {
+        "theta_alt": 0.54193,
+        "alt_weight": 0.47607,
+        "beta": 9.970723,
+        "side_bias": 1.334505
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.484569,
+          "beta": 11.08518,
+          "side_bias": 1.879147,
+          "theta_alt": 0.517914
+        },
+        "negative_log_likelihood": 355.654121,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 12,
+      "true_params": {
+        "theta_alt": 0.825823,
+        "alt_weight": 0.497116,
+        "beta": 11.489211,
+        "side_bias": 1.58209
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.503589,
+          "beta": 12.0,
+          "side_bias": 1.472242,
+          "theta_alt": 0.806641
+        },
+        "negative_log_likelihood": 167.148998,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 13,
+      "true_params": {
+        "theta_alt": 0.356404,
+        "alt_weight": 0.767701,
+        "beta": 7.04148,
+        "side_bias": -1.262825
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.606988,
+          "beta": 11.430457,
+          "side_bias": -1.555969,
+          "theta_alt": 0.409637
+        },
+        "negative_log_likelihood": 43.96087,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 14,
+      "true_params": {
+        "theta_alt": 0.885709,
+        "alt_weight": 0.353005,
+        "beta": 1.380446,
+        "side_bias": -1.902325
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.14216,
+          "beta": 2.90315,
+          "side_bias": -1.781198,
+          "theta_alt": 0.75445
+        },
+        "negative_log_likelihood": 235.806991,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 15,
+      "true_params": {
+        "theta_alt": 0.663283,
+        "alt_weight": 0.771916,
+        "beta": 2.394474,
+        "side_bias": 1.394617
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.99,
+          "beta": 1.651322,
+          "side_bias": 1.101398,
+          "theta_alt": 0.696446
+        },
+        "negative_log_likelihood": 324.965362,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 16,
+      "true_params": {
+        "theta_alt": 0.873224,
+        "alt_weight": 0.525231,
+        "beta": 9.445106,
+        "side_bias": -1.680095
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.506385,
+          "beta": 11.903311,
+          "side_bias": -1.494976,
+          "theta_alt": 0.828828
+        },
+        "negative_log_likelihood": 366.448689,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 17,
+      "true_params": {
+        "theta_alt": 0.360245,
+        "alt_weight": 0.070407,
+        "beta": 6.346308,
+        "side_bias": 0.781769
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.114586,
+          "beta": 6.157224,
+          "side_bias": 0.839661,
+          "theta_alt": 0.35
+        },
+        "negative_log_likelihood": 384.645487,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 18,
+      "true_params": {
+        "theta_alt": 0.894933,
+        "alt_weight": 0.809284,
+        "beta": 0.276047,
+        "side_bias": -1.162998
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.175506,
+          "beta": 1.498604,
+          "side_bias": -0.967295,
+          "theta_alt": 0.35
+        },
+        "negative_log_likelihood": 330.065012,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 19,
+      "true_params": {
+        "theta_alt": 0.710362,
+        "alt_weight": 0.753591,
+        "beta": 10.94667,
+        "side_bias": 0.026087
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.774238,
+          "beta": 12.0,
+          "side_bias": 0.115116,
+          "theta_alt": 0.710794
+        },
+        "negative_log_likelihood": 324.919228,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 20,
+      "true_params": {
+        "theta_alt": 0.375607,
+        "alt_weight": 0.231228,
+        "beta": 8.181501,
+        "side_bias": 1.25619
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.210654,
+          "beta": 7.996834,
+          "side_bias": 1.184582,
+          "theta_alt": 0.35
+        },
+        "negative_log_likelihood": 370.359186,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 21,
+      "true_params": {
+        "theta_alt": 0.561166,
+        "alt_weight": 0.406014,
+        "beta": 1.416819,
+        "side_bias": 1.502196
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.378846,
+          "beta": 0.524457,
+          "side_bias": 1.39514,
+          "theta_alt": 0.571429
+        },
+        "negative_log_likelihood": 305.575824,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 22,
+      "true_params": {
+        "theta_alt": 0.484717,
+        "alt_weight": 0.407256,
+        "beta": 6.004895,
+        "side_bias": -1.957629
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.316606,
+          "beta": 6.317377,
+          "side_bias": -1.908936,
+          "theta_alt": 0.361545
+        },
+        "negative_log_likelihood": 127.63157,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 23,
+      "true_params": {
+        "theta_alt": 0.674117,
+        "alt_weight": 0.484723,
+        "beta": 9.1365,
+        "side_bias": 0.038995
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.502108,
+          "beta": 8.286752,
+          "side_bias": 0.383121,
+          "theta_alt": 0.644622
+        },
+        "negative_log_likelihood": 388.639262,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 24,
+      "true_params": {
+        "theta_alt": 0.451053,
+        "alt_weight": 0.842572,
+        "beta": 0.762514,
+        "side_bias": 0.860626
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.99,
+          "beta": 1.375007,
+          "side_bias": 1.208961,
+          "theta_alt": 0.393871
+        },
+        "negative_log_likelihood": 376.384118,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 25,
+      "true_params": {
+        "theta_alt": 0.887316,
+        "alt_weight": 0.871085,
+        "beta": 6.325743,
+        "side_bias": -0.794946
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.90288,
+          "beta": 6.933289,
+          "side_bias": -0.683334,
+          "theta_alt": 0.855625
+        },
+        "negative_log_likelihood": 271.136092,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 26,
+      "true_params": {
+        "theta_alt": 0.835531,
+        "alt_weight": 0.749495,
+        "beta": 1.836849,
+        "side_bias": 0.758511
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.49165,
+          "beta": 3.37462,
+          "side_bias": 0.567947,
+          "theta_alt": 0.865918
+        },
+        "negative_log_likelihood": 344.904468,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 27,
+      "true_params": {
+        "theta_alt": 0.441681,
+        "alt_weight": 0.129546,
+        "beta": 5.732876,
+        "side_bias": -0.487208
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.20177,
+          "beta": 7.016142,
+          "side_bias": -0.376666,
+          "theta_alt": 0.571428
+        },
+        "negative_log_likelihood": 340.002197,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 28,
+      "true_params": {
+        "theta_alt": 0.615711,
+        "alt_weight": 0.103882,
+        "beta": 7.24897,
+        "side_bias": -0.006399
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.01,
+          "beta": 6.558091,
+          "side_bias": -0.13989,
+          "theta_alt": 0.35
+        },
+        "negative_log_likelihood": 368.479358,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 29,
+      "true_params": {
+        "theta_alt": 0.855117,
+        "alt_weight": 0.499318,
+        "beta": 7.276424,
+        "side_bias": -0.107591
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.605946,
+          "beta": 7.593422,
+          "side_bias": -0.144282,
+          "theta_alt": 0.810773
+        },
+        "negative_log_likelihood": 348.184185,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 30,
+      "true_params": {
+        "theta_alt": 0.675828,
+        "alt_weight": 0.691422,
+        "beta": 10.643865,
+        "side_bias": -0.206995
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.81736,
+          "beta": 8.181097,
+          "side_bias": -0.120621,
+          "theta_alt": 0.662736
+        },
+        "negative_log_likelihood": 346.142022,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 31,
+      "true_params": {
+        "theta_alt": 0.607516,
+        "alt_weight": 0.537311,
+        "beta": 11.882464,
+        "side_bias": -0.087079
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.546554,
+          "beta": 12.0,
+          "side_bias": 0.076036,
+          "theta_alt": 0.595167
+        },
+        "negative_log_likelihood": 290.220484,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 32,
+      "true_params": {
+        "theta_alt": 0.849872,
+        "alt_weight": 0.652526,
+        "beta": 2.624481,
+        "side_bias": 1.574294
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.407497,
+          "beta": 2.123221,
+          "side_bias": 1.663071,
+          "theta_alt": 0.95
+        },
+        "negative_log_likelihood": 223.892289,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 33,
+      "true_params": {
+        "theta_alt": 0.8597,
+        "alt_weight": 0.14206,
+        "beta": 10.232651,
+        "side_bias": -1.475735
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.178079,
+          "beta": 12.0,
+          "side_bias": -1.567271,
+          "theta_alt": 0.812151
+        },
+        "negative_log_likelihood": 265.159487,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 34,
+      "true_params": {
+        "theta_alt": 0.477828,
+        "alt_weight": 0.423171,
+        "beta": 8.914092,
+        "side_bias": 1.207017
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.412926,
+          "beta": 9.087407,
+          "side_bias": 0.804222,
+          "theta_alt": 0.539066
+        },
+        "negative_log_likelihood": 361.899797,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 35,
+      "true_params": {
+        "theta_alt": 0.633473,
+        "alt_weight": 0.629751,
+        "beta": 1.496277,
+        "side_bias": -0.459159
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.506994,
+          "beta": 3.891193,
+          "side_bias": -0.686277,
+          "theta_alt": 0.711607
+        },
+        "negative_log_likelihood": 382.383478,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 36,
+      "true_params": {
+        "theta_alt": 0.625264,
+        "alt_weight": 0.775741,
+        "beta": 1.361729,
+        "side_bias": 0.439447
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.99,
+          "beta": 0.753078,
+          "side_bias": 0.20062,
+          "theta_alt": 0.726246
+        },
+        "negative_log_likelihood": 409.187972,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 37,
+      "true_params": {
+        "theta_alt": 0.606405,
+        "alt_weight": 0.813192,
+        "beta": 7.934043,
+        "side_bias": -1.781192
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.857795,
+          "beta": 6.288894,
+          "side_bias": -1.596444,
+          "theta_alt": 0.591121
+        },
+        "negative_log_likelihood": 192.570461,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 38,
+      "true_params": {
+        "theta_alt": 0.728996,
+        "alt_weight": 0.476883,
+        "beta": 9.843955,
+        "side_bias": -1.408422
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.508276,
+          "beta": 7.074014,
+          "side_bias": -1.308175,
+          "theta_alt": 0.709615
+        },
+        "negative_log_likelihood": 313.806537,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    },
+    {
+      "repeat": 39,
+      "true_params": {
+        "theta_alt": 0.759484,
+        "alt_weight": 0.293006,
+        "beta": 1.909842,
+        "side_bias": 0.578943
+      },
+      "fit": {
+        "model": "prototype_similarity",
+        "params": {
+          "alt_weight": 0.438376,
+          "beta": 1.39222,
+          "side_bias": 0.405114,
+          "theta_alt": 0.893192
+        },
+        "negative_log_likelihood": 390.84803,
+        "n_trials": 600,
+        "n_stimuli": 18,
+        "n_starts": 28,
+        "max_iters": 180
+      }
+    }
+  ]
+}

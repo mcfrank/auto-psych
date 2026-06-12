@@ -8,6 +8,12 @@ This bridges the pure-Python model families and the PyMC adapters:
 3. Fit the matching PyMC adapter in
    ``src/subjective_randomness/pymc_model_families/``.
 4. Compare posterior parameter summaries to the known true parameters.
+
+By default (no ``true_params`` in the config) every repeat draws a fresh
+ground-truth parameter vector uniformly from the family's ``PARAM_BOUNDS``
+(optionally narrowed by ``param_ranges``), so recovery is evaluated across the
+parameter space. A config that gives ``true_params`` pins every repeat to that
+single fixed vector.
 """
 
 from __future__ import annotations
@@ -15,6 +21,7 @@ from __future__ import annotations
 import csv
 import importlib
 import math
+import random
 import tempfile
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Sequence
@@ -22,6 +29,12 @@ from typing import Any, Dict, Iterable, List, Mapping, Sequence
 import numpy as np
 
 from src.subjective_randomness.config import resolve_path
+from src.subjective_randomness.recover import (
+    TRUTH_SEED_OFFSET,
+    resolve_param_ranges,
+    sample_true_params,
+    summarize_paired_recovery,
+)
 from src.subjective_randomness.features import (
     FLOAT_FEATURE_COLS,
     INT_FEATURE_COLS,
@@ -34,6 +47,28 @@ from src.subjective_randomness.simulate import (
 )
 
 PYMC_MODELS_DIR = Path(__file__).resolve().parent / "pymc_model_families"
+
+_MCMC_SETTINGS = ("draws", "tune", "chains", "cores")
+_MCMC_DEFAULTS = {"draws": 500, "tune": 500, "chains": 2, "cores": 1}
+
+
+def _resolve_mcmc_settings(
+    config: Mapping[str, Any], overrides: Mapping[str, Any]
+) -> Dict[str, int]:
+    """Sampler settings: explicit overrides beat the config's `mcmc` block,
+    which beats the defaults. Unknown setting names fail loudly."""
+    settings = {
+        **_MCMC_DEFAULTS,
+        **dict(config.get("mcmc") or {}),
+        **{k: v for k, v in overrides.items() if v is not None},
+    }
+    unknown = set(settings) - set(_MCMC_SETTINGS)
+    if unknown:
+        raise ValueError(
+            f"Unknown MCMC settings {sorted(unknown)}; "
+            f"expected a subset of {sorted(_MCMC_SETTINGS)}."
+        )
+    return {k: int(v) for k, v in settings.items()}
 
 
 def model_name_from_module(module_path: str, model_module: Any | None = None) -> str:
@@ -132,12 +167,16 @@ def run_pymc_recovery(
     pymc_models_dir: Path = PYMC_MODELS_DIR,
     work_dir: Path | None = None,
     cache_dir: Path | None = None,
-    draws: int = 500,
-    tune: int = 500,
-    chains: int = 2,
-    cores: int = 1,
+    draws: int | None = None,
+    tune: int | None = None,
+    chains: int | None = None,
+    cores: int | None = None,
 ) -> Dict[str, Any]:
-    """Simulate from the reference model and fit the matching PyMC adapter."""
+    """Simulate from the reference model and fit the matching PyMC adapter.
+
+    Sampler settings default to the config's `mcmc` block; pass `draws`,
+    `tune`, `chains`, or `cores` explicitly to override it.
+    """
     from src.models.pymc_inference import fit_model  # type: ignore
 
     model_module = importlib.import_module(str(config["model_module"]))
@@ -148,8 +187,26 @@ def run_pymc_recovery(
             f"No PyMC adapter found for {model_name!r}: {pymc_models_dir / f'{model_name}.py'}"
         )
 
+    if "fit" in config:
+        raise ValueError(
+            "Config has a 'fit' block, which configured the deleted "
+            "max-likelihood optimizer and would be silently ignored. Parameter "
+            "fitting is Bayesian-only — put sampler settings in an 'mcmc' block "
+            "(draws/tune/chains) instead."
+        )
+    mcmc = _resolve_mcmc_settings(
+        config, {"draws": draws, "tune": tune, "chains": chains, "cores": cores}
+    )
+    fixed_truth = {k: float(v) for k, v in (config.get("true_params") or {}).items()}
+    if fixed_truth and config.get("param_ranges"):
+        raise ValueError(
+            "Config gives both true_params and param_ranges; pick one — "
+            "fixed-truth recovery or sampled-truth recovery."
+        )
+    sampled_mode = not fixed_truth
+    param_ranges = resolve_param_ranges(config, model_module) if sampled_mode else None
+
     stimuli = load_stimuli(resolve_path(str(config["stimuli_path"])))
-    true_params = {k: float(v) for k, v in (config.get("true_params") or {}).items()}
     sim_cfg = config.get("simulation") or {}
     n_repeats = (
         repeats_override
@@ -171,9 +228,15 @@ def run_pymc_recovery(
     base_work_dir.mkdir(parents=True, exist_ok=True)
 
     runs = []
+    truths = []
     posterior_summaries = []
     try:
         for repeat in range(n_repeats):
+            if sampled_mode:
+                truth_rng = random.Random(seed + TRUTH_SEED_OFFSET + repeat)
+                true_params = sample_true_params(param_ranges, truth_rng)
+            else:
+                true_params = dict(fixed_truth)
             rows = generate_rows(
                 model_module, stimuli, true_params, n_participants, seed + repeat
             )
@@ -188,17 +251,19 @@ def run_pymc_recovery(
                 models_dir=pymc_models_dir,
                 responses_path=responses_path,
                 cache_dir=cache_dir,
-                draws=draws,
-                tune=tune,
-                chains=chains,
-                cores=cores,
+                draws=mcmc["draws"],
+                tune=mcmc["tune"],
+                chains=mcmc["chains"],
+                cores=mcmc["cores"],
                 random_seed=seed + 10000 + repeat,
             )
             param_summary = posterior_summary(fitted.idata, true_params.keys())
+            truths.append(true_params)
             posterior_summaries.append(param_summary)
             runs.append(
                 {
                     "repeat": repeat,
+                    "true_params": true_params,
                     "responses_path": str(responses_path) if not owns_tmp_dir else None,
                     "fit_fingerprint": fitted.fingerprint,
                     "posterior": param_summary,
@@ -208,7 +273,7 @@ def run_pymc_recovery(
         if tmp_context is not None:
             tmp_context.cleanup()
 
-    return {
+    report: Dict[str, Any] = {
         "model": model_name,
         "model_module": config["model_module"],
         "pymc_models_dir": str(pymc_models_dir),
@@ -216,10 +281,22 @@ def run_pymc_recovery(
         "n_stimuli": len(stimuli),
         "n_participants": n_participants,
         "n_repeats": n_repeats,
-        "draws": draws,
-        "tune": tune,
-        "chains": chains,
-        "true_params": true_params,
-        "summary": summarize_recovery(true_params, posterior_summaries),
-        "runs": runs,
+        "draws": mcmc["draws"],
+        "tune": mcmc["tune"],
+        "chains": mcmc["chains"],
+        "cores": mcmc["cores"],
     }
+    if sampled_mode:
+        report["param_ranges"] = {
+            name: [lo, hi] for name, (lo, hi) in param_ranges.items()
+        }
+        estimates = [
+            {name: float(entry["mean"]) for name, entry in summary.items()}
+            for summary in posterior_summaries
+        ]
+        report["summary"] = summarize_paired_recovery(truths, estimates)
+    else:
+        report["true_params"] = fixed_truth
+        report["summary"] = summarize_recovery(fixed_truth, posterior_summaries)
+    report["runs"] = runs
+    return report

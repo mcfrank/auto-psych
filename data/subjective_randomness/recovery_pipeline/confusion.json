@@ -1,0 +1,149 @@
+{
+  "seed_models": [
+    "prototype_similarity",
+    "encoding_compressibility",
+    "bayesian_diagnosticity"
+  ],
+  "n_participants": 40,
+  "n_stimuli": 20,
+  "generator": "pymc",
+  "fit_kwargs": {
+    "draws": 500,
+    "tune": 500,
+    "chains": 2
+  },
+  "generating": [
+    {
+      "generating_model": "prototype_similarity",
+      "params": {
+        "theta_alt": 0.65,
+        "alt_weight": 0.55,
+        "beta": 4.0,
+        "side_bias": 0.0
+      },
+      "best_model": "prototype_similarity",
+      "recovered_correct": true,
+      "posteriors": {
+        "prototype_similarity": 0.644821,
+        "encoding_compressibility": 7.7e-05,
+        "bayesian_diagnosticity": 0.355102
+      },
+      "elpd_loo": {
+        "prototype_similarity": -545.3557,
+        "encoding_compressibility": -554.3867,
+        "bayesian_diagnosticity": -545.9522
+      },
+      "comparison": {
+        "prototype_similarity": {
+          "rank": 0,
+          "elpd_loo": -545.3556506921079,
+          "elpd_diff": 0.0,
+          "dse": 0.0,
+          "weight": 0.8659203916399464
+        },
+        "bayesian_diagnosticity": {
+          "rank": 1,
+          "elpd_loo": -545.952217890725,
+          "elpd_diff": 0.596567198617139,
+          "dse": 1.2734845110098056,
+          "weight": 0.1164254643931906
+        },
+        "encoding_compressibility": {
+          "rank": 2,
+          "elpd_loo": -554.3866671303365,
+          "elpd_diff": 9.031016438228647,
+          "dse": 4.326855688444902,
+          "weight": 0.017654143966863003
+        }
+      }
+    },
+    {
+      "generating_model": "encoding_compressibility",
+      "params": {
+        "longrun_weight": 0.4,
+        "periodic_share": 0.5,
+        "beta": 4.0,
+        "side_bias": 0.0
+      },
+      "best_model": "encoding_compressibility",
+      "recovered_correct": true,
+      "posteriors": {
+        "prototype_similarity": 0.0,
+        "encoding_compressibility": 0.999991,
+        "bayesian_diagnosticity": 8e-06
+      },
+      "elpd_loo": {
+        "prototype_similarity": -545.5789,
+        "encoding_compressibility": -530.0716,
+        "bayesian_diagnosticity": -541.7645
+      },
+      "comparison": {
+        "encoding_compressibility": {
+          "rank": 0,
+          "elpd_loo": -530.071641091424,
+          "elpd_diff": 0.0,
+          "dse": 0.0,
+          "weight": 0.9999999999992313
+        },
+        "bayesian_diagnosticity": {
+          "rank": 1,
+          "elpd_loo": -541.7644702873267,
+          "elpd_diff": 11.692829195902636,
+          "dse": 4.777167447207866,
+          "weight": 2.5357493882438575e-13
+        },
+        "prototype_similarity": {
+          "rank": 2,
+          "elpd_loo": -545.5788573806667,
+          "elpd_diff": 15.507216289242647,
+          "dse": 5.304280859574007,
+          "weight": 5.150879722748414e-13
+        }
+      }
+    },
+    {
+      "generating_model": "bayesian_diagnosticity",
+      "params": {
+        "alt_prior": 0.34,
+        "bias_share": 0.5,
+        "beta": 4.0,
+        "side_bias": 0.0
+      },
+      "best_model": "prototype_similarity",
+      "recovered_correct": false,
+      "posteriors": {
+        "prototype_similarity": 0.712129,
+        "encoding_compressibility": 0.0,
+        "bayesian_diagnosticity": 0.287871
+      },
+      "elpd_loo": {
+        "prototype_similarity": -420.1955,
+        "encoding_compressibility": -457.876,
+        "bayesian_diagnosticity": -421.1012
+      },
+      "comparison": {
+        "prototype_similarity": {
+          "rank": 0,
+          "elpd_loo": -420.19545416453025,
+          "elpd_diff": 0.0,
+          "dse": 0.0,
+          "weight": 0.9254675864185291
+        },
+        "bayesian_diagnosticity": {
+          "rank": 1,
+          "elpd_loo": -421.1011999310017,
+          "elpd_diff": 0.9057457664714264,
+          "dse": 1.4186828319930838,
+          "weight": 0.0
+        },
+        "encoding_compressibility": {
+          "rank": 2,
+          "elpd_loo": -457.8760351118274,
+          "elpd_diff": 37.68058094729713,
+          "dse": 9.105305018158498,
+          "weight": 0.07453241358147103
+        }
+      }
+    }
+  ]
+}

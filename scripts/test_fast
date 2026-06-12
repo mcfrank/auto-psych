@@ -3,6 +3,4 @@
 # Fast unit/integration tests: everything except the slow PyMC NUTS runs.
 set -e
 trap 'rc=$?; command -v prove_it >/dev/null 2>&1 && prove_it record --name fast-tests --result $rc' EXIT
-# PYTENSOR_FLAGS="cxx=" disables the C linker; macOS sandboxing otherwise
-# breaks PyTensor compilation (the ArviZ/PyTensor cache-dir issue).
-exec env PYTENSOR_FLAGS="cxx=" .venv/bin/python -m pytest -q -m "not slow"
+exec .venv/bin/python -m pytest -q -m "not slow"
