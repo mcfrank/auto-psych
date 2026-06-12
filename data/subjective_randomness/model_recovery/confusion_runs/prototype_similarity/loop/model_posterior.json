@@ -1,0 +1,36 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.644821,
+    "encoding_compressibility": 7.7e-05,
+    "bayesian_diagnosticity": 0.355102
+  },
+  "elpd_loo": {
+    "prototype_similarity": -545.3557,
+    "encoding_compressibility": -554.3867,
+    "bayesian_diagnosticity": -545.9522
+  },
+  "n_trials": 800,
+  "comparison": {
+    "prototype_similarity": {
+      "rank": 0,
+      "elpd_loo": -545.3556506921079,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.8659203916399464
+    },
+    "bayesian_diagnosticity": {
+      "rank": 1,
+      "elpd_loo": -545.952217890725,
+      "elpd_diff": 0.596567198617139,
+      "dse": 1.2734845110098056,
+      "weight": 0.1164254643931906
+    },
+    "encoding_compressibility": {
+      "rank": 2,
+      "elpd_loo": -554.3866671303365,
+      "elpd_diff": 9.031016438228647,
+      "dse": 4.326855688444902,
+      "weight": 0.017654143966863003
+    }
+  }
+}

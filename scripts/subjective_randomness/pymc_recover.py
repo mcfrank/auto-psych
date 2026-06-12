@@ -20,6 +20,10 @@ sys.path.insert(0, str(here()))
 
 from src.subjective_randomness.config import load_config, resolve_path  # noqa: E402
 from src.subjective_randomness.pymc_recover import PYMC_MODELS_DIR, run_pymc_recovery  # noqa: E402
+from src.subjective_randomness.tidy import (  # noqa: E402
+    parameter_recovery_tidy_rows,
+    write_tidy_csv,
+)
 
 
 @dataclass
@@ -38,14 +42,16 @@ class Args:
     """Optional directory to keep simulated featurized CSVs."""
     cache_dir: Optional[Path] = None
     """Optional directory for the PyMC .nc fit cache."""
-    draws: int = 500
-    """Posterior draws per chain."""
-    tune: int = 500
-    """Tuning (warmup) steps per chain."""
-    chains: int = 2
-    """Number of MCMC chains."""
-    cores: int = 1
-    """Number of cores for sampling."""
+    draws: Optional[int] = None
+    """Posterior draws per chain (defaults to the config's `mcmc` block)."""
+    tune: Optional[int] = None
+    """Tuning (warmup) steps per chain (defaults to the config's `mcmc` block)."""
+    chains: Optional[int] = None
+    """Number of MCMC chains (defaults to the config's `mcmc` block)."""
+    cores: Optional[int] = None
+    """Number of cores for sampling (defaults to the config's `mcmc` block)."""
+    tidy_csv: Optional[Path] = None
+    """Optional long-format CSV (one row per parameter x repeat) for plotting."""
 
 
 def main(args: Args) -> None:
@@ -69,6 +75,10 @@ def main(args: Args) -> None:
         f"Wrote PyMC recovery report for {result['model']} "
         f"({result['n_repeats']} repeats, {result['n_stimuli']} stimuli) to {out_path}"
     )
+    if args.tidy_csv is not None:
+        tidy_path = resolve_path(args.tidy_csv)
+        write_tidy_csv(parameter_recovery_tidy_rows(result), tidy_path)
+        print(f"Wrote tidy recovery CSV to {tidy_path}")
 
 
 if __name__ == "__main__":

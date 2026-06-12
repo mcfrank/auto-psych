@@ -1,0 +1,52 @@
+# Closed-ended model recovery for subjective randomness.
+#
+# Generate synthetic data from each seed model (parameters fixed to the values
+# below), then run the inner model loop on the *closed* seed set (no agent
+# candidates) and record the recovered posterior over models. The result is a
+# generating-model x recovered-model confusion matrix: a well-behaved pipeline
+# should put most posterior mass on the diagonal.
+
+seed_models_dir: src/pipelines/outer_loop/projects/subjective_randomness/seed_models
+stimuli_path: data/subjective_randomness/parameter_recovery/stimuli.json
+
+# Synthetic participants per generating model (more participants -> sharper,
+# more reliable recovery).
+n_participants: 40
+
+# RNG seed for the Bernoulli choices.
+seed: 7
+
+# Data source for the synthetic choices:
+#   pymc          - the PyMC seed model with fixed parameters (true model and
+#                   one candidate are identical; the easier, default test).
+#   model_family  - the pure-Python model_families family of the same name,
+#                   whose functional form differs from the PyMC fit (a harder,
+#                   more honest recovery test).
+generator: pymc
+
+# Which seed models generate data, and with what fixed parameters. Omit this
+# key (or set it to null) to recover every seed model with its family's default
+# parameters. You may also give a list of names, or a mapping whose values are
+# explicit parameter dicts (null -> family defaults).
+generating_models:
+  prototype_similarity:
+    theta_alt: 0.65
+    alt_weight: 0.55
+    beta: 4.0
+    side_bias: 0.0
+  encoding_compressibility:
+    longrun_weight: 0.40
+    periodic_share: 0.50
+    beta: 4.0
+    side_bias: 0.0
+  bayesian_diagnosticity:
+    alt_prior: 0.34
+    bias_share: 0.50
+    beta: 4.0
+    side_bias: 0.0
+
+# MCMC settings for fitting each seed model during recovery.
+fit:
+  draws: 500
+  tune: 500
+  chains: 2

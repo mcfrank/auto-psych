@@ -1,0 +1,827 @@
+{
+  "model_names": [
+    "prototype_similarity",
+    "encoding_compressibility",
+    "bayesian_diagnosticity"
+  ],
+  "n_repeats": 5,
+  "n_stimuli": 25,
+  "n_participants": 10,
+  "points_per_dim": 7,
+  "seed": 0,
+  "pool_size": 200,
+  "arms": {
+    "eig": {
+      "stimuli": [
+        {
+          "sequence_a": "HHHHHH",
+          "sequence_b": "THTHTH",
+          "eig": 0.17188370000536468
+        },
+        {
+          "sequence_a": "HHHHHHHH",
+          "sequence_b": "THTHTHTT",
+          "eig": 0.14556158345474846
+        },
+        {
+          "sequence_a": "HTHTHTTH",
+          "sequence_b": "THHHHHHT",
+          "eig": 0.13066018185318118
+        },
+        {
+          "sequence_a": "HTHHHHHT",
+          "sequence_b": "HTHTHHTH",
+          "eig": 0.12855718280691564
+        },
+        {
+          "sequence_a": "HTTTTT",
+          "sequence_b": "TTHTHT",
+          "eig": 0.12455866328968501
+        },
+        {
+          "sequence_a": "HHTHTH",
+          "sequence_b": "THHHHH",
+          "eig": 0.12455866328968268
+        },
+        {
+          "sequence_a": "HTHTTHHT",
+          "sequence_b": "TTTTTTTH",
+          "eig": 0.12448678679228864
+        },
+        {
+          "sequence_a": "HHHHHH",
+          "sequence_b": "HTHHTT",
+          "eig": 0.11498044774118399
+        },
+        {
+          "sequence_a": "HTTTTT",
+          "sequence_b": "TTHTHH",
+          "eig": 0.10426592074913676
+        },
+        {
+          "sequence_a": "THHHHH",
+          "sequence_b": "THHTTH",
+          "eig": 0.10426592074913676
+        },
+        {
+          "sequence_a": "HHHHHT",
+          "sequence_b": "HTTHHT",
+          "eig": 0.10426592074913676
+        },
+        {
+          "sequence_a": "THHHHTTH",
+          "sequence_b": "THTHHTHT",
+          "eig": 0.10278726459366372
+        },
+        {
+          "sequence_a": "THTHTHTT",
+          "sequence_b": "TTTTHTTT",
+          "eig": 0.10044899549835928
+        },
+        {
+          "sequence_a": "HHTTHHTH",
+          "sequence_b": "TTTTTTTT",
+          "eig": 0.09956167138140926
+        },
+        {
+          "sequence_a": "HTTTHT",
+          "sequence_b": "TTTTTT",
+          "eig": 0.09929360711967683
+        },
+        {
+          "sequence_a": "HHTHHHHH",
+          "sequence_b": "TTHHTHHT",
+          "eig": 0.09743657544031015
+        },
+        {
+          "sequence_a": "HHHTHH",
+          "sequence_b": "HTTHTH",
+          "eig": 0.09705587396830806
+        },
+        {
+          "sequence_a": "HTTHTHHH",
+          "sequence_b": "HTTTTTTT",
+          "eig": 0.0949752764188242
+        },
+        {
+          "sequence_a": "THHTHH",
+          "sequence_b": "TTTTTT",
+          "eig": 0.09437730671576217
+        },
+        {
+          "sequence_a": "HTHTHH",
+          "sequence_b": "TTTTHT",
+          "eig": 0.08880080575594795
+        },
+        {
+          "sequence_a": "HHHTHT",
+          "sequence_b": "TTTTTH",
+          "eig": 0.08627098038789716
+        },
+        {
+          "sequence_a": "HTHHHTHT",
+          "sequence_b": "TTTTTHTT",
+          "eig": 0.08396478505874028
+        },
+        {
+          "sequence_a": "HHHHHTHH",
+          "sequence_b": "HTTTHTHT",
+          "eig": 0.08396478505873983
+        },
+        {
+          "sequence_a": "HHHHHH",
+          "sequence_b": "HTTTHH",
+          "eig": 0.08394086108802246
+        },
+        {
+          "sequence_a": "THTHHTTH",
+          "sequence_b": "TTTTHHTT",
+          "eig": 0.08127534087014199
+        }
+      ],
+      "mean_stimulus_eig": 0.10688796403345055,
+      "runs": [
+        {
+          "repeat": 0,
+          "generating_model": "prototype_similarity",
+          "true_params": {
+            "theta_alt": 0.664303,
+            "alt_weight": 0.846892,
+            "beta": 0.532981,
+            "side_bias": -0.338662
+          },
+          "recovered_model": "encoding_compressibility",
+          "recovered_correct": false,
+          "model_posterior": {
+            "prototype_similarity": 0.34084111501806663,
+            "encoding_compressibility": 0.42647092383738283,
+            "bayesian_diagnosticity": 0.23268796114455062
+          }
+        },
+        {
+          "repeat": 0,
+          "generating_model": "encoding_compressibility",
+          "true_params": {
+            "longrun_weight": 0.199649,
+            "periodic_share": 0.16407,
+            "beta": 9.242164,
+            "side_bias": 1.7763
+          },
+          "recovered_model": "encoding_compressibility",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.1360394886552614,
+            "encoding_compressibility": 0.8384155462277619,
+            "bayesian_diagnosticity": 0.025544965116976796
+          }
+        },
+        {
+          "repeat": 0,
+          "generating_model": "bayesian_diagnosticity",
+          "true_params": {
+            "alt_prior": 0.881232,
+            "bias_share": 0.555242,
+            "beta": 4.395534,
+            "side_bias": 0.648808
+          },
+          "recovered_model": "bayesian_diagnosticity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 2.8674839703246896e-38,
+            "encoding_compressibility": 8.228296484972051e-65,
+            "bayesian_diagnosticity": 1.0
+          }
+        },
+        {
+          "repeat": 1,
+          "generating_model": "prototype_similarity",
+          "true_params": {
+            "theta_alt": 0.408042,
+            "alt_weight": 0.940055,
+            "beta": 11.509949,
+            "side_bias": 1.82108
+          },
+          "recovered_model": "prototype_similarity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.6016195597372241,
+            "encoding_compressibility": 1.4861235038483216e-31,
+            "bayesian_diagnosticity": 0.3983804402627759
+          }
+        },
+        {
+          "repeat": 1,
+          "generating_model": "encoding_compressibility",
+          "true_params": {
+            "longrun_weight": 0.852581,
+            "periodic_share": 0.968241,
+            "beta": 0.375533,
+            "side_bias": -1.892518
+          },
+          "recovered_model": "prototype_similarity",
+          "recovered_correct": false,
+          "model_posterior": {
+            "prototype_similarity": 0.38865294173042875,
+            "encoding_compressibility": 0.3221538016844095,
+            "bayesian_diagnosticity": 0.2891932565851618
+          }
+        },
+        {
+          "repeat": 1,
+          "generating_model": "bayesian_diagnosticity",
+          "true_params": {
+            "alt_prior": 0.172937,
+            "bias_share": 0.790869,
+            "beta": 7.950033,
+            "side_bias": 1.954054
+          },
+          "recovered_model": "bayesian_diagnosticity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.08447416932560045,
+            "encoding_compressibility": 0.3341786398524066,
+            "bayesian_diagnosticity": 0.5813471908219929
+          }
+        },
+        {
+          "repeat": 2,
+          "generating_model": "prototype_similarity",
+          "true_params": {
+            "theta_alt": 0.577269,
+            "alt_weight": 0.921101,
+            "beta": 11.595961,
+            "side_bias": 1.855774
+          },
+          "recovered_model": "prototype_similarity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.9937681730093539,
+            "encoding_compressibility": 1.9203748408190893e-07,
+            "bayesian_diagnosticity": 0.0062316349531619415
+          }
+        },
+        {
+          "repeat": 2,
+          "generating_model": "encoding_compressibility",
+          "true_params": {
+            "longrun_weight": 0.042345,
+            "periodic_share": 0.506156,
+            "beta": 9.792655,
+            "side_bias": -1.436683
+          },
+          "recovered_model": "encoding_compressibility",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.0011738592799858027,
+            "encoding_compressibility": 0.9852223981904512,
+            "bayesian_diagnosticity": 0.013603742529563064
+          }
+        },
+        {
+          "repeat": 2,
+          "generating_model": "bayesian_diagnosticity",
+          "true_params": {
+            "alt_prior": 0.872605,
+            "bias_share": 0.203761,
+            "beta": 1.015691,
+            "side_bias": -0.105419
+          },
+          "recovered_model": "bayesian_diagnosticity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 6.5819541358177536e-06,
+            "encoding_compressibility": 1.823471521117885e-11,
+            "bayesian_diagnosticity": 0.9999934180276295
+          }
+        },
+        {
+          "repeat": 3,
+          "generating_model": "prototype_similarity",
+          "true_params": {
+            "theta_alt": 0.917251,
+            "alt_weight": 0.231639,
+            "beta": 11.127719,
+            "side_bias": 1.088692
+          },
+          "recovered_model": "prototype_similarity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.7115121274077407,
+            "encoding_compressibility": 0.26123632230074995,
+            "bayesian_diagnosticity": 0.027251550291509358
+          }
+        },
+        {
+          "repeat": 3,
+          "generating_model": "encoding_compressibility",
+          "true_params": {
+            "longrun_weight": 0.959222,
+            "periodic_share": 0.747664,
+            "beta": 6.437522,
+            "side_bias": -0.470531
+          },
+          "recovered_model": "encoding_compressibility",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.00011590872730464666,
+            "encoding_compressibility": 0.9993009067751524,
+            "bayesian_diagnosticity": 0.0005831844975429311
+          }
+        },
+        {
+          "repeat": 3,
+          "generating_model": "bayesian_diagnosticity",
+          "true_params": {
+            "alt_prior": 0.817285,
+            "bias_share": 0.409428,
+            "beta": 11.21595,
+            "side_bias": -0.249913
+          },
+          "recovered_model": "bayesian_diagnosticity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 4.967378417569702e-50,
+            "encoding_compressibility": 1.2725498254977464e-77,
+            "bayesian_diagnosticity": 1.0
+          }
+        },
+        {
+          "repeat": 4,
+          "generating_model": "prototype_similarity",
+          "true_params": {
+            "theta_alt": 0.441565,
+            "alt_weight": 0.306458,
+            "beta": 6.477474,
+            "side_bias": 0.100441
+          },
+          "recovered_model": "prototype_similarity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.6824502776403427,
+            "encoding_compressibility": 0.20478870523995404,
+            "bayesian_diagnosticity": 0.11276101711970321
+          }
+        },
+        {
+          "repeat": 4,
+          "generating_model": "encoding_compressibility",
+          "true_params": {
+            "longrun_weight": 0.773961,
+            "periodic_share": 0.948051,
+            "beta": 0.842229,
+            "side_bias": 0.873792
+          },
+          "recovered_model": "prototype_similarity",
+          "recovered_correct": false,
+          "model_posterior": {
+            "prototype_similarity": 0.42429633547455486,
+            "encoding_compressibility": 0.41380179120005517,
+            "bayesian_diagnosticity": 0.16190187332539002
+          }
+        },
+        {
+          "repeat": 4,
+          "generating_model": "bayesian_diagnosticity",
+          "true_params": {
+            "alt_prior": 0.508017,
+            "bias_share": 0.819501,
+            "beta": 3.805951,
+            "side_bias": 0.216259
+          },
+          "recovered_model": "bayesian_diagnosticity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.006820270981563806,
+            "encoding_compressibility": 3.2005719731906504e-11,
+            "bayesian_diagnosticity": 0.9931797289864305
+          }
+        }
+      ],
+      "accuracy": 0.8,
+      "mean_true_posterior": 0.7642404023151074,
+      "confusion": {
+        "prototype_similarity": {
+          "prototype_similarity": 0.6660382505625456,
+          "encoding_compressibility": 0.17849922868311419,
+          "bayesian_diagnosticity": 0.15546252075434022
+        },
+        "encoding_compressibility": {
+          "prototype_similarity": 0.19005570677350708,
+          "encoding_compressibility": 0.7117788888155661,
+          "bayesian_diagnosticity": 0.09816540441092693
+        },
+        "bayesian_diagnosticity": {
+          "prototype_similarity": 0.018260204452260016,
+          "encoding_compressibility": 0.0668357279805294,
+          "bayesian_diagnosticity": 0.9149040675672107
+        }
+      }
+    },
+    "random": {
+      "stimuli": [
+        {
+          "sequence_a": "HHHHHH",
+          "sequence_b": "HHHTTT",
+          "eig": 0.0629451048004851
+        },
+        {
+          "sequence_a": "THHTHH",
+          "sequence_b": "TTTTTT",
+          "eig": 0.09437730671576217
+        },
+        {
+          "sequence_a": "THTHHH",
+          "sequence_b": "TTHTTH",
+          "eig": 0.0002270478460725256
+        },
+        {
+          "sequence_a": "TTTHTT",
+          "sequence_b": "TTTTTH",
+          "eig": 0.02589441492072675
+        },
+        {
+          "sequence_a": "HHHTHT",
+          "sequence_b": "TTTTTH",
+          "eig": 0.08627098038789716
+        },
+        {
+          "sequence_a": "HHHHTHHH",
+          "sequence_b": "THHHTTHT",
+          "eig": 0.07797579779306818
+        },
+        {
+          "sequence_a": "HHHHHTHH",
+          "sequence_b": "HHHTHHTT",
+          "eig": 0.04192416222944251
+        },
+        {
+          "sequence_a": "HHHTTH",
+          "sequence_b": "THTHTH",
+          "eig": 0.07446002472181923
+        },
+        {
+          "sequence_a": "HTHTHT",
+          "sequence_b": "THTHTH",
+          "eig": 0.0
+        },
+        {
+          "sequence_a": "HTHTTH",
+          "sequence_b": "THTHHT",
+          "eig": 0.0
+        },
+        {
+          "sequence_a": "HHTHHTTH",
+          "sequence_b": "THHTHHTH",
+          "eig": 0.007305851578537914
+        },
+        {
+          "sequence_a": "THTTTHTH",
+          "sequence_b": "TTTTTHHH",
+          "eig": 0.03076970524826128
+        },
+        {
+          "sequence_a": "HHHHTH",
+          "sequence_b": "THTTHH",
+          "eig": 0.07963772200700592
+        },
+        {
+          "sequence_a": "HTHHHT",
+          "sequence_b": "TTTTTH",
+          "eig": 0.07106958251199924
+        },
+        {
+          "sequence_a": "HHTHHH",
+          "sequence_b": "TTTHHH",
+          "eig": 0.011819719221432767
+        },
+        {
+          "sequence_a": "TTHHHH",
+          "sequence_b": "TTHHTT",
+          "eig": 0.026028652222892856
+        },
+        {
+          "sequence_a": "HHTHTH",
+          "sequence_b": "TTHTHH",
+          "eig": 0.018521227920890726
+        },
+        {
+          "sequence_a": "THTTTH",
+          "sequence_b": "TTTHTT",
+          "eig": 0.03489881493225433
+        },
+        {
+          "sequence_a": "HHHHTT",
+          "sequence_b": "HHHTHT",
+          "eig": 0.029312184806622454
+        },
+        {
+          "sequence_a": "THHTTH",
+          "sequence_b": "TTTTHH",
+          "eig": 0.06540330030476771
+        },
+        {
+          "sequence_a": "HTHTTTTH",
+          "sequence_b": "THTHHHTT",
+          "eig": 0.006825219478126976
+        },
+        {
+          "sequence_a": "HHTTTHHT",
+          "sequence_b": "HTTHTTTH",
+          "eig": 0.000671266454331132
+        },
+        {
+          "sequence_a": "TTHTHTHH",
+          "sequence_b": "TTHTTTHH",
+          "eig": 0.06616994602076309
+        },
+        {
+          "sequence_a": "HHHTHT",
+          "sequence_b": "TTHHHH",
+          "eig": 0.029312184806622565
+        },
+        {
+          "sequence_a": "HTTHHH",
+          "sequence_b": "HTTTTH",
+          "eig": 0.006803624456434232
+        }
+      ],
+      "mean_stimulus_eig": 0.03794495365544867,
+      "runs": [
+        {
+          "repeat": 0,
+          "generating_model": "prototype_similarity",
+          "true_params": {
+            "theta_alt": 0.664303,
+            "alt_weight": 0.846892,
+            "beta": 0.532981,
+            "side_bias": -0.338662
+          },
+          "recovered_model": "bayesian_diagnosticity",
+          "recovered_correct": false,
+          "model_posterior": {
+            "prototype_similarity": 0.2732769165357073,
+            "encoding_compressibility": 0.32112182394165817,
+            "bayesian_diagnosticity": 0.40560125952263454
+          }
+        },
+        {
+          "repeat": 0,
+          "generating_model": "encoding_compressibility",
+          "true_params": {
+            "longrun_weight": 0.199649,
+            "periodic_share": 0.16407,
+            "beta": 9.242164,
+            "side_bias": 1.7763
+          },
+          "recovered_model": "prototype_similarity",
+          "recovered_correct": false,
+          "model_posterior": {
+            "prototype_similarity": 0.8369465746201048,
+            "encoding_compressibility": 0.1630534226151675,
+            "bayesian_diagnosticity": 2.7647276812441667e-09
+          }
+        },
+        {
+          "repeat": 0,
+          "generating_model": "bayesian_diagnosticity",
+          "true_params": {
+            "alt_prior": 0.881232,
+            "bias_share": 0.555242,
+            "beta": 4.395534,
+            "side_bias": 0.648808
+          },
+          "recovered_model": "bayesian_diagnosticity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 2.65553899808963e-23,
+            "encoding_compressibility": 2.567164970945038e-29,
+            "bayesian_diagnosticity": 1.0
+          }
+        },
+        {
+          "repeat": 1,
+          "generating_model": "prototype_similarity",
+          "true_params": {
+            "theta_alt": 0.408042,
+            "alt_weight": 0.940055,
+            "beta": 11.509949,
+            "side_bias": 1.82108
+          },
+          "recovered_model": "prototype_similarity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.8592968842469556,
+            "encoding_compressibility": 8.990324849053296e-13,
+            "bayesian_diagnosticity": 0.1407031157521453
+          }
+        },
+        {
+          "repeat": 1,
+          "generating_model": "encoding_compressibility",
+          "true_params": {
+            "longrun_weight": 0.852581,
+            "periodic_share": 0.968241,
+            "beta": 0.375533,
+            "side_bias": -1.892518
+          },
+          "recovered_model": "encoding_compressibility",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.26930848564969434,
+            "encoding_compressibility": 0.4787996781013641,
+            "bayesian_diagnosticity": 0.2518918362489415
+          }
+        },
+        {
+          "repeat": 1,
+          "generating_model": "bayesian_diagnosticity",
+          "true_params": {
+            "alt_prior": 0.172937,
+            "bias_share": 0.790869,
+            "beta": 7.950033,
+            "side_bias": 1.954054
+          },
+          "recovered_model": "prototype_similarity",
+          "recovered_correct": false,
+          "model_posterior": {
+            "prototype_similarity": 0.4242563029685859,
+            "encoding_compressibility": 0.26068385352206347,
+            "bayesian_diagnosticity": 0.31505984350935057
+          }
+        },
+        {
+          "repeat": 2,
+          "generating_model": "prototype_similarity",
+          "true_params": {
+            "theta_alt": 0.577269,
+            "alt_weight": 0.921101,
+            "beta": 11.595961,
+            "side_bias": 1.855774
+          },
+          "recovered_model": "prototype_similarity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.8783227315445796,
+            "encoding_compressibility": 6.799506226884194e-12,
+            "bayesian_diagnosticity": 0.1216772684486211
+          }
+        },
+        {
+          "repeat": 2,
+          "generating_model": "encoding_compressibility",
+          "true_params": {
+            "longrun_weight": 0.042345,
+            "periodic_share": 0.506156,
+            "beta": 9.792655,
+            "side_bias": -1.436683
+          },
+          "recovered_model": "encoding_compressibility",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 1.883309571683073e-09,
+            "encoding_compressibility": 0.9999999891261416,
+            "bayesian_diagnosticity": 8.990548948064283e-09
+          }
+        },
+        {
+          "repeat": 2,
+          "generating_model": "bayesian_diagnosticity",
+          "true_params": {
+            "alt_prior": 0.872605,
+            "bias_share": 0.203761,
+            "beta": 1.015691,
+            "side_bias": -0.105419
+          },
+          "recovered_model": "bayesian_diagnosticity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.0002998497987719981,
+            "encoding_compressibility": 0.00020886575616428947,
+            "bayesian_diagnosticity": 0.9994912844450637
+          }
+        },
+        {
+          "repeat": 3,
+          "generating_model": "prototype_similarity",
+          "true_params": {
+            "theta_alt": 0.917251,
+            "alt_weight": 0.231639,
+            "beta": 11.127719,
+            "side_bias": 1.088692
+          },
+          "recovered_model": "prototype_similarity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.9424602115738407,
+            "encoding_compressibility": 0.05753978842615175,
+            "bayesian_diagnosticity": 7.603173593108955e-15
+          }
+        },
+        {
+          "repeat": 3,
+          "generating_model": "encoding_compressibility",
+          "true_params": {
+            "longrun_weight": 0.959222,
+            "periodic_share": 0.747664,
+            "beta": 6.437522,
+            "side_bias": -0.470531
+          },
+          "recovered_model": "encoding_compressibility",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.0001336403079036194,
+            "encoding_compressibility": 0.9998559407561926,
+            "bayesian_diagnosticity": 1.0418935903878403e-05
+          }
+        },
+        {
+          "repeat": 3,
+          "generating_model": "bayesian_diagnosticity",
+          "true_params": {
+            "alt_prior": 0.817285,
+            "bias_share": 0.409428,
+            "beta": 11.21595,
+            "side_bias": -0.249913
+          },
+          "recovered_model": "bayesian_diagnosticity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 4.7782171687458476e-29,
+            "encoding_compressibility": 5.937863332325133e-45,
+            "bayesian_diagnosticity": 1.0
+          }
+        },
+        {
+          "repeat": 4,
+          "generating_model": "prototype_similarity",
+          "true_params": {
+            "theta_alt": 0.441565,
+            "alt_weight": 0.306458,
+            "beta": 6.477474,
+            "side_bias": 0.100441
+          },
+          "recovered_model": "encoding_compressibility",
+          "recovered_correct": false,
+          "model_posterior": {
+            "prototype_similarity": 0.2562848011707991,
+            "encoding_compressibility": 0.7336265552005953,
+            "bayesian_diagnosticity": 0.01008864362860567
+          }
+        },
+        {
+          "repeat": 4,
+          "generating_model": "encoding_compressibility",
+          "true_params": {
+            "longrun_weight": 0.773961,
+            "periodic_share": 0.948051,
+            "beta": 0.842229,
+            "side_bias": 0.873792
+          },
+          "recovered_model": "bayesian_diagnosticity",
+          "recovered_correct": false,
+          "model_posterior": {
+            "prototype_similarity": 0.3727030759389793,
+            "encoding_compressibility": 0.24783456101959314,
+            "bayesian_diagnosticity": 0.3794623630414275
+          }
+        },
+        {
+          "repeat": 4,
+          "generating_model": "bayesian_diagnosticity",
+          "true_params": {
+            "alt_prior": 0.508017,
+            "bias_share": 0.819501,
+            "beta": 3.805951,
+            "side_bias": 0.216259
+          },
+          "recovered_model": "bayesian_diagnosticity",
+          "recovered_correct": true,
+          "model_posterior": {
+            "prototype_similarity": 0.004182132894120056,
+            "encoding_compressibility": 0.0005354204593927184,
+            "bayesian_diagnosticity": 0.9952824466464874
+          }
+        }
+      ],
+      "accuracy": 0.6666666666666666,
+      "mean_true_posterior": 0.6939345807527495,
+      "confusion": {
+        "prototype_similarity": {
+          "prototype_similarity": 0.6419283090143765,
+          "encoding_compressibility": 0.22245763351522077,
+          "bayesian_diagnosticity": 0.13561405747040284
+        },
+        "encoding_compressibility": {
+          "prototype_similarity": 0.2958183556799983,
+          "encoding_compressibility": 0.5779087183236917,
+          "bayesian_diagnosticity": 0.1262729259963099
+        },
+        "bayesian_diagnosticity": {
+          "prototype_similarity": 0.0857476571322956,
+          "encoding_compressibility": 0.052285627947524095,
+          "bayesian_diagnosticity": 0.8619667149201803
+        }
+      }
+    }
+  }
+}

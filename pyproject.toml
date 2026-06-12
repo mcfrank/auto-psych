@@ -49,6 +49,13 @@ open-models = [
     "accelerate>=0.30.0",
 ]
 
+[tool.uv]
+# The test suite (and the inner-loop pipeline) depend on the pymc stack, so it
+# must be present in the default dev environment — otherwise a plain `uv sync`
+# prunes pymc/pytensor and every PyMC test fails. `open-models` stays opt-in
+# (heavy torch/transformers; no test needs it): `uv sync --group open-models`.
+default-groups = ["dev", "pymc"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests", "src/pipelines/inner_loop/tests"]
 pythonpath = ["."]

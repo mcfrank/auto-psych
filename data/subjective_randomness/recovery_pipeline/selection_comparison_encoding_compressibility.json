@@ -1,0 +1,1225 @@
+{
+  "model": "encoding_compressibility",
+  "n_repeats": 20,
+  "n_stimuli": 25,
+  "n_participants": 3,
+  "points_per_dim": 7,
+  "seed": 0,
+  "pool_size": 200,
+  "param_ranges": {
+    "longrun_weight": [
+      0.01,
+      0.99
+    ],
+    "periodic_share": [
+      0.01,
+      0.99
+    ],
+    "beta": [
+      0.2,
+      12.0
+    ],
+    "side_bias": [
+      -2.0,
+      2.0
+    ]
+  },
+  "arms": {
+    "eig": {
+      "stimuli": [
+        {
+          "sequence_a": "THHHHT",
+          "sequence_b": "TTHTTH",
+          "eig": 0.38011749882048074
+        },
+        {
+          "sequence_a": "HTTTHH",
+          "sequence_b": "THTHTH",
+          "eig": 0.38011749882048074
+        },
+        {
+          "sequence_a": "HHHTTH",
+          "sequence_b": "THTHTH",
+          "eig": 0.3770591411084926
+        },
+        {
+          "sequence_a": "HHTHHTHH",
+          "sequence_b": "THHHTTTT",
+          "eig": 0.3737882448109452
+        },
+        {
+          "sequence_a": "HHTTTH",
+          "sequence_b": "THTTHT",
+          "eig": 0.36534819019971476
+        },
+        {
+          "sequence_a": "THHTTTTT",
+          "sequence_b": "THTTHTTH",
+          "eig": 0.34982558887728654
+        },
+        {
+          "sequence_a": "HHHTTTTH",
+          "sequence_b": "TTHTTTHT",
+          "eig": 0.3497873637185347
+        },
+        {
+          "sequence_a": "HHTTHHHH",
+          "sequence_b": "TTHHTTHH",
+          "eig": 0.3362300199209848
+        },
+        {
+          "sequence_a": "HTTHTT",
+          "sequence_b": "HTTTTT",
+          "eig": 0.330134726991275
+        },
+        {
+          "sequence_a": "HHHHHT",
+          "sequence_b": "TTHTTH",
+          "eig": 0.330134726991275
+        },
+        {
+          "sequence_a": "TTHHTH",
+          "sequence_b": "TTTHHH",
+          "eig": 0.32862373186912286
+        },
+        {
+          "sequence_a": "HHTTHT",
+          "sequence_b": "TTTHHH",
+          "eig": 0.32862373186912286
+        },
+        {
+          "sequence_a": "HHHTTT",
+          "sequence_b": "HHTHTT",
+          "eig": 0.32862373186912264
+        },
+        {
+          "sequence_a": "HHHTHHHT",
+          "sequence_b": "THHTTTTT",
+          "eig": 0.3280581179916555
+        },
+        {
+          "sequence_a": "HHTHHTHT",
+          "sequence_b": "TTTTHHHT",
+          "eig": 0.3280581179916554
+        },
+        {
+          "sequence_a": "THTTTHTH",
+          "sequence_b": "TTTTTHHH",
+          "eig": 0.3280581179916554
+        },
+        {
+          "sequence_a": "THHHTTTT",
+          "sequence_b": "THHTHHTT",
+          "eig": 0.3265530792658795
+        },
+        {
+          "sequence_a": "HHHHTTHH",
+          "sequence_b": "THTTHTTH",
+          "eig": 0.3265530792658794
+        },
+        {
+          "sequence_a": "HHHHTHHT",
+          "sequence_b": "THHTHHTH",
+          "eig": 0.3265530792658794
+        },
+        {
+          "sequence_a": "HTHHHTHT",
+          "sequence_b": "TTTHHHHT",
+          "eig": 0.326093532078249
+        },
+        {
+          "sequence_a": "THTTTHTT",
+          "sequence_b": "TTHTHHHH",
+          "eig": 0.326093532078249
+        },
+        {
+          "sequence_a": "THHHTTHT",
+          "sequence_b": "TTHTTHTT",
+          "eig": 0.3234012129525059
+        },
+        {
+          "sequence_a": "HTHHTHHT",
+          "sequence_b": "TTHHHTTT",
+          "eig": 0.32179537266501956
+        },
+        {
+          "sequence_a": "HHTHHTTH",
+          "sequence_b": "THHHHHTT",
+          "eig": 0.312405059380489
+        },
+        {
+          "sequence_a": "THHTTH",
+          "sequence_b": "TTTTHH",
+          "eig": 0.31214157678388066
+        }
+      ],
+      "mean_stimulus_eig": 0.3377671229431135,
+      "runs": [
+        {
+          "repeat": 0,
+          "true_params": {
+            "longrun_weight": 0.523362,
+            "periodic_share": 0.846892,
+            "beta": 0.532981,
+            "side_bias": -0.338662
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.3811944109037513,
+            "periodic_share": 0.6024789917130843,
+            "beta": 1.1725756205190003,
+            "side_bias": -0.39441429825802843
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.2699199768144687,
+            "periodic_share": 0.2979440814549652,
+            "beta": 1.173124653312343,
+            "side_bias": 0.3289970222312232
+          },
+          "final_entropy_bits": 7.188948391478533
+        },
+        {
+          "repeat": 1,
+          "true_params": {
+            "longrun_weight": 0.199649,
+            "periodic_share": 0.16407,
+            "beta": 9.242164,
+            "side_bias": 1.7763
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.3164389802209632,
+            "periodic_share": 0.21532577708261488,
+            "beta": 5.984477505713139,
+            "side_bias": 1.1700994751522154
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.19903557326936086,
+            "periodic_share": 0.2106245755159844,
+            "beta": 2.1079814855282764,
+            "side_bias": 0.3550619296742417
+          },
+          "final_entropy_bits": 6.459790351522307
+        },
+        {
+          "repeat": 2,
+          "true_params": {
+            "longrun_weight": 0.890214,
+            "periodic_share": 0.555242,
+            "beta": 4.395534,
+            "side_bias": 0.648808
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.869362537330681,
+            "periodic_share": 0.463465687928321,
+            "beta": 4.216969797639096,
+            "side_bias": 0.8187690035817508
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.12152205000648916,
+            "periodic_share": 0.3245064897336723,
+            "beta": 1.4939209867613388,
+            "side_bias": 0.29618234644292957
+          },
+          "final_entropy_bits": 6.334211441047963
+        },
+        {
+          "repeat": 3,
+          "true_params": {
+            "longrun_weight": 0.104802,
+            "periodic_share": 0.940055,
+            "beta": 11.509949,
+            "side_bias": 1.82108
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.0831893774396247,
+            "periodic_share": 0.8240802257180624,
+            "beta": 10.399545104648475,
+            "side_bias": 1.5137055787873543
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.09211881648486744,
+            "periodic_share": 0.13056692735984915,
+            "beta": 1.7194920964524694,
+            "side_bias": 0.4925066180703963
+          },
+          "final_entropy_bits": 5.240941227672891
+        },
+        {
+          "repeat": 4,
+          "true_params": {
+            "longrun_weight": 0.852581,
+            "periodic_share": 0.968241,
+            "beta": 0.375533,
+            "side_bias": -1.892518
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.4998115345429912,
+            "periodic_share": 0.5023192284302999,
+            "beta": 0.7004425453175194,
+            "side_bias": -1.4029220819260875
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.3061817454494366,
+            "periodic_share": 0.3219360991406353,
+            "beta": 0.96267049374704,
+            "side_bias": 0.2513101693506918
+          },
+          "final_entropy_bits": 7.086869820428769
+        },
+        {
+          "repeat": 5,
+          "true_params": {
+            "longrun_weight": 0.174617,
+            "periodic_share": 0.790869,
+            "beta": 7.950033,
+            "side_bias": 1.954054
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.358648295319495,
+            "periodic_share": 0.8026399080184472,
+            "beta": 10.78723328235634,
+            "side_bias": 1.789591642318324
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.12570073683489613,
+            "periodic_share": 0.17234296525357487,
+            "beta": 1.6102255657463043,
+            "side_bias": 0.31991367287829564
+          },
+          "final_entropy_bits": 4.624387275504399
+        },
+        {
+          "repeat": 6,
+          "true_params": {
+            "longrun_weight": 0.381206,
+            "periodic_share": 0.921101,
+            "beta": 11.595961,
+            "side_bias": 1.855774
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.2619349751445563,
+            "periodic_share": 0.8327091133263408,
+            "beta": 9.668175428013459,
+            "side_bias": 1.9454354383103944
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.11755046652597022,
+            "periodic_share": 0.14529534878258624,
+            "beta": 1.9621529311077344,
+            "side_bias": 0.18434762595874674
+          },
+          "final_entropy_bits": 4.569793370289093
+        },
+        {
+          "repeat": 7,
+          "true_params": {
+            "longrun_weight": 0.042345,
+            "periodic_share": 0.506156,
+            "beta": 9.792655,
+            "side_bias": -1.436683
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.1707176240992906,
+            "periodic_share": 0.709213361653247,
+            "beta": 9.966056626625246,
+            "side_bias": -1.5776650153566925
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.12333381453145549,
+            "periodic_share": 0.14422529981247464,
+            "beta": 1.9718733279419949,
+            "side_bias": 0.406630173611444
+          },
+          "final_entropy_bits": 5.217286784462298
+        },
+        {
+          "repeat": 8,
+          "true_params": {
+            "longrun_weight": 0.881498,
+            "periodic_share": 0.203761,
+            "beta": 1.015691,
+            "side_bias": -0.105419
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.8037562080378309,
+            "periodic_share": 0.43582333648382987,
+            "beta": 2.272485725386401,
+            "side_bias": 0.12472372966735941
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.20032572197430115,
+            "periodic_share": 0.32388696260727556,
+            "beta": 1.086576406079514,
+            "side_bias": 0.26355002691323676
+          },
+          "final_entropy_bits": 6.42171558407473
+        },
+        {
+          "repeat": 9,
+          "true_params": {
+            "longrun_weight": 0.936509,
+            "periodic_share": 0.231639,
+            "beta": 11.127719,
+            "side_bias": 1.088692
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.9567254478676678,
+            "periodic_share": 0.45317567445997176,
+            "beta": 7.946277293225935,
+            "side_bias": 0.6920536345502892
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.06756293564514186,
+            "periodic_share": 0.3249418341145783,
+            "beta": 1.6961732828616038,
+            "side_bias": 0.3757777881266212
+          },
+          "final_entropy_bits": 6.235615685273698
+        },
+        {
+          "repeat": 10,
+          "true_params": {
+            "longrun_weight": 0.959222,
+            "periodic_share": 0.747664,
+            "beta": 6.437522,
+            "side_bias": -0.470531
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.9076719389972542,
+            "periodic_share": 0.4204902198962265,
+            "beta": 4.270205292372669,
+            "side_bias": -0.48048770579850775
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.10866561728865747,
+            "periodic_share": 0.3236761190967161,
+            "beta": 1.2263772817709313,
+            "side_bias": 0.3107697436704873
+          },
+          "final_entropy_bits": 6.067924620923891
+        },
+        {
+          "repeat": 11,
+          "true_params": {
+            "longrun_weight": 0.825607,
+            "periodic_share": 0.409428,
+            "beta": 11.21595,
+            "side_bias": -0.249913
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.9734138568155599,
+            "periodic_share": 0.46556408416527223,
+            "beta": 10.807661198560814,
+            "side_bias": -1.0373435226498795
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.04965431855977147,
+            "periodic_share": 0.3305897338281634,
+            "beta": 1.4190053677023176,
+            "side_bias": 0.4524539596272019
+          },
+          "final_entropy_bits": 5.949429777942486
+        },
+        {
+          "repeat": 12,
+          "true_params": {
+            "longrun_weight": 0.159556,
+            "periodic_share": 0.306458,
+            "beta": 6.477474,
+            "side_bias": 0.100441
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.148097680683207,
+            "periodic_share": 0.3175583252117908,
+            "beta": 6.329947866181882,
+            "side_bias": 0.018493774171783266
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.1411853018374869,
+            "periodic_share": 0.15041316393612966,
+            "beta": 1.8390314553010347,
+            "side_bias": 0.24224315694203408
+          },
+          "final_entropy_bits": 5.2033467965653575
+        },
+        {
+          "repeat": 13,
+          "true_params": {
+            "longrun_weight": 0.773961,
+            "periodic_share": 0.948051,
+            "beta": 0.842229,
+            "side_bias": 0.873792
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.5795336332784913,
+            "periodic_share": 0.5628168528690677,
+            "beta": 1.3906815355808733,
+            "side_bias": 0.5090779955220458
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.26973440571397483,
+            "periodic_share": 0.31809384655951717,
+            "beta": 1.4722765527209882,
+            "side_bias": 0.2866423557653906
+          },
+          "final_entropy_bits": 7.299242781620633
+        },
+        {
+          "repeat": 14,
+          "true_params": {
+            "longrun_weight": 0.513151,
+            "periodic_share": 0.819501,
+            "beta": 3.805951,
+            "side_bias": 0.216259
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.5000379181153201,
+            "periodic_share": 0.537494968159206,
+            "beta": 2.525237988163396,
+            "side_bias": -0.15567847138182295
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.23282453315203472,
+            "periodic_share": 0.30642732080949886,
+            "beta": 1.754262032018255,
+            "side_bias": 0.28416731581180577
+          },
+          "final_entropy_bits": 7.247246518626168
+        },
+        {
+          "repeat": 15,
+          "true_params": {
+            "longrun_weight": 0.096745,
+            "periodic_share": 0.913937,
+            "beta": 4.434049,
+            "side_bias": -1.22357
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.14005028244369827,
+            "periodic_share": 0.9176465438194891,
+            "beta": 4.412566357879346,
+            "side_bias": -0.4299702959670222
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.11874902292049885,
+            "periodic_share": 0.10361280286525931,
+            "beta": 1.3558069464910185,
+            "side_bias": 0.36116089019723147
+          },
+          "final_entropy_bits": 4.630352137501246
+        },
+        {
+          "repeat": 16,
+          "true_params": {
+            "longrun_weight": 0.407015,
+            "periodic_share": 0.554706,
+            "beta": 7.226713,
+            "side_bias": 1.63031
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.2487415678724978,
+            "periodic_share": 0.4656360202509228,
+            "beta": 5.926375270473362,
+            "side_bias": 1.7920233199672642
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.17727999948969325,
+            "periodic_share": 0.21647819264280163,
+            "beta": 2.277933665537238,
+            "side_bias": 0.31207643949353747
+          },
+          "final_entropy_bits": 6.405284341130751
+        },
+        {
+          "repeat": 17,
+          "true_params": {
+            "longrun_weight": 0.358785,
+            "periodic_share": 0.833312,
+            "beta": 9.182623,
+            "side_bias": 0.911516
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.14295747574229678,
+            "periodic_share": 0.8855758755158115,
+            "beta": 8.680709858530895,
+            "side_bias": 1.7406792014385084
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.11577462664271691,
+            "periodic_share": 0.12183389927831172,
+            "beta": 2.0565585187496174,
+            "side_bias": 0.3705630221458414
+          },
+          "final_entropy_bits": 5.149236263500357
+        },
+        {
+          "repeat": 18,
+          "true_params": {
+            "longrun_weight": 0.424272,
+            "periodic_share": 0.270888,
+            "beta": 2.267181,
+            "side_bias": 0.239628
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.6390710819683412,
+            "periodic_share": 0.5148405439420332,
+            "beta": 1.5414606916210671,
+            "side_bias": -0.01874995473705445
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.2608767289204126,
+            "periodic_share": 0.31995507427760284,
+            "beta": 1.3426897882014808,
+            "side_bias": 0.14475489257623164
+          },
+          "final_entropy_bits": 6.783096430871817
+        },
+        {
+          "repeat": 19,
+          "true_params": {
+            "longrun_weight": 0.714315,
+            "periodic_share": 0.675638,
+            "beta": 1.287767,
+            "side_bias": 1.789451
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.6378890190164823,
+            "periodic_share": 0.5847317550259714,
+            "beta": 2.676708611442463,
+            "side_bias": 1.7926793298484447
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.2390872162839953,
+            "periodic_share": 0.31500854397747097,
+            "beta": 2.2146547917888886,
+            "side_bias": 0.30977378453208665
+          },
+          "final_entropy_bits": 7.601262211254968
+        }
+      ],
+      "summary": {
+        "longrun_weight": {
+          "pearson_r": 0.8920683580073152,
+          "rmse": 0.14462386906386343,
+          "bias": -0.03000840770799996,
+          "mean_posterior_sd": 0.16685418041728148
+        },
+        "periodic_share": {
+          "pearson_r": 0.6806240069531724,
+          "rmse": 0.20858353744385316,
+          "bias": -0.054701125316499496,
+          "mean_posterior_sd": 0.24511796405235337
+        },
+        "beta": {
+          "pearson_r": 0.9309088425942075,
+          "rmse": 1.5348472654664327,
+          "bias": -0.4519942699874312,
+          "mean_posterior_sd": 1.6371393814910191
+        },
+        "side_bias": {
+          "pearson_r": 0.935756136007372,
+          "rmse": 0.40665439661246683,
+          "bias": -0.03893541113796806,
+          "mean_posterior_sd": 0.31744414670098375
+        }
+      }
+    },
+    "random": {
+      "stimuli": [
+        {
+          "sequence_a": "HHHHHH",
+          "sequence_b": "HHHTTT",
+          "eig": 0.24427766329891987
+        },
+        {
+          "sequence_a": "THHTHH",
+          "sequence_b": "TTTTTT",
+          "eig": 0.26853395221069193
+        },
+        {
+          "sequence_a": "THTHHH",
+          "sequence_b": "TTHTTH",
+          "eig": 0.28288618402717947
+        },
+        {
+          "sequence_a": "TTTHTT",
+          "sequence_b": "TTTTTH",
+          "eig": 0.2685764399048989
+        },
+        {
+          "sequence_a": "HHHTHT",
+          "sequence_b": "TTTTTH",
+          "eig": 0.2406921560309906
+        },
+        {
+          "sequence_a": "HHHHTHHH",
+          "sequence_b": "THHHTTHT",
+          "eig": 0.25595694665671287
+        },
+        {
+          "sequence_a": "HHHHHTHH",
+          "sequence_b": "HHHTHHTT",
+          "eig": 0.25085932610273654
+        },
+        {
+          "sequence_a": "HHHTTH",
+          "sequence_b": "THTHTH",
+          "eig": 0.3770591411084926
+        },
+        {
+          "sequence_a": "HTHTHT",
+          "sequence_b": "THTHTH",
+          "eig": 0.2314362937568557
+        },
+        {
+          "sequence_a": "HTHTTH",
+          "sequence_b": "THTHHT",
+          "eig": 0.2314362937568557
+        },
+        {
+          "sequence_a": "HHTHHTTH",
+          "sequence_b": "THHTHHTH",
+          "eig": 0.24237121961986485
+        },
+        {
+          "sequence_a": "THTTTHTH",
+          "sequence_b": "TTTTTHHH",
+          "eig": 0.3280581179916554
+        },
+        {
+          "sequence_a": "HHHHTH",
+          "sequence_b": "THTTHH",
+          "eig": 0.2604429676183833
+        },
+        {
+          "sequence_a": "HTHHHT",
+          "sequence_b": "TTTTTH",
+          "eig": 0.25375935603109034
+        },
+        {
+          "sequence_a": "HHTHHH",
+          "sequence_b": "TTTHHH",
+          "eig": 0.29477092789880366
+        },
+        {
+          "sequence_a": "TTHHHH",
+          "sequence_b": "TTHHTT",
+          "eig": 0.26857643990489877
+        },
+        {
+          "sequence_a": "HHTHTH",
+          "sequence_b": "TTHTHH",
+          "eig": 0.2766874901471713
+        },
+        {
+          "sequence_a": "THTTTH",
+          "sequence_b": "TTTHTT",
+          "eig": 0.24978713027182775
+        },
+        {
+          "sequence_a": "HHHHTT",
+          "sequence_b": "HHHTHT",
+          "eig": 0.2423363376466212
+        },
+        {
+          "sequence_a": "THHTTH",
+          "sequence_b": "TTTTHH",
+          "eig": 0.31214157678388066
+        },
+        {
+          "sequence_a": "HTHTTTTH",
+          "sequence_b": "THTHHHTT",
+          "eig": 0.2643583097776443
+        },
+        {
+          "sequence_a": "HHTTTHHT",
+          "sequence_b": "HTTHTTTH",
+          "eig": 0.24832782562464362
+        },
+        {
+          "sequence_a": "TTHTHTHH",
+          "sequence_b": "TTHTTTHH",
+          "eig": 0.23195650239274868
+        },
+        {
+          "sequence_a": "HHHTHT",
+          "sequence_b": "TTHHHH",
+          "eig": 0.24233633764662088
+        },
+        {
+          "sequence_a": "HTTHHH",
+          "sequence_b": "HTTTTH",
+          "eig": 0.24233633764662088
+        }
+      ],
+      "mean_stimulus_eig": 0.2643984509542724,
+      "runs": [
+        {
+          "repeat": 0,
+          "true_params": {
+            "longrun_weight": 0.523362,
+            "periodic_share": 0.846892,
+            "beta": 0.532981,
+            "side_bias": -0.338662
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.5044041568613448,
+            "periodic_share": 0.5391207092041765,
+            "beta": 0.25875163256871625,
+            "side_bias": -0.4747385185490506
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.32475665222668254,
+            "periodic_share": 0.3267854255517495,
+            "beta": 0.3361538674626071,
+            "side_bias": 0.30356306027618807
+          },
+          "final_entropy_bits": 6.6477503955909825
+        },
+        {
+          "repeat": 1,
+          "true_params": {
+            "longrun_weight": 0.199649,
+            "periodic_share": 0.16407,
+            "beta": 9.242164,
+            "side_bias": 1.7763
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.14003297265949863,
+            "periodic_share": 0.1523907649586171,
+            "beta": 7.955281754333626,
+            "side_bias": 1.5605962091379157
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.13312019027161603,
+            "periodic_share": 0.12469718366682729,
+            "beta": 1.9303037190980825,
+            "side_bias": 0.3723623401560703
+          },
+          "final_entropy_bits": 6.009774889575249
+        },
+        {
+          "repeat": 2,
+          "true_params": {
+            "longrun_weight": 0.890214,
+            "periodic_share": 0.555242,
+            "beta": 4.395534,
+            "side_bias": 0.648808
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.910687702478331,
+            "periodic_share": 0.4242077236972539,
+            "beta": 5.899939394153442,
+            "side_bias": 0.6908530962343135
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.11341719191303286,
+            "periodic_share": 0.3227849231162744,
+            "beta": 1.4612494349716993,
+            "side_bias": 0.2700622662076087
+          },
+          "final_entropy_bits": 6.336744814131752
+        },
+        {
+          "repeat": 3,
+          "true_params": {
+            "longrun_weight": 0.104802,
+            "periodic_share": 0.940055,
+            "beta": 11.509949,
+            "side_bias": 1.82108
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.13687010484433695,
+            "periodic_share": 0.9405531821616568,
+            "beta": 10.885280333626234,
+            "side_bias": 1.1677401044983808
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.09468133390101355,
+            "periodic_share": 0.07958930321216429,
+            "beta": 1.468391737329025,
+            "side_bias": 0.3694386355663859
+          },
+          "final_entropy_bits": 4.616014194281281
+        },
+        {
+          "repeat": 4,
+          "true_params": {
+            "longrun_weight": 0.852581,
+            "periodic_share": 0.968241,
+            "beta": 0.375533,
+            "side_bias": -1.892518
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.4848247211528036,
+            "periodic_share": 0.5233385781033204,
+            "beta": 0.25869326388390923,
+            "side_bias": -1.3972389740730167
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.32545194607698036,
+            "periodic_share": 0.3265805638812137,
+            "beta": 0.3373014380187759,
+            "side_bias": 0.24665113780172146
+          },
+          "final_entropy_bits": 6.4792893075431035
+        },
+        {
+          "repeat": 5,
+          "true_params": {
+            "longrun_weight": 0.174617,
+            "periodic_share": 0.790869,
+            "beta": 7.950033,
+            "side_bias": 1.954054
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.2732654915927873,
+            "periodic_share": 0.8438246670804216,
+            "beta": 7.320550595187378,
+            "side_bias": 1.6753265876929153
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.1434185807197274,
+            "periodic_share": 0.15264630760677497,
+            "beta": 2.1103635847505555,
+            "side_bias": 0.3447492954349559
+          },
+          "final_entropy_bits": 6.325242080321299
+        },
+        {
+          "repeat": 6,
+          "true_params": {
+            "longrun_weight": 0.381206,
+            "periodic_share": 0.921101,
+            "beta": 11.595961,
+            "side_bias": 1.855774
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.42461543236910526,
+            "periodic_share": 0.7905699074037711,
+            "beta": 10.71690304706787,
+            "side_bias": 1.5736247823859024
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.11304338865163281,
+            "periodic_share": 0.15986845780521405,
+            "beta": 1.5772091636595722,
+            "side_bias": 0.36220310153549173
+          },
+          "final_entropy_bits": 5.668294184846973
+        },
+        {
+          "repeat": 7,
+          "true_params": {
+            "longrun_weight": 0.042345,
+            "periodic_share": 0.506156,
+            "beta": 9.792655,
+            "side_bias": -1.436683
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.18455879727610394,
+            "periodic_share": 0.5990680074050414,
+            "beta": 8.995688364679914,
+            "side_bias": -1.4080490131859318
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.13875970621514813,
+            "periodic_share": 0.15202027661935094,
+            "beta": 2.1365525743038423,
+            "side_bias": 0.36054439303060865
+          },
+          "final_entropy_bits": 6.138646045083754
+        },
+        {
+          "repeat": 8,
+          "true_params": {
+            "longrun_weight": 0.881498,
+            "periodic_share": 0.203761,
+            "beta": 1.015691,
+            "side_bias": -0.105419
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.528201052462863,
+            "periodic_share": 0.49512926161310883,
+            "beta": 0.3531412708945092,
+            "side_bias": -0.37403460327226457
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.32280388197454546,
+            "periodic_share": 0.3255976243687349,
+            "beta": 0.5285358826783592,
+            "side_bias": 0.3316380799361687
+          },
+          "final_entropy_bits": 6.9795473349477755
+        },
+        {
+          "repeat": 9,
+          "true_params": {
+            "longrun_weight": 0.936509,
+            "periodic_share": 0.231639,
+            "beta": 11.127719,
+            "side_bias": 1.088692
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.8298363254037793,
+            "periodic_share": 0.6700224101833427,
+            "beta": 8.96974695233244,
+            "side_bias": 0.6812272847726999
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.1072674971440997,
+            "periodic_share": 0.29140005154327964,
+            "beta": 1.9809610905892918,
+            "side_bias": 0.31549916554254775
+          },
+          "final_entropy_bits": 6.7432916721857925
+        },
+        {
+          "repeat": 10,
+          "true_params": {
+            "longrun_weight": 0.959222,
+            "periodic_share": 0.747664,
+            "beta": 6.437522,
+            "side_bias": -0.470531
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.7623892844661684,
+            "periodic_share": 0.2837074393187319,
+            "beta": 6.191408507939943,
+            "side_bias": -0.26828371685333097
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.18242469160216923,
+            "periodic_share": 0.2883941297449716,
+            "beta": 1.528082249537186,
+            "side_bias": 0.33932590646322264
+          },
+          "final_entropy_bits": 7.003499448313129
+        },
+        {
+          "repeat": 11,
+          "true_params": {
+            "longrun_weight": 0.825607,
+            "periodic_share": 0.409428,
+            "beta": 11.21595,
+            "side_bias": -0.249913
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.8633286642104182,
+            "periodic_share": 0.45242549893819495,
+            "beta": 10.892922630119205,
+            "side_bias": 0.6342072603569713
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.1039706508441767,
+            "periodic_share": 0.30950959358187907,
+            "beta": 1.408349584272783,
+            "side_bias": 0.35330510769274626
+          },
+          "final_entropy_bits": 6.58294967411733
+        },
+        {
+          "repeat": 12,
+          "true_params": {
+            "longrun_weight": 0.159556,
+            "periodic_share": 0.306458,
+            "beta": 6.477474,
+            "side_bias": 0.100441
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.47032320556045315,
+            "periodic_share": 0.47129221086553574,
+            "beta": 7.249798372001992,
+            "side_bias": -0.29917657251983176
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.17419744804535212,
+            "periodic_share": 0.24826688047724982,
+            "beta": 2.112749014790595,
+            "side_bias": 0.34469094929215466
+          },
+          "final_entropy_bits": 7.300577327292499
+        },
+        {
+          "repeat": 13,
+          "true_params": {
+            "longrun_weight": 0.773961,
+            "periodic_share": 0.948051,
+            "beta": 0.842229,
+            "side_bias": 0.873792
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.3779769564288873,
+            "periodic_share": 0.6658426082250701,
+            "beta": 1.4433819170890752,
+            "side_bias": 0.6507114109994118
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.2851636420666264,
+            "periodic_share": 0.29916270811903556,
+            "beta": 1.0870659548931147,
+            "side_bias": 0.16753741118301319
+          },
+          "final_entropy_bits": 6.603198949679848
+        },
+        {
+          "repeat": 14,
+          "true_params": {
+            "longrun_weight": 0.513151,
+            "periodic_share": 0.819501,
+            "beta": 3.805951,
+            "side_bias": 0.216259
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.6609693646284331,
+            "periodic_share": 0.5047480854011664,
+            "beta": 2.3418376394101905,
+            "side_bias": 0.2192469374245702
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.2541345339293577,
+            "periodic_share": 0.31723948803925767,
+            "beta": 0.9443551941173937,
+            "side_bias": 0.31493148946994975
+          },
+          "final_entropy_bits": 7.139155192392348
+        },
+        {
+          "repeat": 15,
+          "true_params": {
+            "longrun_weight": 0.096745,
+            "periodic_share": 0.913937,
+            "beta": 4.434049,
+            "side_bias": -1.22357
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.15022694174508386,
+            "periodic_share": 0.7747210589032897,
+            "beta": 5.5532552527736225,
+            "side_bias": -0.9042107653385622
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.13437810680763665,
+            "periodic_share": 0.16028855282018017,
+            "beta": 1.882786540951978,
+            "side_bias": 0.33780011244471553
+          },
+          "final_entropy_bits": 6.081775219323288
+        },
+        {
+          "repeat": 16,
+          "true_params": {
+            "longrun_weight": 0.407015,
+            "periodic_share": 0.554706,
+            "beta": 7.226713,
+            "side_bias": 1.63031
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.5806764519579001,
+            "periodic_share": 0.43273116590932736,
+            "beta": 8.94139372205608,
+            "side_bias": 1.7643553917682344
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.14257969264882384,
+            "periodic_share": 0.2557816889852076,
+            "beta": 2.0009907385378582,
+            "side_bias": 0.32980741309471284
+          },
+          "final_entropy_bits": 6.892261243636874
+        },
+        {
+          "repeat": 17,
+          "true_params": {
+            "longrun_weight": 0.358785,
+            "periodic_share": 0.833312,
+            "beta": 9.182623,
+            "side_bias": 0.911516
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.2985650742840035,
+            "periodic_share": 0.7948268657911154,
+            "beta": 10.446339734835409,
+            "side_bias": 1.0629928351313591
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.12185209955712642,
+            "periodic_share": 0.14227682875384948,
+            "beta": 1.6807430748525942,
+            "side_bias": 0.3702947496767144
+          },
+          "final_entropy_bits": 5.816957226682172
+        },
+        {
+          "repeat": 18,
+          "true_params": {
+            "longrun_weight": 0.424272,
+            "periodic_share": 0.270888,
+            "beta": 2.267181,
+            "side_bias": 0.239628
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.641969570008658,
+            "periodic_share": 0.5102770306269698,
+            "beta": 1.69485119358971,
+            "side_bias": -0.01036759183174051
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.2777531618588035,
+            "periodic_share": 0.3183196023190148,
+            "beta": 0.9877730813159148,
+            "side_bias": 0.14382139594741863
+          },
+          "final_entropy_bits": 6.700647544869673
+        },
+        {
+          "repeat": 19,
+          "true_params": {
+            "longrun_weight": 0.714315,
+            "periodic_share": 0.675638,
+            "beta": 1.287767,
+            "side_bias": 1.789451
+          },
+          "posterior_mean": {
+            "longrun_weight": 0.4339106827400675,
+            "periodic_share": 0.5900508456097098,
+            "beta": 1.06901306168389,
+            "side_bias": 1.7332843089718897
+          },
+          "posterior_sd": {
+            "longrun_weight": 0.3095320006716889,
+            "periodic_share": 0.3188878928321286,
+            "beta": 1.044169731764406,
+            "side_bias": 0.32839010173186894
+          },
+          "final_entropy_bits": 7.436351200942783
+        }
+      ],
+      "summary": {
+        "longrun_weight": {
+          "pearson_r": 0.7760719546276563,
+          "rmse": 0.19833102980333833,
+          "bias": -0.028088952343448666,
+          "mean_posterior_sd": 0.190135319856312
+        },
+        "periodic_share": {
+          "pearson_r": 0.5538045776196581,
+          "rmse": 0.23862908808711653,
+          "bias": -0.05743804893000892,
+          "mean_posterior_sd": 0.2460048741522179
+        },
+        "beta": {
+          "pearson_r": 0.9674177373673357,
+          "rmse": 1.0180837770899813,
+          "bias": -0.1638750179886423,
+          "mean_posterior_sd": 1.4272043828947816
+        },
+        "side_bias": {
+          "pearson_r": 0.9582851871883475,
+          "rmse": 0.34466381098771054,
+          "bias": -0.04553712731245825,
+          "mean_posterior_sd": 0.3153308056242132
+        }
+      }
+    }
+  }
+}

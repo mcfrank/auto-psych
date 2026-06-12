@@ -7,7 +7,6 @@ lists, optionality, defaults) cannot silently regress.
 
 from __future__ import annotations
 
-import os
 import subprocess
 import sys
 from pathlib import Path
@@ -132,11 +131,9 @@ def test_inner_run_cli_required_paths():
     ],
 )
 def test_cli_module_help_runs(module, expected_flag):
-    env = {**os.environ, "PYTENSOR_FLAGS": "cxx="}
     result = subprocess.run(
         [sys.executable, "-m", module, "--help"],
         cwd=REPO_ROOT,
-        env=env,
         capture_output=True,
         text=True,
         timeout=120,
