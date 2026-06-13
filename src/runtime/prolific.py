@@ -152,7 +152,7 @@ def get_study(study_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
     try:
         r = requests.get(f"{_BASE}/studies/{study_id}/", headers=_headers(), timeout=30)
         if r.status_code != 200:
-            return (None, f"GET /studies/{id}/ {r.status_code}: {r.text[:500]}")
+            return (None, f"GET /studies/{study_id}/ {r.status_code}: {r.text[:500]}")
         return (r.json(), None)
     except Exception as e:
         return (None, str(e))
@@ -171,7 +171,7 @@ def get_submission_counts(
         if r.status_code != 200:
             return (
                 None,
-                f"GET /studies/{id}/submissions/counts/ {r.status_code}: {r.text[:500]}",
+                f"GET /studies/{study_id}/submissions/counts/ {r.status_code}: {r.text[:500]}",
             )
         return (r.json(), None)
     except Exception as e:

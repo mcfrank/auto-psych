@@ -42,10 +42,13 @@
       if (!r.ok) { console.warn('[auto-psych] /auto_psych_config.json failed:', r.status); return null; }
       return r.json();
     }).then(function(cfg){
-      if (cfg && cfg.project_id != null && cfg.run_id != null) {
-        var payload = { run_id: cfg.run_id, project_id: cfg.project_id,
+      if (cfg && (cfg.collection_session_id || (cfg.project_id != null && cfg.run_id != null))) {
+        var payload = Object.assign({}, cfg, {
           participant_id: (typeof window !== 'undefined' && window.__participantId != null) ? window.__participantId : Date.now(),
-          trials: data };
+          trials: data,
+          submitted_at_client: new Date().toISOString(),
+          user_agent: navigator.userAgent
+        });
         fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
           .then(function(res){
             console.log('[auto-psych] POST /submit', res.status, res.ok ? 'OK' : 'FAIL');
@@ -53,7 +56,7 @@
           })
           .catch(function(e){ console.warn('[auto-psych] POST /submit error', e); });
       } else {
-        console.log('[auto-psych] No Firebase config (project_id/run_id); skipping POST /submit');
+        console.log('[auto-psych] No Firebase config (collection_session_id or project_id/run_id); skipping POST /submit');
       }
     }).catch(function(e){ console.warn('[auto-psych] Config fetch error', e); });
   };
