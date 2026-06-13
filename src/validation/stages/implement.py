@@ -8,7 +8,9 @@ from src.validation.types import Validated
 
 def validate_implementer_output(run_dir: Path) -> Validated:
     run_dir = Path(run_dir)
-    impl_dir = run_dir / "3_implement"
+    impl_dir = run_dir / "experiment"
+    if not impl_dir.exists():
+        impl_dir = run_dir / "3_implement"
     index_path = impl_dir / "index.html"
     config_path = impl_dir / "config.json"
     details: Dict[str, Any] = {}
