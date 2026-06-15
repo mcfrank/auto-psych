@@ -1,0 +1,22 @@
+models:
+- name: prototype_similarity
+  rationale: Random-looking sequences are close to a prototype with balanced H/T counts
+    and an ideal alternation rate.
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+    long runs, periodic templates, and imbalance.'
+- name: inferred_mixture_model
+  rationale: A variant of the Bayesian mixture model that infers the parameters of
+    the alternative hypotheses (alternating Markov, streaky Markov, and biased coin)
+    rather than keeping them hardcoded.
+- name: unnormalized_mixture_model
+  rationale: A variant of the inner loop model that does not normalize log probabilities
+    by sequence length, to test if length normalization was the critical success factor.
+- name: feature_heuristic_model
+  rationale: A simple heuristic model that directly weights observable features (alternation
+    proportion, imbalance, and max run length) using a linear combination.
+- name: fair_vs_alternating
+  rationale: A simpler variant of the Bayesian model that only contrasts a fair coin
+    against an alternating Markov process, omitting streaky and biased alternatives.
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

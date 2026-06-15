@@ -1,0 +1,15 @@
+models:
+- name: encoding_compressibility
+- name: bayesian_diagnosticity
+- name: length_sensitive_prototype
+- name: asymmetric_alternation_prototype
+- name: inner_loop_model
+- name: runs_test_model
+- name: periodicity_salience
+- name: iter0_candidate0
+- name: iter0_candidate1
+- name: iter0_candidate2
+- name: iter1_candidate0
+- name: iter1_candidate1
+- name: iter1_candidate2
+  rationale: Inner-loop candidate from round 1.

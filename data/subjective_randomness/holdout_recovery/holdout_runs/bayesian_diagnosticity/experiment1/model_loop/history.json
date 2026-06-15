@@ -1,0 +1,57 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "prototype_similarity",
+    "posteriors": {
+      "prototype_similarity": 1.0,
+      "encoding_compressibility": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -537.7933,
+      "encoding_compressibility": -606.7915
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "iter0_candidate1",
+    "posteriors": {
+      "prototype_similarity": 0.001837,
+      "encoding_compressibility": 0.0,
+      "iter0_candidate0": 0.000732,
+      "iter0_candidate1": 0.997431,
+      "iter0_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -537.7933,
+      "encoding_compressibility": -606.7915,
+      "iter0_candidate0": -538.7139,
+      "iter0_candidate1": -531.4965,
+      "iter0_candidate2": -624.8361
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "iter0_candidate1",
+    "posteriors": {
+      "prototype_similarity": 0.000869,
+      "encoding_compressibility": 0.0,
+      "iter0_candidate0": 0.000346,
+      "iter0_candidate1": 0.471537,
+      "iter0_candidate2": 0.0,
+      "iter1_candidate1": 0.094763,
+      "iter1_candidate2": 0.432485
+    },
+    "elpd_loo": {
+      "prototype_similarity": -537.7933,
+      "encoding_compressibility": -606.7915,
+      "iter0_candidate0": -538.7139,
+      "iter0_candidate1": -531.4965,
+      "iter0_candidate2": -624.8361,
+      "iter1_candidate1": -533.1011,
+      "iter1_candidate2": -531.5829
+    }
+  }
+]

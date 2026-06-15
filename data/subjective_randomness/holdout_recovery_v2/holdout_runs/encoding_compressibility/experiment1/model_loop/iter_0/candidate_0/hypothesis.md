@@ -1,0 +1,1 @@
+People choose the sequence that is harder to compress. A sequence with high periodicity can be described compactly as a repeating pattern, which makes it feel structured and non-random. The sequence with lower periodicity resists this kind of compact description and therefore appears more random.

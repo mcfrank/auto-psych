@@ -17,6 +17,7 @@ import src.subjective_randomness.model_recovery as model_recovery
 from src.subjective_randomness.model_recovery import (
     confusion_tidy_rows,
     default_generating_params,
+    feature_rows,
     generate_responses,
     p_left_fixed_params,
     p_left_model_family,
@@ -25,6 +26,7 @@ from src.subjective_randomness.model_recovery import (
     run_recovery_from_config,
     write_responses_csv,
 )
+from src.subjective_randomness.features import featurize_stimulus
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 SEED_MODELS_DIR = (
@@ -43,6 +45,28 @@ PROTOTYPE_PARAMS = {
     "beta": 4.0,
     "side_bias": 0.0,
 }
+
+
+# ── feature_rows (public: consumed by holdout_recovery) ─────────────
+
+
+def test_feature_rows_carries_sequences_features_and_dummy_response():
+    rows = feature_rows(STIMULI)
+    assert len(rows) == len(STIMULI)
+    for stim, row in zip(STIMULI, rows):
+        assert row["sequence_a"] == stim["sequence_a"]
+        assert row["sequence_b"] == stim["sequence_b"]
+        # The dummy observed-response column exists (PyMC models declare it as
+        # a pm.Data input) but carries no information.
+        assert row["chose_left"] == 0
+        # Every derived feature matches the canonical featurizer exactly.
+        expected = featurize_stimulus(stim["sequence_a"], stim["sequence_b"])
+        assert {k: row[k] for k in expected} == expected
+
+
+def test_feature_rows_rejects_empty_stimuli():
+    with pytest.raises(ValueError, match="No stimuli"):
+        feature_rows([])
 
 
 def test_p_left_fixed_params_is_deterministic_and_valid():

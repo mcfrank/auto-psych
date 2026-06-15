@@ -21,7 +21,9 @@ def _seed(exp_dir: Path, names) -> Path:
     models_dir.mkdir(parents=True)
     for name in names:
         shutil.copyfile(FIXTURE_DIR / f"{name}.py", models_dir / f"{name}.py")
-    manifest = "models:\n" + "".join(f"  - name: {n}\n" for n in names)
+    manifest = "models:\n" + "".join(
+        f"  - name: {n}\n    rationale: People use mechanism {n}.\n" for n in names
+    )
     (models_dir / "models_manifest.yaml").write_text(manifest, encoding="utf-8")
     return models_dir
 
@@ -43,7 +45,8 @@ def test_manifest_model_without_file_fails(tmp_path):
     models_dir = tmp_path / "cognitive_models"
     models_dir.mkdir(parents=True)
     (models_dir / "models_manifest.yaml").write_text(
-        "models:\n  - name: ghost\n", encoding="utf-8"
+        "models:\n  - name: ghost\n    rationale: People use ghost.\n",
+        encoding="utf-8",
     )
     ok, msg = _validate_theory(tmp_path)
     assert not ok
@@ -63,8 +66,22 @@ def test_model_without_observed_rv_fails(tmp_path):
         encoding="utf-8",
     )
     (models_dir / "models_manifest.yaml").write_text(
-        "models:\n  - name: no_obs\n", encoding="utf-8"
+        "models:\n  - name: no_obs\n    rationale: People use no_obs.\n",
+        encoding="utf-8",
     )
     ok, msg = _validate_theory(tmp_path)
     assert not ok
     assert "no_obs" in msg
+
+
+def test_model_without_rationale_fails(tmp_path):
+    """A model that states no hypothesis (empty manifest rationale) is rejected."""
+    _seed(tmp_path, ["bayesian_fair_coin"])
+    # Drop the rationale → the model no longer states a hypothesis.
+    (tmp_path / "cognitive_models" / "models_manifest.yaml").write_text(
+        "models:\n  - name: bayesian_fair_coin\n", encoding="utf-8"
+    )
+    ok, msg = _validate_theory(tmp_path)
+    assert not ok
+    assert "bayesian_fair_coin" in msg
+    assert "hypothesis" in msg.lower()

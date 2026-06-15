@@ -1,0 +1,17 @@
+{
+  "posteriors": {
+    "encoding_compressibility": 0.189978,
+    "bayesian_diagnosticity": 0.163982,
+    "iter0_candidate0": 0.181442,
+    "iter0_candidate1": 0.323414,
+    "iter0_candidate2": 0.141184
+  },
+  "elpd_loo": {
+    "encoding_compressibility": -167.3,
+    "bayesian_diagnosticity": -167.4471,
+    "iter0_candidate0": -167.346,
+    "iter0_candidate1": -166.768,
+    "iter0_candidate2": -167.5968
+  },
+  "n_trials": 600
+}

@@ -68,7 +68,7 @@ def sample_true_params(
     }
 
 
-def _pearson_r(xs: Sequence[float], ys: Sequence[float]) -> float | None:
+def pearson_r(xs: Sequence[float], ys: Sequence[float]) -> float | None:
     """Pearson correlation, or ``None`` when undefined (n < 2 or zero variance).
 
     Variance is judged by distinct values, not the moment sums: a constant
@@ -105,7 +105,7 @@ def summarize_paired_recovery(
         ests = [e for _, e in pairs]
         errors = [e - t for t, e in pairs]
         constant_truth = len(set(trues)) == 1
-        pearson = _pearson_r(trues, ests)
+        pearson = pearson_r(trues, ests)
         summary[name] = {
             "true": trues[0] if constant_truth else None,
             "mean_estimate": round(sum(ests) / len(ests), 6),

@@ -1,0 +1,87 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "inferred_mixture_model": 0.474081,
+      "unnormalized_mixture_model": 0.0,
+      "inner_loop_model": 0.525918,
+      "feature_heuristic_model": 0.0,
+      "fair_vs_alternating": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1718.8619,
+      "encoding_compressibility": -1833.0692,
+      "inferred_mixture_model": -1702.7454,
+      "unnormalized_mixture_model": -13831.5988,
+      "inner_loop_model": -1702.6416,
+      "feature_heuristic_model": -1780.4529,
+      "fair_vs_alternating": -1870.1684
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "inferred_mixture_model": 0.341659,
+      "unnormalized_mixture_model": 0.0,
+      "inner_loop_model": 0.379017,
+      "feature_heuristic_model": 0.0,
+      "fair_vs_alternating": 0.0,
+      "iter0_candidate0": 0.274301,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.005023
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1718.8619,
+      "encoding_compressibility": -1833.0692,
+      "inferred_mixture_model": -1702.7454,
+      "unnormalized_mixture_model": -13831.5988,
+      "inner_loop_model": -1702.6416,
+      "feature_heuristic_model": -1780.4529,
+      "fair_vs_alternating": -1870.1684,
+      "iter0_candidate0": -1702.965,
+      "iter0_candidate1": -1725.3253,
+      "iter0_candidate2": -1706.9653
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "inferred_mixture_model": 0.341659,
+      "unnormalized_mixture_model": 0.0,
+      "inner_loop_model": 0.379017,
+      "feature_heuristic_model": 0.0,
+      "fair_vs_alternating": 0.0,
+      "iter0_candidate0": 0.274301,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.005023,
+      "iter1_candidate0": 0.0,
+      "iter1_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1718.8619,
+      "encoding_compressibility": -1833.0692,
+      "inferred_mixture_model": -1702.7454,
+      "unnormalized_mixture_model": -13831.5988,
+      "inner_loop_model": -1702.6416,
+      "feature_heuristic_model": -1780.4529,
+      "fair_vs_alternating": -1870.1684,
+      "iter0_candidate0": -1702.965,
+      "iter0_candidate1": -1725.3253,
+      "iter0_candidate2": -1706.9653,
+      "iter1_candidate0": -1747.0737,
+      "iter1_candidate2": -1743.7352
+    }
+  }
+]

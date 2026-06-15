@@ -41,7 +41,10 @@ import tyro
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
-from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
+from src.pipelines.inner_loop.pymc_orchestrator import (
+    DEFAULT_COMPLEXITY_PRIOR_CONST,
+    run_pymc_inner_loop,
+)
 from src.runtime.coding_agent import select_backend
 
 
@@ -59,8 +62,9 @@ class Args:
     """Candidate-generation rounds. 0 = fit/compare the seed set only (no agent spawned)."""
     candidate_count: int = 3
     """Candidate models proposed per round (only used when --max-iterations > 0)."""
-    complexity_prior: float = 0.0
-    """Log-prior per model = CONST * complexity (negative penalises complex models)."""
+    complexity_prior: float = DEFAULT_COMPLEXITY_PRIOR_CONST
+    """Log-prior per model = CONST * non-comment line count (negative penalises
+    complex models). Defaults to a gentle Occam backstop; pass 0.0 to disable."""
     draws: int = 500
     """MCMC posterior draws per chain."""
     tune: int = 500

@@ -1,0 +1,71 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "encoding_compressibility": 0.273425,
+      "bayesian_diagnosticity": 0.272078,
+      "inner_loop_model": 0.454497,
+      "alternation_prototype": 0.0
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -509.9302,
+      "bayesian_diagnosticity": -508.6351,
+      "inner_loop_model": -507.822,
+      "alternation_prototype": -544.1047
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "iter0_candidate0",
+    "posteriors": {
+      "encoding_compressibility": 0.182763,
+      "bayesian_diagnosticity": 0.181863,
+      "inner_loop_model": 0.303795,
+      "alternation_prototype": 0.0,
+      "iter0_candidate0": 0.326827,
+      "iter0_candidate1": 0.004751,
+      "iter0_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -509.9302,
+      "bayesian_diagnosticity": -508.6351,
+      "inner_loop_model": -507.822,
+      "alternation_prototype": -544.1047,
+      "iter0_candidate0": -507.799,
+      "iter0_candidate1": -514.58,
+      "iter0_candidate2": -564.1431
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "iter0_candidate0",
+    "posteriors": {
+      "encoding_compressibility": 0.140984,
+      "bayesian_diagnosticity": 0.140289,
+      "inner_loop_model": 0.234348,
+      "alternation_prototype": 0.0,
+      "iter0_candidate0": 0.252115,
+      "iter0_candidate1": 0.003665,
+      "iter0_candidate2": 0.0,
+      "iter1_candidate0": 0.228598,
+      "iter1_candidate1": 0.0,
+      "iter1_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -509.9302,
+      "bayesian_diagnosticity": -508.6351,
+      "inner_loop_model": -507.822,
+      "alternation_prototype": -544.1047,
+      "iter0_candidate0": -507.799,
+      "iter0_candidate1": -514.58,
+      "iter0_candidate2": -564.1431,
+      "iter1_candidate0": -507.8469,
+      "iter1_candidate1": -796.4024,
+      "iter1_candidate2": -804.975
+    }
+  }
+]

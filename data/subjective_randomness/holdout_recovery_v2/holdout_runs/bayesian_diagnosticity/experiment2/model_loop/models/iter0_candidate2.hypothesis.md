@@ -1,0 +1,1 @@
+People judge a sequence as more random-looking when its proportion of heads is closer to 0.5, because a fair coin produces equal heads and tails and balance is the primary signal of randomness. The more imbalanced a sequence (too many heads or too many tails), the less random it looks — and this single balance cue, not alternation or run structure, drives the choice.

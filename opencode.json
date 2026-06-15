@@ -3,6 +3,12 @@
   "permission": {
     "edit": "allow",
     "bash": "allow",
-    "webfetch": "allow"
+    "webfetch": "allow",
+    "external_directory": {
+      "/tmp/**": "allow",
+      "/private/tmp/**": "allow",
+      "/var/folders/**": "allow",
+      "/private/var/folders/**": "allow"
+    }
   }
 }

@@ -1,0 +1,61 @@
+models:
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+- name: alternation_prototype
+  rationale: 'People judge a sequence as more random when its alternation rate is
+    closer
+
+    (L1 distance) to an internalized prototype value that is biased above 0.5,
+
+    reflecting the well-documented human tendency to overestimate alternation in
+
+    random sequences.
+
+    '
+- name: iter0_candidate0
+  rationale: "People judge sequences by how diagnostic they are of a fair-coin process\
+    \ against three salient non-random alternatives \u2014 alternating, biased, and\
+    \ streaky. While the alternating generator has a canonical switch probability\
+    \ (0.95), people's mental prototype for streakiness is flexible: the characteristic\
+    \ persistence of the streaky generator (its switch probability) is a learned cognitive\
+    \ parameter rather than a fixed constant at 0.15."
+- name: iter0_candidate1
+  rationale: "People judge a sequence as more random when its proportion of heads\
+    \ is closer to 0.5. When comparing two sequences, they choose the one whose head\
+    \ count deviates less from an equal split as more random \u2014 imbalance is the\
+    \ sole cue driving the choice."
+- name: iter0_candidate2
+  rationale: 'People judge a sequence as more random when its longest unbroken run
+    of identical outcomes is shorter. The maximum run length is the sole cue: a long
+    streak signals a non-random, streaky process, so people pick whichever sequence
+    has the shorter maximum run as looking more random.'
+- name: iter1_candidate0
+  rationale: "People judge sequences by how diagnostic they are of a fair-coin process\
+    \ against three salient non-random alternatives \u2014 alternating, biased, and\
+    \ streaky. While the alternating and streaky generators are defined by canonical\
+    \ transition probabilities, people's mental model of what a biased sequence looks\
+    \ like is flexible: the characteristic head probability of the biased generator\
+    \ is a learned cognitive parameter rather than a fixed constant."
+- name: iter1_candidate1
+  rationale: "People judge a sequence as more random when it contains less detectable\
+    \ periodic structure. When comparing two sequences, they choose the one with lower\
+    \ periodicity as the more random-looking one \u2014 periodic regularity signals\
+    \ a non-random, patterned generator."
+- name: iter1_candidate2
+  rationale: "People judge a sequence as more random when its transitions between\
+    \ outcomes are closer to maximum uncertainty \u2014 that is, when each outcome\
+    \ is equally likely to be followed by the same or a different outcome. When comparing\
+    \ two sequences, people choose the one whose transition process has higher Shannon\
+    \ entropy (closer to 50% alternation rate) as the more random-looking sequence."

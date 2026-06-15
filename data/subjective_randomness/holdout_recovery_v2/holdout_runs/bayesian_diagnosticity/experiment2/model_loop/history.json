@@ -1,0 +1,77 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "prototype_similarity",
+    "posteriors": {
+      "prototype_similarity": 0.636152,
+      "encoding_compressibility": 0.017756,
+      "inner_loop_model": 0.345726,
+      "length_sensitive_alternation": 0.0,
+      "bayesian_markov_fairness": 0.000366
+    },
+    "elpd_loo": {
+      "prototype_similarity": -824.9696,
+      "encoding_compressibility": -828.0983,
+      "inner_loop_model": -825.6294,
+      "length_sensitive_alternation": -12323.693,
+      "bayesian_markov_fairness": -831.9813
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "prototype_similarity",
+    "posteriors": {
+      "prototype_similarity": 0.502099,
+      "encoding_compressibility": 0.014015,
+      "inner_loop_model": 0.272873,
+      "length_sensitive_alternation": 0.0,
+      "bayesian_markov_fairness": 0.000289,
+      "iter0_candidate0": 0.045478,
+      "iter0_candidate1": 0.046183,
+      "iter0_candidate2": 0.119064
+    },
+    "elpd_loo": {
+      "prototype_similarity": -824.9696,
+      "encoding_compressibility": -828.0983,
+      "inner_loop_model": -825.6294,
+      "length_sensitive_alternation": -12323.693,
+      "bayesian_markov_fairness": -831.9813,
+      "iter0_candidate0": -827.4712,
+      "iter0_candidate1": -827.8058,
+      "iter0_candidate2": -826.8587
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "iter1_candidate0",
+    "posteriors": {
+      "prototype_similarity": 0.040089,
+      "encoding_compressibility": 0.001119,
+      "inner_loop_model": 0.021787,
+      "length_sensitive_alternation": 0.0,
+      "bayesian_markov_fairness": 2.3e-05,
+      "iter0_candidate0": 0.003631,
+      "iter0_candidate1": 0.003687,
+      "iter0_candidate2": 0.009506,
+      "iter1_candidate0": 0.91893,
+      "iter1_candidate1": 3.6e-05,
+      "iter1_candidate2": 0.001191
+    },
+    "elpd_loo": {
+      "prototype_similarity": -824.9696,
+      "encoding_compressibility": -828.0983,
+      "inner_loop_model": -825.6294,
+      "length_sensitive_alternation": -12323.693,
+      "bayesian_markov_fairness": -831.9813,
+      "iter0_candidate0": -827.4712,
+      "iter0_candidate1": -827.8058,
+      "iter0_candidate2": -826.8587,
+      "iter1_candidate0": -821.9875,
+      "iter1_candidate1": -832.4888,
+      "iter1_candidate2": -828.7863
+    }
+  }
+]

@@ -1,0 +1,79 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: inner_loop_model
+  rationale: 'People judge a sequence as more random-looking when its alternation
+    rate is
+
+    closer to an internal prototype ideal, computed quadratically (Gaussian decay),
+
+    so small departures are disproportionately forgiven relative to large ones.
+
+    '
+- name: length_sensitive_alternation
+  rationale: "People evaluate alternation deviation on the count scale rather than\
+    \ the\nproportion scale \u2014 a sequence with two extra transitions relative\
+    \ to the\nideal count looks equally deviant regardless of whether it is 4 or 8\
+    \ flips\nlong, so the randomness signal scales with sequence length.\n"
+- name: bayesian_markov_fairness
+  rationale: 'People implicitly compute the log-Bayes-factor comparing each sequence''s
+
+    observed transitions against a fair Markov chain (p_transition = 0.5) versus
+
+    a biased one, and choose the sequence whose transitions are more consistent
+
+    with the fair-coin hypothesis.
+
+    '
+- name: iter0_candidate0
+  rationale: "People judge a sequence as more random-looking when its alternation\
+    \ rate is close to an internal ideal, but they penalize under-alternation (too\
+    \ few changes, making the sequence look predictable and patterned) more harshly\
+    \ than over-alternation (too many changes, which still looks somewhat erratic).\
+    \ This asymmetric sensitivity \u2014 a steeper slope on the under-alternation\
+    \ side than the over-alternation side \u2014 is the single mechanism driving randomness\
+    \ judgments."
+- name: iter0_candidate1
+  rationale: People judge a sequence as more random-looking when it contains a shorter
+    maximum consecutive run of the same outcome. A long streak of identical flips
+    is the most salient cue that a sequence is not random, so when comparing two sequences
+    people choose the one whose longest run is shorter, and the strength of that preference
+    scales with how different the two maximum runs are.
+- name: iter0_candidate2
+  rationale: "People judge a sequence as more random-looking when its proportion of\
+    \ heads is closer to 0.5, because a fair coin produces equal heads and tails and\
+    \ balance is the primary signal of randomness. The more imbalanced a sequence\
+    \ (too many heads or too many tails), the less random it looks \u2014 and this\
+    \ single balance cue, not alternation or run structure, drives the choice."
+- name: iter1_candidate0
+  rationale: "People judge a sequence as more random-looking when it is close to an\
+    \ internal 2D prototype that specifies both an ideal alternation rate and balanced\
+    \ heads and tails (50/50 split). Closeness to the prototype follows Gaussian decay\
+    \ in both dimensions simultaneously \u2014 small deviations in alternation or\
+    \ balance are disproportionately forgiven, and the two dimensions contribute independently\
+    \ by adding their squared distances from the ideal."
+- name: iter1_candidate1
+  rationale: "People judge a sequence as more random-looking when it contains less\
+    \ periodic structure \u2014 fewer regularly-repeating patterns. A truly random\
+    \ sequence should have no detectable rhythm or cycle, so a sequence with high\
+    \ periodicity looks engineered rather than chance-produced. When comparing two\
+    \ sequences, people choose the one with lower periodicity as the more random-looking\
+    \ one."
+- name: iter1_candidate2
+  rationale: "People judge a sequence as more random-looking when its alternation\
+    \ rate is closer to 0.5, the rate a fair coin naturally produces. They carry a\
+    \ fixed internal prototype at exactly 0.5 \u2014 not a learned or context-dependent\
+    \ ideal \u2014 and their preference is driven by linear distance from that standard:\
+    \ whichever sequence's alternation rate deviates less from 0.5 looks more random,\
+    \ scaled by a single sensitivity parameter."

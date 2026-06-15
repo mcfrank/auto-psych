@@ -1,0 +1,75 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "encoding_compressibility": 0.12751,
+      "bayesian_diagnosticity": 0.051034,
+      "inner_loop_model": 0.356073,
+      "length_sensitive_prototype": 0.112135,
+      "asymmetric_alternation_prototype": 0.353247
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -327.0665,
+      "bayesian_diagnosticity": -327.9822,
+      "inner_loop_model": -326.0396,
+      "length_sensitive_prototype": -327.195,
+      "asymmetric_alternation_prototype": -326.0475
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "encoding_compressibility": 0.08013,
+      "bayesian_diagnosticity": 0.032071,
+      "inner_loop_model": 0.223763,
+      "length_sensitive_prototype": 0.070468,
+      "asymmetric_alternation_prototype": 0.221988,
+      "iter0_candidate0": 0.1362,
+      "iter0_candidate1": 0.144151,
+      "iter0_candidate2": 0.091229
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -327.0665,
+      "bayesian_diagnosticity": -327.9822,
+      "inner_loop_model": -326.0396,
+      "length_sensitive_prototype": -327.195,
+      "asymmetric_alternation_prototype": -326.0475,
+      "iter0_candidate0": -326.536,
+      "iter0_candidate1": -326.4793,
+      "iter0_candidate2": -326.9368
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "iter1_candidate1",
+    "posteriors": {
+      "encoding_compressibility": 0.055663,
+      "bayesian_diagnosticity": 0.022278,
+      "inner_loop_model": 0.155437,
+      "length_sensitive_prototype": 0.048951,
+      "asymmetric_alternation_prototype": 0.154204,
+      "iter0_candidate0": 0.094612,
+      "iter0_candidate1": 0.100135,
+      "iter0_candidate2": 0.063372,
+      "iter1_candidate1": 0.161139,
+      "iter1_candidate2": 0.144209
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -327.0665,
+      "bayesian_diagnosticity": -327.9822,
+      "inner_loop_model": -326.0396,
+      "length_sensitive_prototype": -327.195,
+      "asymmetric_alternation_prototype": -326.0475,
+      "iter0_candidate0": -326.536,
+      "iter0_candidate1": -326.4793,
+      "iter0_candidate2": -326.9368,
+      "iter1_candidate1": -326.0035,
+      "iter1_candidate2": -326.1146
+    }
+  }
+]

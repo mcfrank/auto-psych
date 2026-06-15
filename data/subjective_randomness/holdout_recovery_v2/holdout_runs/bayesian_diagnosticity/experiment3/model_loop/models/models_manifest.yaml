@@ -1,0 +1,91 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: length_sensitive_alternation
+  rationale: "People evaluate alternation deviation on the count scale rather than\
+    \ the\nproportion scale \u2014 a sequence with two extra transitions relative\
+    \ to the\nideal count looks equally deviant regardless of whether it is 4 or 8\
+    \ flips\nlong, so the randomness signal scales with sequence length.\n"
+- name: bayesian_markov_fairness
+  rationale: 'People implicitly compute the log-Bayes-factor comparing each sequence''s
+
+    observed transitions against a fair Markov chain (p_transition = 0.5) versus
+
+    a biased one, and choose the sequence whose transitions are more consistent
+
+    with the fair-coin hypothesis.
+
+    '
+- name: inner_loop_model
+  rationale: 'People judge a sequence as more random-looking when it is close to an
+    internal
+
+    2D prototype specifying both an ideal alternation rate and balanced heads and
+
+    tails, with Gaussian (quadratic) decay in each dimension independently.
+
+    '
+- name: run_length_prototype
+  rationale: "People judge sequences by how close the maximum run length is to an\
+    \ internal\nprototype for a random sequence \u2014 both too-long streaks and too-short\
+    \ maximum\nruns look non-random, so sequences whose longest run matches the ideal\
+    \ are\njudged most random.\n"
+- name: length_sensitive_2d_prototype
+  rationale: 'People evaluate sequences using the two-dimensional prototype (alternation
+
+    rate and balance), but their sensitivity to deviations scales linearly with
+
+    sequence length because longer sequences provide stronger statistical evidence
+
+    of non-randomness for the same proportional deviation.
+
+    '
+- name: iter0_candidate0
+  rationale: "People judge a coin sequence as more random-looking when it falls close\
+    \ to an internal two-dimensional prototype specifying both an ideal alternation\
+    \ rate and balanced heads-to-tails proportions. Their sensitivity to departures\
+    \ from this prototype is linear \u2014 each additional unit of distance from the\
+    \ prototype ideal reduces perceived randomness by a fixed amount, rather than\
+    \ accelerating the further from the ideal the sequence strays."
+- name: iter0_candidate1
+  rationale: People judge a sequence as more random-looking when it contains less
+    detectable periodic structure. A truly random coin sequence should not repeat
+    a regular pattern, so sequences with stronger periodicity feel non-random. When
+    comparing two sequences, people choose the one with lower periodicity as the more
+    random-looking one.
+- name: iter0_candidate2
+  rationale: "People judge a sequence as more random-looking when its outcomes are\
+    \ more evenly balanced between heads and tails. The single cognitive mechanism\
+    \ is outcome balance: a sequence where heads and tails are equal looks maximally\
+    \ random, and any departure from that balance \u2014 in either direction \u2014\
+    \ reduces how random the sequence feels."
+- name: iter1_candidate0
+  rationale: 'People evaluate sequences against an internal two-dimensional prototype
+    specifying both an ideal alternation rate and balanced outcomes, as in the leading
+    model. However, their sensitivity to departures in the alternation dimension is
+    asymmetric: sequences that are too streaky (alternation rate below the ideal)
+    are penalized more heavily than sequences that are too alternating (alternation
+    rate above the ideal), because streaks feel more distinctively non-random than
+    excess back-and-forth switching.'
+- name: iter1_candidate1
+  rationale: 'People judge a coin sequence as more random-looking based solely on
+    the length of its longest streak: longer maximum runs always feel less random,
+    with no ideal run length to aim for. When comparing two sequences, people simply
+    choose whichever has the shorter maximum run as the more random-looking one.'
+- name: iter1_candidate2
+  rationale: "People judge a sequence as more random-looking when its alternation\
+    \ rate is closer to 0.5 \u2014 the rate a fair coin produces. Their internal prototype\
+    \ is fixed at exactly 0.5 rather than being a learned parameter, so there is only\
+    \ one free parameter: how sensitively they respond to deviations from that fixed\
+    \ standard."
