@@ -1,0 +1,2453 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/CONTEXT.md
+[0m→ [0mRead src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+[0m
+[0m$ [0mls -la /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 56
+drwxr-xr-x@  7 ben  staff   224 Jun 12 12:20 __pycache__
+drwxr-xr-x@ 10 ben  staff   320 Jun 12 12:19 .
+drwxr-xr-x@ 10 ben  staff   320 Jun 12 12:18 ..
+-rw-r--r--@  1 ben  staff  1581 Jun 12 12:18 encoding_compressibility.py
+-rw-r--r--@  1 ben  staff  3190 Jun 12 12:19 inferred_mixture_model.py
+-rw-r--r--@  1 ben  staff  2814 Jun 12 12:18 inner_loop_model.py
+-rw-r--r--@  1 ben  staff   869 Jun 12 12:19 models_manifest.yaml
+-rw-r--r--@  1 ben  staff  1171 Jun 12 12:18 prototype_similarity.py
+-rw-r--r--@  1 ben  staff  1594 Jun 12 12:19 theory_report.md
+-rw-r--r--@  1 ben  staff  2721 Jun 12 12:19 unnormalized_mixture_model.py
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/model_posterior.json
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+{
+  "posteriors": {
+    "prototype_similarity": 0.000869,
+    "encoding_compressibility": 0.0,
+    "iter0_candidate0": 0.000346,
+    "iter0_candidate1": 0.471537,
+    "iter0_candidate2": 0.0,
+    "iter1_candidate1": 0.094763,
+    "iter1_candidate2": 0.432485
+  },
+  "elpd_loo": {
+    "prototype_similarity": -537.7933,
+    "encoding_compressibility": -606.7915,
+    "iter0_candidate0": -538.7139,
+    "iter0_candidate1": -531.4965,
+    "iter0_candidate2": -624.8361,
+    "iter1_candidate1": -533.1011,
+    "iter1_candidate2": -531.5829
+  },
+  "n_trials": 900,
+  "comparison": {
+    "iter0_candidate1": {
+      "rank": 0,
+      "elpd_loo": -531.4964862073318,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.5526322472680054
+    },
+    "iter1_candidate2": {
+      "rank": 1,
+      "elpd_loo": -531.582935558527,
+      "elpd_diff": 0.08644935119507302,
+      "dse": 0.4289960690201809,
+      "weight": 0.2110410795273842
+    },
+    "iter1_candidate1": {
+      "rank": 2,
+      "elpd_loo": -533.1011023428011,
+      "elpd_diff": 1.604616135469226,
+      "dse": 2.4438582205194628,
+      "weight": 0.23632667321265358
+    },
+    "prototype_similarity": {
+      "rank": 3,
+      "elpd_loo": -537.7932706539025,
+      "elpd_diff": 6.296784446570597,
+      "dse": 3.0201498495736736,
+      "weight": 1.7339975793118045e-12
+    },
+    "iter0_candidate0": {
+      "rank": 4,
+      "elpd_loo": -538.7139052385293,
+      "elpd_diff": 7.217419031197463,
+      "dse": 3.2912497671710326,
+      "weight": 1.647110572292432e-12
+    },
+    "encoding_compressibility": {
+      "rank": 5,
+      "elpd_loo": -606.791494131666,
+      "elpd_diff": 75.29500792433419,
+      "dse": 11.057858463284669,
+      "weight": 3.1773057460905153e-15
+    },
+    "iter0_candidate2": {
+      "rank": 6,
+      "elpd_loo": -624.8360690730524,
+      "elpd_diff": 93.33958286572062,
+      "dse": 12.311846120980348,
+      "weight": 0.0
+    }
+  }
+}
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_registry.yaml
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+reserved_for_new: 0.25
+theories: {}
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/models_manifest.yaml
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.'
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.'
+- name: inner_loop_model
+  rationale: 'Best PyMC model found by the inner model-improvement loop.'
+- name: inferred_mixture_model
+  rationale: 'A variant of the Bayesian mixture model that infers the parameters of the alternative hypotheses (alternating Markov, streaky Markov, and biased coin) rather than keeping them hardcoded.'
+- name: unnormalized_mixture_model
+  rationale: 'A variant of the inner loop model that does not normalize log probabilities by sequence length, to test if length normalization was the critical success factor.'
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/generate_candidates.py
+import json
+import random
+import itertools
+
+def generate_sequences():
+    seqs = []
+    for length in range(3, 9):
+        for p in itertools.product('HT', repeat=length):
+            seqs.append("".join(p))
+    return seqs
+
+all_seqs = generate_sequences()
+candidates = []
+
+# To ensure diversity, let's include all combinations of different lengths? No, just random sampling is fine if we sample enough.
+random.seed(42)
+# Sample 5000 pairs
+pairs = set()
+while len(pairs) < 5000:
+    a, b = random.sample(all_seqs, 2)
+    # enforce a sort to avoid symmetric duplicates? No, order matters maybe? The model is p_left, so A vs B. We can just use A and B.
+    pairs.add((a, b))
+
+for a, b in pairs:
+    candidates.append({"sequence_a": a, "sequence_b": b})
+
+with open("/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/candidates.json", "w") as f:
+    json.dump(candidates, f)
+
+EOF
+python3 /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/generate_candidates.py
+ls -lh /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/candidates.json
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+-rw-r--r--@ 1 ben  staff   255K Jun 12 12:20 /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/candidates.json
+[0m
+[0m✱ [0mGlob "**/preprocess.py"[90m 3 matches[0m
+[0m
+[0m$ [0mls -la src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py scripts/subjective_randomness/preprocess.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+-rw-r--r--@ 1 ben  staff  1134 Jun  5 13:49 scripts/subjective_randomness/preprocess.py
+-rw-r--r--@ 1 ben  staff  3639 Jun  5 13:49 src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py
+[0m
+[0m$ [0mhead -n 20 src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+"""Featurize subjective_randomness responses for PyMC models.
+
+Raw collected responses carry the H/T sequence strings (`sequence_a`,
+`sequence_b`) plus the binary choice (`chose_left`). PyMC cognitive models read
+*numeric* per-sequence features through `pm.Data` containers whose names match
+CSV columns. This module derives those feature columns from the raw sequences.
+
+The inner model loop loads `featurize_stimulus` from here (by project) to turn
+pooled raw responses into the feature CSV the PyMC models are fit on; the design
+step uses the same function to score candidate stimuli for EIG.
+
+Feature columns per sequence (`a` and `b`):
+    n_<x>             total length                        (int)
+    h_<x>             head count                          (int)
+    alts_<x>          alternation count (H/T transitions) (int)
+    max_run_<x>       longest constant run                (int)
+    p_<x>             head proportion                     (float)
+    p_alts_<x>        alternation proportion              (float)
+    max_run_norm_<x>  longest run scaled to [0, 1]        (float)
+    imbalance_<x>     distance from 50/50 heads/tails     (float)
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych && python3 -m src.pipelines.outer_loop.eig \
+    --candidates /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/candidates.json \
+    --models-dir /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models \
+    --featurize  /Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py \
+    --registry   /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_registry.yaml \
+    --out        /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/stimuli.json \
+    --top        30
+...output truncated...
+
+Full output saved to: /Users/ben/.local/share/opencode/tool-output/tool_ebd493c8d001K4pbwzRcngugLo
+
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/generate_candidates.py
+import json
+import random
+import itertools
+
+def generate_sequences():
+    seqs = []
+    for length in range(3, 9):
+        for p in itertools.product('HT', repeat=length):
+            seqs.append("".join(p))
+    return seqs
+
+all_seqs = generate_sequences()
+candidates = []
+
+random.seed(42)
+pairs = set()
+while len(pairs) < 300:
+    a, b = random.sample(all_seqs, 2)
+    pairs.add((a, b))
+
+for a, b in pairs:
+    candidates.append({"sequence_a": a, "sequence_b": b})
+
+with open("/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/candidates.json", "w") as f:
+    json.dump(candidates, f)
+EOF
+python3 /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/generate_candidates.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych && python3 -m src.pipelines.outer_loop.eig \
+    --candidates /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/candidates.json \
+    --models-dir /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models \
+    --featurize  /Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py \
+    --registry   /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_registry.yaml \
+    --out        /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/stimuli.json \
+    --top        30
+...output truncated...
+
+Full output saved to: /Users/ben/.local/share/opencode/tool-output/tool_ebd4b2530001xI1qoNqmEfEO01
+
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+
+
+<shell_metadata>
+shell tool terminated command after exceeding timeout 120000 ms. If this command is expected to take longer and is not waiting for interactive input, retry with a larger timeout value in milliseconds.
+</shell_metadata>
+[0m
+[0m$ [0mcat src/pipelines/outer_loop/eig.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+"""
+Annotate candidate stimuli with Expected Information Gain (EIG) over PyMC models.
+
+Each stimulus has "sequence_a"/"sequence_b" keys. The cognitive models are PyMC
+models (module-level `model: pm.Model`); EIG is computed from each model's
+**prior-predictive** p_left for the stimulus — no MCMC fit is needed at design
+time. Raw stimuli are featurized (via the project's `featurize_stimulus`) into
+the numeric columns the models read through `pm.Data`. EIG is added as a float
+field; stimuli are sorted by EIG descending on output.
+
+Usage (CLI):
+    python3 -m src.pipelines.outer_loop.eig \\
+        --candidates candidates.json \\
+        --models-dir PATH/cognitive_models \\
+        --featurize  PATH/projects/<project>/preprocess.py \\
+        --registry   PATH/model_registry.yaml \\
+        --out        PATH/design/stimuli.json \\
+        --top        20
+
+    # --out defaults to stdout if omitted
+    # --top defaults to all stimuli (no truncation)
+    # --registry is optional (uniform prior over models if omitted)
+    # --featurize is optional (omit if candidates already carry feature columns)
+"""
+
+from __future__ import annotations
+
+import importlib.util
+import json
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any, Callable, Dict, List, Optional
+
+import tyro
+
+REPO_ROOT = Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(REPO_ROOT))
+
+
+def _load_featurizer(
+    featurize_path: Optional[Path],
+) -> Optional[Callable[[str, str], Dict[str, Any]]]:
+    if featurize_path is None:
+        return None
+    featurize_path = Path(featurize_path)
+    if not featurize_path.exists():
+        raise FileNotFoundError(f"featurize module not found: {featurize_path}")
+    spec = importlib.util.spec_from_file_location("_eig_featurize", featurize_path)
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot load featurize module from {featurize_path}")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    fn = getattr(mod, "featurize_stimulus", None)
+    if fn is None:
+        raise AttributeError(f"{featurize_path} has no featurize_stimulus()")
+    return fn
+
+
+def annotate(
+    candidates: List[Dict[str, Any]],
+    models_dir: Path,
+    registry_path: Optional[Path] = None,
+    *,
+    featurize_path: Optional[Path] = None,
+    n_samples: int = 200,
+    seed: int = 42,
+) -> List[Dict[str, Any]]:
+    """Annotate each candidate with an "eig" key and sort by EIG descending.
+
+    candidates: list of dicts, each with "sequence_a"/"sequence_b" (and possibly
+        already-derived feature columns).
+    models_dir: cognitive_models/ directory (models_manifest.yaml + PyMC .py files).
+    registry_path: optional model_registry.yaml for a weighted model prior.
+    featurize_path: optional path to a module exposing featurize_stimulus(seq_a,
+        seq_b) -> dict of numeric feature columns. If given, those columns are
+        merged into each stimulus before EIG so the PyMC models can read them.
+    n_samples: prior-predictive draws per model per stimulus.
+    """
+    import yaml
+
+    from src.models.pymc_inference import (
+        expected_information_gain_prior_pymc,  # type: ignore
+    )
+    from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
+
+    models_dir = Path(models_dir)
+    manifest_path = models_dir / "models_manifest.yaml"
+    if not manifest_path.exists():
+        raise FileNotFoundError(f"models_manifest.yaml not found at {manifest_path}")
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+    model_names = get_model_names_from_manifest(manifest, models_dir)
+    if not model_names:
+        raise ValueError(f"No loadable models found in {models_dir}")
+
+    model_weights: Dict[str, float] = {}
+    if registry_path and Path(registry_path).exists():
+        reg = yaml.safe_load(Path(registry_path).read_text(encoding="utf-8")) or {}
+        model_weights = reg.get("theories", {}) or {}
+
+    featurize = _load_featurizer(featurize_path)
+
+    results = []
+    for item in candidates:
+        feature_row: Dict[str, Any] = dict(item)
+        if featurize is not None:
+            feature_row.update(featurize(item["sequence_a"], item["sequence_b"]))
+        # The observed-response container is required as a pm.Data input but its
+        # value is ignored for prior-predictive p_left — pass a dummy.
+        feature_row.setdefault("chose_left", 0)
+        eig_val = expected_information_gain_prior_pymc(
+            feature_row,
+            model_names,
+            models_dir,
+            model_weights=model_weights or None,
+            n_samples=n_samples,
+            seed=seed,
+        )
+        results.append({**item, "eig": round(eig_val, 6)})
+
+    results.sort(key=lambda x: -x["eig"])
+    return results
+
+
+@dataclass
+class Args:
+    """Annotate candidate stimuli with EIG over PyMC models and sort descending."""
+
+    candidates: Path
+    """JSON file with a list of {sequence_a, sequence_b} dicts."""
+    models_dir: Path
+    """Path to the cognitive_models/ directory."""
+    featurize: Optional[Path] = None
+    """Path to a module exposing featurize_stimulus() (e.g. projects/<project>/preprocess.py)."""
+    registry: Optional[Path] = None
+    """Path to model_registry.yaml (optional; uniform prior if omitted)."""
+    out: Optional[Path] = None
+    """Output JSON file path (default: stdout)."""
+    top: Optional[int] = None
+    """Keep only the top N stimuli by EIG."""
+    n_samples: int = 200
+    """Prior-predictive draws per model per stimulus."""
+
+
+def main(args: Args) -> None:
+    candidates = json.loads(args.candidates.read_text(encoding="utf-8"))
+    if not isinstance(candidates, list):
+        print("Error: candidates file must contain a JSON list", file=sys.stderr)
+        sys.exit(1)
+
+    annotated = annotate(
+        candidates=candidates,
+        models_dir=args.models_dir,
+        registry_path=args.registry,
+        featurize_path=args.featurize,
+        n_samples=args.n_samples,
+    )
+
+    if args.top is not None:
+        annotated = annotated[: args.top]
+
+    output = json.dumps(annotated, indent=2)
+    if args.out:
+        args.out.write_text(output, encoding="utf-8")
+        eig_vals = [s["eig"] for s in annotated]
+        print(
+            f"Wrote {len(annotated)} stimuli to {args.out} "
+            f"(EIG range: {min(eig_vals):.4f} – {max(eig_vals):.4f})",
+            flush=True,
+        )
+    else:
+        print(output)
+
+
+if __name__ == "__main__":
+    main(tyro.cli(Args))
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/generate_candidates.py
+import json
+import random
+import itertools
+
+def generate_sequences():
+    seqs = []
+    for length in range(3, 9):
+        for p in itertools.product('HT', repeat=length):
+            seqs.append("".join(p))
+    return seqs
+
+all_seqs = generate_sequences()
+candidates = []
+
+random.seed(101) # new seed
+pairs = set()
+while len(pairs) < 60:
+    a, b = random.sample(all_seqs, 2)
+    pairs.add((a, b))
+
+for a, b in pairs:
+    candidates.append({"sequence_a": a, "sequence_b": b})
+
+with open("/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/candidates.json", "w") as f:
+    json.dump(candidates, f)
+EOF
+python3 /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/generate_candidates.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych && python3 -m src.pipelines.outer_loop.eig \
+    --candidates /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/candidates.json \
+    --models-dir /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models \
+    --featurize  /Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py \
+    --registry   /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_registry.yaml \
+    --out        /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/stimuli.json \
+    --top        30
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Sampling: [alt_prior, alt_switch_prob, beta, bias_head_prob, bias_share, side_bias, streak_switch_prob]
+Sampling: [alt_prior, beta, bias_share, side_bias]
+Wrote 30 stimuli to /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/stimuli.json (EIG range: 0.1081 – 0.3278)
+[0m
+[0m$ [0mhead -n 25 /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/stimuli.json
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[
+  {
+    "sequence_a": "HHHHHH",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.327847
+  },
+  {
+    "sequence_a": "HTTHTHTH",
+    "sequence_b": "THHTTHHH",
+    "eig": 0.210618
+  },
+  {
+    "sequence_a": "HTHTTTHH",
+    "sequence_b": "THTTTTTT",
+    "eig": 0.198679
+  },
+  {
+    "sequence_a": "HHTTHTT",
+    "sequence_b": "HHHHHHHH",
+    "eig": 0.189444
+  },
+  {
+    "sequence_a": "THHHHTT",
+    "sequence_b": "THTHTH",
+    "eig": 0.188585
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design/design_rationale.md
+# Experiment 2 Design Rationale
+
+**Number of stimuli:** 30 pairs
+**EIG Range:** 0.1081 to 0.3278
+
+## Selection Process
+We generated a candidate pool of 60 random sequence pairs, drawing from all possible sequences of lengths 3 through 8. For each candidate pair, we computed the Expected Information Gain (EIG) based on prior-predictive samples from the five competing models:
+- `prototype_similarity`
+- `encoding_compressibility`
+- `inner_loop_model`
+- `inferred_mixture_model`
+- `unnormalized_mixture_model`
+
+The top 30 most informative pairs were selected as the final design to adhere to the target experiment duration of approximately 5 minutes.
+
+## Model Discrimination
+The highest EIG pair in the design compares "HHHHHH" (an extreme contiguous streak) with "HTHTHTHT" (a perfect alternation). This highlights the core tension among the candidate theories:
+- **`prototype_similarity`** models randomness based on proximity to an ideal alternation rate.
+- **`encoding_compressibility`** penalizes simple descriptions like long runs and strict periodicity.
+- **`inferred_mixture_model`** considers discrete generating hypotheses (streaky Markov vs alternating Markov).
+
+The other selected pairs (e.g., "HTHTTTHH" vs "THTTTTTT") further probe the boundaries between sequence lengths and substring patterns. By prioritizing pairs with high variance in predicted choice probabilities across the five models, this design maximally distinguishes their differing computational accounts of subjective randomness.
+EOF
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+[0m$ [0mls -la /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/design
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 32
+drwxr-xr-x@  6 ben  staff   192 Jun 12 12:26 .
+drwxr-xr-x@ 10 ben  staff   320 Jun 12 12:18 ..
+-rw-r--r--@  1 ben  staff  3118 Jun 12 12:25 candidates.json
+-rw-r--r--@  1 ben  staff  1511 Jun 12 12:26 design_rationale.md
+-rw-r--r--@  1 ben  staff   678 Jun 12 12:25 generate_candidates.py
+-rw-r--r--@  1 ben  staff  2608 Jun 12 12:26 stimuli.json
+[0m
+I have completed the experiment design for Experiment 2. Here is a summary of the steps taken:
+
+1. **Candidate Generation**: I created a Python script that generated a diverse pool of 60 candidate stimulus pairs formed from sequences of coin flips (lengths 3 through 8). These were saved to `design/candidates.json`.
+
+2. **EIG Evaluation**: Using the provided `eig.py` pipeline helper and the featurization script (`preprocess.py`), I evaluated the prior-predictive Expected Information Gain (EIG) of all 60 pairs over the 5 PyMC models (`prototype_similarity`, `encoding_compressibility`, `inner_loop_model`, `inferred_mixture_model`, and `unnormalized_mixture_model`) registered in the `cognitive_models` directory.
+
+3. **Stimulus Selection**: From the EIG evaluation, I extracted the top 30 optimal stimulus pairs to conform to the 30-trial target limit and saved them to `design/stimuli.json`. The EIG values range between 0.1081 and 0.3278. The highest-ranked item contrasts an extreme streak (`HHHHHH`) with extreme periodic alternation (`HTHTHTHT`).
+
+4. **Rationale Documentation**: I wrote `design/design_rationale.md` outlining the stimulus quantity, EIG distribution, selection process, and exactly how the chosen stimuli effectively discriminate between the competing models' core theoretical tensions (ideal alternation proximity, simple description penalties, versus discrete generating hypotheses). 
+
+The checklist has been completely satisfied and the design artifacts are stored under the corresponding `experiment2/design` directory.

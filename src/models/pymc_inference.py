@@ -17,6 +17,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import importlib.util
+import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -193,6 +194,34 @@ def extract_observed(csv_path: Path, model) -> Dict[str, np.ndarray]:
             arr = np.array(values, dtype=dtype)
         out[col] = arr
     return out
+
+
+def model_logp_is_finite(
+    name: str, models_dir: Path, responses_path: Path
+) -> tuple[bool, str]:
+    """Fast, sampling-free check that a model can actually be MCMC-fit.
+
+    Loads the model, binds the real responses, and evaluates the total log
+    probability at the initial point. Returns ``(True, "")`` when that logp is
+    finite, else ``(False, reason)``.
+
+    A model whose graph evaluates to NaN or ``-inf`` — e.g. the numerically
+    unsafe ``pt.sqrt(x**2)``, which NaNs in PyTensor for some inputs — passes
+    graph-loading but crashes ``pm.sample`` at its start-value check, aborting
+    the whole run. This catches such a model cheaply, before any sampling.
+    """
+    pm = _import_pymc()
+    model = load_pymc_model(name, models_dir)
+    observed = extract_observed(responses_path, model)
+    with model:
+        pm.set_data(observed)
+    try:
+        logp = float(model.compile_logp()(model.initial_point()))
+    except Exception as e:  # a graph that cannot even be evaluated
+        return False, f"logp evaluation raised: {type(e).__name__}: {e}"
+    if not math.isfinite(logp):
+        return False, f"non-finite logp ({logp}) at the initial point"
+    return True, ""
 
 
 _MODEL_CACHE: Dict[tuple, Any] = {}

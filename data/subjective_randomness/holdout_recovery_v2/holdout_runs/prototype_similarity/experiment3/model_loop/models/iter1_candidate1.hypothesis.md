@@ -1,0 +1,3 @@
+# Hypothesis: Learned Streaky Generator Diagnosticity
+
+People judge which sequence looks more random by computing how much better a fair coin explains each sequence compared with the most compelling non-random alternative — an alternating, biased-coin, or streaky (run-generating) generator. The alternating generator's switch probability and the biased generator's bias level are fixed at canonical values, but the streaky generator's characteristic switch probability — how likely it is to stay on the same outcome — is a flexible cognitive parameter that people learn from experience rather than inheriting from a fixed prototype.

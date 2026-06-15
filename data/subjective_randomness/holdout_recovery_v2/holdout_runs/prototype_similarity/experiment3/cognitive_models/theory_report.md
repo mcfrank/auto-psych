@@ -1,0 +1,9 @@
+# Theory Report — Experiment 3
+
+## fair_coin_run_baseline
+
+**Hypothesis:** People judge a sequence as more random when its maximum run length is short relative to the expected maximum run length for a fair-coin sequence of the same length, where that expectation scales as kappa * log2(n).
+
+**Motivation:** In Experiment 2, the max-run-only model (`iter0_candidate2`) failed catastrophically (ELPD -564, rank 9/10), but the `encoding_compressibility` model, which normalizes max run by linear sequence length (`max_run_norm = max_run / n`), earned 14.1% posterior mass. This gap suggests that people do adjust for sequence length when interpreting run lengths — but the correct normalization may not be linear. Probability theory for Bernoulli sequences shows that the expected maximum run length scales as log2(n), not as n. A sequence of length 8 with a max run of 4 is unremarkable for a fair coin (log2(8) = 3), while a length-4 sequence with max run 4 is the entire sequence. The `encoding_compressibility` model applies a linear divisor that systematically overcorrects for long sequences and undercorrects for short ones. A log-scaled baseline is a principled correction that no existing model implements.
+
+**Mechanism:** The model computes the "excess" run length for each sequence: `excess = max_run - kappa * log2(n)`, where `kappa` is a free parameter capturing people's implicit estimate of typical fair-coin run lengths (the true statistical value is kappa ≈ 1). The decision rule is a sigmoid over the difference in excesses: sequence A is judged more random when its excess is smaller than B's. This is a single-cue mechanism — no imbalance, no alternation, no Bayesian comparison to generators. It is distinct from `iter0_candidate2` (raw max run, no length adjustment), from `encoding_compressibility` (linear normalization across multiple cues), and from all Bayesian diagnosticity variants (which use head counts and alternation counts, not run lengths).

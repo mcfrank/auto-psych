@@ -1,0 +1,1 @@
+People judge a sequence as more random-looking when its outcomes are more evenly balanced between heads and tails. The single cognitive mechanism is outcome balance: a sequence where heads and tails are equal looks maximally random, and any departure from that balance — in either direction — reduces how random the sequence feels.

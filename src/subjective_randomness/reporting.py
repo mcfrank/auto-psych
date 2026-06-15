@@ -370,6 +370,85 @@ def _draw_fixed_truth_panels(
     axes[-1].legend(loc="best", fontsize=8)
 
 
+def plot_holdout_trajectories(result: Mapping[str, Any], out_path: Path) -> None:
+    """Plot held-out recovery vs. inner-loop step, one panel per held-out model.
+
+    Each panel shows two trajectories of the Pearson correlation with the
+    ground truth's ``p_left`` on the held-out stimuli: the single best-fitting
+    model (solid) and the posterior-weighted Bayesian model average (dashed).
+    Steps with an undefined correlation (None — e.g. a constant prediction) are
+    skipped rather than plotted as zero. Dotted vertical lines mark
+    outer-experiment boundaries.
+    """
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    BEST_COLOR = "#4878CF"
+    BMA_COLOR = "#D65F5F"
+    SEED_FIT_COLOR = "#EE854A"
+    BASELINE_COLOR = "#6ACC65"
+
+    gt_runs = result["gt_runs"]
+    n = len(gt_runs)
+    fig, axes = plt.subplots(
+        1, n, figsize=(4.6 * n, 4.4), squeeze=False, sharey=True
+    )
+    for ax, gt_run in zip(axes[0], gt_runs):
+        trajectory = gt_run["trajectory"]
+        for key, color, style, marker, label in (
+            ("pearson_r", BEST_COLOR, "-", "o", "best model"),
+            ("pearson_r_bma", BMA_COLOR, "--", "s", "Bayesian model average"),
+        ):
+            points = [
+                (row["global_step"], row[key])
+                for row in trajectory
+                if row.get(key) is not None
+            ]
+            if points:
+                xs, ys = zip(*points)
+                ax.plot(
+                    xs, ys, color=color, linestyle=style, marker=marker, label=label
+                )
+        # Two flat seed-model baselines (constant across steps): the other seed
+        # models with default params, and those seed models fit on all the data.
+        for run_key, baseline_color, baseline_style, baseline_label in (
+            ("fitted_baseline", SEED_FIT_COLOR, ":", "seed models (fit to all data)"),
+            ("baseline", BASELINE_COLOR, "-.", "seed models (default params)"),
+        ):
+            baseline_r = (gt_run.get(run_key) or {}).get("mean_r")
+            if baseline_r is not None:
+                ax.axhline(
+                    baseline_r,
+                    color=baseline_color,
+                    linestyle=baseline_style,
+                    linewidth=1.3,
+                    label=baseline_label,
+                )
+        for x in sorted(
+            row["global_step"]
+            for row in trajectory
+            if row["step"] == 0 and row["experiment"] > 1
+        ):
+            ax.axvline(x - 0.5, color="grey", linestyle=":", linewidth=0.8)
+        ax.axhline(0.0, color="grey", linewidth=0.5)
+        ax.set_ylim(-1.05, 1.05)
+        ax.set_title(gt_run["gt_model"])
+        ax.set_xlabel("inner-loop scoring step")
+
+    axes[0][0].set_ylabel("Pearson r vs. ground-truth p_left (held-out stimuli)")
+    axes[0][0].legend(loc="lower right", fontsize=8)
+    fig.suptitle(
+        "Holdout recovery — best model vs. Bayesian model average "
+        "(held-out model = ground truth)"
+    )
+    fig.tight_layout()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, dpi=150)
+    plt.close(fig)
+
+
 def plot_model_recovery(confusion: Mapping[str, Any], out_path: Path) -> None:
     """Write the generating x recovered posterior confusion heatmap."""
     import matplotlib

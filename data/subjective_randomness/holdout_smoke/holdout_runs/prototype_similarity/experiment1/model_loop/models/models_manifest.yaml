@@ -1,0 +1,21 @@
+models:
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: iter0_candidate0
+  rationale: People judge the randomness of a sequence by the proportion of the sequence
+    made up of its longest continuous run, perceiving sequences where a single run
+    occupies a larger fraction of the total length as less random.
+- name: iter0_candidate1
+  rationale: People evaluate the randomness of a coin flip sequence based on its alternation
+    rate. Sequences with a higher proportion of alternations between outcomes are
+    perceived as more random due to an expectation that random processes switch frequently.

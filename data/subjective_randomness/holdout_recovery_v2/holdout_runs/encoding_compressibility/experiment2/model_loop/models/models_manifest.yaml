@@ -1,0 +1,78 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+- name: max_run_length
+  rationale: 'People judge a sequence as more random when its longest consecutive
+    run is
+
+    shorter, because a long run is the most compact single-symbol run-length
+
+    encoding unit and is the strongest single cue that the sequence is structured.
+
+    '
+- name: rle_description_length
+  rationale: 'People judge a sequence as more random when its run-length encoding
+    requires
+
+    more blocks (alternations + 1 normalized by length), predicting a monotonic
+
+    relationship between alternation rate and perceived randomness with no ideal rate.
+
+    '
+- name: iter0_candidate0
+  rationale: "People judge a sequence as more random when it is close to a prototype\
+    \ with balanced H/T counts and an ideal alternation rate, where closeness is measured\
+    \ by squared deviation rather than absolute deviation. This means the randomness\
+    \ gradient is steepest exactly at the prototype \u2014 even modest departures\
+    \ are penalized disproportionately \u2014 rather than declining at a constant\
+    \ rate regardless of how far the sequence already is from ideal."
+- name: iter0_candidate1
+  rationale: "People judge a sequence as more random when it contains less periodic\
+    \ structure. Sequences that repeat a regular cycle (e.g., HTHT\u2026 or HHTTHHTT\u2026\
+    ) are perceived as non-random because the mind detects the underlying period.\
+    \ When comparing two sequences, people choose the one with lower periodicity as\
+    \ the more random-looking."
+- name: iter0_candidate2
+  rationale: "People judge a sequence as more random when its proportion of heads\
+    \ is closer to 0.5 \u2014 that is, when the sequence is more balanced. They ignore\
+    \ run structure, alternation patterns, and periodicity entirely; only the overall\
+    \ H/T ratio guides the judgment. The sequence with the less imbalanced coin-flip\
+    \ count looks more random."
+- name: iter1_candidate0
+  rationale: "People judge sequence randomness by comparing each sequence to a mental\
+    \ prototype with balanced heads-tails counts and an ideal alternation rate, penalizing\
+    \ deviations quadratically (as in the leading existing model). However, the penalty\
+    \ is asymmetric around the ideal alternation rate: sequences that are too streaky\
+    \ \u2014 fewer alternations than ideal \u2014 are treated as more non-random than\
+    \ sequences that are equally distant in the over-alternating direction. This asymmetry\
+    \ reflects the well-documented human tendency to find runs of the same symbol\
+    \ particularly diagnostic of non-randomness, stronger than the reverse surprise\
+    \ of excessive alternation."
+- name: iter1_candidate1
+  rationale: "People judge a sequence as more random when its longest consecutive\
+    \ run is close to the length expected from a fair coin of that length \u2014 approximately\
+    \ log\u2082(n). A max run that is too long signals a streaky, non-random process,\
+    \ but a max run that is too short signals an artificially regular, over-alternating\
+    \ process; both extremes feel non-random. Perceived randomness therefore peaks\
+    \ at the characteristic max-run length of a fair coin and declines quadratically\
+    \ as the actual max run departs in either direction."
+- name: iter1_candidate2
+  rationale: "People judge a sequence as more random when its alternation rate is\
+    \ closer to their internal ideal for what randomness looks like. When comparing\
+    \ two sequences, they pick whichever one's alternation rate deviates less from\
+    \ this ideal. The ideal alternation rate is a free parameter inferred from the\
+    \ data \u2014 not fixed at 0.5 \u2014 because people's intuitions about random\
+    \ sequences are known to be biased toward over-alternation."

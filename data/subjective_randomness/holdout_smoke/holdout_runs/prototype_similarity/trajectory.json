@@ -1,0 +1,117 @@
+{
+  "gt_model": "prototype_similarity",
+  "params": {
+    "theta_alt": 0.65,
+    "alt_weight": 0.55,
+    "beta": 4.0,
+    "side_bias": 0.0
+  },
+  "run_root": "/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity",
+  "n_eval_stimuli": 499,
+  "n_eval_dropped": 1,
+  "trajectory": [
+    {
+      "experiment": 1,
+      "step": 0,
+      "iteration": null,
+      "global_step": 0,
+      "best_model": "encoding_compressibility",
+      "pearson_r": 0.873892705468809,
+      "rmse": 0.126189519374114,
+      "pearson_r_bma": 0.8836570922490952,
+      "rmse_bma": 0.12251723423680892
+    },
+    {
+      "experiment": 1,
+      "step": 1,
+      "iteration": 0,
+      "global_step": 1,
+      "best_model": "encoding_compressibility",
+      "pearson_r": 0.873892705468809,
+      "rmse": 0.126189519374114,
+      "pearson_r_bma": 0.8663643242586133,
+      "rmse_bma": 0.10975998807170267
+    }
+  ],
+  "baseline": {
+    "mean_r": 0.5826022395990068,
+    "per_model": {
+      "encoding_compressibility": 0.8219591319711704,
+      "bayesian_diagnosticity": 0.34324534722684324
+    }
+  },
+  "fitted_baseline": {
+    "per_model": {
+      "bayesian_diagnosticity": {
+        "pearson_r": 0.8345079002779345,
+        "rmse": 0.1226640473843164
+      },
+      "encoding_compressibility": {
+        "pearson_r": 0.873892705468809,
+        "rmse": 0.126189519374114
+      }
+    },
+    "mean_r": 0.8542003028733718,
+    "mean_rmse": 0.1244267833792152,
+    "n_responses": 240
+  },
+  "leakage": {
+    "files": [
+      {
+        "path": "experiment1/cognitive_models/bayesian_diagnosticity.py",
+        "identical": false,
+        "mentions_gt_params": true,
+        "gt_named": false
+      },
+      {
+        "path": "experiment1/cognitive_models/encoding_compressibility.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "gt_named": false
+      },
+      {
+        "path": "experiment1/cognitive_models/inner_loop_model.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "gt_named": false
+      },
+      {
+        "path": "experiment1/model_loop/models/bayesian_diagnosticity.py",
+        "identical": false,
+        "mentions_gt_params": true,
+        "gt_named": false
+      },
+      {
+        "path": "experiment1/model_loop/models/encoding_compressibility.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "gt_named": false
+      },
+      {
+        "path": "experiment1/model_loop/models/iter0_candidate0.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "gt_named": false
+      },
+      {
+        "path": "experiment1/model_loop/models/iter0_candidate1.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "gt_named": false
+      }
+    ],
+    "any_identical": false,
+    "any_mention": true,
+    "any_gt_named": false
+  },
+  "experiments": [
+    {
+      "experiment": 1,
+      "manifest_models": [
+        "encoding_compressibility",
+        "bayesian_diagnosticity",
+        "inner_loop_model"
+      ]
+    }
+  ]
+}

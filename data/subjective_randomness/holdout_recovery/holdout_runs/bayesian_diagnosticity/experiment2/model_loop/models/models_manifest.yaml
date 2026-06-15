@@ -1,0 +1,12 @@
+models:
+- name: prototype_similarity
+- name: encoding_compressibility
+- name: inner_loop_model
+- name: inferred_mixture_model
+- name: unnormalized_mixture_model
+- name: iter0_candidate0
+- name: iter0_candidate1
+- name: iter0_candidate2
+- name: iter1_candidate0
+- name: iter1_candidate1
+  rationale: Inner-loop candidate from round 1.

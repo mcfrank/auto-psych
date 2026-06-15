@@ -147,6 +147,108 @@ generate from the pure-Python `model_families` family of the same name. Its
 functional form differs from the PyMC fit, making recovery a harder, more honest
 test of whether the loop can re-identify the generating process.
 
+## Holdout Recovery — the Full Agentic Loop vs. a Held-Out Ground Truth
+
+Closed-ended recovery (above) keeps the true model *in* the candidate set.
+*Holdout recovery* removes it: each seed model in turn is held out as the
+ground truth — its fixed-param PyMC model generates every synthetic response —
+while the full agentic outer+inner loop starts from the *remaining* seed models
+and tries to recover the held-out process. Real agents do the work: the design
+agent chooses each experiment's stimuli by EIG, the theory agent proposes
+models between experiments, and the inner loop's candidate agents conjecture
+new PyMC models that are fit by MCMC and compared by ELPD-LOO.
+
+After **every inner-loop scoring step** (the initial seed-set fit and each
+candidate round, in every experiment) the then-best model's posterior-predictive
+`p_left` is correlated with the ground truth's `p_left` on a large held-out
+stimulus set, giving a trajectory of how the loop converges on the true process.
+
+```bash
+uv run python scripts/subjective_randomness/holdout_recovery.py \
+  --config scripts/subjective_randomness/configs/holdout_recovery.yaml \
+  --out data/subjective_randomness/holdout_recovery/holdout.json \
+  --tidy-csv data/subjective_randomness/holdout_recovery/holdout.csv \
+  --figure data/subjective_randomness/holdout_recovery/holdout.png
+```
+
+This spawns real coding agents and runs real MCMC — a full 3-model run takes
+hours. Scope a smoke run first:
+
+```bash
+# 1 ground truth, 1 experiment, seed-set-only inner loop, tiny MCMC
+uv run python scripts/subjective_randomness/holdout_recovery.py \
+  --config scripts/subjective_randomness/configs/holdout_recovery.yaml \
+  --out /tmp/holdout_smoke/holdout.json \
+  --gt-model bayesian_diagnosticity \
+  --n-experiments 1 --n-participants 5 --inner-loop-iterations 0 \
+  --draws 150 --tune 150 --chains 2
+```
+
+Outputs, per held-out model under `<out dir>/<out stem>_runs/<gt_model>/`:
+the full `experiment1..N/` pipeline trees, `eval_stimuli.json` (the held-out
+evaluation set), and `trajectory.json` (the per-step correlation trajectory,
+per-experiment model sets, and a leakage audit). The combined JSON, tidy CSV
+(one row per `gt_model × step`: `gt_model, experiment, step, iteration,
+global_step, best_model, pearson_r, rmse`), and correlation-vs-step figure land
+at the paths you pass.
+
+Details worth knowing:
+
+- **Held-out eval set.** The design agents choose training stimuli freely, so
+  holdout is enforced *after* the run: any eval-pool pair that appeared (in
+  either order) in any of the run's training data is dropped, and the run fails
+  loudly if fewer than `eval_pool.min_remaining` stimuli survive.
+- **Per-step history.** The inner loop now writes `model_loop/history.json`
+  (best model + posterior after the seed fit and after every candidate round);
+  the trajectory evaluation refits each step's best model through the shared
+  MCMC cache (`--cache-dir`, default `<out dir>/mcmc_cache`), so evaluation
+  costs no new sampling.
+- **The cache ignores fit kwargs.** Cached fits are keyed by model file + data
+  only, so changing `--draws`/`--tune`/`--chains` for a fresh run requires
+  clearing the cache directory first.
+- **Leakage is audited, not prevented.** Agents can read the project assets
+  dir, which contains the held-out model's source. `trajectory.json` flags
+  byte-identical copies, mentions of the ground truth's distinctive parameter
+  names, and files named after the ground truth — heuristics for auditing a
+  run, not proof it was clean.
+- **Design = candidate pool + deterministic EIG.** The design agent's creative
+  job is to write `design/candidates.json` (a pool of stimulus pairs); scoring
+  it by EIG into the top-N `design/stimuli.json` is deterministic. Agents
+  sometimes background that slow scoring and end their turn before
+  `stimuli.json` exists — so when the agent leaves a candidate pool but no
+  stimuli, the harness runs the EIG annotation itself (top 20 by EIG) rather
+  than stalling. Keep candidate pools tractable (the prompt asks for ~100–300
+  pairs): EIG scores every candidate via prior-predictive sampling, so a pool
+  of thousands takes many minutes.
+- **Resume after a failure.** The harness stops loudly at the first agent
+  stage whose output doesn't validate. Re-run the same command with `--resume`
+  to continue: any ground truth that already has a `trajectory.json` is
+  skipped, and within an incomplete run every stage whose output already
+  validates is skipped, so work restarts at the first invalid stage. If a
+  stopped design stage left a valid `candidates.json`, resume reuses it (it
+  scores the EIG and writes `stimuli.json` without re-running the expensive
+  design agent). A partial `model_loop/` from a crashed inner loop is wiped and
+  rerun (it is fully regenerable, and its MCMC fits are still in `mcmc_cache/`).
+  If `--resume` finds a `trajectory.json` whose experiment count disagrees with
+  the config's `n_experiments`, it fails loudly rather than mixing runs.
+
+  ```bash
+  # after fixing the cause of the failure, continue the same run:
+  uv run python scripts/subjective_randomness/holdout_recovery.py \
+    --config scripts/subjective_randomness/configs/holdout_recovery.yaml \
+    --out data/subjective_randomness/holdout_recovery/holdout.json \
+    --tidy-csv data/subjective_randomness/holdout_recovery/holdout.csv \
+    --figure data/subjective_randomness/holdout_recovery/holdout.png \
+    --resume
+  ```
+
+- **opencode permissions.** Agents run from the repo root, so opencode treats
+  `/tmp` (and `/private/tmp`, `/var/folders`) as external directories and, in
+  non-interactive `opencode run`, auto-rejects writes there — which silently
+  breaks design agents that stage temp files. The repo `opencode.json` grants
+  `external_directory` allow rules for those paths so this does not recur. If
+  you point the pipeline at a different scratch directory, add it there too.
+
 ## Analyzing Results
 
 `analyze_recovery.py` summarizes either result type — it auto-detects whether the

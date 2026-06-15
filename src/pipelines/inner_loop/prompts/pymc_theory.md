@@ -1,29 +1,45 @@
-# Cognitive Model Candidate Generation (PyMC)
+# Cognitive Hypothesis → PyMC Model (inner loop)
 
-You are generating one candidate cognitive model for an auto-psych inner model
-loop. Models are written **directly as PyMC models** so the pipeline can fit
-them with MCMC, compare them by ELPD-LOO, and criticize them with shared
-machinery.
+You are proposing one candidate **hypothesis** about how people make these
+judgments. You do this in two steps: first state the hypothesis in plain
+English, then translate that single hypothesis into a PyMC model the pipeline
+fits with MCMC and compares by ELPD-LOO.
 
 Read these files in the current working directory before deciding what to write:
 
 1. `CONTEXT.md` — paths, the responses CSV schema (the feature columns your
    model may read), and the inner-loop round number.
-2. `CANDIDATE_BRIEF.md` — what kind of change to attempt this round.
-3. Any diagnostics present: `model_posterior.json` (current ELPD-LOO posterior
-   over the surviving models), `report.md`, and the code of the top-mass models.
+2. `CANDIDATE_BRIEF.md` — what kind of hypothesis to attempt this round.
+3. `existing_hypotheses.md` — the hypotheses already in the model set and how
+   well each fits the data. Use it to pick a hypothesis that is genuinely
+   different, or a refinement of a single existing one.
 
 ## Goal
 
-Write a full replacement `candidate.py` that improves fit to the observed
-responses, expressed as a probabilistic model in PyMC.
+Each model is one specific, falsifiable hypothesis about the cognitive process
+people use — **not** a fit-maximizing combination of cues. Articulate one such
+hypothesis and implement exactly that.
 
-## Output contract
+Do **NOT** build a mixture-of-heuristics: no averaging, weighting, or Dirichlet-
+/ softmax-blending of cues or mechanisms drawn from several hypotheses into one
+model. A model that bolts together many heuristics to fit better is not a
+hypothesis and will be rejected. Refining a *single* existing hypothesis — a
+different functional form, prior, or normalization of the **same** mechanism —
+is encouraged.
 
-Write `candidate.py` in the current working directory. It must build a PyMC
-model **at module level** inside a `with pm.Model() as model:` block. The
+## Step 1 — `hypothesis.md`
+
+Write `hypothesis.md`: 1–3 plain-English sentences naming the single cognitive
+mechanism you claim people use and how it drives their choice. No code, no math
+notation — a psychologist should read it as one clear, testable claim.
+
+## Step 2 — `candidate.py`
+
+Translate the hypothesis in `hypothesis.md` into a PyMC model. It must build a
+PyMC model **at module level** inside a `with pm.Model() as model:` block. The
 pipeline imports the module and reads the module attribute `model`. Do **not**
-wrap the model in a function.
+wrap the model in a function. Start the file with a module docstring restating
+the hypothesis (the same claim as `hypothesis.md`).
 
 Inside the `with pm.Model() as model:` block:
 
@@ -47,7 +63,23 @@ Inside the `with pm.Model() as model:` block:
   identify the response container, and it must be the same node.
 
 Allowed top-level imports: `numpy as np`, `pymc as pm`, `pytensor.tensor as pt`.
-Keep the file short and parsimonious — one cognitive principle per model.
+Keep the file short and parsimonious — **one cognitive mechanism per model**.
+The number of free parameters and feature columns a model reads should match the
+single hypothesis; a model that needs many weighted cues to fit is a blend, not
+a hypothesis.
+
+### Numerical safety (required)
+
+Your model must evaluate to a **finite** log-probability — a model whose `p_left`
+or likelihood is NaN or `-inf` is rejected (it would crash MCMC at its
+start-value check). So:
+
+- Keep `p_left` strictly inside `(0, 1)`. A `sigmoid`/`softmax` already does
+  this; if you build a probability another way, clamp it with
+  `pt.clip(p, 1e-6, 1 - 1e-6)`.
+- Use `pt.abs(x)` for absolute value — **not** `pt.sqrt(x ** 2)`, which returns
+  NaN in PyTensor for some inputs.
+- Avoid `log(0)`, division by zero, and unbounded exponentials of large scores.
 
 ## Example skeleton
 
@@ -77,9 +109,12 @@ with pm.Model() as model:
 
 ## Self-check
 
-Before stopping, confirm `candidate.py` imports and exposes a `pm.Model`:
+Before stopping, confirm both files exist — `hypothesis.md` (non-empty) and a
+`candidate.py` that imports and exposes a `pm.Model`. A candidate with no
+`hypothesis.md` is rejected.
 
 ```bash
+test -s hypothesis.md && echo "hypothesis.md OK"
 python3 -c "
 from pathlib import Path
 from src.models.pymc_inference import load_pymc_model, observed_response_data

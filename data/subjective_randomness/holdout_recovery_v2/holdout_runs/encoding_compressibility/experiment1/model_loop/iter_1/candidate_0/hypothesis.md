@@ -1,0 +1,1 @@
+People judge a sequence as more random when it has shorter maximum runs. A long run (e.g., HHHHH) can be compactly described via run-length encoding — just name the element and its length — making the sequence feel structured and non-random. The sequence whose longest run is shorter resists this compact description and therefore appears more random.

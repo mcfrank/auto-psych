@@ -1,0 +1,26 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: extended_compressibility
+  rationale: 'Extends the best linear compressibility model by adding an alternation
+    rate term, reflecting people''s known sensitivity to alternation.
+
+    '
+- name: alternation_and_run
+  rationale: 'A simplified combination model using only alternation rate and max run
+    length to gauge subjective randomness.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

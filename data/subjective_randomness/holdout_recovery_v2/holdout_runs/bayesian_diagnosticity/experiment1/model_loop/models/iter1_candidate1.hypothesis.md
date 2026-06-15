@@ -1,0 +1,1 @@
+People judge a sequence as random-looking based on how much periodic structure it contains. A truly random sequence should have no detectable, regularly-repeating pattern, so a sequence that cycles through outcomes in a predictable rhythm looks non-random. When comparing two sequences, people choose the one with lower periodicity as the more random-looking one.

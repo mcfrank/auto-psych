@@ -1,0 +1,257 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md CANDIDATE_BRIEF.md existing_hypotheses.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+cat: CONTEXT.md: No such file or directory
+cat: CANDIDATE_BRIEF.md: No such file or directory
+cat: existing_hypotheses.md: No such file or directory
+[0m
+[0m$ [0mpwd && ls -la
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+/Users/ben/Documents/auto-psych
+total 1496
+drwxr-xr-x@   8 ben  staff     256 Jun 12 14:02 __pycache__
+drwxr-xr-x@  27 ben  staff     864 Jun 12 14:18 .
+drwx------@ 283 ben  staff    9056 Jun 10 14:21 ..
+drwxr-xr-x@   3 ben  staff      96 Jun 13 17:50 .claude
+-rw-r--r--@   1 ben  staff    8196 Jun 13 12:08 .DS_Store
+drwxr-xr-x@  16 ben  staff     512 Jun 12 15:58 .git
+-rw-r--r--@   1 ben  staff     877 Jun  5 13:49 .gitignore
+drwxr-xr-x@   6 ben  staff     192 Apr 16 22:36 .pytest_cache
+drwxr-xr-x@   5 ben  staff     160 Jun  5 13:56 .ruff_cache
+drwxr-xr-x@  10 ben  staff     320 May 28 12:09 .venv
+drwxr-xr-x@   2 ben  staff      64 Apr 17 09:52 .worktrees
+-rw-r--r--@   1 ben  staff    1753 Jun 12 14:01 candidate.py
+-rw-r--r--@   1 ben  staff    1724 Jun  5 09:37 CLEANUP_PLAN.md
+drwxr-xr-x@   6 ben  staff     192 Jun  9 16:41 data
+-rw-r--r--@   1 ben  staff    1070 Apr 16 22:03 LICENSE
+-rw-r--r--@   1 ben  staff     310 Jun 12 14:18 opencode.json
+drwxr-xr-x@   6 ben  staff     192 Jun  5 13:49 projects
+-rw-r--r--@   1 ben  staff    1859 Jun  6 21:57 pyproject.toml
+-rw-r--r--@   1 ben  staff    5363 Jun  5 13:49 README.md
+drwxr-xr-x@   7 ben  staff     224 Jun  5 13:49 scripts
+drwxr-xr-x@  12 ben  staff     384 Jun  5 10:57 src
+drwxr-xr-x@   7 ben  staff     224 Apr 16 22:03 templates
+-rw-r--r--@   1 ben  staff     462 Jun 12 12:48 test_hier.py
+-rw-r--r--@   1 ben  staff    3645 Jun 12 12:48 test_hierarchical.py
+-rw-r--r--@   1 ben  staff     412 Jun 12 12:47 test_shape.py
+drwxr-xr-x@  40 ben  staff    1280 Jun 13 19:22 tests
+-rw-r--r--@   1 ben  staff  706474 Jun  6 21:38 uv.lock
+[0m
+[0m$ [0mfind . -name "CONTEXT.md"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/CONTEXT.md
+./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/CONTEXT.md
+./data/think_aloud_game24/experiment1/CONTEXT.md
+[0m
+[0m$ [0mls -lt $(find . -name "CONTEXT.md") | head -n 5
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+-rw-r--r--@ 1 ben  staff   871 Jun 13 19:33 ./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+-rw-r--r--@ 1 ben  staff  1510 Jun 13 19:31 ./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/CONTEXT.md
+-rw-r--r--@ 1 ben  staff   575 Jun 12 20:22 ./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_2/CONTEXT.md
+-rw-r--r--@ 1 ben  staff   575 Jun 12 20:00 ./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+-rw-r--r--@ 1 ben  staff   575 Jun 12 19:58 ./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_0/CONTEXT.md
+[0m
+[0m$ [0mls -la ./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 48
+drwxr-xr-x@ 6 ben  staff    192 Jun 13 19:33 .
+drwxr-xr-x@ 3 ben  staff     96 Jun 13 19:33 ..
+-rw-r--r--@ 1 ben  staff  12281 Jun 13 19:33 agent.jsonl
+-rw-r--r--@ 1 ben  staff    393 Jun 13 19:33 CANDIDATE_BRIEF.md
+-rw-r--r--@ 1 ben  staff    871 Jun 13 19:33 CONTEXT.md
+-rw-r--r--@ 1 ben  staff    646 Jun 13 19:33 existing_hypotheses.md
+[0m
+[0m$ [0mcat CONTEXT.md CANDIDATE_BRIEF.md existing_hypotheses.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+# Inner Loop — round 0, candidate 0 of 2
+
+Responses CSV: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/responses.csv`
+Feature columns available (use these as `pm.Data` names): `sequence_a,sequence_b,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b,participant_id,trial_index,chose_left,generating_model`
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+# Candidate Brief
+
+Refine one existing hypothesis within its single mechanism — e.g. a different functional form, prior, or normalization. Do NOT graft cues from other models onto it.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## encoding_compressibility  — posterior 0.937, ELPD-LOO -113.70
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.063, ELPD-LOO -115.11
+
+Random-looking sequences are diagnostic of a fair coin over salient
+non-random alternatives: alternating, biased, and streaky generators.
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People judge the randomness of a sequence by the proportion of the sequence made up of its longest continuous run, perceiving sequences where a single run occupies a larger fraction of the total length as less random.
+EOF
+cat << 'EOF' > candidate.py
+"""
+People judge the randomness of a sequence by the proportion of the sequence made up of its longest continuous run, perceiving sequences where a single run occupies a larger fraction of the total length as less random.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+
+    # Free parameter mapping the difference in normalized run length to choice probability
+    beta_run_norm = pm.Normal("beta_run_norm", mu=0.0, sigma=10.0)
+
+    # p_left is the probability of choosing sequence A as more random.
+    # If A has a larger normalized run, it is less random, so beta_run_norm should be negative.
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(beta_run_norm * (max_run_norm_a - max_run_norm_b)))
+
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.insert(0, '/Users/ben/Documents/auto-psych')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People judge the randomness of a sequence by the proportion of the sequence made up of its longest continuous run, perceiving sequences where a single run occupies a larger fraction of the total length as less random.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+
+    # Sensitivity to the difference in normalized run length. 
+    beta = pm.Normal("beta", mu=0.0, sigma=5.0)
+
+    # Calculate probability of choosing sequence A.
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(beta * (max_run_norm_a - max_run_norm_b)))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.insert(0, '/Users/ben/Documents/auto-psych')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+hypothesis.md OK
+observed: chose_left
+[0m
+I have successfully formulated the cognitive hypothesis and implemented it as a PyMC model in `candidate.py`. 
+
+### `hypothesis.md`
+> People judge the randomness of a sequence by the proportion of the sequence made up of its longest continuous run, perceiving sequences where a single run occupies a larger fraction of the total length as less random.
+
+### `candidate.py`
+The model isolates a single metric—the proportion of the sequence occupied by the maximum run (`max_run_norm_a` and `max_run_norm_b`)—as a normalized refinement of the run-length aspect of the existing encoding compressibility hypothesis. It exposes the required stimulus inputs, sets up a normally distributed cognitive parameter (`beta`), defines the deterministic probability `p_left`, and properly passes the `chose_left` Data tensor to the Bernoulli observed variable without intermediate modification. 
+
+Both files have been written to the directory and pass the structural self-checks.

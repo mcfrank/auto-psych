@@ -92,7 +92,7 @@ def resolve_generating_params(
     )
 
 
-def _feature_rows(stimuli: Sequence[Mapping[str, str]]) -> List[Dict[str, Any]]:
+def feature_rows(stimuli: Sequence[Mapping[str, str]]) -> List[Dict[str, Any]]:
     """Featurize each (sequence_a, sequence_b) stimulus into a full feature row.
 
     The row carries every feature column any seed model reads, plus the raw
@@ -150,7 +150,7 @@ def p_left_fixed_params(
 
     model = load_pymc_model(model_name, models_dir)
     _require_exact_params(model, params)
-    rows = _feature_rows(stimuli)
+    rows = feature_rows(stimuli)
     stim_data = make_stim_data(model, rows)
 
     with model:
@@ -217,7 +217,7 @@ def generate_responses(
     if n_participants < 1:
         raise ValueError(f"n_participants must be >= 1, got {n_participants}.")
 
-    feature_rows = _feature_rows(stimuli)
+    stim_feature_rows = feature_rows(stimuli)
     if generator == "pymc":
         p_left = p_left_fixed_params(model_name, models_dir, stimuli, params, seed=seed)
     elif generator == "model_family":
@@ -230,8 +230,8 @@ def generate_responses(
 
     rows: List[Dict[str, Any]] = []
     for participant in range(n_participants):
-        draws = rng.random(len(feature_rows)) < p_left
-        for trial_index, (feat, chose_left) in enumerate(zip(feature_rows, draws)):
+        draws = rng.random(len(stim_feature_rows)) < p_left
+        for trial_index, (feat, chose_left) in enumerate(zip(stim_feature_rows, draws)):
             row = {k: v for k, v in feat.items() if k != "chose_left"}
             row["participant_id"] = participant
             row["trial_index"] = trial_index

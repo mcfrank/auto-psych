@@ -1,0 +1,130 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/CONTEXT.md
+[0m→ [0mRead src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+[0m→ [0mRead data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/report.md
+[0m
+[0m$ [0mls -l /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/cognitive_models
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 32
+drwxr-xr-x@ 4 ben  staff   128 Jun 12 12:01 __pycache__
+-rw-r--r--@ 1 ben  staff  1581 Jun 12 12:01 encoding_compressibility.py
+-rw-r--r--@ 1 ben  staff  2814 Jun 12 12:18 inner_loop_model.py
+-rw-r--r--@ 1 ben  staff   449 Jun 12 12:18 models_manifest.yaml
+-rw-r--r--@ 1 ben  staff  1171 Jun 12 12:01 prototype_similarity.py
+[0m
+[0m→ [0mRead data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/cognitive_models/models_manifest.yaml
+[0m→ [0mRead data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/cognitive_models/inner_loop_model.py
+[0m
+[0m$ [0mmkdir -p /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models
+cp /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/cognitive_models/*.py /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/
+cp /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/cognitive_models/models_manifest.yaml /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+[0m$ [0mls -l /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 32
+-rw-r--r--@ 1 ben  staff  1581 Jun 12 12:18 encoding_compressibility.py
+-rw-r--r--@ 1 ben  staff  2814 Jun 12 12:18 inner_loop_model.py
+-rw-r--r--@ 1 ben  staff   449 Jun 12 12:18 models_manifest.yaml
+-rw-r--r--@ 1 ben  staff  1171 Jun 12 12:18 prototype_similarity.py
+[0m
+[0m→ [0mRead data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/prototype_similarity.py
+[0m→ [0mRead data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/encoding_compressibility.py
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/inferred_mixture_model.py
+Wrote file successfully.
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych && uv run python -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+m = load_pymc_model('inferred_mixture_model', Path('data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models'))
+print('pm.Data inputs:', pm_data_inputs(m))
+print('observed response container:', observed_response_data(m))
+print('OK')
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+pm.Data inputs: ['n_a', 'h_a', 'alts_a', 'n_b', 'h_b', 'alts_b', 'chose_left']
+observed response container: chose_left
+OK
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/unnormalized_mixture_model.py
+Wrote file successfully.
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych && uv run python -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+m = load_pymc_model('unnormalized_mixture_model', Path('data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models'))
+print('pm.Data inputs:', pm_data_inputs(m))
+print('observed response container:', observed_response_data(m))
+print('OK')
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+pm.Data inputs: ['n_a', 'h_a', 'alts_a', 'n_b', 'h_b', 'alts_b', 'chose_left']
+observed response container: chose_left
+OK
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/models_manifest.yaml
+Wrote file successfully.
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/theory_report.md
+Wrote file successfully.
+[0m
+[0m$ [0mls -l /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 56
+drwxr-xr-x@ 4 ben  staff   128 Jun 12 12:19 __pycache__
+-rw-r--r--@ 1 ben  staff  1581 Jun 12 12:18 encoding_compressibility.py
+-rw-r--r--@ 1 ben  staff  3190 Jun 12 12:19 inferred_mixture_model.py
+-rw-r--r--@ 1 ben  staff  2814 Jun 12 12:18 inner_loop_model.py
+-rw-r--r--@ 1 ben  staff   869 Jun 12 12:19 models_manifest.yaml
+-rw-r--r--@ 1 ben  staff  1171 Jun 12 12:18 prototype_similarity.py
+-rw-r--r--@ 1 ben  staff  1594 Jun 12 12:19 theory_report.md
+-rw-r--r--@ 1 ben  staff  2721 Jun 12 12:19 unnormalized_mixture_model.py
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models && python3 -c "import yaml; print(yaml.safe_load(open('models_manifest.yaml')))"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+{'models': [{'name': 'prototype_similarity', 'rationale': 'Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.'}, {'name': 'encoding_compressibility', 'rationale': 'Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.'}, {'name': 'inner_loop_model', 'rationale': 'Best PyMC model found by the inner model-improvement loop.'}, {'name': 'inferred_mixture_model', 'rationale': 'A variant of the Bayesian mixture model that infers the parameters of the alternative hypotheses (alternating Markov, streaky Markov, and biased coin) rather than keeping them hardcoded.'}, {'name': 'unnormalized_mixture_model', 'rationale': 'A variant of the inner loop model that does not normalize log probabilities by sequence length, to test if length normalization was the critical success factor.'}]}
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych && uv run python -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+
+for model_name in ['prototype_similarity', 'encoding_compressibility', 'inner_loop_model', 'inferred_mixture_model', 'unnormalized_mixture_model']:
+    print(f'Checking {model_name}...')
+    m = load_pymc_model(model_name, Path('data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models'))
+    print('  pm.Data inputs:', pm_data_inputs(m))
+    print('  observed response container:', observed_response_data(m))
+print('ALL OK')
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+Checking prototype_similarity...
+  pm.Data inputs: ['imbalance_a', 'imbalance_b', 'p_alts_a', 'p_alts_b', 'chose_left']
+  observed response container: chose_left
+Checking encoding_compressibility...
+  pm.Data inputs: ['max_run_norm_a', 'max_run_norm_b', 'periodicity_a', 'periodicity_b', 'imbalance_a', 'imbalance_b', 'chose_left']
+  observed response container: chose_left
+Checking inner_loop_model...
+  pm.Data inputs: ['n_a', 'h_a', 'alts_a', 'n_b', 'h_b', 'alts_b', 'chose_left']
+  observed response container: chose_left
+Checking inferred_mixture_model...
+  pm.Data inputs: ['n_a', 'h_a', 'alts_a', 'n_b', 'h_b', 'alts_b', 'chose_left']
+  observed response container: chose_left
+Checking unnormalized_mixture_model...
+  pm.Data inputs: ['n_a', 'h_a', 'alts_a', 'n_b', 'h_b', 'alts_b', 'chose_left']
+  observed response container: chose_left
+ALL OK
+[0m
+I have completed the tasks for Experiment 2's theory agent. 
+
+### What was done:
+1. **Copied Previous Models**: Copied `prototype_similarity.py`, `encoding_compressibility.py`, `inner_loop_model.py`, and `models_manifest.yaml` from Experiment 1 to Experiment 2's `cognitive_models` directory.
+2. **Analyzed Experiment 1 Results**: The inner model loop successfully identified a Bayesian log Bayes factor model (`inner_loop_model.py`) that outperformed the feature-heuristic ones like prototype similarity and encoding compressibility. Its ELPD-LOO (-531.50) was strongly dominant. This model mixes alternating Markov, streaky Markov, and biased coin alternatives and normalizes the final log likelihoods by sequence length. 
+3. **Proposed 2 New Models**: Based on the success of `inner_loop_model`, I have added two new variants to isolate its success factors:
+   - `inferred_mixture_model.py`: Allows PyMC to infer the underlying switch probabilities and bias shares instead of hard-coding them (e.g. `ALT_SWITCH_PROB = 0.95`).
+   - `unnormalized_mixture_model.py`: Uses the exact same hardcoded constants and generative models as `inner_loop_model` but drops the length-normalization (`/ N`) component. In standard Bayesian statistics literature, Bayes Factors are typically unnormalized, so this tests whether humans extract a length-invariant normalized summary or use the true raw sum over sequences. 
+4. **Updated the YAML manifest**: All 5 models are now listed correctly.
+5. **Wrote the Report**: Created `cognitive_models/theory_report.md` explaining the motivation and mechanism for the two new variant models.
+
+All files validate perfectly against the provided PyMC checker script.

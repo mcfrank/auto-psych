@@ -1,0 +1,1 @@
+People evaluate the randomness of a coin flip sequence based on its alternation rate. Sequences with a higher proportion of alternations between outcomes are perceived as more random due to an expectation that random processes switch frequently.
