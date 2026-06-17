@@ -38,6 +38,17 @@ from src.model_comparison.posterior import compare_table, model_posterior
 
 _PKG_DIR = Path(__file__).resolve().parent
 _THEORY_PROMPT = _PKG_DIR / "prompts" / "pymc_theory.md"
+_CRITIQUE_PROMPT = _PKG_DIR / "prompts" / "critique.md"
+
+# CriticAL critique defaults. Before each candidate round the inner loop runs a
+# posterior-predictive critique of the incumbent (best) model: the critique agent
+# proposes test statistics, the PPC harness scores each as a two-sided empirical
+# p-value over ``CRITIQUE_PPC_REPLICATES`` posterior-predictive datasets, and
+# Benjamini–Hochberg FDR flags the significant discrepancies the next round of
+# candidates should address (see ``src/critique/ppc.py``).
+CRITIQUE_N_PROPOSALS = 8
+CRITIQUE_SIGNIFICANCE_ALPHA = 0.05
+CRITIQUE_PPC_REPLICATES = 200
 
 # Occam backstop for model selection: each model's log-prior is this constant
 # times its non-comment line count (see ``model_complexity``). Negative ⇒ leaner
@@ -267,6 +278,7 @@ def _write_candidate_context(
     candidate_idx: int,
     candidate_count: int,
     current_posterior: Optional[Dict[str, Any]],
+    critique_path: Optional[Path] = None,
 ) -> None:
     candidate_dir.mkdir(parents=True, exist_ok=True)
     with responses_path.open(encoding="utf-8") as f:
@@ -286,9 +298,20 @@ def _write_candidate_context(
         "how well each fits. Read it so you propose a *distinct* or *refined*",
         "hypothesis — never a blend of several.",
     ]
+    if critique_path is not None:
+        lines += [
+            "",
+            f"`critiques.md` ({critique_path}) is a posterior-predictive critique of",
+            "the current **best** model: the test statistics on which it significantly",
+            "fails to reproduce the data, each with the direction of the discrepancy.",
+            "Treat these as the **strongest evidence** for what your hypothesis should",
+            "fix — propose a single mechanism that would close one of these gaps.",
+        ]
     (candidate_dir / "CONTEXT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
     _write_existing_hypotheses(candidate_dir, models_dir, current_posterior)
+    if critique_path is not None and critique_path.exists():
+        shutil.copyfile(critique_path, candidate_dir / "critiques.md")
 
     hints = [
         "Refine one existing hypothesis within its single mechanism — e.g. a "
@@ -299,12 +322,19 @@ def _write_candidate_context(
         "Propose a simpler or higher-variance single-mechanism hypothesis if "
         "progress has stalled.",
     ]
+    critique_note = (
+        "\nIf `critiques.md` is present, prioritise a hypothesis that addresses one of "
+        "the significant discrepancies it reports.\n"
+        if critique_path is not None
+        else ""
+    )
     brief = (
         "# Candidate Brief\n\n"
         f"{hints[candidate_idx % len(hints)]}\n\n"
         "Your candidate must express **exactly one** cognitive hypothesis. Do not "
         "average, weight, or mix cues or mechanisms from several hypotheses into a "
         "single model — a blended mega-model is not a hypothesis.\n"
+        f"{critique_note}"
     )
     (candidate_dir / "CANDIDATE_BRIEF.md").write_text(brief, encoding="utf-8")
 
@@ -316,9 +346,10 @@ def _spawn_candidate_agent(
 
     prompt = (
         f"{_THEORY_PROMPT.read_text(encoding='utf-8')}\n\n"
-        "---\n\nRead `CONTEXT.md`, `CANDIDATE_BRIEF.md`, and `existing_hypotheses.md` "
-        "in this directory. Then write `hypothesis.md` (your single hypothesis in "
-        "plain English), and `candidate.py` (a PyMC model implementing only it).\n"
+        "---\n\nRead `CONTEXT.md`, `CANDIDATE_BRIEF.md`, `existing_hypotheses.md`, and "
+        "`critiques.md` (if present) in this directory. Then write `hypothesis.md` "
+        "(your single hypothesis in plain English), and `candidate.py` (a PyMC model "
+        "implementing only it).\n"
     )
     log_path = candidate_dir / "agent.jsonl"
     success, _ = run_coding_agent(
@@ -330,6 +361,218 @@ def _spawn_candidate_agent(
         backend=backend,
     )
     return success
+
+
+# ─────────────────────────────────────────────
+# Critique round (CriticAL posterior-predictive model criticism)
+# ─────────────────────────────────────────────
+
+
+def _incumbent_hypothesis(models_dir: Path, incumbent: str) -> str:
+    """The incumbent's stated hypothesis (its manifest rationale), or a fallback."""
+    for entry in _manifest_entries(models_dir):
+        if entry.get("name") == incumbent:
+            return (entry.get("rationale") or "").strip() or "(no stated hypothesis)"
+    return "(no stated hypothesis)"
+
+
+def _seed_critique_fit_cache(
+    incumbent: str,
+    models_dir: Path,
+    responses_path: Path,
+    fit_cache_dir: Path,
+    fit_kwargs: Dict[str, Any],
+) -> None:
+    """Persist the incumbent's fit so the critique agent's PPC harness reuses it.
+
+    The inner loop just fit the incumbent while scoring, so this is an in-process
+    cache hit; we only write its InferenceData to ``fit_cache_dir`` (under the
+    content-addressed name the harness expects) so the agent's separate harness
+    process loads it instead of refitting with MCMC.
+    """
+    from src.models.pymc_inference import fit_models_cached
+
+    fit_cache_dir.mkdir(parents=True, exist_ok=True)
+    fitted = fit_models_cached(
+        [incumbent],
+        models_dir=models_dir,
+        responses_path=responses_path,
+        cache_dir=fit_cache_dir,
+        **fit_kwargs,
+    )[incumbent]
+    nc_path = fit_cache_dir / f"{incumbent}.{fitted.fingerprint}.nc"
+    if not nc_path.exists():
+        fitted.idata.to_netcdf(str(nc_path))
+
+
+def _write_critique_context(
+    critique_dir: Path,
+    incumbent: str,
+    models_dir: Path,
+    responses_path: Path,
+    fit_cache_dir: Path,
+    *,
+    n_proposals: int,
+    significance_alpha: float,
+    n_replicates: int,
+) -> None:
+    """Write CRITIQUE_CONTEXT.md: the incumbent, the data schema, and the PPC command."""
+    critique_dir.mkdir(parents=True, exist_ok=True)
+    with responses_path.open(encoding="utf-8") as f:
+        header = f.readline().strip()
+    incumbent_file = models_dir / f"{incumbent}.py"
+    test_stats_dir = critique_dir / "test_stats"
+    results_path = critique_dir / "ppc_results.json"
+    ppc_command = (
+        "python3 -m src.critique.ppc \\\n"
+        f"    --responses {responses_path} \\\n"
+        f"    --model {incumbent} \\\n"
+        f"    --models-dir {models_dir} \\\n"
+        f"    --test-stats-dir {test_stats_dir} \\\n"
+        f"    --out {results_path} \\\n"
+        f"    --cache-dir {fit_cache_dir} \\\n"
+        f"    --n-replicates {n_replicates} \\\n"
+        f"    --significance-alpha {significance_alpha}"
+    )
+    lines = [
+        "# Critique context",
+        "",
+        f"**Incumbent (best) model:** `{incumbent}`",
+        f"**Incumbent model code:** `{incumbent_file}`",
+        f"**Incumbent hypothesis:** {_incumbent_hypothesis(models_dir, incumbent)}",
+        "",
+        f"**Responses CSV:** `{responses_path}`",
+        f"**Columns (DataFrame your test statistics receive):** `{header}`",
+        f"**Model set directory:** `{models_dir}`",
+        "",
+        f"Propose **{n_proposals}** test statistics. Write each to "
+        f"`{test_stats_dir}/<name>.py`.",
+        "",
+        "Run the posterior-predictive harness once over that directory:",
+        "",
+        "```bash",
+        ppc_command,
+        "```",
+        "",
+        f"It writes `{results_path}` with a two-sided empirical p-value and a "
+        f"Benjamini–Hochberg FDR-adjusted p-value per statistic ({n_replicates} "
+        "posterior-predictive replicates). A statistic is a **significant "
+        f"discrepancy** when its `p_value_adjusted` ≤ {significance_alpha}.",
+    ]
+    (critique_dir / "CRITIQUE_CONTEXT.md").write_text(
+        "\n".join(lines) + "\n", encoding="utf-8"
+    )
+
+
+def _spawn_critique_agent(
+    critique_dir: Path,
+    incumbent: str,
+    *,
+    models_dir: Path,
+    responses_path: Path,
+    cache_dir: Optional[Path],
+    fit_kwargs: Dict[str, Any],
+    n_proposals: int,
+    significance_alpha: float,
+    n_replicates: int,
+    agent_timeout_sec: int,
+    backend: Optional[str],
+) -> bool:
+    """Critique the incumbent: seed its fit, write context, spawn the critique agent.
+
+    The agent proposes test statistics, runs the PPC harness (which loads the
+    seeded fit — no refit), and writes `critiques.md` describing the significant
+    discrepancies. Returns the agent's success flag.
+    """
+    from src.runtime.coding_agent import run_coding_agent
+
+    critique_dir.mkdir(parents=True, exist_ok=True)
+    # Share the inner loop's on-disk cache when it has one; otherwise keep a small
+    # per-round cache so the harness process reuses the just-computed fit.
+    fit_cache_dir = Path(cache_dir) if cache_dir is not None else critique_dir / ".fit_cache"
+    _seed_critique_fit_cache(
+        incumbent, models_dir, responses_path, fit_cache_dir, fit_kwargs
+    )
+    _write_critique_context(
+        critique_dir,
+        incumbent,
+        models_dir,
+        responses_path,
+        fit_cache_dir,
+        n_proposals=n_proposals,
+        significance_alpha=significance_alpha,
+        n_replicates=n_replicates,
+    )
+
+    prompt = (
+        f"{_CRITIQUE_PROMPT.read_text(encoding='utf-8')}\n\n"
+        "---\n\nRead `CRITIQUE_CONTEXT.md` in this directory, then follow the steps "
+        "above: write your test statistics under `test_stats/`, run the harness, and "
+        "write `critiques.md`.\n"
+    )
+    log_path = critique_dir / "agent.jsonl"
+    # The harness imports from the repo, so it must run from the repo root; give
+    # the agent file access to its working dir, the model set, and the responses.
+    success, _ = run_coding_agent(
+        prompt,
+        cwd=REPO_ROOT,
+        log_path=log_path,
+        allowed_dirs=[critique_dir, models_dir, responses_path.parent],
+        timeout_secs=agent_timeout_sec,
+        backend=backend,
+    )
+    return success
+
+
+def _run_critique_round(
+    round_dir: Path,
+    *,
+    responses_path: Path,
+    models_dir: Path,
+    posterior: Dict[str, Any],
+    cache_dir: Optional[Path],
+    fit_kwargs: Dict[str, Any],
+    n_proposals: int,
+    significance_alpha: float,
+    n_replicates: int,
+    agent_timeout_sec: int,
+    backend: Optional[str],
+) -> Optional[Path]:
+    """Critique the current incumbent before a candidate round; return critiques.md.
+
+    Returns the path to the round's ``critiques.md`` when the critique agent
+    produced one, else ``None`` (with a loud warning) so a failed critique skips
+    forward rather than aborting the whole inner loop.
+    """
+    incumbent = _best_model(posterior)
+    critique_dir = round_dir / "critique"
+    print(f"  [critique] critiquing incumbent {incumbent!r}", flush=True)
+    try:
+        _spawn_critique_agent(
+            critique_dir,
+            incumbent,
+            models_dir=models_dir,
+            responses_path=responses_path,
+            cache_dir=cache_dir,
+            fit_kwargs=fit_kwargs,
+            n_proposals=n_proposals,
+            significance_alpha=significance_alpha,
+            n_replicates=n_replicates,
+            agent_timeout_sec=agent_timeout_sec,
+            backend=backend,
+        )
+    except Exception as e:  # a critique failure must not kill a long inner-loop run
+        print(f"  [critique] skipped — {type(e).__name__}: {e}", flush=True)
+        return None
+
+    critiques_md = critique_dir / "critiques.md"
+    if not critiques_md.exists():
+        print(
+            "  [critique] agent produced no critiques.md — candidates run without it",
+            flush=True,
+        )
+        return None
+    return critiques_md
 
 
 # ─────────────────────────────────────────────
@@ -349,6 +592,10 @@ def run_pymc_inner_loop(
     agent_timeout_sec: int = 900,
     backend: Optional[str] = None,
     fit_kwargs: Optional[Dict[str, Any]] = None,
+    enable_critique: bool = True,
+    n_critique_proposals: int = CRITIQUE_N_PROPOSALS,
+    critique_significance_alpha: float = CRITIQUE_SIGNIFICANCE_ALPHA,
+    n_critique_replicates: int = CRITIQUE_PPC_REPLICATES,
 ) -> Dict[str, Any]:
     """Run the PyMC inner model loop and export the best model.
 
@@ -371,6 +618,14 @@ def run_pymc_inner_loop(
         Passed through to ``model_posterior`` (negative penalises complex models).
     fit_kwargs
         Extra kwargs for MCMC (e.g. ``{"draws": 500, "tune": 500, "chains": 2}``).
+    enable_critique
+        When True, run a CriticAL posterior-predictive critique of the incumbent
+        (best) model before each candidate round and feed the resulting
+        ``critiques.md`` to the candidate agents (see ``src/critique/ppc.py``).
+    n_critique_proposals, critique_significance_alpha, n_critique_replicates
+        Test statistics the critique agent proposes per round, the FDR threshold
+        for a significant discrepancy, and the posterior-predictive replicates
+        forming each statistic's null distribution.
 
     Returns a dict with ``best_model``, ``posteriors``, ``elpd_loo`` and paths.
     """
@@ -391,6 +646,21 @@ def run_pymc_inner_loop(
 
     for iteration in range(max_iterations):
         round_dir = results_dir / f"iter_{iteration}"
+        critique_path: Optional[Path] = None
+        if enable_critique:
+            critique_path = _run_critique_round(
+                round_dir,
+                responses_path=responses_path,
+                models_dir=models_dir,
+                posterior=posterior,
+                cache_dir=cache_dir,
+                fit_kwargs=fit_kwargs,
+                n_proposals=n_critique_proposals,
+                significance_alpha=critique_significance_alpha,
+                n_replicates=n_critique_replicates,
+                agent_timeout_sec=agent_timeout_sec,
+                backend=backend,
+            )
         for idx in range(candidate_count):
             candidate_dir = round_dir / f"candidate_{idx}"
             _write_candidate_context(
@@ -401,6 +671,7 @@ def run_pymc_inner_loop(
                 idx,
                 candidate_count,
                 posterior,
+                critique_path=critique_path,
             )
             if not _spawn_candidate_agent(candidate_dir, agent_timeout_sec, backend):
                 continue

@@ -536,6 +536,8 @@ def run_inner_model_loop_programmatic(
     project_id: Optional[str] = None,
     agent_timeout_sec: int = 900,
     complexity_prior_const: Optional[float] = None,
+    enable_critique: bool = True,
+    n_critique_proposals: Optional[int] = None,
 ) -> Path:
     """Run the PyMC inner model loop over pooled outer-loop data.
 
@@ -550,6 +552,10 @@ def run_inner_model_loop_programmatic(
     MCMC fit cache so later analyses can re-load the loop's fits for free.
     `complexity_prior_const` overrides the inner loop's default Occam line-count
     prior (leave None to use it; pass 0.0 to disable the penalty).
+    `enable_critique` runs a CriticAL posterior-predictive critique of the
+    incumbent before each candidate round (the critique feeds the candidate
+    agents); `n_critique_proposals` (None ⇒ inner-loop default) sets how many test
+    statistics the critique agent proposes.
     """
     from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 
@@ -575,6 +581,9 @@ def run_inner_model_loop_programmatic(
         if complexity_prior_const is None
         else {"complexity_prior_const": complexity_prior_const}
     )
+    # None ⇒ inherit run_pymc_inner_loop's default proposal count.
+    if n_critique_proposals is not None:
+        extra["n_critique_proposals"] = n_critique_proposals
     run_pymc_inner_loop(
         responses_path,
         loop_dir,
@@ -585,6 +594,7 @@ def run_inner_model_loop_programmatic(
         agent_timeout_sec=agent_timeout_sec,
         backend=backend,
         fit_kwargs=fit_kwargs,
+        enable_critique=enable_critique,
         **extra,
     )
     model_path = _export_inner_loop_model(exp_dir, loop_dir)

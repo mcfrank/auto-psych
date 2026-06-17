@@ -83,6 +83,8 @@ def _run_agent(
     backend: Optional[str] = None,
     participant_backend: str = "closed",
     participant_model: Optional[str] = None,
+    enable_critique: bool = True,
+    n_critique_proposals: Optional[int] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output is invalid."""
     print(f"\n{'=' * 60}", flush=True)
@@ -105,6 +107,8 @@ def _run_agent(
             max_iterations=inner_loop_iterations,
             candidate_count=inner_loop_candidates,
             fit_kwargs=fit_kwargs,
+            enable_critique=enable_critique,
+            n_critique_proposals=n_critique_proposals,
         )
     else:
         write_context(
@@ -152,6 +156,8 @@ def _run_experiment(
     backend: Optional[str] = None,
     participant_backend: str = "closed",
     participant_model: Optional[str] = None,
+    enable_critique: bool = True,
+    n_critique_proposals: Optional[int] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
@@ -214,6 +220,8 @@ def _run_experiment(
             backend=backend,
             participant_backend=participant_backend,
             participant_model=participant_model,
+            enable_critique=enable_critique,
+            n_critique_proposals=n_critique_proposals,
         )
 
     if "5_model_loop" in keys_to_run:
@@ -261,6 +269,12 @@ class Args:
     """MCMC tuning (warmup) steps per chain for inner-loop model fits."""
     chains: int = 4
     """MCMC chains for inner-loop model fits."""
+    critique: bool = True
+    """Run a CriticAL posterior-predictive critique of the incumbent before each
+    inner-loop candidate round (the critique feeds the candidate agents)."""
+    n_critique_proposals: Optional[int] = None
+    """Test statistics the critique agent proposes per round (None ⇒ inner-loop
+    default)."""
 
 
 def main(args: Args) -> None:
@@ -334,6 +348,8 @@ def main(args: Args) -> None:
             backend=backend,
             participant_backend=args.participant_backend,
             participant_model=participant_model,
+            enable_critique=args.critique,
+            n_critique_proposals=args.n_critique_proposals,
         )
 
     print("\nAll experiments complete.", flush=True)
