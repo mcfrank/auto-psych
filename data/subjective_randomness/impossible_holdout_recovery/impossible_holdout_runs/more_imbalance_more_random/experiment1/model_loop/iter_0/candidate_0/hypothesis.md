@@ -1,0 +1,1 @@
+People judge sequence randomness based on the Bayesian diagnosticity of a fair coin compared to a single salient alternative: a "streaky" Markov generator that has an innate tendency to repeat previous outcomes. Sequences that are more likely under the fair coin than the streaky alternative are perceived as more random.

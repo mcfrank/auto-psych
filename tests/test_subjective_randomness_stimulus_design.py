@@ -15,6 +15,7 @@ import pytest
 from src.subjective_randomness.stimulus_design import (
     binary_entropy,
     default_model_family_names,
+    enumerate_all_pairs,
     family_predict_fns,
     generate_candidate_pool,
     model_discrimination_eig,
@@ -140,6 +141,31 @@ def test_generate_candidate_pool_rejects_oversized_request():
     # Only 2^4 = 16 sequences of length 4 -> C(16,2)=120 distinct pairs.
     with pytest.raises(ValueError, match="distinct pairs"):
         generate_candidate_pool(n_pairs=1000, lengths=(4,), seed=0)
+
+
+def test_enumerate_all_pairs_covers_every_pair_including_cross_length():
+    # Lengths 2 and 3 pool to 4 + 8 = 12 sequences, so every unordered pair is
+    # C(12, 2) = 66: 6 same-length-2, 28 same-length-3, and 32 cross-length (4*8).
+    pool = enumerate_all_pairs([2, 3])
+    assert len(pool) == 66
+    cross = [p for p in pool if len(p["sequence_a"]) != len(p["sequence_b"])]
+    assert len(cross) == 4 * 8
+    for item in pool:
+        a, b = item["sequence_a"], item["sequence_b"]
+        assert a != b
+        assert len(a) in (2, 3) and len(b) in (2, 3)
+        assert set(a) <= {"H", "T"} and set(b) <= {"H", "T"}
+    # Every pair is distinct (unordered), and enumeration is deterministic.
+    keys = {frozenset((d["sequence_a"], d["sequence_b"])) for d in pool}
+    assert len(keys) == 66
+    assert enumerate_all_pairs([2, 3]) == pool
+
+
+def test_enumerate_all_pairs_caps_length_and_rejects_empty():
+    with pytest.raises(ValueError, match="capped at 12"):
+        enumerate_all_pairs([13])
+    with pytest.raises(ValueError, match="non-empty"):
+        enumerate_all_pairs([])
 
 
 def test_family_predict_fns_prior_predictive_is_valid():

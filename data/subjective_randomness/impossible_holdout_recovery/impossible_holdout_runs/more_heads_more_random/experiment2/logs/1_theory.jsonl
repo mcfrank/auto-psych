@@ -1,0 +1,397 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/CONTEXT.md
+# CONTEXT — experiment 2, agent 1_theory
+
+**Project:** subjective_randomness
+**Experiment number:** 2
+**Repo root:** /Users/ben/Documents/auto-psych
+**This experiment directory:** /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2
+
+## Key paths
+
+- Problem definition: `/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md`
+- Cognitive models dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models`
+- Design dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/design`
+- Experiment dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/experiment`
+- Data dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/data`
+- Responses: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/data/responses.csv`
+- Model registry: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/model_registry.yaml`
+- Inner model loop dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/model_loop`
+
+## Previous experiment paths
+
+- Previous cognitive models: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/cognitive_models`
+- Previous model registry: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_registry.yaml`
+- Previous model loop report: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/report.md`
+- Previous model posterior: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/model_posterior.json`
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+# Subjective randomness: problem definition
+
+The domain of inquiry is the subjective perception of randomness by humans judges. We seek an explantory theory of which sequences humans find more or less random. To explore this we use an forced-choice experimental paradigm, in which participants are asked to choose the more random sequence from a pair.
+
+## Task
+
+On each trial, the participant sees **two sequences of coin flips** (H and T) and chooses which sequence looks **more random**. This is a classic paradigm for studying representativeness and alternation biases (e.g. Griffiths, "The Rational Basis of Representativeness").
+
+## Stimulus design schema
+
+- **Stimulus**: A pair of two sequences of H and T. Each sequence is a string (e.g. `"HHT"`, `"HTHTHT"`, `"HHTHTTHT"`). The two sequences in a pair **may have different lengths** (e.g. length 4 vs length 6).
+- **Response**: Which sequence was chosen (e.g. "left" / "right").
+
+## Experiment design constraints
+
+- **Total trials per experiment: 30.** Target duration is about 5 minutes at ~5 seconds per trial (consistent with Prolific).
+- **Maximum sequence length: 8.**
+
+## Models
+
+Each model is a **PyMC model** in `cognitive_models/<name>.py`. At module load
+the file builds, at top level, `with pm.Model() as model: ...` containing:
+
+- One `pm.Data` container per stimulus feature the theory uses (see the
+  feature-column list below). Each container must have a **1-element placeholder**
+  of the correct dtype (e.g. `np.zeros(1, dtype="int64")`); the pipeline calls
+  `pm.set_data(...)` to swap in real data before sampling.
+- Priors over the theory's free cognitive parameters (e.g. softmax temperature,
+  Beta prior on bias). MCMC infers these — they are **not** hyperparameters.
+- A `pm.Bernoulli("response", p=p_left, observed=chose_left)` likelihood, where
+  the `observed=` argument is the **exact** `chose_left = pm.Data("chose_left", ...)`
+  tensor (not a derived copy).
+- A `pm.Deterministic("p_left", ...)` exposing per-trial P(chose_left=1).
+
+The pipeline fits each model on the preprocessed responses, scores it by
+`arviz.loo` (ELPD-LOO), and uses posterior-predictive samples for correlations
+and posterior predictive checks. No callable-style `def model_name(stimulus,
+response_options)` functions — that is the old contract and is no longer used.
+
+## Preprocessed data schema
+
+`model_loop/responses.csv` is produced by the project's `preprocess.py` helper.
+It carries the raw columns (`participant_id`, `trial_index`, `sequence_a`,
+`sequence_b`, `chose_left`) **plus** the following numeric feature columns, one
+per sequence (`_a` and `_b`). Use these names verbatim in your `pm.Data(...)`
+containers.
+
+| Column           | Type  | Meaning                                          |
+| ---------------- | ----- | ------------------------------------------------ |
+| `n_a`, `n_b`     | int   | Length of the sequence                           |
+| `h_a`, `h_b`     | int   | Number of H's                                    |
+| `p_a`, `p_b`     | float | Head proportion (`h / n`)                        |
+| `alts_a`, `alts_b`     | int   | Alternation count (transitions H↔T)        |
+| `p_alts_a`, `p_alts_b` | float | Alternation proportion (`alts / (n-1)`)    |
+| `max_run_a`, `max_run_b` | int | Longest constant-character run                |
+| `max_run_norm_a`, `max_run_norm_b` | float | Longest run scaled to `[0, 1]`      |
+| `imbalance_a`, `imbalance_b` | float | Distance from balanced H/T counts          |
+| `periodicity_a`, `periodicity_b` | float | Match to a short repeating template       |
+
+And the observed response: `chose_left` ∈ {0, 1} — 1 means the participant
+chose sequence A. Use `chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))`
+in every model and pass it to `pm.Bernoulli(..., observed=chose_left)`.
+
+You may pick any subset of these feature columns per theory. You do not need
+to use them all — only the ones the theory commits to.
+
+## Running the active outer loop
+
+```bash
+# 1. Preprocess a raw responses CSV (adds the feature columns above)
+uv run python scripts/subjective_randomness/preprocess.py \
+    --input-csv data/subjective_randomness/experiment1/responses.csv \
+    --output-csv data/subjective_randomness/responses.csv
+
+# 2. Run the outer loop (theory → design → collect → model loop)
+uv run python -m src.pipelines.outer_loop.run \
+    --project subjective_randomness \
+    --experiment 1 \
+    --ground-truth-model length_sensitive_alternation
+```
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/report.md
+# Inner Model Loop Report
+
+Each model below is ONE distinct cognitive hypothesis. The posterior mass shows which single hypothesis best explains the data — it is **not** a recipe to combine the top models into a blend.
+
+- Best model: **iter0_candidate2** (posterior=1.000, elpd_loo=-29.03)
+- Trials: 900
+- Models compared: 8
+
+## Posterior over models (ELPD-LOO)
+
+| model | posterior | elpd_loo |
+| --- | --- | --- |
+| iter0_candidate2 | 1.0000 | -29.03 |
+| prototype_similarity | 0.0000 | -619.22 |
+| encoding_compressibility | 0.0000 | -628.79 |
+| bayesian_diagnosticity | 0.0000 | -608.24 |
+| iter0_candidate0 | 0.0000 | -120.42 |
+| iter0_candidate1 | 0.0000 | -119.99 |
+| iter1_candidate0 | 0.0000 | -58.03 |
+| iter1_candidate2 | 0.0000 | -129.11 |
+
+## Hypotheses
+
+- **iter0_candidate2**: People evaluate the randomness of a sequence strictly based on the absolute number of heads it contains. They apply a simple additive heuristic where each additional head linearly increases the perceived randomness score, disregarding the sequence length and outcome order. When comparing two sequences, they are more likely to choose the sequence with the higher total head count as the more random one.
+- **prototype_similarity**: Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+- **encoding_compressibility**: Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+- **bayesian_diagnosticity**: Random-looking sequences are diagnostic of a fair coin over salient
+non-random alternatives: alternating, biased, and streaky generators.
+- **iter0_candidate0**: People judge the randomness of a sequence by its similarity to a prototype, but rather than expecting balanced outcomes, their prototype expects a sequence to be dominated by heads. Sequences with a higher proportion of heads are perceived as closer to the prototype and therefore more random.
+- **iter0_candidate1**: People rely on a simple "heads-equal-randomness" heuristic, where heads are viewed as independent random events and tails are viewed as non-random deterministic events. Consequently, the perceived randomness of a sequence strictly and monotonically increases with its proportion of heads.
+- **iter1_candidate0**: People evaluate the randomness of a sequence based on the absolute number of heads it contains, but following the Weber-Fechner law for numerosity perception, their sensitivity to additional heads exhibits diminishing returns. When comparing two sequences, they compute a randomness score that grows logarithmically with the absolute head count plus a constant.
+- **iter1_candidate2**: People evaluate the randomness of a sequence by calculating the excess of heads over tails, expecting random sequences to be heavily biased. They compute a randomness score equal to the number of heads minus the number of tails, perceiving sequences with a greater excess of heads as more random.
+
+## Distinguishability (arviz.compare, PSIS-LOO)
+
+`elpd_diff` and `dse` are relative to the best model. A model is only clearly worse than the best when `elpd_diff > 2 * dse`; models within ~2·dse of the top are statistically indistinguishable.
+
+| model | elpd_diff | dse | distinguishable from best | weight |
+| --- | --- | --- | --- | --- |
+| iter0_candidate2 | 0.00 | 0.00 | — (best) | 1.000 |
+| iter1_candidate0 | 29.01 | 2.44 | yes | 0.000 |
+| iter0_candidate1 | 90.96 | 13.80 | yes | 0.000 |
+| iter0_candidate0 | 91.40 | 13.92 | yes | 0.000 |
+| iter1_candidate2 | 100.09 | 12.27 | yes | 0.000 |
+| bayesian_diagnosticity | 579.21 | 7.43 | yes | 0.000 |
+| prototype_similarity | 590.19 | 6.12 | yes | 0.000 |
+| encoding_compressibility | 599.76 | 6.11 | yes | 0.000 |
+[0m
+[0m$ [0mmkdir -p /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models && cp /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/cognitive_models/*.py /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models/ && cp /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/cognitive_models/models_manifest.yaml /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models/
+(no output)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models/iter0_candidate2.py
+cat: /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models/iter0_candidate2.py: No such file or directory
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models/models_manifest.yaml
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+[0m
+[0m$ [0mls -la /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/cognitive_models/
+total 40
+drwxr-xr-x@  5 ben  staff   160 Jun 16 12:04 __pycache__
+drwxr-xr-x@  8 ben  staff   256 Jun 16 12:19 .
+drwxr-xr-x@ 11 ben  staff   352 Jun 16 12:05 ..
+-rw-r--r--@  1 ben  staff  2683 Jun 16 12:04 bayesian_diagnosticity.py
+-rw-r--r--@  1 ben  staff  1581 Jun 16 12:04 encoding_compressibility.py
+-rw-r--r--@  1 ben  staff  1190 Jun 16 12:19 inner_loop_model.py
+-rw-r--r--@  1 ben  staff   644 Jun 16 12:19 models_manifest.yaml
+-rw-r--r--@  1 ben  staff  1171 Jun 16 12:04 prototype_similarity.py
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/cognitive_models/inner_loop_model.py
+"""
+People evaluate the randomness of a sequence strictly based on the absolute number of heads it contains. They apply a simple additive heuristic where each additional head linearly increases the perceived randomness score, disregarding the sequence length and outcome order. When comparing two sequences, they are more likely to choose the sequence with the higher total head count as the more random one.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameter: sensitivity to the difference in head counts
+    tau = pm.HalfNormal("tau", sigma=1.0)
+
+    # Perceived randomness is simply proportional to the absolute number of heads
+    # The probability of choosing sequence A (left) increases with its relative head count advantage
+    p_left = pm.Deterministic(
+        "p_left", 
+        pm.math.sigmoid(tau * (h_a - h_b))
+    )
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/cognitive_models/prototype_similarity.py
+"""PyMC adapter for the prototype-similarity model family."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+with pm.Model() as model:
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+    score_a = -(
+        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
+    )
+    score_b = -(
+        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models/length_scaled_head_difference.py
+"""People evaluate randomness primarily by the absolute number of heads, but their sensitivity to the difference in head counts between two sequences is diminished when the overall length of the sequences being compared is larger."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+
+    tau = pm.HalfNormal("tau", sigma=5.0)
+
+    # Sensitivity to difference is scaled by the total lengths
+    total_n = pt.cast(n_a + n_b, "float64")
+    total_n = pt.clip(total_n, 1e-3, 1e4) # numerical safety
+    
+    diff = pt.cast(h_a - h_b, "float64")
+
+    p_left = pm.Deterministic(
+        "p_left", 
+        pm.math.sigmoid(tau * (diff / total_n))
+    )
+
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models/squared_heads_heuristic.py
+"""People evaluate the randomness of a sequence strictly based on the squared number of heads it contains, amplifying the perception of randomness for sequences with very high head counts."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    tau = pm.HalfNormal("tau", sigma=1.0)
+
+    score_a = pt.cast(h_a ** 2, "float64")
+    score_b = pt.cast(h_b ** 2, "float64")
+
+    p_left = pm.Deterministic(
+        "p_left", 
+        pm.math.sigmoid(tau * (score_a - score_b))
+    )
+
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models/models_manifest.yaml
+models:
+  - name: prototype_similarity
+    rationale: |
+      Random-looking sequences are close to a prototype with balanced H/T counts
+      and an ideal alternation rate.
+  - name: encoding_compressibility
+    rationale: |
+      Random-looking sequences are those with low simple-description penalties:
+      long runs, periodic templates, and imbalance.
+  - name: bayesian_diagnosticity
+    rationale: |
+      Random-looking sequences are diagnostic of a fair coin over salient
+      non-random alternatives: alternating, biased, and streaky generators.
+  - name: inner_loop_model
+    rationale: |
+      People evaluate the randomness of a sequence strictly based on the absolute number of heads it contains.
+  - name: length_scaled_head_difference
+    rationale: |
+      People evaluate randomness primarily by the absolute number of heads, but their sensitivity to the difference in head counts between two sequences is diminished when the overall length of the sequences being compared is larger.
+  - name: squared_heads_heuristic
+    rationale: |
+      People evaluate the randomness of a sequence strictly based on the squared number of heads it contains, amplifying the perception of randomness for sequences with very high head counts.
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models/theory_report.md
+# Theory Report — Experiment 2
+
+## length_scaled_head_difference
+**Hypothesis:** People evaluate randomness primarily by the absolute number of heads, but their sensitivity to the difference in head counts between two sequences is diminished when the overall length of the sequences being compared is larger.
+**Motivation:** The `inner_loop_model` relying strictly on absolute head count dominated the previous iteration. We refine this by proposing that a difference of e.g. 2 heads is far more noticeable when comparing sequences of lengths 3 vs 4 than lengths 7 vs 8, so we scale the linear difference by the sum of sequence lengths.
+**Mechanism:** The model computes the difference in absolute head counts `h_a - h_b` and divides it by `n_a + n_b` before applying the softmax scaling factor `tau`. This isolates length-dependent sensitivity from the absolute linear difference hypothesis.
+
+## squared_heads_heuristic
+**Hypothesis:** People evaluate the randomness of a sequence strictly based on the squared number of heads it contains, amplifying the perception of randomness for sequences with very high head counts.
+**Motivation:** Previous hypotheses tested logarithmic growth and proportional models and performed poorly relative to the linear absolute model. This model proposes a super-linear (squared) relationship where extreme head counts exhibit an outsized effect compared to moderate ones.
+**Mechanism:** The model calculates `(h_a)^2 - (h_b)^2` as the decision variable. This is a distinct mechanism from the linear difference model because a fixed difference of 1 head has a larger impact on the choice probability when the total number of heads is large.
+EOF
+(no output)
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych && python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+for m_name in ['length_scaled_head_difference', 'squared_heads_heuristic']:
+    m = load_pymc_model(m_name, Path('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment2/cognitive_models'))
+    print(f'Model {m_name}:')
+    print('pm.Data inputs:', pm_data_inputs(m))
+    print('observed response container:', observed_response_data(m))
+    print('OK\n')
+"
+Model length_scaled_head_difference:
+pm.Data inputs: ['h_a', 'h_b', 'n_a', 'n_b', 'chose_left']
+observed response container: chose_left
+OK
+
+Model squared_heads_heuristic:
+pm.Data inputs: ['h_a', 'h_b', 'chose_left']
+observed response container: chose_left
+OK
+[0m
+I have completed the task for the theory agent in Experiment 2. Here is what I did:
+
+1. **Reviewed the Data**: Read the `CONTEXT.md`, problem definition, and the `model_loop/report.md` from Experiment 1. The previous iteration showed a massive win for a simple model representing an absolute head count difference heuristic (`inner_loop_model`).
+2. **Copied Existing Models**: Copied all `.py` models and `models_manifest.yaml` from Experiment 1 into the `cognitive_models/` directory for Experiment 2.
+3. **Designed New Hypotheses**: Guided by the decisive victory of the absolute-heads heuristic and the failures of the proportional and logarithmic variants, I formulated two refined and theoretically distinct hypotheses:
+   - **`length_scaled_head_difference`**: "People evaluate randomness primarily by the absolute number of heads, but their sensitivity to the difference in head counts between two sequences is diminished when the overall length of the sequences being compared is larger." (Mechanism: the difference `h_a - h_b` is normalized by the sum of sequence lengths before being scaled into a probability).
+   - **`squared_heads_heuristic`**: "People evaluate the randomness of a sequence strictly based on the squared number of heads it contains, amplifying the perception of randomness for sequences with very high head counts." (Mechanism: uses `h^2` instead of `h` to reflect an increasing marginal impact of heads, as opposed to the previously-rejected diminishing marginal impact from logarithmic scaling).
+4. **Wrote Models & Manifest**:
+   - Implemented `length_scaled_head_difference.py` and `squared_heads_heuristic.py` as pure PyMC models in `cognitive_models/`
+   - Updated `models_manifest.yaml` with the two new models and their single-sentence rationale
+   - Added `theory_report.md` with structured details on the motivation and mechanism for the two new models
+5. **Validation**: Verified the graph structures of both new models (proper `pm.Data` nodes linked to likelihood outputs) using the provided verification snippet.
+
+The pipeline is fully set up and ready to move to the next stage of the experimental loop.

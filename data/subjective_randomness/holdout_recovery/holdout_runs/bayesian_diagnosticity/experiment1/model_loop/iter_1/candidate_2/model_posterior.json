@@ -1,0 +1,17 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.001837,
+    "encoding_compressibility": 0.0,
+    "iter0_candidate0": 0.000732,
+    "iter0_candidate1": 0.997431,
+    "iter0_candidate2": 0.0
+  },
+  "elpd_loo": {
+    "prototype_similarity": -537.7933,
+    "encoding_compressibility": -606.7915,
+    "iter0_candidate0": -538.7139,
+    "iter0_candidate1": -531.4965,
+    "iter0_candidate2": -624.8361
+  },
+  "n_trials": 900
+}

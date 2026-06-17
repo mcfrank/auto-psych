@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by comparing its maximum run proportion to a subjective ideal proportion, but they penalize deviations from this ideal using a squared distance, causing extreme deviations to seem disproportionately less random than minor ones.

@@ -1,0 +1,1 @@
+People judge a sequence as more random when its longest unbroken run of identical outcomes is shorter. The maximum run length is the sole cue: a long streak signals a non-random, streaky process, so people pick whichever sequence has the shorter maximum run as looking more random.

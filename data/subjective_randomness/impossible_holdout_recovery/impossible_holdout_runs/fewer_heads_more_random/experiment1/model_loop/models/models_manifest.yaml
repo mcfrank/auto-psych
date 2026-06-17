@@ -1,0 +1,40 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: iter0_candidate0
+  rationale: People judge randomness by comparing the likelihood of the sequence under
+    a fair coin to its likelihood under a single Markov alternative model that generates
+    alternations at a non-random rate. The transition probability of this alternative
+    model is a free cognitive parameter.
+- name: iter0_candidate1
+  rationale: People judge the randomness of a sequence by looking solely at the length
+    of its longest streak of identical outcomes. Relying on a representativeness heuristic,
+    they expect short runs and penalize sequences with longer streaks, judging sequences
+    with a shorter maximum run length as more random.
+- name: iter0_candidate2
+  rationale: People judge the randomness of a sequence by its proportion of heads,
+    holding a biased belief that sequences containing a lower proportion of heads
+    (and thus more tails) are more representative of a random coin.
+- name: iter1_candidate0
+  rationale: People judge the randomness of a sequence based purely on its absolute
+    count of heads, rather than the proportion of heads. They hold a biased belief
+    that sequences containing fewer total heads are more representative of a random
+    coin, and thus penalize sequences based directly on their total head count independent
+    of sequence length.

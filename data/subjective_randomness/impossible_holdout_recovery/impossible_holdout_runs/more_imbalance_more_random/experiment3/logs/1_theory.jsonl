@@ -1,0 +1,389 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/CONTEXT.md
+# CONTEXT — experiment 3, agent 1_theory
+
+**Project:** subjective_randomness
+**Experiment number:** 3
+**Repo root:** /Users/ben/Documents/auto-psych
+**This experiment directory:** /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3
+
+## Key paths
+
+- Problem definition: `/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md`
+- Cognitive models dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models`
+- Design dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/design`
+- Experiment dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/experiment`
+- Data dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/data`
+- Responses: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/data/responses.csv`
+- Model registry: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/model_registry.yaml`
+- Inner model loop dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/model_loop`
+
+## Previous experiment paths
+
+- Previous cognitive models: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models`
+- Previous model registry: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/model_registry.yaml`
+- Previous model loop report: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/model_loop/report.md`
+- Previous model posterior: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/model_loop/model_posterior.json`
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+# Subjective randomness: problem definition
+
+The domain of inquiry is the subjective perception of randomness by humans judges. We seek an explantory theory of which sequences humans find more or less random. To explore this we use an forced-choice experimental paradigm, in which participants are asked to choose the more random sequence from a pair.
+
+## Task
+
+On each trial, the participant sees **two sequences of coin flips** (H and T) and chooses which sequence looks **more random**. This is a classic paradigm for studying representativeness and alternation biases (e.g. Griffiths, "The Rational Basis of Representativeness").
+
+## Stimulus design schema
+
+- **Stimulus**: A pair of two sequences of H and T. Each sequence is a string (e.g. `"HHT"`, `"HTHTHT"`, `"HHTHTTHT"`). The two sequences in a pair **may have different lengths** (e.g. length 4 vs length 6).
+- **Response**: Which sequence was chosen (e.g. "left" / "right").
+
+## Experiment design constraints
+
+- **Total trials per experiment: 30.** Target duration is about 5 minutes at ~5 seconds per trial (consistent with Prolific).
+- **Maximum sequence length: 8.**
+
+## Models
+
+Each model is a **PyMC model** in `cognitive_models/<name>.py`. At module load
+the file builds, at top level, `with pm.Model() as model: ...` containing:
+
+- One `pm.Data` container per stimulus feature the theory uses (see the
+  feature-column list below). Each container must have a **1-element placeholder**
+  of the correct dtype (e.g. `np.zeros(1, dtype="int64")`); the pipeline calls
+  `pm.set_data(...)` to swap in real data before sampling.
+- Priors over the theory's free cognitive parameters (e.g. softmax temperature,
+  Beta prior on bias). MCMC infers these — they are **not** hyperparameters.
+- A `pm.Bernoulli("response", p=p_left, observed=chose_left)` likelihood, where
+  the `observed=` argument is the **exact** `chose_left = pm.Data("chose_left", ...)`
+  tensor (not a derived copy).
+- A `pm.Deterministic("p_left", ...)` exposing per-trial P(chose_left=1).
+
+The pipeline fits each model on the preprocessed responses, scores it by
+`arviz.loo` (ELPD-LOO), and uses posterior-predictive samples for correlations
+and posterior predictive checks. No callable-style `def model_name(stimulus,
+response_options)` functions — that is the old contract and is no longer used.
+
+## Preprocessed data schema
+
+`model_loop/responses.csv` is produced by the project's `preprocess.py` helper.
+It carries the raw columns (`participant_id`, `trial_index`, `sequence_a`,
+`sequence_b`, `chose_left`) **plus** the following numeric feature columns, one
+per sequence (`_a` and `_b`). Use these names verbatim in your `pm.Data(...)`
+containers.
+
+| Column           | Type  | Meaning                                          |
+| ---------------- | ----- | ------------------------------------------------ |
+| `n_a`, `n_b`     | int   | Length of the sequence                           |
+| `h_a`, `h_b`     | int   | Number of H's                                    |
+| `p_a`, `p_b`     | float | Head proportion (`h / n`)                        |
+| `alts_a`, `alts_b`     | int   | Alternation count (transitions H↔T)        |
+| `p_alts_a`, `p_alts_b` | float | Alternation proportion (`alts / (n-1)`)    |
+| `max_run_a`, `max_run_b` | int | Longest constant-character run                |
+| `max_run_norm_a`, `max_run_norm_b` | float | Longest run scaled to `[0, 1]`      |
+| `imbalance_a`, `imbalance_b` | float | Distance from balanced H/T counts          |
+| `periodicity_a`, `periodicity_b` | float | Match to a short repeating template       |
+
+And the observed response: `chose_left` ∈ {0, 1} — 1 means the participant
+chose sequence A. Use `chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))`
+in every model and pass it to `pm.Bernoulli(..., observed=chose_left)`.
+
+You may pick any subset of these feature columns per theory. You do not need
+to use them all — only the ones the theory commits to.
+
+## Running the active outer loop
+
+```bash
+# 1. Preprocess a raw responses CSV (adds the feature columns above)
+uv run python scripts/subjective_randomness/preprocess.py \
+    --input-csv data/subjective_randomness/experiment1/responses.csv \
+    --output-csv data/subjective_randomness/responses.csv
+
+# 2. Run the outer loop (theory → design → collect → model loop)
+uv run python -m src.pipelines.outer_loop.run \
+    --project subjective_randomness \
+    --experiment 1 \
+    --ground-truth-model length_sensitive_alternation
+```
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/model_loop/report.md
+# Inner Model Loop Report
+
+Each model below is ONE distinct cognitive hypothesis. The posterior mass shows which single hypothesis best explains the data — it is **not** a recipe to combine the top models into a blend.
+
+- Best model: **inner_loop_model** (posterior=0.684, elpd_loo=-517.16)
+- Trials: 1800
+- Models compared: 12
+
+## Posterior over models (ELPD-LOO)
+
+| model | posterior | elpd_loo |
+| --- | --- | --- |
+| inner_loop_model | 0.6843 | -517.16 |
+| iter1_candidate2 | 0.3157 | -517.83 |
+| prototype_similarity | 0.0000 | -917.46 |
+| encoding_compressibility | 0.0000 | -1273.89 |
+| bayesian_diagnosticity | 0.0000 | -594.69 |
+| raw_alternation_count | 0.0000 | -1248.66 |
+| high_alternation_rate | 0.0000 | -1248.67 |
+| ideal_alternation_rate | 0.0000 | -630.83 |
+| iter0_candidate0 | 0.0000 | -553.45 |
+| iter0_candidate1 | 0.0000 | -595.26 |
+| iter0_candidate2 | 0.0000 | -1248.64 |
+| iter1_candidate1 | 0.0000 | -607.17 |
+
+## Hypotheses
+
+- **inner_loop_model**: People judge sequence randomness based purely on outcome frequencies, paradoxically perceiving sequences with a greater imbalance between the number of heads and tails as more random.
+- **iter1_candidate2**: People judge sequence randomness based on outcome frequencies, paradoxically perceiving sequences with a greater proportion imbalance as more random, but their judgments are moderated by a constant lapse rate representing random guessing.
+- **prototype_similarity**: Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+- **encoding_compressibility**: Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+- **bayesian_diagnosticity**: Random-looking sequences are diagnostic of a fair coin over salient
+non-random alternatives: alternating, biased, and streaky generators.
+- **raw_alternation_count**: People perceive sequences with a higher raw count of alternations as more random, regardless of sequence length.
+- **high_alternation_rate**: People judge sequence randomness based on the proportion of alternations, perceiving sequences with a higher alternation rate as strictly more random.
+- **ideal_alternation_rate**: People judge sequence randomness by comparing the proportion of alternating outcomes to a subjective ideal alternation rate, perceiving sequences closer to this ideal as more random.
+- **iter0_candidate0**: People judge sequence randomness based on outcome frequencies, with perceived randomness growing quadratically as the proportion of heads and tails deviates further from a balanced distribution.
+- **iter0_candidate1**: People judge sequence randomness based on the statistical evidence for outcome bias, perceiving sequences as more random when the log-likelihood ratio of a biased coin model versus a fair coin model is higher.
+- **iter0_candidate2**: People judge sequence randomness by looking for the longest streak of identical outcomes, perceiving sequences where the longest streak takes up a smaller proportion of the sequence length as more random.
+- **iter1_candidate1**: People judge sequence randomness by evaluating the raw numerical difference between the counts of the two outcomes, perceiving sequences with a larger absolute difference between the number of heads and tails as more random.
+
+## Distinguishability (arviz.compare, PSIS-LOO)
+
+`elpd_diff` and `dse` are relative to the best model. A model is only clearly worse than the best when `elpd_diff > 2 * dse`; models within ~2·dse of the top are statistically indistinguishable.
+
+| model | elpd_diff | dse | distinguishable from best | weight |
+| --- | --- | --- | --- | --- |
+| inner_loop_model | 0.00 | 0.00 | — (best) | 0.875 |
+| iter1_candidate2 | 0.67 | 0.59 | no (within ~2·dse) | 0.000 |
+| iter0_candidate0 | 36.29 | 9.53 | yes | 0.091 |
+| bayesian_diagnosticity | 77.53 | 12.80 | yes | 0.000 |
+| iter0_candidate1 | 78.10 | 15.08 | yes | 0.000 |
+| iter1_candidate1 | 90.01 | 11.32 | yes | 0.000 |
+| ideal_alternation_rate | 113.66 | 15.05 | yes | 0.034 |
+| prototype_similarity | 400.30 | 22.51 | yes | 0.000 |
+| iter0_candidate2 | 731.48 | 26.38 | yes | 0.000 |
+| raw_alternation_count | 731.50 | 26.38 | yes | 0.000 |
+| high_alternation_rate | 731.51 | 26.38 | yes | 0.000 |
+| encoding_compressibility | 756.73 | 26.75 | yes | 0.000 |
+[0m
+[0m$ [0mls -la /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models
+total 72
+drwxr-xr-x@  9 ben  staff   288 Jun 16 17:09 __pycache__
+drwxr-xr-x@ 12 ben  staff   384 Jun 16 17:09 .
+drwxr-xr-x@ 10 ben  staff   320 Jun 16 17:12 ..
+-rw-r--r--@  1 ben  staff  2683 Jun 16 17:08 bayesian_diagnosticity.py
+-rw-r--r--@  1 ben  staff  1581 Jun 16 17:08 encoding_compressibility.py
+-rw-r--r--@  1 ben  staff   755 Jun 16 17:09 high_alternation_rate.py
+-rw-r--r--@  1 ben  staff   895 Jun 16 17:09 ideal_alternation_rate.py
+-rw-r--r--@  1 ben  staff  1007 Jun 16 17:29 inner_loop_model.py
+-rw-r--r--@  1 ben  staff  1261 Jun 16 17:29 models_manifest.yaml
+-rw-r--r--@  1 ben  staff  1171 Jun 16 17:08 prototype_similarity.py
+-rw-r--r--@  1 ben  staff   740 Jun 16 17:09 raw_alternation_count.py
+-rw-r--r--@  1 ben  staff  2046 Jun 16 17:09 theory_report.md
+[0m
+[0m$ [0mmkdir -p /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models
+(no output)
+[0m
+[0m$ [0mcp /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/*.py /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models/
+(no output)
+[0m
+[0m$ [0mcp /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/models_manifest.yaml /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models/
+(no output)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models/models_manifest.yaml
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: raw_alternation_count
+  rationale: 'People perceive sequences with a higher raw count of alternations as
+    more random, regardless of sequence length.
+
+    '
+- name: high_alternation_rate
+  rationale: 'People judge sequence randomness based on the proportion of alternations,
+    perceiving sequences with a higher alternation rate as strictly more random.
+
+    '
+- name: ideal_alternation_rate
+  rationale: 'People judge sequence randomness by comparing the proportion of alternating
+    outcomes to a subjective ideal alternation rate, perceiving sequences closer to
+    this ideal as more random.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models/inner_loop_model.py
+"""
+People judge sequence randomness based purely on outcome frequencies, paradoxically perceiving sequences with a greater imbalance between the number of heads and tails as more random.
+"""
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameter for sensitivity
+    tau = pm.HalfNormal("tau", sigma=10.0)
+
+    # Higher imbalance means higher perceived randomness
+    score_a = imbalance_a
+    score_b = imbalance_b
+    
+    # Calculate probability and clamp for numerical safety
+    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 5 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/data/responses.csv
+head: /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/data/responses.csv: No such file or directory
+[0m
+[0m$ [0mhead -n 5 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/data/responses.csv
+sequence_a,sequence_b,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b,participant_id,trial_index,chose_left,generating_model
+THTH,TTTT,4,2,3,1,4,0,0,4,0.5,1.0,0.0,0.0,1.0,0.0,0.0,1.0,1.0,1.0,0,0,0,more_imbalance_more_random
+HHHH,THTH,4,4,0,4,4,2,3,1,1.0,0.0,1.0,1.0,1.0,0.5,1.0,0.0,0.0,1.0,0,1,1,more_imbalance_more_random
+HTHTHTHT,THHHHHHH,8,4,7,1,8,7,1,7,0.5,1.0,0.0,0.0,1.0,0.875,0.14285714285714285,0.8571428571428571,0.75,0.75,0,2,0,more_imbalance_more_random
+THTHT,TTTTT,5,2,4,1,5,0,0,5,0.4,1.0,0.0,0.19999999999999996,1.0,0.0,0.0,1.0,1.0,1.0,0,3,0,more_imbalance_more_random
+[0m
+[0m← [0mWrite data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models/imbalance_with_lapse.py
+Wrote file successfully.
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models/models_manifest.yaml
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.'
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.'
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient non-random alternatives: alternating, biased, and streaky generators.'
+- name: raw_alternation_count
+  rationale: 'People perceive sequences with a higher raw count of alternations as more random, regardless of sequence length.'
+- name: high_alternation_rate
+  rationale: 'People judge sequence randomness based on the proportion of alternations, perceiving sequences with a higher alternation rate as strictly more random.'
+- name: ideal_alternation_rate
+  rationale: 'People judge sequence randomness by comparing the proportion of alternating outcomes to a subjective ideal alternation rate, perceiving sequences closer to this ideal as more random.'
+- name: inner_loop_model
+  rationale: 'People judge sequence randomness based purely on outcome frequencies, paradoxically perceiving sequences with a greater imbalance between the number of heads and tails as more random.'
+- name: imbalance_with_lapse
+  rationale: 'People judge sequence randomness based purely on outcome frequencies, perceiving sequences with a greater proportion imbalance as more random, but their judgments are moderated by a constant lapse rate representing random guessing.'
+EOF
+(no output)
+[0m
+[0m← [0mWrite data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models/quadratic_imbalance.py
+Wrote file successfully.
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models/models_manifest.yaml
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.'
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.'
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient non-random alternatives: alternating, biased, and streaky generators.'
+- name: raw_alternation_count
+  rationale: 'People perceive sequences with a higher raw count of alternations as more random, regardless of sequence length.'
+- name: high_alternation_rate
+  rationale: 'People judge sequence randomness based on the proportion of alternations, perceiving sequences with a higher alternation rate as strictly more random.'
+- name: ideal_alternation_rate
+  rationale: 'People judge sequence randomness by comparing the proportion of alternating outcomes to a subjective ideal alternation rate, perceiving sequences closer to this ideal as more random.'
+- name: inner_loop_model
+  rationale: 'People judge sequence randomness based purely on outcome frequencies, paradoxically perceiving sequences with a greater imbalance between the number of heads and tails as more random.'
+- name: imbalance_with_lapse
+  rationale: 'People judge sequence randomness based purely on outcome frequencies, perceiving sequences with a greater proportion imbalance as more random, but their judgments are moderated by a constant lapse rate representing random guessing.'
+- name: quadratic_imbalance
+  rationale: 'People judge sequence randomness based on outcome frequencies, with perceived randomness growing quadratically as the proportion of heads and tails deviates further from a balanced distribution.'
+EOF
+(no output)
+[0m
+[0m← [0mWrite data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models/theory_report.md
+Wrote file successfully.
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych && python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+
+models = ['imbalance_with_lapse', 'quadratic_imbalance']
+for model_name in models:
+    m = load_pymc_model(model_name, Path('data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models'))
+    print(f'Model: {model_name}')
+    print('pm.Data inputs:', pm_data_inputs(m))
+    print('observed response container:', observed_response_data(m))
+print('OK')
+"
+Model: imbalance_with_lapse
+pm.Data inputs: ['imbalance_a', 'imbalance_b', 'chose_left']
+observed response container: chose_left
+Model: quadratic_imbalance
+pm.Data inputs: ['imbalance_a', 'imbalance_b', 'chose_left']
+observed response container: chose_left
+OK
+[0m
+[0m$ [0mls -la /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models
+total 88
+drwxr-xr-x@  4 ben  staff   128 Jun 16 17:30 __pycache__
+drwxr-xr-x@ 14 ben  staff   448 Jun 16 17:30 .
+drwxr-xr-x@ 10 ben  staff   320 Jun 16 17:29 ..
+-rw-r--r--@  1 ben  staff  2683 Jun 16 17:29 bayesian_diagnosticity.py
+-rw-r--r--@  1 ben  staff  1581 Jun 16 17:29 encoding_compressibility.py
+-rw-r--r--@  1 ben  staff   755 Jun 16 17:29 high_alternation_rate.py
+-rw-r--r--@  1 ben  staff   895 Jun 16 17:29 ideal_alternation_rate.py
+-rw-r--r--@  1 ben  staff  1259 Jun 16 17:30 imbalance_with_lapse.py
+-rw-r--r--@  1 ben  staff  1007 Jun 16 17:29 inner_loop_model.py
+-rw-r--r--@  1 ben  staff  1831 Jun 16 17:30 models_manifest.yaml
+-rw-r--r--@  1 ben  staff  1171 Jun 16 17:29 prototype_similarity.py
+-rw-r--r--@  1 ben  staff  1002 Jun 16 17:30 quadratic_imbalance.py
+-rw-r--r--@  1 ben  staff   740 Jun 16 17:29 raw_alternation_count.py
+-rw-r--r--@  1 ben  staff  1568 Jun 16 17:30 theory_report.md
+[0m
+[0m$ [0mgrep "name:" /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment3/cognitive_models/models_manifest.yaml
+- name: prototype_similarity
+- name: encoding_compressibility
+- name: bayesian_diagnosticity
+- name: raw_alternation_count
+- name: high_alternation_rate
+- name: ideal_alternation_rate
+- name: inner_loop_model
+- name: imbalance_with_lapse
+- name: quadratic_imbalance
+[0m
+I have completed the theory agent task for Experiment 3. 
+
+Here is what I accomplished:
+1. **Reviewed Context and Prior Results:** I read the problem definition and the inner loop report from Experiment 2. The report showed that the model `inner_loop_model` (which uses a simple "more imbalance = more random" rule) decisively won, with an indistinguishable runner-up `iter1_candidate2` that included a lapse rate. Another inner loop candidate, `iter0_candidate0` (quadratic imbalance), performed worse but represented a distinct functional form.
+2. **Migrated Models:** I copied all `.py` models and the `models_manifest.yaml` from Experiment 2 to Experiment 3's `cognitive_models/` directory.
+3. **Proposed New Models:** I formalized two new hypotheses based on the top-performing modifications found by the inner loop in Experiment 2:
+   - `imbalance_with_lapse.py`: Formalizes the hypothesis that people judge sequences with higher proportion imbalance as more random, but this is moderated by a constant lapse rate due to random guessing or inattention (based on `iter1_candidate2`).
+   - `quadratic_imbalance.py`: Formalizes the hypothesis that perceived randomness accelerates quadratically as the proportion of heads/tails deviates from 0.5, rather than scaling linearly (based on `iter0_candidate0`).
+4. **Updated Manifest & Theory Report:** I added the two new models and their single-sentence hypotheses to `models_manifest.yaml`, and I created the required `theory_report.md` documenting the motivation and mechanisms of both models.
+5. **Self-Validation:** I ran the validation script to guarantee that all new PyMC models compile, their `pm.Data` inputs successfully match exactly the allowed columns, and their observed responses link properly. 
+
+The pipeline is now ready to take these models to the experiment 3 design phase.

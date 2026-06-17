@@ -1,0 +1,32 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "encoding_compressibility",
+    "posteriors": {
+      "encoding_compressibility": 0.937333,
+      "bayesian_diagnosticity": 0.062667
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -113.7012,
+      "bayesian_diagnosticity": -115.1064
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "encoding_compressibility",
+    "posteriors": {
+      "encoding_compressibility": 0.539231,
+      "bayesian_diagnosticity": 0.036051,
+      "iter0_candidate0": 0.204868,
+      "iter0_candidate1": 0.219851
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -113.7012,
+      "bayesian_diagnosticity": -115.1064,
+      "iter0_candidate0": -115.7689,
+      "iter0_candidate1": -115.5984
+    }
+  }
+]

@@ -1,0 +1,59 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "encoding_compressibility",
+    "posteriors": {
+      "encoding_compressibility": 0.536722,
+      "bayesian_diagnosticity": 0.463278
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -167.3,
+      "bayesian_diagnosticity": -167.4471
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "iter0_candidate1",
+    "posteriors": {
+      "encoding_compressibility": 0.189978,
+      "bayesian_diagnosticity": 0.163982,
+      "iter0_candidate0": 0.181442,
+      "iter0_candidate1": 0.323414,
+      "iter0_candidate2": 0.141184
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -167.3,
+      "bayesian_diagnosticity": -167.4471,
+      "iter0_candidate0": -167.346,
+      "iter0_candidate1": -166.768,
+      "iter0_candidate2": -167.5968
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "iter0_candidate1",
+    "posteriors": {
+      "encoding_compressibility": 0.113692,
+      "bayesian_diagnosticity": 0.098134,
+      "iter0_candidate0": 0.108583,
+      "iter0_candidate1": 0.193546,
+      "iter0_candidate2": 0.084491,
+      "iter1_candidate0": 0.16447,
+      "iter1_candidate1": 0.086445,
+      "iter1_candidate2": 0.150638
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -167.3,
+      "bayesian_diagnosticity": -167.4471,
+      "iter0_candidate0": -167.346,
+      "iter0_candidate1": -166.768,
+      "iter0_candidate2": -167.5968,
+      "iter1_candidate0": -166.9307,
+      "iter1_candidate1": -167.574,
+      "iter1_candidate2": -167.0186
+    }
+  }
+]

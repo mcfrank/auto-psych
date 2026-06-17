@@ -1,0 +1,1 @@
+People judge a sequence as more random when its transitions between outcomes are closer to maximum uncertainty — that is, when each outcome is equally likely to be followed by the same or a different outcome. When comparing two sequences, people choose the one whose transition process has higher Shannon entropy (closer to 50% alternation rate) as the more random-looking sequence.

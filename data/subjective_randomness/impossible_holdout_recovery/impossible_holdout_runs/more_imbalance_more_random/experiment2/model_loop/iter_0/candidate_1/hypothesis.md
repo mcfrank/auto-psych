@@ -1,0 +1,1 @@
+People judge sequence randomness based on the statistical evidence for outcome bias, perceiving sequences as more random when the log-likelihood ratio of a biased coin model versus a fair coin model is higher.

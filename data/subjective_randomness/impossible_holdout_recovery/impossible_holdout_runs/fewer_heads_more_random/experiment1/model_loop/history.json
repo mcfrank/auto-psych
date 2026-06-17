@@ -1,0 +1,61 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "bayesian_diagnosticity",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 1.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -616.8653,
+      "encoding_compressibility": -628.162,
+      "bayesian_diagnosticity": -600.16
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "iter0_candidate2",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.0,
+      "iter0_candidate0": 0.0,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 1.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -616.8653,
+      "encoding_compressibility": -628.162,
+      "bayesian_diagnosticity": -600.16,
+      "iter0_candidate0": -619.5944,
+      "iter0_candidate1": -624.797,
+      "iter0_candidate2": -218.8941
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "iter1_candidate0",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.0,
+      "iter0_candidate0": 0.0,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.0,
+      "iter1_candidate0": 1.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -616.8653,
+      "encoding_compressibility": -628.162,
+      "bayesian_diagnosticity": -600.16,
+      "iter0_candidate0": -619.5944,
+      "iter0_candidate1": -624.797,
+      "iter0_candidate2": -218.8941,
+      "iter1_candidate0": -29.9453
+    }
+  }
+]

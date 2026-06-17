@@ -1,0 +1,1 @@
+People evaluate the randomness of a sequence strictly based on the absolute number of heads it contains. However, their choices are subject to a constant lapse rate, meaning they occasionally guess randomly regardless of the head counts, rather than perfectly following a logistic choice curve.

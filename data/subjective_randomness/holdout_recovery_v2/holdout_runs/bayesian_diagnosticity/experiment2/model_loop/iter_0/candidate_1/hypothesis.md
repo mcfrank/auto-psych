@@ -1,0 +1,1 @@
+People judge a sequence as more random-looking when it contains a shorter maximum consecutive run of the same outcome. A long streak of identical flips is the most salient cue that a sequence is not random, so when comparing two sequences people choose the one whose longest run is shorter, and the strength of that preference scales with how different the two maximum runs are.

@@ -1,0 +1,87 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: ideal_run_proportion
+  rationale: 'People judge the randomness of a sequence by comparing its longest streak
+    of identical outcomes to their subjective ideal streak proportion. They perceive
+    a sequence as more random the closer its maximum run proportion is to this expected
+    ideal length, penalizing streaks that are either suspiciously short or excessively
+    long.
+
+    '
+- name: absolute_ideal_run
+  rationale: 'People judge the randomness of a sequence by comparing its absolute
+    longest streak of identical outcomes to a subjective ideal absolute streak length,
+    regardless of total sequence length.
+
+    '
+- name: pure_periodicity_penalty
+  rationale: 'People judge the randomness of a sequence strictly by penalizing its
+    periodicity, perceiving sequences with fewer short, repeating patterns as more
+    random.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+- name: nonlinear_run_proportion
+  rationale: 'People judge the randomness of a sequence by focusing solely on its
+    longest streak of identical outcomes relative to the total sequence length, but
+    their perception of this proportion is non-linear, following a power law.
+
+    '
+- name: surprising_run_length
+  rationale: 'People judge the randomness of a sequence by assessing how much the
+    absolute length of its longest streak of identical outcomes exceeds the natural
+    logarithmic growth expected for a sequence of that total length.
+
+    '
+- name: iter0_candidate0
+  rationale: People judge the randomness of a sequence by comparing its maximum run
+    proportion to a subjective ideal proportion, but they penalize deviations from
+    this ideal using a squared distance, causing extreme deviations to seem disproportionately
+    less random than minor ones.
+- name: iter0_candidate1
+  rationale: People judge the randomness of a sequence strictly by comparing its rate
+    of alternations to a subjective ideal alternation rate. They perceive a sequence
+    as more random the closer its alternation proportion is to this expected ideal,
+    penalizing sequences that either alternate too much or too little.
+- name: iter0_candidate2
+  rationale: People judge the randomness of a sequence by focusing solely on the absolute
+    length of its longest streak of identical outcomes. Because they believe true
+    randomness naturally produces long streaks, they perceive a sequence as more random
+    the longer its absolute maximum run is, completely ignoring the total sequence
+    length.
+- name: iter1_candidate0
+  rationale: People judge the randomness of a sequence by comparing its maximum run
+    proportion to a subjective ideal proportion, but following the Weber-Fechner law,
+    their perception of this difference is logarithmic, penalizing the absolute log-ratio
+    of the observed run proportion to the ideal proportion.
+- name: iter1_candidate1
+  rationale: People judge the randomness of a sequence by comparing its maximum run
+    proportion against a subjective tolerance limit. Sequences with a longest streak
+    below this limit are perceived as perfectly acceptable, but any maximum run proportion
+    exceeding the tolerance incurs a linearly increasing penalty for appearing too
+    streaky.
+- name: iter1_candidate2
+  rationale: People judge the randomness of a sequence by comparing its longest streak
+    proportion to a subjective ideal, but they evaluate deviations asymmetrically.
+    Sequences that are excessively streaky (exceeding the ideal) are penalized at
+    a different, typically steeper rate than sequences that are overly alternating
+    (falling short of the ideal).

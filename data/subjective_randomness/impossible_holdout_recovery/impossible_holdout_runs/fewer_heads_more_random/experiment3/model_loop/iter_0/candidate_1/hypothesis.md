@@ -1,0 +1,1 @@
+People judge the randomness of a sequence strictly by the absolute number of heads it contains, preferring sequences with fewer heads. However, the perceived penalty for heads scales with the square root of the head count, meaning sensitivity diminishes gradually as the number of heads increases.

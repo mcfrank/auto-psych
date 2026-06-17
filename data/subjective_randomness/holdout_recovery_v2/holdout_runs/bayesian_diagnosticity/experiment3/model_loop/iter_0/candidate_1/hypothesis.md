@@ -1,0 +1,1 @@
+People judge a sequence as more random-looking when it contains less detectable periodic structure. A truly random coin sequence should not repeat a regular pattern, so sequences with stronger periodicity feel non-random. When comparing two sequences, people choose the one with lower periodicity as the more random-looking one.

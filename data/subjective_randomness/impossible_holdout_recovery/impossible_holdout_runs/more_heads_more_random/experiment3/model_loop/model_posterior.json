@@ -1,0 +1,132 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.0,
+    "encoding_compressibility": 0.0,
+    "bayesian_diagnosticity": 0.0,
+    "length_scaled_head_difference": 7e-06,
+    "squared_heads_heuristic": 0.002237,
+    "inner_loop_model": 0.002237,
+    "power_law_heads": 0.0,
+    "absolute_heads_lapse": 0.194017,
+    "iter0_candidate0": 0.084702,
+    "iter0_candidate1": 0.0,
+    "iter1_candidate1": 0.716799,
+    "iter1_candidate2": 0.0
+  },
+  "elpd_loo": {
+    "prototype_similarity": -1586.7812,
+    "encoding_compressibility": -1716.3891,
+    "bayesian_diagnosticity": -1296.2516,
+    "length_scaled_head_difference": -59.0369,
+    "squared_heads_heuristic": -53.4778,
+    "inner_loop_model": -53.4778,
+    "power_law_heads": -163912.1432,
+    "absolute_heads_lapse": -48.9151,
+    "iter0_candidate0": -49.7439,
+    "iter0_candidate1": -142.394,
+    "iter1_candidate1": -47.7583,
+    "iter1_candidate2": -71.3433
+  },
+  "n_trials": 2400,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "prototype_similarity": 26,
+    "encoding_compressibility": 35,
+    "bayesian_diagnosticity": 61,
+    "length_scaled_head_difference": 19,
+    "squared_heads_heuristic": 16,
+    "inner_loop_model": 16,
+    "power_law_heads": 17,
+    "absolute_heads_lapse": 18,
+    "iter0_candidate0": 18,
+    "iter0_candidate1": 16,
+    "iter1_candidate1": 15,
+    "iter1_candidate2": 20
+  },
+  "comparison": {
+    "iter1_candidate1": {
+      "rank": 0,
+      "elpd_loo": -47.75827845732078,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.8795382498376529
+    },
+    "absolute_heads_lapse": {
+      "rank": 1,
+      "elpd_loo": -48.915128434262044,
+      "elpd_diff": 1.1568499769412721,
+      "dse": 0.12545241748943603,
+      "weight": 1.730227845117954e-10
+    },
+    "iter0_candidate0": {
+      "rank": 2,
+      "elpd_loo": -49.74392918475199,
+      "elpd_diff": 1.985650727431219,
+      "dse": 1.993321428372293,
+      "weight": 0.1204617499019272
+    },
+    "squared_heads_heuristic": {
+      "rank": 3,
+      "elpd_loo": -53.477827592750835,
+      "elpd_diff": 5.719549135430057,
+      "dse": 3.5801995286843673,
+      "weight": 2.69742619706809e-10
+    },
+    "inner_loop_model": {
+      "rank": 4,
+      "elpd_loo": -53.477827592750835,
+      "elpd_diff": 5.719549135430057,
+      "dse": 3.5801995286843673,
+      "weight": 2.696074541321216e-10
+    },
+    "length_scaled_head_difference": {
+      "rank": 5,
+      "elpd_loo": -59.0369227727225,
+      "elpd_diff": 11.278644315401724,
+      "dse": 3.3151963075057296,
+      "weight": 4.534030154501343e-10
+    },
+    "iter1_candidate2": {
+      "rank": 6,
+      "elpd_loo": -71.34333900811826,
+      "elpd_diff": 23.585060550797483,
+      "dse": 4.685787662909787,
+      "weight": 4.134951668494433e-10
+    },
+    "iter0_candidate1": {
+      "rank": 7,
+      "elpd_loo": -142.39402580675136,
+      "elpd_diff": 94.63574734943059,
+      "dse": 17.301630687318344,
+      "weight": 1.2199835144482537e-10
+    },
+    "bayesian_diagnosticity": {
+      "rank": 8,
+      "elpd_loo": -1296.2516140136106,
+      "elpd_diff": 1248.4933355562896,
+      "dse": 26.637834810446435,
+      "weight": 0.0
+    },
+    "prototype_similarity": {
+      "rank": 9,
+      "elpd_loo": -1586.7812014202646,
+      "elpd_diff": 1539.022922962944,
+      "dse": 15.398036822713792,
+      "weight": 0.0
+    },
+    "encoding_compressibility": {
+      "rank": 10,
+      "elpd_loo": -1716.3891191318435,
+      "elpd_diff": 1668.630840674523,
+      "dse": 11.487631522090135,
+      "weight": 4.3694535624163284e-11
+    },
+    "power_law_heads": {
+      "rank": 11,
+      "elpd_loo": -163912.143221428,
+      "elpd_diff": 163864.38494297065,
+      "dse": 116489.56855548534,
+      "weight": 0.0
+    }
+  }
+}

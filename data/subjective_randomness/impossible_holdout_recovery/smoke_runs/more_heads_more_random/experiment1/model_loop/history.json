@@ -1,0 +1,17 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "bayesian_diagnosticity",
+    "posteriors": {
+      "prototype_similarity": 0.233561,
+      "encoding_compressibility": 0.023373,
+      "bayesian_diagnosticity": 0.743066
+    },
+    "elpd_loo": {
+      "prototype_similarity": -98.3508,
+      "encoding_compressibility": -100.2026,
+      "bayesian_diagnosticity": -95.4434
+    }
+  }
+]

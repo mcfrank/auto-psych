@@ -1,0 +1,155 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md CANDIDATE_BRIEF.md existing_hypotheses.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+cat: CONTEXT.md: No such file or directory
+cat: CANDIDATE_BRIEF.md: No such file or directory
+cat: existing_hypotheses.md: No such file or directory
+[0m
+[0m$ [0mpwd && ls -la
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+/Users/ben/Documents/auto-psych
+total 1496
+drwxr-xr-x@   8 ben  staff     256 Jun 12 14:02 __pycache__
+drwxr-xr-x@  27 ben  staff     864 Jun 12 14:18 .
+drwx------@ 283 ben  staff    9056 Jun 10 14:21 ..
+drwxr-xr-x@   3 ben  staff      96 Jun 13 17:50 .claude
+-rw-r--r--@   1 ben  staff    8196 Jun 13 12:08 .DS_Store
+drwxr-xr-x@  16 ben  staff     512 Jun 12 15:58 .git
+-rw-r--r--@   1 ben  staff     877 Jun  5 13:49 .gitignore
+drwxr-xr-x@   6 ben  staff     192 Apr 16 22:36 .pytest_cache
+drwxr-xr-x@   5 ben  staff     160 Jun  5 13:56 .ruff_cache
+drwxr-xr-x@  10 ben  staff     320 May 28 12:09 .venv
+drwxr-xr-x@   2 ben  staff      64 Apr 17 09:52 .worktrees
+-rw-r--r--@   1 ben  staff    1753 Jun 12 14:01 candidate.py
+-rw-r--r--@   1 ben  staff    1724 Jun  5 09:37 CLEANUP_PLAN.md
+drwxr-xr-x@   6 ben  staff     192 Jun  9 16:41 data
+-rw-r--r--@   1 ben  staff    1070 Apr 16 22:03 LICENSE
+-rw-r--r--@   1 ben  staff     310 Jun 12 14:18 opencode.json
+drwxr-xr-x@   6 ben  staff     192 Jun  5 13:49 projects
+-rw-r--r--@   1 ben  staff    1859 Jun  6 21:57 pyproject.toml
+-rw-r--r--@   1 ben  staff    5363 Jun  5 13:49 README.md
+drwxr-xr-x@   7 ben  staff     224 Jun  5 13:49 scripts
+drwxr-xr-x@  12 ben  staff     384 Jun  5 10:57 src
+drwxr-xr-x@   7 ben  staff     224 Apr 16 22:03 templates
+-rw-r--r--@   1 ben  staff     462 Jun 12 12:48 test_hier.py
+-rw-r--r--@   1 ben  staff    3645 Jun 12 12:48 test_hierarchical.py
+-rw-r--r--@   1 ben  staff     412 Jun 12 12:47 test_shape.py
+drwxr-xr-x@  40 ben  staff    1280 Jun 13 19:22 tests
+-rw-r--r--@   1 ben  staff  706474 Jun  6 21:38 uv.lock
+[0m
+[0m✱ [0mGlob "**/CONTEXT.md"[90m 74 matches[0m
+[0m
+[0m$ [0mls -la /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_1
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 32
+drwxr-xr-x@ 6 ben  staff   192 Jun 13 19:34 .
+drwxr-xr-x@ 4 ben  staff   128 Jun 13 19:34 ..
+-rw-r--r--@ 1 ben  staff  2100 Jun 13 19:34 agent.jsonl
+-rw-r--r--@ 1 ben  staff   308 Jun 13 19:34 CANDIDATE_BRIEF.md
+-rw-r--r--@ 1 ben  staff   871 Jun 13 19:34 CONTEXT.md
+-rw-r--r--@ 1 ben  staff   886 Jun 13 19:34 existing_hypotheses.md
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md CONTEXT.md existing_hypotheses.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+# Inner Loop — round 0, candidate 1 of 2
+
+Responses CSV: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/responses.csv`
+Feature columns available (use these as `pm.Data` names): `sequence_a,sequence_b,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b,participant_id,trial_index,chose_left,generating_model`
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## encoding_compressibility  — posterior 0.937, ELPD-LOO -113.70
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.063, ELPD-LOO -115.11
+
+Random-looking sequences are diagnostic of a fair coin over salient
+non-random alternatives: alternating, biased, and streaky generators.
+
+## iter0_candidate0
+
+People judge the randomness of a sequence by the proportion of the sequence made up of its longest continuous run, perceiving sequences where a single run occupies a larger fraction of the total length as less random.
+[0m
+[0m← [0mWrite hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mPYTHONPATH=/Users/ben/Documents/auto-psych python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+observed: chose_left
+[0m
+[0m$ [0mcat hypothesis.md && echo "\n" && cat candidate.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+People evaluate the randomness of a coin flip sequence based on its alternation rate. Sequences with a higher proportion of alternations between outcomes are perceived as more random due to an expectation that random processes switch frequently.
+
+
+"""
+People evaluate the randomness of a coin flip sequence based on its alternation rate.
+Sequences with a higher proportion of alternations between outcomes are perceived as
+more random due to an expectation that random processes switch frequently.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs: proportion of alternations
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+
+    # Free parameter: sensitivity to the difference in alternation rates
+    tau = pm.Normal("tau", mu=0.0, sigma=10.0)
+
+    # Probability of choosing the left sequence (A) as more random
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (p_alts_a - p_alts_b)))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+I have written the candidate hypothesis and implemented its PyMC model.
+
+1. **`hypothesis.md`**: I proposed that people judge randomness based on a sequence's alternation rate (`p_alts`). People expect random processes to switch back and forth frequently, so they treat the proportion of alternations as a primary cue for randomness (this is grounded in the well-known psychological phenomenon of "alternation bias" or "negative recency").
+2. **`candidate.py`**: I created a simple, module-level PyMC model that takes the proportion of alternations for sequence A and sequence B as inputs (`pm.Data`), uses a free parameter `tau` to evaluate sensitivity to differences between them, and fits against the observed `chose_left` choice data via a `pm.Bernoulli` likelihood.
+
+I ran the self-check tests and confirmed both files are formatted correctly, the model successfully exposes the observed output tensor, and it uses exactly one cognitive mechanism without inappropriately blending cues.

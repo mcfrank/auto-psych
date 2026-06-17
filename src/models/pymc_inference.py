@@ -17,6 +17,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import importlib.util
+import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
@@ -195,6 +196,34 @@ def extract_observed(csv_path: Path, model) -> Dict[str, np.ndarray]:
     return out
 
 
+def model_logp_is_finite(
+    name: str, models_dir: Path, responses_path: Path
+) -> tuple[bool, str]:
+    """Fast, sampling-free check that a model can actually be MCMC-fit.
+
+    Loads the model, binds the real responses, and evaluates the total log
+    probability at the initial point. Returns ``(True, "")`` when that logp is
+    finite, else ``(False, reason)``.
+
+    A model whose graph evaluates to NaN or ``-inf`` — e.g. the numerically
+    unsafe ``pt.sqrt(x**2)``, which NaNs in PyTensor for some inputs — passes
+    graph-loading but crashes ``pm.sample`` at its start-value check, aborting
+    the whole run. This catches such a model cheaply, before any sampling.
+    """
+    pm = _import_pymc()
+    model = load_pymc_model(name, models_dir)
+    observed = extract_observed(responses_path, model)
+    with model:
+        pm.set_data(observed)
+    try:
+        logp = float(model.compile_logp()(model.initial_point()))
+    except Exception as e:  # a graph that cannot even be evaluated
+        return False, f"logp evaluation raised: {type(e).__name__}: {e}"
+    if not math.isfinite(logp):
+        return False, f"non-finite logp ({logp}) at the initial point"
+    return True, ""
+
+
 _MODEL_CACHE: Dict[tuple, Any] = {}
 
 
@@ -321,6 +350,22 @@ def _sha256_dict_arrays(d: Dict[str, np.ndarray]) -> str:
     return h.hexdigest()
 
 
+def _thin_posterior(idata: Any, max_draws: int) -> Any:
+    """Subsample an InferenceData's posterior to at most ``max_draws`` samples.
+
+    Keeps the first ``max_draws // n_chains`` draws of each chain (deterministic),
+    so a downstream posterior-predictive pass over many stimuli builds a far
+    smaller ``(chain, draw, n_stim)`` array. Returns the idata unchanged when it
+    already holds ``<= max_draws`` total samples.
+    """
+    n_chains = int(idata.posterior.sizes["chain"])
+    n_draws = int(idata.posterior.sizes["draw"])
+    if n_chains * n_draws <= max_draws:
+        return idata
+    per_chain = max(1, max_draws // n_chains)
+    return idata.isel(draw=slice(0, per_chain))
+
+
 @dataclass
 class FittedModel:
     """A fitted PyMC model and its InferenceData."""
@@ -336,18 +381,26 @@ class FittedModel:
         *,
         var_name: str = "p_left",
         seed: int = 42,
+        max_draws: Optional[int] = None,
     ) -> np.ndarray:
         """Posterior-mean p_left for each stimulus row in `stim_data`.
 
         `stim_data` must include every pm.Data input expected by the model
         (the observed-response container can be set to dummies — it is unused).
         Returns shape (n_stim,).
+
+        ``max_draws`` thins the posterior to at most that many samples before the
+        posterior-predictive pass. The intermediate ``(chain, draw, n_stim)``
+        array scales with draws × n_stim, so thinning keeps memory bounded when
+        predicting over very large stimulus sets (e.g. an exhaustive eval pool);
+        the posterior *mean* is essentially unchanged by using fewer samples.
         """
         pm = _import_pymc()
+        idata = self.idata if max_draws is None else _thin_posterior(self.idata, max_draws)
         with self.model:
             pm.set_data(stim_data)
             pp = pm.sample_posterior_predictive(
-                self.idata,
+                idata,
                 var_names=[var_name],
                 random_seed=seed,
                 progressbar=False,

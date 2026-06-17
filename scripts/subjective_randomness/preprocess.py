@@ -17,7 +17,7 @@ from pyprojroot import here
 
 sys.path.insert(0, str(here()))
 
-from src.subjective_randomness.features import featurize_responses_csv  # noqa: E402
+from src.subjective_randomness.features import featurize_responses_csv, featurize_stimulus  # noqa: E402
 
 DEFAULT_OUTPUT = here() / "data" / "subjective_randomness" / "responses.csv"
 

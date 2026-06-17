@@ -1,0 +1,1 @@
+People evaluate the randomness of a sequence based solely on the number of heads it contains, but their perception of randomness scales as a power-law function of the head count rather than strictly linearly or quadratically. The model infers this exponent to capture exactly how marginal increases in head counts shape judgments.

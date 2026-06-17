@@ -1,0 +1,17 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.0,
+    "bayesian_diagnosticity": 0.0,
+    "inner_loop_model": 0.695546,
+    "extended_compressibility": 0.304454,
+    "alternation_and_run": 0.0
+  },
+  "elpd_loo": {
+    "prototype_similarity": -760.0916,
+    "bayesian_diagnosticity": -749.505,
+    "inner_loop_model": -681.1897,
+    "extended_compressibility": -682.0159,
+    "alternation_and_run": -720.695
+  },
+  "n_trials": 1800
+}

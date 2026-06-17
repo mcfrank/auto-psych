@@ -1,0 +1,1 @@
+People judge a sequence as more random when it contains less periodic structure. Sequences that repeat a regular cycle (e.g., HTHT… or HHTTHHTT…) are perceived as non-random because the mind detects the underlying period. When comparing two sequences, people choose the one with lower periodicity as the more random-looking.

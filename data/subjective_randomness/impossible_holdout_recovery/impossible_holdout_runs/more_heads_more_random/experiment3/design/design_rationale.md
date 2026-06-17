@@ -1,0 +1,5 @@
+# Design Rationale
+
+- **Number of stimuli:** 30 trials (selected from 300 candidates generated with mixed lengths (3-8) and head proportions).
+- **EIG range:** 0.2879 to 0.4891
+- **How the design discriminates between models:** The selected stimuli primarily contrast sequences with very high, extreme numbers of heads (e.g., "HHHHHHHH", "HHHHHHH") against sequences with more balanced distributions of heads and tails (e.g., "TTHTHT", "THTHTHHT"), sometimes involving length disparities. This specifically targets the most promising models from the previous experiment—`squared_heads_heuristic`, `power_law_heads`, `absolute_heads_lapse`, and `length_scaled_head_difference`. By varying the lengths and head counts simultaneously, these pairs will produce varying choice probabilities across the models. For example, comparing extreme head proportions across different lengths forces models like `length_scaled_head_difference` to predict differently from models that strictly look at absolute head differences, and distinguishing `squared_heads` from `power_law_heads` relies on nonlinear scaling of head counts at the high end.

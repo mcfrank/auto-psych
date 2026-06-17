@@ -18,7 +18,7 @@ import shutil
 import sys
 import time
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import yaml
 
@@ -76,13 +76,19 @@ def ensure_experiment_dirs(exp_dir: Path) -> None:
         (exp_dir / sub).mkdir(parents=True, exist_ok=True)
 
 
-def seed_experiment_models_from_project(exp_dir: Path, project_id: str) -> bool:
+def seed_experiment_models_from_project(
+    exp_dir: Path, project_id: str, *, exclude: Sequence[str] = ()
+) -> bool:
     """Copy project-level seed models into an empty experiment model directory.
 
     Projects can define ``seed_models/<name>.py`` plus ``models_manifest.yaml`` to
     specify the model set experiment 1 should start from. The copy is skipped if
     the experiment already has a manifest, which keeps ``--resume`` from
     overwriting models a user or previous agent created.
+
+    ``exclude`` withholds the named seed models (e.g. one held out as a
+    ground-truth generator). Unknown names or an exclusion that empties the
+    seed set raise rather than silently seeding the wrong model set.
     """
     seed_dir = project_seed_models_dir(project_id)
     seed_manifest = seed_dir / "models_manifest.yaml"
@@ -99,8 +105,21 @@ def seed_experiment_models_from_project(exp_dir: Path, project_id: str) -> bool:
     if not entries:
         raise ValueError(f"Seed manifest has no models: {seed_manifest}")
 
+    names = [e.get("name") if isinstance(e, dict) else e for e in entries]
+    unknown = set(exclude) - set(names)
+    if unknown:
+        raise ValueError(
+            f"exclude names models not in the seed manifest: {sorted(unknown)} "
+            f"(available: {sorted(n for n in names if n)})"
+        )
+    kept = [e for e, name in zip(entries, names) if name not in set(exclude)]
+    if not kept:
+        raise ValueError(
+            f"Excluding {sorted(exclude)} empties the seed set from {seed_manifest}"
+        )
+
     dest_dir.mkdir(parents=True, exist_ok=True)
-    for entry in entries:
+    for entry in kept:
         name = entry.get("name") if isinstance(entry, dict) else entry
         if not name:
             continue
@@ -108,7 +127,12 @@ def seed_experiment_models_from_project(exp_dir: Path, project_id: str) -> bool:
         if not src.exists():
             raise FileNotFoundError(f"Seed model {name!r} has no file at {src}")
         shutil.copyfile(src, dest_dir / f"{name}.py")
-    shutil.copyfile(seed_manifest, dest_manifest)
+    if exclude:
+        dest_manifest.write_text(
+            yaml.safe_dump({"models": kept}, sort_keys=False), encoding="utf-8"
+        )
+    else:
+        shutil.copyfile(seed_manifest, dest_manifest)
     return True
 
 
@@ -582,6 +606,12 @@ def run_inner_model_loop_programmatic(
     candidate_count: int,
     fit_kwargs: Optional[Dict[str, Any]] = None,
     backend: Optional[str] = None,
+    cache_dir: Optional[Path] = None,
+    project_id: Optional[str] = None,
+    agent_timeout_sec: int = 900,
+    complexity_prior_const: Optional[float] = None,
+    enable_critique: bool = True,
+    n_critique_proposals: Optional[int] = None,
 ) -> Path:
     """Run the PyMC inner model loop over pooled outer-loop data.
 
@@ -589,6 +619,17 @@ def run_inner_model_loop_programmatic(
     `preprocess.py` if present), seeds the model set from this experiment's
     `cognitive_models/` (the theorist's PyMC models), fits and compares them by
     ELPD-LOO, and exports the best model back into `cognitive_models/`.
+
+    `project_id` locates the project assets; it defaults to `exp_dir.parent.name`
+    (the standard `data/outer_loop/<project>/experimentN` layout) and must be
+    passed explicitly when experiments live elsewhere. `cache_dir` shares the
+    MCMC fit cache so later analyses can re-load the loop's fits for free.
+    `complexity_prior_const` overrides the inner loop's default Occam line-count
+    prior (leave None to use it; pass 0.0 to disable the penalty).
+    `enable_critique` runs a CriticAL posterior-predictive critique of the
+    incumbent before each candidate round (the critique feeds the candidate
+    agents); `n_critique_proposals` (None ⇒ inner-loop default) sets how many test
+    statistics the critique agent proposes.
     """
     from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 
@@ -601,19 +642,34 @@ def run_inner_model_loop_programmatic(
     loop_dir = exp_dir / "model_loop"
     loop_dir.mkdir(parents=True, exist_ok=True)
     # The featurizer is a project *asset* (src assets dir), not under the data
-    # tree where exp_dir now lives. exp_dir.parent.name is the project id.
-    featurize = _load_project_featurizer(outer_project_dir(exp_dir.parent.name))
+    # tree where exp_dir now lives.
+    featurize = _load_project_featurizer(
+        outer_project_dir(project_id or exp_dir.parent.name)
+    )
     responses_path = _write_feature_csv(rows, featurize, loop_dir / "responses.csv")
 
     seed_models_dir = exp_dir / "cognitive_models"
+    # None ⇒ inherit run_pymc_inner_loop's default Occam line-count prior.
+    extra = (
+        {}
+        if complexity_prior_const is None
+        else {"complexity_prior_const": complexity_prior_const}
+    )
+    # None ⇒ inherit run_pymc_inner_loop's default proposal count.
+    if n_critique_proposals is not None:
+        extra["n_critique_proposals"] = n_critique_proposals
     run_pymc_inner_loop(
         responses_path,
         loop_dir,
         seed_models_dir=seed_models_dir,
         max_iterations=max_iterations,
         candidate_count=candidate_count,
+        cache_dir=cache_dir,
+        agent_timeout_sec=agent_timeout_sec,
         backend=backend,
         fit_kwargs=fit_kwargs,
+        enable_critique=enable_critique,
+        **extra,
     )
     model_path = _export_inner_loop_model(exp_dir, loop_dir)
     print(f"  [inner-loop] Exported {model_path}", flush=True)
@@ -659,11 +715,30 @@ def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
     if not isinstance(data, dict):
         return False, "models_manifest.yaml is not a dict"
     models = data.get("models") or []
-    names = [m["name"] if isinstance(m, dict) else m for m in models]
-    if not names:
+    if not models:
         return False, "models_manifest.yaml has no models"
 
-    for name in names:
+    # Each entry carries the model name and its rationale — the one-sentence
+    # natural-language hypothesis the model implements. A model with no stated
+    # hypothesis is rejected: every model must be a specific, testable claim.
+    entries = [
+        (m.get("name"), (m.get("rationale") or "").strip())
+        if isinstance(m, dict)
+        else (m, "")
+        for m in models
+    ]
+    names = [name for name, _ in entries]
+    if not all(names):
+        return False, "models_manifest.yaml has a model with no name"
+
+    for name, rationale in entries:
+        if not rationale:
+            return (
+                False,
+                f"Model '{name}' states no hypothesis: every model needs a non-empty "
+                "'rationale' in models_manifest.yaml naming the single cognitive "
+                "hypothesis it implements",
+            )
         if not (theorist_dir / f"{name}.py").exists():
             return (
                 False,

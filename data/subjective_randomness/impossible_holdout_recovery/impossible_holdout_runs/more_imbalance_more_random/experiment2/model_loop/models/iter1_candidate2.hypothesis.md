@@ -1,0 +1,1 @@
+People judge sequence randomness based on outcome frequencies, paradoxically perceiving sequences with a greater proportion imbalance as more random, but their judgments are moderated by a constant lapse rate representing random guessing.

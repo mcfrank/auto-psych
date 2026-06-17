@@ -1,0 +1,92 @@
+{
+  "posteriors": {
+    "encoding_compressibility": 0.089135,
+    "bayesian_diagnosticity": 0.302251,
+    "iter0_candidate0": 0.0,
+    "iter0_candidate1": 2e-06,
+    "iter0_candidate2": 0.015443,
+    "iter1_candidate0": 0.593169,
+    "iter1_candidate1": 0.0,
+    "iter1_candidate2": 0.0
+  },
+  "elpd_loo": {
+    "encoding_compressibility": -306.2904,
+    "bayesian_diagnosticity": -303.7693,
+    "iter0_candidate0": -416.8462,
+    "iter0_candidate1": -317.7921,
+    "iter0_candidate2": -308.8434,
+    "iter1_candidate0": -302.795,
+    "iter1_candidate1": -416.8309,
+    "iter1_candidate2": -341.9607
+  },
+  "n_trials": 600,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "encoding_compressibility": 35,
+    "bayesian_diagnosticity": 61,
+    "iter0_candidate0": 20,
+    "iter0_candidate1": 19,
+    "iter0_candidate2": 19,
+    "iter1_candidate0": 67,
+    "iter1_candidate1": 19,
+    "iter1_candidate2": 21
+  },
+  "comparison": {
+    "iter1_candidate0": {
+      "rank": 0,
+      "elpd_loo": -302.79504830994324,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.9053532811529109
+    },
+    "bayesian_diagnosticity": {
+      "rank": 1,
+      "elpd_loo": -303.7692701629178,
+      "elpd_diff": 0.9742218529744875,
+      "dse": 0.47751765579500055,
+      "weight": 0.0
+    },
+    "encoding_compressibility": {
+      "rank": 2,
+      "elpd_loo": -306.2903793760422,
+      "elpd_diff": 3.4953310660989754,
+      "dse": 2.2346069758895064,
+      "weight": 4.881452854844813e-14
+    },
+    "iter0_candidate2": {
+      "rank": 3,
+      "elpd_loo": -308.843355891158,
+      "elpd_diff": 6.04830758121472,
+      "dse": 3.7937771111077327,
+      "weight": 0.09464671884711802
+    },
+    "iter0_candidate1": {
+      "rank": 4,
+      "elpd_loo": -317.7921041833998,
+      "elpd_diff": 14.997055873456505,
+      "dse": 5.252922268916183,
+      "weight": 4.956148357631279e-14
+    },
+    "iter1_candidate2": {
+      "rank": 5,
+      "elpd_loo": -341.960675402278,
+      "elpd_diff": 39.165627092334766,
+      "dse": 6.96099816879446,
+      "weight": 1.4728634379534956e-13
+    },
+    "iter1_candidate1": {
+      "rank": 6,
+      "elpd_loo": -416.8309354606159,
+      "elpd_diff": 114.03588715067264,
+      "dse": 12.51940461321279,
+      "weight": 0.0
+    },
+    "iter0_candidate0": {
+      "rank": 7,
+      "elpd_loo": -416.84618418617066,
+      "elpd_diff": 114.05113587622742,
+      "dse": 12.520325757179299,
+      "weight": 0.0
+    }
+  }
+}

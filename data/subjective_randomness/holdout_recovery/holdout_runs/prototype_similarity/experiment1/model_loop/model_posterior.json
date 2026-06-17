@@ -1,0 +1,81 @@
+{
+  "posteriors": {
+    "encoding_compressibility": 0.113692,
+    "bayesian_diagnosticity": 0.098134,
+    "iter0_candidate0": 0.108583,
+    "iter0_candidate1": 0.193546,
+    "iter0_candidate2": 0.084491,
+    "iter1_candidate0": 0.16447,
+    "iter1_candidate1": 0.086445,
+    "iter1_candidate2": 0.150638
+  },
+  "elpd_loo": {
+    "encoding_compressibility": -167.3,
+    "bayesian_diagnosticity": -167.4471,
+    "iter0_candidate0": -167.346,
+    "iter0_candidate1": -166.768,
+    "iter0_candidate2": -167.5968,
+    "iter1_candidate0": -166.9307,
+    "iter1_candidate1": -167.574,
+    "iter1_candidate2": -167.0186
+  },
+  "n_trials": 600,
+  "comparison": {
+    "iter0_candidate1": {
+      "rank": 0,
+      "elpd_loo": -166.76795886923253,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.9264393920026454
+    },
+    "iter1_candidate0": {
+      "rank": 1,
+      "elpd_loo": -166.93074239271712,
+      "elpd_diff": 0.16278352348458114,
+      "dse": 0.47108694109043386,
+      "weight": 0.0
+    },
+    "iter1_candidate2": {
+      "rank": 2,
+      "elpd_loo": -167.01859449682718,
+      "elpd_diff": 0.2506356275946233,
+      "dse": 0.695655758028493,
+      "weight": 0.0
+    },
+    "encoding_compressibility": {
+      "rank": 3,
+      "elpd_loo": -167.29998331407643,
+      "elpd_diff": 0.5320244448438647,
+      "dse": 0.700395305200348,
+      "weight": 0.0
+    },
+    "iter0_candidate0": {
+      "rank": 4,
+      "elpd_loo": -167.34595832763236,
+      "elpd_diff": 0.5779994583998143,
+      "dse": 0.5206200133198874,
+      "weight": 0.0
+    },
+    "bayesian_diagnosticity": {
+      "rank": 5,
+      "elpd_loo": -167.44713513289088,
+      "elpd_diff": 0.6791762636583387,
+      "dse": 1.258547818832939,
+      "weight": 6.606115458886098e-17
+    },
+    "iter1_candidate1": {
+      "rank": 6,
+      "elpd_loo": -167.57396175404796,
+      "elpd_diff": 0.8060028848154062,
+      "dse": 1.3041136643781694,
+      "weight": 7.386741023075661e-17
+    },
+    "iter0_candidate2": {
+      "rank": 7,
+      "elpd_loo": -167.59682479592368,
+      "elpd_diff": 0.8288659266911402,
+      "dse": 1.3707381380211712,
+      "weight": 0.07356060799735556
+    }
+  }
+}

@@ -1,0 +1,114 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead CONTEXT.md
+[0m→ [0mRead CANDIDATE_BRIEF.md
+[0m→ [0mRead existing_hypotheses.md
+[0m
+[0m$ [0mhead -n 5 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/data/responses.csv
+(no output)
+[0m
+[0m$ [0mhead -n 5 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/model_loop/responses.csv
+sequence_a,sequence_b,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b,participant_id,trial_index,chose_left,generating_model
+HTHTHTHT,TTTT,8,4,7,1,4,0,0,4,0.5,1.0,0.0,0.0,1.0,0.0,0.0,1.0,1.0,1.0,0,0,0,fewer_heads_more_random
+THTHTH,HHHHHHH,6,3,5,1,7,7,0,7,0.5,1.0,0.0,0.0,1.0,1.0,0.0,1.0,1.0,1.0,0,1,1,fewer_heads_more_random
+THTHT,TTTTTTTT,5,2,4,1,8,0,0,8,0.4,1.0,0.0,0.19999999999999996,1.0,0.0,0.0,1.0,1.0,1.0,0,2,0,fewer_heads_more_random
+HHHHH,HTHTTHTH,5,5,0,5,8,4,6,2,1.0,0.0,1.0,1.0,1.0,0.5,0.8571428571428571,0.14285714285714285,0.0,0.25,0,3,0,fewer_heads_more_random
+[0m
+[0m$ [0mcat > hypothesis.md << 'EOF'
+People judge the randomness of a sequence by calculating the surplus of tails over heads it contains. They subtract the absolute number of heads from the absolute number of tails, judging sequences with a higher "net tails" score as more representative of a random process.
+EOF
+(no output)
+[0m
+[0m$ [0mcat > test_responses.py << 'EOF'
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/model_loop/responses.csv')
+
+def eval_score(score_a, score_b):
+    # If score_a > score_b, chose_left should be 1
+    predicted = (score_a > score_b).astype(int)
+    # Exclude ties
+    mask = score_a != score_b
+    acc = (predicted[mask] == df['chose_left'][mask]).mean()
+    return acc
+
+h_a = df['h_a']
+h_b = df['h_b']
+n_a = df['n_a']
+n_b = df['n_b']
+
+print("-h:", eval_score(-h_a, -h_b))
+print("tails:", eval_score(n_a - h_a, n_b - h_b))
+print("net_tails:", eval_score((n_a - h_a) - h_a, (n_b - h_b) - h_b))
+print("-h^2:", eval_score(-(h_a**2), -(h_b**2)))
+print("log(-h):", eval_score(-np.log(h_a+1), -np.log(h_b+1)))
+EOF
+python3 test_responses.py
+-h: 0.9966666666666667
+tails: 0.8714285714285714
+net_tails: 0.9288135593220339
+-h^2: 0.9966666666666667
+log(-h): 0.9966666666666667
+[0m
+[0m$ [0mpython3 -c "import pandas as pd; df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/model_loop/responses.csv'); print(df['h_a'].max(), df['h_b'].max())"
+8 8
+[0m
+[0m$ [0mcat > hypothesis.md << 'EOF'
+People judge the randomness of a sequence strictly by the absolute number of heads it contains, but their penalty for heads grows quadratically. Each additional head decreases the perceived randomness more than the previous one, meaning the perceived difference in randomness between 8 and 9 heads is much larger than between 1 and 2.
+EOF
+(no output)
+[0m
+[0m$ [0mcat > candidate.py << 'EOF'
+"""
+People judge the randomness of a sequence strictly by the absolute number of heads it contains, but their penalty for heads grows quadratically. Each additional head decreases the perceived randomness more than the previous one, meaning the perceived difference in randomness between 8 and 9 heads is much larger than between 1 and 2.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameter
+    tau = pm.HalfNormal("tau", sigma=1.0)
+
+    # Quadratic penalty for number of heads
+    score_a = - pt.cast(h_a ** 2, "float64")
+    score_b = - pt.cast(h_b ** 2, "float64")
+
+    # Difference in scores
+    diff = score_a - score_b
+    
+    # Sigmoid to get probability, clipped for numerical safety
+    p_raw = pm.math.sigmoid(tau * diff)
+    p_left = pm.Deterministic("p_left", pt.clip(p_raw, 1e-6, 1 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+(no output)
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat hypothesis.md
+People judge the randomness of a sequence strictly by the absolute number of heads it contains, but their penalty for heads grows quadratically. Each additional head decreases the perceived randomness more than the previous one, meaning the perceived difference in randomness between 8 and 9 heads is much larger than between 1 and 2.
+[0m
+I have created `hypothesis.md` and `candidate.py` based on the hypothesis that people judge randomness using the absolute number of heads, but their penalty for each additional head grows quadratically.
+
+This provides a direct refinement of `iter0_candidate0` (which had a linear penalty) by exploring the opposite non-linear functional form (supra-linear/quadratic penalty) compared to the logarithmic one proposed by `iter1_candidate0`. 
+
+The PyMC model appropriately uses the `pm.Data` tensor directly in the `observed=` argument of the `Bernoulli` likelihood, properly sets a prior on `tau`, and clamps the output probabilities using `pt.clip` for rigorous numerical safety.

@@ -1,0 +1,34 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: max_run_length
+  rationale: 'People judge a sequence as more random when its longest consecutive
+    run is
+
+    shorter, because a long run is the most compact single-symbol run-length
+
+    encoding unit and is the strongest single cue that the sequence is structured.
+
+    '
+- name: rle_description_length
+  rationale: 'People judge a sequence as more random when its run-length encoding
+    requires
+
+    more blocks (alternations + 1 normalized by length), predicting a monotonic
+
+    relationship between alternation rate and perceived randomness with no ideal rate.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

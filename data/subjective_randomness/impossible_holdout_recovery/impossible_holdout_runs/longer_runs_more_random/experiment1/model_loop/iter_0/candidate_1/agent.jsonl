@@ -1,0 +1,33 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead CONTEXT.md
+[0m→ [0mRead CANDIDATE_BRIEF.md
+[0m→ [0mRead existing_hypotheses.md
+[0m
+[0m← [0mWrite hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.insert(0, '/Users/ben/Documents/auto-psych')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+I have implemented the new hypothesis as requested.
+
+The selected cognitive mechanism asserts that **Alternation Expectation** drives judgments. Since people harbor Gambler's Fallacy biases, they expect random sequences to alternate more than chance (typically around 60%). The hypothesis posits that people judge randomness entirely by comparing a sequence's alternation proportion to this subjective ideal rate.
+
+1. `hypothesis.md` articulates the plain-English statement.
+2. `candidate.py` translates it into a 2-parameter PyMC model (`ideal_alts` tracking the subjective target, and `tau` scaling the absolute deviations). The model uses the existing `p_alts_a` and `p_alts_b` columns directly to formulate its likelihood.
+
+The self-checks pass and confirm the response container matches `chose_left`.

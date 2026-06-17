@@ -1,0 +1,102 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.0,
+    "encoding_compressibility": 0.0,
+    "bayesian_diagnosticity": 0.0,
+    "iter0_candidate0": 0.0,
+    "iter0_candidate1": 3.9e-05,
+    "iter0_candidate2": 0.87051,
+    "iter1_candidate0": 0.0,
+    "iter1_candidate1": 0.129451,
+    "iter1_candidate2": 0.0
+  },
+  "elpd_loo": {
+    "prototype_similarity": -416.0688,
+    "encoding_compressibility": -614.7679,
+    "bayesian_diagnosticity": -259.4695,
+    "iter0_candidate0": -618.4439,
+    "iter0_candidate1": -256.9553,
+    "iter0_candidate2": -247.135,
+    "iter1_candidate0": -270.5181,
+    "iter1_candidate1": -248.8908,
+    "iter1_candidate2": -624.838
+  },
+  "n_trials": 900,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "prototype_similarity": 26,
+    "encoding_compressibility": 35,
+    "bayesian_diagnosticity": 61,
+    "iter0_candidate0": 23,
+    "iter0_candidate1": 19,
+    "iter0_candidate2": 15,
+    "iter1_candidate0": 16,
+    "iter1_candidate1": 18,
+    "iter1_candidate2": 16
+  },
+  "comparison": {
+    "iter0_candidate2": {
+      "rank": 0,
+      "elpd_loo": -247.1349872681086,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.7844856714034023
+    },
+    "iter1_candidate1": {
+      "rank": 1,
+      "elpd_loo": -248.89076713872942,
+      "elpd_diff": 1.7557798706208345,
+      "dse": 2.138467683522282,
+      "weight": 2.3357695103095644e-14
+    },
+    "iter0_candidate1": {
+      "rank": 2,
+      "elpd_loo": -256.95525142117623,
+      "elpd_diff": 9.82026415306767,
+      "dse": 6.0190323386061415,
+      "weight": 3.0442608259838266e-14
+    },
+    "bayesian_diagnosticity": {
+      "rank": 3,
+      "elpd_loo": -259.46945435366786,
+      "elpd_diff": 12.334467085559298,
+      "dse": 6.828724238568053,
+      "weight": 0.21551432859638647
+    },
+    "iter1_candidate0": {
+      "rank": 4,
+      "elpd_loo": -270.51813250315075,
+      "elpd_diff": 23.383145235042175,
+      "dse": 7.363691290185244,
+      "weight": 7.473273249601808e-14
+    },
+    "prototype_similarity": {
+      "rank": 5,
+      "elpd_loo": -416.06875271866994,
+      "elpd_diff": 168.93376545056137,
+      "dse": 14.293641552439544,
+      "weight": 1.5234346940117362e-13
+    },
+    "encoding_compressibility": {
+      "rank": 6,
+      "elpd_loo": -614.7679145792993,
+      "elpd_diff": 367.63292731119066,
+      "dse": 19.209381693612478,
+      "weight": 1.6299927206850058e-13
+    },
+    "iter0_candidate0": {
+      "rank": 7,
+      "elpd_loo": -618.4439153920855,
+      "elpd_diff": 371.308928123977,
+      "dse": 19.240084098229136,
+      "weight": 0.0
+    },
+    "iter1_candidate2": {
+      "rank": 8,
+      "elpd_loo": -624.8380219142292,
+      "elpd_diff": 377.70303464612056,
+      "dse": 19.257167884355884,
+      "weight": 0.0
+    }
+  }
+}

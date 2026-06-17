@@ -1,0 +1,1 @@
+People judge sequence randomness based purely on the Shannon entropy of the sequence's outcome frequencies, paradoxically perceiving sequences with lower entropy (a more biased distribution of heads and tails) as more random.

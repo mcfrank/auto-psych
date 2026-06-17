@@ -1,0 +1,1 @@
+People judge a sequence as more random-looking when its alternation rate is closer to 0.5 — the rate a fair coin produces. Their internal prototype is fixed at exactly 0.5 rather than being a learned parameter, so there is only one free parameter: how sensitively they respond to deviations from that fixed standard.

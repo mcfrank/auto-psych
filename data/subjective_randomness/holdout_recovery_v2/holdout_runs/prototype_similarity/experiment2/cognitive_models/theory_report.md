@@ -1,0 +1,9 @@
+# Theory Report — Experiment 2
+
+## alternation_prototype
+
+**Hypothesis:** People judge a sequence as more random when its alternation rate is closer (L1 distance) to an internalized prototype value, where that prototype is biased above 0.5 due to the well-documented human alternation bias in randomness perception.
+
+**Motivation:** In experiment 1, the closest competitor to this hypothesis was `iter0_candidate0`, which modeled alternation-rate prototype similarity using a *fixed* prototype at 0.5 and an L2 (Gaussian) distance — and it failed catastrophically (ELPD-LOO = -416.85, rank 7 of 8). There are two likely reasons: (1) the prototype value is not 0.5 — humans overestimate alternation in fair-coin sequences, so their internal "random" prototype sits above 0.5; and (2) the L2 penalty may be the wrong functional form — L1 (absolute deviation) changes the gradient shape and may better match how sharply people respond to deviations from the prototype. The top two models, `inner_loop_model` and `bayesian_diagnosticity`, are both Bayesian-diagnosticity variants and hold 0.89 combined posterior mass, but they implement a fundamentally different mechanism (log Bayes factors against specific generators) that may be fitting the same data pattern for the wrong reason.
+
+**Mechanism:** The model computes each sequence's score as the negative absolute deviation of its alternation proportion from a learned prototype `theta_alt`, inferred with a Uniform(0.35, 0.95) prior. The decision is a sigmoid over the score difference, scaled by a HalfNormal temperature parameter. This is a single-cue, single-mechanism model: no balance term, no Bayesian comparison, no run-length penalty. It is distinct from `bayesian_diagnosticity`/`inner_loop_model` because it uses prototype similarity rather than log Bayes factors, and distinct from `iter0_candidate0` because the prototype is learned (not fixed at 0.5) and uses L1 rather than L2 distance.

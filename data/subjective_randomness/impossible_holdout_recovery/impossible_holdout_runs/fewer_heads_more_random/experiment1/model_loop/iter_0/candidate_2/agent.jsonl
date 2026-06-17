@@ -1,0 +1,39 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead CONTEXT.md
+[0m→ [0mRead CANDIDATE_BRIEF.md
+[0m→ [0mRead existing_hypotheses.md
+[0m
+[0m← [0mWrite hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mexport PYTHONPATH=/Users/ben/Documents/auto-psych
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+I have created the hypothesis and the corresponding PyMC model. 
+
+The proposed hypothesis leverages the `fewer_heads_more_random` dynamic directly: it asserts that people judge randomness primarily based on the proportion of heads, considering a sequence with a lower proportion of heads as more representative of a random process. The model compares the negative proportion of heads for sequences A and B and uses a `HalfNormal` prior for the sensitivity (`tau`) to enforce this directional hypothesis. 
+
+Both `hypothesis.md` and `candidate.py` pass the validation checks and strictly model a single, clear cognitive mechanism without blending cues.

@@ -1,0 +1,170 @@
+{
+  "v1:30844ee9506ce83685778d31e56e3313d8e3b1bb2c89907bf41c7ad90f680f07": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models evaluate sequences based on their alternation rate and heads/tails balance, but Model A computes a Bayesian likelihood ratio against alternative generative models whereas Model B computes a weighted absolute distance to prototype feature values.\"}\n```"
+  },
+  "v1:b0f4331766c24504bbcba7b1d33413b26c626c5ae8009919f8fd8d31618312ed": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models rely on the same driving features of sequence balance and alternation rate, but they use fundamentally different core computations, with Model A calculating a weighted distance to an ideal prototype and Model B computing a Bayesian log-likelihood ratio against alternative generating processes.\"}\n```"
+  },
+  "v1:f2115f94b999c3764d9e8edbedb4e6893e190a264c49bc386e230bc76f9801bd": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models use the alternation rate of the sequence as a key feature, but Model A computes a Bayesian likelihood ratio comparing a fair coin to a mixture of alternatives (also incorporating heads/tails balance), whereas Model B computes a simple absolute distance to an ideal alternation prototype.\"}\n```"
+  },
+  "v1:111a00355917fed88c1330f76a963d8a04c562de805c700422861f343e4e7ff4": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models use the sequence's alternation rate as a key cue, but they differ fundamentally in computation and additional features, with Model A using a simple distance to a prototype ideal and Model B computing a Bayesian likelihood ratio against alternative generative processes including bias.\"}\n```"
+  },
+  "v1:0daf6d1a9816d36afb92bdc3ce80d8f3c548209da457126ba3bf2403d25d9a8c": {
+    "rating": 1,
+    "reply": "```json\n{\"rating\": 1, \"rationale\": \"Model A evaluates randomness using a Bayesian likelihood ratio comparing a fair coin hypothesis against a mixture of biased, streaky, and alternating hypotheses, whereas Model B uses a simple heuristic based on the squared distance of the sequence's alternation rate to an ideal prototype.\"}\n```"
+  },
+  "v1:281ad11e32644c119e14345f24bf6ee97ddb7202601f5813949e8649cacc947c": {
+    "rating": 1,
+    "reply": "```json\n{\"rating\": 1, \"rationale\": \"Model A evaluates randomness based on the squared distance of the alternation rate to an ideal prototype, whereas Model B computes a Bayesian log-likelihood ratio comparing a fair coin model to a mixture of biased, alternating, and streaky alternatives.\"}\n```"
+  },
+  "v1:1ec9d89e9fddb87e64fdf7b65e8249cd39719b11147989f71f82ae2468c0e332": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models evaluate randomness using the sequence's alternation rate and proportion of heads, but they use fundamentally different core computations: Model A calculates a Bayesian likelihood ratio against alternative generative models, whereas Model B calculates a weighted squared distance to an ideal prototype.\"}\n```"
+  },
+  "v1:f40a37f193b96f4f8d924880b2295332f9eeed5e8d6e1660ea760ce602d74140": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models use alternation rate and heads/tails balance as the driving features, but they use fundamentally different core computations, with Model A calculating a distance to an ideal prototype and Model B computing a Bayesian log-likelihood ratio against alternative generative models.\"}\n```"
+  },
+  "v1:e5ab66da71955afa2343794f3c51c6d5bbcf0527cc1be10f09de3e3a54bdb4d7": {
+    "rating": 3,
+    "reply": "```json\n{\"rating\": 3, \"rationale\": \"Both models compute a preference using a weighted sum of penalties and share the imbalance cue, but they rely on fundamentally different primary features (maximum run length and periodicity in Model A vs. distance to an ideal alternation rate in Model B).\"}\n```"
+  },
+  "v1:8eba7d93d258a6f6081d7124201f03b1adfd7ed6cb05563ca86258b87e91d83f": {
+    "rating": 2,
+    "reply": "```json\n{\"rating\": 2, \"rationale\": \"Model A evaluates randomness via prototype similarity using distance to an ideal alternation rate and imbalance, whereas Model B uses an encoding/compressibility approach penalizing max run length, periodicity, and imbalance, meaning they share only one secondary cue while the primary features and theoretical frameworks differ.\"}\n```"
+  },
+  "v1:e00bd35b259f84708856a37279f7a87f9f8562038378e999d039f7f4ad7b7a73": {
+    "rating": 3,
+    "reply": "```json\n{\"rating\": 3, \"rationale\": \"Model A computes a linear penalty based on max run length, periodicity, and imbalance, whereas Model B computes a squared distance to an ideal prototype based on alternation rate and imbalance, sharing only the imbalance cue while differing in the other features and the core computation.\"}\n```"
+  },
+  "v1:b7aa34c8d42719561f0fe773e09a2bd8810e1e489a3e338f02e4a5a2eb59846b": {
+    "rating": 2,
+    "reply": "```json\n{\"rating\": 2, \"rationale\": \"Model A computes randomness as the squared distance to a prototype defined by ideal alternation and balance, whereas Model B computes it as a linear combination of compressibility penalties including maximum run length, periodicity, and balance.\"}\n```"
+  },
+  "v1:21f004aefc6b278b3945f3a65048be2c0d11b6396b7ca873d64b480395d1d144": {
+    "rating": 3,
+    "reply": "```json\n{\"rating\": 3, \"rationale\": \"Model A evaluates randomness using a weighted combination of run length, periodicity, and imbalance, whereas Model B relies solely on imbalance, meaning they share one feature but differ significantly in the cues driving the judgement.\"}\n```"
+  },
+  "v1:c863e88cc66c0ed8545ed802ea90f6ef62e6c993a608b46f8f238ecade832485": {
+    "rating": 3,
+    "reply": "```json\n{\"rating\": 3, \"rationale\": \"Model A judges randomness solely based on sequence imbalance, whereas Model B evaluates compressibility using a weighted combination of imbalance, maximum run length, and periodicity, meaning they share one cue but differ significantly in their overall feature sets.\"}\n```"
+  },
+  "v1:19bff174d00cf67e727039c1a37ef5d4433ba1e3d949049e0ef783ce51014da6": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models evaluate sequences based on their alternation rate and balance, but Model A computes a linear distance to a prototype whereas Model B computes a Bayesian likelihood ratio against alternative generative processes.\"}\n```"
+  },
+  "v1:e8e016cf35fc0f3e76bae06b3d0cc2e43884848e7c2ce8a823d633b17629ce50": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models evaluate sequences based on their proportion of heads and alternation rate, but Model A integrates these via a Bayesian likelihood ratio against alternative generative processes, whereas Model B computes a weighted sum of absolute distances to prototype feature values.\"}\n```"
+  },
+  "v1:af2cf144c7d0b8203e6904519f8b31f2b06ecd46734bb674c8725121ccc421a4": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models evaluate sequences based on their proportion of heads and alternations, but Model A computes a linear combination of distances to prototype features while Model B computes a Bayesian log-likelihood ratio against alternative generative processes.\"}\n```"
+  },
+  "v1:94985246b87766b98095a76d167c0cbed6d2260997e0a7b12caa216458258ee3": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models rely on the same underlying features of balance and alternation rate, but they use fundamentally different core computations (a Bayesian likelihood ratio against alternative generative processes in Model A versus a weighted absolute distance to prototype values in Model B).\"}\n```"
+  },
+  "v2:9bdab22b444868cb11c83ed17a89c29929cd7c228fbbb9ee78371364c46d2822": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models rely on the same underlying sequence features (heads/tails balance and alternation rate), but they use fundamentally different computations, with Model A calculating a Bayesian likelihood ratio against alternative generators and Model B calculating a weighted absolute distance to an ideal prototype.\"}\n```"
+  },
+  "v2:5b226056cb9e54acdefda548bdcc1ca0e2647d20096d078014ce993da6f10a8c": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models evaluate sequences based on their alternation rates and head/tail balance, but Model A computes a linear distance to a prototype while Model B computes a Bayesian log-likelihood ratio against alternative generative processes.\"}\n```"
+  },
+  "v2:39a02246768c0191534e2823353a45ec19584f2a3d7d96ebd9d9f2053521ff0a": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models use alternation rate as a cue, but they differ in core computation and additional features: Model A computes a Bayesian likelihood ratio comparing a fair coin to a mixture of alternative generators using both alternation rate and heads/tails balance, whereas Model B computes a simple absolute distance to an ideal alternation rate prototype.\"}\n```"
+  },
+  "v2:7556dcbed2d2ee5f39462427f23dcc4a577f84472c9e2c8cae2a4292d130487e": {
+    "rating": 1,
+    "reply": "```json\n{\"rating\": 1, \"rationale\": \"Model A evaluates randomness using the absolute distance of the alternation rate to an ideal prototype, whereas Model B computes a Bayesian likelihood ratio comparing a fair coin to a mixture of biased, streaky, and alternating generators.\"}\n```"
+  },
+  "v2:ef1522ac54d02e464104857a135e38b2d9aa9389e1adb7bee26309e6c45ba592": {
+    "rating": 1,
+    "reply": "```json\n{\"rating\": 1, \"rationale\": \"Model A computes a Bayesian log-likelihood ratio comparing a fair coin to a mixture of biased, alternating, and streaky generators, whereas Model B computes the squared deviation of the sequence's alternation rate from a prototype ideal.\"}\n```"
+  },
+  "v2:9aa3c42e0a411614ddc19b708d336c09e6673ac1981ca67863aa92112e7e2f54": {
+    "rating": 1,
+    "reply": "```json\n{\"rating\": 1, \"rationale\": \"Model A computes a quadratic distance to an ideal alternation rate prototype, whereas Model B computes a Bayesian likelihood ratio comparing a fair coin to a mixture of biased, alternating, and streaky generators.\"}\n```"
+  },
+  "v2:5b030a529ef488ab1d57e25afeee03efd7594d24fb69be9c12cf1e279a8531d7": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models use the sequence's alternation rate and proportion of heads as driving features, but they use entirely different core computations: Model A calculates a Bayesian likelihood ratio against alternative generators, whereas Model B computes a squared distance to an ideal prototype.\"}\n```"
+  },
+  "v2:39248b466e2f190cb3d6374b3faca2bf7f5e617d5ccd487bb42b00edcbced023": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models rely on the same sequence features (alternation rate and heads/tails balance), but their core computations differ completely, with Model A calculating a squared distance to a 2D prototype and Model B computing a Bayesian likelihood ratio against alternative generative models.\"}\n```"
+  },
+  "v2:eebd9e81714e52da2d0d40c49928781ac3f2a77d099a08e411d6dccc78a957a4": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models evaluate randomness using the sequence's alternation rate and proportion of heads, but Model A computes a Bayesian likelihood ratio against alternative generators while Model B computes a squared distance to an ideal prototype.\"}\n```"
+  },
+  "v2:7dd101f544dc4e17110222a576d3782b9470dc01c1c3a166e77dd1e27a7e7c6b": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models rely on the same sequence features (alternation rate and proportion of heads), but they use completely different core computations (squared distance to an ideal prototype versus a Bayesian likelihood ratio against alternative generative models).\"}\n```"
+  },
+  "v2:979af6d7f41bcb3825a407469486249d66192c1b3bfab3ad50815a5f15b80f92": {
+    "rating": 3,
+    "reply": "```json\n{\"rating\": 3, \"rationale\": \"Model A evaluates randomness using a weighted penalty of maximum run length, periodicity, and imbalance, whereas Model B computes distance to a prototype based on alternation rate and imbalance, meaning they share the imbalance cue and a linear combination rule but rely on different primary features.\"}\n```"
+  },
+  "v2:b6e832a1576c1211d5fe44c95aab17ece89d8d85fdbc3707644854dfaa7495e9": {
+    "rating": 3,
+    "reply": "```json\n{\"rating\": 3, \"rationale\": \"Model A evaluates randomness as similarity to a prototype based on alternation rate and imbalance, whereas Model B evaluates it as encoding complexity based on run length, periodicity, and imbalance, sharing only the imbalance cue.\"}\n```"
+  },
+  "v2:d3c03e6a4758e6dc8b582aa0d676d3a689711197d77a11ab4322d0797deda86a": {
+    "rating": 2,
+    "reply": "```json\n{\"rating\": 2, \"rationale\": \"Model A evaluates randomness using a linear combination of complexity penalties (maximum run length, periodicity, and imbalance), whereas Model B computes the squared distance to a prototype defined by an ideal alternation rate and balance, meaning they share only the imbalance feature but differ fundamentally in their other features and core computation.\"}\n```"
+  },
+  "v2:7f9804f63c5dbc790d84613502204e7f687c2e4cdc04b224b221c9b4c394155a": {
+    "rating": 2,
+    "reply": "```json\n{\"rating\": 2, \"rationale\": \"Model A evaluates randomness based on squared distance to an ideal alternation rate and balanced counts, whereas Model B computes a linear penalty based on max run length, periodicity, and imbalance, sharing only the imbalance feature but differing in both the remaining features and the core computation.\"}\n```"
+  },
+  "v2:e2aa36a1dc36632691d1c448fc66531ef42f31cf5b6e397e64ff973fd2723fbe": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models use sequence imbalance to evaluate randomness, but Model A combines it with run length and periodicity into a weighted complexity penalty, whereas Model B relies exclusively on imbalance.\"}\n```"
+  },
+  "v2:6bce01ecb90c3a7c27363760f4fd673a5a4bdabf34deebe8b7dfc5f7a576c36e": {
+    "rating": 3,
+    "reply": "```json\n{\"rating\": 3, \"rationale\": \"Model A relies solely on sequence imbalance to judge randomness, whereas Model B computes a weighted penalty across imbalance, maximum run length, and periodicity, meaning they share one cue but differ significantly in the overall feature set.\"}\n```"
+  },
+  "v2:4bc94958dded09836aa143e53948293d1af8bfcaa9d466fb47a9058fa795e110": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models evaluate sequences based on alternation rate and heads/tails balance, but Model A computes a linear distance to a prototype while Model B computes a Bayesian likelihood ratio against a mixture of non-random generators.\"}\n```"
+  },
+  "v2:0e52c06546f0684d8a2d062d576b09233f07c3d5fe92f5c9e1a4c1f085590110": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models rely on the same underlying sequence features (H/T balance and alternation rate), but they combine them using fundamentally different core computations (a Bayesian likelihood ratio versus a weighted linear distance to a prototype).\"}\n```"
+  },
+  "v2:c3269b178e6e3c5261f5fe7e4e093ded68d87fff1c1be49b525e0f2915fbfd62": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models rely on the same driving features (balance of heads/tails and alternation rate), but their core computations differ fundamentally, with Model A calculating a weighted distance to prototype values and Model B computing a Bayesian log-likelihood ratio against a mixture of alternative generators.\"}\n```"
+  },
+  "v2:5121679433daf06a6ccf558bba569ac386628821b71813261ecf74c13251151f": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models rely on the same underlying sequence features (alternation rate and heads/tails balance), but their core computations differ fundamentally, as Model A calculates a Bayesian likelihood ratio against alternative generators while Model B computes a weighted absolute distance to an ideal prototype.\"}\n```"
+  },
+  "v2:dac50c8b034d0bf6ac3497ea9e1daa9840c990cd89ad12e32948360a7980f283": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models evaluate sequences based on their alternation rate and heads/tails balance, but Model A computes a linear combination of distances to prototype values while Model B computes a Bayesian log-likelihood ratio against alternative generative processes.\"}\n```"
+  },
+  "v2:0534c6b8b5158502d7edfbe66ec5a634aa733f7cca4416ce395eaba7c6560b23": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models rely on the same underlying sequence features (H/T balance and alternation rate), but they use fundamentally different core computations to evaluate them (a Bayesian likelihood ratio against alternative generative processes versus a weighted absolute distance to an ideal prototype).\"}\n```"
+  },
+  "v2:3b29f008164a702dddfa433108b669f27334a888480a4f9f820d690fe54cc320": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models use alternation rate and heads/tails counts as driving features, but they use fundamentally different core computations, with Model A calculating a linear distance to a prototype and Model B calculating a Bayesian likelihood ratio against alternative generative processes.\"}\n```"
+  },
+  "v2:ec3aa33ff9e923edf6061e871c8308819e09b4109a186d968fc4d5c915cb8cc3": {
+    "rating": 4,
+    "reply": "```json\n{\"rating\": 4, \"rationale\": \"Both models evaluate sequences based on their alternation rate and heads/tails balance, but Model A computes a Bayesian likelihood ratio against alternative generative processes while Model B computes a weighted distance to ideal prototype features.\"}\n```"
+  }
+}

@@ -1,0 +1,1 @@
+People judge sequence randomness based purely on the relative length of the longest streak of identical outcomes, perceiving sequences with a larger normalized maximum run as less random.

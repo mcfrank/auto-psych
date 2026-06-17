@@ -1,0 +1,1 @@
+People evaluate the randomness of a sequence based on the logarithm of the absolute number of heads it contains, reflecting a diminishing sensitivity to head count differences as the total number of heads increases, and their choices are subject to a constant lapse rate for random guessing.

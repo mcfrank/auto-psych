@@ -1,0 +1,142 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.009962,
+    "encoding_compressibility": 0.0,
+    "length_sensitive_alternation": 0.0,
+    "bayesian_markov_fairness": 0.0,
+    "inner_loop_model": 0.689132,
+    "run_length_prototype": 1e-06,
+    "length_sensitive_2d_prototype": 0.208846,
+    "iter0_candidate0": 0.001291,
+    "iter0_candidate1": 0.0,
+    "iter0_candidate2": 0.0,
+    "iter1_candidate0": 0.090766,
+    "iter1_candidate1": 0.0,
+    "iter1_candidate2": 2e-06
+  },
+  "elpd_loo": {
+    "prototype_similarity": -1229.0157,
+    "encoding_compressibility": -1245.8709,
+    "length_sensitive_alternation": -21626.2658,
+    "bayesian_markov_fairness": -1249.2649,
+    "inner_loop_model": -1224.9291,
+    "run_length_prototype": -1239.1932,
+    "length_sensitive_2d_prototype": -1226.023,
+    "iter0_candidate0": -1231.0092,
+    "iter0_candidate1": -1248.4292,
+    "iter0_candidate2": -1245.8674,
+    "iter1_candidate0": -1226.5563,
+    "iter1_candidate1": -1243.8035,
+    "iter1_candidate2": -1237.7293
+  },
+  "n_trials": 1800,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "prototype_similarity": 26,
+    "encoding_compressibility": 35,
+    "length_sensitive_alternation": 25,
+    "bayesian_markov_fairness": 35,
+    "inner_loop_model": 23,
+    "run_length_prototype": 16,
+    "length_sensitive_2d_prototype": 25,
+    "iter0_candidate0": 27,
+    "iter0_candidate1": 19,
+    "iter0_candidate2": 16,
+    "iter1_candidate0": 31,
+    "iter1_candidate1": 15,
+    "iter1_candidate2": 18
+  },
+  "comparison": {
+    "inner_loop_model": {
+      "rank": 0,
+      "elpd_loo": -1224.9291257387486,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.8803360374459755
+    },
+    "length_sensitive_2d_prototype": {
+      "rank": 1,
+      "elpd_loo": -1226.0229614196737,
+      "elpd_diff": 1.0938356809250198,
+      "dse": 1.4371423423298475,
+      "weight": 7.23141699459886e-13
+    },
+    "iter1_candidate0": {
+      "rank": 2,
+      "elpd_loo": -1226.5562793027898,
+      "elpd_diff": 1.6271535640413113,
+      "dse": 0.6298302824435349,
+      "weight": 6.837982131583591e-13
+    },
+    "prototype_similarity": {
+      "rank": 3,
+      "elpd_loo": -1229.0157372165963,
+      "elpd_diff": 4.086611477847841,
+      "dse": 2.3644301621792487,
+      "weight": 7.854997461812314e-13
+    },
+    "iter0_candidate0": {
+      "rank": 4,
+      "elpd_loo": -1231.0091636773454,
+      "elpd_diff": 6.080037938596785,
+      "dse": 3.3252451211732317,
+      "weight": 8.493202539265872e-13
+    },
+    "iter1_candidate2": {
+      "rank": 5,
+      "elpd_loo": -1237.7293360973492,
+      "elpd_diff": 12.800210358600747,
+      "dse": 5.022170000406602,
+      "weight": 1.0791969111471472e-12
+    },
+    "run_length_prototype": {
+      "rank": 6,
+      "elpd_loo": -1239.193182392578,
+      "elpd_diff": 14.26405665382922,
+      "dse": 6.093218294540803,
+      "weight": 0.11966396378336693
+    },
+    "iter1_candidate1": {
+      "rank": 7,
+      "elpd_loo": -1243.8034603737083,
+      "elpd_diff": 18.874334634959567,
+      "dse": 5.973988003775407,
+      "weight": 1.1506235701878829e-12
+    },
+    "iter0_candidate2": {
+      "rank": 8,
+      "elpd_loo": -1245.8673510298831,
+      "elpd_diff": 20.938225291134458,
+      "dse": 6.265300333141334,
+      "weight": 1.0111172384708809e-12
+    },
+    "encoding_compressibility": {
+      "rank": 9,
+      "elpd_loo": -1245.8709082222053,
+      "elpd_diff": 20.94178248345666,
+      "dse": 6.12904422440739,
+      "weight": 1.0482921269728793e-12
+    },
+    "iter0_candidate1": {
+      "rank": 10,
+      "elpd_loo": -1248.429170408218,
+      "elpd_diff": 23.500044669469467,
+      "dse": 6.730463911933648,
+      "weight": 1.045549573134843e-12
+    },
+    "bayesian_markov_fairness": {
+      "rank": 11,
+      "elpd_loo": -1249.2648936990036,
+      "elpd_diff": 24.335767960254742,
+      "dse": 6.627422703733735,
+      "weight": 1.0619130402865043e-12
+    },
+    "length_sensitive_alternation": {
+      "rank": 12,
+      "elpd_loo": -21626.265754095293,
+      "elpd_diff": 20401.33662835655,
+      "dse": 732.6774328206521,
+      "weight": 3.5055676320392577e-10
+    }
+  }
+}

@@ -1,0 +1,36 @@
+models:
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: length_sensitive_prototype
+  rationale: 'Variant of the winning prototype model that scales each penalty by sqrt(n),
+
+    reflecting that longer sequences provide more statistical evidence against
+
+    randomness. When n is constant across trials this is equivalent to the base
+
+    model up to rescaling of beta.
+
+    '
+- name: asymmetric_alternation_prototype
+  rationale: 'Variant of the winning prototype model with an asymmetric alternation
+    penalty:
+
+    streaky sequences (below-prototype alternation rate) are penalized by a free
+
+    factor streak_k relative to over-alternating sequences. Reduces to the
+
+    symmetric base model when streak_k = 1.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

@@ -1,0 +1,1 @@
+People judge the randomness of a sequence strictly by the absolute number of heads it contains, but their penalty for heads grows quadratically. Each additional head decreases the perceived randomness more than the previous one, meaning the perceived difference in randomness between 8 and 9 heads is much larger than between 1 and 2.
