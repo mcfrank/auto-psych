@@ -1,0 +1,56 @@
+# Impossible-theory holdout recovery: the ground-truth generator is a
+# deliberately weird theory of subjective randomness (e.g. "more heads = more
+# random") that humans could not plausibly use. The agentic loop is seeded with
+# the normal seed models and tries — and is expected to fail — to recover it, so
+# the held-out correlation should stay low. Mirrors holdout_recovery.yaml; the
+# only structural difference is gt_models_dir + explicit {beta, side_bias} params.
+project_id: subjective_randomness
+seed_models_dir: src/pipelines/outer_loop/projects/subjective_randomness/seed_models
+
+# Impossible ground-truth models live OUTSIDE the seed pool (this directory has
+# no models_manifest.yaml) so the agents never see them. Each is a PyMC file
+# whose only free parameters are beta + side_bias.
+gt_models_dir: src/subjective_randomness/impossible_models
+
+# name -> fixed generating params. Params MUST name exactly the model's free
+# RVs ({beta, side_bias}); there is no model_families fallback for these. beta=4
+# keeps p_left graded (not saturated) and side_bias=0 keeps it symmetric. The
+# four features (head count, max-run length, imbalance) all vary on the eval
+# pool below, so the ground-truth p_left is non-constant and the correlation is
+# well defined.
+gt_models:
+  more_heads_more_random: { beta: 4.0, side_bias: 0.0 }
+  fewer_heads_more_random: { beta: 4.0, side_bias: 0.0 }
+  longer_runs_more_random: { beta: 4.0, side_bias: 0.0 }
+  more_imbalance_more_random: { beta: 4.0, side_bias: 0.0 }
+
+n_experiments: 3
+n_participants: 30
+seed: 7
+
+inner_loop:
+  max_iterations: 2
+  candidate_count: 3
+
+agent:
+  timeout_sec: 900
+  backend: opencode # null -> CODING_AGENT env var, then "claude"
+  model: google/gemini-3.1-pro-preview
+
+# Held-out evaluation pool. exhaustive=true measures the recovery correlation
+# over EVERY distinct unordered pair across all sequences of the listed lengths,
+# cross-length pairs included (510 sequences up to length 8 -> C(510, 2) =
+# 129,795 pairs), so n_pairs/seed are unused. predict_max_draws thins the
+# posterior to 500 samples for the held-out prediction, keeping the
+# (draws × n_stim) array bounded (~0.5 GB at 130k pairs); the posterior mean is
+# essentially unchanged.
+eval_pool:
+  exhaustive: true
+  lengths: [1, 2, 3, 4, 5, 6, 7, 8]
+  predict_max_draws: 500
+  min_remaining: 100
+
+fit:
+  draws: 2000
+  tune: 1000
+  chains: 4

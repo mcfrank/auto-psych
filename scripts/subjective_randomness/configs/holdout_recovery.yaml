@@ -1,0 +1,40 @@
+# Holdout recovery: hold each seed model out as the ground truth, run the full
+# agentic outer+inner loop seeded with the remaining models, and track the
+# correlation between the loop's best model and the ground truth on a large
+# held-out stimulus set at every inner-loop scoring step.
+project_id: subjective_randomness
+seed_models_dir: src/pipelines/outer_loop/projects/subjective_randomness/seed_models
+
+# null | [names] | {name: params|null} — the same shapes as model_recovery's
+# generating_models (null/missing params -> the family's DEFAULT_PARAMS).
+gt_models:
+  bayesian_diagnosticity:
+  encoding_compressibility:
+  prototype_similarity:
+
+n_experiments: 3
+n_participants: 30
+seed: 7
+
+inner_loop:
+  max_iterations: 2
+  candidate_count: 3
+
+agent:
+  timeout_sec: 900
+  backend: opencode # null -> CODING_AGENT env var, then "claude"
+  model: google/gemini-3.1-pro-preview
+
+# Held-out evaluation stimuli. Pairs the design agents happened to use for
+# training are excluded after the run; fail loudly if fewer than min_remaining
+# survive.
+eval_pool:
+  n_pairs: 500
+  lengths: [6, 8]
+  seed: 11
+  min_remaining: 100
+
+fit:
+  draws: 2000
+  tune: 1000
+  chains: 4

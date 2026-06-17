@@ -1,0 +1,52 @@
+{
+  "posteriors": {
+    "encoding_compressibility": 0.539231,
+    "bayesian_diagnosticity": 0.036051,
+    "iter0_candidate0": 0.204868,
+    "iter0_candidate1": 0.219851
+  },
+  "elpd_loo": {
+    "encoding_compressibility": -113.7012,
+    "bayesian_diagnosticity": -115.1064,
+    "iter0_candidate0": -115.7689,
+    "iter0_candidate1": -115.5984
+  },
+  "n_trials": 240,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "encoding_compressibility": 35,
+    "bayesian_diagnosticity": 61,
+    "iter0_candidate0": 13,
+    "iter0_candidate1": 15
+  },
+  "comparison": {
+    "encoding_compressibility": {
+      "rank": 0,
+      "elpd_loo": -113.70115583577999,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.5456289066300724
+    },
+    "bayesian_diagnosticity": {
+      "rank": 1,
+      "elpd_loo": -115.10636697837776,
+      "elpd_diff": 1.4052111425977838,
+      "dse": 2.1509858908100012,
+      "weight": 0.1625172815291306
+    },
+    "iter0_candidate1": {
+      "rank": 2,
+      "elpd_loo": -115.59835023941616,
+      "elpd_diff": 1.8971944036361759,
+      "dse": 2.728295545319847,
+      "weight": 0.0817058201505938
+    },
+    "iter0_candidate0": {
+      "rank": 3,
+      "elpd_loo": -115.76893412396186,
+      "elpd_diff": 2.067778288181877,
+      "dse": 2.8799839325846848,
+      "weight": 0.21014799169020326
+    }
+  }
+}

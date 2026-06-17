@@ -8,11 +8,13 @@ You are the **experiment design agent** in an automated cognitive psychology exp
 
 2. **Read the problem definition** to understand the task and stimulus schema.
 
-3. **Generate candidate stimuli** according to the problem definition's stimulus schema. Write them to `design/candidates.json` as a JSON list of `{"sequence_a": ..., "sequence_b": ...}` dicts.
+3. **Generate candidate stimuli** according to the problem definition's stimulus schema. Write them to `design/candidates.json` as a JSON list of `{"sequence_a": ..., "sequence_b": ...}` dicts. Keep the pool **tractable (roughly 100–300 pairs)**: every candidate is scored by EIG, so a huge pool only makes the next step slow.
 
 4. **Score by EIG** using the pipeline helper. EIG is computed over the theorist's
    PyMC models from their **prior-predictive** `p_left` (no MCMC fit needed at
-   design time). Pass `--featurize` so raw stimuli are turned into the numeric
+   design time). Run this command in the **foreground and wait for it to
+   finish** — do not background it and end your turn before `stimuli.json`
+   exists. Pass `--featurize` so raw stimuli are turned into the numeric
    feature columns the models read:
 
 ```bash

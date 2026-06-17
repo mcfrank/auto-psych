@@ -1,0 +1,77 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "squared_heads_heuristic",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.0,
+      "inner_loop_model": 0.266399,
+      "length_scaled_head_difference": 2e-06,
+      "squared_heads_heuristic": 0.733599
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1018.5049,
+      "encoding_compressibility": -1069.7933,
+      "bayesian_diagnosticity": -899.908,
+      "inner_loop_model": -29.29,
+      "length_scaled_head_difference": -41.1233,
+      "squared_heads_heuristic": -28.277
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "squared_heads_heuristic",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.0,
+      "inner_loop_model": 0.263903,
+      "length_scaled_head_difference": 2e-06,
+      "squared_heads_heuristic": 0.726726,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.00937
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1018.5049,
+      "encoding_compressibility": -1069.7933,
+      "bayesian_diagnosticity": -899.908,
+      "inner_loop_model": -29.29,
+      "length_scaled_head_difference": -41.1233,
+      "squared_heads_heuristic": -28.277,
+      "iter0_candidate1": -129.0665,
+      "iter0_candidate2": -32.6281
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "squared_heads_heuristic",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.0,
+      "inner_loop_model": 0.140436,
+      "length_scaled_head_difference": 1e-06,
+      "squared_heads_heuristic": 0.386727,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.004986,
+      "iter1_candidate0": 0.295895,
+      "iter1_candidate2": 0.171955
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1018.5049,
+      "encoding_compressibility": -1069.7933,
+      "bayesian_diagnosticity": -899.908,
+      "inner_loop_model": -29.29,
+      "length_scaled_head_difference": -41.1233,
+      "squared_heads_heuristic": -28.277,
+      "iter0_candidate1": -129.0665,
+      "iter0_candidate2": -32.6281,
+      "iter1_candidate0": -28.4447,
+      "iter1_candidate2": -29.0375
+    }
+  }
+]

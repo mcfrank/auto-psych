@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by comparing its alternation rate to their subjective ideal alternation rate. They perceive a sequence as more random the closer its alternation proportion is to this expected ideal, penalizing sequences that either alternate too rarely (streaky) or too frequently (perfectly alternating).

@@ -70,6 +70,32 @@ def test_complexity_prior_penalises_longer_models(tmp_path, monkeypatch):
     assert result["posteriors"]["simple"] > result["posteriors"]["complex"]
 
 
+def test_complexity_counts_noncomment_lines_not_chars(tmp_path):
+    """Complexity is non-blank non-comment *lines*, not characters.
+
+    A model with few but very long lines must score as *less* complex than one
+    with many short lines — the opposite of a character count.
+    """
+    models_dir = _make_models_dir(tmp_path, ["few_long_lines", "many_short_lines"])
+    # 2 code lines, each very long (hundreds of characters).
+    (models_dir / "few_long_lines.py").write_text(
+        "a = " + "1 + " * 200 + "1\n" + "b = " + "2 + " * 200 + "2\n",
+        encoding="utf-8",
+    )
+    # 10 short code lines, plus comments and blanks that must NOT count.
+    (models_dir / "many_short_lines.py").write_text(
+        "# header comment\n\n"
+        + "".join(f"x{i} = {i}  # trailing comment\n" for i in range(10)),
+        encoding="utf-8",
+    )
+
+    assert mp.model_complexity("few_long_lines", models_dir) == 2
+    assert mp.model_complexity("many_short_lines", models_dir) == 10
+    assert mp.model_complexity("many_short_lines", models_dir) > mp.model_complexity(
+        "few_long_lines", models_dir
+    )
+
+
 def test_missing_manifest_raises(tmp_path):
     (tmp_path / "cognitive_models").mkdir()
     with pytest.raises(FileNotFoundError):

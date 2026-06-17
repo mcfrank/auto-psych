@@ -1,0 +1,662 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+cat: CONTEXT.md: No such file or directory
+[0m
+[0m$ [0mls -la
+total 1528
+drwxr-xr-x@   8 ben  staff     256 Jun 16 16:00 __pycache__
+drwxr-xr-x@  30 ben  staff     960 Jun 16 16:01 .
+drwx------@ 283 ben  staff    9056 Jun 10 14:21 ..
+drwxr-xr-x@   4 ben  staff     128 Jun 15 14:59 .claude
+-rw-r--r--@   1 ben  staff   14340 Jun 15 22:43 .DS_Store
+drwxr-xr-x@  16 ben  staff     512 Jun 16 11:58 .git
+-rw-r--r--@   1 ben  staff     877 Jun  5 13:49 .gitignore
+drwxr-xr-x@   6 ben  staff     192 Apr 16 22:36 .pytest_cache
+drwxr-xr-x@   5 ben  staff     160 Jun  5 13:56 .ruff_cache
+drwxr-xr-x@  10 ben  staff     320 May 28 12:09 .venv
+drwxr-xr-x@   2 ben  staff      64 Apr 17 09:52 .worktrees
+-rw-r--r--@   1 ben  staff    1724 Jun  5 09:37 CLEANUP_PLAN.md
+drwxr-xr-x@   6 ben  staff     192 Jun  9 16:41 data
+-rw-r--r--@   1 ben  staff     688 Jun 16 15:40 generate_candidates.py
+-rw-r--r--@   1 ben  staff    1070 Apr 16 22:03 LICENSE
+-rw-r--r--@   1 ben  staff     310 Jun 12 14:18 opencode.json
+drwxr-xr-x@   6 ben  staff     192 Jun  5 13:49 projects
+-rw-r--r--@   1 ben  staff    1859 Jun  6 21:57 pyproject.toml
+-rw-r--r--@   1 ben  staff    5363 Jun  5 13:49 README.md
+drwxr-xr-x@   7 ben  staff     224 Jun  5 13:49 scripts
+drwxr-xr-x@  12 ben  staff     384 Jun  5 10:57 src
+drwxr-xr-x@   7 ben  staff     224 Apr 16 22:03 templates
+-rw-r--r--@   1 ben  staff     275 Jun 16 13:54 test_cauchy.py
+-rw-r--r--@   1 ben  staff     550 Jun 16 16:00 test_eval.py
+-rw-r--r--@   1 ben  staff     462 Jun 12 12:48 test_hier.py
+-rw-r--r--@   1 ben  staff    3645 Jun 12 12:48 test_hierarchical.py
+-rw-r--r--@   1 ben  staff     825 Jun 16 13:35 test_responses.py
+-rw-r--r--@   1 ben  staff     412 Jun 12 12:47 test_shape.py
+drwxr-xr-x@  44 ben  staff    1408 Jun 16 13:23 tests
+-rw-r--r--@   1 ben  staff  706474 Jun  6 21:38 uv.lock
+[0m
+[0m✱ [0mGlob "**/CONTEXT.md"[90m 100 matches[0m
+[0m
+[0m$ [0mpwd && ls -la
+/Users/ben/Documents/auto-psych
+total 1528
+drwxr-xr-x@   8 ben  staff     256 Jun 16 16:00 __pycache__
+drwxr-xr-x@  30 ben  staff     960 Jun 16 16:01 .
+drwx------@ 283 ben  staff    9056 Jun 10 14:21 ..
+drwxr-xr-x@   4 ben  staff     128 Jun 15 14:59 .claude
+-rw-r--r--@   1 ben  staff   14340 Jun 15 22:43 .DS_Store
+drwxr-xr-x@  16 ben  staff     512 Jun 16 11:58 .git
+-rw-r--r--@   1 ben  staff     877 Jun  5 13:49 .gitignore
+drwxr-xr-x@   6 ben  staff     192 Apr 16 22:36 .pytest_cache
+drwxr-xr-x@   5 ben  staff     160 Jun  5 13:56 .ruff_cache
+drwxr-xr-x@  10 ben  staff     320 May 28 12:09 .venv
+drwxr-xr-x@   2 ben  staff      64 Apr 17 09:52 .worktrees
+-rw-r--r--@   1 ben  staff    1724 Jun  5 09:37 CLEANUP_PLAN.md
+drwxr-xr-x@   6 ben  staff     192 Jun  9 16:41 data
+-rw-r--r--@   1 ben  staff     688 Jun 16 15:40 generate_candidates.py
+-rw-r--r--@   1 ben  staff    1070 Apr 16 22:03 LICENSE
+-rw-r--r--@   1 ben  staff     310 Jun 12 14:18 opencode.json
+drwxr-xr-x@   6 ben  staff     192 Jun  5 13:49 projects
+-rw-r--r--@   1 ben  staff    1859 Jun  6 21:57 pyproject.toml
+-rw-r--r--@   1 ben  staff    5363 Jun  5 13:49 README.md
+drwxr-xr-x@   7 ben  staff     224 Jun  5 13:49 scripts
+drwxr-xr-x@  12 ben  staff     384 Jun  5 10:57 src
+drwxr-xr-x@   7 ben  staff     224 Apr 16 22:03 templates
+-rw-r--r--@   1 ben  staff     275 Jun 16 13:54 test_cauchy.py
+-rw-r--r--@   1 ben  staff     550 Jun 16 16:00 test_eval.py
+-rw-r--r--@   1 ben  staff     462 Jun 12 12:48 test_hier.py
+-rw-r--r--@   1 ben  staff    3645 Jun 12 12:48 test_hierarchical.py
+-rw-r--r--@   1 ben  staff     825 Jun 16 13:35 test_responses.py
+-rw-r--r--@   1 ben  staff     412 Jun 12 12:47 test_shape.py
+drwxr-xr-x@  44 ben  staff    1408 Jun 16 13:23 tests
+-rw-r--r--@   1 ben  staff  706474 Jun  6 21:38 uv.lock
+[0m
+[0m✱ [0mGlob "**/CANDIDATE_BRIEF.md"[90m 100 matches[0m
+[0m
+[0m$ [0mls -la
+total 32
+drwxr-xr-x@ 6 ben  staff   192 Jun 16 16:05 .
+drwxr-xr-x@ 3 ben  staff    96 Jun 16 16:05 ..
+-rw-r--r--@ 1 ben  staff  3871 Jun 16 16:05 agent.jsonl
+-rw-r--r--@ 1 ben  staff   393 Jun 16 16:05 CANDIDATE_BRIEF.md
+-rw-r--r--@ 1 ben  staff   899 Jun 16 16:05 CONTEXT.md
+-rw-r--r--@ 1 ben  staff  3063 Jun 16 16:05 existing_hypotheses.md
+[0m
+[0m$ [0mcat CONTEXT.md CANDIDATE_BRIEF.md existing_hypotheses.md
+# Inner Loop — round 1, candidate 0 of 3
+
+Responses CSV: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/longer_runs_more_random/experiment2/model_loop/responses.csv`
+Feature columns available (use these as `pm.Data` names): `sequence_a,sequence_b,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b,participant_id,trial_index,chose_left,generating_model`
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+# Candidate Brief
+
+Refine one existing hypothesis within its single mechanism — e.g. a different functional form, prior, or normalization. Do NOT graft cues from other models onto it.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -986.65
+
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -1204.01
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -541.03
+
+Random-looking sequences are diagnostic of a fair coin over salient
+non-random alternatives: alternating, biased, and streaky generators.
+
+## inner_loop_model  — posterior 0.796, ELPD-LOO -485.40
+
+People judge the randomness of a sequence by focusing solely on its longest streak of identical outcomes. Because they believe true randomness naturally produces long streaks, they perceive a sequence as more random the longer its maximum run is relative to the total sequence length.
+
+## ideal_run_proportion  — posterior 0.196, ELPD-LOO -486.75
+
+People judge the randomness of a sequence by comparing its longest streak of identical outcomes to their subjective ideal streak proportion. They perceive a sequence as more random the closer its maximum run proportion is to this expected ideal length, penalizing streaks that are either suspiciously short or excessively long.
+
+## absolute_ideal_run  — posterior 0.000, ELPD-LOO -28797.01
+
+People judge the randomness of a sequence by comparing its absolute longest streak of identical outcomes to a subjective ideal absolute streak length, regardless of total sequence length.
+
+## pure_periodicity_penalty  — posterior 0.000, ELPD-LOO -1248.67
+
+People judge the randomness of a sequence strictly by penalizing its periodicity, perceiving sequences with fewer short, repeating patterns as more random.
+
+## iter0_candidate0  — posterior 0.008, ELPD-LOO -489.99
+
+People judge the randomness of a sequence by focusing solely on its longest streak of identical outcomes. They evaluate this streak as a simple ratio of the maximum run length to the total sequence length, perceiving a sequence as more random the larger this absolute fraction is.
+
+## iter0_candidate1  — posterior 0.000, ELPD-LOO -528.10
+
+People judge the randomness of a sequence by comparing its alternation rate to their subjective ideal alternation rate. They perceive a sequence as more random the closer its alternation proportion is to this expected ideal, penalizing sequences that either alternate too rarely (streaky) or too frequently (perfectly alternating).
+
+## iter0_candidate2  — posterior 0.000, ELPD-LOO -552.65
+
+People judge the randomness of a sequence based solely on the overall balance of its outcomes. They perceive a sequence as less random the more its proportion of heads deviates from an even split, heavily penalizing any imbalance.
+[0m
+[0m$ [0mfind ../../../../.. -name "inner_loop_model.py"
+../../../../../longer_runs_more_random/experiment1/cognitive_models/inner_loop_model.py
+../../../../../longer_runs_more_random/experiment2/model_loop/models/inner_loop_model.py
+../../../../../longer_runs_more_random/experiment2/cognitive_models/inner_loop_model.py
+../../../../../more_heads_more_random/experiment1/cognitive_models/inner_loop_model.py
+../../../../../more_heads_more_random/experiment2/model_loop/models/inner_loop_model.py
+../../../../../more_heads_more_random/experiment2/cognitive_models/inner_loop_model.py
+../../../../../more_heads_more_random/experiment3/model_loop/models/inner_loop_model.py
+../../../../../more_heads_more_random/experiment3/cognitive_models/inner_loop_model.py
+../../../../../fewer_heads_more_random/experiment1/cognitive_models/inner_loop_model.py
+../../../../../fewer_heads_more_random/experiment2/model_loop/models/inner_loop_model.py
+../../../../../fewer_heads_more_random/experiment2/cognitive_models/inner_loop_model.py
+../../../../../fewer_heads_more_random/experiment3/model_loop/models/inner_loop_model.py
+../../../../../fewer_heads_more_random/experiment3/cognitive_models/inner_loop_model.py
+[0m
+[0m$ [0mcat ../../../../../longer_runs_more_random/experiment2/model_loop/models/inner_loop_model.py
+"""
+People judge the randomness of a sequence by focusing solely on its longest streak of identical outcomes. Because they believe true randomness naturally produces long streaks, they perceive a sequence as more random the longer its maximum run is relative to the total sequence length.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    
+    # Free cognitive parameter for sensitivity/noise
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # The perceived randomness score is directly proportional to the normalized maximum run length
+    score_a = max_run_norm_a
+    score_b = max_run_norm_b
+    
+    # Probability of choosing left (A)
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (score_a - score_b)))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat ../../../../../longer_runs_more_random/experiment2/model_loop/models/ideal_run_proportion.py
+"""People judge the randomness of a sequence by comparing its longest streak of identical outcomes to their subjective ideal streak proportion. They perceive a sequence as more random the closer its maximum run proportion is to this expected ideal length, penalizing streaks that are either suspiciously short or excessively long."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    
+    ideal_run_norm = pm.Beta("ideal_run_norm", alpha=2.0, beta=5.0)
+    tau = pm.HalfNormal("tau", sigma=10.0)
+    
+    dist_a = pt.abs(max_run_norm_a - ideal_run_norm)
+    dist_b = pt.abs(max_run_norm_b - ideal_run_norm)
+    
+    score_a = -tau * dist_a
+    score_b = -tau * dist_b
+    
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(score_a - score_b))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat ../../../../../longer_runs_more_random/experiment2/model_loop/models/iter0_candidate0.py
+"""People judge the randomness of a sequence by focusing solely on its longest streak of identical outcomes. They evaluate this streak as a simple ratio of the maximum run length to the total sequence length, perceiving a sequence as more random the larger this absolute fraction is."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="int64"))
+    
+    # Free cognitive parameter for sensitivity
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # Perceived randomness is the simple ratio of maximum run to total length
+    score_a = pt.cast(max_run_a, "float64") / pt.cast(n_a, "float64")
+    score_b = pt.cast(max_run_b, "float64") / pt.cast(n_b, "float64")
+    
+    # Probability of choosing left (A)
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (score_a - score_b)))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m← [0mWrite candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 -c "
+from pathlib import Path
+from pymc_inference import load_pymc_model, observed_response_data
+import sys
+sys.path.append('../../../../../../src/models')
+from pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'pymc_inference'
+[0m
+[0m$ [0mpython3 -c "
+import sys
+sys.path.append('/Users/ben/Documents/auto-psych/src/models')
+from pathlib import Path
+from pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m← [0mWrite hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite test_eval.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+There were 2000 divergences after tuning. Increase `target_accept` or reparameterize.
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+Traceback (most recent call last):
+  File "/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/longer_runs_more_random/experiment2/model_loop/iter_1/candidate_0/test_eval.py", line 23, in <module>
+    print("m1 LOO:", az.loo(tr1).elpd_loo)
+                     ^^^^^^^^^^^
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py", line 743, in loo
+    log_likelihood = _get_log_likelihood(inference_data, var_name=var_name)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats_utils.py", line 429, in get_log_likelihood
+    raise TypeError("log likelihood not found in inference data object")
+TypeError: log likelihood not found in inference data object
+[0m
+[0m← [0mWrite test_eval.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite test_eval.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+There were 3000 divergences after tuning. Increase `target_accept` or reparameterize.
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+m1 LOO: -485.38273188930214
+m2 LOO: -3880.869463931777
+[0m
+[0m← [0mWrite test_eval2.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval2.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m3 LOO: -496.79225852606135
+[0m
+[0m← [0mWrite test_eval3.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval3.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+There were 2000 divergences after tuning. Increase `target_accept` or reparameterize.
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+m4 LOO: -3809.38814795946
+[0m
+[0m← [0mWrite test_eval4.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval4.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+There was 1 divergence after tuning. Increase `target_accept` or reparameterize.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+m5 LOO: -1248.6774009680282
+[0m
+[0m← [0mWrite test_eval5.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval5.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [ideal_run_norm, tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m6 LOO: -513.9994750569404
+[0m
+[0m← [0mWrite test_eval6.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval6.py
+max_run_norm_a:
+0    0.00
+1    0.00
+2    0.20
+3    0.25
+4    0.25
+Name: max_run_norm_a, dtype: float64
+max_run_a / n_a:
+0    0.250000
+1    0.250000
+2    0.333333
+3    0.400000
+4    0.400000
+dtype: float64
+[0m
+[0m← [0mWrite test_eval7.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval7.py
+max_run_a:
+0    1
+1    1
+2    2
+3    2
+4    2
+5    4
+6    1
+7    4
+8    4
+9    2
+Name: max_run_a, dtype: int64
+n_a:
+0    4
+1    4
+2    6
+3    5
+4    5
+5    6
+6    6
+7    7
+8    6
+9    8
+Name: n_a, dtype: int64
+max_run_norm_a:
+0    0.000000
+1    0.000000
+2    0.200000
+3    0.250000
+4    0.250000
+5    0.600000
+6    0.000000
+7    0.500000
+8    0.600000
+9    0.142857
+Name: max_run_norm_a, dtype: float64
+[0m
+[0m← [0mWrite test_eval8.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval8.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m8 LOO: -507.20323748701196
+[0m
+[0m← [0mWrite test_eval9.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval9.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m9 LOO: -524.7801879807881
+[0m
+[0m← [0mWrite test_eval10.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval10.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [ideal_run_norm, tau_short, tau_long]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 2 seconds.
+There were 12 divergences after tuning. Increase `target_accept` or reparameterize.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m10 LOO: -486.81032339779057
+[0m
+[0m← [0mWrite test_eval11.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval11.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m11 LOO: -486.48839153835956
+[0m
+[0m← [0mWrite test_eval12.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval12.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau, gamma]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m12 LOO: -486.03713986558324
+[0m
+[0m← [0mWrite test_eval13.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval13.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 73 seconds.
+Chain 3 reached the maximum tree depth. Increase `max_treedepth`, increase `target_accept` or reparameterize.
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+m13 LOO: -1201.9088003422044
+[0m
+[0m← [0mWrite test_eval14.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval14.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+There were 3000 divergences after tuning. Increase `target_accept` or reparameterize.
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+m14 LOO: -3254.6211309605583
+[0m
+[0m← [0mWrite test_eval15.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval15.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m15 LOO: -487.91543172202233
+[0m
+[0m← [0mWrite test_eval16.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval16.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 0 seconds.
+There were 4000 divergences after tuning. Increase `target_accept` or reparameterize.
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+m16 LOO: -22072342.696542982
+[0m
+[0m← [0mWrite test_eval17.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval17.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m17 LOO: -504.67336664668994
+[0m
+[0m← [0mWrite test_eval18.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval18.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m18 LOO: -496.9363526786252
+[0m
+[0m← [0mWrite test_eval19.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval19.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+There were 2000 divergences after tuning. Increase `target_accept` or reparameterize.
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+m19 LOO: -5183.399508834992
+[0m
+[0m← [0mWrite test_eval20.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval20.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m20 LOO: -485.40385490441474
+[0m
+[0m← [0mWrite test_eval21.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval21.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m21 LOO: -489.0131152357759
+[0m
+[0m← [0mWrite test_eval22.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_eval22.py
+Initializing NUTS using jitter+adapt_diag...
+Multiprocess sampling (4 chains in 4 jobs)
+NUTS: [tau, gamma]
+Sampling 4 chains for 1_000 tune and 1_000 draw iterations (4_000 + 4_000 draws total) took 1 seconds.
+Computing ... ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 100% 0:00:00
+m22 LOO: -486.0249326299312
+[0m
+[0m← [0mWrite hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.append('../../../../../../src/models')
+from pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+ModuleNotFoundError: No module named 'pymc_inference'
+[0m
+[0m$ [0mpython3 -c "
+import sys
+sys.path.append('/Users/ben/Documents/auto-psych/src/models')
+from pathlib import Path
+from pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mrm test_eval*.py
+(no output)
+[0m
+I have proposed a refinement to the "longer runs are more random" hypothesis by incorporating a non-linear perceptual scaling step (Stevens' Power Law).
+
+The hypothesis (`hypothesis.md`) and the PyMC model (`candidate.py`) have been correctly implemented and verify against PyMC parsing checks. The model scales the linearly normalized maximum run length by a learned power (`gamma`) before comparing them through the standard logistic function, enabling it to fit diminishing or accelerating returns for streak lengths without blending in any new cues.

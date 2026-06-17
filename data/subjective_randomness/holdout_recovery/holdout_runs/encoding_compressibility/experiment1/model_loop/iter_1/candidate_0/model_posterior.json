@@ -1,0 +1,13 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.009362,
+    "bayesian_diagnosticity": 0.417052,
+    "iter0_candidate0": 0.573586
+  },
+  "elpd_loo": {
+    "prototype_similarity": -424.6272,
+    "bayesian_diagnosticity": -420.8307,
+    "iter0_candidate0": -420.512
+  },
+  "n_trials": 900
+}

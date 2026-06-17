@@ -1,0 +1,1 @@
+People judge a coin sequence as more random-looking based solely on the length of its longest streak: longer maximum runs always feel less random, with no ideal run length to aim for. When comparing two sequences, people simply choose whichever has the shorter maximum run as the more random-looking one.

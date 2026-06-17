@@ -1,0 +1,1 @@
+People judge the randomness of a sequence strictly by the absolute number of heads it contains, but their sensitivity to this count diminishes logarithmically. Sequences are penalized based on the logarithm of their head count, meaning the perceived difference in randomness between 1 and 2 heads is larger than the difference between 8 and 9.

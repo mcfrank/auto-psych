@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by focusing solely on its absolute longest streak of identical outcomes. Instead of adjusting for the total sequence length, they perceive a sequence as more random simply by counting the raw number of consecutive identical outcomes in its longest run.

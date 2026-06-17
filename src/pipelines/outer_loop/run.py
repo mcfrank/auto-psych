@@ -86,6 +86,8 @@ def _run_agent(
     participant_backend: str = "closed",
     participant_model: Optional[str] = None,
     prolific_mode: str = "none",
+    enable_critique: bool = True,
+    n_critique_proposals: Optional[int] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output is invalid."""
     print(f"\n{'=' * 60}", flush=True)
@@ -109,6 +111,8 @@ def _run_agent(
             max_iterations=inner_loop_iterations,
             candidate_count=inner_loop_candidates,
             fit_kwargs=fit_kwargs,
+            enable_critique=enable_critique,
+            n_critique_proposals=n_critique_proposals,
         )
     else:
         write_context(
@@ -163,6 +167,8 @@ def _run_experiment(
     prolific_mode: str = "none",
     deploy_only: bool = False,
     prepare_smoke_experiment: bool = False,
+    enable_critique: bool = True,
+    n_critique_proposals: Optional[int] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
@@ -262,6 +268,8 @@ def _run_experiment(
             participant_backend=participant_backend,
             participant_model=participant_model,
             prolific_mode=prolific_mode,
+            enable_critique=enable_critique,
+            n_critique_proposals=n_critique_proposals,
         )
         if agent_key == "3_implement" and deploy_target != "none":
             print(f"\n{'=' * 60}", flush=True)
@@ -347,6 +355,12 @@ class Args:
     """MCMC tuning (warmup) steps per chain for inner-loop model fits."""
     chains: int = 4
     """MCMC chains for inner-loop model fits."""
+    critique: bool = True
+    """Run a CriticAL posterior-predictive critique of the incumbent before each
+    inner-loop candidate round (the critique feeds the candidate agents)."""
+    n_critique_proposals: Optional[int] = None
+    """Test statistics the critique agent proposes per round (None ⇒ inner-loop
+    default)."""
 
 
 def main(args: Args) -> None:
@@ -426,6 +440,8 @@ def main(args: Args) -> None:
             prolific_mode=args.prolific_mode,
             deploy_only=args.deploy_only,
             prepare_smoke_experiment=args.prepare_smoke_experiment,
+            enable_critique=args.critique,
+            n_critique_proposals=args.n_critique_proposals,
         )
 
     print("\nAll experiments complete.", flush=True)

@@ -1,0 +1,92 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.0,
+    "encoding_compressibility": 0.0,
+    "bayesian_diagnosticity": 0.0,
+    "iter0_candidate0": 0.0,
+    "iter0_candidate1": 0.0,
+    "iter0_candidate2": 1.0,
+    "iter1_candidate0": 0.0,
+    "iter1_candidate2": 0.0
+  },
+  "elpd_loo": {
+    "prototype_similarity": -619.2209,
+    "encoding_compressibility": -628.7898,
+    "bayesian_diagnosticity": -608.2354,
+    "iter0_candidate0": -120.4237,
+    "iter0_candidate1": -119.992,
+    "iter0_candidate2": -29.0286,
+    "iter1_candidate0": -58.0349,
+    "iter1_candidate2": -129.1147
+  },
+  "n_trials": 900,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "prototype_similarity": 26,
+    "encoding_compressibility": 35,
+    "bayesian_diagnosticity": 61,
+    "iter0_candidate0": 17,
+    "iter0_candidate1": 14,
+    "iter0_candidate2": 16,
+    "iter1_candidate0": 16,
+    "iter1_candidate2": 17
+  },
+  "comparison": {
+    "iter0_candidate2": {
+      "rank": 0,
+      "elpd_loo": -29.028574004239164,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.9999999999009623
+    },
+    "iter1_candidate0": {
+      "rank": 1,
+      "elpd_loo": -58.03487397473558,
+      "elpd_diff": 29.006299970496414,
+      "dse": 2.4402418677287585,
+      "weight": 1.760354596361784e-11
+    },
+    "iter0_candidate1": {
+      "rank": 2,
+      "elpd_loo": -119.99199072683197,
+      "elpd_diff": 90.96341672259281,
+      "dse": 13.79576218227998,
+      "weight": 3.599657672158456e-11
+    },
+    "iter0_candidate0": {
+      "rank": 3,
+      "elpd_loo": -120.42373063963728,
+      "elpd_diff": 91.39515663539814,
+      "dse": 13.923365898497226,
+      "weight": 3.55216258807513e-11
+    },
+    "iter1_candidate2": {
+      "rank": 4,
+      "elpd_loo": -129.11465823184903,
+      "elpd_diff": 100.08608422760986,
+      "dse": 12.27482010497429,
+      "weight": 4.152025476641006e-11
+    },
+    "bayesian_diagnosticity": {
+      "rank": 5,
+      "elpd_loo": -608.2354249456081,
+      "elpd_diff": 579.206850941369,
+      "dse": 7.434533311267869,
+      "weight": 0.0
+    },
+    "prototype_similarity": {
+      "rank": 6,
+      "elpd_loo": -619.2208814239353,
+      "elpd_diff": 590.1923074196961,
+      "dse": 6.12067482299781,
+      "weight": 0.0
+    },
+    "encoding_compressibility": {
+      "rank": 7,
+      "elpd_loo": -628.7898299828578,
+      "elpd_diff": 599.7612559786187,
+      "dse": 6.109305365052576,
+      "weight": 0.0
+    }
+  }
+}

@@ -1,0 +1,26 @@
+models:
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: alternation_prototype
+  rationale: 'People judge a sequence as more random when its alternation rate is
+    closer
+
+    (L1 distance) to an internalized prototype value that is biased above 0.5,
+
+    reflecting the well-documented human tendency to overestimate alternation in
+
+    random sequences.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

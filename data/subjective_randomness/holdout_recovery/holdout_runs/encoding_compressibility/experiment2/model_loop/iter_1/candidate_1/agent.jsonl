@@ -1,0 +1,533 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mls -la
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 1496
+drwxr-xr-x@   8 ben  staff     256 Jun 12 14:02 __pycache__
+drwxr-xr-x@  27 ben  staff     864 Jun 12 13:59 .
+drwx------@ 283 ben  staff    9056 Jun 10 14:21 ..
+drwxr-xr-x@   4 ben  staff     128 Jun 12 14:00 .claude
+-rw-r--r--@   1 ben  staff    8196 Jun  9 17:12 .DS_Store
+drwxr-xr-x@  16 ben  staff     512 Jun 12 11:57 .git
+-rw-r--r--@   1 ben  staff     877 Jun  5 13:49 .gitignore
+drwxr-xr-x@   6 ben  staff     192 Apr 16 22:36 .pytest_cache
+drwxr-xr-x@   5 ben  staff     160 Jun  5 13:56 .ruff_cache
+drwxr-xr-x@  10 ben  staff     320 May 28 12:09 .venv
+drwxr-xr-x@   2 ben  staff      64 Apr 17 09:52 .worktrees
+-rw-r--r--@   1 ben  staff    1753 Jun 12 14:01 candidate.py
+-rw-r--r--@   1 ben  staff    1724 Jun  5 09:37 CLEANUP_PLAN.md
+drwxr-xr-x@   6 ben  staff     192 Jun  9 16:41 data
+-rw-r--r--@   1 ben  staff    1070 Apr 16 22:03 LICENSE
+-rw-r--r--@   1 ben  staff     140 Jun  5 09:37 opencode.json
+drwxr-xr-x@   6 ben  staff     192 Jun  5 13:49 projects
+-rw-r--r--@   1 ben  staff    1859 Jun  6 21:57 pyproject.toml
+-rw-r--r--@   1 ben  staff    5363 Jun  5 13:49 README.md
+drwxr-xr-x@   7 ben  staff     224 Jun  5 13:49 scripts
+drwxr-xr-x@  12 ben  staff     384 Jun  5 10:57 src
+drwxr-xr-x@   7 ben  staff     224 Apr 16 22:03 templates
+-rw-r--r--@   1 ben  staff     462 Jun 12 12:48 test_hier.py
+-rw-r--r--@   1 ben  staff    3645 Jun 12 12:48 test_hierarchical.py
+-rw-r--r--@   1 ben  staff     412 Jun 12 12:47 test_shape.py
+drwxr-xr-x@  39 ben  staff    1248 Jun 12 11:51 tests
+-rw-r--r--@   1 ben  staff  706474 Jun  6 21:38 uv.lock
+[0m
+[0m✱ [0mGlob "**/{CONTEXT.md,CANDIDATE_BRIEF.md}"[90m 77 matches[0m
+[0m
+[0m$ [0mfind . -name "CONTEXT.md" -mtime -1
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/CONTEXT.md
+[0m
+[0m$ [0mls -la data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1/
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 40
+drwxr-xr-x@ 6 ben  staff   192 Jun 12 14:02 .
+drwxr-xr-x@ 4 ben  staff   128 Jun 12 14:02 ..
+-rw-r--r--@ 1 ben  staff  6383 Jun 12 14:02 agent.jsonl
+-rw-r--r--@ 1 ben  staff    93 Jun 12 14:02 CANDIDATE_BRIEF.md
+-rw-r--r--@ 1 ben  staff   579 Jun 12 14:02 CONTEXT.md
+-rw-r--r--@ 1 ben  staff   639 Jun 12 14:02 model_posterior.json
+[0m
+[0m$ [0mcat data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+# Inner Loop — round 1, candidate 1 of 3
+
+Responses CSV: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/responses.csv`
+Feature columns available (use these as `pm.Data` names): `sequence_a,sequence_b,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b,participant_id,trial_index,chose_left,generating_model`
+
+Write `candidate.py` (a module-level PyMC model) per the instructions.
+[0m
+[0m$ [0mcat data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+# Candidate Brief
+
+Try a different cognitive mechanism if the current models miss structure.
+[0m
+[0m$ [0mcat data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1/model_posterior.json
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+{
+  "posteriors": {
+    "prototype_similarity": 0.0,
+    "bayesian_diagnosticity": 0.0,
+    "inner_loop_model": 0.18889,
+    "extended_compressibility": 0.082681,
+    "alternation_and_run": 0.0,
+    "iter0_candidate0": 0.245017,
+    "iter0_candidate1": 0.233852,
+    "iter0_candidate2": 0.24956
+  },
+  "elpd_loo": {
+    "prototype_similarity": -760.0916,
+    "bayesian_diagnosticity": -749.505,
+    "inner_loop_model": -681.1897,
+    "extended_compressibility": -682.0159,
+    "alternation_and_run": -720.695,
+    "iter0_candidate0": -680.9296,
+    "iter0_candidate1": -680.9762,
+    "iter0_candidate2": -680.9112
+  },
+  "n_trials": 1800
+}
+[0m
+[0m$ [0mls -la data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 576
+drwxr-xr-x@  7 ben  staff     224 Jun 12 13:59 .
+drwxr-xr-x@ 10 ben  staff     320 Jun 12 13:43 ..
+-rw-r--r--@  1 ben  staff    1264 Jun 12 13:59 history.json
+drwxr-xr-x@  5 ben  staff     160 Jun 12 13:58 iter_0
+drwxr-xr-x@  4 ben  staff     128 Jun 12 14:02 iter_1
+drwxr-xr-x@ 12 ben  staff     384 Jun 12 13:59 models
+-rw-r--r--@  1 ben  staff  289706 Jun 12 13:50 responses.csv
+[0m
+[0m$ [0mls -la data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 72
+drwxr-xr-x@ 10 ben  staff   320 Jun 12 13:59 __pycache__
+drwxr-xr-x@ 12 ben  staff   384 Jun 12 13:59 .
+drwxr-xr-x@  7 ben  staff   224 Jun 12 13:59 ..
+-rw-r--r--@  1 ben  staff   896 Jun 12 13:50 alternation_and_run.py
+-rw-r--r--@  1 ben  staff  2683 Jun 12 13:50 bayesian_diagnosticity.py
+-rw-r--r--@  1 ben  staff  1416 Jun 12 13:50 extended_compressibility.py
+-rw-r--r--@  1 ben  staff  1461 Jun 12 13:50 inner_loop_model.py
+-rw-r--r--@  1 ben  staff  1749 Jun 12 13:54 iter0_candidate0.py
+-rw-r--r--@  1 ben  staff  2328 Jun 12 13:58 iter0_candidate1.py
+-rw-r--r--@  1 ben  staff  1489 Jun 12 13:59 iter0_candidate2.py
+-rw-r--r--@  1 ben  staff   277 Jun 12 13:59 models_manifest.yaml
+-rw-r--r--@  1 ben  staff  1171 Jun 12 13:50 prototype_similarity.py
+[0m
+[0m$ [0mcat data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/inner_loop_model.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    # Read the features
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    
+    # Simpler prior structure: independent normal weights for each penalty term.
+    # Higher variance allows the model to flexibly capture the compressibility heuristic.
+    w_run = pm.Normal("w_run", mu=0.0, sigma=5.0)
+    w_period = pm.Normal("w_period", mu=0.0, sigma=5.0)
+    w_imbalance = pm.Normal("w_imbalance", mu=0.0, sigma=5.0)
+    
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    # Negative weight means the feature penalizes the randomness score.
+    score_a = w_run * max_run_norm_a + w_period * periodicity_a + w_imbalance * imbalance_a
+    score_b = w_run * max_run_norm_b + w_period * periodicity_b + w_imbalance * imbalance_b
+    
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid((score_a - score_b) + side_bias)
+    )
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/iter0_candidate2.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    # Read the features
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    
+    # Higher variance / heavy-tailed prior for the parameters
+    # This allows for larger weights and more extreme probability differences
+    # without aggressively shrinking them to zero.
+    nu_val = 4.0
+    w_run = pm.StudentT("w_run", nu=nu_val, mu=0.0, sigma=5.0)
+    w_period = pm.StudentT("w_period", nu=nu_val, mu=0.0, sigma=5.0)
+    w_imbalance = pm.StudentT("w_imbalance", nu=nu_val, mu=0.0, sigma=5.0)
+    
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    # Score calculation
+    score_a = w_run * max_run_norm_a + w_period * periodicity_a + w_imbalance * imbalance_a
+    score_b = w_run * max_run_norm_b + w_period * periodicity_b + w_imbalance * imbalance_b
+    
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid((score_a - score_b) + side_bias)
+    )
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/extended_compressibility.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    
+    w_run = pm.Normal("w_run", mu=0.0, sigma=5.0)
+    w_period = pm.Normal("w_period", mu=0.0, sigma=5.0)
+    w_imbalance = pm.Normal("w_imbalance", mu=0.0, sigma=5.0)
+    w_alts = pm.Normal("w_alts", mu=0.0, sigma=5.0)
+    
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    score_a = w_run * max_run_norm_a + w_period * periodicity_a + w_imbalance * imbalance_a + w_alts * p_alts_a
+    score_b = w_run * max_run_norm_b + w_period * periodicity_b + w_imbalance * imbalance_b + w_alts * p_alts_b
+    
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid((score_a - score_b) + side_bias)
+    )
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/prototype_similarity.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+"""PyMC adapter for the prototype-similarity model family."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+with pm.Model() as model:
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+    score_a = -(
+        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
+    )
+    score_b = -(
+        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/bayesian_diagnosticity.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+"""PyMC adapter for the Bayesian-diagnosticity model family."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+ALT_SWITCH_PROB = 0.95
+STREAK_SWITCH_PROB = 0.15
+BIAS_HEAD_PROB = 0.85
+
+
+def _logsumexp2(a, b):
+    m = pt.maximum(a, b)
+    return m + pt.log(pt.exp(a - m) + pt.exp(b - m))
+
+
+def _normalized_iid_log_prob(n, h, p_heads):
+    n_f = pt.cast(n, "float64")
+    h_f = pt.cast(h, "float64")
+    tails_f = n_f - h_f
+    denom = pt.maximum(n_f, 1.0)
+    return (h_f * np.log(p_heads) + tails_f * np.log(1.0 - p_heads)) / denom
+
+
+def _normalized_markov_log_prob(n, alts, switch_prob):
+    n_f = pt.cast(n, "float64")
+    alts_f = pt.cast(alts, "float64")
+    stays_f = pt.maximum(n_f - 1.0, 0.0) - alts_f
+    denom = pt.maximum(n_f, 1.0)
+    return (
+        np.log(0.5) + alts_f * np.log(switch_prob) + stays_f * np.log(1.0 - switch_prob)
+    ) / denom
+
+
+def _score_sequence(n, h, alts, alt_prior, bias_share):
+    fair = _normalized_iid_log_prob(n, h, 0.5)
+    alternating = _normalized_markov_log_prob(n, alts, ALT_SWITCH_PROB)
+    streaky = _normalized_markov_log_prob(n, alts, STREAK_SWITCH_PROB)
+    bias_h = _normalized_iid_log_prob(n, h, BIAS_HEAD_PROB)
+    bias_t = _normalized_iid_log_prob(n, h, 1.0 - BIAS_HEAD_PROB)
+    biased = _logsumexp2(np.log(0.5) + bias_h, np.log(0.5) + bias_t)
+
+    alt_weight = alt_prior
+    bias_weight = (1.0 - alt_prior) * bias_share
+    streak_weight = (1.0 - alt_prior) * (1.0 - bias_share)
+    alternatives = _logsumexp2(
+        _logsumexp2(
+            pt.log(alt_weight) + alternating,
+            pt.log(bias_weight) + biased,
+        ),
+        pt.log(streak_weight) + streaky,
+    )
+    return fair - alternatives
+
+
+with pm.Model() as model:
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    alt_prior = pm.Uniform("alt_prior", lower=0.01, upper=0.98)
+    bias_share = pm.Uniform("bias_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    score_a = _score_sequence(n_a, h_a, alts_a, alt_prior, bias_share)
+    score_b = _score_sequence(n_b, h_b, alts_b, alt_prior, bias_share)
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/alternation_and_run.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    
+    w_run = pm.Normal("w_run", mu=0.0, sigma=5.0)
+    w_alts = pm.Normal("w_alts", mu=0.0, sigma=5.0)
+    
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    score_a = w_run * max_run_norm_a + w_alts * p_alts_a
+    score_b = w_run * max_run_norm_b + w_alts * p_alts_b
+    
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid((score_a - score_b) + side_bias)
+    )
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/iter0_candidate0.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    # Stimulus inputs — names match responses CSV columns
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    # Cognitive principle: participants evaluate compressibility using a convex 
+    # combination of penalty features, scaled by a global precision/temperature parameter.
+    longrun_weight = pm.Beta("longrun_weight", alpha=1.0, beta=1.0)
+    periodic_share = pm.Beta("periodic_share", alpha=1.0, beta=1.0)
+    
+    w_run = longrun_weight
+    w_period = (1.0 - longrun_weight) * periodic_share
+    w_imbalance = (1.0 - longrun_weight) * (1.0 - periodic_share)
+    
+    beta = pm.HalfNormal("beta", sigma=10.0)
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    # Negative weight means the feature penalizes the randomness score.
+    score_a = -(w_run * max_run_norm_a + w_period * periodicity_a + w_imbalance * imbalance_a)
+    score_b = -(w_run * max_run_norm_b + w_period * periodicity_b + w_imbalance * imbalance_b)
+    
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    )
+    
+    # Observed response: the pm.Data tensor is passed directly to observed=.
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/iter0_candidate1.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Sequences are evaluated based on features of their shortest mental description.
+    # We load the normalized structural features.
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    
+    # We hypothesize that observers have a limited attention/weight capacity 
+    # that they distribute among different compression heuristics.
+    # We use a stick-breaking parameterization to ensure weights are strictly 
+    # positive and sum to 1, providing strong regularization.
+    longrun_weight = pm.Beta("longrun_weight", alpha=2.0, beta=2.0)
+    periodic_share = pm.Beta("periodic_share", alpha=2.0, beta=2.0)
+    
+    # Overall sensitivity to subjective randomness differences
+    beta = pm.HalfNormal("beta", sigma=5.0)
+    
+    # Task-specific side bias
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    # Compute the effective fractional weight for each heuristic
+    w_run = longrun_weight
+    remaining = 1.0 - longrun_weight
+    w_period = remaining * periodic_share
+    w_imbalance = remaining * (1.0 - periodic_share)
+    
+    # Compressibility penalty: higher penalty means the sequence is MORE compressible, 
+    # and therefore LESS subjectively random.
+    penalty_a = w_run * max_run_norm_a + w_period * periodicity_a + w_imbalance * imbalance_a
+    penalty_b = w_run * max_run_norm_b + w_period * periodicity_b + w_imbalance * imbalance_b
+    
+    # Subjective randomness score is the negative of the compressibility penalty
+    score_a = -penalty_a
+    score_b = -penalty_b
+    
+    # Probability of choosing sequence A (left) as more random
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    )
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/responses.csv')
+print(df[['max_run_norm_a', 'periodicity_a', 'imbalance_a']].describe())
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+       max_run_norm_a  periodicity_a  imbalance_a
+count     1800.000000    1800.000000  1800.000000
+mean         0.407619       0.644643     0.442500
+std          0.378207       0.340894     0.411194
+min          0.000000       0.000000     0.000000
+25%          0.142857       0.404762     0.107143
+50%          0.250000       0.714286     0.291667
+75%          0.812500       1.000000     1.000000
+max          1.000000       1.000000     1.000000
+[0m
+[0m← [0mWrite candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1'))
+print('observed:', observed_response_data(m))
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+observed: chose_left
+[0m
+I have successfully created `candidate.py` using a new cognitive mechanism: rather than computing a weighted *sum* of encoding penalties, it posits that participants evaluate the sequence by its Minimum Description Length (MDL). Because participants are boundedly rational, they simply notice the *most prominent* or "best" compression strategy available. 
+
+Thus, the total compressibility penalty becomes the **maximum** among the long-run, periodicity, and imbalance heuristics, instead of an additive linear combination. This introduces a structural non-linearity while remaining grounded in the same feature space. 
+
+The self-check ran successfully and correctly mapped `chose_left` as the observed data container.

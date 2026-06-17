@@ -24,7 +24,7 @@ from typing import Callable, Optional
 DEFAULT_BACKEND = "claude"
 _DEFAULT_MODEL = {
     "claude": "claude-sonnet-4-6",
-    "opencode": "anthropic/claude-sonnet-4-6",
+    "opencode": "google/gemini-3.1-pro-preview",
 }
 
 

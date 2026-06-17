@@ -1,0 +1,62 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: length_scaled_head_difference
+  rationale: 'People evaluate randomness primarily by the absolute number of heads,
+    but their sensitivity to the difference in head counts between two sequences is
+    diminished when the overall length of the sequences being compared is larger.
+
+    '
+- name: squared_heads_heuristic
+  rationale: 'People evaluate the randomness of a sequence strictly based on the squared
+    number of heads it contains, amplifying the perception of randomness for sequences
+    with very high head counts.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+- name: power_law_heads
+  rationale: People evaluate the randomness of a sequence based on the number of heads
+    it contains, but their perception of randomness scales as an inferred power-law
+    function of the head count.
+- name: absolute_heads_lapse
+  rationale: People evaluate the randomness of a sequence strictly based on the absolute
+    number of heads it contains, but their choices are subject to a constant lapse
+    rate representing random guessing.
+- name: iter0_candidate0
+  rationale: People evaluate the randomness of a sequence based on the logarithm of
+    the absolute number of heads it contains, reflecting a diminishing sensitivity
+    to head count differences as the total number of heads increases, and their choices
+    are subject to a constant lapse rate for random guessing.
+- name: iter0_candidate1
+  rationale: People evaluate the randomness of a sequence primarily based on the proportion
+    of heads it contains relative to its total length, judging sequences with a higher
+    fraction of heads to be more random, and their choices are subject to a constant
+    lapse rate representing occasional random guessing.
+- name: iter1_candidate1
+  rationale: People evaluate the randomness of a sequence strictly based on the absolute
+    number of heads it contains. Their choice between sequences is driven by a cumulative
+    normal (probit) discrimination process on the difference in head counts, reflecting
+    Gaussian internal noise with no baseline rate of random guessing.
+- name: iter1_candidate2
+  rationale: People evaluate the randomness of a sequence based on the square root
+    of the number of heads it contains, reflecting a diminishing sensitivity to each
+    additional head, and their choices are subject to a constant lapse rate representing
+    occasional random guessing.

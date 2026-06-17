@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by comparing its maximum run proportion to a subjective ideal proportion, but following the Weber-Fechner law, their perception of this difference is logarithmic, penalizing the absolute log-ratio of the observed run proportion to the ideal proportion.

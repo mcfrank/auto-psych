@@ -1,0 +1,1 @@
+People judge a sequence as more random when its proportion of heads is closer to 50%. When comparing two sequences, they choose whichever has better head/tail balance — the smaller absolute deviation from equal proportions — as the more random one. A single inverse-temperature parameter governs how sensitively this balance difference drives the choice.

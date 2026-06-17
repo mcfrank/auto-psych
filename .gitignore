@@ -55,3 +55,4 @@ remote_jobs/.env.local
 
 # Local scratch / working notes (never commit)
 *.local.txt
+*_cache/

@@ -1,0 +1,8 @@
+models:
+- name: prototype_similarity
+- name: bayesian_diagnosticity
+- name: iter0_candidate0
+- name: iter1_candidate0
+- name: iter1_candidate1
+- name: iter1_candidate2
+  rationale: Inner-loop candidate from round 1.

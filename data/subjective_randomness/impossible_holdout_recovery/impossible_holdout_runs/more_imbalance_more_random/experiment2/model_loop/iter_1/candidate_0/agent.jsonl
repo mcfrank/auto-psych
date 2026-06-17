@@ -1,0 +1,275 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead CONTEXT.md
+[0m→ [0mRead CANDIDATE_BRIEF.md
+[0m→ [0mRead existing_hypotheses.md
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/inner_loop_model.py
+"""
+People judge sequence randomness based purely on outcome frequencies, paradoxically perceiving sequences with a greater imbalance between the number of heads and tails as more random.
+"""
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameter for sensitivity
+    tau = pm.HalfNormal("tau", sigma=10.0)
+
+    # Higher imbalance means higher perceived randomness
+    score_a = imbalance_a
+    score_b = imbalance_b
+    
+    # Calculate probability and clamp for numerical safety
+    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 5 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/data/responses.csv
+sequence_a,sequence_b,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b,participant_id,trial_index,chose_left,generating_model
+THTH,TTTT,4,2,3,1,4,0,0,4,0.5,1.0,0.0,0.0,1.0,0.0,0.0,1.0,1.0,1.0,0,0,0,more_imbalance_more_random
+HHHH,THTH,4,4,0,4,4,2,3,1,1.0,0.0,1.0,1.0,1.0,0.5,1.0,0.0,0.0,1.0,0,1,1,more_imbalance_more_random
+HTHTHTHT,THHHHHHH,8,4,7,1,8,7,1,7,0.5,1.0,0.0,0.0,1.0,0.875,0.14285714285714285,0.8571428571428571,0.75,0.75,0,2,0,more_imbalance_more_random
+THTHT,TTTTT,5,2,4,1,5,0,0,5,0.4,1.0,0.0,0.19999999999999996,1.0,0.0,0.0,1.0,1.0,1.0,0,3,0,more_imbalance_more_random
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+# Subjective randomness: problem definition
+
+The domain of inquiry is the subjective perception of randomness by humans judges. We seek an explantory theory of which sequences humans find more or less random. To explore this we use an forced-choice experimental paradigm, in which participants are asked to choose the more random sequence from a pair.
+
+## Task
+
+On each trial, the participant sees **two sequences of coin flips** (H and T) and chooses which sequence looks **more random**. This is a classic paradigm for studying representativeness and alternation biases (e.g. Griffiths, "The Rational Basis of Representativeness").
+
+## Stimulus design schema
+
+- **Stimulus**: A pair of two sequences of H and T. Each sequence is a string (e.g. `"HHT"`, `"HTHTHT"`, `"HHTHTTHT"`). The two sequences in a pair **may have different lengths** (e.g. length 4 vs length 6).
+- **Response**: Which sequence was chosen (e.g. "left" / "right").
+
+## Experiment design constraints
+
+- **Total trials per experiment: 30.** Target duration is about 5 minutes at ~5 seconds per trial (consistent with Prolific).
+- **Maximum sequence length: 8.**
+
+## Models
+
+Each model is a **PyMC model** in `cognitive_models/<name>.py`. At module load
+the file builds, at top level, `with pm.Model() as model: ...` containing:
+
+- One `pm.Data` container per stimulus feature the theory uses (see the
+  feature-column list below). Each container must have a **1-element placeholder**
+  of the correct dtype (e.g. `np.zeros(1, dtype="int64")`); the pipeline calls
+  `pm.set_data(...)` to swap in real data before sampling.
+- Priors over the theory's free cognitive parameters (e.g. softmax temperature,
+  Beta prior on bias). MCMC infers these — they are **not** hyperparameters.
+- A `pm.Bernoulli("response", p=p_left, observed=chose_left)` likelihood, where
+  the `observed=` argument is the **exact** `chose_left = pm.Data("chose_left", ...)`
+  tensor (not a derived copy).
+- A `pm.Deterministic("p_left", ...)` exposing per-trial P(chose_left=1).
+
+The pipeline fits each model on the preprocessed responses, scores it by
+`arviz.loo` (ELPD-LOO), and uses posterior-predictive samples for correlations
+and posterior predictive checks. No callable-style `def model_name(stimulus,
+response_options)` functions — that is the old contract and is no longer used.
+
+## Preprocessed data schema
+
+`model_loop/responses.csv` is produced by the project's `preprocess.py` helper.
+It carries the raw columns (`participant_id`, `trial_index`, `sequence_a`,
+`sequence_b`, `chose_left`) **plus** the following numeric feature columns, one
+per sequence (`_a` and `_b`). Use these names verbatim in your `pm.Data(...)`
+containers.
+
+| Column           | Type  | Meaning                                          |
+| ---------------- | ----- | ------------------------------------------------ |
+| `n_a`, `n_b`     | int   | Length of the sequence                           |
+| `h_a`, `h_b`     | int   | Number of H's                                    |
+| `p_a`, `p_b`     | float | Head proportion (`h / n`)                        |
+| `alts_a`, `alts_b`     | int   | Alternation count (transitions H↔T)        |
+| `p_alts_a`, `p_alts_b` | float | Alternation proportion (`alts / (n-1)`)    |
+| `max_run_a`, `max_run_b` | int | Longest constant-character run                |
+| `max_run_norm_a`, `max_run_norm_b` | float | Longest run scaled to `[0, 1]`      |
+| `imbalance_a`, `imbalance_b` | float | Distance from balanced H/T counts          |
+| `periodicity_a`, `periodicity_b` | float | Match to a short repeating template       |
+
+And the observed response: `chose_left` ∈ {0, 1} — 1 means the participant
+chose sequence A. Use `chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))`
+in every model and pass it to `pm.Bernoulli(..., observed=chose_left)`.
+
+You may pick any subset of these feature columns per theory. You do not need
+to use them all — only the ones the theory commits to.
+
+## Running the active outer loop
+
+```bash
+# 1. Preprocess a raw responses CSV (adds the feature columns above)
+uv run python scripts/subjective_randomness/preprocess.py \
+    --input-csv data/subjective_randomness/experiment1/responses.csv \
+    --output-csv data/subjective_randomness/responses.csv
+
+# 2. Run the outer loop (theory → design → collect → model loop)
+uv run python -m src.pipelines.outer_loop.run \
+    --project subjective_randomness \
+    --experiment 1 \
+    --ground-truth-model length_sensitive_alternation
+```
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People judge sequence randomness based on outcome frequencies, perceiving sequences with a greater imbalance between the number of heads and tails as more random according to a psychophysical power law, where sensitivity to imbalance is governed by a free exponent parameter.
+EOF
+cat hypothesis.md
+People judge sequence randomness based on outcome frequencies, perceiving sequences with a greater imbalance between the number of heads and tails as more random according to a psychophysical power law, where sensitivity to imbalance is governed by a free exponent parameter.
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People judge sequence randomness based on outcome frequencies, but rely on the unnormalized raw difference in counts between heads and tails rather than the proportion, perceiving sequences with a larger absolute difference in counts as more random.
+EOF
+cat hypothesis.md
+People judge sequence randomness based on outcome frequencies, but rely on the unnormalized raw difference in counts between heads and tails rather than the proportion, perceiving sequences with a larger absolute difference in counts as more random.
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People judge sequence randomness based on outcome frequencies, but rely on the unnormalized raw difference in counts between heads and tails rather than the proportion, perceiving sequences with a larger absolute difference in counts as more random.
+"""
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameter
+    tau = pm.HalfNormal("tau", sigma=10.0)
+
+    # Raw absolute difference in counts (heads vs tails)
+    # tails = n - h
+    # diff = h - tails = h - (n - h) = 2*h - n
+    raw_diff_a = pt.abs(2 * h_a - n_a)
+    raw_diff_b = pt.abs(2 * h_b - n_b)
+
+    # Larger raw difference -> more random
+    # Using cast to float64 for the score just to be safe
+    score_a = pt.cast(raw_diff_a, "float64")
+    score_b = pt.cast(raw_diff_b, "float64")
+    
+    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+python3 -c "
+import candidate
+print('Model built successfully:', candidate.model.name)
+"
+Model built successfully:
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat candidate.py
+"""
+People judge sequence randomness based on outcome frequencies, but rely on the unnormalized raw difference in counts between heads and tails rather than the proportion, perceiving sequences with a larger absolute difference in counts as more random.
+"""
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameter
+    tau = pm.HalfNormal("tau", sigma=10.0)
+
+    # Raw absolute difference in counts (heads vs tails)
+    # tails = n - h
+    # diff = h - tails = h - (n - h) = 2*h - n
+    raw_diff_a = pt.abs(2 * h_a - n_a)
+    raw_diff_b = pt.abs(2 * h_b - n_b)
+
+    # Larger raw difference -> more random
+    # Using cast to float64 for the score just to be safe
+    score_a = pt.cast(raw_diff_a, "float64")
+    score_b = pt.cast(raw_diff_b, "float64")
+    
+    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mecho "All done"
+All done
+[0m
+I have formulated the hypothesis and implemented the PyMC model as requested. 
+
+The selected hypothesis is a refinement of the highest-performing existing model (`inner_loop_model`). Instead of relying on a normalized proportion (`imbalance`), this hypothesis proposes that humans use the raw, unnormalized count difference between heads and tails as their heuristic for sequence randomness. 
+
+### `hypothesis.md`
+```md
+People judge sequence randomness based on outcome frequencies, but rely on the unnormalized raw difference in counts between heads and tails rather than the proportion, perceiving sequences with a larger absolute difference in counts as more random.
+```
+
+### `candidate.py`
+```python
+"""
+People judge sequence randomness based on outcome frequencies, but rely on the unnormalized raw difference in counts between heads and tails rather than the proportion, perceiving sequences with a larger absolute difference in counts as more random.
+"""
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameter
+    tau = pm.HalfNormal("tau", sigma=10.0)
+
+    # Raw absolute difference in counts (heads vs tails)
+    # tails = n - h
+    # diff = h - tails = h - (n - h) = 2*h - n
+    raw_diff_a = pt.abs(2 * h_a - n_a)
+    raw_diff_b = pt.abs(2 * h_b - n_b)
+
+    # Larger raw difference -> more random
+    # Using cast to float64 for the score just to be safe
+    score_a = pt.cast(raw_diff_a, "float64")
+    score_b = pt.cast(raw_diff_b, "float64")
+    
+    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+```
+
+The internal self-checks run properly and the model meets the exact specification for numerical safety, proper variable linking via `pm.Data`, priors, and likelihood definitions.

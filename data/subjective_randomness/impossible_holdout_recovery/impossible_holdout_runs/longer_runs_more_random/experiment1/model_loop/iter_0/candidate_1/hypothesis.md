@@ -1,0 +1,1 @@
+People judge the randomness of a sequence solely by evaluating its alternation rate. Influenced by the Gambler's Fallacy, they expect random sequences to self-correct and alternate more frequently than chance, so they perceive a sequence as more random the closer its alternation rate is to their subjective ideal rate.

@@ -1,0 +1,305 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/CONTEXT.md
+[0m→ [0mRead src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+[0m
+[0m$ [0mls -l /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 56
+drwxr-xr-x@ 7 ben  staff   224 Jun 12 12:20 __pycache__
+-rw-r--r--@ 1 ben  staff  1581 Jun 12 12:18 encoding_compressibility.py
+-rw-r--r--@ 1 ben  staff  3190 Jun 12 12:19 inferred_mixture_model.py
+-rw-r--r--@ 1 ben  staff  2814 Jun 12 12:50 inner_loop_model.py
+-rw-r--r--@ 1 ben  staff   881 Jun 12 12:50 models_manifest.yaml
+-rw-r--r--@ 1 ben  staff  1171 Jun 12 12:18 prototype_similarity.py
+-rw-r--r--@ 1 ben  staff  1594 Jun 12 12:19 theory_report.md
+-rw-r--r--@ 1 ben  staff  2721 Jun 12 12:19 unnormalized_mixture_model.py
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/models_manifest.yaml
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+models:
+- name: prototype_similarity
+  rationale: Random-looking sequences are close to a prototype with balanced H/T counts
+    and an ideal alternation rate.
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+    long runs, periodic templates, and imbalance.'
+- name: inferred_mixture_model
+  rationale: A variant of the Bayesian mixture model that infers the parameters of
+    the alternative hypotheses (alternating Markov, streaky Markov, and biased coin)
+    rather than keeping them hardcoded.
+- name: unnormalized_mixture_model
+  rationale: A variant of the inner loop model that does not normalize log probabilities
+    by sequence length, to test if length normalization was the critical success factor.
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+[0m
+[0m→ [0mRead data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/report.md
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/inner_loop_model.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+ALT_SWITCH_PROB = 0.95
+STREAK_SWITCH_PROB = 0.15
+BIAS_HEAD_PROB = 0.85
+
+def _logsumexp2(a, b):
+    m = pt.maximum(a, b)
+    return m + pt.log(pt.exp(a - m) + pt.exp(b - m))
+
+def _normalized_iid_log_prob(n, h, p_heads):
+    n_f = pt.cast(n, "float64")
+    h_f = pt.cast(h, "float64")
+    tails_f = n_f - h_f
+    denom = pt.maximum(n_f, 1.0)
+    return (h_f * np.log(p_heads) + tails_f * np.log(1.0 - p_heads)) / denom
+
+def _normalized_markov_log_prob(n, alts, switch_prob):
+    n_f = pt.cast(n, "float64")
+    alts_f = pt.cast(alts, "float64")
+    stays_f = pt.maximum(n_f - 1.0, 0.0) - alts_f
+    denom = pt.maximum(n_f, 1.0)
+    return (
+        np.log(0.5) + alts_f * np.log(switch_prob) + stays_f * np.log(1.0 - switch_prob)
+    ) / denom
+
+def _score_sequence(n, h, alts, alt_prior, bias_share):
+    fair = _normalized_iid_log_prob(n, h, 0.5)
+    alternating = _normalized_markov_log_prob(n, alts, ALT_SWITCH_PROB)
+    streaky = _normalized_markov_log_prob(n, alts, STREAK_SWITCH_PROB)
+    bias_h = _normalized_iid_log_prob(n, h, BIAS_HEAD_PROB)
+    bias_t = _normalized_iid_log_prob(n, h, 1.0 - BIAS_HEAD_PROB)
+    biased = _logsumexp2(np.log(0.5) + bias_h, np.log(0.5) + bias_t)
+
+    alt_weight = alt_prior
+    bias_weight = (1.0 - alt_prior) * bias_share
+    streak_weight = (1.0 - alt_prior) * (1.0 - bias_share)
+    
+    # logsumexp over alternative models
+    alternatives = _logsumexp2(
+        _logsumexp2(
+            pt.log(alt_weight) + alternating,
+            pt.log(bias_weight) + biased,
+        ),
+        pt.log(streak_weight) + streaky,
+    )
+    return fair - alternatives
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+    
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+    
+    # Cognitive parameters
+    alt_prior = pm.Uniform("alt_prior", lower=0.01, upper=0.98)
+    bias_share = pm.Uniform("bias_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    # Score each sequence
+    score_a = _score_sequence(n_a, h_a, alts_a, alt_prior, bias_share)
+    score_b = _score_sequence(n_b, h_b, alts_b, alt_prior, bias_share)
+
+    # Deterministic probability of choosing left
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    )
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mmkdir -p /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models && cp /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/*.py /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models/ && cp /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/models_manifest.yaml /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models/
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models/inferred_mixture_model.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+def _logsumexp2(a, b):
+    m = pt.maximum(a, b)
+    return m + pt.log(pt.exp(a - m) + pt.exp(b - m))
+
+def _normalized_iid_log_prob(n, h, p_heads):
+    n_f = pt.cast(n, "float64")
+    h_f = pt.cast(h, "float64")
+    tails_f = n_f - h_f
+    denom = pt.maximum(n_f, 1.0)
+    return (h_f * pt.log(p_heads) + tails_f * pt.log(1.0 - p_heads)) / denom
+
+def _normalized_markov_log_prob(n, alts, switch_prob):
+    n_f = pt.cast(n, "float64")
+    alts_f = pt.cast(alts, "float64")
+    stays_f = pt.maximum(n_f - 1.0, 0.0) - alts_f
+    denom = pt.maximum(n_f, 1.0)
+    return (
+        np.log(0.5) + alts_f * pt.log(switch_prob) + stays_f * pt.log(1.0 - switch_prob)
+    ) / denom
+
+def _score_sequence(n, h, alts, alt_prior, bias_share, alt_switch_prob, streak_switch_prob, bias_head_prob):
+    fair = _normalized_iid_log_prob(n, h, 0.5)
+    alternating = _normalized_markov_log_prob(n, alts, alt_switch_prob)
+    streaky = _normalized_markov_log_prob(n, alts, streak_switch_prob)
+    bias_h = _normalized_iid_log_prob(n, h, bias_head_prob)
+    bias_t = _normalized_iid_log_prob(n, h, 1.0 - bias_head_prob)
+    biased = _logsumexp2(np.log(0.5) + bias_h, np.log(0.5) + bias_t)
+
+    alt_weight = alt_prior
+    bias_weight = (1.0 - alt_prior) * bias_share
+    streak_weight = (1.0 - alt_prior) * (1.0 - bias_share)
+    
+    # logsumexp over alternative models
+    alternatives = _logsumexp2(
+        _logsumexp2(
+            pt.log(alt_weight) + alternating,
+            pt.log(bias_weight) + biased,
+        ),
+        pt.log(streak_weight) + streaky,
+    )
+    return fair - alternatives
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+    
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+    
+    # Cognitive parameters
+    alt_prior = pm.Uniform("alt_prior", lower=0.01, upper=0.98)
+    bias_share = pm.Uniform("bias_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+    
+    # Newly inferred parameters instead of hardcoded
+    alt_switch_prob = pm.Uniform("alt_switch_prob", lower=0.51, upper=0.99)
+    streak_switch_prob = pm.Uniform("streak_switch_prob", lower=0.01, upper=0.49)
+    bias_head_prob = pm.Uniform("bias_head_prob", lower=0.51, upper=0.99)
+
+    # Score each sequence
+    score_a = _score_sequence(n_a, h_a, alts_a, alt_prior, bias_share, alt_switch_prob, streak_switch_prob, bias_head_prob)
+    score_b = _score_sequence(n_b, h_b, alts_b, alt_prior, bias_share, alt_switch_prob, streak_switch_prob, bias_head_prob)
+
+    # Deterministic probability of choosing left
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    )
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models/feature_heuristic_model.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models/fair_vs_alternating.py
+Wrote file successfully.
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models/models_manifest.yaml
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+models:
+- name: prototype_similarity
+  rationale: Random-looking sequences are close to a prototype with balanced H/T counts
+    and an ideal alternation rate.
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+    long runs, periodic templates, and imbalance.'
+- name: inferred_mixture_model
+  rationale: A variant of the Bayesian mixture model that infers the parameters of
+    the alternative hypotheses (alternating Markov, streaky Markov, and biased coin)
+    rather than keeping them hardcoded.
+- name: unnormalized_mixture_model
+  rationale: A variant of the inner loop model that does not normalize log probabilities
+    by sequence length, to test if length normalization was the critical success factor.
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models/models_manifest.yaml
+Wrote file successfully.
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models/theory_report.md
+Wrote file successfully.
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych && python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+for m_name in ['feature_heuristic_model', 'fair_vs_alternating']:
+    m = load_pymc_model(m_name, Path('data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models'))
+    print(f'Model: {m_name}')
+    print('pm.Data inputs:', pm_data_inputs(m))
+    print('observed response container:', observed_response_data(m))
+print('OK')
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+Model: feature_heuristic_model
+pm.Data inputs: ['p_alts_a', 'imbalance_a', 'max_run_norm_a', 'p_alts_b', 'imbalance_b', 'max_run_norm_b', 'chose_left']
+observed response container: chose_left
+Model: fair_vs_alternating
+pm.Data inputs: ['n_a', 'h_a', 'alts_a', 'n_b', 'h_b', 'alts_b', 'chose_left']
+observed response container: chose_left
+OK
+[0m
+[0m$ [0mls /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+__pycache__
+encoding_compressibility.py
+fair_vs_alternating.py
+feature_heuristic_model.py
+inferred_mixture_model.py
+inner_loop_model.py
+models_manifest.yaml
+prototype_similarity.py
+theory_report.md
+unnormalized_mixture_model.py
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/cognitive_models/models_manifest.yaml
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+models:
+- name: prototype_similarity
+  rationale: Random-looking sequences are close to a prototype with balanced H/T counts
+    and an ideal alternation rate.
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+    long runs, periodic templates, and imbalance.'
+- name: inferred_mixture_model
+  rationale: A variant of the Bayesian mixture model that infers the parameters of
+    the alternative hypotheses (alternating Markov, streaky Markov, and biased coin)
+    rather than keeping them hardcoded.
+- name: unnormalized_mixture_model
+  rationale: A variant of the inner loop model that does not normalize log probabilities
+    by sequence length, to test if length normalization was the critical success factor.
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+- name: feature_heuristic_model
+  rationale: A simple heuristic model that directly weights observable features (alternation proportion, imbalance, and max run length) using a linear combination.
+- name: fair_vs_alternating
+  rationale: A simpler variant of the Bayesian model that only contrasts a fair coin against an alternating Markov process, omitting streaky and biased alternatives.
+[0m
+I have successfully completed my tasks as the theory agent for Experiment 3. Here is a summary of the work done:
+
+1. **Copied Previous Assets**: All Python models (`.py`) and the `models_manifest.yaml` from Experiment 2 were safely brought into the Experiment 3 `cognitive_models` directory.
+2. **Analyzed Previous Results**: `inner_loop_model` and `inferred_mixture_model` were statistically tied as the best-fitting models (ELPD-LOO). `unnormalized_mixture_model` and non-probabilistic models (`encoding_compressibility`, `prototype_similarity`) completely failed to capture participant behavior.
+3. **Proposed New Models**:
+   - `feature_heuristic_model.py`: Despite the poor performance of previous non-Bayesian models, it's possible participants rely on a purely linear additive feature heuristic. This model assigns free weight parameters to standardized observable features (`p_alts`, `imbalance`, `max_run_norm`) to directly score sequences.
+   - `fair_vs_alternating.py`: A theoretically trimmed version of `inner_loop_model`. Since the Bayesian likelihood paradigm worked excellently, this tests whether we can drop the less salient mixture components (streaky + biased alternatives) to test if human judgments rely *only* on distinguishing a fair coin from an overly alternating process.
+4. **Updated the Manifest**: Appended the two new models and their theoretical rationales to `models_manifest.yaml`.
+5. **Wrote the Theory Report**: Authored `theory_report.md` justifying both additions in the context of Experiment 2's LOO posterior.
+6. **Validated Models**: Confirmed both new module-level PyMC setups run, capture `pm.Data` matching the CSV format correctly, and expose exactly one valid `chose_left` Bernoulli observed container. 
+
+The pipeline is now ready to proceed to the design phase!

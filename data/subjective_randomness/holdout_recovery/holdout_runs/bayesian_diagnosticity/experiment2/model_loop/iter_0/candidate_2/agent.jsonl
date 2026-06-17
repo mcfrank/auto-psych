@@ -1,0 +1,761 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mls -l
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 1456
+drwxr-xr-x@  7 ben  staff     224 Jun 12 12:32 __pycache__
+-rw-r--r--@  1 ben  staff    3452 Jun 12 12:11 candidate.py
+-rw-r--r--@  1 ben  staff    1724 Jun  5 09:37 CLEANUP_PLAN.md
+drwxr-xr-x@  6 ben  staff     192 Jun  9 16:41 data
+-rw-r--r--@  1 ben  staff    1070 Apr 16 22:03 LICENSE
+-rw-r--r--@  1 ben  staff     140 Jun  5 09:37 opencode.json
+drwxr-xr-x@  6 ben  staff     192 Jun  5 13:49 projects
+-rw-r--r--@  1 ben  staff    1859 Jun  6 21:57 pyproject.toml
+-rw-r--r--@  1 ben  staff    5363 Jun  5 13:49 README.md
+drwxr-xr-x@  7 ben  staff     224 Jun  5 13:49 scripts
+drwxr-xr-x@ 12 ben  staff     384 Jun  5 10:57 src
+drwxr-xr-x@  7 ben  staff     224 Apr 16 22:03 templates
+-rw-r--r--@  1 ben  staff    1853 Jun 12 12:32 test_candidate.py
+-rw-r--r--@  1 ben  staff     125 Jun 12 12:31 test_norm.py
+drwxr-xr-x@ 39 ben  staff    1248 Jun 12 11:51 tests
+-rw-r--r--@  1 ben  staff  706474 Jun  6 21:38 uv.lock
+[0m
+[0m✱ [0mGlob "**/CONTEXT.md"[90m 19 matches[0m
+[0m
+[0m$ [0mls -l /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 32
+-rw-r--r--@ 1 ben  staff  1123 Jun 12 12:33 agent.jsonl
+-rw-r--r--@ 1 ben  staff    91 Jun 12 12:32 CANDIDATE_BRIEF.md
+-rw-r--r--@ 1 ben  staff   577 Jun 12 12:32 CONTEXT.md
+-rw-r--r--@ 1 ben  staff   457 Jun 12 12:32 model_posterior.json
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+# Inner Loop — round 0, candidate 2 of 3
+
+Responses CSV: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/responses.csv`
+Feature columns available (use these as `pm.Data` names): `sequence_a,sequence_b,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b,participant_id,trial_index,chose_left,generating_model`
+
+Write `candidate.py` (a module-level PyMC model) per the instructions.
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+# Candidate Brief
+
+Try a simpler or a higher-variance alternative if progress has stalled.
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/model_posterior.json
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+{
+  "posteriors": {
+    "prototype_similarity": 6.4e-05,
+    "encoding_compressibility": 0.0,
+    "inner_loop_model": 0.725314,
+    "inferred_mixture_model": 0.274621,
+    "unnormalized_mixture_model": 0.0
+  },
+  "elpd_loo": {
+    "prototype_similarity": -1136.898,
+    "encoding_compressibility": -1228.0691,
+    "inner_loop_model": -1127.5682,
+    "inferred_mixture_model": -1128.5394,
+    "unnormalized_mixture_model": -8065.332
+  },
+  "n_trials": 1800
+}
+[0m
+[0m$ [0mls -l /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 16
+drwxr-xr-x@ 10 ben  staff   320 Jun 12 12:19 cognitive_models
+-rw-r--r--@  1 ben  staff  2289 Jun 12 12:20 CONTEXT.md
+drwxr-xr-x@  3 ben  staff    96 Jun 12 12:26 data
+drwxr-xr-x@  6 ben  staff   192 Jun 12 12:26 design
+drwxr-xr-x@  2 ben  staff    64 Jun 12 12:18 experiment
+drwxr-xr-x@  4 ben  staff   128 Jun 12 12:20 logs
+drwxr-xr-x@  6 ben  staff   192 Jun 12 12:28 model_loop
+-rw-r--r--@  1 ben  staff    36 Jun 12 12:18 model_registry.yaml
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/inner_loop_model.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+ALT_SWITCH_PROB = 0.95
+STREAK_SWITCH_PROB = 0.15
+BIAS_HEAD_PROB = 0.85
+
+def _logsumexp2(a, b):
+    m = pt.maximum(a, b)
+    return m + pt.log(pt.exp(a - m) + pt.exp(b - m))
+
+def _normalized_iid_log_prob(n, h, p_heads):
+    n_f = pt.cast(n, "float64")
+    h_f = pt.cast(h, "float64")
+    tails_f = n_f - h_f
+    denom = pt.maximum(n_f, 1.0)
+    return (h_f * np.log(p_heads) + tails_f * np.log(1.0 - p_heads)) / denom
+
+def _normalized_markov_log_prob(n, alts, switch_prob):
+    n_f = pt.cast(n, "float64")
+    alts_f = pt.cast(alts, "float64")
+    stays_f = pt.maximum(n_f - 1.0, 0.0) - alts_f
+    denom = pt.maximum(n_f, 1.0)
+    return (
+        np.log(0.5) + alts_f * np.log(switch_prob) + stays_f * np.log(1.0 - switch_prob)
+    ) / denom
+
+def _score_sequence(n, h, alts, alt_prior, bias_share):
+    fair = _normalized_iid_log_prob(n, h, 0.5)
+    alternating = _normalized_markov_log_prob(n, alts, ALT_SWITCH_PROB)
+    streaky = _normalized_markov_log_prob(n, alts, STREAK_SWITCH_PROB)
+    bias_h = _normalized_iid_log_prob(n, h, BIAS_HEAD_PROB)
+    bias_t = _normalized_iid_log_prob(n, h, 1.0 - BIAS_HEAD_PROB)
+    biased = _logsumexp2(np.log(0.5) + bias_h, np.log(0.5) + bias_t)
+
+    alt_weight = alt_prior
+    bias_weight = (1.0 - alt_prior) * bias_share
+    streak_weight = (1.0 - alt_prior) * (1.0 - bias_share)
+    
+    # logsumexp over alternative models
+    alternatives = _logsumexp2(
+        _logsumexp2(
+            pt.log(alt_weight) + alternating,
+            pt.log(bias_weight) + biased,
+        ),
+        pt.log(streak_weight) + streaky,
+    )
+    return fair - alternatives
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+    
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+    
+    # Cognitive parameters
+    alt_prior = pm.Uniform("alt_prior", lower=0.01, upper=0.98)
+    bias_share = pm.Uniform("bias_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    # Score each sequence
+    score_a = _score_sequence(n_a, h_a, alts_a, alt_prior, bias_share)
+    score_b = _score_sequence(n_b, h_b, alts_b, alt_prior, bias_share)
+
+    # Deterministic probability of choosing left
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    )
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/inferred_mixture_model.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+def _logsumexp2(a, b):
+    m = pt.maximum(a, b)
+    return m + pt.log(pt.exp(a - m) + pt.exp(b - m))
+
+def _normalized_iid_log_prob(n, h, p_heads):
+    n_f = pt.cast(n, "float64")
+    h_f = pt.cast(h, "float64")
+    tails_f = n_f - h_f
+    denom = pt.maximum(n_f, 1.0)
+    return (h_f * pt.log(p_heads) + tails_f * pt.log(1.0 - p_heads)) / denom
+
+def _normalized_markov_log_prob(n, alts, switch_prob):
+    n_f = pt.cast(n, "float64")
+    alts_f = pt.cast(alts, "float64")
+    stays_f = pt.maximum(n_f - 1.0, 0.0) - alts_f
+    denom = pt.maximum(n_f, 1.0)
+    return (
+        np.log(0.5) + alts_f * pt.log(switch_prob) + stays_f * pt.log(1.0 - switch_prob)
+    ) / denom
+
+def _score_sequence(n, h, alts, alt_prior, bias_share, alt_switch_prob, streak_switch_prob, bias_head_prob):
+    fair = _normalized_iid_log_prob(n, h, 0.5)
+    alternating = _normalized_markov_log_prob(n, alts, alt_switch_prob)
+    streaky = _normalized_markov_log_prob(n, alts, streak_switch_prob)
+    bias_h = _normalized_iid_log_prob(n, h, bias_head_prob)
+    bias_t = _normalized_iid_log_prob(n, h, 1.0 - bias_head_prob)
+    biased = _logsumexp2(np.log(0.5) + bias_h, np.log(0.5) + bias_t)
+
+    alt_weight = alt_prior
+    bias_weight = (1.0 - alt_prior) * bias_share
+    streak_weight = (1.0 - alt_prior) * (1.0 - bias_share)
+    
+    # logsumexp over alternative models
+    alternatives = _logsumexp2(
+        _logsumexp2(
+            pt.log(alt_weight) + alternating,
+            pt.log(bias_weight) + biased,
+        ),
+        pt.log(streak_weight) + streaky,
+    )
+    return fair - alternatives
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+    
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+    
+    # Cognitive parameters
+    alt_prior = pm.Uniform("alt_prior", lower=0.01, upper=0.98)
+    bias_share = pm.Uniform("bias_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+    
+    # Newly inferred parameters instead of hardcoded
+    alt_switch_prob = pm.Uniform("alt_switch_prob", lower=0.51, upper=0.99)
+    streak_switch_prob = pm.Uniform("streak_switch_prob", lower=0.01, upper=0.49)
+    bias_head_prob = pm.Uniform("bias_head_prob", lower=0.51, upper=0.99)
+
+    # Score each sequence
+    score_a = _score_sequence(n_a, h_a, alts_a, alt_prior, bias_share, alt_switch_prob, streak_switch_prob, bias_head_prob)
+    score_b = _score_sequence(n_b, h_b, alts_b, alt_prior, bias_share, alt_switch_prob, streak_switch_prob, bias_head_prob)
+
+    # Deterministic probability of choosing left
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    )
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/prototype_similarity.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+"""PyMC adapter for the prototype-similarity model family."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+with pm.Model() as model:
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+    score_a = -(
+        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
+    )
+    score_b = -(
+        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/cognitive_models/encoding_compressibility.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+"""PyMC adapter for the encoding/compressibility model family."""
+
+import numpy as np
+import pymc as pm
+
+
+with pm.Model() as model:
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    longrun_weight = pm.Uniform("longrun_weight", lower=0.01, upper=0.99)
+    periodic_share = pm.Uniform("periodic_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    remaining = 1.0 - longrun_weight
+    periodic_weight = remaining * periodic_share
+    imbalance_weight = remaining * (1.0 - periodic_share)
+
+    penalty_a = (
+        longrun_weight * max_run_norm_a
+        + periodic_weight * periodicity_a
+        + imbalance_weight * imbalance_a
+    )
+    penalty_b = (
+        longrun_weight * max_run_norm_b
+        + periodic_weight * periodicity_b
+        + imbalance_weight * imbalance_b
+    )
+    score_a = -penalty_a
+    score_b = -penalty_b
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/responses.csv | head -n 5
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+sequence_a,sequence_b,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b,participant_id,trial_index,chose_left,generating_model
+THHH,T,4,3,1,3,1,0,0,1,0.75,0.3333333333333333,0.6666666666666666,0.5,0.5,0.0,0.0,0.0,1.0,0.0,0,0,1,bayesian_diagnosticity
+T,TTTHTHTH,1,0,0,1,8,3,5,3,0.0,0.0,0.0,1.0,0.0,0.375,0.7142857142857143,0.2857142857142857,0.25,0.75,0,1,0,bayesian_diagnosticity
+TTHHHHT,H,7,4,2,4,1,1,0,1,0.5714285714285714,0.3333333333333333,0.5,0.1428571428571428,0.4285714285714286,1.0,0.0,0.0,1.0,0.0,0,2,1,bayesian_diagnosticity
+THHHTHH,T,7,5,3,3,1,0,0,1,0.7142857142857143,0.5,0.3333333333333333,0.4285714285714286,0.4285714285714286,0.0,0.0,0.0,1.0,0.0,0,3,1,bayesian_diagnosticity
+[0m
+[0m$ [0mcat << 'EOF' > test_norm.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Let's test if we can do an unconstrained linear model
+    pass
+EOF
+python3 test_norm.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+[0m$ [0mcat << 'EOF' > test_candidate.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    n_a = pm.Data("n_a", np.zeros(1, dtype="float64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.01, upper=5.0)  # slightly lower upper bound due to scaling
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+    length_power = pm.Uniform("length_power", lower=0.0, upper=1.5)
+
+    balance_weight = 1.0 - alt_weight
+    
+    # Scale distance by a power of sequence length
+    weight_n_a = pt.pow(n_a, length_power)
+    weight_n_b = pt.pow(n_b, length_power)
+    
+    score_a = -weight_n_a * (
+        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
+    )
+    score_b = -weight_n_b * (
+        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('test_candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+observed: chose_left
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    
+    n_a = pm.Data("n_a", np.zeros(1, dtype="float64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="float64"))
+
+    # Cognitive parameters
+    # Ideal alternation rate
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    
+    # Feature weights (simplex)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    balance_weight = 1.0 - alt_weight
+    
+    # Evidence scaling: how much does sequence length magnify the penalty?
+    # 0 = no scaling (like basic prototype model), 1 = linear scaling
+    length_power = pm.Uniform("length_power", lower=0.0, upper=2.0)
+    
+    # Decision parameters
+    beta = pm.HalfNormal("beta", sigma=5.0)
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+
+    # Scale distance by a power of sequence length
+    weight_n_a = pt.pow(n_a, length_power)
+    weight_n_b = pt.pow(n_b, length_power)
+    
+    # Penalize deviations from prototype (ideal balance and ideal alternation rate)
+    penalty_a = weight_n_a * (
+        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
+    )
+    penalty_b = weight_n_b * (
+        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
+    )
+
+    # Deterministic probability of choosing left
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (penalty_b - penalty_a) + side_bias),
+    )
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+observed: chose_left
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    
+    n_a = pm.Data("n_a", np.zeros(1, dtype="float64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="float64"))
+
+    # Cognitive parameters
+    # Ideal alternation rate
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    
+    # Feature weights (using Dirichlet to ensure they sum to 1, or just Uniforms)
+    w_alt = pm.Uniform("w_alt", lower=0.01, upper=0.99)
+    w_max_run = pm.Uniform("w_max_run", lower=0.01, upper=0.99)
+    # Ensure weights sum to 1 by scaling
+    total_weight = w_alt + w_max_run + 1.0  # 1.0 is the fixed weight for imbalance, or we can explicitly normalize
+    
+    # It's better to just use unconstrained HalfNormals and let beta absorb the scale
+    weight_imbalance = pm.HalfNormal("weight_imbalance", sigma=1.0)
+    weight_alt = pm.HalfNormal("weight_alt", sigma=1.0)
+    weight_run = pm.HalfNormal("weight_run", sigma=1.0)
+    
+    # Evidence scaling: how much does sequence length magnify the penalty?
+    # 0 = no scaling, 1 = linear scaling
+    length_power = pm.Uniform("length_power", lower=0.0, upper=2.0)
+    
+    # Decision parameters
+    beta = pm.HalfNormal("beta", sigma=5.0)
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+
+    # Scale distance by a power of sequence length
+    ev_scale_a = pt.pow(n_a, length_power)
+    ev_scale_b = pt.pow(n_b, length_power)
+    
+    # Penalize deviations from prototype
+    penalty_a = ev_scale_a * (
+        weight_imbalance * imbalance_a + 
+        weight_alt * pt.abs(p_alts_a - theta_alt) +
+        weight_run * max_run_norm_a
+    )
+    penalty_b = ev_scale_b * (
+        weight_imbalance * imbalance_b + 
+        weight_alt * pt.abs(p_alts_b - theta_alt) +
+        weight_run * max_run_norm_b
+    )
+
+    # Deterministic probability of choosing left
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (penalty_b - penalty_a) + side_bias),
+    )
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+observed: chose_left
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    
+    n_a = pm.Data("n_a", np.zeros(1, dtype="float64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="float64"))
+
+    # Cognitive parameters
+    # Ideal alternation rate
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    
+    # Feature weights summing to 1
+    weights = pm.Dirichlet("weights", a=np.ones(3))
+    weight_imbalance = weights[0]
+    weight_alt = weights[1]
+    weight_run = weights[2]
+    
+    # Evidence scaling: how much does sequence length magnify the penalty?
+    # 0 = no scaling, 1 = linear scaling
+    length_power = pm.Uniform("length_power", lower=0.0, upper=2.0)
+    
+    # Decision parameters
+    beta = pm.Uniform("beta", lower=0.2, upper=20.0)
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+
+    # Scale distance by a power of sequence length
+    ev_scale_a = pt.pow(n_a, length_power)
+    ev_scale_b = pt.pow(n_b, length_power)
+    
+    # Penalize deviations from prototype
+    penalty_a = ev_scale_a * (
+        weight_imbalance * imbalance_a + 
+        weight_alt * pt.abs(p_alts_a - theta_alt) +
+        weight_run * max_run_norm_a
+    )
+    penalty_b = ev_scale_b * (
+        weight_imbalance * imbalance_b + 
+        weight_alt * pt.abs(p_alts_b - theta_alt) +
+        weight_run * max_run_norm_b
+    )
+
+    # Deterministic probability of choosing left
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (penalty_b - penalty_a) + side_bias),
+    )
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+observed: chose_left
+[0m
+[0m$ [0mcat << 'EOF' > test_sample.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    imbalance_a = pm.Data("imbalance_a", np.zeros(2, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(2, dtype="float64"))
+    
+    p_alts_a = pm.Data("p_alts_a", np.zeros(2, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(2, dtype="float64"))
+    
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(2, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(2, dtype="float64"))
+    
+    n_a = pm.Data("n_a", np.zeros(2, dtype="float64"))
+    n_b = pm.Data("n_b", np.zeros(2, dtype="float64"))
+
+    # Cognitive parameters
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    weights = pm.Dirichlet("weights", a=np.ones(3))
+    length_power = pm.Uniform("length_power", lower=0.0, upper=2.0)
+    beta = pm.Uniform("beta", lower=0.2, upper=20.0)
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+
+    weight_imbalance = weights[0]
+    weight_alt = weights[1]
+    weight_run = weights[2]
+
+    ev_scale_a = pt.pow(n_a, length_power)
+    ev_scale_b = pt.pow(n_b, length_power)
+    
+    penalty_a = ev_scale_a * (
+        weight_imbalance * imbalance_a + 
+        weight_alt * pt.abs(p_alts_a - theta_alt) +
+        weight_run * max_run_norm_a
+    )
+    penalty_b = ev_scale_b * (
+        weight_imbalance * imbalance_b + 
+        weight_alt * pt.abs(p_alts_b - theta_alt) +
+        weight_run * max_run_norm_b
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (penalty_b - penalty_a) + side_bias),
+    )
+
+    chose_left = pm.Data("chose_left", np.zeros(2, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    pm.sample_prior_predictive(samples=2)
+EOF
+python3 test_sample.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+Sampling: [beta, length_power, response, side_bias, theta_alt, weights]
+[0m
+[0m$ [0mls -l candidate.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+-rw-r--r--@ 1 ben  staff  2144 Jun 12 12:35 candidate.py
+[0m
+[0m$ [0mpwd
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+/Users/ben/Documents/auto-psych
+[0m
+[0m$ [0mls -l /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/candidate.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+ls: /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/candidate.py: No such file or directory
+[0m
+[0m$ [0mrm test_candidate.py test_norm.py test_sample.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+[0m$ [0mcat candidate.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    
+    n_a = pm.Data("n_a", np.zeros(1, dtype="float64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="float64"))
+
+    # Cognitive parameters
+    # Ideal alternation rate
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    
+    # Feature weights summing to 1
+    weights = pm.Dirichlet("weights", a=np.ones(3))
+    weight_imbalance = weights[0]
+    weight_alt = weights[1]
+    weight_run = weights[2]
+    
+    # Evidence scaling: how much does sequence length magnify the penalty?
+    # 0 = no scaling, 1 = linear scaling
+    length_power = pm.Uniform("length_power", lower=0.0, upper=2.0)
+    
+    # Decision parameters
+    beta = pm.Uniform("beta", lower=0.2, upper=20.0)
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+
+    # Scale distance by a power of sequence length
+    ev_scale_a = pt.pow(n_a, length_power)
+    ev_scale_b = pt.pow(n_b, length_power)
+    
+    # Penalize deviations from prototype
+    penalty_a = ev_scale_a * (
+        weight_imbalance * imbalance_a + 
+        weight_alt * pt.abs(p_alts_a - theta_alt) +
+        weight_run * max_run_norm_a
+    )
+    penalty_b = ev_scale_b * (
+        weight_imbalance * imbalance_b + 
+        weight_alt * pt.abs(p_alts_b - theta_alt) +
+        weight_run * max_run_norm_b
+    )
+
+    # Deterministic probability of choosing left
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (penalty_b - penalty_a) + side_bias),
+    )
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcp candidate.py /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/candidate.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+[0m$ [0mrm candidate.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+[0m$ [0mcp /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/candidate.py candidate.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+[0m
+I have generated `candidate.py` based on an **evidence-scaled multidimensional prototype heuristic**. 
+
+Following the brief to explore a higher-variance/simpler alternative to the Bayesian model, this model operates on three distinct heuristic deviations from a random "prototype":
+1. Imbalance of heads vs tails (`imbalance`)
+2. Deviation from an ideal alternation rate (`abs(p_alts - theta_alt)`)
+3. Length of the longest run (`max_run_norm`)
+
+A critical flaw with previous prototype heuristics was that they did not account for the sequence length (i.e. longer sequences are evaluated as more confidently un-random than shorter ones with the exact same proportions). This model adds a flexible `length_power` scaling parameter that scales the total penalty by a function of the sequence length (`pt.pow(n, length_power)`).
+
+The model has been written to the current working directory, and verified with the requested self-check command.

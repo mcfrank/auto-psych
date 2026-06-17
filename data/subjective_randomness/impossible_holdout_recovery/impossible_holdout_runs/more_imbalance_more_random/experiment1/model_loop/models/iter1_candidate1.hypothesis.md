@@ -1,0 +1,1 @@
+People judge sequence randomness based on the Bayesian diagnosticity of a biased coin relative to a fair coin. Sequences that provide stronger evidence for a biased coin (which can favor either heads or tails) over a fair coin are perceived as more random.

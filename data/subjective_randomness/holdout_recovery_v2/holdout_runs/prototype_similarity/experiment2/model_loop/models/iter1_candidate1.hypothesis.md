@@ -1,0 +1,1 @@
+People judge a sequence as more random when it contains less detectable periodic structure. When comparing two sequences, they choose the one with lower periodicity as the more random-looking one — periodic regularity signals a non-random, patterned generator.

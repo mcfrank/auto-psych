@@ -1,0 +1,39 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: fewer_heads_proportion
+  rationale: People judge the randomness of a sequence by its proportion of heads,
+    holding a biased belief that sequences containing a lower proportion of heads
+    are more representative of a random coin.
+- name: short_streaks
+  rationale: People judge the randomness of a sequence by looking solely at the length
+    of its longest streak of identical outcomes, judging sequences with a shorter
+    maximum run length as more random.
+- name: logarithmic_heads_penalty
+  rationale: People judge the randomness of a sequence strictly by the absolute number
+    of heads it contains, but their sensitivity to this count diminishes logarithmically,
+    such that the difference between small head counts matters more than between large
+    head counts.
+- name: quadratic_heads_penalty
+  rationale: People judge the randomness of a sequence strictly by the absolute number
+    of heads it contains, but the penalty for heads grows quadratically, such that
+    each additional head decreases perceived randomness more than the previous one.
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

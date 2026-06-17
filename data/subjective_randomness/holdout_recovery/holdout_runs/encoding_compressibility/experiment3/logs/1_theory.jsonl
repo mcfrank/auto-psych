@@ -1,0 +1,628 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/CONTEXT.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+# CONTEXT — experiment 3, agent 1_theory
+
+**Project:** subjective_randomness
+**Experiment number:** 3
+**Repo root:** /Users/ben/Documents/auto-psych
+**This experiment directory:** /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3
+
+## Key paths
+
+- Problem definition: `/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md`
+- Cognitive models dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models`
+- Design dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/design`
+- Experiment dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/experiment`
+- Data dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/data`
+- Responses: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/data/responses.csv`
+- Model registry: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_registry.yaml`
+- Inner model loop dir: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop`
+
+## Previous experiment paths
+
+- Previous cognitive models: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/cognitive_models`
+- Previous model registry: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_registry.yaml`
+- Previous model loop report: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/report.md`
+- Previous model posterior: `/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/model_posterior.json`
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+# Subjective randomness: problem definition
+
+The domain of inquiry is the subjective perception of randomness by humans judges. We seek an explantory theory of which sequences humans find more or less random. To explore this we use an forced-choice experimental paradigm, in which participants are asked to choose the more random sequence from a pair.
+
+## Task
+
+On each trial, the participant sees **two sequences of coin flips** (H and T) and chooses which sequence looks **more random**. This is a classic paradigm for studying representativeness and alternation biases (e.g. Griffiths, "The Rational Basis of Representativeness").
+
+## Stimulus design schema
+
+- **Stimulus**: A pair of two sequences of H and T. Each sequence is a string (e.g. `"HHT"`, `"HTHTHT"`, `"HHTHTTHT"`). The two sequences in a pair **may have different lengths** (e.g. length 4 vs length 6).
+- **Response**: Which sequence was chosen (e.g. "left" / "right").
+
+## Experiment design constraints
+
+- **Total trials per experiment: 30.** Target duration is about 5 minutes at ~5 seconds per trial (consistent with Prolific).
+- **Maximum sequence length: 8.**
+
+## Models
+
+Each model is a **PyMC model** in `cognitive_models/<name>.py`. At module load
+the file builds, at top level, `with pm.Model() as model: ...` containing:
+
+- One `pm.Data` container per stimulus feature the theory uses (see the
+  feature-column list below). Each container must have a **1-element placeholder**
+  of the correct dtype (e.g. `np.zeros(1, dtype="int64")`); the pipeline calls
+  `pm.set_data(...)` to swap in real data before sampling.
+- Priors over the theory's free cognitive parameters (e.g. softmax temperature,
+  Beta prior on bias). MCMC infers these — they are **not** hyperparameters.
+- A `pm.Bernoulli("response", p=p_left, observed=chose_left)` likelihood, where
+  the `observed=` argument is the **exact** `chose_left = pm.Data("chose_left", ...)`
+  tensor (not a derived copy).
+- A `pm.Deterministic("p_left", ...)` exposing per-trial P(chose_left=1).
+
+The pipeline fits each model on the preprocessed responses, scores it by
+`arviz.loo` (ELPD-LOO), and uses posterior-predictive samples for correlations
+and posterior predictive checks. No callable-style `def model_name(stimulus,
+response_options)` functions — that is the old contract and is no longer used.
+
+## Preprocessed data schema
+
+`model_loop/responses.csv` is produced by the project's `preprocess.py` helper.
+It carries the raw columns (`participant_id`, `trial_index`, `sequence_a`,
+`sequence_b`, `chose_left`) **plus** the following numeric feature columns, one
+per sequence (`_a` and `_b`). Use these names verbatim in your `pm.Data(...)`
+containers.
+
+| Column           | Type  | Meaning                                          |
+| ---------------- | ----- | ------------------------------------------------ |
+| `n_a`, `n_b`     | int   | Length of the sequence                           |
+| `h_a`, `h_b`     | int   | Number of H's                                    |
+| `p_a`, `p_b`     | float | Head proportion (`h / n`)                        |
+| `alts_a`, `alts_b`     | int   | Alternation count (transitions H↔T)        |
+| `p_alts_a`, `p_alts_b` | float | Alternation proportion (`alts / (n-1)`)    |
+| `max_run_a`, `max_run_b` | int | Longest constant-character run                |
+| `max_run_norm_a`, `max_run_norm_b` | float | Longest run scaled to `[0, 1]`      |
+| `imbalance_a`, `imbalance_b` | float | Distance from balanced H/T counts          |
+| `periodicity_a`, `periodicity_b` | float | Match to a short repeating template       |
+
+And the observed response: `chose_left` ∈ {0, 1} — 1 means the participant
+chose sequence A. Use `chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))`
+in every model and pass it to `pm.Bernoulli(..., observed=chose_left)`.
+
+You may pick any subset of these feature columns per theory. You do not need
+to use them all — only the ones the theory commits to.
+
+## Running the active outer loop
+
+```bash
+# 1. Preprocess a raw responses CSV (adds the feature columns above)
+uv run python scripts/subjective_randomness/preprocess.py \
+    --input-csv data/subjective_randomness/experiment1/responses.csv \
+    --output-csv data/subjective_randomness/responses.csv
+
+# 2. Run the outer loop (theory → design → collect → model loop)
+uv run python -m src.pipelines.outer_loop.run \
+    --project subjective_randomness \
+    --experiment 1 \
+    --ground-truth-model length_sensitive_alternation
+```
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/report.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+# Inner Model Loop Report
+
+- Best model: **iter0_candidate2** (posterior=0.224, elpd_loo=-680.91)
+- Trials: 1800
+- Models compared: 10
+
+## Posterior over models (ELPD-LOO)
+
+| model | posterior | elpd_loo |
+| --- | --- | --- |
+| iter0_candidate2 | 0.2242 | -680.91 |
+| iter0_candidate0 | 0.2201 | -680.93 |
+| iter0_candidate1 | 0.2101 | -680.98 |
+| inner_loop_model | 0.1697 | -681.19 |
+| iter1_candidate2 | 0.1016 | -681.70 |
+| extended_compressibility | 0.0743 | -682.02 |
+| prototype_similarity | 0.0000 | -760.09 |
+| bayesian_diagnosticity | 0.0000 | -749.50 |
+| alternation_and_run | 0.0000 | -720.70 |
+| iter1_candidate1 | 0.0000 | -6150.13 |
+
+## Distinguishability (arviz.compare, PSIS-LOO)
+
+`elpd_diff` and `dse` are relative to the best model. A model is only clearly worse than the best when `elpd_diff > 2 * dse`; models within ~2·dse of the top are statistically indistinguishable.
+
+| model | elpd_diff | dse | distinguishable from best | weight |
+| --- | --- | --- | --- | --- |
+| iter0_candidate2 | 0.00 | 0.00 | — (best) | 1.000 |
+| iter0_candidate0 | 0.02 | 0.15 | no (within ~2·dse) | 0.000 |
+| iter0_candidate1 | 0.07 | 0.32 | no (within ~2·dse) | 0.000 |
+| inner_loop_model | 0.28 | 0.06 | yes | 0.000 |
+| iter1_candidate2 | 0.79 | 0.42 | no (within ~2·dse) | 0.000 |
+| extended_compressibility | 1.10 | 0.17 | yes | 0.000 |
+| alternation_and_run | 39.78 | 8.88 | yes | 0.000 |
+| bayesian_diagnosticity | 68.59 | 11.74 | yes | 0.000 |
+| prototype_similarity | 79.18 | 12.68 | yes | 0.000 |
+| iter1_candidate1 | 5469.22 | 356.15 | yes | 0.000 |
+[0m
+[0m$ [0mmkdir -p /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models
+cp /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/cognitive_models/*.py /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/
+cp /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/cognitive_models/models_manifest.yaml /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/
+cat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/models_manifest.yaml
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: extended_compressibility
+  rationale: 'Extends the best linear compressibility model by adding an alternation
+    rate term, reflecting people''s known sensitivity to alternation.
+
+    '
+- name: alternation_and_run
+  rationale: 'A simplified combination model using only alternation rate and max run
+    length to gauge subjective randomness.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+[0m
+[0m$ [0mls -1 /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+alternation_and_run.py
+bayesian_diagnosticity.py
+extended_compressibility.py
+inner_loop_model.py
+models_manifest.yaml
+prototype_similarity.py
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/inner_loop_model.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    # Read the features
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    
+    # Higher variance / heavy-tailed prior for the parameters
+    # This allows for larger weights and more extreme probability differences
+    # without aggressively shrinking them to zero.
+    nu_val = 4.0
+    w_run = pm.StudentT("w_run", nu=nu_val, mu=0.0, sigma=5.0)
+    w_period = pm.StudentT("w_period", nu=nu_val, mu=0.0, sigma=5.0)
+    w_imbalance = pm.StudentT("w_imbalance", nu=nu_val, mu=0.0, sigma=5.0)
+    
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    # Score calculation
+    score_a = w_run * max_run_norm_a + w_period * periodicity_a + w_imbalance * imbalance_a
+    score_b = w_run * max_run_norm_b + w_period * periodicity_b + w_imbalance * imbalance_b
+    
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid((score_a - score_b) + side_bias)
+    )
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/report.md
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+# Inner Model Loop Report
+
+- Best model: **iter0_candidate2** (posterior=0.224, elpd_loo=-680.91)
+- Trials: 1800
+- Models compared: 10
+
+## Posterior over models (ELPD-LOO)
+
+| model | posterior | elpd_loo |
+| --- | --- | --- |
+| iter0_candidate2 | 0.2242 | -680.91 |
+| iter0_candidate0 | 0.2201 | -680.93 |
+| iter0_candidate1 | 0.2101 | -680.98 |
+| inner_loop_model | 0.1697 | -681.19 |
+| iter1_candidate2 | 0.1016 | -681.70 |
+| extended_compressibility | 0.0743 | -682.02 |
+| prototype_similarity | 0.0000 | -760.09 |
+| bayesian_diagnosticity | 0.0000 | -749.50 |
+| alternation_and_run | 0.0000 | -720.70 |
+| iter1_candidate1 | 0.0000 | -6150.13 |
+
+## Distinguishability (arviz.compare, PSIS-LOO)
+
+`elpd_diff` and `dse` are relative to the best model. A model is only clearly worse than the best when `elpd_diff > 2 * dse`; models within ~2·dse of the top are statistically indistinguishable.
+
+| model | elpd_diff | dse | distinguishable from best | weight |
+| --- | --- | --- | --- | --- |
+| iter0_candidate2 | 0.00 | 0.00 | — (best) | 1.000 |
+| iter0_candidate0 | 0.02 | 0.15 | no (within ~2·dse) | 0.000 |
+| iter0_candidate1 | 0.07 | 0.32 | no (within ~2·dse) | 0.000 |
+| inner_loop_model | 0.28 | 0.06 | yes | 0.000 |
+| iter1_candidate2 | 0.79 | 0.42 | no (within ~2·dse) | 0.000 |
+| extended_compressibility | 1.10 | 0.17 | yes | 0.000 |
+| alternation_and_run | 39.78 | 8.88 | yes | 0.000 |
+| bayesian_diagnosticity | 68.59 | 11.74 | yes | 0.000 |
+| prototype_similarity | 79.18 | 12.68 | yes | 0.000 |
+| iter1_candidate1 | 5469.22 | 356.15 | yes | 0.000 |
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/extended_compressibility.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    
+    w_run = pm.Normal("w_run", mu=0.0, sigma=5.0)
+    w_period = pm.Normal("w_period", mu=0.0, sigma=5.0)
+    w_imbalance = pm.Normal("w_imbalance", mu=0.0, sigma=5.0)
+    w_alts = pm.Normal("w_alts", mu=0.0, sigma=5.0)
+    
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    score_a = w_run * max_run_norm_a + w_period * periodicity_a + w_imbalance * imbalance_a + w_alts * p_alts_a
+    score_b = w_run * max_run_norm_b + w_period * periodicity_b + w_imbalance * imbalance_b + w_alts * p_alts_b
+    
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid((score_a - score_b) + side_bias)
+    )
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/alternation_and_run.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    
+    w_run = pm.Normal("w_run", mu=0.0, sigma=5.0)
+    w_alts = pm.Normal("w_alts", mu=0.0, sigma=5.0)
+    
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    score_a = w_run * max_run_norm_a + w_alts * p_alts_a
+    score_b = w_run * max_run_norm_b + w_alts * p_alts_b
+    
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid((score_a - score_b) + side_bias)
+    )
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mls -l /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 600
+-rw-r--r--@  1 ben  staff    1489 Jun 12 14:05 best_model.py
+-rw-r--r--@  1 ben  staff    2145 Jun 12 14:05 history.json
+drwxr-xr-x@  5 ben  staff     160 Jun 12 13:58 iter_0
+drwxr-xr-x@  5 ben  staff     160 Jun 12 14:03 iter_1
+-rw-r--r--@  1 ben  staff    2701 Jun 12 14:05 model_posterior.json
+drwxr-xr-x@ 14 ben  staff     448 Jun 12 14:04 models
+-rw-r--r--@  1 ben  staff    1568 Jun 12 14:05 report.md
+-rw-r--r--@  1 ben  staff  289706 Jun 12 13:50 responses.csv
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/best_model.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    # Read the features
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    
+    # Higher variance / heavy-tailed prior for the parameters
+    # This allows for larger weights and more extreme probability differences
+    # without aggressively shrinking them to zero.
+    nu_val = 4.0
+    w_run = pm.StudentT("w_run", nu=nu_val, mu=0.0, sigma=5.0)
+    w_period = pm.StudentT("w_period", nu=nu_val, mu=0.0, sigma=5.0)
+    w_imbalance = pm.StudentT("w_imbalance", nu=nu_val, mu=0.0, sigma=5.0)
+    
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    # Score calculation
+    score_a = w_run * max_run_norm_a + w_period * periodicity_a + w_imbalance * imbalance_a
+    score_b = w_run * max_run_norm_b + w_period * periodicity_b + w_imbalance * imbalance_b
+    
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid((score_a - score_b) + side_bias)
+    )
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mls -l /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+total 88
+drwxr-xr-x@ 12 ben  staff   384 Jun 12 14:04 __pycache__
+-rw-r--r--@  1 ben  staff   896 Jun 12 13:50 alternation_and_run.py
+-rw-r--r--@  1 ben  staff  2683 Jun 12 13:50 bayesian_diagnosticity.py
+-rw-r--r--@  1 ben  staff  1416 Jun 12 13:50 extended_compressibility.py
+-rw-r--r--@  1 ben  staff  1461 Jun 12 13:50 inner_loop_model.py
+-rw-r--r--@  1 ben  staff  1749 Jun 12 13:54 iter0_candidate0.py
+-rw-r--r--@  1 ben  staff  2328 Jun 12 13:58 iter0_candidate1.py
+-rw-r--r--@  1 ben  staff  1489 Jun 12 13:59 iter0_candidate2.py
+-rw-r--r--@  1 ben  staff  1934 Jun 12 14:03 iter1_candidate1.py
+-rw-r--r--@  1 ben  staff  1852 Jun 12 14:04 iter1_candidate2.py
+-rw-r--r--@  1 ben  staff   327 Jun 12 14:04 models_manifest.yaml
+-rw-r--r--@  1 ben  staff  1171 Jun 12 13:50 prototype_similarity.py
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/iter0_candidate2.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    # Read the features
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    
+    # Higher variance / heavy-tailed prior for the parameters
+    # This allows for larger weights and more extreme probability differences
+    # without aggressively shrinking them to zero.
+    nu_val = 4.0
+    w_run = pm.StudentT("w_run", nu=nu_val, mu=0.0, sigma=5.0)
+    w_period = pm.StudentT("w_period", nu=nu_val, mu=0.0, sigma=5.0)
+    w_imbalance = pm.StudentT("w_imbalance", nu=nu_val, mu=0.0, sigma=5.0)
+    
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    # Score calculation
+    score_a = w_run * max_run_norm_a + w_period * periodicity_a + w_imbalance * imbalance_a
+    score_b = w_run * max_run_norm_b + w_period * periodicity_b + w_imbalance * imbalance_b
+    
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid((score_a - score_b) + side_bias)
+    )
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/iter0_candidate0.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+
+with pm.Model() as model:
+    # Stimulus inputs — names match responses CSV columns
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    # Cognitive principle: participants evaluate compressibility using a convex 
+    # combination of penalty features, scaled by a global precision/temperature parameter.
+    longrun_weight = pm.Beta("longrun_weight", alpha=1.0, beta=1.0)
+    periodic_share = pm.Beta("periodic_share", alpha=1.0, beta=1.0)
+    
+    w_run = longrun_weight
+    w_period = (1.0 - longrun_weight) * periodic_share
+    w_imbalance = (1.0 - longrun_weight) * (1.0 - periodic_share)
+    
+    beta = pm.HalfNormal("beta", sigma=10.0)
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    # Negative weight means the feature penalizes the randomness score.
+    score_a = -(w_run * max_run_norm_a + w_period * periodicity_a + w_imbalance * imbalance_a)
+    score_b = -(w_run * max_run_norm_b + w_period * periodicity_b + w_imbalance * imbalance_b)
+    
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    )
+    
+    # Observed response: the pm.Data tensor is passed directly to observed=.
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/models/iter0_candidate1.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Sequences are evaluated based on features of their shortest mental description.
+    # We load the normalized structural features.
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    
+    # We hypothesize that observers have a limited attention/weight capacity 
+    # that they distribute among different compression heuristics.
+    # We use a stick-breaking parameterization to ensure weights are strictly 
+    # positive and sum to 1, providing strong regularization.
+    longrun_weight = pm.Beta("longrun_weight", alpha=2.0, beta=2.0)
+    periodic_share = pm.Beta("periodic_share", alpha=2.0, beta=2.0)
+    
+    # Overall sensitivity to subjective randomness differences
+    beta = pm.HalfNormal("beta", sigma=5.0)
+    
+    # Task-specific side bias
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+    
+    # Compute the effective fractional weight for each heuristic
+    w_run = longrun_weight
+    remaining = 1.0 - longrun_weight
+    w_period = remaining * periodic_share
+    w_imbalance = remaining * (1.0 - periodic_share)
+    
+    # Compressibility penalty: higher penalty means the sequence is MORE compressible, 
+    # and therefore LESS subjectively random.
+    penalty_a = w_run * max_run_norm_a + w_period * periodicity_a + w_imbalance * imbalance_a
+    penalty_b = w_run * max_run_norm_b + w_period * periodicity_b + w_imbalance * imbalance_b
+    
+    # Subjective randomness score is the negative of the compressibility penalty
+    score_a = -penalty_a
+    score_b = -penalty_b
+    
+    # Probability of choosing sequence A (left) as more random
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    )
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/student_extended_compressibility.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/length_sensitive_compressibility.py
+Wrote file successfully.
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/models_manifest.yaml
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: extended_compressibility
+  rationale: 'Extends the best linear compressibility model by adding an alternation
+    rate term, reflecting people''s known sensitivity to alternation.
+
+    '
+- name: alternation_and_run
+  rationale: 'A simplified combination model using only alternation rate and max run
+    length to gauge subjective randomness.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/models_manifest.yaml
+Wrote file successfully.
+[0m
+[0m← [0mWrite data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/theory_report.md
+Wrote file successfully.
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych && uv run python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+for model_name in ['student_extended_compressibility', 'length_sensitive_compressibility']:
+    m = load_pymc_model(model_name, Path('/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models'))
+    print(f'{model_name} pm.Data inputs:', pm_data_inputs(m))
+    print(f'{model_name} observed response container:', observed_response_data(m))
+print('OK')
+"
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+student_extended_compressibility pm.Data inputs: ['max_run_norm_a', 'periodicity_a', 'imbalance_a', 'p_alts_a', 'max_run_norm_b', 'periodicity_b', 'imbalance_b', 'p_alts_b', 'chose_left']
+student_extended_compressibility observed response container: chose_left
+length_sensitive_compressibility pm.Data inputs: ['max_run_norm_a', 'periodicity_a', 'imbalance_a', 'n_a', 'max_run_norm_b', 'periodicity_b', 'imbalance_b', 'n_b', 'chose_left']
+length_sensitive_compressibility observed response container: chose_left
+OK
+[0m
+[0m$ [0mls -1 /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/*.py
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/alternation_and_run.py
+/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/bayesian_diagnosticity.py
+/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/extended_compressibility.py
+/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/inner_loop_model.py
+/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/length_sensitive_compressibility.py
+/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/prototype_similarity.py
+/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/student_extended_compressibility.py
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/cognitive_models/models_manifest.yaml
+/Users/ben/.zshenv:.:1: no such file or directory: /Users/ben/.cargo/env
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.'
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient non-random alternatives: alternating, biased, and streaky generators.'
+- name: extended_compressibility
+  rationale: 'Extends the best linear compressibility model by adding an alternation rate term, reflecting people''s known sensitivity to alternation.'
+- name: alternation_and_run
+  rationale: 'A simplified combination model using only alternation rate and max run length to gauge subjective randomness.'
+- name: inner_loop_model
+  rationale: 'Best PyMC model found by the inner model-improvement loop.'
+- name: student_extended_compressibility
+  rationale: 'A variant of extended compressibility that uses Student-T priors for weights, building on the success of the inner loop candidates.'
+- name: length_sensitive_compressibility
+  rationale: 'Extends the successful inner loop model by adding a term for sequence length, testing if people have a baseline bias for sequence length in subjective randomness.'
+[0m
+I have successfully read the problem context, reviewed the results of the previous experiment's inner model loop, ported over the models from experiment 2, and proposed two new models for experiment 3 based on those findings. 
+
+The inner loop in experiment 2 demonstrated that an unconstrained model structure using heavy-tailed `StudentT` priors for the weights outperformed models utilizing rigid `Beta`-driven weighting allocations. Building on this and noting other potential variables missing from recent models, I have added the following to the `cognitive_models` directory:
+
+1. **`student_extended_compressibility`**: It was observed that `extended_compressibility` performed relatively well by including alternation proportions, while `inner_loop_model` performed the best overall utilizing heavy-tailed `StudentT` priors. This new model simply combines these two successes: it runs the extended set of features (including alternation rate `p_alts`) but utilizes the heavy-tailed priors discovered and favored by the inner loop. 
+2. **`length_sensitive_compressibility`**: Given that none of the top-performing base models take the length of the sequences (`n_a` and `n_b`) into account, this model extends the `inner_loop_model` (our current champion) by adding a linear weight term for sequence length. It directly tests if humans have an underlying subjective bias to perceive longer (or shorter) sequences as inherently more random irrespective of other intrinsic structural features.
+
+The self-validation script successfully extracted all `pm.Data` inputs and the observed container from the newly constructed models. Both the `models_manifest.yaml` and the `theory_report.md` files have also been updated accordingly.

@@ -1,0 +1,46 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: length_sensitive_alternation
+  rationale: "People evaluate alternation deviation on the count scale rather than\
+    \ the\nproportion scale \u2014 a sequence with two extra transitions relative\
+    \ to the\nideal count looks equally deviant regardless of whether it is 4 or 8\
+    \ flips\nlong, so the randomness signal scales with sequence length.\n"
+- name: bayesian_markov_fairness
+  rationale: 'People implicitly compute the log-Bayes-factor comparing each sequence''s
+
+    observed transitions against a fair Markov chain (p_transition = 0.5) versus
+
+    a biased one, and choose the sequence whose transitions are more consistent
+
+    with the fair-coin hypothesis.
+
+    '
+- name: run_length_prototype
+  rationale: "People judge sequences by how close the maximum run length is to an\
+    \ internal\nprototype for a random sequence \u2014 both too-long streaks and too-short\
+    \ maximum\nruns look non-random, so sequences whose longest run matches the ideal\
+    \ are\njudged most random.\n"
+- name: length_sensitive_2d_prototype
+  rationale: 'People evaluate sequences using the two-dimensional prototype (alternation
+
+    rate and balance), but their sensitivity to deviations scales linearly with
+
+    sequence length because longer sequences provide stronger statistical evidence
+
+    of non-randomness for the same proportional deviation.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

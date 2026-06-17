@@ -370,6 +370,140 @@ def _draw_fixed_truth_panels(
     axes[-1].legend(loc="best", fontsize=8)
 
 
+# Per-metric plotting spec for `plot_holdout_trajectories`. Each metric names
+# the trajectory keys for the best-model and BMA series, the per-run baseline
+# field, and how to label/scale the axis. The default-params (green) baseline
+# only records `mean_r`, so it is absent on the RMSE figure (its `baseline_field`
+# lookup returns None and the line is skipped).
+_HOLDOUT_METRIC_SPECS = {
+    "pearson_r": {
+        "best_key": "pearson_r",
+        "bma_key": "pearson_r_bma",
+        "baseline_field": "mean_r",
+        "ylabel": "Pearson r vs. ground-truth p_left (held-out stimuli)",
+        "suptitle": (
+            "Holdout recovery — best model vs. Bayesian model average "
+            "(held-out model = ground truth)"
+        ),
+        "ylim": (-1.05, 1.05),
+        "zero_line": True,
+        "legend_loc": "lower right",
+    },
+    "rmse": {
+        "best_key": "rmse",
+        "bma_key": "rmse_bma",
+        "baseline_field": "mean_rmse",
+        "ylabel": "RMSE vs. ground-truth p_left (held-out stimuli)",
+        "suptitle": (
+            "Holdout recovery — RMSE of best model vs. Bayesian model average "
+            "(held-out model = ground truth; lower is better)"
+        ),
+        "ylim": None,  # autoscale up from 0
+        "zero_line": False,
+        "legend_loc": "upper right",
+    },
+}
+
+
+def plot_holdout_trajectories(
+    result: Mapping[str, Any], out_path: Path, *, metric: str = "pearson_r"
+) -> None:
+    """Plot held-out recovery vs. inner-loop step, one panel per held-out model.
+
+    Each panel shows two trajectories of the chosen ``metric`` against the
+    ground truth's ``p_left`` on the held-out stimuli: the single best-fitting
+    model (solid) and the posterior-weighted Bayesian model average (dashed).
+    ``metric`` is ``"pearson_r"`` (higher is better, fixed [-1, 1] axis) or
+    ``"rmse"`` (lower is better, axis autoscaled up from 0). Steps with an
+    undefined value (None — e.g. a constant prediction makes correlation
+    undefined) are skipped rather than plotted as zero. Dotted vertical lines
+    mark outer-experiment boundaries; flat lines mark the seed-model baselines.
+    """
+    if metric not in _HOLDOUT_METRIC_SPECS:
+        raise ValueError(
+            f"Unknown metric {metric!r}; expected one of "
+            f"{sorted(_HOLDOUT_METRIC_SPECS)}"
+        )
+    spec = _HOLDOUT_METRIC_SPECS[metric]
+
+    import matplotlib
+
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    BEST_COLOR = "#4878CF"
+    BMA_COLOR = "#D65F5F"
+    SEED_FIT_COLOR = "#EE854A"
+    BASELINE_COLOR = "#6ACC65"
+
+    gt_runs = result["gt_runs"]
+    n = len(gt_runs)
+    fig, axes = plt.subplots(
+        1, n, figsize=(4.6 * n, 4.4), squeeze=False, sharey=True
+    )
+    plotted_values = []
+    for ax, gt_run in zip(axes[0], gt_runs):
+        trajectory = gt_run["trajectory"]
+        for key, color, style, marker, label in (
+            (spec["best_key"], BEST_COLOR, "-", "o", "best model"),
+            (spec["bma_key"], BMA_COLOR, "--", "s", "Bayesian model average"),
+        ):
+            points = [
+                (row["global_step"], row[key])
+                for row in trajectory
+                if row.get(key) is not None
+            ]
+            if points:
+                xs, ys = zip(*points)
+                plotted_values.extend(ys)
+                ax.plot(
+                    xs, ys, color=color, linestyle=style, marker=marker, label=label
+                )
+        # Two flat seed-model baselines (constant across steps): the other seed
+        # models with default params, and those seed models fit on all the data.
+        for run_key, baseline_color, baseline_style, baseline_label in (
+            ("fitted_baseline", SEED_FIT_COLOR, ":", "seed models (fit to all data)"),
+            ("baseline", BASELINE_COLOR, "-.", "seed models (default params)"),
+        ):
+            baseline_value = (gt_run.get(run_key) or {}).get(spec["baseline_field"])
+            if baseline_value is not None:
+                plotted_values.append(baseline_value)
+                ax.axhline(
+                    baseline_value,
+                    color=baseline_color,
+                    linestyle=baseline_style,
+                    linewidth=1.3,
+                    label=baseline_label,
+                )
+        for x in sorted(
+            row["global_step"]
+            for row in trajectory
+            if row["step"] == 0 and row["experiment"] > 1
+        ):
+            ax.axvline(x - 0.5, color="grey", linestyle=":", linewidth=0.8)
+        if spec["zero_line"]:
+            ax.axhline(0.0, color="grey", linewidth=0.5)
+        ax.set_title(gt_run["gt_model"])
+        ax.set_xlabel("inner-loop scoring step")
+
+    # Axes share y, so one limit governs every panel. Fixed window for the
+    # bounded correlation; autoscale up from 0 for RMSE so small differences
+    # near the floor stay legible.
+    if spec["ylim"] is not None:
+        axes[0][0].set_ylim(*spec["ylim"])
+    else:
+        top = max(plotted_values) * 1.15 if plotted_values else 1.0
+        axes[0][0].set_ylim(0.0, top)
+
+    axes[0][0].set_ylabel(spec["ylabel"])
+    axes[0][0].legend(loc=spec["legend_loc"], fontsize=8)
+    fig.suptitle(spec["suptitle"])
+    fig.tight_layout()
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(out_path, dpi=150)
+    plt.close(fig)
+
+
 def plot_model_recovery(confusion: Mapping[str, Any], out_path: Path) -> None:
     """Write the generating x recovered posterior confusion heatmap."""
     import matplotlib

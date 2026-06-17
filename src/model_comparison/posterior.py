@@ -48,14 +48,23 @@ sys.path.insert(0, str(REPO_ROOT))
 
 
 def model_complexity(model_name: str, models_dir: Path) -> int:
-    """Non-whitespace, non-comment character count in `<model_name>.py`."""
+    """Number of non-blank, non-comment lines of code in `<model_name>.py`.
+
+    A line counts when it still has non-whitespace content once its `#`-comment
+    portion is stripped. This is the Occam complexity proxy for the model
+    posterior: shared boilerplate (imports, the `pm.Data` containers, the
+    likelihood) is roughly constant across models and cancels in the softmax, so
+    only the lines a hypothesis spends on extra mechanism move posterior mass —
+    a model that blends several heuristics pays for every extra cue it adds.
+    """
     model_file = models_dir / f"{model_name}.py"
     if not model_file.exists():
         return 0
     count = 0
     for line in model_file.read_text(encoding="utf-8").splitlines():
         code_part = line.split("#")[0]
-        count += sum(1 for c in code_part if not c.isspace())
+        if code_part.strip():
+            count += 1
     return count
 
 

@@ -1,0 +1,77 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "encoding_compressibility": 0.31049,
+      "bayesian_diagnosticity": 0.235794,
+      "alternation_prototype": 0.0,
+      "inner_loop_model": 0.453717,
+      "fair_coin_run_baseline": 0.0
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -861.2289,
+      "bayesian_diagnosticity": -860.2041,
+      "alternation_prototype": -899.3296,
+      "inner_loop_model": -859.2996,
+      "fair_coin_run_baseline": -8153.2859
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "encoding_compressibility": 0.23797,
+      "bayesian_diagnosticity": 0.180721,
+      "alternation_prototype": 0.0,
+      "inner_loop_model": 0.347744,
+      "fair_coin_run_baseline": 0.0,
+      "iter0_candidate0": 0.232792,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.000772
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -861.2289,
+      "bayesian_diagnosticity": -860.2041,
+      "alternation_prototype": -899.3296,
+      "inner_loop_model": -859.2996,
+      "fair_coin_run_baseline": -8153.2859,
+      "iter0_candidate0": -859.7009,
+      "iter0_candidate1": -1215.992,
+      "iter0_candidate2": -867.9095
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "encoding_compressibility": 0.185589,
+      "bayesian_diagnosticity": 0.140941,
+      "alternation_prototype": 0.0,
+      "inner_loop_model": 0.271199,
+      "fair_coin_run_baseline": 0.0,
+      "iter0_candidate0": 0.18155,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.000602,
+      "iter1_candidate0": 0.220119,
+      "iter1_candidate1": 0.0,
+      "iter1_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "encoding_compressibility": -861.2289,
+      "bayesian_diagnosticity": -860.2041,
+      "alternation_prototype": -899.3296,
+      "inner_loop_model": -859.2996,
+      "fair_coin_run_baseline": -8153.2859,
+      "iter0_candidate0": -859.7009,
+      "iter0_candidate1": -1215.992,
+      "iter0_candidate2": -867.9095,
+      "iter1_candidate0": -859.2583,
+      "iter1_candidate1": -1220.9233,
+      "iter1_candidate2": -928.1136
+    }
+  }
+]

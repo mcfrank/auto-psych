@@ -1,0 +1,137 @@
+{
+  "project_id": "subjective_randomness",
+  "seed_models_dir": "/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/seed_models",
+  "n_experiments": 1,
+  "n_participants": 5,
+  "inner_loop": {
+    "max_iterations": 0,
+    "candidate_count": 3
+  },
+  "fit_kwargs": {
+    "draws": 50,
+    "tune": 50,
+    "chains": 1
+  },
+  "seed": 7,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      6,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100
+  },
+  "gt_runs": [
+    {
+      "gt_model": "more_heads_more_random",
+      "params": {
+        "beta": 4.0,
+        "side_bias": 0.0
+      },
+      "run_root": "/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/smoke_runs/more_heads_more_random",
+      "n_eval_stimuli": 500,
+      "n_eval_dropped": 0,
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "bayesian_diagnosticity",
+          "pearson_r": 0.02244576935535485,
+          "rmse": 0.4282836999586813,
+          "pearson_r_bma": 0.01753835892485064,
+          "rmse_bma": 0.42604499344702823
+        }
+      ],
+      "baseline": {
+        "mean_r": 0.004833391889774388,
+        "per_model": {
+          "prototype_similarity": 0.016887750873444716,
+          "encoding_compressibility": -0.004221536063820709,
+          "bayesian_diagnosticity": 0.0018339608596991573
+        }
+      },
+      "fitted_baseline": {
+        "per_model": {
+          "bayesian_diagnosticity": {
+            "pearson_r": 0.02244576935535485,
+            "rmse": 0.4282836999586813
+          },
+          "encoding_compressibility": {
+            "pearson_r": 0.004643381031851134,
+            "rmse": 0.4146214103138898
+          },
+          "prototype_similarity": {
+            "pearson_r": -0.0035990759015944417,
+            "rmse": 0.4229475077865569
+          }
+        },
+        "mean_r": 0.007830024828537181,
+        "mean_rmse": 0.42195087268637604,
+        "n_responses": 150
+      },
+      "leakage": {
+        "files": [
+          {
+            "path": "experiment1/cognitive_models/bayesian_diagnosticity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/cognitive_models/encoding_compressibility.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/cognitive_models/inner_loop_model.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/cognitive_models/prototype_similarity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/bayesian_diagnosticity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/encoding_compressibility.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/prototype_similarity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          }
+        ],
+        "any_identical": false,
+        "any_mention": false,
+        "any_gt_named": false
+      },
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "prototype_similarity",
+            "encoding_compressibility",
+            "bayesian_diagnosticity",
+            "inner_loop_model"
+          ]
+        }
+      ]
+    }
+  ]
+}

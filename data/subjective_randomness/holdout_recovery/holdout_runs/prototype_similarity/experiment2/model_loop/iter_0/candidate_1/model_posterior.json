@@ -1,0 +1,17 @@
+{
+  "posteriors": {
+    "encoding_compressibility": 0.12751,
+    "bayesian_diagnosticity": 0.051034,
+    "inner_loop_model": 0.356073,
+    "length_sensitive_prototype": 0.112135,
+    "asymmetric_alternation_prototype": 0.353247
+  },
+  "elpd_loo": {
+    "encoding_compressibility": -327.0665,
+    "bayesian_diagnosticity": -327.9822,
+    "inner_loop_model": -326.0396,
+    "length_sensitive_prototype": -327.195,
+    "asymmetric_alternation_prototype": -326.0475
+  },
+  "n_trials": 1200
+}

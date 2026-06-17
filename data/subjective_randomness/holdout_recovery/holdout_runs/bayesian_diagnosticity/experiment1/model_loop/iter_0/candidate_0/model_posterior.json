@@ -1,0 +1,11 @@
+{
+  "posteriors": {
+    "prototype_similarity": 1.0,
+    "encoding_compressibility": 0.0
+  },
+  "elpd_loo": {
+    "prototype_similarity": -537.7933,
+    "encoding_compressibility": -606.7915
+  },
+  "n_trials": 900
+}

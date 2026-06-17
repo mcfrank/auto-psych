@@ -1,0 +1,1 @@
+People judge sequence randomness based purely on outcome frequencies, paradoxically perceiving sequences with a greater imbalance between the number of heads and tails as more random. However, their choices are also influenced by a constant baseline spatial or presentation order preference (a side bias) that shifts their probability of choosing the first sequence.

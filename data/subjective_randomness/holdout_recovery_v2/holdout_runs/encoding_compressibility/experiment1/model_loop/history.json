@@ -1,0 +1,47 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "prototype_similarity",
+    "posteriors": {
+      "prototype_similarity": 0.824742,
+      "bayesian_diagnosticity": 0.175258
+    },
+    "elpd_loo": {
+      "prototype_similarity": -220.4508,
+      "bayesian_diagnosticity": -220.2496
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "prototype_similarity",
+    "posteriors": {
+      "prototype_similarity": 0.824742,
+      "bayesian_diagnosticity": 0.175258,
+      "iter0_candidate0": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -220.4508,
+      "bayesian_diagnosticity": -220.2496,
+      "iter0_candidate0": -315.6204
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "prototype_similarity",
+    "posteriors": {
+      "prototype_similarity": 0.557436,
+      "bayesian_diagnosticity": 0.118455,
+      "iter0_candidate0": 0.0,
+      "iter1_candidate0": 0.324109
+    },
+    "elpd_loo": {
+      "prototype_similarity": -220.4508,
+      "bayesian_diagnosticity": -220.2496,
+      "iter0_candidate0": -315.6204,
+      "iter1_candidate0": -221.2931
+    }
+  }
+]

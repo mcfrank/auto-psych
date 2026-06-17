@@ -1,0 +1,1 @@
+People judge a sequence as more random when its proportion of heads is closer to 0.5 — that is, when the sequence is more balanced. They ignore run structure, alternation patterns, and periodicity entirely; only the overall H/T ratio guides the judgment. The sequence with the less imbalanced coin-flip count looks more random.

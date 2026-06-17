@@ -1,0 +1,142 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.0,
+    "encoding_compressibility": 0.0,
+    "bayesian_diagnosticity": 0.0,
+    "fewer_heads_proportion": 0.0,
+    "short_streaks": 0.0,
+    "inner_loop_model": 0.338824,
+    "logarithmic_heads_penalty": 0.000242,
+    "quadratic_heads_penalty": 0.0,
+    "iter0_candidate0": 0.41474,
+    "iter0_candidate1": 0.0,
+    "iter0_candidate2": 0.10807,
+    "iter1_candidate1": 1e-06,
+    "iter1_candidate2": 0.138123
+  },
+  "elpd_loo": {
+    "prototype_similarity": -1825.1231,
+    "encoding_compressibility": -1875.1527,
+    "bayesian_diagnosticity": -1501.6181,
+    "fewer_heads_proportion": -637.4514,
+    "short_streaks": -1872.5038,
+    "inner_loop_model": -31.7577,
+    "logarithmic_heads_penalty": -39.1002,
+    "quadratic_heads_penalty": -52.4107,
+    "iter0_candidate0": -31.5555,
+    "iter0_candidate1": -51.268,
+    "iter0_candidate2": -32.8004,
+    "iter1_candidate1": -44.5425,
+    "iter1_candidate2": -32.605
+  },
+  "n_trials": 2700,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "prototype_similarity": 26,
+    "encoding_compressibility": 35,
+    "bayesian_diagnosticity": 61,
+    "fewer_heads_proportion": 14,
+    "short_streaks": 14,
+    "inner_loop_model": 16,
+    "logarithmic_heads_penalty": 14,
+    "quadratic_heads_penalty": 14,
+    "iter0_candidate0": 16,
+    "iter0_candidate1": 15,
+    "iter0_candidate2": 18,
+    "iter1_candidate1": 15,
+    "iter1_candidate2": 17
+  },
+  "comparison": {
+    "iter0_candidate0": {
+      "rank": 0,
+      "elpd_loo": -31.55550500338616,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.9999999999885135
+    },
+    "inner_loop_model": {
+      "rank": 1,
+      "elpd_loo": -31.757675301398375,
+      "elpd_diff": 0.2021702980122182,
+      "dse": 0.23716634873320666,
+      "weight": 1.0255418703573057e-11
+    },
+    "iter1_candidate2": {
+      "rank": 2,
+      "elpd_loo": -32.605007806762536,
+      "elpd_diff": 1.0495028033763827,
+      "dse": 0.016517450629399803,
+      "weight": 1.1542958887832366e-13
+    },
+    "iter0_candidate2": {
+      "rank": 3,
+      "elpd_loo": -32.80037950637197,
+      "elpd_diff": 1.2448745029858141,
+      "dse": 0.2543679111364924,
+      "weight": 1.0545179188281904e-13
+    },
+    "logarithmic_heads_penalty": {
+      "rank": 4,
+      "elpd_loo": -39.10017302864737,
+      "elpd_diff": 7.5446680252612115,
+      "dse": 3.962535041532771,
+      "weight": 1.2236617839220716e-13
+    },
+    "iter1_candidate1": {
+      "rank": 5,
+      "elpd_loo": -44.542452653927356,
+      "elpd_diff": 12.986947650541202,
+      "dse": 0.36755696362660173,
+      "weight": 9.44620826456797e-14
+    },
+    "iter0_candidate1": {
+      "rank": 6,
+      "elpd_loo": -51.26803358422959,
+      "elpd_diff": 19.71252858084344,
+      "dse": 4.016027089587121,
+      "weight": 5.094762315512861e-13
+    },
+    "quadratic_heads_penalty": {
+      "rank": 7,
+      "elpd_loo": -52.41067039871991,
+      "elpd_diff": 20.855165395333756,
+      "dse": 8.09418277689343,
+      "weight": 6.100436576705733e-14
+    },
+    "fewer_heads_proportion": {
+      "rank": 8,
+      "elpd_loo": -637.4513806963055,
+      "elpd_diff": 605.8958756929194,
+      "dse": 32.29040848158934,
+      "weight": 2.9280587909209903e-13
+    },
+    "bayesian_diagnosticity": {
+      "rank": 9,
+      "elpd_loo": -1501.6181017529266,
+      "elpd_diff": 1470.0625967495407,
+      "dse": 28.216155047785374,
+      "weight": 3.527495900945164e-13
+    },
+    "prototype_similarity": {
+      "rank": 10,
+      "elpd_loo": -1825.1230864565641,
+      "elpd_diff": 1793.567581453178,
+      "dse": 14.337399404171856,
+      "weight": 4.1759063024588126e-10
+    },
+    "short_streaks": {
+      "rank": 11,
+      "elpd_loo": -1872.5038316536272,
+      "elpd_diff": 1840.9483266502411,
+      "dse": 10.366153459088022,
+      "weight": 8.114037155763711e-14
+    },
+    "encoding_compressibility": {
+      "rank": 12,
+      "elpd_loo": -1875.1527336531765,
+      "elpd_diff": 1843.5972286497904,
+      "dse": 14.754065187303738,
+      "weight": 4.361483738693347e-10
+    }
+  }
+}

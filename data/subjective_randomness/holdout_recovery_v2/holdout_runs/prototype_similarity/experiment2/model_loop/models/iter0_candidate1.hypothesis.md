@@ -1,0 +1,1 @@
+People judge a sequence as more random when its proportion of heads is closer to 0.5. When comparing two sequences, they choose the one whose head count deviates less from an equal split as more random — imbalance is the sole cue driving the choice.

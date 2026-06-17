@@ -1,0 +1,77 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "prototype_similarity",
+    "posteriors": {
+      "prototype_similarity": 0.46009,
+      "bayesian_diagnosticity": 0.07982,
+      "inner_loop_model": 0.46009,
+      "max_run_length": 0.0,
+      "rle_description_length": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -622.0802,
+      "bayesian_diagnosticity": -622.0819,
+      "inner_loop_model": -622.0802,
+      "max_run_length": -662.4864,
+      "rle_description_length": -725.7736
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "iter0_candidate0",
+    "posteriors": {
+      "prototype_similarity": 0.245985,
+      "bayesian_diagnosticity": 0.042675,
+      "inner_loop_model": 0.245985,
+      "max_run_length": 0.0,
+      "rle_description_length": 0.0,
+      "iter0_candidate0": 0.369615,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.095739
+    },
+    "elpd_loo": {
+      "prototype_similarity": -622.0802,
+      "bayesian_diagnosticity": -622.0819,
+      "inner_loop_model": -622.0802,
+      "max_run_length": -662.4864,
+      "rle_description_length": -725.7736,
+      "iter0_candidate0": -621.373,
+      "iter0_candidate1": -832.7572,
+      "iter0_candidate2": -623.4239
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "iter0_candidate0",
+    "posteriors": {
+      "prototype_similarity": 0.245275,
+      "bayesian_diagnosticity": 0.042552,
+      "inner_loop_model": 0.245275,
+      "max_run_length": 0.0,
+      "rle_description_length": 0.0,
+      "iter0_candidate0": 0.368548,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.095463,
+      "iter1_candidate0": 0.002852,
+      "iter1_candidate1": 0.0,
+      "iter1_candidate2": 3.6e-05
+    },
+    "elpd_loo": {
+      "prototype_similarity": -622.0802,
+      "bayesian_diagnosticity": -622.0819,
+      "inner_loop_model": -622.0802,
+      "max_run_length": -662.4864,
+      "rle_description_length": -725.7736,
+      "iter0_candidate0": -621.373,
+      "iter0_candidate1": -832.7572,
+      "iter0_candidate2": -623.4239,
+      "iter1_candidate0": -626.3347,
+      "iter1_candidate1": -3631.6031,
+      "iter1_candidate2": -631.2199
+    }
+  }
+]
