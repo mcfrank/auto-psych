@@ -183,6 +183,7 @@ dependencies = [
     { name = "pypdf" },
     { name = "pyprojroot" },
     { name = "pyyaml" },
+    { name = "requests" },
     { name = "scipy" },
     { name = "tyro" },
 ]
@@ -227,6 +228,7 @@ requires-dist = [
     { name = "pypdf", specifier = ">=4.0.0" },
     { name = "pyprojroot", specifier = ">=0.3.0" },
     { name = "pyyaml", specifier = ">=6.0.0" },
+    { name = "requests", specifier = ">=2.31.0" },
     { name = "scipy", specifier = ">=1.11.0" },
     { name = "tyro", specifier = ">=0.8.0" },
 ]

@@ -3,7 +3,7 @@
 Claude Code agent pipeline for auto-psych.
 
 Each agent runs as a full Claude Code instance (read/write files, run bash, multi-step reasoning).
-Outputs go to src/pipelines/outer_loop/projects/<project>/experimentN/ directories.
+Outputs go to data/outer_loop/<project>/experimentN/ directories.
 
 Usage:
   python3 -m src.pipelines.outer_loop.run --project subjective_randomness --experiment 1
@@ -27,23 +27,25 @@ import tyro
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
+from src.pipelines.outer_loop.deployment import write_smoke_experiment
 from src.pipelines.outer_loop.orchestrator import (
-    outer_project_dir,
-    outer_data_dir,
     ensure_experiment_dirs,
     experiment_dir,
     get_ground_truth_models,
     init_registry,
-    run_inner_model_loop_programmatic,
+    outer_data_dir,
+    outer_project_dir,
     run_collect_programmatic,
-    spawn_cc_agent,
+    run_deployment_programmatic,
+    run_inner_model_loop_programmatic,
     seed_experiment_models_from_project,
+    spawn_cc_agent,
     update_registry_from_interpretation,
     validate_cc_output,
     write_context,
 )
-from src.runtime.coding_agent import select_backend
 from src.pipelines.outer_loop.participants import DEFAULT_OPEN_MODEL
+from src.runtime.coding_agent import select_backend
 
 AGENT_KEYS = ["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]
 
@@ -83,6 +85,7 @@ def _run_agent(
     backend: Optional[str] = None,
     participant_backend: str = "closed",
     participant_model: Optional[str] = None,
+    prolific_mode: str = "none",
     enable_critique: bool = True,
     n_critique_proposals: Optional[int] = None,
 ) -> None:
@@ -100,6 +103,7 @@ def _run_agent(
             ground_truth_model=ground_truth_model,
             participant_backend=participant_backend,
             participant_model=participant_model,
+            prolific_mode=prolific_mode,
         )
     elif agent_key == "5_model_loop":
         run_inner_model_loop_programmatic(
@@ -156,6 +160,13 @@ def _run_experiment(
     backend: Optional[str] = None,
     participant_backend: str = "closed",
     participant_model: Optional[str] = None,
+    deploy_target: str = "none",
+    collection_owner: str = "unknown",
+    firebase_project: Optional[str] = None,
+    firebase_region: str = "us-central1",
+    prolific_mode: str = "none",
+    deploy_only: bool = False,
+    prepare_smoke_experiment: bool = False,
     enable_critique: bool = True,
     n_critique_proposals: Optional[int] = None,
 ) -> None:
@@ -170,6 +181,42 @@ def _run_experiment(
         sys.exit(1)
     ensure_experiment_dirs(exp_dir_path)
     init_registry(exp_dir_path)
+
+    if prepare_smoke_experiment:
+        smoke_dir = write_smoke_experiment(exp_dir_path)
+        print(f"  [smoke] Wrote deployment smoke experiment: {smoke_dir}", flush=True)
+
+    if deploy_only:
+        if deploy_target == "none":
+            print(
+                "Error: --deploy-only requires --deploy-target dry-run or firebase",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        print(f"\n{'=' * 60}", flush=True)
+        print(
+            f"  Experiment {exp_num} / Deployment ({deploy_target}, deploy-only)",
+            flush=True,
+        )
+        print(f"{'=' * 60}", flush=True)
+        run_deployment_programmatic(
+            exp_dir=exp_dir_path,
+            project_id=project_id,
+            run_id=exp_num,
+            deploy_target=deploy_target,
+            prolific_mode=prolific_mode,
+            n_participants=n_participants,
+            collection_owner=collection_owner,
+            firebase_project=firebase_project,
+            firebase_region=firebase_region,
+            backend=backend,
+        )
+        print(
+            f"\nExperiment {exp_num} deployment complete. Outputs: {exp_dir_path}",
+            flush=True,
+        )
+        return
+
     seeded_models = False
     if exp_num == 1:
         seeded_models = seed_experiment_models_from_project(exp_dir_path, project_id)
@@ -220,9 +267,26 @@ def _run_experiment(
             backend=backend,
             participant_backend=participant_backend,
             participant_model=participant_model,
+            prolific_mode=prolific_mode,
             enable_critique=enable_critique,
             n_critique_proposals=n_critique_proposals,
         )
+        if agent_key == "3_implement" and deploy_target != "none":
+            print(f"\n{'=' * 60}", flush=True)
+            print(f"  Experiment {exp_num} / Deployment ({deploy_target})", flush=True)
+            print(f"{'=' * 60}", flush=True)
+            run_deployment_programmatic(
+                exp_dir=exp_dir_path,
+                project_id=project_id,
+                run_id=exp_num,
+                deploy_target=deploy_target,
+                prolific_mode=prolific_mode,
+                n_participants=n_participants,
+                collection_owner=collection_owner,
+                firebase_project=firebase_project,
+                firebase_region=firebase_region,
+                backend=backend,
+            )
 
     if "5_model_loop" in keys_to_run:
         update_registry_from_interpretation(exp_dir_path)
@@ -244,10 +308,12 @@ class Args:
         Literal["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]
     ] = None
     """Run only this agent. Omit for full pipeline."""
-    mode: Literal["simulated_participants", "live"] = "simulated_participants"
+    mode: Literal["simulated_participants", "simulated_participants_nobrowser", "live"] = (
+        "simulated_participants"
+    )
     """Data-collection mode."""
     n_participants: int = DEFAULT_N_PARTICIPANTS
-    """Number of (simulated) participants to collect."""
+    """Number of participants to collect or simulate."""
     ground_truth_model: Optional[str] = None
     """Generate synthetic participant data from this ground-truth model (must be in
     src/pipelines/outer_loop/projects/<project>/ground_truth_models.py). If omitted,
@@ -263,6 +329,26 @@ class Args:
     coding_agent: Optional[Literal["claude", "opencode"]] = None
     """Coding-agent backend for outer and inner loops. Defaults to the CODING_AGENT
     env var, then 'claude'."""
+    participant_backend: Literal["closed", "open"] = "closed"
+    """Participant model backend for simulated_participants_nobrowser."""
+    closed_model: Optional[str] = None
+    """Closed/backend model override for simulated_participants_nobrowser."""
+    hf_model: Optional[str] = None
+    """Hugging Face model id for open simulated_participants_nobrowser."""
+    deploy_target: Literal["none", "dry-run", "firebase"] = "none"
+    """Deployment phase after 3_implement."""
+    collection_owner: str = os.environ.get("AUTO_PSYCH_COLLECTION_OWNER", "unknown")
+    """Human or agent identity responsible for collection bookkeeping."""
+    firebase_project: Optional[str] = None
+    """Firebase project id. Optional when .firebaserc has projects.default."""
+    firebase_region: str = "us-central1"
+    """Firebase Functions region for generated rewrites."""
+    prolific_mode: Literal["none", "test", "live"] = "none"
+    """Create/poll a Prolific study for the deployed experiment."""
+    deploy_only: bool = False
+    """Run only deployment for an existing experiment; do not spawn a coding agent."""
+    prepare_smoke_experiment: bool = False
+    """Write a tiny implemented experiment before deploying, useful for smoke tests."""
     draws: int = 2000
     """MCMC posterior draws per chain for inner-loop model fits."""
     tune: int = 2000
@@ -293,7 +379,7 @@ def main(args: Args) -> None:
             )
             sys.exit(1)
 
-    # Resolve experiment IDs
+    # Resolve experiment IDs.
     if args.experiments is not None:
         try:
             exp_ids = _parse_experiments(args.experiments)
@@ -306,9 +392,6 @@ def main(args: Args) -> None:
         print("Error: specify --experiment N or --experiments N", file=sys.stderr)
         sys.exit(1)
 
-    # Resolve the participant-model id for no-browser collection. The open
-    # backend has a default model; the closed backend uses the project default
-    # unless --closed-model overrides it.
     participant_model = (
         (args.hf_model or DEFAULT_OPEN_MODEL)
         if args.participant_backend == "open"
@@ -323,7 +406,9 @@ def main(args: Args) -> None:
     fit_kwargs = {"draws": args.draws, "tune": args.tune, "chains": args.chains}
 
     print(
-        f"Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} agent={backend} validate={args.validate}",
+        f"Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} "
+        f"agent={backend} deploy={args.deploy_target} prolific={args.prolific_mode} "
+        f"validate={args.validate}",
         flush=True,
     )
     print(
@@ -348,6 +433,13 @@ def main(args: Args) -> None:
             backend=backend,
             participant_backend=args.participant_backend,
             participant_model=participant_model,
+            deploy_target=args.deploy_target,
+            collection_owner=args.collection_owner,
+            firebase_project=args.firebase_project,
+            firebase_region=args.firebase_region,
+            prolific_mode=args.prolific_mode,
+            deploy_only=args.deploy_only,
+            prepare_smoke_experiment=args.prepare_smoke_experiment,
             enable_critique=args.critique,
             n_critique_proposals=args.n_critique_proposals,
         )
