@@ -1,0 +1,1 @@
+People evaluate the randomness of a sequence solely by checking whether its proportion of heads matches the expectation of a fair coin (0.5). Sequences whose proportion of heads is closer to 0.5 are consistently judged as being more representative of a random process.

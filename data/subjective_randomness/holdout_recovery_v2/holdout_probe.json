@@ -1,0 +1,87 @@
+{
+  "pool_size": 2000,
+  "k": 150,
+  "gt_runs": [
+    {
+      "gt_model": "bayesian_diagnosticity",
+      "final_best_model": "inner_loop_model",
+      "n_pool": 1999,
+      "k": 150,
+      "pool": {
+        "n": 1999,
+        "pearson_r": 0.9867349127763613,
+        "rmse": 0.023374556376488775,
+        "mean_abs_disagreement": 0.01883974442304308,
+        "max_abs_disagreement": 0.06571592445717833
+      },
+      "control": {
+        "n": 150,
+        "pearson_r": 0.988466014559121,
+        "rmse": 0.024250197545464536,
+        "mean_abs_disagreement": 0.0193612529306554,
+        "max_abs_disagreement": 0.053635920134179615
+      },
+      "adversarial": {
+        "n": 150,
+        "pearson_r": 0.9932630283884941,
+        "rmse": 0.048260263574864,
+        "mean_abs_disagreement": 0.047983188137917666,
+        "max_abs_disagreement": 0.06571592445717833
+      }
+    },
+    {
+      "gt_model": "encoding_compressibility",
+      "final_best_model": "head_balance",
+      "n_pool": 2000,
+      "k": 150,
+      "pool": {
+        "n": 2000,
+        "pearson_r": 0.9064417987233548,
+        "rmse": 0.08788174220420578,
+        "mean_abs_disagreement": 0.07041521977867221,
+        "max_abs_disagreement": 0.26156554551441696
+      },
+      "control": {
+        "n": 150,
+        "pearson_r": 0.9220765377815449,
+        "rmse": 0.08315297897220705,
+        "mean_abs_disagreement": 0.06844482523276492,
+        "max_abs_disagreement": 0.20497258310889266
+      },
+      "adversarial": {
+        "n": 150,
+        "pearson_r": 0.4239182239065315,
+        "rmse": 0.19244073917111562,
+        "mean_abs_disagreement": 0.19056523094957237,
+        "max_abs_disagreement": 0.26156554551441696
+      }
+    },
+    {
+      "gt_model": "prototype_similarity",
+      "final_best_model": "inner_loop_model",
+      "n_pool": 1999,
+      "k": 150,
+      "pool": {
+        "n": 1999,
+        "pearson_r": 0.9566132780557747,
+        "rmse": 0.05703344860866362,
+        "mean_abs_disagreement": 0.04516701228593232,
+        "max_abs_disagreement": 0.14929055523887202
+      },
+      "control": {
+        "n": 150,
+        "pearson_r": 0.9571415810304363,
+        "rmse": 0.05732460196267989,
+        "mean_abs_disagreement": 0.04604351820480485,
+        "max_abs_disagreement": 0.1438988247327863
+      },
+      "adversarial": {
+        "n": 150,
+        "pearson_r": 0.956023768637261,
+        "rmse": 0.12233633732324316,
+        "mean_abs_disagreement": 0.12150125523229367,
+        "max_abs_disagreement": 0.14929055523887202
+      }
+    }
+  ]
+}

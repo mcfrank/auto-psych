@@ -1,0 +1,168 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+cat: CONTEXT.md: No such file or directory
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+cat: CANDIDATE_BRIEF.md: No such file or directory
+[0m
+[0m$ [0mcat existing_hypotheses.md
+cat: existing_hypotheses.md: No such file or directory
+[0m
+[0m$ [0mls -l
+total 1464
+drwxr-xr-x@  8 ben  staff     256 Jun 12 14:02 __pycache__
+-rw-r--r--@  1 ben  staff    1753 Jun 12 14:01 candidate.py
+-rw-r--r--@  1 ben  staff    1724 Jun  5 09:37 CLEANUP_PLAN.md
+drwxr-xr-x@  6 ben  staff     192 Jun  9 16:41 data
+-rw-r--r--@  1 ben  staff    1070 Apr 16 22:03 LICENSE
+-rw-r--r--@  1 ben  staff     310 Jun 12 14:18 opencode.json
+drwxr-xr-x@  6 ben  staff     192 Jun  5 13:49 projects
+-rw-r--r--@  1 ben  staff    1859 Jun  6 21:57 pyproject.toml
+-rw-r--r--@  1 ben  staff    5363 Jun  5 13:49 README.md
+drwxr-xr-x@  7 ben  staff     224 Jun  5 13:49 scripts
+drwxr-xr-x@ 12 ben  staff     384 Jun  5 10:57 src
+drwxr-xr-x@  7 ben  staff     224 Apr 16 22:03 templates
+-rw-r--r--@  1 ben  staff     462 Jun 12 12:48 test_hier.py
+-rw-r--r--@  1 ben  staff    3645 Jun 12 12:48 test_hierarchical.py
+-rw-r--r--@  1 ben  staff     412 Jun 12 12:47 test_shape.py
+drwxr-xr-x@ 44 ben  staff    1408 Jun 16 11:49 tests
+-rw-r--r--@  1 ben  staff  706474 Jun  6 21:38 uv.lock
+[0m
+[0m✱ [0mGlob "**/CONTEXT.md"[90m 100 matches[0m
+[0m
+[0m$ [0mpwd
+/Users/ben/Documents/auto-psych
+[0m
+[0m$ [0mls -l /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_1/
+total 32
+-rw-r--r--@ 1 ben  staff  1430 Jun 16 12:11 agent.jsonl
+-rw-r--r--@ 1 ben  staff   308 Jun 16 12:10 CANDIDATE_BRIEF.md
+-rw-r--r--@ 1 ben  staff   898 Jun 16 12:10 CONTEXT.md
+-rw-r--r--@ 1 ben  staff  1133 Jun 16 12:10 existing_hypotheses.md
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 0, candidate 1 of 3
+
+Responses CSV: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/responses.csv`
+Feature columns available (use these as `pm.Data` names): `sequence_a,sequence_b,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b,participant_id,trial_index,chose_left,generating_model`
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -619.22
+
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -628.79
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 1.000, ELPD-LOO -608.24
+
+Random-looking sequences are diagnostic of a fair coin over salient
+non-random alternatives: alternating, biased, and streaky generators.
+
+## iter0_candidate0
+
+People judge the randomness of a sequence by its similarity to a prototype, but rather than expecting balanced outcomes, their prototype expects a sequence to be dominated by heads. Sequences with a higher proportion of heads are perceived as closer to the prototype and therefore more random.
+[0m
+[0m$ [0mcat ../candidate_0/candidate.py
+"""
+People judge the randomness of a sequence by its similarity to a prototype, but rather than expecting balanced outcomes, their prototype expects a sequence to be dominated by heads. Sequences with a higher proportion of heads are perceived as closer to the prototype and therefore more random.
+"""
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    p_a = pm.Data("p_a", np.zeros(1, dtype="float64"))
+    p_b = pm.Data("p_b", np.zeros(1, dtype="float64"))
+    
+    # Free parameters
+    ideal_heads = pm.Beta("ideal_heads", alpha=1.0, beta=1.0)
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # Distance to the heads-biased prototype
+    dist_a = pt.abs(p_a - ideal_heads)
+    dist_b = pt.abs(p_b - ideal_heads)
+    
+    # Probability of choosing A (A is more random if distance is smaller)
+    p_left_raw = pm.math.sigmoid(tau * (dist_b - dist_a))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat ../candidate_0/hypothesis.md
+People judge the randomness of a sequence by its similarity to a prototype, but rather than expecting balanced outcomes, their prototype expects a sequence to be dominated by heads. Sequences with a higher proportion of heads are perceived as closer to the prototype and therefore more random.
+[0m
+[0m← [0mWrite hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.insert(0, '/Users/ben/Documents/auto-psych')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat candidate.py
+"""
+People rely on a simple "heads-equal-randomness" heuristic, where heads are viewed as independent random events and tails are viewed as non-random deterministic events. Consequently, the perceived randomness of a sequence strictly and monotonically increases with its proportion of heads.
+"""
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    p_a = pm.Data("p_a", np.zeros(1, dtype="float64"))
+    p_b = pm.Data("p_b", np.zeros(1, dtype="float64"))
+    
+    # Free cognitive parameter for choice stochasticity/sensitivity
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # Randomness score is directly proportional to the proportion of heads.
+    # Score difference: p_a - p_b
+    p_left_raw = pm.math.sigmoid(tau * (p_a - p_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+I have proposed a new single-mechanism cognitive hypothesis and implemented it as a PyMC model.
+
+1. **`hypothesis.md`** has been written with a clear, plain-English hypothesis claiming that people equate randomness with the presence of heads (i.e., higher proportion of heads = more random).
+2. **`candidate.py`** has been written translating this specific hypothesis into a numerically safe, valid PyMC model without building a mixture-of-heuristics.
+3. The model safely exposes `p_left` inside `(0, 1)`, binds `observed=` correctly to the `pm.Data` tensor, and has been verified with the self-check script.

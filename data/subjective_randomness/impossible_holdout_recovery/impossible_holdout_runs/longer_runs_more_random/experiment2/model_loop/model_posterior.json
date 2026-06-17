@@ -1,0 +1,132 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.0,
+    "encoding_compressibility": 0.0,
+    "bayesian_diagnosticity": 0.0,
+    "inner_loop_model": 0.567695,
+    "ideal_run_proportion": 0.139428,
+    "absolute_ideal_run": 0.0,
+    "pure_periodicity_penalty": 0.0,
+    "iter0_candidate0": 0.005764,
+    "iter0_candidate1": 0.0,
+    "iter0_candidate2": 0.0,
+    "iter1_candidate0": 0.287113,
+    "iter1_candidate1": 0.0
+  },
+  "elpd_loo": {
+    "prototype_similarity": -986.6509,
+    "encoding_compressibility": -1204.0063,
+    "bayesian_diagnosticity": -541.0342,
+    "inner_loop_model": -485.3995,
+    "ideal_run_proportion": -486.7535,
+    "absolute_ideal_run": -28797.0098,
+    "pure_periodicity_penalty": -1248.6722,
+    "iter0_candidate0": -489.9894,
+    "iter0_candidate1": -528.0977,
+    "iter0_candidate2": -552.6514,
+    "iter1_candidate0": -486.0312,
+    "iter1_candidate1": -581.5307
+  },
+  "n_trials": 1800,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "prototype_similarity": 26,
+    "encoding_compressibility": 35,
+    "bayesian_diagnosticity": 61,
+    "inner_loop_model": 15,
+    "ideal_run_proportion": 16,
+    "absolute_ideal_run": 16,
+    "pure_periodicity_penalty": 13,
+    "iter0_candidate0": 15,
+    "iter0_candidate1": 17,
+    "iter0_candidate2": 16,
+    "iter1_candidate0": 16,
+    "iter1_candidate1": 14
+  },
+  "comparison": {
+    "inner_loop_model": {
+      "rank": 0,
+      "elpd_loo": -485.3994897343283,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.666018617945346
+    },
+    "iter1_candidate0": {
+      "rank": 1,
+      "elpd_loo": -486.03119795701326,
+      "elpd_diff": 0.631708222684912,
+      "dse": 0.849322799602028,
+      "weight": 2.1583471783719236e-09
+    },
+    "ideal_run_proportion": {
+      "rank": 2,
+      "elpd_loo": -486.75352784122936,
+      "elpd_diff": 1.3540381069010206,
+      "dse": 2.4771390459592593,
+      "weight": 0.2904337640096063
+    },
+    "iter0_candidate0": {
+      "rank": 3,
+      "elpd_loo": -489.98939952579224,
+      "elpd_diff": 4.589909791463931,
+      "dse": 2.3629009531404517,
+      "weight": 2.318766496717775e-08
+    },
+    "iter0_candidate1": {
+      "rank": 4,
+      "elpd_loo": -528.0976649054245,
+      "elpd_diff": 42.69817517109615,
+      "dse": 9.40331867981312,
+      "weight": 1.9540412854444837e-09
+    },
+    "bayesian_diagnosticity": {
+      "rank": 5,
+      "elpd_loo": -541.0341996044383,
+      "elpd_diff": 55.63470987010988,
+      "dse": 10.409012929929812,
+      "weight": 1.0385963943487655e-09
+    },
+    "iter0_candidate2": {
+      "rank": 6,
+      "elpd_loo": -552.6513660943779,
+      "elpd_diff": 67.2518763600495,
+      "dse": 12.849129635956436,
+      "weight": 0.04081471502779512
+    },
+    "iter1_candidate1": {
+      "rank": 7,
+      "elpd_loo": -581.5307339405042,
+      "elpd_diff": 96.13124420617585,
+      "dse": 13.054442787375375,
+      "weight": 6.85318660452929e-10
+    },
+    "prototype_similarity": {
+      "rank": 8,
+      "elpd_loo": -986.6509412216319,
+      "elpd_diff": 501.2514514873035,
+      "dse": 24.62622858188451,
+      "weight": 0.0
+    },
+    "encoding_compressibility": {
+      "rank": 9,
+      "elpd_loo": -1204.0062721682268,
+      "elpd_diff": 718.6067824338984,
+      "dse": 27.70701820702974,
+      "weight": 0.0
+    },
+    "pure_periodicity_penalty": {
+      "rank": 10,
+      "elpd_loo": -1248.6721915466821,
+      "elpd_diff": 763.2727018123537,
+      "dse": 27.355877860178133,
+      "weight": 0.0027328495065828914
+    },
+    "absolute_ideal_run": {
+      "rank": 11,
+      "elpd_loo": -28797.009798725827,
+      "elpd_diff": 28311.610308991498,
+      "dse": 605.4862728722386,
+      "weight": 4.0293671187086894e-08
+    }
+  }
+}

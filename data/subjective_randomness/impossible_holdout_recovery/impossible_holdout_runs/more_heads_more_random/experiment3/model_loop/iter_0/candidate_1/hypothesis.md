@@ -1,0 +1,1 @@
+People evaluate the randomness of a sequence primarily based on the proportion of heads it contains relative to its total length, judging sequences with a higher fraction of heads to be more random, and their choices are subject to a constant lapse rate representing occasional random guessing.

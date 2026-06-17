@@ -1,0 +1,344 @@
+{
+  "symmetrized": true,
+  "gt_runs": [
+    {
+      "gt_model": "bayesian_diagnosticity",
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "prototype_similarity",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "iter0_candidate0",
+          "similarity": 2.5,
+          "ratings": [
+            4,
+            1
+          ]
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "iter1_candidate0",
+          "similarity": 1.0,
+          "ratings": [
+            1,
+            1
+          ]
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "iteration": null,
+          "global_step": 3,
+          "best_model": "prototype_similarity",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 4,
+          "best_model": "prototype_similarity",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 5,
+          "best_model": "iter1_candidate0",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "iteration": null,
+          "global_step": 6,
+          "best_model": "inner_loop_model",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 7,
+          "best_model": "inner_loop_model",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 8,
+          "best_model": "inner_loop_model",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        }
+      ]
+    },
+    {
+      "gt_model": "encoding_compressibility",
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "prototype_similarity",
+          "similarity": 3.0,
+          "ratings": [
+            3,
+            3
+          ]
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "prototype_similarity",
+          "similarity": 3.0,
+          "ratings": [
+            3,
+            3
+          ]
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "prototype_similarity",
+          "similarity": 3.0,
+          "ratings": [
+            3,
+            3
+          ]
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "iteration": null,
+          "global_step": 3,
+          "best_model": "prototype_similarity",
+          "similarity": 3.0,
+          "ratings": [
+            3,
+            3
+          ]
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 4,
+          "best_model": "iter0_candidate0",
+          "similarity": 2.0,
+          "ratings": [
+            2,
+            2
+          ]
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 5,
+          "best_model": "iter0_candidate0",
+          "similarity": 2.0,
+          "ratings": [
+            2,
+            2
+          ]
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "iteration": null,
+          "global_step": 6,
+          "best_model": "head_balance",
+          "similarity": 3.5,
+          "ratings": [
+            4,
+            3
+          ]
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 7,
+          "best_model": "head_balance",
+          "similarity": 3.5,
+          "ratings": [
+            4,
+            3
+          ]
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 8,
+          "best_model": "head_balance",
+          "similarity": 3.5,
+          "ratings": [
+            4,
+            3
+          ]
+        }
+      ]
+    },
+    {
+      "gt_model": "prototype_similarity",
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "bayesian_diagnosticity",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "bayesian_diagnosticity",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "iter1_candidate0",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "iteration": null,
+          "global_step": 3,
+          "best_model": "inner_loop_model",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 4,
+          "best_model": "iter0_candidate0",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 5,
+          "best_model": "iter0_candidate0",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "iteration": null,
+          "global_step": 6,
+          "best_model": "inner_loop_model",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 7,
+          "best_model": "inner_loop_model",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 8,
+          "best_model": "inner_loop_model",
+          "similarity": 4.0,
+          "ratings": [
+            4,
+            4
+          ]
+        }
+      ]
+    }
+  ]
+}

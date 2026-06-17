@@ -1,0 +1,699 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mls -la
+total 1504
+drwxr-xr-x@   8 ben  staff     256 Jun 12 14:02 __pycache__
+drwxr-xr-x@  27 ben  staff     864 Jun 15 20:28 .
+drwx------@ 283 ben  staff    9056 Jun 10 14:21 ..
+drwxr-xr-x@   4 ben  staff     128 Jun 15 14:59 .claude
+-rw-r--r--@   1 ben  staff   14340 Jun 15 22:43 .DS_Store
+drwxr-xr-x@  16 ben  staff     512 Jun 16 11:58 .git
+-rw-r--r--@   1 ben  staff     877 Jun  5 13:49 .gitignore
+drwxr-xr-x@   6 ben  staff     192 Apr 16 22:36 .pytest_cache
+drwxr-xr-x@   5 ben  staff     160 Jun  5 13:56 .ruff_cache
+drwxr-xr-x@  10 ben  staff     320 May 28 12:09 .venv
+drwxr-xr-x@   2 ben  staff      64 Apr 17 09:52 .worktrees
+-rw-r--r--@   1 ben  staff    1753 Jun 12 14:01 candidate.py
+-rw-r--r--@   1 ben  staff    1724 Jun  5 09:37 CLEANUP_PLAN.md
+drwxr-xr-x@   6 ben  staff     192 Jun  9 16:41 data
+-rw-r--r--@   1 ben  staff    1070 Apr 16 22:03 LICENSE
+-rw-r--r--@   1 ben  staff     310 Jun 12 14:18 opencode.json
+drwxr-xr-x@   6 ben  staff     192 Jun  5 13:49 projects
+-rw-r--r--@   1 ben  staff    1859 Jun  6 21:57 pyproject.toml
+-rw-r--r--@   1 ben  staff    5363 Jun  5 13:49 README.md
+drwxr-xr-x@   7 ben  staff     224 Jun  5 13:49 scripts
+drwxr-xr-x@  12 ben  staff     384 Jun  5 10:57 src
+drwxr-xr-x@   7 ben  staff     224 Apr 16 22:03 templates
+-rw-r--r--@   1 ben  staff     462 Jun 12 12:48 test_hier.py
+-rw-r--r--@   1 ben  staff    3645 Jun 12 12:48 test_hierarchical.py
+-rw-r--r--@   1 ben  staff     412 Jun 12 12:47 test_shape.py
+drwxr-xr-x@  44 ben  staff    1408 Jun 16 11:49 tests
+-rw-r--r--@   1 ben  staff  706474 Jun  6 21:38 uv.lock
+[0m
+[0m$ [0mfind . -name "CONTEXT.md" -o -name "CANDIDATE_BRIEF.md" -o -name "existing_hypotheses.md"
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/outer_loop/subjective_randomness/experiment1/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/outer_loop/subjective_randomness/experiment1/CONTEXT.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_1/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_1/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/CONTEXT.md
+./data/subjective_randomness/impossible_holdout_recovery/smoke_runs/more_heads_more_random/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/prototype_similarity/experiment3/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/encoding_compressibility/experiment3/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery/holdout_runs/bayesian_diagnosticity/experiment3/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/prototype_similarity/experiment3/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/encoding_compressibility/experiment3/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_2/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_2/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_2/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_recovery_v2/holdout_runs/bayesian_diagnosticity/experiment3/CONTEXT.md
+./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/CONTEXT.md
+./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/existing_hypotheses.md
+./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_0/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_1/CONTEXT.md
+./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_1/existing_hypotheses.md
+./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+./data/subjective_randomness/holdout_smoke/holdout_runs/prototype_similarity/experiment1/CONTEXT.md
+./data/think_aloud_game24/experiment1/CONTEXT.md
+[0m
+[0m$ [0mcat ./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_1/candidate_1/CONTEXT.md
+# Inner Loop — round 1, candidate 1 of 3
+
+Responses CSV: `/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/responses.csv`
+Feature columns available (use these as `pm.Data` names): `sequence_a,sequence_b,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b,participant_id,trial_index,chose_left,generating_model`
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+[0m
+[0m$ [0mcat ./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+[0m
+[0m$ [0mcat ./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_1/candidate_1/existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -619.22
+
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -628.79
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -608.24
+
+Random-looking sequences are diagnostic of a fair coin over salient
+non-random alternatives: alternating, biased, and streaky generators.
+
+## iter0_candidate0  — posterior 0.000, ELPD-LOO -120.42
+
+People judge the randomness of a sequence by its similarity to a prototype, but rather than expecting balanced outcomes, their prototype expects a sequence to be dominated by heads. Sequences with a higher proportion of heads are perceived as closer to the prototype and therefore more random.
+
+## iter0_candidate1  — posterior 0.000, ELPD-LOO -119.99
+
+People rely on a simple "heads-equal-randomness" heuristic, where heads are viewed as independent random events and tails are viewed as non-random deterministic events. Consequently, the perceived randomness of a sequence strictly and monotonically increases with its proportion of heads.
+
+## iter0_candidate2  — posterior 1.000, ELPD-LOO -29.03
+
+People evaluate the randomness of a sequence strictly based on the absolute number of heads it contains. They apply a simple additive heuristic where each additional head linearly increases the perceived randomness score, disregarding the sequence length and outcome order. When comparing two sequences, they are more likely to choose the sequence with the higher total head count as the more random one.
+
+## iter1_candidate0
+
+People evaluate the randomness of a sequence based on the absolute number of heads it contains, but following the Weber-Fechner law for numerosity perception, their sensitivity to additional heads exhibits diminishing returns. When comparing two sequences, they compute a randomness score that grows logarithmically with the absolute head count plus a constant.
+[0m
+[0m$ [0mcat ./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_2/hypothesis.md
+People evaluate the randomness of a sequence strictly based on the absolute number of heads it contains. They apply a simple additive heuristic where each additional head linearly increases the perceived randomness score, disregarding the sequence length and outcome order. When comparing two sequences, they are more likely to choose the sequence with the higher total head count as the more random one.
+[0m
+[0m$ [0mcat ./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_0/candidate_2/candidate.py
+"""
+People evaluate the randomness of a sequence strictly based on the absolute number of heads it contains. They apply a simple additive heuristic where each additional head linearly increases the perceived randomness score, disregarding the sequence length and outcome order. When comparing two sequences, they are more likely to choose the sequence with the higher total head count as the more random one.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameter: sensitivity to the difference in head counts
+    tau = pm.HalfNormal("tau", sigma=1.0)
+
+    # Perceived randomness is simply proportional to the absolute number of heads
+    # The probability of choosing sequence A (left) increases with its relative head count advantage
+    p_left = pm.Deterministic(
+        "p_left", 
+        pm.math.sigmoid(tau * (h_a - h_b))
+    )
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat ./data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment1/model_loop/iter_1/candidate_0/candidate.py
+"""
+People evaluate the randomness of a sequence based on the absolute number of heads it contains, but following the Weber-Fechner law for numerosity perception, their sensitivity to additional heads exhibits diminishing returns. When comparing two sequences, they compute a randomness score that grows logarithmically with the absolute head count plus a constant.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameter
+    tau = pm.HalfNormal("tau", sigma=1.0)
+    
+    # Logarithmic transformation of head counts
+    log_h_a = pt.log(h_a + 1.0)
+    log_h_b = pt.log(h_b + 1.0)
+
+    # Choice probability based on the difference in logarithmic scores
+    p_left_raw = pm.math.sigmoid(tau * (log_h_a - log_h_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People evaluate the randomness of a sequence strictly based on the absolute number of heads it contains, but their perception of numerosity follows Stevens's power law. Rather than a purely linear or logarithmic scaling, the perceived randomness score is the absolute head count raised to an inferred power, allowing for either accelerating or decelerating sensitivity to additional heads.
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People evaluate the randomness of a sequence strictly based on the absolute number of heads it contains, with each additional head linearly increasing the perceived randomness score. However, their choices are subject to a constant lapse rate, meaning that on a certain fraction of trials they make a completely random guess due to inattention or motor error.
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People evaluate the randomness of a sequence based on the absolute number of heads it contains, but their perception of this quantity follows Stevens's power law. When comparing two sequences, they compute a randomness score that is the absolute head count raised to an inferred exponent, accommodating either accelerating or decelerating sensitivity to additional heads.
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People evaluate the randomness of a sequence based on the absolute number of heads it contains, but their perception of this quantity follows Stevens's power law. When comparing two sequences, they compute a randomness score that is the absolute head count raised to an inferred exponent, accommodating either accelerating or decelerating sensitivity to additional heads.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    tau = pm.HalfNormal("tau", sigma=1.0)
+    alpha = pm.HalfNormal("alpha", sigma=2.0)
+    
+    # Stevens's power law transformation
+    # Adding a small constant prevents log(0) / inf gradient issues when h=0
+    score_a = (h_a + 1e-4) ** alpha
+    score_b = (h_b + 1e-4) ** alpha
+
+    # Choice probability based on the difference in power-law scores
+    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+(no output)
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mpython3 -c "
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import candidate
+
+with candidate.model:
+    print('Variables:', candidate.model.unobserved_RVs)
+    print('Data:', candidate.model.vars)
+"
+Traceback (most recent call last):
+  File "<string>", line 9, in <module>
+AttributeError: 'Model' object has no attribute 'vars'
+Variables: [tau, alpha, p_left]
+[0m
+[0m$ [0mcat candidate.py
+"""
+People evaluate the randomness of a sequence based on the absolute number of heads it contains, but their perception of this quantity follows Stevens's power law. When comparing two sequences, they compute a randomness score that is the absolute head count raised to an inferred exponent, accommodating either accelerating or decelerating sensitivity to additional heads.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    tau = pm.HalfNormal("tau", sigma=1.0)
+    alpha = pm.HalfNormal("alpha", sigma=2.0)
+    
+    # Stevens's power law transformation
+    # Adding a small constant prevents log(0) / inf gradient issues when h=0
+    score_a = (h_a + 1e-4) ** alpha
+    score_b = (h_b + 1e-4) ** alpha
+
+    # Choice probability based on the difference in power-law scores
+    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat hypothesis.md
+People evaluate the randomness of a sequence based on the absolute number of heads it contains, but their perception of this quantity follows Stevens's power law. When comparing two sequences, they compute a randomness score that is the absolute head count raised to an inferred exponent, accommodating either accelerating or decelerating sensitivity to additional heads.
+[0m
+[0m$ [0mpython3 -c "
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as m:
+    h = pm.Data('h', np.zeros(1, dtype='int64'))
+    a = pm.HalfNormal('a', sigma=2.0)
+    score = (h + 1e-4) ** a
+    pm.Deterministic('s', score)
+    pm.Bernoulli('y', p=pm.math.sigmoid(score), observed=pm.Data('obs', np.ones(1, dtype='int64')))
+    
+    print(pm.logp(m, m.initial_point()))
+"
+Traceback (most recent call last):
+  File "<string>", line 13, in <module>
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pymc/logprob/basic.py", line 192, in logp
+    value = pt.as_tensor_variable(value, dtype=rv.dtype)
+                                               ^^^^^^^^
+AttributeError: 'Model' object has no attribute 'dtype'
+[0m
+[0m$ [0mpython3 -c "
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as m:
+    h = pm.Data('h', np.zeros(1, dtype='int64'))
+    a = pm.HalfNormal('a', sigma=2.0)
+    score = (h + 1e-4) ** a
+    pm.Deterministic('s', score)
+    pm.Bernoulli('y', p=pt.clip(pm.math.sigmoid(score), 1e-6, 1-1e-6), observed=pm.Data('obs', np.ones(1, dtype='int64')))
+    
+    fn = m.compile_logp()
+    print('logp:', fn(m.initial_point()))
+"
+logp: -1.418938530109327
+[0m
+[0m$ [0mcat hypothesis.md
+People evaluate the randomness of a sequence based on the absolute number of heads it contains, but their perception of this quantity follows Stevens's power law. When comparing two sequences, they compute a randomness score that is the absolute head count raised to an inferred exponent, accommodating either accelerating or decelerating sensitivity to additional heads.
+[0m
+[0m$ [0mcat candidate.py
+"""
+People evaluate the randomness of a sequence based on the absolute number of heads it contains, but their perception of this quantity follows Stevens's power law. When comparing two sequences, they compute a randomness score that is the absolute head count raised to an inferred exponent, accommodating either accelerating or decelerating sensitivity to additional heads.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    tau = pm.HalfNormal("tau", sigma=1.0)
+    alpha = pm.HalfNormal("alpha", sigma=2.0)
+    
+    # Stevens's power law transformation
+    # Adding a small constant prevents log(0) / inf gradient issues when h=0
+    score_a = (h_a + 1e-4) ** alpha
+    score_b = (h_b + 1e-4) ** alpha
+
+    # Choice probability based on the difference in power-law scores
+    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+I have proposed a refinement of the existing absolute-heads mechanism (which scored highest) by applying Stevens's power law to the numerical perception of the head counts. This proposes a different functional form of the single mechanism.
+
+I have created both `hypothesis.md` and `candidate.py` in the current working directory, passing your provided integration checks.
+
+**`hypothesis.md`**
+```md
+People evaluate the randomness of a sequence based on the absolute number of heads it contains, but their perception of this quantity follows Stevens's power law. When comparing two sequences, they compute a randomness score that is the absolute head count raised to an inferred exponent, accommodating either accelerating or decelerating sensitivity to additional heads.
+```
+
+**`candidate.py`**
+```python
+"""
+People evaluate the randomness of a sequence based on the absolute number of heads it contains, but their perception of this quantity follows Stevens's power law. When comparing two sequences, they compute a randomness score that is the absolute head count raised to an inferred exponent, accommodating either accelerating or decelerating sensitivity to additional heads.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    tau = pm.HalfNormal("tau", sigma=1.0)
+    alpha = pm.HalfNormal("alpha", sigma=2.0)
+    
+    # Stevens's power law transformation
+    # Adding a small constant prevents log(0) / inf gradient issues when h=0
+    score_a = (h_a + 1e-4) ** alpha
+    score_b = (h_b + 1e-4) ** alpha
+
+    # Choice probability based on the difference in power-law scores
+    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+```

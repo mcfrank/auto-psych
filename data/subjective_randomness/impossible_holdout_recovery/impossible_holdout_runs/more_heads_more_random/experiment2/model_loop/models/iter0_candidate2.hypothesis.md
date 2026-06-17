@@ -1,0 +1,1 @@
+People evaluate the randomness of a sequence strictly based on the cubed number of heads it contains. This mechanism creates an extreme, accelerating non-linear preference where sequences with high head counts are overwhelmingly perceived as more random.

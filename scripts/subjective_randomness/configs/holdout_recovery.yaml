@@ -23,6 +23,7 @@ inner_loop:
 agent:
   timeout_sec: 900
   backend: opencode # null -> CODING_AGENT env var, then "claude"
+  model: google/gemini-3.1-pro-preview
 
 # Held-out evaluation stimuli. Pairs the design agents happened to use for
 # training are excluded after the run; fail loudly if fewer than min_remaining

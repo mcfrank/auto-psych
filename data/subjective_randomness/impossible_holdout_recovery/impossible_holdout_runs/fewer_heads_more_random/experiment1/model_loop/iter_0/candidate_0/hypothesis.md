@@ -1,0 +1,1 @@
+People judge randomness by comparing the likelihood of the sequence under a fair coin to its likelihood under a single Markov alternative model that generates alternations at a non-random rate. The transition probability of this alternative model is a free cognitive parameter.

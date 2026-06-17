@@ -104,6 +104,25 @@ def test_cache_key_changes_when_model_or_data_changes(tmp_path):
     assert k1 != k2
 
 
+def test_thin_posterior_subsamples_to_at_most_max_draws():
+    import arviz as az
+
+    idata = az.from_dict(posterior={"x": np.zeros((4, 2000))})  # 8000 total
+    thinned = pi._thin_posterior(idata, 500)
+    assert thinned.posterior.sizes["chain"] == 4
+    assert thinned.posterior.sizes["draw"] == 125  # 500 // 4 per chain
+    total = thinned.posterior.sizes["chain"] * thinned.posterior.sizes["draw"]
+    assert total <= 500
+
+
+def test_thin_posterior_is_noop_when_already_within_budget():
+    import arviz as az
+
+    idata = az.from_dict(posterior={"x": np.zeros((2, 50))})  # 100 total
+    thinned = pi._thin_posterior(idata, 500)
+    assert thinned is idata
+
+
 def test_prior_predict_p_left_returns_per_model_means():
     feature_row = {"n_a": 10, "h_a": 5, "n_b": 10, "h_b": 5, "chose_left": 0}
     pi.clear_model_cache()

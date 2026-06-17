@@ -56,7 +56,10 @@ from src.subjective_randomness.model_recovery import (
 )
 from src.subjective_randomness.recover import pearson_r
 from src.subjective_randomness.simulate import load_stimuli
-from src.subjective_randomness.stimulus_design import generate_candidate_pool
+from src.subjective_randomness.stimulus_design import (
+    enumerate_all_pairs,
+    generate_candidate_pool,
+)
 
 PROJECT_ID = "subjective_randomness"
 
@@ -183,6 +186,7 @@ def run_holdout_experiments(
     agent_timeout_sec: int = 900,
     backend: Optional[str] = None,
     resume: bool = False,
+    gt_models_dir: Optional[Path] = None,
 ) -> List[Path]:
     """Run the full agentic pipeline for ``n_experiments`` with a held-out GT.
 
@@ -202,6 +206,17 @@ def run_holdout_experiments(
     """
     run_root = Path(run_root)
     seed_models_dir = Path(seed_models_dir)
+    # The agent seed pool comes from the project assets (seed_models_dir); the
+    # ground-truth generator may live elsewhere (e.g. the impossible-models dir).
+    gt_models_dir = (
+        Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
+    )
+    # Hold the GT out of experiment 1's seed pool only when it IS a project seed
+    # model (the normal holdout). An impossible GT lives in a separate
+    # gt_models_dir and is not among the seeds, so nothing is excluded — the loop
+    # seeds all of them (and excluding an unknown name would fail loudly).
+    gt_is_seed_model = gt_models_dir.resolve() == seed_models_dir.resolve()
+    seed_exclude = (gt_model,) if gt_is_seed_model else ()
     exp_dirs: List[Path] = []
 
     for exp_num in range(1, n_experiments + 1):
@@ -222,7 +237,7 @@ def run_holdout_experiments(
         if not (resume and _stage_done("1_theory", exp_dir)):
             if exp_num == 1:
                 seeded = seed_experiment_models_from_project(
-                    exp_dir, project_id, exclude=(gt_model,)
+                    exp_dir, project_id, exclude=seed_exclude
                 )
                 if not seeded:
                     raise RuntimeError(
@@ -281,7 +296,7 @@ def run_holdout_experiments(
             stimuli = load_stimuli(exp_dir / "design" / "stimuli.json")
             rows = generate_responses(
                 gt_model,
-                seed_models_dir,
+                gt_models_dir,
                 stimuli,
                 gt_params,
                 n_participants=n_participants,
@@ -352,6 +367,7 @@ def build_eval_stimuli(
     lengths: Sequence[int],
     seed: int,
     min_remaining: int = 1,
+    exhaustive: bool = False,
 ) -> Dict[str, Any]:
     """Generate the held-out eval pool, excluding every pair used in training.
 
@@ -359,8 +375,18 @@ def build_eval_stimuli(
     *after* the run: any pool pair that appeared (in either order) in any of
     the run's ``responses.csv`` files is dropped. The surviving set is fixed and
     shared across every trajectory step.
+
+    With ``exhaustive=True`` the pool is *every* distinct unordered pair over all
+    sequences of the given ``lengths`` (``enumerate_all_pairs``, cross-length
+    pairs included) rather than an ``n_pairs`` sample, so the correlation is
+    measured over the whole stimulus space at those lengths (``n_pairs``/``seed``
+    are then unused).
     """
-    pool = generate_candidate_pool(n_pairs, lengths=tuple(lengths), seed=seed)
+    pool = (
+        enumerate_all_pairs(lengths)
+        if exhaustive
+        else generate_candidate_pool(n_pairs, lengths=tuple(lengths), seed=seed)
+    )
     trained = collect_trained_pairs(run_root, n_experiments)
     kept = [
         stim
@@ -369,11 +395,11 @@ def build_eval_stimuli(
     ]
     if len(kept) < min_remaining:
         raise ValueError(
-            f"Only {len(kept)} of {n_pairs} eval stimuli remain after excluding "
+            f"Only {len(kept)} of {len(pool)} eval stimuli remain after excluding "
             f"trained pairs (min_remaining={min_remaining}); enlarge the pool or "
             f"its lengths."
         )
-    return {"stimuli": kept, "n_pool": n_pairs, "n_dropped": n_pairs - len(kept)}
+    return {"stimuli": kept, "n_pool": len(pool), "n_dropped": len(pool) - len(kept)}
 
 
 # ─────────────────────────────────────────────
@@ -401,6 +427,7 @@ def _eval_prediction(
     base_rows: Sequence[Mapping[str, Any]],
     *,
     participant_ids: Optional[Sequence[int]],
+    max_draws: Optional[int] = None,
 ) -> np.ndarray:
     """Population-level held-out ``p_left`` for one fitted model.
 
@@ -411,11 +438,18 @@ def _eval_prediction(
     and average the per-participant ``p_left`` (over participants *and* posterior
     draws). The result is one population-mean probability per stimulus, directly
     comparable to the non-hierarchical ground truth.
+
+    ``max_draws`` thins the posterior for the prediction (see
+    ``FittedModel.predict_p_left``); it is only forwarded when set, so callers
+    that pass a predictor without that keyword keep working.
     """
+    predict_kwargs = {} if max_draws is None else {"max_draws": max_draws}
     n_stim = len(base_rows)
     if "participant_id" not in pm_data_inputs(fitted.model):
         stim_data = make_stim_data(fitted.model, list(base_rows))
-        return np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
+        return np.asarray(
+            fitted.predict_p_left(stim_data, **predict_kwargs), dtype="float64"
+        )
     if not participant_ids:
         raise ValueError(
             "Model indexes a participant_id random effect but the training "
@@ -427,7 +461,9 @@ def _eval_prediction(
         for row in base_rows
     ]
     stim_data = make_stim_data(fitted.model, rows)
-    preds = np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
+    preds = np.asarray(
+        fitted.predict_p_left(stim_data, **predict_kwargs), dtype="float64"
+    )
     return preds.reshape(len(participant_ids), n_stim).mean(axis=0)
 
 
@@ -441,6 +477,7 @@ def _fitted_seed_baseline(
     participant_ids: Optional[Sequence[int]],
     cache_dir: Optional[Path],
     fit_kwargs: Mapping[str, Any],
+    predict_max_draws: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Fit each canonical seed model on ``responses_path`` and correlate with GT.
 
@@ -458,7 +495,10 @@ def _fitted_seed_baseline(
             cache_dir=cache_dir,
             **dict(fit_kwargs),
         )
-        pred = _eval_prediction(fitted, eval_rows, participant_ids=participant_ids)
+        pred = _eval_prediction(
+            fitted, eval_rows, participant_ids=participant_ids,
+            max_draws=predict_max_draws,
+        )
         per_model[name] = {
             "pearson_r": pearson_r(gt_p.tolist(), pred.tolist()),
             "rmse": float(np.sqrt(np.mean((gt_p - pred) ** 2))),
@@ -504,6 +544,8 @@ def evaluate_trajectory(
     n_experiments: int,
     cache_dir: Optional[Path],
     fit_kwargs: Mapping[str, Any],
+    gt_models_dir: Optional[Path] = None,
+    predict_max_draws: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
     """Correlate every inner-loop step's models with the ground truth.
 
@@ -519,7 +561,10 @@ def evaluate_trajectory(
     hit when the run shared ``cache_dir``); zero-weight models are skipped.
     """
     run_root = Path(run_root)
-    gt_p = p_left_fixed_params(gt_model, seed_models_dir, eval_stimuli, gt_params)
+    gt_models_dir = (
+        Path(gt_models_dir) if gt_models_dir is not None else Path(seed_models_dir)
+    )
+    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
     eval_rows = feature_rows(eval_stimuli)
 
     rows: List[Dict[str, Any]] = []
@@ -552,7 +597,8 @@ def evaluate_trajectory(
                 )
                 try:
                     predictions[name] = _eval_prediction(
-                        fitted, eval_rows, participant_ids=participant_ids
+                        fitted, eval_rows, participant_ids=participant_ids,
+                        max_draws=predict_max_draws,
                     )
                 except Exception as exc:
                     raise RuntimeError(
@@ -585,6 +631,7 @@ def seed_baseline_correlation(
     eval_stimuli: Sequence[Mapping[str, str]],
     *,
     seed_models_dir: Path,
+    gt_models_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """No-learning baseline: how well the *other* seed models predict the GT.
 
@@ -595,9 +642,18 @@ def seed_baseline_correlation(
     — the off-the-shelf alternatives the loop starts from in experiment 1,
     before any fitting or agent-written models. Fails loudly only if *no* other
     seed model yields a defined correlation.
+
+    ``gt_models_dir`` is where the ground-truth model lives (default:
+    ``seed_models_dir``); the *other* seed models always come from
+    ``seed_models_dir``. For an impossible ground truth these differ, and since
+    the impossible model is not among the project seeds nothing is excluded —
+    every seed model is scored against it.
     """
     seed_models_dir = Path(seed_models_dir)
-    gt_p = p_left_fixed_params(gt_model, seed_models_dir, eval_stimuli, gt_params)
+    gt_models_dir = (
+        Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
+    )
+    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
     defaults = resolve_generating_params(None, seed_models_dir)
 
     per_model: Dict[str, Optional[float]] = {}
@@ -663,6 +719,8 @@ def fitted_seed_baseline_correlation(
     other_seed_models: Sequence[str],
     cache_dir: Optional[Path],
     fit_kwargs: Mapping[str, Any],
+    gt_models_dir: Optional[Path] = None,
+    predict_max_draws: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Fitted-seed baseline: other seed models fit on *all* collected data.
 
@@ -674,7 +732,10 @@ def fitted_seed_baseline_correlation(
     machinery, only the starting model forms.
     """
     run_root = Path(run_root)
-    gt_p = p_left_fixed_params(gt_model, seed_models_dir, eval_stimuli, gt_params)
+    gt_models_dir = (
+        Path(gt_models_dir) if gt_models_dir is not None else Path(seed_models_dir)
+    )
+    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
     eval_rows = feature_rows(eval_stimuli)
     pooled_path = _pool_experiment_responses(run_root, n_experiments)
     participant_ids = _participant_ids_in(pooled_path)
@@ -689,6 +750,7 @@ def fitted_seed_baseline_correlation(
         participant_ids=participant_ids,
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
+        predict_max_draws=predict_max_draws,
     )
     if baseline["pearson_r"] is None:
         raise ValueError(
@@ -720,6 +782,7 @@ def reevaluate_trajectories(
     seed_models_dir = Path(seed_models_dir)
     n_experiments = int(result["n_experiments"])
     fit_kwargs = dict(result.get("fit_kwargs", {}))
+    predict_max_draws = dict(result.get("eval_pool", {})).get("predict_max_draws")
 
     all_seed_models = set(resolve_generating_params(None, seed_models_dir))
     new_runs: List[Dict[str, Any]] = []
@@ -738,6 +801,7 @@ def reevaluate_trajectories(
             n_experiments=n_experiments,
             cache_dir=cache_dir,
             fit_kwargs=fit_kwargs,
+            predict_max_draws=predict_max_draws,
         )
         baseline = seed_baseline_correlation(
             gt_run["gt_model"],
@@ -755,6 +819,7 @@ def reevaluate_trajectories(
             other_seed_models=other_seeds,
             cache_dir=cache_dir,
             fit_kwargs=fit_kwargs,
+            predict_max_draws=predict_max_draws,
         )
         new_runs.append(
             {
@@ -773,10 +838,20 @@ def reevaluate_trajectories(
 
 
 def _distinctive_param_names(gt_model: str) -> Set[str]:
-    """The GT family's parameter names that other families do not share."""
-    module = importlib.import_module(
-        f"src.subjective_randomness.model_families.{gt_model}"
-    )
+    """The GT family's parameter names that other families do not share.
+
+    An impossible ground truth has no pure-Python ``model_families`` counterpart;
+    in that case there are no distinctive family params to leak, so the set is
+    empty. (``beta``/``side_bias`` are shared by every family, so they are never
+    distinctive anyway.) Only a *missing* family is tolerated — any other import
+    error in an existing family still propagates loudly.
+    """
+    try:
+        module = importlib.import_module(
+            f"src.subjective_randomness.model_families.{gt_model}"
+        )
+    except ModuleNotFoundError:
+        return set()
     return set(module.DEFAULT_PARAMS) - {"beta", "side_bias"}
 
 
@@ -786,6 +861,7 @@ def leakage_check(
     *,
     seed_models_dir: Path,
     n_experiments: int,
+    gt_models_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Audit a run for ground-truth leakage into agent-written models.
 
@@ -795,10 +871,19 @@ def leakage_check(
     after the GT model, across every experiment's ``cognitive_models/`` and
     ``model_loop/models/``. Heuristic: a paraphrased reimplementation can evade
     it, so flags are an audit trail, not proof of a clean run.
+
+    ``gt_models_dir`` is where the ground-truth source lives for the byte-
+    identity hash (default: ``seed_models_dir``). For an impossible ground truth
+    it points at the impossible-models directory instead, and the source is not
+    in the project assets the agents can read, so identical-copy leakage is
+    effectively impossible.
     """
     run_root = Path(run_root)
+    gt_models_dir = (
+        Path(gt_models_dir) if gt_models_dir is not None else Path(seed_models_dir)
+    )
     gt_hash = hashlib.sha256(
-        (Path(seed_models_dir) / f"{gt_model}.py").read_bytes()
+        (gt_models_dir / f"{gt_model}.py").read_bytes()
     ).hexdigest()
     distinctive = _distinctive_param_names(gt_model)
 
@@ -857,6 +942,8 @@ def run_holdout_recovery_from_config(
     backend_override: Optional[str] = None,
     agent_timeout_override: Optional[int] = None,
     resume: bool = False,
+    gt_models_dir: Optional[Path] = None,
+    gt_params_by_model_override: Optional[Mapping[str, Mapping[str, float]]] = None,
 ) -> Dict[str, Any]:
     """Run holdout recovery for every configured ground-truth model.
 
@@ -877,6 +964,13 @@ def run_holdout_recovery_from_config(
         agent             {timeout_sec, backend}
         eval_pool         {n_pairs, lengths, seed, min_remaining}
         fit               MCMC kwargs (draws/tune/chains/...)
+
+    ``gt_models_dir`` (default: ``seed_models_dir``) is where the ground-truth
+    models live; the impossible-theory variant points it at a separate directory
+    so the agent seed pool stays the normal seed models. When
+    ``gt_params_by_model_override`` is given, the per-model fixed params are
+    taken from it verbatim instead of resolving the config's ``gt_models`` spec
+    (impossible models have no ``model_families`` defaults to fall back on).
     """
     project_id = config.get("project_id", PROJECT_ID)
     seed_models_dir = resolve_path(config["seed_models_dir"], config_path)
@@ -887,10 +981,18 @@ def run_holdout_recovery_from_config(
             f"directory ({project_seed_dir}): experiment 1 is seeded from the "
             f"project assets, so a different generator set would be incoherent."
         )
-
-    gt_params_by_model = resolve_generating_params(
-        config.get("gt_models"), seed_models_dir
+    gt_models_dir = (
+        Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
     )
+
+    if gt_params_by_model_override is not None:
+        gt_params_by_model = {
+            name: dict(params) for name, params in gt_params_by_model_override.items()
+        }
+    else:
+        gt_params_by_model = resolve_generating_params(
+            config.get("gt_models"), seed_models_dir
+        )
     if gt_model_override is not None:
         if gt_model_override not in gt_params_by_model:
             raise ValueError(
@@ -926,11 +1028,19 @@ def run_holdout_recovery_from_config(
     fit_kwargs = {**dict(config.get("fit", {})), **dict(fit_overrides or {})}
 
     pool_cfg = dict(config.get("eval_pool", {}))
+    predict_max_draws_cfg = pool_cfg.get("predict_max_draws")
     eval_pool = {
         "n_pairs": int(pool_cfg.get("n_pairs", 500)),
         "lengths": [int(x) for x in pool_cfg.get("lengths", (6, 8))],
         "seed": int(pool_cfg.get("seed", 11)),
         "min_remaining": int(pool_cfg.get("min_remaining", 100)),
+        # Exhaustive: use every distinct same-length pair for the lengths, not an
+        # n_pairs sample. predict_max_draws thins the posterior for the held-out
+        # prediction so the (draws x n_stim) array stays bounded on a big pool.
+        "exhaustive": bool(pool_cfg.get("exhaustive", False)),
+        "predict_max_draws": (
+            int(predict_max_draws_cfg) if predict_max_draws_cfg is not None else None
+        ),
     }
 
     results_root = Path(results_root)
@@ -974,6 +1084,7 @@ def run_holdout_recovery_from_config(
             agent_timeout_sec=agent_timeout_sec,
             backend=backend,
             resume=resume,
+            gt_models_dir=gt_models_dir,
         )
 
         eval_info = build_eval_stimuli(
@@ -983,6 +1094,7 @@ def run_holdout_recovery_from_config(
             lengths=eval_pool["lengths"],
             seed=eval_pool["seed"],
             min_remaining=eval_pool["min_remaining"],
+            exhaustive=eval_pool["exhaustive"],
         )
         (run_root / "eval_stimuli.json").write_text(
             json.dumps(eval_info["stimuli"], indent=2), encoding="utf-8"
@@ -998,18 +1110,22 @@ def run_holdout_recovery_from_config(
             n_experiments=n_experiments,
             cache_dir=cache_dir,
             fit_kwargs=fit_kwargs,
+            gt_models_dir=gt_models_dir,
+            predict_max_draws=eval_pool["predict_max_draws"],
         )
         leakage = leakage_check(
             run_root,
             gt_model,
             seed_models_dir=seed_models_dir,
             n_experiments=n_experiments,
+            gt_models_dir=gt_models_dir,
         )
         baseline = seed_baseline_correlation(
             gt_model,
             gt_params,
             eval_info["stimuli"],
             seed_models_dir=seed_models_dir,
+            gt_models_dir=gt_models_dir,
         )
         fitted_baseline = fitted_seed_baseline_correlation(
             run_root,
@@ -1021,6 +1137,8 @@ def run_holdout_recovery_from_config(
             other_seed_models=other_seeds,
             cache_dir=cache_dir,
             fit_kwargs=fit_kwargs,
+            gt_models_dir=gt_models_dir,
+            predict_max_draws=eval_pool["predict_max_draws"],
         )
 
         gt_run = {
@@ -1060,6 +1178,64 @@ def run_holdout_recovery_from_config(
         "eval_pool": eval_pool,
         "gt_runs": gt_runs,
     }
+
+
+def run_impossible_holdout_recovery_from_config(
+    config: Mapping[str, Any],
+    config_path: Path,
+    results_root: Path,
+    **overrides: Any,
+) -> Dict[str, Any]:
+    """Run holdout recovery with impossible-theory ground-truth generators.
+
+    Identical to ``run_holdout_recovery_from_config`` except the ground truth is
+    a deliberately weird model (e.g. "more heads => more random") that lives in a
+    separate ``gt_models_dir`` outside the project seed pool. The agentic loop is
+    still seeded with the normal seed models, so it is *expected* to fail to
+    recover the ground truth (the held-out correlation should stay low). The
+    config must provide:
+
+      * ``gt_models_dir`` — directory of impossible PyMC models (it has no
+        ``models_manifest.yaml``, so it never enters the agent seed pool).
+      * ``gt_models`` — a ``{name: {beta, side_bias}}`` mapping; explicit params
+        are required because impossible models have no ``model_families``
+        defaults to fall back on.
+
+    All keyword overrides are forwarded to ``run_holdout_recovery_from_config``.
+    """
+    if "gt_models_dir" not in config:
+        raise KeyError(
+            "Impossible-theory holdout config must set 'gt_models_dir' (the "
+            "directory of impossible ground-truth models, separate from the "
+            "project seed pool)."
+        )
+    gt_models_dir = resolve_path(config["gt_models_dir"], config_path)
+
+    spec = config.get("gt_models")
+    if not isinstance(spec, Mapping) or not spec:
+        raise ValueError(
+            "Impossible-theory holdout config must give 'gt_models' as a "
+            "non-empty mapping of {name: {beta, side_bias}}; got "
+            f"{type(spec).__name__}."
+        )
+    gt_params_by_model: Dict[str, Dict[str, float]] = {}
+    for name, params in spec.items():
+        if not params:
+            raise ValueError(
+                f"Impossible ground-truth model {name!r} needs explicit params "
+                f"{{beta, side_bias}}: there is no model_families default to "
+                f"fall back on for an impossible model."
+            )
+        gt_params_by_model[name] = dict(params)
+
+    return run_holdout_recovery_from_config(
+        config,
+        config_path,
+        results_root,
+        gt_models_dir=gt_models_dir,
+        gt_params_by_model_override=gt_params_by_model,
+        **overrides,
+    )
 
 
 def trajectory_tidy_rows(result: Mapping[str, Any]) -> List[Dict[str, Any]]:

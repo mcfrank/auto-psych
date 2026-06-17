@@ -1,0 +1,168 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/CONTEXT.md
+[0m→ [0mRead src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+[0m✗ [0mmkdir -p /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models failed
+[91m[1mError: [0mThe bash tool was called with invalid arguments: SchemaError(Missing key
+  at ["description"]).
+Please rewrite the input so it satisfies the expected schema.
+[0m
+[0m$ [0mmkdir -p /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models
+(no output)
+[0m
+[0m$ [0mcp /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment1/cognitive_models/*.py /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/ && cp /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment1/cognitive_models/models_manifest.yaml /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/
+(no output)
+[0m
+[0m→ [0mRead data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/models_manifest.yaml
+[0m
+[0m$ [0mls -la /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models
+total 40
+drwxr-xr-x@  7 ben  staff   224 Jun 16 17:08 .
+drwxr-xr-x@ 10 ben  staff   320 Jun 16 17:08 ..
+-rw-r--r--@  1 ben  staff  2683 Jun 16 17:08 bayesian_diagnosticity.py
+-rw-r--r--@  1 ben  staff  1581 Jun 16 17:08 encoding_compressibility.py
+-rw-r--r--@  1 ben  staff  1007 Jun 16 17:08 inner_loop_model.py
+-rw-r--r--@  1 ben  staff   644 Jun 16 17:08 models_manifest.yaml
+-rw-r--r--@  1 ben  staff  1171 Jun 16 17:08 prototype_similarity.py
+[0m
+[0m→ [0mRead data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment1/model_loop/report.md
+[0m→ [0mRead data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/inner_loop_model.py
+[0m→ [0mRead data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/bayesian_diagnosticity.py
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/prototype_similarity.py
+"""PyMC adapter for the prototype-similarity model family."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+with pm.Model() as model:
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+    score_a = -(
+        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
+    )
+    score_b = -(
+        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mls -la /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment1/cognitive_models
+total 40
+drwxr-xr-x@  5 ben  staff   160 Jun 16 16:54 __pycache__
+drwxr-xr-x@  8 ben  staff   256 Jun 16 17:08 .
+drwxr-xr-x@ 11 ben  staff   352 Jun 16 16:56 ..
+-rw-r--r--@  1 ben  staff  2683 Jun 16 16:54 bayesian_diagnosticity.py
+-rw-r--r--@  1 ben  staff  1581 Jun 16 16:54 encoding_compressibility.py
+-rw-r--r--@  1 ben  staff  1007 Jun 16 17:08 inner_loop_model.py
+-rw-r--r--@  1 ben  staff   644 Jun 16 17:08 models_manifest.yaml
+-rw-r--r--@  1 ben  staff  1171 Jun 16 16:54 prototype_similarity.py
+[0m
+[0m← [0mWrite data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/raw_alternation_count.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/high_alternation_rate.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/ideal_alternation_rate.py
+Wrote file successfully.
+[0m
+[0m→ [0mRead data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/models_manifest.yaml
+[0m
+[0m← [0mWrite data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/models_manifest.yaml
+Wrote file successfully.
+[0m
+[0m← [0mWrite data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/theory_report.md
+Wrote file successfully.
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych && python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+models = ['raw_alternation_count', 'high_alternation_rate', 'ideal_alternation_rate']
+for m_name in models:
+    m = load_pymc_model(m_name, Path('data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models'))
+    print(f'Model: {m_name}')
+    print('pm.Data inputs:', pm_data_inputs(m))
+    print('observed response container:', observed_response_data(m))
+    print('---')
+print('OK')
+"
+Model: raw_alternation_count
+pm.Data inputs: ['alts_a', 'alts_b', 'chose_left']
+observed response container: chose_left
+---
+Model: high_alternation_rate
+pm.Data inputs: ['p_alts_a', 'p_alts_b', 'chose_left']
+observed response container: chose_left
+---
+Model: ideal_alternation_rate
+pm.Data inputs: ['p_alts_a', 'p_alts_b', 'chose_left']
+observed response container: chose_left
+---
+OK
+[0m
+[0m$ [0mls -l /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/*.py
+-rw-r--r--@ 1 ben  staff  2683 Jun 16 17:08 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/bayesian_diagnosticity.py
+-rw-r--r--@ 1 ben  staff  1581 Jun 16 17:08 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/encoding_compressibility.py
+-rw-r--r--@ 1 ben  staff   755 Jun 16 17:09 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/high_alternation_rate.py
+-rw-r--r--@ 1 ben  staff   895 Jun 16 17:09 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/ideal_alternation_rate.py
+-rw-r--r--@ 1 ben  staff  1007 Jun 16 17:08 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/inner_loop_model.py
+-rw-r--r--@ 1 ben  staff  1171 Jun 16 17:08 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/prototype_similarity.py
+-rw-r--r--@ 1 ben  staff   740 Jun 16 17:09 /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models/raw_alternation_count.py
+[0m
+[0m$ [0mcd /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_imbalance_more_random/experiment2/cognitive_models && cat models_manifest.yaml
+models:
+- name: prototype_similarity
+  rationale: |
+    Random-looking sequences are close to a prototype with balanced H/T counts
+    and an ideal alternation rate.
+- name: encoding_compressibility
+  rationale: |
+    Random-looking sequences are those with low simple-description penalties:
+    long runs, periodic templates, and imbalance.
+- name: bayesian_diagnosticity
+  rationale: |
+    Random-looking sequences are diagnostic of a fair coin over salient
+    non-random alternatives: alternating, biased, and streaky generators.
+- name: inner_loop_model
+  rationale: |
+    People judge sequence randomness based purely on outcome frequencies, paradoxically perceiving sequences with a greater imbalance between the number of heads and tails as more random.
+- name: raw_alternation_count
+  rationale: |
+    People perceive sequences with a higher raw count of alternations as more random, regardless of sequence length.
+- name: high_alternation_rate
+  rationale: |
+    People judge sequence randomness based on the proportion of alternations, perceiving sequences with a higher alternation rate as strictly more random.
+- name: ideal_alternation_rate
+  rationale: |
+    People judge sequence randomness by comparing the proportion of alternating outcomes to a subjective ideal alternation rate, perceiving sequences closer to this ideal as more random.
+[0m
+I have completed the theory generation step for Experiment 2.
+
+Here's what was done:
+1. Copied the 4 models from Experiment 1 (`prototype_similarity`, `encoding_compressibility`, `bayesian_diagnosticity`, and `inner_loop_model`) to the `experiment2/cognitive_models` directory.
+2. Updated the `inner_loop_model` rationale in the manifest to contain the actual hypothesis it uses ("People judge sequence randomness based purely on outcome frequencies, paradoxically perceiving sequences with a greater imbalance between the number of heads and tails as more random.") instead of a generic placeholder, which will help the pipeline accurately parse it.
+3. Proposed **three new models**, each representing a distinct hypothesis focused on different aspects of how subjects might perceive alternations (especially since we suspect "length sensitive alternation" was the ground truth but dropped out in Experiment 1):
+   - `raw_alternation_count`: People judge based on the pure raw count of alternations, regardless of sequence length.
+   - `high_alternation_rate`: People judge based on the *proportion* of alternations (`p_alts`), strictly preferring sequences with a higher alternation rate.
+   - `ideal_alternation_rate`: People judge based on the proportion of alternations, perceiving sequences that are closer to a subjective *ideal* alternation rate as more random.
+4. Appended these models to `models_manifest.yaml` with their one-sentence hypotheses.
+5. Wrote `theory_report.md` detailing the hypothesis, motivation, and mechanism for each of the new models.
+6. Validated the PyMC models successfully against the `pm.Data` schema requirements.

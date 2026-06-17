@@ -1,0 +1,1 @@
+People evaluate the randomness of a sequence strictly based on the absolute number of heads it contains. Their choice between sequences is driven by a cumulative normal (probit) discrimination process on the difference in head counts, reflecting Gaussian internal noise with no baseline rate of random guessing.

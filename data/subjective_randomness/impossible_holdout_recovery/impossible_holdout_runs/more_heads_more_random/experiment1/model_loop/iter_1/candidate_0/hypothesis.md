@@ -1,0 +1,1 @@
+People evaluate the randomness of a sequence based on the absolute number of heads it contains, but following the Weber-Fechner law for numerosity perception, their sensitivity to additional heads exhibits diminishing returns. When comparing two sequences, they compute a randomness score that grows logarithmically with the absolute head count plus a constant.

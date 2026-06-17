@@ -1,0 +1,58 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead CONTEXT.md
+[0m→ [0mRead CANDIDATE_BRIEF.md
+[0m→ [0mRead existing_hypotheses.md
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People evaluate the randomness of a sequence by focusing strictly on the absolute number of tails it contains, viewing tails as evidence against randomness. Thus, sequences with fewer tails are perceived as more random, regardless of the sequence's total length.
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+"""
+People evaluate the randomness of a sequence by focusing strictly on the absolute number of tails it contains, viewing tails as evidence against randomness. Thus, sequences with fewer tails are perceived as more random, regardless of the sequence's total length.
+"""
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameter
+    tau = pm.HalfNormal("tau", sigma=1.0)
+
+    # Cognitive mechanism: count tails (n - h)
+    t_a = n_a - h_a
+    t_b = n_b - h_b
+
+    # Fewer tails means more random. 
+    # If t_b > t_a, p_left should be > 0.5.
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (t_b - t_a)))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+(no output)
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+I have proposed the "inverse tails heuristic" hypothesis. It posits that people focus strictly on the absolute number of tails as evidence *against* randomness. This creates a beautifully simple, single-mechanism cognitive model that makes distinct predictions when comparing sequences of different lengths (e.g., favoring a 5-flip sequence with 5 heads over a 15-flip sequence with 10 heads, because the former has 0 tails and the latter has 5).
+
+Both `hypothesis.md` and `candidate.py` have been written, and they pass the required self-checks for syntax and PyMC model structure.

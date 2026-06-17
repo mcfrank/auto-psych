@@ -1,0 +1,1 @@
+People judge sequence randomness based purely on the alternation rate heuristic: they compare the proportion of alternating outcomes in the sequence to a subjective ideal alternation rate. Sequences whose alternation rate is closer to this subjective ideal are perceived as more random.
