@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by comparing its maximum run proportion against a subjective tolerance limit. Sequences with a longest streak below this limit are perceived as perfectly acceptable, but any maximum run proportion exceeding the tolerance incurs a linearly increasing penalty for appearing too streaky.

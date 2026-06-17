@@ -1,0 +1,26 @@
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -473.21
+
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -639.57
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 1.000, ELPD-LOO -340.71
+
+Random-looking sequences are diagnostic of a fair coin over salient
+non-random alternatives: alternating, biased, and streaky generators.
+
+## iter0_candidate0
+
+People judge sequence randomness based on the Bayesian diagnosticity of a fair coin compared to a single salient alternative: a "streaky" Markov generator that has an innate tendency to repeat previous outcomes. Sequences that are more likely under the fair coin than the streaky alternative are perceived as more random.
+
+## iter0_candidate1
+
+People judge sequence randomness based purely on the alternation rate heuristic: they compare the proportion of alternating outcomes in the sequence to a subjective ideal alternation rate. Sequences whose alternation rate is closer to this subjective ideal are perceived as more random.

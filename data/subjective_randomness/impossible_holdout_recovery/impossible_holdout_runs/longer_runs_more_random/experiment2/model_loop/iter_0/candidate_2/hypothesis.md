@@ -1,0 +1,1 @@
+People judge the randomness of a sequence based solely on the overall balance of its outcomes. They perceive a sequence as less random the more its proportion of heads deviates from an even split, heavily penalizing any imbalance.

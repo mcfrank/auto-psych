@@ -106,8 +106,12 @@ def main(args: Args) -> None:
         if args.figure is not None
         else result_path.with_suffix(".png")
     )
-    plot_holdout_trajectories(enriched, figure_path)
-    print(f"Wrote trajectory figure to {figure_path}")
+    plot_holdout_trajectories(enriched, figure_path, metric="pearson_r")
+    print(f"Wrote trajectory figure (Pearson r) to {figure_path}")
+
+    rmse_figure_path = figure_path.with_name(f"{figure_path.stem}_rmse{figure_path.suffix}")
+    plot_holdout_trajectories(enriched, rmse_figure_path, metric="rmse")
+    print(f"Wrote trajectory figure (RMSE) to {rmse_figure_path}")
 
 
 if __name__ == "__main__":

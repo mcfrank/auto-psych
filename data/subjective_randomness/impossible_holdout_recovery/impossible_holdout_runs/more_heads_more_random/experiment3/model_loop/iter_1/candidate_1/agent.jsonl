@@ -1,0 +1,1038 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead CONTEXT.md
+[0m→ [0mRead CANDIDATE_BRIEF.md
+[0m→ [0mRead existing_hypotheses.md
+[0m
+[0m$ [0mcat << 'EOF' > test_correlations.py
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+features = ['h_a', 'h_b', 'n_a', 'n_b', 'chose_left']
+print(df[features].head())
+
+# Correlation with chose_left
+for feat in ['h_a', 'n_a', 'p_a', 'alts_a', 'max_run_a']:
+    diff = df[feat] - df[feat.replace('_a', '_b')]
+    corr = np.corrcoef(diff, df['chose_left'])[0,1]
+    print(f"Corr(chose_left, {feat} diff): {corr:.3f}")
+EOF
+python3 test_correlations.py
+h_a  h_b  n_a  n_b  chose_left
+0    0    4    4    8           0
+1    4    0    8    8           1
+2    8    4    8    8           1
+3    7    3    7    7           1
+4    6    3    6    6           1
+Corr(chose_left, h_a diff): 0.901
+Corr(chose_left, n_a diff): 0.243
+Corr(chose_left, p_a diff): 0.902
+Corr(chose_left, alts_a diff): -0.384
+Corr(chose_left, max_run_a diff): 0.626
+[0m
+[0m$ [0mcat << 'EOF' > test_accuracy.py
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+h_diff = df['h_a'] - df['h_b']
+acc_h = np.mean((h_diff > 0) == df['chose_left'])
+acc_h_strict = np.mean(((h_diff > 0).astype(int)) == df['chose_left']) # ignores ties
+
+p_diff = df['p_a'] - df['p_b']
+acc_p = np.mean((p_diff > 0) == df['chose_left'])
+
+df['pred_h'] = (h_diff > 0).astype(int)
+df.loc[h_diff == 0, 'pred_h'] = 0.5
+
+df['pred_p'] = (p_diff > 0).astype(int)
+df.loc[p_diff == 0, 'pred_p'] = 0.5
+
+def acc_with_ties(diff, true_val):
+    correct = 0
+    for d, t in zip(diff, true_val):
+        if d > 0 and t == 1: correct += 1
+        elif d < 0 and t == 0: correct += 1
+        elif d == 0: correct += 0.5
+    return correct / len(true_val)
+
+print(f"Acc h_diff: {acc_with_ties(h_diff, df['chose_left']):.3f}")
+print(f"Acc p_diff: {acc_with_ties(p_diff, df['chose_left']):.3f}")
+
+# Check when they disagree
+mask = np.sign(h_diff) != np.sign(p_diff)
+df_disagree = df[mask & (h_diff != 0) & (p_diff != 0)]
+if len(df_disagree) > 0:
+    acc_h_disagree = np.mean((df_disagree['h_a'] > df_disagree['h_b']).astype(int) == df_disagree['chose_left'])
+    acc_p_disagree = np.mean((df_disagree['p_a'] > df_disagree['p_b']).astype(int) == df_disagree['chose_left'])
+    print(f"When they disagree (N={len(df_disagree)}):")
+    print(f"  Acc h_diff: {acc_h_disagree:.3f}")
+    print(f"  Acc p_diff: {acc_p_disagree:.3f}")
+else:
+    print("They never disagree strictly (excluding ties)")
+
+EOF
+python3 test_accuracy.py
+Traceback (most recent call last):
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pandas/core/internals/blocks.py", line 1115, in setitem
+    casted = np_can_hold_element(values.dtype, value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pandas/core/dtypes/cast.py", line 1750, in np_can_hold_element
+    raise LossySetitemError
+pandas.errors.LossySetitemError
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/Users/ben/Documents/auto-psych/test_accuracy.py", line 14, in <module>
+    df.loc[h_diff == 0, 'pred_h'] = 0.5
+    ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pandas/core/indexing.py", line 938, in __setitem__
+    iloc._setitem_with_indexer(indexer, value, self.name)
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pandas/core/indexing.py", line 1953, in _setitem_with_indexer
+    self._setitem_with_indexer_split_path(indexer, value, name)
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pandas/core/indexing.py", line 2044, in _setitem_with_indexer_split_path
+    self._setitem_single_column(loc, value, pi)
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pandas/core/indexing.py", line 2181, in _setitem_single_column
+    self.obj._mgr.column_setitem(loc, plane_indexer, value)
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pandas/core/internals/managers.py", line 1528, in column_setitem
+    new_mgr = col_mgr.setitem((idx,), value)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pandas/core/internals/managers.py", line 607, in setitem
+    return self.apply("setitem", indexer=indexer, value=value)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pandas/core/internals/managers.py", line 445, in apply
+    applied = getattr(b, f)(**kwargs)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pandas/core/internals/blocks.py", line 1118, in setitem
+    nb = self.coerce_to_target_dtype(value, raise_on_upcast=True)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/pandas/core/internals/blocks.py", line 468, in coerce_to_target_dtype
+    raise TypeError(f"Invalid value '{other}' for dtype '{self.values.dtype}'")
+TypeError: Invalid value '0.5' for dtype 'int64'
+[0m
+[0m$ [0mcat << 'EOF' > test_accuracy.py
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+h_diff = df['h_a'] - df['h_b']
+p_diff = df['p_a'] - df['p_b']
+
+def acc_with_ties(diff, true_val):
+    correct = 0
+    for d, t in zip(diff, true_val):
+        if d > 0 and t == 1: correct += 1
+        elif d < 0 and t == 0: correct += 1
+        elif d == 0: correct += 0.5
+    return correct / len(true_val)
+
+print(f"Acc h_diff: {acc_with_ties(h_diff, df['chose_left']):.3f}")
+print(f"Acc p_diff: {acc_with_ties(p_diff, df['chose_left']):.3f}")
+
+mask = np.sign(h_diff) != np.sign(p_diff)
+df_disagree = df[mask & (h_diff != 0) & (p_diff != 0)]
+if len(df_disagree) > 0:
+    acc_h_disagree = np.mean((df_disagree['h_a'] > df_disagree['h_b']).astype(int) == df_disagree['chose_left'])
+    acc_p_disagree = np.mean((df_disagree['p_a'] > df_disagree['p_b']).astype(int) == df_disagree['chose_left'])
+    print(f"When they disagree (N={len(df_disagree)}):")
+    print(f"  Acc h_diff: {acc_h_disagree:.3f}")
+    print(f"  Acc p_diff: {acc_p_disagree:.3f}")
+else:
+    print("They never disagree strictly (excluding ties)")
+
+EOF
+python3 test_accuracy.py
+Acc h_diff: 0.992
+Acc p_diff: 0.990
+They never disagree strictly (excluding ties)
+[0m
+[0m$ [0mcat << 'EOF' > test_zscore.py
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+z_a = (df['h_a'] - df['n_a']/2) / np.sqrt(df['n_a'] * 0.25)
+z_b = (df['h_b'] - df['n_b']/2) / np.sqrt(df['n_b'] * 0.25)
+
+z_diff = z_a - z_b
+
+def acc_with_ties(diff, true_val):
+    correct = 0
+    for d, t in zip(diff, true_val):
+        if d > 0 and t == 1: correct += 1
+        elif d < 0 and t == 0: correct += 1
+        elif d == 0: correct += 0.5
+    return correct / len(true_val)
+
+print(f"Acc z_diff: {acc_with_ties(z_diff, df['chose_left']):.3f}")
+
+EOF
+python3 test_zscore.py
+Acc z_diff: 0.978
+[0m
+[0m$ [0mcat << 'EOF' > test_exp.py
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+exp_diff = np.exp(df['h_a']) - np.exp(df['h_b'])
+
+def acc_with_ties(diff, true_val):
+    correct = 0
+    for d, t in zip(diff, true_val):
+        if d > 0 and t == 1: correct += 1
+        elif d < 0 and t == 0: correct += 1
+        elif d == 0: correct += 0.5
+    return correct / len(true_val)
+
+print(f"Acc exp_diff: {acc_with_ties(exp_diff, df['chose_left']):.3f}")
+
+EOF
+python3 test_exp.py
+Acc exp_diff: 0.992
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_step.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    lapse = pm.Beta("lapse", alpha=1.0, beta=9.0)
+    
+    # 1 if a > b, 0 if a < b, 0.5 if a == b
+    is_greater = pt.gt(h_a, h_b)
+    is_less = pt.lt(h_a, h_b)
+    is_equal = pt.eq(h_a, h_b)
+    
+    # Convert boolean to float
+    step_prob = is_greater * 1.0 + is_less * 0.0 + is_equal * 0.5
+    
+    p_left = pm.Deterministic("p_left", lapse / 2.0 + (1.0 - lapse) * step_prob)
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True)
+    loo = az.loo(idata)
+    print(loo)
+EOF
+python3 test_pymc_step.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [lapse]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         0.892     1          5047.67   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   0         1.767     1          2624.54   0:00:00   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 1 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+Traceback (most recent call last):
+  File "/Users/ben/Documents/auto-psych/test_pymc_step.py", line 29, in <module>
+    loo = az.loo(idata)
+          ^^^^^^^^^^^^^
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py", line 743, in loo
+    log_likelihood = _get_log_likelihood(inference_data, var_name=var_name)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats_utils.py", line 429, in get_log_likelihood
+    raise TypeError("log likelihood not found in inference data object")
+TypeError: log likelihood not found in inference data object
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_step.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    lapse = pm.Beta("lapse", alpha=1.0, beta=9.0)
+    
+    step_prob = pt.switch(pt.gt(h_a, h_b), 1.0, pt.switch(pt.lt(h_a, h_b), 0.0, 0.5))
+    
+    p_left = pm.Deterministic("p_left", lapse / 2.0 + (1.0 - lapse) * step_prob)
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO:", loo.elpd_loo)
+EOF
+python3 test_pymc_step.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [lapse]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         1.662     1          5252.00   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   0         0.974     1          2648.37   0:00:00   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 1 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO: -57.58276832185462
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_logistic.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    lapse = pm.Beta("lapse", alpha=1.0, beta=9.0)
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    p_left = pm.Deterministic("p_left", lapse / 2.0 + (1.0 - lapse) * pm.math.sigmoid(tau * (h_a - h_b)))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO:", loo.elpd_loo)
+EOF
+python3 test_pymc_logistic.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [lapse, tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   2         0.524     7          2593.77   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   1         1.446     3          1294.58   0:00:01   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 2 seconds.
+There were 3 divergences after tuning. Increase `target_accept` or reparameterize.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO: -49.00136015985632
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_length_scaled.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    n_a = pm.Data("n_a", df['n_a'].values)
+    n_b = pm.Data("n_b", df['n_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    lapse = pm.Beta("lapse", alpha=1.0, beta=9.0)
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # Scale by (n_a + n_b) or something
+    scale = (n_a + n_b) / 2.0
+    
+    p_left = pm.Deterministic("p_left", lapse / 2.0 + (1.0 - lapse) * pm.math.sigmoid(tau * (h_a - h_b) / scale))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO scale by mean length:", loo.elpd_loo)
+EOF
+python3 test_pymc_length_scaled.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [lapse, tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         0.527     3          2269.13   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   0         0.916     3          1216.30   0:00:01   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 2 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO scale by mean length: -52.02322351611173
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_zscore.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    n_a = pm.Data("n_a", df['n_a'].values)
+    n_b = pm.Data("n_b", df['n_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    lapse = pm.Beta("lapse", alpha=1.0, beta=9.0)
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    z_a = (h_a - n_a / 2) / pt.sqrt(n_a * 0.25)
+    z_b = (h_b - n_b / 2) / pt.sqrt(n_b * 0.25)
+    
+    p_left = pm.Deterministic("p_left", lapse / 2.0 + (1.0 - lapse) * pm.math.sigmoid(tau * (z_a - z_b)))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO Z-score:", loo.elpd_loo)
+EOF
+python3 test_pymc_zscore.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [lapse, tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   4         0.646     5          2261.05   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   2         0.665     3          1110.14   0:00:01   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 2 seconds.
+There were 6 divergences after tuning. Increase `target_accept` or reparameterize.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+ELPD-LOO Z-score: -158.6294178191489
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_sq.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    lapse = pm.Beta("lapse", alpha=1.0, beta=9.0)
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # Squared heads
+    sq_a = h_a ** 2
+    sq_b = h_b ** 2
+    
+    p_left = pm.Deterministic("p_left", lapse / 2.0 + (1.0 - lapse) * pm.math.sigmoid(tau * (sq_a - sq_b)))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO Squared Heads + Lapse:", loo.elpd_loo)
+EOF
+python3 test_pymc_sq.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [lapse, tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         0.230     7          1462.26   0:00:01   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   9         0.494     7          804.93    0:00:02   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 2 seconds.
+There were 9 divergences after tuning. Increase `target_accept` or reparameterize.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO Squared Heads + Lapse: -56.877799926812294
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_ratio.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    lapse = pm.Beta("lapse", alpha=1.0, beta=9.0)
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # ratio
+    ratio_a = (h_a + 1) / (h_a + h_b + 2)
+    ratio_b = (h_b + 1) / (h_a + h_b + 2)
+    
+    p_left = pm.Deterministic("p_left", lapse / 2.0 + (1.0 - lapse) * pm.math.sigmoid(tau * (ratio_a - ratio_b)))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO Ratio + Lapse:", loo.elpd_loo)
+EOF
+python3 test_pymc_ratio.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [lapse, tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         1.132     3          2443.88   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   0         1.094     3          1176.20   0:00:01   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 2 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO Ratio + Lapse: -54.81391121742986
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_probit.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    lapse = pm.Beta("lapse", alpha=1.0, beta=9.0)
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # Probit link
+    diff = h_a - h_b
+    probit_p = 0.5 + 0.5 * pt.erf(tau * diff / pt.sqrt(2.0))
+    
+    p_left = pm.Deterministic("p_left", lapse / 2.0 + (1.0 - lapse) * probit_p)
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO Probit + Lapse:", loo.elpd_loo)
+EOF
+python3 test_pymc_probit.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [lapse, tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         1.371     3          1617.52   0:00:01   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   0         0.843     7          818.94    0:00:02   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 2 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO Probit + Lapse: -49.00054244228524
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_odds.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    n_a = pm.Data("n_a", df['n_a'].values)
+    n_b = pm.Data("n_b", df['n_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    lapse = pm.Beta("lapse", alpha=1.0, beta=9.0)
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # Odds
+    odds_a = pt.log(h_a + 0.5) - pt.log(n_a - h_a + 0.5)
+    odds_b = pt.log(h_b + 0.5) - pt.log(n_b - h_b + 0.5)
+    
+    p_left = pm.Deterministic("p_left", lapse / 2.0 + (1.0 - lapse) * pm.math.sigmoid(tau * (odds_a - odds_b)))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO Log Odds + Lapse:", loo.elpd_loo)
+EOF
+python3 test_pymc_odds.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [lapse, tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         1.022     3          1945.00   0:00:01   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   0         1.027     3          965.06    0:00:02   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 2 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+ELPD-LOO Log Odds + Lapse: -145.88867310914492
+[0m
+[0m$ [0mpython3 -c "import pandas as pd; df=pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv'); print((df['n_a'] == df['n_b']).value_counts())"
+False    1410
+True      990
+Name: count, dtype: int64
+[0m
+[0m$ [0mcat << 'EOF' > test_errors.py
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+h_diff = df['h_a'] - df['h_b']
+df['pred'] = -1
+df.loc[h_diff > 0, 'pred'] = 1
+df.loc[h_diff < 0, 'pred'] = 0
+
+errors = df[(df['pred'] != -1) & (df['pred'] != df['chose_left'])]
+print("Errors:", len(errors))
+if len(errors) > 0:
+    print(errors[['h_a', 'h_b', 'n_a', 'n_b', 'chose_left', 'pred']].head(20))
+
+ties = df[df['pred'] == -1]
+print("Ties:", len(ties))
+print(ties[['h_a', 'h_b', 'n_a', 'n_b', 'chose_left']].head(10))
+
+EOF
+python3 test_errors.py
+Errors: 5
+      h_a  h_b  n_a  n_b  chose_left  pred
+400     3    4    5    5           1     0
+1791    6    7    8    8           1     0
+2185    5    4    7    8           0     1
+2308    5    4    6    8           0     1
+2364    3    4    5    5           1     0
+Ties: 30
+     h_a  h_b  n_a  n_b  chose_left
+23     4    4    8    5           1
+53     4    4    8    5           0
+83     4    4    8    5           0
+113    4    4    8    5           0
+143    4    4    8    5           1
+173    4    4    8    5           1
+203    4    4    8    5           1
+233    4    4    8    5           0
+263    4    4    8    5           1
+293    4    4    8    5           0
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_no_lapse.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (h_a - h_b)))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO Logistic No Lapse:", loo.elpd_loo)
+EOF
+python3 test_pymc_no_lapse.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         1.139     3          3397.97   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   0         1.848     1          1710.49   0:00:01   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 1 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO Logistic No Lapse: -47.87003105503629
+[0m
+[0m$ [0mcat << 'EOF' > test_h_diff.py
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+h_diff = df['h_a'] - df['h_b']
+abs_h = np.abs(h_diff)
+
+print("Trials with abs(diff) == 1:", len(df[abs_h == 1]))
+print("Errors with abs(diff) == 1:", len(df[(abs_h == 1) & (np.sign(h_diff) != (df['chose_left']*2-1))]))
+
+print("Trials with abs(diff) >= 2:", len(df[abs_h >= 2]))
+print("Errors with abs(diff) >= 2:", len(df[(abs_h >= 2) & (np.sign(h_diff) != (df['chose_left']*2-1))]))
+EOF
+python3 test_h_diff.py
+Trials with abs(diff) == 1: 330
+Errors with abs(diff) == 1: 5
+Trials with abs(diff) >= 2: 2040
+Errors with abs(diff) >= 2: 0
+[0m
+[0m$ [0mcat << 'EOF' > test_p_diff.py
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+p_diff = df['p_a'] - df['p_b']
+h_diff = df['h_a'] - df['h_b']
+
+print("Strict errors for h_diff:")
+mask_h = (h_diff != 0) & (np.sign(h_diff) != (df['chose_left']*2-1))
+print(len(df[mask_h]))
+
+print("Strict errors for p_diff:")
+mask_p = (p_diff != 0) & (np.sign(p_diff) != (df['chose_left']*2-1))
+print(len(df[mask_p]))
+EOF
+python3 test_p_diff.py
+Strict errors for h_diff:
+5
+Strict errors for p_diff:
+24
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_probit_no_lapse.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    diff = h_a - h_b
+    probit_p = 0.5 + 0.5 * pt.erf(tau * diff / pt.sqrt(2.0))
+    p_left = pm.Deterministic("p_left", probit_p)
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO Probit No Lapse:", loo.elpd_loo)
+EOF
+python3 test_pymc_probit_no_lapse.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         1.260     1          3033.79   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   0         1.571     1          1504.26   0:00:01   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 1 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO Probit No Lapse: -47.756129340020244
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_sum_scaled.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    scale = h_a + h_b + 1.0
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (h_a - h_b) / scale))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO Sum Scaled No Lapse:", loo.elpd_loo)
+EOF
+python3 test_pymc_sum_scaled.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         1.397     3          3279.36   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   0         1.413     1          1692.45   0:00:01   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 1 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO Sum Scaled No Lapse: -52.84775051326464
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_cauchy.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # Cauchy CDF: 0.5 + 1/pi * arctan(x)
+    diff = h_a - h_b
+    cauchy_p = 0.5 + (1.0 / np.pi) * pt.arctan(tau * diff)
+    
+    p_left = pm.Deterministic("p_left", cauchy_p)
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO Cauchy No Lapse:", loo.elpd_loo)
+EOF
+python3 test_pymc_cauchy.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         2.158     1          4401.75   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   0         1.137     3          2176.46   0:00:00   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 1 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO Cauchy No Lapse: -59.53984465749979
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_log_no_lapse.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # +0.5 to avoid log(0)
+    log_a = pt.log(pt.cast(h_a, "float64") + 0.5)
+    log_b = pt.log(pt.cast(h_b, "float64") + 0.5)
+    
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (log_a - log_b)))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO Log No Lapse:", loo.elpd_loo)
+EOF
+python3 test_pymc_log_no_lapse.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   0         1.131     3          2604.75   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   0         1.850     3          1313.24   0:00:01   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 2 seconds.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO Log No Lapse: -48.855072670949696
+[0m
+[0m$ [0mcat << 'EOF' > test_pymc_sq_no_lapse.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+import pandas as pd
+import arviz as az
+
+df = pd.read_csv('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/more_heads_more_random/experiment3/model_loop/responses.csv')
+
+with pm.Model() as model:
+    h_a = pm.Data("h_a", df['h_a'].values)
+    h_b = pm.Data("h_b", df['h_b'].values)
+    chose_left = pm.Data("chose_left", df['chose_left'].values)
+    
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    sq_a = pt.cast(h_a, "float64") ** 2
+    sq_b = pt.cast(h_b, "float64") ** 2
+    
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (sq_a - sq_b)))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+    
+    idata = pm.sample(1000, tune=1000, cores=1, return_inferencedata=True, idata_kwargs={"log_likelihood": True})
+    loo = az.loo(idata)
+    print("ELPD-LOO Sq No Lapse:", loo.elpd_loo)
+EOF
+python3 test_pymc_sq_no_lapse.py
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (2 chains in 1 job)
+NUTS: [tau]
+                                                                                
+                             Step      Grad                                     
+  Progre…   Draw   Diverg…   size      evals      Speed     Elapsed   Remaini…  
+ ────────────────────────────────────────────────────────────────────────────── 
+  ━━━━━━━   2000   1000      0.000     1          7614.41   0:00:00   0:00:00   
+                                                  draws/s                       
+  ━━━━━━━   2000   1000      0.000     1          3924.13   0:00:00   0:00:00   
+                                                  draws/s                       
+                                                                                
+Sampling 2 chains for 1_000 tune and 1_000 draw iterations (2_000 + 2_000 draws total) took 1 seconds.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/diagnostics.py:595: RuntimeWarning: invalid value encountered in sqrt
+  rhat_value = np.sqrt(
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/diagnostics.py:596: RuntimeWarning: invalid value encountered in scalar divide
+  (between_chain_variance / within_chain_variance + num_samples - 1) / (num_samples)
+There were 2000 divergences after tuning. Increase `target_accept` or reparameterize.
+We recommend running at least 4 chains for robust computation of convergence diagnostics
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+ELPD-LOO Sq No Lapse: -278.8970928426218
+[0m
+[0m← [0mWrite hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.append('/Users/ben/Documents/auto-psych')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mrm test_correlations.py test_accuracy.py test_zscore.py test_exp.py test_pymc_step.py test_pymc_logistic.py test_pymc_length_scaled.py test_pymc_zscore.py test_pymc_sq.py test_pymc_ratio.py test_pymc_probit.py test_pymc_odds.py test_errors.py test_pymc_no_lapse.py test_h_diff.py test_p_diff.py test_pymc_probit_no_lapse.py test_pymc_sum_scaled.py test_pymc_cauchy.py test_pymc_log_no_lapse.py test_pymc_sq_no_lapse.py
+(no output)
+[0m
+I have formulated a new cognitive hypothesis and implemented the corresponding PyMC model.
+
+Here is the cognitive hypothesis:
+> People evaluate the randomness of a sequence strictly based on the absolute number of heads it contains. Their choice between sequences is driven by a cumulative normal (probit) discrimination process on the difference in head counts, reflecting Gaussian internal noise with no baseline rate of random guessing.
+
+This is a specific refinement of the prior "absolute_heads_lapse" hypothesis. By removing the lapse rate and changing the error function from logistic to probit (Gaussian noise), it offers a mathematically distinct, more parsimonious functional form that eliminates random guessing parameters altogether. Through testing, this simple structural change explains the data better (improving the ELPD-LOO) by correctly predicting that errors only happen at small `h_a - h_b` differences without implying a constant baseline lapse rate at larger differences.
+
+The model is successfully created in `candidate.py` and passes the required validation checks. All self-checks report success.

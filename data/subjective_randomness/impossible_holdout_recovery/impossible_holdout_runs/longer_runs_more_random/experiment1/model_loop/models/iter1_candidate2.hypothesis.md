@@ -1,0 +1,1 @@
+People judge the randomness of a sequence solely by evaluating the overall balance of its outcomes. They perceive a sequence as more random the closer its proportion of heads is to exactly fifty percent, strictly penalizing any deviation from perfect balance.

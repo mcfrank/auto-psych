@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by focusing solely on its longest streak of identical outcomes. They evaluate this streak as a simple ratio of the maximum run length to the total sequence length, perceiving a sequence as more random the larger this absolute fraction is.

@@ -1,0 +1,73 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead CONTEXT.md
+[0m→ [0mRead CANDIDATE_BRIEF.md
+[0m→ [0mRead existing_hypotheses.md
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People judge the randomness of a sequence by comparing its longest streak of identical outcomes to their subjective ideal streak length. They perceive a sequence as more random the closer its maximum run proportion is to this expected ideal length, penalizing streaks that are either suspiciously short or excessively long.
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+"""
+People judge the randomness of a sequence by comparing its longest streak of identical outcomes to their subjective ideal streak length. They perceive a sequence as more random the closer its maximum run proportion is to this expected ideal length, penalizing streaks that are either suspiciously short or excessively long.
+"""
+
+with pm.Model() as model:
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    
+    ideal_run_norm = pm.Beta("ideal_run_norm", alpha=2.0, beta=5.0)
+    tau = pm.HalfNormal("tau", sigma=10.0)
+    
+    dist_a = pt.abs(max_run_norm_a - ideal_run_norm)
+    dist_b = pt.abs(max_run_norm_b - ideal_run_norm)
+    
+    score_a = -tau * dist_a
+    score_b = -tau * dist_b
+    
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(score_a - score_b))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+
+test -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mPYTHONPATH=/Users/ben/Documents/auto-psych python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mcat hypothesis.md
+People judge the randomness of a sequence by comparing its longest streak of identical outcomes to their subjective ideal streak length. They perceive a sequence as more random the closer its maximum run proportion is to this expected ideal length, penalizing streaks that are either suspiciously short or excessively long.
+[0m
+I have written the hypothesis and implemented the PyMC model as requested.
+
+**`hypothesis.md`** contains the cognitive claim:
+> People judge the randomness of a sequence by comparing its longest streak of identical outcomes to their subjective ideal streak length. They perceive a sequence as more random the closer its maximum run proportion is to this expected ideal length, penalizing streaks that are either suspiciously short or excessively long.
+
+This model serves as a cognitive refinement of an existing mechanism. Rather than a linear preference for maximum run lengths (as in `iter0_candidate2`), this hypothesis implements an intuitive ideal point based on the expected cluster limits under local representativeness.
+
+**`candidate.py`** provides the module-level PyMC model implementation using `pm.math.sigmoid` on the negative absolute difference between a sequence's `max_run_norm` and an unobserved `ideal_run_norm` parameter inferred by the MCMC sampling. 
+
+The self-checks ran completely successfully.

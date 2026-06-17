@@ -1,0 +1,30 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead CONTEXT.md
+[0m→ [0mRead CANDIDATE_BRIEF.md
+[0m→ [0mRead existing_hypotheses.md
+[0m
+[0m← [0mWrite hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.append('/Users/ben/Documents/auto-psych')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+I have written the hypothesis and the corresponding PyMC model as requested.
+
+The cognitive hypothesis proposes that people judge randomness using a one-sided tolerance for streakiness: sequences are fine as long as their maximum run proportion is below a subjective threshold, but any streaks exceeding that threshold incur a linearly increasing penalty. 
+
+Both `hypothesis.md` and `candidate.py` have been created and the model passes the self-check.

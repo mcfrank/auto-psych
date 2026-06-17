@@ -1,0 +1,81 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.0,
+      "inner_loop_model": 1.0,
+      "fewer_heads_proportion": 0.0,
+      "short_streaks": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1223.0392,
+      "encoding_compressibility": -1238.0034,
+      "bayesian_diagnosticity": -1150.9748,
+      "inner_loop_model": -29.9954,
+      "fewer_heads_proportion": -373.0391,
+      "short_streaks": -1248.6612
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.0,
+      "inner_loop_model": 0.5,
+      "fewer_heads_proportion": 0.0,
+      "short_streaks": 0.0,
+      "iter0_candidate0": 0.5,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1223.0392,
+      "encoding_compressibility": -1238.0034,
+      "bayesian_diagnosticity": -1150.9748,
+      "inner_loop_model": -29.9954,
+      "fewer_heads_proportion": -373.0391,
+      "short_streaks": -1248.6612,
+      "iter0_candidate0": -29.9954,
+      "iter0_candidate1": -302.7196,
+      "iter0_candidate2": -1248.6463
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "inner_loop_model",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.0,
+      "inner_loop_model": 0.499687,
+      "fewer_heads_proportion": 0.0,
+      "short_streaks": 0.0,
+      "iter0_candidate0": 0.499687,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.0,
+      "iter1_candidate0": 0.000288,
+      "iter1_candidate2": 0.000338
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1223.0392,
+      "encoding_compressibility": -1238.0034,
+      "bayesian_diagnosticity": -1150.9748,
+      "inner_loop_model": -29.9954,
+      "fewer_heads_proportion": -373.0391,
+      "short_streaks": -1248.6612,
+      "iter0_candidate0": -29.9954,
+      "iter0_candidate1": -302.7196,
+      "iter0_candidate2": -1248.6463,
+      "iter1_candidate0": -37.453,
+      "iter1_candidate2": -37.244
+    }
+  }
+]

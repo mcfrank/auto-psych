@@ -1,0 +1,1 @@
+People judge sequence randomness based on outcome frequencies, with perceived randomness growing quadratically as the proportion of heads and tails deviates further from a balanced distribution.

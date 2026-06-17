@@ -78,6 +78,39 @@ def generate_candidate_pool(
     return pool
 
 
+def enumerate_all_pairs(lengths: Sequence[int]) -> List[Dict[str, str]]:
+    """Every distinct unordered H/T pair over all sequences of the given lengths.
+
+    The full ``2**L`` sequence space is enumerated for each length ``L`` in
+    ``lengths`` and pooled into one sequence set; every unordered pair of two
+    distinct sequences from that pool is emitted (deterministic order),
+    *including cross-length pairs* (e.g. a length-5 sequence vs a length-7 one).
+    This is the exhaustive counterpart to :func:`generate_candidate_pool`:
+    instead of sampling ``n_pairs``, it returns the *whole* pair space over the
+    union of the lengths — every run/alternation/imbalance contrast both within
+    and across lengths. For lengths ``1..8`` the pool is 510 sequences, so
+    ``C(510, 2) = 129,795`` pairs. Duplicate lengths are ignored; lengths are
+    capped at 12 to bound enumeration.
+    """
+    lengths = tuple(sorted(set(lengths)))
+    if not lengths:
+        raise ValueError("lengths must be non-empty.")
+    if any(length < 1 for length in lengths):
+        raise ValueError(f"Sequence lengths must be >= 1, got {lengths}.")
+    if any(length > 12 for length in lengths):
+        raise ValueError("Sequence lengths are capped at 12 to bound enumeration.")
+
+    sequences: List[str] = []
+    for length in lengths:
+        sequences.extend(
+            "".join(bits) for bits in itertools.product("HT", repeat=length)
+        )
+    return [
+        {"sequence_a": seq_a, "sequence_b": seq_b}
+        for seq_a, seq_b in itertools.combinations(sequences, 2)
+    ]
+
+
 def binary_entropy(p: float) -> float:
     """Binary entropy in bits; 0 at the endpoints ``p in {0, 1}``."""
     if p <= 0.0 or p >= 1.0:

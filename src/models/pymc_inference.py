@@ -350,6 +350,22 @@ def _sha256_dict_arrays(d: Dict[str, np.ndarray]) -> str:
     return h.hexdigest()
 
 
+def _thin_posterior(idata: Any, max_draws: int) -> Any:
+    """Subsample an InferenceData's posterior to at most ``max_draws`` samples.
+
+    Keeps the first ``max_draws // n_chains`` draws of each chain (deterministic),
+    so a downstream posterior-predictive pass over many stimuli builds a far
+    smaller ``(chain, draw, n_stim)`` array. Returns the idata unchanged when it
+    already holds ``<= max_draws`` total samples.
+    """
+    n_chains = int(idata.posterior.sizes["chain"])
+    n_draws = int(idata.posterior.sizes["draw"])
+    if n_chains * n_draws <= max_draws:
+        return idata
+    per_chain = max(1, max_draws // n_chains)
+    return idata.isel(draw=slice(0, per_chain))
+
+
 @dataclass
 class FittedModel:
     """A fitted PyMC model and its InferenceData."""
@@ -365,18 +381,26 @@ class FittedModel:
         *,
         var_name: str = "p_left",
         seed: int = 42,
+        max_draws: Optional[int] = None,
     ) -> np.ndarray:
         """Posterior-mean p_left for each stimulus row in `stim_data`.
 
         `stim_data` must include every pm.Data input expected by the model
         (the observed-response container can be set to dummies — it is unused).
         Returns shape (n_stim,).
+
+        ``max_draws`` thins the posterior to at most that many samples before the
+        posterior-predictive pass. The intermediate ``(chain, draw, n_stim)``
+        array scales with draws × n_stim, so thinning keeps memory bounded when
+        predicting over very large stimulus sets (e.g. an exhaustive eval pool);
+        the posterior *mean* is essentially unchanged by using fewer samples.
         """
         pm = _import_pymc()
+        idata = self.idata if max_draws is None else _thin_posterior(self.idata, max_draws)
         with self.model:
             pm.set_data(stim_data)
             pp = pm.sample_posterior_predictive(
-                self.idata,
+                idata,
                 var_names=[var_name],
                 random_seed=seed,
                 progressbar=False,

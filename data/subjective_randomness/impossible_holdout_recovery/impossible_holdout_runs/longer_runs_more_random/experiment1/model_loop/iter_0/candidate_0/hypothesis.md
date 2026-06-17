@@ -1,0 +1,1 @@
+People judge a sequence as random based on its similarity to an ideal prototype, but they evaluate the sequence by its maximum absolute deviation (L-infinity norm) from ideal head balance and expected alternation rate, penalizing only its most salient flaw.

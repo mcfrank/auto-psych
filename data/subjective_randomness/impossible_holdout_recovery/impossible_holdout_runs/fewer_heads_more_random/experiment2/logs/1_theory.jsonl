@@ -1,0 +1,181 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/CONTEXT.md
+[0m→ [0mRead src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+[0m→ [0mRead data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment1/model_loop/report.md
+[0m✗ [0mRead data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment1/cognitive_models/iter1_candidate0.py failed
+[91m[1mError: [0mFile not found: /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment1/cognitive_models/iter1_candidate0.py
+[0m✱ [0mGlob "*.py"[90m in data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment1/cognitive_models · 4 matches[0m
+[0m→ [0mRead data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment1/cognitive_models/models_manifest.yaml
+[0m→ [0mRead data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment1/cognitive_models/inner_loop_model.py
+[0m
+[0m$ [0mmkdir -p /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models
+cp /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment1/cognitive_models/*.py /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models/
+cp /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment1/cognitive_models/models_manifest.yaml /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models/
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models/fewer_heads_proportion.py
+"""People judge the randomness of a sequence by its proportion of heads, holding a biased belief that sequences containing a lower proportion of heads are more representative of a random coin."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs: proportion of heads
+    p_a = pm.Data("p_a", np.zeros(1, dtype="float64"))
+    p_b = pm.Data("p_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameter representing sensitivity to the head proportion difference.
+    # Higher tau means stronger preference for sequences with lower proportion of heads.
+    tau = pm.HalfNormal("tau", sigma=10.0)
+
+    # Sequences with LOWER proportion of heads are judged as MORE random.
+    score_a = -tau * p_a
+    score_b = -tau * p_b
+
+    # Probability of choosing left (sequence A)
+    p_left_raw = pm.math.sigmoid(score_a - score_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+
+cat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models/short_streaks.py
+"""People judge the randomness of a sequence by looking solely at the length of its longest streak of identical outcomes, judging sequences with a shorter maximum run length as more random."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs: max run length
+    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="int64"))
+    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameter representing the sensitivity to max run length
+    tau = pm.HalfNormal("tau", sigma=10.0)
+
+    # Sequences with shorter maximum runs are judged as MORE random.
+    score_a = -tau * max_run_a
+    score_b = -tau * max_run_b
+
+    # Probability of choosing left (sequence A)
+    p_left_raw = pm.math.sigmoid(score_a - score_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' >> /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models/models_manifest.yaml
+- name: fewer_heads_proportion
+  rationale: 'People judge the randomness of a sequence by its proportion of heads, holding a biased belief that sequences containing a lower proportion of heads are more representative of a random coin.'
+- name: short_streaks
+  rationale: 'People judge the randomness of a sequence by looking solely at the length of its longest streak of identical outcomes, judging sequences with a shorter maximum run length as more random.'
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models/theory_report.md
+# Theory Report — Experiment 2
+
+## fewer_heads_proportion
+**Hypothesis:** People judge the randomness of a sequence by its proportion of heads, preferring sequences with a lower proportion of heads as more random.
+**Motivation:** The experiment 1 inner-loop report identified a model penalizing the absolute count of heads (`inner_loop_model`) as the best. However, a model based on the proportion of heads (`iter0_candidate2`) was second-best. Adding `fewer_heads_proportion` explicitly tests whether relative frequency (proportion) is a better predictor than absolute frequency.
+**Mechanism:** This model assigns a score proportional to the negative of the sequence's proportion of heads (`p_a`, `p_b`), translating to a preference for sequences with a lower proportion of heads independent of length.
+
+## short_streaks
+**Hypothesis:** People judge sequences with shorter streaks (maximum run length of identical outcomes) as more random.
+**Motivation:** While experiment 1 showed a strong preference for fewer heads, previous literature strongly suggests representativeness heuristic effects driven by streak avoidance. `iter0_candidate1` explored this but was lost in the iter1 manifest; adding it ensures this distinct baseline hypothesis is continually tested.
+**Mechanism:** This model penalizes sequences directly based on their maximum run length (`max_run_a`, `max_run_b`), avoiding any combination with head proportions or other features.
+EOF
+(no output)
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models/models_manifest.yaml
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+- name: fewer_heads_proportion
+  rationale: 'People judge the randomness of a sequence by its proportion of heads, holding a biased belief that sequences containing a lower proportion of heads are more representative of a random coin.'
+- name: short_streaks
+  rationale: 'People judge the randomness of a sequence by looking solely at the length of its longest streak of identical outcomes, judging sequences with a shorter maximum run length as more random.'
+[0m
+[0m$ [0mpython3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+models_dir = Path('/Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models')
+for m_name in ['fewer_heads_proportion', 'short_streaks']:
+    m = load_pymc_model(m_name, models_dir)
+    print(f'Model: {m_name}')
+    print('pm.Data inputs:', pm_data_inputs(m))
+    print('observed response container:', observed_response_data(m))
+print('OK')
+"
+Model: fewer_heads_proportion
+pm.Data inputs: ['p_a', 'p_b', 'chose_left']
+observed response container: chose_left
+Model: short_streaks
+pm.Data inputs: ['max_run_a', 'max_run_b', 'chose_left']
+observed response container: chose_left
+OK
+[0m
+[0m$ [0mcat /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models/theory_report.md
+# Theory Report — Experiment 2
+
+## fewer_heads_proportion
+**Hypothesis:** People judge the randomness of a sequence by its proportion of heads, preferring sequences with a lower proportion of heads as more random.
+**Motivation:** The experiment 1 inner-loop report identified a model penalizing the absolute count of heads (`inner_loop_model`) as the best. However, a model based on the proportion of heads (`iter0_candidate2`) was second-best. Adding `fewer_heads_proportion` explicitly tests whether relative frequency (proportion) is a better predictor than absolute frequency.
+**Mechanism:** This model assigns a score proportional to the negative of the sequence's proportion of heads (`p_a`, `p_b`), translating to a preference for sequences with a lower proportion of heads independent of length.
+
+## short_streaks
+**Hypothesis:** People judge sequences with shorter streaks (maximum run length of identical outcomes) as more random.
+**Motivation:** While experiment 1 showed a strong preference for fewer heads, previous literature strongly suggests representativeness heuristic effects driven by streak avoidance. `iter0_candidate1` explored this but was lost in the iter1 manifest; adding it ensures this distinct baseline hypothesis is continually tested.
+**Mechanism:** This model penalizes sequences directly based on their maximum run length (`max_run_a`, `max_run_b`), avoiding any combination with head proportions or other features.
+[0m
+[0m✱ [0mGlob "*.py"[90m in data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models · 6 matches[0m
+[0m
+[0m$ [0mgrep 'name:' /Users/ben/Documents/auto-psych/data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random/experiment2/cognitive_models/models_manifest.yaml
+- name: prototype_similarity
+- name: encoding_compressibility
+- name: bayesian_diagnosticity
+- name: inner_loop_model
+- name: fewer_heads_proportion
+- name: short_streaks
+[0m
+I have successfully completed the tasks for the theory agent in experiment 2. 
+
+1. **Analyzed previous results**: I reviewed the model loop report from experiment 1. The model `inner_loop_model` (which posited people judge sequences by their absolute count of heads, preferring fewer) overwhelmingly won all posterior mass. A model positing a preference based on proportion of heads (`iter0_candidate2`) was a distinct second, while others were less competitive.
+
+2. **Migrated files**: I copied over all the cognitive models (`.py` files) and the `models_manifest.yaml` from experiment 1 into the `experiment2/cognitive_models` directory to ensure they remain in the active comparison set. 
+
+3. **Proposed new hypotheses**: I devised two new cognitive models, each capturing a single, distinct hypothesis that tests alternatives not represented in the manifest, without blending or averaging mechanisms:
+   - **`fewer_heads_proportion`**: People judge the randomness of a sequence by its proportion of heads, holding a biased belief that sequences containing a lower proportion of heads are more representative of a random coin. This serves to directly pit relative frequency against the absolute frequency hypothesis that won in experiment 1.
+   - **`short_streaks`**: People judge the randomness of a sequence by looking solely at the length of its longest streak of identical outcomes, judging sequences with a shorter maximum run length as more random. This captures the well-known representativeness streak-avoidance bias.
+
+4. **Wrote cognitive models & validated**: I wrote `fewer_heads_proportion.py` and `short_streaks.py` as pure PyMC module-level models exposing the correct `pm.Data` nodes, mapping responses directly to the data tensor, and bounding the sigmoid probability for numerical safety. The models passed the self-validation script successfully.
+
+5. **Updated manifest & reports**: I appended the new models and their single-sentence rationales to `models_manifest.yaml` and created a `theory_report.md` file in the experiment 2 cognitive models directory explaining the explicit motivation and mechanism for each new candidate.

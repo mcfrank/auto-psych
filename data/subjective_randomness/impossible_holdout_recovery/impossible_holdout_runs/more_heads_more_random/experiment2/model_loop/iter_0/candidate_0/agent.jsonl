@@ -1,0 +1,125 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead CONTEXT.md
+[0m→ [0mRead CANDIDATE_BRIEF.md
+[0m→ [0mRead existing_hypotheses.md
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People evaluate the randomness of a sequence based on the proportion of heads it contains relative to its total length, judging sequences with a higher density of heads as more random.
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People evaluate the randomness of a sequence strictly based on the number of heads it contains, but the impact of the head count scales non-linearly according to an inferred power-law parameter.
+EOF
+(no output)
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People evaluate the randomness of a sequence strictly based on the number of heads it contains, but the impact of the head count scales non-linearly according to an inferred power-law parameter.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    # h_a and h_b are integers but using float64 avoids dtype issues with pt.pow
+    h_a = pm.Data("h_a", np.zeros(1, dtype="float64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="float64"))
+    
+    # Free cognitive parameters
+    tau = pm.HalfNormal("tau", sigma=10.0)
+    gamma = pm.HalfNormal("gamma", sigma=3.0)
+    
+    # Non-linear scaling of heads
+    # Add small epsilon to h_a and h_b to prevent NaN gradients when h=0 and gamma < 1
+    score_a = pt.pow(h_a + 1e-4, gamma)
+    score_b = pt.pow(h_b + 1e-4, gamma)
+    
+    # Probability of choosing left (sequence A)
+    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
+    
+    # Clamp p_left for numerical stability
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+(no output)
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People evaluate the randomness of a sequence strictly based on the number of heads it contains, but the impact of the head count scales non-linearly according to an inferred power-law parameter.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs match CSV column types (int)
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    
+    # Cast to float for math operations
+    h_a_f = pt.cast(h_a, "float64")
+    h_b_f = pt.cast(h_b, "float64")
+    
+    # Free cognitive parameters
+    tau = pm.HalfNormal("tau", sigma=10.0)
+    # Exponent for the non-linear scaling
+    gamma = pm.HalfNormal("gamma", sigma=3.0)
+    
+    # Non-linear scaling of heads
+    # Add small epsilon to prevent NaN gradients during sampling when h=0 and gamma < 1
+    score_a = pt.pow(h_a_f + 1e-4, gamma)
+    score_b = pt.pow(h_b_f + 1e-4, gamma)
+    
+    # Probability of choosing left (sequence A)
+    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
+    
+    # Clamp p_left for numerical stability
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+(no output)
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat hypothesis.md
+People evaluate the randomness of a sequence strictly based on the number of heads it contains, but the impact of the head count scales non-linearly according to an inferred power-law parameter.
+[0m
+I have successfully defined the cognitive hypothesis and translated it into a safe, well-formed PyMC model.
+
+**Hypothesis (`hypothesis.md`)**:
+"People evaluate the randomness of a sequence strictly based on the number of heads it contains, but the impact of the head count scales non-linearly according to an inferred power-law parameter."
+
+This hypothesis directly builds upon the two most successful existing models (`inner_loop_model` and `squared_heads_heuristic`), taking the single "number of heads" mechanism but fitting a free parameter for the exponent rather than assuming a linear or quadratic form. 
+
+**Model (`candidate.py`)**:
+It defines the stimulus inputs `h_a` and `h_b` mapping to the correct CSV feature columns. It uses a `HalfNormal` prior on both `tau` (the decision noise scale factor) and `gamma` (the power-law exponent), securely evaluating the choice using an epsilon-stabilized `pt.pow` operator to compute scores and mapping them boundedly to `p_left` to avoid numerical instability (`NaN`/`-inf`). The correct `observed=` parameter receives the raw `pm.Data` container perfectly.

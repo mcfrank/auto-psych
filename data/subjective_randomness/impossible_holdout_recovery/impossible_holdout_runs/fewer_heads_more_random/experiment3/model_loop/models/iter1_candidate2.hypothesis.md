@@ -1,0 +1,1 @@
+People judge the randomness of a sequence strictly by the absolute number of heads it contains, preferring sequences with fewer heads. Their trial-by-trial comparison follows a probit function, reflecting normally distributed evaluation noise, but their final choices incorporate a baseline rate of random guessing due to occasional attentional lapses.

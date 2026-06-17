@@ -1,0 +1,1 @@
+People judge the randomness of a sequence based purely on its absolute count of heads, rather than the proportion of heads. They hold a biased belief that sequences containing fewer total heads are more representative of a random coin, and thus penalize sequences based directly on their total head count independent of sequence length.

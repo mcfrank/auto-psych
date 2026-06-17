@@ -1,0 +1,34 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Random-looking sequences are diagnostic of a fair coin over salient
+
+    non-random alternatives: alternating, biased, and streaky generators.
+
+    '
+- name: length_scaled_head_difference
+  rationale: 'People evaluate randomness primarily by the absolute number of heads,
+    but their sensitivity to the difference in head counts between two sequences is
+    diminished when the overall length of the sequences being compared is larger.
+
+    '
+- name: squared_heads_heuristic
+  rationale: 'People evaluate the randomness of a sequence strictly based on the squared
+    number of heads it contains, amplifying the perception of randomness for sequences
+    with very high head counts.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

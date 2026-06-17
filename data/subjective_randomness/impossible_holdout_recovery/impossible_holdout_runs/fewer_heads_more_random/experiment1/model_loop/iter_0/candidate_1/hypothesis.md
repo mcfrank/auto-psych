@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by looking solely at the length of its longest streak of identical outcomes. Relying on a representativeness heuristic, they expect short runs and penalize sequences with longer streaks, judging sequences with a shorter maximum run length as more random.

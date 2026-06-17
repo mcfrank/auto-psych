@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by comparing its longest streak proportion to a subjective ideal, but they evaluate deviations asymmetrically. Sequences that are excessively streaky (exceeding the ideal) are penalized at a different, typically steeper rate than sequences that are overly alternating (falling short of the ideal).

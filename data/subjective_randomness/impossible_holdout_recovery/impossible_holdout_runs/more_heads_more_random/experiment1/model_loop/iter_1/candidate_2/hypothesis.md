@@ -1,0 +1,1 @@
+People evaluate the randomness of a sequence by calculating the excess of heads over tails, expecting random sequences to be heavily biased. They compute a randomness score equal to the number of heads minus the number of tails, perceiving sequences with a greater excess of heads as more random.

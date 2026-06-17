@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by comparing its longest streak of identical outcomes to their subjective ideal streak length. They perceive a sequence as more random the closer its maximum run proportion is to this expected ideal length, penalizing streaks that are either suspiciously short or excessively long.

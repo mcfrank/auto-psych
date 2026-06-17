@@ -1,0 +1,1 @@
+People judge the randomness of a sequence strictly by the absolute number of heads it contains, rather than the proportion of heads. Sequences are penalized directly for their total count of heads, such that fewer absolute heads are judged as more representative of a random process, regardless of the sequence's length.

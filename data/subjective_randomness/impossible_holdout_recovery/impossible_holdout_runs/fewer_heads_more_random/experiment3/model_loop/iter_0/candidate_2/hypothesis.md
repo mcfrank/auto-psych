@@ -1,0 +1,1 @@
+People judge the randomness of a sequence strictly by the absolute number of heads it contains, preferring sequences with fewer heads. However, their choices include a baseline rate of random guessing due to occasional attentional lapses.

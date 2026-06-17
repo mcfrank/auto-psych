@@ -1398,6 +1398,21 @@ def test_plot_holdout_trajectories_writes_png(tmp_path):
     assert out_path.exists()
     assert out_path.stat().st_size > 0
 
+    # The same result renders an RMSE figure from the rmse/rmse_bma keys and the
+    # fitted-seed mean_rmse baseline; the default-params baseline (mean_r only)
+    # is absent here and must be tolerated.
+    rmse_path = tmp_path / "figs" / "holdout_rmse.png"
+    plot_holdout_trajectories(result, rmse_path, metric="rmse")
+    assert rmse_path.exists()
+    assert rmse_path.stat().st_size > 0
+
+
+def test_plot_holdout_trajectories_rejects_unknown_metric(tmp_path):
+    from src.subjective_randomness.reporting import plot_holdout_trajectories
+
+    with pytest.raises(ValueError, match="Unknown metric"):
+        plot_holdout_trajectories({"gt_runs": []}, tmp_path / "x.png", metric="mae")
+
 
 # ── CLI parsing ─────────────────────────────────────────────────────
 

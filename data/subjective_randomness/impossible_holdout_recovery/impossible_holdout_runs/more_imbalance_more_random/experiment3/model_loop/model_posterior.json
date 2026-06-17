@@ -1,0 +1,152 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.0,
+    "encoding_compressibility": 0.0,
+    "bayesian_diagnosticity": 0.0,
+    "raw_alternation_count": 0.0,
+    "high_alternation_rate": 0.0,
+    "ideal_alternation_rate": 0.0,
+    "inner_loop_model": 0.39425,
+    "imbalance_with_lapse": 0.184699,
+    "quadratic_imbalance": 0.0,
+    "iter0_candidate0": 0.0,
+    "iter0_candidate2": 0.0,
+    "iter1_candidate0": 0.280637,
+    "iter1_candidate1": 0.140413,
+    "iter1_candidate2": 0.0
+  },
+  "elpd_loo": {
+    "prototype_similarity": -1408.9188,
+    "encoding_compressibility": -1716.2797,
+    "bayesian_diagnosticity": -746.0723,
+    "raw_alternation_count": -1664.5866,
+    "high_alternation_rate": -1664.5701,
+    "ideal_alternation_rate": -815.4712,
+    "inner_loop_model": -629.2351,
+    "imbalance_with_lapse": -629.9934,
+    "quadratic_imbalance": -669.9553,
+    "iter0_candidate0": -732.3175,
+    "iter0_candidate2": -712.4603,
+    "iter1_candidate0": -629.5751,
+    "iter1_candidate1": -630.2175,
+    "iter1_candidate2": -704.9837
+  },
+  "n_trials": 2400,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "prototype_similarity": 26,
+    "encoding_compressibility": 35,
+    "bayesian_diagnosticity": 61,
+    "raw_alternation_count": 16,
+    "high_alternation_rate": 16,
+    "ideal_alternation_rate": 17,
+    "inner_loop_model": 16,
+    "imbalance_with_lapse": 16,
+    "quadratic_imbalance": 14,
+    "iter0_candidate0": 19,
+    "iter0_candidate2": 15,
+    "iter1_candidate0": 16,
+    "iter1_candidate1": 17,
+    "iter1_candidate2": 17
+  },
+  "comparison": {
+    "inner_loop_model": {
+      "rank": 0,
+      "elpd_loo": -629.2351466030016,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.8786307116826407
+    },
+    "iter1_candidate0": {
+      "rank": 1,
+      "elpd_loo": -629.5750712392523,
+      "elpd_diff": 0.3399246362507249,
+      "dse": 1.1451388414810852,
+      "weight": 0.0
+    },
+    "imbalance_with_lapse": {
+      "rank": 2,
+      "elpd_loo": -629.9934035735764,
+      "elpd_diff": 0.7582569705747719,
+      "dse": 0.5883446912358095,
+      "weight": 0.0
+    },
+    "iter1_candidate1": {
+      "rank": 3,
+      "elpd_loo": -630.2175429375242,
+      "elpd_diff": 0.982396334522603,
+      "dse": 0.1391671395426061,
+      "weight": 0.0
+    },
+    "quadratic_imbalance": {
+      "rank": 4,
+      "elpd_loo": -669.9553496021213,
+      "elpd_diff": 40.72020299911966,
+      "dse": 10.178707632518755,
+      "weight": 0.10261845606467587
+    },
+    "iter1_candidate2": {
+      "rank": 5,
+      "elpd_loo": -704.9836694107571,
+      "elpd_diff": 75.74852280775545,
+      "dse": 13.372536273399344,
+      "weight": 2.810543686970841e-13
+    },
+    "iter0_candidate2": {
+      "rank": 6,
+      "elpd_loo": -712.4602812418916,
+      "elpd_diff": 83.22513463888995,
+      "dse": 13.492344517626044,
+      "weight": 0.008876463872442016
+    },
+    "iter0_candidate0": {
+      "rank": 7,
+      "elpd_loo": -732.3174520409425,
+      "elpd_diff": 103.08230543794093,
+      "dse": 12.641311440426628,
+      "weight": 0.0
+    },
+    "bayesian_diagnosticity": {
+      "rank": 8,
+      "elpd_loo": -746.0723443810971,
+      "elpd_diff": 116.83719777809549,
+      "dse": 14.807339941076457,
+      "weight": 0.0
+    },
+    "ideal_alternation_rate": {
+      "rank": 9,
+      "elpd_loo": -815.4712367698961,
+      "elpd_diff": 186.2360901668945,
+      "dse": 18.29669893061414,
+      "weight": 0.009874368385021596
+    },
+    "prototype_similarity": {
+      "rank": 10,
+      "elpd_loo": -1408.9188014080487,
+      "elpd_diff": 779.6836548050469,
+      "dse": 28.717186181041605,
+      "weight": 2.5198908419717e-13
+    },
+    "high_alternation_rate": {
+      "rank": 11,
+      "elpd_loo": -1664.5701376149163,
+      "elpd_diff": 1035.334991011915,
+      "dse": 30.490788003840354,
+      "weight": 0.0
+    },
+    "raw_alternation_count": {
+      "rank": 12,
+      "elpd_loo": -1664.5865536482186,
+      "elpd_diff": 1035.351407045217,
+      "dse": 30.49066716886017,
+      "weight": 0.0
+    },
+    "encoding_compressibility": {
+      "rank": 13,
+      "elpd_loo": -1716.2796817872895,
+      "elpd_diff": 1087.044535184288,
+      "dse": 31.11110334037519,
+      "weight": 1.4858269327391742e-13
+    }
+  }
+}
