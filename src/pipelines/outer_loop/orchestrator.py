@@ -13,6 +13,7 @@ from __future__ import annotations
 import csv
 import importlib.util
 import json
+import re
 import shutil
 import sys
 import time
@@ -320,6 +321,7 @@ def run_collect_programmatic(
     ground_truth_model: Optional[str] = None,
     participant_backend: str = "closed",
     participant_model: Optional[str] = None,
+    prolific_mode: str = "none",
 ) -> Path:
     """
     Run data collection directly (no CC agent).
@@ -337,6 +339,8 @@ def run_collect_programmatic(
     """
     sys.path.insert(0, str(REPO_ROOT))
     from src.pipelines.outer_loop.collect import (
+        _collect_from_firebase,
+        _collect_live,
         _generate_from_models,
         _generate_from_pymc_models,
     )
@@ -352,6 +356,27 @@ def run_collect_programmatic(
 
     data_dir = exp_dir / "data"
     data_dir.mkdir(parents=True, exist_ok=True)
+    logs_dir = data_dir / "logs"
+    logs_dir.mkdir(exist_ok=True)
+    config_path = exp_dir / "experiment" / "config.json"
+    config: Dict[str, Any] = {}
+    if config_path.exists():
+        try:
+            loaded = json.loads(config_path.read_text(encoding="utf-8"))
+            config = loaded if isinstance(loaded, dict) else {}
+        except Exception:
+            config = {}
+
+    run_match = re.search(r"experiment(\d+)$", exp_dir.name)
+    run_id = int(run_match.group(1)) if run_match else 1
+    state = {
+        "project_id": project_id or exp_dir.parent.name,
+        "run_id": run_id,
+        "mode": mode,
+        "deployment_config_path": str(config_path),
+        "stimuli_path": str(stimuli_path),
+        "theorist_manifest_path": str(manifest_path),
+    }
 
     if mode == "simulated_participants_nobrowser":
         rows = _collect_llm_participant_programmatic(
@@ -362,7 +387,24 @@ def run_collect_programmatic(
             participant_backend=participant_backend,
             participant_model=participant_model,
         )
-    elif ground_truth_model and project_id:
+    else:
+        rows = None
+
+    has_results_api = bool(config.get("results_api_url") or config.get("experiment_url"))
+    if rows is None and not ground_truth_model and has_results_api:
+        if prolific_mode != "none" or mode == "live" or config.get("prolific_study_id"):
+            rows = _collect_live(state, config, data_dir, logs_dir)
+        elif config.get("results_api_url"):
+            rows = _collect_from_firebase(
+                state,
+                config,
+                str(config["results_api_url"]),
+                int(config.get("simulated_n_participants") or n_participants),
+                data_dir,
+                logs_dir,
+            )
+
+    if rows is None and ground_truth_model and project_id:
         # Ground-truth models are simple callables (data-generation tool used to
         # verify the loop recovers a known process); keep the callable path.
         model_registry = get_ground_truth_models(project_id)
@@ -378,7 +420,7 @@ def run_collect_programmatic(
             n_participants,
             model_registry=model_registry,
         )
-    else:
+    elif rows is None:
         # Theorist models are PyMC models: sample synthetic responses from their
         # prior-predictive p_left, featurizing each stimulus first.
         model_names: List[str] = []
@@ -419,6 +461,38 @@ def run_collect_programmatic(
 
     print(f"  [collect] Wrote {len(rows)} rows to {csv_path}", flush=True)
     return csv_path
+
+
+def run_deployment_programmatic(
+    exp_dir: Path,
+    project_id: str,
+    run_id: int,
+    deploy_target: str,
+    prolific_mode: str,
+    n_participants: int,
+    collection_owner: str,
+    firebase_project: Optional[str],
+    firebase_region: str,
+    backend: Optional[str],
+) -> Path:
+    """Run the deployment phase between implement and collect."""
+    from src.pipelines.outer_loop.deployment import run_deployment
+
+    manifest_path = run_deployment(
+        exp_dir=exp_dir,
+        project_id=project_id,
+        run_id=run_id,
+        deploy_target=deploy_target,
+        prolific_mode=prolific_mode,
+        agent_backend=backend or "unknown",
+        collection_owner=collection_owner,
+        firebase_project=firebase_project,
+        firebase_region=firebase_region,
+        n_participants=n_participants,
+        repo_root=REPO_ROOT,
+    )
+    print(f"  [deploy] Wrote deployment manifest: {manifest_path}", flush=True)
+    return manifest_path
 
 
 # ─────────────────────────────────────────────

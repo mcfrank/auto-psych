@@ -23,7 +23,7 @@ You are the **experiment implementer** in an automated cognitive psychology expe
      "experiment_url": null
    }
    ```
-   The collect step reads this file. Leave `experiment_url` as `null` unless you have deployed the experiment to a URL.
+   The collect/deployment steps read this file. Leave `experiment_url` as `null`; the programmatic deployment phase will fill in Firebase URLs and bookkeeping metadata when deployment is enabled.
 
 6. **Optionally write `experiment/stimuli.json`** as a copy of `design/stimuli.json`.
 

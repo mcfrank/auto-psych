@@ -5,6 +5,7 @@
 .secrets
 *.env
 .env.*
+.firebaserc
 # Python
 __pycache__/
 *.py[cod]
@@ -43,6 +44,7 @@ npm-debug.log
 
 # Firebase Hosting deploy target (copy of implementer output)
 public/
+firebase.generated.json
 
 # remote_jobs (SLURM cluster deployment): per-submission JSON, fetched logs, local env
 remote_jobs/.runs/

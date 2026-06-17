@@ -435,7 +435,7 @@ def _collect_live(
     project_id = state["project_id"]
     run_id = state["run_id"]
     study_id = config.get("prolific_study_id")
-    results_api_url = config.get("experiment_url") or config.get("results_api_url")
+    results_api_url = config.get("results_api_url") or config.get("experiment_url")
     target_places = (
         config.get("total_available_places")
         or config.get("simulated_n_participants")
@@ -479,9 +479,7 @@ def _collect_live(
         time.sleep(_PROLIFIC_POLL_INTERVAL_SEC)
 
     agent_log(out_dir, "Collect (live): fetching results from Firebase")
-    url = (
-        f"{results_api_url.rstrip('/')}/results?run_id={run_id}&project_id={project_id}"
-    )
+    url = _results_url(results_api_url, config, project_id, run_id)
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "auto-psych"})
         with urllib.request.urlopen(req, timeout=60) as response:
@@ -543,7 +541,8 @@ def _collect_from_firebase(
 ) -> list[dict[str, Any]]:
     project_id = config.get("project_id", "")
     run_id = config.get("run_id", "")
-    if not project_id and not run_id:
+    collection_session_id = config.get("collection_session_id")
+    if not collection_session_id and not (project_id and run_id):
         return []
 
     experiment_url = config.get("experiment_url")
@@ -667,9 +666,7 @@ def _collect_from_firebase(
                     browser.close()
         log_status("Fetching /results...")
 
-    url = (
-        f"{results_api_url.rstrip('/')}/results?run_id={run_id}&project_id={project_id}"
-    )
+    url = _results_url(results_api_url, config, project_id, run_id)
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "auto-psych"})
         with urllib.request.urlopen(req, timeout=60) as response:
@@ -706,6 +703,14 @@ def _collect_from_firebase(
             )
     log_status(f"Done. Got {len(rows)} response rows from Firestore.")
     return rows
+
+
+def _results_url(base_url: str, config: dict[str, Any], project_id: str, run_id: int | str) -> str:
+    if config.get("collection_session_id"):
+        query = urllib.parse.urlencode({"collection_session_id": str(config["collection_session_id"])})
+    else:
+        query = urllib.parse.urlencode({"run_id": str(run_id), "project_id": str(project_id)})
+    return f"{base_url.rstrip('/')}/results?{query}"
 
 
 def _server_reachable(url: str, timeout_sec: float = 2.0) -> bool:
