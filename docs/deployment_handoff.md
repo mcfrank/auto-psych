@@ -306,6 +306,37 @@ uv run python -m src.pipelines.outer_loop.run \
   --collection-owner linas
 ```
 
+## Simulated-Participant Smoke Test (Gemini + Playwright)
+
+`scripts/smoke_firebase_deploy.py` exercises the whole setup end to end with
+simulated participants instead of waiting for a Prolific worker. It renders the
+real participant template (`templates/jspsych_experiment.html`) over a few H/T
+stimuli, deploys to Firebase, then drives N headless-Chromium participants whose
+choices are made by **Gemini** (one `ACTION:` per screen, via the
+`4_collect_steering` prompt). Each participant's `onFinish` POSTs to `/submit`;
+the script then confirms `/results` returns their rows.
+
+Validate the artifacts first without any credentials (renders + stages, no
+deploy, no collection):
+
+```bash
+uv run python scripts/smoke_firebase_deploy.py --deploy-target dry-run
+```
+
+Full live smoke (deploys to production Hosting/Functions and writes to
+production Firestore — needs `GOOGLE_API_KEY` and `firebase login`):
+
+```bash
+export GOOGLE_API_KEY=...
+uv run python scripts/smoke_firebase_deploy.py \
+  --confirm-production --n-participants 2 --n-stimuli 4
+```
+
+It refuses the live path without `--confirm-production`. Simulated participants
+are written under `collection_sessions/<collection_session_id>/responses/*`
+(the session id and the participant-id list are printed); delete that session in
+the Firebase console afterward if you do not want the smoke data.
+
 ## Manual Acceptance
 
 - [ ] Firebase deploy succeeds.

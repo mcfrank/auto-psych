@@ -346,6 +346,7 @@ def run_collect_programmatic(
         _collect_live,
         _generate_from_models,
         _generate_from_pymc_models,
+        check_response_variation,
     )
     from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
 
@@ -381,6 +382,10 @@ def run_collect_programmatic(
         "theorist_manifest_path": str(manifest_path),
     }
 
+    # Track whether rows came from actual participants (browser / Firebase /
+    # live / LLM-as-participant) vs. synthetic model sampling, so the
+    # degenerate-data quality guard only fires on collected behavior.
+    collected_from_participants = False
     if mode == "simulated_participants_nobrowser":
         rows = _collect_llm_participant_programmatic(
             stimuli,
@@ -390,6 +395,7 @@ def run_collect_programmatic(
             participant_backend=participant_backend,
             participant_model=participant_model,
         )
+        collected_from_participants = True
     else:
         rows = None
 
@@ -397,6 +403,7 @@ def run_collect_programmatic(
     if rows is None and not ground_truth_model and has_results_api:
         if prolific_mode != "none" or mode == "live" or config.get("prolific_study_id"):
             rows = _collect_live(state, config, data_dir, logs_dir)
+            collected_from_participants = True
         elif config.get("results_api_url"):
             rows = _collect_from_firebase(
                 state,
@@ -406,6 +413,7 @@ def run_collect_programmatic(
                 data_dir,
                 logs_dir,
             )
+            collected_from_participants = True
 
     if rows is None and ground_truth_model and project_id:
         # Ground-truth models are simple callables (data-generation tool used to
@@ -447,6 +455,18 @@ def run_collect_programmatic(
                 n_participants,
                 models_dir=theorist_dir,
                 featurize_path=featurize_path if featurize_path.exists() else None,
+            )
+
+    # Fail loudly on degenerate collected data: if real participants produced no
+    # response variation (every trial chose the same side), the data carries no
+    # signal for model comparison and almost always signals a broken collector.
+    if collected_from_participants and rows:
+        ok, qc_msg = check_response_variation(rows)
+        if not ok:
+            raise RuntimeError(
+                f"Collected data failed the quality check: {qc_msg}. "
+                f"Inspect {data_dir / 'logs'} and the deployed experiment; the "
+                "data was NOT written for modeling."
             )
 
     csv_path = data_dir / "responses.csv"

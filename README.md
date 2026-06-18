@@ -3,7 +3,7 @@
 Active development is organized around two explicit loops:
 
 - `src/pipelines/outer_loop`: experiment loop. Claude Code agents propose models, design stimuli, implement experiments, collect data, then hand observed data to the inner model loop.
-- `src/pipelines/inner_loop`: cognitive-model improvement loop. It fits and compares candidate models over a generic `Dataset`/`Trial` abstraction, exports the best model, and maintains model-zoo/BMC artifacts.
+- `src/pipelines/inner_loop`: cognitive-model improvement loop. It fits and compares candidate models over a generic `Dataset`/`Trial` abstraction, exports the best model, and maintains model-zoo/BMC artifacts. Before each candidate round it runs a CriticAL posterior-predictive critique (`src/critique`) of the incumbent best model and feeds the resulting `critiques.md` to the candidate agents.
 
 The old LangGraph/LangChain pipeline, Cloud Run entrypoint, SLURM submitter, and old root prompts have been retired into `legacy/`.
 
@@ -113,9 +113,40 @@ The inner loop writes:
 
 ```text
 model_loop/
+model_loop/iter_<i>/critique/test_stats/*.py   # proposed test statistics
+model_loop/iter_<i>/critique/ppc_results.json  # empirical + FDR-adjusted p-values
+model_loop/iter_<i>/critique/critiques.md      # significant discrepancies of the incumbent
 cognitive_models/inner_loop_model.py
 cognitive_models/models_manifest.yaml
 ```
+
+## Browse Run Results
+
+A live web explorer presents one page per **run**. A run is any directory under
+`data/` that holds experiments (or a single bare model loop) — for example
+`data/outer_loop/subjective_randomness` or
+`data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random`.
+The sidebar is a directory tree of every run found; clicking one opens its page.
+
+Each run page stacks its experiments as collapsible panels (the first open).
+Every experiment shows: the seed cognitive models, the stimulus design, the
+deployed experiment, the collected data, the inner model loop (interactive
+posterior trajectory + sortable model comparison + the **models proposed at each
+iteration** with hypothesis/code/transcript), and the **critiques** — every
+proposed posterior-predictive test statistic with its description, code, and PPC
+result (observed vs. null, FDR-adjusted p, significant discrepancy). Run-level
+analysis figures (`<run>/analysis/*.png`) appear at the top.
+
+```bash
+uv run python -m src.viewer.server               # serves http://127.0.0.1:8000
+uv run python -m src.viewer.server --data-root data --port 9000
+uv run python -m src.viewer.server --host 0.0.0.0   # expose on the network
+```
+
+The data tree is walked on each request, so the explorer always reflects the
+latest runs — no build step. Partial runs (e.g. smoke runs that skipped
+modeling) load fine; corrupt JSON/YAML artifacts fail loudly with the offending
+filename.
 
 ## Project Layout
 
@@ -156,6 +187,12 @@ src/
       ground_truth.py
   validation/
     validators.py
+  viewer/                # browser-based run explorer (Flask + static SPA)
+    server.py            # `python -m src.viewer.server`
+    scan.py              # finds runs under data/ -> structured payloads
+    models.py            # pydantic schema for the payloads
+    transcripts.py       # strips ANSI from agent terminal logs
+    static/              # index.html + app.js + styles.css (no external deps)
 legacy/
   run_pipeline.py
   run_agent.py

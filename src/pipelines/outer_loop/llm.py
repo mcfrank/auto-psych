@@ -13,11 +13,28 @@ DEFAULT_LLM_TIMEOUT = 300
 DEFAULT_CLOSED_MODEL = "gemini-3.1-pro-preview"
 
 
+def resolve_google_api_key(require: bool = True) -> str | None:
+    """Return the Gemini API key from ``GOOGLE_API_KEY`` env or ``.secrets``.
+
+    With ``require=True`` (the default) a missing key raises ``RuntimeError`` with
+    an actionable message, so anything needing Gemini fails loudly and early
+    rather than constructing a client that errors obscurely on first call.
+    """
+    api_key = os.environ.get("GOOGLE_API_KEY") or _read_secret("GOOGLE_API_KEY")
+    if not api_key and require:
+        raise RuntimeError(
+            "GOOGLE_API_KEY is not set. Gemini calls require it. Set it via:\n"
+            "    export GOOGLE_API_KEY=...\n"
+            "or add a line `GOOGLE_API_KEY=...` to the repo-root .secrets file."
+        )
+    return api_key
+
+
 def get_llm(timeout: int | None = None, model: str | None = None) -> Any:
     """Return the configured Gemini client. ``model`` overrides the default id."""
     from langchain_google_genai import ChatGoogleGenerativeAI
 
-    api_key = os.environ.get("GOOGLE_API_KEY") or _read_secret("GOOGLE_API_KEY")
+    api_key = resolve_google_api_key(require=True)
     kwargs = {
         "model": model or DEFAULT_CLOSED_MODEL,
         "google_api_key": api_key,

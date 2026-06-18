@@ -81,6 +81,94 @@ def _parse_steering_action(text: str) -> tuple[str, str] | None:
     return ("key", key)
 
 
+def check_response_variation(rows: list[dict[str, Any]]) -> tuple[bool, str]:
+    """Return ``(ok, message)`` for a quality check on collected responses.
+
+    Flags data that has no response variation — every trial chose the same side.
+    Such data carries no signal for model comparison and almost always means the
+    collector decided every trial (e.g. a biased fallback always clicking the
+    first option) rather than the participant responding to the stimulus. Tiny
+    inputs (0–1 parseable responses) are not flagged as degenerate.
+    """
+    if not rows:
+        return False, "no response rows were collected"
+    values: list[int] = []
+    for row in rows:
+        raw = row.get("chose_left")
+        if raw is None or raw == "":
+            continue
+        values.append(int(float(raw)))
+    if not values:
+        return False, "collected rows have no parseable chose_left values"
+    if len(values) >= 2 and len(set(values)) == 1:
+        return False, (
+            f"all {len(values)} responses are identical (chose_left={values[0]}); "
+            "the participants ignored the stimulus or the steering is biased to one "
+            "side — this data has no signal for model comparison"
+        )
+    return True, f"ok: {len(values)} responses with variation across sides"
+
+
+# Directional keys the keyboard template listens for; used to translate an LLM's
+# left/right decision into the correct button on a button-based trial.
+_LEFT_KEYS = {"f", "arrowleft"}
+_RIGHT_KEYS = {"j", "arrowright"}
+
+
+def _click_random_choice(page) -> None:
+    """Advance a trial by an UNBIASED random choice.
+
+    When buttons are present, click a uniformly-random one (so a declined or
+    unparseable LLM action never silently biases toward the first option);
+    otherwise press a random directional key.
+    """
+    try:
+        buttons = page.locator("button.jspsych-btn")
+        count = buttons.count()
+        if count > 0:
+            buttons.nth(random.randrange(count)).click(timeout=1000)
+            return
+    except Exception:
+        pass
+    try:
+        page.keyboard.press(random.choice(["f", "j"]))
+    except Exception:
+        pass
+
+
+def _act_key(page, key: str) -> None:
+    """Apply a directional key choice, modality-aware.
+
+    On a multi-button trial, translate left keys (f/ArrowLeft) to the first
+    button and right keys (j/ArrowRight) to the last, so the participant's
+    left/right decision lands on the right option whether the experiment uses
+    keyboard or button responses. A single-button screen (consent/instructions)
+    is advanced by clicking it. Falls back to an actual key press.
+    """
+    lowered = key.lower()
+    try:
+        buttons = page.locator("button.jspsych-btn")
+        count = buttons.count()
+        if count == 1:
+            buttons.first.click(timeout=1000)
+            return
+        if count >= 2:
+            if lowered in _LEFT_KEYS:
+                idx = 0
+            elif lowered in _RIGHT_KEYS:
+                idx = count - 1
+            else:
+                idx = random.randrange(count)
+            buttons.nth(idx).click(timeout=1000)
+            return
+    except Exception:
+        pass
+    try:
+        page.keyboard.press(key)
+    except Exception:
+        pass
+
+
 def _drive_experiment_with_llm(
     page,
     timeout_ms: int,
@@ -132,20 +220,16 @@ def _drive_experiment_with_llm(
 
         action = _parse_steering_action(response)
         if action is None:
-            try:
-                page.locator("button.jspsych-btn").first.click(timeout=500)
-            except Exception:
-                page.keyboard.press("f")
+            # Unparseable reply: advance without biasing toward either side.
+            _click_random_choice(page)
         elif action[0] == "click":
             try:
                 page.get_by_role("button", name=action[1]).click(timeout=2000)
             except Exception:
-                try:
-                    page.locator("button.jspsych-btn").first.click(timeout=1000)
-                except Exception:
-                    page.keyboard.press("f")
+                _click_random_choice(page)
         else:
-            page.keyboard.press(action[1])
+            # Directional key: lands on the correct button for button trials.
+            _act_key(page, action[1])
 
         context_parts.append(f"Your action: {response.strip()[:150]}")
         if len(context_parts) > _LLM_CONTEXT_MAX_SCREENS * 4:
@@ -162,6 +246,12 @@ def _drive_experiment_with_llm(
 
 
 def _drive_experiment_to_finish(page, timeout_ms: int = _DRIVE_TIMEOUT_MS) -> bool:
+    """Blind fallback when LLM steering is unavailable: click through to the end.
+
+    Picks an UNBIASED random option each step rather than always the first
+    button, so a blind run does not systematically favor one side (which would
+    silently produce degenerate, one-sided data).
+    """
     deadline = time.monotonic() + (timeout_ms / 1000.0)
     step_sec = _DRIVE_INTERVAL_MS / 1000.0
     while time.monotonic() < deadline:
@@ -170,14 +260,7 @@ def _drive_experiment_to_finish(page, timeout_ms: int = _DRIVE_TIMEOUT_MS) -> bo
                 return True
         except Exception:
             pass
-        try:
-            page.locator("button.jspsych-btn").first.click(timeout=400)
-        except Exception:
-            pass
-        try:
-            page.keyboard.press("f")
-        except Exception:
-            pass
+        _click_random_choice(page)
         time.sleep(step_sec)
     try:
         return bool(page.evaluate("typeof window.__experimentData !== 'undefined'"))

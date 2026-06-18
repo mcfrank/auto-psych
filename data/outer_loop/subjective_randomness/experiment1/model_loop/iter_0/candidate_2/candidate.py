@@ -1,19 +1,28 @@
+"""
+People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+"""
+
 import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
 with pm.Model() as model:
-    # Head proportions for each sequence.
-    p_a = pm.Data("p_a", np.zeros(1, dtype="float64"))
-    p_b = pm.Data("p_b", np.zeros(1, dtype="float64"))
+    # Stimulus inputs
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
 
-    # Sensitivity to fairness deviation.
-    tau = pm.HalfNormal("tau", sigma=2.0)
+    # Free cognitive parameter
+    # A positive weight means people penalize periodicity (i.e. they prefer sequences with lower periodicity).
+    beta_periodicity = pm.HalfNormal("beta_periodicity", sigma=5.0)
 
-    # Prefer the sequence whose proportion is closer to 0.5 (more "fair-looking").
-    dev_a = pt.abs(p_a - 0.5)
-    dev_b = pt.abs(p_b - 0.5)
-    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (dev_b - dev_a)))
+    # Calculate difference. If B is more periodic than A, diff > 0, increasing p_left.
+    diff = periodicity_b - periodicity_a
+    
+    # Clip probability for numerical stability
+    p = pm.math.sigmoid(beta_periodicity * diff)
+    p_left_safe = pt.clip(p, 1e-6, 1 - 1e-6)
+    p_left = pm.Deterministic("p_left", p_left_safe)
 
+    # Observed response
     chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
     pm.Bernoulli("response", p=p_left, observed=chose_left)

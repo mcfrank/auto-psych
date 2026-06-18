@@ -1,0 +1,81 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "bayesian_fair_coin",
+    "posteriors": {
+      "equally_likely": 0.003651,
+      "alternation_rate": 0.018307,
+      "bayesian_fair_coin": 0.483804,
+      "inner_loop_model": 0.483804,
+      "subjective_markov_evidence": 0.006664,
+      "absolute_alternation_deviation": 0.00377
+    },
+    "elpd_loo": {
+      "equally_likely": -215.6859,
+      "alternation_rate": -214.0237,
+      "bayesian_fair_coin": -210.3993,
+      "inner_loop_model": -210.3993,
+      "subjective_markov_evidence": -214.6842,
+      "absolute_alternation_deviation": -215.404
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "bayesian_fair_coin",
+    "posteriors": {
+      "equally_likely": 0.003624,
+      "alternation_rate": 0.01817,
+      "bayesian_fair_coin": 0.4802,
+      "inner_loop_model": 0.4802,
+      "subjective_markov_evidence": 0.006615,
+      "absolute_alternation_deviation": 0.003741,
+      "iter0_candidate0": 0.001842,
+      "iter0_candidate1": 0.003533,
+      "iter0_candidate2": 0.002074
+    },
+    "elpd_loo": {
+      "equally_likely": -215.6859,
+      "alternation_rate": -214.0237,
+      "bayesian_fair_coin": -210.3993,
+      "inner_loop_model": -210.3993,
+      "subjective_markov_evidence": -214.6842,
+      "absolute_alternation_deviation": -215.404,
+      "iter0_candidate0": -215.6627,
+      "iter0_candidate1": -215.5613,
+      "iter0_candidate2": -215.694
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "bayesian_fair_coin",
+    "posteriors": {
+      "equally_likely": 0.00259,
+      "alternation_rate": 0.012988,
+      "bayesian_fair_coin": 0.343237,
+      "inner_loop_model": 0.343237,
+      "subjective_markov_evidence": 0.004728,
+      "absolute_alternation_deviation": 0.002674,
+      "iter0_candidate0": 0.001317,
+      "iter0_candidate1": 0.002525,
+      "iter0_candidate2": 0.001482,
+      "iter1_candidate0": 0.281282,
+      "iter1_candidate1": 0.00394
+    },
+    "elpd_loo": {
+      "equally_likely": -215.6859,
+      "alternation_rate": -214.0237,
+      "bayesian_fair_coin": -210.3993,
+      "inner_loop_model": -210.3993,
+      "subjective_markov_evidence": -214.6842,
+      "absolute_alternation_deviation": -215.404,
+      "iter0_candidate0": -215.6627,
+      "iter0_candidate1": -215.5613,
+      "iter0_candidate2": -215.694,
+      "iter1_candidate0": -210.9983,
+      "iter1_candidate1": -215.1165
+    }
+  }
+]

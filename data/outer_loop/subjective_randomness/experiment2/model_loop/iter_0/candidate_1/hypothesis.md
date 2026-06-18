@@ -1,0 +1,1 @@
+Observers evaluate the randomness of a sequence based on its longest unbroken streak of identical outcomes. They use the length of this maximum run as a heuristic for non-randomness, judging sequences with longer streaks as less random.

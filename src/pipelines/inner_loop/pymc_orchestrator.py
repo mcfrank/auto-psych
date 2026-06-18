@@ -446,15 +446,18 @@ def _write_critique_context(
         f"**Model set directory:** `{models_dir}`",
         "",
         f"Propose **{n_proposals}** test statistics. Write each to "
-        f"`{test_stats_dir}/<name>.py`.",
+        f"`{test_stats_dir}/<name>.py` as a function `test_statistic(df)` returning a "
+        "scalar, with `# name:` and `# description:` header comments.",
         "",
-        "Run the posterior-predictive harness once over that directory:",
+        "You do **not** need to run anything. After you write the statistics, the "
+        "pipeline runs the posterior-predictive harness automatically over "
+        f"`{test_stats_dir}` and records the results:",
         "",
         "```bash",
         ppc_command,
         "```",
         "",
-        f"It writes `{results_path}` with a two-sided empirical p-value and a "
+        f"That writes `{results_path}` with a two-sided empirical p-value and a "
         f"Benjamini–Hochberg FDR-adjusted p-value per statistic ({n_replicates} "
         "posterior-predictive replicates). A statistic is a **significant "
         f"discrepancy** when its `p_value_adjusted` ≤ {significance_alpha}.",
@@ -506,13 +509,14 @@ def _spawn_critique_agent(
 
     prompt = (
         f"{_CRITIQUE_PROMPT.read_text(encoding='utf-8')}\n\n"
-        "---\n\nRead `CRITIQUE_CONTEXT.md` in this directory, then follow the steps "
-        "above: write your test statistics under `test_stats/`, run the harness, and "
-        "write `critiques.md`.\n"
+        "---\n\nRead `CRITIQUE_CONTEXT.md` in this directory, then write your test "
+        "statistics under `test_stats/` (one `test_statistic(df)` per file). You do "
+        "NOT need to run the harness or write `critiques.md` — the pipeline runs the "
+        "posterior-predictive check over your statistics and records the results.\n"
     )
     log_path = critique_dir / "agent.jsonl"
-    # The harness imports from the repo, so it must run from the repo root; give
-    # the agent file access to its working dir, the model set, and the responses.
+    # The agent only needs to write into test_stats/; give it the model set and
+    # responses for reference.
     success, _ = run_coding_agent(
         prompt,
         cwd=REPO_ROOT,
@@ -521,7 +525,92 @@ def _spawn_critique_agent(
         timeout_secs=agent_timeout_sec,
         backend=backend,
     )
+    # Run the PPC harness ourselves so the results are always persisted, rather
+    # than relying on the agent to have run it.
+    _persist_critique_results(
+        critique_dir,
+        incumbent,
+        models_dir=models_dir,
+        responses_path=responses_path,
+        fit_cache_dir=fit_cache_dir,
+        fit_kwargs=fit_kwargs,
+        n_replicates=n_replicates,
+        significance_alpha=significance_alpha,
+    )
     return success
+
+
+def _format_critiques_md(result: Dict[str, Any]) -> str:
+    """Render a human/agent-readable critique summary from a PPC result dict."""
+    sig = [r for r in result.get("results", []) if r.get("significant")]
+    lines = [
+        f"# Critique of `{result.get('model')}`",
+        "",
+        f"{result.get('n_significant', 0)} of {result.get('n_test_statistics', 0)} test "
+        f"statistics show a significant discrepancy (FDR-adjusted p ≤ "
+        f"{result.get('significance_alpha')}), over {result.get('n_replicates')} "
+        "posterior-predictive replicates.",
+        "",
+    ]
+    if sig:
+        lines.append("## Significant discrepancies (a better model should address these)")
+        for r in sig:
+            lines.append(
+                f"- **{r['name']}** — {r.get('description', '')} "
+                f"(observed {r['t_observed']:.3g} vs null mean {r['null_mean']:.3g}, "
+                f"z={r['z_score']:.2f}, adjusted p={r['p_value_adjusted']:.3g})"
+            )
+    else:
+        lines.append("No statistic showed a significant discrepancy — the incumbent fits these checks.")
+    return "\n".join(lines) + "\n"
+
+
+def _persist_critique_results(
+    critique_dir: Path,
+    incumbent: str,
+    *,
+    models_dir: Path,
+    responses_path: Path,
+    fit_cache_dir: Path,
+    fit_kwargs: Dict[str, Any],
+    n_replicates: int,
+    significance_alpha: float,
+) -> None:
+    """Run the PPC harness over the agent's ``test_stats/`` and persist the results.
+
+    Writes ``ppc_results.json`` (the per-statistic p-values) and a derived
+    ``critiques.md``. This runs deterministically in-process so the critique
+    results are always recorded — it does not depend on the agent having run the
+    harness. The fit is reused from ``fit_cache_dir`` (no resampling).
+    """
+    from src.critique.ppc import run_ppc_for_model
+
+    test_stats_dir = critique_dir / "test_stats"
+    if not test_stats_dir.is_dir() or not any(test_stats_dir.glob("*.py")):
+        print("  [critique] agent wrote no test statistics — skipping PPC", flush=True)
+        return
+
+    result = run_ppc_for_model(
+        incumbent,
+        models_dir,
+        responses_path,
+        test_stats_dir,
+        cache_dir=fit_cache_dir,
+        n_replicates=n_replicates,
+        significance_alpha=significance_alpha,
+        fit_kwargs=fit_kwargs,
+    )
+    (critique_dir / "ppc_results.json").write_text(
+        json.dumps(result, indent=2), encoding="utf-8"
+    )
+    (critique_dir / "critiques.md").write_text(
+        _format_critiques_md(result), encoding="utf-8"
+    )
+    print(
+        f"  [critique] PPC: {result['n_significant']}/{result['n_test_statistics']} "
+        "statistics show a significant discrepancy",
+        flush=True,
+    )
 
 
 def _run_critique_round(

@@ -1,0 +1,1 @@
+Refining the hypothesis that observers track the frequency of heads, we propose they evaluate subjective randomness using a simple directional heuristic. Rather than penalizing symmetric deviations from a 50% proportion, observers judge a sequence as more random simply if it contains a greater absolute number of heads.
