@@ -3,15 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Randomness Judgment</title>
-  <script src="https://unpkg.com/jspsych@8.2.3"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
-  <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <title>Randomness Judgment Experiment</title>
+  <script src="https://unpkg.com/jspsych@7.3.4"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@1.1.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
+  <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet">
   <style>
-    #progress-wrap { position: fixed; top: 0; left: 0; right: 0; height: 6px; background: #e0e0e0; z-index: 10000; }
-    #progress-fill { height: 100%; width: 0%; background: #4a90d9; transition: width 0.2s ease; }
-
     .seq-display {
       display: flex;
       justify-content: center;
@@ -62,35 +59,179 @@
       background: #4a90d9;
       color: white;
     }
-    .jspsych-content { max-width: 720px; }
   </style>
 </head>
-<body>
-  <div id="progress-wrap"><div id="progress-fill"></div></div>
-</body>
+<body></body>
 <script>
   const STIMULI = [
-    {"sequence_a": "TTT", "sequence_b": "HTTTTTTH", "eig": 0.206148},
-    {"sequence_a": "HTTTTTTH", "sequence_b": "TTT", "eig": 0.206148},
-    {"sequence_a": "TTT", "sequence_b": "TTTTTTTT", "eig": 0.176123},
-    {"sequence_a": "TTTTTTTT", "sequence_b": "TTT", "eig": 0.176123},
-    {"sequence_a": "HHH", "sequence_b": "TTTTTTTT", "eig": 0.175449},
-    {"sequence_a": "TTTTTTTT", "sequence_b": "HHH", "eig": 0.175449},
-    {"sequence_a": "HHH", "sequence_b": "HTTTTTTH", "eig": 0.168856},
-    {"sequence_a": "HTTTTTTH", "sequence_b": "HHH", "eig": 0.168856},
-    {"sequence_a": "HTH", "sequence_b": "TTTTTTTT", "eig": 0.168093},
-    {"sequence_a": "TTTTTTTT", "sequence_b": "HTH", "eig": 0.168093},
-    {"sequence_a": "HTHT", "sequence_b": "TTTTTTTT", "eig": 0.167165},
-    {"sequence_a": "THTH", "sequence_b": "TTTTTTTT", "eig": 0.167165},
-    {"sequence_a": "TTTTTTTT", "sequence_b": "HTHT", "eig": 0.167165},
-    {"sequence_a": "TTTTTTTT", "sequence_b": "THTH", "eig": 0.167165},
-    {"sequence_a": "HHH", "sequence_b": "HHHHHHTH", "eig": 0.16695},
-    {"sequence_a": "HHHHHHTH", "sequence_b": "HHH", "eig": 0.16695},
-    {"sequence_a": "HTHTHT", "sequence_b": "TTTTTTTT", "eig": 0.165712},
-    {"sequence_a": "THTHTH", "sequence_b": "TTTTTTTT", "eig": 0.165712},
-    {"sequence_a": "TTTTTTTT", "sequence_b": "HTHTHT", "eig": 0.165712},
-    {"sequence_a": "TTTTTTTT", "sequence_b": "THTHTH", "eig": 0.165712}
-  ];
+  {
+    "sequence_a": "TTHT",
+    "sequence_b": "THTH",
+    "eig": 0.180861
+  },
+  {
+    "sequence_a": "HHTH",
+    "sequence_b": "HTHT",
+    "eig": 0.180825
+  },
+  {
+    "sequence_a": "THTHTH",
+    "sequence_b": "TTHT",
+    "eig": 0.180811
+  },
+  {
+    "sequence_a": "HTHTHT",
+    "sequence_b": "HTTHTTT",
+    "eig": 0.143898
+  },
+  {
+    "sequence_a": "HTHTHT",
+    "sequence_b": "HTHHHHT",
+    "eig": 0.142985
+  },
+  {
+    "sequence_a": "TTHTTH",
+    "sequence_b": "THTH",
+    "eig": 0.139953
+  },
+  {
+    "sequence_a": "HTTHTT",
+    "sequence_b": "THTH",
+    "eig": 0.139953
+  },
+  {
+    "sequence_a": "THHTHTHT",
+    "sequence_b": "TTTHT",
+    "eig": 0.12955
+  },
+  {
+    "sequence_a": "THTHT",
+    "sequence_b": "TTTHTTHT",
+    "eig": 0.127801
+  },
+  {
+    "sequence_a": "HTHTHTH",
+    "sequence_b": "TTTHTTTT",
+    "eig": 0.126142
+  },
+  {
+    "sequence_a": "HHTH",
+    "sequence_b": "THTHTHHT",
+    "eig": 0.125702
+  },
+  {
+    "sequence_a": "HTHT",
+    "sequence_b": "TTTH",
+    "eig": 0.118449
+  },
+  {
+    "sequence_a": "HTHT",
+    "sequence_b": "TTTH",
+    "eig": 0.118449
+  },
+  {
+    "sequence_a": "HTHT",
+    "sequence_b": "HTTHHHTH",
+    "eig": 0.114746
+  },
+  {
+    "sequence_a": "TTTT",
+    "sequence_b": "HTHT",
+    "eig": 0.113299
+  },
+  {
+    "sequence_a": "HHHHT",
+    "sequence_b": "HTHT",
+    "eig": 0.111165
+  },
+  {
+    "sequence_a": "HTHTHT",
+    "sequence_b": "TTTT",
+    "eig": 0.110485
+  },
+  {
+    "sequence_a": "HTHHT",
+    "sequence_b": "THTH",
+    "eig": 0.10697
+  },
+  {
+    "sequence_a": "HTHT",
+    "sequence_b": "THTTH",
+    "eig": 0.106346
+  },
+  {
+    "sequence_a": "TTHTH",
+    "sequence_b": "HTHT",
+    "eig": 0.106346
+  },
+  {
+    "sequence_a": "HTHT",
+    "sequence_b": "HTTHT",
+    "eig": 0.106346
+  },
+  {
+    "sequence_a": "HTTTTH",
+    "sequence_b": "THTH",
+    "eig": 0.103463
+  },
+  {
+    "sequence_a": "HHHHHHH",
+    "sequence_b": "HTHT",
+    "eig": 0.099643
+  },
+  {
+    "sequence_a": "THHT",
+    "sequence_b": "TTTT",
+    "eig": 0.097659
+  },
+  {
+    "sequence_a": "TTTHTHTT",
+    "sequence_b": "HHTHTHT",
+    "eig": 0.0943
+  },
+  {
+    "sequence_a": "HTHTTHT",
+    "sequence_b": "TTTHTTHT",
+    "eig": 0.094137
+  },
+  {
+    "sequence_a": "HTTHTHH",
+    "sequence_b": "THTH",
+    "eig": 0.090987
+  },
+  {
+    "sequence_a": "TTTTH",
+    "sequence_b": "TTTTHHH",
+    "eig": 0.088891
+  },
+  {
+    "sequence_a": "HHTHT",
+    "sequence_b": "TTTTTTT",
+    "eig": 0.087749
+  },
+  {
+    "sequence_a": "TTHTTTT",
+    "sequence_b": "HTHHTT",
+    "eig": 0.085607
+  },
+  {
+    "sequence_a": "TTTT",
+    "sequence_b": "THHTHHT",
+    "eig": 0.085289
+  },
+  {
+    "sequence_a": "THHT",
+    "sequence_b": "THTHTH",
+    "eig": 0.085062
+  }
+];
+
+  const jsPsych = initJsPsych({
+    on_finish: function() {
+      window.__experimentData = jsPsych.data.get().values();
+      console.log('[auto-psych] experiment finished', window.__experimentData.length, 'trials');
+    }
+  });
 
   function makeStimDisplay(seq_a, seq_b) {
     return `
@@ -111,27 +252,12 @@
   const trialVariables = STIMULI.map(s => ({
     sequence_a: s.sequence_a,
     sequence_b: s.sequence_b,
-    eig: s.eig,
     stimulus_display: makeStimDisplay(s.sequence_a, s.sequence_b)
   }));
-
-  var totalTrials = trialVariables.length;
-  var completedTrials = 0;
-  function updateProgress() {
-    var el = document.getElementById('progress-fill');
-    if (el && totalTrials > 0) el.style.width = (100 * completedTrials / totalTrials) + '%';
-  }
 
   function styledBtn(label) {
     return '<button class="jspsych-btn jspsych-btn-auto">' + label + '</button>';
   }
-
-  const jsPsych = initJsPsych({
-    on_finish: function() {
-      window.__experimentData = jsPsych.data.get().values();
-      console.log('[auto-psych] experiment finished', window.__experimentData.length, 'trials');
-    }
-  });
 
   const timeline = [];
 
@@ -146,6 +272,7 @@
         and choose which one looks more random to you. The study takes about 5 minutes.
         Your participation is voluntary and your responses are anonymous.
       </p>
+      <br>
     `,
     choices: ['I agree — start the study'],
     button_html: styledBtn
@@ -166,8 +293,9 @@
         There are no right or wrong answers — we are interested in your intuitions.
       </p>
       <p style="max-width:560px; text-align:left; margin:auto;">
-        There will be <strong>${totalTrials} trials</strong> in total. Please work at your own pace.
+        There will be <strong>${trialVariables.length} trials</strong> in total. Please work at your own pace.
       </p>
+      <br>
     `,
     choices: ['Begin'],
     button_html: styledBtn,
@@ -178,7 +306,7 @@
   const fixation = {
     type: jsPsychHtmlKeyboardResponse,
     stimulus: '<div style="text-align:center; font-size:48px; color:#999;">+</div>',
-    choices: 'NO_KEYS',
+    choices: "NO_KEYS",
     trial_duration: 400
   };
 
@@ -186,20 +314,16 @@
   const trial = {
     type: jsPsychHtmlButtonResponse,
     stimulus: jsPsych.timelineVariable('stimulus_display'),
-    choices: ['Sequence A', 'Sequence B'],
+    choices: ['Sequence A (left)', 'Sequence B (right)'],
     button_html: styledBtn,
     data: {
       sequence_a: jsPsych.timelineVariable('sequence_a'),
       sequence_b: jsPsych.timelineVariable('sequence_b'),
-      eig: jsPsych.timelineVariable('eig'),
-      task: 'randomness_judgment'
+      task: 'judgment'
     },
     on_finish: function(data) {
       // response 0 = chose A (left), 1 = chose B (right)
-      data.chose_a = (data.response === 0);
-      data.chosen_sequence = data.chose_a ? data.sequence_a : data.sequence_b;
-      completedTrials++;
-      updateProgress();
+      data.chose_left = (data.response === 0) ? 1 : 0;
     }
   };
 
@@ -223,6 +347,7 @@
         expecting frequent alternations between heads and tails — even when true randomness
         does not follow any such pattern. Your responses help us understand these intuitions.
       </p>
+      <br>
     `,
     choices: ['Finish'],
     button_html: styledBtn

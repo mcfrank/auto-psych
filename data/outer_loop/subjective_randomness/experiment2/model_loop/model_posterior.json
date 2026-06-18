@@ -1,0 +1,122 @@
+{
+  "posteriors": {
+    "equally_likely": 0.00259,
+    "alternation_rate": 0.012988,
+    "bayesian_fair_coin": 0.343237,
+    "inner_loop_model": 0.343237,
+    "subjective_markov_evidence": 0.004728,
+    "absolute_alternation_deviation": 0.002674,
+    "iter0_candidate0": 0.001317,
+    "iter0_candidate1": 0.002525,
+    "iter0_candidate2": 0.001482,
+    "iter1_candidate0": 0.281282,
+    "iter1_candidate1": 0.00394
+  },
+  "elpd_loo": {
+    "equally_likely": -215.6859,
+    "alternation_rate": -214.0237,
+    "bayesian_fair_coin": -210.3993,
+    "inner_loop_model": -210.3993,
+    "subjective_markov_evidence": -214.6842,
+    "absolute_alternation_deviation": -215.404,
+    "iter0_candidate0": -215.6627,
+    "iter0_candidate1": -215.5613,
+    "iter0_candidate2": -215.694,
+    "iter1_candidate0": -210.9983,
+    "iter1_candidate1": -215.1165
+  },
+  "n_trials": 310,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "equally_likely": 13,
+    "alternation_rate": 14,
+    "bayesian_fair_coin": 21,
+    "inner_loop_model": 21,
+    "subjective_markov_evidence": 21,
+    "absolute_alternation_deviation": 18,
+    "iter0_candidate0": 27,
+    "iter0_candidate1": 16,
+    "iter0_candidate2": 24,
+    "iter1_candidate0": 13,
+    "iter1_candidate1": 16
+  },
+  "comparison": {
+    "bayesian_fair_coin": {
+      "rank": 0,
+      "elpd_loo": -210.399259270789,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.35199709651622135
+    },
+    "inner_loop_model": {
+      "rank": 1,
+      "elpd_loo": -210.399259270789,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.35199709651618816
+    },
+    "iter1_candidate0": {
+      "rank": 2,
+      "elpd_loo": -210.99832177244252,
+      "elpd_diff": 0.59906250165354,
+      "dse": 1.540362887353725,
+      "weight": 0.15733476265135082
+    },
+    "alternation_rate": {
+      "rank": 3,
+      "elpd_loo": -214.02366904179257,
+      "elpd_diff": 3.624409771003556,
+      "dse": 3.2815819483654574,
+      "weight": 0.13867104431623842
+    },
+    "subjective_markov_evidence": {
+      "rank": 4,
+      "elpd_loo": -214.68417870645627,
+      "elpd_diff": 4.284919435667236,
+      "dse": 2.9791940040053144,
+      "weight": 0.0
+    },
+    "iter1_candidate1": {
+      "rank": 5,
+      "elpd_loo": -215.1164535339433,
+      "elpd_diff": 4.717194263154294,
+      "dse": 2.9223314278464927,
+      "weight": 0.0
+    },
+    "absolute_alternation_deviation": {
+      "rank": 6,
+      "elpd_loo": -215.4039883268945,
+      "elpd_diff": 5.004729056105504,
+      "dse": 3.10375451917219,
+      "weight": 0.0
+    },
+    "iter0_candidate1": {
+      "rank": 7,
+      "elpd_loo": -215.56126955707091,
+      "elpd_diff": 5.1620102862819195,
+      "dse": 2.929422073756287,
+      "weight": 7.737260356268362e-17
+    },
+    "iter0_candidate0": {
+      "rank": 8,
+      "elpd_loo": -215.66268961379097,
+      "elpd_diff": 5.263430343001962,
+      "dse": 2.8870505545833343,
+      "weight": 9.555176403886663e-16
+    },
+    "equally_likely": {
+      "rank": 9,
+      "elpd_loo": -215.6859067382602,
+      "elpd_diff": 5.286647467471193,
+      "dse": 2.8689527742228957,
+      "weight": 1.6455671117308651e-15
+    },
+    "iter0_candidate2": {
+      "rank": 10,
+      "elpd_loo": -215.6940389336931,
+      "elpd_diff": 5.294779662904094,
+      "dse": 2.893224539131618,
+      "weight": 3.2534080262979226e-17
+    }
+  }
+}

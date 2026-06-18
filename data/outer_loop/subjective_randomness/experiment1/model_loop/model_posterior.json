@@ -1,90 +1,102 @@
 {
   "posteriors": {
-    "bayesian_fair_coin": 8.6e-05,
-    "alternation_bias": 0.158074,
-    "runs_penalty": 0.000477,
-    "iter0_candidate0": 0.066286,
-    "iter0_candidate1": 0.277068,
-    "iter0_candidate2": 0.175899,
-    "iter1_candidate0": 0.22237,
-    "iter1_candidate1": 0.097829,
-    "iter1_candidate2": 0.00191
+    "equally_likely": 0.036148,
+    "alternation_rate": 0.043009,
+    "bayesian_fair_coin": 0.704747,
+    "iter0_candidate0": 0.049875,
+    "iter0_candidate1": 0.040309,
+    "iter0_candidate2": 0.042715,
+    "iter1_candidate0": 0.020488,
+    "iter1_candidate1": 0.037006,
+    "iter1_candidate2": 0.025702
   },
   "elpd_loo": {
-    "bayesian_fair_coin": -68.9509,
-    "alternation_bias": -61.4319,
-    "runs_penalty": -67.2351,
-    "iter0_candidate0": -62.3009,
-    "iter0_candidate1": -60.8707,
-    "iter0_candidate2": -61.325,
-    "iter1_candidate0": -61.0906,
-    "iter1_candidate1": -61.9117,
-    "iter1_candidate2": -65.8476
+    "equally_likely": -111.6526,
+    "alternation_rate": -111.4288,
+    "bayesian_fair_coin": -108.2824,
+    "iter0_candidate0": -111.4807,
+    "iter0_candidate1": -111.3936,
+    "iter0_candidate2": -111.3357,
+    "iter1_candidate0": -111.4204,
+    "iter1_candidate1": -111.0291,
+    "iter1_candidate2": -111.7936
   },
-  "n_trials": 100,
+  "n_trials": 160,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "equally_likely": 13,
+    "alternation_rate": 14,
+    "bayesian_fair_coin": 21,
+    "iter0_candidate0": 10,
+    "iter0_candidate1": 16,
+    "iter0_candidate2": 16,
+    "iter1_candidate0": 29,
+    "iter1_candidate1": 25,
+    "iter1_candidate2": 17
+  },
   "comparison": {
-    "iter0_candidate1": {
+    "bayesian_fair_coin": {
       "rank": 0,
-      "elpd_loo": -60.87066297570749,
+      "elpd_loo": -108.28238096136171,
       "elpd_diff": 0.0,
       "dse": 0.0,
-      "weight": 0.9999999999999989
+      "weight": 0.9517603274180653
     },
-    "iter1_candidate0": {
+    "iter1_candidate1": {
       "rank": 1,
-      "elpd_loo": -61.09058218422983,
-      "elpd_diff": 0.21991920852233804,
-      "dse": 0.16438047742051481,
-      "weight": 0.0
+      "elpd_loo": -111.02913198238178,
+      "elpd_diff": 2.7467510210200707,
+      "dse": 2.2275959743489846,
+      "weight": 6.41241233797836e-16
     },
     "iter0_candidate2": {
       "rank": 2,
-      "elpd_loo": -61.32501468918264,
-      "elpd_diff": 0.4543517134751518,
-      "dse": 0.7110634961658904,
-      "weight": 8.18385742511539e-16
+      "elpd_loo": -111.33565933618999,
+      "elpd_diff": 3.053278374828272,
+      "dse": 2.5855406193372663,
+      "weight": 0.048239672581934796
     },
-    "alternation_bias": {
+    "iter0_candidate1": {
       "rank": 3,
-      "elpd_loo": -61.43185844761643,
-      "elpd_diff": 0.561195471908924,
-      "dse": 0.31851516914747025,
-      "weight": 1.1172046404717478e-16
+      "elpd_loo": -111.39364566266681,
+      "elpd_diff": 3.111264701305112,
+      "dse": 2.3614248982038095,
+      "weight": 8.550622916620249e-17
     },
-    "iter1_candidate1": {
+    "iter1_candidate0": {
       "rank": 4,
-      "elpd_loo": -61.911698795895575,
-      "elpd_diff": 1.0410358201880676,
-      "dse": 1.135806861845387,
+      "elpd_loo": -111.42035644413714,
+      "elpd_diff": 3.1379754827754347,
+      "dse": 2.193218128340283,
       "weight": 0.0
+    },
+    "alternation_rate": {
+      "rank": 5,
+      "elpd_loo": -111.42880808074798,
+      "elpd_diff": 3.1464271193862814,
+      "dse": 2.2956145463359854,
+      "weight": 1.3036165164628231e-16
     },
     "iter0_candidate0": {
-      "rank": 5,
-      "elpd_loo": -62.30094457793112,
-      "elpd_diff": 1.4302816022236264,
-      "dse": 0.685840762515823,
-      "weight": 4.391797781469521e-16
+      "rank": 6,
+      "elpd_loo": -111.48069005961456,
+      "elpd_diff": 3.1983090982528584,
+      "dse": 2.227659235555104,
+      "weight": 0.0
+    },
+    "equally_likely": {
+      "rank": 7,
+      "elpd_loo": -111.65261026307385,
+      "elpd_diff": 3.3702293017121487,
+      "dse": 2.154508641688913,
+      "weight": 0.0
     },
     "iter1_candidate2": {
-      "rank": 6,
-      "elpd_loo": -65.84758922862767,
-      "elpd_diff": 4.976926252920146,
-      "dse": 2.406128555566951,
-      "weight": 7.255676870652699e-16
-    },
-    "runs_penalty": {
-      "rank": 7,
-      "elpd_loo": -67.23513702659812,
-      "elpd_diff": 6.364474050890593,
-      "dse": 2.7977281776497143,
-      "weight": 0.0
-    },
-    "bayesian_fair_coin": {
       "rank": 8,
-      "elpd_loo": -68.95092017148295,
-      "elpd_diff": 8.080257195775435,
-      "dse": 3.1409780387898403,
-      "weight": 0.0
+      "elpd_loo": -111.79363829755314,
+      "elpd_diff": 3.511257336191438,
+      "dse": 2.598098147907792,
+      "weight": 6.940681922381853e-16
     }
   }
 }

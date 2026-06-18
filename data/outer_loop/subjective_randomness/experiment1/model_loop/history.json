@@ -1,0 +1,65 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "bayesian_fair_coin",
+    "posteriors": {
+      "equally_likely": 0.046112,
+      "alternation_rate": 0.054865,
+      "bayesian_fair_coin": 0.899022
+    },
+    "elpd_loo": {
+      "equally_likely": -111.6526,
+      "alternation_rate": -111.4288,
+      "bayesian_fair_coin": -108.2824
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "bayesian_fair_coin",
+    "posteriors": {
+      "equally_likely": 0.039428,
+      "alternation_rate": 0.046912,
+      "bayesian_fair_coin": 0.7687,
+      "iter0_candidate0": 0.054402,
+      "iter0_candidate1": 0.043967,
+      "iter0_candidate2": 0.046592
+    },
+    "elpd_loo": {
+      "equally_likely": -111.6526,
+      "alternation_rate": -111.4288,
+      "bayesian_fair_coin": -108.2824,
+      "iter0_candidate0": -111.4807,
+      "iter0_candidate1": -111.3936,
+      "iter0_candidate2": -111.3357
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "bayesian_fair_coin",
+    "posteriors": {
+      "equally_likely": 0.036148,
+      "alternation_rate": 0.043009,
+      "bayesian_fair_coin": 0.704747,
+      "iter0_candidate0": 0.049875,
+      "iter0_candidate1": 0.040309,
+      "iter0_candidate2": 0.042715,
+      "iter1_candidate0": 0.020488,
+      "iter1_candidate1": 0.037006,
+      "iter1_candidate2": 0.025702
+    },
+    "elpd_loo": {
+      "equally_likely": -111.6526,
+      "alternation_rate": -111.4288,
+      "bayesian_fair_coin": -108.2824,
+      "iter0_candidate0": -111.4807,
+      "iter0_candidate1": -111.3936,
+      "iter0_candidate2": -111.3357,
+      "iter1_candidate0": -111.4204,
+      "iter1_candidate1": -111.0291,
+      "iter1_candidate2": -111.7936
+    }
+  }
+]

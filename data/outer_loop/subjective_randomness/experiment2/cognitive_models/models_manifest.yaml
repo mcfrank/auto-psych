@@ -1,0 +1,30 @@
+models:
+- name: equally_likely
+  rationale: 'People judge a sequence as more random the closer its proportion of
+    heads is to 50%.
+
+    '
+- name: alternation_rate
+  rationale: 'People judge a sequence as more random if its proportion of alternations
+    is closer to their subjective ideal alternation rate.
+
+    '
+- name: bayesian_fair_coin
+  rationale: 'Observers compare two binary sequences via the log Bayes factor between
+    a fair-coin null and a biased-coin alternative.
+
+    '
+- name: subjective_markov_evidence
+  rationale: 'Observers evaluate randomness by computing the log Bayes factor of the
+    sequence''s transitions under a subjective ideal Markov process versus a purely
+    independent fair coin.
+
+    '
+- name: absolute_alternation_deviation
+  rationale: 'People judge a sequence as less random the further its number of alternations
+    deviates from the expected number under their subjective ideal rate, computing
+    distance in absolute counts rather than proportions.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

@@ -308,9 +308,9 @@ class Args:
         Literal["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]
     ] = None
     """Run only this agent. Omit for full pipeline."""
-    mode: Literal["simulated_participants", "simulated_participants_nobrowser", "live"] = (
-        "simulated_participants"
-    )
+    mode: Literal[
+        "simulated_participants", "simulated_participants_nobrowser", "live"
+    ] = "simulated_participants"
     """Data-collection mode."""
     n_participants: int = DEFAULT_N_PARTICIPANTS
     """Number of participants to collect or simulate."""
