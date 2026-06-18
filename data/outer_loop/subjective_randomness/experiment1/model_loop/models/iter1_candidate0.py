@@ -1,32 +1,53 @@
+"""People evaluate a sequence's randomness by comparing its likelihood under a fair coin against its probability under a biased coin, mathematically marginalizing over all possible alternative biases rather than assuming a single fixed bias. They hold a symmetric prior belief about the alternative coin's bias, with the concentration of this prior acting as a subjective parameter, and they prefer the sequence that provides stronger Bayesian evidence for the fair coin."""
+
 import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
 with pm.Model() as model:
-    # Stimulus inputs.
+    # Stimulus inputs
     n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
-    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="int64"))
-    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
     n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
-    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="int64"))
-    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
 
-    # Sensitivity and mixing weight between the two randomness cues.
+    # Cognitive parameters
+    # The concentration parameter of the symmetric Beta prior. Add a small constant for numerical stability.
+    alpha_base = pm.HalfNormal("alpha_base", sigma=5.0)
+    alpha = alpha_base + 1e-4
+    
+    # Softmax temperature
     tau = pm.HalfNormal("tau", sigma=2.0)
-    w = pm.Beta(
-        "w", alpha=1.0, beta=1.0
-    )  # w=1 → pure normalized-run; w=0 → pure alternation
 
-    # Cue 1: shorter length-normalized max run → more random-looking.
-    norm_run_a = pt.cast(max_run_a, "float64") / pt.cast(n_a, "float64")
-    norm_run_b = pt.cast(max_run_b, "float64") / pt.cast(n_b, "float64")
-    run_diff = norm_run_b - norm_run_a
+    # Cast to float for computations
+    n_a_f = pt.cast(n_a, "float64")
+    h_a_f = pt.cast(h_a, "float64")
+    n_b_f = pt.cast(n_b, "float64")
+    h_b_f = pt.cast(h_b, "float64")
 
-    # Cue 2: higher alternation rate → more random-looking.
-    alts_diff = p_alts_a - p_alts_b
+    # Compute exact log marginal likelihood for the biased coin (Beta-Binomial)
+    # log P(D | biased) = log[ B(h + alpha, n - h + alpha) / B(alpha, alpha) ]
+    # where B(x, y) = Gamma(x)Gamma(y) / Gamma(x + y)
+    def log_marginal_biased(h_f, n_f, a):
+        log_beta_post = pt.gammaln(h_f + a) + pt.gammaln(n_f - h_f + a) - pt.gammaln(n_f + 2.0 * a)
+        log_beta_prior = 2.0 * pt.gammaln(a) - pt.gammaln(2.0 * a)
+        return log_beta_post - log_beta_prior
 
-    util = tau * (w * run_diff + (1.0 - w) * alts_diff)
-    p_left = pm.Deterministic("p_left", pm.math.sigmoid(util))
+    log_bias_a = log_marginal_biased(h_a_f, n_a_f, alpha)
+    log_bias_b = log_marginal_biased(h_b_f, n_b_f, alpha)
 
+    # Compute log likelihood for the fair coin
+    log_fair_a = n_a_f * pt.log(0.5)
+    log_fair_b = n_b_f * pt.log(0.5)
+
+    # Log Bayes factor in favor of the fair coin
+    lbf_a = log_fair_a - log_bias_a
+    lbf_b = log_fair_b - log_bias_b
+
+    # Choice probability
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (lbf_a - lbf_b)))
+
+    # Observed response
     chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
     pm.Bernoulli("response", p=p_left, observed=chose_left)
+

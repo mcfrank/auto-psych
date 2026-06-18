@@ -1,0 +1,344 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+cat: CONTEXT.md: No such file or directory
+[0m
+[0m$ [0mls -la
+total 1664
+drwxr-xr-x@   8 ben  staff     256 Jun 17 16:14 __pycache__
+drwxr-xr-x@  52 ben  staff    1664 Jun 17 16:47 .
+drwx------@ 283 ben  staff    9056 Jun 10 14:21 ..
+drwxr-xr-x@   4 ben  staff     128 Jun 15 14:59 .claude
+-rw-r--r--@   1 ben  staff   14340 Jun 15 22:43 .DS_Store
+drwxr-xr-x@   3 ben  staff      96 Jun 17 15:22 .firebase
+-rw-r--r--@   1 ben  staff      58 Jun 17 14:47 .firebaserc.example
+drwxr-xr-x@  16 ben  staff     512 Jun 17 16:29 .git
+-rw-r--r--@   1 ben  staff     922 Jun 17 14:47 .gitignore
+drwxr-xr-x@   6 ben  staff     192 Apr 16 22:36 .pytest_cache
+drwxr-xr-x@   5 ben  staff     160 Jun  5 13:56 .ruff_cache
+-rw-r--r--@   1 ben  staff     195 Jun 17 15:06 .secrets
+-rw-r--r--@   1 ben  staff     125 Jun 17 14:47 .secrets.example
+drwxr-xr-x@  10 ben  staff     320 May 28 12:09 .venv
+drwxr-xr-x@   2 ben  staff      64 Apr 17 09:52 .worktrees
+-rw-r--r--@   1 ben  staff    1724 Jun  5 09:37 CLEANUP_PLAN.md
+drwxr-xr-x@   6 ben  staff     192 Jun  9 16:41 data
+drwxr-xr-x@   4 ben  staff     128 Jun 17 12:43 diagrams
+drwxr-xr-x@   3 ben  staff      96 Jun 17 15:16 docs
+-rw-r--r--@   1 ben  staff     559 Jun 17 16:29 firebase.generated.json
+-rw-r--r--@   1 ben  staff     559 Jun 17 14:47 firebase.json
+drwxr-xr-x@   6 ben  staff     192 Jun 17 15:22 functions
+-rw-r--r--@   1 ben  staff     688 Jun 16 15:40 generate_candidates.py
+-rw-r--r--@   1 ben  staff    1070 Apr 16 22:03 LICENSE
+-rw-r--r--@   1 ben  staff     310 Jun 12 14:18 opencode.json
+drwxr-xr-x@   6 ben  staff     192 Jun  5 13:49 projects
+drwxr-xr-x@   7 ben  staff     224 Jun 17 16:29 public
+-rw-r--r--@   1 ben  staff    1883 Jun 17 14:47 pyproject.toml
+-rw-r--r--@   1 ben  staff    5798 Jun 17 14:41 README.md
+drwxr-xr-x@  10 ben  staff     320 Jun 17 15:16 scripts
+drwxr-xr-x@  13 ben  staff     416 Jun 17 14:28 src
+drwxr-xr-x@   7 ben  staff     224 Jun 17 14:47 templates
+-rw-r--r--@   1 ben  staff     275 Jun 16 13:54 test_cauchy.py
+-rw-r--r--@   1 ben  staff     597 Jun 17 16:46 test_cor.py
+-rw-r--r--@   1 ben  staff     260 Jun 17 16:46 test_cor2.py
+-rw-r--r--@   1 ben  staff     549 Jun 17 16:46 test_cor3.py
+-rw-r--r--@   1 ben  staff     335 Jun 17 16:46 test_cor4.py
+-rw-r--r--@   1 ben  staff     380 Jun 17 16:46 test_cor5.py
+-rw-r--r--@   1 ben  staff     550 Jun 16 16:00 test_eval.py
+-rw-r--r--@   1 ben  staff     462 Jun 12 12:48 test_hier.py
+-rw-r--r--@   1 ben  staff    3645 Jun 12 12:48 test_hierarchical.py
+-rw-r--r--@   1 ben  staff     412 Jun 17 16:46 test_lr.py
+-rw-r--r--@   1 ben  staff     584 Jun 17 16:46 test_lr2.py
+-rw-r--r--@   1 ben  staff     973 Jun 17 16:46 test_lr3.py
+-rw-r--r--@   1 ben  staff     983 Jun 17 16:47 test_lr4.py
+-rw-r--r--@   1 ben  staff     904 Jun 17 16:47 test_lr5.py
+-rw-r--r--@   1 ben  staff     825 Jun 16 13:35 test_responses.py
+-rw-r--r--@   1 ben  staff     412 Jun 12 12:47 test_shape.py
+-rw-r--r--@   1 ben  staff     488 Jun 17 16:45 test_sym.py
+-rw-r--r--@   1 ben  staff     523 Jun 17 16:45 test_sym2.py
+drwxr-xr-x@  53 ben  staff    1696 Jun 17 15:13 tests
+-rw-r--r--@   1 ben  staff  706552 Jun 17 14:47 uv.lock
+[0m
+[0m✱ [0mGlob "**/CONTEXT.md"[90m 100 matches[0m
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 1, candidate 1 of 3
+
+Responses CSV: `/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/experiment2/model_loop/responses.csv`
+Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## equally_likely  — posterior 0.004, ELPD-LOO -215.69
+
+People judge a sequence as more random the closer its proportion of heads is to 50%.
+
+## alternation_rate  — posterior 0.018, ELPD-LOO -214.02
+
+People judge a sequence as more random if its proportion of alternations is closer to their subjective ideal alternation rate.
+
+## bayesian_fair_coin  — posterior 0.480, ELPD-LOO -210.40
+
+Observers compare two binary sequences via the log Bayes factor between a fair-coin null and a biased-coin alternative.
+
+## inner_loop_model  — posterior 0.480, ELPD-LOO -210.40
+
+Best PyMC model found by the inner model-improvement loop.
+
+## subjective_markov_evidence  — posterior 0.007, ELPD-LOO -214.68
+
+Observers evaluate randomness by computing the log Bayes factor of the sequence's transitions under a subjective ideal Markov process versus a purely independent fair coin.
+
+## absolute_alternation_deviation  — posterior 0.004, ELPD-LOO -215.40
+
+People judge a sequence as less random the further its number of alternations deviates from the expected number under their subjective ideal rate, computing distance in absolute counts rather than proportions.
+
+## iter0_candidate0  — posterior 0.002, ELPD-LOO -215.66
+
+Observers evaluate the randomness of a sequence by computing the true log Bayes factor between a fair-coin null and a biased-coin alternative, marginalizing over possible alternative biases using a subjective Beta prior instead of comparing to a single fixed bias.
+
+## iter0_candidate1  — posterior 0.004, ELPD-LOO -215.56
+
+Observers evaluate the randomness of a sequence based on its longest unbroken streak of identical outcomes. They use the length of this maximum run as a heuristic for non-randomness, judging sequences with longer streaks as less random.
+
+## iter0_candidate2  — posterior 0.002, ELPD-LOO -215.69
+
+Observers evaluate the randomness of a sequence using a point-estimate log-likelihood ratio rather than full Bayesian integration. They estimate the sequence's bias by smoothing the empirical proportion of heads with subjective pseudo-counts, and judge the sequence as less random the more its likelihood under this estimated bias exceeds its likelihood under a fair coin.
+
+## iter1_candidate0
+
+Refining the hypothesis that observers track the frequency of heads, we propose they evaluate subjective randomness using a simple directional heuristic. Rather than penalizing symmetric deviations from a 50% proportion, observers judge a sequence as more random simply if it contains a greater absolute number of heads.
+[0m
+[0m$ [0mhead -n 5 responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,subjective_randomness_run1_20260617_230228_p0,3,THHT,TTTT,1,0,,4,2,2,2,4,0,0,4,0.5,0.6666666666666666,0.3333333333333333,0.0,0.0,0.0,0.0,1.0,1.0,1.0
+0,subjective_randomness_run1_20260617_230228_p0,5,TTHTTTT,HTHHTT,1,0,,7,1,2,4,6,3,3,2,0.14285714285714285,0.3333333333333333,0.5,0.7142857142857143,0.7142857142857142,0.5,0.6,0.2,0.0,0.6666666666666667
+0,subjective_randomness_run1_20260617_230228_p0,7,THHTHTHT,TTTHT,1,0,,8,4,6,2,5,1,2,3,0.5,0.8571428571428571,0.14285714285714285,0.0,0.5,0.2,0.5,0.5,0.6,0.6000000000000001
+0,subjective_randomness_run1_20260617_230228_p0,9,HTHT,HTTHHHTH,1,0,,4,2,3,1,8,5,4,3,0.5,1.0,0.0,0.0,1.0,0.625,0.5714285714285714,0.2857142857142857,0.25,0.75
+[0m
+[0m$ [0mcat ../candidate_1/candidate.py
+cat: ../candidate_1/candidate.py: No such file or directory
+[0m
+[0m$ [0mcat ../../iter_0/candidate_1/candidate.py
+"""
+Observers evaluate the randomness of a sequence based on its longest unbroken streak of identical outcomes. They use the length of this maximum run as a heuristic for non-randomness, judging sequences with longer streaks as less random.
+"""
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="int64"))
+    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="int64"))
+    
+    # Sensitivity to the maximum run length
+    beta = pm.HalfNormal("beta", sigma=2.0)
+    
+    # Score decreases as the maximum run increases
+    score_a = -beta * max_run_a
+    score_b = -beta * max_run_b
+    
+    # Sigmoid to get probability, clamped for numerical stability
+    p_raw = pm.math.sigmoid(score_a - score_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_raw, 1e-6, 1 - 1e-6))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mgrep -r "periodicity" ../../../../
+../../../../experiment1/model_loop/iter_0/candidate_2/CONTEXT.md:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    # A positive weight means people penalize periodicity (i.e. they prefer sequences with lower periodicity).
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    beta_periodicity = pm.HalfNormal("beta_periodicity", sigma=5.0)
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    diff = periodicity_b - periodicity_a
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    p = pm.math.sigmoid(beta_periodicity * diff)
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    # A positive weight means people penalize periodicity (i.e. they prefer sequences with lower periodicity).
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    beta_periodicity = pm.HalfNormal("beta_periodicity", sigma=5.0)
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    diff = periodicity_b - periodicity_a
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:    p = pm.math.sigmoid(beta_periodicity * diff)
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:I have read the provided instructions and context files. I proposed a new hypothesis based on the `periodicity_a` and `periodicity_b` features, ensuring it tests a single cognitive mechanism and is distinct from the existing models. 
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_0/candidate_2/agent.jsonl:The PyMC implementation correctly defines `p_left` (clamped for numerical stability), uses `pm.HalfNormal` to restrict the beta direction to "penalizing" periodicity, and exposes the required `chose_left` node to `observed=`.
+grep: ../../../../experiment1/model_loop/iter_0/candidate_2/__pycache__/candidate.cpython-311.pyc: binary file matches
+../../../../experiment1/model_loop/iter_0/candidate_2/candidate.py:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_0/candidate_2/candidate.py:    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+../../../../experiment1/model_loop/iter_0/candidate_2/candidate.py:    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+../../../../experiment1/model_loop/iter_0/candidate_2/candidate.py:    # A positive weight means people penalize periodicity (i.e. they prefer sequences with lower periodicity).
+../../../../experiment1/model_loop/iter_0/candidate_2/candidate.py:    beta_periodicity = pm.HalfNormal("beta_periodicity", sigma=5.0)
+../../../../experiment1/model_loop/iter_0/candidate_2/candidate.py:    diff = periodicity_b - periodicity_a
+../../../../experiment1/model_loop/iter_0/candidate_2/candidate.py:    p = pm.math.sigmoid(beta_periodicity * diff)
+../../../../experiment1/model_loop/iter_0/candidate_2/hypothesis.md:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_0/candidate_0/CONTEXT.md:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_0/candidate_0/agent.jsonl:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_0/candidate_1/CONTEXT.md:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_0/candidate_1/agent.jsonl:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_0/critique/CRITIQUE_CONTEXT.md:**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/responses.csv:participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+../../../../experiment1/model_loop/iter_1/candidate_2/CONTEXT.md:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_1/candidate_2/agent.jsonl:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_1/candidate_2/agent.jsonl:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_1/candidate_2/agent.jsonl:participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+../../../../experiment1/model_loop/iter_1/candidate_2/existing_hypotheses.md:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_1/candidate_0/CONTEXT.md:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_1/candidate_0/agent.jsonl:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_1/candidate_0/agent.jsonl:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_1/candidate_0/existing_hypotheses.md:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_1/candidate_1/CONTEXT.md:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_1/candidate_1/agent.jsonl:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/iter_1/candidate_1/agent.jsonl:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_1/candidate_1/agent.jsonl:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_1/candidate_1/agent.jsonl:participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+../../../../experiment1/model_loop/iter_1/candidate_1/existing_hypotheses.md:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/iter_1/critique/CRITIQUE_CONTEXT.md:**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment1/model_loop/report.md:- **iter0_candidate2**: People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/models/iter0_candidate2.py:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+../../../../experiment1/model_loop/models/iter0_candidate2.py:    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+../../../../experiment1/model_loop/models/iter0_candidate2.py:    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+../../../../experiment1/model_loop/models/iter0_candidate2.py:    # A positive weight means people penalize periodicity (i.e. they prefer sequences with lower periodicity).
+../../../../experiment1/model_loop/models/iter0_candidate2.py:    beta_periodicity = pm.HalfNormal("beta_periodicity", sigma=5.0)
+../../../../experiment1/model_loop/models/iter0_candidate2.py:    diff = periodicity_b - periodicity_a
+../../../../experiment1/model_loop/models/iter0_candidate2.py:    p = pm.math.sigmoid(beta_periodicity * diff)
+../../../../experiment1/model_loop/models/models_manifest.yaml:    patterns. When comparing two sequences, they prefer the one with a lower periodicity
+../../../../experiment1/model_loop/models/iter0_candidate2.hypothesis.md:People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+grep: ../../../../experiment1/model_loop/models/__pycache__/iter0_candidate2.cpython-311.pyc: binary file matches
+../../../../experiment2/model_loop/iter_0/candidate_2/CONTEXT.md:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment2/model_loop/iter_0/candidate_2/agent.jsonl:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment2/model_loop/iter_0/candidate_2/agent.jsonl:participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+../../../../experiment2/model_loop/iter_0/candidate_2/agent.jsonl:participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+../../../../experiment2/model_loop/iter_0/candidate_0/CONTEXT.md:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment2/model_loop/iter_0/candidate_0/agent.jsonl:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment2/model_loop/iter_0/candidate_1/CONTEXT.md:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment2/model_loop/iter_0/critique/CRITIQUE_CONTEXT.md:**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment2/model_loop/responses.csv:participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+../../../../experiment2/model_loop/iter_1/candidate_0/CONTEXT.md:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment2/model_loop/iter_1/candidate_0/agent.jsonl:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment2/model_loop/iter_1/candidate_0/agent.jsonl:participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+../../../../experiment2/model_loop/iter_1/candidate_0/agent.jsonl:print("Mean d(periodicity):", (df['periodicity_a'] - df['periodicity_b']).mean())
+../../../../experiment2/model_loop/iter_1/candidate_0/agent.jsonl:Mean d(periodicity): 0.03271889400921659
+../../../../experiment2/model_loop/iter_1/candidate_0/agent.jsonl:print("Fraction where d(periodicity) > 0:", (df['periodicity_a'] > df['periodicity_b']).mean())
+../../../../experiment2/model_loop/iter_1/candidate_0/agent.jsonl:Fraction where d(periodicity) > 0: 0.5
+../../../../experiment2/model_loop/iter_1/candidate_0/agent.jsonl:    ('periodicity_a', 'periodicity_b')
+../../../../experiment2/model_loop/iter_1/candidate_0/agent.jsonl:periodicity_a: 0.27671521154896866
+../../../../experiment2/model_loop/iter_1/candidate_0/agent.jsonl:    ('periodicity_a', 'periodicity_b')
+../../../../experiment2/model_loop/iter_1/candidate_0/agent.jsonl:periodicity_a: -214.17
+../../../../experiment2/model_loop/iter_1/candidate_1/CONTEXT.md:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment2/model_loop/iter_1/candidate_1/agent.jsonl:Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment2/model_loop/iter_1/candidate_1/agent.jsonl:participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+../../../../experiment2/model_loop/iter_1/critique/CRITIQUE_CONTEXT.md:**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+../../../../experiment2/logs/1_theory.jsonl:| `periodicity_a`, `periodicity_b` | float | Match to a short repeating template       |
+../../../../experiment2/logs/1_theory.jsonl:- **iter0_candidate2**: People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+[0m
+[0m← [0mWrite hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mexport PYTHONPATH="/Users/ben/Documents/auto-psych:$PYTHONPATH"
+test -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat ../candidate_0/candidate.py
+"""Refining the hypothesis that observers track the frequency of heads, we propose they evaluate subjective randomness using a simple directional heuristic. Rather than penalizing symmetric deviations from a 50% proportion, observers judge a sequence as more random simply if it contains a greater absolute number of heads."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    
+    # Free cognitive parameter for decision noise/scaling
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    
+    # Score is simply the absolute number of heads
+    score_a = pt.cast(h_a, "float64")
+    score_b = pt.cast(h_b, "float64")
+    
+    # Decision rule: higher score (more heads) -> higher probability of choosing sequence as more random
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (score_a - score_b)))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat candidate.py
+"""
+Observers evaluate the randomness of a binary sequence using a simple directional heuristic based on alternations. Rather than penalizing deviations from a specific ideal rate, they judge a sequence as more random simply if it contains a higher proportion of alternations.
+"""
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs: proportion of alternations
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    
+    # Sensitivity to the proportion of alternations
+    # Positive prior implies higher proportion of alternations -> higher perceived randomness -> higher score
+    beta = pm.HalfNormal("beta", sigma=2.0)
+    
+    # The score for each sequence is simply proportional to its proportion of alternations
+    score_a = beta * p_alts_a
+    score_b = beta * p_alts_b
+    
+    # Probability of choosing left (sequence a)
+    # Uses sigmoid of the difference in scores, clamped for numerical stability
+    p_raw = pm.math.sigmoid(score_a - score_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_raw, 1e-6, 1 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+I have analyzed the provided context and existing models. I have written the files `hypothesis.md` and `candidate.py` to propose a simple directional heuristic based on alternations (where participants judge a sequence as more random simply if it contains a higher proportion of alternations, rather than penalizing deviations from an ideal). The tests verify that the model correctly integrates the observed response logic and parses into the PyMC graph without issue.

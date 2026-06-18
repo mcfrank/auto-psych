@@ -1,0 +1,9 @@
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model
+0,subjective_randomness_run9999_20260617_222228_p0,3,HTHTHTHT,HHTHTTHT,1,0,
+0,subjective_randomness_run9999_20260617_222228_p0,5,HHHHHHHH,HTHHTHTT,0,1,
+0,subjective_randomness_run9999_20260617_222228_p0,7,HHHHHT,THTHHT,0,1,
+0,subjective_randomness_run9999_20260617_222228_p0,9,HHHTTT,HTHTHT,1,0,
+1,subjective_randomness_run9999_20260617_222228_p1,3,HHHHHT,THTHHT,1,0,
+1,subjective_randomness_run9999_20260617_222228_p1,5,HHHHHHHH,HTHHTHTT,0,1,
+1,subjective_randomness_run9999_20260617_222228_p1,7,HTHTHTHT,HHTHTTHT,0,1,
+1,subjective_randomness_run9999_20260617_222228_p1,9,HHHTTT,HTHTHT,1,0,
