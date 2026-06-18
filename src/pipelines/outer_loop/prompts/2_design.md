@@ -24,7 +24,7 @@ cd REPO_ROOT && python3 -m src.pipelines.outer_loop.eig \
     --featurize  PROJECT_DIR/preprocess.py \
     --registry   EXP_DIR/model_registry.yaml \
     --out        EXP_DIR/design/stimuli.json \
-    --top        20
+    --top        32
 ```
 
 `--featurize` and `--registry` are optional: omit `--featurize` if your stimuli
@@ -40,4 +40,4 @@ Before finishing, verify:
 - [ ] Each stimulus has `sequence_a`, `sequence_b`, and `eig` (numeric)
 - [ ] At least one stimulus has `eig > 0`
 - [ ] `design/design_rationale.md` exists and is non-empty
-- [ ] N stimuli is between 10 and 30 (or as specified in problem definition)
+- [ ] N stimuli is around 32 (use `--top 32`), unless the problem definition specifies otherwise

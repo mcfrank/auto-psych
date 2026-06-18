@@ -1,27 +1,29 @@
+"""Observers compare two binary sequences via the log Bayes factor between a fair-coin null and a biased-coin alternative."""
 import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
 with pm.Model() as model:
-    # Stimulus inputs — names match responses CSV columns.
     n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
-    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
     n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
-    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
 
-    # Sensitivity to length-normalized max run difference.
-    tau = pm.HalfNormal("tau", sigma=2.0)
+    theta = pm.Beta("theta", alpha=2.0, beta=2.0)     # bias of the alternative
+    tau = pm.HalfNormal("tau", sigma=2.0)             # softmax temperature
 
-    # Longer sequences naturally have longer max runs; normalize by sequence length
-    # so that equal-"randomness" sequences score the same regardless of length.
-    norm_run_a = pt.cast(max_run_a, "float64") / pt.cast(n_a, "float64")
-    norm_run_b = pt.cast(max_run_b, "float64") / pt.cast(n_b, "float64")
+    # Avoid log(0)
+    theta_safe = pt.clip(theta, 1e-6, 1.0 - 1e-6)
 
-    # Prefer the sequence with the shorter length-corrected max run (more random-looking).
-    p_left = pm.Deterministic(
-        "p_left", pm.math.sigmoid(tau * (norm_run_b - norm_run_a))
-    )
+    log_fair_a = pt.cast(n_a, "float64") * pt.log(0.5)
+    log_bias_a = pt.cast(h_a, "float64") * pt.log(theta_safe) + pt.cast(n_a - h_a, "float64") * pt.log(1.0 - theta_safe)
+    lbf_a = log_fair_a - log_bias_a
+    
+    log_fair_b = pt.cast(n_b, "float64") * pt.log(0.5)
+    log_bias_b = pt.cast(h_b, "float64") * pt.log(theta_safe) + pt.cast(n_b - h_b, "float64") * pt.log(1.0 - theta_safe)
+    lbf_b = log_fair_b - log_bias_b
 
-    # Observed response.
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (lbf_a - lbf_b)))
+
     chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
     pm.Bernoulli("response", p=p_left, observed=chose_left)

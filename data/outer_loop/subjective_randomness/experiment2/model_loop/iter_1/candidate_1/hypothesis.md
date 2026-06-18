@@ -1,0 +1,1 @@
+Observers evaluate the randomness of a binary sequence using a simple directional heuristic based on alternations. Rather than penalizing deviations from a specific ideal rate, they judge a sequence as more random simply if it contains a higher proportion of alternations.

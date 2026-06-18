@@ -1,0 +1,1 @@
+People evaluate a sequence's randomness by how statistically typical its number of alternations is. They compute the exact binomial probability of observing the sequence's number of alternations under a fair coin, and prefer the sequence whose alternation count is more mathematically probable to occur by chance.

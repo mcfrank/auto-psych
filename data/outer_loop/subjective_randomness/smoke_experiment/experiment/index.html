@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Experiment</title>
+  <script src="https://unpkg.com/jspsych@8.2.3"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
+  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+  <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+  <style>
+    #progress-wrap { position: fixed; top: 0; left: 0; right: 0; height: 6px; background: #e0e0e0; z-index: 10000; }
+    #progress-fill { height: 100%; width: 0%; background: #4a90d9; transition: width 0.2s ease; }
+    .jspsych-btn-auto { padding: 12px 28px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; background: #4a90d9; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
+    .jspsych-btn-auto:hover { background: #3a7bc8; }
+  </style>
+</head>
+<body>
+  <div id="progress-wrap"><div id="progress-fill"></div></div>
+</body>
+<script>
+  // Injected by pipeline
+  const consentHtml = "<h2>Research Study Consent</h2><p style=\"max-width:560px; text-align:left; margin:auto;\">You are invited to take part in a short study about how people perceive randomness. On each trial you will see two short sequences of coin-flip outcomes (H = Heads, T = Tails) and choose which one looks more random. The study takes about 5 minutes. Participation is voluntary and your responses are anonymous.</p>";
+  const instructionsHtml = "<h2>Instructions</h2><p style=\"max-width:560px; text-align:left; margin:auto;\">On each screen you will see two sequences of coin flips, on the left and the right. Decide which one looks <strong>more random</strong> to you, then press <strong>F</strong> for the left sequence or <strong>J</strong> for the right sequence. There are no right or wrong answers.</p>";
+  const trialVariables = [
+  {
+    "sequence_a": "HHHTTT",
+    "sequence_b": "HTHTHT",
+    "stimulus_display": "<p class=\"trial-prompt\">Which sequence looks <strong>more random</strong>?</p><div class=\"seq-display\"><div class=\"seq-box\"><div class=\"seq-label\">Press F</div><div class=\"seq-text\">HHHTTT</div></div><div class=\"seq-box\"><div class=\"seq-label\">Press J</div><div class=\"seq-text\">HTHTHT</div></div></div><p>Press <strong>F</strong> for the left sequence or <strong>J</strong> for the right sequence.</p>"
+  },
+  {
+    "sequence_a": "HHHHHT",
+    "sequence_b": "THTHHT",
+    "stimulus_display": "<p class=\"trial-prompt\">Which sequence looks <strong>more random</strong>?</p><div class=\"seq-display\"><div class=\"seq-box\"><div class=\"seq-label\">Press F</div><div class=\"seq-text\">HHHHHT</div></div><div class=\"seq-box\"><div class=\"seq-label\">Press J</div><div class=\"seq-text\">THTHHT</div></div></div><p>Press <strong>F</strong> for the left sequence or <strong>J</strong> for the right sequence.</p>"
+  },
+  {
+    "sequence_a": "HHHHHHHH",
+    "sequence_b": "HTHHTHTT",
+    "stimulus_display": "<p class=\"trial-prompt\">Which sequence looks <strong>more random</strong>?</p><div class=\"seq-display\"><div class=\"seq-box\"><div class=\"seq-label\">Press F</div><div class=\"seq-text\">HHHHHHHH</div></div><div class=\"seq-box\"><div class=\"seq-label\">Press J</div><div class=\"seq-text\">HTHHTHTT</div></div></div><p>Press <strong>F</strong> for the left sequence or <strong>J</strong> for the right sequence.</p>"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "HHTHTTHT",
+    "stimulus_display": "<p class=\"trial-prompt\">Which sequence looks <strong>more random</strong>?</p><div class=\"seq-display\"><div class=\"seq-box\"><div class=\"seq-label\">Press F</div><div class=\"seq-text\">HTHTHTHT</div></div><div class=\"seq-box\"><div class=\"seq-label\">Press J</div><div class=\"seq-text\">HHTHTTHT</div></div></div><p>Press <strong>F</strong> for the left sequence or <strong>J</strong> for the right sequence.</p>"
+  }
+];
+  const trialChoices = ["f", "j"];
+  const debriefHtml = "<h2>Thank you!</h2><p style=\"max-width:560px; text-align:left; margin:auto;\">You have completed the study and your responses have been recorded. This study examines the systematic intuitions people hold about what random coin-flip sequences look like.</p>";
+
+  // Capture participant_id from URL (?participant_id=xxx) for Prolific/simulated participants
+  function getUrlParam(name) {
+    var m = new RegExp('[?&]' + name + '=([^&]*)').exec(typeof window !== 'undefined' && window.location ? window.location.search : '');
+    return m ? decodeURIComponent(m[1]) : null;
+  }
+  var urlParticipantId = getUrlParam('participant_id');
+  if (urlParticipantId && typeof window !== 'undefined') window.__participantId = urlParticipantId;
+
+  const onFinish = function() {
+    var data = jsPsych.data.get().values();
+    console.log(data);
+    if (typeof window !== 'undefined') window.__experimentData = data;
+    fetch('/auto_psych_config.json').then(function(r){
+      if (!r.ok) { console.warn('[auto-psych] /auto_psych_config.json failed:', r.status); return null; }
+      return r.json();
+    }).then(function(cfg){
+      if (cfg && (cfg.collection_session_id || (cfg.project_id != null && cfg.run_id != null))) {
+        var payload = Object.assign({}, cfg, {
+          participant_id: (typeof window !== 'undefined' && window.__participantId != null) ? window.__participantId : Date.now(),
+          trials: data,
+          submitted_at_client: new Date().toISOString(),
+          user_agent: navigator.userAgent
+        });
+        fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+          .then(function(res){
+            console.log('[auto-psych] POST /submit', res.status, res.ok ? 'OK' : 'FAIL');
+            if (res.ok && cfg.prolific_redirect_url && typeof window !== 'undefined') window.location = cfg.prolific_redirect_url;
+          })
+          .catch(function(e){ console.warn('[auto-psych] POST /submit error', e); });
+      } else {
+        console.log('[auto-psych] No Firebase config (collection_session_id or project_id/run_id); skipping POST /submit');
+      }
+    }).catch(function(e){ console.warn('[auto-psych] Config fetch error', e); });
+  };
+
+  const jsPsych = initJsPsych({ on_finish: onFinish });
+  if (typeof window !== 'undefined' && window.__participantId) jsPsych.data.addProperties({ participant_id: window.__participantId });
+  const timeline = [];
+
+  var totalTrials = trialVariables.length;
+  var completedTrials = 0;
+  function updateProgress() {
+    var el = document.getElementById('progress-fill');
+    if (el && totalTrials > 0) el.style.width = (100 * completedTrials / totalTrials) + '%';
+  }
+
+  function styledButtonHtml(choice) {
+    return '<button class="jspsych-btn jspsych-btn-auto">' + choice + '</button>';
+  }
+
+  // 1. Consent – button "I agree"
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: consentHtml,
+    choices: ['I agree'],
+    button_html: styledButtonHtml
+  });
+
+  // 2. Instructions – button "Next"
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: instructionsHtml,
+    choices: ['Next'],
+    button_html: styledButtonHtml,
+    post_trial_gap: 400
+  });
+
+  // 3. Trials: for each stimulus, [fixation 150ms, then main trial] (keyboard) — short fixation to reduce collect-step latency
+  const fixation = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: '<div style="text-align:center; font-size:48px;">+</div>',
+    choices: 'NO_KEYS',
+    trial_duration: 150
+  };
+  const trial = {
+    type: jsPsychHtmlKeyboardResponse,
+    stimulus: jsPsych.timelineVariable('stimulus_display'),
+    choices: trialChoices,
+    data: {
+      sequence_a: jsPsych.timelineVariable('sequence_a'),
+      sequence_b: jsPsych.timelineVariable('sequence_b'),
+      task: 'judgment'
+    },
+    on_finish: function(data) {
+      data.chose_left = (data.response === 'f' || data.response === 'ArrowLeft');
+      completedTrials++;
+      updateProgress();
+    }
+  };
+  timeline.push({
+    timeline: [fixation, trial],
+    timeline_variables: trialVariables,
+    randomize_order: true
+  });
+
+  // 4. Debrief – button "End"
+  timeline.push({
+    type: jsPsychHtmlButtonResponse,
+    stimulus: debriefHtml,
+    choices: ['End'],
+    button_html: styledButtonHtml
+  });
+
+  jsPsych.run(timeline);
+</script>
+</html>

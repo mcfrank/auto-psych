@@ -3,15 +3,15 @@
 **Project:** subjective_randomness
 **Experiment number:** 1
 **Repo root:** /Users/ben/Documents/auto-psych
-**This experiment directory:** /Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/experiment1
+**This experiment directory:** /Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/experiment1
 
 ## Key paths
 
 - Problem definition: `/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md`
-- Cognitive models dir: `/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/experiment1/cognitive_models`
-- Design dir: `/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/experiment1/design`
-- Experiment dir: `/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/experiment1/experiment`
-- Data dir: `/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/experiment1/data`
-- Responses: `/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/experiment1/data/responses.csv`
-- Model registry: `/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/experiment1/model_registry.yaml`
-- Inner model loop dir: `/Users/ben/Documents/auto-psych/src/pipelines/outer_loop/projects/subjective_randomness/experiment1/model_loop`
+- Cognitive models dir: `/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/experiment1/cognitive_models`
+- Design dir: `/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/experiment1/design`
+- Experiment dir: `/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/experiment1/experiment`
+- Data dir: `/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/experiment1/data`
+- Responses: `/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/experiment1/data/responses.csv`
+- Model registry: `/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/experiment1/model_registry.yaml`
+- Inner model loop dir: `/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/experiment1/model_loop`

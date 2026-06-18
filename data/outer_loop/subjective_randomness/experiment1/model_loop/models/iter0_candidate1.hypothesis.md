@@ -1,0 +1,1 @@
+People judge a sequence as less random the longer its longest continuous run of identical outcomes. When comparing two sequences, they prefer the one with the shorter maximum run length as being more random.

@@ -1,34 +1,17 @@
 models:
+- name: equally_likely
+  rationale: 'People judge a sequence as more random the closer its proportion of
+    heads is to 50%.
+
+    '
+- name: alternation_rate
+  rationale: 'People judge a sequence as more random if its proportion of alternations
+    is closer to their subjective ideal alternation rate.
+
+    '
 - name: bayesian_fair_coin
-  rationale: 'Computes the log Bayes factor of the fair-coin hypothesis against a
-
-    biased-coin alternative for each sequence, then picks the higher-LBF
-
-    sequence via softmax. Operationalises Griffiths & Tenenbaum''s (2001)
-
-    Bayesian account of representativeness: the sequence that most exceeds
-
-    a biased alternative is judged more random.
-
-    '
-- name: alternation_bias
-  rationale: 'Prefers whichever sequence has a higher alternation proportion
-
-    (transitions / possible transitions). Captures the classic gambler''s
-
-    fallacy: people expect fair coins to alternate more than they actually do
-
-    and rate highly-alternating sequences as more random.
-
-    '
-- name: runs_penalty
-  rationale: 'Prefers whichever sequence has a shorter maximum unbroken run. Long
-
-    streaks (e.g., HHHHHH) feel deterministic, so their absence signals
-
-    randomness. Complements alternation_bias by focusing on the worst-case
-
-    run rather than the average alternation rate.
+  rationale: 'Observers compare two binary sequences via the log Bayes factor between
+    a fair-coin null and a biased-coin alternative.
 
     '
 - name: inner_loop_model
