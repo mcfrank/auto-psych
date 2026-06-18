@@ -1,0 +1,155 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) devel   2) math
+Downloading cpython-3.12.13-linux-x86_64-gnu (download) (32.3MiB)
+ Downloaded cpython-3.12.13-linux-x86_64-gnu (download)
+Using CPython 3.12.13
+Creating virtual environment at: /home/groups/ngoodman/envs/auto-psych
+Resolved 160 packages in 4ms
+   Building contourpy==1.3.3
+   Building scipy==1.17.1
+   Building pandas==3.0.3
+   Building numpy==2.4.6
+   Building greenlet==3.5.1
+Downloading kiwisolver (1.4MiB)
+Downloading numba (3.6MiB)
+Downloading pillow (7.7MiB)
+Downloading fonttools (4.8MiB)
+Downloading pydantic-core (2.0MiB)
+Downloading matplotlib (8.4MiB)
+Downloading llvmlite (53.7MiB)
+Downloading zstandard (5.3MiB)
+Downloading grpcio (6.5MiB)
+Downloading pytensor (2.2MiB)
+ Downloaded kiwisolver
+ Downloaded pydantic-core
+ Downloaded pytensor
+ Downloaded zstandard
+ Downloaded pillow
+ Downloaded grpcio
+ Downloaded fonttools
+ Downloaded llvmlite
+ Downloaded matplotlib
+ Downloaded numba
+      Built greenlet==3.5.1
+      Built contourpy==1.3.3
+      Built numpy==2.4.6
+  × Failed to build `scipy==1.17.1`
+  ├─▶ The build backend returned an error
+  ╰─▶ Call to `mesonpy.build_wheel` failed (exit status: 1)
+
+      [stdout]
+      + meson setup
+      /scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/sdists-v9/pypi/scipy/1.17.1/zrOXRqowrNizI_bX2U19e/src
+      /scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/sdists-v9/pypi/scipy/1.17.1/zrOXRqowrNizI_bX2U19e/src/.mesonpy-tgc6favv
+      -Dbuildtype=release -Db_ndebug=if-release -Db_vscrt=md
+      --native-file=/scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/sdists-v9/pypi/scipy/1.17.1/zrOXRqowrNizI_bX2U19e/src/.mesonpy-tgc6favv/meson-python-native-file.ini
+      The Meson build system
+      Version: 1.11.1
+      Source dir:
+      /scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/sdists-v9/pypi/scipy/1.17.1/zrOXRqowrNizI_bX2U19e/src
+      Build dir:
+      /scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/sdists-v9/pypi/scipy/1.17.1/zrOXRqowrNizI_bX2U19e/src/.mesonpy-tgc6favv
+      Build type: native build
+      Project name: scipy
+      Project version: 1.17.1
+      C compiler for the host machine: gcc (gcc 14.2.0 "gcc (GCC) 14.2.0")
+      C linker for the host machine: gcc ld.bfd 2.27-44
+      C++ compiler for the host machine: c++ (gcc 14.2.0 "c++ (GCC) 14.2.0")
+      C++ linker for the host machine: c++ ld.bfd 2.27-44
+      Cython compiler for the host machine: cython (cython 3.2.5)
+      Host machine cpu family: x86_64
+      Host machine cpu: x86_64
+      Program python found: YES
+      (/scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/builds-v0/.tmpmB8Z6e/bin/python)
+      Found pkg-config: YES (/usr/bin/pkg-config) 0.27.1
+      Run-time dependency python found: YES 3.12
+      Program cython found: YES
+      (/scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/builds-v0/.tmpmB8Z6e/bin/cython)
+      Compiler for C supports arguments -Wno-unused-but-set-variable: YES
+      Compiler for C supports arguments -Wno-unused-function: YES
+      Compiler for C supports arguments -Wno-conversion: YES
+      Compiler for C supports arguments -Wno-misleading-indentation: YES
+      Library m found: YES
+      Fortran compiler for the host machine: gfortran (gcc 14.2.0 "GNU Fortran
+      (GCC) 14.2.0")
+      Fortran linker for the host machine: gfortran ld.bfd 2.27-44
+      ../meson.build:94: WARNING: Consider using the built-in option for
+      language standard version instead of using "-std=legacy".
+      Compiler for Fortran supports arguments -Wno-conversion: YES
+      Checking if "-Wl,--version-script" links: YES
+      Program tools/generate_f2pymod.py found: YES
+      (/scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/builds-v0/.tmpmB8Z6e/bin/python
+      /scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/sdists-v9/pypi/scipy/1.17.1/zrOXRqowrNizI_bX2U19e/src/tools/generate_f2pymod.py)
+      Program scipy/_build_utils/tempita.py found: YES
+      (/scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/builds-v0/.tmpmB8Z6e/bin/python
+      /scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/sdists-v9/pypi/scipy/1.17.1/zrOXRqowrNizI_bX2U19e/src/scipy/_build_utils/tempita.py)
+      Program pythran found: YES 0.18.1 0.18.1
+      (/scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/builds-v0/.tmpmB8Z6e/bin/pythran)
+      Did not find CMake 'cmake'
+      Found CMake: NO
+      Run-time dependency xsimd found: NO  (tried pkg-config and cmake)
+
+      Executing subproject xsf
+
+      xsf| Project name: xsf
+      xsf| Project version: 0.1.3
+      xsf| C++ compiler for the host machine: c++ (gcc 14.2.0 "c++ (GCC)
+      14.2.0")
+      xsf| C++ linker for the host machine: c++ ld.bfd 2.27-44
+      xsf| Build targets in project: 0
+      xsf| Subproject xsf finished.
+
+
+      Executing subproject boost_math
+
+      boost_math| Project name: boost-math
+      boost_math| Project version: 1.89.0
+      boost_math| Build targets in project: 0
+      boost_math| Subproject boost_math finished.
+
+
+      Executing subproject qhull_r
+
+      qhull_r| Project name: qhull_r
+      qhull_r| Project version: 8.0.2
+      qhull_r| C compiler for the host machine: gcc (gcc 14.2.0 "gcc (GCC)
+      14.2.0")
+      qhull_r| C linker for the host machine: gcc ld.bfd 2.27-44
+      qhull_r| Compiler for C supports arguments -Wno-unused-but-set-variable:
+      YES (cached)
+      qhull_r| Build targets in project: 1
+      qhull_r| Subproject qhull_r finished.
+
+      Run-time dependency threads found: YES
+      numpy-config found: YES
+      (/scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/builds-v0/.tmpmB8Z6e/bin/numpy-config)
+      2.4.6
+      Run-time dependency numpy found: YES 2.4.6
+      Message: f2py free-threading enabled
+      Library npymath found: YES
+      pybind11-config found: YES
+      (/scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/builds-v0/.tmpmB8Z6e/bin/pybind11-config)
+      3.0.4
+      Run-time dependency pybind11 found: YES 3.0.4
+      Checking if "thread_local" compiles: NO
+      Checking if "_Thread_local" compiles: YES
+      Checking if "__thread" compiles: YES
+      Configuring scipy_config.h using configuration
+      Program f2py found: YES
+      (/scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/builds-v0/.tmpmB8Z6e/bin/f2py)
+      Run-time dependency scipy-openblas found: NO  (tried pkg-config)
+      Run-time dependency openblas found: NO  (tried pkg-config and cmake)
+      Run-time dependency openblas found: NO  (tried pkg-config)
+
+      ../scipy/meson.build:285:9: ERROR: Dependency "OpenBLAS" not found
+      (tried pkg-config)
+
+      A full log can be found at
+      /scratch/users/benpry/auto-psych/holdout_test_retest/.uv_cache/sdists-v9/pypi/scipy/1.17.1/zrOXRqowrNizI_bX2U19e/src/.mesonpy-tgc6favv/meson-logs/meson-log.txt
+
+      hint: This usually indicates a problem with the package or the build
+      environment.
+  help: `scipy` (v1.17.1) was included because `auto-psych` (v0.1.0) depends
+        on `scipy`
