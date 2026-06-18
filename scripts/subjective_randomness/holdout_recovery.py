@@ -62,6 +62,13 @@ class Args:
     evaluation refits free)."""
     gt_model: Optional[str] = None
     """Hold out only this model (must be among the config's gt_models)."""
+    gt_models_dir: Optional[Path] = None
+    """Read the ground-truth generator(s) from this directory instead of the
+    config's seed_models_dir. Use to keep the held-out GT file off the coding
+    agent's sandbox: point this at a pristine copy of the seed models while
+    deleting the held-out model from the agent's working checkout. The GT is
+    still excluded from the agent's seed set (exclusion keys off the seed
+    manifest, not this path)."""
     n_experiments: Optional[int] = None
     """Override the config's number of outer-loop experiments per run."""
     n_participants: Optional[int] = None
@@ -100,6 +107,9 @@ def main(args: Args) -> None:
         if args.cache_dir is not None
         else out_path.parent / "mcmc_cache"
     )
+    gt_models_dir = (
+        resolve_path(args.gt_models_dir) if args.gt_models_dir is not None else None
+    )
 
     fit_overrides = {
         key: value
@@ -124,6 +134,7 @@ def main(args: Args) -> None:
         config_path,
         results_root,
         gt_model_override=args.gt_model,
+        gt_models_dir=gt_models_dir,
         n_experiments_override=args.n_experiments,
         n_participants_override=args.n_participants,
         inner_loop_overrides=inner_loop_overrides or None,

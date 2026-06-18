@@ -211,11 +211,12 @@ def run_holdout_experiments(
     gt_models_dir = (
         Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
     )
-    # Hold the GT out of experiment 1's seed pool only when it IS a project seed
-    # model (the normal holdout). An impossible GT lives in a separate
-    # gt_models_dir and is not among the seeds, so nothing is excluded — the loop
-    # seeds all of them (and excluding an unknown name would fail loudly).
-    gt_is_seed_model = gt_models_dir.resolve() == seed_models_dir.resolve()
+    # Hold the GT out of experiment 1's seed pool whenever it IS a project seed
+    # model (the normal holdout) — keyed off the seed manifest, not the dir, so a
+    # GT read from a separate gt_models_dir (e.g. a pristine copy used to keep the
+    # GT file off the agent's sandbox) is still correctly excluded from seeding.
+    # An impossible GT is not in the seed manifest, so nothing is excluded.
+    gt_is_seed_model = gt_model in resolve_generating_params(None, seed_models_dir)
     seed_exclude = (gt_model,) if gt_is_seed_model else ()
     exp_dirs: List[Path] = []
 
@@ -274,12 +275,16 @@ def run_holdout_experiments(
         if not (resume and _stage_done("2_design", exp_dir)):
             if not (resume and _has_candidate_pool(exp_dir)):
                 write_context(exp_dir, "2_design", project_id, exp_num, prev_exp_dir)
+                # Candidate-generation-only prompt: the agent proposes the pool,
+                # and _ensure_design_stimuli (below) scores it by EIG to produce
+                # stimuli.json — so the agent never runs the slow EIG command.
                 ok, _ = spawn_cc_agent(
                     "2_design",
                     exp_dir,
                     allowed_dirs=allowed_dirs,
                     timeout_secs=agent_timeout_sec,
                     backend=backend,
+                    prompt_key="2_design_candidates_only",
                 )
                 if not ok:
                     print(
@@ -607,7 +612,10 @@ def evaluate_trajectory(
                     ) from exc
 
             best_pred = predictions[best]
-            bma_pred = _bma_prediction(weights, predictions)
+            # With no positive-weight models (an empty/degenerate posterior at
+            # this step) the BMA has nothing to average — fall back to the best
+            # single model's prediction rather than failing the whole run.
+            bma_pred = _bma_prediction(weights, predictions) if weights else best_pred
             rows.append(
                 {
                     "experiment": exp_num,

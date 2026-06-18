@@ -202,10 +202,13 @@ def spawn_cc_agent(
     allowed_dirs: Optional[List[Path]] = None,
     timeout_secs: int = 900,
     backend: Optional[str] = None,
+    prompt_key: Optional[str] = None,
 ) -> tuple[bool, str]:
     """
     Spawn a coding agent (Claude Code or opencode) for the given agent_key.
-    Reads prompt from src/pipelines/outer_loop/prompts/<agent_key>.md.
+    Reads prompt from src/pipelines/outer_loop/prompts/<agent_key>.md, or
+    <prompt_key>.md when prompt_key is given (lets a caller swap the prompt
+    while keeping the stage identity — logs/validation still use agent_key).
     Tells the agent to read CONTEXT.md and complete the task.
     File tool access is restricted to allowed_dirs (defaults to exp_dir only).
     Bash still runs from REPO_ROOT so python3 -m src.* imports work.
@@ -213,7 +216,7 @@ def spawn_cc_agent(
     `backend` selects the agent CLI; None resolves via CODING_AGENT/default.
     Returns (success, final_result_text).
     """
-    prompt_path = PROMPTS_DIR / f"{agent_key}.md"
+    prompt_path = PROMPTS_DIR / f"{prompt_key or agent_key}.md"
     if not prompt_path.exists():
         return False, f"Prompt not found: {prompt_path}"
 
