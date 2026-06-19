@@ -21,7 +21,7 @@ export HOLDOUT_SLURM_DIR
 # --- knobs (exported so --export=ALL carries them into every job) ----------
 export N_REPEATS="${N_REPEATS:-5}"
 # Must match the config's gt_models keys (the setup job validates this).
-export GT_MODELS="${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity}"
+export GT_MODELS="${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity statistical_inference}"
 export SEED_MODELS_REL="${SEED_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}"
 read -r -a _GTS <<< "$GT_MODELS"
 export N_GTS="${#_GTS[@]}"
@@ -44,6 +44,12 @@ if [[ -n "${SMOKE:-}" ]]; then
   echo ">>> SMOKE MODE: $TOTAL task(s), $MAX_PARALLEL concurrent, cheap settings"
 fi
 
+# Array spec: full sweep by default; ARRAY_TASKS overrides it to rerun a subset
+# (e.g. ARRAY_TASKS=14 to redo one failed task on the same WORK_ROOT via --resume,
+# or "1,4,14" / "1-5"). Pair with the original WORK_ROOT so --resume reuses work.
+ARRAY_SPEC="1-${TOTAL}%${MAX_PARALLEL}"
+[[ -n "${ARRAY_TASKS:-}" ]] && ARRAY_SPEC="$ARRAY_TASKS"
+
 # Optional pass-throughs (only export if the caller set them).
 [[ -n "${BASE_SEED:-}" ]] && export BASE_SEED
 [[ -n "${CONFIG:-}"    ]] && export CONFIG
@@ -62,7 +68,7 @@ setup_id=$(sbatch --parsable --export=ALL \
 echo "submitted setup job:    $setup_id"
 
 array_id=$(sbatch --parsable --dependency=afterok:"$setup_id" --export=ALL \
-  --array=1-"$TOTAL"%"$MAX_PARALLEL" ${ARRAY_TIME:+--time="$ARRAY_TIME"} \
+  --array="$ARRAY_SPEC" ${ARRAY_TIME:+--time="$ARRAY_TIME"} \
   --output="$LOGDIR/%x_%A_%a.out" --error="$LOGDIR/%x_%A_%a.out" \
   holdout_recovery_array.sbatch)
 echo "submitted array job:    $array_id (1-$TOTAL%$MAX_PARALLEL  =  $N_REPEATS repeats x $N_GTS GTs)"

@@ -510,8 +510,8 @@ class Args:
     """Test statistics the critique agent proposes per round (None ⇒ inner-loop
     default)."""
     critique_alpha: Optional[float] = None
-    """FDR-adjusted p-value threshold for flagging a critique discrepancy
-    (None ⇒ inner-loop default of 0.1; lower = stricter)."""
+    """Raw p-value threshold for flagging a critique discrepancy, no multiple-
+    comparisons correction (None ⇒ inner-loop default of 0.1; lower = stricter)."""
 
 
 def main(args: Args) -> None:

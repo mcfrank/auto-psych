@@ -58,9 +58,9 @@ Run the command given in `CRITIQUE_CONTEXT.md` (it is
 `python3 -m src.critique.ppc ...`). It computes each statistic on the observed
 data and on the model's posterior-predictive replicates, then writes
 `ppc_results.json` with, per statistic: `t_observed`, `null_mean`, `null_std`,
-`z_score`, the two-sided empirical `p_value`, and the Benjamini–Hochberg
-FDR-adjusted `p_value_adjusted`. A statistic is a **significant discrepancy**
-when `significant` is `true` (`p_value_adjusted` ≤ the alpha in the context).
+`z_score`, and the two-sided empirical `p_value`. A statistic is a **significant
+discrepancy** when `significant` is `true` (raw `p_value` ≤ the alpha in the
+context; no multiple-comparisons correction is applied).
 
 Do not hand-edit `ppc_results.json`; it is the harness's output.
 
@@ -82,9 +82,9 @@ Use this structure:
 ```markdown
 # Critique of `<incumbent>`
 
-<one line: N significant discrepancies at FDR α=<alpha>, over <k> test statistics.>
+<one line: N significant discrepancies at p ≤ <alpha>, over <k> test statistics.>
 
-## <statistic name> — observed <t_observed>, model <null_mean> (z=<z_score>, p_adj=<p_value_adjusted>)
+## <statistic name> — observed <t_observed>, model <null_mean> (z=<z_score>, p=<p_value>)
 
 <2–4 sentences: what it measures, the direction of the discrepancy, and which
 assumption to revise.>
@@ -109,4 +109,4 @@ Before stopping, confirm:
       `test_statistic(df)` with `# name:` / `# description:` headers.
 - [ ] `ppc_results.json` exists (you ran the harness, did not write it by hand).
 - [ ] `critiques.md` exists, is non-empty, and only claims significance for
-      statistics whose `p_value_adjusted` ≤ the configured alpha.
+      statistics whose `p_value` ≤ the configured alpha.

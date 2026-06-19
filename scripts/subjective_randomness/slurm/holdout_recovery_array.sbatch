@@ -42,7 +42,7 @@ unset UV_PROJECT_ENVIRONMENT UV_CACHE_DIR UV_PYTHON
 
 # --- task -> (repeat, ground-truth model) ----------------------------------
 BASE_SEED="${BASE_SEED:-0}"
-read -r -a GTS <<< "${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity}"
+read -r -a GTS <<< "${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity statistical_inference}"
 N_GTS="${N_GTS:-${#GTS[@]}}"
 SEED_MODELS_REL="${SEED_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}"
 CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery.yaml}"
@@ -65,6 +65,14 @@ export XDG_DATA_HOME="$RUN_DIR/.xdg/data"
 export XDG_STATE_HOME="$RUN_DIR/.xdg/state"
 export XDG_CACHE_HOME="$RUN_DIR/.xdg/cache"
 mkdir -p "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
+
+# Per-task PyTensor compile dir. pytensor defaults to ~/.pytensor (NFS $HOME),
+# shared across concurrent tasks, so its C-compile filelock contends and goes
+# stale ("OSError: [Errno 116] Stale file handle"). Give each task a private
+# compiledir on node-local SSD (reliable flock, fast, and off $HOME).
+PYTENSOR_BASE="${L_SCRATCH:-$RUN_DIR/.cache}/pytensor"
+mkdir -p "$PYTENSOR_BASE"
+export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"
 
 echo "[task $TASK] repeat=$REPEAT gt=$GT seed=$SEED -> $RUN_DIR"
 [[ -f "$GT_MODELS_SRC/${GT}.py" ]] || { echo "ERROR: GT snapshot missing $GT_MODELS_SRC/${GT}.py (setup job didn't run?)" >&2; exit 1; }

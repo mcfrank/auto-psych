@@ -18,13 +18,12 @@ posterior-predictive check:
 
    (the plus-one keeps finite Monte-Carlo samples from yielding an exact zero)
    and a z-score of the observed value against the replicate distribution.
-3. ``fdr_adjust`` applies Benjamini–Hochberg FDR across the proposed statistics
-   — exploratory discrepancy screening, where FDR is far more powerful than
-   Bonferroni.
 
-A statistic whose FDR-adjusted p-value is at or below ``significance_alpha`` is a
-*significant discrepancy*: concrete evidence of how the incumbent model fails to
-reproduce the data, which the next round of candidate models should address.
+A statistic whose (raw, uncorrected) two-sided p-value is at or below
+``significance_alpha`` is a *significant discrepancy*: concrete evidence of how
+the incumbent model fails to reproduce the data, which the next round of
+candidate models should address. No multiple-comparisons correction is applied —
+this is exploratory discrepancy screening, not confirmatory testing.
 
 This is the statistical core only. The critique agent writes the test-statistic
 files and the natural-language synthesis; this module computes the evidence.
@@ -77,11 +76,10 @@ class TestStatistic:
 class TestStatisticResult:
     """The outcome of evaluating one test statistic under the PPC.
 
-    ``p_value`` is the two-sided empirical p-value; ``p_value_one_sided`` is the
-    upper-tail value (how often the model meets or exceeds the observed). Both
-    are unadjusted; ``p_value_adjusted`` is set by :func:`fdr_adjust`. ``error``
-    is non-None when the statistic's code raised or returned a non-finite value,
-    in which case the p-values are NaN and the statistic is excluded from FDR.
+    ``p_value`` is the two-sided empirical p-value (raw, uncorrected);
+    ``p_value_one_sided`` is the upper-tail value (how often the model meets or
+    exceeds the observed). ``error`` is non-None when the statistic's code raised
+    or returned a non-finite value, in which case the p-values are NaN.
     """
 
     __test__ = False  # not a pytest test class despite the "Test" prefix
@@ -90,7 +88,6 @@ class TestStatisticResult:
     t_observed: float
     t_null: List[float]
     p_value: float
-    p_value_adjusted: float
     p_value_one_sided: float = float("nan")
     z_score: float = float("nan")
     p_value_is_floor: bool = False
@@ -164,7 +161,7 @@ def evaluate_test_statistic(
     Returns a :class:`TestStatisticResult` with the observed value, the null
     distribution over replicates, the two-sided empirical p-value, and a z-score.
     A statistic whose code raises, or which is non-finite anywhere, returns a
-    result with ``error`` set and NaN p-values (excluded from FDR downstream).
+    result with ``error`` set and NaN p-values.
     """
     try:
         t_obs = _execute_test_statistic(test_statistic.code, human_df)
@@ -175,7 +172,6 @@ def evaluate_test_statistic(
             t_observed=float("nan"),
             t_null=[],
             p_value=float("nan"),
-            p_value_adjusted=float("nan"),
             error=f"{type(exc).__name__}: {exc}",
         )
 
@@ -186,7 +182,6 @@ def evaluate_test_statistic(
             t_observed=t_obs,
             t_null=list(t_null_arr),
             p_value=float("nan"),
-            p_value_adjusted=float("nan"),
             error="non-finite test statistic value",
         )
 
@@ -214,36 +209,10 @@ def evaluate_test_statistic(
         t_observed=t_obs,
         t_null=list(t_null_arr),
         p_value=p_two,
-        p_value_adjusted=p_two,  # adjusted in place by fdr_adjust
         p_value_one_sided=p_one,
         z_score=z_score,
         p_value_is_floor=min(n_ge, n_le) == 0,
     )
-
-
-def fdr_adjust(results: List[TestStatisticResult]) -> List[TestStatisticResult]:
-    """In-place Benjamini–Hochberg FDR adjustment over the valid results.
-
-    FDR control is far more powerful than Bonferroni when many statistics are
-    screened — appropriate here, since this is exploratory discrepancy screening
-    rather than confirmatory testing. Errored / non-finite results get NaN.
-    """
-    for r in results:
-        if r.error is not None or math.isnan(r.p_value):
-            r.p_value_adjusted = float("nan")
-
-    valid = [r for r in results if r.error is None and not math.isnan(r.p_value)]
-    m = len(valid)
-    if m == 0:
-        return results
-
-    ordered = sorted(valid, key=lambda r: r.p_value)
-    running_min = 1.0
-    for rank in range(m, 0, -1):
-        r = ordered[rank - 1]
-        running_min = min(running_min, r.p_value * m / rank)
-        r.p_value_adjusted = running_min
-    return results
 
 
 # ─────────────────────────────────────────────
@@ -339,8 +308,8 @@ def _result_to_dict(res: TestStatisticResult, alpha: float) -> Dict[str, Any]:
     t_null = np.asarray(res.t_null, dtype=float) if res.t_null else np.array([])
     significant = (
         res.error is None
-        and not math.isnan(res.p_value_adjusted)
-        and res.p_value_adjusted <= alpha
+        and not math.isnan(res.p_value)
+        and res.p_value <= alpha
     )
     return {
         "name": res.test_statistic.name,
@@ -352,7 +321,6 @@ def _result_to_dict(res: TestStatisticResult, alpha: float) -> Dict[str, Any]:
         "z_score": res.z_score,
         "p_value": res.p_value,
         "p_value_one_sided": res.p_value_one_sided,
-        "p_value_adjusted": res.p_value_adjusted,
         "p_value_is_floor": res.p_value_is_floor,
         "significant": bool(significant),
         "error": res.error,
@@ -371,10 +339,11 @@ def evaluate_test_stat_dir(
 ) -> Dict[str, Any]:
     """Evaluate every ``test_stats_dir/*.py`` statistic under the PPC.
 
-    Builds the observed + replicate frames once, runs every statistic, applies
-    Benjamini–Hochberg FDR, and returns a JSON-serialisable dict with one entry
-    per statistic (sorted most-discrepant first) plus a significance count. Fails
-    loudly if the directory holds no test-statistic files.
+    Builds the observed + replicate frames once, runs every statistic, and
+    returns a JSON-serialisable dict with one entry per statistic (sorted
+    most-discrepant first) plus a significance count (raw two-sided p ≤ alpha;
+    no multiple-comparisons correction). Fails loudly if the directory holds no
+    test-statistic files.
     """
     test_stats_dir = Path(test_stats_dir)
     stat_files = sorted(test_stats_dir.glob("*.py"))
@@ -387,7 +356,6 @@ def evaluate_test_stat_dir(
 
     statistics = [load_test_statistic_file(p) for p in stat_files]
     results = [evaluate_test_statistic(ts, human_df, model_dfs) for ts in statistics]
-    fdr_adjust(results)
 
     rows = [_result_to_dict(r, significance_alpha) for r in results]
     # Most discrepant first: significant before not, then by |z|.
@@ -468,7 +436,8 @@ class Args:
     n_replicates: int = 200
     """Posterior-predictive replicates forming each statistic's null distribution."""
     significance_alpha: float = 0.05
-    """FDR-adjusted threshold for flagging a statistic as a significant discrepancy."""
+    """Raw two-sided p-value threshold for flagging a statistic as a significant
+    discrepancy (no multiple-comparisons correction)."""
     seed: int = 42
     """Seed for posterior-predictive sampling."""
     draws: int = 2000
@@ -502,7 +471,7 @@ def main(args: Args) -> None:
         args.out.write_text(output, encoding="utf-8")
         print(
             f"Wrote {args.out} — {result['n_significant']}/{result['n_test_statistics']} "
-            f"test statistics significant at FDR α={result['significance_alpha']} "
+            f"test statistics significant at p ≤ {result['significance_alpha']} "
             f"({result['n_replicates']} PPC replicates)",
             flush=True,
         )

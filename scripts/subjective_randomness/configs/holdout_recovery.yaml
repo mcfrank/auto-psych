@@ -11,6 +11,7 @@ gt_models:
   bayesian_diagnosticity:
   encoding_compressibility:
   prototype_similarity:
+  statistical_inference:
 
 n_experiments: 3
 n_participants: 30
