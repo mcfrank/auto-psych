@@ -1,5 +1,3 @@
 Consent
 
-This experiment is part of a research study. By continuing, you confirm that you have read the information sheet and agree to participate.
-
-Press any key to continue.
+By answering the following questions, you are participating in a study being performed by cognitive scientists in the Stanford Department of Psychology. If you have questions about this research, please contact us at langcoglab@stanford.edu. You must be at least 18 years old to participate. Your participation in this research is voluntary. You may decline to answer any or all of the following questions. You may decline further participation, at any time, without adverse consequences. Your anonymity is assured; the researchers who have requested your participation will not receive any personal information about you.

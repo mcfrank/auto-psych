@@ -11,4 +11,9 @@ models:
     rationale: |
       Random-looking sequences are diagnostic of a fair coin over salient
       non-random alternatives: alternating, biased, and streaky generators.
+  - name: statistical_inference
+    rationale: |
+      Randomness is the log-likelihood ratio of a fair coin versus a
+      complexity-penalized motif process (Griffiths et al. 2018): sequences
+      with no short motif description are evidence for a random generator.
 

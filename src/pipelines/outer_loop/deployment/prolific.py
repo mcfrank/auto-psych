@@ -23,6 +23,20 @@ def completion_redirect_url(code: str) -> str:
     return "https://app.prolific.com/submissions/complete?cc=" + urllib.parse.quote(code)
 
 
+def compute_reward_cents(cfg: dict[str, Any]) -> int:
+    """Reward (cents) for a study, derived from the configured hourly wage.
+
+    When ``reward_per_hour`` (cents/hour) is set, the reward is computed from it
+    and ``estimated_completion_time`` (minutes) so the effective wage stays fixed
+    even if the study length changes — e.g. 1200 cents/hr over 5 minutes is 100
+    cents. Falls back to an explicit ``reward`` (cents), then to 50.
+    """
+    if cfg.get("reward_per_hour") is not None:
+        minutes = float(cfg.get("estimated_completion_time") or 5)
+        return round(float(cfg["reward_per_hour"]) * minutes / 60.0)
+    return int(cfg.get("reward") or 50)
+
+
 def external_study_url(base_url: str) -> str:
     sep = "&" if "?" in base_url else "?"
     return (
@@ -60,7 +74,7 @@ def build_prolific_plan(
         "completion_option": "code",
         "estimated_completion_time": int(cfg.get("estimated_completion_time") or 5),
         "total_available_places": int(cfg.get("total_available_places") or n_participants),
-        "reward": int(cfg.get("reward") or 50),
+        "reward": compute_reward_cents(cfg),
         "device_compatibility": cfg.get("device_compatibility") or ["desktop"],
     }
     if mode == "test" and test_participant_id:

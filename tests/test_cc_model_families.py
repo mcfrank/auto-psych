@@ -4,6 +4,7 @@ from src.subjective_randomness.model_families import (
     bayesian_diagnosticity,
     encoding_compressibility,
     prototype_similarity,
+    statistical_inference,
 )
 
 
@@ -11,6 +12,7 @@ MODEL_MODULES = [
     bayesian_diagnosticity,
     encoding_compressibility,
     prototype_similarity,
+    statistical_inference,
 ]
 
 TEST_STIMULI = [

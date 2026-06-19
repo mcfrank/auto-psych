@@ -1,0 +1,22 @@
+# Prolific settings for subjective_randomness (used by --prolific-mode test/live).
+# Reward is derived from reward_per_hour so the effective wage stays fixed if the
+# study length changes: reward_per_hour * estimated_completion_time / 60.
+
+estimated_completion_time: 5            # minutes; keep in sync with the actual task length
+reward_per_hour: 1200                   # cents/hour -> $12.00/hr (5 min => $1.00)
+completion_code: AUTO_PSYCH_COMPLETE    # the completion code workers submit to Prolific
+
+# total_available_places controls how many participants Prolific recruits AND how
+# many completed submissions the live collector waits for. Set this to your pilot N.
+total_available_places: 30
+
+name: "Perceptions of randomness in coin-flip sequences"
+description: >-
+  A short (~5 minute) decision task. On each trial you see two sequences of coin
+  flips (Heads and Tails) and choose which one looks more random. There are no
+  right or wrong answers and your responses are anonymous.
+device_compatibility:
+  - desktop
+
+# Required only for --prolific-mode test (must NOT already be a registered Prolific email):
+# test_participant_email: "your-test@example.com"

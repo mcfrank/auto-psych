@@ -53,7 +53,7 @@ def _stub_spawn_cc_agent(calls):
     set forward; the design stub writes a valid EIG-annotated stimuli.json.
     """
 
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None):
+    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None):
         calls.append((agent_key, Path(exp_dir).name))
         if agent_key == "1_theory":
             exp_num = int(exp_dir.name.removeprefix("experiment"))
@@ -242,7 +242,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # The fitted-seed baseline (one flat number, seeds fit on all data) recovers
     # it too, since every stub prediction is identical.
     assert set(gt_run["fitted_baseline"]["per_model"]) == {
-        "bayesian_diagnosticity", "encoding_compressibility"
+        "bayesian_diagnosticity", "encoding_compressibility", "statistical_inference"
     }
     assert gt_run["fitted_baseline"]["mean_r"] == pytest.approx(1.0)
 
@@ -252,12 +252,13 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert {c["name"] for c in fit_calls} == {
         "encoding_compressibility",
         "bayesian_diagnosticity",
+        "statistical_inference",
     }
 
     # The no-learning baseline averages the other seed models (default params)
     # against the GT; with identical stub predictions every correlation is 1.
     assert set(gt_run["baseline"]["per_model"]) == {
-        "bayesian_diagnosticity", "encoding_compressibility"
+        "bayesian_diagnosticity", "encoding_compressibility", "statistical_inference"
     }
     assert gt_run["baseline"]["mean_r"] == pytest.approx(1.0)
 
@@ -583,7 +584,7 @@ def _stub_annotate_eig(calls):
 def _spawn_writing_candidates(calls, pool=CANDIDATE_POOL):
     """Design agent that writes only candidates.json (backgrounded EIG, no stimuli)."""
 
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None):
+    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None):
         calls.append((agent_key, Path(exp_dir).name))
         if agent_key == "2_design":
             design_dir = exp_dir / "design"
@@ -1179,7 +1180,9 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
     # The no-learning baseline is attached (other seeds vs. GT, all stubbed equal).
     baseline = enriched["gt_runs"][0]["baseline"]
     assert set(baseline["per_model"]) == {
-        "bayesian_diagnosticity", "encoding_compressibility"
+        "bayesian_diagnosticity",
+        "encoding_compressibility",
+        "statistical_inference",
     }
     assert baseline["mean_r"] == pytest.approx(1.0)
     # The original result is not mutated.

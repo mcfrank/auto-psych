@@ -34,6 +34,50 @@ _DRIVE_TIMEOUT_MS = 180_000
 _LLM_CONTEXT_MAX_SCREENS = 20
 _FIXATION_WAIT_SEC = 0.25
 _PROLIFIC_POLL_INTERVAL_SEC = 30
+# Stop waiting on a Prolific study after this long so a stalled/under-recruited
+# study (participants return or time out and the target is never met) can't hang
+# the pipeline forever. On timeout we fetch whatever results exist.
+_PROLIFIC_MAX_WAIT_SEC = 2 * 60 * 60  # 2 hours
+
+
+def _poll_prolific_until_target(
+    study_id: str,
+    target_places: int,
+    out_dir: Path,
+    *,
+    max_wait_sec: float = _PROLIFIC_MAX_WAIT_SEC,
+    poll_interval_sec: float = _PROLIFIC_POLL_INTERVAL_SEC,
+) -> int:
+    """Poll Prolific until ``target_places`` submissions complete or time out.
+
+    Returns the last observed COMPLETED count. Bounded by ``max_wait_sec`` so a
+    study that never fills cannot block indefinitely.
+    """
+    from src.runtime.prolific import get_submission_counts
+
+    start = time.monotonic()
+    completed = 0
+    while completed < target_places:
+        counts, err = get_submission_counts(study_id)
+        if err:
+            agent_log(out_dir, f"Prolific poll: study_id={study_id!r} error={err!r}")
+        else:
+            completed = int(counts.get("COMPLETED") or counts.get("completed") or 0)
+            agent_log(
+                out_dir,
+                f"Prolific poll: study_id={study_id!r} completed={completed} target={target_places}",
+            )
+            if completed >= target_places:
+                break
+        if time.monotonic() - start >= max_wait_sec:
+            agent_log(
+                out_dir,
+                f"Prolific poll: timed out after {max_wait_sec}s with "
+                f"completed={completed}/{target_places}; fetching partial results",
+            )
+            break
+        time.sleep(poll_interval_sec)
+    return completed
 
 
 def _get_screen_content(page) -> str:
@@ -539,27 +583,7 @@ def _collect_live(
         )
         return []
 
-    try:
-        from src.runtime.prolific import get_submission_counts
-    except ImportError:
-        agent_log(out_dir, "Collect (live): prolific_client not available")
-        return []
-
-    completed = 0
-    while completed < target_places:
-        counts, err = get_submission_counts(study_id)
-        if err:
-            agent_log(out_dir, f"Prolific poll: study_id={study_id!r} error={err!r}")
-            time.sleep(_PROLIFIC_POLL_INTERVAL_SEC)
-            continue
-        completed = int(counts.get("COMPLETED") or counts.get("completed") or 0)
-        agent_log(
-            out_dir,
-            f"Prolific poll: study_id={study_id!r} completed={completed} target={target_places}",
-        )
-        if completed >= target_places:
-            break
-        time.sleep(_PROLIFIC_POLL_INTERVAL_SEC)
+    _poll_prolific_until_target(study_id, int(target_places), out_dir)
 
     agent_log(out_dir, "Collect (live): fetching results from Firebase")
     url = _results_url(results_api_url, config, project_id, run_id)

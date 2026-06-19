@@ -15,6 +15,8 @@ Feature columns per sequence (``a`` and ``b``):
     p_alts_<x>        alternation proportion (alts / (length - 1))
     max_run_<x>       length of the longest constant run
     max_run_norm_<x>  max_run scaled to [0, 1]
+    rep_motifs_<x>    repetition motifs in the motif parse (n1)
+    alt_motifs_<x>    alternation motifs in the motif parse (n2)
     imbalance_<x>     distance from 50/50 heads/tails
     periodicity_<x>   simple repeating-template score
 """
@@ -37,10 +39,14 @@ INT_FEATURE_COLS = [
     "h_a",
     "alts_a",
     "max_run_a",
+    "rep_motifs_a",
+    "alt_motifs_a",
     "n_b",
     "h_b",
     "alts_b",
     "max_run_b",
+    "rep_motifs_b",
+    "alt_motifs_b",
 ]
 FLOAT_FEATURE_COLS = [
     "p_a",
@@ -55,6 +61,54 @@ FLOAT_FEATURE_COLS = [
     "periodicity_b",
 ]
 REQUIRED_INPUT_COLS = {"sequence_a", "sequence_b", "chose_left"}
+
+
+def parse_motifs(seq: str) -> tuple[int, int]:
+    """Parse an H/T sequence into Falk & Konold (1997) motifs.
+
+    Returns ``(rep_motifs, alt_motifs)`` — the n1 (repetition motifs: maximal
+    constant runs) and n2 (alternation motifs: maximal alternating sub-sequences
+    of length >= 2) of the canonical minimal-description parse, as used by the
+    statistical-inference model of Griffiths, Daniels, Austerweil & Tenenbaum
+    (2018). The parse run-length-encodes the sequence and groups any maximal
+    stretch of >= 2 consecutive length-1 runs (which alternate H/T) into one
+    alternation motif; every other run is a repetition motif. This is Falk &
+    Konold's Difficulty Predictor parse, for which DP = n1 + 2*n2. For example
+    HHTTHTHT -> {HH, TT} repetition + {HTHT} alternation -> (2, 1), DP = 4.
+    """
+    s = seq.strip().upper()
+    n = len(s)
+    if n == 0:
+        return 0, 0
+
+    run_lengths = []
+    cur = 1
+    for i in range(1, n):
+        if s[i] == s[i - 1]:
+            cur += 1
+        else:
+            run_lengths.append(cur)
+            cur = 1
+    run_lengths.append(cur)
+
+    rep_motifs = 0
+    alt_motifs = 0
+    i = 0
+    n_runs = len(run_lengths)
+    while i < n_runs:
+        if run_lengths[i] == 1:
+            j = i
+            while j < n_runs and run_lengths[j] == 1:
+                j += 1
+            if j - i >= 2:
+                alt_motifs += 1
+            else:
+                rep_motifs += 1
+            i = j
+        else:
+            rep_motifs += 1
+            i += 1
+    return rep_motifs, alt_motifs
 
 
 def sequence_features(seq: str, suffix: str) -> Dict[str, int]:
@@ -75,11 +129,14 @@ def sequence_features(seq: str, suffix: str) -> Dict[str, int]:
             prev = c
         if cur > max_run:
             max_run = cur
+    rep_motifs, alt_motifs = parse_motifs(s)
     return {
         f"n_{suffix}": n,
         f"h_{suffix}": h,
         f"alts_{suffix}": alts,
         f"max_run_{suffix}": max_run,
+        f"rep_motifs_{suffix}": rep_motifs,
+        f"alt_motifs_{suffix}": alt_motifs,
     }
 
 

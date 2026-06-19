@@ -44,7 +44,7 @@ DESIGN_STIMULI = [
 def _stub_spawn_cc_agent(calls):
     """Stand-in for the theory/design coding agents (mirrors the seed-model test)."""
 
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None):
+    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None):
         calls.append((agent_key, Path(exp_dir).name))
         if agent_key == "1_theory":
             exp_num = int(exp_dir.name.removeprefix("experiment"))
@@ -224,12 +224,13 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     assert gt_run["gt_model"] == "more_heads_more_random"
     assert [row["global_step"] for row in gt_run["trajectory"]] == [0, 1, 2, 3]
 
-    # The fitted-seed baseline fits all three normal seeds (none excluded, since
-    # the impossible GT is not in the project seed set).
+    # The fitted-seed baseline fits all normal seeds (none excluded, since the
+    # impossible GT is not in the project seed set).
     assert set(gt_run["fitted_baseline"]["per_model"]) == {
         "prototype_similarity",
         "bayesian_diagnosticity",
         "encoding_compressibility",
+        "statistical_inference",
     }
 
     # Leakage is audited and robust to the impossible GT having no model_families

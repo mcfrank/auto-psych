@@ -42,6 +42,7 @@ def test_seed_experiment_models_from_project_copies_active_seed_set(tmp_path):
         "prototype_similarity",
         "encoding_compressibility",
         "bayesian_diagnosticity",
+        "statistical_inference",
     ]
     for name in names:
         model = load_pymc_model(name, models_dir)
