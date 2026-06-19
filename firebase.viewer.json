@@ -1,0 +1,13 @@
+{
+  "hosting": {
+    "site": "auto-psych-viewer",
+    "public": "viewer_dist",
+    "cleanUrls": false,
+    "trailingSlash": false,
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ]
+  }
+}

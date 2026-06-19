@@ -46,6 +46,9 @@ npm-debug.log
 public/
 firebase.generated.json
 
+# Static results-viewer snapshot built by src/viewer/freeze.py (regenerated, never committed)
+viewer_dist/
+
 # remote_jobs (SLURM cluster deployment): per-submission JSON, fetched logs, local env
 remote_jobs/.runs/
 remote_jobs/logs/

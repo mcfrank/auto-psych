@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>auto-psych · study monitor</title>
+  <link rel="stylesheet" href="/static/styles.css" />
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <span class="logo">auto-psych <span class="dot">●</span> study monitor</span>
+      <span class="spacer"></span>
+      <label class="refresh">
+        <input type="checkbox" id="autorefresh" checked />
+        auto-refresh
+      </label>
+      <span class="refresh-state" id="refresh-state"></span>
+      <button class="refresh-now" id="refresh-now" title="Refresh now">↻</button>
+    </header>
+    <div class="body">
+      <aside class="sidebar" id="sidebar">
+        <div class="placeholder">Loading studies…</div>
+      </aside>
+      <main class="content" id="content">
+        <div class="placeholder">Select a study to see live participant data.</div>
+      </main>
+    </div>
+  </div>
+  <script src="/static/app.js"></script>
+</body>
+</html>
