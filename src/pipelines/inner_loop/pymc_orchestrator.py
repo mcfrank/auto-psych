@@ -45,13 +45,13 @@ _CRITIQUE_PROMPT = _PKG_DIR / "prompts" / "critique.md"
 # posterior-predictive critique of the incumbent (best) model: the critique agent
 # proposes test statistics, the PPC harness scores each as a two-sided empirical
 # p-value over ``CRITIQUE_PPC_REPLICATES`` posterior-predictive datasets, and
-# Benjamini–Hochberg FDR flags the significant discrepancies the next round of
-# candidates should address (see ``src/critique/ppc.py``).
+# flags the significant discrepancies (raw p ≤ alpha, no multiple-comparisons
+# correction) the next round of candidates should address (see ``src/critique/ppc.py``).
 CRITIQUE_N_PROPOSALS = 8
-# Loosened from 0.05: the critique is exploratory (it hands leads to the candidate
-# agents), so a more permissive FDR-adjusted threshold surfaces more candidate
-# discrepancies to act on. Override per-run with --critique-alpha.
-CRITIQUE_SIGNIFICANCE_ALPHA = 0.1
+# A critique statistic is a significant discrepancy when its raw two-sided
+# p-value is ≤ this (no multiple-comparisons correction). Override per-run with
+# --critique-alpha.
+CRITIQUE_SIGNIFICANCE_ALPHA = 0.05
 CRITIQUE_PPC_REPLICATES = 200
 
 # Occam backstop for model selection: each model's log-prior is this constant
@@ -461,10 +461,10 @@ def _write_critique_context(
         ppc_command,
         "```",
         "",
-        f"That writes `{results_path}` with a two-sided empirical p-value and a "
-        f"Benjamini–Hochberg FDR-adjusted p-value per statistic ({n_replicates} "
-        "posterior-predictive replicates). A statistic is a **significant "
-        f"discrepancy** when its `p_value_adjusted` ≤ {significance_alpha}.",
+        f"That writes `{results_path}` with a two-sided empirical p-value per "
+        f"statistic ({n_replicates} posterior-predictive replicates). A statistic "
+        f"is a **significant discrepancy** when its `p_value` ≤ {significance_alpha} "
+        "(raw, no multiple-comparisons correction).",
     ]
     (critique_dir / "CRITIQUE_CONTEXT.md").write_text(
         "\n".join(lines) + "\n", encoding="utf-8"
@@ -551,7 +551,7 @@ def _format_critiques_md(result: Dict[str, Any]) -> str:
         f"# Critique of `{result.get('model')}`",
         "",
         f"{result.get('n_significant', 0)} of {result.get('n_test_statistics', 0)} test "
-        f"statistics show a significant discrepancy (FDR-adjusted p ≤ "
+        f"statistics show a significant discrepancy (p ≤ "
         f"{result.get('significance_alpha')}), over {result.get('n_replicates')} "
         "posterior-predictive replicates.",
         "",
@@ -562,7 +562,7 @@ def _format_critiques_md(result: Dict[str, Any]) -> str:
             lines.append(
                 f"- **{r['name']}** — {r.get('description', '')} "
                 f"(observed {r['t_observed']:.3g} vs null mean {r['null_mean']:.3g}, "
-                f"z={r['z_score']:.2f}, adjusted p={r['p_value_adjusted']:.3g})"
+                f"z={r['z_score']:.2f}, p={r['p_value']:.3g})"
             )
     else:
         lines.append("No statistic showed a significant discrepancy — the incumbent fits these checks.")
@@ -716,8 +716,8 @@ def run_pymc_inner_loop(
         (best) model before each candidate round and feed the resulting
         ``critiques.md`` to the candidate agents (see ``src/critique/ppc.py``).
     n_critique_proposals, critique_significance_alpha, n_critique_replicates
-        Test statistics the critique agent proposes per round, the FDR threshold
-        for a significant discrepancy, and the posterior-predictive replicates
+        Test statistics the critique agent proposes per round, the raw p-value
+        threshold for a significant discrepancy, and the posterior-predictive replicates
         forming each statistic's null distribution.
 
     Returns a dict with ``best_model``, ``posteriors``, ``elpd_loo`` and paths.

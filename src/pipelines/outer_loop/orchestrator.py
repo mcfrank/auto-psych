@@ -682,7 +682,7 @@ def run_inner_model_loop_programmatic(
     incumbent before each candidate round (the critique feeds the candidate
     agents); `n_critique_proposals` (None ⇒ inner-loop default) sets how many test
     statistics the critique agent proposes; `critique_alpha` (None ⇒ inner-loop
-    default) is the FDR-adjusted p threshold for flagging a discrepancy.
+    default) is the raw p threshold for flagging a discrepancy.
     """
     from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 

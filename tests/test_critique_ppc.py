@@ -3,8 +3,8 @@
 The critique step generates posterior-predictive replicates from a *fitted*
 PyMC model and compares an LLM-proposed test statistic computed on the observed
 responses against the distribution of that statistic over the replicates. These
-tests cover the pure statistical machinery (empirical p-values, Benjamini–
-Hochberg FDR, test-statistic file parsing) and the frame builder that swaps the
+tests cover the pure statistical machinery (empirical p-values, test-statistic
+file parsing) and the frame builder that swaps the
 observed-response column for each posterior-predictive draw. The frame-builder
 test stubs ``sample_synthetic_responses`` so it never runs MCMC.
 """
@@ -23,7 +23,6 @@ from src.critique.ppc import (
     build_critique_frames,
     evaluate_test_statistic,
     evaluate_test_stat_dir,
-    fdr_adjust,
     load_test_statistic_file,
     run_ppc_for_model,
 )
@@ -94,32 +93,6 @@ def test_evaluate_test_statistic_records_execution_error():
     assert res.error is not None
     assert "RuntimeError" in res.error
     assert math.isnan(res.p_value)
-
-
-def test_fdr_adjust_is_benjamini_hochberg_monotone():
-    def stub(name, p):
-        ts = TestStatistic(name=name, code="", description="")
-        res = evaluate_test_statistic(
-            ts,
-            *_frames([1], [[0]]),  # placeholder; overwritten below
-        )
-        res.p_value = p
-        res.p_value_adjusted = p
-        res.error = None
-        return res
-
-    p_values = [0.001, 0.01, 0.02, 0.5]
-    results = [stub(f"t{i}", p) for i, p in enumerate(p_values)]
-    fdr_adjust(results)
-
-    adjusted = [r.p_value_adjusted for r in results]
-    m = len(p_values)
-    # BH: adjusted[i] = min over k>=rank of (p_k * m / k); also monotone nondecreasing
-    # in p-value order. Smallest raw p should not exceed its naive p*m/1.
-    assert adjusted[0] <= p_values[0] * m / 1 + 1e-12
-    # Adjusted p-values are each >= their raw p-value and <= 1.
-    for raw, adj in zip(p_values, adjusted):
-        assert raw - 1e-12 <= adj <= 1.0
 
 
 def test_load_test_statistic_file_parses_name_and_description(tmp_path):
@@ -209,7 +182,7 @@ def test_evaluate_test_stat_dir_marks_significant(tmp_path, monkeypatch):
 
     results = {r["name"]: r for r in out["results"]}
     assert results["mean_response"]["significant"] is True
-    assert results["mean_response"]["p_value_adjusted"] <= 0.05
+    assert results["mean_response"]["p_value"] <= 0.05
     # A statistic identical on observed and replicates is never significant.
     assert results["constant"]["significant"] is False
     assert out["n_significant"] == 1
@@ -242,7 +215,7 @@ def test_run_ppc_for_model_end_to_end_real_mcmc(tmp_path):
     assert res["name"] == "mean_response"
     assert res["n_replicates"] == 200
     assert math.isfinite(res["t_observed"])
-    assert math.isfinite(res["p_value_adjusted"])
+    assert math.isfinite(res["p_value"])
     # The data were simulated from this model, so its own PPC reproduces the
     # mean response: the observed value sits inside the replicate distribution.
     assert res["significant"] is False
