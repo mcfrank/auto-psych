@@ -1,151 +1,172 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Experiment</title>
-  <script src="https://unpkg.com/jspsych@8.2.3"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
-  <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
-  <style>
-    #progress-wrap { position: fixed; top: 0; left: 0; right: 0; height: 6px; background: #e0e0e0; z-index: 10000; }
-    #progress-fill { height: 100%; width: 0%; background: #4a90d9; transition: width 0.2s ease; }
-    .jspsych-btn-auto { padding: 12px 28px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer; background: #4a90d9; color: white; box-shadow: 0 2px 4px rgba(0,0,0,0.2); }
-    .jspsych-btn-auto:hover { background: #3a7bc8; }
-  </style>
-</head>
-<body>
-  <div id="progress-wrap"><div id="progress-fill"></div></div>
-</body>
-<script>
-  // Injected by pipeline
-  const consentHtml = {{CONSENT_HTML}};
-  const instructionsHtml = {{INSTRUCTIONS_HTML}};
-  const trialVariables = {{STIMULI_JSON}};
-  const trialChoices = {{TRIAL_CHOICES_JSON}};
-  const debriefHtml = {{DEBRIEF_HTML}};
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Experiment</title>
+        <script src="https://unpkg.com/jspsych@8.2.3"></script>
+        <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+        <link
+            href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css"
+            rel="stylesheet"
+            type="text/css"
+        />
+        <style>
+            #progress-wrap {
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 6px;
+                background: #e0e0e0;
+                z-index: 10000;
+            }
+            #progress-fill {
+                height: 100%;
+                width: 0%;
+                background: #4a90d9;
+                transition: width 0.2s ease;
+            }
+            .jspsych-btn-auto {
+                padding: 12px 28px;
+                font-size: 18px;
+                border-radius: 8px;
+                border: none;
+                cursor: pointer;
+                background: #4a90d9;
+                color: white;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            }
+            .jspsych-btn-auto:hover {
+                background: #3a7bc8;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="progress-wrap"><div id="progress-fill"></div></div>
+    </body>
+    <script>
+        // Injected by pipeline. Consent is NOT here: the deployment step injects the
+        // approved verbatim IRB consent gate in front of this experiment, so the
+        // timeline starts at the instructions screen.
+        const instructionsHtml = {{INSTRUCTIONS_HTML}};
+        const trialVariables = {{STIMULI_JSON}};
+        const trialChoices = {{TRIAL_CHOICES_JSON}};
+        const debriefHtml = {{DEBRIEF_HTML}};
 
-  // Capture participant_id from URL (?participant_id=xxx) for Prolific/simulated participants
-  function getUrlParam(name) {
-    var m = new RegExp('[?&]' + name + '=([^&]*)').exec(typeof window !== 'undefined' && window.location ? window.location.search : '');
-    return m ? decodeURIComponent(m[1]) : null;
-  }
-  var urlParticipantId = getUrlParam('participant_id');
-  if (urlParticipantId && typeof window !== 'undefined') window.__participantId = urlParticipantId;
+        // Capture participant_id from URL (?participant_id=xxx) for Prolific/simulated participants
+        function getUrlParam(name) {
+          var m = new RegExp('[?&]' + name + '=([^&]*)').exec(typeof window !== 'undefined' && window.location ? window.location.search : '');
+          return m ? decodeURIComponent(m[1]) : null;
+        }
+        var urlParticipantId = getUrlParam('participant_id');
+        if (urlParticipantId && typeof window !== 'undefined') window.__participantId = urlParticipantId;
 
-  const onFinish = function() {
-    var data = jsPsych.data.get().values();
-    console.log(data);
-    if (typeof window !== 'undefined') window.__experimentData = data;
-    fetch('auto_psych_config.json').then(function(r){
-      if (!r.ok) { console.warn('[auto-psych] /auto_psych_config.json failed:', r.status); return null; }
-      return r.json();
-    }).then(function(cfg){
-      if (cfg && (cfg.collection_session_id || (cfg.project_id != null && cfg.run_id != null))) {
-        var payload = Object.assign({}, cfg, {
-          participant_id: (typeof window !== 'undefined' && window.__participantId != null) ? window.__participantId : Date.now(),
-          trials: data,
-          submitted_at_client: new Date().toISOString(),
-          user_agent: navigator.userAgent
+        const onFinish = function() {
+          var data = jsPsych.data.get().values();
+          console.log(data);
+          if (typeof window !== 'undefined') window.__experimentData = data;
+          fetch('auto_psych_config.json').then(function(r){
+            if (!r.ok) { console.warn('[auto-psych] /auto_psych_config.json failed:', r.status); return null; }
+            return r.json();
+          }).then(function(cfg){
+            if (cfg && (cfg.collection_session_id || (cfg.project_id != null && cfg.run_id != null))) {
+              var payload = Object.assign({}, cfg, {
+                participant_id: (typeof window !== 'undefined' && window.__participantId != null) ? window.__participantId : Date.now(),
+                trials: data,
+                submitted_at_client: new Date().toISOString(),
+                user_agent: navigator.userAgent
+              });
+              fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
+                .then(function(res){
+                  console.log('[auto-psych] POST /submit', res.status, res.ok ? 'OK' : 'FAIL');
+                  if (res.ok && cfg.prolific_redirect_url && typeof window !== 'undefined') window.location = cfg.prolific_redirect_url;
+                })
+                .catch(function(e){ console.warn('[auto-psych] POST /submit error', e); });
+            } else {
+              console.log('[auto-psych] No Firebase config (collection_session_id or project_id/run_id); skipping POST /submit');
+            }
+          }).catch(function(e){ console.warn('[auto-psych] Config fetch error', e); });
+        };
+
+        const jsPsych = initJsPsych({ on_finish: onFinish });
+        if (typeof window !== 'undefined' && window.__participantId) jsPsych.data.addProperties({ participant_id: window.__participantId });
+        const timeline = [];
+
+        var totalTrials = trialVariables.length;
+        var completedTrials = 0;
+        function updateProgress() {
+          var el = document.getElementById('progress-fill');
+          if (el && totalTrials > 0) el.style.width = (100 * completedTrials / totalTrials) + '%';
+        }
+
+        function styledButtonHtml(choice) {
+          return '<button class="jspsych-btn jspsych-btn-auto">' + choice + '</button>';
+        }
+
+        // 1. Instructions – button "Next". (Consent is the injected gate before this.)
+        timeline.push({
+          type: jsPsychHtmlButtonResponse,
+          stimulus: instructionsHtml,
+          choices: ['Next'],
+          button_html: styledButtonHtml,
+          post_trial_gap: 400
         });
-        fetch('/submit', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
-          .then(function(res){
-            console.log('[auto-psych] POST /submit', res.status, res.ok ? 'OK' : 'FAIL');
-            if (res.ok && cfg.prolific_redirect_url && typeof window !== 'undefined') window.location = cfg.prolific_redirect_url;
-          })
-          .catch(function(e){ console.warn('[auto-psych] POST /submit error', e); });
-      } else {
-        console.log('[auto-psych] No Firebase config (collection_session_id or project_id/run_id); skipping POST /submit');
-      }
-    }).catch(function(e){ console.warn('[auto-psych] Config fetch error', e); });
-  };
 
-  const jsPsych = initJsPsych({ on_finish: onFinish });
-  if (typeof window !== 'undefined' && window.__participantId) jsPsych.data.addProperties({ participant_id: window.__participantId });
-  const timeline = [];
+        // 3. Trials: for each stimulus, [fixation 150ms, then main trial] (button
+        //    responses only — same modality the pipeline's implement validator
+        //    enforces). The fixation is a button trial with no buttons that auto-
+        //    advances via trial_duration.
+        const fixation = {
+          type: jsPsychHtmlButtonResponse,
+          stimulus: '<div style="text-align:center; font-size:48px;">+</div>',
+          choices: [],
+          trial_duration: 150
+        };
+        // Per-trial, per-participant side counterbalancing: randomly show one of the
+        // two sequences on the left, then RECORD the presented order (sequence_a = the
+        // sequence shown on the left). This decouples content from physical side so a
+        // side bias is identifiable, with no change to the data contract. Each stimulus
+        // ships both precomputed displays (display_a_left / display_b_left).
+        let presentedOrder = null;
+        const trial = {
+          type: jsPsychHtmlButtonResponse,
+          stimulus: function() {
+            var a = jsPsych.evaluateTimelineVariable('sequence_a');
+            var b = jsPsych.evaluateTimelineVariable('sequence_b');
+            var swap = Math.random() < 0.5;
+            presentedOrder = swap
+              ? { left: b, right: a, html: jsPsych.evaluateTimelineVariable('display_b_left') }
+              : { left: a, right: b, html: jsPsych.evaluateTimelineVariable('display_a_left') };
+            return presentedOrder.html;
+          },
+          choices: trialChoices,
+          button_html: styledButtonHtml,
+          data: { task: 'judgment' },
+          on_finish: function(data) {
+            // sequence_a = the sequence shown on the LEFT; the first button (index 0)
+            // is the left option, so chose_left = (response === 0).
+            data.sequence_a = presentedOrder.left;
+            data.sequence_b = presentedOrder.right;
+            data.chose_left = (data.response === 0);
+            completedTrials++;
+            updateProgress();
+          }
+        };
+        timeline.push({
+          timeline: [fixation, trial],
+          timeline_variables: trialVariables,
+          randomize_order: true
+        });
 
-  var totalTrials = trialVariables.length;
-  var completedTrials = 0;
-  function updateProgress() {
-    var el = document.getElementById('progress-fill');
-    if (el && totalTrials > 0) el.style.width = (100 * completedTrials / totalTrials) + '%';
-  }
+        // 3. Debrief – button "End"
+        timeline.push({
+          type: jsPsychHtmlButtonResponse,
+          stimulus: debriefHtml,
+          choices: ['End'],
+          button_html: styledButtonHtml
+        });
 
-  function styledButtonHtml(choice) {
-    return '<button class="jspsych-btn jspsych-btn-auto">' + choice + '</button>';
-  }
-
-  // 1. Consent – button "I agree"
-  timeline.push({
-    type: jsPsychHtmlButtonResponse,
-    stimulus: consentHtml,
-    choices: ['I agree'],
-    button_html: styledButtonHtml
-  });
-
-  // 2. Instructions – button "Next"
-  timeline.push({
-    type: jsPsychHtmlButtonResponse,
-    stimulus: instructionsHtml,
-    choices: ['Next'],
-    button_html: styledButtonHtml,
-    post_trial_gap: 400
-  });
-
-  // 3. Trials: for each stimulus, [fixation 150ms, then main trial] (button
-  //    responses only — same modality the pipeline's implement validator
-  //    enforces). The fixation is a button trial with no buttons that auto-
-  //    advances via trial_duration.
-  const fixation = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: '<div style="text-align:center; font-size:48px;">+</div>',
-    choices: [],
-    trial_duration: 150
-  };
-  // Per-trial, per-participant side counterbalancing: randomly show one of the
-  // two sequences on the left, then RECORD the presented order (sequence_a = the
-  // sequence shown on the left). This decouples content from physical side so a
-  // side bias is identifiable, with no change to the data contract. Each stimulus
-  // ships both precomputed displays (display_a_left / display_b_left).
-  let presentedOrder = null;
-  const trial = {
-    type: jsPsychHtmlButtonResponse,
-    stimulus: function() {
-      var a = jsPsych.evaluateTimelineVariable('sequence_a');
-      var b = jsPsych.evaluateTimelineVariable('sequence_b');
-      var swap = Math.random() < 0.5;
-      presentedOrder = swap
-        ? { left: b, right: a, html: jsPsych.evaluateTimelineVariable('display_b_left') }
-        : { left: a, right: b, html: jsPsych.evaluateTimelineVariable('display_a_left') };
-      return presentedOrder.html;
-    },
-    choices: trialChoices,
-    button_html: styledButtonHtml,
-    data: { task: 'judgment' },
-    on_finish: function(data) {
-      // sequence_a = the sequence shown on the LEFT; the first button (index 0)
-      // is the left option, so chose_left = (response === 0).
-      data.sequence_a = presentedOrder.left;
-      data.sequence_b = presentedOrder.right;
-      data.chose_left = (data.response === 0);
-      completedTrials++;
-      updateProgress();
-    }
-  };
-  timeline.push({
-    timeline: [fixation, trial],
-    timeline_variables: trialVariables,
-    randomize_order: true
-  });
-
-  // 4. Debrief – button "End"
-  timeline.push({
-    type: jsPsychHtmlButtonResponse,
-    stimulus: debriefHtml,
-    choices: ['End'],
-    button_html: styledButtonHtml
-  });
-
-  jsPsych.run(timeline);
-</script>
+        jsPsych.run(timeline);
+    </script>
 </html>

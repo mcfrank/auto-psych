@@ -15,6 +15,29 @@ Treat the structure below as a fixed template: copy it, change only the embedded
 stimuli (and use the project's exact presentation wording). Do not add, remove,
 or reorder anything else.
 
+## Participant flow (required order)
+
+Every participant must experience the study in **exactly this order**:
+
+1. **Consent + "I agree"** — a full-screen page showing the IRB-approved consent
+   text with an **"I agree"** button. **You do NOT build this.** The deployment
+   step injects it automatically, using the approved verbatim wording, as a gate
+   in front of your experiment; clicking **"I agree"** reveals whatever your
+   timeline shows first. Do **not** write your own consent text or agree button —
+   reproducing or paraphrasing approved IRB wording yourself is not allowed.
+2. **Instructions** — the **first screen of your jsPsych timeline MUST be an
+   instructions page** that tells the participant what the task is, what they will
+   see, and how to respond. No trial may appear before it. This page is **purely
+   task instructions** — it must **not** look like a second consent form: do not
+   title it "consent" / "Research Study Consent", do not restate consent,
+   voluntary-participation, anonymity, or withdrawal language, and do not add an
+   "I agree" button. The participant already consented on the injected screen, so
+   a second consent-looking page confuses them.
+3. **Trials** — one stimulus per trial, as described in the problem definition.
+
+In short: the consent gate is added for you, so your timeline begins with the
+**instructions page** and then the trials — never a trial first.
+
 ## Your task
 
 1. **Read CONTEXT.md** (path below) — it has the paths to the problem definition,
@@ -33,33 +56,58 @@ or reorder anything else.
 ```html
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Experiment</title>
-  <script src="https://unpkg.com/jspsych@7.3.4"></script>
-  <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" />
-  <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
-  <style>
-    /* Readable prose block for instructions/debrief — constrained width, left
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Experiment</title>
+    <script src="https://unpkg.com/jspsych@7.3.4"></script>
+    <link
+      href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
+    <style>
+      /* Readable prose block for instructions/debrief — constrained width, left
        aligned, comfortable line height. Without this, text spans the full screen. */
-    .auto-psych-prose { max-width: 620px; margin: 0 auto; text-align: left; line-height: 1.6; font-size: 18px; }
-    .auto-psych-prose p { margin: 0 0 1em; }
-    .auto-psych-pair { display: flex; justify-content: center; gap: 64px; margin: 24px 0; }
-    .auto-psych-seq { font-family: monospace; font-size: 28px; letter-spacing: 4px; }
-    .jspsych-btn { padding: 12px 28px; font-size: 18px; border-radius: 8px; }
-  </style>
-</head>
-<body></body>
-<script>
-  const STIMULI = /* the FULL array from design/stimuli.json, verbatim */;
+      .auto-psych-prose {
+        max-width: 620px;
+        margin: 0 auto;
+        text-align: left;
+        line-height: 1.6;
+        font-size: 18px;
+      }
+      .auto-psych-prose p {
+        margin: 0 0 1em;
+      }
+      .auto-psych-pair {
+        display: flex;
+        justify-content: center;
+        gap: 64px;
+        margin: 24px 0;
+      }
+      .auto-psych-seq {
+        font-family: monospace;
+        font-size: 28px;
+        letter-spacing: 4px;
+      }
+      .jspsych-btn {
+        padding: 12px 28px;
+        font-size: 18px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body></body>
+  <script>
+    const STIMULI = /* the FULL array from design/stimuli.json, verbatim */;
 
-  const jsPsych = initJsPsych({
-    on_finish: function () { window.__experimentData = jsPsych.data.get().values(); }
-  });
+    const jsPsych = initJsPsych({
+      on_finish: function () { window.__experimentData = jsPsych.data.get().values(); }
+    });
 
-  const timeline = [];
+    const timeline = [];
 
+<<<<<<< HEAD
   // 1. Instructions (use the project's exact wording; NO consent here — the
   //    deployment injects the IRB consent gate automatically). Render the wording
   //    as HTML inside the .auto-psych-prose container: one <p> per paragraph, and
@@ -96,19 +144,48 @@ or reorder anything else.
       choices: ['LEFT_CHOICE_LABEL', 'RIGHT_CHOICE_LABEL'],   // first button = left
       data: { sequence_a: left, sequence_b: right },          // PRESENTED order
       on_finish: function (data) { data.chose_left = data.response === 0 ? 1 : 0; }
+=======
+    // 1. Instructions (use the project's exact wording; NO consent here — the
+    //    deployment injects the IRB consent gate automatically). Render the wording
+    //    as HTML inside the .auto-psych-prose container: one <p> per paragraph, and
+    //    convert **bold** -> <strong>bold</strong>. NEVER emit raw Markdown (no `**`).
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus:
+        '<div class="auto-psych-prose">' +
+          '<p>INSTRUCTIONS_PARAGRAPH_1</p>' +
+          '<p>INSTRUCTIONS_PARAGRAPH_2 …</p>' +   // one <p> per paragraph; <strong> for bold
+        '</div>',
+      choices: ['Begin']
+>>>>>>> be48bff (prevent models from adding a second consent form)
     });
-  });
 
-  // 3. Debrief (project's exact wording; same .auto-psych-prose container, HTML
-  //    rendering, no raw Markdown).
-  timeline.push({
-    type: jsPsychHtmlButtonResponse,
-    stimulus: '<div class="auto-psych-prose"><p>DEBRIEF_TEXT_FROM_PROBLEM_DEFINITION</p></div>',
-    choices: ['Finish']
-  });
+    // 2. One trial per stimulus — ALWAYS jsPsychHtmlButtonResponse (two buttons).
+    STIMULI.forEach(function (s) {
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus:
+          '<p>CHOICE_PROMPT_FROM_PROBLEM_DEFINITION</p>' +
+          '<div class="auto-psych-pair">' +
+            '<div class="auto-psych-seq">' + s.sequence_a + '</div>' +
+            '<div class="auto-psych-seq">' + s.sequence_b + '</div>' +
+          '</div>',
+        choices: ['LEFT_CHOICE_LABEL', 'RIGHT_CHOICE_LABEL'],   // left = first/sequence_a
+        data: { sequence_a: s.sequence_a, sequence_b: s.sequence_b },
+        on_finish: function (data) { data.chose_left = data.response === 0 ? 1 : 0; }
+      });
+    });
 
-  jsPsych.run(timeline);
-</script>
+    // 3. Debrief (project's exact wording; same .auto-psych-prose container, HTML
+    //    rendering, no raw Markdown).
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: '<div class="auto-psych-prose"><p>DEBRIEF_TEXT_FROM_PROBLEM_DEFINITION</p></div>',
+      choices: ['Finish']
+    });
+
+    jsPsych.run(timeline);
+  </script>
 </html>
 ```
 
@@ -160,5 +237,6 @@ or reorder anything else.
 - [ ] Instructions / choice labels / debrief match the problem definition's wording exactly
 - [ ] All `**bold**` rendered as `<strong>`; **no literal `**`/`*` anywhere in the page**
 - [ ] Instructions and debrief wrapped in `<div class="auto-psych-prose">…</div>`
-- [ ] No consent screen, no submission code, no absolute root paths
+- [ ] No consent screen or "I agree" button; instructions page not titled/worded like a consent form (no "Research Study Consent" heading, no withdrawal/anonymity language)
+- [ ] No submission code, no absolute root paths
 - [ ] `experiment/config.json` is `{ "experiment_url": null }`

@@ -60,6 +60,26 @@ def test_render_template_experiment_fills_every_placeholder(tmp_path):
     assert "presentedOrder" in index
 
 
+def test_render_template_experiment_has_no_builtin_consent(tmp_path):
+    """The template must NOT carry its own consent screen.
+
+    Consent is injected at deployment from the approved verbatim IRB text
+    (``ensure_consent_gate``). If the template also had a consent step, a
+    participant would see two consent forms — and the template's wording is an
+    unapproved paraphrase. So the rendered experiment starts at instructions.
+    """
+    exp_dir = tmp_path / "smoke_experiment"
+    experiment_dir = render_template_experiment(exp_dir, n_stimuli=2)
+    index = (experiment_dir / "index.html").read_text(encoding="utf-8")
+
+    # The template's own consent step + "I agree" button must be gone; the only
+    # consent is the gate injected by stage_experiment at deploy time.
+    assert "I agree" not in index
+    assert "consentHtml" not in index
+    # The instructions screen (the real first screen) remains.
+    assert "Instructions" in index
+
+
 def test_render_template_experiment_writes_design_and_config(tmp_path):
     exp_dir = tmp_path / "smoke_experiment"
     render_template_experiment(exp_dir, n_stimuli=2)

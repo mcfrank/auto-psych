@@ -41,19 +41,9 @@ _RANDOMNESS_STIMULUS_PAIRS = [
     ("HHHHTTTT", "HTTHTHHT"),
 ]
 
-DEFAULT_CONSENT_HTML = (
-    "<h2>Research Study Consent</h2>"
-    "<p style=\"max-width:560px; text-align:left; margin:auto;\">"
-    "You are invited to take part in a short study about how people perceive "
-    "randomness. On each trial you will see two short sequences of coin-flip "
-    "outcomes (H = Heads, T = Tails) and choose which one looks more random. "
-    "The study takes about 5 minutes. Participation is voluntary and your "
-    "responses are anonymous.</p>"
-)
-
 DEFAULT_INSTRUCTIONS_HTML = (
     "<h2>Instructions</h2>"
-    "<p style=\"max-width:560px; text-align:left; margin:auto;\">"
+    '<p style="max-width:560px; text-align:left; margin:auto;">'
     "On each screen you will see two sequences of coin flips, on the left and "
     "the right. Decide which one looks <strong>more random</strong> to you, "
     "then press <strong>F</strong> for the left sequence or <strong>J</strong> "
@@ -62,7 +52,7 @@ DEFAULT_INSTRUCTIONS_HTML = (
 
 DEFAULT_DEBRIEF_HTML = (
     "<h2>Thank you!</h2>"
-    "<p style=\"max-width:560px; text-align:left; margin:auto;\">"
+    '<p style="max-width:560px; text-align:left; margin:auto;">'
     "You have completed the study and your responses have been recorded. This "
     "study examines the systematic intuitions people hold about what random "
     "coin-flip sequences look like.</p>"
@@ -133,7 +123,6 @@ def render_template_experiment(
     *,
     n_stimuli: int = 4,
     stimuli: list[dict[str, str]] | None = None,
-    consent_html: str = DEFAULT_CONSENT_HTML,
     instructions_html: str = DEFAULT_INSTRUCTIONS_HTML,
     debrief_html: str = DEFAULT_DEBRIEF_HTML,
 ) -> Path:
@@ -162,12 +151,8 @@ def render_template_experiment(
         {
             "sequence_a": s["sequence_a"],
             "sequence_b": s["sequence_b"],
-            "display_a_left": render_stimulus_display(
-                s["sequence_a"], s["sequence_b"]
-            ),
-            "display_b_left": render_stimulus_display(
-                s["sequence_b"], s["sequence_a"]
-            ),
+            "display_a_left": render_stimulus_display(s["sequence_a"], s["sequence_b"]),
+            "display_b_left": render_stimulus_display(s["sequence_b"], s["sequence_a"]),
         }
         for s in stimuli
     ]
@@ -177,7 +162,6 @@ def render_template_experiment(
     # substitute JSON — strings become quoted JS string literals, lists become
     # JS array literals — which is exactly what the template expects.
     substitutions = {
-        "{{CONSENT_HTML}}": json.dumps(consent_html),
         "{{INSTRUCTIONS_HTML}}": json.dumps(instructions_html),
         "{{STIMULI_JSON}}": json.dumps(trial_variables, indent=2),
         "{{TRIAL_CHOICES_JSON}}": json.dumps(TRIAL_CHOICES),
@@ -220,7 +204,9 @@ def write_smoke_experiment(exp_dir: Path) -> Path:
 
     stimuli_json = json.dumps(SMOKE_STIMULI, indent=2)
     (design_dir / "stimuli.json").write_text(stimuli_json + "\n", encoding="utf-8")
-    (experiment_dir / "config.json").write_text('{"experiment_url": null}\n', encoding="utf-8")
+    (experiment_dir / "config.json").write_text(
+        '{"experiment_url": null}\n', encoding="utf-8"
+    )
     (experiment_dir / "index.html").write_text(
         f"""<!doctype html>
 <html lang="en">
