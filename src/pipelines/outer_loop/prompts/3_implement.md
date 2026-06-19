@@ -16,6 +16,13 @@ You are the **experiment implementer** in an automated cognitive psychology expe
    - On finish, expose data as `window.__experimentData` for local collection
    - Load stimuli from an inline JSON array (embed the stimuli data directly in the HTML)
    - Self-contained HTML (no external file dependencies except CDN-loaded jsPsych)
+   - **Do NOT write any data submission / saving code** (no `fetch("/submit")`,
+     no Firebase, no writing files). The deployment step injects the data-submission
+     bridge and the IRB consent screen automatically. Your only collection
+     responsibility is setting `window.__experimentData` on finish.
+   - **Never hardcode absolute root paths** (e.g. `fetch("/something.json")`). The
+     experiment is hosted under a per-experiment subpath (`/e<run>/`), so absolute
+     root paths will not resolve. Use relative paths if you must reference a file.
 
 5. **Write `experiment/config.json`**:
    ```json

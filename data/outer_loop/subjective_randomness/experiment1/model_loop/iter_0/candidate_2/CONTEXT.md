@@ -1,7 +1,7 @@
 # Inner Loop — round 0, candidate 2 of 3
 
 Responses CSV: `/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/experiment1/model_loop/responses.csv`
-Feature columns available (use these as `pm.Data` names): `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,n_b,h_b,alts_b,max_run_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+Feature columns available (use these as `pm.Data` names): `participant_id,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
 
 Work in two steps:
 1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
@@ -11,3 +11,9 @@ Work in two steps:
 `existing_hypotheses.md` lists the hypotheses already in the model set and
 how well each fits. Read it so you propose a *distinct* or *refined*
 hypothesis — never a blend of several.
+
+`critiques.md` (/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/experiment1/model_loop/iter_0/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy.
+Treat these as the **strongest evidence** for what your hypothesis should
+fix — propose a single mechanism that would close one of these gaps.

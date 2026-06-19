@@ -1,0 +1,1 @@
+People judge a sequence as more random when its proportion of heads is closer to 50% — the rate expected from a fair coin. The sequence whose head proportion is nearest to 0.5 looks most random, regardless of run structure or alternation patterns.

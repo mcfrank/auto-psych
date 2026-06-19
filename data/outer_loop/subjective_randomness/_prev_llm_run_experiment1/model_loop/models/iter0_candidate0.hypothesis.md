@@ -1,0 +1,1 @@
+People judge a sequence as random based solely on how close its alternation rate (the proportion of adjacent pairs that differ) is to 50% — the rate expected from a fair coin. The sequence whose alternation rate is nearest to 50% looks more random, regardless of whether its heads-to-tails ratio is balanced.

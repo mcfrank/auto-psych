@@ -13,6 +13,7 @@ from __future__ import annotations
 import csv
 import importlib.util
 import json
+import os
 import re
 import shutil
 import sys
@@ -41,8 +42,14 @@ def outer_project_dir(project_id: str) -> Path:
 
 
 def outer_data_dir() -> Path:
-    """Generated experiment *outputs* (one subtree per project)."""
-    return REPO_ROOT / "data" / "outer_loop"
+    """Generated experiment *outputs* (one subtree per project).
+
+    Override with ``AUTO_PSYCH_OUTPUT_DIR`` so parallel runs (e.g. separate
+    cluster jobs sharing one checkout) each write to their own output tree and
+    don't collide on ``experiment{N}/`` dirs or pool each other's responses.
+    """
+    override = os.environ.get("AUTO_PSYCH_OUTPUT_DIR")
+    return Path(override) if override else REPO_ROOT / "data" / "outer_loop"
 
 
 def experiment_dir(project_id: str, exp_num: int) -> Path:
@@ -307,6 +314,10 @@ def _collect_llm_participant_programmatic(
         participant_model=model,
         prompt_text=prompt_text,
         transcripts_dir=data_dir / "transcripts",
+        progress=lambda pid, n_rows: print(
+            f"  [collect] participant {pid + 1}/{n_participants} done ({n_rows} responses)",
+            flush=True,
+        ),
     )
     print(
         f"  [collect] {stats['n_rows']} rows (unparseable={stats['n_unparseable']}, errors={stats['n_errors']})",
@@ -512,6 +523,7 @@ def run_deployment_programmatic(
     firebase_project: Optional[str],
     firebase_region: str,
     backend: Optional[str],
+    run_label: Optional[str] = None,
 ) -> Path:
     """Run the deployment phase between implement and collect."""
     from src.pipelines.outer_loop.deployment import run_deployment
@@ -528,6 +540,7 @@ def run_deployment_programmatic(
         firebase_region=firebase_region,
         n_participants=n_participants,
         repo_root=REPO_ROOT,
+        run_label=run_label,
     )
     print(f"  [deploy] Wrote deployment manifest: {manifest_path}", flush=True)
     return manifest_path
@@ -650,6 +663,7 @@ def run_inner_model_loop_programmatic(
     complexity_prior_const: Optional[float] = None,
     enable_critique: bool = True,
     n_critique_proposals: Optional[int] = None,
+    critique_alpha: Optional[float] = None,
 ) -> Path:
     """Run the PyMC inner model loop over pooled outer-loop data.
 
@@ -667,7 +681,8 @@ def run_inner_model_loop_programmatic(
     `enable_critique` runs a CriticAL posterior-predictive critique of the
     incumbent before each candidate round (the critique feeds the candidate
     agents); `n_critique_proposals` (None ⇒ inner-loop default) sets how many test
-    statistics the critique agent proposes.
+    statistics the critique agent proposes; `critique_alpha` (None ⇒ inner-loop
+    default) is the FDR-adjusted p threshold for flagging a discrepancy.
     """
     from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 
@@ -693,9 +708,11 @@ def run_inner_model_loop_programmatic(
         if complexity_prior_const is None
         else {"complexity_prior_const": complexity_prior_const}
     )
-    # None ⇒ inherit run_pymc_inner_loop's default proposal count.
+    # None ⇒ inherit run_pymc_inner_loop's default proposal count / critique alpha.
     if n_critique_proposals is not None:
         extra["n_critique_proposals"] = n_critique_proposals
+    if critique_alpha is not None:
+        extra["critique_significance_alpha"] = critique_alpha
     run_pymc_inner_loop(
         responses_path,
         loop_dir,

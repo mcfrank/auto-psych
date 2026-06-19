@@ -96,6 +96,30 @@ def _patch_critique_agent(monkeypatch, spawn_log):
     )
 
 
+def test_critique_default_significance_alpha_is_loosened():
+    # The critique's default FDR threshold was loosened from 0.05 to 0.1 so the
+    # exploratory critique surfaces more leads; --critique-alpha overrides it.
+    import inspect
+
+    from src.pipelines.inner_loop.pymc_orchestrator import (
+        CRITIQUE_SIGNIFICANCE_ALPHA,
+        run_pymc_inner_loop,
+    )
+
+    assert CRITIQUE_SIGNIFICANCE_ALPHA == 0.1
+    default = inspect.signature(run_pymc_inner_loop).parameters[
+        "critique_significance_alpha"
+    ].default
+    assert default == 0.1
+
+
+def test_critique_module_defines_repo_root():
+    # Regression: `_spawn_critique_agent` runs the critique agent with
+    # `cwd=REPO_ROOT`. A missing module-level import made every critique skip with
+    # "NameError: name 'REPO_ROOT' is not defined". Guard the symbol's presence.
+    assert hasattr(pymc_orchestrator, "REPO_ROOT")
+
+
 def test_critique_runs_before_each_candidate_round_and_feeds_candidates(
     tmp_path, monkeypatch
 ):

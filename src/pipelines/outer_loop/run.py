@@ -14,9 +14,11 @@ Usage:
 
 from __future__ import annotations
 
+import json
 import os
 import re
 import sys
+import uuid
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal, Optional
@@ -88,6 +90,7 @@ def _run_agent(
     prolific_mode: str = "none",
     enable_critique: bool = True,
     n_critique_proposals: Optional[int] = None,
+    critique_alpha: Optional[float] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output is invalid."""
     print(f"\n{'=' * 60}", flush=True)
@@ -113,6 +116,7 @@ def _run_agent(
             fit_kwargs=fit_kwargs,
             enable_critique=enable_critique,
             n_critique_proposals=n_critique_proposals,
+            critique_alpha=critique_alpha,
         )
     else:
         write_context(
@@ -145,6 +149,125 @@ def _run_agent(
             sys.exit(1)
 
 
+def _posterior_design_inputs(exp_dir: Path, prev_exp_dir: Path):
+    """Posterior model weights + per-model posterior parameter sets from the prior run.
+
+    For experiments >= 2, EIG is computed under the previous experiment's
+    posterior: model weights from its ``model_registry.yaml`` and per-model
+    parameter draws obtained by fitting the current (carried-forward) models on
+    the previous experiment's responses. Each model must have a pure-Python family
+    twin (so its posterior draws can score the ~129k candidate pool quickly);
+    fails loudly otherwise.
+    """
+    import importlib
+
+    import yaml
+
+    from src.models.pymc_inference import fit_model
+    from src.models.theorist.loader import get_model_names_from_manifest
+    from src.registry.io import load_registry
+    from src.subjective_randomness.stimulus_design import posterior_param_sets
+
+    models_dir = exp_dir / "cognitive_models"
+    manifest_path = models_dir / "models_manifest.yaml"
+    if not manifest_path.exists():
+        raise RuntimeError(f"Exhaustive posterior design needs models at {manifest_path}")
+    names = get_model_names_from_manifest(
+        yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}, models_dir
+    )
+    if not names:
+        raise RuntimeError(f"No loadable models in {models_dir} for exhaustive design.")
+
+    responses = prev_exp_dir / "data" / "responses.csv"
+    if not responses.exists():
+        raise RuntimeError(
+            f"Exhaustive posterior design needs experiment {prev_exp_dir.name}'s "
+            f"responses at {responses}, but it is missing."
+        )
+    registry = load_registry(prev_exp_dir / "model_registry.yaml")
+    weights = registry.get("theories") or None
+    if not weights:
+        raise RuntimeError(
+            f"Exhaustive posterior design needs model weights in "
+            f"{prev_exp_dir / 'model_registry.yaml'} (theories), but none were found."
+        )
+
+    cache_dir = exp_dir / "design" / "_fit_cache"
+    param_sets_by_model = {}
+    for name in names:
+        try:
+            family = importlib.import_module(
+                f"src.subjective_randomness.model_families.{name}"
+            )
+        except ModuleNotFoundError as exc:
+            raise RuntimeError(
+                f"--design-mode exhaustive (experiment >= 2) needs a pure-Python family "
+                f"twin for model {name!r} to score the candidate pool under its posterior; "
+                f"none found in src/subjective_randomness/model_families/."
+            ) from exc
+        fitted = fit_model(
+            name, models_dir, responses, cache_dir=cache_dir, draws=500, tune=500, chains=2
+        )
+        param_sets_by_model[name] = posterior_param_sets(
+            fitted.idata, list(family.PARAM_BOUNDS), n_draws=200
+        )
+    return names, param_sets_by_model, weights
+
+
+def _write_exhaustive_design(
+    exp_dir: Path,
+    project_id: str,
+    *,
+    exp_num: int = 1,
+    prev_exp_dir: Optional[Path] = None,
+    k: int = 32,
+    lengths=(2, 3, 4, 5, 6, 7, 8),
+) -> None:
+    """Deterministically select the design's stimuli by exhaustive enumeration.
+
+    Replaces the 2_design coding agent: enumerates every H/T pair over the given
+    lengths and greedily picks ``k`` jointly-informative pairs (diverse over model
+    distinctions), writing ``design/stimuli.json``. Experiment 1 averages EIG over
+    the model parameter *priors* with uniform model weights; experiments >= 2 use
+    the previous experiment's posterior (model weights and parameter draws). Only
+    implemented for subjective_randomness (it scores under its reference families).
+    """
+    if project_id != "subjective_randomness":
+        print(
+            "Error: --design-mode exhaustive is only implemented for "
+            f"subjective_randomness (got {project_id!r}).",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    from src.subjective_randomness.stimulus_design import build_exhaustive_design
+
+    if exp_num <= 1 or prev_exp_dir is None:
+        stimuli = build_exhaustive_design(k=k, lengths=tuple(lengths))
+        basis = "parameter priors + uniform model weights"
+    else:
+        names, param_sets_by_model, weights = _posterior_design_inputs(exp_dir, prev_exp_dir)
+        stimuli = build_exhaustive_design(
+            k=k,
+            lengths=tuple(lengths),
+            model_names=names,
+            param_sets_by_model=param_sets_by_model,
+            model_weights=weights,
+        )
+        basis = f"experiment {exp_num - 1} posterior (model weights + parameter draws)"
+
+    design_dir = exp_dir / "design"
+    design_dir.mkdir(parents=True, exist_ok=True)
+    (design_dir / "stimuli.json").write_text(
+        json.dumps(stimuli, indent=2), encoding="utf-8"
+    )
+    print(
+        f"  [design] Exhaustive: enumerated all H/T pairs over lengths {tuple(lengths)}, "
+        f"selected {len(stimuli)} jointly-informative pairs ({basis}) -> "
+        f"{design_dir / 'stimuli.json'}",
+        flush=True,
+    )
+
+
 def _run_experiment(
     project_id: str,
     exp_num: int,
@@ -169,6 +292,9 @@ def _run_experiment(
     prepare_smoke_experiment: bool = False,
     enable_critique: bool = True,
     n_critique_proposals: Optional[int] = None,
+    critique_alpha: Optional[float] = None,
+    design_mode: str = "agent",
+    run_label: Optional[str] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
@@ -210,6 +336,7 @@ def _run_experiment(
             firebase_project=firebase_project,
             firebase_region=firebase_region,
             backend=backend,
+            run_label=run_label,
         )
         print(
             f"\nExperiment {exp_num} deployment complete. Outputs: {exp_dir_path}",
@@ -242,6 +369,18 @@ def _run_experiment(
         keys_to_run = [key for key in keys_to_run if key != "1_theory"]
 
     for agent_key in keys_to_run:
+        # Exhaustive design replaces the 2_design coding agent. It runs at the
+        # design stage (after 1_theory) so experiments >= 2 see the current models.
+        if agent_key == "2_design" and design_mode == "exhaustive":
+            _write_exhaustive_design(
+                exp_dir_path, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir
+            )
+            if validate:
+                ok, msg = validate_cc_output("2_design", exp_dir_path)
+                if not ok:
+                    print(f"  [error] Exhaustive design invalid: {msg}", file=sys.stderr)
+                    sys.exit(1)
+            continue
         # No-browser mode never uses the jsPsych experiment, so skip building it
         # in a full run (still runnable explicitly via --agent 3_implement).
         if (
@@ -270,6 +409,7 @@ def _run_experiment(
             prolific_mode=prolific_mode,
             enable_critique=enable_critique,
             n_critique_proposals=n_critique_proposals,
+            critique_alpha=critique_alpha,
         )
         if agent_key == "3_implement" and deploy_target != "none":
             print(f"\n{'=' * 60}", flush=True)
@@ -286,6 +426,7 @@ def _run_experiment(
                 firebase_project=firebase_project,
                 firebase_region=firebase_region,
                 backend=backend,
+                run_label=run_label,
             )
 
     if "5_model_loop" in keys_to_run:
@@ -308,6 +449,13 @@ class Args:
         Literal["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]
     ] = None
     """Run only this agent. Omit for full pipeline."""
+    design_mode: Literal["agent", "exhaustive"] = "agent"
+    """How 2_design picks stimuli. 'agent': a coding agent proposes a candidate
+    pool. 'exhaustive': deterministically enumerate the full H/T pair space and
+    greedily select a diverse, jointly-informative set (subjective_randomness)."""
+    run_label: Optional[str] = None
+    """Label that isolates this run's Firebase hosting paths (/e{N}-{label}/) so
+    parallel runs don't deploy to the same URLs. Defaults to a unique auto token."""
     mode: Literal[
         "simulated_participants", "simulated_participants_nobrowser", "live"
     ] = "simulated_participants"
@@ -361,6 +509,9 @@ class Args:
     n_critique_proposals: Optional[int] = None
     """Test statistics the critique agent proposes per round (None ⇒ inner-loop
     default)."""
+    critique_alpha: Optional[float] = None
+    """FDR-adjusted p-value threshold for flagging a critique discrepancy
+    (None ⇒ inner-loop default of 0.1; lower = stricter)."""
 
 
 def main(args: Args) -> None:
@@ -405,6 +556,10 @@ def main(args: Args) -> None:
 
     fit_kwargs = {"draws": args.draws, "tune": args.tune, "chains": args.chains}
 
+    # One label per invocation, shared across this run's experiments, so parallel
+    # runs deploy to distinct /e{N}-{label}/ hosting paths instead of colliding.
+    run_label = args.run_label or uuid.uuid4().hex[:8]
+
     print(
         f"Pipeline: project={project_id} experiments={exp_ids} mode={args.mode} "
         f"agent={backend} deploy={args.deploy_target} prolific={args.prolific_mode} "
@@ -442,6 +597,9 @@ def main(args: Args) -> None:
             prepare_smoke_experiment=args.prepare_smoke_experiment,
             enable_critique=args.critique,
             n_critique_proposals=args.n_critique_proposals,
+            critique_alpha=args.critique_alpha,
+            design_mode=args.design_mode,
+            run_label=run_label,
         )
 
     print("\nAll experiments complete.", flush=True)

@@ -9,6 +9,7 @@ from pathlib import Path
 import re
 import subprocess
 from typing import Any
+import uuid
 
 MANIFEST_FILENAME = "deployment_manifest.json"
 CLIENT_CONFIG_FILENAME = "auto_psych_config.json"
@@ -70,6 +71,7 @@ class DeploymentManifest:
     firebase_region: str
     experiment_url: str | None = None
     results_api_url: str | None = None
+    hosting_path: str | None = None
     prolific_study_id: str | None = None
     prolific_completion_code: str | None = None
     prolific_redirect_url: str | None = None
@@ -130,6 +132,7 @@ def build_manifest(
     firebase_region: str,
     n_participants: int,
     repo_root: Path,
+    run_label: str | None = None,
 ) -> DeploymentManifest:
     if deploy_target not in VALID_DEPLOY_TARGETS:
         raise ValueError(f"Unknown deploy target: {deploy_target}")
@@ -141,8 +144,20 @@ def build_manifest(
     git = git_metadata(repo_root)
     short_sha = (git.get("git_commit") or "nogit")[:7]
     experiment_id = f"{project_id}_experiment{resolved_run_id}"
-    id_base = slug(f"{project_id}-e{resolved_run_id}-{timestamp}-{short_sha}")
-    experiment_url = f"https://{firebase_project}.web.app" if deploy_target == "firebase" and firebase_project else None
+    # The run label (an explicit --run-label, or a unique auto token) makes the
+    # deployment/session ids and hosting path unique PER RUN, so parallel runs
+    # never collide on Firestore session ids or deploy to the same path. The
+    # e{run} part separates experiments within a single run.
+    label = slug(run_label) if run_label else uuid.uuid4().hex[:8]
+    id_base = slug(f"{project_id}-e{resolved_run_id}-{label}-{timestamp}-{short_sha}")
+    site_root = (
+        f"https://{firebase_project}.web.app"
+        if deploy_target == "firebase" and firebase_project
+        else None
+    )
+    # /submit and /results Cloud Functions stay at the site root (results_api_url).
+    hosting_path = f"e{resolved_run_id}-{label}"
+    experiment_url = f"{site_root}/{hosting_path}/" if site_root else None
 
     manifest = DeploymentManifest(
         project_id=project_id,
@@ -158,7 +173,8 @@ def build_manifest(
         firebase_project=firebase_project,
         firebase_region=firebase_region,
         experiment_url=experiment_url,
-        results_api_url=experiment_url,
+        results_api_url=site_root,
+        hosting_path=hosting_path,
         total_available_places=n_participants,
         git_commit=git.get("git_commit"),
         git_dirty=git.get("git_dirty"),

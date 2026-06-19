@@ -1,27 +1,29 @@
 """
-People judge a sequence as less random the longer its longest continuous run of identical outcomes. When comparing two sequences, they prefer the one with the shorter maximum run length as being more random.
+People judge which sequence looks more random by focusing on the longest
+unbroken run of identical outcomes. The sequence with the shorter maximum run
+length appears more random, because long streaks are the most perceptually
+salient violation of randomness expectations. All other structural features
+of the sequence are ignored.
 """
+
 import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
 with pm.Model() as model:
-    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="float64"))
-    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="float64"))
+    # Stimulus inputs — normalized maximum run length for each sequence.
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
 
-    # Free cognitive parameter for decision noise / sensitivity.
-    tau = pm.HalfNormal("tau", sigma=1.0)
+    # Sensitivity to run-length differences (positive = shorter run → more random).
+    beta = pm.HalfNormal("beta", sigma=5.0)
 
-    # People prefer the sequence with the shorter max run, 
-    # so longer runs decrease the subjective randomness score.
-    score_a = -max_run_a
-    score_b = -max_run_b
-    
-    # Sigmoid function maps differences in scores to probabilities.
-    p_left_raw = pm.math.sigmoid(tau * (score_a - score_b))
-    
-    # Clip to avoid exact 0 or 1 for numerical stability during MCMC.
-    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+    # Sequence A looks more random when its max run is shorter than B's.
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (max_run_norm_b - max_run_norm_a)),
+    )
 
+    # Observed response.
     chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
     pm.Bernoulli("response", p=p_left, observed=chose_left)

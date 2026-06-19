@@ -30,6 +30,7 @@ def run_deployment(
     firebase_region: str,
     n_participants: int,
     repo_root: Path,
+    run_label: str | None = None,
 ) -> Path:
     if deploy_target == "none":
         raise ValueError("run_deployment should not be called with deploy_target='none'")
@@ -51,6 +52,7 @@ def run_deployment(
         firebase_region=firebase_region,
         n_participants=n_participants,
         repo_root=repo_root,
+        run_label=run_label,
     )
     manifest.firestore_paths = firestore_paths(manifest)
 
@@ -79,7 +81,12 @@ def run_deployment(
             manifest.metadata["prolific_test_participant_id"] = plan.test_participant_id
 
     deployment_dir = exp_dir / "deployment"
-    public_dir = repo_root / "public" if deploy_target == "firebase" else deployment_dir / "public"
+    # Stage under a per-experiment subdir (e.g. public/e2) so deploying a later
+    # experiment leaves earlier experiments' live pages untouched. The whole
+    # public/ tree is what Firebase Hosting serves.
+    hosting_subdir = manifest.hosting_path or ""
+    public_root = repo_root / "public" if deploy_target == "firebase" else deployment_dir / "public"
+    public_dir = public_root / hosting_subdir
     firebase_config_path = repo_root / "firebase.generated.json" if deploy_target == "firebase" else deployment_dir / "firebase.generated.json"
     manifest.staged_public_dir = str(public_dir)
     manifest.firebase_config_path = str(firebase_config_path)

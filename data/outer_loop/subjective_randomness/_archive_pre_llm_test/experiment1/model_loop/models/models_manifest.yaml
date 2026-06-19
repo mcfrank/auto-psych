@@ -1,0 +1,47 @@
+models:
+- name: equally_likely
+  rationale: 'People judge a sequence as more random the closer its proportion of
+    heads is to 50%.
+
+    '
+- name: alternation_rate
+  rationale: 'People judge a sequence as more random if its proportion of alternations
+    is closer to their subjective ideal alternation rate.
+
+    '
+- name: bayesian_fair_coin
+  rationale: 'Observers compare two binary sequences via the log Bayes factor between
+    a fair-coin null and a biased-coin alternative.
+
+    '
+- name: iter0_candidate0
+  rationale: People judge a sequence as more random the higher its proportion of alternations,
+    evaluating randomness via a linear monotonic preference rather than calculating
+    distance to a subjective ideal alternation rate.
+- name: iter0_candidate1
+  rationale: People judge a sequence as less random the longer its longest continuous
+    run of identical outcomes. When comparing two sequences, they prefer the one with
+    the shorter maximum run length as being more random.
+- name: iter0_candidate2
+  rationale: People judge a sequence as less random if it contains periodic, repeating
+    patterns. When comparing two sequences, they prefer the one with a lower periodicity
+    score as being more randomly generated.
+- name: iter1_candidate0
+  rationale: People evaluate a sequence's randomness by comparing its likelihood under
+    a fair coin against its probability under a biased coin, mathematically marginalizing
+    over all possible alternative biases rather than assuming a single fixed bias.
+    They hold a symmetric prior belief about the alternative coin's bias, with the
+    concentration of this prior acting as a subjective parameter, and they prefer
+    the sequence that provides stronger Bayesian evidence for the fair coin.
+- name: iter1_candidate1
+  rationale: Observers evaluate a sequence's randomness by computing the log Bayes
+    factor between an independent fair coin and an alternative first-order Markov
+    process with a fixed, subjective transition probability. Rather than evaluating
+    the overall proportion of heads, they assess the sequential dependence, preferring
+    sequences that provide stronger evidence against the Markov alternative.
+- name: iter1_candidate2
+  rationale: People evaluate a sequence's randomness by how statistically typical
+    its number of alternations is. They compute the exact binomial probability of
+    observing the sequence's number of alternations under a fair coin, and prefer
+    the sequence whose alternation count is more mathematically probable to occur
+    by chance.

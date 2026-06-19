@@ -2,34 +2,43 @@
 
 Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
 
-## equally_likely  — posterior 0.039, ELPD-LOO -111.65
+## prototype_similarity  — posterior 0.220, ELPD-LOO -74.87
 
-People judge a sequence as more random the closer its proportion of heads is to 50%.
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
 
-## alternation_rate  — posterior 0.047, ELPD-LOO -111.43
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -98.86
 
-People judge a sequence as more random if its proportion of alternations is closer to their subjective ideal alternation rate.
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
 
-## bayesian_fair_coin  — posterior 0.769, ELPD-LOO -108.28
+## bayesian_diagnosticity  — posterior 0.780, ELPD-LOO -71.85
 
-Observers compare two binary sequences via the log Bayes factor between a fair-coin null and a biased-coin alternative.
+Random-looking sequences are diagnostic of a fair coin over salient
+non-random alternatives: alternating, biased, and streaky generators.
 
-## iter0_candidate0  — posterior 0.054, ELPD-LOO -111.48
+## statistical_inference  — posterior 0.000, ELPD-LOO -115.94
 
-People judge a sequence as more random the higher its proportion of alternations, evaluating randomness via a linear monotonic preference rather than calculating distance to a subjective ideal alternation rate.
+Randomness is the log-likelihood ratio of a fair coin versus a
+complexity-penalized motif process (Griffiths et al. 2018): sequences
+with no short motif description are evidence for a random generator.
 
-## iter0_candidate1  — posterior 0.044, ELPD-LOO -111.39
+## iter0_candidate0  — posterior 0.000, ELPD-LOO -167.84
 
-People judge a sequence as less random the longer its longest continuous run of identical outcomes. When comparing two sequences, they prefer the one with the shorter maximum run length as being more random.
+People judge which sequence looks more random by computing Bayesian diagnosticity against a single implicit alternative: a repetitive (streaky) generator that rarely alternates. The sequence whose log-likelihood ratio — fair coin versus repetitive generator — is higher is chosen as more random. The repetitive generator's alternation probability is a free parameter inferred from behavior, expected to sit well below 0.5.
 
-## iter0_candidate2  — posterior 0.047, ELPD-LOO -111.34
+## iter0_candidate1  — posterior 0.000, ELPD-LOO -116.49
 
-People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
+People judge which sequence looks more random by focusing on the longest unbroken run of identical outcomes (e.g., five heads in a row). The sequence with the shorter maximum run length appears more random, because long streaks are the most perceptually salient violation of randomness expectations. All other structural features of the sequence are ignored.
+
+## iter0_candidate2  — posterior 0.000, ELPD-LOO -171.91
+
+People judge a sequence as more random when its proportion of heads is closer to 0.5 — that is, when its head-count is more balanced. The sequence with lower imbalance (smaller deviation from equal heads and tails) is chosen as more random. No other feature of the sequence — alternation patterns, run lengths, or motif structure — matters; only proximity to a 50/50 split drives the choice.
 
 ## iter1_candidate0
 
-People evaluate a sequence's randomness by comparing its likelihood under a fair coin against its probability under a biased coin, mathematically marginalizing over all possible alternative biases rather than assuming a single fixed bias. They hold a symmetric prior belief about the alternative coin's bias, with the concentration of this prior acting as a subjective parameter, and they prefer the sequence that provides stronger Bayesian evidence for the fair coin.
+People judge sequences as random by comparing them to a mental prototype defined by two dimensions: alternation rate and head-balance. Crucially, they apply a conjunctive criterion — a sequence must be near the ideal on *both* dimensions to look random, so the dimension with the larger deviation from the prototype governs the judgment (Chebyshev / worst-case distance). A sequence that is perfectly balanced but wildly alternating looks just as non-random as one that alternates ideally but is heavily biased; only meeting both criteria simultaneously yields a high randomness rating.
 
 ## iter1_candidate1
 
-Observers evaluate a sequence's randomness by computing the log Bayes factor between an independent fair coin and an alternative first-order Markov process with a fixed, subjective transition probability. Rather than evaluating the overall proportion of heads, they assess the sequential dependence, preferring sequences that provide stronger evidence against the Markov alternative.
+People judge which sequence is more random by computing the Falk-Konold Difficulty Predictor (DP = repetition motifs + 2 × alternation motifs), which measures how many motifs are needed to describe the sequence under minimal run-based encoding. The sequence requiring more motifs — one that resists compact description because it has no simple repeating structure — is chosen as more random. Purely alternating and purely streaky sequences both have low DP and are rejected as non-random; only sequences that mix streaks and alternations in an unpredictable way have high DP and appear random.
