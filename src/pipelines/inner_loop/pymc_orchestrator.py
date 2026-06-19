@@ -287,11 +287,32 @@ def _write_candidate_context(
     candidate_dir.mkdir(parents=True, exist_ok=True)
     with responses_path.open(encoding="utf-8") as f:
         header = f.readline().strip()
+    columns = [c for c in header.split(",") if c]
+    raw_sequence_cols = [c for c in ("sequence_a", "sequence_b") if c in columns]
     lines = [
         f"# Inner Loop — round {iteration}, candidate {candidate_idx} of {candidate_count}",
         "",
         f"Responses CSV: `{responses_path}`",
-        f"Feature columns available (use these as `pm.Data` names): `{header}`",
+        f"Columns in the responses CSV: `{header}`",
+        "",
+        "Read the columns you need as `pm.Data` containers, matching each "
+        "container name to a column. **Only numeric columns can back a `pm.Data`** "
+        "— the precomputed integer/float feature columns and `chose_left`.",
+    ]
+    if raw_sequence_cols:
+        lines += [
+            "",
+            f"The raw H/T sequence strings `{'` and `'.join(raw_sequence_cols)}` are "
+            "**not numeric** and cannot be a `pm.Data` directly. To make your "
+            "hypothesis depend on an aspect of the sequence the precomputed features "
+            "discard — order, position, recency, or specific sub-sequences — define a "
+            "module-level `compute_features(sequence_a, sequence_b) -> dict[str, "
+            "float]` in `candidate.py`. The pipeline runs it on the raw sequences for "
+            "every trial and exposes each returned key as a column you read with a "
+            "matching `pm.Data`. This extends the feature space beyond the "
+            "precomputed columns above.",
+        ]
+    lines += [
         "",
         "Work in two steps:",
         "1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.",
