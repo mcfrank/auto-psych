@@ -148,6 +148,72 @@ latest runs — no build step. Partial runs (e.g. smoke runs that skipped
 modeling) load fine; corrupt JSON/YAML artifacts fail loudly with the offending
 filename.
 
+### Publish to the web (static snapshot)
+
+To share results with collaborators, freeze a **curated** set of runs into a
+self-contained static site and host it on Firebase. `src/viewer/freeze.py` calls
+the same scanners the live server uses, so the frozen JSON is identical to the
+API — the same frontend renders it with no server.
+
+```bash
+# 1. Freeze the runs you want to publish into viewer_dist/ (git-ignored).
+uv run python -m src.viewer.freeze \
+    --data-root data \
+    --out-dir viewer_dist \
+    --run-paths outer_loop/subjective_randomness
+
+# 2. One-time: create the dedicated hosting site (needs `firebase login`).
+firebase hosting:sites:create auto-psych-viewer --project auto-psych-2c5da
+
+# 3. Deploy. The isolated firebase.viewer.json hosting-only config can never
+#    touch the experiment site or its Cloud Functions.
+firebase deploy --config firebase.viewer.json \
+    --only hosting:auto-psych-viewer \
+    --project auto-psych-2c5da --non-interactive
+# → https://auto-psych-viewer.web.app
+```
+
+The snapshot is a public, read-only point-in-time copy (re-run the freeze + deploy
+to refresh it). Only the listed `--run-paths` are published; each must be a run
+the viewer discovers, or the freeze fails loudly. Note the frozen JSON inlines
+participant response previews and full agent transcripts — the freeze prints what
+it is publishing so you can vet it before deploying publicly.
+
+## Monitor A Live Study
+
+While a human study is collecting data on Prolific + Firebase, a separate
+dashboard shows what is happening **in real time** — distinct from the run
+explorer above, which reads finished runs from disk. The monitor reads live
+participant submissions from Firestore and recruitment status from Prolific.
+
+```bash
+uv run python -m src.monitor.server                 # serves http://127.0.0.1:8001
+uv run python -m src.monitor.server --port 9001
+uv run python -m src.monitor.server --firebase-project auto-psych-2c5da
+uv run python -m src.monitor.server --host 0.0.0.0  # expose on the network
+```
+
+It discovers studies to watch from the `deployment_manifest.json` files each
+deploy writes into `data/` (only real `firebase` deployments — dry-runs are
+skipped), so launching a study makes it appear with no restart. For each study
+the dashboard shows completion vs. target, the Prolific recruitment counts
+(active / awaiting review / approved / returned / timed out), and a
+**per-participant breakdown**.
+
+The first job of the monitor is to catch degenerate data early. It flags any
+participant who chose the same side on every trial and warns loudly when the
+overall left/right split collapses to one side across the study — exactly the
+silent failure mode (everyone answering identically) that can quietly ruin a
+pilot. The page auto-refreshes every 15 s.
+
+Reading live data needs credentials: Application Default Credentials for
+Firestore (`gcloud auth application-default login`) and `PROLIFIC_API_TOKEN`
+(env or `.secrets`) for the recruitment counts. If Prolific is unreachable the
+participant data still renders and the Prolific error is shown inline.
+
+To preview the dashboard without any cloud access, run it against in-memory demo
+data: `uv run python scratch/monitor_demo.py` (serves http://127.0.0.1:8011).
+
 ## Project Layout
 
 ```text
@@ -189,9 +255,18 @@ src/
     validators.py
   viewer/                # browser-based run explorer (Flask + static SPA)
     server.py            # `python -m src.viewer.server`
+    freeze.py            # `python -m src.viewer.freeze` -> static snapshot for web hosting
     scan.py              # finds runs under data/ -> structured payloads
     models.py            # pydantic schema for the payloads
     transcripts.py       # strips ANSI from agent terminal logs
+    static/              # index.html + app.js + styles.css (no external deps)
+  monitor/               # live dashboard for in-progress human studies (Flask + static SPA)
+    server.py            # `python -m src.monitor.server`
+    discovery.py         # finds monitorable sessions from deployment manifests
+    sources.py           # Firestore + Prolific data sources (live impls + protocols)
+    aggregate.py         # per-participant / choice-balance stats + degenerate-data detection
+    report.py            # assembles API payloads from a session + its live data
+    models.py            # pydantic schema for the payloads
     static/              # index.html + app.js + styles.css (no external deps)
 legacy/
   run_pipeline.py
