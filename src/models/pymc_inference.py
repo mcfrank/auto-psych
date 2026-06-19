@@ -29,6 +29,11 @@ import numpy as np
 # loading this module is cheap when only e.g. cache utilities are used.
 
 
+# Attribute under which a loaded model carries its optional theorist-supplied
+# featurizer (a ``compute_features(sequence_a, sequence_b) -> dict`` callable).
+_EXTRA_FEATURIZER_ATTR = "_auto_psych_extra_featurizer"
+
+
 def _import_pymc():
     import pymc as pm
 
@@ -71,6 +76,20 @@ def load_pymc_model(name: str, models_dir: Path):
             f"{py_path} must define a module-level `model: pm.Model` "
             f"(got {type(model).__name__ if model is not None else 'missing'})"
         )
+
+    # Optional theorist-extensible featurizer: a model may declare
+    # ``compute_features(sequence_a, sequence_b) -> dict[str, float]`` to add
+    # numeric feature columns the base featurizer never produced (e.g.
+    # order/position-sensitive statistics). We attach it to the model so every
+    # data-binding path (extract_observed / make_stim_data) computes those
+    # columns from the raw H/T sequences before binding pm.Data containers.
+    featurizer = getattr(mod, "compute_features", None)
+    if featurizer is not None and not callable(featurizer):
+        raise TypeError(
+            f"{py_path}: `compute_features` must be a callable "
+            f"(sequence_a, sequence_b) -> dict, got {type(featurizer).__name__}"
+        )
+    setattr(model, _EXTRA_FEATURIZER_ATTR, featurizer)
     return model
 
 
@@ -134,13 +153,86 @@ def _read_csv_rows(csv_path: Path) -> List[Dict[str, str]]:
         return list(csv.DictReader(f))
 
 
+def _model_extra_featurizer(model):
+    """The model's optional ``compute_features`` callable, or ``None``."""
+    return getattr(model, _EXTRA_FEATURIZER_ATTR, None)
+
+
+def _augment_rows_with_features(
+    model, rows: List[Dict[str, Any]]
+) -> List[Dict[str, Any]]:
+    """Add a model's theorist-declared extra features to each row.
+
+    If the model carries a ``compute_features(sequence_a, sequence_b)``
+    featurizer, run it over every row's raw H/T sequences and merge the numeric
+    columns it returns. A no-op (returns ``rows`` unchanged) for models that do
+    not declare one. Fails loudly — never silently drops or coerces — if:
+
+    - the featurizer is declared but the rows lack ``sequence_a``/``sequence_b``;
+    - it returns something other than a dict, or a non-finite/non-numeric value;
+    - it returns different feature names for different rows;
+    - a returned feature name collides with an existing column.
+    """
+    featurizer = _model_extra_featurizer(model)
+    if featurizer is None or not rows:
+        return rows
+
+    missing = {"sequence_a", "sequence_b"} - set(rows[0].keys())
+    if missing:
+        raise ValueError(
+            f"Model declares compute_features but rows are missing "
+            f"{sorted(missing)}; the raw H/T sequence columns are required to "
+            "compute extra features."
+        )
+
+    augmented: List[Dict[str, Any]] = []
+    expected_keys: Optional[tuple] = None
+    for i, r in enumerate(rows):
+        extra = featurizer(r["sequence_a"], r["sequence_b"])
+        if not isinstance(extra, dict):
+            raise TypeError(
+                f"compute_features must return a dict of feature_name -> number, "
+                f"got {type(extra).__name__} for row {i}."
+            )
+        keys = tuple(sorted(extra.keys()))
+        if expected_keys is None:
+            expected_keys = keys
+        elif keys != expected_keys:
+            raise ValueError(
+                "compute_features returned inconsistent feature names: row 0 -> "
+                f"{list(expected_keys)}, row {i} -> {list(keys)}. It must return "
+                "the same feature names for every stimulus."
+            )
+        for name, value in extra.items():
+            if name in r:
+                raise ValueError(
+                    f"compute_features feature {name!r} collides with an existing "
+                    "column; extra features must use new names."
+                )
+            if isinstance(value, bool) or not isinstance(value, (int, float)):
+                raise ValueError(
+                    f"compute_features feature {name!r} must be a number, got "
+                    f"{type(value).__name__} ({value!r})."
+                )
+            if not math.isfinite(float(value)):
+                raise ValueError(
+                    f"compute_features feature {name!r} is not finite ({value!r})."
+                )
+        augmented.append({**r, **extra})
+    return augmented
+
+
 def make_stim_data(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
     """Build a `pm.set_data` dict from a list of row dicts for a given model.
 
     Each `pm.Data` container in `model` is filled with the corresponding column
     from `rows`, cast to the placeholder's dtype. Useful for predict_p_left and
     sample_synthetic_responses, where the caller has rows but not a CSV file.
+
+    If the model declares a ``compute_features`` featurizer, its extra columns
+    are computed from each row's raw sequences first.
     """
+    rows = _augment_rows_with_features(model, rows)
     inputs = pm_data_inputs(model)
     missing = [c for c in inputs if rows and c not in rows[0]]
     if missing:
@@ -172,6 +264,7 @@ def extract_observed(csv_path: Path, model) -> Dict[str, np.ndarray]:
     rows = _read_csv_rows(csv_path)
     if not rows:
         raise ValueError(f"No rows in {csv_path}")
+    rows = _augment_rows_with_features(model, rows)
 
     inputs = pm_data_inputs(model)
     missing = [c for c in inputs if c not in rows[0]]

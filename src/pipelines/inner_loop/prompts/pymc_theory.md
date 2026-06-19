@@ -44,11 +44,15 @@ the hypothesis (the same claim as `hypothesis.md`).
 Inside the `with pm.Model() as model:` block:
 
 - Expose **stimulus inputs** as `pm.Data` containers, one per scalar field of
-  the stimulus. **Each `pm.Data` name must match a column in the responses
-  CSV** (the pipeline auto-maps containers to columns by name). Initialize each
-  with a **1-element placeholder of the correct dtype** (e.g.
-  `np.zeros(1, dtype="int64")`); the pipeline calls `pm.set_data(...)` to fill
-  in real data before sampling. Do **not** use `np.zeros(0, ...)`.
+  the stimulus. **Each `pm.Data` name must match a numeric column** the pipeline
+  can supply — either a precomputed feature column in the responses CSV or a
+  feature you derive yourself (see *Extending the feature space* below). The
+  pipeline auto-maps containers to columns by name. Initialize each with a
+  **1-element placeholder of the correct dtype** (e.g. `np.zeros(1,
+  dtype="int64")`); the pipeline calls `pm.set_data(...)` to fill in real data
+  before sampling. Do **not** use `np.zeros(0, ...)`. The raw H/T sequence
+  strings `sequence_a`/`sequence_b` are **not** numeric and cannot be a
+  `pm.Data` directly — derive numbers from them as below.
 - Put **priors** on every free cognitive parameter (e.g. `pm.HalfNormal`,
   `pm.Beta`, `pm.Normal`). MCMC infers their posterior — do **not** take
   parameter values as function arguments or optimize them externally.
@@ -67,6 +71,40 @@ Keep the file short and parsimonious — **one cognitive mechanism per model**.
 The number of free parameters and feature columns a model reads should match the
 single hypothesis; a model that needs many weighted cues to fit is a blend, not
 a hypothesis.
+
+### Extending the feature space (optional)
+
+The precomputed feature columns are order-destroying aggregates: they cannot see
+where in a sequence something happens, the specific sub-sequences it contains, or
+recency. If your hypothesis depends on such an aspect of the raw sequence, do
+**not** try to force it from the existing columns — derive the exact statistic
+your hypothesis needs by adding a module-level featurizer to `candidate.py`:
+
+```python
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    """Return new numeric feature columns for one stimulus pair."""
+    ...
+```
+
+The pipeline calls it on the raw `sequence_a`/`sequence_b` strings for every
+trial and exposes each returned key as a new column you read with a matching
+`pm.Data`. Use this to express a hypothesis the precomputed features cannot — for
+example, whether the *last* toss of each sequence is heads (a recency cue):
+
+```python
+def compute_features(sequence_a, sequence_b):
+    def ends_heads(seq):
+        return 1.0 if seq.strip().upper().endswith("H") else 0.0
+    return {"ends_heads_a": ends_heads(sequence_a), "ends_heads_b": ends_heads(sequence_b)}
+
+# ... then inside the model:
+#   ends_heads_a = pm.Data("ends_heads_a", np.zeros(1, dtype="float64"))
+```
+
+Rules for `compute_features`: it must return a dict of **finite numbers** with
+the **same keys for every sequence pair**, and those keys must be **new names**
+(not collisions with existing columns). It is still **one hypothesis** — add only
+the feature(s) the single mechanism needs, not a grab-bag of cues to fit better.
 
 ### Numerical safety (required)
 
