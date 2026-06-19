@@ -97,11 +97,12 @@ def test_select_discriminating_stimuli_rejects_bad_k_and_empty():
 # ── real model families ─────────────────────────────────────────────
 
 
-def test_default_model_family_names_are_the_three_families():
+def test_default_model_family_names_are_the_reference_families():
     assert set(default_model_family_names()) == {
         "prototype_similarity",
         "encoding_compressibility",
         "bayesian_diagnosticity",
+        "statistical_inference",
     }
 
 

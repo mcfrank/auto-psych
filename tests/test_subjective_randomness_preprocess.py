@@ -40,6 +40,31 @@ def test_featurize_stimulus_counts_heads_alternations_runs():
     assert feats["periodicity_b"] == pytest.approx(1.0)
 
 
+def test_parse_motifs_matches_falk_konold_examples():
+    pp = _load()
+    # Falk & Konold (1997) Difficulty Predictor parse: HHTTHTHT -> two runs
+    # (HH, TT) plus one alternating sub-sequence (HTHT), so DP = 2*1 + 1*2 = 4.
+    assert pp._parse_motifs("HHTTHTHT") == (2, 1)
+    # A fully alternating sequence is a single alternation motif.
+    assert pp._parse_motifs("HTHTHT") == (0, 1)
+    # A single constant run is one repetition motif.
+    assert pp._parse_motifs("HHHHHH") == (1, 0)
+    # An isolated single symbol between runs is itself a repetition motif.
+    assert pp._parse_motifs("HHTHH") == (3, 0)
+    # A length-2 alternation (one transition) counts as one alternation motif.
+    assert pp._parse_motifs("HHTH") == (1, 1)
+    # Degenerate inputs.
+    assert pp._parse_motifs("H") == (1, 0)
+    assert pp._parse_motifs("") == (0, 0)
+
+
+def test_featurize_stimulus_adds_motif_parse_counts():
+    pp = _load()
+    feats = pp.featurize_stimulus("HHTTHTHT", "HTHTHTHT")
+    assert feats["rep_motifs_a"] == 2 and feats["alt_motifs_a"] == 1
+    assert feats["rep_motifs_b"] == 0 and feats["alt_motifs_b"] == 1
+
+
 def test_featurize_stimulus_keys_match_pm_data_names():
     pp = _load()
     feats = pp.featurize_stimulus("HT", "TH")
@@ -48,6 +73,8 @@ def test_featurize_stimulus_keys_match_pm_data_names():
         "h_a",
         "alts_a",
         "max_run_a",
+        "rep_motifs_a",
+        "alt_motifs_a",
         "p_a",
         "p_alts_a",
         "max_run_norm_a",
@@ -57,6 +84,8 @@ def test_featurize_stimulus_keys_match_pm_data_names():
         "h_b",
         "alts_b",
         "max_run_b",
+        "rep_motifs_b",
+        "alt_motifs_b",
         "p_b",
         "p_alts_b",
         "max_run_norm_b",

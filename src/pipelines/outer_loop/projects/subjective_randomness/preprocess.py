@@ -14,6 +14,8 @@ Feature columns per sequence (`a` and `b`):
     h_<x>             head count                          (int)
     alts_<x>          alternation count (H/T transitions) (int)
     max_run_<x>       longest constant run                (int)
+    rep_motifs_<x>    repetition motifs in motif parse    (int)
+    alt_motifs_<x>    alternation motifs in motif parse   (int)
     p_<x>             head proportion                     (float)
     p_alts_<x>        alternation proportion              (float)
     max_run_norm_<x>  longest run scaled to [0, 1]        (float)
@@ -23,7 +25,59 @@ Feature columns per sequence (`a` and `b`):
 
 from __future__ import annotations
 
-from typing import Dict
+from typing import Dict, Tuple
+
+
+def _parse_motifs(seq: str) -> Tuple[int, int]:
+    """Parse an H/T sequence into Falk & Konold (1997) motifs.
+
+    Returns ``(rep_motifs, alt_motifs)`` — the counts the statistical-inference
+    model of Griffiths, Daniels, Austerweil & Tenenbaum (2018) calls n1 and n2:
+    the number of repetition motifs (maximal constant runs) and alternation
+    motifs (maximal alternating sub-sequences of length >= 2) in the canonical
+    minimal-description parse of the sequence.
+
+    The parse run-length-encodes the sequence, then groups any maximal stretch
+    of >= 2 consecutive length-1 runs (which necessarily alternate H/T) into one
+    alternation motif; every other run is a repetition motif. This is the parse
+    underlying Falk & Konold's Difficulty Predictor, for which DP = n1 + 2*n2.
+    For example HHTTHTHT -> runs [HH, TT, H, T, H, T] -> repetition motifs
+    {HH, TT} and one alternation motif {HTHT}, giving (2, 1) and DP = 4.
+    """
+    s = seq.strip().upper()
+    n = len(s)
+    if n == 0:
+        return 0, 0
+
+    run_lengths = []
+    cur = 1
+    for i in range(1, n):
+        if s[i] == s[i - 1]:
+            cur += 1
+        else:
+            run_lengths.append(cur)
+            cur = 1
+    run_lengths.append(cur)
+
+    rep_motifs = 0
+    alt_motifs = 0
+    i = 0
+    n_runs = len(run_lengths)
+    while i < n_runs:
+        if run_lengths[i] == 1:
+            # Maximal stretch of consecutive length-1 runs == an alternating block.
+            j = i
+            while j < n_runs and run_lengths[j] == 1:
+                j += 1
+            if j - i >= 2:
+                alt_motifs += 1
+            else:
+                rep_motifs += 1  # a single isolated symbol is its own run
+            i = j
+        else:
+            rep_motifs += 1  # a constant run of length >= 2
+            i += 1
+    return rep_motifs, alt_motifs
 
 
 def _sequence_features_int(seq: str, suffix: str) -> Dict[str, int]:
@@ -38,11 +92,14 @@ def _sequence_features_int(seq: str, suffix: str) -> Dict[str, int]:
         cur = cur + 1 if c == prev else 1
         prev = c
         max_run = max(max_run, cur)
+    rep_motifs, alt_motifs = _parse_motifs(s)
     return {
         f"n_{suffix}": n,
         f"h_{suffix}": h,
         f"alts_{suffix}": alts,
         f"max_run_{suffix}": max_run,
+        f"rep_motifs_{suffix}": rep_motifs,
+        f"alt_motifs_{suffix}": alt_motifs,
     }
 
 

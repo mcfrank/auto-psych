@@ -120,6 +120,46 @@ def max_run_norm(seq: str) -> float:
     return (max_run_length(seq) - 1) / (len(seq) - 1)
 
 
+def parse_motifs(seq: str) -> Tuple[int, int]:
+    """Parse an H/T sequence into Falk & Konold (1997) motifs.
+
+    Returns ``(rep_motifs, alt_motifs)`` — n1 (repetition motifs: maximal
+    constant runs) and n2 (alternation motifs: maximal alternating sub-sequences
+    of length >= 2) of the canonical minimal-description parse used by the
+    statistical-inference model (Griffiths et al. 2018). Mirrors the featurizer
+    helper of the same name; DP = n1 + 2*n2.
+    """
+    s = clean_sequence(seq)
+    run_lengths = []
+    cur = 1
+    for a, b in zip(s, s[1:]):
+        if a == b:
+            cur += 1
+        else:
+            run_lengths.append(cur)
+            cur = 1
+    run_lengths.append(cur)
+
+    rep_motifs = 0
+    alt_motifs = 0
+    i = 0
+    n_runs = len(run_lengths)
+    while i < n_runs:
+        if run_lengths[i] == 1:
+            j = i
+            while j < n_runs and run_lengths[j] == 1:
+                j += 1
+            if j - i >= 2:
+                alt_motifs += 1
+            else:
+                rep_motifs += 1
+            i = j
+        else:
+            rep_motifs += 1
+            i += 1
+    return rep_motifs, alt_motifs
+
+
 def periodicity_score(seq: str) -> float:
     """
     Degree to which the sequence can be described by a short repeating template.

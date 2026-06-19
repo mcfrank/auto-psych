@@ -49,6 +49,15 @@ EXPECTED_INPUTS = {
         "alts_b",
         "chose_left",
     },
+    "statistical_inference": {
+        "n_a",
+        "rep_motifs_a",
+        "alt_motifs_a",
+        "n_b",
+        "rep_motifs_b",
+        "alt_motifs_b",
+        "chose_left",
+    },
 }
 
 
@@ -58,6 +67,7 @@ def test_subjective_randomness_manifest_lists_loadable_pymc_models():
         "prototype_similarity",
         "encoding_compressibility",
         "bayesian_diagnosticity",
+        "statistical_inference",
     ]
 
 

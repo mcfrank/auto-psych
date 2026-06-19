@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from html import escape
 import json
 import os
 from pathlib import Path
@@ -9,11 +10,75 @@ import shutil
 import subprocess
 from typing import Any
 
+from src.runtime.config import REPO_ROOT
+
 from .manifest import CLIENT_CONFIG_FILENAME, MANIFEST_FILENAME, DeploymentManifest
+
+# Marker on the injected consent overlay. Used to keep injection idempotent and
+# to assert at staging time that every deployed experiment gates on consent.
+CONSENT_GATE_MARKER = "auto-psych-consent-gate"
+CONSENT_TEXT_PATH = REPO_ROOT / "templates" / "consent.txt"
 
 
 class DeploymentError(RuntimeError):
     """Raised when Firebase staging or deployment fails."""
+
+
+def load_consent_html() -> str:
+    """Render the verbatim IRB consent text (templates/consent.txt) as HTML.
+
+    The first paragraph becomes a heading; the rest become paragraphs. Text is
+    HTML-escaped so the participant sees exactly the approved wording.
+    """
+    if not CONSENT_TEXT_PATH.exists():
+        raise DeploymentError(f"IRB consent text not found at {CONSENT_TEXT_PATH}")
+    raw = CONSENT_TEXT_PATH.read_text(encoding="utf-8").strip()
+    if not raw:
+        raise DeploymentError(f"IRB consent text at {CONSENT_TEXT_PATH} is empty")
+    paragraphs = [p.strip() for p in raw.split("\n\n") if p.strip()]
+    head = f"<h2>{escape(paragraphs[0])}</h2>"
+    body = "".join(f"<p>{escape(p)}</p>" for p in paragraphs[1:])
+    return head + body
+
+
+def ensure_consent_gate(index_html: str, consent_html: str) -> str:
+    """Inject a full-screen consent gate that blocks the experiment until "I agree".
+
+    Idempotent: if the gate marker is already present the HTML is returned
+    unchanged. The gate is a fixed overlay (max z-index) rendered over whatever
+    the experiment displays, removed only when the participant consents — so it
+    works regardless of how the experiment builds its jsPsych timeline.
+    """
+    if CONSENT_GATE_MARKER in index_html:
+        return index_html
+    gate = f"""
+<div id="{CONSENT_GATE_MARKER}" style="position:fixed; inset:0; z-index:2147483647; background:#ffffff; overflow:auto;">
+  <div style="max-width:640px; margin:40px auto; padding:24px; font-family:sans-serif; font-size:16px; line-height:1.6; color:#222; text-align:left;">
+    {consent_html}
+    <div style="text-align:center; margin-top:28px;">
+      <button id="{CONSENT_GATE_MARKER}-agree" type="button"
+        style="padding:12px 32px; font-size:18px; border:none; border-radius:8px; cursor:pointer; background:#4a90d9; color:#fff;">
+        I agree
+      </button>
+    </div>
+  </div>
+</div>
+<script>
+(function() {{
+  var btn = document.getElementById("{CONSENT_GATE_MARKER}-agree");
+  if (!btn) return;
+  btn.addEventListener("click", function() {{
+    var gate = document.getElementById("{CONSENT_GATE_MARKER}");
+    if (gate && gate.parentNode) gate.parentNode.removeChild(gate);
+  }});
+}})();
+</script>
+""".strip()
+    marker = "</body>"
+    if marker.lower() in index_html.lower():
+        idx = index_html.lower().rfind(marker)
+        return index_html[:idx] + gate + "\n" + index_html[idx:]
+    return index_html + "\n" + gate + "\n"
 
 
 def firebase_project_from_rc(repo_root: Path) -> str | None:
@@ -107,10 +172,14 @@ def stage_experiment(exp_dir: Path, manifest: DeploymentManifest, public_dir: Pa
         shutil.copyfile(design_stimuli, public_dir / "stimuli.json")
 
     staged_index = public_dir / "index.html"
-    staged_index.write_text(
-        ensure_submit_bridge(staged_index.read_text(encoding="utf-8")),
-        encoding="utf-8",
-    )
+    staged_html = ensure_submit_bridge(staged_index.read_text(encoding="utf-8"))
+    staged_html = ensure_consent_gate(staged_html, load_consent_html())
+    if CONSENT_GATE_MARKER not in staged_html:
+        raise DeploymentError(
+            "Refusing to deploy: staged experiment does not gate on IRB consent "
+            f"(missing {CONSENT_GATE_MARKER!r} in {staged_index})."
+        )
+    staged_index.write_text(staged_html, encoding="utf-8")
     (public_dir / CLIENT_CONFIG_FILENAME).write_text(
         json.dumps(manifest.to_client_config(), indent=2, sort_keys=True) + "\n",
         encoding="utf-8",
@@ -146,6 +215,9 @@ def write_firebase_config(config_path: Path, manifest: DeploymentManifest) -> Pa
             "source": "functions",
             "runtime": "nodejs22",
         },
+        # Lock the database to Admin-SDK (Cloud Functions) access only; clients
+        # never read/write Firestore directly. See firestore.rules.
+        "firestore": {"rules": "firestore.rules"},
     }
     config_path.parent.mkdir(parents=True, exist_ok=True)
     config_path.write_text(json.dumps(config, indent=2, sort_keys=True) + "\n", encoding="utf-8")
@@ -195,7 +267,7 @@ def run_firebase_deploy(repo_root: Path, manifest: DeploymentManifest, config_pa
             firebase,
             "deploy",
             "--only",
-            "hosting,functions",
+            "hosting,functions,firestore",
             "--non-interactive",
             "--force",
             "--project",
@@ -210,7 +282,7 @@ def run_firebase_deploy(repo_root: Path, manifest: DeploymentManifest, config_pa
             "firebase-tools",
             "deploy",
             "--only",
-            "hosting,functions",
+            "hosting,functions,firestore",
             "--non-interactive",
             "--force",
             "--project",

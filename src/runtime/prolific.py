@@ -5,7 +5,6 @@ Project-level settings: projects/<project_id>/prolific_config.yaml
 """
 
 import os
-from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 import requests
@@ -37,11 +36,13 @@ def load_prolific_config(project_id: str) -> Dict[str, Any]:
     if path.exists():
         try:
             data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-            for k, v in data.items():
-                if v is not None:
-                    out[k] = v
-        except Exception:
-            pass
+        except yaml.YAMLError as exc:
+            raise ValueError(f"Malformed Prolific config at {path}: {exc}") from exc
+        if not isinstance(data, dict):
+            raise ValueError(f"Prolific config at {path} must be a mapping, got {type(data).__name__}")
+        for k, v in data.items():
+            if v is not None:
+                out[k] = v
     return out
 
 

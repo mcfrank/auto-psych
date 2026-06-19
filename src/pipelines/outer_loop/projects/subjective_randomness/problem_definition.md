@@ -56,6 +56,8 @@ containers.
 | `max_run_norm_a`, `max_run_norm_b` | float | Longest run scaled to `[0, 1]`      |
 | `imbalance_a`, `imbalance_b` | float | Distance from balanced H/T counts          |
 | `periodicity_a`, `periodicity_b` | float | Match to a short repeating template       |
+| `rep_motifs_a`, `rep_motifs_b` | int | Repetition motifs (n1: maximal constant runs) in the Falk & Konold parse |
+| `alt_motifs_a`, `alt_motifs_b` | int | Alternation motifs (n2: maximal alternating sub-sequences) in the parse |
 
 And the observed response: `chose_left` ∈ {0, 1} — 1 means the participant
 chose sequence A. Use `chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))`

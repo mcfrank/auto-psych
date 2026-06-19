@@ -2,8 +2,26 @@ from src.pipelines.outer_loop.deployment.manifest import DeploymentManifest
 from src.pipelines.outer_loop.deployment.prolific import (
     build_prolific_plan,
     completion_redirect_url,
+    compute_reward_cents,
     external_study_url,
 )
+
+
+def test_compute_reward_from_hourly_wage_for_five_minutes():
+    # $12.00/hr == 1200 cents/hr; a 5-minute study pays 1200 * 5/60 = 100 cents.
+    assert compute_reward_cents({"reward_per_hour": 1200, "estimated_completion_time": 5}) == 100
+
+
+def test_compute_reward_scales_with_duration():
+    assert compute_reward_cents({"reward_per_hour": 1200, "estimated_completion_time": 10}) == 200
+
+
+def test_compute_reward_uses_explicit_reward_when_no_hourly_rate():
+    assert compute_reward_cents({"reward": 75}) == 75
+
+
+def test_compute_reward_falls_back_to_default():
+    assert compute_reward_cents({}) == 50
 
 
 def test_external_study_url_adds_prolific_params():

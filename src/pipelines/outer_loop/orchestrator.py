@@ -16,7 +16,6 @@ import json
 import re
 import shutil
 import sys
-import time
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Sequence
 
@@ -367,9 +366,11 @@ def run_collect_programmatic(
     if config_path.exists():
         try:
             loaded = json.loads(config_path.read_text(encoding="utf-8"))
-            config = loaded if isinstance(loaded, dict) else {}
-        except Exception:
-            config = {}
+        except json.JSONDecodeError as exc:
+            raise RuntimeError(f"Malformed experiment config at {config_path}: {exc}") from exc
+        if not isinstance(loaded, dict):
+            raise RuntimeError(f"Experiment config at {config_path} must be a JSON object")
+        config = loaded
 
     run_match = re.search(r"experiment(\d+)$", exp_dir.name)
     run_id = int(run_match.group(1)) if run_match else 1
@@ -400,6 +401,14 @@ def run_collect_programmatic(
         rows = None
 
     has_results_api = bool(config.get("results_api_url") or config.get("experiment_url"))
+    if mode == "live" and not has_results_api:
+        raise RuntimeError(
+            "mode='live' requires a deployed experiment to collect from, but the "
+            f"experiment config ({config_path}) has no results_api_url/experiment_url. "
+            "Run a live pilot with: --deploy-target firebase --prolific-mode live "
+            "(this deploys the experiment and creates the Prolific study). Refusing "
+            "to silently fall back to synthetic data."
+        )
     if rows is None and not ground_truth_model and has_results_api:
         if prolific_mode != "none" or mode == "live" or config.get("prolific_study_id"):
             rows = _collect_live(state, config, data_dir, logs_dir)
@@ -460,6 +469,12 @@ def run_collect_programmatic(
     # Fail loudly on degenerate collected data: if real participants produced no
     # response variation (every trial chose the same side), the data carries no
     # signal for model comparison and almost always signals a broken collector.
+    if collected_from_participants and not rows:
+        raise RuntimeError(
+            "Participant collection returned no data (0 rows). The deployed "
+            f"experiment or results fetch failed; inspect {data_dir / 'logs'}. "
+            "Refusing to write an empty responses.csv and proceed to modeling."
+        )
     if collected_from_participants and rows:
         ok, qc_msg = check_response_variation(rows)
         if not ok:

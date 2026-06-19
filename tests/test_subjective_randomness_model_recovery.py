@@ -290,6 +290,7 @@ def test_default_generating_params_covers_every_seed_model():
         "prototype_similarity",
         "encoding_compressibility",
         "bayesian_diagnosticity",
+        "statistical_inference",
     }
     # Each default must name exactly the PyMC model's free parameters, so it can
     # drive the fixed-parameter generator without a loud failure.
@@ -300,6 +301,12 @@ def test_default_generating_params_covers_every_seed_model():
         "side_bias",
     }
     assert "alt_prior" in params["bayesian_diagnosticity"]
+    assert set(params["statistical_inference"]) == {
+        "delta",
+        "alpha",
+        "beta",
+        "side_bias",
+    }
 
 
 # ── config -> generating params resolution ──────────────────────────
@@ -428,6 +435,7 @@ def test_run_closed_ended_recovery_assembles_confusion(tmp_path):
         "prototype_similarity",
         "encoding_compressibility",
         "bayesian_diagnosticity",
+        "statistical_inference",
     }
     assert len(result["generating"]) == 1
 
