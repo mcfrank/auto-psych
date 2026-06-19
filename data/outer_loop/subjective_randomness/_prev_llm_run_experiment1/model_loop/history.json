@@ -1,0 +1,71 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "bayesian_diagnosticity",
+    "posteriors": {
+      "prototype_similarity": 0.336928,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.663072,
+      "statistical_inference": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -72.5082,
+      "encoding_compressibility": -101.8148,
+      "bayesian_diagnosticity": -70.0812,
+      "statistical_inference": -130.6628
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "bayesian_diagnosticity",
+    "posteriors": {
+      "prototype_similarity": 0.336928,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.663072,
+      "statistical_inference": 0.0,
+      "iter0_candidate0": 0.0,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -72.5082,
+      "encoding_compressibility": -101.8148,
+      "bayesian_diagnosticity": -70.0812,
+      "statistical_inference": -130.6628,
+      "iter0_candidate0": -222.6699,
+      "iter0_candidate1": -118.2832,
+      "iter0_candidate2": -169.4912
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "bayesian_diagnosticity",
+    "posteriors": {
+      "prototype_similarity": 0.336928,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.663072,
+      "statistical_inference": 0.0,
+      "iter0_candidate0": 0.0,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.0,
+      "iter1_candidate0": 0.0,
+      "iter1_candidate1": 0.0,
+      "iter1_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -72.5082,
+      "encoding_compressibility": -101.8148,
+      "bayesian_diagnosticity": -70.0812,
+      "statistical_inference": -130.6628,
+      "iter0_candidate0": -222.6699,
+      "iter0_candidate1": -118.2832,
+      "iter0_candidate2": -169.4912,
+      "iter1_candidate0": -222.7872,
+      "iter1_candidate1": -157.377,
+      "iter1_candidate2": -196.7619
+    }
+  }
+]

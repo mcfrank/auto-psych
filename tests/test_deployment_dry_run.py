@@ -26,10 +26,12 @@ def test_dry_run_deployment_writes_manifest_config_and_staging(tmp_path):
         firebase_region="us-central1",
         n_participants=5,
         repo_root=tmp_path,
+        run_label="t",
     )
 
     assert manifest_path.exists()
-    assert (exp_dir / "deployment" / "public" / "index.html").exists()
+    # Staged under the per-experiment, per-run subdir (e{run}-{label}), not root.
+    assert (exp_dir / "deployment" / "public" / "e2-t" / "index.html").exists()
     config = json.loads((exp_dir / "experiment" / "config.json").read_text(encoding="utf-8"))
     assert config["deployment_id"].startswith("deploy_subjective_randomness-e2-")
     assert config["collection_owner"] == "linas"

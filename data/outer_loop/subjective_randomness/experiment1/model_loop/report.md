@@ -2,35 +2,42 @@
 
 Each model below is ONE distinct cognitive hypothesis. The posterior mass shows which single hypothesis best explains the data — it is **not** a recipe to combine the top models into a blend.
 
-- Best model: **bayesian_fair_coin** (posterior=0.705, elpd_loo=-108.28)
-- Trials: 160
-- Models compared: 9
+- Best model: **bayesian_diagnosticity** (posterior=0.780, elpd_loo=-71.85)
+- Trials: 320
+- Models compared: 10
 
 ## Posterior over models (ELPD-LOO)
 
 | model | posterior | elpd_loo |
 | --- | --- | --- |
-| bayesian_fair_coin | 0.7047 | -108.28 |
-| iter0_candidate0 | 0.0499 | -111.48 |
-| alternation_rate | 0.0430 | -111.43 |
-| iter0_candidate2 | 0.0427 | -111.34 |
-| iter0_candidate1 | 0.0403 | -111.39 |
-| iter1_candidate1 | 0.0370 | -111.03 |
-| equally_likely | 0.0361 | -111.65 |
-| iter1_candidate2 | 0.0257 | -111.79 |
-| iter1_candidate0 | 0.0205 | -111.42 |
+| bayesian_diagnosticity | 0.7802 | -71.85 |
+| prototype_similarity | 0.2198 | -74.87 |
+| encoding_compressibility | 0.0000 | -98.86 |
+| statistical_inference | 0.0000 | -115.94 |
+| iter0_candidate0 | 0.0000 | -167.84 |
+| iter0_candidate1 | 0.0000 | -116.49 |
+| iter0_candidate2 | 0.0000 | -171.91 |
+| iter1_candidate0 | 0.0000 | -222.74 |
+| iter1_candidate1 | 0.0000 | -222.78 |
+| iter1_candidate2 | 0.0000 | -196.69 |
 
 ## Hypotheses
 
-- **bayesian_fair_coin**: Observers compare two binary sequences via the log Bayes factor between a fair-coin null and a biased-coin alternative.
-- **iter0_candidate0**: People judge a sequence as more random the higher its proportion of alternations, evaluating randomness via a linear monotonic preference rather than calculating distance to a subjective ideal alternation rate.
-- **alternation_rate**: People judge a sequence as more random if its proportion of alternations is closer to their subjective ideal alternation rate.
-- **iter0_candidate2**: People judge a sequence as less random if it contains periodic, repeating patterns. When comparing two sequences, they prefer the one with a lower periodicity score as being more randomly generated.
-- **iter0_candidate1**: People judge a sequence as less random the longer its longest continuous run of identical outcomes. When comparing two sequences, they prefer the one with the shorter maximum run length as being more random.
-- **iter1_candidate1**: Observers evaluate a sequence's randomness by computing the log Bayes factor between an independent fair coin and an alternative first-order Markov process with a fixed, subjective transition probability. Rather than evaluating the overall proportion of heads, they assess the sequential dependence, preferring sequences that provide stronger evidence against the Markov alternative.
-- **equally_likely**: People judge a sequence as more random the closer its proportion of heads is to 50%.
-- **iter1_candidate2**: People evaluate a sequence's randomness by how statistically typical its number of alternations is. They compute the exact binomial probability of observing the sequence's number of alternations under a fair coin, and prefer the sequence whose alternation count is more mathematically probable to occur by chance.
-- **iter1_candidate0**: People evaluate a sequence's randomness by comparing its likelihood under a fair coin against its probability under a biased coin, mathematically marginalizing over all possible alternative biases rather than assuming a single fixed bias. They hold a symmetric prior belief about the alternative coin's bias, with the concentration of this prior acting as a subjective parameter, and they prefer the sequence that provides stronger Bayesian evidence for the fair coin.
+- **bayesian_diagnosticity**: Random-looking sequences are diagnostic of a fair coin over salient
+non-random alternatives: alternating, biased, and streaky generators.
+- **prototype_similarity**: Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+- **encoding_compressibility**: Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+- **statistical_inference**: Randomness is the log-likelihood ratio of a fair coin versus a
+complexity-penalized motif process (Griffiths et al. 2018): sequences
+with no short motif description are evidence for a random generator.
+- **iter0_candidate0**: People judge which sequence looks more random by computing Bayesian diagnosticity against a single implicit alternative: a repetitive (streaky) generator that rarely alternates. The sequence whose log-likelihood ratio — fair coin versus repetitive generator — is higher is chosen as more random. The repetitive generator's alternation probability is a free parameter inferred from behavior, expected to sit well below 0.5.
+- **iter0_candidate1**: People judge which sequence looks more random by focusing on the longest unbroken run of identical outcomes (e.g., five heads in a row). The sequence with the shorter maximum run length appears more random, because long streaks are the most perceptually salient violation of randomness expectations. All other structural features of the sequence are ignored.
+- **iter0_candidate2**: People judge a sequence as more random when its proportion of heads is closer to 0.5 — that is, when its head-count is more balanced. The sequence with lower imbalance (smaller deviation from equal heads and tails) is chosen as more random. No other feature of the sequence — alternation patterns, run lengths, or motif structure — matters; only proximity to a 50/50 split drives the choice.
+- **iter1_candidate0**: People judge sequences as random by comparing them to a mental prototype defined by two dimensions: alternation rate and head-balance. Crucially, they apply a conjunctive criterion — a sequence must be near the ideal on *both* dimensions to look random, so the dimension with the larger deviation from the prototype governs the judgment (Chebyshev / worst-case distance). A sequence that is perfectly balanced but wildly alternating looks just as non-random as one that alternates ideally but is heavily biased; only meeting both criteria simultaneously yields a high randomness rating.
+- **iter1_candidate1**: People judge which sequence is more random by computing the Falk-Konold Difficulty Predictor (DP = repetition motifs + 2 × alternation motifs), which measures how many motifs are needed to describe the sequence under minimal run-based encoding. The sequence requiring more motifs — one that resists compact description because it has no simple repeating structure — is chosen as more random. Purely alternating and purely streaky sequences both have low DP and are rejected as non-random; only sequences that mix streaks and alternations in an unpredictable way have high DP and appear random.
+- **iter1_candidate2**: People judge which sequence looks more random by detecting periodic structure: regular, cyclic patterns signal a non-random (patterned or deterministic) generator, so the sequence with lower periodicity is chosen as more random. Only this one perceptual cue — how strongly a sequence repeats itself at regular intervals — drives the choice; balance and run structure are ignored.
 
 ## Distinguishability (arviz.compare, PSIS-LOO)
 
@@ -38,12 +45,13 @@ Each model below is ONE distinct cognitive hypothesis. The posterior mass shows 
 
 | model | elpd_diff | dse | distinguishable from best | weight |
 | --- | --- | --- | --- | --- |
-| bayesian_fair_coin | 0.00 | 0.00 | — (best) | 0.952 |
-| iter1_candidate1 | 2.75 | 2.23 | no (within ~2·dse) | 0.000 |
-| iter0_candidate2 | 3.05 | 2.59 | no (within ~2·dse) | 0.048 |
-| iter0_candidate1 | 3.11 | 2.36 | no (within ~2·dse) | 0.000 |
-| iter1_candidate0 | 3.14 | 2.19 | no (within ~2·dse) | 0.000 |
-| alternation_rate | 3.15 | 2.30 | no (within ~2·dse) | 0.000 |
-| iter0_candidate0 | 3.20 | 2.23 | no (within ~2·dse) | 0.000 |
-| equally_likely | 3.37 | 2.15 | no (within ~2·dse) | 0.000 |
-| iter1_candidate2 | 3.51 | 2.60 | no (within ~2·dse) | 0.000 |
+| bayesian_diagnosticity | 0.00 | 0.00 | — (best) | 1.000 |
+| prototype_similarity | 3.02 | 1.21 | yes | 0.000 |
+| encoding_compressibility | 27.00 | 6.58 | yes | 0.000 |
+| statistical_inference | 44.09 | 6.88 | yes | 0.000 |
+| iter0_candidate1 | 44.64 | 7.07 | yes | 0.000 |
+| iter0_candidate0 | 95.98 | 8.86 | yes | 0.000 |
+| iter0_candidate2 | 100.06 | 9.11 | yes | 0.000 |
+| iter1_candidate2 | 124.84 | 8.27 | yes | 0.000 |
+| iter1_candidate0 | 150.88 | 7.81 | yes | 0.000 |
+| iter1_candidate1 | 150.93 | 7.81 | yes | 0.000 |

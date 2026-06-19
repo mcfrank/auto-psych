@@ -66,26 +66,23 @@ def test_generate_rows_shape_and_schema(tmp_path):
 
 
 def test_unparseable_and_errors_are_counted(tmp_path):
+    # Content-based (not call-order-based) so it is deterministic even though
+    # participants run concurrently: stimulus 0 -> unparseable, stimulus 1 -> error.
     class Flaky:
         name = "fake:flaky"
 
-        def __init__(self):
-            self._n = 0
-
         def answer(self, system, user):
-            self._n += 1
-            if self._n == 1:
-                return "i refuse to answer"  # unparseable
-            if self._n == 2:
-                raise RuntimeError("boom")  # error
-            return "ANSWER: left"
+            if "HHTHT" in user:  # STIMULI[0].sequence_a -> unparseable reply
+                return "i refuse to answer"
+            raise RuntimeError("boom")  # STIMULI[1] -> model error
 
     rows, stats = generate_llm_participant_rows(
         STIMULI, n_participants=2, participant_model=Flaky(), prompt_text="x"
     )
-    assert stats["n_unparseable"] == 1
-    assert stats["n_errors"] == 1
-    assert stats["n_rows"] == len(rows) == 2  # 4 trials, 1 unparseable, 1 error
+    # 2 participants x 2 stimuli: stimulus 0 unparseable, stimulus 1 errors.
+    assert stats["n_unparseable"] == 2
+    assert stats["n_errors"] == 2
+    assert stats["n_rows"] == len(rows) == 0
 
 
 def test_factory_rejects_unknown_backend():

@@ -1,0 +1,18 @@
+models:
+- name: equally_likely
+  rationale: 'People judge a sequence as more random the closer its proportion of
+    heads is to 50%.
+
+    '
+- name: alternation_rate
+  rationale: 'People judge a sequence as more random if its proportion of alternations
+    is closer to their subjective ideal alternation rate.
+
+    '
+- name: bayesian_fair_coin
+  rationale: 'Observers compare two binary sequences via the log Bayes factor between
+    a fair-coin null and a biased-coin alternative.
+
+    '
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

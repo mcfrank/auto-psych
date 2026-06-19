@@ -1,0 +1,1 @@
+People judge a sequence as more random when it contains a shorter maximum run — the longest unbroken streak of the same outcome. Long streaks feel like a pattern or a non-random generator at work, so the sequence whose worst streak is smallest looks most random, regardless of its overall balance or alternation rate.

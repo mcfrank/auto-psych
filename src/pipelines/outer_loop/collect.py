@@ -13,9 +13,10 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import yaml
 
@@ -1039,6 +1040,8 @@ def generate_llm_participant_rows(
     participant_model: Any,
     prompt_text: str,
     transcripts_dir: Path | None = None,
+    max_workers: int = 8,
+    progress: Callable[[int, int], None] | None = None,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """Run an LLM-as-participant over ``stimuli`` and return ``(rows, stats)``.
 
@@ -1050,15 +1053,20 @@ def generate_llm_participant_rows(
     If ``transcripts_dir`` is given, one Markdown transcript per participant is
     written there.
 
+    Participants run concurrently (up to ``max_workers``) since each one's API
+    calls are independent and I/O-bound; output rows are reassembled in
+    participant order so the result is deterministic regardless of finish order.
+    ``progress(participant_id, n_rows)`` is called as each participant completes.
+
     ``stats`` carries ``n_participants``, ``n_stimuli``, ``n_rows``,
     ``n_unparseable``, ``n_errors``.
     """
     model_name = getattr(participant_model, "name", "llm_participant")
-    rows: list[dict[str, Any]] = []
-    n_unparseable = 0
-    n_errors = 0
 
-    for participant_id in range(n_participants):
+    def _run_participant(participant_id: int) -> tuple[list[dict[str, Any]], int, int]:
+        rows_p: list[dict[str, Any]] = []
+        unparseable = 0
+        errors = 0
         transcript = None
         if transcripts_dir is not None:
             transcripts_dir.mkdir(parents=True, exist_ok=True)
@@ -1081,7 +1089,7 @@ def generate_llm_participant_rows(
                 try:
                     response = participant_model.answer(prompt_text, user_msg)
                 except Exception as exc:
-                    n_errors += 1
+                    errors += 1
                     if transcript is not None:
                         transcript.write(
                             f"## Trial {trial_index}\n- left: `{seq_a}`\n- right: `{seq_b}`\n\n"
@@ -1096,10 +1104,10 @@ def generate_llm_participant_rows(
                         f"**Parsed:** {choice if choice else 'UNPARSEABLE'}\n\n"
                     )
                 if choice is None:
-                    n_unparseable += 1
+                    unparseable += 1
                     continue
                 chose_left = choice == "left"
-                rows.append(
+                rows_p.append(
                     {
                         "participant_id": participant_id,
                         "trial_index": trial_index,
@@ -1113,6 +1121,28 @@ def generate_llm_participant_rows(
         finally:
             if transcript is not None:
                 transcript.close()
+        if progress is not None:
+            progress(participant_id, len(rows_p))
+        return rows_p, unparseable, errors
+
+    results: list[tuple[list[dict[str, Any]], int, int] | None] = [None] * n_participants
+    workers = max(1, min(max_workers, n_participants))
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        futures = {
+            executor.submit(_run_participant, pid): pid for pid in range(n_participants)
+        }
+        for future in as_completed(futures):
+            results[futures[future]] = future.result()
+
+    rows: list[dict[str, Any]] = []
+    n_unparseable = 0
+    n_errors = 0
+    for result in results:
+        assert result is not None  # every participant future populated its slot
+        rows_p, unparseable, errors = result
+        rows.extend(rows_p)
+        n_unparseable += unparseable
+        n_errors += errors
 
     stats = {
         "n_participants": n_participants,
@@ -1158,12 +1188,20 @@ def _collect_llm_participant(
         )
         return []
 
+    def _log_progress(participant_id: int, n_rows: int) -> None:
+        print(
+            f"  [collect] participant {participant_id + 1}/{n_participants} done "
+            f"({n_rows} responses)",
+            flush=True,
+        )
+
     rows, stats = generate_llm_participant_rows(
         stimuli,
         n_participants,
         participant_model=participant_model,
         prompt_text=participant_prompt,
         transcripts_dir=out_dir / "transcripts",
+        progress=_log_progress,
     )
 
     agent_log(

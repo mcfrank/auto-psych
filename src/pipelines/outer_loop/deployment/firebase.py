@@ -118,7 +118,7 @@ def ensure_submit_bridge(index_html: str) -> str:
     submitted = true;
     try {{
       const params = new URLSearchParams(window.location.search);
-      const cfgResponse = await fetch("/{CLIENT_CONFIG_FILENAME}");
+      const cfgResponse = await fetch("{CLIENT_CONFIG_FILENAME}");
       const cfg = await cfgResponse.json();
       const participantId = params.get("participant_id") || params.get("PROLIFIC_PID") || String(Date.now());
       const payload = {{
@@ -156,6 +156,19 @@ def ensure_submit_bridge(index_html: str) -> str:
     return index_html + "\n" + bridge + "\n"
 
 
+def relativize_config_fetch(index_html: str) -> str:
+    """Rewrite absolute ``/auto_psych_config.json`` fetches to a relative path.
+
+    Each experiment is served from its own ``/e{run}/`` subpath, so the client
+    config must be fetched relative to the page (``auto_psych_config.json``), not
+    from the site root. ``/submit`` and ``/results`` are global Cloud Functions
+    at the site root and are deliberately left absolute.
+    """
+    return index_html.replace(
+        f'"/{CLIENT_CONFIG_FILENAME}"', f'"{CLIENT_CONFIG_FILENAME}"'
+    ).replace(f"'/{CLIENT_CONFIG_FILENAME}'", f"'{CLIENT_CONFIG_FILENAME}'")
+
+
 def stage_experiment(exp_dir: Path, manifest: DeploymentManifest, public_dir: Path) -> Path:
     source_dir = exp_dir / "experiment"
     index_path = source_dir / "index.html"
@@ -174,6 +187,7 @@ def stage_experiment(exp_dir: Path, manifest: DeploymentManifest, public_dir: Pa
     staged_index = public_dir / "index.html"
     staged_html = ensure_submit_bridge(staged_index.read_text(encoding="utf-8"))
     staged_html = ensure_consent_gate(staged_html, load_consent_html())
+    staged_html = relativize_config_fetch(staged_html)
     if CONSENT_GATE_MARKER not in staged_html:
         raise DeploymentError(
             "Refusing to deploy: staged experiment does not gate on IRB consent "

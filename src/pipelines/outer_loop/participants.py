@@ -56,17 +56,23 @@ class ClosedParticipantModel:
     default. The client is constructed once and reused across trials.
     """
 
+    # Bound each participant API call so a single stuck request can't hang the
+    # whole collection (a normal reply takes a few seconds).
+    REQUEST_TIMEOUT_SEC = 60
+
     def __init__(self, model: Optional[str] = None) -> None:
         from src.pipelines.outer_loop.llm import get_llm
 
         self.name = f"closed:{model}" if model else "closed:default"
         # Raises if credentials / model are unavailable — surfaced to the caller.
-        self._llm = get_llm(model=model)
+        self._llm = get_llm(model=model, timeout=self.REQUEST_TIMEOUT_SEC)
 
     def answer(self, system: str, user: str) -> str:
         from src.pipelines.outer_loop.llm import invoke_llm
 
-        return invoke_llm(system=system, user=user, llm=self._llm)
+        return invoke_llm(
+            system=system, user=user, llm=self._llm, timeout=self.REQUEST_TIMEOUT_SEC
+        )
 
 
 # ─────────────────────────────────────────────

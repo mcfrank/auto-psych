@@ -45,6 +45,34 @@ def test_ensure_submit_bridge_is_idempotent():
     assert once == twice
 
 
+def test_submit_bridge_fetches_config_relatively_for_subpath_hosting():
+    # The experiment is served from /e{run}/, so the config must be fetched
+    # relative to the page, not from the site root.
+    bridge = ensure_submit_bridge("<html><body></body></html>")
+    assert '"auto_psych_config.json"' in bridge
+    assert '"/auto_psych_config.json"' not in bridge
+    # /submit and /results are global Cloud Functions at the site root.
+    assert '"/submit"' in bridge
+
+
+def test_stage_experiment_relativizes_agent_absolute_config_fetch(tmp_path):
+    exp_dir, manifest = _manifest(tmp_path)
+    # An agent that wrote its own submit with an absolute config fetch would
+    # break under subpath hosting; staging must normalize it to a relative path.
+    (exp_dir / "experiment" / "index.html").write_text(
+        '<html><body><script>'
+        'fetch("/auto_psych_config.json").then(r=>r.json());'
+        'fetch("/submit",{method:"POST"});'
+        'window.__experimentData=[];</script></body></html>',
+        encoding="utf-8",
+    )
+    public_dir = stage_experiment(exp_dir, manifest, tmp_path / "public")
+    staged = (public_dir / "index.html").read_text(encoding="utf-8")
+    assert '"/auto_psych_config.json"' not in staged
+    assert '"auto_psych_config.json"' in staged
+    assert '"/submit"' in staged  # global function path is untouched
+
+
 def test_stage_experiment_copies_files_and_leaves_source_untouched(tmp_path):
     exp_dir, manifest = _manifest(tmp_path)
     source_before = (exp_dir / "experiment" / "index.html").read_text(encoding="utf-8")
@@ -82,6 +110,19 @@ def test_stage_experiment_injects_consent_into_deployed_html(tmp_path):
     staged = (public_dir / "index.html").read_text(encoding="utf-8")
     assert CONSENT_GATE_MARKER in staged
     assert "Your anonymity is assured" in staged
+
+
+def test_staging_into_subdir_preserves_sibling_experiments(tmp_path):
+    # Deploying experiment 2 must not wipe experiment 1's staged page.
+    exp1, manifest1 = _manifest(tmp_path / "a")
+    exp2, manifest2 = _manifest(tmp_path / "b")
+    public_root = tmp_path / "public"
+
+    stage_experiment(exp1, manifest1, public_root / "e1")
+    stage_experiment(exp2, manifest2, public_root / "e2")
+
+    assert (public_root / "e1" / "index.html").exists()
+    assert (public_root / "e2" / "index.html").exists()
 
 
 def test_firebase_config_includes_locked_firestore_rules(tmp_path):

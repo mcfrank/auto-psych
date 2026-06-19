@@ -13,8 +13,14 @@ On each trial, the participant sees **two sequences of coin flips** (H and T) an
 
 ## Experiment design constraints
 
-- **Total trials per experiment: 30.** Target duration is about 5 minutes at ~5 seconds per trial (consistent with Prolific).
-- **Maximum sequence length: 8.**
+- **Total trials per experiment: 32.** Target duration is about 5 minutes at ~5 seconds per trial (consistent with Prolific).
+- **Sequence length: 2 to 8** (inclusive).
+
+The default design (`--design-mode exhaustive`) enumerates **every** distinct H/T
+pair over lengths 2–8 (≈129k pairs) and greedily selects the 32 pairs that
+jointly carry the most information about which model is correct — a diverse set
+spread across distinctions, not 32 near-duplicates of the single highest-EIG
+contrast.
 
 ## Models
 

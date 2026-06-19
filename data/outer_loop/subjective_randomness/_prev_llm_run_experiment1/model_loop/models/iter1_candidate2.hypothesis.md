@@ -1,0 +1,1 @@
+People judge a sequence as more random when it has lower periodicity — fewer regular, repeating cycles in the pattern of outcomes. A sequence that follows a repeating temporal template (e.g., HTHTHT or HHTTHHTT) feels obviously non-random; the sequence with less periodic structure looks more like genuine noise, regardless of its overall balance or run lengths.

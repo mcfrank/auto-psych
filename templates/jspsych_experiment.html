@@ -38,7 +38,7 @@
     var data = jsPsych.data.get().values();
     console.log(data);
     if (typeof window !== 'undefined') window.__experimentData = data;
-    fetch('/auto_psych_config.json').then(function(r){
+    fetch('auto_psych_config.json').then(function(r){
       if (!r.ok) { console.warn('[auto-psych] /auto_psych_config.json failed:', r.status); return null; }
       return r.json();
     }).then(function(cfg){

@@ -35,6 +35,7 @@ import yaml
 
 from src.models.pymc_inference import load_pymc_model, model_logp_is_finite
 from src.model_comparison.posterior import compare_table, model_posterior
+from src.runtime.config import REPO_ROOT
 
 _PKG_DIR = Path(__file__).resolve().parent
 _THEORY_PROMPT = _PKG_DIR / "prompts" / "pymc_theory.md"
@@ -47,7 +48,10 @@ _CRITIQUE_PROMPT = _PKG_DIR / "prompts" / "critique.md"
 # Benjamini–Hochberg FDR flags the significant discrepancies the next round of
 # candidates should address (see ``src/critique/ppc.py``).
 CRITIQUE_N_PROPOSALS = 8
-CRITIQUE_SIGNIFICANCE_ALPHA = 0.05
+# Loosened from 0.05: the critique is exploratory (it hands leads to the candidate
+# agents), so a more permissive FDR-adjusted threshold surfaces more candidate
+# discrepancies to act on. Override per-run with --critique-alpha.
+CRITIQUE_SIGNIFICANCE_ALPHA = 0.1
 CRITIQUE_PPC_REPLICATES = 200
 
 # Occam backstop for model selection: each model's log-prior is this constant
