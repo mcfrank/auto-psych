@@ -14,5 +14,13 @@
   {
     "sequence_a": "HTHTHTHT",
     "sequence_b": "HHTHTTHT"
+  },
+  {
+    "sequence_a": "TTTTTTTT",
+    "sequence_b": "HTHHTHTT"
+  },
+  {
+    "sequence_a": "HHHHTTTT",
+    "sequence_b": "HTTHTHHT"
   }
 ]

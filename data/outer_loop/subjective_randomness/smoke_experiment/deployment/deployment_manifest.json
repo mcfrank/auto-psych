@@ -1,31 +1,32 @@
 {
   "agent_backend": "smoke",
   "collection_owner": "smoke",
-  "collection_session_id": "session_subjective_randomness-e9999-20260617T222207Z-ebf971e",
-  "created_at": "2026-06-17T22:22:07Z",
+  "collection_session_id": "session_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94",
+  "created_at": "2026-06-19T22:14:32Z",
   "deploy_target": "firebase",
-  "deployment_id": "deploy_subjective_randomness-e9999-20260617T222207Z-ebf971e",
+  "deployment_id": "deploy_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94",
   "experiment_id": "subjective_randomness_experiment9999",
-  "experiment_url": "https://auto-psych-2c5da.web.app",
+  "experiment_url": "https://auto-psych-2c5da.web.app/e9999-2c3f6af7/",
   "firebase_config_path": "/Users/ben/Documents/auto-psych/firebase.generated.json",
   "firebase_project": "auto-psych-2c5da",
   "firebase_region": "us-central1",
   "firestore_paths": {
-    "collection_session": "collection_sessions/session_subjective_randomness-e9999-20260617T222207Z-ebf971e",
-    "deployment": "deployments/deploy_subjective_randomness-e9999-20260617T222207Z-ebf971e",
-    "responses": "collection_sessions/session_subjective_randomness-e9999-20260617T222207Z-ebf971e/responses",
+    "collection_session": "collection_sessions/session_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94",
+    "deployment": "deployments/deploy_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94",
+    "responses": "collection_sessions/session_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94/responses",
     "study": "studies/study_subjective_randomness"
   },
-  "git_commit": "ebf971eae31d2b42e6ded703cba886adf1e93114",
+  "git_commit": "87bcd94bdaf7d3915b219f7a8335a34434a2e9b5",
   "git_dirty": true,
+  "hosting_path": "e9999-2c3f6af7",
   "metadata": {
     "firestore_documents": {
-      "collection_sessions/session_subjective_randomness-e9999-20260617T222207Z-ebf971e": {
+      "collection_sessions/session_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94": {
         "agent_backend": "smoke",
         "collection_owner": "smoke",
-        "collection_session_id": "session_subjective_randomness-e9999-20260617T222207Z-ebf971e",
-        "created_at": "2026-06-17T22:22:07Z",
-        "deployment_id": "deploy_subjective_randomness-e9999-20260617T222207Z-ebf971e",
+        "collection_session_id": "session_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94",
+        "created_at": "2026-06-19T22:14:32Z",
+        "deployment_id": "deploy_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94",
         "experiment_id": "subjective_randomness_experiment9999",
         "firebase_project": "auto-psych-2c5da",
         "project_id": "subjective_randomness",
@@ -34,28 +35,29 @@
         "run_id": 9999,
         "status": "deployed",
         "study_id": "study_subjective_randomness",
-        "target_participants": 2
+        "target_participants": 1
       },
-      "deployments/deploy_subjective_randomness-e9999-20260617T222207Z-ebf971e": {
+      "deployments/deploy_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94": {
         "agent_backend": "smoke",
         "collection_owner": "smoke",
-        "collection_session_id": "session_subjective_randomness-e9999-20260617T222207Z-ebf971e",
-        "created_at": "2026-06-17T22:22:07Z",
+        "collection_session_id": "session_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94",
+        "created_at": "2026-06-19T22:14:32Z",
         "deploy_target": "firebase",
-        "deployment_id": "deploy_subjective_randomness-e9999-20260617T222207Z-ebf971e",
+        "deployment_id": "deploy_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94",
         "experiment_id": "subjective_randomness_experiment9999",
-        "experiment_url": "https://auto-psych-2c5da.web.app",
+        "experiment_url": "https://auto-psych-2c5da.web.app/e9999-2c3f6af7/",
         "firebase_config_path": "/Users/ben/Documents/auto-psych/firebase.generated.json",
         "firebase_project": "auto-psych-2c5da",
         "firebase_region": "us-central1",
         "firestore_paths": {
-          "collection_session": "collection_sessions/session_subjective_randomness-e9999-20260617T222207Z-ebf971e",
-          "deployment": "deployments/deploy_subjective_randomness-e9999-20260617T222207Z-ebf971e",
-          "responses": "collection_sessions/session_subjective_randomness-e9999-20260617T222207Z-ebf971e/responses",
+          "collection_session": "collection_sessions/session_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94",
+          "deployment": "deployments/deploy_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94",
+          "responses": "collection_sessions/session_subjective_randomness-e9999-2c3f6af7-20260619T221432Z-87bcd94/responses",
           "study": "studies/study_subjective_randomness"
         },
-        "git_commit": "ebf971eae31d2b42e6ded703cba886adf1e93114",
+        "git_commit": "87bcd94bdaf7d3915b219f7a8335a34434a2e9b5",
         "git_dirty": true,
+        "hosting_path": "e9999-2c3f6af7",
         "metadata": {},
         "project_id": "subjective_randomness",
         "prolific_completion_code": null,
@@ -65,14 +67,14 @@
         "results_api_url": "https://auto-psych-2c5da.web.app",
         "run_id": 9999,
         "source_experiment_dir": "/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/smoke_experiment/experiment",
-        "staged_public_dir": "/Users/ben/Documents/auto-psych/public",
+        "staged_public_dir": "/Users/ben/Documents/auto-psych/public/e9999-2c3f6af7",
         "study_id": "study_subjective_randomness",
-        "total_available_places": 2
+        "total_available_places": 1
       },
       "studies/study_subjective_randomness": {
         "project_id": "subjective_randomness",
         "study_id": "study_subjective_randomness",
-        "updated_at": "2026-06-17T22:22:07Z"
+        "updated_at": "2026-06-19T22:14:32Z"
       }
     }
   },
@@ -84,7 +86,7 @@
   "results_api_url": "https://auto-psych-2c5da.web.app",
   "run_id": 9999,
   "source_experiment_dir": "/Users/ben/Documents/auto-psych/data/outer_loop/subjective_randomness/smoke_experiment/experiment",
-  "staged_public_dir": "/Users/ben/Documents/auto-psych/public",
+  "staged_public_dir": "/Users/ben/Documents/auto-psych/public/e9999-2c3f6af7",
   "study_id": "study_subjective_randomness",
-  "total_available_places": 2
+  "total_available_places": 1
 }
