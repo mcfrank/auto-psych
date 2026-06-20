@@ -109,7 +109,9 @@ def run_deployment(
                 flush=True,
             )
             write_manifest(exp_dir, manifest)
-        if prolific_mode != "none" and manifest.prolific_study_id:
+        # Publish ONLY for live mode. Test mode leaves the study as a DRAFT you
+        # preview yourself; none mode creates no study to publish.
+        if prolific_mode == "live" and manifest.prolific_study_id:
             published = publish_study(plan)
             manifest.metadata["prolific_published"] = published.published
             write_client_config(exp_dir, manifest, existing=existing_config)

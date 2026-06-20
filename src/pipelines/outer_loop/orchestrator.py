@@ -834,12 +834,18 @@ def _validate_design(exp_dir: Path) -> tuple[bool, str]:
 
 
 def _validate_implement(exp_dir: Path) -> tuple[bool, str]:
+    """Validate the implemented experiment AND enforce cross-experiment
+    consistency: the ONLY thing that may differ between experiments (within or
+    across runs) is the stimuli. Reject drift in response modality, the data
+    contract, or the standard structure so every experiment looks/behaves alike.
+    """
     index_path = exp_dir / "experiment" / "index.html"
     config_path = exp_dir / "experiment" / "config.json"
     if not index_path.exists():
         return False, f"index.html not found at {index_path}"
     text = index_path.read_text(encoding="utf-8")
-    if "jsPsych" not in text and "jspsych" not in text.lower():
+    low = text.lower()
+    if "jspsych" not in low:
         return False, "index.html does not mention jsPsych"
     if not config_path.exists():
         return False, f"config.json not found at {config_path}"
@@ -847,7 +853,56 @@ def _validate_implement(exp_dir: Path) -> tuple[bool, str]:
         json.loads(config_path.read_text(encoding="utf-8"))
     except Exception as e:
         return False, f"Invalid config.json: {e}"
-    return True, "Implement valid"
+
+    # --- consistency guardrails ------------------------------------------------
+    # Response modality MUST be button responses ONLY (identical across
+    # experiments) — no keyboard responses anywhere, so the modality can't drift.
+    if "jspsychhtmlbuttonresponse" not in low:
+        return False, (
+            "consistency: the choice must be collected with jsPsychHtmlButtonResponse "
+            "(button responses) so every experiment uses the same response modality — "
+            "none found."
+        )
+    if "jspsychhtmlkeyboardresponse" in low or "jspsychkeyboardresponse" in low:
+        return False, (
+            "consistency: the experiment uses a keyboard-response plugin. Every "
+            "experiment must use BUTTON responses only (jsPsychHtmlButtonResponse) — "
+            "for fixations/spacing use a button trial with trial_duration/post_trial_gap, "
+            "not a keyboard trial."
+        )
+    # Data contract: each trial must record chose_left (1=left/first sequence) plus
+    # the raw sequences, or the collection/Firestore step cannot parse the data.
+    for needed in ("chose_left", "sequence_a", "sequence_b"):
+        if needed not in text:
+            return False, (
+                f"consistency/data contract: index.html never sets `{needed}` — every "
+                "trial must record chose_left (1 if the LEFT/first sequence was chosen) "
+                "plus sequence_a and sequence_b."
+            )
+    # The experiment must present exactly the design's stimuli — nothing added,
+    # dropped, or altered. Each stimulus's raw sequences must appear verbatim.
+    stim_path = exp_dir / "design" / "stimuli.json"
+    if stim_path.exists():
+        try:
+            stimuli = json.loads(stim_path.read_text(encoding="utf-8"))
+        except Exception as e:
+            return False, f"design/stimuli.json is invalid: {e}"
+        missing = [
+            i
+            for i, s in enumerate(stimuli)
+            if isinstance(s, dict)
+            and not (
+                str(s.get("sequence_a", "\0")) in text
+                and str(s.get("sequence_b", "\0")) in text
+            )
+        ]
+        if missing:
+            return False, (
+                f"consistency: {len(missing)} of {len(stimuli)} design stimuli are not "
+                f"embedded verbatim in index.html (e.g. indices {missing[:5]}). The "
+                "experiment must present exactly the design's stimuli."
+            )
+    return True, "Implement valid (consistency guardrails passed)"
 
 
 def _validate_collect(exp_dir: Path) -> tuple[bool, str]:

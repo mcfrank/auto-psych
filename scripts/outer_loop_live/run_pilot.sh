@@ -55,9 +55,14 @@ fi
 echo "  output dir        : $WORK_ROOT/$RUN_LABEL/data"
 echo
 
-# --- explicit confirmation (real humans + money) ---------------------------
+# --- explicit confirmation (mode-aware) ------------------------------------
+case "${PROLIFIC_MODE:-test}" in
+  live) PROMPT='LIVE: publish a REAL study and recruit + PAY participants. Type "yes" to proceed: ' ;;
+  test) PROMPT='TEST: create a DRAFT study (NOT published) + deploy, to preview yourself. Type "yes": ' ;;
+  *)    PROMPT='Deploy the experiment (no Prolific study). Type "yes" to proceed: ' ;;
+esac
 if [[ "${CONFIRM:-}" != "yes" ]]; then
-  read -r -p 'Publish this study and recruit participants? Type "yes" to proceed: ' reply
+  read -r -p "$PROMPT" reply
   [[ "$reply" == "yes" ]] || { echo "Aborted — nothing was deployed or published."; exit 1; }
 fi
 
@@ -85,7 +90,7 @@ touch "$WT/.here"   # pyprojroot sentinel (.git is excluded from the copy)
 LOGDIR="$WORK_ROOT/slurm_logs"; mkdir -p "$LOGDIR"
 OUT="$WORK_ROOT/$RUN_LABEL/data"; mkdir -p "$OUT"
 
-EXPORTS="ALL,RUN_LABEL=$RUN_LABEL,RUN_WORKTREE=$WT,PROJECT=$PROJECT,DESIGN_MODE=$DESIGN_MODE,CODING_AGENT=$CODING_AGENT,FIREBASE_PROJECT=$FIREBASE_PROJECT,N_PARTICIPANTS=$N_PARTICIPANTS,AUTO_PSYCH_OUTPUT_DIR=$OUT"
+EXPORTS="ALL,RUN_LABEL=$RUN_LABEL,RUN_WORKTREE=$WT,PROJECT=$PROJECT,DESIGN_MODE=$DESIGN_MODE,CODING_AGENT=$CODING_AGENT,PROLIFIC_MODE=$PROLIFIC_MODE,FIREBASE_PROJECT=$FIREBASE_PROJECT,N_PARTICIPANTS=$N_PARTICIPANTS,AUTO_PSYCH_OUTPUT_DIR=$OUT"
 if (( N_EXPERIMENTS > 1 )); then EXPORTS="$EXPORTS,EXPERIMENTS=1-$N_EXPERIMENTS"; else EXPORTS="$EXPORTS,EXPERIMENT=1"; fi
 add() { [[ -n "${2:-}" ]] && EXPORTS="$EXPORTS,$1=$2" || true; }
 add DRAWS "${DRAWS:-}"
