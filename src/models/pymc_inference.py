@@ -305,9 +305,17 @@ def model_logp_is_finite(
     """
     pm = _import_pymc()
     model = load_pymc_model(name, models_dir)
-    observed = extract_observed(responses_path, model)
-    with model:
-        pm.set_data(observed)
+    try:
+        observed = extract_observed(responses_path, model)
+        with model:
+            pm.set_data(observed)
+    except Exception as e:
+        # A candidate (or seed) model that references feature columns the
+        # responses don't carry — e.g. it declares extra pm.Data inputs without
+        # a matching compute_features featurizer — is simply unfittable. Reject
+        # it via this gate's (False, reason) contract so the caller drops/skips
+        # it, rather than letting the error abort the whole inner loop.
+        return False, f"cannot bind responses to model: {type(e).__name__}: {e}"
     try:
         logp = float(model.compile_logp()(model.initial_point()))
     except Exception as e:  # a graph that cannot even be evaluated

@@ -2,13 +2,14 @@
 
 from __future__ import annotations
 
+import contextlib
 from html import escape
 import json
 import os
 from pathlib import Path
 import shutil
 import subprocess
-from typing import Any
+from typing import Any, Iterator
 
 from src.runtime.config import REPO_ROOT
 
@@ -271,6 +272,35 @@ def ensure_functions_dependencies(repo_root: Path) -> None:
         )
 
 
+@contextlib.contextmanager
+def _deploy_lock() -> Iterator[None]:
+    """Serialize ``firebase deploy`` across parallel runs sharing one site.
+
+    Parallel runs use isolated git worktrees, so the only shared resource is the
+    remote Firebase Hosting site itself; two ``firebase deploy`` calls racing on
+    the same site can clash. When ``AUTO_PSYCH_DEPLOY_LOCK`` names a lockfile we
+    take a blocking advisory ``flock`` on it for the duration of the deploy, so
+    only the (brief) deploy step serializes while everything else stays
+    concurrent. Unset (or on a platform without ``fcntl``) this is a no-op.
+    """
+    lock_path = os.environ.get("AUTO_PSYCH_DEPLOY_LOCK")
+    if not lock_path:
+        yield
+        return
+    try:
+        import fcntl
+    except ImportError:
+        yield
+        return
+    Path(lock_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(lock_path, "w", encoding="utf-8") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        try:
+            yield
+        finally:
+            fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
+
+
 def run_firebase_deploy(repo_root: Path, manifest: DeploymentManifest, config_path: Path) -> None:
     if not manifest.firebase_project:
         raise DeploymentError("Firebase deploy requires firebase_project")
@@ -305,7 +335,8 @@ def run_firebase_deploy(repo_root: Path, manifest: DeploymentManifest, config_pa
             str(config_path),
         ]
     env = {**os.environ, "FUNCTION_REGION": manifest.firebase_region}
-    result = subprocess.run(cmd, cwd=repo_root, text=True, capture_output=True, env=env)
+    with _deploy_lock():
+        result = subprocess.run(cmd, cwd=repo_root, text=True, capture_output=True, env=env)
     if result.returncode != 0:
         raise DeploymentError(
             "Firebase deploy failed\n"
