@@ -94,24 +94,17 @@ def build_prolific_plan(
 
 
 def create_draft_study(project_id: str, manifest: DeploymentManifest, n_participants: int, mode: str) -> ProlificStudyPlan:
-    from src.runtime.prolific import create_study, create_test_participant, load_prolific_config
-
-    test_participant_id = None
-    if mode == "test":
-        cfg = load_prolific_config(project_id)
-        email = cfg.get("test_participant_email")
-        if not email:
-            raise ValueError("test Prolific mode requires test_participant_email in prolific_config.yaml")
-        test_participant_id, err = create_test_participant(str(email))
-        if err:
-            raise RuntimeError(f"Failed to create Prolific test participant: {err}")
+    """Create a DRAFT Prolific study. It is never published here — the caller
+    publishes only for live mode. Test mode creates the same draft (no test
+    participant) so you can preview it in Prolific with a made-up PROLIFIC_PID.
+    """
+    from src.runtime.prolific import create_study
 
     plan = build_prolific_plan(
         project_id=project_id,
         manifest=manifest,
         n_participants=n_participants,
         mode=mode,
-        test_participant_id=test_participant_id,
     )
     study_id, err = create_study(plan.payload)
     if err:

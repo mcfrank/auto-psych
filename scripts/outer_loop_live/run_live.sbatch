@@ -124,7 +124,7 @@ echo "[run] label=$RUN_LABEL worktree=$RUN_WORKTREE out=$AUTO_PSYCH_OUTPUT_DIR $
   "${EXP_FLAG[@]}" \
   --mode live \
   --deploy-target firebase \
-  --prolific-mode live \
+  --prolific-mode "${PROLIFIC_MODE:-test}" \
   --firebase-project "$FIREBASE_PROJECT" \
   --design-mode "$DESIGN_MODE" \
   --run-label "$RUN_LABEL" \

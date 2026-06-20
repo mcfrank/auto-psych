@@ -42,44 +42,87 @@ def load_consent_html() -> str:
     return head + body
 
 
+# JS that builds the consent overlay and keeps it present until "I agree".
+# `__MARKER__` / `__CONSENT_HTML_JSON__` are substituted in Python (avoids
+# brace-escaping). The overlay is attached to <html> (document.documentElement),
+# NOT <body>: jsPsych's initJsPsych() clears document.body when it runs, which
+# would delete an in-body overlay. A MutationObserver re-attaches it if anything
+# detaches it, and keyboard input to the experiment is blocked, so the consent
+# form ALWAYS shows first and is removed only when the participant consents.
+_CONSENT_GATE_JS = """
+(function () {
+  var MARKER = "__MARKER__";
+  if (window.__autoPsychConsentInstalled) return;
+  window.__autoPsychConsentInstalled = true;
+  window.__autoPsychConsented = false;
+  var CONSENT_HTML = __CONSENT_HTML_JSON__;
+  var gate = document.createElement("div");
+  gate.id = MARKER;
+  gate.setAttribute("role", "dialog");
+  gate.setAttribute("aria-modal", "true");
+  gate.style.cssText =
+    "position:fixed;top:0;left:0;right:0;bottom:0;width:100%;height:100%;" +
+    "z-index:2147483647;background:#ffffff;overflow:auto;margin:0;";
+  gate.innerHTML =
+    '<div style="max-width:640px;margin:40px auto;padding:24px;font-family:sans-serif;' +
+    'font-size:16px;line-height:1.6;color:#222;text-align:left;">' + CONSENT_HTML +
+    '<div style="text-align:center;margin-top:28px;">' +
+    '<button id="' + MARKER + '-agree" type="button" style="padding:12px 32px;font-size:18px;' +
+    'border:none;border-radius:8px;cursor:pointer;background:#4a90d9;color:#fff;">I agree</button>' +
+    '</div></div>';
+  var observer = null;
+  function mount() {
+    if (window.__autoPsychConsented) return;
+    var root = document.documentElement || document.body;
+    if (root && gate.parentNode !== root) root.appendChild(gate);
+  }
+  function blockInput(e) {
+    if (window.__autoPsychConsented) return;
+    if (gate.contains && gate.contains(e.target)) return;  // allow the consent dialog itself
+    e.stopImmediatePropagation();
+    e.preventDefault();
+  }
+  gate.addEventListener("click", function (e) {
+    var t = e.target;
+    if (t && t.id === MARKER + "-agree") {
+      window.__autoPsychConsented = true;
+      if (observer) observer.disconnect();
+      if (gate.parentNode) gate.parentNode.removeChild(gate);
+    }
+  });
+  mount();
+  observer = new MutationObserver(mount);
+  observer.observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener("DOMContentLoaded", mount);
+  window.addEventListener("load", mount);
+  ["keydown", "keyup", "keypress"].forEach(function (t) {
+    document.addEventListener(t, blockInput, true);
+  });
+})();
+""".strip()
+
+
 def ensure_consent_gate(index_html: str, consent_html: str) -> str:
-    """Inject a full-screen consent gate that blocks the experiment until "I agree".
+    """Inject a consent gate that ALWAYS shows first and blocks the experiment
+    until the participant clicks "I agree".
 
     Idempotent: if the gate marker is already present the HTML is returned
-    unchanged. The gate is a fixed overlay (max z-index) rendered over whatever
-    the experiment displays, removed only when the participant consents — so it
-    works regardless of how the experiment builds its jsPsych timeline.
+    unchanged. The gate is built by JS attached to <html> (not <body>, which the
+    experiment's jsPsych init clears) and re-attached via a MutationObserver, so
+    it survives however the experiment builds and runs its timeline. Injected
+    into <head> so it is established before the experiment's body scripts run.
     """
     if CONSENT_GATE_MARKER in index_html:
         return index_html
-    gate = f"""
-<div id="{CONSENT_GATE_MARKER}" style="position:fixed; inset:0; z-index:2147483647; background:#ffffff; overflow:auto;">
-  <div style="max-width:640px; margin:40px auto; padding:24px; font-family:sans-serif; font-size:16px; line-height:1.6; color:#222; text-align:left;">
-    {consent_html}
-    <div style="text-align:center; margin-top:28px;">
-      <button id="{CONSENT_GATE_MARKER}-agree" type="button"
-        style="padding:12px 32px; font-size:18px; border:none; border-radius:8px; cursor:pointer; background:#4a90d9; color:#fff;">
-        I agree
-      </button>
-    </div>
-  </div>
-</div>
-<script>
-(function() {{
-  var btn = document.getElementById("{CONSENT_GATE_MARKER}-agree");
-  if (!btn) return;
-  btn.addEventListener("click", function() {{
-    var gate = document.getElementById("{CONSENT_GATE_MARKER}");
-    if (gate && gate.parentNode) gate.parentNode.removeChild(gate);
-  }});
-}})();
-</script>
-""".strip()
-    marker = "</body>"
-    if marker.lower() in index_html.lower():
-        idx = index_html.lower().rfind(marker)
-        return index_html[:idx] + gate + "\n" + index_html[idx:]
-    return index_html + "\n" + gate + "\n"
+    js = _CONSENT_GATE_JS.replace("__MARKER__", CONSENT_GATE_MARKER).replace(
+        "__CONSENT_HTML_JSON__", json.dumps(consent_html)
+    )
+    gate = f'<script id="{CONSENT_GATE_MARKER}-script">\n{js}\n</script>'
+    for tag in ("</head>", "</body>"):
+        if tag.lower() in index_html.lower():
+            idx = index_html.lower().rfind(tag)
+            return index_html[:idx] + gate + "\n" + index_html[idx:]
+    return gate + "\n" + index_html
 
 
 def firebase_project_from_rc(repo_root: Path) -> str | None:
@@ -301,45 +344,79 @@ def _deploy_lock() -> Iterator[None]:
             fcntl.flock(handle.fileno(), fcntl.LOCK_UN)
 
 
+def _deploy_argv(targets: str, project: str, config_path: Path) -> list[str]:
+    firebase = shutil.which("firebase")
+    base = [firebase] if firebase else ["npx", "-y", "firebase-tools"]
+    return base + [
+        "deploy",
+        "--only",
+        targets,
+        "--non-interactive",
+        "--force",
+        "--project",
+        project,
+        "--config",
+        str(config_path),
+    ]
+
+
+def _run_one_deploy(cmd: list[str], repo_root: Path, env: dict) -> None:
+    result = subprocess.run(cmd, cwd=repo_root, text=True, capture_output=True, env=env)
+    if result.returncode != 0:
+        raise DeploymentError(
+            f"Firebase deploy failed (--only {cmd[cmd.index('--only') + 1]})\n"
+            f"STDOUT:\n{result.stdout[-4000:]}\n"
+            f"STDERR:\n{result.stderr[-4000:]}"
+        )
+
+
+def _verify_hosting_live(url: str, *, attempts: int = 12, delay: float = 6.0) -> None:
+    """Poll the deployed experiment URL until it returns 2xx, else raise.
+
+    A combined ``--only hosting,functions,firestore`` deploy has been observed to
+    return success WITHOUT publishing hosting (the page stays 404). Recruiting
+    participants onto a 404 page is the worst possible failure, so after deploying
+    we hard-verify the experiment page is actually live before the pipeline is
+    allowed to proceed (and create a Prolific study). Allows a short window for
+    CDN propagation; fails loudly if the page never comes up.
+    """
+    import time
+    import urllib.error
+    import urllib.request
+
+    last: object = None
+    for _ in range(attempts):
+        try:
+            req = urllib.request.Request(url, headers={"User-Agent": "auto-psych"})
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                if 200 <= resp.status < 300:
+                    return
+                last = resp.status
+        except urllib.error.HTTPError as exc:
+            last = exc.code
+        except Exception as exc:  # network / TLS / DNS
+            last = repr(exc)
+        time.sleep(delay)
+    raise DeploymentError(
+        f"Firebase deploy reported success but the experiment page is NOT live: "
+        f"GET {url} -> {last} after {attempts} attempts. Refusing to proceed — "
+        "the pipeline would otherwise recruit participants onto a broken (404) page."
+    )
+
+
 def run_firebase_deploy(repo_root: Path, manifest: DeploymentManifest, config_path: Path) -> None:
     if not manifest.firebase_project:
         raise DeploymentError("Firebase deploy requires firebase_project")
     ensure_functions_dependencies(repo_root)
-    firebase = shutil.which("firebase")
-    if firebase:
-        cmd = [
-            firebase,
-            "deploy",
-            "--only",
-            "hosting,functions,firestore",
-            "--non-interactive",
-            "--force",
-            "--project",
-            manifest.firebase_project,
-            "--config",
-            str(config_path),
-        ]
-    else:
-        cmd = [
-            "npx",
-            "-y",
-            "firebase-tools",
-            "deploy",
-            "--only",
-            "hosting,functions,firestore",
-            "--non-interactive",
-            "--force",
-            "--project",
-            manifest.firebase_project,
-            "--config",
-            str(config_path),
-        ]
     env = {**os.environ, "FUNCTION_REGION": manifest.firebase_region}
+    project = manifest.firebase_project
+    # Deploy functions+firestore and hosting SEPARATELY. A combined
+    # `--only hosting,functions,firestore` deploy has been observed to return
+    # success without actually releasing hosting (the experiment page stays 404);
+    # a standalone hosting deploy releases reliably.
     with _deploy_lock():
-        result = subprocess.run(cmd, cwd=repo_root, text=True, capture_output=True, env=env)
-    if result.returncode != 0:
-        raise DeploymentError(
-            "Firebase deploy failed\n"
-            f"STDOUT:\n{result.stdout[-4000:]}\n"
-            f"STDERR:\n{result.stderr[-4000:]}"
-        )
+        _run_one_deploy(_deploy_argv("functions,firestore", project, config_path), repo_root, env)
+        _run_one_deploy(_deploy_argv("hosting", project, config_path), repo_root, env)
+    # Hard-verify the page is actually live before anything downstream recruits.
+    if manifest.experiment_url:
+        _verify_hosting_live(manifest.experiment_url)

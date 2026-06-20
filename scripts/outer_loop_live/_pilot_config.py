@@ -29,6 +29,7 @@ from src.pipelines.outer_loop.deployment.prolific import compute_reward_cents  #
 PROLIFIC_SERVICE_FEE = 0.33  # ~33%; verify the current rate in your Prolific account
 VALID_DESIGN_MODES = {"exhaustive", "agent"}
 VALID_CODING_AGENTS = {"opencode", "claude"}
+VALID_PROLIFIC_MODES = {"test", "live", "none"}
 
 
 def die(msg: str) -> "None":
@@ -68,6 +69,9 @@ def main() -> None:
     coding_agent = str(cfg.get("coding_agent") or "opencode")
     if coding_agent not in VALID_CODING_AGENTS:
         die(f"`coding_agent` must be one of {sorted(VALID_CODING_AGENTS)}")
+    prolific_mode = str(cfg.get("prolific_mode") or "test")  # safe default: test, not live
+    if prolific_mode not in VALID_PROLIFIC_MODES:
+        die(f"`prolific_mode` must be one of {sorted(VALID_PROLIFIC_MODES)}")
     firebase_project = str(cfg.get("firebase_project") or "")
     walltime = str(cfg.get("walltime") or "1-00:00:00")
     qos = str(cfg.get("qos") or "")
@@ -114,8 +118,13 @@ def main() -> None:
     grand = per_total * experiments
 
     w = sys.stderr
+    banner = {
+        "test": "  PILOT STUDY (TEST)  —  draft study to preview (NOT published), no recruiting",
+        "live": "  PILOT STUDY (LIVE)  —  recruits REAL humans and spends REAL money",
+        "none": "  PILOT STUDY (NONE)  —  deploy only, no Prolific study",
+    }[prolific_mode]
     print("=" * 66, file=w)
-    print("  PILOT STUDY  —  recruits REAL humans and spends REAL money", file=w)
+    print(banner, file=w)
     print("=" * 66, file=w)
     print(f"  config            : {cfg_path}", file=w)
     print(f"  project           : {project}", file=w)
@@ -123,12 +132,19 @@ def main() -> None:
     print(f"  study name        : {eff.get('name')}", file=w)
     print(f"  task length       : {minutes:g} min", file=w)
     print(f"  reward            : ${reward/100:,.2f}/participant  (~${reward/minutes*60/100:,.2f}/hr)", file=w)
-    print(f"  participants (N)  : {participants} per experiment", file=w)
     print(f"  experiments       : {experiments}  (design={design_mode}; coding agent={coding_agent})", file=w)
-    print(f"  cost / experiment : ${per_study/100:,.2f} reward + ~${per_fee/100:,.2f} fee = ~${per_total/100:,.2f}", file=w)
-    label = "EST. GRAND TOTAL " if experiments > 1 else "ESTIMATED TOTAL  "
-    print(f"  {label} : ~${grand/100:,.2f}" + (f"  ({experiments} x {participants})" if experiments > 1 else ""), file=w)
-    print(f"  (Prolific fee est ~{int(PROLIFIC_SERVICE_FEE*100)}%; confirm the current rate in your account.)", file=w)
+    if prolific_mode == "test":
+        print("  prolific mode     : TEST — creates a DRAFT study (NOT published); preview it in "
+              "Prolific with a made-up PROLIFIC_PID, then it stops (no collect/model).", file=w)
+    elif prolific_mode == "live":
+        print(f"  prolific mode     : LIVE — recruits + PAYS real participants", file=w)
+        print(f"  participants (N)  : {participants} per experiment", file=w)
+        print(f"  cost / experiment : ${per_study/100:,.2f} reward + ~${per_fee/100:,.2f} fee = ~${per_total/100:,.2f}", file=w)
+        label = "EST. GRAND TOTAL " if experiments > 1 else "ESTIMATED TOTAL  "
+        print(f"  {label} : ~${grand/100:,.2f}" + (f"  ({experiments} x {participants})" if experiments > 1 else ""), file=w)
+        print(f"  (Prolific fee est ~{int(PROLIFIC_SERVICE_FEE*100)}%; confirm the current rate in your account.)", file=w)
+    else:
+        print(f"  prolific mode     : none — deploys the experiment, creates NO study", file=w)
 
     me, err = get_me()
     if err or not me:
@@ -145,6 +161,7 @@ def main() -> None:
         "N_EXPERIMENTS": experiments,
         "DESIGN_MODE": design_mode,
         "CODING_AGENT": coding_agent,
+        "PROLIFIC_MODE": prolific_mode,
         "FIREBASE_PROJECT": firebase_project,
         "WALLTIME": walltime,
         "QOS": qos,

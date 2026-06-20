@@ -428,6 +428,19 @@ def _run_experiment(
                 backend=backend,
                 run_label=run_label,
             )
+            if prolific_mode == "test":
+                # Test mode creates a DRAFT study (not published) and deploys the
+                # experiment, then STOPS — you preview it yourself (open the study
+                # in Prolific, or the experiment URL with a made-up PROLIFIC_PID).
+                # There is nothing to collect/model until you do.
+                print(
+                    "\n  [test] Draft Prolific study created (NOT published) and experiment "
+                    "deployed. Preview it from your Prolific dashboard, or open the experiment "
+                    "URL with a made-up PROLIFIC_PID. Stopping before collection/modeling.",
+                    flush=True,
+                )
+                print(f"\nExperiment {exp_num} (test) complete. Outputs: {exp_dir_path}", flush=True)
+                return
 
     if "5_model_loop" in keys_to_run:
         update_registry_from_interpretation(exp_dir_path)
@@ -571,6 +584,18 @@ def main(args: Args) -> None:
         flush=True,
     )
     print(f"Outputs: {outer_data_dir() / project_id}", flush=True)
+
+    # Test mode produces a draft to preview and stops before collection, so a
+    # later experiment would have no prior-experiment data to build on. Run only
+    # the first.
+    if args.prolific_mode == "test" and len(exp_ids) > 1:
+        print(
+            f"  [test] prolific_mode=test runs only experiment {exp_ids[0]} (a draft to "
+            f"preview); skipping {exp_ids[1:]}.",
+            file=sys.stderr,
+            flush=True,
+        )
+        exp_ids = exp_ids[:1]
 
     for exp_num in exp_ids:
         _run_experiment(
