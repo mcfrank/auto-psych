@@ -15,13 +15,14 @@
 # the inner-loop MCMC runs locally (CPU). For sequences longer than ~2 days add
 # `--qos=long` (up to 7 days) when submitting.
 #
-# MUST run from a PER-RUN worktree (RUN_WORKTREE): the coding agents — especially
-# opencode — keep per-project state and must not share a working dir or session
-# DB across parallel runs. run_pilot.sh and submit_parallel.sh provide one.
+# MUST run from a PER-RUN copy of the repo (RUN_WORKTREE): the coding agents —
+# opencode especially — keep per-project state and must not share a working dir
+# or session DB across parallel runs. run_pilot.sh and submit_parallel.sh make a
+# per-run rsync copy (el7's git is too old for `git worktree`).
 #
 # Per-run knobs (env; set by run_pilot.sh / submit_parallel.sh, or via --export):
 #   RUN_LABEL              unique label -> /e{N}-{label}/ hosting path + session id
-#   RUN_WORKTREE           per-run checkout (its own public/, functions/, opencode.json)
+#   RUN_WORKTREE           per-run repo copy (its own public/, functions/, opencode.json)
 #   AUTO_PSYCH_OUTPUT_DIR  this run's data tree (avoids experiment{N}/ collisions)
 #   CODING_AGENT (opencode)  PROJECT (subjective_randomness)  EXPERIMENT (1)
 #   N_PARTICIPANTS (1)  FIREBASE_PROJECT  DESIGN_MODE (agent|exhaustive)
@@ -78,9 +79,9 @@ mkdir -p "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME" "$TMPDIR"
 CODING_AGENT="${CODING_AGENT:-opencode}"
 # opencode operates on its cwd and reaches paths outside it only via
 # external_directory grants (no Claude-style --add-dir). The experiment outputs
-# live on $SCRATCH outside the worktree, so grant the agents access. We patch
-# the WORKTREE's opencode.json — a per-run checkout copy, never the tracked repo
-# file (run_pilot.sh / submit_parallel.sh give every run its own worktree).
+# live on $SCRATCH outside the run copy, so grant the agents access. We patch
+# the run copy's opencode.json (a per-run rsync copy on $SCRATCH), never your
+# tracked repo file.
 if [[ "$CODING_AGENT" == "opencode" ]]; then
   "$VENV_PY" - "$RUN_WORKTREE/opencode.json" "$AUTO_PSYCH_OUTPUT_DIR" <<'PY'
 import json, sys, pathlib
