@@ -52,11 +52,17 @@ def _filters_by_id(payload) -> dict:
 
 def test_compute_reward_from_hourly_wage_for_five_minutes():
     # $12.00/hr == 1200 cents/hr; a 5-minute study pays 1200 * 5/60 = 100 cents.
-    assert compute_reward_cents({"reward_per_hour": 1200, "estimated_completion_time": 5}) == 100
+    assert (
+        compute_reward_cents({"reward_per_hour": 1200, "estimated_completion_time": 5})
+        == 100
+    )
 
 
 def test_compute_reward_scales_with_duration():
-    assert compute_reward_cents({"reward_per_hour": 1200, "estimated_completion_time": 10}) == 200
+    assert (
+        compute_reward_cents({"reward_per_hour": 1200, "estimated_completion_time": 10})
+        == 200
+    )
 
 
 def test_compute_reward_uses_explicit_reward_when_no_hourly_rate():
@@ -74,11 +80,14 @@ def test_external_study_url_adds_prolific_params():
 
 
 def test_completion_redirect_url_escapes_code():
-    assert completion_redirect_url("A B") == "https://app.prolific.com/submissions/complete?cc=A%20B"
+    assert (
+        completion_redirect_url("A B")
+        == "https://app.prolific.com/submissions/complete?cc=A%20B"
+    )
 
 
-def test_build_prolific_payload_without_network():
-    manifest = DeploymentManifest(
+def _manifest() -> DeploymentManifest:
+    return DeploymentManifest(
         project_id="subjective_randomness",
         experiment_id="subjective_randomness_experiment1",
         run_id=1,
@@ -95,9 +104,11 @@ def test_build_prolific_payload_without_network():
         results_api_url="https://example.org/exp",
     )
 
+
+def test_build_prolific_payload_without_network():
     plan = build_prolific_plan(
         project_id="missing_project_uses_defaults",
-        manifest=manifest,
+        manifest=_manifest(),
         n_participants=7,
         mode="test",
         test_participant_id="tester",
@@ -117,7 +128,9 @@ def test_eligibility_filters_default_to_us_english_and_98_percent():
 
 
 def test_eligibility_filters_respect_configured_min_approval_rate():
-    filters = {f["filter_id"]: f for f in build_eligibility_filters({"min_approval_rate": 90})}
+    filters = {
+        f["filter_id"]: f for f in build_eligibility_filters({"min_approval_rate": 90})
+    }
     assert filters["approval_rate"]["selected_range"] == {"lower": 90, "upper": 100}
 
 
@@ -139,7 +152,9 @@ def test_verify_eligibility_choice_ids_raises_on_drift():
 
 
 def test_verify_eligibility_choice_ids_raises_on_missing_filter():
-    without_language = [f for f in _live_filters_snapshot() if f["filter_id"] != "fluent-languages"]
+    without_language = [
+        f for f in _live_filters_snapshot() if f["filter_id"] != "fluent-languages"
+    ]
     with pytest.raises(ValueError, match="fluent-languages"):
         verify_eligibility_choice_ids(without_language)
 
@@ -158,3 +173,33 @@ def test_live_study_applies_data_quality_eligibility_filters():
     assert filters["current-country-of-residence"]["selected_values"] == ["1"]
     assert filters["fluent-languages"]["selected_values"] == ["19"]
     assert filters["approval_rate"]["selected_range"] == {"lower": 98, "upper": 100}
+
+
+def test_payload_uses_completion_codes_array_matching_the_redirect():
+    """Prolific's current API requires a `completion_codes` array (objects with
+    code/code_type/actions), not the legacy singular `completion_code` +
+    `completion_option`. The registered code must equal the one the participant
+    is redirected to (`?cc=...`), or Prolific won't recognise the completion.
+    """
+    plan = build_prolific_plan(
+        project_id="missing_project_uses_defaults",
+        manifest=_manifest(),
+        n_participants=5,
+        mode="live",
+    )
+    payload = plan.payload
+
+    # Legacy fields must be gone.
+    assert "completion_code" not in payload
+    assert "completion_option" not in payload
+
+    # New schema: one COMPLETED code that auto-approves.
+    codes = payload["completion_codes"]
+    assert isinstance(codes, list) and len(codes) == 1
+    assert codes[0]["code"] == "AUTO_PSYCH_COMPLETE"
+    assert codes[0]["code_type"] == "COMPLETED"
+    assert codes[0]["actions"] == [{"action": "AUTOMATICALLY_APPROVE"}]
+
+    # The code registered on the study must equal the one in the redirect URL.
+    assert plan.redirect_url.endswith("cc=AUTO_PSYCH_COMPLETE")
+    assert codes[0]["code"] in plan.redirect_url
