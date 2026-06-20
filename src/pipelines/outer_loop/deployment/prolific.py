@@ -19,6 +19,15 @@ class ProlificStudyPlan:
     published: bool = False
 
 
+# Prolific actions valid for a COMPLETED completion code. Auto-approve pays every
+# worker who finishes (the Prolific norm — data quality is an *analysis* decision,
+# handled by the monitor, not a payment one); manual review holds submissions for
+# vetting. Other API actions (group add/remove, screen-out payment, …) need extra
+# fields and don't apply to a plain completion, so we reject them loudly.
+_COMPLETION_ACTIONS = {"AUTOMATICALLY_APPROVE", "MANUALLY_REVIEW"}
+DEFAULT_COMPLETION_ACTION = "AUTOMATICALLY_APPROVE"
+
+
 def completion_redirect_url(code: str) -> str:
     return "https://app.prolific.com/submissions/complete?cc=" + urllib.parse.quote(code)
 
@@ -158,14 +167,28 @@ def build_prolific_plan(
     cfg = load_prolific_config(project_id)
     completion_code = str(cfg.get("completion_code") or "AUTO_PSYCH_COMPLETE")
     redirect = str(cfg.get("prolific_redirect_url") or completion_redirect_url(completion_code))
+    completion_action = str(cfg.get("completion_code_action") or DEFAULT_COMPLETION_ACTION)
+    if completion_action not in _COMPLETION_ACTIONS:
+        raise ValueError(
+            f"completion_code_action must be one of {sorted(_COMPLETION_ACTIONS)}, "
+            f"got {completion_action!r}."
+        )
     payload: dict[str, Any] = {
         "name": cfg.get("name") or f"Auto-psych {manifest.experiment_id}",
         "internal_name": f"auto-psych {manifest.deployment_id}",
         "description": cfg.get("description") or "Psychology experiment (auto-psych pipeline).",
         "external_study_url": external_study_url(manifest.experiment_url),
         "prolific_id_option": "url_parameters",
-        "completion_code": completion_code,
-        "completion_option": "code",
+        # Prolific's current API: an array of completion codes, each with a type
+        # and automatic actions. The participant is redirected to `?cc=<code>`
+        # (see `redirect` above), so this code must equal that one.
+        "completion_codes": [
+            {
+                "code": completion_code,
+                "code_type": "COMPLETED",
+                "actions": [{"action": completion_action}],
+            }
+        ],
         "estimated_completion_time": int(cfg.get("estimated_completion_time") or 5),
         "total_available_places": int(cfg.get("total_available_places") or n_participants),
         "reward": compute_reward_cents(cfg),

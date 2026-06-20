@@ -4,6 +4,11 @@
 
 estimated_completion_time: 5   # minutes
 completion_code: AUTO_PSYCH_COMPLETE
+# What Prolific does when a worker submits the completion code:
+#   AUTOMATICALLY_APPROVE (default) — pay everyone who finishes; exclude bad data
+#                                     analytically (the monitor flags degenerate runs).
+#   MANUALLY_REVIEW — hold submissions for you to approve/reject.
+completion_code_action: AUTOMATICALLY_APPROVE
 test_participant_email: "your-test@example.com"   # required for --mode test_prolific
 total_available_places: 1
 reward: 50   # cents

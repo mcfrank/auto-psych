@@ -4,9 +4,10 @@
 reward_per_hour: 1200
 estimated_completion_time: 10
 name: Which sequence is more random?
-description: In this study, you will see a series of con flip results and be asked
+description:
+  In this study, you will see a series of con flip results and be asked
   to judge which is more random.
 device_compatibility:
-- desktop
+  - desktop
 completion_code: AUTO_PSYCH_COMPLETE
 total_available_places: 10
