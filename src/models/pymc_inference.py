@@ -545,7 +545,16 @@ class FittedModel:
             )
         arr = pp.posterior_predictive[response_rv_name].values  # (chain, draw, n_stim)
         flat = arr.reshape(-1, arr.shape[-1])  # (chain*draw, n_stim)
-        return flat[:n_datasets]
+        if n_datasets >= flat.shape[0]:
+            return flat
+        # Subsample WITHOUT replacement across the full chain×draw pool rather than
+        # taking flat[:n_datasets] — the reshape above is chain-major, so a head
+        # slice would draw the PPC null distribution from a single chain's first
+        # draws (autocorrelated, ignoring the other chains). A seeded, evenly
+        # strided selection spreads the replicates across all chains/draws and is
+        # reproducible for a given seed.
+        idx = np.linspace(0, flat.shape[0] - 1, num=n_datasets, dtype=int)
+        return flat[idx]
 
 
 _FIT_CACHE: Dict[tuple, FittedModel] = {}

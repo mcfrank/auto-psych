@@ -33,6 +33,12 @@ run; **only the stimuli change.** Use the wording below exactly (do not
 paraphrase), **button responses only**, and the data contract above (`chose_left`,
 `sequence_a`, `sequence_b`).
 
+> **Rendering note (the wording below is Markdown — convert it to HTML).** The
+> `**bold**` spans must render as `<strong>` in the experiment; participants must
+> never see literal asterisks. Put each paragraph in its own `<p>`, and wrap the
+> instructions and debrief in the skeleton's `<div class="auto-psych-prose">`
+> (constrained-width, left-aligned) so the text does not span the full screen.
+
 - **Instructions** (first screen, button labelled `Begin`) — use this wording exactly:
   > In this study, you will look at sequences of coin flips and judge how
   > **random** they look.

@@ -185,12 +185,27 @@ def _posterior_design_inputs(exp_dir: Path, prev_exp_dir: Path):
             f"responses at {responses}, but it is missing."
         )
     registry = load_registry(prev_exp_dir / "model_registry.yaml")
-    weights = registry.get("theories") or None
-    if not weights:
-        raise RuntimeError(
-            f"Exhaustive posterior design needs model weights in "
-            f"{prev_exp_dir / 'model_registry.yaml'} (theories), but none were found."
+    raw_weights = registry.get("theories") or {}
+    # Align the previous experiment's posterior to THIS experiment's model set.
+    # Model identities are not guaranteed to carry across experiments (the inner
+    # loop renames candidates each round), so keep only weights whose model name
+    # still exists here and renormalize. Fall back to a uniform model prior when
+    # none overlap, rather than crashing or letting a single carried-over name
+    # dominate every EIG scenario.
+    aligned = {
+        n: float(raw_weights[n])
+        for n in names
+        if isinstance(raw_weights.get(n), (int, float)) and raw_weights[n] > 0
+    }
+    if aligned:
+        weights = aligned
+    else:
+        print(
+            f"  [design] previous posterior over {sorted(raw_weights)} does not "
+            f"overlap this experiment's models {names}; using a uniform model prior.",
+            flush=True,
         )
+        weights = {n: 1.0 / len(names) for n in names}
 
     cache_dir = exp_dir / "design" / "_fit_cache"
     param_sets_by_model = {}
