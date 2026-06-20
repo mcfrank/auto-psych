@@ -13,6 +13,7 @@ from __future__ import annotations
 import csv
 import importlib.util
 import json
+import math
 import os
 import re
 import shutil
@@ -870,6 +871,34 @@ def _validate_implement(exp_dir: Path) -> tuple[bool, str]:
             "for fixations/spacing use a button trial with trial_duration/post_trial_gap, "
             "not a keyboard trial."
         )
+    # Formatting consistency: instruction/debrief prose MUST render as HTML, never
+    # leak raw Markdown. A literal `**bold**` (or `*emph*`/`__bold__`) means the
+    # agent pasted the problem-definition Markdown verbatim instead of converting it
+    # to <strong>/<em>; participants would see the asterisks. Reject it.
+    # Paired `**…**` (opens with a letter) signals leaked Markdown bold without
+    # tripping on JS exponentiation like `x**2` (no letter immediately after `**`).
+    if re.search(r"\*\*[A-Za-z][^*]*?\*\*", text):
+        return False, (
+            "formatting: index.html contains literal Markdown bold (`**...**`). The "
+            "instruction/choice/debrief wording must be rendered as HTML — convert "
+            "`**bold**` to <strong>bold</strong> and never emit raw asterisks to "
+            "participants."
+        )
+    if re.search(r"(?<![\w*])__[A-Za-z].*?[A-Za-z]__(?![\w*])", text):
+        return False, (
+            "formatting: index.html contains literal Markdown bold (`__...__`). Render "
+            "emphasis as HTML (<strong>/<em>), not raw Markdown."
+        )
+    # Readability: long instruction/debrief text must sit in a constrained-width,
+    # left-aligned prose container (the fixed `.auto-psych-prose` class from the
+    # skeleton), so it does not stretch edge-to-edge across wide screens.
+    if "auto-psych-prose" not in text:
+        return False, (
+            "readability: instructions and debrief must be wrapped in the fixed "
+            "`<div class=\"auto-psych-prose\">…</div>` container (a max-width, "
+            "left-aligned, line-height block) so prose does not span the full screen "
+            "width. Copy the .auto-psych-prose rule and wrappers from the skeleton."
+        )
     # Data contract: each trial must record chose_left (1=left/first sequence) plus
     # the raw sequences, or the collection/Firestore step cannot parse the data.
     for needed in ("chose_left", "sequence_a", "sequence_b"):
@@ -965,7 +994,18 @@ def init_registry(exp_dir: Path) -> None:
 
 
 def update_registry_from_interpretation(exp_dir: Path) -> None:
-    """Update model_registry.yaml from the inner model loop output."""
+    """Record the inner model loop's posterior over models in model_registry.yaml.
+
+    The inner loop writes ``model_loop/model_posterior.json`` with a ``posteriors``
+    map (model_name -> probability). We copy those weights verbatim (renormalized
+    to sum to 1) into this experiment's registry ``theories`` so downstream design
+    — e.g. the posterior-weighted EIG of a later experiment — sees the *real*
+    per-model posterior mass. (Previously this wrote a hard-coded
+    ``{"inner_loop_model": 1.0}``, discarding the computed posterior and emitting a
+    weight keyed by a model name with no pure-Python family twin, which broke the
+    exhaustive posterior-design path.) No-op if the posterior file is missing or
+    malformed.
+    """
     sys.path.insert(0, str(REPO_ROOT))
     from src.registry import write_registry  # type: ignore
 
@@ -979,7 +1019,20 @@ def update_registry_from_interpretation(exp_dir: Path) -> None:
     except Exception:
         return
 
-    if not isinstance(data.get("posteriors"), dict):
+    posteriors = data.get("posteriors")
+    if not isinstance(posteriors, dict) or not posteriors:
         return
-    write_registry(registry_path, {"inner_loop_model": 1.0}, reserved_for_new=0.0)
-    print("  [registry] Updated model_registry.yaml from inner model loop", flush=True)
+    weights = {
+        str(name): float(p)
+        for name, p in posteriors.items()
+        if isinstance(p, (int, float)) and math.isfinite(float(p)) and float(p) >= 0.0
+    }
+    total = sum(weights.values())
+    if total <= 0:
+        return
+    weights = {name: p / total for name, p in weights.items()}
+    write_registry(registry_path, weights, reserved_for_new=0.0)
+    print(
+        "  [registry] Recorded inner-loop posterior over models in model_registry.yaml",
+        flush=True,
+    )

@@ -41,6 +41,10 @@ or reorder anything else.
   <link href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css" rel="stylesheet" />
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
   <style>
+    /* Readable prose block for instructions/debrief — constrained width, left
+       aligned, comfortable line height. Without this, text spans the full screen. */
+    .auto-psych-prose { max-width: 620px; margin: 0 auto; text-align: left; line-height: 1.6; font-size: 18px; }
+    .auto-psych-prose p { margin: 0 0 1em; }
     .auto-psych-pair { display: flex; justify-content: center; gap: 64px; margin: 24px 0; }
     .auto-psych-seq { font-family: monospace; font-size: 28px; letter-spacing: 4px; }
     .jspsych-btn { padding: 12px 28px; font-size: 18px; border-radius: 8px; }
@@ -57,10 +61,16 @@ or reorder anything else.
   const timeline = [];
 
   // 1. Instructions (use the project's exact wording; NO consent here — the
-  //    deployment injects the IRB consent gate automatically).
+  //    deployment injects the IRB consent gate automatically). Render the wording
+  //    as HTML inside the .auto-psych-prose container: one <p> per paragraph, and
+  //    convert **bold** -> <strong>bold</strong>. NEVER emit raw Markdown (no `**`).
   timeline.push({
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p>INSTRUCTIONS_TEXT_FROM_PROBLEM_DEFINITION</p>',
+    stimulus:
+      '<div class="auto-psych-prose">' +
+        '<p>INSTRUCTIONS_PARAGRAPH_1</p>' +
+        '<p>INSTRUCTIONS_PARAGRAPH_2 …</p>' +   // one <p> per paragraph; <strong> for bold
+      '</div>',
     choices: ['Begin']
   });
 
@@ -80,10 +90,11 @@ or reorder anything else.
     });
   });
 
-  // 3. Debrief (project's exact wording).
+  // 3. Debrief (project's exact wording; same .auto-psych-prose container, HTML
+  //    rendering, no raw Markdown).
   timeline.push({
     type: jsPsychHtmlButtonResponse,
-    stimulus: '<p>DEBRIEF_TEXT_FROM_PROBLEM_DEFINITION</p>',
+    stimulus: '<div class="auto-psych-prose"><p>DEBRIEF_TEXT_FROM_PROBLEM_DEFINITION</p></div>',
     choices: ['Finish']
   });
 
@@ -110,6 +121,15 @@ or reorder anything else.
 - **Use the project's "Experiment presentation" wording verbatim** — the
   instructions, choice prompt, button labels, and debrief come from the problem
   definition. Do not paraphrase, shorten, or embellish them.
+- **Render prose as HTML — never leak Markdown.** The problem definition is written
+  in Markdown; convert it. `**bold**` becomes `<strong>bold</strong>`, each
+  paragraph its own `<p>`. The page must contain **no literal `**` or `*`
+  emphasis** — participants must never see asterisks. (The validator rejects raw
+  `**`.)
+- **Wrap instructions and debrief in `<div class="auto-psych-prose">…</div>`** (the
+  fixed max-width, left-aligned, line-height container) so the text is readable and
+  does not stretch edge-to-edge on wide screens. (The validator requires this
+  container.)
 - **No data-submission code** (no `fetch("/submit")`, no Firebase). The deployment
   injects the submit bridge; your only job is `window.__experimentData` on finish.
 - **Self-contained**, CDN-only. **Never** use absolute root paths
@@ -122,5 +142,7 @@ or reorder anything else.
 - [ ] Every trial sets `chose_left`, `sequence_a`, `sequence_b`
 - [ ] All `design/stimuli.json` stimuli are embedded verbatim
 - [ ] Instructions / choice labels / debrief match the problem definition's wording exactly
+- [ ] All `**bold**` rendered as `<strong>`; **no literal `**`/`*` anywhere in the page**
+- [ ] Instructions and debrief wrapped in `<div class="auto-psych-prose">…</div>`
 - [ ] No consent screen, no submission code, no absolute root paths
 - [ ] `experiment/config.json` is `{ "experiment_url": null }`

@@ -17,7 +17,7 @@ design_mode: agent                 # agent = an agent proposes stimuli, EIG scor
                                    # (no family twins; works for multi-experiment) | exhaustive = twin-based
 coding_agent: opencode             # backend for ALL coding agents (theory/design/inner loop):
                                    # opencode (opencode + Gemini, default) | claude (Claude Code)
-prolific_mode: test                # test = create a DRAFT study (NOT published) + deploy, then STOP so you
+prolific_mode: live                # test = create a DRAFT study (NOT published) + deploy, then STOP so you
                                    #        can preview it (open it in Prolific, use a made-up PROLIFIC_PID);
                                    #        no recruiting, no payment, no auto collect/model.
                                    # live = REAL paid participants + full pipeline. Default test for safety —
