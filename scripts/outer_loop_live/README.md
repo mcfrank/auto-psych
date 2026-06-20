@@ -120,7 +120,8 @@ Longer than ~2 days of wall-clock? Set `qos: long` in `pilot.yaml` (or add
 | Resource | Isolation |
 |---|---|
 | Output data tree | `AUTO_PSYCH_OUTPUT_DIR` per run → separate `experiment{N}/` |
-| Local checkout (`public/`, `firebase.generated.json`, `functions/`) | one **git worktree** per run |
+| Local checkout (`public/`, `firebase.generated.json`, `opencode.json`, `functions/`) | one **rsync copy** of the repo per run (el7 git is too old for `git worktree`; rsync also needs no commit) |
+| opencode session DB / cache | **private XDG data/state/cache + TMPDIR** per run (node-local SSD) |
 | Live experiment URL | hosting path `/e{N}-<label>/` (per `--run-label`) |
 | Participant data | `collection_sessions/<collection_session_id>/responses` — `collection_session_id` embeds the run-label, so `/results` reads only this run's data |
 | Prolific study | each run creates its own study |

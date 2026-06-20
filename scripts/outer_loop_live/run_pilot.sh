@@ -61,19 +61,25 @@ if [[ "${CONFIRM:-}" != "yes" ]]; then
   [[ "$reply" == "yes" ]] || { echo "Aborted — nothing was deployed or published."; exit 1; }
 fi
 
-# --- per-run worktree (isolated cwd) ---------------------------------------
+# --- per-run isolated checkout (rsync copy) --------------------------------
 # Coding agents — opencode especially — keep per-project working state; parallel
 # runs must NOT share a working directory (its public/, firebase.generated.json,
-# opencode.json). Give this run its own git worktree. Worktrees check out HEAD,
-# so the run uses your COMMITTED code + config; render the study config into the
-# worktree from your (committed) pilot.yaml. Commit before launching.
-if [[ -n "$(git -C "$REPO" status --porcelain)" ]]; then
-  fail "uncommitted changes in $REPO — the run uses a worktree checked out at HEAD. Commit pilot.yaml + code first (then re-run)."
-fi
-WT="$WORK_ROOT/worktrees/$RUN_LABEL"; mkdir -p "$WORK_ROOT/worktrees"
-[[ -d "$WT" ]] || git -C "$REPO" worktree add --detach "$WT" HEAD
+# opencode.json). Give this run its OWN copy of the repo on $SCRATCH. We rsync
+# (not `git worktree`: el7's git is too old for it) so the copy captures your
+# CURRENT working tree — no commit required. Excludes .git/.secrets/data/caches;
+# code + assets come along, and we render the study config into the copy.
+WT="$WORK_ROOT/runs/$RUN_LABEL/repo"; mkdir -p "$WT"
+rsync -a --delete \
+  --exclude '.git' --exclude '.secrets' --exclude '.venv' --exclude 'data' \
+  --exclude '__pycache__' --exclude '*.nc' --exclude 'scratch' --exclude '.worktrees' \
+  --exclude 'public' --exclude 'firebase.generated.json' --exclude 'functions/node_modules' \
+  --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
+  "$REPO"/ "$WT"/
+touch "$WT/.here"   # pyprojroot sentinel (.git is excluded from the copy)
+# Render the study config into the COPY from your current pilot.yaml (leaves your
+# main checkout untouched).
 "$VENV_PY" "$WT/scripts/outer_loop_live/_pilot_config.py" "$CONFIG" --render-only \
-  || fail "failed to render prolific_config into the worktree"
+  || fail "failed to render prolific_config into the run copy"
 
 # --- assemble + submit the live-run job ------------------------------------
 LOGDIR="$WORK_ROOT/slurm_logs"; mkdir -p "$LOGDIR"
@@ -100,7 +106,7 @@ echo
 echo "Pilot submitted: job $jid  (N=$N_PARTICIPANTS participants x $N_EXPERIMENTS experiment(s))"
 echo "  monitor : squeue --me ; tail -f $LOGDIR/pilot_${RUN_LABEL}_${jid}.out"
 echo "  data    : $OUT/$PROJECT/experiment<k>/data/responses.csv"
-echo "  worktree: $WT   (isolated cwd; remove when done: git -C $REPO worktree remove $WT)"
+echo "  run copy: $WT   (isolated cwd; remove when done: rm -rf $WORK_ROOT/runs/$RUN_LABEL)"
 echo "  studies : one Prolific study per experiment appears in your dashboard (Draft -> Published)"
 echo
 echo "TO STOP THE PILOT:"

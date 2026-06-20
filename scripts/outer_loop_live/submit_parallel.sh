@@ -1,10 +1,12 @@
 #!/bin/bash
 # Launch K parallel LIVE outer-loop runs on Sherlock. Each run gets:
-#   * its own git worktree         -> isolated public/, firebase.generated.json,
-#                                     functions/
+#   * its own rsync copy of the repo -> isolated public/, firebase.generated.json,
+#                                     opencode.json, functions/ (captures your
+#                                     CURRENT working tree; no commit needed)
 #   * its own --run-label          -> /e{N}-{label}/ hosting path + Firestore
 #                                     collection_session_id + its own Prolific study
 #   * its own AUTO_PSYCH_OUTPUT_DIR -> isolated experiment{N}/ data tree
+#   * its own private XDG dirs (set in run_live.sbatch) -> no opencode DB collision
 # The brief `firebase deploy` step is serialized across runs by the shared
 # AUTO_PSYCH_DEPLOY_LOCK (set in _env.sh); everything else runs concurrently.
 #
@@ -29,34 +31,33 @@ export EXPERIMENT="${EXPERIMENT:-1}"
 export N_PARTICIPANTS="${N_PARTICIPANTS:-1}"
 export FIREBASE_PROJECT="${FIREBASE_PROJECT:-auto-psych-2c5da}"
 export DESIGN_MODE="${DESIGN_MODE:-agent}"
-
-# Worktrees check out HEAD, so uncommitted edits to src/ would NOT reach them.
-if [[ -n "$(git -C "$REPO" status --porcelain)" ]]; then
-  echo "ERROR: $REPO has uncommitted changes; per-run worktrees check out HEAD." >&2
-  echo "       Commit (or stash) your edits first so they reach the worktrees." >&2
-  exit 1
-fi
+export CODING_AGENT="${CODING_AGENT:-opencode}"
 
 LOGDIR="$WORK_ROOT/slurm_logs"; mkdir -p "$LOGDIR"
-WT_ROOT="$WORK_ROOT/worktrees"; mkdir -p "$WT_ROOT"
-HEAD_SHA="$(git -C "$REPO" rev-parse --short HEAD)"
+RUNS_ROOT="$WORK_ROOT/runs"; mkdir -p "$RUNS_ROOT"
+SRC_SHA="$( (cd "$REPO" && git rev-parse --short HEAD) 2>/dev/null || echo working-tree)"
 
 for i in $(seq 1 "$K"); do
   LABEL="run${i}"
-  WT="$WT_ROOT/$LABEL"
-  OUT="$WORK_ROOT/$LABEL/data"; mkdir -p "$OUT"
-  # Detached worktree at HEAD (idempotent: reuse if a prior submit made it).
-  if [[ ! -d "$WT" ]]; then
-    git -C "$REPO" worktree add --detach "$WT" HEAD
-  fi
+  WT="$RUNS_ROOT/$LABEL/repo"
+  OUT="$WORK_ROOT/$LABEL/data"; mkdir -p "$OUT" "$WT"
+  # Per-run rsync copy of the CURRENT working tree (el7 git lacks `git worktree`;
+  # rsync needs no commit). Isolates public/, firebase.generated.json, opencode.json.
+  rsync -a --delete \
+    --exclude '.git' --exclude '.secrets' --exclude '.venv' --exclude 'data' \
+    --exclude '__pycache__' --exclude '*.nc' --exclude 'scratch' --exclude '.worktrees' \
+    --exclude 'public' --exclude 'firebase.generated.json' --exclude 'functions/node_modules' \
+    --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
+    "$REPO"/ "$WT"/
+  touch "$WT/.here"   # pyprojroot sentinel (.git excluded)
   jid=$(sbatch --parsable \
     --job-name="outer_live_$LABEL" \
     --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
-    --export=ALL,RUN_LABEL="$LABEL",RUN_WORKTREE="$WT",AUTO_PSYCH_OUTPUT_DIR="$OUT" \
+    --export=ALL,RUN_LABEL="$LABEL",RUN_WORKTREE="$WT",CODING_AGENT="$CODING_AGENT",AUTO_PSYCH_OUTPUT_DIR="$OUT" \
     "$OUTER_LIVE_SLURM_DIR/run_live.sbatch")
-  echo "submitted $LABEL: job $jid  (worktree=$WT  out=$OUT)"
+  echo "submitted $LABEL: job $jid  (copy=$WT  out=$OUT)"
 done
 
 echo
-echo "code @ $HEAD_SHA   |   watch: squeue --me   |   logs: $LOGDIR"
-echo "Tear down worktrees when done:  git -C $REPO worktree remove <path>"
+echo "code @ $SRC_SHA   |   watch: squeue --me   |   logs: $LOGDIR"
+echo "Tear down run copies when done:  rm -rf $RUNS_ROOT/<label>"
