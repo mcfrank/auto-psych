@@ -5,9 +5,9 @@ import pytest
 from src.runtime.coding_agent import build_command, select_backend
 
 
-def test_select_backend_defaults_to_claude(monkeypatch):
+def test_select_backend_defaults_to_opencode(monkeypatch):
     monkeypatch.delenv("CODING_AGENT", raising=False)
-    assert select_backend(None) == "claude"
+    assert select_backend(None) == "opencode"
 
 
 def test_select_backend_env_fallback(monkeypatch):

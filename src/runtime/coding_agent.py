@@ -7,9 +7,10 @@ how the streamed output is interpreted. This module owns that difference so the
 call sites stay backend-neutral.
 
 Backend selection: an explicit argument wins, else the ``CODING_AGENT``
-environment variable, else ``"claude"``. Model names are per-backend: each
-backend has its own default and any ``model`` argument is passed through
-verbatim (Claude uses ``claude-sonnet-4-6``; opencode uses ``provider/model``).
+environment variable, else ``"opencode"`` (the default). Model names are
+per-backend: each backend has its own default and any ``model`` argument is
+passed through verbatim (opencode uses ``provider/model`` — defaults to Gemini;
+Claude uses ``claude-sonnet-4-6``).
 """
 
 from __future__ import annotations
@@ -21,7 +22,7 @@ import threading
 from pathlib import Path
 from typing import Callable, Optional
 
-DEFAULT_BACKEND = "claude"
+DEFAULT_BACKEND = "opencode"
 _DEFAULT_MODEL = {
     "claude": "claude-sonnet-4-6",
     "opencode": "google/gemini-3.1-pro-preview",

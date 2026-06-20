@@ -1,0 +1,47 @@
+# ============================================================================
+#  Unified config for a pilot human run. EDIT THIS FILE — it is the single
+#  source of truth. `run_pilot.sh` reads it, renders the project's
+#  prolific_config.yaml from the `prolific:` block, and passes the rest to the
+#  Slurm job. (Credentials stay in .secrets, never here.)
+#
+#  Launch:  bash scripts/outer_loop_live/run_pilot.sh
+#           CONFIG=path/to/other.yaml bash scripts/outer_loop_live/run_pilot.sh
+# ============================================================================
+
+# --- what to run -----------------------------------------------------------
+project: subjective_randomness     # project under projects/<project>/
+run_label: pilot1                  # names the run: URL path /e{k}-{label}/, output dir, session ids
+experiments: 2                     # how many experiments to run, in sequence (1..N). Each is its
+                                   # own deploy + Prolific study; experiment k's design uses k-1's posterior.
+design_mode: agent                 # agent = an agent proposes stimuli, EIG scored on the real PyMC models
+                                   # (no family twins; works for multi-experiment) | exhaustive = twin-based
+coding_agent: opencode             # backend for ALL coding agents (theory/design/inner loop):
+                                   # opencode (opencode + Gemini, default) | claude (Claude Code)
+
+# --- where / how it runs (Slurm + Firebase) --------------------------------
+firebase_project: auto-psych-2c5da
+walltime: "1-00:00:00"             # Slurm walltime D-HH:MM:SS. A live experiment can wait up to ~2h
+                                   # for recruiting; budget ~N_experiments x that.
+qos: ""                            # "" normal (<=2 days) | "long" for up to 7 days
+
+# --- the Prolific study (defines who is recruited and what they're paid) ---
+# Rendered to projects/<project>/prolific_config.yaml on launch.
+prolific:
+  participants: 10                 # per experiment (-> total_available_places)
+  reward_per_hour: 1200            # cents/hour ($12/hr). OR set a flat `reward:` in cents instead.
+  # reward: 200                    # flat cents/participant (overrides reward_per_hour if set)
+  estimated_completion_time: 10    # minutes; keep in sync with the ACTUAL task length
+  name: "Which sequence is more random?"
+  description: >-
+    In this study, you will see a series of con flip results and be asked to judge which is more random.
+  device_compatibility: [desktop]
+  completion_code: AUTO_PSYCH_COMPLETE
+  # test_participant_email: "you@example.com"   # only needed for a Prolific "test" study
+
+# --- modeling / inner loop -------------------------------------------------
+modeling:
+  inner_loop_iterations: 2         # candidate-improvement rounds per experiment
+  inner_loop_candidates: 3         # candidate models proposed per round
+  draws: 2000                      # MCMC posterior draws / chain
+  tune: 2000                       # MCMC warmup / chain
+  chains: 4                        # MCMC chains (<= cpus-per-task in run_live.sbatch)
