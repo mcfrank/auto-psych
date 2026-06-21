@@ -71,7 +71,7 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
 def _patch_candidates(monkeypatch):
     """Each spawned agent writes a candidate; validation is stubbed to accept."""
 
-    def fake_spawn(candidate_dir, agent_timeout_sec, backend):
+    def fake_spawn(candidate_dir, **kwargs):
         (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
         (candidate_dir / "hypothesis.md").write_text(
             "People use heuristic H.\n", encoding="utf-8"
