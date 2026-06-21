@@ -814,6 +814,21 @@ def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
     if not all(names):
         return False, "models_manifest.yaml has a model with no name"
 
+    # Only the previous experiment's cognitive_models/ carries forward (its theory
+    # models + the single exported best `inner_loop_model`). The inner loop's
+    # intermediate candidates (`iterN_candidateM`) live only in model_loop/models/
+    # and must never be copied into a theory set — reject them so the repair loop
+    # makes the agent drop them rather than silently bloating every later experiment.
+    zoo = [n for n in names if re.fullmatch(r"iter\d+_candidate\d+", n)]
+    if zoo:
+        return (
+            False,
+            f"models_manifest.yaml carries inner-loop zoo candidate(s) {zoo} from the "
+            "previous experiment's model_loop/. Carry forward ONLY the previous "
+            "experiment's cognitive_models/ (its theory models plus the single best "
+            "`inner_loop_model`); never copy candidates from model_loop/models/.",
+        )
+
     for name, rationale in entries:
         if not rationale:
             return (
