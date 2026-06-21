@@ -242,7 +242,9 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # The fitted-seed baseline (one flat number, seeds fit on all data) recovers
     # it too, since every stub prediction is identical.
     assert set(gt_run["fitted_baseline"]["per_model"]) == {
-        "bayesian_diagnosticity", "encoding_compressibility", "statistical_inference"
+        "bayesian_diagnosticity",
+        "encoding_compressibility",
+        "window_typicality",
     }
     assert gt_run["fitted_baseline"]["mean_r"] == pytest.approx(1.0)
 
@@ -252,13 +254,15 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert {c["name"] for c in fit_calls} == {
         "encoding_compressibility",
         "bayesian_diagnosticity",
-        "statistical_inference",
+        "window_typicality",
     }
 
     # The no-learning baseline averages the other seed models (default params)
     # against the GT; with identical stub predictions every correlation is 1.
     assert set(gt_run["baseline"]["per_model"]) == {
-        "bayesian_diagnosticity", "encoding_compressibility", "statistical_inference"
+        "bayesian_diagnosticity",
+        "encoding_compressibility",
+        "window_typicality",
     }
     assert gt_run["baseline"]["mean_r"] == pytest.approx(1.0)
 
@@ -1182,7 +1186,7 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
     assert set(baseline["per_model"]) == {
         "bayesian_diagnosticity",
         "encoding_compressibility",
-        "statistical_inference",
+        "window_typicality",
     }
     assert baseline["mean_r"] == pytest.approx(1.0)
     # The original result is not mutated.
@@ -1575,9 +1579,14 @@ def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypa
     gt_run = result["gt_runs"][0]
     trajectory = gt_run["trajectory"]
     assert len(trajectory) == 1  # seed-only scoring step
+    # The held-out GT (prototype_similarity) is excluded from the seed set; the
+    # recovered best model is whichever of the remaining seeds best fits the
+    # small design sample. This is a pipeline/caching smoke test, so we only
+    # require a valid seeded model, not a specific winner.
     assert trajectory[0]["best_model"] in {
         "bayesian_diagnosticity",
         "encoding_compressibility",
+        "window_typicality",
     }
     r = trajectory[0]["pearson_r"]
     assert r is not None and -1.0 <= r <= 1.0

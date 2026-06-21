@@ -21,7 +21,7 @@ export HOLDOUT_SLURM_DIR
 # --- knobs (exported so --export=ALL carries them into every job) ----------
 export N_REPEATS="${N_REPEATS:-5}"
 # Must match the config's gt_models keys (the setup job validates this).
-export GT_MODELS="${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity statistical_inference}"
+export GT_MODELS="${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity window_typicality}"
 export SEED_MODELS_REL="${SEED_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}"
 read -r -a _GTS <<< "$GT_MODELS"
 export N_GTS="${#_GTS[@]}"

@@ -102,7 +102,7 @@ def test_default_model_family_names_are_the_reference_families():
         "prototype_similarity",
         "encoding_compressibility",
         "bayesian_diagnosticity",
-        "statistical_inference",
+        "window_typicality",
     }
 
 

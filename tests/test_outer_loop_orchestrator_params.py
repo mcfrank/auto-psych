@@ -42,7 +42,7 @@ def test_seed_exclude_filters_files_and_manifest(tmp_path):
     assert _seeded_names(exp_dir) == {
         "bayesian_diagnosticity",
         "encoding_compressibility",
-        "statistical_inference",
+        "window_typicality",
     }
 
 

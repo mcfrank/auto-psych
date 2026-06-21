@@ -40,8 +40,14 @@ generating_models:
     beta: 4.0
     side_bias: 0.0
   bayesian_diagnosticity:
-    alt_prior: 0.34
-    bias_share: 0.50
+    delta: 0.50
+    alpha: 0.35
+    bias_share: 0.30
+    beta: 4.0
+    side_bias: 0.0
+  window_typicality:
+    window: 5.0
+    over_alt_penalty: 0.60
     beta: 4.0
     side_bias: 0.0
 

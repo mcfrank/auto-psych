@@ -18,7 +18,7 @@ set -euo pipefail
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:-$GROUP_SCRATCH}/auto-psych/holdout_full5}"
 # Must match the config's gt_models (the setup job validates this).
-export GT_MODELS="${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity statistical_inference}"
+export GT_MODELS="${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity window_typicality}"
 read -r -a _GTS <<< "$GT_MODELS"; NG="${#_GTS[@]}"
 
 [[ -d "$WORK_ROOT" ]] || { echo "ERROR: WORK_ROOT '$WORK_ROOT' does not exist — point it at your existing study dir." >&2; exit 1; }

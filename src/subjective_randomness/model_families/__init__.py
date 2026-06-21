@@ -7,9 +7,11 @@ may copy or wrap them, but the canonical definitions should live here.
 from . import bayesian_diagnosticity
 from . import encoding_compressibility
 from . import prototype_similarity
+from . import window_typicality
 
 __all__ = [
     "bayesian_diagnosticity",
     "encoding_compressibility",
     "prototype_similarity",
+    "window_typicality",
 ]
