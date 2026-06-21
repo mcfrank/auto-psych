@@ -14,9 +14,10 @@ Each model must be **one specific, falsifiable hypothesis** about the cognitive 
 
 3. **If this is experiment 1**: Propose 2–3 cognitive models, each a single distinct hypothesis. PDFs or papers in `references/` may be consulted for scientific background.
    **If this is experiment 2+**:
-   - Copy all `.py` files from the previous experiment's `cognitive_models/` directory into this experiment's `cognitive_models/` directory
+   - Copy all `.py` files from the previous experiment's `cognitive_models/` directory into this experiment's `cognitive_models/` directory. This dir already holds the carry-forward set: the prior theory models plus `inner_loop_model.py`, the single best model the inner loop distilled.
    - Copy `models_manifest.yaml` from the previous experiment's `cognitive_models/` directory
-   - Read the previous model-loop report (`model_loop/report.md`) carefully — it lists each model's hypothesis, its ELPD-LOO posterior mass, and concrete failure modes
+   - **Do NOT copy any models from the previous experiment's `model_loop/` directory.** That is the inner loop's internal zoo of candidates (files named `iterN_candidateM.py`); only its best is promoted, and it is already present here as `inner_loop_model.py`. Copying the zoo candidates forward is an error and will fail validation.
+   - Read the previous model-loop report (`model_loop/report.md`) **for understanding only** — it lists each model's hypothesis, ELPD-LOO posterior mass, and failure modes. Use it to inform your new hypothesis; do not copy the candidate model files it names.
    - Propose at least 1 **new model for a single distinct hypothesis** the existing set does not capture, **or** a **refinement of one** existing hypothesis (a different functional form, prior, or normalization of the *same* mechanism). Use the report to see which hypotheses are already covered and which systematic failures remain. **Never** add a `_v2` that blends, averages, or weights cues from several existing models — a combined mega-model is not a hypothesis.
 
 4. **For each new model**, state the hypothesis first, then implement only it:
@@ -129,7 +130,7 @@ Before finishing, verify:
 - [ ] Each `.py` file defines a module-level `model` of type `pm.Model`, with a module docstring restating its hypothesis
 - [ ] Each model implements **exactly one** cognitive mechanism — no weighted/averaged/Dirichlet mixtures of cues from several hypotheses
 - [ ] Each model has `pm.Data` containers whose names match responses CSV columns, priors on every free parameter, a named `Deterministic` for the response probability, and exactly one observed-response container
-- [ ] For experiment 2+: all previous models are included in the manifest
+- [ ] For experiment 2+: every model from the previous experiment's `cognitive_models/` (its theory models + `inner_loop_model`) is included in the manifest — and NO `iterN_candidateM` zoo models from the previous `model_loop/`
 - [ ] `cognitive_models/theory_report.md` exists with an entry for each new model
 
 You can validate a model by running:
