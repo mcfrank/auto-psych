@@ -1,89 +1,16 @@
-"""Firestore metadata and result-shaping helpers for deployments."""
+"""Result-shaping helpers for deployments.
+
+Mirrors the /submit and /results Cloud Functions (functions/index.js) in Python:
+the participant data path runs entirely through those Cloud Functions, which use
+their own admin credentials to write/read the Firestore ``responses``
+subcollection. The pipeline itself does no server-side Firestore access.
+"""
 
 from __future__ import annotations
 
 import csv
 import io
 from typing import Any
-
-from .manifest import DeploymentManifest
-
-ADC_HELP = (
-    "Firestore metadata write needs Application Default Credentials. "
-    "Run: gcloud auth application-default login && "
-    "gcloud auth application-default set-quota-project auto-psych-2c5da"
-)
-
-
-def firestore_paths(manifest: DeploymentManifest) -> dict[str, str]:
-    return {
-        "study": f"studies/{manifest.study_id}",
-        "deployment": f"deployments/{manifest.deployment_id}",
-        "collection_session": f"collection_sessions/{manifest.collection_session_id}",
-        "responses": f"collection_sessions/{manifest.collection_session_id}/responses",
-    }
-
-
-def metadata_documents(manifest: DeploymentManifest) -> dict[str, dict[str, Any]]:
-    paths = firestore_paths(manifest)
-    base = manifest.to_dict()
-    return {
-        paths["study"]: {
-            "study_id": manifest.study_id,
-            "project_id": manifest.project_id,
-            "updated_at": manifest.created_at,
-        },
-        paths["deployment"]: {
-            **base,
-            "firestore_paths": paths,
-        },
-        paths["collection_session"]: {
-            "collection_session_id": manifest.collection_session_id,
-            "deployment_id": manifest.deployment_id,
-            "study_id": manifest.study_id,
-            "project_id": manifest.project_id,
-            "experiment_id": manifest.experiment_id,
-            "run_id": manifest.run_id,
-            "agent_backend": manifest.agent_backend,
-            "collection_owner": manifest.collection_owner,
-            "firebase_project": manifest.firebase_project,
-            "prolific_mode": manifest.prolific_mode,
-            "prolific_study_id": manifest.prolific_study_id,
-            "target_participants": manifest.total_available_places,
-            "created_at": manifest.created_at,
-            "status": "planned" if manifest.deploy_target == "dry-run" else "deployed",
-        },
-    }
-
-
-def write_metadata(manifest: DeploymentManifest, client: Any | None = None) -> dict[str, str]:
-    """Write study/deployment/session metadata to Firestore.
-
-    A client can be injected by tests. In production this uses the Firebase
-    project from the manifest.
-    """
-    if client is None:
-        from google.cloud import firestore
-        from google.auth.exceptions import DefaultCredentialsError
-
-        try:
-            client = firestore.Client(project=manifest.firebase_project)
-        except DefaultCredentialsError as exc:
-            raise RuntimeError(ADC_HELP) from exc
-
-    docs = metadata_documents(manifest)
-    try:
-        # Write the study/deployment/session docs atomically. A plain loop could
-        # die after the study doc but before the session doc, leaving a deployment
-        # that references a session record which was never written (and the caller
-        # then publishes the Prolific study anyway). A WriteBatch is all-or-nothing.
-        batch = client.batch()
-        for path, payload in docs.items():
-            batch.set(client.document(path), payload, merge=True)
-        batch.commit()
-    except Exception as exc:
-        raise RuntimeError(f"Failed to write Firestore deployment metadata. {ADC_HELP}") from exc
-    return firestore_paths(manifest)
 
 
 def _chose_left(value: Any) -> bool:

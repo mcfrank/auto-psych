@@ -6,14 +6,12 @@ from dataclasses import replace
 from pathlib import Path
 
 from .firebase import (
-    DeploymentError,
     firebase_project_from_rc,
     load_experiment_config,
     run_firebase_deploy,
     stage_experiment,
     write_firebase_config,
 )
-from .firestore import firestore_paths, metadata_documents, write_metadata
 from .manifest import build_manifest, write_client_config, write_manifest
 from .prolific import build_prolific_plan, create_draft_study, publish_study
 
@@ -55,7 +53,6 @@ def run_deployment(
         repo_root=repo_root,
         run_label=run_label,
     )
-    manifest.firestore_paths = firestore_paths(manifest)
 
     if prolific_mode != "none":
         if deploy_target == "firebase":
@@ -91,7 +88,6 @@ def run_deployment(
     firebase_config_path = repo_root / "firebase.generated.json" if deploy_target == "firebase" else deployment_dir / "firebase.generated.json"
     manifest.staged_public_dir = str(public_dir)
     manifest.firebase_config_path = str(firebase_config_path)
-    manifest.metadata["firestore_documents"] = metadata_documents(manifest)
 
     write_firebase_config(firebase_config_path, manifest)
     write_client_config(exp_dir, manifest, existing=existing_config)
@@ -100,27 +96,12 @@ def run_deployment(
 
     if deploy_target == "firebase":
         run_firebase_deploy(repo_root, manifest, firebase_config_path)
-        try:
-            write_metadata(manifest)
-        except Exception as exc:
-            manifest.metadata["firestore_metadata_write_error"] = str(exc)
-            write_manifest(exp_dir, manifest)
-            # In live mode the study is about to recruit paid participants whose
-            # /submit posts key on the collection-session doc this write creates.
-            # Publishing against missing session metadata would silently drop
-            # their data, so fail loudly rather than warn-and-continue. (Test/none
-            # mode creates no live recruitment, so a warning is acceptable there.)
-            if prolific_mode == "live":
-                raise DeploymentError(
-                    "Firebase deploy succeeded but the Firestore metadata write "
-                    "failed; refusing to publish a live Prolific study against "
-                    f"missing collection-session metadata: {exc}"
-                ) from exc
-            print(
-                "  [deploy] Warning: Firebase deploy succeeded, but Firestore metadata "
-                f"write failed: {exc}",
-                flush=True,
-            )
+        # No Firestore metadata write here: participant data flows through the
+        # /submit and /results Cloud Functions (which write/read the responses
+        # subcollection directly, with their own admin credentials), so the
+        # pipeline needs no server-side Firestore access. The deployment record
+        # lives in deployment_manifest.json on disk.
+        #
         # Publish ONLY for live mode. Test mode leaves the study as a DRAFT you
         # preview yourself; none mode creates no study to publish.
         if prolific_mode == "live" and manifest.prolific_study_id:

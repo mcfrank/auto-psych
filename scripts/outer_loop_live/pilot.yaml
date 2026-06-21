@@ -10,7 +10,7 @@
 
 # --- what to run -----------------------------------------------------------
 project: subjective_randomness     # project under projects/<project>/
-run_label: pilot1                  # names the run: URL path /e{k}-{label}/, output dir, session ids
+run_label: pilot2                  # names the run: URL path /e{k}-{label}/, output dir, session ids
 experiments: 2                     # how many experiments to run, in sequence (1..N). Each is its
                                    # own deploy + Prolific study; experiment k's design uses k-1's posterior.
 design_mode: agent                 # agent = an agent proposes stimuli, EIG scored on the real PyMC models
@@ -42,7 +42,7 @@ prolific:
   description: >-
     In this study, you will see a series of coin flip results and be asked to judge which is more random.
   device_compatibility: [desktop]
-  completion_code: AUTO_PSYCH_COMPLETE
+  completion_code: AUTO_PSYCH_COMPLETE2
   # Data-quality eligibility: every live study recruits only US-resident,
   # English-fluent participants with an approval rate >= the threshold below.
   # Residence/language defaults are fixed in code; the approval floor is here.

@@ -82,7 +82,6 @@ class DeploymentManifest:
     source_experiment_dir: str | None = None
     staged_public_dir: str | None = None
     firebase_config_path: str | None = None
-    firestore_paths: dict[str, str] = field(default_factory=dict)
     metadata: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:

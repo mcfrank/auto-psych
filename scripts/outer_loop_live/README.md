@@ -183,11 +183,13 @@ Slurm logs: `$WORK_ROOT/slurm_logs/`. Browse with
   (Gemini answers stimuli directly — validated here) or the default PyMC
   prior-predictive sampling. For browser sim specifically, run it off-cluster or
   in an Apptainer/Playwright container.
-- The Firestore **metadata** write (study/deployment/session docs) needs ADC and
-  is **non-fatal** under a CI token — it logs a warning and the run continues.
-  Participant **data** does not depend on it (it flows through the `/submit` and
-  `/results` Cloud Functions). For metadata persistence, add a service account +
-  `GOOGLE_APPLICATION_CREDENTIALS`.
+- The live pipeline does **no** server-side Firestore access. Participant data
+  flows entirely through the `/submit` and `/results` Cloud Functions
+  (`functions/index.js`), which use their own admin credentials to write/read the
+  Firestore `responses` subcollection — so the cluster needs only `FIREBASE_TOKEN`
+  (deploy) and `PROLIFIC_API_TOKEN` (recruit), not GCP ADC. The deployment record
+  is kept in `deployment_manifest.json` on disk. (The separate monitor dashboard
+  reads Firestore and needs ADC, but it runs off-cluster.)
 - A Firebase Hosting deploy can take a minute or two to propagate across the CDN;
   a freshly deployed `/e{N}-{label}/` page may briefly 404 right after the deploy
   reports success. The live collector polls Prolific for far longer than that, so
