@@ -44,7 +44,7 @@ DESIGN_STIMULI = [
 def _stub_spawn_cc_agent(calls):
     """Stand-in for the theory/design coding agents (mirrors the seed-model test)."""
 
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None):
+    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None):
         calls.append((agent_key, Path(exp_dir).name))
         if agent_key == "1_theory":
             exp_num = int(exp_dir.name.removeprefix("experiment"))
