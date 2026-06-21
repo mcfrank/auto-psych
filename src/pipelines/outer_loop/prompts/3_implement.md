@@ -63,7 +63,8 @@ or reorder anything else.
   // 1. Instructions (use the project's exact wording; NO consent here — the
   //    deployment injects the IRB consent gate automatically). Render the wording
   //    as HTML inside the .auto-psych-prose container: one <p> per paragraph, and
-  //    convert **bold** -> <strong>bold</strong>. NEVER emit raw Markdown (no `**`).
+  //    convert Markdown bold/italic in the wording into <strong>/<em> tags.
+  //    NEVER emit raw Markdown asterisks to participants.
   timeline.push({
     type: jsPsychHtmlButtonResponse,
     stimulus:

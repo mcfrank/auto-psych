@@ -210,6 +210,7 @@ def spawn_cc_agent(
     timeout_secs: int = 900,
     backend: Optional[str] = None,
     prompt_key: Optional[str] = None,
+    repair_feedback: Optional[str] = None,
 ) -> tuple[bool, str]:
     """
     Spawn a coding agent (Claude Code or opencode) for the given agent_key.
@@ -234,6 +235,17 @@ def spawn_cc_agent(
         f"Read your task context from: `{context_path}`\n\n"
         f"Start by reading that file, then follow the instructions above.\n"
     )
+    # On a repair pass, the agent's previous output is already on disk; feed it the
+    # exact validation error and ask it to fix that in place rather than restart.
+    if repair_feedback:
+        prompt += (
+            "\n---\n\n"
+            "IMPORTANT — this is a REPAIR pass. Your previous attempt is already "
+            "written in the task directory, but it FAILED automated validation with:\n\n"
+            f"    {repair_feedback}\n\n"
+            "Fix ONLY what is needed to resolve this specific error, then stop. Do "
+            "not start over or change anything unrelated.\n"
+        )
 
     dirs = allowed_dirs if allowed_dirs is not None else [exp_dir]
     log_path = exp_dir / "logs" / f"{agent_key}.jsonl"
@@ -849,6 +861,18 @@ def _validate_design(exp_dir: Path) -> tuple[bool, str]:
     return True, f"Design valid: {len(data)} stimuli"
 
 
+def _strip_code_comments(text: str) -> str:
+    """Remove HTML/JS/CSS comments so content checks see only participant-facing
+    code. Comments are scaffolding (the skeleton's instructions to the agent, the
+    agent's own notes) and never render to participants, so e.g. a `**bold**`
+    example inside a comment must not trip the raw-Markdown guard.
+    """
+    text = re.sub(r"<!--.*?-->", "", text, flags=re.DOTALL)  # HTML comments
+    text = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)  # /* block */ (JS, CSS)
+    text = re.sub(r"//[^\n]*", "", text)  # // line comments
+    return text
+
+
 def _validate_implement(exp_dir: Path) -> tuple[bool, str]:
     """Validate the implemented experiment AND enforce cross-experiment
     consistency: the ONLY thing that may differ between experiments (within or
@@ -890,16 +914,20 @@ def _validate_implement(exp_dir: Path) -> tuple[bool, str]:
     # leak raw Markdown. A literal `**bold**` (or `*emph*`/`__bold__`) means the
     # agent pasted the problem-definition Markdown verbatim instead of converting it
     # to <strong>/<em>; participants would see the asterisks. Reject it.
+    # Check only participant-facing code: comments (e.g. the skeleton's own
+    # `**bold**` instruction to the agent, which it copies verbatim) never reach
+    # participants and must not trip this guard.
     # Paired `**…**` (opens with a letter) signals leaked Markdown bold without
     # tripping on JS exponentiation like `x**2` (no letter immediately after `**`).
-    if re.search(r"\*\*[A-Za-z][^*]*?\*\*", text):
+    visible = _strip_code_comments(text)
+    if re.search(r"\*\*[A-Za-z][^*]*?\*\*", visible):
         return False, (
             "formatting: index.html contains literal Markdown bold (`**...**`). The "
             "instruction/choice/debrief wording must be rendered as HTML — convert "
             "`**bold**` to <strong>bold</strong> and never emit raw asterisks to "
             "participants."
         )
-    if re.search(r"(?<![\w*])__[A-Za-z].*?[A-Za-z]__(?![\w*])", text):
+    if re.search(r"(?<![\w*])__[A-Za-z].*?[A-Za-z]__(?![\w*])", visible):
         return False, (
             "formatting: index.html contains literal Markdown bold (`__...__`). Render "
             "emphasis as HTML (<strong>/<em>), not raw Markdown."

@@ -91,8 +91,16 @@ def _run_agent(
     enable_critique: bool = True,
     n_critique_proposals: Optional[int] = None,
     critique_alpha: Optional[float] = None,
+    max_validation_repairs: int = 2,
 ) -> None:
-    """Run one agent. Raises SystemExit if --validate and output is invalid."""
+    """Run one agent. Raises SystemExit if --validate and output stays invalid.
+
+    Coding-agent stages get a repair loop: a validation failure is fed back to the
+    agent so it can fix its output in place, up to ``max_validation_repairs`` extra
+    attempts. Only an exhausted budget aborts the run — one fixable mistake no
+    longer throws away the whole pipeline. Programmatic stages (collect, model
+    loop) validate once and abort on failure (there is no agent to re-prompt).
+    """
     print(f"\n{'=' * 60}", flush=True)
     print(f"  Experiment {exp_num} / Agent {agent_key}", flush=True)
     print(f"{'=' * 60}", flush=True)
@@ -108,6 +116,7 @@ def _run_agent(
             participant_model=participant_model,
             prolific_mode=prolific_mode,
         )
+        _validate_or_exit(agent_key, exp_dir, validate)
     elif agent_key == "5_model_loop":
         run_inner_model_loop_programmatic(
             exp_dir,
@@ -118,6 +127,7 @@ def _run_agent(
             n_critique_proposals=n_critique_proposals,
             critique_alpha=critique_alpha,
         )
+        _validate_or_exit(agent_key, exp_dir, validate)
     else:
         write_context(
             exp_dir=exp_dir,
@@ -129,24 +139,58 @@ def _run_agent(
         allowed_dirs = [exp_dir, outer_project_dir(project_id)]
         if prev_exp_dir:
             allowed_dirs.append(prev_exp_dir)
-        ok_spawn, output = spawn_cc_agent(
-            agent_key=agent_key,
-            exp_dir=exp_dir,
-            allowed_dirs=allowed_dirs,
-            backend=backend,
-        )
-        if not ok_spawn:
-            print(f"  [warn] Agent {agent_key} exited with non-zero status", flush=True)
 
-    if validate:
-        ok, msg = validate_cc_output(agent_key, exp_dir)
-        if ok:
-            print(f"  [ok] {agent_key}: {msg}", flush=True)
-        else:
-            print(
-                f"  [error] Validation failed for {agent_key}: {msg}", file=sys.stderr
+        repair_feedback: Optional[str] = None
+        for attempt in range(max_validation_repairs + 1):
+            ok_spawn, _output = spawn_cc_agent(
+                agent_key=agent_key,
+                exp_dir=exp_dir,
+                allowed_dirs=allowed_dirs,
+                backend=backend,
+                repair_feedback=repair_feedback,
             )
-            sys.exit(1)
+            if not ok_spawn:
+                print(
+                    f"  [warn] Agent {agent_key} exited with non-zero status",
+                    flush=True,
+                )
+            if not validate:
+                return
+            ok, msg = validate_cc_output(agent_key, exp_dir)
+            if ok:
+                print(f"  [ok] {agent_key}: {msg}", flush=True)
+                return
+            if attempt < max_validation_repairs:
+                print(
+                    f"  [repair] {agent_key} failed validation "
+                    f"(attempt {attempt + 1}/{max_validation_repairs + 1}): {msg}\n"
+                    f"  [repair] feeding the error back to the agent to fix in place",
+                    flush=True,
+                )
+                repair_feedback = msg
+            else:
+                print(
+                    f"  [error] {agent_key} still invalid after "
+                    f"{max_validation_repairs + 1} attempt(s): {msg}",
+                    file=sys.stderr,
+                )
+                sys.exit(1)
+
+
+def _validate_or_exit(agent_key: str, exp_dir: Path, validate: bool) -> None:
+    """Validate a programmatic stage's output once; abort the run on failure.
+
+    Programmatic stages (collect, model loop) have no agent to re-prompt, so a
+    failure is terminal — unlike coding stages, which get a repair loop.
+    """
+    if not validate:
+        return
+    ok, msg = validate_cc_output(agent_key, exp_dir)
+    if ok:
+        print(f"  [ok] {agent_key}: {msg}", flush=True)
+    else:
+        print(f"  [error] Validation failed for {agent_key}: {msg}", file=sys.stderr)
+        sys.exit(1)
 
 
 def _posterior_design_inputs(exp_dir: Path, prev_exp_dir: Path):
@@ -310,6 +354,7 @@ def _run_experiment(
     critique_alpha: Optional[float] = None,
     design_mode: str = "agent",
     run_label: Optional[str] = None,
+    max_validation_repairs: int = 2,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
@@ -425,6 +470,7 @@ def _run_experiment(
             enable_critique=enable_critique,
             n_critique_proposals=n_critique_proposals,
             critique_alpha=critique_alpha,
+            max_validation_repairs=max_validation_repairs,
         )
         if agent_key == "3_implement" and deploy_target != "none":
             print(f"\n{'=' * 60}", flush=True)
@@ -495,7 +541,12 @@ class Args:
     src/pipelines/outer_loop/projects/<project>/ground_truth_models.py). If omitted,
     data is sampled from the theorist's models."""
     validate: bool = False
-    """Validate each agent's output; error and stop on failure."""
+    """Validate each agent's output. A failed coding stage is fed its error and
+    re-run to fix it in place (up to --max-validation-repairs times); the run
+    aborts only if the output is still invalid after that."""
+    max_validation_repairs: int = 2
+    """How many extra times a coding stage may be re-run with its validation error
+    as feedback before the run aborts. 0 = fail on the first invalid output."""
     resume: bool = False
     """Allow running into an existing experiment directory (skip the exists-check)."""
     inner_loop_iterations: int = 2
@@ -641,6 +692,7 @@ def main(args: Args) -> None:
             critique_alpha=args.critique_alpha,
             design_mode=args.design_mode,
             run_label=run_label,
+            max_validation_repairs=args.max_validation_repairs,
         )
 
     print("\nAll experiments complete.", flush=True)
