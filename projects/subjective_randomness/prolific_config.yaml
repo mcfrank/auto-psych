@@ -2,12 +2,12 @@
 # Do not edit by hand — edit pilot.yaml and re-launch.
 
 reward_per_hour: 1200
-estimated_completion_time: 10
+estimated_completion_time: 5
 name: Which sequence is more random?
-description:
-  In this study, you will see a series of con flip results and be asked
+description: In this study, you will see a series of coin flip results and be asked
   to judge which is more random.
 device_compatibility:
-  - desktop
-completion_code: AUTO_PSYCH_COMPLETE
+- desktop
+completion_code: AUTO_PSYCH_COMPLETE2
+min_approval_rate: 98
 total_available_places: 10

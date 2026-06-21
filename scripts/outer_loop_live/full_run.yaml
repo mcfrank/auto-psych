@@ -1,0 +1,44 @@
+# ============================================================================
+#  Config for the FULL live run. This is the PER-RUN config; start_full_run.sh
+#  launches K parallel copies of it (default K=3 -> run1/run2/run3).
+#
+#  Launch:  bash scripts/outer_loop_live/start_full_run.sh
+#           K=5 CONFIG=path/to/other.yaml bash scripts/outer_loop_live/start_full_run.sh
+#
+#  (pilot.yaml is the separate config for small single pilots via run_pilot.sh.)
+# ============================================================================
+
+# --- what to run -----------------------------------------------------------
+project: subjective_randomness
+run_label: full                    # cosmetic here — submit_parallel overrides the
+                                   # per-run label to run1/run2/run3.
+experiments: 3                     # experiments per run, in sequence (design k uses k-1's posterior)
+design_mode: agent
+coding_agent: opencode
+prolific_mode: live                # REAL recruiting + payment
+
+# --- where / how it runs (Slurm + Firebase) --------------------------------
+firebase_project: auto-psych-2c5da
+walltime: "1-23:00:00"             # 47h — under the 2-day normal-QoS cap, so NO --qos=long needed
+                                   # (the run only needs ~12-15h; this is generous headroom).
+qos: ""                            # "" = default normal QoS
+
+# --- the Prolific study (per experiment) -----------------------------------
+prolific:
+  participants: 40                 # per experiment -> total_available_places
+  reward_per_hour: 1200            # cents/hour ($12/hr)
+  estimated_completion_time: 5     # minutes -> ~$1.00/participant (matches the ~4-5 min task)
+  name: "Which sequence is more random?"
+  description: >-
+    In this study, you will see a series of coin flip results and be asked to judge which is more random.
+  device_compatibility: [desktop]
+  completion_code: AUTO_PSYCH_COMPLETE_FULL
+  min_approval_rate: 98            # percent; Prolific approval-rate floor
+
+# --- modeling / inner loop -------------------------------------------------
+modeling:
+  inner_loop_iterations: 2         # candidate-improvement rounds per experiment
+  inner_loop_candidates: 3         # candidate models proposed per round
+  draws: 3000
+  tune: 2000
+  chains: 4
