@@ -33,6 +33,14 @@ export FIREBASE_PROJECT="${FIREBASE_PROJECT:-auto-psych-2c5da}"
 export DESIGN_MODE="${DESIGN_MODE:-agent}"
 export CODING_AGENT="${CODING_AGENT:-opencode}"
 
+# Optional Slurm overrides (else use run_live.sbatch's directives). For a long
+# multi-experiment live run: WALLTIME=2-00:00:00 QOS=long.
+WALLTIME="${WALLTIME:-}"
+QOS="${QOS:-}"
+EXTRA_SBATCH=()
+[[ -n "$WALLTIME" ]] && EXTRA_SBATCH+=(--time="$WALLTIME")
+[[ -n "$QOS" ]] && EXTRA_SBATCH+=(--qos="$QOS")
+
 LOGDIR="$WORK_ROOT/slurm_logs"; mkdir -p "$LOGDIR"
 RUNS_ROOT="$WORK_ROOT/runs"; mkdir -p "$RUNS_ROOT"
 SRC_SHA="$( (cd "$REPO" && git rev-parse --short HEAD) 2>/dev/null || echo working-tree)"
@@ -53,6 +61,7 @@ for i in $(seq 1 "$K"); do
   jid=$(sbatch --parsable \
     --job-name="outer_live_$LABEL" \
     --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
+    ${EXTRA_SBATCH[@]+"${EXTRA_SBATCH[@]}"} \
     --export=ALL,RUN_LABEL="$LABEL",RUN_WORKTREE="$WT",CODING_AGENT="$CODING_AGENT",AUTO_PSYCH_OUTPUT_DIR="$OUT" \
     "$OUTER_LIVE_SLURM_DIR/run_live.sbatch")
   echo "submitted $LABEL: job $jid  (copy=$WT  out=$OUT)"
