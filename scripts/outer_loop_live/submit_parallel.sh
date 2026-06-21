@@ -45,7 +45,11 @@ LOGDIR="$WORK_ROOT/slurm_logs"; mkdir -p "$LOGDIR"
 RUNS_ROOT="$WORK_ROOT/runs"; mkdir -p "$RUNS_ROOT"
 SRC_SHA="$( (cd "$REPO" && git rev-parse --short HEAD) 2>/dev/null || echo working-tree)"
 
-for i in $(seq 1 "$K"); do
+# RUNS: which run indices to launch (default 1..K). Use e.g. RUNS="2 3" to
+# (re)launch only those runs without disturbing the others (e.g. a salvaged run1).
+if [[ -n "${RUNS:-}" ]]; then read -r -a _runs <<< "${RUNS//,/ }"; else _runs=($(seq 1 "$K")); fi
+
+for i in "${_runs[@]}"; do
   LABEL="run${i}"
   WT="$RUNS_ROOT/$LABEL/repo"
   OUT="$WORK_ROOT/$LABEL/data"; mkdir -p "$OUT" "$WT"
@@ -58,11 +62,15 @@ for i in $(seq 1 "$K"); do
     --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
     "$REPO"/ "$WT"/
   touch "$WT/.here"   # pyprojroot sentinel (.git excluded)
+  # Each run deploys to its OWN Firebase Hosting site so concurrent deploys don't
+  # clobber the shared live site (the bug that 404'd all but the last run). Site
+  # IDs must be lowercase and <=30 chars; the deploy creates it if missing.
+  HOST_SITE="$(echo "${FIREBASE_PROJECT}-${LABEL}" | tr '[:upper:]' '[:lower:]')"
   jid=$(sbatch --parsable \
     --job-name="outer_live_$LABEL" \
     --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
     ${EXTRA_SBATCH[@]+"${EXTRA_SBATCH[@]}"} \
-    --export=ALL,RUN_LABEL="$LABEL",RUN_WORKTREE="$WT",CODING_AGENT="$CODING_AGENT",AUTO_PSYCH_OUTPUT_DIR="$OUT" \
+    --export=ALL,RUN_LABEL="$LABEL",RUN_WORKTREE="$WT",CODING_AGENT="$CODING_AGENT",AUTO_PSYCH_OUTPUT_DIR="$OUT",AUTO_PSYCH_HOSTING_SITE="$HOST_SITE" \
     "$OUTER_LIVE_SLURM_DIR/run_live.sbatch")
   echo "submitted $LABEL: job $jid  (copy=$WT  out=$OUT)"
 done

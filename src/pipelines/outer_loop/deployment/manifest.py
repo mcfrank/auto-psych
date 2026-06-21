@@ -5,6 +5,7 @@ from __future__ import annotations
 from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 import json
+import os
 from pathlib import Path
 import re
 import subprocess
@@ -72,6 +73,7 @@ class DeploymentManifest:
     experiment_url: str | None = None
     results_api_url: str | None = None
     hosting_path: str | None = None
+    hosting_site: str | None = None
     prolific_study_id: str | None = None
     prolific_completion_code: str | None = None
     prolific_redirect_url: str | None = None
@@ -149,9 +151,18 @@ def build_manifest(
     # e{run} part separates experiments within a single run.
     label = slug(run_label) if run_label else uuid.uuid4().hex[:8]
     id_base = slug(f"{project_id}-e{resolved_run_id}-{label}-{timestamp}-{short_sha}")
+    # Each run can deploy to its OWN Firebase Hosting site (AUTO_PSYCH_HOSTING_SITE,
+    # set per-run by submit_parallel.sh) so concurrent parallel deploys don't
+    # clobber a shared live site — the failure that 404'd all but the last run.
+    # Falls back to the project's default site for single (non-parallel) runs.
+    hosting_site = (
+        (os.environ.get("AUTO_PSYCH_HOSTING_SITE") or firebase_project)
+        if deploy_target == "firebase"
+        else None
+    )
     site_root = (
-        f"https://{firebase_project}.web.app"
-        if deploy_target == "firebase" and firebase_project
+        f"https://{hosting_site}.web.app"
+        if deploy_target == "firebase" and hosting_site
         else None
     )
     # /submit and /results Cloud Functions stay at the site root (results_api_url).
@@ -174,6 +185,7 @@ def build_manifest(
         experiment_url=experiment_url,
         results_api_url=site_root,
         hosting_path=hosting_path,
+        hosting_site=hosting_site,
         total_available_places=n_participants,
         git_commit=git.get("git_commit"),
         git_dirty=git.get("git_dirty"),

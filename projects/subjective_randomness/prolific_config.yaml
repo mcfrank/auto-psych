@@ -8,6 +8,6 @@ description: In this study, you will see a series of coin flip results and be as
   to judge which is more random.
 device_compatibility:
 - desktop
-completion_code: AUTO_PSYCH_COMPLETE2
+completion_code: AUTO_PSYCH_COMPLETE_FULL
 min_approval_rate: 98
-total_available_places: 10
+total_available_places: 40
