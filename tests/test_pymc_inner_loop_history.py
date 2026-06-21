@@ -66,6 +66,8 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
     # Candidate admission now ends with a real MCMC fit-gate; stub it so the fake
     # stub candidates (not real PyMC models) are admitted without sampling.
     monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
+    # Admission also gates on a finite ELPD-LOO; stub it finite for stub candidates.
+    monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: -100.0)
 
 
 def _patch_candidates(monkeypatch):

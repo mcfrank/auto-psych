@@ -27,7 +27,7 @@ import importlib
 import json
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 import numpy as np
 import yaml
@@ -88,6 +88,63 @@ def _require_valid(agent_key: str, exp_dir: Path) -> None:
     ok, msg = validate_cc_output(agent_key, exp_dir)
     if not ok:
         raise RuntimeError(f"{agent_key} output invalid in {exp_dir}: {msg}")
+
+
+def _spawn_with_repair(
+    agent_key: str,
+    exp_dir: Path,
+    *,
+    allowed_dirs: List[Path],
+    agent_timeout_sec: int,
+    backend: Optional[str],
+    prompt_key: Optional[str] = None,
+    post_spawn: Optional[Callable[[], None]] = None,
+    max_repairs: int = 2,
+) -> None:
+    """Spawn a coding-agent stage and validate it, repairing on failure.
+
+    A validation failure is fed back to the agent as ``repair_feedback`` and the
+    stage is re-spawned, up to ``max_repairs`` extra times. Only an exhausted
+    budget raises — so one fixable agent mistake (a malformed YAML manifest, a
+    model using a missing PyMC op) is repaired in place instead of aborting the
+    whole holdout task. ``post_spawn`` runs after each spawn and before validation
+    (e.g. EIG-scoring the design candidate pool into ``stimuli.json``).
+    """
+    repair_feedback: Optional[str] = None
+    for attempt in range(max_repairs + 1):
+        ok, _ = spawn_cc_agent(
+            agent_key,
+            exp_dir,
+            allowed_dirs=allowed_dirs,
+            timeout_secs=agent_timeout_sec,
+            backend=backend,
+            prompt_key=prompt_key,
+            repair_feedback=repair_feedback,
+        )
+        if not ok:
+            print(
+                f"  [holdout] Warning: {agent_key} agent exited without success "
+                f"in {exp_dir}",
+                flush=True,
+            )
+        if post_spawn is not None:
+            post_spawn()
+        valid, msg = validate_cc_output(agent_key, exp_dir)
+        if valid:
+            return
+        if attempt < max_repairs:
+            print(
+                f"  [holdout] [repair] {agent_key} failed validation "
+                f"(attempt {attempt + 1}/{max_repairs + 1}): {msg}\n"
+                f"  [holdout] [repair] feeding the error back to the agent to fix in place",
+                flush=True,
+            )
+            repair_feedback = msg
+        else:
+            raise RuntimeError(
+                f"{agent_key} output invalid in {exp_dir} after "
+                f"{max_repairs + 1} attempt(s): {msg}"
+            )
 
 
 def _has_candidate_pool(exp_dir: Path) -> bool:
@@ -251,22 +308,16 @@ def run_holdout_experiments(
                             else ""
                         )
                     )
+                _require_valid("1_theory", exp_dir)
             else:
                 write_context(exp_dir, "1_theory", project_id, exp_num, prev_exp_dir)
-                ok, _ = spawn_cc_agent(
+                _spawn_with_repair(
                     "1_theory",
                     exp_dir,
                     allowed_dirs=allowed_dirs,
-                    timeout_secs=agent_timeout_sec,
+                    agent_timeout_sec=agent_timeout_sec,
                     backend=backend,
                 )
-                if not ok:
-                    print(
-                        f"  [holdout] Warning: 1_theory agent exited without "
-                        f"success in {exp_dir}",
-                        flush=True,
-                    )
-            _require_valid("1_theory", exp_dir)
 
         # Design: the agent proposes a candidate pool (design/candidates.json);
         # turning it into stimuli.json by EIG is deterministic, so the harness
@@ -276,24 +327,22 @@ def run_holdout_experiments(
             if not (resume and _has_candidate_pool(exp_dir)):
                 write_context(exp_dir, "2_design", project_id, exp_num, prev_exp_dir)
                 # Candidate-generation-only prompt: the agent proposes the pool,
-                # and _ensure_design_stimuli (below) scores it by EIG to produce
-                # stimuli.json — so the agent never runs the slow EIG command.
-                ok, _ = spawn_cc_agent(
+                # and _ensure_design_stimuli scores it by EIG to produce
+                # stimuli.json (run as post_spawn, before validation) — so the
+                # agent never runs the slow EIG command.
+                _spawn_with_repair(
                     "2_design",
                     exp_dir,
                     allowed_dirs=allowed_dirs,
-                    timeout_secs=agent_timeout_sec,
+                    agent_timeout_sec=agent_timeout_sec,
                     backend=backend,
                     prompt_key="2_design_candidates_only",
+                    post_spawn=lambda: _ensure_design_stimuli(exp_dir, project_id),
                 )
-                if not ok:
-                    print(
-                        f"  [holdout] Warning: 2_design agent exited without "
-                        f"success in {exp_dir}",
-                        flush=True,
-                    )
-            _ensure_design_stimuli(exp_dir, project_id)
-            _require_valid("2_design", exp_dir)
+            else:
+                # Resume with an existing candidate pool: rebuild stimuli + validate.
+                _ensure_design_stimuli(exp_dir, project_id)
+                _require_valid("2_design", exp_dir)
 
         # Collect: every response comes from the held-out ground truth. The
         # per-experiment seed offset gives repeated stimuli fresh Bernoulli draws.

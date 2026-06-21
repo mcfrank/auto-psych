@@ -53,7 +53,7 @@ def _stub_spawn_cc_agent(calls):
     set forward; the design stub writes a valid EIG-annotated stimuli.json.
     """
 
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None):
+    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None):
         calls.append((agent_key, Path(exp_dir).name))
         if agent_key == "1_theory":
             exp_num = int(exp_dir.name.removeprefix("experiment"))
@@ -588,7 +588,7 @@ def _stub_annotate_eig(calls):
 def _spawn_writing_candidates(calls, pool=CANDIDATE_POOL):
     """Design agent that writes only candidates.json (backgrounded EIG, no stimuli)."""
 
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None):
+    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None):
         calls.append((agent_key, Path(exp_dir).name))
         if agent_key == "2_design":
             design_dir = exp_dir / "design"

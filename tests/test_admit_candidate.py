@@ -50,6 +50,8 @@ def _stub_fittable(monkeypatch, ok=True, reason=""):
     # Admission ends with a real MCMC fit-gate; stub it to succeed so these
     # bookkeeping tests don't sample (the stub candidate isn't a real PyMC model).
     monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
+    # Admission also gates on a finite ELPD-LOO (reuses the fit); stub it finite.
+    monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: -100.0)
 
 
 def _stub_fit_raises(monkeypatch):
@@ -100,6 +102,30 @@ def test_admit_rejects_unfittable_candidate(tmp_path, monkeypatch):
     """A candidate that loads but evaluates to non-finite logp is rejected."""
     monkeypatch.setattr(pymc_orchestrator, "load_pymc_model", lambda n, d: object())
     _stub_fittable(monkeypatch, ok=False, reason="non-finite logp (-inf)")
+    models_dir = _models_dir_with_seed(tmp_path)
+    cand_dir = _candidate_dir(tmp_path, hypothesis="People use heuristic H.\n")
+
+    ok = _admit_candidate(
+        cand_dir / "candidate.py",
+        models_dir,
+        model_name="iter0_candidate0",
+        responses_path=tmp_path / "responses.csv",
+    )
+
+    assert ok is False
+    assert "iter0_candidate0" not in _manifest(models_dir)
+    assert not (models_dir / "iter0_candidate0.py").exists()
+
+
+def test_admit_rejects_candidate_with_nonfinite_elpd(tmp_path, monkeypatch):
+    """A candidate that fits (sampling succeeds) but yields a non-finite ELPD-LOO
+    is rejected at admission — so it never reaches scoring, where a NaN ELPD would
+    crash model_posterior. Closes the gap the logp/real-fit gates miss."""
+    import math
+
+    monkeypatch.setattr(pymc_orchestrator, "load_pymc_model", lambda n, d: object())
+    _stub_fittable(monkeypatch)  # logp finite + MCMC fit gate succeeds
+    monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: math.nan)
     models_dir = _models_dir_with_seed(tmp_path)
     cand_dir = _candidate_dir(tmp_path, hypothesis="People use heuristic H.\n")
 

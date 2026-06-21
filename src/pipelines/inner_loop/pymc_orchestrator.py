@@ -27,6 +27,7 @@ Layout under ``results_dir``::
 from __future__ import annotations
 
 import json
+import math
 import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Optional
@@ -34,6 +35,7 @@ from typing import Any, Dict, List, Optional
 import yaml
 
 from src.models.pymc_inference import fit_model, load_pymc_model, model_logp_is_finite
+from src.model_comparison.likelihood import log_likelihood
 from src.model_comparison.posterior import compare_table, model_posterior
 from src.runtime.config import REPO_ROOT
 
@@ -241,6 +243,37 @@ def _admit_candidate(
         print(
             f"  [reject] {model_name}: MCMC sampling failed "
             f"({type(e).__name__}: {e}); dropping it so it cannot abort scoring.",
+            flush=True,
+        )
+        return False
+
+    # ELPD-LOO gate: a model can sample cleanly yet still assign ~0 probability to
+    # an observed outcome at some posterior draws, giving a non-finite PSIS-LOO.
+    # That NaN/inf would later crash model_posterior (which refuses to build a
+    # posterior a non-finite ELPD would corrupt). Compute it now from the cached
+    # fit (no extra sampling) and drop the candidate here instead.
+    try:
+        elpd = log_likelihood(
+            model_name,
+            responses_path,
+            models_dir,
+            cache_dir=cache_dir,
+            **(fit_kwargs or {}),
+        )
+    except Exception as e:
+        staged.unlink(missing_ok=True)
+        print(
+            f"  [reject] {model_name}: ELPD-LOO computation failed "
+            f"({type(e).__name__}: {e}); dropping it so it cannot abort scoring.",
+            flush=True,
+        )
+        return False
+    if not math.isfinite(elpd):
+        staged.unlink(missing_ok=True)
+        print(
+            f"  [reject] {model_name}: non-finite ELPD-LOO ({elpd}); a model that "
+            "assigns ~0 probability to an observed outcome would corrupt the "
+            "posterior — dropping it.",
             flush=True,
         )
         return False
