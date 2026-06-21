@@ -71,7 +71,7 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
 
 
 def _patch_candidates(monkeypatch, captured_critique_paths):
-    def fake_spawn(candidate_dir, agent_timeout_sec, backend):
+    def fake_spawn(candidate_dir, **kwargs):
         (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
         (candidate_dir / "hypothesis.md").write_text("People use H.\n", encoding="utf-8")
         # Record whether the candidate's context points at a critique file.

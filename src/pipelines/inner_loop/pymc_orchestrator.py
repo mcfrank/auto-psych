@@ -401,23 +401,39 @@ def _write_candidate_context(
 
 
 def _spawn_candidate_agent(
-    candidate_dir: Path, agent_timeout_sec: int, backend: Optional[str]
+    candidate_dir: Path,
+    *,
+    models_dir: Path,
+    responses_path: Path,
+    agent_timeout_sec: int,
+    backend: Optional[str],
 ) -> bool:
     from src.runtime.coding_agent import run_coding_agent
 
+    # Run from REPO_ROOT, NOT candidate_dir. opencode discovers its
+    # external_directory grants by walking up from cwd to the worktree's
+    # opencode.json; candidate_dir lives on $SCRATCH outside the worktree, so a
+    # cwd there loads no grants and opencode auto-rejects every external path the
+    # CONTEXT.md points at (critiques.md, responses CSV, model set) — no
+    # candidate.py ever gets written. The critique agent runs from REPO_ROOT for
+    # the same reason. The candidate_dir is named explicitly below since it is no
+    # longer the cwd.
     prompt = (
         f"{_THEORY_PROMPT.read_text(encoding='utf-8')}\n\n"
-        "---\n\nRead `CONTEXT.md`, `CANDIDATE_BRIEF.md`, `existing_hypotheses.md`, and "
-        "`critiques.md` (if present) in this directory. Then write `hypothesis.md` "
-        "(your single hypothesis in plain English), and `candidate.py` (a PyMC model "
-        "implementing only it).\n"
+        f"---\n\nYour working directory for this candidate is `{candidate_dir}`.\n"
+        f"Read `CONTEXT.md`, `CANDIDATE_BRIEF.md`, `existing_hypotheses.md`, and "
+        f"`critiques.md` (if present) in that directory. Then write `hypothesis.md` "
+        f"(your single hypothesis in plain English) and `candidate.py` (a PyMC model "
+        f"implementing only it) into that same directory.\n"
     )
     log_path = candidate_dir / "agent.jsonl"
+    # For the Claude backend (which honours allowed_dirs via --add-dir) grant the
+    # candidate's workspace plus the responses CSV and model set it references.
     success, _ = run_coding_agent(
         prompt,
-        cwd=candidate_dir,
+        cwd=REPO_ROOT,
         log_path=log_path,
-        allowed_dirs=[candidate_dir],
+        allowed_dirs=[candidate_dir, models_dir, responses_path.parent],
         timeout_secs=agent_timeout_sec,
         backend=backend,
     )
@@ -568,12 +584,18 @@ def _spawn_critique_agent(
         n_replicates=n_replicates,
     )
 
+    # Name critique_dir explicitly: the agent runs from REPO_ROOT (so opencode
+    # loads the worktree's external_directory grants), NOT from critique_dir, so a
+    # bare "in this directory" leaves it guessing where CRITIQUE_CONTEXT.md is —
+    # which it sometimes gets wrong, then writes no statistics. Same fix as the
+    # candidate agent.
     prompt = (
         f"{_CRITIQUE_PROMPT.read_text(encoding='utf-8')}\n\n"
-        "---\n\nRead `CRITIQUE_CONTEXT.md` in this directory, then write your test "
-        "statistics under `test_stats/` (one `test_statistic(df)` per file). You do "
-        "NOT need to run the harness or write `critiques.md` — the pipeline runs the "
-        "posterior-predictive check over your statistics and records the results.\n"
+        f"---\n\nYour working directory for this critique is `{critique_dir}`.\n"
+        f"Read `CRITIQUE_CONTEXT.md` there, then write your test statistics into "
+        f"`{critique_dir}/test_stats/` (one `test_statistic(df)` per file). You do "
+        f"NOT need to run the harness or write `critiques.md` — the pipeline runs the "
+        f"posterior-predictive check over your statistics and records the results.\n"
     )
     log_path = critique_dir / "agent.jsonl"
     # The agent only needs to write into test_stats/; give it the model set and
@@ -635,6 +657,70 @@ def _format_critiques_md(result: Dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
+def _incumbent_response_col(incumbent: str, models_dir: Path) -> str:
+    """Name of the incumbent model's observed-response ``pm.Data`` column."""
+    from src.models.pymc_inference import load_pymc_model, observed_response_data
+
+    return observed_response_data(load_pymc_model(incumbent, models_dir))
+
+
+def _write_default_test_statistics(
+    test_stats_dir: Path, responses_path: Path, response_col: str
+) -> int:
+    """Write a deterministic fallback battery of PPC test statistics.
+
+    Used when the critique agent proposes none, so the posterior-predictive
+    critique still runs instead of silently producing nothing. The statistics are
+    generic discrepancy probes built from the data's *actual* columns — the
+    marginal response rate, and the response's linear association with each
+    varying numeric feature — so they work for any project's responses. Returns
+    the number of statistic files written.
+    """
+    import pandas as pd
+
+    test_stats_dir.mkdir(parents=True, exist_ok=True)
+    df = pd.read_csv(responses_path)
+    if response_col not in df.columns:
+        raise ValueError(
+            f"response column {response_col!r} not in {responses_path}; "
+            f"columns: {list(df.columns)}"
+        )
+    numeric = df.select_dtypes(include="number")
+    # Probe each varying numeric feature, but not the response itself, an id
+    # column, or the response's mechanical complement.
+    id_like = {response_col, "chose_right", "participant_id", "trial_index"}
+    feature_cols = [
+        c
+        for c in numeric.columns
+        if c not in id_like and float(numeric[c].std(skipna=True) or 0.0) > 0.0
+    ]
+
+    stats: Dict[str, tuple[str, str]] = {
+        "fallback_mean_response": (
+            "Marginal mean of the response column (the overall choice rate).",
+            f'    return float(df["{response_col}"].astype(float).mean())',
+        )
+    }
+    for col in feature_cols:
+        stats[f"fallback_corr_{col}"] = (
+            f"Pearson correlation between the response and the `{col}` feature.",
+            f'    x = df["{response_col}"].astype(float)\n'
+            f'    y = df["{col}"].astype(float)\n'
+            "    if x.std() == 0 or y.std() == 0:\n"
+            "        return 0.0\n"
+            "    return float(np.corrcoef(x, y)[0, 1])",
+        )
+    for name, (desc, body) in stats.items():
+        code = (
+            f"# name: {name}\n"
+            f"# description: {desc}\n"
+            "def test_statistic(df):\n"
+            f"{body}\n"
+        )
+        (test_stats_dir / f"{name}.py").write_text(code, encoding="utf-8")
+    return len(stats)
+
+
 def _persist_critique_results(
     critique_dir: Path,
     incumbent: str,
@@ -652,13 +738,23 @@ def _persist_critique_results(
     ``critiques.md``. This runs deterministically in-process so the critique
     results are always recorded — it does not depend on the agent having run the
     harness. The fit is reused from ``fit_cache_dir`` (no resampling).
+
+    If the agent proposed no usable statistics, a deterministic default battery is
+    written first (loudly) so the critique never silently produces nothing.
     """
     from src.critique.ppc import run_ppc_for_model
 
     test_stats_dir = critique_dir / "test_stats"
     if not test_stats_dir.is_dir() or not any(test_stats_dir.glob("*.py")):
-        print("  [critique] agent wrote no test statistics — skipping PPC", flush=True)
-        return
+        print(
+            "  [critique] agent wrote no test statistics — using default battery",
+            flush=True,
+        )
+        response_col = _incumbent_response_col(incumbent, models_dir)
+        n_default = _write_default_test_statistics(
+            test_stats_dir, responses_path, response_col
+        )
+        print(f"  [critique] wrote {n_default} default test statistics", flush=True)
 
     result = run_ppc_for_model(
         incumbent,
@@ -832,7 +928,13 @@ def run_pymc_inner_loop(
                 posterior,
                 critique_path=critique_path,
             )
-            if not _spawn_candidate_agent(candidate_dir, agent_timeout_sec, backend):
+            if not _spawn_candidate_agent(
+                candidate_dir,
+                models_dir=models_dir,
+                responses_path=responses_path,
+                agent_timeout_sec=agent_timeout_sec,
+                backend=backend,
+            ):
                 continue
             _admit_candidate(
                 candidate_dir / "candidate.py",
