@@ -29,10 +29,13 @@ with pm.Model() as model:
     pm.Bernoulli("response", p=p_left, observed=chose_left)
 """
 
-# pt.sqrt((x - 0.5) ** 2) is mathematically |x - 0.5| but NaNs in PyTensor for
-# inputs like 1/7 — exactly the alternation proportions of length-7 sequences.
-_NAN = _GOOD.replace("pt.abs(x_b - 0.5)", "pt.sqrt((x_b - 0.5) ** 2)").replace(
-    "pt.abs(x_a - 0.5)", "pt.sqrt((x_a - 0.5) ** 2)"
+# Replace the safe |x - 0.5| terms with the square root of a negative quantity
+# (the eval data has x_a < x_b), which evaluates to a non-finite value. The
+# Bernoulli logp is then non-finite, so pm.sample would crash at its start-value
+# check — exactly what the guard must catch before sampling.
+_NAN = _GOOD.replace(
+    "pm.math.sigmoid(tau * (pt.abs(x_b - 0.5) - pt.abs(x_a - 0.5)))",
+    "pm.math.sigmoid(tau * pt.sqrt(x_a - x_b))",
 )
 
 

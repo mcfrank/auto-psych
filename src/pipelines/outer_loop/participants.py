@@ -21,16 +21,19 @@ Resolve a backend with :func:`get_participant_model`.
 
 from __future__ import annotations
 
+import logging
 from typing import Optional, Protocol, runtime_checkable
+
+logger = logging.getLogger(__name__)
 
 CLOSED = "closed"
 OPEN = "open"
 PARTICIPANT_BACKENDS = (CLOSED, OPEN)
 
-# Default Hugging Face model for the open backend. ~9B params (~18 GB in
-# bf16, 4 safetensors shards) — needs a GPU or a lot of RAM. Override with a
-# smaller id (e.g. Qwen/Qwen2.5-0.5B-Instruct) for quick local checks.
-DEFAULT_OPEN_MODEL = "Qwen/Qwen3.5-9B"
+# Default Hugging Face model for the open backend. ~7.6B params (~15 GB in bf16)
+# — needs a GPU or a lot of RAM. Override with a smaller id (e.g.
+# Qwen/Qwen2.5-0.5B-Instruct) for quick local checks.
+DEFAULT_OPEN_MODEL = "Qwen/Qwen2.5-7B-Instruct"
 
 
 @runtime_checkable
@@ -54,6 +57,12 @@ class ClosedParticipantModel:
 
     ``model`` overrides the default closed model id; ``None`` uses the client
     default. The client is constructed once and reused across trials.
+
+    Reproducibility caveat: the hosted Gemini API does not expose a sampling seed
+    that guarantees deterministic output, so data collected through this backend
+    is NOT bit-reproducible run-to-run (unlike the open backend, which is seeded,
+    and the synthetic PyMC paths). Record the model id and treat each collection
+    as a fresh sample.
     """
 
     # Bound each participant API call so a single stuck request can't hang the
@@ -121,6 +130,7 @@ class OpenParticipantModel:
         device: Optional[str] = None,
         max_new_tokens: int = 24,
         temperature: float = 0.7,
+        seed: int = 0,
     ) -> None:
         if not model_name:
             raise ValueError(
@@ -133,6 +143,12 @@ class OpenParticipantModel:
         self._max_new_tokens = max_new_tokens
         self._temperature = temperature
         self._device = device or _auto_device(torch)
+        # Seed torch's global RNG once so the sequence of sampled generations is
+        # reproducible run-to-run. ``answer`` is called once per trial in a fixed
+        # order, each draw advancing the same RNG, so a fixed seed makes the whole
+        # collected dataset reproducible (do_sample=True is otherwise unseeded —
+        # the data that drives modeling would change on every run).
+        torch.manual_seed(seed)
 
         self._tokenizer = AutoTokenizer.from_pretrained(model_name)
         if self._tokenizer.pad_token_id is None:
@@ -154,7 +170,17 @@ class OpenParticipantModel:
                     messages, tokenize=False, add_generation_prompt=True
                 )
             except Exception:
-                pass  # not all chat templates accept a system role
+                # Some chat templates reject a system role; fall back to a plain
+                # concatenation. Log it (rather than swallowing silently) — an
+                # un-templated prompt makes an instruction-tuned model follow the
+                # answer format far less reliably, inflating unparseable replies,
+                # so the degradation must be visible in the run log.
+                logger.warning(
+                    "chat template for %s rejected the system+user messages; "
+                    "falling back to plain prompt concatenation",
+                    self.name,
+                    exc_info=True,
+                )
         return f"{system}\n\n{user}\n"
 
     def answer(self, system: str, user: str) -> str:

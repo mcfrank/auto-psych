@@ -7,8 +7,10 @@ posterior over models.
     P(model | data) ∝ exp(elpd_loo(model)) * P(model)
 
 With --complexity-prior CONST, log-prior = CONST * complexity(model), where
-complexity = non-whitespace, non-comment chars in the model's .py file.
-Negative CONST penalises complex models (Occam's razor).
+complexity = non-blank, non-comment LINES in the model's .py file (see
+``model_complexity``). Negative CONST penalises complex models (Occam's razor).
+The DEFAULT_COMPLEXITY_PRIOR_CONST in the inner loop is tuned for this line
+count, not a character count.
 
 Multiple --responses files are pooled into a single observed set before
 fitting (one MCMC run per model on pooled data).
@@ -35,6 +37,7 @@ from __future__ import annotations
 import csv
 import json
 import math
+import os
 import sys
 import tempfile
 from dataclasses import dataclass
@@ -59,7 +62,13 @@ def model_complexity(model_name: str, models_dir: Path) -> int:
     """
     model_file = models_dir / f"{model_name}.py"
     if not model_file.exists():
-        return 0
+        # Returning 0 here would silently hand a missing model the *best* possible
+        # Occam prior (log_prior = const * 0 = 0) under a negative complexity
+        # constant. A model in the comparison with no source file is a bug, not a
+        # zero-complexity model — fail loudly.
+        raise FileNotFoundError(
+            f"Cannot compute complexity for {model_name!r}: no source at {model_file}"
+        )
     count = 0
     for line in model_file.read_text(encoding="utf-8").splitlines():
         code_part = line.split("#")[0]
@@ -91,7 +100,11 @@ def _pool_response_csvs(paths: List[Path]) -> Path:
                 pooled_rows.append(row)
     if header is None:
         raise ValueError("No response files provided")
-    tmp = Path(tempfile.mkstemp(prefix="pooled_responses_", suffix=".csv")[1])
+    # mkstemp returns (fd, path); close the fd immediately or it leaks on every
+    # multi-CSV pool. The caller is responsible for unlinking the returned path.
+    fd, tmp_name = tempfile.mkstemp(prefix="pooled_responses_", suffix=".csv")
+    os.close(fd)
+    tmp = Path(tmp_name)
     with tmp.open("w", encoding="utf-8", newline="") as f:
         w = csv.writer(f)
         w.writerow(header)
@@ -119,6 +132,9 @@ def compare_table(
       only meaningfully distinguishable when ``elpd_diff`` is large relative to
       ``dse`` (a rough rule of thumb is ``elpd_diff > 2 * dse``).
     - ``weight``: Akaike-style stacking weight from ``az.compare``.
+    - ``loo_unreliable``: ``az.compare``'s ``warning`` flag — True when this
+      model's PSIS-LOO estimate is untrustworthy (many high Pareto-k points), so
+      its ELPD (and the posterior built from it) should be read with caution.
 
     Returns a plain dict keyed by model name (JSON-serialisable).
     """
@@ -151,13 +167,22 @@ def compare_table(
 
     out: Dict[str, Dict[str, float]] = {}
     for rank, (name, row) in enumerate(cmp.iterrows()):
+        unreliable = bool(row["warning"]) if "warning" in cmp.columns else False
         out[name] = {
             "rank": rank,
             "elpd_loo": float(row["elpd_loo"]),
             "elpd_diff": float(row["elpd_diff"]),
             "dse": float(row["dse"]),
             "weight": float(row["weight"]),
+            "loo_unreliable": unreliable,
         }
+        if unreliable:
+            print(
+                f"  [warn] PSIS-LOO for {name!r} is unreliable (many high Pareto-k "
+                "points); its ELPD-LOO and any posterior built from it may be off.",
+                file=sys.stderr,
+                flush=True,
+            )
     return out
 
 
@@ -178,6 +203,16 @@ def model_posterior(
 
     Extra ``fit_kwargs`` (e.g. ``draws``, ``tune``, ``chains``) are forwarded
     to the MCMC fit of every model.
+
+    Caveat (overconfidence): the posterior is a softmax of total ELPD-LOO, which
+    sums pointwise log-densities over every trial. A per-trial advantage of even a
+    fraction of a nat, multiplied by hundreds of trials, drives the softmax to a
+    near one-hot vector — and this does NOT account for the standard error of the
+    ELPD difference. So ``posteriors`` will routinely read ~1.0 for one model even
+    when ``compare_table``'s ``dse`` says the models are statistically
+    indistinguishable (``elpd_diff`` < ~2·dse). Treat ``posteriors`` as a ranking
+    that is overconfident about its certainty; use the ``dse`` column of
+    ``compare_table`` for the standard-error-aware view of distinguishability.
 
     Returns a dict with `posteriors`, `elpd_loo`, `n_trials`, and (if
     complexity_prior_const != 0) `complexity_prior_const` + `complexities`.
@@ -204,6 +239,18 @@ def model_posterior(
         for m in model_names
     }
 
+    # A non-finite ELPD (a model assigning ~0 probability to an observed outcome,
+    # or a degenerate fit) would silently poison the softmax below: a single NaN
+    # makes every posterior NaN, and -inf would zero a model without a trace. Fail
+    # loudly with the offending model(s) rather than emit a corrupt posterior.
+    nonfinite = [m for m in model_names if not math.isfinite(elpd[m])]
+    if nonfinite:
+        raise ValueError(
+            f"Non-finite ELPD-LOO for model(s) {nonfinite} "
+            f"({ {m: elpd[m] for m in nonfinite} }); refusing to build a posterior "
+            "a NaN/inf would silently corrupt. Inspect the model(s)' likelihood."
+        )
+
     if complexity_prior_const != 0.0:
         complexities: Optional[Dict[str, int]] = {
             m: model_complexity(m, models_dir) for m in model_names
@@ -219,7 +266,8 @@ def model_posterior(
     log_norm = max_score + math.log(sum_exp)
     posteriors = {m: round(math.exp(log_scores[m] - log_norm), 6) for m in model_names}
 
-    n_trials = sum(1 for _ in csv.DictReader(responses_path.open(encoding="utf-8")))
+    with responses_path.open(encoding="utf-8", newline="") as f:
+        n_trials = sum(1 for _ in csv.DictReader(f))
 
     result: Dict[str, Any] = {
         "posteriors": posteriors,
@@ -243,8 +291,8 @@ class Args:
     out: Optional[Path] = None
     """Write JSON to this file (default: stdout)."""
     complexity_prior: float = 0.0
-    """Log-prior per model = CONST * complexity, where complexity = non-whitespace
-    non-comment chars in the model .py file. Negative CONST penalises complex
+    """Log-prior per model = CONST * complexity, where complexity = non-blank,
+    non-comment LINES in the model .py file. Negative CONST penalises complex
     models (Occam's razor). Default: 0.0 (uniform prior)."""
     cache_dir: Optional[Path] = None
     """Optional directory to persist .nc fits (default: in-process cache only)."""
@@ -261,12 +309,17 @@ def main(args: Args) -> None:
 
     pooled = _pool_response_csvs(args.responses)
 
-    result = model_posterior(
-        responses_path=pooled,
-        models_dir=args.models_dir,
-        complexity_prior_const=args.complexity_prior,
-        cache_dir=args.cache_dir,
-    )
+    try:
+        result = model_posterior(
+            responses_path=pooled,
+            models_dir=args.models_dir,
+            complexity_prior_const=args.complexity_prior,
+            cache_dir=args.cache_dir,
+        )
+    finally:
+        # Remove the pooled temp file (only created when >1 input was pooled).
+        if pooled not in args.responses and pooled.exists():
+            pooled.unlink()
 
     output = json.dumps(result, indent=2)
     if args.out:

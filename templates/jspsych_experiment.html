@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Experiment</title>
   <script src="https://unpkg.com/jspsych@8.2.3"></script>
-  <script src="https://unpkg.com/@jspsych/plugin-html-keyboard-response@2.1.0"></script>
   <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
   <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
   <style>
@@ -93,24 +92,42 @@
     post_trial_gap: 400
   });
 
-  // 3. Trials: for each stimulus, [fixation 150ms, then main trial] (keyboard) — short fixation to reduce collect-step latency
+  // 3. Trials: for each stimulus, [fixation 150ms, then main trial] (button
+  //    responses only — same modality the pipeline's implement validator
+  //    enforces). The fixation is a button trial with no buttons that auto-
+  //    advances via trial_duration.
   const fixation = {
-    type: jsPsychHtmlKeyboardResponse,
+    type: jsPsychHtmlButtonResponse,
     stimulus: '<div style="text-align:center; font-size:48px;">+</div>',
-    choices: 'NO_KEYS',
+    choices: [],
     trial_duration: 150
   };
+  // Per-trial, per-participant side counterbalancing: randomly show one of the
+  // two sequences on the left, then RECORD the presented order (sequence_a = the
+  // sequence shown on the left). This decouples content from physical side so a
+  // side bias is identifiable, with no change to the data contract. Each stimulus
+  // ships both precomputed displays (display_a_left / display_b_left).
+  let presentedOrder = null;
   const trial = {
-    type: jsPsychHtmlKeyboardResponse,
-    stimulus: jsPsych.timelineVariable('stimulus_display'),
-    choices: trialChoices,
-    data: {
-      sequence_a: jsPsych.timelineVariable('sequence_a'),
-      sequence_b: jsPsych.timelineVariable('sequence_b'),
-      task: 'judgment'
+    type: jsPsychHtmlButtonResponse,
+    stimulus: function() {
+      var a = jsPsych.evaluateTimelineVariable('sequence_a');
+      var b = jsPsych.evaluateTimelineVariable('sequence_b');
+      var swap = Math.random() < 0.5;
+      presentedOrder = swap
+        ? { left: b, right: a, html: jsPsych.evaluateTimelineVariable('display_b_left') }
+        : { left: a, right: b, html: jsPsych.evaluateTimelineVariable('display_a_left') };
+      return presentedOrder.html;
     },
+    choices: trialChoices,
+    button_html: styledButtonHtml,
+    data: { task: 'judgment' },
     on_finish: function(data) {
-      data.chose_left = (data.response === 'f' || data.response === 'ArrowLeft');
+      // sequence_a = the sequence shown on the LEFT; the first button (index 0)
+      // is the left option, so chose_left = (response === 0).
+      data.sequence_a = presentedOrder.left;
+      data.sequence_b = presentedOrder.right;
+      data.chose_left = (data.response === 0);
       completedTrials++;
       updateProgress();
     }

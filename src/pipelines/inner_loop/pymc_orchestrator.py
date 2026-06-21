@@ -33,7 +33,7 @@ from typing import Any, Dict, List, Optional
 
 import yaml
 
-from src.models.pymc_inference import load_pymc_model, model_logp_is_finite
+from src.models.pymc_inference import fit_model, load_pymc_model, model_logp_is_finite
 from src.model_comparison.posterior import compare_table, model_posterior
 from src.runtime.config import REPO_ROOT
 
@@ -155,23 +155,36 @@ def _drop_unfittable_models(models_dir: Path, responses_path: Path) -> None:
 
 
 def _admit_candidate(
-    candidate_file: Path, models_dir: Path, model_name: str, responses_path: Path
+    candidate_file: Path,
+    models_dir: Path,
+    model_name: str,
+    responses_path: Path,
+    *,
+    cache_dir: Optional[Path] = None,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
 ) -> bool:
     """Validate a candidate and, if valid, admit it to the model set.
 
     A candidate is admitted only when it ships **both**:
 
     - ``candidate.py`` that loads as a module-level ``model: pm.Model`` (via
-      ``load_pymc_model``) **and** evaluates to a finite logp on the data, and
+      ``load_pymc_model``), evaluates to a finite logp on the data, **and
+      actually completes an MCMC fit**, and
     - ``hypothesis.md`` next to it stating, in natural language, the single
       cognitive hypothesis the model implements.
 
     The hypothesis text becomes the model's manifest rationale and is copied to
     ``models/<name>.hypothesis.md`` so every model in the set carries the
     hypothesis it tests. Candidates missing either file, or whose logp is
-    non-finite on the data (NaN/-inf, which would crash MCMC at its start-value
-    check and abort the whole run), are skipped (returns False, with a loud
-    message) so one bad agent output does not abort the round.
+    non-finite on the data, or whose MCMC sampling raises, are skipped (returns
+    False, with a loud message) so one bad agent output does not abort the round.
+
+    The finite-logp check only inspects the initial point, so a candidate can
+    pass it yet NaN once NUTS jitters off that point. Such a candidate, if merely
+    admitted, would crash the post-admission scoring pass and take down the whole
+    run — so admission ends with a real fit (its result is cached and reused by
+    scoring, adding no extra MCMC), containing any sampling failure to this one
+    candidate.
     """
     if not candidate_file.exists():
         print(f"  [reject] {model_name}: no candidate.py written", flush=True)
@@ -207,6 +220,27 @@ def _admit_candidate(
         staged.unlink(missing_ok=True)
         print(
             f"  [reject] {model_name}: model cannot be fit — {reason}",
+            flush=True,
+        )
+        return False
+
+    # Real-fit gate: the logp check above only covers the initial point, so a
+    # candidate can pass it yet diverge/NaN once NUTS jitters off it. Fit it now
+    # (cached, so scoring reuses this exact fit) to contain such a failure here
+    # instead of letting it abort the round's scoring pass.
+    try:
+        fit_model(
+            model_name,
+            models_dir,
+            responses_path,
+            cache_dir=cache_dir,
+            **(fit_kwargs or {}),
+        )
+    except Exception as e:
+        staged.unlink(missing_ok=True)
+        print(
+            f"  [reject] {model_name}: MCMC sampling failed "
+            f"({type(e).__name__}: {e}); dropping it so it cannot abort scoring.",
             flush=True,
         )
         return False
@@ -328,9 +362,11 @@ def _write_candidate_context(
             "",
             f"`critiques.md` ({critique_path}) is a posterior-predictive critique of",
             "the current **best** model: the test statistics on which it significantly",
-            "fails to reproduce the data, each with the direction of the discrepancy.",
-            "Treat these as the **strongest evidence** for what your hypothesis should",
-            "fix — propose a single mechanism that would close one of these gaps.",
+            "fails to reproduce the data, each with the direction of the discrepancy",
+            "and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not",
+            "confirmatory tests — several are checked per round, so prefer a",
+            "discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such",
+            "discrepancy to motivate a single mechanism that would close that gap.",
         ]
     (candidate_dir / "CONTEXT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
@@ -579,11 +615,20 @@ def _format_critiques_md(result: Dict[str, Any]) -> str:
     ]
     if sig:
         lines.append("## Significant discrepancies (a better model should address these)")
+        lines.append("")
+        lines.append(
+            "Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across "
+            "this round's statistics. Prioritise discrepancies that survive the FDR "
+            "(`q ≤ alpha`); a raw-only hit may be one of several screened at once."
+        )
         for r in sig:
+            q = r.get("p_value_fdr")
+            q_str = f"{q:.3g}" if isinstance(q, (int, float)) and q == q else "n/a"
+            fdr_mark = " [survives FDR]" if r.get("significant_fdr") else ""
             lines.append(
                 f"- **{r['name']}** — {r.get('description', '')} "
                 f"(observed {r['t_observed']:.3g} vs null mean {r['null_mean']:.3g}, "
-                f"z={r['z_score']:.2f}, p={r['p_value']:.3g})"
+                f"z={r['z_score']:.2f}, p={r['p_value']:.3g}, q={q_str}){fdr_mark}"
             )
     else:
         lines.append("No statistic showed a significant discrepancy — the incumbent fits these checks.")
@@ -794,6 +839,8 @@ def run_pymc_inner_loop(
                 models_dir,
                 model_name=f"iter{iteration}_candidate{idx}",
                 responses_path=responses_path,
+                cache_dir=cache_dir,
+                fit_kwargs=fit_kwargs,
             )
         posterior = _score(
             responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
@@ -910,20 +957,35 @@ def _export(
         lines.append(f"- **{name}**: {hypotheses.get(name) or '(no stated hypothesis)'}")
 
     if comparison:
-        # Ordered by az.compare rank (0 = best). elpd_diff/dse are relative to
-        # the top model; a model is distinguishable from the best only when
-        # elpd_diff is large vs dse (rule of thumb: elpd_diff > 2*dse).
+        # Ordered by az.compare rank (0 = best by RAW ELPD-LOO — no complexity
+        # prior). elpd_diff/dse are relative to that top model; a model is
+        # distinguishable only when elpd_diff is large vs dse (~elpd_diff > 2*dse).
         by_rank = sorted(comparison.items(), key=lambda kv: kv[1]["rank"])
+        loo_top = by_rank[0][0] if by_rank else None
+        # The "Best model" above is the posterior argmax, which INCLUDES the
+        # complexity prior, so it can differ from this table's raw-ELPD rank-0.
+        # Call that out explicitly rather than letting the report contradict itself.
+        reconcile = ""
+        if loo_top is not None and loo_top != best_model:
+            reconcile = (
+                f" NOTE: this table ranks by **raw** ELPD-LOO, so its top model "
+                f"(`{loo_top}`) differs from the **Best model** above "
+                f"(`{best_model}`), which is the posterior argmax *including the "
+                "complexity prior*. The exported `best_model.py` is the latter."
+            )
         lines += [
             "",
             "## Distinguishability (arviz.compare, PSIS-LOO)",
             "",
             "`elpd_diff` and `dse` are relative to the best model. A model is "
             "only clearly worse than the best when `elpd_diff > 2 * dse`; "
-            "models within ~2·dse of the top are statistically indistinguishable.",
+            "models within ~2·dse of the top are statistically indistinguishable. "
+            "`LOO reliable` is False when PSIS-LOO flagged this model's estimate as "
+            "untrustworthy (many high Pareto-k points) — its row should be read with "
+            "caution." + reconcile,
             "",
-            "| model | elpd_diff | dse | distinguishable from best | weight |",
-            "| --- | --- | --- | --- | --- |",
+            "| model | elpd_diff | dse | distinguishable from best | weight | LOO reliable |",
+            "| --- | --- | --- | --- | --- | --- |",
         ]
         for name, row in by_rank:
             if row["rank"] == 0:
@@ -932,9 +994,11 @@ def _export(
                 verdict = "yes"
             else:
                 verdict = "no (within ~2·dse)"
+            reliable = "no ⚠" if row.get("loo_unreliable") else "yes"
+            marker = " ←selected" if name == best_model else ""
             lines.append(
-                f"| {name} | {row['elpd_diff']:.2f} | {row['dse']:.2f} | "
-                f"{verdict} | {row['weight']:.3f} |"
+                f"| {name}{marker} | {row['elpd_diff']:.2f} | {row['dse']:.2f} | "
+                f"{verdict} | {row['weight']:.3f} | {reliable} |"
             )
 
     (results_dir / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

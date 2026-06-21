@@ -2,10 +2,10 @@
 
 Active development is organized around two explicit loops:
 
-- `src/pipelines/outer_loop`: experiment loop. Claude Code agents propose models, design stimuli, implement experiments, collect data, then hand observed data to the inner model loop.
-- `src/pipelines/inner_loop`: cognitive-model improvement loop. It fits and compares candidate models over a generic `Dataset`/`Trial` abstraction, exports the best model, and maintains model-zoo/BMC artifacts. Before each candidate round it runs a CriticAL posterior-predictive critique (`src/critique`) of the incumbent best model and feeds the resulting `critiques.md` to the candidate agents.
+- `src/pipelines/outer_loop`: experiment loop. Coding agents propose models, design stimuli, implement experiments, collect data, then hand observed data to the inner model loop.
+- `src/pipelines/inner_loop`: cognitive-model improvement loop. It fits and compares candidate **PyMC** models by ELPD-LOO, exports the best model, and maintains the model-zoo/posterior artifacts. Before each candidate round it runs a CriticAL posterior-predictive critique (`src/critique`) of the incumbent best model and feeds the resulting `critiques.md` to the candidate agents.
 
-The old LangGraph/LangChain pipeline, Cloud Run entrypoint, SLURM submitter, and old root prompts have been retired into `legacy/`.
+The old LangGraph/LangChain pipeline, Cloud Run entrypoint, and SLURM submitter have been removed.
 
 ## Setup
 
@@ -53,7 +53,10 @@ uv run python -m src.pipelines.outer_loop.run --project subjective_randomness --
 - `simulated_participants_nobrowser`: **LLM-as-participant** — each synthetic
   participant answers every stimulus directly via a language model. The jsPsych
   `3_implement` stage is skipped in a full run.
-- `live`: real participants via Prolific (not yet wired into this runner).
+- `live`: real participants via Prolific + Firebase. Requires a deployed
+  experiment to collect from (run with `--deploy-target firebase --prolific-mode
+  live`); it reads submissions from the results API / Firestore and refuses to
+  fall back to synthetic data if no deployment is configured.
 
 For `simulated_participants_nobrowser`, choose the participant-model backend:
 
@@ -70,12 +73,12 @@ uv run python -m src.pipelines.outer_loop.run --project subjective_randomness \
 
 The closed backend needs `GOOGLE_API_KEY` (env or `.secrets`); `--closed-model`
 overrides the default model id. The open backend loads the named model locally;
-`--hf-model` defaults to `Qwen/Qwen3.5-9B` (large — pass a smaller id for quick
-runs).
+`--hf-model` defaults to `Qwen/Qwen2.5-7B-Instruct` (large — pass a smaller id,
+e.g. `Qwen/Qwen2.5-0.5B-Instruct`, for quick runs).
 
 **This participant model is separate from the coding-agent backend.** The
 theory / design / implement stages (and inner-loop candidate generation) are
-driven by `--coding-agent` (Claude Code by default); `--participant-backend` /
+driven by `--coding-agent` (opencode by default); `--participant-backend` /
 `--hf-model` only choose the model that *answers trials* during `4_collect`.
 
 Smoke-test just the open participant path (no PyMC, no API key, tiny model):
@@ -88,18 +91,19 @@ uv run python scripts/smoke_open_participant.py
 ### Coding-agent backend
 
 Both loops spawn a coding-agent CLI to write models/experiments. The default is
-Claude Code; pass `--coding-agent opencode` (or set `CODING_AGENT=opencode`) to
-use opencode instead. The backend is resolved once and exported so the inner
-loop inherits it.
+opencode (default model `google/gemini-3.1-pro-preview`); pass `--coding-agent
+claude` (or set `CODING_AGENT=claude`) to use Claude Code (`claude-sonnet-4-6`)
+instead. The backend is resolved once and exported so the inner loop inherits it.
 
 ```bash
-uv run python -m src.pipelines.outer_loop.run --project subjective_randomness --experiment 1 --coding-agent opencode
+uv run python -m src.pipelines.outer_loop.run --project subjective_randomness --experiment 1 --coding-agent claude
 ```
 
 opencode runs headless via `opencode run`; grant it edit/bash permission in
 `opencode.json` (the equivalent of Claude's `--dangerously-skip-permissions`),
-and confirm its default model id (`anthropic/claude-sonnet-4-6`) is valid for
-your install or override it with `--model`.
+and confirm its default model id (`google/gemini-3.1-pro-preview`) is valid for
+your install (set a different model in `opencode.json` if not — the runners have
+no model-override flag).
 
 Project *assets* (problem definition, ground-truth models, featurizer) live under
 `src/pipelines/outer_loop/projects/<project>/`. Generated experiment *outputs* are
@@ -211,77 +215,50 @@ Firestore (`gcloud auth application-default login`) and `PROLIFIC_API_TOKEN`
 (env or `.secrets`) for the recruitment counts. If Prolific is unreachable the
 participant data still renders and the Prolific error is shown inline.
 
-To preview the dashboard without any cloud access, run it against in-memory demo
-data: `uv run python scratch/monitor_demo.py` (serves http://127.0.0.1:8011).
-
 ## Project Layout
 
 ```text
 src/
   pipelines/
     outer_loop/
-      run.py
-      orchestrator.py
-      prompts/
-      projects/
-      llm.py
-      collect.py
+      run.py                 # `python -m src.pipelines.outer_loop.run` (entry point)
+      orchestrator.py        # stage spawning, programmatic collect/deploy/inner-loop, validators
+      collect.py             # collection modes (simulated / LLM-as-participant / live)
+      participants.py        # closed (Gemini) + open (HuggingFace) participant models
+      llm.py eig.py
+      prompts/               # 1_theory / 2_design / 3_implement / 4_collect_* prompts
+      projects/<project>/    # problem_definition.md, ground_truth_models.py, preprocess.py, seed_models/
+      deployment/            # firebase.py firestore.py prolific.py manifest.py local.py smoke.py
     inner_loop/
-      core.py
-      likelihood.py
-      fitting.py
-      bmc.py
-      zoo.py
-      orchestrator.py
-  runtime/
-    config.py
-    console.py
-    observability.py
-    prolific.py
-  experiments/
-    state.py
-    state_loader.py
-    problem_definition.py
-    references.py
-  registry/
-    io.py
+      run.py                 # `python -m src.pipelines.inner_loop.run` (entry point)
+      pymc_orchestrator.py   # seed/score/critique/candidate rounds, export best model
+      prompts/               # pymc_theory.md + critique.md
+  critique/
+    ppc.py                   # CriticAL posterior-predictive check (empirical p + BH-FDR)
+  model_comparison/
+    posterior.py             # ELPD-LOO softmax posterior over models + az.compare table
+    likelihood.py            # ELPD-LOO of one model
   models/
-    theorist/
-      loader.py
-      predictions.py
-    project/
-      ground_truth.py
+    pymc_inference.py        # load/fit (MCMC) agent-written PyMC models, PPC sampling, caching
+    theorist/                # loader.py + predictions.py (pure-Python prediction callables)
+    project/                 # ground_truth.py
+  subjective_randomness/     # standalone research library: model families, recovery, stimulus design
+  runtime/
+    coding_agent.py          # backend-agnostic Claude Code / opencode subprocess launcher
+    config.py console.py observability.py prolific.py
+  experiments/
+    state.py state_loader.py problem_definition.py references.py
+  registry/
+    io.py                    # per-run model_registry.yaml (theory -> probability)
   validation/
-    validators.py
-  viewer/                # browser-based run explorer (Flask + static SPA)
-    server.py            # `python -m src.viewer.server`
-    freeze.py            # `python -m src.viewer.freeze` -> static snapshot for web hosting
-    scan.py              # finds runs under data/ -> structured payloads
-    models.py            # pydantic schema for the payloads
-    transcripts.py       # strips ANSI from agent terminal logs
-    static/              # index.html + app.js + styles.css (no external deps)
-  monitor/               # live dashboard for in-progress human studies (Flask + static SPA)
-    server.py            # `python -m src.monitor.server`
-    discovery.py         # finds monitorable sessions from deployment manifests
-    sources.py           # Firestore + Prolific data sources (live impls + protocols)
-    aggregate.py         # per-participant / choice-balance stats + degenerate-data detection
-    report.py            # assembles API payloads from a session + its live data
-    models.py            # pydantic schema for the payloads
-    static/              # index.html + app.js + styles.css (no external deps)
-legacy/
-  run_pipeline.py
-  run_agent.py
-  run_critic.py
-  prompts/
-  src/
-  tests/
-  remote_jobs/
-  cloudrun/
-  batch_plots.py
-  stats/
-    correlations.py
-  tests/
-    test_correlations.py
+    validators.py stages/    # per-stage output validators
+  viewer/                    # browser-based run explorer (Flask + static SPA)
+    server.py                # `python -m src.viewer.server`
+    freeze.py                # `python -m src.viewer.freeze` -> static snapshot for web hosting
+    scan.py models.py transcripts.py static/
+  monitor/                   # live dashboard for in-progress human studies (Flask + static SPA)
+    server.py                # `python -m src.monitor.server`
+    discovery.py sources.py aggregate.py report.py models.py static/
 ```
 
 ## Tests

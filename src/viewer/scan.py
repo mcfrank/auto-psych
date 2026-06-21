@@ -18,6 +18,19 @@ import re
 from pathlib import Path
 
 import yaml
+from pydantic import ValidationError
+
+
+def _argmax_posteriors(posteriors: dict, source: object) -> str | None:
+    """Argmax of a model-posterior map, failing loudly (as ValueError, which the
+    server surfaces) on non-numeric values rather than raising an opaque TypeError.
+    ``source`` names the offending artifact in the error."""
+    if not posteriors:
+        return None
+    try:
+        return max(posteriors, key=lambda k: float(posteriors[k]))
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"Non-numeric posterior values in {source}: {exc}") from exc
 
 from src.viewer.models import (
     Candidate,
@@ -203,7 +216,15 @@ def _scan_model_loop_at(ml_dir: Path) -> ModelLoopStage | None:
     if not ml_dir.is_dir():
         return None
     history = _read_json(ml_dir / "history.json") or []
-    trajectory = [TrajectoryStep(**step) for step in history]
+    try:
+        trajectory = [TrajectoryStep(**step) for step in history]
+    except (TypeError, ValidationError) as exc:
+        # Surface a malformed history.json loudly with its path (the server's
+        # ValueError handler turns this into a clear 500), rather than letting a
+        # pydantic ValidationError / TypeError escape as an opaque stack trace.
+        raise ValueError(
+            f"Malformed history.json in {ml_dir / 'history.json'}: {exc}"
+        ) from exc
 
     candidates: list[Candidate] = []
     for iter_dir in _iter_dirs(ml_dir):
@@ -234,9 +255,7 @@ def _best_model(model_loop: ModelLoopStage | None) -> str | None:
     if model_loop.trajectory:
         return model_loop.trajectory[-1].best_model
     posteriors = (model_loop.final_posterior or {}).get("posteriors")
-    if posteriors:
-        return max(posteriors, key=posteriors.get)
-    return None
+    return _argmax_posteriors(posteriors, "model_posterior.json")
 
 
 def _quick_loop_stats(ml_dir: Path) -> tuple[str | None, int | None, int | None]:
@@ -245,10 +264,10 @@ def _quick_loop_stats(ml_dir: Path) -> tuple[str | None, int | None, int | None]
     final = _read_json(ml_dir / "model_posterior.json") or {}
     if history and history[-1].get("best_model"):
         best = history[-1]["best_model"]
-    elif final.get("posteriors"):
-        best = max(final["posteriors"], key=final["posteriors"].get)
     else:
-        best = None
+        best = _argmax_posteriors(
+            final.get("posteriors"), ml_dir / "model_posterior.json"
+        )
     iters = _iter_dirs(ml_dir) if ml_dir.is_dir() else []
     n_cand = sum(
         1 for it in iters for c in it.iterdir() if c.is_dir() and _CAND_DIR.match(c.name)
@@ -290,7 +309,10 @@ def _stat_from_result(name, result, description=None, code=None) -> CritiqueStat
         null_std=result.get("null_std"),
         z_score=result.get("z_score"),
         p_value=result.get("p_value"),
-        p_value_adjusted=result.get("p_value_adjusted"),
+        # ppc.py writes the Benjamini-Hochberg FDR q-value under ``p_value_fdr``
+        # (``p_value_adjusted`` is the viewer's generic name for "multiplicity-
+        # adjusted p"); read the key the harness actually emits.
+        p_value_adjusted=result.get("p_value_fdr"),
         significant=result.get("significant"),
         error=result.get("error"),
         has_result=True,

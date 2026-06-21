@@ -504,7 +504,7 @@ class Args:
     """Candidate models per inner-loop iteration for 5_model_loop."""
     coding_agent: Optional[Literal["claude", "opencode"]] = None
     """Coding-agent backend for outer and inner loops. Defaults to the CODING_AGENT
-    env var, then 'claude'."""
+    env var, then 'opencode'. Pass 'claude' for Claude Code."""
     participant_backend: Literal["closed", "open"] = "closed"
     """Participant model backend for simulated_participants_nobrowser."""
     closed_model: Optional[str] = None
@@ -538,8 +538,9 @@ class Args:
     """Test statistics the critique agent proposes per round (None ⇒ inner-loop
     default)."""
     critique_alpha: Optional[float] = None
-    """Raw p-value threshold for flagging a critique discrepancy, no multiple-
-    comparisons correction (None ⇒ inner-loop default of 0.1; lower = stricter)."""
+    """Raw p-value threshold for flagging a critique discrepancy (a Benjamini-
+    Hochberg FDR-adjusted q is reported alongside it). None ⇒ inner-loop default
+    of 0.05; lower = stricter."""
 
 
 def main(args: Args) -> None:

@@ -2,10 +2,13 @@
 Load reference material from project references/ (PDFs, .md, .txt) for use by the theorist.
 """
 
+import logging
 from pathlib import Path
 from typing import Optional
 
 from src.runtime.config import references_dir
+
+logger = logging.getLogger(__name__)
 
 # Cap total reference text to avoid blowing context
 MAX_REFERENCE_CHARS = 80_000
@@ -51,6 +54,9 @@ def load_references(project_id: str) -> str:
             chunks.append(chunk)
             total += len(chunk)
         except Exception:
+            # A corrupt/unreadable reference file is skipped, but log it — a
+            # silently dropped reference vanishes from the theorist's context.
+            logger.warning("skipping unreadable reference %s", path, exc_info=True)
             continue
 
     if not chunks:
@@ -62,15 +68,26 @@ def _extract_pdf_text(path: Path) -> str:
     """Extract text from a PDF using pypdf."""
     try:
         from pypdf import PdfReader
-    except ImportError:
-        return ""
+    except ImportError as exc:
+        # pypdf is a declared dependency; a missing import means a broken env, not
+        # "this PDF has no text". Fail loudly rather than silently dropping every
+        # PDF reference from the theorist's context.
+        raise RuntimeError(
+            f"cannot extract text from {path}: pypdf is not installed "
+            "(it is a project dependency — run `uv sync`)"
+        ) from exc
     reader = PdfReader(path)
     parts = []
-    for page in reader.pages:
+    for page_num, page in enumerate(reader.pages):
         try:
             text = page.extract_text()
             if text:
                 parts.append(text)
         except Exception:
+            # A single unextractable page should not lose the whole PDF, but the
+            # partial loss must be visible rather than silent.
+            logger.warning(
+                "skipping unextractable page %d of %s", page_num, path, exc_info=True
+            )
             continue
     return "\n".join(parts)

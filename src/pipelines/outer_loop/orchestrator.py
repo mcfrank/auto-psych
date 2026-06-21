@@ -441,9 +441,14 @@ def run_collect_programmatic(
         # verify the loop recovers a known process); keep the callable path.
         model_registry = get_ground_truth_models(project_id)
         if ground_truth_model not in model_registry:
-            print(
-                f"  [collect] Warning: ground truth model {ground_truth_model!r} not found in registry",
-                flush=True,
+            # The ground-truth registry is a known, enumerable set. A name that
+            # isn't in it is a typo/config error — NOT a cue to silently fall back
+            # to coin-flip data (which would flow into modeling as if it were the
+            # named generative process). Fail loudly with the valid options.
+            raise ValueError(
+                f"--ground-truth-model {ground_truth_model!r} is not in the "
+                f"{project_id} ground-truth registry. Available: "
+                f"{sorted(model_registry)}."
             )
         print(f"  [collect] Using ground truth model: {ground_truth_model}", flush=True)
         rows = _generate_from_models(
@@ -498,9 +503,19 @@ def run_collect_programmatic(
 
     csv_path = data_dir / "responses.csv"
     if rows:
-        fieldnames = list(rows[0].keys())
+        # Use the UNION of keys across all rows (not just rows[0]), preserving
+        # first-seen order. Live/Firebase rows can be heterogeneous (a row missing
+        # or carrying an extra column), and DictWriter raises ValueError on an
+        # unexpected key; restval="" fills columns a row lacks.
+        fieldnames: List[str] = []
+        seen: set = set()
+        for row in rows:
+            for key in row:
+                if key not in seen:
+                    seen.add(key)
+                    fieldnames.append(key)
         with open(csv_path, "w", newline="", encoding="utf-8") as f:
-            w = csv.DictWriter(f, fieldnames=fieldnames)
+            w = csv.DictWriter(f, fieldnames=fieldnames, restval="")
             w.writeheader()
             w.writerows(rows)
     else:

@@ -119,19 +119,47 @@ EXTRA=()
 
 echo "[run] label=$RUN_LABEL worktree=$RUN_WORKTREE out=$AUTO_PSYCH_OUTPUT_DIR $EXP_DESC N=$N_PARTICIPANTS design=$DESIGN_MODE"
 
-"$VENV_PY" -m src.pipelines.outer_loop.run \
-  --project "$PROJECT" \
-  "${EXP_FLAG[@]}" \
-  --mode live \
-  --deploy-target firebase \
-  --prolific-mode "${PROLIFIC_MODE:-test}" \
-  --firebase-project "$FIREBASE_PROJECT" \
-  --design-mode "$DESIGN_MODE" \
-  --run-label "$RUN_LABEL" \
-  --n-participants "$N_PARTICIPANTS" \
-  --coding-agent "$CODING_AGENT" \
-  --validate \
-  --resume \
-  ${EXTRA[@]+"${EXTRA[@]}"}
+# RESUME_AGENTS (optional, stage keys separated by ':' or space, e.g.
+# "4_collect:5_model_loop"): re-run only those stages of an existing experiment
+# via --agent, reusing the already-deployed study. The deploy step is bound to
+# 3_implement inside run.py, so a resume that omits 3_implement never re-deploys
+# or re-recruits. Used to recover a run that stalled mid-pipeline without spending
+# money again. NOTE: use ':' not ',' as the separator — Slurm's --export is itself
+# comma-delimited and would split a comma-separated value into separate exports.
+if [[ -n "${RESUME_AGENTS:-}" ]]; then
+  for AK in ${RESUME_AGENTS//[:,]/ }; do
+    echo "[resume] stage=$AK only (no deploy / no new recruiting)"
+    "$VENV_PY" -m src.pipelines.outer_loop.run \
+      --project "$PROJECT" \
+      "${EXP_FLAG[@]}" \
+      --mode live \
+      --deploy-target firebase \
+      --prolific-mode "${PROLIFIC_MODE:-test}" \
+      --firebase-project "$FIREBASE_PROJECT" \
+      --design-mode "$DESIGN_MODE" \
+      --run-label "$RUN_LABEL" \
+      --n-participants "$N_PARTICIPANTS" \
+      --coding-agent "$CODING_AGENT" \
+      --validate \
+      --resume \
+      --agent "$AK" \
+      ${EXTRA[@]+"${EXTRA[@]}"}
+  done
+else
+  "$VENV_PY" -m src.pipelines.outer_loop.run \
+    --project "$PROJECT" \
+    "${EXP_FLAG[@]}" \
+    --mode live \
+    --deploy-target firebase \
+    --prolific-mode "${PROLIFIC_MODE:-test}" \
+    --firebase-project "$FIREBASE_PROJECT" \
+    --design-mode "$DESIGN_MODE" \
+    --run-label "$RUN_LABEL" \
+    --n-participants "$N_PARTICIPANTS" \
+    --coding-agent "$CODING_AGENT" \
+    --validate \
+    --resume \
+    ${EXTRA[@]+"${EXTRA[@]}"}
+fi
 
 echo "[run] done -> $AUTO_PSYCH_OUTPUT_DIR/$PROJECT/experiment$EXPERIMENT"

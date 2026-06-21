@@ -22,8 +22,11 @@ posterior-predictive check:
 A statistic whose (raw, uncorrected) two-sided p-value is at or below
 ``significance_alpha`` is a *significant discrepancy*: concrete evidence of how
 the incumbent model fails to reproduce the data, which the next round of
-candidate models should address. No multiple-comparisons correction is applied —
-this is exploratory discrepancy screening, not confirmatory testing.
+candidate models should address. This is exploratory discrepancy screening, not
+confirmatory testing — but because several statistics are screened per round, a
+Benjamini-Hochberg FDR-adjusted q-value (``p_value_fdr``) and flag
+(``significant_fdr``, ``n_significant_fdr``) are reported *alongside* the raw
+ones so the multiplicity is visible rather than ignored.
 
 This is the statistical core only. The critique agent writes the test-statistic
 files and the natural-language synthesis; this module computes the evidence.
@@ -41,19 +44,27 @@ CLI (run by the critique agent over a directory of test-statistic files)::
 
 from __future__ import annotations
 
+import contextlib
 import json
 import math
 import re
+import signal
 import sys
+import threading
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
 
 REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
+
+# Best-effort wall-clock limit (seconds) for one agent-authored test statistic, so
+# a runaway/infinite statistic cannot hang the in-process critique harness (which
+# runs outside the critique agent's own subprocess timeout). See ``_time_limit``.
+_TEST_STAT_TIMEOUT_SEC = 30.0
 
 
 # ─────────────────────────────────────────────
@@ -123,12 +134,44 @@ def load_test_statistic_file(path: Path) -> TestStatistic:
     return TestStatistic(name=name, code=code, description=description)
 
 
-def _execute_test_statistic(code: str, df: Any) -> float:
-    """Execute test-statistic ``code`` against a dataframe and return the scalar.
+@contextlib.contextmanager
+def _time_limit(seconds: Optional[float]):
+    """Best-effort wall-clock limit for agent-authored code.
+
+    Uses ``SIGALRM``, which only fires on the main thread of a Unix process; in
+    any other context (a worker thread, Windows) this is a no-op and the code
+    runs unbounded. That is acceptable as a guard: the in-process PPC harness
+    runs on the main thread, which is exactly where a hung statistic would
+    otherwise stall the whole inner loop.
+    """
+    if (
+        not seconds
+        or seconds <= 0
+        or not hasattr(signal, "SIGALRM")
+        or threading.current_thread() is not threading.main_thread()
+    ):
+        yield
+        return
+
+    def _handler(signum, frame):
+        raise TimeoutError(f"test statistic exceeded {seconds:g}s")
+
+    old = signal.signal(signal.SIGALRM, _handler)
+    signal.setitimer(signal.ITIMER_REAL, seconds)
+    try:
+        yield
+    finally:
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        signal.signal(signal.SIGALRM, old)
+
+
+def _compile_test_statistic(code: str) -> Callable[[Any], Any]:
+    """Compile test-statistic ``code`` once and return its ``test_statistic`` fn.
 
     The code runs with ``np``, ``pd``, ``math`` and ``json`` in scope (the same
-    surface the critique agent is told it may use). The dataframe is copied so a
-    statistic that mutates it cannot leak into the next evaluation.
+    surface the critique agent is told it may use). Compiling once (rather than
+    re-``exec``-ing per replicate) is faster and means any module-level side
+    effects in the agent's code run exactly once.
     """
     import pandas as pd  # local import: pandas is only needed at evaluation time
 
@@ -143,7 +186,14 @@ def _execute_test_statistic(code: str, df: Any) -> float:
     fn = namespace.get("test_statistic")
     if not callable(fn):
         raise ValueError("code must define a callable named 'test_statistic'")
-    return float(fn(df.copy()))
+    return fn
+
+
+def _execute_test_statistic(code: str, df: Any) -> float:
+    """Compile ``code`` and evaluate it once against ``df`` (copied). Back-compat
+    single-shot helper; the hot path uses :func:`_compile_test_statistic` to
+    compile once and call many times."""
+    return float(_compile_test_statistic(code)(df.copy()))
 
 
 # ─────────────────────────────────────────────
@@ -164,8 +214,10 @@ def evaluate_test_statistic(
     result with ``error`` set and NaN p-values.
     """
     try:
-        t_obs = _execute_test_statistic(test_statistic.code, human_df)
-        t_null = [_execute_test_statistic(test_statistic.code, df) for df in model_dfs]
+        fn = _compile_test_statistic(test_statistic.code)
+        with _time_limit(_TEST_STAT_TIMEOUT_SEC):
+            t_obs = float(fn(human_df.copy()))
+            t_null = [float(fn(df.copy())) for df in model_dfs]
     except Exception as exc:  # an agent-authored statistic that does not run
         return TestStatisticResult(
             test_statistic=test_statistic,
@@ -303,6 +355,27 @@ def _posterior_capacity(fitted: Any) -> Optional[int]:
 # ─────────────────────────────────────────────
 
 
+def _benjamini_hochberg(pvals: List[float]) -> List[float]:
+    """Benjamini-Hochberg step-up FDR-adjusted q-values, in the input order.
+
+    NaN entries (statistics that errored) pass through as NaN and are excluded
+    from the correction's m. Each returned q is clipped to ``[0, 1]`` and made
+    monotone non-decreasing in p under the standard step-up.
+    """
+    finite = [i for i, p in enumerate(pvals) if isinstance(p, float) and math.isfinite(p)]
+    m = len(finite)
+    q = [float("nan")] * len(pvals)
+    if m == 0:
+        return q
+    order = sorted(finite, key=lambda i: pvals[i])  # ascending p
+    running_min = 1.0
+    for rank in range(m - 1, -1, -1):  # step up from the largest p
+        i = order[rank]
+        running_min = min(running_min, pvals[i] * m / (rank + 1))
+        q[i] = min(1.0, running_min)
+    return q
+
+
 def _result_to_dict(res: TestStatisticResult, alpha: float) -> Dict[str, Any]:
     """JSON-serialisable summary of a result (the full null vector is omitted)."""
     t_null = np.asarray(res.t_null, dtype=float) if res.t_null else np.array([])
@@ -358,6 +431,19 @@ def evaluate_test_stat_dir(
     results = [evaluate_test_statistic(ts, human_df, model_dfs) for ts in statistics]
 
     rows = [_result_to_dict(r, significance_alpha) for r in results]
+    # Multiple statistics are screened per round, so also report a Benjamini-
+    # Hochberg FDR-adjusted q-value and flag alongside the raw p. ``significant``
+    # stays the raw screen (kept for back-compat / the most-discrepant sort);
+    # ``significant_fdr`` is the multiplicity-aware view.
+    qvals = _benjamini_hochberg([d["p_value"] for d in rows])
+    for d, q in zip(rows, qvals):
+        d["p_value_fdr"] = q
+        d["significant_fdr"] = bool(
+            d["error"] is None
+            and isinstance(q, float)
+            and math.isfinite(q)
+            and q <= significance_alpha
+        )
     # Most discrepant first: significant before not, then by |z|.
     rows.sort(
         key=lambda d: (
@@ -371,6 +457,7 @@ def evaluate_test_stat_dir(
         "n_replicates": len(model_dfs),
         "significance_alpha": significance_alpha,
         "n_significant": sum(1 for d in rows if d["significant"]),
+        "n_significant_fdr": sum(1 for d in rows if d["significant_fdr"]),
         "results": rows,
     }
 

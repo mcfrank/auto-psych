@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Union
+
+logger = logging.getLogger(__name__)
 
 # Type for stimulus: (sequence_a, sequence_b), each sequence is string of H/T
 Stimulus = Tuple[str, str]
@@ -45,6 +48,12 @@ def get_model_predictions(
         try:
             fn = get_model_callable(name, theorist_dir)
             out[name] = fn(stimulus, response_options)
-        except (KeyError, FileNotFoundError, ValueError):
+        except Exception as exc:
+            # A model that fails to load or raises while predicting is dropped
+            # from the result, but log it: a silently vanished model skews any
+            # downstream weighting/EIG, and "predicts nothing" must be
+            # distinguishable from "crashed". (Catch broadly — a malformed
+            # callable can raise TypeError/AttributeError, not just ValueError.)
+            logger.warning("dropping model %r — %s: %s", name, type(exc).__name__, exc)
             continue
     return out

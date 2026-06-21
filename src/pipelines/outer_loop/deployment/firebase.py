@@ -7,8 +7,10 @@ from html import escape
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
+import tempfile
 from typing import Any, Iterator
 
 from src.runtime.config import REPO_ROOT
@@ -18,6 +20,10 @@ from .manifest import CLIENT_CONFIG_FILENAME, MANIFEST_FILENAME, DeploymentManif
 # Marker on the injected consent overlay. Used to keep injection idempotent and
 # to assert at staging time that every deployed experiment gates on consent.
 CONSENT_GATE_MARKER = "auto-psych-consent-gate"
+# Marker on the injected submit bridge — keeps injection idempotent and lets
+# staging assert that a working /submit path exists (else the study collects
+# nothing while looking fully staged).
+SUBMIT_BRIDGE_MARKER = "auto-psych-submit-bridge"
 CONSENT_TEXT_PATH = REPO_ROOT / "templates" / "consent.txt"
 
 
@@ -149,12 +155,23 @@ def load_experiment_config(exp_dir: Path) -> dict[str, Any]:
     return data if isinstance(data, dict) else {}
 
 
+def _has_working_submit(index_html: str) -> bool:
+    """True if the page already POSTs to ``/submit`` (our bridge, or the
+    implementer's own). Looks for an actual ``fetch(... "/submit"`` call, not just
+    the bare substrings — a page that merely *mentions* ``/submit`` in a comment
+    must still get the bridge injected, or it silently collects nothing."""
+    if SUBMIT_BRIDGE_MARKER in index_html:
+        return True
+    return bool(re.search(r"""fetch\(\s*['"][^'"]*?/submit""", index_html))
+
+
 def ensure_submit_bridge(index_html: str) -> str:
-    """Inject a small submit bridge if the implementer did not add one."""
-    if CLIENT_CONFIG_FILENAME in index_html and "/submit" in index_html:
+    """Inject a small submit bridge unless the page already POSTs to ``/submit``."""
+    if _has_working_submit(index_html):
         return index_html
     bridge = f"""
 <script>
+/* {SUBMIT_BRIDGE_MARKER} */
 (function() {{
   let submitted = false;
   async function autoPsychSubmit() {{
@@ -237,6 +254,12 @@ def stage_experiment(exp_dir: Path, manifest: DeploymentManifest, public_dir: Pa
             "Refusing to deploy: staged experiment does not gate on IRB consent "
             f"(missing {CONSENT_GATE_MARKER!r} in {staged_index})."
         )
+    if not _has_working_submit(staged_html):
+        raise DeploymentError(
+            "Refusing to deploy: staged experiment has no working /submit path "
+            f"(neither the injected {SUBMIT_BRIDGE_MARKER!r} bridge nor an explicit "
+            f"fetch to /submit in {staged_index}). It would collect no data."
+        )
     staged_index.write_text(staged_html, encoding="utf-8")
     (public_dir / CLIENT_CONFIG_FILENAME).write_text(
         json.dumps(manifest.to_client_config(), indent=2, sort_keys=True) + "\n",
@@ -316,20 +339,28 @@ def ensure_functions_dependencies(repo_root: Path) -> None:
 
 
 @contextlib.contextmanager
-def _deploy_lock() -> Iterator[None]:
+def _deploy_lock(project: str) -> Iterator[None]:
     """Serialize ``firebase deploy`` across parallel runs sharing one site.
 
     Parallel runs use isolated git worktrees, so the only shared resource is the
     remote Firebase Hosting site itself; two ``firebase deploy`` calls racing on
-    the same site can clash. When ``AUTO_PSYCH_DEPLOY_LOCK`` names a lockfile we
-    take a blocking advisory ``flock`` on it for the duration of the deploy, so
-    only the (brief) deploy step serializes while everything else stays
-    concurrent. Unset (or on a platform without ``fcntl``) this is a no-op.
+    the same site can clash. We take a blocking advisory ``flock`` for the
+    duration of the deploy so only the (brief) deploy step serializes while
+    everything else stays concurrent.
+
+    By default the lockfile lives in the system temp dir keyed by ``project``,
+    which serializes same-machine deploys to the same site automatically (no env
+    var needed). For cross-node parallelism (cluster jobs sharing one checkout on
+    a shared filesystem), point ``AUTO_PSYCH_DEPLOY_LOCK`` at a lockfile on that
+    shared filesystem so the lock is visible across nodes. On a platform without
+    ``fcntl`` this is a no-op.
     """
     lock_path = os.environ.get("AUTO_PSYCH_DEPLOY_LOCK")
     if not lock_path:
-        yield
-        return
+        safe = re.sub(r"[^A-Za-z0-9_.-]", "_", project or "default")
+        lock_path = str(
+            Path(tempfile.gettempdir()) / f"auto_psych_firebase_deploy_{safe}.lock"
+        )
     try:
         import fcntl
     except ImportError:
@@ -414,7 +445,7 @@ def run_firebase_deploy(repo_root: Path, manifest: DeploymentManifest, config_pa
     # `--only hosting,functions,firestore` deploy has been observed to return
     # success without actually releasing hosting (the experiment page stays 404);
     # a standalone hosting deploy releases reliably.
-    with _deploy_lock():
+    with _deploy_lock(project):
         _run_one_deploy(_deploy_argv("functions,firestore", project, config_path), repo_root, env)
         _run_one_deploy(_deploy_argv("hosting", project, config_path), repo_root, env)
     # Hard-verify the page is actually live before anything downstream recruits.

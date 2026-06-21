@@ -302,6 +302,12 @@ def model_logp_is_finite(
     unsafe ``pt.sqrt(x**2)``, which NaNs in PyTensor for some inputs — passes
     graph-loading but crashes ``pm.sample`` at its start-value check, aborting
     the whole run. This catches such a model cheaply, before any sampling.
+
+    NUTS also needs a finite *gradient* of the logp, and it evaluates the logp
+    at jittered initial points. We therefore check both the logp and its gradient
+    at the initial point. This is still not a full guarantee (a logp that only
+    NaNs once NUTS jitters off the initial point can slip through), but it catches
+    the common non-finite-gradient failure that a logp-only check misses.
     """
     pm = _import_pymc()
     model = load_pymc_model(name, models_dir)
@@ -317,11 +323,18 @@ def model_logp_is_finite(
         # it, rather than letting the error abort the whole inner loop.
         return False, f"cannot bind responses to model: {type(e).__name__}: {e}"
     try:
-        logp = float(model.compile_logp()(model.initial_point()))
+        point = model.initial_point()
+        logp = float(model.compile_logp()(point))
     except Exception as e:  # a graph that cannot even be evaluated
         return False, f"logp evaluation raised: {type(e).__name__}: {e}"
     if not math.isfinite(logp):
         return False, f"non-finite logp ({logp}) at the initial point"
+    try:
+        grad = np.asarray(model.compile_dlogp()(point), dtype=float)
+    except Exception as e:
+        return False, f"gradient evaluation raised: {type(e).__name__}: {e}"
+    if not np.all(np.isfinite(grad)):
+        return False, "non-finite gradient of logp at the initial point"
     return True, ""
 
 
@@ -440,6 +453,21 @@ def _sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+# Default MCMC sampler settings for ``fit_model``, kept as a single source of
+# truth so the cache key can fold the *resolved* settings in. A fit's posterior
+# depends on draws/tune/chains/cores/seed, so a cache keyed only on (model, data)
+# would silently reuse a posterior sampled under different settings if a cache_dir
+# is shared across callers that request different settings (e.g. a standalone CLI
+# run pointed at the inner loop's cache_dir).
+_FIT_DEFAULTS = {"draws": 2000, "tune": 2000, "chains": 4, "cores": 1, "random_seed": 42}
+
+
+def _sampler_signature(fit_kwargs: Dict[str, Any]) -> str:
+    """Stable string of the resolved sampler settings, for cache keying."""
+    merged = {**_FIT_DEFAULTS, **fit_kwargs}
+    return ";".join(f"{k}={merged[k]}" for k in sorted(_FIT_DEFAULTS))
+
+
 def _sha256_dict_arrays(d: Dict[str, np.ndarray]) -> str:
     h = hashlib.sha256()
     for k in sorted(d.keys()):
@@ -454,17 +482,20 @@ def _sha256_dict_arrays(d: Dict[str, np.ndarray]) -> str:
 def _thin_posterior(idata: Any, max_draws: int) -> Any:
     """Subsample an InferenceData's posterior to at most ``max_draws`` samples.
 
-    Keeps the first ``max_draws // n_chains`` draws of each chain (deterministic),
-    so a downstream posterior-predictive pass over many stimuli builds a far
-    smaller ``(chain, draw, n_stim)`` array. Returns the idata unchanged when it
-    already holds ``<= max_draws`` total samples.
+    Keeps ``max_draws // n_chains`` draws of each chain by an even stride across
+    the whole chain (deterministic), so the thinned posterior spans the full chain
+    rather than only its earliest, least-mixed draws. A downstream
+    posterior-predictive pass over many stimuli then builds a far smaller
+    ``(chain, draw, n_stim)`` array. Returns the idata unchanged when it already
+    holds ``<= max_draws`` total samples.
     """
     n_chains = int(idata.posterior.sizes["chain"])
     n_draws = int(idata.posterior.sizes["draw"])
     if n_chains * n_draws <= max_draws:
         return idata
     per_chain = max(1, max_draws // n_chains)
-    return idata.isel(draw=slice(0, per_chain))
+    idx = np.linspace(0, n_draws - 1, num=per_chain, dtype=int)
+    return idata.isel(draw=idx)
 
 
 @dataclass
@@ -510,9 +541,24 @@ class FittedModel:
         return arr.mean(("chain", "draw")).values
 
     def elpd_loo(self) -> float:
-        """Expected log pointwise predictive density (PSIS-LOO)."""
+        """Expected log pointwise predictive density (PSIS-LOO).
+
+        PSIS-LOO is only trustworthy when the importance-sampling Pareto-k tail
+        index stays low; ArviZ sets ``loo.warning`` when too many points exceed
+        the safe threshold. We do not silently return a number ArviZ flagged as
+        unreliable — surface an attributed warning so a dubious score is visible
+        in the run log (the value is still returned; the human/comparison can act
+        on the warning).
+        """
         az = _import_arviz()
         loo = az.loo(self.idata)
+        if getattr(loo, "warning", False):
+            print(
+                f"  [warn] {self.name}: PSIS-LOO is unreliable (many high Pareto-k "
+                "points); its ELPD-LOO may be inaccurate.",
+                file=sys.stderr,
+                flush=True,
+            )
         return float(loo.elpd_loo)
 
     def sample_synthetic_responses(
@@ -560,8 +606,18 @@ class FittedModel:
 _FIT_CACHE: Dict[tuple, FittedModel] = {}
 
 
-def _cache_key(name: str, models_dir: Path, csv_path: Path) -> tuple:
-    return (name, _sha256_file(models_dir / f"{name}.py"), _sha256_file(csv_path))
+def _cache_key(
+    name: str,
+    models_dir: Path,
+    csv_path: Path,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+) -> tuple:
+    return (
+        name,
+        _sha256_file(models_dir / f"{name}.py"),
+        _sha256_file(csv_path),
+        _sampler_signature(fit_kwargs or {}),
+    )
 
 
 def fit_model(
@@ -570,11 +626,11 @@ def fit_model(
     responses_path: Path,
     *,
     cache_dir: Optional[Path] = None,
-    draws: int = 2000,
-    tune: int = 2000,
-    chains: int = 4,
-    cores: int = 1,
-    random_seed: int = 42,
+    draws: int = _FIT_DEFAULTS["draws"],
+    tune: int = _FIT_DEFAULTS["tune"],
+    chains: int = _FIT_DEFAULTS["chains"],
+    cores: int = _FIT_DEFAULTS["cores"],
+    random_seed: int = _FIT_DEFAULTS["random_seed"],
 ) -> FittedModel:
     """Load the named PyMC model, fit it on `responses_path`, return a FittedModel.
 
@@ -588,10 +644,26 @@ def fit_model(
     responses_path = Path(responses_path)
     model = load_pymc_model(name, models_dir)
 
-    observed = extract_observed(responses_path, model)
+    # Fingerprint from the model source + the responses-file bytes + the resolved
+    # sampler settings — the SAME inputs as the in-process ``_cache_key``. Keeping
+    # the two keyed identically means the on-disk ``.nc`` and the in-process cache
+    # can never disagree about which fit corresponds to a (model, data, sampler)
+    # triple, so the seeded critique always reuses exactly the fit the model
+    # comparison scored, and a fit sampled under different draws/chains is never
+    # silently reused for a request that asked for different settings.
     fp = hashlib.sha256(
         (
-            _sha256_file(models_dir / f"{name}.py") + _sha256_dict_arrays(observed)
+            _sha256_file(models_dir / f"{name}.py")
+            + _sha256_file(responses_path)
+            + _sampler_signature(
+                {
+                    "draws": draws,
+                    "tune": tune,
+                    "chains": chains,
+                    "cores": cores,
+                    "random_seed": random_seed,
+                }
+            )
         ).encode("utf-8")
     ).hexdigest()[:16]
 
@@ -605,6 +677,7 @@ def fit_model(
         idata = az.from_netcdf(str(nc_path))
         return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
 
+    observed = extract_observed(responses_path, model)
     with model:
         pm.set_data(observed)
         idata = pm.sample(
@@ -617,10 +690,47 @@ def fit_model(
             idata_kwargs={"log_likelihood": True},
         )
 
+    _warn_sampling_diagnostics(name, idata)
+
     if nc_path is not None:
         idata.to_netcdf(str(nc_path))
 
     return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
+
+
+def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
+    """Loudly surface NUTS trouble (divergences, poor R-hat) for a fresh fit.
+
+    These are advisory, not fatal — ArviZ still returns usable arrays — but a fit
+    with divergences or R-hat > 1.01 is suspect, and accepting its ELPD at face
+    value is exactly the silent-quality trap the project's fail-loud rule guards
+    against. Print an attributed warning so a degraded fit is visible in the run
+    log. Only called on a real sample (not on a cache hit).
+    """
+    az = _import_arviz()
+    try:
+        n_div = int(idata.sample_stats["diverging"].values.sum())
+    except Exception:
+        n_div = 0
+    if n_div > 0:
+        print(
+            f"  [warn] {name}: {n_div} divergence(s) during sampling; the posterior "
+            "may be biased — treat its ELPD-LOO with caution.",
+            file=sys.stderr,
+            flush=True,
+        )
+    try:
+        rhat = az.rhat(idata)
+        max_rhat = max(float(rhat[v].max()) for v in rhat.data_vars)
+    except Exception:
+        max_rhat = float("nan")
+    if math.isfinite(max_rhat) and max_rhat > 1.01:
+        print(
+            f"  [warn] {name}: max R-hat={max_rhat:.3f} (>1.01); chains may not have "
+            "converged.",
+            file=sys.stderr,
+            flush=True,
+        )
 
 
 def fit_models_cached(
@@ -632,15 +742,16 @@ def fit_models_cached(
     **fit_kwargs: Any,
 ) -> Dict[str, FittedModel]:
     """Fit each model in `model_names`, reusing cached fits keyed by
-    (model_name, sha256(model.py), sha256(responses.csv)). Each call to
-    `pm.sample` is expensive, so identical (model, data) pairs are reused
-    within a process. If `cache_dir` is given, also persists/reads .nc files.
+    (model_name, sha256(model.py), sha256(responses.csv), sampler settings). Each
+    call to `pm.sample` is expensive, so identical (model, data, sampler) triples
+    are reused within a process. If `cache_dir` is given, also persists/reads .nc
+    files (keyed by the same triple).
     """
     models_dir = Path(models_dir)
     responses_path = Path(responses_path)
     out: Dict[str, FittedModel] = {}
     for name in model_names:
-        key = _cache_key(name, models_dir, responses_path)
+        key = _cache_key(name, models_dir, responses_path, fit_kwargs)
         cached = _FIT_CACHE.get(key)
         if cached is not None:
             out[name] = cached

@@ -98,7 +98,9 @@ def _read_secret(key: str) -> str | None:
                 continue
             current_key, _, value = line.partition("=")
             if current_key.strip() == key:
-                return value.strip()
+                # Strip surrounding quotes so KEY="abc" yields abc, not "abc"
+                # (a quoted key otherwise becomes an invalid credential).
+                return value.strip().strip("\"'")
     if secrets_file.is_dir():
         key_file = secrets_file / key
         if key_file.exists():

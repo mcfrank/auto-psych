@@ -85,6 +85,25 @@ def test_unparseable_and_errors_are_counted(tmp_path):
     assert stats["n_rows"] == len(rows) == 0
 
 
+def test_only_committed_answers_parse_loose_mentions_are_unparseable():
+    from src.pipelines.outer_loop.collect import _parse_participant_answer
+
+    # The committed forms parse.
+    assert _parse_participant_answer("ANSWER: left") == "left"
+    assert _parse_participant_answer("answer:  RIGHT") == "right"
+    assert _parse_participant_answer("Left") == "left"
+    # A reply that merely mentions a side without committing must NOT be coerced
+    # into a choice (it would bias the data given fixed presentation side).
+    assert _parse_participant_answer("I'd lean left but it's really close") is None
+    assert (
+        _parse_participant_answer(
+            "the left column looks less random, so I pick the other"
+        )
+        is None
+    )
+    assert _parse_participant_answer("i refuse to answer") is None
+
+
 def test_factory_rejects_unknown_backend():
     with pytest.raises(ValueError, match="unknown participant backend"):
         get_participant_model("banana")

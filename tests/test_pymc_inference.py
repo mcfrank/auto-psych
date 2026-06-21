@@ -104,6 +104,23 @@ def test_cache_key_changes_when_model_or_data_changes(tmp_path):
     assert k1 != k2
 
 
+def test_cache_key_changes_when_sampler_settings_change(tmp_path):
+    """A fit sampled under different MCMC settings must not be reused — the cache
+    key (and the on-disk .nc fingerprint, which uses the same signature) must
+    distinguish draws/tune/chains/cores/seed."""
+    csv = tmp_path / "a.csv"
+    csv.write_text("col,col2\n1,2\n")
+    base = pi._cache_key("bayesian_fair_coin", FIXTURE_DIR, csv, {"draws": 500})
+    more = pi._cache_key("bayesian_fair_coin", FIXTURE_DIR, csv, {"draws": 2000})
+    assert base != more
+    # Default settings and an explicit-but-equal spec must collide (cache hit).
+    default = pi._cache_key("bayesian_fair_coin", FIXTURE_DIR, csv)
+    explicit = pi._cache_key(
+        "bayesian_fair_coin", FIXTURE_DIR, csv, dict(pi._FIT_DEFAULTS)
+    )
+    assert default == explicit
+
+
 def test_thin_posterior_subsamples_to_at_most_max_draws():
     import arviz as az
 

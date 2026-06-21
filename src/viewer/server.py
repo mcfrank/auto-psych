@@ -30,6 +30,18 @@ from src.viewer.scan import scan_index, scan_run, scan_run_experiment
 
 _STATIC_DIR = Path(__file__).parent / "static"
 
+# The /files/ route exists only to serve run-level analysis figures and the
+# deployed experiment page (plus that page's own local assets). Restrict it to
+# those types so it can never hand out agent transcripts (*.jsonl), raw model
+# source (*.py), deployment configs/manifests (*.json/*.yaml), saved fits (*.nc),
+# or anything else that happens to sit in a run directory.
+_SERVABLE_SUFFIXES = frozenset(
+    {".png", ".jpg", ".jpeg", ".gif", ".webp", ".svg", ".html", ".htm", ".css", ".js"}
+)
+
+# Hosts that keep the (unauthenticated) server on the local machine only.
+_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", ""})
+
 
 def create_app(data_root: Path) -> Flask:
     """Build the Flask app bound to a data directory whose tree holds runs."""
@@ -77,10 +89,19 @@ def create_app(data_root: Path) -> Flask:
     @app.get("/api/run/<path:run_path>/files/<path:rel>")
     def api_run_file(run_path: str, rel: str):
         run_dir = _run_dir(run_path)
+        # Check the type BEFORE touching the filesystem so a disallowed request
+        # (e.g. a *.py model or *.jsonl transcript) is rejected without revealing
+        # whether the file exists.
+        if Path(rel).suffix.lower() not in _SERVABLE_SUFFIXES:
+            abort(403, description=f"File type not served: {rel}")
         if not (run_dir / rel).is_file():
             abort(404, description=f"No such file: {run_path}/{rel}")
         # send_from_directory blocks path traversal outside run_dir.
         return send_from_directory(run_dir, rel)
+
+    @app.errorhandler(403)
+    def handle_403(err):
+        return jsonify(error=str(getattr(err, "description", "Forbidden"))), 403
 
     @app.errorhandler(404)
     def handle_404(err):
@@ -109,6 +130,13 @@ def main(
         debug: Enable Flask's auto-reloading debug server.
     """
     app = create_app(data_root=data_root)
+    if host not in _LOOPBACK_HOSTS:
+        print(
+            f"  [WARNING] Binding to {host} exposes this UNAUTHENTICATED viewer — "
+            "including raw run artifacts under the data root — to anyone who can "
+            "reach this host on the network. Use 127.0.0.1 unless you intend that.",
+            flush=True,
+        )
     print(f"Serving run explorer for {data_root} at http://{host}:{port}")
     app.run(host=host, port=port, debug=debug)
 

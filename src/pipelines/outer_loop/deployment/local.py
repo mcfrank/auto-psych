@@ -6,6 +6,7 @@ from dataclasses import replace
 from pathlib import Path
 
 from .firebase import (
+    DeploymentError,
     firebase_project_from_rc,
     load_experiment_config,
     run_firebase_deploy,
@@ -103,12 +104,23 @@ def run_deployment(
             write_metadata(manifest)
         except Exception as exc:
             manifest.metadata["firestore_metadata_write_error"] = str(exc)
+            write_manifest(exp_dir, manifest)
+            # In live mode the study is about to recruit paid participants whose
+            # /submit posts key on the collection-session doc this write creates.
+            # Publishing against missing session metadata would silently drop
+            # their data, so fail loudly rather than warn-and-continue. (Test/none
+            # mode creates no live recruitment, so a warning is acceptable there.)
+            if prolific_mode == "live":
+                raise DeploymentError(
+                    "Firebase deploy succeeded but the Firestore metadata write "
+                    "failed; refusing to publish a live Prolific study against "
+                    f"missing collection-session metadata: {exc}"
+                ) from exc
             print(
                 "  [deploy] Warning: Firebase deploy succeeded, but Firestore metadata "
                 f"write failed: {exc}",
                 flush=True,
             )
-            write_manifest(exp_dir, manifest)
         # Publish ONLY for live mode. Test mode leaves the study as a DRAFT you
         # preview yourself; none mode creates no study to publish.
         if prolific_mode == "live" and manifest.prolific_study_id:

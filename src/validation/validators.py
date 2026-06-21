@@ -2,8 +2,11 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 from typing import Any, Dict
+
+logger = logging.getLogger(__name__)
 
 from src.runtime.config import run_dir_for_state
 from src.runtime.observability import append_validation_failure
@@ -70,7 +73,13 @@ def run_validation(state: Dict[str, Any], agent_key: str) -> Dict[str, Any]:
             details=v.details,
         )
     except Exception:
-        pass
+        # Recording the failure must not mask the validation failure itself, but
+        # don't lose the audit trail silently — log why the record could not be
+        # written (e.g. disk full, bad path).
+        logger.warning(
+            "could not record validation failure for %s in %s", agent_key, rdir,
+            exc_info=True,
+        )
 
     return {
         **state,

@@ -116,17 +116,18 @@ def _write_critique(crit: Path, *, with_results: bool) -> None:
         _write(crit / "ppc_results.json", json.dumps({
             "model": "bayesian_fair_coin", "n_test_statistics": 2,
             "n_replicates": 200, "significance_alpha": 0.05, "n_significant": 1,
+            "n_significant_fdr": 1,
             "results": [
                 {"name": "alternation_rate_gap", "description": "Mean alternation proportion of A.",
                  "t_observed": 0.55, "null_mean": 0.50, "null_std": 0.02, "z_score": 2.5,
-                 "p_value": 0.012, "p_value_one_sided": 0.006, "p_value_adjusted": 0.024,
-                 "p_value_is_floor": False, "significant": True, "error": None,
-                 "code": "def test_statistic(df): ..."},
+                 "p_value": 0.012, "p_value_one_sided": 0.006, "p_value_fdr": 0.024,
+                 "p_value_is_floor": False, "significant": True, "significant_fdr": True,
+                 "error": None, "code": "def test_statistic(df): ..."},
                 {"name": "results_only_stat", "description": "A result with no source file.",
                  "t_observed": 2.1, "null_mean": 2.0, "null_std": 0.3, "z_score": 0.5,
-                 "p_value": 0.6, "p_value_one_sided": 0.3, "p_value_adjusted": 0.6,
-                 "p_value_is_floor": False, "significant": False, "error": None,
-                 "code": "def test_statistic(df): ..."},
+                 "p_value": 0.6, "p_value_one_sided": 0.3, "p_value_fdr": 0.6,
+                 "p_value_is_floor": False, "significant": False, "significant_fdr": False,
+                 "error": None, "code": "def test_statistic(df): ..."},
             ]}))
 
 

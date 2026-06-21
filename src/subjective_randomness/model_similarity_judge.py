@@ -134,8 +134,12 @@ def parse_rating(reply: str) -> int:
             continue
         if isinstance(obj, dict) and "rating" in obj:
             value = obj["rating"]
-            if isinstance(value, (int, float)) and _in_range(int(value)):
-                return int(value)
+            # Round (don't truncate) a float rating: int(4.6) -> 4 biases ratings
+            # downward; round(4.6) -> 5 is the nearest valid integer.
+            if isinstance(value, (int, float)):
+                rounded = int(round(value))
+                if _in_range(rounded):
+                    return rounded
 
     # 2. Explicit "rating: N" or "N/7".
     for pattern in (r"rating[\"']?\s*[:=]\s*([1-7])\b", r"\b([1-7])\s*/\s*7\b"):

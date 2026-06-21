@@ -43,6 +43,10 @@ prolific:
     In this study, you will see a series of coin flip results and be asked to judge which is more random.
   device_compatibility: [desktop]
   completion_code: AUTO_PSYCH_COMPLETE
+  # Data-quality eligibility: every live study recruits only US-resident,
+  # English-fluent participants with an approval rate >= the threshold below.
+  # Residence/language defaults are fixed in code; the approval floor is here.
+  min_approval_rate: 98            # percent (0-100); Prolific approval-rate floor
 
 # --- modeling / inner loop -------------------------------------------------
 modeling:

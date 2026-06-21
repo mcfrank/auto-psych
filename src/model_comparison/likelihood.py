@@ -90,7 +90,8 @@ def main(args: Args) -> None:
         models_dir=args.models_dir,
         cache_dir=args.cache_dir,
     )
-    n_trials = sum(1 for _ in csv.DictReader(args.responses.open(encoding="utf-8")))
+    with args.responses.open(encoding="utf-8", newline="") as f:
+        n_trials = sum(1 for _ in csv.DictReader(f))
 
     print(
         json.dumps(

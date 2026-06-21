@@ -59,7 +59,8 @@ def _get_token() -> Optional[str]:
                 continue
             k, _, v = line.partition("=")
             if k.strip() == "PROLIFIC_API_TOKEN":
-                return v.strip()
+                # Strip surrounding quotes so TOKEN="abc" yields abc, not "abc".
+                return v.strip().strip("\"'")
     if secrets_file.is_dir():
         key_file = secrets_file / "PROLIFIC_API_TOKEN"
         if key_file.exists():
@@ -110,6 +111,19 @@ def create_test_participant(email: str) -> Tuple[Optional[str], Optional[str]]:
             )
         data = r.json()
         return (data.get("participant_id") or data.get("id"), None)
+    except Exception as e:
+        return (None, str(e))
+
+
+def get_filters() -> Tuple[Optional[list], Optional[str]]:
+    """GET /filters/ . Returns (filters_list, error_message). Each entry is a
+    filter spec with 'filter_id' and (for select filters) a 'choices' map."""
+    try:
+        r = requests.get(f"{_BASE}/filters/", headers=_headers(), timeout=30)
+        if r.status_code != 200:
+            return (None, f"GET /filters/ {r.status_code}: {r.text[:500]}")
+        data = r.json()
+        return (data.get("results", data) if isinstance(data, dict) else data, None)
     except Exception as e:
         return (None, str(e))
 
