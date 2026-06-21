@@ -287,8 +287,8 @@ def write_firebase_config(config_path: Path, manifest: DeploymentManifest) -> Pa
             },
         ],
     }
-    if manifest.firebase_project:
-        hosting["site"] = manifest.firebase_project
+    if manifest.hosting_site or manifest.firebase_project:
+        hosting["site"] = manifest.hosting_site or manifest.firebase_project
 
     config = {
         "hosting": hosting,
@@ -391,6 +391,30 @@ def _deploy_argv(targets: str, project: str, config_path: Path) -> list[str]:
     ]
 
 
+def _ensure_hosting_site(site: str, project: str, repo_root: Path, env: dict) -> None:
+    """Create the Firebase Hosting site if it doesn't already exist (idempotent).
+
+    Parallel runs each deploy to their OWN site so concurrent deploys don't
+    clobber each other on a shared live site. Re-running is safe — an
+    already-existing site is treated as success; any other failure is loud.
+    """
+    firebase = shutil.which("firebase")
+    base = [firebase] if firebase else ["npx", "-y", "firebase-tools"]
+    cmd = base + [
+        "hosting:sites:create", site,
+        "--project", project, "--non-interactive",
+    ]
+    result = subprocess.run(cmd, cwd=repo_root, text=True, capture_output=True, env=env)
+    if result.returncode != 0:
+        blob = (result.stdout + result.stderr).lower()
+        if "already exists" in blob or "already_exists" in blob:
+            return
+        raise DeploymentError(
+            f"Could not create Firebase Hosting site {site!r}:\n"
+            f"STDOUT:\n{result.stdout[-2000:]}\nSTDERR:\n{result.stderr[-2000:]}"
+        )
+
+
 def _run_one_deploy(cmd: list[str], repo_root: Path, env: dict) -> None:
     result = subprocess.run(cmd, cwd=repo_root, text=True, capture_output=True, env=env)
     if result.returncode != 0:
@@ -447,6 +471,11 @@ def run_firebase_deploy(repo_root: Path, manifest: DeploymentManifest, config_pa
     # a standalone hosting deploy releases reliably.
     with _deploy_lock(project):
         _run_one_deploy(_deploy_argv("functions,firestore", project, config_path), repo_root, env)
+        # When deploying to a non-default (per-run) site, make sure it exists
+        # first so the hosting deploy targets an isolated site instead of the
+        # shared one (which parallel deploys would otherwise overwrite).
+        if manifest.hosting_site and manifest.hosting_site != project:
+            _ensure_hosting_site(manifest.hosting_site, project, repo_root, env)
         _run_one_deploy(_deploy_argv("hosting", project, config_path), repo_root, env)
     # Hard-verify the page is actually live before anything downstream recruits.
     if manifest.experiment_url:
