@@ -75,17 +75,25 @@ or reorder anything else.
   });
 
   // 2. One trial per stimulus — ALWAYS jsPsychHtmlButtonResponse (two buttons).
+  //    COUNTERBALANCE the side: randomly show one of the pair on the left each
+  //    trial, and RECORD the presented order (sequence_a = the sequence shown on
+  //    the LEFT). This decouples content from physical side so a side bias is
+  //    identifiable. Math.random() runs once per stimulus when each participant's
+  //    browser builds the timeline, so the side varies across participants/trials.
   STIMULI.forEach(function (s) {
+    var swap = Math.random() < 0.5;
+    var left = swap ? s.sequence_b : s.sequence_a;
+    var right = swap ? s.sequence_a : s.sequence_b;
     timeline.push({
       type: jsPsychHtmlButtonResponse,
       stimulus:
         '<p>CHOICE_PROMPT_FROM_PROBLEM_DEFINITION</p>' +
         '<div class="auto-psych-pair">' +
-          '<div class="auto-psych-seq">' + s.sequence_a + '</div>' +
-          '<div class="auto-psych-seq">' + s.sequence_b + '</div>' +
+          '<div class="auto-psych-seq">' + left + '</div>' +
+          '<div class="auto-psych-seq">' + right + '</div>' +
         '</div>',
-      choices: ['LEFT_CHOICE_LABEL', 'RIGHT_CHOICE_LABEL'],   // left = first/sequence_a
-      data: { sequence_a: s.sequence_a, sequence_b: s.sequence_b },
+      choices: ['LEFT_CHOICE_LABEL', 'RIGHT_CHOICE_LABEL'],   // first button = left
+      data: { sequence_a: left, sequence_b: right },          // PRESENTED order
       on_finish: function (data) { data.chose_left = data.response === 0 ? 1 : 0; }
     });
   });
@@ -106,11 +114,17 @@ or reorder anything else.
 ## Hard rules (the validator enforces these — a run FAILS if any is violated)
 
 - **Response modality is buttons.** The choice trial MUST use
-  `jsPsychHtmlButtonResponse` with exactly two choices (left = first sequence,
-  right = second). **Never** use keyboard responses for the choice.
-- **Data contract, every trial:** set `data.sequence_a`, `data.sequence_b`, and
-  `data.chose_left` (`1` if the LEFT/first sequence was chosen — i.e.
-  `response === 0` — else `0`). Collection parses exactly these fields.
+  `jsPsychHtmlButtonResponse` with exactly two choices (the first button is the
+  LEFT option, the second is the RIGHT option). **Never** use keyboard responses
+  for the choice.
+- **Counterbalance the side, every trial.** Randomly choose which of the pair's
+  two sequences is shown on the LEFT (e.g. `Math.random() < 0.5`). Do NOT always
+  put `sequence_a` on the left — that confounds a side bias with content.
+- **Data contract, every trial:** set `data.sequence_a` to the sequence shown on
+  the **LEFT**, `data.sequence_b` to the one on the right (i.e. the PRESENTED
+  order, after counterbalancing — not a fixed labeling), and `data.chose_left`
+  (`1` if the LEFT sequence was chosen — i.e. `response === 0` — else `0`).
+  Collection parses exactly these fields.
 - **Embed every design stimulus verbatim.** Do not sample, reorder into new
   stimuli, or alter the sequences.
 - **No consent screen** — the deployment injects the IRB consent gate as the
@@ -139,7 +153,8 @@ or reorder anything else.
 ## Self-validation checklist
 
 - [ ] `experiment/index.html` uses `jsPsychHtmlButtonResponse` for the choice (no keyboard)
-- [ ] Every trial sets `chose_left`, `sequence_a`, `sequence_b`
+- [ ] Each trial randomizes which sequence is shown on the left (side counterbalancing)
+- [ ] Every trial sets `chose_left`, `sequence_a` (= left), `sequence_b` (= right)
 - [ ] All `design/stimuli.json` stimuli are embedded verbatim
 - [ ] Instructions / choice labels / debrief match the problem definition's wording exactly
 - [ ] All `**bold**` rendered as `<strong>`; **no literal `**`/`*` anywhere in the page**

@@ -63,6 +63,9 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
     monkeypatch.setattr(
         pymc_orchestrator, "model_logp_is_finite", lambda *a, **k: (True, "")
     )
+    # Candidate admission now ends with a real MCMC fit-gate; stub it so the fake
+    # stub candidates (not real PyMC models) are admitted without sampling.
+    monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
 
 
 def _patch_candidates(monkeypatch):

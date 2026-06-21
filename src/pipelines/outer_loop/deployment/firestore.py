@@ -73,11 +73,41 @@ def write_metadata(manifest: DeploymentManifest, client: Any | None = None) -> d
 
     docs = metadata_documents(manifest)
     try:
+        # Write the study/deployment/session docs atomically. A plain loop could
+        # die after the study doc but before the session doc, leaving a deployment
+        # that references a session record which was never written (and the caller
+        # then publishes the Prolific study anyway). A WriteBatch is all-or-nothing.
+        batch = client.batch()
         for path, payload in docs.items():
-            client.document(path).set(payload, merge=True)
+            batch.set(client.document(path), payload, merge=True)
+        batch.commit()
     except Exception as exc:
         raise RuntimeError(f"Failed to write Firestore deployment metadata. {ADC_HELP}") from exc
     return firestore_paths(manifest)
+
+
+def _chose_left(value: Any) -> bool:
+    """Interpret a stored ``chose_left`` (number, bool, or string) as left/right.
+
+    A naive ``bool(value)`` is wrong for strings — ``bool("0")`` and
+    ``bool("false")`` are both ``True`` — which would flip a right-choice to left
+    when shaping live data. Coerce explicitly.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    if isinstance(value, str):
+        v = value.strip().lower()
+        if v in ("1", "true", "yes", "left"):
+            return True
+        if v in ("0", "false", "no", "right", ""):
+            return False
+        try:
+            return float(v) != 0.0
+        except ValueError:
+            return False
+    return bool(value)
 
 
 def validate_submit_payload(payload: dict[str, Any]) -> tuple[bool, str]:
@@ -102,6 +132,7 @@ def responses_to_csv(response_docs: list[tuple[str, dict[str, Any]]]) -> str:
             chose_left = trial.get("chose_left")
             if chose_left is None:
                 continue
+            left = _chose_left(chose_left)
             rows.append(
                 {
                     "participant_id": participant_index,
@@ -109,8 +140,8 @@ def responses_to_csv(response_docs: list[tuple[str, dict[str, Any]]]) -> str:
                     "trial_index": trial_index,
                     "sequence_a": str(trial["sequence_a"]),
                     "sequence_b": str(trial["sequence_b"]),
-                    "chose_left": 1 if bool(chose_left) else 0,
-                    "chose_right": 0 if bool(chose_left) else 1,
+                    "chose_left": 1 if left else 0,
+                    "chose_right": 0 if left else 1,
                     "model": "",
                 }
             )

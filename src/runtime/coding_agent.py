@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import os
+import signal
 import subprocess
 import threading
 from pathlib import Path
@@ -70,6 +71,9 @@ def build_command(
         return cmd
     if backend == "opencode":
         return ["opencode", "run", "-m", model, prompt]
+    # Reachable only if _DEFAULT_MODEL gains a backend without a branch here.
+    # Fail loudly rather than returning None into subprocess.Popen.
+    raise ValueError(f"no command builder for coding-agent backend: {backend!r}")
 
 
 def _summarise_claude_event(event: dict) -> Optional[str]:
@@ -141,12 +145,21 @@ def run_coding_agent(
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
+            # Put the agent in its own process group so a timeout can kill the
+            # whole tree. The coding-agent CLIs (claude/opencode/npx) spawn their
+            # own children; proc.kill() would SIGKILL only the direct child, leak
+            # the grandchildren, and — because a leaked grandchild can hold the
+            # stdout pipe open — let the read loop / proc.wait() below hang forever.
+            start_new_session=True,
         )
         timed_out = threading.Event()
 
         def _kill_after():
             timed_out.set()
-            proc.kill()
+            try:
+                os.killpg(os.getpgid(proc.pid), signal.SIGKILL)
+            except (ProcessLookupError, PermissionError):
+                proc.kill()
 
         timer = threading.Timer(timeout_secs, _kill_after)
         timer.start()

@@ -42,14 +42,22 @@ def test_render_template_experiment_fills_every_placeholder(tmp_path):
 
     # Every {{PLACEHOLDER}} must be substituted — a leftover would ship broken JS.
     assert "{{" not in index and "}}" not in index
-    # Keyboard trial choices f / j are injected as a JSON array.
-    assert '"f"' in index and '"j"' in index
-    # Stimuli are embedded with the per-trial display the keyboard trial reads.
-    assert "stimulus_display" in index
+    # Button trial choices (Sequence A / Sequence B) are injected as a JSON array.
+    assert "Sequence A (left)" in index and "Sequence B (right)" in index
+    # Each stimulus ships both side orderings so the template can counterbalance
+    # which sequence is shown on the left per trial.
+    assert "display_a_left" in index and "display_b_left" in index
     assert '"sequence_a"' in index and '"sequence_b"' in index
     # The real template's jsPsych bootstrap survives substitution.
     assert "initJsPsych" in index
-    assert "jsPsychHtmlKeyboardResponse" in index
+    # Button responses ONLY — the modality the implement validator enforces; no
+    # keyboard-response plugin should remain (the pipeline rejects keyboard).
+    assert "jsPsychHtmlButtonResponse" in index
+    assert "jsPsychHtmlKeyboardResponse" not in index
+    # chose_left must come from the first button (index 0 = left / Sequence A).
+    assert "data.response === 0" in index
+    # Side counterbalancing: the trial records the presented order and flips sides.
+    assert "presentedOrder" in index
 
 
 def test_render_template_experiment_writes_design_and_config(tmp_path):

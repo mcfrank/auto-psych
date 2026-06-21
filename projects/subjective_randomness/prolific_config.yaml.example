@@ -9,3 +9,9 @@ total_available_places: 1
 reward: 50   # cents
 name: "Auto-psych test"
 description: "Test run (test participant)."
+
+# Data-quality eligibility (live studies only): participants are restricted to
+# US residents fluent in English with an approval rate >= min_approval_rate.
+# Residence and language defaults are fixed in code; only the approval floor is
+# configurable here.
+min_approval_rate: 98   # percent (0-100)

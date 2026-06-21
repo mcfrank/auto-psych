@@ -74,7 +74,7 @@ class Args:
     cache_dir: Optional[Path] = None
     """Optional directory to persist .nc fits across runs."""
     coding_agent: Optional[Literal["claude", "opencode"]] = None
-    """Coding-agent backend for candidate generation. Defaults to CODING_AGENT env, then 'claude'."""
+    """Coding-agent backend for candidate generation. Defaults to CODING_AGENT env, then 'opencode'."""
     agent_timeout_sec: int = 900
     """Per-candidate coding-agent timeout in seconds."""
 

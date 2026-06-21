@@ -565,8 +565,13 @@ def compare_parameter_recovery(
             bounds, random.Random(seed + _COMPARISON_TRUTH_SEED_OFFSET + repeat)
         )
         true_p = np.array([module.predict_left(s, truth) for s in candidates])
-        for arm, indices in sets.items():
-            rng = np.random.default_rng(seed + repeat)
+        for arm_index, (arm, indices) in enumerate(sets.items()):
+            # Decorrelate the response noise across arms. The arms use different
+            # stimulus sets of equal length, so a shared RNG stream (seed + repeat)
+            # would hand the k-th stimulus in each arm the SAME uniform variate —
+            # coupling the very comparison the arms are meant to isolate. Fold the
+            # arm index into the seed for independent (but reproducible) streams.
+            rng = np.random.default_rng([seed, repeat, arm_index])
             counts = rng.binomial(n_participants, true_p[indices])
             weights = _batch_posterior_weights(
                 pred[:, indices], counts, n_participants
@@ -678,8 +683,12 @@ def compare_model_recovery(
             true_p = np.array(
                 [modules[gen_model].predict_left(s, truth) for s in candidates]
             )
-            for arm, indices in sets.items():
-                rng = np.random.default_rng(seed + repeat)
+            for arm_index, (arm, indices) in enumerate(sets.items()):
+                # Independent response noise per (arm, generating model, repeat):
+                # default_rng(seed + repeat) was shared across every arm AND every
+                # generating model in a repeat, correlating the confusion-matrix
+                # cells. Fold all three indices into the seed.
+                rng = np.random.default_rng([seed, repeat, gen_index, arm_index])
                 counts = rng.binomial(n_participants, true_p[indices])
                 log_evidence = np.array(
                     [

@@ -58,6 +58,23 @@ open-models = [
 # (heavy torch/transformers; no test needs it): `uv sync --group open-models`.
 default-groups = ["dev", "pymc"]
 
+# Sherlock (and other RHEL7) compute nodes run glibc 2.17 (manylinux2014). The
+# newest numpy/scipy/pandas dropped their glibc-2.17 wheels — they now require
+# glibc >= 2.27/2.28 — so without these caps `uv` finds no compatible wheel on the
+# cluster and falls back to building them from source (slow; needs gfortran/BLAS).
+# Cap them to the last releases that still ship manylinux2014 (glibc 2.17) wheels.
+# Remove these caps if you only run on glibc >= 2.28 hosts. After editing, re-lock:
+#   uv lock && uv run pytest -q
+constraint-dependencies = ["numpy<2.3", "scipy<1.15", "pandas<2.3"]
+
+# NOTE on the Python version (see .python-version, pinned to 3.11): the code is
+# written for the arviz 0.x / pymc 5.x API (e.g. `loo.elpd_loo`,
+# `az.compare(ic="loo")`, positive `elpd_diff`). On Python >= 3.12 this lock
+# resolves arviz 1.x / pymc 6.x, whose DataTree rewrite renames/changes those
+# (e.g. `loo.elpd`, no `ic=` kwarg, sign-flipped `elpd_diff`) and breaks the
+# model-comparison code and tests. Staying on 3.11 keeps the validated 0.x stack.
+# Porting to arviz 1.x (then any Python >= 3.12 works) is a separate task.
+
 [tool.pytest.ini_options]
 testpaths = ["tests", "src/pipelines/inner_loop/tests"]
 pythonpath = ["."]

@@ -52,11 +52,37 @@ def _trial_is_valid(trial: dict[str, Any]) -> bool:
     )
 
 
+def _chose_left(value: Any) -> bool:
+    """Interpret a stored ``chose_left`` (number, bool, or string) as left/right.
+
+    Firestore may carry ``chose_left`` as 1/0, true/false, or the *strings*
+    "1"/"0"/"true"/"false". A naive ``bool(value)`` is wrong for strings —
+    ``bool("0")`` and ``bool("false")`` are both ``True`` — so a right-choice
+    stored as a string would be silently counted as left, defeating the
+    degenerate-data detection this module exists for. Coerce explicitly.
+    """
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, (int, float)):
+        return value != 0
+    if isinstance(value, str):
+        v = value.strip().lower()
+        if v in ("1", "true", "yes", "left"):
+            return True
+        if v in ("0", "false", "no", "right", ""):
+            return False
+        try:
+            return float(v) != 0.0
+        except ValueError:
+            return False
+    return False
+
+
 def participant_stat(doc_id: str, data: dict[str, Any]) -> ParticipantStat:
     """Summarize one participant's response document."""
     trials = data.get("trials") or []
     valid = [t for t in trials if _trial_is_valid(t)]
-    n_left = sum(1 for t in valid if bool(t["chose_left"]))
+    n_left = sum(1 for t in valid if _chose_left(t["chose_left"]))
     n_valid = len(valid)
     n_right = n_valid - n_left
     p_left = (n_left / n_valid) if n_valid else None

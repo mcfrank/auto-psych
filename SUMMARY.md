@@ -48,8 +48,9 @@ in `orchestrator.py`, e.g. `_validate_theory` builds each model graph, `_validat
 enforces a jsPsych button-response data contract and that every design stimulus
 appears verbatim in the HTML).
 
-After `5_model_loop`, `update_registry_from_interpretation` updates the
-experiment's `model_registry.yaml`.
+After `5_model_loop`, `update_registry_from_interpretation` records the inner
+loop's actual posterior over models into the experiment's `model_registry.yaml`
+(used to weight the posterior-aware EIG design of a later experiment).
 
 ### Collection modes (`--mode`)
 
@@ -101,9 +102,10 @@ Flow:
      `test_stats/`, then run the **posterior-predictive check** harness
      (`src/critique/ppc.py`) in-process. Each statistic is evaluated on the
      observed data vs. `CRITIQUE_PPC_REPLICATES` posterior-predictive replicate
-     datasets, producing a two-sided empirical p-value; statistics with raw
-     p ≤ `alpha` (no multiple-comparisons correction — deliberately "exploratory
-     screening") are flagged in `critiques.md`.
+     datasets, producing a two-sided empirical p-value plus a Benjamini-Hochberg
+     FDR-adjusted q across the round's statistics; statistics significant at raw
+     `alpha` are flagged in `critiques.md` (FDR-surviving ones called out, since
+     this is exploratory screening of several statistics at once).
    - **Generate** `candidate_count` new models: spawn coding agents
      (`_spawn_candidate_agent`), each told to propose **one** distinct/refined
      single-mechanism hypothesis (never a blend), prioritizing the critique's
@@ -209,9 +211,4 @@ Secrets are read from environment or a git-ignored `.secrets` file.
 Tests live under `tests/` and `src/pipelines/inner_loop/tests/`, run with
 `uv run --group dev pytest tests src/pipelines/inner_loop/tests -q`.
 
-> **Note:** the README's "Project Layout" section is out of date — it lists an
-> `inner_loop/` with `core.py`/`likelihood.py`/`fitting.py`/`bmc.py`/`zoo.py`
-> (the real files are `pymc_orchestrator.py` + `run.py`) and a top-level
-> `legacy/` tree that no longer exists. See `PROBLEMS.md`.
-</content>
-</invoke>
+> See `PROBLEMS.md` for the code review and the list of fixes applied during it.

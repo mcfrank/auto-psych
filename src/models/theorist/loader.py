@@ -35,14 +35,23 @@ def get_model_callable(
     fn = getattr(mod, model_name, None)
     if callable(fn):
         return fn
-    for name in dir(mod):
-        if name.startswith("_"):
-            continue
-        obj = getattr(mod, name)
-        if callable(obj):
-            return obj
+    # No function named after the model. Fall back ONLY when the module defines
+    # exactly one public callable of its own — refusing to guess among several
+    # (which could silently bind prediction/validation to the wrong symbol) or to
+    # return an imported helper (filter by __module__). Otherwise fail loudly.
+    own_callables = [
+        getattr(mod, name)
+        for name in dir(mod)
+        if not name.startswith("_")
+        and callable(getattr(mod, name))
+        and getattr(getattr(mod, name), "__module__", None) == mod.__name__
+    ]
+    if len(own_callables) == 1:
+        return own_callables[0]
     raise ValueError(
-        f"No callable found in {py_path} (expected function '{model_name}')"
+        f"{py_path} defines no function named '{model_name}' and "
+        f"{'several' if own_callables else 'no'} public module-level callables were "
+        f"found; name the model's entry-point function '{model_name}'."
     )
 
 

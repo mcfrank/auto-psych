@@ -24,7 +24,11 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
 from src.runtime.prolific import get_me, load_prolific_config  # noqa: E402
-from src.pipelines.outer_loop.deployment.prolific import compute_reward_cents  # noqa: E402
+from src.pipelines.outer_loop.deployment.prolific import (  # noqa: E402
+    DEFAULT_MIN_APPROVAL_RATE,
+    build_eligibility_filters,
+    compute_reward_cents,
+)
 
 PROLIFIC_SERVICE_FEE = 0.33  # ~33%; verify the current rate in your Prolific account
 VALID_DESIGN_MODES = {"exhaustive", "agent"}
@@ -112,6 +116,13 @@ def main() -> None:
     }
     reward = compute_reward_cents(eff)  # cents/participant
     minutes = float(eff.get("estimated_completion_time") or 5)
+    # Validate the eligibility config now so a bad min_approval_rate fails here,
+    # before the Slurm job runs and before any study is created.
+    try:
+        build_eligibility_filters(eff)
+    except ValueError as e:
+        die(str(e))
+    min_approval = int(eff.get("min_approval_rate", DEFAULT_MIN_APPROVAL_RATE))
     per_study = reward * participants
     per_fee = round(per_study * PROLIFIC_SERVICE_FEE)
     per_total = per_study + per_fee
@@ -132,6 +143,7 @@ def main() -> None:
     print(f"  study name        : {eff.get('name')}", file=w)
     print(f"  task length       : {minutes:g} min", file=w)
     print(f"  reward            : ${reward/100:,.2f}/participant  (~${reward/minutes*60/100:,.2f}/hr)", file=w)
+    print(f"  eligibility       : US residents, English-fluent, approval >= {min_approval}%", file=w)
     print(f"  experiments       : {experiments}  (design={design_mode}; coding agent={coding_agent})", file=w)
     if prolific_mode == "test":
         print("  prolific mode     : TEST — creates a DRAFT study (NOT published); preview it in "

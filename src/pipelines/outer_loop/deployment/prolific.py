@@ -23,6 +23,79 @@ def completion_redirect_url(code: str) -> str:
     return "https://app.prolific.com/submissions/complete?cc=" + urllib.parse.quote(code)
 
 
+# Data-quality eligibility defaults applied to every real-recruitment study so
+# we collect from US-based, English-fluent participants with a strong approval
+# history. The choice IDs are Prolific's stable identifiers from
+# GET /api/v1/filters/ (NOT display order):
+#   current-country-of-residence "1"  -> United States
+#   fluent-languages             "19" -> English
+DEFAULT_MIN_APPROVAL_RATE = 98
+UNITED_STATES_RESIDENCE_CHOICE_ID = "1"
+ENGLISH_FLUENT_LANGUAGE_CHOICE_ID = "19"
+
+
+def verify_eligibility_choice_ids(filters: list[dict[str, Any]]) -> None:
+    """Assert Prolific's choice IDs still mean what we hardcode in
+    ``build_eligibility_filters``.
+
+    The IDs are stable in practice, but a silent remap would make us recruit the
+    wrong pool, so before a live run we check them against Prolific's current
+    ``GET /filters/`` payload (passed in as ``filters``). Raises ``ValueError``
+    on any drift or missing filter — recruiting against unverified IDs is exactly
+    the silent fallback we want to avoid.
+    """
+    expected = {
+        "current-country-of-residence": (UNITED_STATES_RESIDENCE_CHOICE_ID, "United States"),
+        "fluent-languages": (ENGLISH_FLUENT_LANGUAGE_CHOICE_ID, "English"),
+    }
+    by_id = {f.get("filter_id"): f for f in filters}
+    for filter_id, (choice_id, expected_label) in expected.items():
+        spec = by_id.get(filter_id)
+        if spec is None:
+            raise ValueError(
+                f"Prolific filter {filter_id!r} is missing from GET /filters/; "
+                "cannot confirm eligibility choice IDs before recruiting."
+            )
+        actual_label = (spec.get("choices") or {}).get(choice_id)
+        if actual_label != expected_label:
+            raise ValueError(
+                f"Prolific choice ID drift: {filter_id!r} choice {choice_id!r} is "
+                f"{actual_label!r}, expected {expected_label!r}. The hardcoded "
+                "eligibility IDs are stale — re-check GET /filters/ before recruiting."
+            )
+
+
+def build_eligibility_filters(cfg: dict[str, Any]) -> list[dict[str, Any]]:
+    """Prolific eligibility filters enforcing our data-quality baseline:
+    US residence, English fluency, and a minimum approval rate.
+
+    The approval-rate floor is overridable via the ``min_approval_rate`` config
+    key (a percentage, default ``DEFAULT_MIN_APPROVAL_RATE``); residence and
+    language use the documented defaults. An out-of-range approval rate raises
+    rather than silently creating a study that recruits the wrong pool.
+    """
+    min_approval_rate = int(cfg.get("min_approval_rate", DEFAULT_MIN_APPROVAL_RATE))
+    if not 0 <= min_approval_rate <= 100:
+        raise ValueError(
+            f"min_approval_rate must be a percentage between 0 and 100, got "
+            f"{min_approval_rate}."
+        )
+    return [
+        {
+            "filter_id": "current-country-of-residence",
+            "selected_values": [UNITED_STATES_RESIDENCE_CHOICE_ID],
+        },
+        {
+            "filter_id": "fluent-languages",
+            "selected_values": [ENGLISH_FLUENT_LANGUAGE_CHOICE_ID],
+        },
+        {
+            "filter_id": "approval_rate",
+            "selected_range": {"lower": min_approval_rate, "upper": 100},
+        },
+    ]
+
+
 def compute_reward_cents(cfg: dict[str, Any]) -> int:
     """Reward (cents) for a study, derived from the configured hourly wage.
 
@@ -30,11 +103,32 @@ def compute_reward_cents(cfg: dict[str, Any]) -> int:
     and ``estimated_completion_time`` (minutes) so the effective wage stays fixed
     even if the study length changes — e.g. 1200 cents/hr over 5 minutes is 100
     cents. Falls back to an explicit ``reward`` (cents), then to 50.
+
+    Refuses to return a non-positive reward: a misconfigured wage (zero/negative
+    ``reward_per_hour`` or ``estimated_completion_time``, or a per-hour rate so low
+    it rounds to 0 cents) would otherwise create a study that pays real
+    participants nothing. Raising here surfaces the problem at dry-run time, before
+    any study is created.
     """
     if cfg.get("reward_per_hour") is not None:
+        reward_per_hour = float(cfg["reward_per_hour"])
         minutes = float(cfg.get("estimated_completion_time") or 5)
-        return round(float(cfg["reward_per_hour"]) * minutes / 60.0)
-    return int(cfg.get("reward") or 50)
+        if reward_per_hour <= 0 or minutes <= 0:
+            raise ValueError(
+                f"Prolific reward config is non-positive (reward_per_hour="
+                f"{reward_per_hour} cents/hr, estimated_completion_time={minutes} "
+                "min); refusing to create a study that underpays participants."
+            )
+        reward = round(reward_per_hour * minutes / 60.0)
+    else:
+        reward = int(cfg.get("reward") or 50)
+    if reward <= 0:
+        raise ValueError(
+            f"Computed Prolific reward is {reward} cents; refusing to create a study "
+            "that pays participants nothing. Fix reward_per_hour / reward / "
+            "estimated_completion_time in the Prolific config."
+        )
+    return reward
 
 
 def external_study_url(base_url: str) -> str:
@@ -78,6 +172,10 @@ def build_prolific_plan(
         "device_compatibility": cfg.get("device_compatibility") or ["desktop"],
     }
     if mode == "test" and test_participant_id:
+        # Test preview: pin recruitment to the single known test participant.
+        # The data-quality eligibility filters are intentionally skipped here —
+        # the allowlist already restricts to one account, which need not carry
+        # the demographics the live filters require.
         payload["filters"] = [
             {
                 "filter_id": "custom_allowlist",
@@ -85,6 +183,8 @@ def build_prolific_plan(
             }
         ]
         payload["total_available_places"] = 1
+    else:
+        payload["filters"] = build_eligibility_filters(cfg)
     return ProlificStudyPlan(
         payload=payload,
         completion_code=completion_code,
@@ -98,7 +198,7 @@ def create_draft_study(project_id: str, manifest: DeploymentManifest, n_particip
     publishes only for live mode. Test mode creates the same draft (no test
     participant) so you can preview it in Prolific with a made-up PROLIFIC_PID.
     """
-    from src.runtime.prolific import create_study
+    from src.runtime.prolific import create_study, get_filters
 
     plan = build_prolific_plan(
         project_id=project_id,
@@ -106,6 +206,16 @@ def create_draft_study(project_id: str, manifest: DeploymentManifest, n_particip
         n_participants=n_participants,
         mode=mode,
     )
+    # Live studies recruit paid participants gated by hardcoded choice IDs, so
+    # confirm those IDs still mean what we think before any study is created.
+    if mode == "live":
+        filters, err = get_filters()
+        if err:
+            raise RuntimeError(
+                f"Could not fetch Prolific filters to verify eligibility choice IDs "
+                f"before recruiting: {err}"
+            )
+        verify_eligibility_choice_ids(filters)
     study_id, err = create_study(plan.payload)
     if err:
         raise RuntimeError(f"Failed to create Prolific study: {err}")

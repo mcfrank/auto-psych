@@ -13,8 +13,9 @@ import sys
 import time
 import urllib.parse
 import urllib.request
+import uuid
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
@@ -27,6 +28,20 @@ from src.models.project.ground_truth import get_ground_truth_models
 from src.models.theorist.loader import get_model_names_from_manifest
 from src.models.theorist.predictions import get_model_predictions
 from src.runtime.observability import agent_log
+
+
+def _unique_batch_id() -> str:
+    """Collision-resistant batch id used to build participant IDs.
+
+    ``datetime.utcnow()`` has 1-second resolution, so two collection passes for
+    the same project/run within the same second produced *identical* participant
+    IDs — and the Firebase results filter keys on ``participant_id_str``, so the
+    collision cross-attributes responses between runs. Add microseconds plus a
+    short random token, and use a timezone-aware UTC clock (``utcnow()`` is
+    deprecated and returns a naive timestamp).
+    """
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
+    return f"{stamp}_{uuid.uuid4().hex[:6]}"
 
 RESPONSE_OPTIONS = ["left", "right"]
 MAX_PARALLEL_PARTICIPANTS = 3
@@ -63,7 +78,19 @@ def _poll_prolific_until_target(
         if err:
             agent_log(out_dir, f"Prolific poll: study_id={study_id!r} error={err!r}")
         else:
-            completed = int(counts.get("COMPLETED") or counts.get("completed") or 0)
+            # Prolific's submissions/counts/ has no "COMPLETED" status: a finished
+            # participant lands in AWAITING REVIEW, then APPROVED (or PARTIALLY
+            # APPROVED). Count those as completed. ACTIVE/RESERVED are still in
+            # progress; RETURNED/TIMED-OUT/SCREENED OUT/REJECTED never yield data.
+            completed = sum(
+                int(counts.get(k) or 0)
+                for k in ("AWAITING REVIEW", "APPROVED", "PARTIALLY APPROVED")
+            )
+            # Back-compat: honor an explicit COMPLETED count if the API ever adds one.
+            completed = max(
+                completed,
+                int(counts.get("COMPLETED") or counts.get("completed") or 0),
+            )
             agent_log(
                 out_dir,
                 f"Prolific poll: study_id={study_id!r} completed={completed} target={target_places}",
@@ -654,7 +681,7 @@ def _collect_from_firebase(
         return []
 
     experiment_url = config.get("experiment_url")
-    batch_id = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    batch_id = _unique_batch_id()
     participant_ids = [
         f"{project_id}_run{run_id}_{batch_id}_p{i}" for i in range(n_participants)
     ]
@@ -887,7 +914,7 @@ def _collect_from_browser(
 
     project_id = config.get("project_id", "")
     run_id = config.get("run_id", 0)
-    batch_id = datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+    batch_id = _unique_batch_id()
     participant_ids = [
         f"{project_id}_run{run_id}_{batch_id}_p{i}" for i in range(n_participants)
     ]
@@ -1016,6 +1043,18 @@ def _collect_from_browser(
 
 
 def _parse_participant_answer(text: str) -> str | None:
+    """Parse a participant reply into ``"left"``/``"right"``, or ``None`` if it did
+    not clearly commit to one.
+
+    Only the explicit ``ANSWER: left|right`` form (the format the participant is
+    instructed to use) or a reply that is exactly ``left``/``right`` counts. A
+    loose "does the word 'left' appear anywhere?" scan is deliberately NOT used:
+    chain-of-thought that merely mentions a side ("the left column looks…",
+    "I'd lean left but it's close") would be miscoded as a committed choice, and
+    because presentation side is fixed that miscoding would bias the data toward
+    one side. An ambiguous reply is better counted as unparseable (and dropped)
+    than silently mis-sided.
+    """
     if not text or not isinstance(text, str):
         return None
     match = re.search(r"ANSWER\s*:\s*(left|right)\b", text, re.IGNORECASE)
@@ -1024,12 +1063,6 @@ def _parse_participant_answer(text: str) -> str | None:
     normalized = text.strip().lower()
     if normalized in ("left", "right"):
         return normalized
-    has_left = bool(re.search(r"\bleft\b", normalized))
-    has_right = bool(re.search(r"\bright\b", normalized))
-    if has_left and not has_right:
-        return "left"
-    if has_right and not has_left:
-        return "right"
     return None
 
 
@@ -1042,6 +1075,7 @@ def generate_llm_participant_rows(
     transcripts_dir: Path | None = None,
     max_workers: int = 8,
     progress: Callable[[int, int], None] | None = None,
+    seed: int = 0,
 ) -> tuple[list[dict[str, Any]], dict[str, int]]:
     """Run an LLM-as-participant over ``stimuli`` and return ``(rows, stats)``.
 
@@ -1067,6 +1101,9 @@ def generate_llm_participant_rows(
         rows_p: list[dict[str, Any]] = []
         unparseable = 0
         errors = 0
+        # Per-participant seeded RNG so the side counterbalancing is reproducible
+        # regardless of the (concurrent) finish order of participants.
+        prng = random.Random(seed + participant_id * 1_000_003)
         transcript = None
         if transcripts_dir is not None:
             transcripts_dir.mkdir(parents=True, exist_ok=True)
@@ -1078,12 +1115,18 @@ def generate_llm_participant_rows(
             )
         try:
             for trial_index, stimulus in enumerate(stimuli):
-                seq_a = stimulus.get("sequence_a", "")
-                seq_b = stimulus.get("sequence_b", "")
+                # Randomize which sequence is shown on the left per trial; the
+                # presented order is what we show AND what we record (a = left).
+                swap = prng.random() < 0.5
+                left, right = _present_sides(
+                    str(stimulus.get("sequence_a", "")),
+                    str(stimulus.get("sequence_b", "")),
+                    swap,
+                )
                 user_msg = (
                     "Stimulus pair (left vs right):\n"
-                    f"  Left:  {seq_a}\n"
-                    f"  Right: {seq_b}\n\n"
+                    f"  Left:  {left}\n"
+                    f"  Right: {right}\n\n"
                     "Reply with exactly one line: `ANSWER: left` or `ANSWER: right`."
                 )
                 try:
@@ -1092,14 +1135,14 @@ def generate_llm_participant_rows(
                     errors += 1
                     if transcript is not None:
                         transcript.write(
-                            f"## Trial {trial_index}\n- left: `{seq_a}`\n- right: `{seq_b}`\n\n"
+                            f"## Trial {trial_index}\n- left: `{left}`\n- right: `{right}`\n\n"
                             f"**Model error:** {exc}\n\n"
                         )
                     continue
                 choice = _parse_participant_answer(response)
                 if transcript is not None:
                     transcript.write(
-                        f"## Trial {trial_index}\n- left: `{seq_a}`\n- right: `{seq_b}`\n\n"
+                        f"## Trial {trial_index}\n- left: `{left}`\n- right: `{right}`\n\n"
                         f"**Reply:**\n```\n{response.strip()}\n```\n\n"
                         f"**Parsed:** {choice if choice else 'UNPARSEABLE'}\n\n"
                     )
@@ -1111,8 +1154,8 @@ def generate_llm_participant_rows(
                     {
                         "participant_id": participant_id,
                         "trial_index": trial_index,
-                        "sequence_a": str(seq_a),
-                        "sequence_b": str(seq_b),
+                        "sequence_a": left,
+                        "sequence_b": right,
                         "chose_left": int(chose_left),
                         "chose_right": int(not chose_left),
                         "model": model_name,
@@ -1236,6 +1279,19 @@ def _load_featurizer(featurize_path: Path | None):
     return getattr(mod, "featurize_stimulus", None)
 
 
+def _present_sides(seq_a: str, seq_b: str, swap: bool) -> tuple[str, str]:
+    """Return the presented ``(left, right)`` order: canonical, or swapped.
+
+    Side counterbalancing: each trial independently randomizes which sequence is
+    shown on the LEFT, and we record the *presented* order into
+    ``sequence_a`` (= left) / ``sequence_b`` (= right). The cognitive models treat
+    ``sequence_a`` as the left option, so randomizing the side per trial decouples
+    content from physical side — making each model's ``side_bias`` a genuine,
+    identifiable physical-left preference — with no model or schema change.
+    """
+    return (seq_b, seq_a) if swap else (seq_a, seq_b)
+
+
 def _generate_from_pymc_models(
     stimuli: list[dict[str, Any]],
     model_names: list[str],
@@ -1250,47 +1306,55 @@ def _generate_from_pymc_models(
 
     Each participant is assigned a random theorist model; for every stimulus the
     model's prior-predictive mean p_left is the choice probability for a binary
-    draw. Raw stimuli are featurized so the PyMC `pm.Data` columns are present.
-    No MCMC fit — the prior is the generative process for synthetic participants.
+    draw. The side each sequence is shown on is randomized per trial (see
+    :func:`_present_sides`), and the model is evaluated on the *presented* order so
+    a generative ``side_bias`` biases toward the physical left. Raw stimuli are
+    featurized so the PyMC `pm.Data` columns are present. No MCMC fit — the prior
+    is the generative process for synthetic participants.
     """
     from src.models.pymc_inference import prior_predict_p_left
 
     featurize = _load_featurizer(featurize_path)
     rng = random.Random(seed)
 
-    # Cache prior-predictive p_left per (model, stimulus) — it is deterministic
-    # given the engine seed, and stimuli repeat across participants.
-    p_left_cache: dict[tuple[str, int], float] = {}
+    # Cache prior-predictive p_left per (model, stimulus, side) — deterministic
+    # given the engine seed. Each stimulus recurs across participants in both its
+    # canonical and side-swapped presentation, so both orders are worth caching.
+    p_left_cache: dict[tuple[str, int, bool], float] = {}
 
-    def _p_left(model_name: str, stim_idx: int, feature_row: dict[str, Any]) -> float:
-        key = (model_name, stim_idx)
+    def _feature_row(left: str, right: str) -> dict[str, Any]:
+        row: dict[str, Any] = {"sequence_a": left, "sequence_b": right}
+        if featurize is not None:
+            row.update(featurize(left, right))
+        row.setdefault("chose_left", 0)  # dummy observed value; unused for p_left
+        return row
+
+    def _p_left(model_name: str, stim_idx: int, left: str, right: str, swap: bool) -> float:
+        key = (model_name, stim_idx, swap)
         if key not in p_left_cache:
             preds = prior_predict_p_left(
-                [model_name], models_dir, feature_row, n_samples=n_samples, seed=seed
+                [model_name], models_dir, _feature_row(left, right),
+                n_samples=n_samples, seed=seed,
             )
             p_left_cache[key] = preds[model_name]
         return p_left_cache[key]
-
-    feature_rows: list[dict[str, Any]] = []
-    for stimulus in stimuli:
-        row = dict(stimulus)
-        if featurize is not None:
-            row.update(featurize(stimulus["sequence_a"], stimulus["sequence_b"]))
-        row.setdefault("chose_left", 0)  # dummy observed value; unused for p_left
-        feature_rows.append(row)
 
     rows: list[dict[str, Any]] = []
     for participant_id in range(n_participants):
         model_name = rng.choice(model_names)
         for trial_index, stimulus in enumerate(stimuli):
-            p_left = _p_left(model_name, trial_index, feature_rows[trial_index])
+            swap = rng.random() < 0.5
+            left, right = _present_sides(
+                stimulus["sequence_a"], stimulus["sequence_b"], swap
+            )
+            p_left = _p_left(model_name, trial_index, left, right, swap)
             chose_left = rng.random() < p_left
             rows.append(
                 {
                     "participant_id": participant_id,
                     "trial_index": trial_index,
-                    "sequence_a": stimulus["sequence_a"],
-                    "sequence_b": stimulus["sequence_b"],
+                    "sequence_a": left,
+                    "sequence_b": right,
                     "chose_left": int(chose_left),
                     "chose_right": int(not chose_left),
                     "model": model_name,
@@ -1305,13 +1369,21 @@ def _generate_from_models(
     n_participants: int,
     theorist_dir: Path | None = None,
     model_registry: dict[str, Any] | None = None,
+    seed: int = 0,
 ) -> list[dict[str, Any]]:
+    # Use a seeded local RNG (not the unseeded global `random`) so synthetic
+    # ground-truth data is reproducible across runs, like _generate_from_pymc_models.
+    rng = random.Random(seed)
     rows: list[dict[str, Any]] = []
     for participant_id in range(n_participants):
-        model_name = random.choice(model_names)
+        model_name = rng.choice(model_names)
         for trial_index, stimulus in enumerate(stimuli):
-            seq_a = stimulus["sequence_a"]
-            seq_b = stimulus["sequence_b"]
+            # Randomize which sequence is shown on the left per trial; evaluate the
+            # ground-truth model on the PRESENTED order and record it (a = left).
+            swap = rng.random() < 0.5
+            seq_a, seq_b = _present_sides(
+                stimulus["sequence_a"], stimulus["sequence_b"], swap
+            )
             stimulus_tuple = (seq_a, seq_b)
             if model_registry is not None and model_name in model_registry:
                 fn = model_registry[model_name]
@@ -1321,10 +1393,18 @@ def _generate_from_models(
                     stimulus_tuple, RESPONSE_OPTIONS, [model_name], theorist_dir
                 )
             if not preds:
-                chose_left = random.choice([True, False])
-            else:
-                p_left = preds[model_name].get("left", 0.5)
-                chose_left = random.random() < p_left
+                # No prediction means the model failed to load/run on this
+                # stimulus. Substituting a coin flip would emit pure noise labeled
+                # as this model's ground-truth data and feed it straight into model
+                # comparison. Fail loudly instead of fabricating data.
+                raise RuntimeError(
+                    f"ground-truth model {model_name!r} produced no prediction for "
+                    f"stimulus {stimulus_tuple}; refusing to substitute random "
+                    "responses. Check the model loads and returns a left/right "
+                    "distribution."
+                )
+            p_left = preds[model_name].get("left", 0.5)
+            chose_left = rng.random() < p_left
             rows.append(
                 {
                     "participant_id": participant_id,

@@ -47,6 +47,18 @@ def _stub_fittable(monkeypatch, ok=True, reason=""):
     monkeypatch.setattr(
         pymc_orchestrator, "model_logp_is_finite", lambda *a, **k: (ok, reason)
     )
+    # Admission ends with a real MCMC fit-gate; stub it to succeed so these
+    # bookkeeping tests don't sample (the stub candidate isn't a real PyMC model).
+    monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
+
+
+def _stub_fit_raises(monkeypatch):
+    """Make the admission fit-gate's MCMC sample raise (a NUTS-fragile model)."""
+
+    def _boom(*a, **k):
+        raise RuntimeError("NUTS diverged")
+
+    monkeypatch.setattr(pymc_orchestrator, "fit_model", _boom)
 
 
 def test_admit_rejects_candidate_without_hypothesis(tmp_path, monkeypatch):
@@ -124,3 +136,29 @@ def test_admit_uses_hypothesis_as_rationale_and_copies_it(tmp_path, monkeypatch)
     assert copied.read_text(encoding="utf-8").strip() == hyp
     # The seed model's existing rationale must be preserved, not dropped.
     assert manifest["seed"]["rationale"] == "People do X."
+
+
+def test_admit_rejects_candidate_whose_fit_raises(tmp_path, monkeypatch):
+    """A candidate that passes the initial-point logp check but whose MCMC fit
+    raises (NaN once NUTS jitters off the initial point) is rejected — not
+    admitted — so it can't abort the round's scoring pass."""
+    monkeypatch.setattr(pymc_orchestrator, "load_pymc_model", lambda n, d: object())
+    monkeypatch.setattr(
+        pymc_orchestrator, "model_logp_is_finite", lambda *a, **k: (True, "")
+    )
+    _stub_fit_raises(monkeypatch)
+    models_dir = _models_dir_with_seed(tmp_path)
+    cand_dir = _candidate_dir(tmp_path, hypothesis="People use heuristic H.\n")
+
+    ok = _admit_candidate(
+        cand_dir / "candidate.py",
+        models_dir,
+        model_name="iter0_candidate0",
+        responses_path=tmp_path / "responses.csv",
+    )
+
+    assert ok is False
+    assert "iter0_candidate0" not in _manifest(models_dir)
+    # Both the staged model file and its hypothesis sidecar must be cleaned up.
+    assert not (models_dir / "iter0_candidate0.py").exists()
+    assert not (models_dir / "iter0_candidate0.hypothesis.md").exists()

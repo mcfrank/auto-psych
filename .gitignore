@@ -60,3 +60,7 @@ remote_jobs/.env.local
 *.local.txt
 *_cache/
 scratch/
+
+# Large generated text dumps (e.g. PDF text-extraction output from extract_pdf.py).
+# gt.txt (~21 MB) is already tracked — untrack it with: git rm --cached gt.txt
+gt.txt

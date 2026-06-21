@@ -53,6 +53,20 @@ def test_posteriors_softmax_elpd_and_sum_to_one(tmp_path, monkeypatch):
     assert result["posteriors"]["good"] > result["posteriors"]["bad"]
 
 
+@pytest.mark.parametrize("bad_value", [float("nan"), float("-inf")])
+def test_non_finite_elpd_raises_instead_of_corrupting_posterior(
+    tmp_path, monkeypatch, bad_value
+):
+    """A NaN/-inf ELPD must fail loudly, not silently poison the softmax."""
+    models_dir = _make_models_dir(tmp_path, ["good", "degenerate"])
+    responses = _make_responses(tmp_path, 5)
+    elpd = {"good": -10.0, "degenerate": bad_value}
+    monkeypatch.setattr(ll, "log_likelihood", lambda m, *a, **k: elpd[m])
+
+    with pytest.raises(ValueError, match="Non-finite ELPD-LOO.*degenerate"):
+        mp.model_posterior(responses, models_dir)
+
+
 def test_complexity_prior_penalises_longer_models(tmp_path, monkeypatch):
     models_dir = _make_models_dir(tmp_path, ["simple", "complex"])
     # Make "complex" genuinely longer so model_complexity differs.

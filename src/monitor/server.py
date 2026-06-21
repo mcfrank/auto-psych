@@ -37,6 +37,9 @@ __all__ = ["MonitorSources", "create_app", "main"]
 
 _STATIC_DIR = Path(__file__).parent / "static"
 
+# Hosts that keep the (unauthenticated) dashboard on the local machine only.
+_LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", ""})
+
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -120,6 +123,14 @@ def main(
 
     sources = _build_live_sources(firebase_project)
     app = create_app(data_root=data_root, sources=sources)
+    if host not in _LOOPBACK_HOSTS:
+        print(
+            f"  [WARNING] Binding to {host} exposes this UNAUTHENTICATED dashboard — "
+            "including live human-subjects data (Prolific IDs, per-participant "
+            "responses) — to anyone who can reach this host on the network. Use "
+            "127.0.0.1 unless you intend that.",
+            flush=True,
+        )
     print(
         f"Monitoring studies under {data_root}"
         + (f" (Firebase project {firebase_project})" if firebase_project else "")

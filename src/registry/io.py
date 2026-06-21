@@ -15,11 +15,15 @@ def load_registry(registry_path: Path) -> Dict[str, Any]:
     """Load model_registry.yaml; return dict with 'theories' and 'reserved_for_new'."""
     path = Path(registry_path)
     if not path.exists():
+        # A missing registry legitimately means "no theories accumulated yet".
         return {"theories": {}, "reserved_for_new": DEFAULT_RESERVED_FOR_NEW}
     try:
         data = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-    except Exception:
-        return {"theories": {}, "reserved_for_new": DEFAULT_RESERVED_FOR_NEW}
+    except Exception as exc:
+        # A registry that exists but cannot be parsed is a corruption, NOT an
+        # empty registry. Returning a default here would silently discard every
+        # accumulated theory probability; fail loudly instead.
+        raise ValueError(f"Could not parse model registry at {path}: {exc}") from exc
     theories = data.get("theories") or data.get("probabilities") or {}
     if not isinstance(theories, dict):
         theories = {}
@@ -53,8 +57,14 @@ def get_model_weights(registry_path: Path) -> Dict[str, float]:
 def normalize_theories(
     theories: Dict[str, float], reserved: float = 0.0
 ) -> Dict[str, float]:
-    """Scale theory probabilities so they sum to (1 - reserved)."""
-    total = sum(theories.values()) or 1.0
+    """Scale theory probabilities so they sum to (1 - reserved).
+
+    When the weights sum to <= 0 (an all-zero or collapsed registry) there is no
+    mass to scale, so redistribute the target uniformly rather than returning all
+    zeros. (Do NOT coalesce the sum to 1.0 first — that would mask the zero-sum
+    case and silently emit an all-zero distribution.)
+    """
+    total = sum(theories.values())
     target = max(0.0, 1.0 - reserved)
     if total <= 0:
         n = len(theories) or 1

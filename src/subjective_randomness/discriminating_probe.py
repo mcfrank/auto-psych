@@ -157,7 +157,12 @@ def probe_gt_run(
     # 3. Adversarial (max-disagreement) vs. matched random control.
     adv_idx = select_by_disagreement(gt_p, winner_p, k)
     rng = np.random.default_rng(control_seed)
-    ctrl_idx = sorted(int(i) for i in rng.choice(len(pool), size=k, replace=False))
+    # Draw the matched control from the NON-adversarial stimuli so the random
+    # control cannot overlap the max-disagreement set it is meant to contrast
+    # (len(pool) >= 2*k is enforced upstream, so there are always >= k eligible).
+    adv_set = {int(i) for i in adv_idx}
+    eligible = np.array([i for i in range(len(pool)) if i not in adv_set])
+    ctrl_idx = sorted(int(i) for i in rng.choice(eligible, size=k, replace=False))
 
     return {
         "gt_model": gt_model,
