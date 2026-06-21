@@ -290,7 +290,7 @@ def test_default_generating_params_covers_every_seed_model():
         "prototype_similarity",
         "encoding_compressibility",
         "bayesian_diagnosticity",
-        "statistical_inference",
+        "window_typicality",
     }
     # Each default must name exactly the PyMC model's free parameters, so it can
     # drive the fixed-parameter generator without a loud failure.
@@ -300,10 +300,16 @@ def test_default_generating_params_covers_every_seed_model():
         "beta",
         "side_bias",
     }
-    assert "alt_prior" in params["bayesian_diagnosticity"]
-    assert set(params["statistical_inference"]) == {
+    assert set(params["bayesian_diagnosticity"]) == {
         "delta",
         "alpha",
+        "bias_share",
+        "beta",
+        "side_bias",
+    }
+    assert set(params["window_typicality"]) == {
+        "window",
+        "over_alt_penalty",
         "beta",
         "side_bias",
     }
@@ -435,7 +441,7 @@ def test_run_closed_ended_recovery_assembles_confusion(tmp_path):
         "prototype_similarity",
         "encoding_compressibility",
         "bayesian_diagnosticity",
-        "statistical_inference",
+        "window_typicality",
     }
     assert len(result["generating"]) == 1
 
@@ -443,7 +449,9 @@ def test_run_closed_ended_recovery_assembles_confusion(tmp_path):
     assert record["generating_model"] == "prototype_similarity"
     # Every seed model is scored; the posterior is a distribution over them.
     assert set(record["posteriors"]) == seed_set
-    assert abs(sum(record["posteriors"].values()) - 1.0) < 1e-6
+    # Posteriors are stored rounded to 6 dp; the sum can drift by a few ULPs of
+    # that rounding across the seed set, so allow a 1e-5 tolerance.
+    assert abs(sum(record["posteriors"].values()) - 1.0) < 1e-5
     assert record["best_model"] in seed_set
     assert record["recovered_correct"] == (
         record["best_model"] == "prototype_similarity"

@@ -42,7 +42,7 @@ unset UV_PROJECT_ENVIRONMENT UV_CACHE_DIR UV_PYTHON
 
 # --- task -> (repeat, ground-truth model) ----------------------------------
 BASE_SEED="${BASE_SEED:-0}"
-read -r -a GTS <<< "${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity statistical_inference}"
+read -r -a GTS <<< "${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity window_typicality}"
 N_GTS="${N_GTS:-${#GTS[@]}}"
 SEED_MODELS_REL="${SEED_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}"
 CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery.yaml}"

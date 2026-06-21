@@ -376,62 +376,59 @@ sequence, independent of its content.
 
 Source: `src/subjective_randomness/model_families/bayesian_diagnosticity.py`
 
-This model is the closest implementation of the Tenenbaum & Griffiths
-representativeness account. A sequence looks random when it is better evidence
-for a fair/random generator than for salient non-random alternatives.
+This is the unified "randomness as statistical inference" account (Griffiths &
+Tenenbaum 2001/2003; Griffiths et al. 2018), merging what used to be two separate
+Bayesian seeds (`bayesian_diagnosticity` and `statistical_inference`). A sequence
+looks random when it is better evidence for a fair coin than for a *regular*
+(non-random) generator.
 
 The model computes:
 
 ```text
 S(seq) =
   log P(seq | fair)
-  - log P(seq | alternatives)
+  - log P(seq | regular)
 ```
 
-Because the experiment allows mixed-length pairs, log probabilities are
-length-normalized:
-
-```text
-log P_norm(seq | h) = log P(seq | h) / len(seq)
-```
+The score is **not** length-normalized: evidence accumulating with sequence
+length is a property of the Bayesian account.
 
 The fair generator is an iid fair coin:
 
 ```text
-P(seq | fair) = product_t P(x_t)
-P(H) = P(T) = 0.5
+P(seq | fair) = (1/2)^n
 ```
 
-The alternative generator is a mixture:
+The regular hypothesis is a mixture (weight `bias_share`) of a motif-complexity
+process and a biased coin:
 
 ```text
-P(seq | alternatives) =
-    pi_alt    * P_norm(seq | alternating)
-  + pi_bias   * P_norm(seq | biased)
-  + pi_streak * P_norm(seq | streaky)
+P(seq | regular) =
+    (1 - bias_share) * P(seq | motif)
+  + bias_share       * P(seq | biased)
 ```
 
 implemented in log space with `logsumexp`.
 
-The alternating and streaky generators are first-order Markov generators:
+The motif-complexity process (Griffiths et al. 2018, §6.1) is evaluated at the
+canonical minimal-description parse, with `n1` repetition motifs and `n2`
+alternation motifs:
 
 ```text
-P(first symbol) = 0.5
-P(switch) = 0.95   for alternating
-P(switch) = 0.15   for streaky
+log P(seq | motif) =
+  (n - n1 - n2) * log(delta)
+  + (n1 + n2)   * log(C)
+  + (n1 + 2*n2) * log(alpha)
+C = (1 - delta) / (2*alpha + 2*alpha^2)
 ```
 
-So:
-
-```text
-log P(seq | Markov(q)) =
-  log(0.5)
-  + n_switches(seq) * log(q)
-  + n_stays(seq)    * log(1 - q)
-```
+`delta` is motif persistence and `alpha` penalizes motif complexity. This single
+process subsumes the old "alternating" and "streaky" Markov alternatives (long
+runs = high persistence, regular alternation = alternation motifs) and carries
+Falk & Konold's Difficulty Predictor DP = n1 + 2*n2 in the `alpha` exponent.
 
 The biased generator is a symmetric mixture of mostly-heads and mostly-tails
-coins:
+coins, capturing the H/T imbalance the motif process is blind to:
 
 ```text
 P(seq | biased) =
@@ -439,27 +436,19 @@ P(seq | biased) =
   + 0.5 * P(seq | P(H)=0.15)
 ```
 
-The recoverable mixture parameters are represented with a stick-breaking
-parameterization:
-
-```text
-pi_alt    = alt_prior
-pi_bias   = (1 - alt_prior) * bias_share
-pi_streak = (1 - alt_prior) * (1 - bias_share)
-```
-
 Main parameters:
 
 ```text
-alt_prior   : weight on the alternating alternative
-bias_share  : share of remaining alternative mass assigned to biased coins
+delta       : motif persistence (probability of continuing a motif)
+alpha       : motif complexity penalty
+bias_share  : weight on the biased-coin alternative within the regular mixture
 beta        : choice sensitivity
 side_bias   : left/right response bias
 ```
 
 Psychological interpretation: people judge randomness by asking whether the
-sequence is diagnostic of a fair random process rather than an overly
-alternating, biased, or streaky process.
+sequence is diagnostic of a fair random process rather than a structured one —
+either a complexity-penalized motif/regularity process or a biased coin.
 
 ### 2. Prototype Similarity
 
@@ -566,6 +555,25 @@ side_bias      : left/right response bias
 ```
 
 Psychological interpretation: people judge a sequence as random when it is hard to summarize with a simple rule. This model can penalize both long streaks and perfect alternation, because both are compressible.
+
+### 4. Window Typicality
+
+Source: `src/subjective_randomness/model_families/window_typicality.py`
+
+The Hahn & Warren (2009) finite-window account: people experience sequences
+through a limited memory window of length `window`, and a sequence looks random
+when its longest run is typical of a fair coin seen through that window. The
+expected longest run over an effective length `min(n, window)` is `log2(...)`;
+runs longer than expected look streaky and non-random, while runs shorter than
+expected (over-alternation) are penalized by the smaller `over_alt_penalty`:
+
+```text
+e(seq)  = log2(min(n, window))
+S(seq)  = -( softplus(max_run - e)
+             + over_alt_penalty * softplus(e - max_run) )
+```
+
+Parameters: `window`, `over_alt_penalty`, `beta`, `side_bias`.
 
 ## Why Parameter Recovery?
 

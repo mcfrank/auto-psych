@@ -47,6 +47,13 @@ def sigmoid(x: float) -> float:
     return z / (1.0 + z)
 
 
+def softplus(x: float) -> float:
+    """Numerically stable ``log(1 + exp(x))``."""
+    if x > 30.0:
+        return x
+    return math.log1p(math.exp(x))
+
+
 def clipped(p: float) -> float:
     return max(_EPS, min(1.0 - _EPS, p))
 

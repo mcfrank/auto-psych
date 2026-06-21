@@ -230,7 +230,7 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
         "prototype_similarity",
         "bayesian_diagnosticity",
         "encoding_compressibility",
-        "statistical_inference",
+        "window_typicality",
     }
 
     # Leakage is audited and robust to the impossible GT having no model_families
