@@ -34,7 +34,10 @@ fi
 # el7 wheels only (never build from source). The PyMC stack is pinned to the
 # project's 5.x API (pure-Python wheels). langchain / google-generativeai /
 # torch are intentionally OMITTED — a live human run imports them lazily only on
-# the Gemini-steering / open-participant paths it never takes.
+# the Gemini-steering / open-participant paths it never takes. The live pipeline
+# does NO server-side Firestore access either: participant data flows through the
+# /submit and /results Cloud Functions (functions/index.js), so google-cloud-*
+# is not needed here. (The monitor reads Firestore, but it runs off-cluster.)
 uv pip install --python "$UV_PROJECT_ENVIRONMENT" --only-binary :all: \
   "pymc==5.28.5" "pytensor==2.38.3" "arviz<1" \
   numpy scipy pyyaml tyro pyprojroot requests pydantic matplotlib
