@@ -4,7 +4,6 @@ import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
-
 with pm.Model() as model:
     imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
     imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))

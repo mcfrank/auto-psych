@@ -57,6 +57,12 @@ ARRAY_SPEC="1-${TOTAL}%${MAX_PARALLEL}"
 # Optional pass-throughs (only export if the caller set them).
 [[ -n "${BASE_SEED:-}" ]] && export BASE_SEED
 [[ -n "${REPO:-}"      ]] && export REPO
+# Inner-loop ablation knob: INNER_LOOP_ITERATIONS=0 makes every array task pass
+# --inner-loop-iterations 0, so the inner model loop only fits/scores the
+# theorist's models (no candidate-conjecturing or critique agents are spawned).
+# The array sbatch turns it into the CLI flag;
+# run_impossible_no_inner_loop_test_retest.sh pins it to 0.
+[[ -n "${INNER_LOOP_ITERATIONS:-}" ]] && export INNER_LOOP_ITERATIONS
 
 # Keep Slurm logs off $HOME (15 GB, NFS). Mirror _env.sh's WORK_ROOT default,
 # but in a dedicated impossible work root so it never collides with the standard
