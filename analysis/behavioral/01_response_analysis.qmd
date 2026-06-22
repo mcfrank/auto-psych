@@ -1,0 +1,323 @@
+---
+title: "01 — Response analysis: choice biases & stimulus reuse"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    df-print: kable
+    fig-width: 9
+    fig-height: 5
+execute:
+  warning: false
+  message: false
+---
+
+# Purpose
+
+Building on `00_load_human_data.qmd`, this notebook analyses the **choices**
+participants made on the `subjective_randomness` task ("Which sequence looks
+more random?") and characterises the **stimulus structure** of the corpus.
+
+Two parts:
+
+1. **Choice biases.** Simple "proportion choosing the side that follows a rule"
+   summaries for four candidate biases — side, number-of-heads, length, and
+   alternation — across runs and rounds.
+2. **Stimulus reuse**, with H/T relabelling consolidated (see the note below):
+   pair-level reuse and single-sequence ("side") reuse across the corpus.
+
+```{r setup}
+library(tidyverse)
+library(here)
+library(glue)
+
+theme_set(theme_bw(base_size = 12))
+options(dplyr.summarise.inform = FALSE)
+
+trials <- read_rds(here("analysis", "behavioral", "data", "human_trials.rds"))
+```
+
+## A note on H/T symmetry
+
+Heads and Tails are arbitrary labels, so for the **stimulus-structure** analyses
+we treat a sequence as equivalent to its H↔T relabelling (e.g. `HT` ≡ `TH`,
+`HHT` ≡ `TTH`). We canonicalise each sequence to the lexicographically smaller
+of itself and its complement:
+
+```{r ht-helpers}
+complement   <- function(s) chartr("HT", "TH", s)
+canon_seq    <- function(s) pmin(s, complement(s))   # H/T-canonical single sequence
+
+# number of H↔T alternations (switches between adjacent symbols)
+n_alternations <- function(s) {
+  ch <- str_split(s, "")
+  map_int(ch, \(x) if (length(x) < 2) 0L else sum(x[-1] != x[-length(x)]))
+}
+```
+
+We apply this **per sequence** for the single-sequence analysis, and to the
+**whole pair** (flipping H/T on both sides together) for the pair analysis —
+because "which looks more random" is invariant to relabelling the entire
+display, but *not* to flipping just one side. We do **not** apply reversal
+symmetry (reading a sequence backwards); ask if that's wanted too.
+
+# Choice biases
+
+For each trial we compute features of both sequences, then ask, for each
+candidate bias, **what proportion of choices followed the rule** — choosing the
+side with the higher value of that feature. Trials where the two sequences tie
+on a feature carry no information about that bias and are dropped from its
+denominator. We summarise per participant (the unit of analysis), then average
+across participants within each round.
+
+```{r trial-features}
+# Per-sequence features, joined back for side a and side b.
+seq_feat <- trials |>
+  distinct(sequence_a, sequence_b) |>
+  pivot_longer(everything(), values_to = "seq") |>
+  distinct(seq) |>
+  mutate(
+    len     = str_length(seq),
+    n_heads = str_count(seq, "H"),
+    n_alt   = n_alternations(seq),
+    alt_rate = n_alt / (len - 1)            # len >= 2, so denominator >= 1
+  )
+
+bias_trials <- trials |>
+  select(-len_a, -len_b) |>   # recomputed (with more features) from seq_feat below
+  left_join(seq_feat |> rename_with(~ paste0(.x, "_a")), by = c("sequence_a" = "seq_a")) |>
+  left_join(seq_feat |> rename_with(~ paste0(.x, "_b")), by = c("sequence_b" = "seq_b")) |>
+  mutate(
+    chose_a = chosen_side == "left",   # sequence_a is shown on the left
+    # For each rule: did the chosen side have the strictly higher feature value?
+    # NA when the two sides tie on that feature (excluded from that bias).
+    follow_side  = chose_left == 1,                       # "rule" = chose left
+    follow_heads = case_when(n_heads_a == n_heads_b ~ NA,
+                             TRUE ~ (n_heads_a > n_heads_b) == chose_a),
+    follow_len   = case_when(len_a == len_b ~ NA,
+                             TRUE ~ (len_a > len_b) == chose_a),
+    follow_alt   = case_when(alt_rate_a == alt_rate_b ~ NA,
+                             TRUE ~ (alt_rate_a > alt_rate_b) == chose_a)
+  )
+```
+
+```{r bias-per-participant}
+bias_long <- bias_trials |>
+  select(run, round, participant_uid,
+         side = follow_side, n_heads = follow_heads,
+         length = follow_len, alternation = follow_alt) |>
+  pivot_longer(c(side, n_heads, length, alternation),
+               names_to = "bias", values_to = "follow") |>
+  mutate(bias = factor(bias, levels = c("side", "n_heads", "length", "alternation")))
+
+# Per-participant proportion following each rule (ties excluded via na.rm).
+# Each participant belongs to exactly one (run, round) cell, so this is one
+# value per participant per bias.
+bias_pp <- bias_long |>
+  group_by(run, round, participant_uid, bias) |>
+  summarise(prop = mean(follow, na.rm = TRUE),
+            n_used = sum(!is.na(follow)), .groups = "drop")
+```
+
+## Topline summary
+
+Pooled across all three chains and three rounds, with the **participant as the
+unit of analysis**: the per-participant proportion of rule-following choices,
+averaged over participants, with a t-based 95% CI. `0.5` = no bias.
+
+```{r bias-topline}
+bias_topline <- bias_pp |>
+  filter(is.finite(prop)) |>
+  group_by(bias) |>
+  summarise(
+    n_participants = n(),
+    estimate = mean(prop),
+    se       = sd(prop) / sqrt(n()),
+    ci_lo    = estimate - qt(0.975, n() - 1) * se,
+    ci_hi    = estimate + qt(0.975, n() - 1) * se,
+    .groups = "drop"
+  )
+
+bias_topline |>
+  transmute(
+    bias,
+    n_participants,
+    `proportion [95% CI]` = sprintf("%.3f [%.3f, %.3f]", estimate, ci_lo, ci_hi)
+  ) |>
+  knitr::kable(caption = paste(
+    "Topline choice biases, pooled across all runs and rounds",
+    "(participant-level mean ± 95% CI; 0.5 = no bias)."
+  ))
+```
+
+```{r bias-topline-text}
+pct <- function(b) {
+  r <- bias_topline |> filter(bias == b)
+  sprintf("%.1f%%, 95%% CI [%.1f%%, %.1f%%]", 100 * r$estimate, 100 * r$ci_lo, 100 * r$ci_hi)
+}
+glue(
+  "Across all {n_distinct(bias_pp$participant_uid)} participants, choices showed ",
+  "no side bias ({pct('side')} chose the left sequence), ",
+  "a negligible heads bias ({pct('n_heads')} chose the sequence with more heads), ",
+  "a modest length bias ({pct('length')} chose the longer sequence), ",
+  "and a clear alternation bias ({pct('alternation')} chose the higher-alternation sequence)."
+)
+```
+
+Each rule is scored so that **0.5 = no bias**; the dashed line marks chance.
+
+- **side** — proportion choosing the *left* sequence.
+- **n_heads** — proportion choosing the sequence with *more heads*.
+- **length** — proportion choosing the *longer* sequence.
+- **alternation** — proportion choosing the sequence with the higher
+  *alternation rate* (switches per adjacent pair). The classic
+  representativeness prediction is a strong alternation bias (> 0.5).
+
+```{r bias-summary-plot}
+bias_summary <- bias_pp |>
+  group_by(round, bias) |>
+  summarise(
+    mean_prop = mean(prop),
+    se        = sd(prop) / sqrt(n()),
+    n_part    = n(),
+    .groups = "drop"
+  )
+
+bias_summary |>
+  ggplot(aes(x = factor(round), y = mean_prop, color = factor(round))) +
+  geom_hline(yintercept = 0.5, linetype = "dashed", color = "grey50") +
+  geom_pointrange(aes(ymin = mean_prop - 1.96 * se,
+                      ymax = mean_prop + 1.96 * se)) +
+  facet_wrap(~ bias, nrow = 1) +
+  scale_color_brewer(palette = "Dark2", name = "round") +
+  scale_y_continuous(limits = c(0, 1)) +
+  labs(x = "round", y = "Proportion of choices following rule",
+       title = "Choice biases across rounds (mean ± 95% CI over participants)",
+       subtitle = "0.5 = no bias; pooled over the three chains")
+```
+
+Per (run, round) table of the same proportions:
+
+```{r bias-table}
+bias_pp |>
+  group_by(run, round, bias) |>
+  summarise(prop = mean(prop), .groups = "drop") |>
+  pivot_wider(names_from = bias, values_from = prop) |>
+  knitr::kable(digits = 2,
+               caption = "Mean proportion of choices following each rule, per cell")
+```
+
+# Stimulus pair reuse
+
+Each round presents **32 distinct (unordered) pairs**, every participant seeing
+each once. Here we consolidate pairs under whole-display H/T relabelling and ask
+how often the same (consolidated) pair recurs across the nine cells.
+
+```{r pair-canon}
+pair_canon <- trials |>
+  distinct(run, round, sequence_a, sequence_b) |>
+  mutate(
+    # sorted within-pair (order-independent), and its whole-pair H/T complement
+    lo = pmin(sequence_a, sequence_b),
+    hi = pmax(sequence_a, sequence_b),
+    raw_pair  = paste(lo, hi, sep = " | "),
+    comp_lo   = pmin(complement(sequence_a), complement(sequence_b)),
+    comp_hi   = pmax(complement(sequence_a), complement(sequence_b)),
+    comp_pair = paste(comp_lo, comp_hi, sep = " | "),
+    pair_canon = pmin(raw_pair, comp_pair)
+  ) |>
+  select(run, round, pair_canon)
+```
+
+```{r pair-consolidation-note}
+n_raw <- trials |>
+  distinct(sequence_a, sequence_b) |>
+  mutate(k = paste(pmin(sequence_a, sequence_b), pmax(sequence_a, sequence_b))) |>
+  pull(k) |> n_distinct()
+n_canon <- n_distinct(pair_canon$pair_canon)
+
+glue("Distinct pairs: {n_raw} ignoring H/T symmetry -> {n_canon} after ",
+     "consolidating each pair with its H/T complement.")
+```
+
+How many of the nine cells does each consolidated pair appear in?
+
+```{r pair-reuse-plot}
+pair_reuse <- pair_canon |>
+  distinct(run, round, pair_canon) |>
+  count(pair_canon, name = "n_cells")
+
+pair_reuse |>
+  count(n_cells, name = "n_pairs") |>
+  ggplot(aes(x = factor(n_cells), y = n_pairs)) +
+  geom_col(fill = "steelblue") +
+  geom_text(aes(label = n_pairs), vjust = -0.4, size = 3.5) +
+  labs(x = "Number of (run × round) cells the pair appears in",
+       y = "Number of distinct stimulus pairs",
+       title = "Stimulus-pair reuse across the corpus (H/T-consolidated)",
+       subtitle = glue("{nrow(pair_reuse)} distinct consolidated pairs total")) +
+  expand_limits(y = max(count(pair_reuse, n_cells)$n) * 1.1)
+```
+
+Pairs that recur in more than one cell — candidates for comparing responses to
+the same stimulus across conditions:
+
+```{r pair-reuse-table}
+pair_reuse |>
+  filter(n_cells > 1) |>
+  arrange(desc(n_cells), pair_canon) |>
+  knitr::kable(col.names = c("pair (H/T-canonical)", "n cells"),
+               caption = "Consolidated stimulus pairs appearing in >1 cell")
+```
+
+# Single-sequence (side) reuse
+
+A pair has two sides, each a full sequence. Here we ignore pairing and ask how
+often each individual (H/T-canonical) sequence appears as a stimulus, and in how
+many cells — i.e. which *sequences* the design reused, regardless of partner.
+
+```{r side-reuse}
+side_seqs <- trials |>
+  distinct(run, round, sequence_a, sequence_b) |>
+  pivot_longer(c(sequence_a, sequence_b), values_to = "seq") |>
+  mutate(seq_canon = canon_seq(seq)) |>
+  distinct(run, round, seq_canon)
+
+seq_reuse <- side_seqs |>
+  count(seq_canon, name = "n_cells") |>
+  mutate(len = str_length(seq_canon))
+
+glue("{n_distinct(side_seqs$seq_canon)} distinct H/T-canonical sequences used ",
+     "as sides across the corpus.")
+```
+
+```{r side-reuse-plot}
+seq_reuse |>
+  count(n_cells, name = "n_seqs") |>
+  ggplot(aes(x = factor(n_cells), y = n_seqs)) +
+  geom_col(fill = "darkorange") +
+  geom_text(aes(label = n_seqs), vjust = -0.4, size = 3.5) +
+  labs(x = "Number of (run × round) cells the sequence appears in (as either side)",
+       y = "Number of distinct sequences",
+       title = "Single-sequence reuse across the corpus (H/T-consolidated)") +
+  expand_limits(y = max(count(seq_reuse, n_cells)$n) * 1.1)
+```
+
+The most-reused individual sequences:
+
+```{r side-reuse-table}
+seq_reuse |>
+  arrange(desc(n_cells), len, seq_canon) |>
+  slice_head(n = 20) |>
+  knitr::kable(col.names = c("sequence (H/T-canonical)", "n cells", "length"),
+               caption = "Most-reused individual sequences (by cells appearing in)")
+```
+
+# Notes
+
+- **Bias scoring.** Each bias is "proportion of non-tie trials whose chosen side
+  has the higher feature value," scored so 0.5 = no bias. `side` is the special
+  case of proportion-choosing-left. Participant is the unit of analysis.
+- **H/T consolidation** is applied per-sequence for the side analysis and
+  per-whole-pair for the pair analysis; reversal symmetry is not applied.
