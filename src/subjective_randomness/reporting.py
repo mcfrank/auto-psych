@@ -518,6 +518,20 @@ def plot_holdout_trajectories(
 _ERROR_KINDS = ("sem", "std", "ci95")
 
 
+def _is_finite(value: Any) -> bool:
+    """True only for a real, finite number — not None, NaN, or +/-inf.
+
+    Impossible-ground-truth recoveries can make a metric undefined (a constant
+    prediction gives a NaN correlation) or unbounded; such points are dropped
+    from a step's sample exactly like an explicit ``None``.
+    """
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and math.isfinite(value)
+    )
+
+
 def _summarize(values: List[float], error: str) -> Mapping[str, Any]:
     """Reduce a list of per-run values to a mean and a spread.
 
@@ -561,7 +575,7 @@ def _best_seed_value(
         values = list(per_model.values())
     else:
         return None  # default-params baseline has no RMSE
-    values = [v for v in values if v is not None]
+    values = [v for v in values if _is_finite(v)]
     if not values:
         return None
     return max(values) if spec["higher_is_better"] else min(values)
@@ -580,9 +594,10 @@ def aggregate_holdout_trajectories(
     held-out model this returns, at each inner-loop ``global_step`` that any run
     reached, the mean and ``error`` spread of the best-model and Bayesian
     model-average ``metric`` across the runs that defined a value there. Steps
-    whose value is undefined in a run (``None`` — e.g. a constant prediction
-    makes correlation undefined) are dropped from that step's sample rather than
-    counted as zero. The two flat seed-model baselines are the *best* sibling
+    whose value is undefined in a run (``None``, ``NaN``, or ``inf`` — e.g. a
+    constant prediction, common for impossible ground truths, makes correlation
+    undefined) are dropped from that step's sample rather than counted as zero.
+    The two flat seed-model baselines are the *best* sibling
     seed per run (not the average), pooled the same way; outer-experiment
     boundaries (where any run starts a new experiment) are collected so the
     figure can mark them.
@@ -617,7 +632,7 @@ def aggregate_holdout_trajectories(
             for gt_run in gt_runs:
                 for row in gt_run["trajectory"]:
                     value = row.get(key)
-                    if value is not None:
+                    if _is_finite(value):
                         by_step[row["global_step"]].append(value)
             return [
                 {"global_step": step, **_summarize(by_step[step], error)}
@@ -630,7 +645,7 @@ def aggregate_holdout_trajectories(
                 _best_seed_value(gt_run.get(run_key) or {}, run_key, spec)
                 for gt_run in gt_runs
             ]
-            values = [v for v in values if v is not None]
+            values = [v for v in values if _is_finite(v)]
             baselines[run_key] = _summarize(values, error) if values else None
 
         boundaries = sorted(
@@ -657,31 +672,48 @@ def aggregate_holdout_trajectories(
 
 
 # Per-series labels and styling for the combined (plotnine) holdout figure.
-# Exported as module constants so a manual recolor/restyle is a one-line change.
 _BEST_LABEL = "best model"
-_BASELINE_LABELS = {
-    "fitted_baseline": "best other seed model (fit to all data)",
-    "baseline": "best seed (default params)",
-}
-HOLDOUT_SERIES_ORDER = [
-    _BEST_LABEL,
-    _BASELINE_LABELS["fitted_baseline"],
-    _BASELINE_LABELS["baseline"],
-]
-# ColorBrewer Dark2 (qualitative) — override to recolor every geom at once.
-HOLDOUT_SERIES_COLORS = {
-    _BEST_LABEL: "#1B9E77",
-    _BASELINE_LABELS["fitted_baseline"]: "#D95F02",
-    _BASELINE_LABELS["baseline"]: "#7570B3",
-}
-HOLDOUT_SERIES_LINETYPES = {
-    _BEST_LABEL: "solid",
-    _BASELINE_LABELS["fitted_baseline"]: "dotted",
-    _BASELINE_LABELS["baseline"]: "dashdot",
-}
+_DEFAULT_PARAMS_LABEL = "best seed (default params)"
+# Default display label for the fitted-seed baseline. In holdout recovery the
+# ground truth is itself a seed model, so the baseline is the best of the *other*
+# seed models. Impossible recovery holds out no seed (the ground truth lies
+# outside the seed family), so its caller passes "best seed model" instead.
+DEFAULT_FITTED_BASELINE_LABEL = "best other seed model"
+
+# ColorBrewer Dark2 (qualitative), keyed by role so the fitted baseline can be
+# relabelled without losing its color/linetype.
+_SERIES_COLOR_BY_ROLE = {"best": "#1B9E77", "fitted": "#D95F02", "default": "#7570B3"}
+_SERIES_LINETYPE_BY_ROLE = {"best": "solid", "fitted": "dotted", "default": "dashdot"}
 
 
-def holdout_combined_frames(aggregated: Mapping[str, Any]) -> Mapping[str, Any]:
+def _series_styling(fitted_baseline_label: str):
+    """Per-figure series labels, draw order, and color/linetype maps.
+
+    Returns ``(baseline_labels, order, colors, linetypes)`` where
+    ``baseline_labels`` maps the aggregate's baseline keys
+    (``fitted_baseline``/``baseline``) to display labels, and the color/linetype
+    maps are keyed by display label for plotnine's ``scale_*_manual``.
+    """
+    role_label = {
+        "best": _BEST_LABEL,
+        "fitted": fitted_baseline_label,
+        "default": _DEFAULT_PARAMS_LABEL,
+    }
+    order = [role_label["best"], role_label["fitted"], role_label["default"]]
+    colors = {role_label[r]: _SERIES_COLOR_BY_ROLE[r] for r in role_label}
+    linetypes = {role_label[r]: _SERIES_LINETYPE_BY_ROLE[r] for r in role_label}
+    baseline_labels = {
+        "fitted_baseline": fitted_baseline_label,
+        "baseline": _DEFAULT_PARAMS_LABEL,
+    }
+    return baseline_labels, order, colors, linetypes
+
+
+def holdout_combined_frames(
+    aggregated: Mapping[str, Any],
+    *,
+    fitted_baseline_label: str = DEFAULT_FITTED_BASELINE_LABEL,
+) -> Mapping[str, Any]:
     """Flatten a pooled aggregate into tidy data frames for plotnine.
 
     Returns a mapping with the run aggregate's ``metric`` and ``error`` plus
@@ -700,6 +732,7 @@ def holdout_combined_frames(aggregated: Mapping[str, Any]) -> Mapping[str, Any]:
     """
     import pandas as pd
 
+    baseline_labels, series_order, _, _ = _series_styling(fitted_baseline_label)
     panels = aggregated["gt_models"]
     facet_order = [p["gt_model"].replace("_", " ") for p in panels]
     all_steps = [pt["global_step"] for p in panels for pt in p["best"]]
@@ -726,7 +759,7 @@ def holdout_combined_frames(aggregated: Mapping[str, Any]) -> Mapping[str, Any]:
                     "n": point["n"],
                 }
             )
-        for run_key, label in _BASELINE_LABELS.items():
+        for run_key, label in baseline_labels.items():
             stats = panel["baselines"].get(run_key)
             if stats is not None:
                 baseline_rows.append(
@@ -757,7 +790,7 @@ def holdout_combined_frames(aggregated: Mapping[str, Any]) -> Mapping[str, Any]:
     # default-param baseline has no RMSE, so it must not show up in the RMSE
     # legend), keeping the canonical order.
     present = {row["series"] for row in (*traj_rows, *baseline_rows)}
-    series_categories = [s for s in HOLDOUT_SERIES_ORDER if s in present]
+    series_categories = [s for s in series_order if s in present]
 
     def _framed(rows: List[Mapping[str, Any]], columns: List[str]):
         df = pd.DataFrame(rows, columns=columns)
@@ -804,7 +837,11 @@ def holdout_combined_frames(aggregated: Mapping[str, Any]) -> Mapping[str, Any]:
     }
 
 
-def holdout_trajectories_ggplot(aggregated: Mapping[str, Any]):
+def holdout_trajectories_ggplot(
+    aggregated: Mapping[str, Any],
+    *,
+    fitted_baseline_label: str = DEFAULT_FITTED_BASELINE_LABEL,
+):
     """Build the pooled holdout-recovery figure as a plotnine ``ggplot``.
 
     One facet per held-out model: the best-model recovery trajectory is a mean
@@ -818,8 +855,10 @@ def holdout_trajectories_ggplot(aggregated: Mapping[str, Any]):
         p = holdout_trajectories_ggplot(aggregated)
         (p + theme(figure_size=(16, 4))).save("holdout.png", dpi=300)
 
-    Colors, line types, and series order are the ``HOLDOUT_SERIES_*`` module
-    constants; override the matching ``scale_*_manual`` to recolor/restyle.
+    Colors, line types, and series order come from :func:`_series_styling`;
+    ``fitted_baseline_label`` renames the fitted-seed baseline series (holdout
+    recovery uses the default "best other seed model"; impossible recovery, which
+    holds out no seed, passes "best seed model").
     """
     from plotnine import (
         aes,
@@ -845,7 +884,10 @@ def holdout_trajectories_ggplot(aggregated: Mapping[str, Any]):
     )
 
     spec = _HOLDOUT_METRIC_SPECS[aggregated["metric"]]
-    frames = holdout_combined_frames(aggregated)
+    _, _, series_colors, series_linetypes = _series_styling(fitted_baseline_label)
+    frames = holdout_combined_frames(
+        aggregated, fitted_baseline_label=fitted_baseline_label
+    )
     trajectory, baselines, boundaries = (
         frames["trajectory"],
         frames["baselines"],
@@ -889,9 +931,9 @@ def holdout_trajectories_ggplot(aggregated: Mapping[str, Any]):
         )
         + facet_wrap("facet", nrow=1)
         + scale_x_continuous(breaks=x_breaks)
-        + scale_color_manual(values=HOLDOUT_SERIES_COLORS, name="")
-        + scale_fill_manual(values=HOLDOUT_SERIES_COLORS, name="")
-        + scale_linetype_manual(values=HOLDOUT_SERIES_LINETYPES, name="")
+        + scale_color_manual(values=series_colors, name="")
+        + scale_fill_manual(values=series_colors, name="")
+        + scale_linetype_manual(values=series_linetypes, name="")
         + labs(x="inner-loop scoring step", y=spec["combined_ylabel"])
         + theme_minimal()
         # Compact layout (tight panels), but larger, legible text throughout.
@@ -915,7 +957,7 @@ def holdout_trajectories_ggplot(aggregated: Mapping[str, Any]):
             aes(xintercept="x"),
             linetype="dotted",
             color="grey",
-            size=0.5,
+            size=1.5,
         )
     if spec["zero_line"]:
         plot = plot + geom_hline(yintercept=0.0, color="grey", size=0.3)
@@ -927,21 +969,25 @@ def holdout_trajectories_ggplot(aggregated: Mapping[str, Any]):
 
 
 def plot_holdout_trajectories_combined(
-    aggregated: Mapping[str, Any], out_path: Path
+    aggregated: Mapping[str, Any],
+    out_path: Path,
+    *,
+    fitted_baseline_label: str = DEFAULT_FITTED_BASELINE_LABEL,
 ) -> None:
     """Render :func:`holdout_trajectories_ggplot` to ``out_path``.
 
     A thin save wrapper kept for the CLI and back-compatibility; for manual
     formatting, build the figure with :func:`holdout_trajectories_ggplot` and
-    save it yourself.
+    save it yourself. ``fitted_baseline_label`` renames the fitted-seed baseline
+    series (see :func:`holdout_trajectories_ggplot`).
     """
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     # bbox_inches="tight" trims margins to the content so the compact panels keep
     # their size while the title and axis labels never clip at the figure edge.
-    holdout_trajectories_ggplot(aggregated).save(
-        out_path, dpi=150, verbose=False, bbox_inches="tight"
-    )
+    holdout_trajectories_ggplot(
+        aggregated, fitted_baseline_label=fitted_baseline_label
+    ).save(out_path, dpi=150, verbose=False, bbox_inches="tight")
 
 
 def plot_model_recovery(confusion: Mapping[str, Any], out_path: Path) -> None:

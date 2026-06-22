@@ -1,0 +1,16 @@
+run,experiment,model,model_label,kind,elpd_loo,elpd_rel,dse,xmin,xmax
+run1,experiment3,iter1_candidate0,best agent model,best agent model,-2286.2612,-0.0,0.0,-0.0,0.0
+run1,experiment3,prototype_similarity,prototype_similarity,seed model,-2330.8547,-44.59353948101305,11.63808202091512,-56.231621501928174,-32.95545746009793
+run1,experiment3,encoding_compressibility,encoding_compressibility,seed model,-2411.1808,-124.91963663335164,19.130102202843297,-144.04973883619493,-105.78953443050835
+run1,experiment3,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-2335.5517,-49.29045913955596,11.60138044919177,-60.891839588747736,-37.68907869036419
+run1,experiment3,window_typicality,window_typicality,seed model,-2460.9177,-174.65645719869121,20.08329582323076,-194.73975302192198,-154.57316137546044
+run2,experiment3,inner_loop_model,best agent model,best agent model,-2418.9895,-0.0,0.0,-0.0,0.0
+run2,experiment3,prototype_similarity,prototype_similarity,seed model,-2453.2596,-34.27003132348118,10.684171048047405,-44.95420237152858,-23.585860275433774
+run2,experiment3,encoding_compressibility,encoding_compressibility,seed model,-2573.9587,-154.96920229502166,19.044026244151986,-174.01322853917364,-135.92517605086968
+run2,experiment3,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-2449.2827,-30.293150642677567,10.158370240676563,-40.45152088335413,-20.134780402001006
+run2,experiment3,window_typicality,window_typicality,seed model,-2561.2303,-142.2407385582671,18.490478762371794,-160.7312173206389,-123.75025979589532
+run3,experiment3,iter1_candidate0,best agent model,best agent model,-2479.648,-0.0,0.0,-0.0,0.0
+run3,experiment3,prototype_similarity,prototype_similarity,seed model,-2543.2172,-63.56915743643658,12.698936280379838,-76.26809371681642,-50.87022115605674
+run3,experiment3,encoding_compressibility,encoding_compressibility,seed model,-2624.215,-144.56692852108614,16.50624122529606,-161.0731697463822,-128.06068729579007
+run3,experiment3,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-2484.893,-5.244960073571139,3.5725328069355173,-8.817492880506656,-1.672427266635622
+run3,experiment3,window_typicality,window_typicality,seed model,-2625.704,-146.0559413437594,19.28140064413984,-165.33734198789924,-126.77454069961956
