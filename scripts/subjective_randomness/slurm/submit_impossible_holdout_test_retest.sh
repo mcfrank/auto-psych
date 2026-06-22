@@ -33,6 +33,10 @@ export N_GTS="${#_GTS[@]}"
 TOTAL=$(( N_REPEATS * N_GTS ))
 MAX_PARALLEL="${MAX_PARALLEL:-5}"   # cap simultaneous tasks (API rate + cores)
 ARRAY_TIME=""                       # use the sbatch directive's walltime
+# MEM overrides the array sbatch's --mem directive (32GB). Raise it for a cell
+# whose held-out eval over the exhaustive pool OOMs on a memory-heavy candidate,
+# e.g. MEM=64GB ARRAY_TASKS=16 to retry one task with more headroom.
+MEM="${MEM:-}"
 
 # SMOKE=1: validate the whole chain cheaply — ONE task (repeat 1, first GT), one
 # experiment, no inner-loop candidate rounds, tiny MCMC. Still exercises the repo
@@ -73,7 +77,7 @@ setup_id=$(sbatch --parsable --export=ALL \
 echo "submitted setup job:    $setup_id"
 
 array_id=$(sbatch --parsable --dependency=afterok:"$setup_id" --export=ALL \
-  --array="$ARRAY_SPEC" ${ARRAY_TIME:+--time="$ARRAY_TIME"} \
+  --array="$ARRAY_SPEC" ${ARRAY_TIME:+--time="$ARRAY_TIME"} ${MEM:+--mem="$MEM"} \
   --output="$LOGDIR/%x_%A_%a.out" --error="$LOGDIR/%x_%A_%a.out" \
   impossible_holdout_recovery_array.sbatch)
 echo "submitted array job:    $array_id (1-$TOTAL%$MAX_PARALLEL  =  $N_REPEATS repeats x $N_GTS GTs)"
