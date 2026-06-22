@@ -3,7 +3,9 @@
 #SBATCH --partition=normal
 #SBATCH --time=1-00:00:00
 #SBATCH --cpus-per-task=4
-#SBATCH --mem=16GB
+#SBATCH --mem=64GB                # inner-loop MCMC over many models on pooled
+                                  # multi-experiment data is memory-heavy; 16GB
+                                  # OOM-killed exp3 model loops. Bump for headroom.
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.out
 #
