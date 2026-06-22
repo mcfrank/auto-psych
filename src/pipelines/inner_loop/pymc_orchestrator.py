@@ -156,6 +156,59 @@ def _drop_unfittable_models(models_dir: Path, responses_path: Path) -> None:
     _write_manifest(models_dir, keep)
 
 
+def _drop_nonfinite_elpd_models(
+    models_dir: Path,
+    responses_path: Path,
+    *,
+    cache_dir: Optional[Path] = None,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+) -> None:
+    """Remove from the manifest any model whose ELPD-LOO is non-finite on the data.
+
+    ``_drop_unfittable_models`` screens only the *initial-point logp*, and
+    ``_admit_candidate`` screens a *fresh candidate*'s ELPD. Neither covers a
+    model carried forward from a previous experiment: it scored a finite ELPD on
+    that experiment's responses but can yield a NaN/inf ELPD-LOO on this
+    experiment's *different* responses (e.g. it now assigns ~0 probability to a
+    newly observed outcome). Such a model slips past the logp gate and crashes
+    ``model_posterior`` (which refuses to softmax a non-finite ELPD), aborting the
+    whole run. Compute each model's ELPD-LOO now (reusing cached fits — no extra
+    MCMC) and drop the non-finite ones with a loud warning. Fails loudly only if
+    **no** model survives.
+    """
+    fit_kwargs = fit_kwargs or {}
+    keep: List[Dict[str, str]] = []
+    for entry in _manifest_entries(models_dir):
+        name = entry.get("name")
+        if not name:
+            continue
+        try:
+            elpd = log_likelihood(
+                name, responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs
+            )
+        except Exception as e:  # noqa: BLE001 — any fit/LOO failure means unscorable
+            print(
+                f"  [drop] model {name!r}: ELPD-LOO computation failed "
+                f"({type(e).__name__}: {e}) — cannot score it; dropping.",
+                flush=True,
+            )
+            continue
+        if math.isfinite(elpd):
+            keep.append(entry)
+        else:
+            print(
+                f"  [drop] model {name!r}: non-finite ELPD-LOO ({elpd}) on the data "
+                "— would corrupt the posterior; dropping.",
+                flush=True,
+            )
+    if not keep:
+        raise ValueError(
+            f"No model in {models_dir} has a finite ELPD-LOO on the data — every "
+            "model's PSIS-LOO was non-finite."
+        )
+    _write_manifest(models_dir, keep)
+
+
 def _admit_candidate(
     candidate_file: Path,
     models_dir: Path,
@@ -925,6 +978,12 @@ def run_pymc_inner_loop(
     _seed_model_set(Path(seed_models_dir), models_dir)
     _drop_unfittable_models(models_dir, responses_path)
     fit_kwargs = fit_kwargs or {}
+    # A carried-forward model can score a finite ELPD on a prior experiment's data
+    # yet NaN on this one's; drop those before scoring so a single one can't crash
+    # model_posterior and abort the whole run.
+    _drop_nonfinite_elpd_models(
+        models_dir, responses_path, cache_dir=cache_dir, fit_kwargs=fit_kwargs
+    )
 
     posterior = _score(
         responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs

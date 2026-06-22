@@ -101,6 +101,45 @@ def annotate(
 
     featurize = _load_featurizer(featurize_path)
 
+    # Screen out models that cannot be evaluated on a bare stimulus — e.g. a
+    # carried-forward model with a participant-level pm.Data (participant_id) that
+    # stimulus feature rows never carry. One such model would otherwise raise
+    # inside prior_predict_p_left and abort the entire annotation. Probe each model
+    # against a representative featurized stimulus, drop the unbindable ones
+    # loudly, and keep the rest; fail only if none can be evaluated.
+    if candidates:
+        from src.models.pymc_inference import (  # type: ignore
+            load_pymc_model_cached,
+            make_stim_data,
+        )
+
+        probe = dict(candidates[0])
+        if featurize is not None:
+            probe.update(
+                featurize(candidates[0]["sequence_a"], candidates[0]["sequence_b"])
+            )
+        probe.setdefault("chose_left", 0)
+
+        usable: List[str] = []
+        for name in model_names:
+            try:
+                make_stim_data(load_pymc_model_cached(name, models_dir), [probe])
+            except Exception as e:  # noqa: BLE001 — unbindable model can't be scored
+                print(
+                    f"  [drop] EIG: model {name!r} cannot be evaluated on a "
+                    f"stimulus ({type(e).__name__}: {e}); excluding it from EIG.",
+                    flush=True,
+                )
+                continue
+            usable.append(name)
+        if not usable:
+            raise ValueError(
+                f"No models in {models_dir} can be evaluated on a stimulus row "
+                "(every model requires columns absent from stimuli, e.g. "
+                "participant_id); cannot compute EIG."
+            )
+        model_names = usable
+
     results = []
     for item in candidates:
         feature_row: Dict[str, Any] = dict(item)
