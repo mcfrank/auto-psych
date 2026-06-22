@@ -1,0 +1,1 @@
+Random-looking sequences are judged by an evidence accumulation process where each item in the sequence provides a baseline weight of evidence for randomness. This accumulated evidence is then discounted by the sequence's deviation from a messy prototype, which is characterized by an ideal positive imbalance and an aversion to long streaks of identical outcomes.

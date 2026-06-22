@@ -1,0 +1,509 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mls -la /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/iter_0/candidate_2
+total 16
+drwx------+ 2 benpry ngoodman 4096 Jun 21 15:44 .
+drwx------+ 6 benpry ngoodman 4096 Jun 21 15:44 ..
+-rw-------+ 1 benpry ngoodman   44 Jun 21 15:44 agent.jsonl
+-rw-------+ 1 benpry ngoodman  435 Jun 21 15:44 CANDIDATE_BRIEF.md
+-rw-------+ 1 benpry ngoodman 2293 Jun 21 15:44 CONTEXT.md
+-rw-------+ 1 benpry ngoodman  643 Jun 21 15:44 critiques.md
+-rw-------+ 1 benpry ngoodman 1922 Jun 21 15:44 existing_hypotheses.md
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md CONTEXT.md critiques.md existing_hypotheses.md
+# Candidate Brief
+
+Propose a simpler or higher-variance single-mechanism hypothesis if progress has stalled.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 0, candidate 2 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/iter_0/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat critiques.md
+# Critique of `prototype_similarity`
+
+1 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **beta_max_run_norm** — Linear regression slope of chose_left on the difference in normalized max run length (max_run_norm_b - max_run_norm_a). (observed 0.0164 vs null mean 0.146, z=-1.96, p=0.0498, q=0.398)
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.998, ELPD-LOO -864.21
+
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -889.63
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.002, ELPD-LOO -867.87
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular
+process: a mixture of a complexity-penalized motif process (Griffiths et
+al. 2018) and a biased coin. Merges the former diagnosticity and
+statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -887.51
+
+Random-looking sequences have a longest run typical of a fair coin seen
+through a limited memory window; over-long streaks look non-random (Hahn &
+Warren 2009).
+
+## iter0_candidate0
+
+People judge the randomness of a sequence based on its Gaussian similarity to an ideal subjective prototype, meaning the sequence's perceived randomness decays exponentially with its squared distance in feature space (proportion of heads and alternations) from the expected prototype. This formulation penalizes extreme deviations more severely than a linear distance metric.
+
+## iter0_candidate1
+
+People judge the randomness of a sequence by evaluating the statistical typicality of its macroscopic features. They compute the joint Binomial probability of observing the sequence's specific number of heads and alternations under their subjective expectations for a random process, perceiving sequences with highly improbable feature counts as less random.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/prototype_similarity.py
+cat: /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/prototype_similarity.py: No such file or directory
+[0m
+[0m$ [0mls -l /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/
+total 256
+-rw-------+ 1 benpry ngoodman    460 Jun 21 15:28 history.json
+drwx------+ 6 benpry ngoodman   4096 Jun 21 15:44 iter_0
+drwx------+ 2 benpry ngoodman   4096 Jun 21 15:44 models
+-rw-------+ 1 benpry ngoodman 249548 Jun 21 15:17 responses.csv
+[0m
+[0m$ [0mls -l /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/models
+total 36
+-rw-------+ 1 benpry ngoodman 4073 Jun 21 15:17 bayesian_diagnosticity.py
+-rw-------+ 1 benpry ngoodman 1581 Jun 21 15:17 encoding_compressibility.py
+-rw-------+ 1 benpry ngoodman  376 Jun 21 15:35 iter0_candidate0.hypothesis.md
+-rw-------+ 1 benpry ngoodman 1694 Jun 21 15:33 iter0_candidate0.py
+-rw-------+ 1 benpry ngoodman  359 Jun 21 15:44 iter0_candidate1.hypothesis.md
+-rw-------+ 1 benpry ngoodman 1838 Jun 21 15:38 iter0_candidate1.py
+-rw-------+ 1 benpry ngoodman 1721 Jun 21 15:44 models_manifest.yaml
+-rw-------+ 1 benpry ngoodman 1171 Jun 21 15:17 prototype_similarity.py
+-rw-------+ 1 benpry ngoodman 1737 Jun 21 15:17 window_typicality.py
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/models/prototype_similarity.py
+"""PyMC adapter for the prototype-similarity model family."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+with pm.Model() as model:
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+    score_a = -(
+        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
+    )
+    score_b = -(
+        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/models/bayesian_diagnosticity.py
+"""PyMC adapter for the (merged) Bayesian-diagnosticity model family.
+
+Randomness as statistical inference (Griffiths & Tenenbaum 2001/2003; Griffiths,
+Daniels, Austerweil & Tenenbaum 2018): a sequence looks random when it is better
+evidence for a fair coin than for a *regular* generator,
+
+    randomness(x) = log P(x | fair) - log P(x | regular),   P(x | fair) = (1/2)^n.
+
+This single model merges the two former Bayesian seeds. The regular hypothesis is
+a mixture (weight ``bias_share``) of:
+
+  * a biased-coin generator (head- or tail-heavy, fixed bias 0.85), capturing
+    H/T imbalance; and
+  * a motif-complexity process (Griffiths et al. 2018, §6.1) evaluated at the
+    canonical parse (n1 = rep_motifs, n2 = alt_motifs):
+
+        log P(x | motif) = (n - n1 - n2)*log δ + (n1 + n2)*log C + (n1 + 2*n2)*log α,
+        C = (1-δ)/(2α + 2α²),
+
+    where δ is motif persistence and α penalises motif complexity. This process
+    subsumes the old "alternating" and "streaky" Markov alternatives (long runs =
+    high persistence, regular alternation = alternation motifs) and carries Falk
+    & Konold's DP = n1 + 2*n2 in the α exponent.
+
+The score is not length-normalised; evidence accumulating with length is part of
+the account. Free parameters inferred by MCMC: δ, α, bias_share, β, side bias.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+BIAS_HEAD_PROB = 0.85
+
+
+def _logsumexp2(a, b):
+    m = pt.maximum(a, b)
+    return m + pt.log(pt.exp(a - m) + pt.exp(b - m))
+
+
+def _log_motif(n, rep_motifs, alt_motifs, log_delta, log_c, log_alpha):
+    n_f = pt.cast(n, "float64")
+    n1 = pt.cast(rep_motifs, "float64")
+    n2 = pt.cast(alt_motifs, "float64")
+    stays = n_f - n1 - n2  # within-motif continuations; >= 0 by construction
+    return stays * log_delta + (n1 + n2) * log_c + (n1 + 2.0 * n2) * log_alpha
+
+
+def _log_biased(n, h):
+    n_f = pt.cast(n, "float64")
+    h_f = pt.cast(h, "float64")
+    tails_f = n_f - h_f
+    head_heavy = h_f * np.log(BIAS_HEAD_PROB) + tails_f * np.log(1.0 - BIAS_HEAD_PROB)
+    tail_heavy = h_f * np.log(1.0 - BIAS_HEAD_PROB) + tails_f * np.log(BIAS_HEAD_PROB)
+    return _logsumexp2(np.log(0.5) + head_heavy, np.log(0.5) + tail_heavy)
+
+
+def _randomness(n, h, rep_motifs, alt_motifs, log_delta, log_c, log_alpha, bias_share):
+    log_fair = pt.cast(n, "float64") * np.log(0.5)
+    log_motif = _log_motif(n, rep_motifs, alt_motifs, log_delta, log_c, log_alpha)
+    log_biased = _log_biased(n, h)
+    log_regular = _logsumexp2(
+        pt.log(1.0 - bias_share) + log_motif,
+        pt.log(bias_share) + log_biased,
+    )
+    return log_fair - log_regular
+
+
+with pm.Model() as model:
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    rep_motifs_a = pm.Data("rep_motifs_a", np.zeros(1, dtype="int64"))
+    alt_motifs_a = pm.Data("alt_motifs_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    rep_motifs_b = pm.Data("rep_motifs_b", np.zeros(1, dtype="int64"))
+    alt_motifs_b = pm.Data("alt_motifs_b", np.zeros(1, dtype="int64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    delta = pm.Uniform("delta", lower=0.01, upper=0.99)
+    alpha = pm.Uniform("alpha", lower=0.01, upper=0.99)
+    bias_share = pm.Uniform("bias_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    log_delta = pt.log(delta)
+    log_alpha = pt.log(alpha)
+    log_c = pt.log(1.0 - delta) - pt.log(2.0 * alpha + 2.0 * alpha**2)
+
+    score_a = _randomness(
+        n_a, h_a, rep_motifs_a, alt_motifs_a, log_delta, log_c, log_alpha, bias_share
+    )
+    score_b = _randomness(
+        n_b, h_b, rep_motifs_b, alt_motifs_b, log_delta, log_c, log_alpha, bias_share
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/models/window_typicality.py
+"""PyMC adapter for the Hahn & Warren (2009) finite-window model family.
+
+Randomness peaks when the longest run is typical of a fair coin viewed through a
+limited memory window: e = log2(min(n, window)). Runs longer than e are penalised
+(the streak-aversion effect); runs shorter than e are penalised by the smaller
+``over_alt_penalty`` weight. See the pure-Python twin in
+``model_families/window_typicality.py`` for the full rationale.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+def _score(n, max_run, window, over_alt_penalty):
+    n_f = pt.cast(n, "float64")
+    max_run_f = pt.cast(max_run, "float64")
+    expected_run = pt.log2(pt.minimum(n_f, window))
+    too_long = pt.softplus(max_run_f - expected_run)
+    too_short = pt.softplus(expected_run - max_run_f)
+    return -(too_long + over_alt_penalty * too_short)
+
+
+with pm.Model() as model:
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="int64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    window = pm.Uniform("window", lower=2.0, upper=8.0)
+    over_alt_penalty = pm.Uniform("over_alt_penalty", lower=0.0, upper=1.0)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    score_a = _score(n_a, max_run_a, window, over_alt_penalty)
+    score_b = _score(n_b, max_run_b, window, over_alt_penalty)
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/models/iter0_candidate0.py
+"""
+People judge the randomness of a sequence based on its Gaussian similarity to an ideal subjective prototype, meaning the sequence's perceived randomness decays exponentially with its squared distance in feature space (proportion of heads and alternations) from the expected prototype. This formulation penalizes extreme deviations more severely than a linear distance metric.
+"""
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    p_a = pm.Data("p_a", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    
+    p_b = pm.Data("p_b", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameters
+    ideal_p_heads = pm.Beta("ideal_p_heads", alpha=5.0, beta=5.0)
+    ideal_p_alts = pm.Beta("ideal_p_alts", alpha=6.0, beta=4.0)
+    
+    precision_heads = pm.HalfNormal("precision_heads", sigma=10.0)
+    precision_alts = pm.HalfNormal("precision_alts", sigma=10.0)
+    
+    # Squared Euclidean distance (weighted)
+    dist_sq_a = precision_heads * (p_a - ideal_p_heads)**2 + precision_alts * (p_alts_a - ideal_p_alts)**2
+    dist_sq_b = precision_heads * (p_b - ideal_p_heads)**2 + precision_alts * (p_alts_b - ideal_p_alts)**2
+    
+    # We choose the one that is closer to the prototype (smaller distance)
+    # p_left is probability of choosing A
+    p_left_raw = pm.math.sigmoid(dist_sq_b - dist_sq_a)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1 - 1e-6))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/models/iter0_candidate1.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+"""
+People judge the randomness of a sequence by evaluating the statistical typicality of its macroscopic features, computing the joint Binomial log-probability of observing its number of heads and alternations under their subjective expectations for a random process.
+"""
+
+with pm.Model() as model:
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+    
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    p_heads = pm.Beta("p_heads", alpha=10.0, beta=10.0)
+    p_alts = pm.Beta("p_alts", alpha=6.0, beta=4.0)
+    tau = pm.HalfNormal("tau", sigma=1.0)
+    
+    p_heads_safe = pt.clip(p_heads, 1e-6, 1.0 - 1e-6)
+    p_alts_safe = pt.clip(p_alts, 1e-6, 1.0 - 1e-6)
+
+    def log_binom(k, n, p):
+        k_f = pt.cast(k, "float64")
+        n_f = pt.cast(n, "float64")
+        comb = pt.gammaln(n_f + 1.0) - pt.gammaln(k_f + 1.0) - pt.gammaln(n_f - k_f + 1.0)
+        return comb + k_f * pt.log(p) + (n_f - k_f) * pt.log(1.0 - p)
+        
+    log_typ_h_a = log_binom(h_a, n_a, p_heads_safe)
+    log_typ_alts_a = log_binom(alts_a, n_a - 1, p_alts_safe)
+    log_typ_a = log_typ_h_a + log_typ_alts_a
+    
+    log_typ_h_b = log_binom(h_b, n_b, p_heads_safe)
+    log_typ_alts_b = log_binom(alts_b, n_b - 1, p_alts_safe)
+    log_typ_b = log_typ_h_b + log_typ_alts_b
+    
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (log_typ_a - log_typ_b)))
+    p_left_safe = pt.clip(p_left, 1e-6, 1.0 - 1e-6)
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left_safe, observed=chose_left)
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People judge the randomness of a sequence by the diversity of its run lengths, perceiving sequences as more random when they contain an unpredictable mix of short and long streaks, which is evaluated as the Shannon entropy of the sequence's run-length distribution.
+EOF
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People judge the randomness of a sequence by the diversity of its run lengths, perceiving sequences as more random when they contain an unpredictable mix of short and long streaks, which is evaluated as the Shannon entropy of the sequence's run-length distribution.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+from collections import Counter
+import math
+
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    """Compute the Shannon entropy of the run-length distribution."""
+    def rle_entropy(seq):
+        seq = seq.strip().upper()
+        if not seq:
+            return 0.0
+        
+        runs = []
+        current = seq[0]
+        count = 1
+        for char in seq[1:]:
+            if char == current:
+                count += 1
+            else:
+                runs.append(count)
+                current = char
+                count = 1
+        runs.append(count)
+        
+        c = Counter(runs)
+        total = sum(c.values())
+        ent = 0.0
+        for cnt in c.values():
+            p = cnt / total
+            ent -= p * math.log2(p)
+        return float(ent)
+
+    return {
+        "run_entropy_a": rle_entropy(sequence_a),
+        "run_entropy_b": rle_entropy(sequence_b)
+    }
+
+with pm.Model() as model:
+    # Stimulus inputs
+    run_entropy_a = pm.Data("run_entropy_a", np.zeros(1, dtype="float64"))
+    run_entropy_b = pm.Data("run_entropy_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameters
+    beta = pm.HalfNormal("beta", sigma=5.0)
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=2.0)
+
+    # Score is proportional to the run-length entropy
+    score_a = beta * run_entropy_a
+    score_b = beta * run_entropy_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(score_a - score_b + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mls /scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo
+candidate.py
+CLEANUP_PLAN.md
+diagrams
+docs
+extract_pdf.py
+firebase.generated.json
+firebase.json
+firebase.viewer.json
+firestore.rules
+functions
+generate_candidates.py
+gt.txt
+LICENSE
+opencode.json
+PROBLEMS.md
+projects
+public
+pyproject.toml
+README.md
+scripts
+src
+SUMMARY.md
+templates
+tests
+uv.lock
+[0m
+[0m$ [0mpython3 -c "
+from pathlib import Path
+import sys
+sys.path.append('.')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+model_path = Path('/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/iter_0/candidate_2/candidate.py').parent
+m = load_pymc_model('candidate', model_path)
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/iter_0/candidate_2/hypothesis.md
+People judge the randomness of a sequence by the diversity of its run lengths, perceiving sequences as more random when they contain an unpredictable mix of short and long streaks, which is evaluated as the Shannon entropy of the sequence's run-length distribution.
+[0m
+I have completed the task. 
+
+I proposed a new, parsimonious single-mechanism cognitive hypothesis based on the **entropy of the run-length distribution**. 
+
+Instead of relying on alternating cues or penalizing runs locally, this hypothesis states that people perceive sequences as random if they contain an unpredictable, diverse mix of short and long streaks. It naturally addresses both streak-aversion (a sequence with 1 long streak has a single run length and an entropy of 0) and over-alternation aversion (a sequence like HTHTHT has all runs of length 1, also an entropy of 0), while directly responding to the `beta_max_run_norm` critique by valuing diversity rather than strictly penalizing the absolute length of the maximum streak. 
+
+Both `hypothesis.md` and `candidate.py` have been written to the target directory and pass the structural self-checks.

@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Experiment</title>
+    <script src="https://unpkg.com/jspsych@7.3.4"></script>
+    <link
+      href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
+    <style>
+      /* Readable prose block for instructions/debrief — constrained width, left
+       aligned, comfortable line height. Without this, text spans the full screen. */
+      .auto-psych-prose {
+        max-width: 620px;
+        margin: 0 auto;
+        text-align: left;
+        line-height: 1.6;
+        font-size: 18px;
+      }
+      .auto-psych-prose p {
+        margin: 0 0 1em;
+      }
+      .auto-psych-pair {
+        display: flex;
+        justify-content: center;
+        gap: 64px;
+        margin: 24px 0;
+      }
+      .auto-psych-seq {
+        font-family: monospace;
+        font-size: 28px;
+        letter-spacing: 4px;
+      }
+      .jspsych-btn {
+        padding: 12px 28px;
+        font-size: 18px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body></body>
+  <script>
+    const STIMULI = [
+  {
+    "sequence_a": "HHHTHHH",
+    "sequence_b": "HTTTTTTH",
+    "eig": 0.402673
+  },
+  {
+    "sequence_a": "HHTTTTT",
+    "sequence_b": "TTTTHTTT",
+    "eig": 0.378692
+  },
+  {
+    "sequence_a": "HHTHTHHH",
+    "sequence_b": "TTHTHHHH",
+    "eig": 0.334298
+  },
+  {
+    "sequence_a": "THTHTTT",
+    "sequence_b": "HHTTTTHH",
+    "eig": 0.328772
+  },
+  {
+    "sequence_a": "HTHHTHH",
+    "sequence_b": "HHTTTTTH",
+    "eig": 0.325992
+  },
+  {
+    "sequence_a": "HTHTHH",
+    "sequence_b": "TTHHHHTT",
+    "eig": 0.324224
+  },
+  {
+    "sequence_a": "HTT",
+    "sequence_b": "THTHHHHT",
+    "eig": 0.315876
+  },
+  {
+    "sequence_a": "HTTTHTT",
+    "sequence_b": "HTHHHHTT",
+    "eig": 0.308994
+  },
+  {
+    "sequence_a": "THT",
+    "sequence_b": "TTTHHHH",
+    "eig": 0.284385
+  },
+  {
+    "sequence_a": "TTTHHT",
+    "sequence_b": "HTTHHHHT",
+    "eig": 0.279819
+  },
+  {
+    "sequence_a": "TTHTTH",
+    "sequence_b": "HHTTTTHT",
+    "eig": 0.278635
+  },
+  {
+    "sequence_a": "HHHT",
+    "sequence_b": "HHHHTHTT",
+    "eig": 0.277711
+  },
+  {
+    "sequence_a": "THTH",
+    "sequence_b": "TTHHHHTH",
+    "eig": 0.266299
+  },
+  {
+    "sequence_a": "TT",
+    "sequence_b": "HTTHTTTT",
+    "eig": 0.259623
+  },
+  {
+    "sequence_a": "TTHHTT",
+    "sequence_b": "TTTHHTHH",
+    "eig": 0.258648
+  },
+  {
+    "sequence_a": "HTHTH",
+    "sequence_b": "THTHHHHT",
+    "eig": 0.252839
+  },
+  {
+    "sequence_a": "HHTHH",
+    "sequence_b": "THTHHTTT",
+    "eig": 0.248856
+  },
+  {
+    "sequence_a": "THTTHTT",
+    "sequence_b": "HHTTTHTH",
+    "eig": 0.248702
+  },
+  {
+    "sequence_a": "HHTHHTH",
+    "sequence_b": "HTHHHTTT",
+    "eig": 0.245907
+  },
+  {
+    "sequence_a": "TTHTH",
+    "sequence_b": "THTTTHHH",
+    "eig": 0.243801
+  },
+  {
+    "sequence_a": "THT",
+    "sequence_b": "HTTHTTH",
+    "eig": 0.237472
+  },
+  {
+    "sequence_a": "TTHTHT",
+    "sequence_b": "THHHTHHT",
+    "eig": 0.230422
+  },
+  {
+    "sequence_a": "THHHTTHT",
+    "sequence_b": "TTHTHTHT",
+    "eig": 0.225006
+  },
+  {
+    "sequence_a": "THHTT",
+    "sequence_b": "THTTHHHH",
+    "eig": 0.22117
+  },
+  {
+    "sequence_a": "HTTHHHH",
+    "sequence_b": "THTTHTTT",
+    "eig": 0.221112
+  },
+  {
+    "sequence_a": "HTTHH",
+    "sequence_b": "HTHTTTH",
+    "eig": 0.220098
+  },
+  {
+    "sequence_a": "HTH",
+    "sequence_b": "HTHHTTH",
+    "eig": 0.216169
+  },
+  {
+    "sequence_a": "THHTT",
+    "sequence_b": "HTTTTHTH",
+    "eig": 0.216129
+  },
+  {
+    "sequence_a": "THT",
+    "sequence_b": "HTHHTT",
+    "eig": 0.209494
+  },
+  {
+    "sequence_a": "THTTT",
+    "sequence_b": "THHHHHTH",
+    "eig": 0.205732
+  },
+  {
+    "sequence_a": "HHHHTT",
+    "sequence_b": "HHHTTTTT",
+    "eig": 0.203643
+  },
+  {
+    "sequence_a": "THHHTH",
+    "sequence_b": "TTTTHHHH",
+    "eig": 0.202649
+  }
+];
+
+    const jsPsych = initJsPsych({
+      on_finish: function () { window.__experimentData = jsPsych.data.get().values(); }
+    });
+
+    const timeline = [];
+
+    // 1. Instructions
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus:
+        '<div class="auto-psych-prose">' +
+          '<p>In this study, you will look at sequences of coin flips and judge how <strong>random</strong> they look.</p>' +
+          '<p>Imagine flipping a fair coin over and over. Each flip is equally likely to come up Heads (H) or Tails (T), and every flip is independent — the coin has no memory, so what came before does not change what comes next.</p>' +
+          '<p>On each trial you will see <strong>two</strong> sequences of coin flips, side by side. The two sequences may be <strong>different lengths</strong>. Your task is to pick the <strong>one sequence that looks more random</strong> to you — the one that looks more like it was produced by genuinely random coin flipping.</p>' +
+          '<p>Different people have different impressions of what makes a sequence look random, and there are no right or wrong answers. We are interested in your own honest impression, so go with your gut. You will complete <strong>32 trials</strong>, which takes about 4 minutes. Your responses are anonymous.</p>' +
+        '</div>',
+      choices: ['Begin']
+    });
+
+    // 2. One trial per stimulus
+    STIMULI.forEach(function (s) {
+      var swap = Math.random() < 0.5;
+      var left = swap ? s.sequence_b : s.sequence_a;
+      var right = swap ? s.sequence_a : s.sequence_b;
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus:
+          '<p>Which sequence looks more random?</p>' +
+          '<div class="auto-psych-pair">' +
+            '<div class="auto-psych-seq">' + left + '</div>' +
+            '<div class="auto-psych-seq">' + right + '</div>' +
+          '</div>',
+        choices: ['Left', 'Right'],
+        data: { sequence_a: left, sequence_b: right },
+        on_finish: function (data) { data.chose_left = data.response === 0 ? 1 : 0; }
+      });
+    });
+
+    // 3. Debrief
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: 
+        '<div class="auto-psych-prose">' +
+          '<p>Thank you for participating! Your responses help us understand how people perceive randomness in sequences of coin flips. When you click <strong>Finish</strong>, your responses will be submitted and you will be <strong>redirected back to Prolific</strong> to complete the study and receive your completion code.</p>' +
+        '</div>',
+      choices: ['Finish']
+    });
+
+    jsPsych.run(timeline);
+  </script>
+</html>

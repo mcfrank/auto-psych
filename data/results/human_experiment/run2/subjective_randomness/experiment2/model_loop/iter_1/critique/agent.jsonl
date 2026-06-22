@@ -1,0 +1,310 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mls -l /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique
+total 1
+-rw-------+ 1 benpry ngoodman   44 Jun 21 18:04 agent.jsonl
+-rw-------+ 1 benpry ngoodman 3184 Jun 21 18:04 CRITIQUE_CONTEXT.md
+[0m
+[0m→ [0mRead ../../../run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/CRITIQUE_CONTEXT.md
+[0m→ [0mRead ../../../run2/data/subjective_randomness/experiment2/model_loop/models/iter0_candidate1.py
+[0m
+[0m$ [0mhead -n 10 /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,TTTHHTTT,THTTTTHH,1,0,,8,2,2,3,3,0,8,3,3,4,2,1,0.25,0.2857142857142857,0.2857142857142857,0.5,0.5,0.375,0.42857142857142855,0.42857142857142855,0.25,0.5
+0,[REDACTED_PROLIFIC_ID],2,TTTTHHTH,HHTH,1,0,,8,3,3,4,2,1,4,3,2,2,1,1,0.375,0.42857142857142855,0.42857142857142855,0.25,0.25,0.75,0.6666666666666666,0.3333333333333333,0.5,0.5
+0,[REDACTED_PROLIFIC_ID],3,THHHHHTT,THTTTTHT,0,1,,8,5,2,5,3,0,8,2,4,4,1,2,0.625,0.2857142857142857,0.5714285714285714,0.25,0.5,0.25,0.5714285714285714,0.42857142857142855,0.5,0.5
+0,[REDACTED_PROLIFIC_ID],4,HTTHHHHT,HHTHHHTH,0,1,,8,5,3,4,4,0,8,6,4,3,3,1,0.625,0.42857142857142855,0.42857142857142855,0.25,0.5,0.75,0.5714285714285714,0.2857142857142857,0.5,1.0
+0,[REDACTED_PROLIFIC_ID],5,THTHHHHT,HTHHTHH,1,0,,8,5,4,4,2,1,7,5,4,2,3,1,0.625,0.5714285714285714,0.42857142857142855,0.25,0.25,0.7142857142857143,0.6666666666666666,0.16666666666666666,0.4285714285714286,1.0
+0,[REDACTED_PROLIFIC_ID],6,THTHHHHH,TTHTTT,0,1,,8,6,3,5,1,1,6,1,2,3,3,0,0.75,0.42857142857142855,0.5714285714285714,0.5,0.5,0.16666666666666666,0.4,0.4,0.6666666666666667,0.6666666666666667
+0,[REDACTED_PROLIFIC_ID],7,HHTTTTH,THHHTHH,0,1,,7,3,2,4,3,0,7,5,3,3,4,0,0.42857142857142855,0.3333333333333333,0.5,0.1428571428571429,0.4285714285714286,0.7142857142857143,0.5,0.3333333333333333,0.4285714285714286,0.4285714285714286
+0,[REDACTED_PROLIFIC_ID],8,TTHH,TTHHHHHT,0,1,,4,2,1,2,2,0,8,5,2,5,3,0,0.5,0.3333333333333333,0.3333333333333333,0.0,0.0,0.625,0.2857142857142857,0.5714285714285714,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],9,THHHHHT,THHHTHHH,0,1,,7,5,2,5,3,0,8,6,3,3,4,0,0.7142857142857143,0.3333333333333333,0.6666666666666666,0.4285714285714286,0.7142857142857142,0.75,0.42857142857142855,0.2857142857142857,0.5,1.0
+[0m
+[0m$ [0mcat << 'EOF' > test_masks.py
+import pandas as pd
+import numpy as np
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv')
+
+def check_mask(name, mask):
+    print(f"{name}: {mask.sum()} trials")
+
+check_mask("1", (df['n_a'] == df['n_b']) & (np.abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1) & (df['max_run_a'] != df['max_run_b']))
+check_mask("2", (df['n_a'] == df['n_b']) & (np.abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1) & (df['periodicity_a'] != df['periodicity_b']))
+check_mask("3", (df['n_a'] != df['n_b']) & (df['imbalance_a'] >= 0.4) & (df['imbalance_b'] >= 0.4))
+check_mask("4", (df['n_a'] != df['n_b']) & (df['p_alts_a'] >= 0.7) & (df['p_alts_b'] >= 0.7))
+check_mask("5", (np.abs(df['imbalance_a'] - df['imbalance_b']) < 1e-4) & (df['p_a'] != df['p_b']) & (df['n_a'] == df['n_b']))
+check_mask("6", (df['n_a'] == df['n_b']) & (np.abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1) & (np.abs(df['imbalance_a'] - df['imbalance_b']) <= 0.1) & (df['rep_motifs_a'] != df['rep_motifs_b']))
+check_mask("7", (df['p_alts_a'] >= 0.6) & (df['p_alts_b'] >= 0.6) & (df['n_a'] == df['n_b']))
+check_mask("8", (df['n_a'] != df['n_b']))
+EOF
+python3 test_masks.py
+1: 40 trials
+2: 40 trials
+3: 200 trials
+4: 80 trials
+5: 0 trials
+6: 0 trials
+7: 0 trials
+8: 1680 trials
+[0m
+[0m$ [0mcat << 'EOF' > test_masks.py
+import pandas as pd
+import numpy as np
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv')
+print((df['n_a'] == df['n_b']).sum())
+print(((np.abs(df['imbalance_a'] - df['imbalance_b']) < 1e-4) & (df['n_a'] == df['n_b'])).sum())
+print(((np.abs(df['imbalance_a'] - df['imbalance_b']) < 1e-4) & (df['n_a'] == df['n_b']) & (df['p_a'] != df['p_b'])).sum())
+EOF
+python3 test_masks.py
+880
+0
+0
+[0m
+[0m$ [0mpython3 -c "import pandas as pd; df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv'); print(df[['sequence_a', 'sequence_b', 'n_a', 'n_b']].head(20))"
+sequence_a sequence_b  n_a  n_b
+0    TTTHHTTT   THTTTTHH    8    8
+1    TTTTHHTH       HHTH    8    4
+2    THHHHHTT   THTTTTHT    8    8
+3    HTTHHHHT   HHTHHHTH    8    8
+4    THTHHHHT    HTHHTHH    8    7
+5    THTHHHHH     TTHTTT    8    6
+6     HHTTTTH    THHHTHH    7    7
+7        TTHH   TTHHHHHT    4    8
+8     THHHHHT   THHHTHHH    7    8
+9    THHHHTHT     TTTHTH    8    6
+10   THHHTHHT      HHTHH    8    5
+11     HTTTTH    HHHTHTH    6    7
+12    TTTHHTT   TTTHHHHH    7    8
+13   HHHTTTHT      THTHH    8    5
+14      THTHH   THTTTHHH    5    8
+15     HTHHTH   HHTTTHHT    6    8
+16   THHHTHHT   TTTHHHHT    8    8
+17   THHHHTTT   THHHTTHH    8    8
+18   THHHTHTH     HHTHTH    8    6
+19    HHHHHTT   HHHHTHTH    7    8
+[0m
+[0m$ [0mpython3 -c "import pandas as pd; df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv'); df_same = df[df['n_a'] == df['n_b']]; print(df_same[['p_alts_a', 'p_alts_b', 'imbalance_a', 'imbalance_b']].head(20))"
+p_alts_a  p_alts_b  imbalance_a  imbalance_b
+0   0.285714  0.428571     0.500000     0.250000
+2   0.285714  0.571429     0.250000     0.500000
+3   0.428571  0.571429     0.250000     0.500000
+6   0.333333  0.500000     0.142857     0.428571
+16  0.571429  0.285714     0.250000     0.000000
+17  0.285714  0.428571     0.000000     0.250000
+21  0.428571  0.857143     0.000000     0.250000
+22  0.285714  0.571429     0.000000     0.250000
+30  0.428571  0.714286     0.000000     0.250000
+32  0.428571  0.285714     0.250000     0.500000
+34  0.571429  0.285714     0.500000     0.250000
+35  0.428571  0.571429     0.250000     0.500000
+38  0.500000  0.333333     0.428571     0.142857
+48  0.285714  0.571429     0.000000     0.250000
+49  0.285714  0.428571     0.000000     0.250000
+53  0.428571  0.857143     0.000000     0.250000
+54  0.571429  0.285714     0.250000     0.000000
+62  0.428571  0.714286     0.000000     0.250000
+64  0.285714  0.428571     0.500000     0.250000
+66  0.571429  0.285714     0.500000     0.250000
+[0m
+[0m$ [0mpython3 -c "import pandas as pd, numpy as np; df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv'); df_same = df[df['n_a'] == df['n_b']]; print('same imbalance:', sum(np.abs(df_same['imbalance_a'] - df_same['imbalance_b']) < 1e-4)); print('same alts:', sum(np.abs(df_same['p_alts_a'] - df_same['p_alts_b']) < 1e-4))"
+same imbalance: 0
+same alts: 40
+[0m
+[0m$ [0mpython3 -c "import pandas as pd, numpy as np; df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv'); df_same = df[(df['n_a'] == df['n_b']) & (np.abs(df['p_alts_a'] - df['p_alts_b']) < 1e-4)]; print(df_same[['sequence_a', 'sequence_b', 'imbalance_a', 'imbalance_b', 'max_run_a', 'max_run_b', 'periodicity_a', 'periodicity_b']].drop_duplicates())"
+sequence_a sequence_b  ...  periodicity_a  periodicity_b
+1308   HHHHHTTH   HHTTTHHH  ...           0.50           0.25
+1340   HHTTTHHH   HHHHHTTH  ...           0.25           0.50
+
+[2 rows x 8 columns]
+[0m
+[0m$ [0mpython3 -c "import pandas as pd; df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv'); print(df[['sequence_a', 'sequence_b']].drop_duplicates().shape[0], 'unique pairs'); print('Some pairs:'); print(df[['sequence_a', 'sequence_b']].drop_duplicates().head(10))"
+128 unique pairs
+Some pairs:
+  sequence_a sequence_b
+0   TTTHHTTT   THTTTTHH
+1   TTTTHHTH       HHTH
+2   THHHHHTT   THTTTTHT
+3   HTTHHHHT   HHTHHHTH
+4   THTHHHHT    HTHHTHH
+5   THTHHHHH     TTHTTT
+6    HHTTTTH    THHHTHH
+7       TTHH   TTHHHHHT
+8    THHHHHT   THHHTHHH
+9   THHHHTHT     TTTHTH
+[0m
+[0m$ [0mpython3 -c "import pandas as pd; df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv').drop_duplicates(subset=['sequence_a', 'sequence_b']); print(df[['n_a', 'n_b', 'imbalance_a', 'imbalance_b', 'p_alts_a', 'p_alts_b']].describe())"
+n_a         n_b  imbalance_a  imbalance_b    p_alts_a    p_alts_b
+count  128.000000  128.000000   128.000000   128.000000  128.000000  128.000000
+mean     6.875000    6.875000     0.275279     0.275279    0.500670    0.500670
+std      1.542061    1.542061     0.225570     0.225570    0.209493    0.209493
+min      2.000000    2.000000     0.000000     0.000000    0.000000    0.000000
+25%      6.000000    6.000000     0.000000     0.000000    0.333333    0.333333
+50%      8.000000    8.000000     0.250000     0.250000    0.428571    0.428571
+75%      8.000000    8.000000     0.428571     0.428571    0.600000    0.600000
+max      8.000000    8.000000     1.000000     1.000000    1.000000    1.000000
+[0m
+[0m$ [0mpython3 -c "import pandas as pd; df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv'); m7 = (df['n_a'] != df['n_b']) & (df['p_alts_a'] >= 0.6) & (df['p_alts_b'] >= 0.6); m8 = (df['n_a'] != df['n_b']) & (df['imbalance_a'] >= 0.4) & (df['imbalance_b'] >= 0.4); print('m7:', m7.sum(), 'm8:', m8.sum())"
+m7: 160 m8: 200
+[0m
+[0m$ [0mmkdir -p /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/max_run_norm_slope.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/iter0_candidate1.py">
+ERROR [56:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [57:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [69:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/periodicity_slope.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/iter0_candidate1.py">
+ERROR [56:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [57:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [69:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/rep_motifs_slope.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/iter0_candidate1.py">
+ERROR [56:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [57:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [69:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/alt_motifs_slope.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/iter0_candidate1.py">
+ERROR [56:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [57:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [69:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/heads_bias_slope.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/iter0_candidate1.py">
+ERROR [56:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [57:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [69:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/length_imbalance_interaction_slope.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/iter0_candidate1.py">
+ERROR [56:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [57:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [69:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/length_pref_high_alternation.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/iter0_candidate1.py">
+ERROR [56:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [57:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [69:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/length_pref_high_imbalance.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/iter0_candidate1.py">
+ERROR [56:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [57:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [69:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m$ [0mls -1 /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/
+alt_motifs_slope.py
+heads_bias_slope.py
+length_imbalance_interaction_slope.py
+length_pref_high_alternation.py
+length_pref_high_imbalance.py
+max_run_norm_slope.py
+periodicity_slope.py
+rep_motifs_slope.py
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/*.py
+# name: alt_motifs_slope
+# description: The linear slope of the difference in the number of alternating motifs predicting the choice of the left sequence.
+import numpy as np
+
+
+def test_statistic(df):
+    x = df["alt_motifs_a"] - df["alt_motifs_b"]
+    y = df["chose_left"]
+    cov = np.cov(x, y)[0, 1]
+    var = np.var(x, ddof=1)
+    return float(cov / var) if var > 1e-8 else np.nan
+[0m
+[0m$ [0mfor f in /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/*.py; do echo "--- $f"; head -n 3 "$f"; done
+--- /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/alt_motifs_slope.py
+# name: alt_motifs_slope
+# description: The linear slope of the difference in the number of alternating motifs predicting the choice of the left sequence.
+import numpy as np
+--- /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/heads_bias_slope.py
+# name: heads_bias_slope
+# description: The linear slope of the difference in the proportion of heads predicting the choice, testing if participants break symmetry between heads and tails.
+import numpy as np
+--- /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/length_imbalance_interaction_slope.py
+# name: length_imbalance_interaction_slope
+# description: The slope of the product of length and imbalance (n * imbalance) predicting the choice, testing if the model misestimates the interaction between length and imbalance.
+import numpy as np
+--- /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/length_pref_high_alternation.py
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/length_pref_high_alternation.py
+# name: length_pref_high_alternation
+# description: The overall proportion of trials where the longer sequence was chosen, restricted to trials where both sequences have high alternation rates (>=0.6) and unequal lengths.
+import numpy as np
+
+
+def test_statistic(df):
+    mask = (df["n_a"] != df["n_b"]) & (df["p_alts_a"] >= 0.6) & (df["p_alts_b"] >= 0.6)
+    sub_df = df[mask]
+    if len(sub_df) == 0:
+        return np.nan
+    chose_longer = np.where(
+        sub_df["n_a"] > sub_df["n_b"], sub_df["chose_left"], sub_df["chose_right"]
+    )
+    return float(np.mean(chose_longer))
+[0m
+[0m$ [0mls -1 /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats | wc -l
+8
+[0m
+I have completed the analysis of the incumbent model (`iter0_candidate1`) and the dataset, and proposed 8 test statistics designed to expose potential systematic failures of its single mechanism.
+
+### Key Hypothesized Failures
+The incumbent model evaluates a sequence using the formula: `score = n * (base_evidence - penalty)`, where `penalty` consists only of absolute imbalance (`theta_imb`) and asymmetric alternation rate (`theta_alt`). Based on this, I targeted features the model ignores or combinations it might incorrectly scale:
+
+1. **Features ignored by the model:** The model entirely ignores sequence structures like the length of runs (`max_run_norm`), repeating patterns (`periodicity`, `rep_motifs`), and alternating patterns (`alt_motifs`), treating any sequence with the same `p_alts` and `imbalance` as identical.
+2. **Symmetry assumptions:** The model uses `abs(p - 0.5)` for imbalance, assuming perfect symmetry between Heads and Tails. Humans may have a bias.
+3. **Multiplicative length penalty:** Because the score multiplies length by evidence minus penalty, the model predicts that if both sequences are "bad" (highly imbalanced or highly alternating), people will *strongly* prefer the shorter sequence (since it yields a less negative score).
+
+### Proposed Test Statistics (Committed to `test_stats/`)
+I have written the 8 requested test statistics as targeted Python scripts:
+
+1. **`max_run_norm_slope.py`**: Linear slope of the difference in normalized maximum run length predicting choice.
+2. **`periodicity_slope.py`**: Linear slope of the difference in periodicity predicting choice.
+3. **`rep_motifs_slope.py`**: Linear slope of the difference in repeated motifs predicting choice.
+4. **`alt_motifs_slope.py`**: Linear slope of the difference in alternating motifs predicting choice.
+5. **`heads_bias_slope.py`**: Linear slope on `p_heads_a - p_heads_b` to test for Heads/Tails asymmetry, which the model assumes is non-existent.
+6. **`length_imbalance_interaction_slope.py`**: Evaluates whether the model's rigid multiplicative penalty `(n * imbalance)` overestimates or underestimates how length interacts with imbalance.
+7. **`length_pref_high_alternation.py`**: The human preference for longer sequences when both sequences have high alternation rates (`p_alts >= 0.6`).
+8. **`length_pref_high_imbalance.py`**: The human preference for longer sequences when both sequences are highly imbalanced (`imbalance >= 0.4`).
+
+As per your final instruction, the test statistics have been saved into the target directory, and I will let the automated pipeline run the posterior-predictive harness and generate the `ppc_results.json` and `critiques.md`.

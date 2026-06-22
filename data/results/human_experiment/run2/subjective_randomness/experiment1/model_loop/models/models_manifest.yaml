@@ -1,0 +1,67 @@
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T
+    counts
+
+    and an ideal alternation rate.
+
+    '
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+
+    long runs, periodic templates, and imbalance.
+
+    '
+- name: bayesian_diagnosticity
+  rationale: 'Randomness is the log-likelihood ratio of a fair coin versus a regular
+
+    process: a mixture of a complexity-penalized motif process (Griffiths et
+
+    al. 2018) and a biased coin. Merges the former diagnosticity and
+
+    statistical-inference accounts.
+
+    '
+- name: window_typicality
+  rationale: 'Random-looking sequences have a longest run typical of a fair coin seen
+
+    through a limited memory window; over-long streaks look non-random (Hahn &
+
+    Warren 2009).
+
+    '
+- name: iter0_candidate0
+  rationale: 'Random-looking sequences are judged by their similarity to a prototype
+    with balanced counts and an ideal alternation rate, but the penalty for deviating
+    from the ideal alternation rate is asymmetric: sequences that alternate less than
+    the ideal are penalized more harshly than those that alternate more.'
+- name: iter0_candidate1
+  rationale: "People judge a sequence's randomness by evaluating the joint typicality\
+    \ of its macroscopic features \u2014 specifically, the binomial probability of\
+    \ its head count given a fair coin, and the binomial probability of its alternation\
+    \ count given an ideal alternation rate. Rather than using length-invariant proportional\
+    \ heuristics, this mechanism naturally scales deviation penalties with sequence\
+    \ length and provides a statistically grounded, asymmetric tolerance for over-alternating\
+    \ (highly periodic) sequences."
+- name: iter0_candidate2
+  rationale: 'People judge randomness by multi-scale representativeness: they expect
+    the proportion of heads to closely match the 50/50 fair-coin ideal not just globally,
+    but across all possible contiguous sub-sequences. Rather than using separate heuristics
+    for global imbalance and alternations, people penalize a sequence based on the
+    mean squared deviation of the head proportion from 0.5 across all sub-windows
+    of length 2 or greater, which naturally favors evenly spaced, periodic sequences
+    because those exhibit the least local variance.'
+- name: iter1_candidate0
+  rationale: 'Random-looking sequences are judged by their Euclidean distance to a
+    "messy" prototype: rather than expecting perfectly balanced counts, people apply
+    a "too-perfect" heuristic and judge sequences against a prototype with a strictly
+    positive ideal imbalance. The cognitive penalty accelerates quadratically with
+    deviations from this ideal imbalance and an ideal alternation rate, creating a
+    wide tolerance for near-ideal sequences while remaining asymmetric to penalize
+    under-alternating sequences more harshly.'
+- name: iter1_candidate2
+  rationale: 'People judge a sequence''s randomness by comparing its local pattern
+    frequencies to a subjective expectation: they compute the Kullback-Leibler divergence
+    between the sequence''s empirical bigram distribution (HH, HT, TH, TT) and an
+    idealized prototype distribution that heavily favors alternating pairs, perceiving
+    sequences with lower divergence from this prototype as more random.'

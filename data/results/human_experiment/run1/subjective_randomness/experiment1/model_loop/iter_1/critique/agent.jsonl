@@ -1,0 +1,594 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_1/critique/CRITIQUE_CONTEXT.md
+# Critique context
+
+**Incumbent (best) model:** `iter0_candidate0`
+**Incumbent model code:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/models/iter0_candidate0.py`
+**Incumbent hypothesis:** People judge randomness by comparing a sequence to a mental prototype, but this prototype is subjectively biased: it possesses an ideal proportion of heads and an ideal alternation rate that may deviate from objective fairness. Sequences are perceived as more random when their proportion of heads and alternations have a smaller squared deviation from these subjective ideals.
+
+**Responses CSV:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv`
+**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+**Model set directory:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/models`
+
+Propose **8** test statistics. Write each to `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_1/critique/test_stats/<name>.py` as a function `test_statistic(df)` returning a scalar, with `# name:` and `# description:` header comments.
+
+You do **not** need to run anything. After you write the statistics, the pipeline runs the posterior-predictive harness automatically over `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_1/critique/test_stats` and records the results:
+
+```bash
+python3 -m src.critique.ppc \
+    --responses /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv \
+    --model iter0_candidate0 \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/models \
+    --test-stats-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_1/critique/test_stats \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_1/critique/ppc_results.json \
+    --cache-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_1/critique/.fit_cache \
+    --n-replicates 200 \
+    --significance-alpha 0.05
+```
+
+That writes `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_1/critique/ppc_results.json` with a two-sided empirical p-value per statistic (200 posterior-predictive replicates). A statistic is a **significant discrepancy** when its `p_value` ≤ 0.05 (raw, no multiple-comparisons correction).
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/models/iter0_candidate0.py
+"""
+People judge randomness by comparing a sequence to a mental prototype, but this prototype is subjectively biased: it possesses an ideal proportion of heads and an ideal alternation rate that may deviate from objective fairness. Sequences are perceived as more random when their proportion of heads and alternations have a smaller squared deviation from these subjective ideals.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Features from responses
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free parameters for the subjective prototype
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+    
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+    
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+    
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+    
+    # Calculate squared deviations from the subjective ideals
+    dev_a = w_p * pt.square(p_a - ideal_p) + w_alt * pt.square(alt_rate_a - ideal_alt)
+    dev_b = w_p * pt.square(p_b - ideal_p) + w_alt * pt.square(alt_rate_b - ideal_alt)
+    
+    # Lower deviation means it is closer to the prototype (more random)
+    # Using sigmoid of (dev_b - dev_a) so that if dev_a < dev_b, p_left > 0.5
+    # Clip to avoid exact 0 or 1 for numerical stability
+    p_left_raw = pm.math.sigmoid(dev_b - dev_a)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 5 /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,TH,TTTTHHTH,0,1,,2,1,1,1,0,1,8,3,3,4,2,1,0.5,1.0,0.0,0.0,0.0,0.375,0.42857142857142855,0.42857142857142855,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],2,HTHTTTTH,HT,1,0,,8,3,4,4,2,1,2,1,1,1,0,1,0.375,0.5714285714285714,0.42857142857142855,0.25,0.25,0.5,1.0,0.0,0.0,0.0
+0,[REDACTED_PROLIFIC_ID],3,THHHHHTT,TTHHTTT,0,1,,8,5,2,5,3,0,7,2,2,3,3,0,0.625,0.2857142857142857,0.5714285714285714,0.25,0.5,0.2857142857142857,0.3333333333333333,0.3333333333333333,0.4285714285714286,0.4285714285714286
+0,[REDACTED_PROLIFIC_ID],4,TTTTTT,HHHHHHHT,0,1,,6,0,0,6,1,0,8,7,1,7,2,0,0.0,0.0,1.0,1.0,1.0,0.875,0.14285714285714285,0.8571428571428571,0.75,0.75
+[0m
+[0m$ [0mcat << 'EOF' > test_stats_preview.py
+import pandas as pd
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+def stat_max_run(df):
+    mask = (df['max_run_norm_a'] - df['max_run_norm_b']) > 0.2
+    print(f"stat_max_run n={mask.sum()}")
+    return df.loc[mask, 'chose_left'].mean()
+
+stat_max_run(df)
+EOF
+python test_stats_preview.py
+stat_max_run n=348
+[0m
+[0m$ [0mcat << 'EOF' > test_stats_preview.py
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+def stat_max_run(df):
+    mask = (df['max_run_norm_a'] - df['max_run_norm_b']) > 0.2
+    return mask.sum(), df.loc[mask, 'chose_left'].mean()
+
+def stat_periodicity(df):
+    mask = (df['periodicity_a'] - df['periodicity_b']) > 0.2
+    return mask.sum(), df.loc[mask, 'chose_left'].mean()
+
+def stat_extreme_alt(df):
+    mask = (df['p_alts_a'] == 1.0) & (df['p_alts_b'] < 1.0)
+    return mask.sum(), df.loc[mask, 'chose_left'].mean()
+
+def stat_alt_asymmetry(df):
+    mask = (df['p_alts_a'] < 0.35) & (df['p_alts_b'] > 0.65)
+    return mask.sum(), df.loc[mask, 'chose_left'].mean()
+
+def stat_length(df):
+    mask = df['n_a'] < df['n_b']
+    return mask.sum(), df.loc[mask, 'chose_left'].mean()
+
+def stat_imbalance(df):
+    mask = (df['imbalance_a'] - df['imbalance_b']) > 0.2
+    return mask.sum(), df.loc[mask, 'chose_left'].mean()
+
+def stat_alt_motifs(df):
+    mask = (df['alt_motifs_a'] > df['alt_motifs_b'])
+    return mask.sum(), df.loc[mask, 'chose_left'].mean()
+
+def stat_rep_motifs(df):
+    mask = (df['rep_motifs_a'] > df['rep_motifs_b'])
+    return mask.sum(), df.loc[mask, 'chose_left'].mean()
+
+for name, func in [
+    ('max_run', stat_max_run),
+    ('periodicity', stat_periodicity),
+    ('extreme_alt', stat_extreme_alt),
+    ('alt_asymmetry', stat_alt_asymmetry),
+    ('length', stat_length),
+    ('imbalance', stat_imbalance),
+    ('alt_motifs', stat_alt_motifs),
+    ('rep_motifs', stat_rep_motifs)
+]:
+    n, mean = func(df)
+    print(f"{name:15s} n={n:4d} mean={mean:.3f}")
+EOF
+python test_stats_preview.py
+max_run         n= 348 mean=0.336
+periodicity     n= 491 mean=0.560
+extreme_alt     n=  59 mean=0.373
+alt_asymmetry   n=  75 mean=0.347
+length          n= 509 mean=0.377
+imbalance       n= 379 mean=0.554
+alt_motifs      n= 326 mean=0.690
+rep_motifs      n= 419 mean=0.623
+[0m
+[0m$ [0mcat << 'EOF' > test_stats_preview2.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+mask_zero = (df['p_alts_a'] == 0.0) & (df['p_alts_b'] > 0.0)
+print(f"p_alts_a == 0.0: n={mask_zero.sum()} mean={df.loc[mask_zero, 'chose_left'].mean():.3f}")
+
+mask_imbal = (df['imbalance_a'] == 0.0) & (df['imbalance_b'] > 0.0)
+print(f"imbalance_a == 0.0: n={mask_imbal.sum()} mean={df.loc[mask_imbal, 'chose_left'].mean():.3f}")
+
+mask_len = (df['n_a'] == 2) & (df['n_b'] > 2)
+print(f"n_a == 2: n={mask_len.sum()} mean={df.loc[mask_len, 'chose_left'].mean():.3f}")
+EOF
+python test_stats_preview2.py
+p_alts_a == 0.0: n=88 mean=0.148
+imbalance_a == 0.0: n=214 mean=0.402
+n_a == 2: n=63 mean=0.302
+[0m
+[0m$ [0mcat << 'EOF' > test_stats_preview3.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+mask = (df['max_run_norm_a'] > df['max_run_norm_b'] + 0.1) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2)
+print(f"max_run with similar p_alts: n={mask.sum()} mean={df.loc[mask, 'chose_left'].mean():.3f}")
+
+mask2 = (df['periodicity_a'] > df['periodicity_b'] + 0.2) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2)
+print(f"periodicity with similar p_alts: n={mask2.sum()} mean={df.loc[mask2, 'chose_left'].mean():.3f}")
+
+mask3 = (df['alt_motifs_a'] > df['alt_motifs_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2)
+print(f"alt_motifs with similar p_alts: n={mask3.sum()} mean={df.loc[mask3, 'chose_left'].mean():.3f}")
+
+mask4 = (df['rep_motifs_a'] > df['rep_motifs_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2)
+print(f"rep_motifs with similar p_alts: n={mask4.sum()} mean={df.loc[mask4, 'chose_left'].mean():.3f}")
+
+mask5 = (df['n_a'] < df['n_b']) & (abs(df['p_a'] - df['p_b']) < 0.2) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2)
+print(f"shorter length with similar features: n={mask5.sum()} mean={df.loc[mask5, 'chose_left'].mean():.3f}")
+EOF
+python test_stats_preview3.py
+max_run with similar p_alts: n=162 mean=0.370
+periodicity with similar p_alts: n=156 mean=0.571
+alt_motifs with similar p_alts: n=40 mean=0.575
+rep_motifs with similar p_alts: n=133 mean=0.714
+shorter length with similar features: n=149 mean=0.383
+[0m
+[0m$ [0mcat << 'EOF' > test_stats_preview4.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+mask = (df['periodicity_a'] == 1.0) & (df['periodicity_b'] < 1.0)
+print(f"periodicity_a == 1.0: n={mask.sum()} mean={df.loc[mask, 'chose_left'].mean():.3f}")
+
+mask2 = (df['alt_motifs_a'] == 0) & (df['alt_motifs_b'] > 0)
+print(f"alt_motifs_a == 0: n={mask2.sum()} mean={df.loc[mask2, 'chose_left'].mean():.3f}")
+
+mask3 = (df['p_a'] == 0.5) & (df['p_b'] != 0.5)
+print(f"p_a == 0.5 vs not: n={mask3.sum()} mean={df.loc[mask3, 'chose_left'].mean():.3f}")
+EOF
+python test_stats_preview4.py
+periodicity_a == 1.0: n=149 mean=0.403
+alt_motifs_a == 0: n=314 mean=0.299
+p_a == 0.5 vs not: n=214 mean=0.402
+[0m
+[0m$ [0mcat << 'EOF' > test_stats_preview5.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+mask = (df['alt_motifs_a'] == 0) & (df['alt_motifs_b'] > 0) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2)
+print(f"alt_motifs_a == 0 and similar p_alts: n={mask.sum()} mean={df.loc[mask, 'chose_left'].mean():.3f}")
+
+mask = (df['n_a'] == df['n_b']) & (df['h_a'] == df['h_b']) & (df['alts_a'] == df['alts_b']) & (df['sequence_a'] != df['sequence_b'])
+print(f"perfectly matched p and alt, different sequence: n={mask.sum()} mean={df.loc[mask, 'chose_left'].mean():.3f}")
+if mask.sum() > 0:
+    print(df.loc[mask, ['sequence_a', 'sequence_b', 'chose_left']].head(10))
+EOF
+python test_stats_preview5.py
+alt_motifs_a == 0 and similar p_alts: n=40 mean=0.450
+perfectly matched p and alt, different sequence: n=0 mean=nan
+[0m
+[0m$ [0mcat << 'EOF' > find_stats.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+def check(name, mask):
+    if mask.sum() > 20:
+        print(f"{name:30s}: n={mask.sum():4d}, mean={df.loc[mask, 'chose_left'].mean():.3f}")
+
+check('max_run_norm_a > b + 0.1', (df['max_run_norm_a'] > df['max_run_norm_b'] + 0.1) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2))
+check('periodicity_a > b + 0.2', (df['periodicity_a'] > df['periodicity_b'] + 0.2) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2))
+check('rep_motifs_a > b', (df['rep_motifs_a'] > df['rep_motifs_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2))
+check('n_a < n_b', (df['n_a'] < df['n_b']) & (abs(df['p_a'] - df['p_b']) < 0.2) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2))
+
+# What about heads vs tails?
+check('more heads (matched imbal)', (df['p_a'] > 0.5) & (df['p_b'] < 0.5) & (abs(df['imbalance_a'] - df['imbalance_b']) < 0.1))
+
+# What about long vs short runs with exact same alt rate?
+check('same alt, diff max_run', (df['p_alts_a'] == df['p_alts_b']) & (df['max_run_norm_a'] > df['max_run_norm_b']))
+
+# Extreme values
+check('p_alts_a == 1.0', (df['p_alts_a'] == 1.0) & (df['p_alts_b'] < 1.0))
+check('p_alts_a == 0.0', (df['p_alts_a'] == 0.0) & (df['p_alts_b'] > 0.0))
+check('imbalance_a == 0.0', (df['imbalance_a'] == 0.0) & (df['imbalance_b'] > 0.0))
+check('imbalance_a == 0.5', (df['imbalance_a'] == 0.5) & (df['imbalance_b'] < 0.5))
+EOF
+python find_stats.py
+max_run_norm_a > b + 0.1      : n= 162, mean=0.370
+periodicity_a > b + 0.2       : n= 156, mean=0.571
+rep_motifs_a > b              : n= 133, mean=0.714
+n_a < n_b                     : n= 149, mean=0.383
+more heads (matched imbal)    : n=  76, mean=0.461
+p_alts_a == 1.0               : n=  59, mean=0.373
+p_alts_a == 0.0               : n=  88, mean=0.148
+imbalance_a == 0.0            : n= 214, mean=0.402
+imbalance_a == 0.5            : n= 127, mean=0.740
+[0m
+[0m$ [0mcat << 'EOF' > check_imbalance.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+mask = (df['imbalance_a'] == 0.5) & (df['imbalance_b'] < 0.5)
+print(df.loc[mask, ['sequence_a', 'sequence_b', 'p_a', 'imbalance_a', 'chose_left']].head(10))
+EOF
+python check_imbalance.py
+sequence_a sequence_b   p_a  imbalance_a  chose_left
+6     TTHTTTHT   TTTHHHHT  0.25          0.5           1
+9     TTTHTHTT    HTTTTTH  0.25          0.5           1
+12    HHHTHHTH   HHHHHTTT  0.75          0.5           1
+37    HHHTHHHT   HHTTTTHH  0.75          0.5           1
+50    HTHHHTHH    THHHHTH  0.75          0.5           0
+73    TTTHTHTT    HTTTTTH  0.25          0.5           1
+87        HTHH   HTTHHHTT  0.75          0.5           0
+105   TTTHTHTT    HTTTTTH  0.25          0.5           1
+119       HTHH   HTTHHHTT  0.75          0.5           1
+133   HHHTHHHT   HHTTTTHH  0.75          0.5           0
+[0m
+[0m$ [0mcat << 'EOF' > check_imbalance2.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+mask = (df['imbalance_a'] == 1.0) & (df['imbalance_b'] < 1.0)
+print(f"imbalance_a == 1.0: n={mask.sum()} mean={df.loc[mask, 'chose_left'].mean():.3f}")
+EOF
+python check_imbalance2.py
+imbalance_a == 1.0: n=88 mean=0.148
+[0m
+[0m$ [0mcat << 'EOF' > check_imbal_detail.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+mask = (df['imbalance_a'] == 0.5) & (df['imbalance_b'] < 0.5)
+print(df.loc[mask, 'imbalance_b'].value_counts())
+EOF
+python check_imbal_detail.py
+imbalance_b
+0.000000    63
+0.428571    44
+0.250000    20
+Name: count, dtype: int64
+[0m
+[0m$ [0mcat << 'EOF' > check_confound.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+mask = (df['imbalance_a'] == 0.5) & (df['imbalance_b'] < 0.5)
+print(df.loc[mask, ['p_alts_a', 'p_alts_b']].describe())
+EOF
+python check_confound.py
+p_alts_a    p_alts_b
+count  127.000000  127.000000
+mean     0.566554    0.328084
+std      0.068097    0.109640
+min      0.428571    0.142857
+25%      0.571429    0.285714
+50%      0.571429    0.333333
+75%      0.571429    0.428571
+max      0.666667    0.500000
+[0m
+[0m$ [0mcat << 'EOF' > check_8_stats.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+def s1(df): return ((df['max_run_norm_a'] > df['max_run_norm_b'] + 0.1) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & (abs(df['p_a'] - df['p_b']) < 0.2))
+def s2(df): return ((df['periodicity_a'] > df['periodicity_b'] + 0.2) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & (abs(df['p_a'] - df['p_b']) < 0.2))
+def s3(df): return ((df['rep_motifs_a'] > df['rep_motifs_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & (abs(df['p_a'] - df['p_b']) < 0.2))
+def s4(df): return ((df['alt_motifs_a'] > df['alt_motifs_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & (abs(df['p_a'] - df['p_b']) < 0.2))
+def s5(df): return ((df['n_a'] < df['n_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & (abs(df['p_a'] - df['p_b']) < 0.2))
+def s6(df): return ((df['imbalance_a'] == 0.0) & (df['imbalance_b'] > 0.1) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2))
+def s7(df): return ((df['p_alts_a'] == 1.0) & (df['p_alts_b'] < 1.0))
+def s8(df): return ((df['p_alts_a'] == 0.0) & (df['p_alts_b'] > 0.0))
+
+for i, func in enumerate([s1, s2, s3, s4, s5, s6, s7, s8], 1):
+    mask = func(df)
+    print(f"Stat {i}: n={mask.sum():3d}, mean={df.loc[mask, 'chose_left'].mean():.3f}")
+EOF
+python check_8_stats.py
+Stat 1: n= 81, mean=0.383
+Stat 2: n= 81, mean=0.605
+Stat 3: n= 75, mean=0.707
+Stat 4: n= 21, mean=0.619
+Stat 5: n=149, mean=0.383
+Stat 6: n= 40, mean=0.625
+Stat 7: n= 59, mean=0.373
+Stat 8: n= 88, mean=0.148
+[0m
+[0m$ [0mcat << 'EOF' > check_heads.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+mask = (df['p_a'] > 0.5) & (df['p_b'] < 0.5) & (abs(df['imbalance_a'] - df['imbalance_b']) < 0.1)
+print(f"More heads: n={mask.sum()}, mean={df.loc[mask, 'chose_left'].mean():.3f}")
+
+mask2 = (df['p_a'] > df['p_b']) & (abs(df['imbalance_a'] - df['imbalance_b']) < 0.1) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2)
+print(f"More heads (controlled): n={mask2.sum()}, mean={df.loc[mask2, 'chose_left'].mean():.3f}")
+EOF
+python check_heads.py
+More heads: n=76, mean=0.461
+More heads (controlled): n=167, mean=0.455
+[0m
+[0m$ [0mcat << 'EOF' > check_stat6.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+mask = (df['imbalance_a'] == 0.0) & (df['imbalance_b'] > 0.0) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2)
+print(f"Perfect balance: n={mask.sum()}, mean={df.loc[mask, 'chose_left'].mean():.3f}")
+
+mask2 = (df['imbalance_a'] == 0.0) & (df['imbalance_b'] > 0.0)
+print(f"Perfect balance (uncontrolled): n={mask2.sum()}, mean={df.loc[mask2, 'chose_left'].mean():.3f}")
+EOF
+python check_stat6.py
+Perfect balance: n=40, mean=0.625
+Perfect balance (uncontrolled): n=214, mean=0.402
+[0m
+[0m$ [0mcat << 'EOF' > check_stats_final.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+funcs = [
+    lambda df: (df['max_run_norm_a'] > df['max_run_norm_b'] + 0.1) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & (abs(df['p_a'] - df['p_b']) < 0.2),
+    lambda df: (df['periodicity_a'] > df['periodicity_b'] + 0.2) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & (abs(df['p_a'] - df['p_b']) < 0.2),
+    lambda df: (df['rep_motifs_a'] > df['rep_motifs_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & (abs(df['p_a'] - df['p_b']) < 0.2),
+    lambda df: (df['n_a'] < df['n_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & (abs(df['p_a'] - df['p_b']) < 0.2),
+    lambda df: (df['p_alts_a'] == 0.0) & (df['p_alts_b'] > 0.0),
+    lambda df: (df['p_alts_a'] == 1.0) & (df['p_alts_b'] < 1.0),
+    lambda df: (df['imbalance_a'] == 0.5) & (df['imbalance_b'] < 0.5),
+    lambda df: (df['p_alts_a'] < 0.35) & (df['p_alts_b'] > 0.65),
+]
+
+for i, f in enumerate(funcs, 1):
+    mask = f(df)
+    print(f"Stat {i}: n={mask.sum()}, mean={df.loc[mask, 'chose_left'].mean():.3f}")
+EOF
+python check_stats_final.py
+Stat 1: n=81, mean=0.383
+Stat 2: n=81, mean=0.605
+Stat 3: n=75, mean=0.707
+Stat 4: n=149, mean=0.383
+Stat 5: n=88, mean=0.148
+Stat 6: n=59, mean=0.373
+Stat 7: n=127, mean=0.740
+Stat 8: n=75, mean=0.347
+[0m
+[0m$ [0mcat << 'EOF' > test_stats/max_run_penalty.py
+# name: max_run_penalty
+# description: Choice rate of sequence A when it has a noticeably longer maximum run than B, controlling for alternation rate and proportion of heads.
+def test_statistic(df):
+    mask = (df['max_run_norm_a'] > df['max_run_norm_b'] + 0.1) & \
+           (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & \
+           (abs(df['p_a'] - df['p_b']) < 0.2)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/periodicity_preference.py
+# name: periodicity_preference
+# description: Choice rate of sequence A when it is more periodic than B, controlling for alternation rate and proportion of heads.
+def test_statistic(df):
+    mask = (df['periodicity_a'] > df['periodicity_b'] + 0.2) & \
+           (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & \
+           (abs(df['p_a'] - df['p_b']) < 0.2)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/rep_motifs_preference.py
+# name: rep_motifs_preference
+# description: Choice rate of sequence A when it has more repeated motifs than B, controlling for alternation rate and proportion of heads.
+def test_statistic(df):
+    mask = (df['rep_motifs_a'] > df['rep_motifs_b']) & \
+           (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & \
+           (abs(df['p_a'] - df['p_b']) < 0.2)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/length_penalty.py
+# name: length_penalty
+# description: Choice rate of sequence A when it is shorter than B, controlling for alternation rate and proportion of heads.
+def test_statistic(df):
+    mask = (df['n_a'] < df['n_b']) & \
+           (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & \
+           (abs(df['p_a'] - df['p_b']) < 0.2)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/zero_alternation_penalty.py
+# name: zero_alternation_penalty
+# description: Choice rate of sequence A when it has zero alternations (all identical outcomes) and B has at least one.
+def test_statistic(df):
+    mask = (df['p_alts_a'] == 0.0) & (df['p_alts_b'] > 0.0)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/perfect_alternation_penalty.py
+# name: perfect_alternation_penalty
+# description: Choice rate of sequence A when it perfectly alternates (p_alts=1.0) and B does not.
+def test_statistic(df):
+    mask = (df['p_alts_a'] == 1.0) & (df['p_alts_b'] < 1.0)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/imbalance_preference.py
+# name: imbalance_preference
+# description: Choice rate of sequence A when it has an intermediate imbalance (0.5) and B is more balanced, to check if the model's quadratic penalty on p captures human preferences.
+def test_statistic(df):
+    mask = (df['imbalance_a'] == 0.5) & (df['imbalance_b'] < 0.5)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/asymmetric_alternation_penalty.py
+# name: asymmetric_alternation_penalty
+# description: Choice rate of sequence A when it has very low alternation (<0.35) and B has very high alternation (>0.65), to test if the model's symmetric quadratic penalty is adequate.
+def test_statistic(df):
+    mask = (df['p_alts_a'] < 0.35) & (df['p_alts_b'] > 0.65)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+/bin/bash: test_stats/max_run_penalty.py: No such file or directory
+/bin/bash: line 9: test_stats/periodicity_preference.py: No such file or directory
+/bin/bash: line 18: test_stats/rep_motifs_preference.py: No such file or directory
+/bin/bash: line 27: test_stats/length_penalty.py: No such file or directory
+/bin/bash: line 36: test_stats/zero_alternation_penalty.py: No such file or directory
+/bin/bash: line 43: test_stats/perfect_alternation_penalty.py: No such file or directory
+/bin/bash: line 50: test_stats/imbalance_preference.py: No such file or directory
+[0m
+[0m$ [0mmkdir -p test_stats
+cat << 'EOF' > test_stats/max_run_penalty.py
+# name: max_run_penalty
+# description: Choice rate of sequence A when it has a noticeably longer maximum run than B, controlling for alternation rate and proportion of heads.
+def test_statistic(df):
+    mask = (df['max_run_norm_a'] > df['max_run_norm_b'] + 0.1) & \
+           (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & \
+           (abs(df['p_a'] - df['p_b']) < 0.2)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/periodicity_preference.py
+# name: periodicity_preference
+# description: Choice rate of sequence A when it is more periodic than B, controlling for alternation rate and proportion of heads.
+def test_statistic(df):
+    mask = (df['periodicity_a'] > df['periodicity_b'] + 0.2) & \
+           (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & \
+           (abs(df['p_a'] - df['p_b']) < 0.2)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/rep_motifs_preference.py
+# name: rep_motifs_preference
+# description: Choice rate of sequence A when it has more repeated motifs than B, controlling for alternation rate and proportion of heads.
+def test_statistic(df):
+    mask = (df['rep_motifs_a'] > df['rep_motifs_b']) & \
+           (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & \
+           (abs(df['p_a'] - df['p_b']) < 0.2)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/length_penalty.py
+# name: length_penalty
+# description: Choice rate of sequence A when it is shorter than B, controlling for alternation rate and proportion of heads.
+def test_statistic(df):
+    mask = (df['n_a'] < df['n_b']) & \
+           (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & \
+           (abs(df['p_a'] - df['p_b']) < 0.2)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/zero_alternation_penalty.py
+# name: zero_alternation_penalty
+# description: Choice rate of sequence A when it has zero alternations (all identical outcomes) and B has at least one.
+def test_statistic(df):
+    mask = (df['p_alts_a'] == 0.0) & (df['p_alts_b'] > 0.0)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/perfect_alternation_penalty.py
+# name: perfect_alternation_penalty
+# description: Choice rate of sequence A when it perfectly alternates (p_alts=1.0) and B does not.
+def test_statistic(df):
+    mask = (df['p_alts_a'] == 1.0) & (df['p_alts_b'] < 1.0)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/imbalance_preference.py
+# name: imbalance_preference
+# description: Choice rate of sequence A when it has an intermediate imbalance (0.5) and B is more balanced, to check if the model's quadratic penalty on p captures human preferences.
+def test_statistic(df):
+    mask = (df['imbalance_a'] == 0.5) & (df['imbalance_b'] < 0.5)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+cat << 'EOF' > test_stats/asymmetric_alternation_penalty.py
+# name: asymmetric_alternation_penalty
+# description: Choice rate of sequence A when it has very low alternation (<0.35) and B has very high alternation (>0.65), to test if the model's symmetric quadratic penalty is adequate.
+def test_statistic(df):
+    mask = (df['p_alts_a'] < 0.35) & (df['p_alts_b'] > 0.65)
+    return float(df.loc[mask, 'chose_left'].mean()) if mask.sum() > 0 else 0.5
+EOF
+[0m
+[0m$ [0mls -la test_stats
+total 12
+drwx------+ 2 benpry ngoodman 4096 Jun 21 14:09 .
+drwx------+ 4 benpry ngoodman 4096 Jun 21 14:09 ..
+-rw-------+ 1 benpry ngoodman  390 Jun 21 14:09 asymmetric_alternation_penalty.py
+-rw-------+ 1 benpry ngoodman  382 Jun 21 14:09 imbalance_preference.py
+-rw-------+ 1 benpry ngoodman  397 Jun 21 14:09 length_penalty.py
+-rw-------+ 1 benpry ngoodman  451 Jun 21 14:09 max_run_penalty.py
+-rw-------+ 1 benpry ngoodman  298 Jun 21 14:09 perfect_alternation_penalty.py
+-rw-------+ 1 benpry ngoodman  437 Jun 21 14:09 periodicity_preference.py
+-rw-------+ 1 benpry ngoodman  436 Jun 21 14:09 rep_motifs_preference.py
+-rw-------+ 1 benpry ngoodman  316 Jun 21 14:09 zero_alternation_penalty.py
+[0m
+[0m$ [0mpython -c '
+import os, glob
+for f in glob.glob("test_stats/*.py"):
+    with open(f) as file:
+        code = file.read()
+    compile(code, f, "exec")
+'
+[0m
+[0m$ [0mhead -n 5 test_stats/max_run_penalty.py
+# name: max_run_penalty
+# description: Choice rate of sequence A when it has a noticeably longer maximum run than B, controlling for alternation rate and proportion of heads.
+def test_statistic(df):
+    mask = (df['max_run_norm_a'] > df['max_run_norm_b'] + 0.1) & \
+           (abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & \
+[0m
+I have successfully analyzed the incumbent model (`iter0_candidate0`) and the dataset, and proposed 8 test statistics that target plausible behavioral patterns the single-mechanism model might fail to reproduce. 
+
+The incumbent model uses a simple weighted sum of squared deviations from subjective ideals of the proportion of heads (`ideal_p`) and alternation rate (`ideal_alt`). This mechanism is symmetric and assumes that randomness judgments depend exclusively on those two summary statistics. My statistics target cases where this simple model is strongly constrained but human responses likely deviate, such as sensitivity to long runs, motif frequencies, varying sequence lengths, and asymmetric penalties for extreme sequences.
+
+I have created the 8 required statistics in the `test_stats/` directory:
+1. `max_run_penalty.py` — Tests if people penalize long runs when alternation rates and heads proportions are closely matched.
+2. `periodicity_preference.py` — Tests if periodic sequences are judged differently from non-periodic ones with identical alternating rates.
+3. `rep_motifs_preference.py` — Tests if repeated motifs influence choices when `p` and `p_alts` are matched.
+4. `length_penalty.py` — Tests if shorter sequences are seen as less random even when proportions are matched.
+5. `zero_alternation_penalty.py` — Probes the penalty magnitude for sequences with zero alternations (all identical outcomes).
+6. `perfect_alternation_penalty.py` — Probes the penalty magnitude for perfectly alternating sequences, testing if the model's single `ideal_alt` can jointly explain both `0` and `1` extremes.
+7. `imbalance_preference.py` — Tests if people have specific preferences for somewhat imbalanced sequences (e.g., `p=0.25` or `0.75`).
+8. `asymmetric_alternation_penalty.py` — Tests whether very low versus very high alternation rates are penalized asymmetrically.
+
+As requested by the override in your instructions, I have only generated the statistic files and will not run the posterior-predictive harness or write `critiques.md`. The pipeline is now ready to run the check automatically.

@@ -1,0 +1,952 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+cat: CONTEXT.md
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 1, candidate 1 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/iter_1/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -809.56
+
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -842.50
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -813.69
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular
+process: a mixture of a complexity-penalized motif process (Griffiths et
+al. 2018) and a biased coin. Merges the former diagnosticity and
+statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -838.52
+
+Random-looking sequences have a longest run typical of a fair coin seen
+through a limited memory window; over-long streaks look non-random (Hahn &
+Warren 2009).
+
+## iter0_candidate0  — posterior 1.000, ELPD-LOO -796.31
+
+Random-looking sequences are judged by their similarity to a prototype with balanced counts and an ideal alternation rate, but the penalty for deviating from the ideal alternation rate is asymmetric: sequences that alternate less than the ideal are penalized more harshly than those that alternate more.
+
+## iter0_candidate1  — posterior 0.000, ELPD-LOO -816.16
+
+People judge a sequence's randomness by evaluating the joint typicality of its macroscopic features — specifically, the binomial probability of its head count given a fair coin, and the binomial probability of its alternation count given an ideal alternation rate. Rather than using length-invariant proportional heuristics, this mechanism naturally scales deviation penalties with sequence length and provides a statistically grounded, asymmetric tolerance for over-alternating (highly periodic) sequences.
+
+## iter0_candidate2  — posterior 0.000, ELPD-LOO -819.85
+
+People judge randomness by multi-scale representativeness: they expect the proportion of heads to closely match the 50/50 fair-coin ideal not just globally, but across all possible contiguous sub-sequences. Rather than using separate heuristics for global imbalance and alternations, people penalize a sequence based on the mean squared deviation of the head proportion from 0.5 across all sub-windows of length 2 or greater, which naturally favors evenly spaced, periodic sequences because those exhibit the least local variance.
+
+## iter1_candidate0
+
+Random-looking sequences are judged by their Euclidean distance to a "messy" prototype: rather than expecting perfectly balanced counts, people apply a "too-perfect" heuristic and judge sequences against a prototype with a strictly positive ideal imbalance. The cognitive penalty accelerates quadratically with deviations from this ideal imbalance and an ideal alternation rate, creating a wide tolerance for near-ideal sequences while remaining asymmetric to penalize under-alternating sequences more harshly.
+[0m
+[0m$ [0mls
+agent.jsonl
+CANDIDATE_BRIEF.md
+CONTEXT.md
+critiques.md
+existing_hypotheses.md
+[0m
+[0m$ [0mcat critiques.md
+# Critique of `iter0_candidate0`
+
+6 of 23 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **fallback_corr_periodicity_b** — Pearson correlation between the response and the `periodicity_b` feature. (observed -0.183 vs null mean -0.095, z=-3.20, p=0.00995, q=0.114)
+- **fallback_corr_p_a** — Pearson correlation between the response and the `p_a` feature. (observed -0.0604 vs null mean 0.00166, z=-2.59, p=0.00995, q=0.114)
+- **fallback_corr_alts_a** — Pearson correlation between the response and the `alts_a` feature. (observed 0.254 vs null mean 0.191, z=2.31, p=0.0398, q=0.183)
+- **fallback_corr_n_a** — Pearson correlation between the response and the `n_a` feature. (observed 0.0167 vs null mean -0.0444, z=2.16, p=0.0299, q=0.183)
+- **fallback_corr_alts_b** — Pearson correlation between the response and the `alts_b` feature. (observed -0.241 vs null mean -0.181, z=-2.09, p=0.0398, q=0.183)
+- **fallback_corr_h_b** — Pearson correlation between the response and the `h_b` feature. (observed -0.0413 vs null mean 0.00868, z=-1.88, p=0.0498, q=0.191)
+[0m
+[0m$ [0mcat ../../iter_0/candidate_0/candidate.py
+"""PyMC model for the asymmetric prototype-similarity hypothesis.
+
+Random-looking sequences are judged by their similarity to a prototype with balanced counts and an ideal alternation rate, but the penalty for deviating from the ideal alternation rate is asymmetric: sequences that alternate less than the ideal are penalized more harshly than those that alternate more.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    # Asymmetry parameter: < 0.5 means over-alternation is penalized less than under-alternation
+    asym = pm.Uniform("asym", lower=0.01, upper=0.99)
+
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+
+    # Asymmetric distance for alternation rate
+    diff_a = p_alts_a - theta_alt
+    alt_penalty_a = pm.math.switch(
+        diff_a > 0, 2.0 * asym * diff_a, -2.0 * (1.0 - asym) * diff_a
+    )
+
+    diff_b = p_alts_b - theta_alt
+    alt_penalty_b = pm.math.switch(
+        diff_b > 0, 2.0 * asym * diff_b, -2.0 * (1.0 - asym) * diff_b
+    )
+
+    score_a = -(balance_weight * imbalance_a + alt_weight * alt_penalty_a)
+    score_b = -(balance_weight * imbalance_b + alt_weight * alt_penalty_b)
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+
+    # Likelihood
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat ../../../../../models/pymc_models/encoding_compressibility.py
+cat: ../../../../../models/pymc_models/encoding_compressibility.py
+[0m
+[0m✱ [0mGlob "**/encoding_compressibility.py"[90m 3 matches[0m
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models/encoding_compressibility.py
+"""PyMC adapter for the encoding/compressibility model family."""
+
+import numpy as np
+import pymc as pm
+
+
+with pm.Model() as model:
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    longrun_weight = pm.Uniform("longrun_weight", lower=0.01, upper=0.99)
+    periodic_share = pm.Uniform("periodic_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    remaining = 1.0 - longrun_weight
+    periodic_weight = remaining * periodic_share
+    imbalance_weight = remaining * (1.0 - periodic_share)
+
+    penalty_a = (
+        longrun_weight * max_run_norm_a
+        + periodic_weight * periodicity_a
+        + imbalance_weight * imbalance_a
+    )
+    penalty_b = (
+        longrun_weight * max_run_norm_b
+        + periodic_weight * periodicity_b
+        + imbalance_weight * imbalance_b
+    )
+    score_a = -penalty_a
+    score_b = -penalty_b
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+for col in df.columns:
+    if df[col].dtype in ['float64', 'int64'] and col != 'chose_left':
+        print(f'{col}: {df[col].corr(df.chose_left):.3f}')
+"
+participant_id: 0.012
+trial_index: 0.011
+chose_right: -1.000
+model: nan
+n_a: 0.017
+h_a: -0.042
+alts_a: 0.254
+max_run_a: -0.158
+rep_motifs_a: -0.057
+alt_motifs_a: 0.176
+n_b: 0.003
+h_b: -0.041
+alts_b: -0.241
+max_run_b: 0.163
+rep_motifs_b: 0.001
+alt_motifs_b: -0.154
+p_a: -0.060
+p_alts_a: 0.198
+max_run_norm_a: -0.186
+imbalance_a: 0.096
+periodicity_a: 0.130
+p_b: -0.055
+p_alts_b: -0.203
+max_run_norm_b: 0.180
+imbalance_b: -0.117
+periodicity_b: -0.183
+[0m
+[0m$ [0mhead -n 5 /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,TTTHHTTT,THTTTTHH,1,0,,8,2,2,3,3,0,8,3,3,4,2,1,0.25,0.2857142857142857,0.2857142857142857,0.5,0.5,0.375,0.42857142857142855,0.42857142857142855,0.25,0.5
+0,[REDACTED_PROLIFIC_ID],2,TTTTHHTH,HHTH,1,0,,8,3,3,4,2,1,4,3,2,2,1,1,0.375,0.42857142857142855,0.42857142857142855,0.25,0.25,0.75,0.6666666666666666,0.3333333333333333,0.5,0.5
+0,[REDACTED_PROLIFIC_ID],3,THHHHHTT,THTTTTHT,0,1,,8,5,2,5,3,0,8,2,4,4,1,2,0.625,0.2857142857142857,0.5714285714285714,0.25,0.5,0.25,0.5714285714285714,0.42857142857142855,0.5,0.5
+0,[REDACTED_PROLIFIC_ID],4,HTTHHHHT,HHTHHHTH,0,1,,8,5,3,4,4,0,8,6,4,3,3,1,0.625,0.42857142857142855,0.42857142857142855,0.25,0.5,0.75,0.5714285714285714,0.2857142857142857,0.5,1.0
+[0m
+[0m$ [0mgrep -E "HTHTHTHT|THTHTHTH" /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv | head -n 10
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+print(df[['sequence_a', 'p_alts_a']].sort_values('p_alts_a', ascending=False).head(5))
+"
+sequence_a  p_alts_a
+604         HTH       1.0
+1212        HTH       1.0
+540         HTH       1.0
+503         THT       1.0
+668         HTH       1.0
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+print(df['n_a'].value_counts())
+"
+n_a
+8    617
+7    233
+6    193
+4    109
+5     81
+3     47
+Name: count, dtype: int64
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+print(df[df['n_a'] == 8][['sequence_a', 'p_alts_a']].sort_values('p_alts_a', ascending=False).head(5))
+"
+sequence_a  p_alts_a
+1269   THTHTHTT  0.857143
+1205   THTHTHTT  0.857143
+1141   THTHTHTT  0.857143
+1109   THTHTHTT  0.857143
+1077   THTHTHTT  0.857143
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+print(df[['sequence_a', 'periodicity_a']].sort_values('periodicity_a', ascending=False).head(5))
+"
+sequence_a  periodicity_a
+15       HTHHTH            1.0
+1263     HTHHTH            1.0
+612     HTHHTHH            1.0
+616    THHHTHHH            1.0
+548     HTHHTHH            1.0
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+periodic_trials = df[df['periodicity_a'] == 1.0]
+print('Mean chose_left when A is periodic:', periodic_trials['chose_left'].mean())
+print('Mean chose_left overall:', df['chose_left'].mean())
+periodic_b = df[df['periodicity_b'] == 1.0]
+print('Mean chose_left when B is periodic:', periodic_b['chose_left'].mean())
+"
+Mean chose_left when A is periodic: 0.5921052631578947
+Mean chose_left overall: 0.509375
+Mean chose_left when B is periodic: 0.3333333333333333
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+periodic_trials = df[df['periodicity_a'] == 1.0]
+print(periodic_trials[['sequence_a', 'sequence_b', 'chose_left']].head(10))
+"
+sequence_a sequence_b  chose_left
+15      HTHHTH   HHTTTHHT           0
+40    THHHTHHH    THHHHHT           1
+67    HHTHHHTH   HTTHHHHT           0
+68     HTHHTHH   THTHHHHT           0
+100    HTHHTHH   THTHHHHT           1
+111     HTHHTH   HHTTTHHT           1
+131   HHTHHHTH   HTTHHHHT           1
+132    HTHHTHH   THTHHHHT           1
+143     HTHHTH   HHTTTHHT           1
+168   THHHTHHH    THHHHHT           0
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+# Let's predict chose_left with alts vs p_alts
+from scipy.stats import pearsonr
+print('Corr chose_left with alts_a:', pearsonr(df['chose_left'], df['alts_a'])[0])
+print('Corr chose_left with p_alts_a:', pearsonr(df['chose_left'], df['p_alts_a'])[0])
+"
+Corr chose_left with alts_a: 0.2540846090455221
+Corr chose_left with p_alts_a: 0.19835244075707853
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+# Let's find the best theta for rate vs unnormalized
+best_r_rate = 0
+best_r_unnorm = 0
+
+for theta in np.linspace(0.4, 0.9, 50):
+    diff_a_rate = df['p_alts_a'] - theta
+    penalty_a_rate = np.where(diff_a_rate > 0, 0.2 * diff_a_rate, -1.0 * diff_a_rate)
+    
+    diff_b_rate = df['p_alts_b'] - theta
+    penalty_b_rate = np.where(diff_b_rate > 0, 0.2 * diff_b_rate, -1.0 * diff_b_rate)
+    
+    score_rate = -(penalty_a_rate - penalty_b_rate)
+    r_rate = pearsonr(score_rate, df['chose_left'])[0]
+    if r_rate > best_r_rate: best_r_rate = r_rate
+    
+    diff_a_unnorm = df['alts_a'] - theta * (df['n_a'] - 1)
+    penalty_a_unnorm = np.where(diff_a_unnorm > 0, 0.2 * diff_a_unnorm, -1.0 * diff_a_unnorm)
+    
+    diff_b_unnorm = df['alts_b'] - theta * (df['n_b'] - 1)
+    penalty_b_unnorm = np.where(diff_b_unnorm > 0, 0.2 * diff_b_unnorm, -1.0 * diff_b_unnorm)
+    
+    score_unnorm = -(penalty_a_unnorm - penalty_b_unnorm)
+    r_unnorm = pearsonr(score_unnorm, df['chose_left'])[0]
+    if r_unnorm > best_r_unnorm: best_r_unnorm = r_unnorm
+
+print('Best r rate:', best_r_rate)
+print('Best r unnorm:', best_r_unnorm)
+"
+Best r rate: 0.37071650106227344
+Best r unnorm: 0.3532271399729645
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+theta = 0.6
+asym = 0.2
+
+diff_a_rate = df['p_alts_a'] - theta
+penalty_a_rate = np.where(diff_a_rate > 0, 2 * asym * diff_a_rate, -2 * (1 - asym) * diff_a_rate)
+
+diff_b_rate = df['p_alts_b'] - theta
+penalty_b_rate = np.where(diff_b_rate > 0, 2 * asym * diff_b_rate, -2 * (1 - asym) * diff_b_rate)
+
+score_base = -(penalty_a_rate - penalty_b_rate)
+print('Base r:', pearsonr(score_base, df['chose_left'])[0])
+
+# Add max_run penalty
+for w in [0.1, 0.5, 1.0, 2.0]:
+    score_with_max_run = score_base - w * (df['max_run_a'] - df['max_run_b'])
+    print(f'With max_run weight {w}:', pearsonr(score_with_max_run, df['chose_left'])[0])
+
+"
+Base r: 0.36623601972722997
+With max_run weight 0.1: 0.34481921436891677
+With max_run weight 0.5: 0.28096578448620346
+With max_run weight 1.0: 0.2555424116981162
+With max_run weight 2.0: 0.23894079650206945
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+print('Corr chose_left, p_a:', pearsonr(df['chose_left'], df['p_a'])[0])
+print('Corr chose_left, p_b:', pearsonr(df['chose_left'], df['p_b'])[0])
+
+"
+Corr chose_left, p_a: -0.060402262248910085
+Corr chose_left, p_b: -0.054504154530194256
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+print('Corr p_a, p_b:', df['p_a'].corr(df['p_b']))
+"
+Corr p_a, p_b: 0.049335228695586306
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+print('alt_motifs_a:', pearsonr(df['chose_left'], df['alt_motifs_a'])[0])
+print('rep_motifs_a:', pearsonr(df['chose_left'], df['rep_motifs_a'])[0])
+print('alt_motifs_b:', pearsonr(df['chose_left'], df['alt_motifs_b'])[0])
+print('rep_motifs_b:', pearsonr(df['chose_left'], df['rep_motifs_b'])[0])
+"
+alt_motifs_a: 0.17618638561236244
+rep_motifs_a: -0.057281421621137175
+alt_motifs_b: -0.15412571788006316
+rep_motifs_b: 0.0006055318413566817
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+score_a = df['alts_a'] - 2 * df['imbalance_a']
+score_b = df['alts_b'] - 2 * df['imbalance_b']
+score = score_a - score_b
+print('Simple alts - imbalance:', pearsonr(score, df['chose_left'])[0])
+
+score_a_rate = df['p_alts_a'] - 2 * df['imbalance_a']
+score_b_rate = df['p_alts_b'] - 2 * df['imbalance_b']
+score_rate = score_a_rate - score_b_rate
+print('Simple rate - imbalance:', pearsonr(score_rate, df['chose_left'])[0])
+"
+Simple alts - imbalance: 0.3229688458666652
+Simple rate - imbalance: 0.0015607215180997377
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+def get_best(feature_a, feature_b):
+    best_r = 0
+    for w in np.linspace(0, 10, 100):
+        score_a = feature_a - w * df['imbalance_a']
+        score_b = feature_b - w * df['imbalance_b']
+        r = pearsonr(score_a - score_b, df['chose_left'])[0]
+        if r > best_r: best_r = r
+    return best_r
+
+print('Best linear alts:', get_best(df['alts_a'], df['alts_b']))
+print('Best linear rate:', get_best(df['p_alts_a'], df['p_alts_b']))
+
+# Now with asymmetric penalty on rate
+best_r_asym_rate = 0
+for theta in np.linspace(0.3, 0.9, 20):
+    for asym in np.linspace(0.1, 0.9, 20):
+        for w in np.linspace(0, 5, 20):
+            diff_a = df['p_alts_a'] - theta
+            pen_a = np.where(diff_a > 0, 2 * asym * diff_a, -2 * (1 - asym) * diff_a)
+            score_a = -pen_a - w * df['imbalance_a']
+            
+            diff_b = df['p_alts_b'] - theta
+            pen_b = np.where(diff_b > 0, 2 * asym * diff_b, -2 * (1 - asym) * diff_b)
+            score_b = -pen_b - w * df['imbalance_b']
+            
+            r = pearsonr(score_a - score_b, df['chose_left'])[0]
+            if r > best_r_asym_rate: best_r_asym_rate = r
+
+print('Best asym rate:', best_r_asym_rate)
+"
+Best linear alts: 0.3549180050503938
+Best linear rate: 0.2967160389514767
+Best asym rate: 0.37117652613624996
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+best_r = 0
+best_params = None
+for theta in np.linspace(1, 7, 30):
+    for asym in np.linspace(0.1, 0.9, 20):
+        for w in np.linspace(0, 5, 20):
+            diff_a = df['alts_a'] - theta
+            pen_a = np.where(diff_a > 0, 2 * asym * diff_a, -2 * (1 - asym) * diff_a)
+            score_a = -pen_a - w * df['imbalance_a']
+            
+            diff_b = df['alts_b'] - theta
+            pen_b = np.where(diff_b > 0, 2 * asym * diff_b, -2 * (1 - asym) * diff_b)
+            score_b = -pen_b - w * df['imbalance_b']
+            
+            r = pearsonr(score_a - score_b, df['chose_left'])[0]
+            if r > best_r: 
+                best_r = r
+                best_params = (theta, asym, w)
+
+print('Best asym absolute alts:', best_r, 'params:', best_params)
+"
+Best asym absolute alts: 0.3549236304964223 params: (np.float64(5.9655172413793105), np.float64(0.31052631578947365), np.float64(0.0))
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+best_r = 0
+for theta in np.linspace(0.4, 0.9, 10):
+    for asym in np.linspace(0.1, 0.9, 10):
+        for w_imb in np.linspace(0, 5, 10):
+            for w_per in np.linspace(-2, 2, 20):
+                diff_a = df['p_alts_a'] - theta
+                pen_a = np.where(diff_a > 0, 2 * asym * diff_a, -2 * (1 - asym) * diff_a)
+                score_a = -pen_a - w_imb * df['imbalance_a'] + w_per * df['periodicity_a']
+                
+                diff_b = df['p_alts_b'] - theta
+                pen_b = np.where(diff_b > 0, 2 * asym * diff_b, -2 * (1 - asym) * diff_b)
+                score_b = -pen_b - w_imb * df['imbalance_b'] + w_per * df['periodicity_b']
+                
+                r = pearsonr(score_a - score_b, df['chose_left'])[0]
+                if r > best_r: 
+                    best_r = r
+                    best_w_per = w_per
+
+print('Best with periodicity:', best_r, 'w_per:', best_w_per)
+"
+Best with periodicity: 0.3791455624421281 w_per: 0.3157894736842106
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+best_r = 0
+for theta in np.linspace(0.4, 0.9, 10):
+    for asym in np.linspace(0.1, 0.9, 10):
+        for w_imb in np.linspace(0, 5, 10):
+            for ideal_p in np.linspace(0.3, 0.7, 20):
+                diff_a = df['p_alts_a'] - theta
+                pen_a = np.where(diff_a > 0, 2 * asym * diff_a, -2 * (1 - asym) * diff_a)
+                imb_a = np.abs(df['p_a'] - ideal_p)
+                score_a = -pen_a - w_imb * imb_a
+                
+                diff_b = df['p_alts_b'] - theta
+                pen_b = np.where(diff_b > 0, 2 * asym * diff_b, -2 * (1 - asym) * diff_b)
+                imb_b = np.abs(df['p_b'] - ideal_p)
+                score_b = -pen_b - w_imb * imb_b
+                
+                r = pearsonr(score_a - score_b, df['chose_left'])[0]
+                if r > best_r: 
+                    best_r = r
+                    best_ideal_p = ideal_p
+
+print('Best with free ideal_p:', best_r, 'ideal_p:', best_ideal_p)
+"
+Best with free ideal_p: 0.3702566185493075 ideal_p: 0.3
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+best_r = 0
+for theta in np.linspace(0.4, 0.9, 10):
+    for asym_alt in np.linspace(0.1, 0.9, 10):
+        for asym_imb in np.linspace(0.1, 0.9, 10):
+            for w_imb in np.linspace(0, 5, 10):
+                diff_a_alt = df['p_alts_a'] - theta
+                pen_a_alt = np.where(diff_a_alt > 0, 2 * asym_alt * diff_a_alt, -2 * (1 - asym_alt) * diff_a_alt)
+                
+                diff_a_imb = df['p_a'] - 0.5
+                pen_a_imb = np.where(diff_a_imb > 0, 2 * asym_imb * diff_a_imb, -2 * (1 - asym_imb) * diff_a_imb)
+                
+                score_a = -pen_a_alt - w_imb * pen_a_imb
+                
+                diff_b_alt = df['p_alts_b'] - theta
+                pen_b_alt = np.where(diff_b_alt > 0, 2 * asym_alt * diff_b_alt, -2 * (1 - asym_alt) * diff_b_alt)
+                
+                diff_b_imb = df['p_b'] - 0.5
+                pen_b_imb = np.where(diff_b_imb > 0, 2 * asym_imb * diff_b_imb, -2 * (1 - asym_imb) * diff_b_imb)
+                
+                score_b = -pen_b_alt - w_imb * pen_b_imb
+                
+                r = pearsonr(score_a - score_b, df['chose_left'])[0]
+                if r > best_r: 
+                    best_r = r
+
+print('Best with asymmetric imbalance:', best_r)
+"
+Best with asymmetric imbalance: 0.3702566185493075
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+best_r = 0
+for theta in np.linspace(0.1, 0.9, 20):
+    for asym in np.linspace(0.1, 0.9, 20):
+        for w_imb in np.linspace(0, 5, 20):
+            diff_a = df['max_run_norm_a'] - theta
+            pen_a = np.where(diff_a > 0, 2 * asym * diff_a, -2 * (1 - asym) * diff_a)
+            score_a = -pen_a - w_imb * df['imbalance_a']
+            
+            diff_b = df['max_run_norm_b'] - theta
+            pen_b = np.where(diff_b > 0, 2 * asym * diff_b, -2 * (1 - asym) * diff_b)
+            score_b = -pen_b - w_imb * df['imbalance_b']
+            
+            r = pearsonr(score_a - score_b, df['chose_left'])[0]
+            if r > best_r: 
+                best_r = r
+
+print('Best with max_run_norm:', best_r)
+"
+Best with max_run_norm: 0.3205633414327308
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+best_r = 0
+for theta in np.linspace(0.1, 5, 20):
+    for asym in np.linspace(0.1, 0.9, 20):
+        for w_imb in np.linspace(0, 5, 20):
+            diff_a = df['alt_motifs_a'] - theta
+            pen_a = np.where(diff_a > 0, 2 * asym * diff_a, -2 * (1 - asym) * diff_a)
+            score_a = -pen_a - w_imb * df['imbalance_a']
+            
+            diff_b = df['alt_motifs_b'] - theta
+            pen_b = np.where(diff_b > 0, 2 * asym * diff_b, -2 * (1 - asym) * diff_b)
+            score_b = -pen_b - w_imb * df['imbalance_b']
+            
+            r = pearsonr(score_a - score_b, df['chose_left'])[0]
+            if r > best_r: 
+                best_r = r
+
+print('Best with alt_motifs:', best_r)
+"
+Best with alt_motifs: 0.25418719650788724
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models/encoding_compressibility.py
+"""PyMC adapter for the encoding/compressibility model family."""
+
+import numpy as np
+import pymc as pm
+
+
+with pm.Model() as model:
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+    periodicity_a = pm.Data("periodicity_a", np.zeros(1, dtype="float64"))
+    periodicity_b = pm.Data("periodicity_b", np.zeros(1, dtype="float64"))
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    longrun_weight = pm.Uniform("longrun_weight", lower=0.01, upper=0.99)
+    periodic_share = pm.Uniform("periodic_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    remaining = 1.0 - longrun_weight
+    periodic_weight = remaining * periodic_share
+    imbalance_weight = remaining * (1.0 - periodic_share)
+
+    penalty_a = (
+        longrun_weight * max_run_norm_a
+        + periodic_weight * periodicity_a
+        + imbalance_weight * imbalance_a
+    )
+    penalty_b = (
+        longrun_weight * max_run_norm_b
+        + periodic_weight * periodicity_b
+        + imbalance_weight * imbalance_b
+    )
+    score_a = -penalty_a
+    score_b = -penalty_b
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+best_r = 0
+for w_lr in np.linspace(0, 5, 20):
+    for w_per in np.linspace(-5, 5, 20):
+        for w_imb in np.linspace(0, 5, 20):
+            score_a = -w_lr * df['max_run_norm_a'] - w_per * df['periodicity_a'] - w_imb * df['imbalance_a']
+            score_b = -w_lr * df['max_run_norm_b'] - w_per * df['periodicity_b'] - w_imb * df['imbalance_b']
+            
+            r = pearsonr(score_a - score_b, df['chose_left'])[0]
+            if r > best_r: 
+                best_r = r
+                best_params = (w_lr, w_per, w_imb)
+
+print('Best refined encoding compressibility:', best_r, 'params:', best_params)
+"
+Best refined encoding compressibility: 0.30337567029634976 params: (np.float64(4.473684210526316), np.float64(-1.8421052631578947), np.float64(0.0))
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+best_r = 0
+for theta in np.linspace(0.4, 0.9, 10):
+    for asym in np.linspace(0.1, 0.9, 10):
+        for w_imb in np.linspace(0, 5, 10):
+            diff_a = df['p_alts_a'] - theta
+            pen_a = np.where(diff_a > 0, asym * diff_a**2, (1 - asym) * diff_a**2)
+            score_a = -pen_a - w_imb * df['imbalance_a']
+            
+            diff_b = df['p_alts_b'] - theta
+            pen_b = np.where(diff_b > 0, asym * diff_b**2, (1 - asym) * diff_b**2)
+            score_b = -pen_b - w_imb * df['imbalance_b']
+            
+            r = pearsonr(score_a - score_b, df['chose_left'])[0]
+            if r > best_r: 
+                best_r = r
+
+print('Best quadratic asym rate:', best_r)
+"
+Best quadratic asym rate: 0.3746168424780125
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+import scipy.stats as stats
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+best_r = 0
+for alpha in np.linspace(1, 10, 20):
+    for beta_param in np.linspace(1, 10, 20):
+        for w_imb in np.linspace(0, 5, 10):
+            # To avoid log(0), clip p_alts
+            p_a = np.clip(df['p_alts_a'], 0.01, 0.99)
+            p_b = np.clip(df['p_alts_b'], 0.01, 0.99)
+            
+            score_a = stats.beta.logpdf(p_a, alpha, beta_param) - w_imb * df['imbalance_a']
+            score_b = stats.beta.logpdf(p_b, alpha, beta_param) - w_imb * df['imbalance_b']
+            
+            r = pearsonr(score_a - score_b, df['chose_left'])[0]
+            if r > best_r: 
+                best_r = r
+                best_params = (alpha, beta_param)
+
+print('Best beta logpdf:', best_r, best_params)
+"
+<string>:20: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+Best beta logpdf: 0.37406694401274804 (np.float64(5.263157894736842), np.float64(1.9473684210526314))
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+p_a = np.clip(df['p_alts_a'], 0.01, 0.99)
+p_b = np.clip(df['p_alts_b'], 0.01, 0.99)
+
+best_r = 0
+for w_log_p in np.linspace(0, 5, 20):
+    for w_log_1mp in np.linspace(0, 5, 20):
+        for w_imb in np.linspace(0, 5, 20):
+            score_a = w_log_p * np.log(p_a) + w_log_1mp * np.log(1 - p_a) - w_imb * df['imbalance_a']
+            score_b = w_log_p * np.log(p_b) + w_log_1mp * np.log(1 - p_b) - w_imb * df['imbalance_b']
+            
+            r = pearsonr(score_a - score_b, df['chose_left'])[0]
+            if r > best_r: 
+                best_r = r
+
+print('Best with log:', best_r)
+"
+<string>:18: ConstantInputWarning: An input array is constant; the correlation coefficient is not defined.
+Best with log: 0.37406694401274804
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+print(df[df['periodicity_a'] == 1.0][['sequence_a', 'p_alts_a']])
+"
+sequence_a  p_alts_a
+15       HTHHTH  0.800000
+40     THHHTHHH  0.428571
+67     HHTHHHTH  0.571429
+68      HTHHTHH  0.666667
+100     HTHHTHH  0.666667
+...         ...       ...
+1199     HTHHTH  0.800000
+1220    HTHHTHH  0.666667
+1224   THHHTHHH  0.428571
+1251   HHTHHHTH  0.571429
+1263     HTHHTH  0.800000
+
+[76 rows x 2 columns]
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+from scipy.stats import pearsonr
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+
+best_r = 0
+for theta in np.linspace(0.4, 0.9, 5):
+    for asym in np.linspace(0.1, 0.9, 5):
+        for w_imb in np.linspace(0, 5, 5):
+            for run_threshold in [2, 3, 4, 5]:
+                for w_run in np.linspace(0, 5, 10):
+                    diff_a = df['p_alts_a'] - theta
+                    pen_a_alt = np.where(diff_a > 0, 2 * asym * diff_a, -2 * (1 - asym) * diff_a)
+                    pen_a_run = w_run * np.maximum(0, df['max_run_a'] - run_threshold)
+                    score_a = -pen_a_alt - w_imb * df['imbalance_a'] - pen_a_run
+                    
+                    diff_b = df['p_alts_b'] - theta
+                    pen_b_alt = np.where(diff_b > 0, 2 * asym * diff_b, -2 * (1 - asym) * diff_b)
+                    pen_b_run = w_run * np.maximum(0, df['max_run_b'] - run_threshold)
+                    score_b = -pen_b_alt - w_imb * df['imbalance_b'] - pen_b_run
+                    
+                    r = pearsonr(score_a - score_b, df['chose_left'])[0]
+                    if r > best_r: 
+                        best_r = r
+                        best_params = (run_threshold, w_run)
+
+print('Best with max_run threshold:', best_r, 'params:', best_params)
+"
+Best with max_run threshold: 0.37131522820707763 params: (2, np.float64(0.0))
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment1/model_loop/iter_1/candidate_1/hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment1/model_loop/iter_1/candidate_1/candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mPYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo python3 -c "
+from pathlib import Path
+from src.pipelines.outer_loop.projects.subjective_randomness.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src.pipelines.outer_loop.projects.subjective_randomness.pymc_inference'
+[0m
+[0m$ [0mfind /scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo -name "*pymc_inference*"
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo/src/models/pymc_inference.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo/tests/test_pymc_inference.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo/tests/test_pymc_inference_integration.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo/tests/test_pymc_inference_extensible_features.py
+[0m
+[0m$ [0mPYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mcat hypothesis.md
+People judge randomness by the log-likelihood that a sequence's alternation rate was drawn from a subjective Beta distribution skewed toward high alternations. Rather than using an ad-hoc piecewise distance function, this statistically grounded mechanism naturally provides a smooth, asymmetric cognitive penalty for both over- and under-alternating sequences, while maintaining a symmetric penalty for overall imbalance.
+[0m
+I have successfully formulated a new single mechanism hypothesis and implemented it in `hypothesis.md` and `candidate.py` inside the specified candidate directory. 
+
+### Hypothesis
+I observed from data correlations that while people maintain a symmetric penalty for overall global imbalance, their preference for sequence alternation rates (`p_alts`) displays a powerful asymmetry. The previous best model (`iter0_candidate0`) captured this using an ad-hoc piecewise linear penalty function. 
+
+I refined this single mechanism by replacing the arbitrary piecewise function with a statistically grounded model: **People judge randomness by evaluating the log-likelihood that the sequence's alternation rate was drawn from a subjective Beta distribution skewed toward high alternations.**
+
+This yields the exact smooth, convex, asymmetric cognitive penalty needed for both over- and under-alternating sequences, doing so through a single foundational statistical principle without having to bolt on heuristic metrics like `max_run`.
+
+### Model implementation
+The hypothesis has been coded in `candidate.py` mapping directly to a PyMC representation. It extracts `logpdf_a` and `logpdf_b` via a continuous non-normalized `Beta` parameterized by a learnable `alpha` and `beta_param`, properly safely bounded from exactly `0` or `1` `p_alts` to remain numerically stable and strictly within the `(0, 1)` domain constraint.
+
+Both `hypothesis.md` and `candidate.py` pass the PyMC model loader self-checks, effectively utilizing the `chose_left` response observation.

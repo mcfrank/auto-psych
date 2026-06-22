@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but this prototype tracks the proportion of 4-item alternating motifs (like HTHT) instead of simple bigram alternations, viewing these longer, more complex alternations as the primary structural signature of local randomness.

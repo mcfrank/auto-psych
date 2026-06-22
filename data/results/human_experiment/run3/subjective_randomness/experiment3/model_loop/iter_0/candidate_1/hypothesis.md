@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by computing its likelihood under a Gambler's Fallacy mental model, expecting that the probability of a coin switching states increases the longer it produces the same outcome. They penalize sequences containing long runs because each successive identical flip violates a progressively stronger subjective expectation of an alternation.

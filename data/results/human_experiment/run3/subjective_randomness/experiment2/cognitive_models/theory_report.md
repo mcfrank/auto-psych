@@ -1,0 +1,11 @@
+# Theory Report — Experiment 2
+
+## smoothed_prototype_distance
+**Hypothesis:** People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal.
+**Motivation:** The best model from Experiment 1 (`iter1_candidate2`) succeeded by scaling deviations by the square root of the sequence length, providing a statistical tolerance for small samples. This model refines that hypothesis by substituting an unbounded square-root scaling with a Bayesian pseudo-count mechanism (Laplace smoothing), offering an alternative rationalization for length-dependence that naturally bounds the maximum deviation while strongly discounting small samples.
+**Mechanism:** The model replaces raw proportions (e.g., $h/n$) with smoothed estimates (e.g., $(h+c)/(n+2c)$). The deviation from the ideal is therefore attenuated by a discount factor $n/(n+K)$ that approaches 1 for long sequences but strongly shrinks the penalty for short sequences, directly capturing length-sensitive tolerance within a unified Bayesian estimation framework.
+
+## falk_konold_complexity
+**Hypothesis:** People judge the randomness of a sequence by its structural complexity when parsed into continuous alternating and repeating sub-sequences (Falk & Konold's difficulty of encoding), perceiving sequences with a lower rate of sub-sequences as simpler and therefore less random.
+**Motivation:** While earlier models focused on basic counts like max run length or specific motifs, Falk & Konold's parsing theory posits that human observers break sequences into subjective chunks of identical symbols or strictly alternating symbols. This is a theoretically distinct structural complexity measure not captured by existing models.
+**Mechanism:** The model sums the number of alternating motifs (`alt_motifs`) and repeating motifs (`rep_motifs`), dividing by the sequence length to compute the sub-sequence rate. A higher rate indicates a more highly fractured (complex) sequence, which is evaluated as more random.

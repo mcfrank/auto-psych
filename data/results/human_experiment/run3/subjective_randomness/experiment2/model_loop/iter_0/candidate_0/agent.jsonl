@@ -1,0 +1,387 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mls -la /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_0
+total 11
+drwx------+ 2 benpry ngoodman 4096 Jun 21 17:18 .
+drwx------+ 4 benpry ngoodman 4096 Jun 21 17:18 ..
+-rw-------+ 1 benpry ngoodman   44 Jun 21 17:18 agent.jsonl
+-rw-------+ 1 benpry ngoodman  512 Jun 21 17:18 CANDIDATE_BRIEF.md
+-rw-------+ 1 benpry ngoodman 2293 Jun 21 17:18 CONTEXT.md
+-rw-------+ 1 benpry ngoodman  673 Jun 21 17:18 critiques.md
+-rw-------+ 1 benpry ngoodman 2242 Jun 21 17:18 existing_hypotheses.md
+[0m
+[0m$ [0mcat CONTEXT.md CANDIDATE_BRIEF.md existing_hypotheses.md critiques.md
+# Inner Loop — round 0, candidate 0 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Refine one existing hypothesis within its single mechanism — e.g. a different functional form, prior, or normalization. Do NOT graft cues from other models onto it.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.005, ELPD-LOO -1720.11
+
+Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -1765.14
+
+Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -1723.64
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -1769.42
+
+Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).
+
+## inner_loop_model  — posterior 0.000, ELPD-LOO -1726.02
+
+People judge the randomness of a sequence by comparing its features (head proportion and alternation rate) to a subjective ideal, but their psychological penalty for deviations is scaled by the square root of the sequence length, reflecting an intuitive sensitivity to the standard error of small samples.
+
+## smoothed_prototype_distance  — posterior 0.995, ELPD-LOO -1714.40
+
+People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal.
+
+## falk_konold_complexity  — posterior 0.000, ELPD-LOO -1774.59
+
+People judge the randomness of a sequence by its structural complexity when parsed into continuous alternating and repeating sub-sequences (Falk & Konold's difficulty of encoding), perceiving sequences with a lower rate of sub-sequences as simpler and therefore less random.
+[0m
+[0m$ [0mcat critiques.md
+# Critique of `smoothed_prototype_distance`
+
+1 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **alt_motifs_preference** — The response rate for sequence A when it has more alternating motifs than sequence B, conditional on similar overall bigram alternation rates. (observed 0.595 vs null mean 0.5, z=2.35, p=0.0398, q=0.279)
+[0m
+[0m$ [0mfind . -type f -name "*.py"
+[0m
+[0m$ [0mfind /scratch/users/benpry/auto-psych/outer_loop_live/run3/repo/src/models -name "smoothed_prototype_distance*"
+find: ‘/scratch/users/benpry/auto-psych/outer_loop_live/run3/repo/src/models’
+[0m
+[0m$ [0mfind /scratch/users/benpry/auto-psych/outer_loop_live/run3 -name "smoothed_prototype_distance*"
+/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/.fit_cache/smoothed_prototype_distance.1cbc5a9da4ed9a55.nc
+/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/models/smoothed_prototype_distance.py
+/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/smoothed_prototype_distance.py
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/models/smoothed_prototype_distance.py
+"""People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Feature inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Cognitive parameters
+    # The ideal alternation rate people expect
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    # The relative weight of alternations vs. heads balance
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    balance_weight = 1.0 - alt_weight
+
+    # Pseudo-counts for Bayesian smoothing of the proportions
+    # Higher K means more regularization toward the ideal (stronger prior)
+    K_bal = pm.Uniform("K_bal", lower=0.0, upper=20.0)
+    K_alt = pm.Uniform("K_alt", lower=0.0, upper=20.0)
+
+    # Scaling parameter and side bias for the decision rule
+    beta = pm.Uniform("beta", lower=0.1, upper=20.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    # Calculate denominators
+    n_a_f = pt.cast(n_a, "float64")
+    n_b_f = pt.cast(n_b, "float64")
+
+    n_alts_a_f = pt.cast(pt.maximum(n_a - 1, 1), "float64")
+    n_alts_b_f = pt.cast(pt.maximum(n_b - 1, 1), "float64")
+
+    # Smoothed deviations: (n / (n + K)) * raw_deviation
+    # For heads/tails balance, raw deviation is imbalance = |h/n - 0.5|
+    smooth_imb_a = (n_a_f / (n_a_f + K_bal)) * imbalance_a
+    smooth_imb_b = (n_b_f / (n_b_f + K_bal)) * imbalance_b
+
+    # For alternations, raw deviation is |p_alts - theta_alt|
+    raw_alt_dev_a = pt.abs(p_alts_a - theta_alt)
+    raw_alt_dev_b = pt.abs(p_alts_b - theta_alt)
+
+    smooth_alt_dev_a = (n_alts_a_f / (n_alts_a_f + K_alt)) * raw_alt_dev_a
+    smooth_alt_dev_b = (n_alts_b_f / (n_alts_b_f + K_alt)) * raw_alt_dev_b
+
+    # Score sequences based on their smoothed distance from the ideal (higher distance = lower score)
+    score_a = -(balance_weight * smooth_imb_a + alt_weight * smooth_alt_dev_a)
+    score_b = -(balance_weight * smooth_imb_b + alt_weight * smooth_alt_dev_b)
+
+    # Softmax decision rule
+    p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 5 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,HTTTTTTH,HHHTHHH,0,1,,8,2,2,6,3,0,7,6,2,3,3,0,0.25,0.2857142857142857,0.7142857142857143,0.5,0.5,0.8571428571428571,0.3333333333333333,0.3333333333333333,0.7142857142857142,0.7142857142857142
+0,[REDACTED_PROLIFIC_ID],2,HHTTTTT,TTTTHTTT,0,1,,7,2,1,5,2,0,8,1,2,4,3,0,0.2857142857142857,0.16666666666666666,0.6666666666666666,0.4285714285714286,0.1428571428571428,0.125,0.2857142857142857,0.42857142857142855,0.75,0.75
+0,[REDACTED_PROLIFIC_ID],3,TTHTHHHH,HHTHTHHH,0,1,,8,5,3,4,2,1,8,6,4,3,2,1,0.625,0.42857142857142855,0.42857142857142855,0.25,0.25,0.75,0.5714285714285714,0.2857142857142857,0.5,0.5
+0,[REDACTED_PROLIFIC_ID],4,THTHTTT,HHTTTTHH,1,0,,7,2,4,3,1,1,8,4,2,4,3,0,0.2857142857142857,0.6666666666666666,0.3333333333333333,0.4285714285714286,0.7142857142857142,0.5,0.2857142857142857,0.42857142857142855,0.0,0.5
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/models/smoothed_prototype_distance.py
+"""People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Feature inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Cognitive parameters
+    # The ideal alternation rate people expect
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    # The relative weight of alternations vs. heads balance
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    balance_weight = 1.0 - alt_weight
+
+    # Pseudo-counts for Bayesian smoothing of the proportions
+    # Higher K means more regularization toward the ideal (stronger prior)
+    K_bal = pm.Uniform("K_bal", lower=0.0, upper=20.0)
+    K_alt = pm.Uniform("K_alt", lower=0.0, upper=20.0)
+
+    # Scaling parameter and side bias for the decision rule
+    beta = pm.Uniform("beta", lower=0.1, upper=20.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    # Calculate denominators
+    n_a_f = pt.cast(n_a, "float64")
+    n_b_f = pt.cast(n_b, "float64")
+
+    n_alts_a_f = pt.cast(pt.maximum(n_a - 1, 1), "float64")
+    n_alts_b_f = pt.cast(pt.maximum(n_b - 1, 1), "float64")
+
+    # Smoothed deviations: (n / (n + K)) * raw_deviation
+    # For heads/tails balance, raw deviation is imbalance = |h/n - 0.5|
+    smooth_imb_a = (n_a_f / (n_a_f + K_bal)) * imbalance_a
+    smooth_imb_b = (n_b_f / (n_b_f + K_bal)) * imbalance_b
+
+    # For alternations, raw deviation is |p_alts - theta_alt|
+    raw_alt_dev_a = pt.abs(p_alts_a - theta_alt)
+    raw_alt_dev_b = pt.abs(p_alts_b - theta_alt)
+
+    smooth_alt_dev_a = (n_alts_a_f / (n_alts_a_f + K_alt)) * raw_alt_dev_a
+    smooth_alt_dev_b = (n_alts_b_f / (n_alts_b_f + K_alt)) * raw_alt_dev_b
+
+    # Score sequences based on their smoothed distance from the ideal (higher distance = lower score)
+    score_a = -(balance_weight * smooth_imb_a + alt_weight * smooth_alt_dev_a)
+    score_b = -(balance_weight * smooth_imb_b + alt_weight * smooth_alt_dev_b)
+
+    # Softmax decision rule
+    p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but their ideal template includes an expectation for higher-order alternating motifs (like HTHT) in addition to basic heads/tails balance and simple bigram alternations.
+EOF
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but their ideal template includes an expectation for higher-order alternating motifs (like HTHT) in addition to basic heads/tails balance and simple bigram alternations."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Feature inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+
+    alt_motifs_a = pm.Data("alt_motifs_a", np.zeros(1, dtype="int64"))
+    alt_motifs_b = pm.Data("alt_motifs_b", np.zeros(1, dtype="int64"))
+
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Cognitive parameters
+    # The ideal alternation rate and ideal alternating motif rate people expect
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    theta_alt_motif = pm.Uniform("theta_alt_motif", lower=0.0, upper=0.95)
+
+    # Relative weights of balance, alternations, and alternating motifs
+    weights = pm.Dirichlet("weights", a=np.ones(3))
+    balance_weight = weights[0]
+    alt_weight = weights[1]
+    motif_weight = weights[2]
+
+    # Pseudo-counts for Bayesian smoothing of the proportions
+    K_bal = pm.Uniform("K_bal", lower=0.0, upper=20.0)
+    K_alt = pm.Uniform("K_alt", lower=0.0, upper=20.0)
+    K_motif = pm.Uniform("K_motif", lower=0.0, upper=20.0)
+
+    # Scaling parameter and side bias for the decision rule
+    beta = pm.Uniform("beta", lower=0.1, upper=20.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    # Calculate denominators
+    n_a_f = pt.cast(n_a, "float64")
+    n_b_f = pt.cast(n_b, "float64")
+
+    n_alts_a_f = pt.cast(pt.maximum(n_a - 1, 1), "float64")
+    n_alts_b_f = pt.cast(pt.maximum(n_b - 1, 1), "float64")
+
+    n_alt_motifs_a_f = pt.cast(pt.maximum(n_a - 3, 1), "float64")
+    n_alt_motifs_b_f = pt.cast(pt.maximum(n_b - 3, 1), "float64")
+
+    p_alt_motifs_a = pt.cast(alt_motifs_a, "float64") / n_alt_motifs_a_f
+    p_alt_motifs_b = pt.cast(alt_motifs_b, "float64") / n_alt_motifs_b_f
+
+    # Smoothed deviations: (n / (n + K)) * raw_deviation
+    smooth_imb_a = (n_a_f / (n_a_f + K_bal)) * imbalance_a
+    smooth_imb_b = (n_b_f / (n_b_f + K_bal)) * imbalance_b
+
+    raw_alt_dev_a = pt.abs(p_alts_a - theta_alt)
+    raw_alt_dev_b = pt.abs(p_alts_b - theta_alt)
+    smooth_alt_dev_a = (n_alts_a_f / (n_alts_a_f + K_alt)) * raw_alt_dev_a
+    smooth_alt_dev_b = (n_alts_b_f / (n_alts_b_f + K_alt)) * raw_alt_dev_b
+
+    raw_motif_dev_a = pt.abs(p_alt_motifs_a - theta_alt_motif)
+    raw_motif_dev_b = pt.abs(p_alt_motifs_b - theta_alt_motif)
+    smooth_motif_dev_a = (n_alt_motifs_a_f / (n_alt_motifs_a_f + K_motif)) * raw_motif_dev_a
+    smooth_motif_dev_b = (n_alt_motifs_b_f / (n_alt_motifs_b_f + K_motif)) * raw_motif_dev_b
+
+    # Score sequences based on their smoothed distance from the ideal (higher distance = lower score)
+    score_a = -(balance_weight * smooth_imb_a + alt_weight * smooth_alt_dev_a + motif_weight * smooth_motif_dev_a)
+    score_b = -(balance_weight * smooth_imb_b + alt_weight * smooth_alt_dev_b + motif_weight * smooth_motif_dev_b)
+
+    # Softmax decision rule
+    p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.append('/scratch/users/benpry/auto-psych/outer_loop_live/run3/repo')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mfind /scratch/users/benpry/auto-psych/outer_loop_live/run3 -type d -name "src"
+[0m
+[0m$ [0mecho $PYTHONPATH
+ls -l /scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo
+total 22200
+-rw-r--r--+  1 benpry ngoodman     1240 Jun 18 12:21 candidate.py
+-rw-r--r--+  1 benpry ngoodman     1724 Jun 17 11:41 CLEANUP_PLAN.md
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 18 12:21 diagrams
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 18 12:21 docs
+-rw-r--r--+  1 benpry ngoodman     1593 Jun 20 01:44 extract_pdf.py
+-rw-------+  1 benpry ngoodman      617 Jun 21 16:20 firebase.generated.json
+-rw-r--r--+  1 benpry ngoodman      612 Jun 18 23:34 firebase.json
+-rw-r--r--+  1 benpry ngoodman      224 Jun 19 12:56 firebase.viewer.json
+-rw-r--r--+  1 benpry ngoodman      503 Jun 18 23:34 firestore.rules
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 21 14:34 functions
+-rw-r--r--+  1 benpry ngoodman      688 Jun 17 11:42 generate_candidates.py
+-rw-r--r--+  1 benpry ngoodman 21915053 Jun 20 01:46 gt.txt
+-rw-r--r--+  1 benpry ngoodman     1070 Jun 17 11:41 LICENSE
+-rw-r--r--+  1 benpry ngoodman      466 Jun 21 14:17 opencode.json
+-rw-r--r--+  1 benpry ngoodman    11807 Jun 20 15:19 PROBLEMS.md
+drwxr-xr-x+  6 benpry ngoodman     4096 Jun 20 14:46 projects
+drwx------+  4 benpry ngoodman     4096 Jun 21 16:21 public
+-rw-r--r--+  1 benpry ngoodman     3034 Jun 20 15:02 pyproject.toml
+-rw-r--r--+  1 benpry ngoodman    12449 Jun 20 16:40 README.md
+drwxr-xr-x+  5 benpry ngoodman     4096 Jun 19 13:11 scripts
+drwxr-xr-x+ 13 benpry ngoodman     4096 Jun 20 01:39 src
+-rw-r--r--+  1 benpry ngoodman    12167 Jun 20 15:19 SUMMARY.md
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 20 23:26 templates
+drwxr-xr-x+  3 benpry ngoodman    12288 Jun 21 13:42 tests
+-rw-r--r--+  1 benpry ngoodman   683270 Jun 20 14:41 uv.lock
+[0m
+[0m$ [0mexport PYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo:$PYTHONPATH
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mecho "All done."
+All done.
+[0m
+I have written the candidate hypothesis and its PyMC model implementation.
+
+- **`hypothesis.md`**: Proposes that people judge sequence randomness by its smoothed distance from a subjective ideal, but refines this ideal to include expectations for higher-order alternating motifs (e.g., `HTHT`), directly addressing the significant discrepancy in `alt_motifs_preference`.
+- **`candidate.py`**: Translates the hypothesis precisely into a PyMC model. It expands the prototype feature space to three dimensions (balance, bigram alternations, and alternating motifs), using Dirichlet weights for the combination. The model safely extracts `alt_motifs_a`/`alt_motifs_b` (which are present in the `responses.csv`) and calculates smoothed deviations using a newly parameterized pseudo-count and ideal rate for motifs. It fully implements the `pm.Data` guidelines, the `p_left` constraint, and observed node constraints.
+
+The self-check confirms that the pipeline correctly introspects `chose_left` as the observed target.

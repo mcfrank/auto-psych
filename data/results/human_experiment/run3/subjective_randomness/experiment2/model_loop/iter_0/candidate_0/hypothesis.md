@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but their ideal template includes an expectation for higher-order alternating motifs (like HTHT) in addition to basic heads/tails balance and simple bigram alternations.

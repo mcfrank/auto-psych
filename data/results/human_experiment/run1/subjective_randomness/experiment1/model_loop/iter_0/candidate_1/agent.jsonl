@@ -1,0 +1,280 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 0, candidate 1 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.959, ELPD-LOO -793.68
+
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -841.68
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.041, ELPD-LOO -794.24
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular
+process: a mixture of a complexity-penalized motif process (Griffiths et
+al. 2018) and a biased coin. Merges the former diagnosticity and
+statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -855.68
+
+Random-looking sequences have a longest run typical of a fair coin seen
+through a limited memory window; over-long streaks look non-random (Hahn &
+Warren 2009).
+
+## iter0_candidate0
+
+People judge randomness by comparing a sequence to a mental prototype, but this prototype is subjectively biased: it possesses an ideal proportion of heads and an ideal alternation rate that may deviate from objective fairness. Sequences are perceived as more random when their proportion of heads and alternations have a smaller squared deviation from these subjective ideals.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/critiques.md
+# Critique of `prototype_similarity`
+
+3 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **rep_motif_aversion** — Rate of choosing the sequence with fewer repetition motifs per item, when alternation rates are similar. (observed 0.375 vs null mean 0.448, z=-3.10, p=0.00995, q=0.0796)
+- **heads_tails_asymmetry** — Rate of choosing the sequence with more heads, when imbalance is identical but they skew in opposite directions. (observed 0.275 vs null mean 0.41, z=-2.48, p=0.0398, q=0.133)
+- **length_preference** — The overall rate of choosing the longer sequence when sequence lengths differ. (observed 0.619 vs null mean 0.594, z=1.83, p=0.0498, q=0.133)
+[0m
+[0m$ [0mcat << 'EOF' > test_run_length.py
+def max_run_of_char(seq):
+    seq = seq.strip().upper()
+    if not seq: return []
+    runs = []
+    current_run = 1
+    for i in range(1, len(seq)):
+        if seq[i] == seq[i-1]:
+            current_run += 1
+        else:
+            runs.append(current_run)
+            current_run = 1
+    runs.append(current_run)
+    return runs
+
+print(max_run_of_char("HHTTHH"))
+print(max_run_of_char("HHHTTT"))
+print(max_run_of_char("HTHTHT"))
+
+EOF
+python3 test_run_length.py
+[2, 2, 2]
+[3, 3]
+[1, 1, 1, 1, 1, 1]
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('../../responses.csv')
+print(df[['sequence_a', 'n_a', 'alts_a', 'rep_motifs_a']].head(10))
+"
+sequence_a  n_a  alts_a  rep_motifs_a
+0         TH    2       1             0
+1   HTHTTTTH    8       4             2
+2   THHHHHTT    8       2             3
+3     TTTTTT    6       0             1
+4         HH    2       0             1
+5   HHTTTTHH    8       2             3
+6   TTHTTTHT    8       4             3
+7   HTTTTHHH    8       2             3
+8        HTT    3       1             2
+9   TTTHTHTT    8       4             2
+[0m
+[0m$ [0mcat << 'EOF' > test_clump.py
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    def clumpiness(seq):
+        seq = seq.strip().upper()
+        if not seq: return 0.0
+        runs = []
+        current_run = 1
+        for i in range(1, len(seq)):
+            if seq[i] == seq[i-1]:
+                current_run += 1
+            else:
+                runs.append(current_run)
+                current_run = 1
+        runs.append(current_run)
+        
+        clump_items = sum(r for r in runs if r in (2, 3))
+        return float(clump_items / len(seq))
+        
+    return {
+        "clumpiness_a": clumpiness(sequence_a),
+        "clumpiness_b": clumpiness(sequence_b)
+    }
+
+print(compute_features("HHTTHH", "HTHTHT"))
+print(compute_features("HHHTTT", "HHHHHH"))
+EOF
+python3 test_clump.py
+{'clumpiness_a': 1.0, 'clumpiness_b': 0.0}
+{'clumpiness_a': 1.0, 'clumpiness_b': 0.0}
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People judge randomness by searching for local "clumps" of identical outcomes, specifically associating moderate-length runs (pairs and triplets) with the natural clumpiness of a stochastic process. Sequences are perceived as more random when a higher proportion of their outcomes belong to these moderate-length clusters, as this simultaneously avoids the artificial regularity of strict alternation and the perceived non-randomness of overly long streaks.
+EOF
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People judge randomness by searching for local "clumps" of identical outcomes, specifically associating moderate-length runs (pairs and triplets) with the natural clumpiness of a stochastic process. Sequences are perceived as more random when a higher proportion of their outcomes belong to these moderate-length clusters, as this simultaneously avoids the artificial regularity of strict alternation and the perceived non-randomness of overly long streaks.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    """Return new numeric feature columns for one stimulus pair."""
+    def clumpiness(seq):
+        seq = seq.strip().upper()
+        if not seq:
+            return 0.0
+        runs = []
+        current_run = 1
+        for i in range(1, len(seq)):
+            if seq[i] == seq[i-1]:
+                current_run += 1
+            else:
+                runs.append(current_run)
+                current_run = 1
+        runs.append(current_run)
+        
+        # Proportion of items that belong to runs of length 2 or 3
+        clump_items = sum(r for r in runs if r in (2, 3))
+        return float(clump_items / len(seq))
+        
+    return {
+        "clumpiness_a": clumpiness(sequence_a),
+        "clumpiness_b": clumpiness(sequence_b)
+    }
+
+with pm.Model() as model:
+    # Stimulus inputs
+    clumpiness_a = pm.Data("clumpiness_a", np.zeros(1, dtype="float64"))
+    clumpiness_b = pm.Data("clumpiness_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameter
+    tau = pm.HalfNormal("tau", sigma=10.0)
+
+    # Score is directly the clumpiness feature
+    score_a = clumpiness_a
+    score_b = clumpiness_b
+
+    # Probability of choosing sequence A (left)
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (score_a - score_b)))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mls -la ../../../../../../../../
+total 128
+drwx------+ 22 benpry ngoodman 4096 Jun 21 13:51 .
+drwx------+  4 benpry ngoodman 4096 Jun 17 14:20 ..
+-rw-------+  1 benpry ngoodman  214 Jun 19 11:46 alphacheck.sh
+-rw-------+  1 benpry ngoodman  344 Jun 19 11:38 compile_check.log
+-rw-------+  1 benpry ngoodman  719 Jun 19 11:38 compile_check.sh
+drwx------+  5 benpry ngoodman 4096 Jun 17 14:39 eltest_venv
+drwx------+  5 benpry ngoodman 4096 Jun 17 14:43 eltest_venv2
+drwx------+  5 benpry ngoodman 4096 Jun 17 14:48 eltest_venv3
+drwx------+  5 benpry ngoodman 4096 Jun 19 12:00 _envcheck
+-rw-------+  1 benpry ngoodman  818 Jun 19 11:19 gtfit.py
+-rw-------+  1 benpry ngoodman 1242 Jun 19 11:21 gtfit_result.log
+-rw-------+  1 benpry ngoodman  333 Jun 19 11:19 gtfit.sh
+drwx------+ 13 benpry ngoodman 4096 Jun 17 16:12 holdout_full
+drwx------+ 13 benpry ngoodman 4096 Jun 17 21:12 holdout_full3
+drwx------+ 13 benpry ngoodman 4096 Jun 17 22:13 holdout_full4
+drwx------+ 13 benpry ngoodman 4096 Jun 18 16:47 holdout_full5
+drwx------+  9 benpry ngoodman 4096 Jun 19 03:21 holdout_oneeach
+drwx------+  9 benpry ngoodman 4096 Jun 17 16:08 holdout_smoke_c2
+drwx------+  6 benpry ngoodman 4096 Jun 17 16:00 holdout_smoke_cands
+drwx------+  8 benpry ngoodman 4096 Jun 17 15:36 holdout_smoke_conc
+drwx------+  9 benpry ngoodman 4096 Jun 17 17:30 holdout_smoke_e3
+drwx------+  9 benpry ngoodman 4096 Jun 17 21:39 holdout_smoke_fix
+drwx------+  9 benpry ngoodman 4096 Jun 19 00:02 holdout_smoke_si
+drwx------+  8 benpry ngoodman 4096 Jun 17 15:20 holdout_test_retest
+drwx------+ 13 benpry ngoodman 4096 Jun 21 11:26 holdout_test_retest_full
+drwx------+ 24 benpry ngoodman 4096 Jun 21 12:50 outer_loop_live
+-rw-------+  1 benpry ngoodman 1466 Jun 19 11:42 runtests.log
+-rw-------+  1 benpry ngoodman  479 Jun 19 11:40 runtests.sh
+drwx------+ 12 benpry ngoodman 4096 Jun 21 13:52 sitetest
+drwx------+  7 benpry ngoodman 4096 Jun 18 11:05 uvtest
+-rw-------+  1 benpry ngoodman  827 Jun 18 11:07 uvtest_result.log
+-rw-------+  1 benpry ngoodman 1009 Jun 18 11:05 uvtest.sh
+[0m
+[0m$ [0mcd /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo && python3 -c "
+import sys
+sys.path.insert(0, '.')
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_0/candidate_1'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mcat hypothesis.md
+People judge randomness by searching for local "clumps" of identical outcomes, specifically associating moderate-length runs (pairs and triplets) with the natural clumpiness of a stochastic process. Sequences are perceived as more random when a higher proportion of their outcomes belong to these moderate-length clusters, as this simultaneously avoids the artificial regularity of strict alternation and the perceived non-randomness of overly long streaks.
+[0m
+I have analyzed the provided context, the existing hypotheses, and the critique of the `prototype_similarity` model. 
+
+To address the significant discrepancy in `rep_motif_aversion` (where the existing model expects people to prefer sequences with fewer repetition motifs, but they actually choose them much less often than expected), I have formulated a new cognitive mechanism: the "clumpiness" heuristic. This hypothesis posits that people expect randomness to feature moderate-length clusters of outcomes (like pairs and triplets), avoiding both the artificial regularity of strict alternation and the non-random appearance of long streaks. 
+
+I've implemented this single mechanism in both `hypothesis.md` and `candidate.py` using a custom `compute_features` function to derive the "clumpiness" metric from the raw sequence strings.
+
+The model is successfully verified via your self-check test logic and accurately introspects the observed response data container. Both requested files are now safely in the working directory.

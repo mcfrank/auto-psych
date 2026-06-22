@@ -1,0 +1,33 @@
+models:
+- name: prototype_similarity
+  rationale: Random-looking sequences are close to a prototype with balanced H/T counts
+    and an ideal alternation rate.
+- name: encoding_compressibility
+  rationale: Random-looking sequences are those with low simple-description penalties
+    like long runs, periodic templates, and imbalance.
+- name: bayesian_diagnosticity
+  rationale: Randomness is the log-likelihood ratio of a fair coin versus a regular
+    process (a mixture of a complexity-penalized motif process and a biased coin).
+- name: window_typicality
+  rationale: Random-looking sequences have a longest run typical of a fair coin seen
+    through a limited memory window; over-long streaks look non-random.
+- name: falk_konold_difficulty
+  rationale: Random-looking sequences are those that are cognitively harder to encode
+    into chunks, as quantified by Falk and Konold's Difficulty Predictor (the number
+    of repetition motifs plus twice the number of alternation motifs) normalized by
+    sequence length.
+- name: manhattan_messy_prototype
+  rationale: Random-looking sequences are judged by their Manhattan (absolute) distance
+    to a messy prototype with a strictly positive ideal imbalance and an ideal alternation
+    rate, with absolute-value penalties that are asymmetric for alternation rate.
+- name: evidence_accumulation_per_run
+  rationale: Random-looking sequences are judged by an evidence accumulation process
+    where each distinct run (streak of identical outcomes) provides a baseline weight
+    of evidence for randomness, which is then discounted by the sequence's quadratic
+    deviation from a messy prototype.
+- name: evidence_accumulation_periodicity
+  rationale: Random-looking sequences are judged by an evidence accumulation process
+    where baseline evidence is discounted by the sequence's deviation from a messy
+    prototype consisting of an ideal imbalance and an ideal (low) periodicity.
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

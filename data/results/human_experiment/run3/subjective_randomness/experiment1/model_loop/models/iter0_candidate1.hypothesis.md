@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by evaluating the statistical typicality of its macroscopic features. They compute the joint Binomial probability of observing the sequence's specific number of heads and alternations under their subjective expectations for a random process, perceiving sequences with highly improbable feature counts as less random.

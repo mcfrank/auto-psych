@@ -1,0 +1,15 @@
+reserved_for_new: 0.0
+theories:
+  accumulated_alternation_typicality: 0.0
+  bayesian_diagnosticity: 0.0
+  encoding_compressibility: 0.0
+  inner_loop_model: 0.5503834496165504
+  iter0_candidate0: 0.1220988779011221
+  iter0_candidate1: 0.08077891922108078
+  iter0_candidate2: 0.0
+  iter1_candidate0: 0.0
+  iter1_candidate1: 0.245982754017246
+  iter1_candidate2: 0.0
+  linear_accumulated_typicality: 0.0007559992440007562
+  prototype_similarity: 0.0
+  window_typicality: 0.0

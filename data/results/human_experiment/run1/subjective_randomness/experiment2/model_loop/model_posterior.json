@@ -1,0 +1,155 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.0,
+    "encoding_compressibility": 0.0,
+    "bayesian_diagnosticity": 0.0,
+    "window_typicality": 0.0,
+    "inner_loop_model": 0.550384,
+    "accumulated_alternation_typicality": 0.0,
+    "linear_accumulated_typicality": 0.000756,
+    "iter0_candidate0": 0.122099,
+    "iter0_candidate1": 0.080779,
+    "iter0_candidate2": 0.0,
+    "iter1_candidate0": 0.0,
+    "iter1_candidate1": 0.245983,
+    "iter1_candidate2": 0.0
+  },
+  "elpd_loo": {
+    "prototype_similarity": -1535.6774,
+    "encoding_compressibility": -1614.8826,
+    "bayesian_diagnosticity": -1539.3776,
+    "window_typicality": -1654.8744,
+    "inner_loop_model": -1491.379,
+    "accumulated_alternation_typicality": -1512.6171,
+    "linear_accumulated_typicality": -1497.9692,
+    "iter0_candidate0": -1492.8348,
+    "iter0_candidate1": -1493.0979,
+    "iter0_candidate2": -1506.1708,
+    "iter1_candidate0": -1512.3387,
+    "iter1_candidate1": -1491.8344,
+    "iter1_candidate2": -1521.9734
+  },
+  "n_trials": 2560,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "prototype_similarity": 26,
+    "encoding_compressibility": 35,
+    "bayesian_diagnosticity": 78,
+    "window_typicality": 34,
+    "inner_loop_model": 34,
+    "accumulated_alternation_typicality": 24,
+    "linear_accumulated_typicality": 34,
+    "iter0_candidate0": 35,
+    "iter0_candidate1": 38,
+    "iter0_candidate2": 35,
+    "iter1_candidate0": 37,
+    "iter1_candidate1": 41,
+    "iter1_candidate2": 29
+  },
+  "comparison": {
+    "inner_loop_model": {
+      "rank": 0,
+      "elpd_loo": -1491.3790080047595,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.6506482704561237,
+      "loo_unreliable": false
+    },
+    "iter1_candidate1": {
+      "rank": 1,
+      "elpd_loo": -1491.8343639221705,
+      "elpd_diff": 0.4553559174109836,
+      "dse": 0.10015501820844519,
+      "weight": 4.767400301028575e-12,
+      "loo_unreliable": false
+    },
+    "iter0_candidate0": {
+      "rank": 2,
+      "elpd_loo": -1492.834796074753,
+      "elpd_diff": 1.4557880699934973,
+      "dse": 2.0812614801361833,
+      "weight": 0.0,
+      "loo_unreliable": false
+    },
+    "iter0_candidate1": {
+      "rank": 3,
+      "elpd_loo": -1493.09791351874,
+      "elpd_diff": 1.7189055139804257,
+      "dse": 1.655068741142788,
+      "weight": 0.0,
+      "loo_unreliable": false
+    },
+    "linear_accumulated_typicality": {
+      "rank": 4,
+      "elpd_loo": -1497.9692144422902,
+      "elpd_diff": 6.590206437530476,
+      "dse": 5.732860180563909,
+      "weight": 0.24497434293836043,
+      "loo_unreliable": false
+    },
+    "iter0_candidate2": {
+      "rank": 5,
+      "elpd_loo": -1506.1707525693087,
+      "elpd_diff": 14.791744564549093,
+      "dse": 3.195567987370394,
+      "weight": 0.0,
+      "loo_unreliable": false
+    },
+    "iter1_candidate0": {
+      "rank": 6,
+      "elpd_loo": -1512.3387254309189,
+      "elpd_diff": 20.959717426159383,
+      "dse": 7.434810731781307,
+      "weight": 0.0,
+      "loo_unreliable": false
+    },
+    "accumulated_alternation_typicality": {
+      "rank": 7,
+      "elpd_loo": -1512.617120309161,
+      "elpd_diff": 21.238112304401373,
+      "dse": 6.771087480752289,
+      "weight": 0.0,
+      "loo_unreliable": true
+    },
+    "iter1_candidate2": {
+      "rank": 8,
+      "elpd_loo": -1521.9734467490252,
+      "elpd_diff": 30.59443874426578,
+      "dse": 8.169286554000776,
+      "weight": 0.0,
+      "loo_unreliable": false
+    },
+    "prototype_similarity": {
+      "rank": 9,
+      "elpd_loo": -1535.6773635516836,
+      "elpd_diff": 44.29835554692408,
+      "dse": 10.958843246505548,
+      "weight": 0.0,
+      "loo_unreliable": false
+    },
+    "bayesian_diagnosticity": {
+      "rank": 10,
+      "elpd_loo": -1539.3776190157723,
+      "elpd_diff": 47.99861101101277,
+      "dse": 9.42422674642776,
+      "weight": 0.0,
+      "loo_unreliable": false
+    },
+    "encoding_compressibility": {
+      "rank": 11,
+      "elpd_loo": -1614.8826435669368,
+      "elpd_diff": 123.5036355621773,
+      "dse": 17.962685287441715,
+      "weight": 0.10437738662117876,
+      "loo_unreliable": false
+    },
+    "window_typicality": {
+      "rank": 12,
+      "elpd_loo": -1654.8744493430918,
+      "elpd_diff": 163.49544133833206,
+      "dse": 18.921308090340514,
+      "weight": 1.9229572903629866e-12,
+      "loo_unreliable": false
+    }
+  }
+}

@@ -1,0 +1,83 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "smoothed_prototype_distance",
+    "posteriors": {
+      "prototype_similarity": 0.004953,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 1.1e-05,
+      "window_typicality": 0.0,
+      "inner_loop_model": 9e-06,
+      "smoothed_prototype_distance": 0.995027,
+      "falk_konold_complexity": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1720.1058,
+      "encoding_compressibility": -1765.1448,
+      "bayesian_diagnosticity": -1723.6407,
+      "window_typicality": -1769.4198,
+      "inner_loop_model": -1726.0217,
+      "smoothed_prototype_distance": -1714.403,
+      "falk_konold_complexity": -1774.5911
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "smoothed_prototype_distance",
+    "posteriors": {
+      "prototype_similarity": 0.004037,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 9e-06,
+      "window_typicality": 0.0,
+      "inner_loop_model": 7e-06,
+      "smoothed_prototype_distance": 0.811001,
+      "falk_konold_complexity": 0.0,
+      "iter0_candidate0": 0.184946,
+      "iter0_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1720.1058,
+      "encoding_compressibility": -1765.1448,
+      "bayesian_diagnosticity": -1723.6407,
+      "window_typicality": -1769.4198,
+      "inner_loop_model": -1726.0217,
+      "smoothed_prototype_distance": -1714.403,
+      "falk_konold_complexity": -1774.5911,
+      "iter0_candidate0": -1715.1812,
+      "iter0_candidate2": -1769.0073
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "smoothed_prototype_distance",
+    "posteriors": {
+      "prototype_similarity": 0.002723,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 6e-06,
+      "window_typicality": 0.0,
+      "inner_loop_model": 5e-06,
+      "smoothed_prototype_distance": 0.54698,
+      "falk_konold_complexity": 0.0,
+      "iter0_candidate0": 0.124737,
+      "iter0_candidate2": 0.0,
+      "iter1_candidate0": 0.32555,
+      "iter1_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -1720.1058,
+      "encoding_compressibility": -1765.1448,
+      "bayesian_diagnosticity": -1723.6407,
+      "window_typicality": -1769.4198,
+      "inner_loop_model": -1726.0217,
+      "smoothed_prototype_distance": -1714.403,
+      "falk_konold_complexity": -1774.5911,
+      "iter0_candidate0": -1715.1812,
+      "iter0_candidate2": -1769.0073,
+      "iter1_candidate0": -1714.9219,
+      "iter1_candidate2": -1758.6115
+    }
+  }
+]

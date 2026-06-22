@@ -1,0 +1,476 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+cat: CONTEXT.md
+[0m
+[0m$ [0mpwd && ls -la
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo
+total 22236
+drwxr-xr-x+ 16 benpry ngoodman     4096 Jun 21 14:32 .
+drwx------+  3 benpry ngoodman     4096 Jun 21 12:50 ..
+-rw-r--r--+  1 benpry ngoodman     1240 Jun 18 12:21 candidate.py
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 20 20:47 .claude
+-rw-r--r--+  1 benpry ngoodman     1724 Jun 17 11:41 CLEANUP_PLAN.md
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 18 12:21 diagrams
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 18 12:21 docs
+-rw-r--r--+  1 benpry ngoodman     1593 Jun 20 01:44 extract_pdf.py
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 19 14:06 .firebase
+-rw-------+  1 benpry ngoodman      612 Jun 21 14:31 firebase.generated.json
+-rw-r--r--+  1 benpry ngoodman      612 Jun 18 23:34 firebase.json
+-rw-r--r--+  1 benpry ngoodman       58 Jun 19 13:13 .firebaserc
+-rw-r--r--+  1 benpry ngoodman       58 Jun 17 14:47 .firebaserc.example
+-rw-r--r--+  1 benpry ngoodman      224 Jun 19 12:56 firebase.viewer.json
+-rw-r--r--+  1 benpry ngoodman      503 Jun 18 23:34 firestore.rules
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 21 13:02 functions
+-rw-------+  1 benpry ngoodman     1303 Jun 21 14:25 generate_candidates_agent.py
+-rw-r--r--+  1 benpry ngoodman      688 Jun 17 11:42 generate_candidates.py
+-rw-r--r--+  1 benpry ngoodman     1212 Jun 20 14:05 .gitignore
+-rw-r--r--+  1 benpry ngoodman 21915053 Jun 20 01:46 gt.txt
+-rw-------+  1 benpry ngoodman        0 Jun 21 12:50 .here
+-rw-r--r--+  1 benpry ngoodman     1070 Jun 17 11:41 LICENSE
+-rw-r--r--+  1 benpry ngoodman      466 Jun 21 12:51 opencode.json
+-rw-r--r--+  1 benpry ngoodman    11807 Jun 20 15:19 PROBLEMS.md
+drwxr-xr-x+  6 benpry ngoodman     4096 Jun 20 14:46 projects
+drwx------+  4 benpry ngoodman     4096 Jun 21 14:32 public
+-rw-r--r--+  1 benpry ngoodman     3047 Jun 21 12:57 pyproject.toml
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 19 11:42 .pytest_cache
+-rw-r--r--+  1 benpry ngoodman        5 Jun 20 15:02 .python-version
+-rw-r--r--+  1 benpry ngoodman    12449 Jun 20 16:40 README.md
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 19 17:36 .ruff_cache
+drwxr-xr-x+  5 benpry ngoodman     4096 Jun 19 13:11 scripts
+-rw-r--r--+  1 benpry ngoodman      791 Jun 19 13:13 .secrets.example
+drwxr-xr-x+ 13 benpry ngoodman     4096 Jun 20 01:39 src
+-rw-r--r--+  1 benpry ngoodman    12167 Jun 20 15:19 SUMMARY.md
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 20 23:26 templates
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 21 11:22 tests
+-rw-r--r--+  1 benpry ngoodman   673755 Jun 21 12:57 uv.lock
+drwx------+  6 benpry ngoodman     4096 Jun 21 12:58 .venv
+[0m
+[0m$ [0mcat CONTEXT.md CANDIDATE_BRIEF.md existing_hypotheses.md
+# Inner Loop — round 0, candidate 2 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mls -la
+total 28
+drwx------+ 2 benpry ngoodman 4096 Jun 21 15:48 .
+drwx------+ 6 benpry ngoodman 4096 Jun 21 15:48 ..
+-rw-------+ 1 benpry ngoodman 5088 Jun 21 15:49 agent.jsonl
+-rw-------+ 1 benpry ngoodman  435 Jun 21 15:48 CANDIDATE_BRIEF.md
+-rw-------+ 1 benpry ngoodman 2293 Jun 21 15:48 CONTEXT.md
+-rw-------+ 1 benpry ngoodman  681 Jun 21 15:48 critiques.md
+-rw-------+ 1 benpry ngoodman 3179 Jun 21 15:48 existing_hypotheses.md
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md existing_hypotheses.md critiques.md
+# Candidate Brief
+
+Propose a simpler or higher-variance single-mechanism hypothesis if progress has stalled.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -1535.68
+
+Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -1614.88
+
+Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -1539.38
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -1654.87
+
+Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).
+
+## inner_loop_model  — posterior 0.999, ELPD-LOO -1491.38
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, rather than merely evaluating its average properties. They evaluate how well a sequence conforms to a mental prototype—represented by an ideal proportion of heads and alternations—and integrate this fit across all events.
+
+## accumulated_alternation_typicality  — posterior 0.000, ELPD-LOO -1512.62
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this typicality is based entirely on how closely the sequence's alternation rate matches a mental prototype, completely ignoring the overall proportion of heads and tails.
+
+## linear_accumulated_typicality  — posterior 0.001, ELPD-LOO -1497.97
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal head proportion and alternation rate is linear (absolute difference) rather than quadratic, treating extreme deviations proportionally to small ones.
+
+## iter0_candidate0
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this evidence integration exhibits diminishing returns. Rather than growing linearly, the accumulated typicality scales according to a power-law function of sequence length, which prevents extremely long sequences from disproportionately dominating judgments and explains why the preference for longer sequences saturates.
+
+## iter0_candidate1
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its events, but working memory for past events is leaky. The evidence contributed by each event decays exponentially over time, meaning the total accumulated randomness score saturates for longer sequences, which prevents large differences in sequence length from having an oversized effect on choice.
+[0m
+[0m$ [0mcat critiques.md
+# Critique of `inner_loop_model`
+
+1 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **length_difference_saturation** — Difference in preference for the longer sequence between trials with a large length difference (>=4) and trials with a small length difference (<=2). (observed -0.0075 vs null mean 0.207, z=-3.07, p=0.0199, q=0.159)
+[0m
+[0m$ [0mfind . -name "inner_loop_model.py" -o -name "inner_loop_model" | grep -v "\.venv"
+./models/inner_loop_model.py
+[0m
+[0m$ [0mcat ./models/inner_loop_model.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, rather than merely evaluating its average properties. They evaluate how well a sequence conforms to a mental prototype—represented by an ideal proportion of heads and alternations—and integrate this fit across all events. Because this typicality is accumulated, longer sequences that match the prototype accrue a higher total randomness score, while longer sequences that deviate strongly accumulate a heavier penalty, explaining why humans prefer longer sequences when average rates are equal.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate per-event typicality as a base rate minus the deviation penalty
+    typ_a = base_typ - (
+        w_p * pt.square(p_a - ideal_p) + w_alt * pt.square(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.square(p_b - ideal_p) + w_alt * pt.square(alt_rate_b - ideal_alt)
+    )
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = n_a * typ_a
+    rand_b = n_b * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat iter_0/candidate_0/candidate.py iter_0/candidate_1/candidate.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this evidence integration exhibits diminishing returns. Rather than growing linearly, the accumulated typicality scales according to a power-law function of sequence length, which prevents extremely long sequences from disproportionately dominating judgments and explains why the preference for longer sequences saturates.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+    
+    # Power-law scaling parameter for diminishing returns on sequence length
+    length_scaling = pm.Beta("length_scaling", alpha=2.0, beta=2.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate per-event typicality as a base rate minus the deviation penalty
+    typ_a = base_typ - (
+        w_p * pt.square(p_a - ideal_p) + w_alt * pt.square(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.square(p_b - ideal_p) + w_alt * pt.square(alt_rate_b - ideal_alt)
+    )
+
+    # Total randomness score with power-law diminishing accumulation
+    rand_a = pt.power(pt.cast(n_a, "float64"), length_scaling) * typ_a
+    rand_b = pt.power(pt.cast(n_b, "float64"), length_scaling) * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat iter_0/candidate_1/candidate.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its events, but working memory for past events is leaky. The evidence contributed by each event decays exponentially over time, meaning the total accumulated randomness score saturates for longer sequences, which prevents large differences in sequence length from having an oversized effect on choice.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+    
+    # Memory decay parameter for the leaky accumulator
+    # A decay of 1 means perfect memory (linear accumulation), 0 means no memory (only last event matters)
+    decay = pm.Beta("decay", alpha=2.0, beta=2.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate average per-event typicality
+    typ_a = base_typ - (
+        w_p * pt.square(p_a - ideal_p) + w_alt * pt.square(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.square(p_b - ideal_p) + w_alt * pt.square(alt_rate_b - ideal_alt)
+    )
+
+    # Calculate effective length under exponential decay
+    # Sum of geometric series: 1 + decay + decay^2 + ... + decay^(n-1) = (1 - decay^n) / (1 - decay)
+    # We clip decay to 0.999 to avoid division by zero
+    safe_decay = pt.clip(decay, 1e-6, 0.999)
+    eff_len_a = (1.0 - pt.power(safe_decay, pt.cast(n_a, "float64"))) / (1.0 - safe_decay)
+    eff_len_b = (1.0 - pt.power(safe_decay, pt.cast(n_b, "float64"))) / (1.0 - safe_decay)
+
+    # Total randomness score with leaky accumulation
+    rand_a = eff_len_a * typ_a
+    rand_b = eff_len_b * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its events, but their choice between two sequences is governed by Weber's law. Instead of comparing the absolute difference in accumulated typicality, they evaluate this difference relative to the total length of both sequences. This relative comparison explains why the preference for a longer sequence saturates, as a given absolute difference in sequence length has a much weaker perceptual effect when the sequences being compared are already long.
+EOF
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its events, but their choice between two sequences is governed by Weber's law. Instead of comparing the absolute difference in accumulated typicality, they evaluate this difference relative to the total length of both sequences. This relative comparison explains why the preference for a longer sequence saturates, as a given absolute difference in sequence length has a much weaker perceptual effect when the sequences being compared are already long.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=20.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=20.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=20.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate average per-event typicality
+    typ_a = base_typ - (
+        w_p * pt.square(p_a - ideal_p) + w_alt * pt.square(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.square(p_b - ideal_p) + w_alt * pt.square(alt_rate_b - ideal_alt)
+    )
+
+    # Total accumulated typicality
+    rand_a = pt.cast(n_a, "float64") * typ_a
+    rand_b = pt.cast(n_b, "float64") * typ_b
+
+    # Weber's law normalisation by total length
+    total_length = pt.maximum(pt.cast(n_a + n_b, "float64"), 1.0)
+    
+    # Choice probability based on relative difference
+    p_left_raw = pm.math.sigmoid((rand_a - rand_b) / total_length)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.append('/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat candidate.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its events, but their choice between two sequences is governed by Weber's law. Instead of comparing the absolute difference in accumulated typicality, they evaluate this difference relative to the total length of both sequences. This relative comparison explains why the preference for a longer sequence saturates, as a given absolute difference in sequence length has a much weaker perceptual effect when the sequences being compared are already long.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=20.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=20.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=20.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate average per-event typicality
+    typ_a = base_typ - (
+        w_p * pt.square(p_a - ideal_p) + w_alt * pt.square(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.square(p_b - ideal_p) + w_alt * pt.square(alt_rate_b - ideal_alt)
+    )
+
+    # Total accumulated typicality
+    rand_a = pt.cast(n_a, "float64") * typ_a
+    rand_b = pt.cast(n_b, "float64") * typ_b
+
+    # Weber's law normalisation by total length
+    total_length = pt.maximum(pt.cast(n_a + n_b, "float64"), 1.0)
+    
+    # Choice probability based on relative difference
+    p_left_raw = pm.math.sigmoid((rand_a - rand_b) / total_length)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+I have created both `hypothesis.md` and `candidate.py` as requested.
+
+The hypothesis is a refinement of the existing `inner_loop_model`. It directly addresses the `length_difference_saturation` discrepancy highlighted in `critiques.md`. The critique points out that the observed preference difference between large and small length differences is ~0, while the `inner_loop_model` expects it to be large.
+
+To fix this, the new candidate hypothesises that while people do accumulate typicality over events, their evaluation of the final difference in accumulated typicality is governed by Weber's law: they evaluate it relative to the total length of the sequences being processed. By normalising the difference in evidence by `n_a + n_b`, a large length difference at longer total sequence lengths produces a much smaller perceptual difference than the same length difference at short total sequence lengths, naturally dampening the overprediction of sequence length importance.
+
+Both files have been written to the target directory, and the self-check verifies that the module structure is correct and that the model exposes the required components correctly.

@@ -1,0 +1,326 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+cat: CONTEXT.md
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 1, candidate 2 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/iter_1/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a simpler or higher-variance single-mechanism hypothesis if progress has stalled.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -2543.22
+
+Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -2624.22
+
+Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 1.000, ELPD-LOO -2484.89
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -2625.70
+
+Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).
+
+## smoothed_prototype_distance  — posterior 0.000, ELPD-LOO -2529.96
+
+People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal.
+
+## falk_konold_complexity  — posterior 0.000, ELPD-LOO -2664.29
+
+People judge the randomness of a sequence by its structural complexity when parsed into continuous alternating and repeating sub-sequences (Falk & Konold's difficulty of encoding), perceiving sequences with a lower rate of sub-sequences as simpler and therefore less random.
+
+## inner_loop_model  — posterior 0.000, ELPD-LOO -2529.96
+
+Best PyMC model found by the inner model-improvement loop.
+
+## gaussian_smoothed_prototype  — posterior 0.000, ELPD-LOO -2519.78
+
+People judge randomness by estimating a sequence's feature proportions using Bayesian smoothing and evaluating its similarity to a subjective ideal, where this similarity follows a Gaussian generalization gradient that disproportionately penalizes glaring squared deviations.
+
+## binomial_feature_surprise  — posterior 0.000, ELPD-LOO -2635.67
+
+People judge the randomness of a sequence by intuitively calculating the exact Binomial probability of its observed number of heads and alternations under a subjective ideal, naturally penalizing deviations more strictly in longer sequences without needing ad-hoc smoothing.
+
+## iter0_candidate0  — posterior 0.000, ELPD-LOO -2570.47
+
+People judge the randomness of a sequence by comparing its smoothed feature proportions to a subjective ideal, but instead of expecting exact perfection, they expect a 'typical' amount of sampling variation. They penalize sequences based on the absolute difference between their smoothed deviations and these expected typical deviations, naturally penalizing exactly balanced sequences as suspiciously artificial.
+
+## iter0_candidate1  — posterior 0.000, ELPD-LOO -2660.27
+
+People judge the randomness of a sequence by computing its likelihood under a Gambler's Fallacy mental model, expecting that the probability of a coin switching states increases the longer it produces the same outcome. They penalize sequences containing long runs because each successive identical flip violates a progressively stronger subjective expectation of an alternation.
+
+## iter0_candidate2  — posterior 0.000, ELPD-LOO -2634.68
+
+People evaluate the randomness of a sequence by intuitively parsing it into runs of identical outcomes and estimating the likelihood of these run lengths. Instead of a standard geometric expectation, they assume the length of any streak follows a subjective Poisson distribution, which inherently applies a severe factorial penalty to excessively long runs and seamlessly accounts for both streak aversion and the preference for alternations without mixing separate heuristics.
+
+## iter1_candidate0
+
+People judge the randomness of a sequence by computing its Bayesian diagnosticity—the log-likelihood ratio of a fair coin versus a subjective "regular" generative process. We refine this model by adding an "artificial balance" component to the regular hypothesis, representing a generator that intentionally targets an exact equal count of heads and tails. This explains why people strongly penalize perfectly symmetric sequences, recognizing them as suspiciously contrived rather than naturally random.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/iter_1/critique/critiques.md
+# Critique of `bayesian_diagnosticity`
+
+2 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **max_run_penalty** — The mean choice rate for sequence A when A has a larger normalized maximum run length than sequence B. (observed 0.427 vs null mean 0.464, z=-2.77, p=0.00995, q=0.0796)
+- **exact_symmetry** — The mean choice rate for sequence A when A is exactly symmetric (imbalance 0) and B is slightly imbalanced (>0 to 0.3). (observed 0.367 vs null mean 0.432, z=-2.27, p=0.0398, q=0.159)
+[0m
+[0m$ [0mhead -n 2 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,HTTTTTTH,HHHTHHH,0,1,,8,2,2,6,3,0,7,6,2,3,3,0,0.25,0.2857142857142857,0.7142857142857143,0.5,0.5,0.8571428571428571,0.3333333333333333,0.3333333333333333,0.7142857142857142,0.7142857142857142
+[0m
+[0m$ [0mhead -n 10 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv | awk -F',' '{print $24, $25, $28, $29, $30}'
+imbalance_a periodicity_a max_run_norm_b imbalance_b periodicity_b
+0.5 0.5 0.3333333333333333 0.7142857142857142 0.7142857142857142
+0.4285714285714286 0.1428571428571428 0.42857142857142855 0.75 0.75
+0.25 0.25 0.2857142857142857 0.5 0.5
+0.4285714285714286 0.7142857142857142 0.42857142857142855 0.0 0.5
+0.4285714285714286 1.0 0.5714285714285714 0.25 0.25
+0.0 0.5 0.2 0.33333333333333326 0.6666666666666667
+0.25 0.25 0.5 0.33333333333333337 0.0
+0.25 0.5 0.3333333333333333 0.4285714285714286 0.4285714285714286
+0.33333333333333337 0.33333333333333326 0.5 0.1428571428571428 0.0
+[0m
+[0m$ [0msed -n '6p' /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv
+0,[REDACTED_PROLIFIC_ID],5,HTHHTHH,HHTTTTTH,1,0,,7,5,4,2,3,1,8,3,2,5,3,0,0.7142857142857143,0.6666666666666666,0.16666666666666666,0.4285714285714286,1.0,0.375,0.2857142857142857,0.5714285714285714,0.25,0.25
+[0m
+[0m$ [0mgrep 'HTHTHTHT' /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv | head -n 1
+[0m
+[0m$ [0mawk -F',' '$11 == $9 - 1 {print $0; exit}' /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv
+0,[REDACTED_PROLIFIC_ID],9,THT,TTTHHHH,1,0,,3,1,2,1,0,1,7,4,1,4,2,0,0.3333333333333333,1.0,0.0,0.33333333333333337,0.33333333333333326,0.5714285714285714,0.16666666666666666,0.5,0.1428571428571428,0.0
+[0m
+[0m$ [0mawk -F',' '$11 == $9 - 1 && $9 > 5 {print $0; exit}' /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv
+1,[REDACTED_PROLIFIC_ID],22,HTHTHT,HH,1,0,,6,3,5,1,0,1,2,2,0,2,1,0,0.5,1.0,0.0,0.0,1.0,1.0,0.0,1.0,1.0,0.0
+[0m
+[0m$ [0mawk -F',' 'NR==5 {print $4, $24, $25, $23}' /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv
+THTHTTT 0.4285714285714286 0.7142857142857142 0.3333333333333333
+[0m
+[0m$ [0mawk -F',' 'NR>1 {sum_i+=$24; sum_p+=$25; sum_m+=$23} END {print sum_i/(NR-1), sum_p/(NR-1), sum_m/(NR-1)}' /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv
+0.33756 0.447181 0.410707
+[0m
+[0m$ [0mawk -F',' 'NR>1 {print $9}' /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv | sort | uniq -c
+291 2
+    397 3
+    369 4
+    336 5
+    290 6
+    573 7
+   1584 8
+[0m
+[0m$ [0mcat << 'EOF' > test_counts.py
+def compute_features(seq_a, seq_b):
+    def get_counts(s):
+        s = s.upper().strip()
+        counts = {'HH': 0, 'HT': 0, 'TH': 0, 'TT': 0}
+        for i in range(len(s)-1):
+            counts[s[i:i+2]] += 1
+        return counts
+    
+    ca = get_counts(seq_a)
+    cb = get_counts(seq_b)
+    
+    return {
+        'n_HH_a': ca['HH'], 'n_HT_a': ca['HT'], 'n_TH_a': ca['TH'], 'n_TT_a': ca['TT'],
+        'n_HH_b': cb['HH'], 'n_HT_b': cb['HT'], 'n_TH_b': cb['TH'], 'n_TT_b': cb['TT']
+    }
+
+print(compute_features('HHHH', 'HTHT'))
+EOF
+python3 test_counts.py
+{'n_HH_a': 3, 'n_HT_a': 0, 'n_TH_a': 0, 'n_TT_a': 0, 'n_HH_b': 0, 'n_HT_b': 2, 'n_TH_b': 1, 'n_TT_b': 0}
+[0m
+[0m$ [0mcat << 'EOF' > test_gammaln.py
+import pytensor.tensor as pt
+import pymc as pm
+import numpy as np
+
+with pm.Model() as m:
+    x = pt.as_tensor_variable(np.array([1.0, 2.0]))
+    y = pt.gammaln(x)
+    print(y.eval())
+EOF
+python3 test_gammaln.py
+[0. 0.]
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment3/model_loop/iter_1/candidate_2/hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment3/model_loop/iter_1/candidate_2/candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.append('/scratch/users/benpry/auto-psych/outer_loop_live/run3/repo')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mPYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mcat << 'EOF' > test_gammaln_int.py
+import pytensor.tensor as pt
+import pymc as pm
+import numpy as np
+
+with pm.Model() as m:
+    x = pt.as_tensor_variable(np.array([1, 2], dtype='int64'))
+    alpha = pm.Exponential('alpha', lam=1.0) + 1e-4
+    y = pt.gammaln(x + alpha)
+    print(m.compile_logp()({"alpha_log__": 0.0}))
+EOF
+python3 test_gammaln_int.py
+-1.0
+[0m
+[0m$ [0mcat candidate.py
+"""
+People judge the randomness of a sequence by computing its Bayesian diagnosticity—the log-likelihood ratio of a fair coin versus a subjective "regular" generative process. We model this regular hypothesis as a two-state Markov chain with symmetric Beta priors on its transition probabilities, an alternative that effortlessly assigns high marginal probability to sequences with glaring anomalies like over-long streaks, global imbalance, or artificial perfect alternation, thereby heavily penalizing them as non-random without blending multiple ad-hoc heuristics.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    """Return the counts of HH, HT, TH, TT transitions for each sequence."""
+
+    def get_counts(s):
+        s = s.strip().upper()
+        counts = {"HH": 0, "HT": 0, "TH": 0, "TT": 0}
+        for i in range(len(s) - 1):
+            pair = s[i : i + 2]
+            if pair in counts:
+                counts[pair] += 1
+        return counts
+
+    ca = get_counts(sequence_a)
+    cb = get_counts(sequence_b)
+
+    return {
+        "n_HH_a": ca["HH"],
+        "n_HT_a": ca["HT"],
+        "n_TH_a": ca["TH"],
+        "n_TT_a": ca["TT"],
+        "n_HH_b": cb["HH"],
+        "n_HT_b": cb["HT"],
+        "n_TH_b": cb["TH"],
+        "n_TT_b": cb["TT"],
+    }
+
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+
+    n_HH_a = pm.Data("n_HH_a", np.zeros(1, dtype="int64"))
+    n_HT_a = pm.Data("n_HT_a", np.zeros(1, dtype="int64"))
+    n_TH_a = pm.Data("n_TH_a", np.zeros(1, dtype="int64"))
+    n_TT_a = pm.Data("n_TT_a", np.zeros(1, dtype="int64"))
+
+    n_HH_b = pm.Data("n_HH_b", np.zeros(1, dtype="int64"))
+    n_HT_b = pm.Data("n_HT_b", np.zeros(1, dtype="int64"))
+    n_TH_b = pm.Data("n_TH_b", np.zeros(1, dtype="int64"))
+    n_TT_b = pm.Data("n_TT_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    tau = pm.HalfNormal("tau", sigma=5.0)
+    # Adding a small constant to ensure alpha > 0 strictly for numerical safety in gammaln
+    alpha = pm.Exponential("alpha", lam=1.0) + 1e-4
+
+    def log_beta(x, y):
+        return pt.gammaln(x) + pt.gammaln(y) - pt.gammaln(x + y)
+
+    def log_p_markov(n_HH, n_HT, n_TH, n_TT, alpha):
+        # Marginal likelihood of the transitions under Beta(alpha, alpha) priors
+        log_p_H_trans = log_beta(n_HH + alpha, n_HT + alpha) - log_beta(alpha, alpha)
+        log_p_T_trans = log_beta(n_TT + alpha, n_TH + alpha) - log_beta(alpha, alpha)
+        # Assuming probability of the first flip is 0.5 under the regular process too
+        return pt.log(0.5) + log_p_H_trans + log_p_T_trans
+
+    log_p_random_a = n_a * pt.log(0.5)
+    log_p_markov_a = log_p_markov(n_HH_a, n_HT_a, n_TH_a, n_TT_a, alpha)
+    diagnosticity_a = log_p_random_a - log_p_markov_a
+
+    log_p_random_b = n_b * pt.log(0.5)
+    log_p_markov_b = log_p_markov(n_HH_b, n_HT_b, n_TH_b, n_TT_b, alpha)
+    diagnosticity_b = log_p_random_b - log_p_markov_b
+
+    # Higher diagnosticity means it looks MORE random.
+    # We want p_left (prob of choosing A) to increase if diagnosticity_a > diagnosticity_b.
+    p_left = pm.Deterministic(
+        "p_left", pm.math.sigmoid(tau * (diagnosticity_a - diagnosticity_b))
+    )
+
+    # Numerical safety: bound probabilities away from exact 0 or 1
+    p_left_safe = pt.clip(p_left, 1e-6, 1.0 - 1e-6)
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left_safe, observed=chose_left)
+[0m
+I've reviewed the existing models and the critiques to propose a distinct, highly parsimonious cognitive hypothesis.
+
+The current best model (`bayesian_diagnosticity`) showed significant discrepancies for `max_run_penalty` (it under-penalized extremely long runs). To address this, I've constructed a mathematically unified single mechanism: **a two-state Markov chain with symmetric Beta priors** on transition probabilities as the "regular" generative alternative hypothesis. Because a Beta prior natively expects transition counts to be highly skewed (if $\alpha < 1$, it suspects the process heavily favors either sticking or switching), the marginal likelihood under this alternative assigns massive probability to sequences containing glaring anomalies such as over-long streaks or perfect artificial alternation. This heavily penalizes them as non-random all within one principled diagnosticity calculation.
+
+I have:
+1. Written the clear plain-English hypothesis into `hypothesis.md`.
+2. Created `candidate.py`, which includes a `compute_features` method to count empirical $H \to H, H \to T, T \to H$, and $T \to T$ transitions. 
+3. Constructed the PyMC model `candidate.py` which computes the Dirichlet-Multinomial transition log-likelihood mathematically, complete with safety bounds.
+4. Passed the self-check verifying that the pipeline accurately binds `pm.Data` nodes.

@@ -1,0 +1,10 @@
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv')
+print("n_a values:", df['n_a'].unique())
+print("imbalance_a max:", df['imbalance_a'].max(), "min:", df['imbalance_a'].min())
+print("p_alts_a max:", df['p_alts_a'].max(), "min:", df['p_alts_a'].min())
+print("periodicity_a max:", df['periodicity_a'].max(), "min:", df['periodicity_a'].min())
+print("alt_motifs_a max:", df['alt_motifs_a'].max())
+print("rep_motifs_a max:", df['rep_motifs_a'].max())
+print("max_run_a max:", df['max_run_a'].max())
+print("Lengths diff:", (df['n_a'] != df['n_b']).sum())

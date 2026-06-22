@@ -1,0 +1,282 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+cat: CONTEXT.md
+[0m
+[0m$ [0mcat CONTEXT.md CANDIDATE_BRIEF.md existing_hypotheses.md
+# Inner Loop — round 0, candidate 2 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mls -la
+total 11
+drwx------+ 2 benpry ngoodman 4096 Jun 21 17:36 .
+drwx------+ 6 benpry ngoodman 4096 Jun 21 17:36 ..
+-rw-------+ 1 benpry ngoodman 2455 Jun 21 17:36 agent.jsonl
+-rw-------+ 1 benpry ngoodman  435 Jun 21 17:36 CANDIDATE_BRIEF.md
+-rw-------+ 1 benpry ngoodman 2293 Jun 21 17:36 CONTEXT.md
+-rw-------+ 1 benpry ngoodman  673 Jun 21 17:36 critiques.md
+-rw-------+ 1 benpry ngoodman 2530 Jun 21 17:36 existing_hypotheses.md
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md existing_hypotheses.md critiques.md
+# Candidate Brief
+
+Propose a simpler or higher-variance single-mechanism hypothesis if progress has stalled.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.005, ELPD-LOO -1720.11
+
+Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -1765.14
+
+Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -1723.64
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -1769.42
+
+Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).
+
+## inner_loop_model  — posterior 0.000, ELPD-LOO -1726.02
+
+People judge the randomness of a sequence by comparing its features (head proportion and alternation rate) to a subjective ideal, but their psychological penalty for deviations is scaled by the square root of the sequence length, reflecting an intuitive sensitivity to the standard error of small samples.
+
+## smoothed_prototype_distance  — posterior 0.995, ELPD-LOO -1714.40
+
+People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal.
+
+## falk_konold_complexity  — posterior 0.000, ELPD-LOO -1774.59
+
+People judge the randomness of a sequence by its structural complexity when parsed into continuous alternating and repeating sub-sequences (Falk & Konold's difficulty of encoding), perceiving sequences with a lower rate of sub-sequences as simpler and therefore less random.
+
+## iter0_candidate0
+
+People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but their ideal template includes an expectation for higher-order alternating motifs (like HTHT) in addition to basic heads/tails balance and simple bigram alternations.
+[0m
+[0m$ [0mcat critiques.md
+# Critique of `smoothed_prototype_distance`
+
+1 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **alt_motifs_preference** — The response rate for sequence A when it has more alternating motifs than sequence B, conditional on similar overall bigram alternation rates. (observed 0.595 vs null mean 0.5, z=2.35, p=0.0398, q=0.279)
+[0m
+[0m$ [0mcat ../candidate_0/hypothesis.md ../candidate_0/candidate.py
+People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but their ideal template includes an expectation for higher-order alternating motifs (like HTHT) in addition to basic heads/tails balance and simple bigram alternations.
+[0m
+[0m$ [0mls -la ../candidate_0/
+total 56
+drwx------+ 2 benpry ngoodman  4096 Jun 21 17:20 .
+drwx------+ 6 benpry ngoodman  4096 Jun 21 17:36 ..
+-rw-------+ 1 benpry ngoodman 22513 Jun 21 17:21 agent.jsonl
+-rw-------+ 1 benpry ngoodman   512 Jun 21 17:18 CANDIDATE_BRIEF.md
+-rw-------+ 1 benpry ngoodman  3665 Jun 21 17:20 candidate.py
+-rw-------+ 1 benpry ngoodman  2293 Jun 21 17:18 CONTEXT.md
+-rw-------+ 1 benpry ngoodman   673 Jun 21 17:18 critiques.md
+-rw-------+ 1 benpry ngoodman  2242 Jun 21 17:18 existing_hypotheses.md
+-rw-------+ 1 benpry ngoodman   266 Jun 21 17:20 hypothesis.md
+[0m
+[0m$ [0mcat ../candidate_0/candidate.py
+"""People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but their ideal template includes an expectation for higher-order alternating motifs (like HTHT) in addition to basic heads/tails balance and simple bigram alternations."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Feature inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+
+    alt_motifs_a = pm.Data("alt_motifs_a", np.zeros(1, dtype="int64"))
+    alt_motifs_b = pm.Data("alt_motifs_b", np.zeros(1, dtype="int64"))
+
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Cognitive parameters
+    # The ideal alternation rate and ideal alternating motif rate people expect
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    theta_alt_motif = pm.Uniform("theta_alt_motif", lower=0.0, upper=0.95)
+
+    # Relative weights of balance, alternations, and alternating motifs
+    weights = pm.Dirichlet("weights", a=np.ones(3))
+    balance_weight = weights[0]
+    alt_weight = weights[1]
+    motif_weight = weights[2]
+
+    # Pseudo-counts for Bayesian smoothing of the proportions
+    K_bal = pm.Uniform("K_bal", lower=0.0, upper=20.0)
+    K_alt = pm.Uniform("K_alt", lower=0.0, upper=20.0)
+    K_motif = pm.Uniform("K_motif", lower=0.0, upper=20.0)
+
+    # Scaling parameter and side bias for the decision rule
+    beta = pm.Uniform("beta", lower=0.1, upper=20.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    # Calculate denominators
+    n_a_f = pt.cast(n_a, "float64")
+    n_b_f = pt.cast(n_b, "float64")
+
+    n_alts_a_f = pt.cast(pt.maximum(n_a - 1, 1), "float64")
+    n_alts_b_f = pt.cast(pt.maximum(n_b - 1, 1), "float64")
+
+    n_alt_motifs_a_f = pt.cast(pt.maximum(n_a - 3, 1), "float64")
+    n_alt_motifs_b_f = pt.cast(pt.maximum(n_b - 3, 1), "float64")
+
+    p_alt_motifs_a = pt.cast(alt_motifs_a, "float64") / n_alt_motifs_a_f
+    p_alt_motifs_b = pt.cast(alt_motifs_b, "float64") / n_alt_motifs_b_f
+
+    # Smoothed deviations: (n / (n + K)) * raw_deviation
+    smooth_imb_a = (n_a_f / (n_a_f + K_bal)) * imbalance_a
+    smooth_imb_b = (n_b_f / (n_b_f + K_bal)) * imbalance_b
+
+    raw_alt_dev_a = pt.abs(p_alts_a - theta_alt)
+    raw_alt_dev_b = pt.abs(p_alts_b - theta_alt)
+    smooth_alt_dev_a = (n_alts_a_f / (n_alts_a_f + K_alt)) * raw_alt_dev_a
+    smooth_alt_dev_b = (n_alts_b_f / (n_alts_b_f + K_alt)) * raw_alt_dev_b
+
+    raw_motif_dev_a = pt.abs(p_alt_motifs_a - theta_alt_motif)
+    raw_motif_dev_b = pt.abs(p_alt_motifs_b - theta_alt_motif)
+    smooth_motif_dev_a = (n_alt_motifs_a_f / (n_alt_motifs_a_f + K_motif)) * raw_motif_dev_a
+    smooth_motif_dev_b = (n_alt_motifs_b_f / (n_alt_motifs_b_f + K_motif)) * raw_motif_dev_b
+
+    # Score sequences based on their smoothed distance from the ideal (higher distance = lower score)
+    score_a = -(balance_weight * smooth_imb_a + alt_weight * smooth_alt_dev_a + motif_weight * smooth_motif_dev_a)
+    score_b = -(balance_weight * smooth_imb_b + alt_weight * smooth_alt_dev_b + motif_weight * smooth_motif_dev_b)
+
+    # Softmax decision rule
+    p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_2/hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_2/candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mls -la /scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo
+total 22260
+drwxr-xr-x+ 16 benpry ngoodman     4096 Jun 21 17:35 .
+drwx------+  3 benpry ngoodman     4096 Jun 21 14:15 ..
+-rw-r--r--+  1 benpry ngoodman     4843 Jun 21 17:36 candidate.py
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 20 20:47 .claude
+-rw-r--r--+  1 benpry ngoodman     1724 Jun 17 11:41 CLEANUP_PLAN.md
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 18 12:21 diagrams
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 18 12:21 docs
+-rw-r--r--+  1 benpry ngoodman     1593 Jun 20 01:44 extract_pdf.py
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 19 14:06 .firebase
+-rw-------+  1 benpry ngoodman      617 Jun 21 16:20 firebase.generated.json
+-rw-r--r--+  1 benpry ngoodman      612 Jun 18 23:34 firebase.json
+-rw-r--r--+  1 benpry ngoodman       58 Jun 19 13:13 .firebaserc
+-rw-r--r--+  1 benpry ngoodman       58 Jun 17 14:47 .firebaserc.example
+-rw-r--r--+  1 benpry ngoodman      224 Jun 19 12:56 firebase.viewer.json
+-rw-r--r--+  1 benpry ngoodman      503 Jun 18 23:34 firestore.rules
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 21 14:34 functions
+-rw-r--r--+  1 benpry ngoodman      688 Jun 17 11:42 generate_candidates.py
+-rw-r--r--+  1 benpry ngoodman     1212 Jun 20 14:05 .gitignore
+-rw-r--r--+  1 benpry ngoodman 21915053 Jun 20 01:46 gt.txt
+-rw-------+  1 benpry ngoodman        0 Jun 21 14:15 .here
+-rw-------+  1 benpry ngoodman      503 Jun 21 17:35 hypothesis.md
+-rw-r--r--+  1 benpry ngoodman     1070 Jun 17 11:41 LICENSE
+-rw-r--r--+  1 benpry ngoodman      466 Jun 21 14:17 opencode.json
+-rw-r--r--+  1 benpry ngoodman    11807 Jun 20 15:19 PROBLEMS.md
+drwxr-xr-x+  6 benpry ngoodman     4096 Jun 20 14:46 projects
+drwx------+  4 benpry ngoodman     4096 Jun 21 16:21 public
+-rw-r--r--+  1 benpry ngoodman     3034 Jun 20 15:02 pyproject.toml
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 19 11:42 .pytest_cache
+-rw-r--r--+  1 benpry ngoodman        5 Jun 20 15:02 .python-version
+-rw-r--r--+  1 benpry ngoodman    12449 Jun 20 16:40 README.md
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 19 17:36 .ruff_cache
+drwxr-xr-x+  5 benpry ngoodman     4096 Jun 19 13:11 scripts
+-rw-r--r--+  1 benpry ngoodman      791 Jun 19 13:13 .secrets.example
+drwxr-xr-x+ 13 benpry ngoodman     4096 Jun 20 01:39 src
+-rw-r--r--+  1 benpry ngoodman    12167 Jun 20 15:19 SUMMARY.md
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 20 23:26 templates
+drwxr-xr-x+  3 benpry ngoodman    12288 Jun 21 13:42 tests
+-rw-------+  1 benpry ngoodman      954 Jun 21 17:35 test_trigrams.py
+-rw-r--r--+  1 benpry ngoodman   683270 Jun 20 14:41 uv.lock
+drwx------+  6 benpry ngoodman     4096 Jun 21 14:28 .venv
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+PYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat hypothesis.md
+People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but this prototype tracks the proportion of 4-item alternating motifs (like HTHT) instead of simple bigram alternations, viewing these longer, more complex alternations as the primary structural signature of local randomness.
+[0m
+I have implemented the cognitive hypothesis and the corresponding PyMC model in `hypothesis.md` and `candidate.py` respectively. 
+
+**Hypothesis Formulated:**
+I noticed from `critiques.md` that the previous best model, `smoothed_prototype_distance`, significantly underestimated how much people prefer sequences with *more alternating motifs* when simple bigram alternation rates are otherwise similar (`alt_motifs_preference`). 
+
+To address this without creating an overly blended mega-model, I formulated a refined, single-mechanism hypothesis. The hypothesis swaps out simple bigram alternations for 4-item alternating motifs (like HTHT). 
+> "People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but this prototype tracks the proportion of 4-item alternating motifs (like HTHT) instead of simple bigram alternations, viewing these longer, more complex alternations as the primary structural signature of local randomness."
+
+**Model Implementation Details:**
+- **Variables:** Exposes strictly standard features like `n_a`, `n_b`, `imbalance_a`, `imbalance_b`, and directly targets the critiqued pattern using `alt_motifs_a` and `alt_motifs_b`.
+- **Numerical Safety:** Ensured sequences shorter than 4-items are handled gracefully (division by zero is prevented by clamping `max(n_motifs, 1.0)`, and zeroes are cleanly assigned 0-deviation via the Bayesian pseudo-counts). `p_left` is rigorously clamped in bounds.
+- **Constraints Validation:** Successfully ran the provided pipeline validation commands, confirming `pm.Model` correctly loads and parses `chose_left` directly.
+
+The hypothesis and candidate file are properly in place in your specified working directory.

@@ -1,0 +1,1202 @@
+[
+  {
+    "sequence_a": "HTHHTHTT",
+    "sequence_b": "HHTTTHHT"
+  },
+  {
+    "sequence_a": "HHHH",
+    "sequence_b": "THHH"
+  },
+  {
+    "sequence_a": "HHHHHHT",
+    "sequence_b": "HTTTHHT"
+  },
+  {
+    "sequence_a": "HHTHTT",
+    "sequence_b": "HHTTHT"
+  },
+  {
+    "sequence_a": "HTHTTTTH",
+    "sequence_b": "HHTHTTHH"
+  },
+  {
+    "sequence_a": "HHTTHHTH",
+    "sequence_b": "TTHTTHHH"
+  },
+  {
+    "sequence_a": "HTHH",
+    "sequence_b": "HHHH"
+  },
+  {
+    "sequence_a": "THHTT",
+    "sequence_b": "HTTHT"
+  },
+  {
+    "sequence_a": "TTTHTT",
+    "sequence_b": "HHHHTT"
+  },
+  {
+    "sequence_a": "HHTHHHTT",
+    "sequence_b": "HTTHHTHT"
+  },
+  {
+    "sequence_a": "HTTTHHTH",
+    "sequence_b": "TTHTHTTH"
+  },
+  {
+    "sequence_a": "TTHTHH",
+    "sequence_b": "TTTHHT"
+  },
+  {
+    "sequence_a": "HHTTHHHT",
+    "sequence_b": "THHHTTTH"
+  },
+  {
+    "sequence_a": "THTHHHTH",
+    "sequence_b": "HHHHHHTT"
+  },
+  {
+    "sequence_a": "THHHTHHH",
+    "sequence_b": "HTHTHHHT"
+  },
+  {
+    "sequence_a": "HTTHTHHT",
+    "sequence_b": "TTHTTHHH"
+  },
+  {
+    "sequence_a": "HTTHHTH",
+    "sequence_b": "THHHTTT"
+  },
+  {
+    "sequence_a": "HTHHTT",
+    "sequence_b": "HTTHTT"
+  },
+  {
+    "sequence_a": "TTTHTTTH",
+    "sequence_b": "THTHTTHH"
+  },
+  {
+    "sequence_a": "TTHHH",
+    "sequence_b": "HHTHT"
+  },
+  {
+    "sequence_a": "THHHTTH",
+    "sequence_b": "HHTTHHH"
+  },
+  {
+    "sequence_a": "HTTTHTT",
+    "sequence_b": "THTTHHH"
+  },
+  {
+    "sequence_a": "HHTTTHHT",
+    "sequence_b": "THHHHTTT"
+  },
+  {
+    "sequence_a": "THTHHHHT",
+    "sequence_b": "HHHTHTTH"
+  },
+  {
+    "sequence_a": "HTTTTHHT",
+    "sequence_b": "TTTHTHTT"
+  },
+  {
+    "sequence_a": "HHHTHTTH",
+    "sequence_b": "HHTTTTTT"
+  },
+  {
+    "sequence_a": "TTTTHTTH",
+    "sequence_b": "TTHHHHHT"
+  },
+  {
+    "sequence_a": "HTTHH",
+    "sequence_b": "THHTH"
+  },
+  {
+    "sequence_a": "THTHTTHH",
+    "sequence_b": "THTTTHHT"
+  },
+  {
+    "sequence_a": "HHTHTHTT",
+    "sequence_b": "HTTHHHTH"
+  },
+  {
+    "sequence_a": "HTTHTTHH",
+    "sequence_b": "HHTHHHTT"
+  },
+  {
+    "sequence_a": "THTT",
+    "sequence_b": "HTTT"
+  },
+  {
+    "sequence_a": "THHHTTTT",
+    "sequence_b": "THHTHTHH"
+  },
+  {
+    "sequence_a": "TTTTTTHH",
+    "sequence_b": "HHTHTHHH"
+  },
+  {
+    "sequence_a": "THTTTHHT",
+    "sequence_b": "HTTTHTTT"
+  },
+  {
+    "sequence_a": "THTTTTTT",
+    "sequence_b": "HHTTHHTT"
+  },
+  {
+    "sequence_a": "THHHTTH",
+    "sequence_b": "THHHTTT"
+  },
+  {
+    "sequence_a": "TTHTTHH",
+    "sequence_b": "THTTTHT"
+  },
+  {
+    "sequence_a": "HTHTTT",
+    "sequence_b": "THTTTT"
+  },
+  {
+    "sequence_a": "HTTTHHT",
+    "sequence_b": "HTTHTHT"
+  },
+  {
+    "sequence_a": "HTHTTHTT",
+    "sequence_b": "THHHTHHH"
+  },
+  {
+    "sequence_a": "HTTHTHTT",
+    "sequence_b": "HHTHHTHH"
+  },
+  {
+    "sequence_a": "HHTTTHTT",
+    "sequence_b": "HTHTHTTT"
+  },
+  {
+    "sequence_a": "HHHTHTHT",
+    "sequence_b": "HTTTTTHT"
+  },
+  {
+    "sequence_a": "HTHTTT",
+    "sequence_b": "TTTHTT"
+  },
+  {
+    "sequence_a": "THHHTTH",
+    "sequence_b": "THHHTHT"
+  },
+  {
+    "sequence_a": "TTTTTTTH",
+    "sequence_b": "HTTTHHHH"
+  },
+  {
+    "sequence_a": "HTTHHHTH",
+    "sequence_b": "THTHHTTH"
+  },
+  {
+    "sequence_a": "THTTHHTT",
+    "sequence_b": "HHHTTTHH"
+  },
+  {
+    "sequence_a": "TTTHHT",
+    "sequence_b": "HHHTHH"
+  },
+  {
+    "sequence_a": "THTHHHHH",
+    "sequence_b": "THTHHHHT"
+  },
+  {
+    "sequence_a": "THTHHHT",
+    "sequence_b": "THHHTHH"
+  },
+  {
+    "sequence_a": "HHTHT",
+    "sequence_b": "HTTHT"
+  },
+  {
+    "sequence_a": "TTHTHTTT",
+    "sequence_b": "THTHHHHT"
+  },
+  {
+    "sequence_a": "TTHHHH",
+    "sequence_b": "TTTTTT"
+  },
+  {
+    "sequence_a": "THHTTTH",
+    "sequence_b": "TTTHTHT"
+  },
+  {
+    "sequence_a": "HHTTHT",
+    "sequence_b": "THHHHT"
+  },
+  {
+    "sequence_a": "HHTHTT",
+    "sequence_b": "HTTTTT"
+  },
+  {
+    "sequence_a": "THHHHHHT",
+    "sequence_b": "THHHHTTH"
+  },
+  {
+    "sequence_a": "THHHHHTH",
+    "sequence_b": "TTHTTHTT"
+  },
+  {
+    "sequence_a": "TTHHTTTT",
+    "sequence_b": "TTHHTTHH"
+  },
+  {
+    "sequence_a": "HTTTTHT",
+    "sequence_b": "HTTTHHH"
+  },
+  {
+    "sequence_a": "HHTHTH",
+    "sequence_b": "TTTTTT"
+  },
+  {
+    "sequence_a": "THHTH",
+    "sequence_b": "HHHTT"
+  },
+  {
+    "sequence_a": "THTTTTHH",
+    "sequence_b": "HHTTTHHH"
+  },
+  {
+    "sequence_a": "HTHHTH",
+    "sequence_b": "HTHTHH"
+  },
+  {
+    "sequence_a": "THHTTHHT",
+    "sequence_b": "TTHTTHHH"
+  },
+  {
+    "sequence_a": "HHTTHTHT",
+    "sequence_b": "HHTHHHHH"
+  },
+  {
+    "sequence_a": "THHTHHT",
+    "sequence_b": "TTHHHHT"
+  },
+  {
+    "sequence_a": "HHTTHTHT",
+    "sequence_b": "TTTHTTTT"
+  },
+  {
+    "sequence_a": "HHHTHHTH",
+    "sequence_b": "THHHHHHH"
+  },
+  {
+    "sequence_a": "TTTTHTHT",
+    "sequence_b": "HHHHHTHT"
+  },
+  {
+    "sequence_a": "HTTHHHHH",
+    "sequence_b": "HHTTTHTH"
+  },
+  {
+    "sequence_a": "HTTHHHHT",
+    "sequence_b": "THHHTHHH"
+  },
+  {
+    "sequence_a": "THHHTTHT",
+    "sequence_b": "THTHTTTH"
+  },
+  {
+    "sequence_a": "TTTHT",
+    "sequence_b": "THHTH"
+  },
+  {
+    "sequence_a": "TTHHHTH",
+    "sequence_b": "HTHTHHH"
+  },
+  {
+    "sequence_a": "TTHTTHH",
+    "sequence_b": "HHHHHHH"
+  },
+  {
+    "sequence_a": "TTTHTTHH",
+    "sequence_b": "THHHHTTH"
+  },
+  {
+    "sequence_a": "TTTTHTHT",
+    "sequence_b": "HTHTTHTT"
+  },
+  {
+    "sequence_a": "HHHHHTTT",
+    "sequence_b": "HHTTHTTH"
+  },
+  {
+    "sequence_a": "TTHHHHHT",
+    "sequence_b": "THHTTHHH"
+  },
+  {
+    "sequence_a": "THTTHHTH",
+    "sequence_b": "HTTHHTHT"
+  },
+  {
+    "sequence_a": "HTHHTH",
+    "sequence_b": "THTTTT"
+  },
+  {
+    "sequence_a": "THHHTHTH",
+    "sequence_b": "HTHTHHTH"
+  },
+  {
+    "sequence_a": "HHHTTHHH",
+    "sequence_b": "HHHHHHHH"
+  },
+  {
+    "sequence_a": "HHTTHTTH",
+    "sequence_b": "THTHHTHT"
+  },
+  {
+    "sequence_a": "TTTTTTH",
+    "sequence_b": "HHHHTHH"
+  },
+  {
+    "sequence_a": "TTTHT",
+    "sequence_b": "THTTT"
+  },
+  {
+    "sequence_a": "TTHHHTHT",
+    "sequence_b": "THHTTTHT"
+  },
+  {
+    "sequence_a": "TTTTTH",
+    "sequence_b": "HHHTTT"
+  },
+  {
+    "sequence_a": "TTTTTT",
+    "sequence_b": "HHTHTH"
+  },
+  {
+    "sequence_a": "HTTTT",
+    "sequence_b": "TTTTT"
+  },
+  {
+    "sequence_a": "THTHHTHT",
+    "sequence_b": "HHTHHHTT"
+  },
+  {
+    "sequence_a": "TTTTTHHH",
+    "sequence_b": "HTHHHHHH"
+  },
+  {
+    "sequence_a": "HHHTHT",
+    "sequence_b": "TTTTHH"
+  },
+  {
+    "sequence_a": "TTTHTHHH",
+    "sequence_b": "HTHTHTHH"
+  },
+  {
+    "sequence_a": "HHHTHTT",
+    "sequence_b": "TTHTTHH"
+  },
+  {
+    "sequence_a": "TTTTHHHT",
+    "sequence_b": "HTTHTTHH"
+  },
+  {
+    "sequence_a": "TTHTTTTT",
+    "sequence_b": "HTTHHTTH"
+  },
+  {
+    "sequence_a": "HTTTHHHT",
+    "sequence_b": "THHTTTTT"
+  },
+  {
+    "sequence_a": "THTHHHH",
+    "sequence_b": "THTTTTT"
+  },
+  {
+    "sequence_a": "TTHHTHH",
+    "sequence_b": "TTTHHTT"
+  },
+  {
+    "sequence_a": "HHHHHT",
+    "sequence_b": "HTTTTT"
+  },
+  {
+    "sequence_a": "TTHTTT",
+    "sequence_b": "HHTHHH"
+  },
+  {
+    "sequence_a": "HTTHHHT",
+    "sequence_b": "HHHHTHT"
+  },
+  {
+    "sequence_a": "HHTTHHHT",
+    "sequence_b": "HTTTHTHT"
+  },
+  {
+    "sequence_a": "HHTTHHHT",
+    "sequence_b": "HTTTHHHH"
+  },
+  {
+    "sequence_a": "TT",
+    "sequence_b": "HH"
+  },
+  {
+    "sequence_a": "HTTHTTTH",
+    "sequence_b": "HHHTTTTH"
+  },
+  {
+    "sequence_a": "TTTHHT",
+    "sequence_b": "HHTHHH"
+  },
+  {
+    "sequence_a": "TTHTHHTT",
+    "sequence_b": "HHHTHHHH"
+  },
+  {
+    "sequence_a": "THTTTTHH",
+    "sequence_b": "THTHTHHT"
+  },
+  {
+    "sequence_a": "HTHHH",
+    "sequence_b": "HTTTT"
+  },
+  {
+    "sequence_a": "HHTHHTH",
+    "sequence_b": "TTTTTHH"
+  },
+  {
+    "sequence_a": "TTHHHT",
+    "sequence_b": "HTHHHH"
+  },
+  {
+    "sequence_a": "HTTTHTTH",
+    "sequence_b": "TTTTHHTH"
+  },
+  {
+    "sequence_a": "HHHHHHH",
+    "sequence_b": "TTTTHHT"
+  },
+  {
+    "sequence_a": "THTHHHHT",
+    "sequence_b": "TTHTHHHH"
+  },
+  {
+    "sequence_a": "THHTHT",
+    "sequence_b": "HHTTHH"
+  },
+  {
+    "sequence_a": "THTHT",
+    "sequence_b": "TTHTT"
+  },
+  {
+    "sequence_a": "HTTTHHT",
+    "sequence_b": "TTHTTHH"
+  },
+  {
+    "sequence_a": "THTHTTH",
+    "sequence_b": "TTTHTTT"
+  },
+  {
+    "sequence_a": "THTTTTTH",
+    "sequence_b": "HHHTTHTT"
+  },
+  {
+    "sequence_a": "HTHTTTHH",
+    "sequence_b": "HHTTHHTH"
+  },
+  {
+    "sequence_a": "HHHTT",
+    "sequence_b": "TTHHT"
+  },
+  {
+    "sequence_a": "HTTTTHHH",
+    "sequence_b": "THTHTTHT"
+  },
+  {
+    "sequence_a": "THHTTTHT",
+    "sequence_b": "HHTTHTTT"
+  },
+  {
+    "sequence_a": "HHHHHTT",
+    "sequence_b": "HTTHHHT"
+  },
+  {
+    "sequence_a": "THHTHT",
+    "sequence_b": "TTTHHT"
+  },
+  {
+    "sequence_a": "HHTHTT",
+    "sequence_b": "TTHTTH"
+  },
+  {
+    "sequence_a": "THHHHT",
+    "sequence_b": "THHHTT"
+  },
+  {
+    "sequence_a": "TTTHHHH",
+    "sequence_b": "HTTTTTT"
+  },
+  {
+    "sequence_a": "TTHHHHTT",
+    "sequence_b": "HHTHHTTH"
+  },
+  {
+    "sequence_a": "TTHHTTH",
+    "sequence_b": "HHTTHHT"
+  },
+  {
+    "sequence_a": "TTHT",
+    "sequence_b": "HHHH"
+  },
+  {
+    "sequence_a": "TTTTHTHH",
+    "sequence_b": "HHTHTTTT"
+  },
+  {
+    "sequence_a": "TTHTTTTH",
+    "sequence_b": "HTTTTHHT"
+  },
+  {
+    "sequence_a": "HTTHHT",
+    "sequence_b": "TTHTHH"
+  },
+  {
+    "sequence_a": "TTTTTHH",
+    "sequence_b": "TTTTHTT"
+  },
+  {
+    "sequence_a": "TTHHHT",
+    "sequence_b": "TTHHTT"
+  },
+  {
+    "sequence_a": "TTHTHHTH",
+    "sequence_b": "HHHTTTTH"
+  },
+  {
+    "sequence_a": "HTTHHH",
+    "sequence_b": "TTHHHH"
+  },
+  {
+    "sequence_a": "HT",
+    "sequence_b": "TT"
+  },
+  {
+    "sequence_a": "HHHTHTT",
+    "sequence_b": "TTTHTHH"
+  },
+  {
+    "sequence_a": "HHTHTTH",
+    "sequence_b": "TTHTTHH"
+  },
+  {
+    "sequence_a": "HTTHTHHH",
+    "sequence_b": "TTTTTHHT"
+  },
+  {
+    "sequence_a": "HTHHTT",
+    "sequence_b": "HTTHHH"
+  },
+  {
+    "sequence_a": "HHTTHTT",
+    "sequence_b": "HTTHTTT"
+  },
+  {
+    "sequence_a": "TTTTHHTT",
+    "sequence_b": "HHHTTTHT"
+  },
+  {
+    "sequence_a": "HHTHTTHH",
+    "sequence_b": "THHHHHH"
+  },
+  {
+    "sequence_a": "HHHTTHHT",
+    "sequence_b": "HHTT"
+  },
+  {
+    "sequence_a": "THHHHHTH",
+    "sequence_b": "HTHTHH"
+  },
+  {
+    "sequence_a": "HHHHT",
+    "sequence_b": "TTHT"
+  },
+  {
+    "sequence_a": "HHTHTTTT",
+    "sequence_b": "TTTTTH"
+  },
+  {
+    "sequence_a": "HHHHHTHT",
+    "sequence_b": "TTHTTTT"
+  },
+  {
+    "sequence_a": "THTTTHHH",
+    "sequence_b": "HHHTHTT"
+  },
+  {
+    "sequence_a": "HTHTHH",
+    "sequence_b": "HHHHT"
+  },
+  {
+    "sequence_a": "TTTHTTTT",
+    "sequence_b": "HHHHTTH"
+  },
+  {
+    "sequence_a": "HTTHT",
+    "sequence_b": "TTHTHTTT"
+  },
+  {
+    "sequence_a": "THHHTT",
+    "sequence_b": "HHTTT"
+  },
+  {
+    "sequence_a": "HHTTHTHH",
+    "sequence_b": "HTHT"
+  },
+  {
+    "sequence_a": "HTHTTTHT",
+    "sequence_b": "TTHHHHH"
+  },
+  {
+    "sequence_a": "TTTTHH",
+    "sequence_b": "HHHTHHTH"
+  },
+  {
+    "sequence_a": "HHHHHT",
+    "sequence_b": "HTTHHTTT"
+  },
+  {
+    "sequence_a": "HHHHHTH",
+    "sequence_b": "THTHTTHH"
+  },
+  {
+    "sequence_a": "HHTTHTHH",
+    "sequence_b": "TTH"
+  },
+  {
+    "sequence_a": "HTHHHHHT",
+    "sequence_b": "THHH"
+  },
+  {
+    "sequence_a": "THTTHTH",
+    "sequence_b": "TTHTHTHH"
+  },
+  {
+    "sequence_a": "HHTHTTTH",
+    "sequence_b": "HHTHTHH"
+  },
+  {
+    "sequence_a": "HHHHTTTT",
+    "sequence_b": "HTHTHH"
+  },
+  {
+    "sequence_a": "TTTHHHTH",
+    "sequence_b": "HHHTTH"
+  },
+  {
+    "sequence_a": "THTTHH",
+    "sequence_b": "THHTTHTH"
+  },
+  {
+    "sequence_a": "HTTTHHTH",
+    "sequence_b": "HTHTHH"
+  },
+  {
+    "sequence_a": "TTTTTH",
+    "sequence_b": "THHTHTT"
+  },
+  {
+    "sequence_a": "THHTTTH",
+    "sequence_b": "HHHTTT"
+  },
+  {
+    "sequence_a": "HTHTTHTT",
+    "sequence_b": "HTHTHHT"
+  },
+  {
+    "sequence_a": "HHTTTHT",
+    "sequence_b": "HTTHTTTH"
+  },
+  {
+    "sequence_a": "HTHHTHT",
+    "sequence_b": "HTHHT"
+  },
+  {
+    "sequence_a": "HHH",
+    "sequence_b": "TTTHTTH"
+  },
+  {
+    "sequence_a": "HTHHHHTH",
+    "sequence_b": "HHTHTHH"
+  },
+  {
+    "sequence_a": "THTTT",
+    "sequence_b": "HHTHHT"
+  },
+  {
+    "sequence_a": "HHHTHTTT",
+    "sequence_b": "TTHTH"
+  },
+  {
+    "sequence_a": "HHHHHTTT",
+    "sequence_b": "HHHTTT"
+  },
+  {
+    "sequence_a": "HHHTTT",
+    "sequence_b": "TTTHTTH"
+  },
+  {
+    "sequence_a": "TTHHHTTT",
+    "sequence_b": "HTHT"
+  },
+  {
+    "sequence_a": "TTHHHTTH",
+    "sequence_b": "HHHHTH"
+  },
+  {
+    "sequence_a": "THHHHHT",
+    "sequence_b": "HHHTHTHT"
+  },
+  {
+    "sequence_a": "HTHTHH",
+    "sequence_b": "HHTHHTHH"
+  },
+  {
+    "sequence_a": "THTHTTTH",
+    "sequence_b": "HHHTTTT"
+  },
+  {
+    "sequence_a": "HTTHTTHH",
+    "sequence_b": "HTHHHT"
+  },
+  {
+    "sequence_a": "HHTTTTHT",
+    "sequence_b": "TTTTTTT"
+  },
+  {
+    "sequence_a": "TTTTTTHT",
+    "sequence_b": "THTHHTH"
+  },
+  {
+    "sequence_a": "HTHTHHTH",
+    "sequence_b": "HHHTHTT"
+  },
+  {
+    "sequence_a": "HHH",
+    "sequence_b": "HTTHHHHT"
+  },
+  {
+    "sequence_a": "THTHHTTH",
+    "sequence_b": "HHTHHHT"
+  },
+  {
+    "sequence_a": "HHTTTHT",
+    "sequence_b": "TTHTHTTT"
+  },
+  {
+    "sequence_a": "TTHHT",
+    "sequence_b": "TTTHHTHT"
+  },
+  {
+    "sequence_a": "HHTHHH",
+    "sequence_b": "THHTHTT"
+  },
+  {
+    "sequence_a": "TTTTT",
+    "sequence_b": "TTTHTHTT"
+  },
+  {
+    "sequence_a": "TTHTH",
+    "sequence_b": "THTHHHHH"
+  },
+  {
+    "sequence_a": "HHHTTTTT",
+    "sequence_b": "HTHTT"
+  },
+  {
+    "sequence_a": "HHHTTTT",
+    "sequence_b": "HHHTHTHH"
+  },
+  {
+    "sequence_a": "HHTTTHHT",
+    "sequence_b": "TTHHT"
+  },
+  {
+    "sequence_a": "HTTTHHTT",
+    "sequence_b": "HTTHTT"
+  },
+  {
+    "sequence_a": "THTTHH",
+    "sequence_b": "THTHHHTT"
+  },
+  {
+    "sequence_a": "HTHHTHHH",
+    "sequence_b": "THTTTTH"
+  },
+  {
+    "sequence_a": "HHHTHTT",
+    "sequence_b": "THHHHTTH"
+  },
+  {
+    "sequence_a": "TTTTTTH",
+    "sequence_b": "HHHHHTHH"
+  },
+  {
+    "sequence_a": "TTHTHHTT",
+    "sequence_b": "TTHTTHH"
+  },
+  {
+    "sequence_a": "THTTHTHT",
+    "sequence_b": "HHHT"
+  },
+  {
+    "sequence_a": "THHTT",
+    "sequence_b": "HTTHTHHH"
+  },
+  {
+    "sequence_a": "THTTTHH",
+    "sequence_b": "HHHTHHHT"
+  },
+  {
+    "sequence_a": "THTH",
+    "sequence_b": "HT"
+  },
+  {
+    "sequence_a": "HTHTTTH",
+    "sequence_b": "HHHTTH"
+  },
+  {
+    "sequence_a": "HTHHTHTH",
+    "sequence_b": "TTTTTTH"
+  },
+  {
+    "sequence_a": "HHHTHTH",
+    "sequence_b": "HTHTTH"
+  },
+  {
+    "sequence_a": "HTTTTTTT",
+    "sequence_b": "TTHTHT"
+  },
+  {
+    "sequence_a": "HHHTTTTH",
+    "sequence_b": "HTTTHHH"
+  },
+  {
+    "sequence_a": "THTTTTH",
+    "sequence_b": "THTHHHTT"
+  },
+  {
+    "sequence_a": "HHH",
+    "sequence_b": "HHHTHT"
+  },
+  {
+    "sequence_a": "HTHTH",
+    "sequence_b": "TTTHTHHH"
+  },
+  {
+    "sequence_a": "HTTHHTHT",
+    "sequence_b": "TTHTHTT"
+  },
+  {
+    "sequence_a": "HTHHHH",
+    "sequence_b": "HTHTTHTT"
+  },
+  {
+    "sequence_a": "HTTH",
+    "sequence_b": "THTTTTTT"
+  },
+  {
+    "sequence_a": "THHHHHT",
+    "sequence_b": "THTHTTTH"
+  },
+  {
+    "sequence_a": "HHHTTTTH",
+    "sequence_b": "HTHHT"
+  },
+  {
+    "sequence_a": "TTHHHHH",
+    "sequence_b": "HHHTHT"
+  },
+  {
+    "sequence_a": "THHT",
+    "sequence_b": "HTTHHHT"
+  },
+  {
+    "sequence_a": "HTTTTTH",
+    "sequence_b": "THHH"
+  },
+  {
+    "sequence_a": "TTHTHHHH",
+    "sequence_b": "HTTTTT"
+  },
+  {
+    "sequence_a": "THTTTT",
+    "sequence_b": "THTHHHHT"
+  },
+  {
+    "sequence_a": "HHHHHTT",
+    "sequence_b": "TTHTTHHT"
+  },
+  {
+    "sequence_a": "TTHHH",
+    "sequence_b": "THTTHHT"
+  },
+  {
+    "sequence_a": "THHTHHTT",
+    "sequence_b": "HHTHHTT"
+  },
+  {
+    "sequence_a": "TTHHTHHH",
+    "sequence_b": "TTHHHTT"
+  },
+  {
+    "sequence_a": "THTHTHH",
+    "sequence_b": "TTHHHHHT"
+  },
+  {
+    "sequence_a": "THHHHHTT",
+    "sequence_b": "HTHTT"
+  },
+  {
+    "sequence_a": "TTHTTTHT",
+    "sequence_b": "TTTHHTH"
+  },
+  {
+    "sequence_a": "TTTTHT",
+    "sequence_b": "TTTTTTTH"
+  },
+  {
+    "sequence_a": "HTHTTT",
+    "sequence_b": "TTHTTTHT"
+  },
+  {
+    "sequence_a": "THTHHHTT",
+    "sequence_b": "THHHT"
+  },
+  {
+    "sequence_a": "TTHHHTTT",
+    "sequence_b": "THTTHT"
+  },
+  {
+    "sequence_a": "HHHH",
+    "sequence_b": "THTTTT"
+  },
+  {
+    "sequence_a": "HTTTTTHT",
+    "sequence_b": "TTTHHHH"
+  },
+  {
+    "sequence_a": "HTHTTTH",
+    "sequence_b": "HTHTHTTH"
+  },
+  {
+    "sequence_a": "THHTTTTH",
+    "sequence_b": "HTHTTTT"
+  },
+  {
+    "sequence_a": "THTTTTTH",
+    "sequence_b": "THHHHHH"
+  },
+  {
+    "sequence_a": "THTHHHTT",
+    "sequence_b": "HHHHTT"
+  },
+  {
+    "sequence_a": "HHHTTHH",
+    "sequence_b": "HTHTHT"
+  },
+  {
+    "sequence_a": "THHTHTTT",
+    "sequence_b": "HTTHTTT"
+  },
+  {
+    "sequence_a": "TTHTT",
+    "sequence_b": "TTHHTTT"
+  },
+  {
+    "sequence_a": "TTHHHHTH",
+    "sequence_b": "THT"
+  },
+  {
+    "sequence_a": "THTTTHTT",
+    "sequence_b": "TTTTHH"
+  },
+  {
+    "sequence_a": "TTHTHT",
+    "sequence_b": "HTHTHTH"
+  },
+  {
+    "sequence_a": "THTHHTTH",
+    "sequence_b": "TTHTTTT"
+  },
+  {
+    "sequence_a": "TTHTTTT",
+    "sequence_b": "HHTTHTTT"
+  },
+  {
+    "sequence_a": "HTHHHHH",
+    "sequence_b": "TTTHHH"
+  },
+  {
+    "sequence_a": "TTHTTH",
+    "sequence_b": "HHHH"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "THTHT"
+  },
+  {
+    "sequence_a": "THTHHHH",
+    "sequence_b": "HHTHTTHH"
+  },
+  {
+    "sequence_a": "HHTHHTH",
+    "sequence_b": "HHTTT"
+  },
+  {
+    "sequence_a": "TTTTHHTT",
+    "sequence_b": "THHTHHT"
+  },
+  {
+    "sequence_a": "HHTHHTH",
+    "sequence_b": "HHTTHTTT"
+  },
+  {
+    "sequence_a": "HTHHTTHH",
+    "sequence_b": "HHHHTTH"
+  },
+  {
+    "sequence_a": "THTHHHH",
+    "sequence_b": "TTHTTTTT"
+  },
+  {
+    "sequence_a": "TTTTTHTH",
+    "sequence_b": "THTTHTT"
+  },
+  {
+    "sequence_a": "HHHTHTTH",
+    "sequence_b": "HTTHHH"
+  },
+  {
+    "sequence_a": "TTTHHTHH",
+    "sequence_b": "HTT"
+  },
+  {
+    "sequence_a": "TTTTT",
+    "sequence_b": "TTTHHTHT"
+  },
+  {
+    "sequence_a": "TTTTHTHH",
+    "sequence_b": "HHHTTH"
+  },
+  {
+    "sequence_a": "HTTTTT",
+    "sequence_b": "HTTHTTHT"
+  },
+  {
+    "sequence_a": "TTTTHHHH",
+    "sequence_b": "TTTTTTT"
+  },
+  {
+    "sequence_a": "HHHTHTT",
+    "sequence_b": "HTTT"
+  },
+  {
+    "sequence_a": "TTHTT",
+    "sequence_b": "HTHTHTHT"
+  },
+  {
+    "sequence_a": "TTHHHTH",
+    "sequence_b": "HHTTHTHH"
+  },
+  {
+    "sequence_a": "HTTTTHHT",
+    "sequence_b": "THHTTHT"
+  },
+  {
+    "sequence_a": "HTHHTHH",
+    "sequence_b": "HTTHHHTT"
+  },
+  {
+    "sequence_a": "HHTTTHTH",
+    "sequence_b": "TTTTTTT"
+  },
+  {
+    "sequence_a": "HHHHTHHT",
+    "sequence_b": "HHHHT"
+  },
+  {
+    "sequence_a": "THHTHHT",
+    "sequence_b": "THTHTHTT"
+  },
+  {
+    "sequence_a": "THHTHT",
+    "sequence_b": "THHHTTH"
+  },
+  {
+    "sequence_a": "THTH",
+    "sequence_b": "HTTTTTTH"
+  },
+  {
+    "sequence_a": "TTHHHTT",
+    "sequence_b": "HH"
+  },
+  {
+    "sequence_a": "HHHHTTTH",
+    "sequence_b": "TTTHHHH"
+  },
+  {
+    "sequence_a": "THTHHHHH",
+    "sequence_b": "HHHTTHT"
+  },
+  {
+    "sequence_a": "HTTHHHTT",
+    "sequence_b": "HTTTTHH"
+  },
+  {
+    "sequence_a": "TTTHHTHT",
+    "sequence_b": "THHHHHT"
+  },
+  {
+    "sequence_a": "HTTTTTHT",
+    "sequence_b": "HTHTTTT"
+  },
+  {
+    "sequence_a": "THTHHH",
+    "sequence_b": "TTTTTTH"
+  },
+  {
+    "sequence_a": "TTHHHHH",
+    "sequence_b": "HHTTT"
+  },
+  {
+    "sequence_a": "TTTHTHHT",
+    "sequence_b": "HTHTTTH"
+  },
+  {
+    "sequence_a": "TTHTTHTT",
+    "sequence_b": "HTTHHH"
+  },
+  {
+    "sequence_a": "HTHHHHTT",
+    "sequence_b": "HTHTHH"
+  },
+  {
+    "sequence_a": "HTHTHTTT",
+    "sequence_b": "THTTTHT"
+  },
+  {
+    "sequence_a": "HHHHTT",
+    "sequence_b": "THTTHTHH"
+  },
+  {
+    "sequence_a": "TTHTHHHH",
+    "sequence_b": "HTHHHH"
+  },
+  {
+    "sequence_a": "HHHHHTTT",
+    "sequence_b": "HTHHTT"
+  },
+  {
+    "sequence_a": "HTHTTHHT",
+    "sequence_b": "THTTHH"
+  },
+  {
+    "sequence_a": "HTHTHTT",
+    "sequence_b": "HTHTHHTH"
+  }
+]

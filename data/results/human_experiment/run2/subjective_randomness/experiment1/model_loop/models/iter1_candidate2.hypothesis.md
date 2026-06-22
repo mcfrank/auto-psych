@@ -1,0 +1,1 @@
+People judge a sequence's randomness by comparing its local pattern frequencies to a subjective expectation: they compute the Kullback-Leibler divergence between the sequence's empirical bigram distribution (HH, HT, TH, TT) and an idealized prototype distribution that heavily favors alternating pairs, perceiving sequences with lower divergence from this prototype as more random.

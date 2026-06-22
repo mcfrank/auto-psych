@@ -1,0 +1,320 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CRITIQUE_CONTEXT.md
+# Critique context
+
+**Incumbent (best) model:** `inner_loop_model`
+**Incumbent model code:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/models/inner_loop_model.py`
+**Incumbent hypothesis:** People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, rather than merely evaluating its average properties. They evaluate how well a sequence conforms to a mental prototype—represented by an ideal proportion of heads and alternations—and integrate this fit across all events.
+
+**Responses CSV:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv`
+**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+**Model set directory:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/models`
+
+Propose **8** test statistics. Write each to `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/<name>.py` as a function `test_statistic(df)` returning a scalar, with `# name:` and `# description:` header comments.
+
+You do **not** need to run anything. After you write the statistics, the pipeline runs the posterior-predictive harness automatically over `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats` and records the results:
+
+```bash
+python3 -m src.critique.ppc \
+    --responses /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv \
+    --model inner_loop_model \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/models \
+    --test-stats-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/ppc_results.json \
+    --cache-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/.fit_cache \
+    --n-replicates 200 \
+    --significance-alpha 0.05
+```
+
+That writes `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/ppc_results.json` with a two-sided empirical p-value per statistic (200 posterior-predictive replicates). A statistic is a **significant discrepancy** when its `p_value` ≤ 0.05 (raw, no multiple-comparisons correction).
+[0m
+[0m$ [0mcat inner_loop_model.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, rather than merely evaluating its average properties. They evaluate how well a sequence conforms to a mental prototype—represented by an ideal proportion of heads and alternations—and integrate this fit across all events. Because this typicality is accumulated, longer sequences that match the prototype accrue a higher total randomness score, while longer sequences that deviate strongly accumulate a heavier penalty, explaining why humans prefer longer sequences when average rates are equal.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate per-event typicality as a base rate minus the deviation penalty
+    typ_a = base_typ - (
+        w_p * pt.square(p_a - ideal_p) + w_alt * pt.square(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.square(p_b - ideal_p) + w_alt * pt.square(alt_rate_b - ideal_alt)
+    )
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = n_a * typ_a
+    rand_b = n_b * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 5 responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,TH,TTTTHHTH,0,1,,2,1,1,1,0,1,8,3,3,4,2,1,0.5,1.0,0.0,0.0,0.0,0.375,0.42857142857142855,0.42857142857142855,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],2,HTHTTTTH,HT,1,0,,8,3,4,4,2,1,2,1,1,1,0,1,0.375,0.5714285714285714,0.42857142857142855,0.25,0.25,0.5,1.0,0.0,0.0,0.0
+0,[REDACTED_PROLIFIC_ID],3,THHHHHTT,TTHHTTT,0,1,,8,5,2,5,3,0,7,2,2,3,3,0,0.625,0.2857142857142857,0.5714285714285714,0.25,0.5,0.2857142857142857,0.3333333333333333,0.3333333333333333,0.4285714285714286,0.4285714285714286
+0,[REDACTED_PROLIFIC_ID],4,TTTTTT,HHHHHHHT,0,1,,6,0,0,6,1,0,8,7,1,7,2,0,0.0,0.0,1.0,1.0,1.0,0.875,0.14285714285714285,0.8571428571428571,0.75,0.75
+[0m
+[0m$ [0mmkdir -p test_stats
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/max_run_effect_equal_length.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/length_difference_saturation.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/rep_motifs_effect.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/alt_motifs_effect.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/extreme_run_penalty.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/extreme_run_penalty.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/periodicity_effect.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/length_preference_unprototypical.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/length_preference_prototypical.py
+Wrote file successfully.
+[0m
+[0m$ [0mls -l test_stats/
+total 29
+-rw-------+ 1 benpry ngoodman 381 Jun 21 15:22 alt_motifs_effect.py
+-rw-------+ 1 benpry ngoodman 622 Jun 21 15:23 extreme_run_penalty.py
+-rw-------+ 1 benpry ngoodman 833 Jun 21 15:22 length_difference_saturation.py
+-rw-------+ 1 benpry ngoodman 771 Jun 21 15:23 length_preference_prototypical.py
+-rw-------+ 1 benpry ngoodman 681 Jun 21 15:23 length_preference_unprototypical.py
+-rw-------+ 1 benpry ngoodman 545 Jun 21 15:22 max_run_effect_equal_length.py
+-rw-------+ 1 benpry ngoodman 379 Jun 21 15:23 periodicity_effect.py
+-rw-------+ 1 benpry ngoodman 379 Jun 21 15:22 rep_motifs_effect.py
+[0m
+[0m$ [0mpython3 -m src.critique.ppc \
+    --responses /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv \
+    --model inner_loop_model \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/models \
+    --test-stats-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/ppc_results.json \
+    --cache-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/.fit_cache \
+    --n-replicates 200 \
+    --significance-alpha 0.05
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [ideal_p, ideal_alt, w_p, w_alt, base_typ]
+Sampling 4 chains for 2_000 tune and 2_000 draw iterations (8_000 + 8_000 draws total) took 56 seconds.
+Sampling: [response]
+Wrote /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/ppc_results.json — 1/8 test statistics significant at p ≤ 0.05 (200 PPC replicates)
+[0m
+[0m$ [0mcat ppc_results.json
+{
+  "model": "inner_loop_model",
+  "n_test_statistics": 8,
+  "n_replicates": 200,
+  "significance_alpha": 0.05,
+  "n_significant": 1,
+  "n_significant_fdr": 0,
+  "results": [
+    {
+      "name": "length_difference_saturation",
+      "description": "Difference in preference for the longer sequence between trials with a large length difference (>=4) and trials with a small length difference (<=2).",
+      "t_observed": -0.007499999999999951,
+      "null_mean": 0.206075,
+      "null_std": 0.06656364905111498,
+      "n_replicates": 200,
+      "z_score": -3.208583108717392,
+      "p_value": 0.009950248756218905,
+      "p_value_one_sided": 1.0,
+      "p_value_is_floor": true,
+      "significant": true,
+      "error": null,
+      "code": "# name: length_difference_saturation\n# description: Difference in preference for the longer sequence between trials with a large length difference (>=4) and trials with a small length difference (<=2).\ndef test_statistic(df):\n    subset = df[\n        (abs(df[\"imbalance_a\"] - df[\"imbalance_b\"]) < 0.2)\n        & (abs(df[\"p_alts_a\"] - df[\"p_alts_b\"]) < 0.2)\n    ]\n    diff_n = abs(subset[\"n_a\"] - subset[\"n_b\"])\n\n    small_diff = subset[diff_n <= 2]\n    large_diff = subset[diff_n >= 4]\n\n    if len(small_diff) == 0 or len(large_diff) == 0:\n        return 0.0\n\n    def prob_longer(d):\n        chose_longer = ((d[\"n_a\"] > d[\"n_b\"]) & (d[\"chose_left\"] == 1)) | (\n            (d[\"n_b\"] > d[\"n_a\"]) & (d[\"chose_left\"] == 0)\n        )\n        return chose_longer.mean()\n\n    return float(prob_longer(large_diff) - prob_longer(small_diff))\n",
+      "p_value_fdr": 0.07960199004975124,
+      "significant_fdr": false
+    },
+    {
+      "name": "max_run_effect_equal_length",
+      "description": "Covariance between the difference in normalized maximum run length and the choice of the left sequence, for sequences of equal length.",
+      "t_observed": -0.034475847061659425,
+      "null_mean": -0.030205713146502618,
+      "null_std": 0.004027919629371337,
+      "n_replicates": 200,
+      "z_score": -1.0601338427954865,
+      "p_value": 0.3283582089552239,
+      "p_value_one_sided": 0.8407960199004975,
+      "p_value_is_floor": false,
+      "significant": false,
+      "error": null,
+      "code": "# name: max_run_effect_equal_length\n# description: Covariance between the difference in normalized maximum run length and the choice of the left sequence, for sequences of equal length.\ndef test_statistic(df):\n    subset = df[df[\"n_a\"] == df[\"n_b\"]]\n    if len(subset) <= 1:\n        return 0.0\n    diff_max_run = subset[\"max_run_norm_a\"] - subset[\"max_run_norm_b\"]\n    cov = subset[\"chose_left\"].cov(diff_max_run)\n    return (\n        float(cov)\n        if not (df[\"chose_left\"].isna().all() or diff_max_run.isna().all())\n        else 0.0\n    )\n",
+      "p_value_fdr": 1.0,
+      "significant_fdr": false
+    },
+    {
+      "name": "length_preference_unprototypical",
+      "description": "Proportion of trials where the longer sequence is chosen, conditioned on both sequences being highly unprototypical (p_alts < 0.2 or p_alts > 0.8) and having different lengths.",
+      "t_observed": 0.6333333333333333,
+      "null_mean": 0.6030416666666667,
+      "null_std": 0.03847056504653916,
+      "n_replicates": 200,
+      "z_score": 0.7873985378177247,
+      "p_value": 0.48756218905472637,
+      "p_value_one_sided": 0.24378109452736318,
+      "p_value_is_floor": false,
+      "significant": false,
+      "error": null,
+      "code": "# name: length_preference_unprototypical\n# description: Proportion of trials where the longer sequence is chosen, conditioned on both sequences being highly unprototypical (p_alts < 0.2 or p_alts > 0.8) and having different lengths.\ndef test_statistic(df):\n    subset = df[\n        ((df[\"p_alts_a\"] < 0.2) | (df[\"p_alts_a\"] > 0.8))\n        & ((df[\"p_alts_b\"] < 0.2) | (df[\"p_alts_b\"] > 0.8))\n        & (df[\"n_a\"] != df[\"n_b\"])\n    ]\n\n    if len(subset) == 0:\n        return 0.0\n\n    chose_longer = ((subset[\"n_a\"] > subset[\"n_b\"]) & (subset[\"chose_left\"] == 1)) | (\n        (subset[\"n_b\"] > subset[\"n_a\"]) & (subset[\"chose_left\"] == 0)\n    )\n\n    return float(chose_longer.mean())\n",
+      "p_value_fdr": 1.0,
+      "significant_fdr": false
+    },
+    {
+      "name": "rep_motifs_effect",
+      "description": "Covariance between the difference in the number of repeating motifs and the choice of the left sequence.",
+      "t_observed": 0.09393317702227427,
+      "null_mean": 0.08293554153233686,
+      "null_std": 0.016207558916370702,
+      "n_replicates": 200,
+      "z_score": 0.6785497770937657,
+      "p_value": 0.5373134328358209,
+      "p_value_one_sided": 0.26865671641791045,
+      "p_value_is_floor": false,
+      "significant": false,
+      "error": null,
+      "code": "# name: rep_motifs_effect\n# description: Covariance between the difference in the number of repeating motifs and the choice of the left sequence.\ndef test_statistic(df):\n    diff_rep = df[\"rep_motifs_a\"] - df[\"rep_motifs_b\"]\n    if len(df) <= 1:\n        return 0.0\n    cov = df[\"chose_left\"].cov(diff_rep)\n    import pandas as pd\n\n    return float(cov) if pd.notna(cov) else 0.0\n",
+      "p_value_fdr": 1.0,
+      "significant_fdr": false
+    },
+    {
+      "name": "periodicity_effect",
+      "description": "Covariance between the difference in periodicity and the choice of the left sequence.",
+      "t_observed": 0.005830774670165061,
+      "null_mean": 0.004197692841790879,
+      "null_std": 0.004002440081926359,
+      "n_replicates": 200,
+      "z_score": 0.408021555587707,
+      "p_value": 0.6666666666666666,
+      "p_value_one_sided": 0.3333333333333333,
+      "p_value_is_floor": false,
+      "significant": false,
+      "error": null,
+      "code": "# name: periodicity_effect\n# description: Covariance between the difference in periodicity and the choice of the left sequence.\ndef test_statistic(df):\n    diff_periodicity = df[\"periodicity_a\"] - df[\"periodicity_b\"]\n    if len(df) <= 1:\n        return 0.0\n    cov = df[\"chose_left\"].cov(diff_periodicity)\n    import pandas as pd\n\n    return float(cov) if pd.notna(cov) else 0.0\n",
+      "p_value_fdr": 1.0,
+      "significant_fdr": false
+    },
+    {
+      "name": "extreme_run_penalty",
+      "description": "The average choice probability for the sequence with max_run_norm == 1, when compared against a sequence with max_run_norm < 1.",
+      "t_observed": 0.15833333333333333,
+      "null_mean": 0.1659375,
+      "null_std": 0.02680121492633828,
+      "n_replicates": 200,
+      "z_score": -0.2837247000767059,
+      "p_value": 0.9054726368159204,
+      "p_value_one_sided": 0.6119402985074627,
+      "p_value_is_floor": false,
+      "significant": false,
+      "error": null,
+      "code": "# name: extreme_run_penalty\n# description: The average choice probability for the sequence with max_run_norm == 1, when compared against a sequence with max_run_norm < 1.\ndef test_statistic(df):\n    a_extreme = df[(df[\"max_run_norm_a\"] == 1.0) & (df[\"max_run_norm_b\"] < 1.0)]\n    b_extreme = df[(df[\"max_run_norm_b\"] == 1.0) & (df[\"max_run_norm_a\"] < 1.0)]\n\n    total_extreme_choices = (\n        a_extreme[\"chose_left\"].sum() + (1 - b_extreme[\"chose_left\"]).sum()\n    )\n    total_trials = len(a_extreme) + len(b_extreme)\n\n    if total_trials == 0:\n        return 0.0\n    return float(total_extreme_choices / total_trials)\n",
+      "p_value_fdr": 1.0,
+      "significant_fdr": false
+    },
+    {
+      "name": "alt_motifs_effect",
+      "description": "Covariance between the difference in the number of alternating motifs and the choice of the left sequence.",
+      "t_observed": 0.11045330207112126,
+      "null_mean": 0.11197244712289957,
+      "null_std": 0.00882022132257311,
+      "n_replicates": 200,
+      "z_score": -0.1722343460804593,
+      "p_value": 0.845771144278607,
+      "p_value_one_sided": 0.582089552238806,
+      "p_value_is_floor": false,
+      "significant": false,
+      "error": null,
+      "code": "# name: alt_motifs_effect\n# description: Covariance between the difference in the number of alternating motifs and the choice of the left sequence.\ndef test_statistic(df):\n    diff_alt = df[\"alt_motifs_a\"] - df[\"alt_motifs_b\"]\n    if len(df) <= 1:\n        return 0.0\n    cov = df[\"chose_left\"].cov(diff_alt)\n    import pandas as pd\n\n    return float(cov) if pd.notna(cov) else 0.0\n",
+      "p_value_fdr": 1.0,
+      "significant_fdr": false
+    },
+    {
+      "name": "length_preference_prototypical",
+      "description": "Proportion of trials where the longer sequence is chosen, conditioned on both sequences being highly prototypical (imbalance < 0.2 and 0.4 < p_alts < 0.6) and having different lengths.",
+      "t_observed": 0.0,
+      "null_mean": 0.0,
+      "null_std": 0.0,
+      "n_replicates": 200,
+      "z_score": 0.0,
+      "p_value": 1.0,
+      "p_value_one_sided": 1.0,
+      "p_value_is_floor": false,
+      "significant": false,
+      "error": null,
+      "code": "# name: length_preference_prototypical\n# description: Proportion of trials where the longer sequence is chosen, conditioned on both sequences being highly prototypical (imbalance < 0.2 and 0.4 < p_alts < 0.6) and having different lengths.\ndef test_statistic(df):\n    subset = df[\n        (df[\"imbalance_a\"] < 0.2)\n        & (df[\"imbalance_b\"] < 0.2)\n        & (df[\"p_alts_a\"] > 0.4)\n        & (df[\"p_alts_a\"] < 0.6)\n        & (df[\"p_alts_b\"] > 0.4)\n        & (df[\"p_alts_b\"] < 0.6)\n        & (df[\"n_a\"] != df[\"n_b\"])\n    ]\n\n    if len(subset) == 0:\n        return 0.0\n\n    chose_longer = ((subset[\"n_a\"] > subset[\"n_b\"]) & (subset[\"chose_left\"] == 1)) | (\n        (subset[\"n_b\"] > subset[\"n_a\"]) & (subset[\"chose_left\"] == 0)\n    )\n\n    return float(chose_longer.mean())\n",
+      "p_value_fdr": 1.0,
+      "significant_fdr": false
+    }
+  ]
+}
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_0/critique/critiques.md
+Wrote file successfully.
+[0m
+[0m$ [0mls -l test_stats/
+total 32
+-rw-------+ 1 benpry ngoodman 381 Jun 21 15:22 alt_motifs_effect.py
+-rw-------+ 1 benpry ngoodman 622 Jun 21 15:23 extreme_run_penalty.py
+-rw-------+ 1 benpry ngoodman 833 Jun 21 15:22 length_difference_saturation.py
+-rw-------+ 1 benpry ngoodman 771 Jun 21 15:23 length_preference_prototypical.py
+-rw-------+ 1 benpry ngoodman 681 Jun 21 15:23 length_preference_unprototypical.py
+-rw-------+ 1 benpry ngoodman 545 Jun 21 15:22 max_run_effect_equal_length.py
+-rw-------+ 1 benpry ngoodman 379 Jun 21 15:23 periodicity_effect.py
+-rw-------+ 1 benpry ngoodman 379 Jun 21 15:22 rep_motifs_effect.py
+[0m
+I have completed the critique.
+
+1. **Test Statistics:** I authored 8 specific, self-contained test statistics (`max_run_effect_equal_length`, `rep_motifs_effect`, `alt_motifs_effect`, `extreme_run_penalty`, `periodicity_effect`, `length_difference_saturation`, `length_preference_unprototypical`, and `length_preference_prototypical`) targeting various assumptions of the incumbent `inner_loop_model` regarding how features like motifs, length, and runs are evaluated by humans compared to the simple quadratic accumulation of alternations and rates.
+2. **PPC Harness:** The test harness was run across these statistics generating 200 posterior-predictive replicates for each.
+3. **Critique Analysis:** A statistically significant failure point was identified with `length_difference_saturation` (p ≈ 0.010). The observed human data showed almost no increase in preference for longer sequences when the difference in length was large vs small (observed = -0.0075), whereas the incumbent model confidently predicted a large positive difference (mean = +0.206).
+4. **Critiques.md:** `critiques.md` has been written accurately pinpointing this discrepancy (that linear accumulation of typicality scales too aggressively with length `n * typ`) and suggesting actionable, single-mechanism revisions for the next iteration (e.g., employing sublinear scaling).

@@ -1,0 +1,572 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 1, candidate 0 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Refine one existing hypothesis within its single mechanism — e.g. a different functional form, prior, or normalization. Do NOT graft cues from other models onto it.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -2330.85
+
+Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -2411.18
+
+Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -2335.55
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -2460.92
+
+Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).
+
+## accumulated_alternation_typicality  — posterior 0.000, ELPD-LOO -2317.52
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this typicality is based entirely on how closely the sequence's alternation rate matches a mental prototype, completely ignoring the overall proportion of heads and tails.
+
+## linear_accumulated_typicality  — posterior 0.620, ELPD-LOO -2290.63
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal head proportion and alternation rate is linear (absolute difference) rather than quadratic, treating extreme deviations proportionally to small ones.
+
+## inner_loop_model  — posterior 0.074, ELPD-LOO -2292.76
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, evaluating how well a sequence conforms to a mental prototype for heads and alternations.
+
+## power_law_accumulated_typicality  — posterior 0.036, ELPD-LOO -2293.12
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this evidence integration exhibits diminishing returns scaling according to a power-law function of sequence length, which prevents extremely long sequences from disproportionately dominating judgments.
+
+## leaky_accumulated_typicality  — posterior 0.028, ELPD-LOO -2293.22
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its events, but working memory for past events is leaky with exponential decay, meaning the total accumulated randomness score saturates for longer sequences.
+
+## asymmetric_alternation_typicality  — posterior 0.242, ELPD-LOO -2291.12
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal alternation rate is asymmetric: sequences that under-alternate (cluster) are heavily penalized, while those that over-alternate are penalized much less severely.
+
+## iter0_candidate0  — posterior 0.000, ELPD-LOO -2321.04
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but we refine how alternation typicality is evaluated. Rather than penalizing the sequence's global average alternation rate, people evaluate typicality at the level of individual runs (streaks): they accumulate a penalty for each run that grows quadratically with how much its length deviates from an ideal run length. This non-linear run-level penalty explains why sequences with atypically long streaks are judged as significantly less random even when their overall alternation rates match.
+
+## iter0_candidate1  — posterior 0.000, ELPD-LOO -2410.39
+
+People evaluate the randomness of a sequence based solely on the proportion of the sequence occupied by its longest contiguous streak of identical outcomes, penalizing sequences where a single streak dominates the sequence length.
+
+## iter0_candidate2  — posterior 0.000, ELPD-LOO -2533.62
+
+People evaluate the randomness of a sequence solely by assessing whether its longest streak of identical outcomes is typical for a random sequence of that length. They linearly penalize sequences based on the absolute deviation of their observed maximum run length from the mathematically expected maximum run length of a fair coin (approximately log2 of the sequence length).
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/critiques.md
+# Critique of `linear_accumulated_typicality`
+
+2 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **length_penalty_scaling** — Mean choice rate of the shorter sequence when both sequences are highly imbalanced (>0.4), testing if the penalty accumulates linearly. (observed 0.302 vs null mean 0.378, z=-3.09, p=0.0199, q=0.159)
+- **extreme_proportion_penalty** — Mean choice rate of sequence A when it has extreme proportion imbalance (>0.6) and sequence B is balanced (<0.2). (observed 0.13 vs null mean 0.205, z=-2.22, p=0.0398, q=0.159)
+[0m
+[0m$ [0mcat ../../models/linear_accumulated_typicality.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal head proportion and alternation rate is linear (absolute difference) rather than quadratic, treating extreme deviations proportionally to small ones.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate per-event typicality using linear (absolute) deviations
+    typ_a = base_typ - (
+        w_p * pt.abs(p_a - ideal_p) + w_alt * pt.abs(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.abs(p_b - ideal_p) + w_alt * pt.abs(alt_rate_b - ideal_alt)
+    )
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = n_a * typ_a
+    rand_b = n_b * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat ../../models/inner_loop_model.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, rather than merely evaluating its average properties. They evaluate how well a sequence conforms to a mental prototype—represented by an ideal proportion of heads and alternations—and integrate this fit across all events. Because this typicality is accumulated, longer sequences that match the prototype accrue a higher total randomness score, while longer sequences that deviate strongly accumulate a heavier penalty, explaining why humans prefer longer sequences when average rates are equal.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate per-event typicality as a base rate minus the deviation penalty
+    typ_a = base_typ - (
+        w_p * pt.square(p_a - ideal_p) + w_alt * pt.square(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.square(p_b - ideal_p) + w_alt * pt.square(alt_rate_b - ideal_alt)
+    )
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = n_a * typ_a
+    rand_b = n_b * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat ../../models/power_law_accumulated_typicality.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this evidence integration exhibits diminishing returns. Rather than growing linearly, the accumulated typicality scales according to a power-law function of sequence length, preventing extremely long sequences from disproportionately dominating judgments and explaining why the preference for longer sequences saturates.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Power law exponent for diminishing returns on length
+    # Beta prior naturally restricts it to (0, 1) capturing the "diminishing returns" hypothesis
+    length_power = pm.Beta("length_power", alpha=2.0, beta=2.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    n_a_f = pt.cast(pt.maximum(n_a, 1), "float64")
+    n_b_f = pt.cast(pt.maximum(n_b, 1), "float64")
+
+    p_a = pt.cast(h_a, "float64") / n_a_f
+    p_b = pt.cast(h_b, "float64") / n_b_f
+
+    alt_rate_a = pt.cast(alts_a, "float64") / pt.maximum(
+        pt.cast(n_a - 1, "float64"), 1.0
+    )
+    alt_rate_b = pt.cast(alts_b, "float64") / pt.maximum(
+        pt.cast(n_b - 1, "float64"), 1.0
+    )
+
+    # Calculate per-event typicality
+    typ_a = base_typ - (
+        w_p * pt.square(p_a - ideal_p) + w_alt * pt.square(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.square(p_b - ideal_p) + w_alt * pt.square(alt_rate_b - ideal_alt)
+    )
+
+    # Total randomness score uses a power-law function of sequence length
+    rand_a = pt.pow(pt.cast(n_a, "float64"), length_power) * typ_a
+    rand_b = pt.pow(pt.cast(n_b, "float64"), length_power) * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal proportion and alternation rate is non-linear. By raising the absolute deviation to a freely inferred exponent rather than assuming a strictly linear or quadratic penalty, the model can capture how human observers disproportionately punish extreme feature deviations.
+EOF
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal proportion and alternation rate is non-linear. By raising the absolute deviation to a freely inferred exponent rather than assuming a strictly linear or quadratic penalty, the model can capture how human observers disproportionately punish extreme feature deviations.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Exponent for the penalty function (e.g. 1.0 = linear, 2.0 = quadratic)
+    # Using a LogNormal prior centered around 0 (so exponent is around 1.0), 
+    # but allowing it to grow >1 to punish extreme deviations more.
+    penalty_power = pm.LogNormal("penalty_power", mu=0.0, sigma=0.5)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    n_a_f = pt.cast(pt.maximum(n_a, 1), "float64")
+    n_b_f = pt.cast(pt.maximum(n_b, 1), "float64")
+
+    p_a = pt.cast(h_a, "float64") / n_a_f
+    p_b = pt.cast(h_b, "float64") / n_b_f
+
+    alt_rate_a = pt.cast(alts_a, "float64") / pt.maximum(pt.cast(n_a - 1, "float64"), 1.0)
+    alt_rate_b = pt.cast(alts_b, "float64") / pt.maximum(pt.cast(n_b - 1, "float64"), 1.0)
+
+    # Calculate absolute deviations
+    dev_p_a = pt.abs(p_a - ideal_p)
+    dev_alt_a = pt.abs(alt_rate_a - ideal_alt)
+    
+    dev_p_b = pt.abs(p_b - ideal_p)
+    dev_alt_b = pt.abs(alt_rate_b - ideal_alt)
+
+    # Calculate per-event typicality using the non-linear penalty function
+    typ_a = base_typ - (
+        w_p * pt.pow(dev_p_a, penalty_power) + 
+        w_alt * pt.pow(dev_alt_a, penalty_power)
+    )
+    typ_b = base_typ - (
+        w_p * pt.pow(dev_p_b, penalty_power) + 
+        w_alt * pt.pow(dev_alt_b, penalty_power)
+    )
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = pt.cast(n_a, "float64") * typ_a
+    rand_b = pt.cast(n_b, "float64") * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.append('/scratch/users/benpry/auto-psych/outer_loop_live/run1')
+try:
+    from src.models.pymc_inference import load_pymc_model, observed_response_data
+    m = load_pymc_model('candidate', Path('.'))
+    print('observed:', observed_response_data(m))
+except Exception as e:
+    print('Error:', e)
+"
+hypothesis.md OK
+Error: No module named 'src'
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+PYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal proportion and alternation rate is non-linear. By raising the absolute deviation to a freely inferred exponent rather than assuming a strictly linear or quadratic penalty, the model can capture how human observers disproportionately punish extreme feature deviations.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Exponent for the penalty function (e.g. 1.0 = linear, 2.0 = quadratic)
+    # Using a LogNormal prior centered around 0 (so exponent is around 1.0), 
+    # but allowing it to grow >1 to punish extreme deviations more.
+    penalty_power = pm.LogNormal("penalty_power", mu=0.0, sigma=0.5)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    n_a_f = pt.cast(pt.maximum(n_a, 1), "float64")
+    n_b_f = pt.cast(pt.maximum(n_b, 1), "float64")
+
+    p_a = pt.cast(h_a, "float64") / n_a_f
+    p_b = pt.cast(h_b, "float64") / n_b_f
+
+    alt_rate_a = pt.cast(alts_a, "float64") / pt.maximum(pt.cast(n_a - 1, "float64"), 1.0)
+    alt_rate_b = pt.cast(alts_b, "float64") / pt.maximum(pt.cast(n_b - 1, "float64"), 1.0)
+
+    # Calculate absolute deviations (add epsilon for numerical safety with powers < 1)
+    dev_p_a = pt.abs(p_a - ideal_p) + 1e-6
+    dev_alt_a = pt.abs(alt_rate_a - ideal_alt) + 1e-6
+    
+    dev_p_b = pt.abs(p_b - ideal_p) + 1e-6
+    dev_alt_b = pt.abs(alt_rate_b - ideal_alt) + 1e-6
+
+    # Calculate per-event typicality using the non-linear penalty function
+    typ_a = base_typ - (
+        w_p * pt.pow(dev_p_a, penalty_power) + 
+        w_alt * pt.pow(dev_alt_a, penalty_power)
+    )
+    typ_b = base_typ - (
+        w_p * pt.pow(dev_p_b, penalty_power) + 
+        w_alt * pt.pow(dev_alt_b, penalty_power)
+    )
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = pt.cast(n_a, "float64") * typ_a
+    rand_b = pt.cast(n_b, "float64") * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+PYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, computing each event's typicality as a penalty based on its distance from a mental prototype. Rather than assuming a strictly linear (City Block) or quadratic (Euclidean) penalty, this distance is computed using a freely inferred exponent (a Minkowski-like metric), allowing the model to naturally capture how human observers disproportionately scale the punishment for extreme feature deviations.
+EOF
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, computing each event's typicality as a penalty based on its distance from a mental prototype. Rather than assuming a strictly linear (City Block) or quadratic (Euclidean) penalty, this distance is computed using a freely inferred exponent (a Minkowski-like metric), allowing the model to naturally capture how human observers disproportionately scale the punishment for extreme feature deviations.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Exponent for the penalty function (e.g. 1.0 = linear, 2.0 = quadratic)
+    # Using a LogNormal prior centered around 0 (so exponent is around 1.0), 
+    # but allowing it to flexibly fit the Minkowski distance exponent.
+    penalty_power = pm.LogNormal("penalty_power", mu=0.0, sigma=0.5)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    n_a_f = pt.cast(pt.maximum(n_a, 1), "float64")
+    n_b_f = pt.cast(pt.maximum(n_b, 1), "float64")
+
+    p_a = pt.cast(h_a, "float64") / n_a_f
+    p_b = pt.cast(h_b, "float64") / n_b_f
+
+    alt_rate_a = pt.cast(alts_a, "float64") / pt.maximum(pt.cast(n_a - 1, "float64"), 1.0)
+    alt_rate_b = pt.cast(alts_b, "float64") / pt.maximum(pt.cast(n_b - 1, "float64"), 1.0)
+
+    # Calculate absolute deviations (add epsilon for numerical safety with powers < 1)
+    dev_p_a = pt.abs(p_a - ideal_p) + 1e-6
+    dev_alt_a = pt.abs(alt_rate_a - ideal_alt) + 1e-6
+    
+    dev_p_b = pt.abs(p_b - ideal_p) + 1e-6
+    dev_alt_b = pt.abs(alt_rate_b - ideal_alt) + 1e-6
+
+    # Calculate per-event typicality using the non-linear penalty function
+    typ_a = base_typ - (
+        w_p * pt.pow(dev_p_a, penalty_power) + 
+        w_alt * pt.pow(dev_alt_a, penalty_power)
+    )
+    typ_b = base_typ - (
+        w_p * pt.pow(dev_p_b, penalty_power) + 
+        w_alt * pt.pow(dev_alt_b, penalty_power)
+    )
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = pt.cast(n_a, "float64") * typ_a
+    rand_b = pt.cast(n_b, "float64") * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+PYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+I have reviewed the existing hypotheses and the critiques of the current best model (`linear_accumulated_typicality`). The critique showed a significant discrepancy in `extreme_proportion_penalty` (the model severely under-penalizes extreme proportion imbalances compared to human observers) and in length scaling. 
+
+To resolve this, I have refined the accumulated typicality mechanism by allowing the penalty function to deviate from strict linearity (L1 norm) or strict quadraticity (L2 norm). By fitting a free Minkowski-like exponent (`penalty_power`), the model can naturally capture human observers' disproportionate penalty weighting for extreme imbalances versus moderate ones without adding entirely new mechanisms.
+
+Both `hypothesis.md` and `candidate.py` have been written successfully to the designated directory and mathematically safeguard against edge-case NaNs or infinite gradients using small epsilons inside the distance metrics. The self-check script confirms the target module loads correctly with all required PyMC components.

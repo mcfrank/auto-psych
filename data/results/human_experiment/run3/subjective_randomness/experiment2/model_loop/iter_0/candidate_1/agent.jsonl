@@ -1,0 +1,281 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md CANDO_BRIEF.md existing_hypotheses.md critiques.md
+cat: CONTEXT.md
+[0m
+[0m$ [0mls -la /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1
+total 28
+drwx------+ 2 benpry ngoodman 4096 Jun 21 17:34 .
+drwx------+ 5 benpry ngoodman 4096 Jun 21 17:34 ..
+-rw-------+ 1 benpry ngoodman  141 Jun 21 17:34 agent.jsonl
+-rw-------+ 1 benpry ngoodman  427 Jun 21 17:34 CANDIDATE_BRIEF.md
+-rw-------+ 1 benpry ngoodman 2293 Jun 21 17:34 CONTEXT.md
+-rw-------+ 1 benpry ngoodman  673 Jun 21 17:34 critiques.md
+-rw-------+ 1 benpry ngoodman 2530 Jun 21 17:34 existing_hypotheses.md
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+# Inner Loop — round 0, candidate 1 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1/existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.005, ELPD-LOO -1720.11
+
+Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -1765.14
+
+Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -1723.64
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -1769.42
+
+Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).
+
+## inner_loop_model  — posterior 0.000, ELPD-LOO -1726.02
+
+People judge the randomness of a sequence by comparing its features (head proportion and alternation rate) to a subjective ideal, but their psychological penalty for deviations is scaled by the square root of the sequence length, reflecting an intuitive sensitivity to the standard error of small samples.
+
+## smoothed_prototype_distance  — posterior 0.995, ELPD-LOO -1714.40
+
+People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal.
+
+## falk_konold_complexity  — posterior 0.000, ELPD-LOO -1774.59
+
+People judge the randomness of a sequence by its structural complexity when parsed into continuous alternating and repeating sub-sequences (Falk & Konold's difficulty of encoding), perceiving sequences with a lower rate of sub-sequences as simpler and therefore less random.
+
+## iter0_candidate0
+
+People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but their ideal template includes an expectation for higher-order alternating motifs (like HTHT) in addition to basic heads/tails balance and simple bigram alternations.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1/critiques.md
+# Critique of `smoothed_prototype_distance`
+
+1 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **alt_motifs_preference** — The response rate for sequence A when it has more alternating motifs than sequence B, conditional on similar overall bigram alternation rates. (observed 0.595 vs null mean 0.5, z=2.35, p=0.0398, q=0.279)
+[0m
+[0m$ [0mcat << 'EOF' > test_trigrams.py
+def compute_features(sequence_a, sequence_b):
+    def get_counts(seq):
+        seq = seq.strip().upper()
+        counts = {"run_cont": 0, "run_end": 0, "alt_cont": 0, "alt_end": 0}
+        for i in range(len(seq) - 2):
+            tri = seq[i:i+3]
+            if tri in ("HHH", "TTT"): counts["run_cont"] += 1
+            elif tri in ("HHT", "TTH"): counts["run_end"] += 1
+            elif tri in ("HTH", "THT"): counts["alt_cont"] += 1
+            elif tri in ("HTT", "THH"): counts["alt_end"] += 1
+        return counts
+
+    ca = get_counts(sequence_a)
+    cb = get_counts(sequence_b)
+    
+    return {
+        "run_cont_a": ca["run_cont"],
+        "run_end_a": ca["run_end"],
+        "alt_cont_a": ca["alt_cont"],
+        "alt_end_a": ca["alt_end"],
+        "run_cont_b": cb["run_cont"],
+        "run_end_b": cb["run_end"],
+        "alt_cont_b": cb["alt_cont"],
+        "alt_end_b": cb["alt_end"],
+    }
+
+print(compute_features("HTHTHHH", "HHHTHTT"))
+EOF
+python3 test_trigrams.py
+{'run_cont_a': 1, 'run_end_a': 0, 'alt_cont_a': 3, 'alt_end_a': 1, 'run_cont_b': 1, 'run_end_b': 1, 'alt_cont_b': 2, 'alt_end_b': 1}
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People judge the randomness of a sequence by translating it into a sequence of local transitions (switches and stays) and evaluating its log-likelihood under a subjective first-order Markov model of these transitions. They score sequences based on how well the transition-to-transition changes align with two distinct subjective expectations: a belief that runs of identical outcomes should end (gambler's fallacy) and a belief that alternating patterns should continue (generating alternating motifs).
+EOF
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People judge the randomness of a sequence by translating it into a sequence of local transitions (switches and stays) and evaluating its log-likelihood under a subjective first-order Markov model of these transitions. They score sequences based on how well the transition-to-transition changes align with two distinct subjective expectations: a belief that runs of identical outcomes should end (gambler's fallacy) and a belief that alternating patterns should continue (generating alternating motifs).
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    """Return counts of transition types for the subjective Markov model."""
+    def get_counts(seq):
+        seq = seq.strip().upper()
+        counts = {
+            "start_alt": 0.0,
+            "start_run": 0.0,
+            "run_cont": 0.0,
+            "run_end": 0.0,
+            "alt_cont": 0.0,
+            "alt_end": 0.0
+        }
+        if len(seq) >= 2:
+            first_bi = seq[0:2]
+            if first_bi in ("HT", "TH"):
+                counts["start_alt"] = 1.0
+            else:
+                counts["start_run"] = 1.0
+        
+        for i in range(len(seq) - 2):
+            tri = seq[i:i+3]
+            if tri in ("HHH", "TTT"):
+                counts["run_cont"] += 1.0
+            elif tri in ("HHT", "TTH"):
+                counts["run_end"] += 1.0
+            elif tri in ("HTH", "THT"):
+                counts["alt_cont"] += 1.0
+            elif tri in ("HTT", "THH"):
+                counts["alt_end"] += 1.0
+                
+        return counts
+
+    ca = get_counts(sequence_a)
+    cb = get_counts(sequence_b)
+    
+    return {
+        "start_alt_a": ca["start_alt"],
+        "start_run_a": ca["start_run"],
+        "run_cont_a": ca["run_cont"],
+        "run_end_a": ca["run_end"],
+        "alt_cont_a": ca["alt_cont"],
+        "alt_end_a": ca["alt_end"],
+        "start_alt_b": cb["start_alt"],
+        "start_run_b": cb["start_run"],
+        "run_cont_b": cb["run_cont"],
+        "run_end_b": cb["run_end"],
+        "alt_cont_b": cb["alt_cont"],
+        "alt_end_b": cb["alt_end"],
+    }
+
+with pm.Model() as model:
+    # Read the custom features
+    start_alt_a = pm.Data("start_alt_a", np.zeros(1, dtype="float64"))
+    start_run_a = pm.Data("start_run_a", np.zeros(1, dtype="float64"))
+    run_cont_a = pm.Data("run_cont_a", np.zeros(1, dtype="float64"))
+    run_end_a = pm.Data("run_end_a", np.zeros(1, dtype="float64"))
+    alt_cont_a = pm.Data("alt_cont_a", np.zeros(1, dtype="float64"))
+    alt_end_a = pm.Data("alt_end_a", np.zeros(1, dtype="float64"))
+    
+    start_alt_b = pm.Data("start_alt_b", np.zeros(1, dtype="float64"))
+    start_run_b = pm.Data("start_run_b", np.zeros(1, dtype="float64"))
+    run_cont_b = pm.Data("run_cont_b", np.zeros(1, dtype="float64"))
+    run_end_b = pm.Data("run_end_b", np.zeros(1, dtype="float64"))
+    alt_cont_b = pm.Data("alt_cont_b", np.zeros(1, dtype="float64"))
+    alt_end_b = pm.Data("alt_end_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameters
+    # Probability of a switch on the first transition
+    theta_switch_raw = pm.Beta("theta_switch", alpha=2.0, beta=2.0)
+    theta_switch = pt.clip(theta_switch_raw, 1e-5, 1.0 - 1e-5)
+    
+    # Probability of a switch given the previous transition was a stay (run ends)
+    theta_run_end_raw = pm.Beta("theta_run_end", alpha=2.0, beta=2.0)
+    theta_run_end = pt.clip(theta_run_end_raw, 1e-5, 1.0 - 1e-5)
+    
+    # Probability of a switch given the previous transition was a switch (alternation continues)
+    theta_alt_cont_raw = pm.Beta("theta_alt_cont", alpha=2.0, beta=2.0)
+    theta_alt_cont = pt.clip(theta_alt_cont_raw, 1e-5, 1.0 - 1e-5)
+
+    # Choice noise
+    tau = pm.HalfNormal("tau", sigma=1.0)
+
+    # Log-likelihood of sequence A under the subjective Markov model
+    log_L_a = (
+        start_alt_a * pt.log(theta_switch) +
+        start_run_a * pt.log(1.0 - theta_switch) +
+        run_end_a * pt.log(theta_run_end) +
+        run_cont_a * pt.log(1.0 - theta_run_end) +
+        alt_cont_a * pt.log(theta_alt_cont) +
+        alt_end_a * pt.log(1.0 - theta_alt_cont)
+    )
+    
+    # Log-likelihood of sequence B
+    log_L_b = (
+        start_alt_b * pt.log(theta_switch) +
+        start_run_b * pt.log(1.0 - theta_switch) +
+        run_end_b * pt.log(theta_run_end) +
+        run_cont_b * pt.log(1.0 - theta_run_end) +
+        alt_cont_b * pt.log(theta_alt_cont) +
+        alt_end_b * pt.log(1.0 - theta_alt_cont)
+    )
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(tau * (log_L_a - log_L_b))
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+
+# We need to add the parent directory of src to sys.path
+sys.path.append('/scratch/users/benpry/auto-psych/outer_loop_live/run3/repo')
+
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat hypothesis.md
+People judge the randomness of a sequence by translating it into a sequence of local transitions (switches and stays) and evaluating its log-likelihood under a subjective first-order Markov model of these transitions. They score sequences based on how well the transition-to-transition changes align with two distinct subjective expectations: a belief that runs of identical outcomes should end (gambler's fallacy) and a belief that alternating patterns should continue (generating alternating motifs).
+[0m
+I have successfully generated the files `hypothesis.md` and `candidate.py` in the specified directory, proposing a novel, single-mechanism cognitive hypothesis designed specifically to address the `alt_motifs_preference` discrepancy found in the critique.
+
+### The Hypothesis
+The `alt_motifs_preference` discrepancy reveals that people have a preference for generating sequence patterns like `HTHT` even when overall alternation rate is held constant. The hypothesis explains this through the parsimonious lens of local transition predictability. It posits that people judge sequence randomness by tracking the transitions themselves (switches vs. stays) and evaluating the sequence under a subjective first-order Markov model. This mechanism natively permits two independent expectations:
+1. **Gambler's fallacy / Negative recency:** An expectation that a run of identical outcomes is likely to end (a stay is likely to be followed by a switch).
+2. **Alternation continuation:** An expectation that an alternating pattern will persist (a switch is likely to be followed by another switch, producing `HTHT...`).
+
+This is a single coherent mechanism—evaluating subjective transition log-likelihoods—which directly naturally produces a bias for alternating motifs when parameterized accordingly, rather than relying on a loose combination of extracted feature weights. Both the natural language description and the corresponding PyMC code are now saved to your working directory.

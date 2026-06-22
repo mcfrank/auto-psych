@@ -1,0 +1,456 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/CRITIQUE_CONTEXT.md
+# Critique context
+
+**Incumbent (best) model:** `inner_loop_model`
+**Incumbent model code:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/models/inner_loop_model.py`
+**Incumbent hypothesis:** People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, rather than merely evaluating its average properties. They evaluate how well a sequence conforms to a mental prototype—represented by an ideal proportion of heads and alternations—and integrate this fit across all events.
+
+**Responses CSV:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv`
+**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+**Model set directory:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/models`
+
+Propose **8** test statistics. Write each to `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/<name>.py` as a function `test_statistic(df)` returning a scalar, with `# name:` and `# description:` header comments.
+
+You do **not** need to run anything. After you write the statistics, the pipeline runs the posterior-predictive harness automatically over `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats` and records the results:
+
+```bash
+python3 -m src.critique.ppc \
+    --responses /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv \
+    --model inner_loop_model \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/models \
+    --test-stats-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/ppc_results.json \
+    --cache-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/.fit_cache \
+    --n-replicates 200 \
+    --significance-alpha 0.05
+```
+
+That writes `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/ppc_results.json` with a two-sided empirical p-value per statistic (200 posterior-predictive replicates). A statistic is a **significant discrepancy** when its `p_value` ≤ 0.05 (raw, no multiple-comparisons correction).
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/models/inner_loop_model.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, rather than merely evaluating its average properties. They evaluate how well a sequence conforms to a mental prototype—represented by an ideal proportion of heads and alternations—and integrate this fit across all events. Because this typicality is accumulated, longer sequences that match the prototype accrue a higher total randomness score, while longer sequences that deviate strongly accumulate a heavier penalty, explaining why humans prefer longer sequences when average rates are equal.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate per-event typicality as a base rate minus the deviation penalty
+    typ_a = base_typ - (
+        w_p * pt.square(p_a - ideal_p) + w_alt * pt.square(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.square(p_b - ideal_p) + w_alt * pt.square(alt_rate_b - ideal_alt)
+    )
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = n_a * typ_a
+    rand_b = n_b * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 20 /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv | column -t -s ','
+participant_id  participant_id_str        trial_index  sequence_a  sequence_b  chose_left  chose_right  model  n_a  h_a  alts_a  max_run_a  rep_motifs_a  alt_motifs_a  n_b  h_b  alts_b  max_run_b  rep_motifs_b  alt_motifs_b  p_a                 p_alts_a             max_run_norm_a       imbalance_a          periodicity_a       p_b                  p_alts_b             max_run_norm_b       imbalance_b          periodicity_b
+0               [REDACTED_PROLIFIC_ID]  1            TH          TTTTHHTH    0           1                   2    1    1       1          0             1             8    3    3       4          2             1             0.5                 1.0                  0.0                  0.0                  0.0                 0.375                0.42857142857142855  0.42857142857142855  0.25                 0.25
+0               [REDACTED_PROLIFIC_ID]  2            HTHTTTTH    HT          1           0                   8    3    4       4          2             1             2    1    1       1          0             1             0.375               0.5714285714285714   0.42857142857142855  0.25                 0.25                0.5                  1.0                  0.0                  0.0                  0.0
+0               [REDACTED_PROLIFIC_ID]  3            THHHHHTT    TTHHTTT     0           1                   8    5    2       5          3             0             7    2    2       3          3             0             0.625               0.2857142857142857   0.5714285714285714   0.25                 0.5                 0.2857142857142857   0.3333333333333333   0.3333333333333333   0.4285714285714286   0.4285714285714286
+0               [REDACTED_PROLIFIC_ID]  4            TTTTTT      HHHHHHHT    0           1                   6    0    0       6          1             0             8    7    1       7          2             0             0.0                 0.0                  1.0                  1.0                  1.0                 0.875                0.14285714285714285  0.8571428571428571   0.75                 0.75
+0               [REDACTED_PROLIFIC_ID]  5            HH          HHTTTT      0           1                   2    2    0       2          1             0             6    2    1       4          2             0             1.0                 0.0                  1.0                  1.0                  0.0                 0.3333333333333333   0.2                  0.6                  0.33333333333333337  0.33333333333333326
+0               [REDACTED_PROLIFIC_ID]  6            HHTTTTHH    HHHTHHHT    0           1                   8    4    2       4          3             0             8    6    3       3          4             0             0.5                 0.2857142857142857   0.42857142857142855  0.0                  0.5                 0.75                 0.42857142857142855  0.2857142857142857   0.5                  1.0
+0               [REDACTED_PROLIFIC_ID]  7            TTHTTTHT    TTTHHHHT    1           0                   8    2    4       3          3             1             8    4    2       4          3             0             0.25                0.5714285714285714   0.2857142857142857   0.5                  1.0                 0.5                  0.2857142857142857   0.42857142857142855  0.0                  0.0
+0               [REDACTED_PROLIFIC_ID]  8            HTTTTHHH    TTHHTT      0           1                   8    4    2       4          3             0             6    2    2       2          3             0             0.5                 0.2857142857142857   0.42857142857142855  0.0                  0.25                0.3333333333333333   0.4                  0.2                  0.33333333333333337  0.33333333333333326
+0               [REDACTED_PROLIFIC_ID]  9            HTT         THHHHTHT    0           1                   3    1    1       2          2             0             8    5    4       4          2             1             0.3333333333333333  0.5                  0.5
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv')
+print(f'Total trials: {len(df)}')
+print('Max run norm a difference > 0.1 and p_alts difference < 0.1:', len(df[(df['p_alts_a'] - df['p_alts_b']).abs() < 0.1 & ((df['max_run_norm_a'] - df['max_run_norm_b']) > 0.1)]))
+print('Periodicity diff non zero:', len(df[df['periodicity_a'] != df['periodicity_b']]))
+print('Longer sequence chosen overall:', len(df[((df['n_a'] > df['n_b']) & (df['chose_left'] == 1)) | ((df['n_b'] > df['n_a']) & (df['chose_left'] == 0))]) / len(df[df['n_a'] != df['n_b']]))
+"
+Traceback (most recent call last):
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/pandas/core/ops/array_ops.py", line 362, in na_logical_op
+    result = op(x, y)
+             ^^^^^^^^
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/pandas/core/roperator.py", line 54, in rand_
+    return operator.and_(right, left)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: ufunc 'bitwise_and' not supported for the input types, and the inputs could not be safely coerced to any supported types according to the casting rule ''safe''
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/pandas/core/ops/array_ops.py", line 376, in na_logical_op
+    result = libops.scalar_binop(x, y, op)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "ops.pyx", line 180, in pandas._libs.ops.scalar_binop
+ValueError: Buffer dtype mismatch, expected 'Python object' but got 'bool'
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/pandas/core/ops/common.py", line 76, in new_method
+    return method(self, other)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/pandas/core/arraylike.py", line 74, in __rand__
+    return self._logical_method(other, roperator.rand_)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/pandas/core/series.py", line 6130, in _logical_method
+    res_values = ops.logical_op(lvalues, rvalues, op)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/pandas/core/ops/array_ops.py", line 454, in logical_op
+    res_values = na_logical_op(lvalues, rvalues, op)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/pandas/core/ops/array_ops.py", line 385, in na_logical_op
+    raise TypeError(
+TypeError: Cannot perform 'rand_' with a dtyped [bool] array and scalar of type [bool]
+Total trials: 2560
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv')
+print(f'Total trials: {len(df)}')
+print('Max run norm a difference > 0.1 and p_alts difference < 0.1:', len(df[((df['p_alts_a'] - df['p_alts_b']).abs() < 0.1) & ((df['max_run_norm_a'] - df['max_run_norm_b']) > 0.1)]))
+print('Periodicity diff non zero:', len(df[df['periodicity_a'] != df['periodicity_b']]))
+print('Longer sequence chosen overall:', len(df[((df['n_a'] > df['n_b']) & (df['chose_left'] == 1)) | ((df['n_b'] > df['n_a']) & (df['chose_left'] == 0))]) / len(df[df['n_a'] != df['n_b']]))
+"
+Total trials: 2560
+Max run norm a difference > 0.1 and p_alts difference < 0.1: 123
+Periodicity diff non zero: 2320
+Longer sequence chosen overall: 0.6672222222222223
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv')
+
+# Stat 1: Atypical alt length pref
+long_atypical = df[((df['p_alts_a'] < 0.3) & (df['p_alts_b'] < 0.3)) | ((df['p_alts_a'] > 0.7) & (df['p_alts_b'] > 0.7))]
+long_atypical = long_atypical[long_atypical['n_a'] != long_atypical['n_b']]
+print('Stat 1 N:', len(long_atypical))
+
+# Stat 2: Max run penalty
+s2 = df[(df['p_alts_a'] - df['p_alts_b']).abs() < 0.15]
+s2 = s2[s2['n_a'] == s2['n_b']]
+print('Stat 2 N:', len(s2))
+
+# Stat 3: Periodicity penalty
+s3 = df[s2['n_a'] == s2['n_b']] # equal length
+print('Stat 3 N:', len(s3))
+
+# Stat 4: Imbalance length pref
+s4 = df[(df['imbalance_a'] > 0.5) & (df['imbalance_b'] > 0.5)]
+s4 = s4[s4['n_a'] != s4['n_b']]
+print('Stat 4 N:', len(s4))
+
+# Stat 5: Asymmetry
+s5 = df[(df['p_alts_a'] > 0.7) & (df['p_alts_b'] < 0.3)]
+print('Stat 5 N:', len(s5))
+
+# Stat 6: Interaction length and periodicity
+s6_long = df[(df['n_a'] >= 6) & (df['n_b'] >= 6) & (df['periodicity_a'] != df['periodicity_b'])]
+s6_short = df[(df['n_a'] <= 4) & (df['n_b'] <= 4) & (df['periodicity_a'] != df['periodicity_b'])]
+print('Stat 6 N:', len(s6_long), len(s6_short))
+
+# Stat 7: Rep motifs
+s7 = df[df['n_a'] == df['n_b']]
+print('Stat 7 N:', len(s7))
+
+# Stat 8: Diminishing returns of length
+s8_42 = df[(df['n_a'] == 4) & (df['n_b'] == 2)]
+s8_86 = df[(df['n_a'] == 8) & (df['n_b'] == 6)]
+print('Stat 8 N:', len(s8_42), len(s8_86))
+"
+<string>:17: UserWarning: Boolean Series key will be reindexed to match DataFrame index.
+Traceback (most recent call last):
+  File "<string>", line 17, in <module>
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/pandas/core/frame.py", line 4093, in __getitem__
+    return self._getitem_bool_array(key)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/pandas/core/frame.py", line 4149, in _getitem_bool_array
+    key = check_bool_indexer(self.index, key)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/pandas/core/indexing.py", line 2662, in check_bool_indexer
+    raise IndexingError(
+pandas.errors.IndexingError: Unalignable boolean Series provided as indexer (index of the boolean Series and of the indexed object do not match).
+Stat 1 N: 160
+Stat 2 N: 280
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv')
+
+def corr(col1, col2, mask=None):
+    if mask is not None:
+        d = df[mask]
+    else:
+        d = df
+    return np.corrcoef(d[col1], d[col2])[0,1]
+
+print('Periodicity diff corr:', corr('periodicity_a', 'chose_left', df['periodicity_a'] != df['periodicity_b']))
+# to be proper, we should do diff
+df['p_diff'] = df['periodicity_a'] - df['periodicity_b']
+print('Periodicity diff corr:', np.corrcoef(df['p_diff'], df['chose_left'])[0,1])
+
+df['max_run_diff'] = df['max_run_norm_a'] - df['max_run_norm_b']
+print('Max run diff corr:', np.corrcoef(df['max_run_diff'], df['chose_left'])[0,1])
+
+df['rep_motifs_diff'] = df['rep_motifs_a'] - df['rep_motifs_b']
+print('Rep motifs diff corr:', np.corrcoef(df['rep_motifs_diff'], df['chose_left'])[0,1])
+
+df['alt_motifs_diff'] = df['alt_motifs_a'] - df['alt_motifs_b']
+print('Alt motifs diff corr:', np.corrcoef(df['alt_motifs_diff'], df['chose_left'])[0,1])
+
+df['n_diff'] = df['n_a'] - df['n_b']
+print('Length diff corr:', np.corrcoef(df['n_diff'], df['chose_left'])[0,1])
+
+df['imbalance_diff'] = df['imbalance_a'] - df['imbalance_b']
+print('Imbalance diff corr:', np.corrcoef(df['imbalance_diff'], df['chose_left'])[0,1])
+
+df['p_alts_diff'] = df['p_alts_a'] - df['p_alts_b']
+print('P alts diff corr:', np.corrcoef(df['p_alts_diff'], df['chose_left'])[0,1])
+
+"
+Periodicity diff corr: 0.02799065738795198
+Periodicity diff corr: 0.031830141374517916
+Max run diff corr: -0.34550988343486655
+Rep motifs diff corr: 0.1281280609139744
+Alt motifs diff corr: 0.2664825568408058
+Length diff corr: 0.25436442499709533
+Imbalance diff corr: -0.17537800471205292
+P alts diff corr: 0.307046491405148
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv')
+
+df['max_run_diff'] = df['max_run_norm_a'] - df['max_run_norm_b']
+df['p_alts_diff'] = df['p_alts_a'] - df['p_alts_b']
+
+# When p_alts_diff is small
+mask = df['p_alts_diff'].abs() < 0.1
+print('Max run diff corr (p_alts controlled):', np.corrcoef(df[mask]['max_run_diff'], df[mask]['chose_left'])[0,1])
+
+# Asymmetry in p_alts
+# Are people penalizing p_alts < 0.5 more than p_alts > 0.5?
+print('Mean chose left when p_alts_a > 0.7, p_alts_b ~ 0.5:', df[(df['p_alts_a'] > 0.7) & (df['p_alts_b'].between(0.4, 0.6))]['chose_left'].mean())
+print('Mean chose left when p_alts_a < 0.3, p_alts_b ~ 0.5:', df[(df['p_alts_a'] < 0.3) & (df['p_alts_b'].between(0.4, 0.6))]['chose_left'].mean())
+
+# Imbalance vs p_alts
+print('Mean chose left when high imbalance (>0.6) a, b~0:', df[(df['imbalance_a'] > 0.6) & (df['imbalance_b'] < 0.2)]['chose_left'].mean())
+"
+Max run diff corr (p_alts controlled): -0.15453107450898962
+Mean chose left when p_alts_a > 0.7, p_alts_b ~ 0.5: 0.5826446280991735
+Mean chose left when p_alts_a < 0.3, p_alts_b ~ 0.5: 0.22264150943396227
+Mean chose left when high imbalance (>0.6) a, b~0: 0.08974358974358974
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv')
+long_atypical = df[((df['p_alts_a'] < 0.3) & (df['p_alts_b'] < 0.3)) & (df['n_a'] != df['n_b'])]
+is_longer_chosen = ((long_atypical['n_a'] > long_atypical['n_b']) & (long_atypical['chose_left'] == 1)) | ((long_atypical['n_b'] > long_atypical['n_a']) & (long_atypical['chose_left'] == 0))
+print('Pref for longer when p_alts < 0.3:', is_longer_chosen.mean())
+
+long_atypical2 = df[((df['p_alts_a'] > 0.7) & (df['p_alts_b'] > 0.7)) & (df['n_a'] != df['n_b'])]
+is_longer_chosen2 = ((long_atypical2['n_a'] > long_atypical2['n_b']) & (long_atypical2['chose_left'] == 1)) | ((long_atypical2['n_b'] > long_atypical2['n_a']) & (long_atypical2['chose_left'] == 0))
+print('Pref for longer when p_alts > 0.7:', is_longer_chosen2.mean())
+
+long_imbalanced = df[((df['imbalance_a'] > 0.6) & (df['imbalance_b'] > 0.6)) & (df['n_a'] != df['n_b'])]
+is_longer_chosen3 = ((long_imbalanced['n_a'] > long_imbalanced['n_b']) & (long_imbalanced['chose_left'] == 1)) | ((long_imbalanced['n_b'] > long_imbalanced['n_a']) & (long_imbalanced['chose_left'] == 0))
+print('Pref for longer when imbalance > 0.6:', is_longer_chosen3.mean())
+"
+Pref for longer when p_alts < 0.3: 0.65625
+Pref for longer when p_alts > 0.7: nan
+Pref for longer when imbalance > 0.6: 0.6
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+import statsmodels.api as sm
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv')
+sub = df[(df['imbalance_a'] > 0.6) & (df['imbalance_b'] < 0.2)]
+print('N for sub:', len(sub))
+print('Corr chose_left and n_a:', np.corrcoef(sub['n_a'], sub['chose_left'])[0,1])
+"
+Traceback (most recent call last):
+  File "<string>", line 4, in <module>
+ModuleNotFoundError: No module named 'statsmodels'
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv')
+sub = df[(df['imbalance_a'] > 0.6) & (df['imbalance_b'] < 0.2)]
+print('N for sub:', len(sub))
+print('Corr chose_left and n_a:', np.corrcoef(sub['n_a'], sub['chose_left'])[0,1])
+"
+N for sub: 78
+Corr chose_left and n_a: 0.06855683683743695
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv')
+sub = df[(df['p_alts_a'] < 0.3) & (df['p_alts_b'].between(0.4, 0.6))]
+print('N for sub:', len(sub))
+print('Corr chose_left and n_a:', np.corrcoef(sub['n_a'], sub['chose_left'])[0,1])
+"
+N for sub: 265
+Corr chose_left and n_a: 0.1882309695737204
+[0m
+[0m$ [0mmkdir -p /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/len_pref_under_alt.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/len_effect_under_alt_vs_normal.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/len_pref_high_imbalance.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/len_effect_imbalanced_vs_balanced.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/pref_over_alt.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/pref_under_alt.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/max_run_penalty.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/periodicity_penalty.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 -m src.critique.ppc --help
+/scratch/users/benpry/auto-psych/outer_loop_live/venv/bin/python3: Error while finding module specification for 'src.critique.ppc' (ModuleNotFoundError: No module named 'src')
+[0m
+[0m$ [0mls -l /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/
+total 32
+-rw-------+ 1 benpry ngoodman 485 Jun 21 15:58 len_effect_imbalanced_vs_balanced.py
+-rw-------+ 1 benpry ngoodman 493 Jun 21 15:58 len_effect_under_alt_vs_normal.py
+-rw-------+ 1 benpry ngoodman 524 Jun 21 15:58 len_pref_high_imbalance.py
+-rw-------+ 1 benpry ngoodman 502 Jun 21 15:58 len_pref_under_alt.py
+-rw-------+ 1 benpry ngoodman 553 Jun 21 15:58 max_run_penalty.py
+-rw-------+ 1 benpry ngoodman 491 Jun 21 15:58 periodicity_penalty.py
+-rw-------+ 1 benpry ngoodman 379 Jun 21 15:58 pref_over_alt.py
+-rw-------+ 1 benpry ngoodman 381 Jun 21 15:58 pref_under_alt.py
+[0m
+[0m$ [0mhead -n 2 /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/*.py
+==> /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/len_effect_imbalanced_vs_balanced.py <==
+# name: len_effect_imbalanced_vs_balanced
+# description: Correlation between n_a and chose_left when Sequence A is highly imbalanced (imbalance > 0.6) and Sequence B is balanced (imbalance < 0.2).
+
+==> /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/len_effect_under_alt_vs_normal.py <==
+# name: len_effect_under_alt_vs_normal
+# description: Correlation between n_a and chose_left when Sequence A is highly under-alternating (p_alts < 0.3) but Sequence B is normal (0.4 <= p_alts <= 0.6).
+
+==> /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/len_pref_high_imbalance.py <==
+# name: len_pref_high_imbalance
+# description: Rate of choosing the longer sequence when both sequences are highly imbalanced (imbalance > 0.6) and lengths are unequal.
+
+==> /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/len_pref_under_alt.py <==
+# name: len_pref_under_alt
+# description: Rate of choosing the longer sequence when both sequences have very low alternation rates (p_alts < 0.3) and unequal lengths.
+
+==> /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/max_run_penalty.py <==
+# name: max_run_penalty
+# description: Correlation between difference in normalized max run length (A - B) and choice probability, for sequences with matched alternation rates.
+
+==> /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/periodicity_penalty.py <==
+# name: periodicity_penalty
+# description: Correlation between difference in periodicity (A - B) and choice probability, for sequences of equal length.
+
+==> /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/pref_over_alt.py <==
+# name: pref_over_alt
+# description: Mean rate of choosing sequence A when A is highly over-alternating (p_alts > 0.7) and B is normally alternating (0.4 <= p_alts <= 0.6).
+
+==> /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/pref_under_alt.py <==
+# name: pref_under_alt
+# description: Mean rate of choosing sequence A when A is highly under-alternating (p_alts < 0.3) and B is normally alternating (0.4 <= p_alts <= 0.6).
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+import numpy as np
+import glob
+import importlib.util
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/responses.csv')
+
+for f in glob.glob('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/*.py'):
+    spec = importlib.util.spec_from_file_location('module.name', f)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    res = mod.test_statistic(df)
+    print(f'{f.split(\"/\")[-1]}: {res}')
+"
+pref_under_alt.py: 0.22264150943396227
+len_effect_imbalanced_vs_balanced.py: 0.06855683683743695
+periodicity_penalty.py: 0.1490651516753677
+len_pref_high_imbalance.py: 0.6
+max_run_penalty.py: -0.15453107450898962
+len_effect_under_alt_vs_normal.py: 0.1882309695737204
+pref_over_alt.py: 0.5826446280991735
+len_pref_under_alt.py: 0.65625
+[0m
+[0m$ [0mecho "Done"
+Done
+[0m
+I have analyzed the incumbent `inner_loop_model` and the human responses data, and proposed 8 test statistics designed to expose potential systematic failures in the model's assumption that randomness is evaluated by linearly accumulating typicality deviations across sequence length. 
+
+The test statistics target:
+1. **Length preference despite severe atypicality**: `len_pref_under_alt` and `len_pref_high_imbalance` test if humans still prefer longer sequences when the model predicts they should accrue massive negative typicality and be rejected.
+2. **Length interaction effects**: `len_effect_under_alt_vs_normal` and `len_effect_imbalanced_vs_balanced` test if sequence length positively (rather than negatively) correlates with choice probability even for atypical sequences.
+3. **Asymmetric alternation penalties**: `pref_over_alt` and `pref_under_alt` test if over-alternating (p_alts > 0.7) and under-alternating (p_alts < 0.3) sequences are penalized asymmetrically, which the model's quadratic penalty around a single `ideal_alt` would miss.
+4. **Ignored structural features**: `max_run_penalty` and `periodicity_penalty` test if humans penalize long unbroken runs and periodicity even when alternation rate and sequence length are controlled.
+
+The 8 test statistics have been written to `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/critique/test_stats/` with the exact requested format (`# name:`, `# description:`, and self-contained `test_statistic(df)` returning a float). 
+
+The automated pipeline can now take over to run the posterior-predictive harness.

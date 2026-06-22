@@ -1,0 +1,1 @@
+People evaluate the randomness of a sequence based on its proportion of tails, exhibiting a cognitive bias where tails are perceived as inherently more random than heads. Thus, when comparing two sequences, they are more likely to judge the sequence with a higher proportion of tails as the more random one.

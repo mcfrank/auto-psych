@@ -1,0 +1,1 @@
+People evaluate the randomness of a sequence solely by assessing whether its longest streak of identical outcomes is typical for a random sequence of that length. They linearly penalize sequences based on the absolute deviation of their observed maximum run length from the mathematically expected maximum run length of a fair coin (approximately log2 of the sequence length).
