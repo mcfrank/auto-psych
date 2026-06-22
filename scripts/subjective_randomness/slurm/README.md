@@ -110,3 +110,47 @@ bash scripts/subjective_randomness/slurm/run_impossible_test_retest.sh
 Output lands in `$WORK_ROOT` (default
 `$SCRATCH/auto-psych/impossible_holdout_test_retest_full/`) with the same
 `run<i>/<gt>/holdout.{json,csv,png}` and `test_retest.{json,csv,png}` layout.
+
+## Ablation: no inner loop
+
+The inner-loop ablation runs the **same** pipeline with
+`--inner-loop-iterations 0`, so the inner model loop does **zero**
+candidate-conjecturing rounds. At 0 iterations the inner loop spawns no agents
+at all — it only fits and ELPD-LOO-scores the theorist's own models (the
+experiment-1 seed set, plus whatever the theory agent proposes in experiments
+≥ 2) and records the single seed-scoring step the trajectory needs. The
+outer-loop agents (theory, design) and synthetic collection still run in full,
+so the only thing removed is the inner candidate/critique search:
+
+```
+full pipeline:  theory → design → collect → [inner loop: fit + critique +
+                conjecture N rounds of new PyMC models] → score
+ablation:       theory → design → collect → [fit + score theorist's models] → score
+```
+
+Comparing the ablation against the full run isolates how much of the recovery
+comes from the inner loop's agent-discovered models vs. the outer loop alone.
+
+- `run_no_inner_loop_test_retest.sh` — standard holdout, inner loop removed.
+  Dedicated work root `…/holdout_test_retest_no_inner_loop`.
+- `run_impossible_no_inner_loop_test_retest.sh` — impossible variant, inner loop
+  removed. Dedicated work root `…/impossible_holdout_test_retest_no_inner_loop`.
+
+Both are thin wrappers that pin `INNER_LOOP_ITERATIONS=0` (forwarded by the
+submit scripts to every array task) and otherwise reuse the full pipeline, so
+they inherit every fix, isolation guard, and leak-prevention measure.
+
+```bash
+# cheap pre-flight first (one task, tiny MCMC):
+SMOKE=1 bash scripts/subjective_randomness/slurm/run_no_inner_loop_test_retest.sh
+SMOKE=1 bash scripts/subjective_randomness/slurm/run_impossible_no_inner_loop_test_retest.sh
+
+# the real ablation runs:
+bash scripts/subjective_randomness/slurm/run_no_inner_loop_test_retest.sh
+bash scripts/subjective_randomness/slurm/run_impossible_no_inner_loop_test_retest.sh
+```
+
+Output lands in each ablation's own `_no_inner_loop` work root, with the same
+`run<i>/<gt>/holdout.{json,csv,png}` and `test_retest.{json,csv,png}` layout —
+so the standard and impossible ablations can be analyzed side by side with their
+full-pipeline counterparts.

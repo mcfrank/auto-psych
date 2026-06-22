@@ -21,8 +21,12 @@ text into a key-results file alongside the figures):
 
 from __future__ import annotations
 
+import math
+from collections import defaultdict
 from pathlib import Path
-from typing import Any, Mapping
+from statistics import mean as _mean
+from statistics import stdev as _stdev
+from typing import Any, Iterable, List, Mapping
 
 from src.subjective_randomness.analysis import (
     model_recovery_summary,
@@ -247,9 +251,7 @@ def plot_selection_comparison_parameters(
     plt.close(fig)
 
 
-def plot_selection_comparison_models(
-    report: Mapping[str, Any], out_path: Path
-) -> None:
+def plot_selection_comparison_models(report: Mapping[str, Any], out_path: Path) -> None:
     """Mean-posterior confusion heatmap per selection rule, side by side."""
     import matplotlib
 
@@ -264,9 +266,7 @@ def plot_selection_comparison_models(
         1, len(arms), figsize=(panel * len(arms), panel), squeeze=False
     )
     for ax, (arm_name, arm) in zip(axes[0], arms.items()):
-        matrix = np.array(
-            [[arm["confusion"][g][m] for m in models] for g in models]
-        )
+        matrix = np.array([[arm["confusion"][g][m] for m in models] for g in models])
         im = ax.imshow(matrix, cmap="Blues", vmin=0.0, vmax=1.0)
         ax.set_xticks(range(len(models)), models, rotation=30, ha="right")
         ax.set_yticks(range(len(models)), models)
@@ -277,8 +277,11 @@ def plot_selection_comparison_models(
             for j in range(len(models)):
                 val = matrix[i, j]
                 ax.text(
-                    j, i, f"{val:.2f}",
-                    ha="center", va="center",
+                    j,
+                    i,
+                    f"{val:.2f}",
+                    ha="center",
+                    va="center",
                     color="white" if val > 0.5 else "black",
                 )
         fig.colorbar(im, ax=ax, label="mean posterior")
@@ -327,8 +330,7 @@ def _draw_correlation_panels(
 ) -> None:
     """One ground-truth (x) vs. recovered (y) scatter per parameter."""
     pearson = {
-        row["parameter"]: row["pearson_r"]
-        for row in parameter_recovery_summary(report)
+        row["parameter"]: row["pearson_r"] for row in parameter_recovery_summary(report)
     }
     for ax, (param, rows) in zip(axes, by_param.items()):
         trues = [r["true_value"] for r in rows]
@@ -385,6 +387,11 @@ _HOLDOUT_METRIC_SPECS = {
             "Holdout recovery — best model vs. Bayesian model average "
             "(held-out model = ground truth)"
         ),
+        "combined_suptitle": (
+            "Holdout recovery — best-model correlation with held-out ground truth"
+        ),
+        "combined_ylabel": "Pearson r vs. ground truth",
+        "higher_is_better": True,
         "ylim": (-1.05, 1.05),
         "zero_line": True,
         "legend_loc": "lower right",
@@ -398,6 +405,12 @@ _HOLDOUT_METRIC_SPECS = {
             "Holdout recovery — RMSE of best model vs. Bayesian model average "
             "(held-out model = ground truth; lower is better)"
         ),
+        "combined_suptitle": (
+            "Holdout recovery — best-model RMSE vs. held-out ground truth "
+            "(lower is better)"
+        ),
+        "combined_ylabel": "RMSE vs. ground truth",
+        "higher_is_better": False,
         "ylim": None,  # autoscale up from 0
         "zero_line": False,
         "legend_loc": "upper right",
@@ -438,9 +451,7 @@ def plot_holdout_trajectories(
 
     gt_runs = result["gt_runs"]
     n = len(gt_runs)
-    fig, axes = plt.subplots(
-        1, n, figsize=(4.6 * n, 4.4), squeeze=False, sharey=True
-    )
+    fig, axes = plt.subplots(1, n, figsize=(4.6 * n, 4.4), squeeze=False, sharey=True)
     plotted_values = []
     for ax, gt_run in zip(axes[0], gt_runs):
         trajectory = gt_run["trajectory"]
@@ -504,6 +515,435 @@ def plot_holdout_trajectories(
     plt.close(fig)
 
 
+_ERROR_KINDS = ("sem", "std", "ci95")
+
+
+def _summarize(values: List[float], error: str) -> Mapping[str, Any]:
+    """Reduce a list of per-run values to a mean and a spread.
+
+    The spread is the sample standard deviation (``std``), the standard error
+    of the mean (``sem = std / sqrt(n)``), or a 95% normal interval half-width
+    (``ci95 = 1.96 * sem``). With fewer than two values the spread is undefined
+    and reported as 0.0 so a lone run still plots a point with no whisker.
+    """
+    n = len(values)
+    avg = _mean(values)
+    if n < 2:
+        spread = 0.0
+    else:
+        std = _stdev(values)
+        spread = {
+            "std": std,
+            "sem": std / math.sqrt(n),
+            "ci95": 1.96 * std / math.sqrt(n),
+        }[error]
+    return {"mean": avg, "err": spread, "n": n}
+
+
+def _best_seed_value(
+    baseline: Mapping[str, Any], run_key: str, spec: Mapping[str, Any]
+) -> Any:
+    """The best (not mean) recovery among the non-held-out seed models, or None.
+
+    Each held-out result stores every sibling seed model's recovery under
+    ``per_model``. The fit-to-all-data baseline stores a ``{metric: value}``
+    dict per model; the default-params baseline stores only a bare Pearson r
+    per model (so it has no RMSE). "Best" is the max for a higher-is-better
+    metric (Pearson r) and the min for RMSE.
+    """
+    per_model = baseline.get("per_model")
+    if not per_model:
+        return None
+    metric_key = spec["best_key"]
+    if run_key == "fitted_baseline":
+        values = [entry.get(metric_key) for entry in per_model.values()]
+    elif metric_key == "pearson_r":  # default-params baseline: bare Pearson r
+        values = list(per_model.values())
+    else:
+        return None  # default-params baseline has no RMSE
+    values = [v for v in values if v is not None]
+    if not values:
+        return None
+    return max(values) if spec["higher_is_better"] else min(values)
+
+
+def aggregate_holdout_trajectories(
+    results: Iterable[Mapping[str, Any]],
+    *,
+    metric: str = "pearson_r",
+    error: str = "sem",
+) -> Mapping[str, Any]:
+    """Pool several single-run holdout results into per-step mean ± spread.
+
+    ``results`` is one decoded ``holdout.json`` per run (each a mapping with a
+    ``gt_runs`` list). Ground truths are pooled by name across runs; for every
+    held-out model this returns, at each inner-loop ``global_step`` that any run
+    reached, the mean and ``error`` spread of the best-model and Bayesian
+    model-average ``metric`` across the runs that defined a value there. Steps
+    whose value is undefined in a run (``None`` — e.g. a constant prediction
+    makes correlation undefined) are dropped from that step's sample rather than
+    counted as zero. The two flat seed-model baselines are the *best* sibling
+    seed per run (not the average), pooled the same way; outer-experiment
+    boundaries (where any run starts a new experiment) are collected so the
+    figure can mark them.
+    """
+    if metric not in _HOLDOUT_METRIC_SPECS:
+        raise ValueError(
+            f"Unknown metric {metric!r}; expected one of "
+            f"{sorted(_HOLDOUT_METRIC_SPECS)}"
+        )
+    if error not in _ERROR_KINDS:
+        raise ValueError(
+            f"Unknown error {error!r}; expected one of {list(_ERROR_KINDS)}"
+        )
+    spec = _HOLDOUT_METRIC_SPECS[metric]
+
+    # Pool every ground truth's runs, preserving first-seen order across files.
+    runs_by_model: "defaultdict[str, List[Mapping[str, Any]]]" = defaultdict(list)
+    order: List[str] = []
+    for result in results:
+        for gt_run in result["gt_runs"]:
+            name = gt_run["gt_model"]
+            if name not in runs_by_model:
+                order.append(name)
+            runs_by_model[name].append(gt_run)
+
+    panels: List[Mapping[str, Any]] = []
+    for name in sorted(order):
+        gt_runs = runs_by_model[name]
+
+        def _series(key: str) -> List[Mapping[str, Any]]:
+            by_step: "defaultdict[int, List[float]]" = defaultdict(list)
+            for gt_run in gt_runs:
+                for row in gt_run["trajectory"]:
+                    value = row.get(key)
+                    if value is not None:
+                        by_step[row["global_step"]].append(value)
+            return [
+                {"global_step": step, **_summarize(by_step[step], error)}
+                for step in sorted(by_step)
+            ]
+
+        baselines: dict[str, Any] = {}
+        for run_key in ("fitted_baseline", "baseline"):
+            values = [
+                _best_seed_value(gt_run.get(run_key) or {}, run_key, spec)
+                for gt_run in gt_runs
+            ]
+            values = [v for v in values if v is not None]
+            baselines[run_key] = _summarize(values, error) if values else None
+
+        boundaries = sorted(
+            {
+                row["global_step"]
+                for gt_run in gt_runs
+                for row in gt_run["trajectory"]
+                if row["step"] == 0 and row["experiment"] > 1
+            }
+        )
+
+        panels.append(
+            {
+                "gt_model": name,
+                "n_runs": len(gt_runs),
+                "best": _series(spec["best_key"]),
+                "bma": _series(spec["bma_key"]),
+                "baselines": baselines,
+                "experiment_boundaries": boundaries,
+            }
+        )
+
+    return {"metric": metric, "error": error, "gt_models": panels}
+
+
+# Per-series labels and styling for the combined (plotnine) holdout figure.
+# Exported as module constants so a manual recolor/restyle is a one-line change.
+_BEST_LABEL = "best model"
+_BASELINE_LABELS = {
+    "fitted_baseline": "best other seed model (fit to all data)",
+    "baseline": "best seed (default params)",
+}
+HOLDOUT_SERIES_ORDER = [
+    _BEST_LABEL,
+    _BASELINE_LABELS["fitted_baseline"],
+    _BASELINE_LABELS["baseline"],
+]
+# ColorBrewer Dark2 (qualitative) — override to recolor every geom at once.
+HOLDOUT_SERIES_COLORS = {
+    _BEST_LABEL: "#1B9E77",
+    _BASELINE_LABELS["fitted_baseline"]: "#D95F02",
+    _BASELINE_LABELS["baseline"]: "#7570B3",
+}
+HOLDOUT_SERIES_LINETYPES = {
+    _BEST_LABEL: "solid",
+    _BASELINE_LABELS["fitted_baseline"]: "dotted",
+    _BASELINE_LABELS["baseline"]: "dashdot",
+}
+
+
+def holdout_combined_frames(aggregated: Mapping[str, Any]) -> Mapping[str, Any]:
+    """Flatten a pooled aggregate into tidy data frames for plotnine.
+
+    Returns a mapping with the run aggregate's ``metric`` and ``error`` plus
+    three ``pandas`` data frames, all faceted by a ``facet`` column (the
+    ground-truth name with underscores spaced out, an ordered categorical so
+    panels stay in ground-truth order):
+
+    * ``trajectory`` — one row per inner-loop step of the best-model series,
+      with ``mean`` and ``ymin``/``ymax`` = mean ± spread for the error bars.
+    * ``baselines`` — one row per defined flat seed-model baseline, with the
+      same ``mean``/``ymin``/``ymax`` plus ``xmin``/``xmax`` spanning the step
+      range so the spread can be drawn as a horizontal band.
+    * ``boundaries`` — one row per outer-experiment boundary, with ``boundary``
+      (the step a new experiment begins) and ``x`` = ``boundary - 0.5`` (where
+      the marker line is drawn).
+    """
+    import pandas as pd
+
+    panels = aggregated["gt_models"]
+    facet_order = [p["gt_model"].replace("_", " ") for p in panels]
+    all_steps = [pt["global_step"] for p in panels for pt in p["best"]]
+    xmin = (min(all_steps) - 0.5) if all_steps else -0.5
+    xmax = (max(all_steps) + 0.5) if all_steps else 0.5
+
+    traj_rows: List[Mapping[str, Any]] = []
+    baseline_rows: List[Mapping[str, Any]] = []
+    boundary_rows: List[Mapping[str, Any]] = []
+    for panel in panels:
+        gt = panel["gt_model"]
+        facet = gt.replace("_", " ")
+        for point in panel["best"]:
+            traj_rows.append(
+                {
+                    "gt_model": gt,
+                    "facet": facet,
+                    "series": _BEST_LABEL,
+                    "global_step": point["global_step"],
+                    "mean": point["mean"],
+                    "err": point["err"],
+                    "ymin": point["mean"] - point["err"],
+                    "ymax": point["mean"] + point["err"],
+                    "n": point["n"],
+                }
+            )
+        for run_key, label in _BASELINE_LABELS.items():
+            stats = panel["baselines"].get(run_key)
+            if stats is not None:
+                baseline_rows.append(
+                    {
+                        "gt_model": gt,
+                        "facet": facet,
+                        "series": label,
+                        "mean": stats["mean"],
+                        "err": stats["err"],
+                        "ymin": stats["mean"] - stats["err"],
+                        "ymax": stats["mean"] + stats["err"],
+                        "xmin": xmin,
+                        "xmax": xmax,
+                        "n": stats["n"],
+                    }
+                )
+        for boundary in panel["experiment_boundaries"]:
+            boundary_rows.append(
+                {
+                    "gt_model": gt,
+                    "facet": facet,
+                    "boundary": boundary,
+                    "x": boundary - 0.5,
+                }
+            )
+
+    # Restrict the series legend to series that actually appear (e.g. the
+    # default-param baseline has no RMSE, so it must not show up in the RMSE
+    # legend), keeping the canonical order.
+    present = {row["series"] for row in (*traj_rows, *baseline_rows)}
+    series_categories = [s for s in HOLDOUT_SERIES_ORDER if s in present]
+
+    def _framed(rows: List[Mapping[str, Any]], columns: List[str]):
+        df = pd.DataFrame(rows, columns=columns)
+        df["facet"] = pd.Categorical(df["facet"], categories=facet_order, ordered=True)
+        if "series" in df.columns:
+            df["series"] = pd.Categorical(
+                df["series"], categories=series_categories, ordered=True
+            )
+        return df
+
+    return {
+        "metric": aggregated["metric"],
+        "error": aggregated["error"],
+        "trajectory": _framed(
+            traj_rows,
+            [
+                "gt_model",
+                "facet",
+                "series",
+                "global_step",
+                "mean",
+                "err",
+                "ymin",
+                "ymax",
+                "n",
+            ],
+        ),
+        "baselines": _framed(
+            baseline_rows,
+            [
+                "gt_model",
+                "facet",
+                "series",
+                "mean",
+                "err",
+                "ymin",
+                "ymax",
+                "xmin",
+                "xmax",
+                "n",
+            ],
+        ),
+        "boundaries": _framed(boundary_rows, ["gt_model", "facet", "boundary", "x"]),
+    }
+
+
+def holdout_trajectories_ggplot(aggregated: Mapping[str, Any]):
+    """Build the pooled holdout-recovery figure as a plotnine ``ggplot``.
+
+    One facet per held-out model: the best-model recovery trajectory is a mean
+    line with per-step error bars, and the flat best-seed baselines (the best
+    sibling seed model, averaged across runs) get a line with a shaded ± spread
+    band. Returning the unsaved ``ggplot`` lets the caller tweak formatting
+    before rendering — e.g.::
+
+        from src.subjective_randomness.reporting import holdout_trajectories_ggplot
+        from plotnine import theme, element_text
+        p = holdout_trajectories_ggplot(aggregated)
+        (p + theme(figure_size=(16, 4))).save("holdout.png", dpi=300)
+
+    Colors, line types, and series order are the ``HOLDOUT_SERIES_*`` module
+    constants; override the matching ``scale_*_manual`` to recolor/restyle.
+    """
+    from plotnine import (
+        aes,
+        coord_cartesian,
+        element_blank,
+        element_text,
+        expand_limits,
+        facet_wrap,
+        geom_errorbar,
+        geom_hline,
+        geom_line,
+        geom_point,
+        geom_rect,
+        geom_vline,
+        ggplot,
+        labs,
+        scale_color_manual,
+        scale_fill_manual,
+        scale_linetype_manual,
+        scale_x_continuous,
+        theme,
+        theme_minimal,
+    )
+
+    spec = _HOLDOUT_METRIC_SPECS[aggregated["metric"]]
+    frames = holdout_combined_frames(aggregated)
+    trajectory, baselines, boundaries = (
+        frames["trajectory"],
+        frames["baselines"],
+        frames["boundaries"],
+    )
+    n_panels = max(len(aggregated["gt_models"]), 1)
+    # Integer x ticks at the actual inner-loop steps (no 2.5/7.5 fractions).
+    x_breaks = sorted(
+        {pt["global_step"] for p in aggregated["gt_models"] for pt in p["best"]}
+    )
+
+    plot = (
+        ggplot()
+        # Seed-model baseline ± spread bands, behind everything (no legend key).
+        + geom_rect(
+            baselines,
+            aes(xmin="xmin", xmax="xmax", ymin="ymin", ymax="ymax", fill="series"),
+            alpha=0.15,
+            show_legend=False,
+        )
+        # Seed-model baseline mean lines.
+        + geom_hline(
+            baselines,
+            aes(yintercept="mean", color="series", linetype="series"),
+            size=1.0,
+        )
+        # Best-model recovery trajectory: line + error bars + points.
+        + geom_line(
+            trajectory,
+            aes(x="global_step", y="mean", color="series", linetype="series"),
+            size=0.8,
+        )
+        + geom_errorbar(
+            trajectory,
+            aes(x="global_step", ymin="ymin", ymax="ymax", color="series"),
+            width=0.3,
+            size=0.6,
+        )
+        + geom_point(
+            trajectory, aes(x="global_step", y="mean", color="series"), size=2.2
+        )
+        + facet_wrap("facet", nrow=1)
+        + scale_x_continuous(breaks=x_breaks)
+        + scale_color_manual(values=HOLDOUT_SERIES_COLORS, name="")
+        + scale_fill_manual(values=HOLDOUT_SERIES_COLORS, name="")
+        + scale_linetype_manual(values=HOLDOUT_SERIES_LINETYPES, name="")
+        + labs(x="inner-loop scoring step", y=spec["combined_ylabel"])
+        + theme_minimal()
+        # Compact layout (tight panels), but larger, legible text throughout.
+        + theme(
+            figure_size=(3.2 * n_panels, 3.0),
+            legend_position="bottom",
+            legend_title=element_blank(),
+            legend_box_spacing=0.0,
+            axis_title=element_text(size=13),
+            axis_text=element_text(size=11),
+            strip_text=element_text(size=13),
+            legend_text=element_text(size=12),
+            panel_spacing=0.02,
+        )
+    )
+
+    # Outer-experiment boundaries (skip the geom when none — it errors on empty data).
+    if len(boundaries):
+        plot = plot + geom_vline(
+            boundaries,
+            aes(xintercept="x"),
+            linetype="dotted",
+            color="grey",
+            size=0.5,
+        )
+    if spec["zero_line"]:
+        plot = plot + geom_hline(yintercept=0.0, color="grey", size=0.3)
+    if spec["ylim"] is not None:
+        plot = plot + coord_cartesian(ylim=spec["ylim"])
+    else:
+        plot = plot + expand_limits(y=0.0)  # RMSE: keep the floor at 0
+    return plot
+
+
+def plot_holdout_trajectories_combined(
+    aggregated: Mapping[str, Any], out_path: Path
+) -> None:
+    """Render :func:`holdout_trajectories_ggplot` to ``out_path``.
+
+    A thin save wrapper kept for the CLI and back-compatibility; for manual
+    formatting, build the figure with :func:`holdout_trajectories_ggplot` and
+    save it yourself.
+    """
+    out_path = Path(out_path)
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    # bbox_inches="tight" trims margins to the content so the compact panels keep
+    # their size while the title and axis labels never clip at the figure edge.
+    holdout_trajectories_ggplot(aggregated).save(
+        out_path, dpi=150, verbose=False, bbox_inches="tight"
+    )
+
+
 def plot_model_recovery(confusion: Mapping[str, Any], out_path: Path) -> None:
     """Write the generating x recovered posterior confusion heatmap."""
     import matplotlib
@@ -528,8 +968,11 @@ def plot_model_recovery(confusion: Mapping[str, Any], out_path: Path) -> None:
         for j in range(len(models)):
             val = matrix[i, j]
             ax.text(
-                j, i, f"{val:.2f}",
-                ha="center", va="center",
+                j,
+                i,
+                f"{val:.2f}",
+                ha="center",
+                va="center",
                 color="white" if val > 0.5 else "black",
             )
     fig.colorbar(im, ax=ax, label="posterior probability")
