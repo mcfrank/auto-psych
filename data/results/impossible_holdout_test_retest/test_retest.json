@@ -1,0 +1,98 @@
+{
+  "runs_root": "/scratch/users/benpry/auto-psych/impossible_holdout_test_retest_full",
+  "metric": "pearson_r",
+  "n_runs_found": 5,
+  "runs_found": [
+    "run1",
+    "run2",
+    "run3",
+    "run4",
+    "run5"
+  ],
+  "runs_missing_tidy": [],
+  "gt_models": [
+    "fewer_heads_more_random",
+    "longer_runs_more_random",
+    "more_heads_more_random",
+    "more_imbalance_more_random"
+  ],
+  "runs_in_complete_matrix": [
+    "run1",
+    "run2",
+    "run3",
+    "run4",
+    "run5"
+  ],
+  "icc_2_1": -0.07827057546090203,
+  "mean_pairwise_corr": 0.11440579083245994,
+  "per_gt_model": {
+    "fewer_heads_more_random": {
+      "n_runs": 5,
+      "mean": 0.9970583559619328,
+      "sd": 0.00612848421908131,
+      "cv": 0.006146565226033062,
+      "min": 0.9861024843594524,
+      "max": 0.9999999033862389,
+      "values": [
+        0.986102,
+        0.999425,
+        0.999864,
+        1.0,
+        0.9999
+      ],
+      "modal_best_model": "inner_loop_model",
+      "best_model_agreement": 0.6
+    },
+    "longer_runs_more_random": {
+      "n_runs": 5,
+      "mean": 0.9955016991536473,
+      "sd": 0.009548682785654686,
+      "cv": 0.00959182972140857,
+      "min": 0.9784225331402147,
+      "max": 0.999974654252751,
+      "values": [
+        0.99983,
+        0.978423,
+        0.999703,
+        0.999578,
+        0.999975
+      ],
+      "modal_best_model": "inner_loop_model",
+      "best_model_agreement": 0.8
+    },
+    "more_heads_more_random": {
+      "n_runs": 5,
+      "mean": 0.999795670685333,
+      "sd": 0.00014888995107714237,
+      "cv": 0.00014892037987630243,
+      "min": 0.9996591943892811,
+      "max": 0.9999944650446144,
+      "values": [
+        0.99966,
+        0.999659,
+        0.999764,
+        0.999901,
+        0.999994
+      ],
+      "modal_best_model": "inner_loop_model",
+      "best_model_agreement": 0.8
+    },
+    "more_imbalance_more_random": {
+      "n_runs": 5,
+      "mean": 0.9997098339404088,
+      "sd": 0.0004919671626495669,
+      "cv": 0.0004921099562564594,
+      "min": 0.9988339503804227,
+      "max": 0.9999782986242758,
+      "values": [
+        0.998834,
+        0.999877,
+        0.999975,
+        0.999885,
+        0.999978
+      ],
+      "modal_best_model": "inner_loop_model",
+      "best_model_agreement": 0.8
+    }
+  }
+}

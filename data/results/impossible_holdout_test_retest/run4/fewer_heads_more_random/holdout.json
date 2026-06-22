@@ -1,0 +1,577 @@
+{
+  "project_id": "subjective_randomness",
+  "seed_models_dir": "/scratch/users/benpry/auto-psych/impossible_holdout_test_retest_full/run4/fewer_heads_more_random/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models",
+  "n_experiments": 3,
+  "n_participants": 30,
+  "inner_loop": {
+    "max_iterations": 2,
+    "candidate_count": 3
+  },
+  "fit_kwargs": {
+    "draws": 2000,
+    "tune": 1000,
+    "chains": 4
+  },
+  "seed": 104,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100,
+    "exhaustive": true,
+    "predict_max_draws": 500
+  },
+  "gt_runs": [
+    {
+      "gt_model": "fewer_heads_more_random",
+      "params": {
+        "beta": 4.0,
+        "side_bias": 0.0
+      },
+      "run_root": "/scratch/users/benpry/auto-psych/impossible_holdout_test_retest_full/run4/fewer_heads_more_random/repo/_runs/fewer_heads_more_random",
+      "n_eval_stimuli": 129735,
+      "n_eval_dropped": 60,
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "window_typicality",
+          "pearson_r": 0.06239650442366194,
+          "rmse": 0.48974630069022773,
+          "pearson_r_bma": 0.06248551576594622,
+          "rmse_bma": 0.4894506812546138
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "iter0_candidate1",
+          "pearson_r": 0.9997921509833527,
+          "rmse": 0.01187287152250121,
+          "pearson_r_bma": 0.9997921509833527,
+          "rmse_bma": 0.01187287152250121
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "iter0_candidate1",
+          "pearson_r": 0.9997921509833527,
+          "rmse": 0.01187287152250121,
+          "pearson_r_bma": 0.999851883687216,
+          "rmse_bma": 0.009969386094079848
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "iteration": null,
+          "global_step": 3,
+          "best_model": "inner_loop_model",
+          "pearson_r": 0.9999142762390875,
+          "rmse": 0.007629983991088234,
+          "pearson_r_bma": 0.9999142762390875,
+          "rmse_bma": 0.007629983991088234
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 4,
+          "best_model": "inner_loop_model",
+          "pearson_r": 0.9999142762390875,
+          "rmse": 0.007629983991088234,
+          "pearson_r_bma": 0.9999697780736345,
+          "rmse_bma": 0.004763827979136345
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 5,
+          "best_model": "iter1_candidate1",
+          "pearson_r": 0.9999971971150778,
+          "rmse": 0.0012677795760793666,
+          "pearson_r_bma": 0.9999932187037951,
+          "rmse_bma": 0.002181116874240175
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "iteration": null,
+          "global_step": 6,
+          "best_model": "inner_loop_model",
+          "pearson_r": 0.9999999033862389,
+          "rmse": 0.00019426588141828853,
+          "pearson_r_bma": 0.9999997700307609,
+          "rmse_bma": 0.00031968683056312946
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 7,
+          "best_model": "inner_loop_model",
+          "pearson_r": 0.9999999033862389,
+          "rmse": 0.00019426588141828853,
+          "pearson_r_bma": 0.9999909239389526,
+          "rmse_bma": 0.0022170108149888444
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 8,
+          "best_model": "inner_loop_model",
+          "pearson_r": 0.9999999033862389,
+          "rmse": 0.00019426588141828853,
+          "pearson_r_bma": 0.9999909860945035,
+          "rmse_bma": 0.002212108229576252
+        }
+      ],
+      "baseline": {
+        "mean_r": -0.057071419997746856,
+        "per_model": {
+          "prototype_similarity": -0.08516544152101267,
+          "encoding_compressibility": -0.02293612354887756,
+          "bayesian_diagnosticity": -0.15608122581545106,
+          "window_typicality": 0.035897110894353886
+        }
+      },
+      "fitted_baseline": {
+        "per_model": {
+          "bayesian_diagnosticity": {
+            "pearson_r": -0.0996213173667685,
+            "rmse": 0.46556279649630117
+          },
+          "encoding_compressibility": {
+            "pearson_r": 0.06750261586895635,
+            "rmse": 0.450103466740465
+          },
+          "prototype_similarity": {
+            "pearson_r": -0.022909708750238067,
+            "rmse": 0.45074988894882556
+          },
+          "window_typicality": {
+            "pearson_r": 0.075069042026639,
+            "rmse": 0.4624590408590707
+          }
+        },
+        "mean_r": 0.005010157944647195,
+        "mean_rmse": 0.4572187982611656,
+        "n_responses": 3600
+      },
+      "leakage": {
+        "files": [
+          {
+            "path": "experiment1/cognitive_models/bayesian_diagnosticity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/cognitive_models/encoding_compressibility.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/cognitive_models/inner_loop_model.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/cognitive_models/prototype_similarity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/cognitive_models/window_typicality.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/bayesian_diagnosticity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/encoding_compressibility.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/iter0_candidate0.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/iter0_candidate1.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/iter0_candidate2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/iter1_candidate0.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/iter1_candidate1.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/iter1_candidate2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/prototype_similarity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/window_typicality.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/cognitive_models/alternation_count.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/cognitive_models/alternation_rate.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/cognitive_models/bayesian_diagnosticity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/cognitive_models/encoding_compressibility.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/cognitive_models/inner_loop_model.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/cognitive_models/prototype_similarity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/cognitive_models/window_typicality.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/alternation_count.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/alternation_rate.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/bayesian_diagnosticity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/encoding_compressibility.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/inner_loop_model.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/iter0_candidate0.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/iter0_candidate1.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/iter0_candidate2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/iter1_candidate0.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/iter1_candidate1.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/iter1_candidate2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/prototype_similarity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/window_typicality.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/cognitive_models/alternation_count.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/cognitive_models/alternation_rate.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/cognitive_models/bayesian_diagnosticity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/cognitive_models/encoding_compressibility.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/cognitive_models/fewer_heads_lapse.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/cognitive_models/fewer_heads_power.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/cognitive_models/inner_loop_model.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/cognitive_models/prototype_similarity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/cognitive_models/window_typicality.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/alternation_count.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/alternation_rate.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/bayesian_diagnosticity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/encoding_compressibility.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/fewer_heads_lapse.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/fewer_heads_power.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/inner_loop_model.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/iter0_candidate0.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/iter0_candidate1.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/iter0_candidate2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/iter1_candidate0.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/iter1_candidate1.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/iter1_candidate2.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/prototype_similarity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/window_typicality.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          }
+        ],
+        "any_identical": false,
+        "any_mention": false,
+        "any_gt_named": false
+      },
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "prototype_similarity",
+            "encoding_compressibility",
+            "bayesian_diagnosticity",
+            "window_typicality",
+            "inner_loop_model"
+          ]
+        },
+        {
+          "experiment": 2,
+          "manifest_models": [
+            "prototype_similarity",
+            "encoding_compressibility",
+            "bayesian_diagnosticity",
+            "window_typicality",
+            "alternation_rate",
+            "alternation_count",
+            "inner_loop_model"
+          ]
+        },
+        {
+          "experiment": 3,
+          "manifest_models": [
+            "prototype_similarity",
+            "encoding_compressibility",
+            "bayesian_diagnosticity",
+            "window_typicality",
+            "alternation_rate",
+            "alternation_count",
+            "fewer_heads_lapse",
+            "fewer_heads_power",
+            "inner_loop_model"
+          ]
+        }
+      ]
+    }
+  ]
+}
