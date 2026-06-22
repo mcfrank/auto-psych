@@ -1,0 +1,292 @@
+---
+title: "00 — Load & describe human behavioral data"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    df-print: kable
+    fig-width: 9
+    fig-height: 5
+execute:
+  warning: false
+  message: false
+---
+
+# Purpose
+
+This notebook is the entry point for analysis of the **human** behavioral data
+collected by the auto-psych outer loop on the `subjective_randomness` task. In
+this task each trial shows two coin-flip sequences (H/T strings) and the
+participant picks the one that looks "more random."
+
+The data are organized as a set of **chains** (`run1`, `run2`, `run3`) — three
+independent replications of the outer loop — each with three sequential
+**rounds** (`experiment1`, `experiment2`, `experiment3`). Every (run, round)
+cell is one freshly-recruited Prolific batch: 40 participants × 32 trials.
+
+This notebook:
+
+- merges all nine cells into one tidy trial-level table, giving every
+  participant a **globally unique id** (the raw `participant_id` only runs 0–39
+  *within* a cell, so ids collide across cells);
+- reports basic diagnostics of **what participants saw** across runs and rounds:
+  number of participants, collection-time, and stimulus lengths.
+
+Choice biases and the stimulus-pair / sub-sequence reuse analyses live in
+`01_response_analysis.qmd`, which reads the merged table this notebook saves.
+
+```{r setup}
+library(tidyverse)
+library(here)
+library(glue)
+library(fs)
+
+theme_set(theme_bw(base_size = 12))
+options(dplyr.summarise.inform = FALSE)
+
+# Root of the committed human-experiment results.
+data_root <- here("data", "results", "human_experiment")
+```
+
+# Load & merge
+
+We walk every `run*/subjective_randomness/experiment*/data/responses.csv`,
+tagging each with its `run` and `round` (= experiment number), then build a
+`participant_uid` that is unique across the whole corpus.
+
+```{r load-responses}
+response_files <- dir_ls(
+  data_root,
+  recurse = TRUE,
+  glob = "*/data/responses.csv"
+)
+
+parse_cell <- function(path) {
+  # path looks like .../runN/subjective_randomness/experimentM/data/responses.csv
+  run   <- as.integer(str_match(path, "run(\\d+)")[, 2])
+  round <- as.integer(str_match(path, "experiment(\\d+)")[, 2])
+
+  read_csv(path, col_types = cols(
+    participant_id = col_integer(),
+    trial_index    = col_integer(),
+    sequence_a     = col_character(),
+    sequence_b     = col_character(),
+    chose_left     = col_integer(),
+    chose_right    = col_integer(),
+    model          = col_character()
+  )) |>
+    mutate(run = run, round = round, .before = 1)
+}
+
+trials_raw <- map(response_files, parse_cell) |> list_rbind()
+
+# `model` is blank for human responses; confirm and drop it.
+stopifnot(all(is.na(trials_raw$model) | trials_raw$model == ""))
+
+trials <- trials_raw |>
+  select(-model) |>
+  mutate(
+    participant_uid = glue("r{run}_e{round}_p{participant_id}"),
+    # which side / which sequence was chosen
+    chosen_side = case_when(
+      chose_left  == 1 & chose_right == 0 ~ "left",
+      chose_right == 1 & chose_left  == 0 ~ "right",
+      TRUE                                ~ NA_character_
+    ),
+    chosen_seq = if_else(chosen_side == "left", sequence_a, sequence_b),
+    # sequence lengths
+    len_a = str_length(sequence_a),
+    len_b = str_length(sequence_b)
+  ) |>
+  relocate(participant_uid, .after = round)
+
+glue("Merged {nrow(trials)} trials from {length(response_files)} cells ",
+     "({n_distinct(trials$participant_uid)} unique participants).")
+```
+
+Sanity check: every (run, round) cell should have 40 participants × 32 trials =
+1280 rows, and `participant_id` should be 0–39 within each cell.
+
+```{r cell-shape}
+trials |>
+  group_by(run, round) |>
+  summarise(
+    n_participants = n_distinct(participant_id),
+    n_trials       = n(),
+    trials_per_pid = n() / n_distinct(participant_id),
+    pid_min        = min(participant_id),
+    pid_max        = max(participant_id),
+    .groups = "drop"
+  ) |>
+  knitr::kable()
+```
+
+A few rows of the merged table:
+
+```{r peek}
+trials |>
+  select(run, round, participant_uid, trial_index,
+         sequence_a, sequence_b, chosen_side, chosen_seq) |>
+  slice_head(n = 6) |>
+  knitr::kable()
+```
+
+# Diagnostics: what participants saw
+
+## Number of participants
+
+```{r n-participants}
+trials |>
+  distinct(run, round, participant_id) |>
+  count(run, round, name = "n_participants") |>
+  pivot_wider(names_from = round, values_from = n_participants,
+              names_prefix = "round ") |>
+  knitr::kable(caption = "Participants per chain (run) × round")
+```
+
+```{r n-participants-total}
+glue("Total unique participants across all chains and rounds: ",
+     "{n_distinct(trials$participant_uid)} ",
+     "(= {n_distinct(trials$run)} runs × {n_distinct(trials$round)} rounds × 40).")
+```
+
+## Collection time
+
+**Caveat.** The committed data do **not** include per-participant response
+times or task durations — `responses.csv` has no timing columns. The only
+timing signal is each cell's `data/observability.log`, which polls Prolific
+every ~30 s and records the cumulative number of completed submissions. From
+that we can recover, per cell, **how long the batch took to fill** and the
+**rate at which submissions arrived** — but not how long any individual
+participant spent on the task.
+
+```{r parse-logs}
+log_files <- dir_ls(data_root, recurse = TRUE, glob = "*/data/observability.log")
+
+parse_log <- function(path) {
+  run   <- as.integer(str_match(path, "run(\\d+)")[, 2])
+  round <- as.integer(str_match(path, "experiment(\\d+)")[, 2])
+
+  lines <- read_lines(path)
+  poll  <- str_match(lines,
+    "^\\[(\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}Z)\\].*completed=(\\d+) target=(\\d+)")
+  poll  <- poll[!is.na(poll[, 1]), , drop = FALSE]
+  if (nrow(poll) == 0) return(NULL)
+
+  tibble(
+    run       = run,
+    round     = round,
+    timestamp = ymd_hms(poll[, 2]),
+    completed = as.integer(poll[, 3]),
+    target    = as.integer(poll[, 4])
+  )
+}
+
+polls <- map(log_files, parse_log) |> list_rbind() |>
+  group_by(run, round) |>
+  mutate(elapsed_min = as.numeric(timestamp - min(timestamp), units = "mins")) |>
+  ungroup()
+```
+
+Per-cell collection duration (first poll → batch full):
+
+```{r collection-duration}
+collection_summary <- polls |>
+  group_by(run, round) |>
+  summarise(
+    target          = first(target),
+    final_completed = max(completed),
+    duration_min    = max(elapsed_min[completed == max(completed)]),
+    .groups = "drop"
+  )
+
+collection_summary |>
+  knitr::kable(
+    digits = 1,
+    col.names = c("run", "round", "target", "completed", "duration (min)"),
+    caption = "Time to fill each 40-participant batch"
+  )
+```
+
+```{r collection-curves}
+polls |>
+  mutate(cell = glue("run {run} · round {round}")) |>
+  ggplot(aes(x = elapsed_min, y = completed, color = factor(round))) +
+  geom_step() +
+  facet_wrap(~ run, labeller = label_both) +
+  scale_color_brewer(palette = "Dark2", name = "round") +
+  labs(
+    x = "Minutes since collection start",
+    y = "Cumulative completed submissions",
+    title = "Submission accrual per chain × round",
+    subtitle = "From Prolific poll logs — batch fill rate, not individual task time"
+  )
+```
+
+## Stimulus lengths
+
+Each stimulus is a string of H/T characters. Below is the distribution of
+sequence lengths (pooling `sequence_a` and `sequence_b`), shown per round since
+the design generator can change stimulus characteristics across rounds.
+
+```{r stim-lengths}
+seq_lengths <- trials |>
+  distinct(run, round, sequence_a, sequence_b) |>
+  pivot_longer(c(sequence_a, sequence_b),
+               names_to = "slot", values_to = "sequence") |>
+  distinct(run, round, sequence) |>
+  mutate(len = str_length(sequence))
+
+seq_lengths |>
+  ggplot(aes(x = len, fill = factor(round))) +
+  geom_histogram(binwidth = 1, color = "white") +
+  facet_grid(round ~ run, labeller = label_both) +
+  scale_fill_brewer(palette = "Dark2", guide = "none") +
+  scale_x_continuous(breaks = scales::breaks_width(2)) +
+  labs(x = "Sequence length (characters)", y = "Number of distinct sequences",
+       title = "Stimulus length distribution by chain × round")
+```
+
+```{r stim-lengths-table}
+seq_lengths |>
+  group_by(run, round) |>
+  summarise(
+    n_distinct_seq = n(),
+    len_min  = min(len),
+    len_median = median(len),
+    len_max  = max(len),
+    .groups = "drop"
+  ) |>
+  knitr::kable(digits = 1, caption = "Distinct sequences and length range per cell")
+```
+
+# Save
+
+We persist the merged trial-level table for downstream analysis notebooks.
+
+```{r save}
+out_dir <- here("analysis", "behavioral", "data")
+dir_create(out_dir)
+
+write_rds(trials, path(out_dir, "human_trials.rds"))
+write_csv(trials, path(out_dir, "human_trials.csv"))
+
+glue("Saved {nrow(trials)} trials ({n_distinct(trials$participant_uid)} participants) ",
+     "to analysis/behavioral/data/human_trials.{{rds,csv}}.")
+```
+
+# Notes
+
+- **Unique participant ids.** `participant_uid = r{run}_e{round}_p{participant_id}`.
+  Each (run, round) cell is an independent Prolific batch, so the raw 0–39
+  `participant_id` is only unique within a cell. Do **not** merge cells on
+  `participant_id` alone.
+- **Use `data/responses.csv`, not `model_loop/responses.csv`.** The per-round
+  `data/responses.csv` is the fresh batch for that round. The sibling
+  `model_loop/responses.csv` accumulates earlier rounds' data *under colliding
+  participant ids* (and adds model feature columns); it is for model fitting,
+  not participant-level description.
+- **No per-participant timing in the committed data.** Response times / task
+  durations are not in `responses.csv`. Collection-time diagnostics here come
+  from the Prolific poll logs and describe batch fill rate only.
