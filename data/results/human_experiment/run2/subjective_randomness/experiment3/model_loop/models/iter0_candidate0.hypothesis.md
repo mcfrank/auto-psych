@@ -1,0 +1,1 @@
+Random-looking sequences are judged by an evidence accumulation process where each item provides a baseline weight of evidence for randomness, which is then discounted by the sequence's quadratic deviation from a messy prototype defined by an ideal repeating-motif rate and an ideal alternating-motif rate.

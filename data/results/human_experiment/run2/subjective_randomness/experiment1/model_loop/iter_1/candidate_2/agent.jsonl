@@ -1,0 +1,240 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+cat: CONTEXT.md
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 1, candidate 2 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/iter_1/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a simpler or higher-variance single-mechanism hypothesis if progress has stalled.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -809.56
+
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -842.50
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -813.69
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular
+process: a mixture of a complexity-penalized motif process (Griffiths et
+al. 2018) and a biased coin. Merges the former diagnosticity and
+statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -838.52
+
+Random-looking sequences have a longest run typical of a fair coin seen
+through a limited memory window; over-long streaks look non-random (Hahn &
+Warren 2009).
+
+## iter0_candidate0  — posterior 1.000, ELPD-LOO -796.31
+
+Random-looking sequences are judged by their similarity to a prototype with balanced counts and an ideal alternation rate, but the penalty for deviating from the ideal alternation rate is asymmetric: sequences that alternate less than the ideal are penalized more harshly than those that alternate more.
+
+## iter0_candidate1  — posterior 0.000, ELPD-LOO -816.16
+
+People judge a sequence's randomness by evaluating the joint typicality of its macroscopic features — specifically, the binomial probability of its head count given a fair coin, and the binomial probability of its alternation count given an ideal alternation rate. Rather than using length-invariant proportional heuristics, this mechanism naturally scales deviation penalties with sequence length and provides a statistically grounded, asymmetric tolerance for over-alternating (highly periodic) sequences.
+
+## iter0_candidate2  — posterior 0.000, ELPD-LOO -819.85
+
+People judge randomness by multi-scale representativeness: they expect the proportion of heads to closely match the 50/50 fair-coin ideal not just globally, but across all possible contiguous sub-sequences. Rather than using separate heuristics for global imbalance and alternations, people penalize a sequence based on the mean squared deviation of the head proportion from 0.5 across all sub-windows of length 2 or greater, which naturally favors evenly spaced, periodic sequences because those exhibit the least local variance.
+
+## iter1_candidate0
+
+Random-looking sequences are judged by their Euclidean distance to a "messy" prototype: rather than expecting perfectly balanced counts, people apply a "too-perfect" heuristic and judge sequences against a prototype with a strictly positive ideal imbalance. The cognitive penalty accelerates quadratically with deviations from this ideal imbalance and an ideal alternation rate, creating a wide tolerance for near-ideal sequences while remaining asymmetric to penalize under-alternating sequences more harshly.
+[0m
+[0m$ [0mcat critiques.md
+# Critique of `iter0_candidate0`
+
+6 of 23 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **fallback_corr_periodicity_b** — Pearson correlation between the response and the `periodicity_b` feature. (observed -0.183 vs null mean -0.095, z=-3.20, p=0.00995, q=0.114)
+- **fallback_corr_p_a** — Pearson correlation between the response and the `p_a` feature. (observed -0.0604 vs null mean 0.00166, z=-2.59, p=0.00995, q=0.114)
+- **fallback_corr_alts_a** — Pearson correlation between the response and the `alts_a` feature. (observed 0.254 vs null mean 0.191, z=2.31, p=0.0398, q=0.183)
+- **fallback_corr_n_a** — Pearson correlation between the response and the `n_a` feature. (observed 0.0167 vs null mean -0.0444, z=2.16, p=0.0299, q=0.183)
+- **fallback_corr_alts_b** — Pearson correlation between the response and the `alts_b` feature. (observed -0.241 vs null mean -0.181, z=-2.09, p=0.0398, q=0.183)
+- **fallback_corr_h_b** — Pearson correlation between the response and the `h_b` feature. (observed -0.0413 vs null mean 0.00868, z=-1.88, p=0.0498, q=0.191)
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People judge a sequence's randomness by comparing its local pattern frequencies to a subjective expectation: they compute the Kullback-Leibler divergence between the sequence's empirical bigram distribution (HH, HT, TH, TT) and an idealized prototype distribution that heavily favors alternating pairs, perceiving sequences with lower divergence from this prototype as more random.
+EOF
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People judge a sequence's randomness by comparing its local pattern frequencies to a subjective expectation: they compute the Kullback-Leibler divergence between the sequence's empirical bigram distribution (HH, HT, TH, TT) and an idealized prototype distribution that heavily favors alternating pairs, perceiving sequences with lower divergence from this prototype as more random.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    def get_bigram_dist(seq: str):
+        seq = seq.strip().upper()
+        if len(seq) < 2:
+            return 0.25, 0.25, 0.25, 0.25  # Uniform fallback
+        
+        transitions = [seq[i:i+2] for i in range(len(seq)-1)]
+        from collections import Counter
+        counts = Counter(transitions)
+        n = len(transitions)
+        
+        # Laplace smoothing (add 1 to each count) to avoid log(0) in the PyMC graph
+        p_HH = (counts.get('HH', 0) + 1.0) / (n + 4.0)
+        p_HT = (counts.get('HT', 0) + 1.0) / (n + 4.0)
+        p_TH = (counts.get('TH', 0) + 1.0) / (n + 4.0)
+        p_TT = (counts.get('TT', 0) + 1.0) / (n + 4.0)
+        
+        return p_HH, p_HT, p_TH, p_TT
+
+    p_HH_a, p_HT_a, p_TH_a, p_TT_a = get_bigram_dist(sequence_a)
+    p_HH_b, p_HT_b, p_TH_b, p_TT_b = get_bigram_dist(sequence_b)
+    
+    return {
+        "p_HH_a": float(p_HH_a), "p_HT_a": float(p_HT_a), "p_TH_a": float(p_TH_a), "p_TT_a": float(p_TT_a),
+        "p_HH_b": float(p_HH_b), "p_HT_b": float(p_HT_b), "p_TH_b": float(p_TH_b), "p_TT_b": float(p_TT_b),
+    }
+
+with pm.Model() as model:
+    # Empirical bigram probabilities for sequence A
+    p_HH_a = pm.Data("p_HH_a", np.zeros(1, dtype="float64"))
+    p_HT_a = pm.Data("p_HT_a", np.zeros(1, dtype="float64"))
+    p_TH_a = pm.Data("p_TH_a", np.zeros(1, dtype="float64"))
+    p_TT_a = pm.Data("p_TT_a", np.zeros(1, dtype="float64"))
+
+    # Empirical bigram probabilities for sequence B
+    p_HH_b = pm.Data("p_HH_b", np.zeros(1, dtype="float64"))
+    p_HT_b = pm.Data("p_HT_b", np.zeros(1, dtype="float64"))
+    p_TH_b = pm.Data("p_TH_b", np.zeros(1, dtype="float64"))
+    p_TT_b = pm.Data("p_TT_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameters
+    # The subjective ideal alternation rate (prior centered loosely around 0.5-0.6)
+    theta = pm.Beta("theta", alpha=2.0, beta=2.0)
+    
+    # Sensitivity to the difference in KL divergences
+    tau = pm.HalfNormal("tau", sigma=10.0)
+
+    # Ideal distribution: P(HT) + P(TH) = theta, P(HH) + P(TT) = 1 - theta
+    # Constrain to avoid division by zero or log(0)
+    theta_safe = pt.clip(theta, 1e-4, 1.0 - 1e-4)
+    ideal_HT = theta_safe / 2.0
+    ideal_TH = theta_safe / 2.0
+    ideal_HH = (1.0 - theta_safe) / 2.0
+    ideal_TT = (1.0 - theta_safe) / 2.0
+    
+    # KL divergence D_KL(Empirical || Ideal) for sequence A
+    kl_a = (
+        p_HH_a * pt.log(p_HH_a / ideal_HH) +
+        p_HT_a * pt.log(p_HT_a / ideal_HT) +
+        p_TH_a * pt.log(p_TH_a / ideal_TH) +
+        p_TT_a * pt.log(p_TT_a / ideal_TT)
+    )
+
+    # KL divergence D_KL(Empirical || Ideal) for sequence B
+    kl_b = (
+        p_HH_b * pt.log(p_HH_b / ideal_HH) +
+        p_HT_b * pt.log(p_HT_b / ideal_HT) +
+        p_TH_b * pt.log(p_TH_b / ideal_TH) +
+        p_TT_b * pt.log(p_TT_b / ideal_TT)
+    )
+
+    # Probability of choosing sequence A.
+    # A smaller KL divergence means it is perceived as more random,
+    # so if kl_a < kl_b, p_left should be > 0.5.
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (kl_b - kl_a)))
+    
+    # Enforce strict bounds for numerical safety
+    p_left_safe = pt.clip(p_left, 1e-6, 1.0 - 1e-6)
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left_safe, observed=chose_left)
+EOF
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mexport PYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo:$PYTHONPATH
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/iter_1/candidate_2'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/model_loop/iter_1/candidate_2/hypothesis.md
+People judge a sequence's randomness by comparing its local pattern frequencies to a subjective expectation: they compute the Kullback-Leibler divergence between the sequence's empirical bigram distribution (HH, HT, TH, TT) and an idealized prototype distribution that heavily favors alternating pairs, perceiving sequences with lower divergence from this prototype as more random.
+[0m
+I have proposed a new single-mechanism hypothesis and implemented its corresponding PyMC model.
+
+### 1. `hypothesis.md`
+The hypothesis is based on comparing the local pattern frequencies using KL divergence:
+> People judge a sequence's randomness by comparing its local pattern frequencies to a subjective expectation: they compute the Kullback-Leibler divergence between the sequence's empirical bigram distribution (HH, HT, TH, TT) and an idealized prototype distribution that heavily favors alternating pairs, perceiving sequences with lower divergence from this prototype as more random.
+
+This provides a genuinely single mechanism (KL divergence to a prototype) that intrinsically penalizes both global imbalance (via the empirical entropy part of KL) and deviations from a subjective, potentially asymmetric alternating preference (via the cross-entropy part), directly addressing the `alts_a` and `periodicity_b` correlation underestimations seen in the previous round.
+
+### 2. `candidate.py`
+The model implements exactly this hypothesis:
+- A custom `compute_features` function extracts the empirical distribution of bigrams (HH, HT, TH, TT) using Laplace smoothing.
+- In the PyMC model, it defines `theta` (the expected alternation rate) with a prior.
+- It calculates the idealized prototype bigram distribution based on `theta`.
+- It computes the KL divergence between the extracted empirical frequencies and the subjective ideal for both sequence A and B.
+- Finally, it uses a sigmoid over the difference in KL divergences, where a lower divergence drives a higher probability of choosing that sequence as more random.
+- I've strictly enforced numerical stability using `pt.clip` for the bounds of `theta` and the final `p_left` likelihood.
+
+The self-check passed successfully with PyMC correctly identifying `chose_left` as the observed data container.

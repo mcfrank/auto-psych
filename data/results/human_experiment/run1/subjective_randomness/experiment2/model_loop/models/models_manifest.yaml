@@ -1,0 +1,75 @@
+models:
+- name: prototype_similarity
+  rationale: Random-looking sequences are close to a prototype with balanced H/T counts
+    and an ideal alternation rate.
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+    long runs, periodic templates, and imbalance.'
+- name: bayesian_diagnosticity
+  rationale: 'Randomness is the log-likelihood ratio of a fair coin versus a regular
+    process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018)
+    and a biased coin. Merges the former diagnosticity and statistical-inference accounts.'
+- name: window_typicality
+  rationale: Random-looking sequences have a longest run typical of a fair coin seen
+    through a limited memory window; over-long streaks look non-random (Hahn & Warren
+    2009).
+- name: inner_loop_model
+  rationale: "People evaluate the randomness of a sequence by accumulating a subjective\
+    \ sense of typicality over its length, rather than merely evaluating its average\
+    \ properties. They evaluate how well a sequence conforms to a mental prototype\u2014\
+    represented by an ideal proportion of heads and alternations\u2014and integrate\
+    \ this fit across all events."
+- name: accumulated_alternation_typicality
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its length, but this typicality is based entirely on
+    how closely the sequence's alternation rate matches a mental prototype, completely
+    ignoring the overall proportion of heads and tails.
+- name: linear_accumulated_typicality
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its length, but their penalty for deviating from the
+    ideal head proportion and alternation rate is linear (absolute difference) rather
+    than quadratic, treating extreme deviations proportionally to small ones.
+- name: iter0_candidate0
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its length, but this evidence integration exhibits diminishing
+    returns. Rather than growing linearly, the accumulated typicality scales according
+    to a power-law function of sequence length, which prevents extremely long sequences
+    from disproportionately dominating judgments and explains why the preference for
+    longer sequences saturates.
+- name: iter0_candidate1
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its events, but working memory for past events is leaky.
+    The evidence contributed by each event decays exponentially over time, meaning
+    the total accumulated randomness score saturates for longer sequences, which prevents
+    large differences in sequence length from having an oversized effect on choice.
+- name: iter0_candidate2
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its events, but their choice between two sequences is
+    governed by Weber's law. Instead of comparing the absolute difference in accumulated
+    typicality, they evaluate this difference relative to the total length of both
+    sequences. This relative comparison explains why the preference for a longer sequence
+    saturates, as a given absolute difference in sequence length has a much weaker
+    perceptual effect when the sequences being compared are already long.
+- name: iter1_candidate0
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its length, but the typicality of each event is strictly
+    positive and bounded. Instead of an unbounded penalty that can drive the per-event
+    score negative, typicality consists of a positive baseline plus an exponentially
+    decaying similarity to a mental prototype. This guarantees that even highly unnatural
+    sequences accumulate positive randomness as they grow, explaining why people still
+    prefer longer sequences when both options are heavily clustered.
+- name: iter1_candidate1
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its length, but their penalty for deviating from the
+    ideal alternation rate is asymmetric. Because human intuition strongly associates
+    randomness with frequent switching, sequences that under-alternate (cluster) are
+    heavily penalized, while those that over-alternate are penalized much less severely.
+- name: iter1_candidate2
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its length, but rather than penalizing deviations from
+    an "ideal" alternation rate, they treat alternations as inherently random and
+    thus monotonically rewarding. Because their per-event typicality includes a linear
+    reward for alternation rate rather than a quadratic penalty, sequences with more
+    total alternations naturally accumulate higher randomness scores, explaining both
+    why people prefer highly over-alternating sequences and why they still prefer
+    longer sequences even when both options are heavily clustered.

@@ -1,0 +1,431 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 1, candidate 2 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/iter_1/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a simpler or higher-variance single-mechanism hypothesis if progress has stalled.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.997, ELPD-LOO -864.21
+
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -889.63
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.002, ELPD-LOO -867.87
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular
+process: a mixture of a complexity-penalized motif process (Griffiths et
+al. 2018) and a biased coin. Merges the former diagnosticity and
+statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -887.51
+
+Random-looking sequences have a longest run typical of a fair coin seen
+through a limited memory window; over-long streaks look non-random (Hahn &
+Warren 2009).
+
+## iter0_candidate0  — posterior 0.001, ELPD-LOO -871.43
+
+People judge the randomness of a sequence based on its Gaussian similarity to an ideal subjective prototype, meaning the sequence's perceived randomness decays exponentially with its squared distance in feature space (proportion of heads and alternations) from the expected prototype. This formulation penalizes extreme deviations more severely than a linear distance metric.
+
+## iter0_candidate1  — posterior 0.000, ELPD-LOO -877.19
+
+People judge the randomness of a sequence by evaluating the statistical typicality of its macroscopic features. They compute the joint Binomial probability of observing the sequence's specific number of heads and alternations under their subjective expectations for a random process, perceiving sequences with highly improbable feature counts as less random.
+
+## iter0_candidate2  — posterior 0.000, ELPD-LOO -886.39
+
+People judge the randomness of a sequence by the diversity of its run lengths, perceiving sequences as more random when they contain an unpredictable mix of short and long streaks, which is evaluated as the Shannon entropy of the sequence's run-length distribution.
+
+## iter1_candidate0
+
+People judge the randomness of a sequence by evaluating its distance from an ideal subjective prototype, but their sensitivity to deviations follows a psychophysical power law with a compressive exponent. This sub-linear scaling means that while initial departures from the prototype are penalized, further deviations toward extremes (like perfect imbalance) result in diminishing additional penalties.
+
+## iter1_candidate1
+
+People judge the randomness of a sequence by comparing it to an ideal prototype, but they evaluate its departure from this ideal using the absolute difference in the raw counts of heads and alternations, rather than their proportions. By using unnormalized counts, people naturally exhibit length-dependent tolerance, applying much smaller penalties to perfectly imbalanced short sequences than to perfectly imbalanced long sequences.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/iter_1/critique/critiques.md
+# Critique of `prototype_similarity`
+
+1 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **extreme_imbalance_aversion** — The probability of choosing the perfectly imbalanced sequence (all H or all T) when paired against a non-extreme sequence. (observed 0.45 vs null mean 0.247, z=2.74, p=0.00995, q=0.0597)
+[0m
+[0m$ [0mhead -n 20 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,HTTTTTTH,HHHTHHH,0,1,,8,2,2,6,3,0,7,6,2,3,3,0,0.25,0.2857142857142857,0.7142857142857143,0.5,0.5,0.8571428571428571,0.3333333333333333,0.3333333333333333,0.7142857142857142,0.7142857142857142
+0,[REDACTED_PROLIFIC_ID],2,HHTTTTT,TTTTHTTT,0,1,,7,2,1,5,2,0,8,1,2,4,3,0,0.2857142857142857,0.16666666666666666,0.6666666666666666,0.4285714285714286,0.1428571428571428,0.125,0.2857142857142857,0.42857142857142855,0.75,0.75
+0,[REDACTED_PROLIFIC_ID],3,TTHTHHHH,HHTHTHHH,0,1,,8,5,3,4,2,1,8,6,4,3,2,1,0.625,0.42857142857142855,0.42857142857142855,0.25,0.25,0.75,0.5714285714285714,0.2857142857142857,0.5,0.5
+0,[REDACTED_PROLIFIC_ID],4,THTHTTT,HHTTTTHH,1,0,,7,2,4,3,1,1,8,4,2,4,3,0,0.2857142857142857,0.6666666666666666,0.3333333333333333,0.4285714285714286,0.7142857142857142,0.5,0.2857142857142857,0.42857142857142855,0.0,0.5
+0,[REDACTED_PROLIFIC_ID],5,HTHHTHH,HHTTTTTH,1,0,,7,5,4,2,3,1,8,3,2,5,3,0,0.7142857142857143,0.6666666666666666,0.16666666666666666,0.4285714285714286,1.0,0.375,0.2857142857142857,0.5714285714285714,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],6,TTHHHHTT,HTHTHH,0,1,,8,4,2,4,3,0,6,4,4,2,1,1,0.5,0.2857142857142857,0.42857142857142855,0.0,0.5,0.6666666666666666,0.8,0.2,0.33333333333333326,0.6666666666666667
+0,[REDACTED_PROLIFIC_ID],7,THTHHHHT,HTT,0,1,,8,5,4,4,2,1,3,1,1,2,2,0,0.625,0.5714285714285714,0.42857142857142855,0.25,0.25,0.3333333333333333,0.5,0.5,0.33333333333333337,0.0
+0,[REDACTED_PROLIFIC_ID],8,HTHHHHTT,HTTTHTT,0,1,,8,5,3,4,2,1,7,2,3,3,4,0,0.625,0.42857142857142855,0.42857142857142855,0.25,0.5,0.2857142857142857,0.5,0.3333333333333333,0.4285714285714286,0.4285714285714286
+0,[REDACTED_PROLIFIC_ID],9,THT,TTTHHHH,1,0,,3,1,2,1,0,1,7,4,1,4,2,0,0.3333333333333333,1.0,0.0,0.33333333333333337,0.33333333333333326,0.5714285714285714,0.16666666666666666,0.5,0.1428571428571428,0.0
+0,[REDACTED_PROLIFIC_ID],10,TTTHHT,HTTHHHHT,1,0,,6,2,2,3,3,0,8,5,3,4,4,0,0.3333333333333333,0.4,0.4,0.33333333333333337,0.33333333333333326,0.625,0.42857142857142855,0.42857142857142855,0.25,0.5
+0,[REDACTED_PROLIFIC_ID],11,HHTTTTHT,TTHTTH,0,1,,8,3,3,4,2,1,6,2,3,2,4,0,0.375,0.42857142857142855,0.42857142857142855,0.25,0.25,0.3333333333333333,0.6,0.2,0.33333333333333337,1.0
+0,[REDACTED_PROLIFIC_ID],12,HHHT,HHHHTHTT,0,1,,4,3,1,3,2,0,8,5,3,4,2,1,0.75,0.3333333333333333,0.6666666666666666,0.5,0.5,0.625,0.42857142857142855,0.42857142857142855,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],13,THTH,TTHHHHTH,1,0,,4,2,3,1,0,1,8,5,3,4,2,1,0.5,1.0,0.0,0.0,1.0,0.625,0.42857142857142855,0.42857142857142855,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,1,0,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+0,[REDACTED_PROLIFIC_ID],15,TTTHHTHH,TTHHTT,1,0,,8,4,3,3,4,0,6,2,2,2,3,0,0.5,0.42857142857142855,0.2857142857142857,0.0,0.5,0.3333333333333333,0.4,0.2,0.33333333333333337,0.33333333333333326
+0,[REDACTED_PROLIFIC_ID],16,THTHHHHT,HTHTH,1,0,,8,5,4,4,2,1,5,3,4,1,0,1,0.625,0.5714285714285714,0.42857142857142855,0.25,0.25,0.6,1.0,0.0,0.19999999999999996,1.0
+0,[REDACTED_PROLIFIC_ID],17,THTHHTTT,HHTHH,1,0,,8,3,4,3,2,1,5,4,2,2,3,0,0.375,0.5714285714285714,0.2857142857142857,0.25,0.5,0.8,0.5,0.25,0.6000000000000001,0.6000000000000001
+0,[REDACTED_PROLIFIC_ID],18,THTTHTT,HHTTTHTH,0,1,,7,2,4,2,3,1,8,4,4,3,2,1,0.2857142857142857,0.6666666666666666,0.16666666666666666,0.4285714285714286,1.0,0.5,0.5714285714285714,0.2857142857142857,0.0,0.5
+0,[REDACTED_PROLIFIC_ID],19,HHTHHTH,HTHHHTTT,0,1,,7,5,4,2,3,1,8,4,3,3,2,1,0.7142857142857143,0.6666666666666666,0.16666666666666666,0.4285714285714286,1.0,0.5,0.42857142857142855,0.2857142857142857,0.0,0.5
+[0m
+[0m$ [0mawk -F',' '$24==1.0 || $29==1.0 {print $0}' /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/responses.csv | head -n 20
+0,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,1,0,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+1,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,1,0,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+2,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,0,1,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+3,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,1,0,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+4,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,1,0,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+5,[REDACTED_PROLIFIC_ID],14,TT,HTTHTTTT,0,1,,2,0,0,2,1,0,8,2,3,4,4,0,0.0,0.0,1.0,1.0,0.0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75
+6,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,0,1,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+7,[REDACTED_PROLIFIC_ID],14,TT,HTTHTTTT,0,1,,2,0,0,2,1,0,8,2,3,4,4,0,0.0,0.0,1.0,1.0,0.0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75
+8,[REDACTED_PROLIFIC_ID],14,TT,HTTHTTTT,1,0,,2,0,0,2,1,0,8,2,3,4,4,0,0.0,0.0,1.0,1.0,0.0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75
+9,[REDACTED_PROLIFIC_ID],14,TT,HTTHTTTT,1,0,,2,0,0,2,1,0,8,2,3,4,4,0,0.0,0.0,1.0,1.0,0.0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75
+10,[REDACTED_PROLIFIC_ID],14,TT,HTTHTTTT,1,0,,2,0,0,2,1,0,8,2,3,4,4,0,0.0,0.0,1.0,1.0,0.0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75
+11,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,1,0,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+12,[REDACTED_PROLIFIC_ID],14,TT,HTTHTTTT,1,0,,2,0,0,2,1,0,8,2,3,4,4,0,0.0,0.0,1.0,1.0,0.0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75
+13,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,1,0,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+14,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,1,0,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+15,[REDACTED_PROLIFIC_ID],14,TT,HTTHTTTT,0,1,,2,0,0,2,1,0,8,2,3,4,4,0,0.0,0.0,1.0,1.0,0.0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75
+16,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,0,1,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+17,[REDACTED_PROLIFIC_ID],14,TT,HTTHTTTT,1,0,,2,0,0,2,1,0,8,2,3,4,4,0,0.0,0.0,1.0,1.0,0.0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75
+18,[REDACTED_PROLIFIC_ID],14,TT,HTTHTTTT,0,1,,2,0,0,2,1,0,8,2,3,4,4,0,0.0,0.0,1.0,1.0,0.0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75
+19,[REDACTED_PROLIFIC_ID],14,HTTHTTTT,TT,0,1,,8,2,3,4,4,0,2,0,0,2,1,0,0.25,0.42857142857142855,0.42857142857142855,0.5,0.75,0.0,0.0,1.0,1.0,0.0
+[0m
+[0m$ [0mawk -F',' '($24==1.0 && $9==8) || ($29==1.0 && $15==8) {print $0}' /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/responses.csv | head -n 20
+[0m
+[0m$ [0mawk -F',' '$24==1.0 || $29==1.0 {if ($24==1.0) print $9; if ($29==1.0) print $15}' /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/responses.csv | sort | uniq -c
+40 2
+[0m
+[0m$ [0mhead -n 1 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+[0m
+[0m$ [0mcat ../../../../../../src/models/pymc_models/prototype_similarity.py || find ../../../../../.. -name prototype_similarity.py
+cat: ../../../../../../src/models/pymc_models/prototype_similarity.py: No such file or directory
+../../../../../../data/subjective_randomness/experiment1/model_loop/models/prototype_similarity.py
+../../../../../../data/subjective_randomness/experiment1/cognitive_models/prototype_similarity.py
+[0m
+[0m$ [0mcat ../../../../../../data/subjective_randomness/experiment1/model_loop/models/prototype_similarity.py
+"""PyMC adapter for the prototype-similarity model family."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+with pm.Model() as model:
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+    score_a = -(
+        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
+    )
+    score_b = -(
+        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat ../../../../../../data/subjective_randomness/experiment1/model_loop/models/iter1_candidate1.py
+"""People judge the randomness of a sequence by comparing it to an ideal prototype, but they evaluate its departure from this ideal using the absolute difference in the raw counts of heads and alternations, rather than their proportions. By using unnormalized counts, people naturally exhibit length-dependent tolerance, applying much smaller penalties to perfectly imbalanced short sequences than to perfectly imbalanced long sequences."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Features
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.1, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+
+    # Absolute difference in counts.
+    expected_h_a = n_a / 2.0
+    imbalance_count_a = pt.abs(h_a - expected_h_a)
+
+    expected_alts_a = (n_a - 1.0) * theta_alt
+    alts_diff_count_a = pt.abs(alts_a - expected_alts_a)
+
+    expected_h_b = n_b / 2.0
+    imbalance_count_b = pt.abs(h_b - expected_h_b)
+
+    expected_alts_b = (n_b - 1.0) * theta_alt
+    alts_diff_count_b = pt.abs(alts_b - expected_alts_b)
+
+    score_a = -(balance_weight * imbalance_count_a + alt_weight * alts_diff_count_a)
+    score_b = -(balance_weight * imbalance_count_b + alt_weight * alts_diff_count_b)
+
+    p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat ../../../../../../data/subjective_randomness/experiment1/model_loop/models/iter0_candidate1.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+"""
+People judge the randomness of a sequence by evaluating the statistical typicality of its macroscopic features, computing the joint Binomial log-probability of observing its number of heads and alternations under their subjective expectations for a random process.
+"""
+
+with pm.Model() as model:
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+    
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    p_heads = pm.Beta("p_heads", alpha=10.0, beta=10.0)
+    p_alts = pm.Beta("p_alts", alpha=6.0, beta=4.0)
+    tau = pm.HalfNormal("tau", sigma=1.0)
+    
+    p_heads_safe = pt.clip(p_heads, 1e-6, 1.0 - 1e-6)
+    p_alts_safe = pt.clip(p_alts, 1e-6, 1.0 - 1e-6)
+
+    def log_binom(k, n, p):
+        k_f = pt.cast(k, "float64")
+        n_f = pt.cast(n, "float64")
+        comb = pt.gammaln(n_f + 1.0) - pt.gammaln(k_f + 1.0) - pt.gammaln(n_f - k_f + 1.0)
+        return comb + k_f * pt.log(p) + (n_f - k_f) * pt.log(1.0 - p)
+        
+    log_typ_h_a = log_binom(h_a, n_a, p_heads_safe)
+    log_typ_alts_a = log_binom(alts_a, n_a - 1, p_alts_safe)
+    log_typ_a = log_typ_h_a + log_typ_alts_a
+    
+    log_typ_h_b = log_binom(h_b, n_b, p_heads_safe)
+    log_typ_alts_b = log_binom(alts_b, n_b - 1, p_alts_safe)
+    log_typ_b = log_typ_h_b + log_typ_alts_b
+    
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (log_typ_a - log_typ_b)))
+    p_left_safe = pt.clip(p_left, 1e-6, 1.0 - 1e-6)
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left_safe, observed=chose_left)
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People judge the randomness of a sequence by comparing its features (head proportion and alternation rate) to a subjective ideal, but their psychological penalty for deviations is scaled by the square root of the sequence length, reflecting an intuitive sensitivity to the standard error of small samples. This statistical-evidence weighting means that while people still penalize non-ideal proportions, they are far more tolerant of extreme imbalance in very short sequences where the small sample size provides weak evidence of non-randomness.
+EOF
+[0m
+[0m$ [0mawk -F',' 'NR==2 {print "p_a:", $21, "imbalance_a:", $24}' /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/responses.csv
+p_a: 0.25 imbalance_a: 0.5
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""People judge the randomness of a sequence by comparing its features (head proportion and alternation rate) to a subjective ideal, but their psychological penalty for deviations is scaled by the square root of the sequence length, reflecting an intuitive sensitivity to the standard error of small samples. This statistical-evidence weighting means that while people still penalize non-ideal proportions, they are far more tolerant of extreme imbalance in very short sequences where the small sample size provides weak evidence of non-randomness."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Read the necessary precomputed columns
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.1, upper=20.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+
+    # Scale absolute deviations by the square root of the relevant sample size
+    sqrt_n_a = pt.sqrt(pt.cast(n_a, "float64"))
+    sqrt_n_b = pt.sqrt(pt.cast(n_b, "float64"))
+    
+    n_alts_a = pt.maximum(n_a - 1, 1)
+    n_alts_b = pt.maximum(n_b - 1, 1)
+    sqrt_n_alts_a = pt.sqrt(pt.cast(n_alts_a, "float64"))
+    sqrt_n_alts_b = pt.sqrt(pt.cast(n_alts_b, "float64"))
+
+    score_a = -(
+        balance_weight * sqrt_n_a * imbalance_a + 
+        alt_weight * sqrt_n_alts_a * pt.abs(p_alts_a - theta_alt)
+    )
+    
+    score_b = -(
+        balance_weight * sqrt_n_b * imbalance_b + 
+        alt_weight * sqrt_n_alts_b * pt.abs(p_alts_b - theta_alt)
+    )
+
+    p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    pm.Bernoulli("response", p=p_left_raw, observed=chose_left)
+EOF
+[0m
+[0m$ [0msed -i 's/p=p_left_raw/p=p_left/' candidate.py
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+sys.path.append('../../../../../../')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 5, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mpython3 -c "
+from pathlib import Path
+import sys
+sys.path.append('/scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo')
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mcat candidate.py
+"""People judge the randomness of a sequence by comparing its features (head proportion and alternation rate) to a subjective ideal, but their psychological penalty for deviations is scaled by the square root of the sequence length, reflecting an intuitive sensitivity to the standard error of small samples. This statistical-evidence weighting means that while people still penalize non-ideal proportions, they are far more tolerant of extreme imbalance in very short sequences where the small sample size provides weak evidence of non-randomness."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Read the necessary precomputed columns
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.1, upper=20.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+
+    # Scale absolute deviations by the square root of the relevant sample size
+    sqrt_n_a = pt.sqrt(pt.cast(n_a, "float64"))
+    sqrt_n_b = pt.sqrt(pt.cast(n_b, "float64"))
+    
+    n_alts_a = pt.maximum(n_a - 1, 1)
+    n_alts_b = pt.maximum(n_b - 1, 1)
+    sqrt_n_alts_a = pt.sqrt(pt.cast(n_alts_a, "float64"))
+    sqrt_n_alts_b = pt.sqrt(pt.cast(n_alts_b, "float64"))
+
+    score_a = -(
+        balance_weight * sqrt_n_a * imbalance_a + 
+        alt_weight * sqrt_n_alts_a * pt.abs(p_alts_a - theta_alt)
+    )
+    
+    score_b = -(
+        balance_weight * sqrt_n_b * imbalance_b + 
+        alt_weight * sqrt_n_alts_b * pt.abs(p_alts_b - theta_alt)
+    )
+
+    p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+I have written both the `hypothesis.md` and the `candidate.py` files containing the new hypothesis and the corresponding PyMC model.
+
+**Hypothesis:**
+People judge the randomness of a sequence by comparing its features (head proportion and alternation rate) to a subjective ideal, but their psychological penalty for deviations is scaled by the square root of the sequence length, reflecting an intuitive sensitivity to the standard error of small samples. This statistical-evidence weighting means that while people still penalize non-ideal proportions, they are far more tolerant of extreme imbalance in very short sequences where the small sample size provides weak evidence of non-randomness.
+
+**Code (`candidate.py`):**
+- It exposes inputs as `pm.Data` matching the required numerical columns (`n_a/n_b`, `imbalance_a/imbalance_b`, `p_alts_a/p_alts_b`, and `chose_left`).
+- It has four simple free cognitive parameters (`theta_alt`, `alt_weight`, `beta`, `side_bias`).
+- It implements the square root scaling directly on the existing `imbalance` and `p_alts` deviations to model a statistical standard-error penalisation effect.
+- The Bernoulli likelihood passes the exact `chose_left` `pm.Data` tensor safely, and numerical stability is ensured by clipping probabilities within bounds `1e-6` and `1.0 - 1e-6`. 
+
+The test verified that the target files exist, and the module loads as expected and correctly maps to the response observed variables.

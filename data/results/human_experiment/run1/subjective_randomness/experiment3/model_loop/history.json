@@ -1,0 +1,107 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "linear_accumulated_typicality",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.0,
+      "window_typicality": 0.0,
+      "accumulated_alternation_typicality": 0.0,
+      "linear_accumulated_typicality": 0.620399,
+      "inner_loop_model": 0.073597,
+      "power_law_accumulated_typicality": 0.03631,
+      "leaky_accumulated_typicality": 0.028181,
+      "asymmetric_alternation_typicality": 0.241513
+    },
+    "elpd_loo": {
+      "prototype_similarity": -2330.8547,
+      "encoding_compressibility": -2411.1808,
+      "bayesian_diagnosticity": -2335.5517,
+      "window_typicality": -2460.9177,
+      "accumulated_alternation_typicality": -2317.5158,
+      "linear_accumulated_typicality": -2290.63,
+      "inner_loop_model": -2292.7617,
+      "power_law_accumulated_typicality": -2293.1182,
+      "leaky_accumulated_typicality": -2293.2217,
+      "asymmetric_alternation_typicality": -2291.1234
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "linear_accumulated_typicality",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.0,
+      "window_typicality": 0.0,
+      "accumulated_alternation_typicality": 0.0,
+      "linear_accumulated_typicality": 0.620399,
+      "inner_loop_model": 0.073597,
+      "power_law_accumulated_typicality": 0.03631,
+      "leaky_accumulated_typicality": 0.028181,
+      "asymmetric_alternation_typicality": 0.241513,
+      "iter0_candidate0": 0.0,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -2330.8547,
+      "encoding_compressibility": -2411.1808,
+      "bayesian_diagnosticity": -2335.5517,
+      "window_typicality": -2460.9177,
+      "accumulated_alternation_typicality": -2317.5158,
+      "linear_accumulated_typicality": -2290.63,
+      "inner_loop_model": -2292.7617,
+      "power_law_accumulated_typicality": -2293.1182,
+      "leaky_accumulated_typicality": -2293.2217,
+      "asymmetric_alternation_typicality": -2291.1234,
+      "iter0_candidate0": -2321.041,
+      "iter0_candidate1": -2410.3883,
+      "iter0_candidate2": -2533.6242
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "iter1_candidate0",
+    "posteriors": {
+      "prototype_similarity": 0.0,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.0,
+      "window_typicality": 0.0,
+      "accumulated_alternation_typicality": 0.0,
+      "linear_accumulated_typicality": 0.019247,
+      "inner_loop_model": 0.002283,
+      "power_law_accumulated_typicality": 0.001126,
+      "leaky_accumulated_typicality": 0.000874,
+      "asymmetric_alternation_typicality": 0.007492,
+      "iter0_candidate0": 0.0,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.0,
+      "iter1_candidate0": 0.968849,
+      "iter1_candidate1": 0.000128,
+      "iter1_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -2330.8547,
+      "encoding_compressibility": -2411.1808,
+      "bayesian_diagnosticity": -2335.5517,
+      "window_typicality": -2460.9177,
+      "accumulated_alternation_typicality": -2317.5158,
+      "linear_accumulated_typicality": -2290.63,
+      "inner_loop_model": -2292.7617,
+      "power_law_accumulated_typicality": -2293.1182,
+      "leaky_accumulated_typicality": -2293.2217,
+      "asymmetric_alternation_typicality": -2291.1234,
+      "iter0_candidate0": -2321.041,
+      "iter0_candidate1": -2410.3883,
+      "iter0_candidate2": -2533.6242,
+      "iter1_candidate0": -2286.2612,
+      "iter1_candidate1": -2295.3912,
+      "iter1_candidate2": -2347.3613
+    }
+  }
+]

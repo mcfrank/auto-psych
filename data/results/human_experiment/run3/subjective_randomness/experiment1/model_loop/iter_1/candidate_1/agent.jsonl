@@ -1,0 +1,650 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+cat: CONTEXT.md
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 1, candidate 1 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/iter_1/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.997, ELPD-LOO -864.21
+
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -889.63
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.002, ELPD-LOO -867.87
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular
+process: a mixture of a complexity-penalized motif process (Griffiths et
+al. 2018) and a biased coin. Merges the former diagnosticity and
+statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -887.51
+
+Random-looking sequences have a longest run typical of a fair coin seen
+through a limited memory window; over-long streaks look non-random (Hahn &
+Warren 2009).
+
+## iter0_candidate0  — posterior 0.001, ELPD-LOO -871.43
+
+People judge the randomness of a sequence based on its Gaussian similarity to an ideal subjective prototype, meaning the sequence's perceived randomness decays exponentially with its squared distance in feature space (proportion of heads and alternations) from the expected prototype. This formulation penalizes extreme deviations more severely than a linear distance metric.
+
+## iter0_candidate1  — posterior 0.000, ELPD-LOO -877.19
+
+People judge the randomness of a sequence by evaluating the statistical typicality of its macroscopic features. They compute the joint Binomial probability of observing the sequence's specific number of heads and alternations under their subjective expectations for a random process, perceiving sequences with highly improbable feature counts as less random.
+
+## iter0_candidate2  — posterior 0.000, ELPD-LOO -886.39
+
+People judge the randomness of a sequence by the diversity of its run lengths, perceiving sequences as more random when they contain an unpredictable mix of short and long streaks, which is evaluated as the Shannon entropy of the sequence's run-length distribution.
+
+## iter1_candidate0
+
+People judge the randomness of a sequence by evaluating its distance from an ideal subjective prototype, but their sensitivity to deviations follows a psychophysical power law with a compressive exponent. This sub-linear scaling means that while initial departures from the prototype are penalized, further deviations toward extremes (like perfect imbalance) result in diminishing additional penalties.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/iter_1/critique/critiques.md
+# Critique of `prototype_similarity`
+
+1 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **extreme_imbalance_aversion** — The probability of choosing the perfectly imbalanced sequence (all H or all T) when paired against a non-extreme sequence. (observed 0.45 vs null mean 0.247, z=2.74, p=0.00995, q=0.0597)
+[0m
+[0m$ [0mls ../../
+history.json
+iter_0
+iter_1
+models
+responses.csv
+[0m
+[0m$ [0mls ../../../
+cognitive_models
+CONTEXT.md
+data
+deployment
+design
+experiment
+logs
+model_loop
+model_registry.yaml
+[0m
+[0m$ [0mcat ../../../CONTEXT.md
+# CONTEXT — experiment 1, agent 3_implement
+
+**Project:** subjective_randomness
+**Experiment number:** 1
+**Repo root:** /scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo
+**This experiment directory:** /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1
+
+## Key paths
+
+- Problem definition: `/scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md`
+- Cognitive models dir: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/cognitive_models`
+- Design dir: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/design`
+- Experiment dir: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/experiment`
+- Data dir: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/data`
+- Responses: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/data/responses.csv`
+- Model registry: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_registry.yaml`
+- Inner model loop dir: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop`
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+# Subjective randomness: problem definition
+
+The domain of inquiry is the subjective perception of randomness by humans judges. We seek an explantory theory of which sequences humans find more or less random. To explore this we use an forced-choice experimental paradigm, in which participants are asked to choose the more random sequence from a pair.
+
+## Task
+
+On each trial, the participant sees **two sequences of coin flips** (H and T) and chooses which sequence looks **more random**. This is a classic paradigm for studying representativeness and alternation biases (e.g. Griffiths, "The Rational Basis of Representativeness").
+
+## Stimulus design schema
+
+- **Stimulus**: A pair of two sequences of H and T. Each sequence is a string (e.g. `"HHT"`, `"HTHTHT"`, `"HHTHTTHT"`). The two sequences in a pair **may have different lengths** (e.g. length 4 vs length 6).
+- **Response**: Which sequence was chosen (e.g. "left" / "right").
+
+## Experiment design constraints
+
+- **Total trials per experiment: 32.** At ~5 s per self-paced trial this is roughly
+  **3 minutes of judgments** (≈4 minutes including consent, instructions, and
+  debrief). The ~5 s/trial rate is grounded in the closest prior paradigm: Reimers,
+  Donkin & Le Pelley (2018) ran a 2AFC short-H/T-string button task of **120 trials
+  in ~10 minutes** (≈5 s/trial including instruction reading).
+- **Sequence length: 2 to 8** (inclusive).
+
+The default design (`--design-mode exhaustive`) enumerates **every** distinct H/T
+pair over lengths 2–8 (≈129k pairs) and greedily selects the 32 pairs that
+jointly carry the most information about which model is correct — a diverse set
+spread across distinctions, not 32 near-duplicates of the single highest-EIG
+contrast.
+
+## Experiment presentation (reproduce VERBATIM — identical across all experiments)
+
+The implemented jsPsych experiment must be identical in every experiment and every
+run; **only the stimuli change.** Use the wording below exactly (do not
+paraphrase), **button responses only**, and the data contract above (`chose_left`,
+`sequence_a`, `sequence_b`).
+
+> **Rendering note (the wording below is Markdown — convert it to HTML).** The
+> `**bold**` spans must render as `<strong>` in the experiment; participants must
+> never see literal asterisks. Put each paragraph in its own `<p>`, and wrap the
+> instructions and debrief in the skeleton's `<div class="auto-psych-prose">`
+> (constrained-width, left-aligned) so the text does not span the full screen.
+
+- **Instructions** (first screen, button labelled `Begin`) — use this wording exactly:
+  > In this study, you will look at sequences of coin flips and judge how
+  > **random** they look.
+  >
+  > Imagine flipping a fair coin over and over. Each flip is equally likely to come
+  > up Heads (H) or Tails (T), and every flip is independent — the coin has no
+  > memory, so what came before does not change what comes next.
+  >
+  > On each trial you will see **two** sequences of coin flips, side by side. The
+  > two sequences may be **different lengths**. Your task is to pick the **one
+  > sequence that looks more random** to you — the one that looks more like it was
+  > produced by genuinely random coin flipping.
+  >
+  > Different people have different impressions of what makes a sequence look
+  > random, and there are no right or wrong answers. We are interested in your own
+  > honest impression, so go with your gut. You will complete **32 trials**, which
+  > takes about 4 minutes. Your responses are anonymous.
+
+  > **Wording rationale (not shown to participants).** This instruction is grounded
+  > in the subjective-randomness literature, which warns that naming the structural
+  > cues under study (run length / "streakiness", alternation / "switching", H–T
+  > balance) coaches participants and confounds the measurement (Nickerson, 2002,
+  > *Psychol. Rev.*; Reimers, Donkin & Le Pelley, 2018, *Cognition*). The accepted
+  > practice is to define the generating process — a *fair coin*, 50/50,
+  > independent flips — but leave the meaning of "random-looking" for the
+  > participant to supply from their own intuition (Williams & Griffiths, 2013,
+  > *JEP:General*, Exp. 3 nested condition; Griffiths, Daniels, Austerweil &
+  > Tenenbaum, 2018, *Cognitive Psychology*). The question phrasing "which … looks
+  > more random" follows the canonical 2AFC framing (Griffiths & Tenenbaum, 2003;
+  > Bar-Hillel & Wagenaar, 1991, "which … is most like a coin?"). The earlier draft
+  > of this instruction named "too streaky / too regular in switching" examples —
+  > exactly the run-length and alternation cues being measured — and was removed for
+  > this reason.
+
+- **Per-trial choice prompt** (shown above the two sequences):
+  > Which sequence looks more random?
+
+- **Display**: the two sequences side by side, **left = `sequence_a`, right =
+  `sequence_b`**, in a monospace font.
+
+- **Choice buttons**: exactly two — `Left` (records `chose_left = 1`) and `Right`
+  (records `chose_left = 0`).
+
+- **Trials run back-to-back: do NOT show a fixation cross, blank screen, or any
+  inter-trial screen between trials.** The next pair appears immediately after a
+  response (a small `post_trial_gap` of a few hundred ms is fine; no fixation).
+
+- **Debrief** (final screen, button labelled `Finish`):
+  > Thank you for participating! Your responses help us understand how people
+  > perceive randomness in sequences of coin flips. When you click **Finish**,
+  > your responses will be submitted and you will be **redirected back to Prolific**
+  > to complete the study and receive your completion code.
+
+Do **not** add a consent screen — the deployment injects the IRB consent gate as
+the first page automatically.
+
+## Models
+
+Each model is a **PyMC model** in `cognitive_models/<name>.py`. At module load
+the file builds, at top level, `with pm.Model() as model: ...` containing:
+
+- One `pm.Data` container per stimulus feature the theory uses (see the
+  feature-column list below). Each container must have a **1-element placeholder**
+  of the correct dtype (e.g. `np.zeros(1, dtype="int64")`); the pipeline calls
+  `pm.set_data(...)` to swap in real data before sampling.
+- Priors over the theory's free cognitive parameters (e.g. softmax temperature,
+  Beta prior on bias). MCMC infers these — they are **not** hyperparameters.
+- A `pm.Bernoulli("response", p=p_left, observed=chose_left)` likelihood, where
+  the `observed=` argument is the **exact** `chose_left = pm.Data("chose_left", ...)`
+  tensor (not a derived copy).
+- A `pm.Deterministic("p_left", ...)` exposing per-trial P(chose_left=1).
+
+The pipeline fits each model on the preprocessed responses, scores it by
+`arviz.loo` (ELPD-LOO), and uses posterior-predictive samples for correlations
+and posterior predictive checks. No callable-style `def model_name(stimulus,
+response_options)` functions — that is the old contract and is no longer used.
+
+## Preprocessed data schema
+
+`model_loop/responses.csv` is produced by the project's `preprocess.py` helper.
+It carries the raw columns (`participant_id`, `trial_index`, `sequence_a`,
+`sequence_b`, `chose_left`) **plus** the following numeric feature columns, one
+per sequence (`_a` and `_b`). Use these names verbatim in your `pm.Data(...)`
+containers.
+
+| Column           | Type  | Meaning                                          |
+| ---------------- | ----- | ------------------------------------------------ |
+| `n_a`, `n_b`     | int   | Length of the sequence                           |
+| `h_a`, `h_b`     | int   | Number of H's                                    |
+| `p_a`, `p_b`     | float | Head proportion (`h / n`)                        |
+| `alts_a`, `alts_b`     | int   | Alternation count (transitions H↔T)        |
+| `p_alts_a`, `p_alts_b` | float | Alternation proportion (`alts / (n-1)`)    |
+| `max_run_a`, `max_run_b` | int | Longest constant-character run                |
+| `max_run_norm_a`, `max_run_norm_b` | float | Longest run scaled to `[0, 1]`      |
+| `imbalance_a`, `imbalance_b` | float | Distance from balanced H/T counts          |
+| `periodicity_a`, `periodicity_b` | float | Match to a short repeating template       |
+| `rep_motifs_a`, `rep_motifs_b` | int | Repetition motifs (n1: maximal constant runs) in the Falk & Konold parse |
+| `alt_motifs_a`, `alt_motifs_b` | int | Alternation motifs (n2: maximal alternating sub-sequences) in the parse |
+
+And the observed response: `chose_left` ∈ {0, 1} — 1 means the participant
+chose sequence A. Use `chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))`
+in every model and pass it to `pm.Bernoulli(..., observed=chose_left)`.
+
+You may pick any subset of these feature columns per theory. You do not need
+to use them all — only the ones the theory commits to.
+
+## Running the active outer loop
+
+```bash
+# 1. Preprocess a raw responses CSV (adds the feature columns above)
+uv run python scripts/subjective_randomness/preprocess.py \
+    --input-csv data/subjective_randomness/experiment1/responses.csv \
+    --output-csv data/subjective_randomness/responses.csv
+
+# 2. Run the outer loop (theory → design → collect → model loop)
+uv run python -m src.pipelines.outer_loop.run \
+    --project subjective_randomness \
+    --experiment 1 \
+    --ground-truth-model length_sensitive_alternation
+```
+[0m
+[0m$ [0mcat ../../../cognitive_models/prototype_similarity.py
+"""PyMC adapter for the prototype-similarity model family."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+with pm.Model() as model:
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+    score_a = -(
+        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
+    )
+    score_b = -(
+        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo/scripts/subjective_randomness/preprocess.py | grep imbalance
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo/scripts/subjective_randomness/preprocess.py
+"""CLI: featurize a raw subjective_randomness responses.csv.
+
+Usage:
+    uv run python scripts/subjective_randomness/preprocess.py \\
+        --input-csv  data/subjective_randomness/experiment1/responses.csv \\
+        [--output-csv data/subjective_randomness/responses.csv]
+"""
+
+from __future__ import annotations
+
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+import tyro
+from pyprojroot import here
+
+sys.path.insert(0, str(here()))
+
+from src.subjective_randomness.features import featurize_responses_csv, featurize_stimulus  # noqa: E402
+
+DEFAULT_OUTPUT = here() / "data" / "subjective_randomness" / "responses.csv"
+
+
+@dataclass
+class Args:
+    """Featurize a raw responses.csv into numeric model-input columns."""
+
+    input_csv: Path
+    """Raw responses.csv with sequence_a / sequence_b / chose_left columns."""
+    output_csv: Path = DEFAULT_OUTPUT
+    """Where to write the featurized CSV."""
+
+
+def main(args: Args) -> None:
+    n_written = featurize_responses_csv(args.input_csv, args.output_csv)
+    print(f"Wrote {n_written} featurized rows to {args.output_csv}")
+
+
+if __name__ == "__main__":
+    main(tyro.cli(Args))
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo/src/subjective_randomness/features.py
+"""Numeric features derived from subjective-randomness H/T sequence pairs.
+
+Takes an "old"-style responses.csv with raw H/T sequence strings:
+    participant_id, trial_index, sequence_a, sequence_b, chose_left, chose_right, model
+
+and produces numeric feature columns derived from each sequence. The numeric
+columns are what theorist PyMC models pull into ``pm.Data`` containers (one
+container per numeric column name).
+
+Feature columns per sequence (``a`` and ``b``):
+    n_<x>             total length
+    h_<x>             head count
+    p_<x>             head proportion (heads / length)
+    alts_<x>          alternation count (transitions between H and T)
+    p_alts_<x>        alternation proportion (alts / (length - 1))
+    max_run_<x>       length of the longest constant run
+    max_run_norm_<x>  max_run scaled to [0, 1]
+    rep_motifs_<x>    repetition motifs in the motif parse (n1)
+    alt_motifs_<x>    alternation motifs in the motif parse (n2)
+    imbalance_<x>     distance from 50/50 heads/tails
+    periodicity_<x>   simple repeating-template score
+"""
+
+from __future__ import annotations
+
+import csv
+from pathlib import Path
+from typing import Dict, List
+
+PASSTHROUGH_COLS = [
+    "participant_id",
+    "trial_index",
+    "sequence_a",
+    "sequence_b",
+    "chose_left",
+]
+INT_FEATURE_COLS = [
+    "n_a",
+    "h_a",
+    "alts_a",
+    "max_run_a",
+    "rep_motifs_a",
+    "alt_motifs_a",
+    "n_b",
+    "h_b",
+    "alts_b",
+    "max_run_b",
+    "rep_motifs_b",
+    "alt_motifs_b",
+]
+FLOAT_FEATURE_COLS = [
+    "p_a",
+    "p_alts_a",
+    "max_run_norm_a",
+    "imbalance_a",
+    "periodicity_a",
+    "p_b",
+    "p_alts_b",
+    "max_run_norm_b",
+    "imbalance_b",
+    "periodicity_b",
+]
+REQUIRED_INPUT_COLS = {"sequence_a", "sequence_b", "chose_left"}
+
+
+def parse_motifs(seq: str) -> tuple[int, int]:
+    """Parse an H/T sequence into Falk & Konold (1997) motifs.
+
+    Returns ``(rep_motifs, alt_motifs)`` — the n1 (repetition motifs: maximal
+    constant runs) and n2 (alternation motifs: maximal alternating sub-sequences
+    of length >= 2) of the canonical minimal-description parse, as used by the
+    statistical-inference model of Griffiths, Daniels, Austerweil & Tenenbaum
+    (2018). The parse run-length-encodes the sequence and groups any maximal
+    stretch of >= 2 consecutive length-1 runs (which alternate H/T) into one
+    alternation motif; every other run is a repetition motif. This is Falk &
+    Konold's Difficulty Predictor parse, for which DP = n1 + 2*n2. For example
+    HHTTHTHT -> {HH, TT} repetition + {HTHT} alternation -> (2, 1), DP = 4.
+    """
+    s = seq.strip().upper()
+    n = len(s)
+    if n == 0:
+        return 0, 0
+
+    run_lengths = []
+    cur = 1
+    for i in range(1, n):
+        if s[i] == s[i - 1]:
+            cur += 1
+        else:
+            run_lengths.append(cur)
+            cur = 1
+    run_lengths.append(cur)
+
+    rep_motifs = 0
+    alt_motifs = 0
+    i = 0
+    n_runs = len(run_lengths)
+    while i < n_runs:
+        if run_lengths[i] == 1:
+            j = i
+            while j < n_runs and run_lengths[j] == 1:
+                j += 1
+            if j - i >= 2:
+                alt_motifs += 1
+            else:
+                rep_motifs += 1
+            i = j
+        else:
+            rep_motifs += 1
+            i += 1
+    return rep_motifs, alt_motifs
+
+
+def sequence_features(seq: str, suffix: str) -> Dict[str, int]:
+    """Integer features derived from a single H/T sequence string."""
+    s = seq.strip().upper()
+    n = len(s)
+    h = sum(1 for c in s if c == "H")
+    alts = sum(1 for i in range(1, n) if s[i] != s[i - 1])
+    # Longest run of consecutive identical characters
+    max_run = 0
+    cur = 0
+    prev = ""
+    for c in s:
+        if c == prev:
+            cur += 1
+        else:
+            cur = 1
+            prev = c
+        if cur > max_run:
+            max_run = cur
+    rep_motifs, alt_motifs = parse_motifs(s)
+    return {
+        f"n_{suffix}": n,
+        f"h_{suffix}": h,
+        f"alts_{suffix}": alts,
+        f"max_run_{suffix}": max_run,
+        f"rep_motifs_{suffix}": rep_motifs,
+        f"alt_motifs_{suffix}": alt_motifs,
+    }
+
+
+def sequence_features_float(
+    seq: str, suffix: str, n: int, alts: int, h: int, max_run: int
+) -> Dict[str, float]:
+    """Float features (proportions) derived alongside the integer features."""
+    return {
+        f"p_{suffix}": (h / n) if n > 0 else 0.0,
+        f"p_alts_{suffix}": (alts / (n - 1)) if n > 1 else 0.0,
+        f"max_run_norm_{suffix}": ((max_run - 1) / (n - 1)) if n > 1 else 0.0,
+        f"imbalance_{suffix}": 2.0 * abs((h / n) - 0.5) if n > 0 else 0.0,
+        f"periodicity_{suffix}": periodicity_score(seq),
+    }
+
+
+def periodicity_score(seq: str) -> float:
+    """Degree to which a sequence matches a short repeating template."""
+    s = seq.strip().upper()
+    n = len(s)
+    if n <= 2:
+        return 0.0
+    best_match = 0.5
+    for period in range(1, (n // 2) + 1):
+        template = s[:period]
+        matches = sum(1 for i, c in enumerate(s) if c == template[i % period])
+        best_match = max(best_match, matches / n)
+    return max(0.0, min(1.0, 2.0 * (best_match - 0.5)))
+
+
+def featurize_stimulus(sequence_a: str, sequence_b: str) -> Dict[str, float]:
+    """Return the full feature-column dict for a single candidate stimulus pair.
+
+    Keys match the ``pm.Data`` container names theorist PyMC models use:
+    n_a, h_a, p_a, alts_a, p_alts_a, max_run_a, max_run_norm_a,
+    imbalance_a, periodicity_a and the _b counterparts.
+    """
+    feats_a = sequence_features(sequence_a, "a")
+    feats_b = sequence_features(sequence_b, "b")
+    floats_a = sequence_features_float(
+        sequence_a,
+        "a",
+        feats_a["n_a"],
+        feats_a["alts_a"],
+        feats_a["h_a"],
+        feats_a["max_run_a"],
+    )
+    floats_b = sequence_features_float(
+        sequence_b,
+        "b",
+        feats_b["n_b"],
+        feats_b["alts_b"],
+        feats_b["h_b"],
+        feats_b["max_run_b"],
+    )
+    return {**feats_a, **feats_b, **floats_a, **floats_b}
+
+
+def featurize_responses_csv(input_path: Path, output_path: Path) -> int:
+    """Read a raw responses.csv, add numeric feature columns, and write it out.
+
+    Returns the number of rows written. Fails loudly if the input is missing,
+    empty, or lacks the required sequence/response columns.
+    """
+    if not input_path.exists():
+        raise FileNotFoundError(f"input file not found: {input_path}")
+
+    with input_path.open(encoding="utf-8", newline="") as f:
+        rows = list(csv.DictReader(f))
+
+    if not rows:
+        raise ValueError(f"input CSV is empty: {input_path}")
+
+    missing = REQUIRED_INPUT_COLS - set(rows[0].keys())
+    if missing:
+        raise ValueError(f"input CSV missing columns {sorted(missing)}: {input_path}")
+
+    out_cols = PASSTHROUGH_COLS + INT_FEATURE_COLS + FLOAT_FEATURE_COLS
+    out_rows: List[Dict[str, object]] = []
+    for r in rows:
+        out_rows.append(
+            {
+                **{k: r.get(k, "") for k in PASSTHROUGH_COLS},
+                **featurize_stimulus(r["sequence_a"], r["sequence_b"]),
+            }
+        )
+
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    with output_path.open("w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=out_cols, lineterminator="\n")
+        writer.writeheader()
+        writer.writerows(out_rows)
+
+    return len(out_rows)
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment1/model_loop/iter_1/candidate_1/hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment1/model_loop/iter_1/candidate_1/candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mPYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mcat hypothesis.md
+People judge the randomness of a sequence by comparing it to an ideal prototype, but they evaluate its departure from this ideal using the absolute difference in the raw counts of heads and alternations, rather than their proportions. By using unnormalized counts, people naturally exhibit length-dependent tolerance, applying much smaller penalties to perfectly imbalanced short sequences than to perfectly imbalanced long sequences.
+[0m
+I have successfully formulated a hypothesis addressing the `extreme_imbalance_aversion` critique and implemented it in PyMC.
+
+**Hypothesis:**
+People judge the randomness of a sequence by comparing it to an ideal prototype, but they evaluate its departure from this ideal using the absolute difference in the raw counts of heads and alternations, rather than their proportions. By using unnormalized counts, people naturally exhibit length-dependent tolerance, applying much smaller penalties to perfectly imbalanced short sequences than to perfectly imbalanced long sequences.
+
+**Implementation details:**
+- Created `hypothesis.md` with the description above.
+- Created `candidate.py` which exposes the required `model` attribute.
+- Utilized precomputed integer features (`n`, `h`, `alts`) to define count-based penalties instead of using normalized ratios (`imbalance_a` and `p_alts_a`), seamlessly accounting for sequence-length variance scaling as outlined by the critique.
+- Used safe PyTensor clip bounds and `pm.math.sigmoid` to ensure numerical safety.
+- Successfully verified the files against the checking script.

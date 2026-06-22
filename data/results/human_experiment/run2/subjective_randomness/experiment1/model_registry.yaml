@@ -1,0 +1,11 @@
+reserved_for_new: 0.0
+theories:
+  bayesian_diagnosticity: 0.0
+  encoding_compressibility: 0.0
+  iter0_candidate0: 0.000795
+  iter0_candidate1: 0.0
+  iter0_candidate2: 0.0
+  iter1_candidate0: 0.999205
+  iter1_candidate2: 0.0
+  prototype_similarity: 0.0
+  window_typicality: 0.0

@@ -1,0 +1,119 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mls -l
+total 3
+-rw-------+ 1 benpry ngoodman   44 Jun 21 16:05 agent.jsonl
+-rw-------+ 1 benpry ngoodman  427 Jun 21 16:05 CANDIDATE_BRIEF.md
+-rw-------+ 1 benpry ngoodman 2293 Jun 21 16:05 CONTEXT.md
+-rw-------+ 1 benpry ngoodman  867 Jun 21 16:05 critiques.md
+-rw-------+ 1 benpry ngoodman 4449 Jun 21 16:05 existing_hypotheses.md
+[0m
+[0m→ [0mRead ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_1/CONTEXT.md
+[0m→ [0mRead ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+[0m→ [0mRead ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_1/existing_hypotheses.md
+[0m→ [0mRead ../../../run1/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_1/critiques.md
+[0m✱ [0mGlob "**/inner_loop_model.py"[90m in ../../../run1/data/subjective_randomness/experiment2/model_loop · 1 match[0m
+[0m→ [0mRead ../../../run1/data/subjective_randomness/experiment2/model_loop/models/inner_loop_model.py
+[0m✱ [0mGlob "**/iter0_*.py"[90m in ../../../run1/data/subjective_randomness/experiment2/model_loop · 3 matches[0m
+[0m✱ [0mGlob "**/iter1_*.py"[90m in ../../../run1/data/subjective_randomness/experiment2/model_loop · 1 match[0m
+[0m→ [0mRead ../../../run1/data/subjective_randomness/experiment2/model_loop/models/iter1_candidate0.py
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal alternation rate is asymmetric. Because human intuition strongly associates randomness with frequent switching, sequences that under-alternate (cluster) are heavily penalized, while those that over-alternate are penalized much less severely.
+EOF
+cat << 'EOF' > candidate.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal alternation rate is asymmetric. Because human intuition strongly associates randomness with frequent switching, sequences that under-alternate (cluster) are heavily penalized, while those that over-alternate are penalized much less severely.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt_under = pm.HalfNormal("w_alt_under", sigma=5.0)
+    w_alt_over = pm.HalfNormal("w_alt_over", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate asymmetric alternation penalty
+    alt_penalty_a = pt.switch(
+        alt_rate_a < ideal_alt,
+        w_alt_under * pt.square(alt_rate_a - ideal_alt),
+        w_alt_over * pt.square(alt_rate_a - ideal_alt)
+    )
+    alt_penalty_b = pt.switch(
+        alt_rate_b < ideal_alt,
+        w_alt_under * pt.square(alt_rate_b - ideal_alt),
+        w_alt_over * pt.square(alt_rate_b - ideal_alt)
+    )
+
+    # Calculate per-event typicality as a base rate minus the deviation penalty
+    typ_a = base_typ - (w_p * pt.square(p_a - ideal_p) + alt_penalty_a)
+    typ_b = base_typ - (w_p * pt.square(p_b - ideal_p) + alt_penalty_b)
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = n_a * typ_a
+    rand_b = n_b * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mPYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_1'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mcat hypothesis.md
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal alternation rate is asymmetric. Because human intuition strongly associates randomness with frequent switching, sequences that under-alternate (cluster) are heavily penalized, while those that over-alternate are penalized much less severely.
+[0m
+I have proposed a hypothesis that addresses the `pref_over_alt` critique and implemented it as a PyMC model in `candidate.py` and `hypothesis.md`. 
+
+The new model refines the `inner_loop_model` by splitting the alternation penalty into two weights (under-alternating vs over-alternating). This allows the model to heavily penalize clustered sequences (under-alternating) while tolerating or rewarding highly alternating sequences, satisfying the significant empirical discrepancy where people still prefer over-alternating sequences more often than the symmetric model expects.
+
+Both files exist in your working directory and passed the self-check tests.

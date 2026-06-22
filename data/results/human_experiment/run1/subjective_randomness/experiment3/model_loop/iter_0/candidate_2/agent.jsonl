@@ -1,0 +1,275 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 0, candidate 2 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a simpler or higher-variance single-mechanism hypothesis if progress has stalled.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -2330.85
+
+Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -2411.18
+
+Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -2335.55
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -2460.92
+
+Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).
+
+## accumulated_alternation_typicality  — posterior 0.000, ELPD-LOO -2317.52
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this typicality is based entirely on how closely the sequence's alternation rate matches a mental prototype, completely ignoring the overall proportion of heads and tails.
+
+## linear_accumulated_typicality  — posterior 0.620, ELPD-LOO -2290.63
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal head proportion and alternation rate is linear (absolute difference) rather than quadratic, treating extreme deviations proportionally to small ones.
+
+## inner_loop_model  — posterior 0.074, ELPD-LOO -2292.76
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, evaluating how well a sequence conforms to a mental prototype for heads and alternations.
+
+## power_law_accumulated_typicality  — posterior 0.036, ELPD-LOO -2293.12
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this evidence integration exhibits diminishing returns scaling according to a power-law function of sequence length, which prevents extremely long sequences from disproportionately dominating judgments.
+
+## leaky_accumulated_typicality  — posterior 0.028, ELPD-LOO -2293.22
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its events, but working memory for past events is leaky with exponential decay, meaning the total accumulated randomness score saturates for longer sequences.
+
+## asymmetric_alternation_typicality  — posterior 0.242, ELPD-LOO -2291.12
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal alternation rate is asymmetric: sequences that under-alternate (cluster) are heavily penalized, while those that over-alternate are penalized much less severely.
+
+## iter0_candidate0
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but we refine how alternation typicality is evaluated. Rather than penalizing the sequence's global average alternation rate, people evaluate typicality at the level of individual runs (streaks): they accumulate a penalty for each run that grows quadratically with how much its length deviates from an ideal run length. This non-linear run-level penalty explains why sequences with atypically long streaks are judged as significantly less random even when their overall alternation rates match.
+
+## iter0_candidate1
+
+People evaluate the randomness of a sequence based solely on the proportion of the sequence occupied by its longest contiguous streak of identical outcomes, penalizing sequences where a single streak dominates the sequence length.
+[0m
+[0m$ [0mcat ../critique/critiques.md || echo "No critiques.md found"
+# Critique of `linear_accumulated_typicality`
+
+1 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **max_run_penalty** — Proportion of times sequence A is chosen when it has a longer max run than B, but similar alternation rates (abs(p_alts_a - p_alts_b) <= 0.1). (observed 0.378 vs null mean 0.524, z=-2.43, p=0.00995, q=0.0796)
+[0m
+[0m$ [0mpython3 -c "import re; print(re.findall(r'(H+|T+)', 'HHHTTH'))"
+['HHH', 'TT', 'H']
+[0m
+[0m$ [0mcat << 'EOF' > test_script.py
+import re
+import numpy as np
+
+seqs = ["HTHTHTHT", "HHTTHHTT", "HHHHHHHH", "HTHHTTHT"]
+for seq in seqs:
+    runs = [len(r) for r in re.findall(r'(H+|T+)', seq)]
+    print(f"{seq}: runs={runs}, std={np.std(runs):.2f}, max={np.max(runs)}")
+EOF
+python3 test_script.py
+HTHTHTHT: runs=[1, 1, 1, 1, 1, 1, 1, 1], std=0.00, max=1
+HHTTHHTT: runs=[2, 2, 2, 2], std=0.00, max=2
+HHHHHHHH: runs=[8], std=0.00, max=8
+HTHHTTHT: runs=[1, 1, 2, 2, 1, 1], std=0.47, max=2
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+People evaluate the randomness of a sequence solely by assessing whether its longest streak of identical outcomes is typical for a random sequence of that length. They linearly penalize sequences based on the absolute deviation of their observed maximum run length from the mathematically expected maximum run length of a fair coin (approximately log2 of the sequence length).
+EOF
+cat hypothesis.md
+People evaluate the randomness of a sequence solely by assessing whether its longest streak of identical outcomes is typical for a random sequence of that length. They linearly penalize sequences based on the absolute deviation of their observed maximum run length from the mathematically expected maximum run length of a fair coin (approximately log2 of the sequence length).
+[0m
+[0m$ [0mcat << 'EOF' > test_script.py
+import numpy as np
+
+def expected_max_run(n):
+    # just simulate
+    runs = []
+    for _ in range(10000):
+        seq = np.random.randint(0, 2, n)
+        # find max run
+        max_r = 1
+        current_r = 1
+        for i in range(1, n):
+            if seq[i] == seq[i-1]:
+                current_r += 1
+                if current_r > max_r: max_r = current_r
+            else:
+                current_r = 1
+        runs.append(max_r)
+    return np.mean(runs)
+
+for n in [2, 3, 4, 5, 10, 20, 50, 100]:
+    sim = expected_max_run(n)
+    form = np.log(n) / np.log(2.0)
+    print(f"n={n}: sim={sim:.2f}, form={form:.2f}")
+EOF
+python3 test_script.py
+n=2: sim=1.50, form=1.00
+n=3: sim=2.00, form=1.58
+n=4: sim=2.38, form=2.00
+n=5: sim=2.69, form=2.32
+n=10: sim=3.67, form=3.32
+n=20: sim=4.64, form=4.32
+n=50: sim=5.99, form=5.64
+n=100: sim=6.99, form=6.64
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""
+People evaluate the randomness of a sequence solely by assessing whether its longest streak of identical outcomes is typical for a random sequence of that length. They linearly penalize sequences based on the absolute deviation of their observed maximum run length from the expected maximum run length of a fair coin (approximately log2 of the sequence length).
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs — names match responses CSV columns.
+    n_a = pm.Data("n_a", np.zeros(1, dtype="float64"))
+    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="float64"))
+    
+    n_b = pm.Data("n_b", np.zeros(1, dtype="float64"))
+    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameter with a prior
+    tau = pm.HalfNormal("tau", sigma=1.0)
+    
+    # Clip n to avoid negative or zero values in logarithm
+    safe_n_a = pt.clip(n_a, 2.0, np.inf)
+    safe_n_b = pt.clip(n_b, 2.0, np.inf)
+    
+    # Expected maximum run length approximation (log2(n))
+    expected_max_run_a = pt.log(safe_n_a) / np.log(2.0)
+    expected_max_run_b = pt.log(safe_n_b) / np.log(2.0)
+    
+    # Linearly penalize absolute deviation from expected max run
+    score_a = -tau * pt.abs(max_run_a - expected_max_run_a)
+    score_b = -tau * pt.abs(max_run_b - expected_max_run_b)
+    
+    # Probability of choosing sequence A (left) over sequence B (right)
+    # Clip to avoid nan in Bernoulli likelihood
+    p_left = pm.Deterministic("p_left", pt.clip(pm.math.sigmoid(score_a - score_b), 1e-6, 1 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+cat candidate.py
+"""
+People evaluate the randomness of a sequence solely by assessing whether its longest streak of identical outcomes is typical for a random sequence of that length. They linearly penalize sequences based on the absolute deviation of their observed maximum run length from the expected maximum run length of a fair coin (approximately log2 of the sequence length).
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs — names match responses CSV columns.
+    n_a = pm.Data("n_a", np.zeros(1, dtype="float64"))
+    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="float64"))
+    
+    n_b = pm.Data("n_b", np.zeros(1, dtype="float64"))
+    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameter with a prior
+    tau = pm.HalfNormal("tau", sigma=1.0)
+    
+    # Clip n to avoid negative or zero values in logarithm
+    safe_n_a = pt.clip(n_a, 2.0, np.inf)
+    safe_n_b = pt.clip(n_b, 2.0, np.inf)
+    
+    # Expected maximum run length approximation (log2(n))
+    expected_max_run_a = pt.log(safe_n_a) / np.log(2.0)
+    expected_max_run_b = pt.log(safe_n_b) / np.log(2.0)
+    
+    # Linearly penalize absolute deviation from expected max run
+    score_a = -tau * pt.abs(max_run_a - expected_max_run_a)
+    score_b = -tau * pt.abs(max_run_b - expected_max_run_b)
+    
+    # Probability of choosing sequence A (left) over sequence B (right)
+    # Clip to avoid nan in Bernoulli likelihood
+    p_left = pm.Deterministic("p_left", pt.clip(pm.math.sigmoid(score_a - score_b), 1e-6, 1 - 1e-6))
+    
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mPYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo python3 -c "
+from pathlib import Path
+import sys
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mcat hypothesis.md
+People evaluate the randomness of a sequence solely by assessing whether its longest streak of identical outcomes is typical for a random sequence of that length. They linearly penalize sequences based on the absolute deviation of their observed maximum run length from the mathematically expected maximum run length of a fair coin (approximately log2 of the sequence length).
+[0m
+I have successfully formulated the single-mechanism hypothesis and translated it into a PyMC model.
+
+1. **Hypothesis Formulation (`hypothesis.md`)**: I reviewed the previous models and the discrepancy raised in `critiques.md` regarding the un-modelled human penalty for unexpectedly long maximum runs (even when overall alternation rates matched). To address this, I've proposed a clean, single-mechanism account: "People evaluate the randomness of a sequence solely by assessing whether its longest streak of identical outcomes is typical for a random sequence of that length. They linearly penalize sequences based on the absolute deviation of their observed maximum run length from the mathematically expected maximum run length of a fair coin (approximately log2 of the sequence length)."
+
+2. **PyMC Implementation (`candidate.py`)**: I translated this hypothesis into a PyMC module-level instance.
+   - It correctly initializes `n_a`/`n_b` and `max_run_a`/`max_run_b` as PyTensor data containers.
+   - It infers a sensitivity scaling parameter (`tau`).
+   - It compares `max_run` against the approximate theoretical expectation given the sequence length (`log2(N)`).
+   - It utilizes `pt.clip` and `pt.abs` to ensure numerical safety.
+   - Self-checks pass confirming the model successfully loads and wires the `chose_left` observation parameter smoothly.

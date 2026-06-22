@@ -1,0 +1,292 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mls -la
+total 24
+drwx------+ 2 benpry ngoodman 4096 Jun 21 15:35 .
+drwx------+ 5 benpry ngoodman 4096 Jun 21 15:35 ..
+-rw-------+ 1 benpry ngoodman   44 Jun 21 15:35 agent.jsonl
+-rw-------+ 1 benpry ngoodman  427 Jun 21 15:35 CANDIDATE_BRIEF.md
+-rw-------+ 1 benpry ngoodman 2293 Jun 21 15:35 CONTEXT.md
+-rw-------+ 1 benpry ngoodman  643 Jun 21 15:35 critiques.md
+-rw-------+ 1 benpry ngoodman 1541 Jun 21 15:35 existing_hypotheses.md
+[0m
+[0m$ [0mcat CONTEXT.md CANDIDATE_BRIEF.md existing_hypotheses.md critiques.md
+# Inner Loop — round 0, candidate 1 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/iter_0/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.998, ELPD-LOO -864.21
+
+Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -889.63
+
+Random-looking sequences are those with low simple-description penalties:
+long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.002, ELPD-LOO -867.87
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular
+process: a mixture of a complexity-penalized motif process (Griffiths et
+al. 2018) and a biased coin. Merges the former diagnosticity and
+statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -887.51
+
+Random-looking sequences have a longest run typical of a fair coin seen
+through a limited memory window; over-long streaks look non-random (Hahn &
+Warren 2009).
+
+## iter0_candidate0
+
+People judge the randomness of a sequence based on its Gaussian similarity to an ideal subjective prototype, meaning the sequence's perceived randomness decays exponentially with its squared distance in feature space (proportion of heads and alternations) from the expected prototype. This formulation penalizes extreme deviations more severely than a linear distance metric.
+[0m
+[0m$ [0mcat critiques.md
+# Critique of `prototype_similarity`
+
+1 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **beta_max_run_norm** — Linear regression slope of chose_left on the difference in normalized max run length (max_run_norm_b - max_run_norm_a). (observed 0.0164 vs null mean 0.146, z=-1.96, p=0.0498, q=0.398)
+[0m
+[0m$ [0mcat << 'EOF' > test_transitions.py
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    def transition_deviations(seq: str) -> float:
+        if len(seq) < 2: return 0.0
+        n_hh, n_ht, n_th, n_tt = 0, 0, 0, 0
+        for i in range(len(seq)-1):
+            if seq[i:i+2] == 'HH': n_hh += 1
+            elif seq[i:i+2] == 'HT': n_ht += 1
+            elif seq[i:i+2] == 'TH': n_th += 1
+            elif seq[i:i+2] == 'TT': n_tt += 1
+        
+        p_h_given_h = n_hh / (n_hh + n_th) if (n_hh + n_th) > 0 else 0.5
+        p_h_given_t = n_ht / (n_ht + n_tt) if (n_ht + n_tt) > 0 else 0.5
+        
+        # Mean squared deviation from 0.5
+        return (p_h_given_h - 0.5)**2 + (p_h_given_t - 0.5)**2
+
+    return {
+        "trans_dev_a": transition_deviations(sequence_a),
+        "trans_dev_b": transition_deviations(sequence_b)
+    }
+
+print(compute_features("HTHTHTHT", "HHHHHHHH"))
+print(compute_features("HHTTHHTT", "HTHTHTHT"))
+EOF
+python test_transitions.py
+{'trans_dev_a': 0.5, 'trans_dev_b': 0.25}
+{'trans_dev_a': 0.027777777777777766, 'trans_dev_b': 0.5}
+[0m
+[0m$ [0mcat << 'EOF' > test_kl.py
+import numpy as np
+
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    def kl_divergence_runs(seq: str) -> float:
+        if not seq: return 0.0
+        runs = []
+        current_run = 1
+        for i in range(1, len(seq)):
+            if seq[i] == seq[i-1]:
+                current_run += 1
+            else:
+                runs.append(current_run)
+                current_run = 1
+        runs.append(current_run)
+        
+        if not runs: return 0.0
+        
+        # Count frequencies
+        counts = {}
+        for r in runs:
+            counts[r] = counts.get(r, 0) + 1
+            
+        n_runs = len(runs)
+        kl = 0.0
+        for k, count in counts.items():
+            obs_prob = count / n_runs
+            # Expected probability for run length k in a finite sequence is tricky, 
+            # but asymptotically it's 0.5^k.
+            # To make it a proper distribution over observed keys, we shouldn't normalize.
+            # Actually, standard KL divergence sum(P * log(P/Q))
+            exp_prob = 0.5 ** k
+            kl += obs_prob * np.log(obs_prob / exp_prob)
+            
+        return float(kl)
+
+    return {
+        "kl_runs_a": kl_divergence_runs(sequence_a),
+        "kl_runs_b": kl_divergence_runs(sequence_b)
+    }
+
+print(compute_features("HTHTHTHT", "HHTTHHTT"))
+print(compute_features("HHHHHHHH", "HTHTHTHT"))
+EOF
+python test_kl.py
+{'kl_runs_a': 0.6931471805599453, 'kl_runs_b': 1.3862943611198906}
+{'kl_runs_a': 5.545177444479562, 'kl_runs_b': 0.6931471805599453}
+[0m
+[0m$ [0mcat << 'EOF' > test_binom.py
+import numpy as np
+from scipy.special import gammaln
+
+def log_binom(k, n, p):
+    # k and n can be arrays
+    comb = gammaln(n + 1) - gammaln(k + 1) - gammaln(n - k + 1)
+    return comb + k * np.log(p) + (n - k) * np.log(1 - p)
+
+n = 20
+p_alt = 0.6
+for alts in range(20):
+    print(f"alts={alts}: {log_binom(alts, 19, p_alt):.2f}")
+EOF
+python test_binom.py
+alts=0: -17.41
+alts=1: -14.06
+alts=2: -11.46
+alts=3: -9.32
+alts=4: -7.53
+alts=5: -6.02
+alts=6: -4.77
+alts=7: -3.74
+alts=8: -2.93
+alts=9: -2.33
+alts=10: -1.92
+alts=11: -1.72
+alts=12: -1.72
+alts=13: -1.93
+alts=14: -2.37
+alts=15: -3.06
+alts=16: -4.05
+alts=17: -5.37
+alts=18: -7.17
+alts=19: -9.71
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+"""
+People judge the randomness of a sequence by evaluating the statistical typicality of its macroscopic features, computing the joint Binomial log-probability of observing its number of heads and alternations under their subjective expectations for a random process.
+"""
+
+with pm.Model() as model:
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+    
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    p_heads = pm.Beta("p_heads", alpha=10.0, beta=10.0)
+    p_alts = pm.Beta("p_alts", alpha=6.0, beta=4.0)
+    tau = pm.HalfNormal("tau", sigma=1.0)
+    
+    p_heads_safe = pt.clip(p_heads, 1e-6, 1.0 - 1e-6)
+    p_alts_safe = pt.clip(p_alts, 1e-6, 1.0 - 1e-6)
+
+    def log_binom(k, n, p):
+        k_f = pt.cast(k, "float64")
+        n_f = pt.cast(n, "float64")
+        comb = pt.gammaln(n_f + 1.0) - pt.gammaln(k_f + 1.0) - pt.gammaln(n_f - k_f + 1.0)
+        return comb + k_f * pt.log(p) + (n_f - k_f) * pt.log(1.0 - p)
+        
+    log_typ_h_a = log_binom(h_a, n_a, p_heads_safe)
+    log_typ_alts_a = log_binom(alts_a, n_a - 1, p_alts_safe)
+    log_typ_a = log_typ_h_a + log_typ_alts_a
+    
+    log_typ_h_b = log_binom(h_b, n_b, p_heads_safe)
+    log_typ_alts_b = log_binom(alts_b, n_b - 1, p_alts_safe)
+    log_typ_b = log_typ_h_b + log_typ_alts_b
+    
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (log_typ_a - log_typ_b)))
+    p_left_safe = pt.clip(p_left, 1e-6, 1.0 - 1e-6)
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left_safe, observed=chose_left)
+EOF
+
+cat << 'EOF' > hypothesis.md
+People judge the randomness of a sequence by evaluating the statistical typicality of its macroscopic features. They compute the joint Binomial probability of observing the sequence's specific number of heads and alternations under their subjective expectations for a random process, perceiving sequences with highly improbable feature counts as less random.
+EOF
+
+test -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+import sys
+
+try:
+    m = load_pymc_model('candidate', Path('.'))
+    print('observed:', observed_response_data(m))
+except Exception as e:
+    print('Error:', e)
+    sys.exit(1)
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mexport PYTHONPATH="/scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo:$PYTHONPATH"
+python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mecho "Done"
+Done
+[0m
+I have successfully created both `hypothesis.md` and `candidate.py` in the required directory.
+
+**Mechanism Proposed:**
+I proposed the **Binomial Feature Typicality** hypothesis: instead of using a linear or Gaussian geometric distance to a prototype, people judge the randomness of a sequence by explicitly evaluating the joint binomial log-probability of observing its specific feature counts (heads and alternations) under their subjective expectations. Sequences with highly improbable macroscopic feature counts are perceived as less random. 
+
+This directly refines the "prototype similarity" class of models into an inferential/statistical formulation rather than a spatial one, providing a naturally scaled, nonlinear penalty without combining disparate heuristics.
+
+The self-check passed successfully with no errors, confirming `candidate.py` builds the model and binds the `observed` data tensor correctly.

@@ -1,0 +1,402 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/CRITIQUE_CONTEXT.md
+# Critique context
+
+**Incumbent (best) model:** `inner_loop_model`
+**Incumbent model code:** `/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/inner_loop_model.py`
+**Incumbent hypothesis:** Random-looking sequences are judged by their Euclidean distance to a messy prototype with a strictly positive ideal imbalance and an ideal alternation rate, with quadratic asymmetric penalties.
+
+**Responses CSV:** `/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv`
+**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+**Model set directory:** `/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models`
+
+Propose **8** test statistics. Write each to `/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/<name>.py` as a function `test_statistic(df)` returning a scalar, with `# name:` and `# description:` header comments.
+
+You do **not** need to run anything. After you write the statistics, the pipeline runs the posterior-predictive harness automatically over `/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats` and records the results:
+
+```bash
+python3 -m src.critique.ppc \
+    --responses /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv \
+    --model inner_loop_model \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models \
+    --test-stats-dir /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/ppc_results.json \
+    --cache-dir /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/.fit_cache \
+    --n-replicates 200 \
+    --significance-alpha 0.05
+```
+
+That writes `/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/ppc_results.json` with a two-sided empirical p-value per statistic (200 posterior-predictive replicates). A statistic is a **significant discrepancy** when its `p_value` ≤ 0.05 (raw, no multiple-comparisons correction).
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/inner_loop_model.py
+"""PyMC model for the Euclidean messy-prototype hypothesis.
+
+Random-looking sequences are judged by their Euclidean distance to a "messy" prototype: rather than expecting perfectly balanced counts, people apply a "too-perfect" heuristic and judge sequences against a prototype with a strictly positive ideal imbalance. The cognitive penalty accelerates quadratically with deviations from this ideal imbalance and an ideal alternation rate, creating a wide tolerance for near-ideal sequences while remaining asymmetric to penalize under-alternating sequences more harshly.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    theta_imb = pm.Uniform("theta_imb", lower=0.0, upper=1.0)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    # Asymmetry parameter: < 0.5 means over-alternation is penalized less than under-alternation
+    asym = pm.Uniform("asym", lower=0.01, upper=0.99)
+
+    beta = pm.Uniform("beta", lower=0.2, upper=30.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+
+    # Quadratic asymmetric distance for alternation rate
+    diff_alt_a = p_alts_a - theta_alt
+    alt_penalty_a = pm.math.switch(
+        diff_alt_a > 0,
+        2.0 * asym * (diff_alt_a**2),
+        2.0 * (1.0 - asym) * (diff_alt_a**2),
+    )
+
+    diff_alt_b = p_alts_b - theta_alt
+    alt_penalty_b = pm.math.switch(
+        diff_alt_b > 0,
+        2.0 * asym * (diff_alt_b**2),
+        2.0 * (1.0 - asym) * (diff_alt_b**2),
+    )
+
+    # Quadratic distance for messy imbalance prototype
+    imb_penalty_a = (imbalance_a - theta_imb) ** 2
+    imb_penalty_b = (imbalance_b - theta_imb) ** 2
+
+    score_a = -(balance_weight * imb_penalty_a + alt_weight * alt_penalty_a)
+    score_b = -(balance_weight * imb_penalty_b + alt_weight * alt_penalty_b)
+
+    # Sigmoid link to probability
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+
+    # Likelihood
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 20 /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,TTTHHTTT,THTTTTHH,1,0,,8,2,2,3,3,0,8,3,3,4,2,1,0.25,0.2857142857142857,0.2857142857142857,0.5,0.5,0.375,0.42857142857142855,0.42857142857142855,0.25,0.5
+0,[REDACTED_PROLIFIC_ID],2,TTTTHHTH,HHTH,1,0,,8,3,3,4,2,1,4,3,2,2,1,1,0.375,0.42857142857142855,0.42857142857142855,0.25,0.25,0.75,0.6666666666666666,0.3333333333333333,0.5,0.5
+0,[REDACTED_PROLIFIC_ID],3,THHHHHTT,THTTTTHT,0,1,,8,5,2,5,3,0,8,2,4,4,1,2,0.625,0.2857142857142857,0.5714285714285714,0.25,0.5,0.25,0.5714285714285714,0.42857142857142855,0.5,0.5
+0,[REDACTED_PROLIFIC_ID],4,HTTHHHHT,HHTHHHTH,0,1,,8,5,3,4,4,0,8,6,4,3,3,1,0.625,0.42857142857142855,0.42857142857142855,0.25,0.5,0.75,0.5714285714285714,0.2857142857142857,0.5,1.0
+0,[REDACTED_PROLIFIC_ID],5,THTHHHHT,HTHHTHH,1,0,,8,5,4,4,2,1,7,5,4,2,3,1,0.625,0.5714285714285714,0.42857142857142855,0.25,0.25,0.7142857142857143,0.6666666666666666,0.16666666666666666,0.4285714285714286,1.0
+0,[REDACTED_PROLIFIC_ID],6,THTHHHHH,TTHTTT,0,1,,8,6,3,5,1,1,6,1,2,3,3,0,0.75,0.42857142857142855,0.5714285714285714,0.5,0.5,0.16666666666666666,0.4,0.4,0.6666666666666667,0.6666666666666667
+0,[REDACTED_PROLIFIC_ID],7,HHTTTTH,THHHTHH,0,1,,7,3,2,4,3,0,7,5,3,3,4,0,0.42857142857142855,0.3333333333333333,0.5,0.1428571428571429,0.4285714285714286,0.7142857142857143,0.5,0.3333333333333333,0.4285714285714286,0.4285714285714286
+0,[REDACTED_PROLIFIC_ID],8,TTHH,TTHHHHHT,0,1,,4,2,1,2,2,0,8,5,2,5,3,0,0.5,0.3333333333333333,0.3333333333333333,0.0,0.0,0.625,0.2857142857142857,0.5714285714285714,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],9,THHHHHT,THHHTHHH,0,1,,7,5,2,5,3,0,8,6,3,3,4,0,0.7142857142857143,0.3333333333333333,0.6666666666666666,0.4285714285714286,0.7142857142857142,0.75,0.42857142857142855,0.2857142857142857,0.5,1.0
+0,[REDACTED_PROLIFIC_ID],10,THHHHTHT,TTTHTH,1,0,,8,5,4,4,2,1,6,2,3,3,1,1,0.625,0.5714285714285714,0.42857142857142855,0.25,0.25,0.3333333333333333,0.6,0.4,0.33333333333333337,0.33333333333333326
+0,[REDACTED_PROLIFIC_ID],11,THHHTHHT,HHTHH,1,0,,8,5,4,3,5,0,5,4,2,2,3,0,0.625,0.5714285714285714,0.2857142857142857,0.25,0.75,0.8,0.5,0.25,0.6000000000000001,0.6000000000000001
+0,[REDACTED_PROLIFIC_ID],12,HTTTTH,HHHTHTH,0,1,,6,2,2,4,3,0,7,5,4,3,1,1,0.3333333333333333,0.4,0.6,0.33333333333333337,0.33333333333333326,0.7142857142857143,0.6666666666666666,0.3333333333333333,0.4285714285714286,0.4285714285714286
+0,[REDACTED_PROLIFIC_ID],13,TTTHHTT,TTTHHHHH,1,0,,7,2,2,3,3,0,8,5,1,5,2,0,0.2857142857142857,0.3333333333333333,0.3333333333333333,0.4285714285714286,0.4285714285714286,0.625,0.14285714285714285,0.5714285714285714,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],14,HHHTTTHT,THTHH,0,1,,8,4,3,3,2,1,5,3,3,2,1,1,0.5,0.42857142857142855,0.2857142857142857,0.0,0.5,0.6,0.75,0.25,0.19999999999999996,0.6000000000000001
+0,[REDACTED_PROLIFIC_ID],15,THTHH,THTTTHHH,1,0,,5,3,3,2,1,1,8,4,3,3,2,1,0.6,0.75,0.25,0.19999999999999996,0.6000000000000001,0.5,0.42857142857142855,0.2857142857142857,0.0,0.5
+0,[REDACTED_PROLIFIC_ID],16,HTHHTH,HHTTTHHT,0,1,,6,4,4,2,1,2,8,4,3,3,4,0,0.6666666666666666,0.8,0.2,0.33333333333333326,1.0,0.5,0.42857142857142855,0.2857142857142857,0.0,0.5
+0,[REDACTED_PROLIFIC_ID],17,THHHTHHT,TTTHHHHT,1,0,,8,5,4,3,5,0,8,4,2,4,3,0,0.625,0.5714285714285714,0.2857142857142857,0.25,0.75,0.5,0.2857142857142857,0.42857142857142855,0.0,0.0
+0,[REDACTED_PROLIFIC_ID],18,THHHHTTT,THHHTTHH,0,1,,8,4,2,4,3,0,8,5,3,3,4,0,0.5,0.2857142857142857,0.42857142857142855,0.0,0.25,0.625,0.42857142857142855,0.2857142857142857,0.25,0.75
+0,[REDACTED_PROLIFIC_ID],19,THHHTHTH,HHTHTH,0,1,,8,5,5,3,2,1,6,4,4,2,1,1,0.625,0.7142857142857143,0.2857142857142857,0.25,0.75,0.6666666666666666,0.8,0.2,0.33333333333333326,0.33333333333333326
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv')
+subset = df[(abs(df['p_alts_a'] - df['p_alts_b']) <= 0.05) & (abs(df['imbalance_a'] - df['imbalance_b']) <= 0.05)]
+valid = subset[subset['n_a'] != subset['n_b']]
+print(len(valid))
+"
+0
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv')
+subset = df[(abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1) & (abs(df['imbalance_a'] - df['imbalance_b']) <= 0.1)]
+valid = subset[subset['n_a'] != subset['n_b']]
+print(len(valid))
+"
+160
+[0m
+[0m$ [0mwc -l /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv
+2561 /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv')
+print('max_run:', len(df[(abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1) & (df['max_run_a'] < df['max_run_b'])]))
+print('periodicity:', len(df[(abs(df['p_alts_a'] - df['p_alts_b']) < 0.15) & (abs(df['imbalance_a'] - df['imbalance_b']) < 0.15) & (df['periodicity_a'] != df['periodicity_b'])]))
+a_bal = (df['imbalance_a'] == 0) & (df['imbalance_b'] > 0) & (df['imbalance_b'] <= 0.3)
+b_bal = (df['imbalance_b'] == 0) & (df['imbalance_a'] > 0) & (df['imbalance_a'] <= 0.3)
+print('exact_balance:', sum(a_bal | b_bal))
+print('rep_motifs:', len(df[(abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & (abs(df['max_run_a'] - df['max_run_b']) <= 1) & (df['rep_motifs_a'] != df['rep_motifs_b'])]))
+print('alt_motifs:', len(df[(abs(df['p_alts_a'] - df['p_alts_b']) < 0.1) & (df['alt_motifs_a'] != df['alt_motifs_b'])]))
+"
+max_run: 355
+periodicity: 160
+exact_balance: 640
+rep_motifs: 840
+alt_motifs: 280
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv')
+d = df[df['n_a'] == df['n_b']]
+short = d[d['n_a'] <= 5]
+long = d[d['n_a'] >= 7]
+print('short same len:', len(short))
+print('long same len:', len(long))
+
+a_mod = (df['p_alts_a'] >= 0.4) & (df['p_alts_a'] <= 0.6) & (df['p_alts_b'] > 0.8)
+b_mod = (df['p_alts_b'] >= 0.4) & (df['p_alts_b'] <= 0.6) & (df['p_alts_a'] > 0.8)
+valid = df[a_mod | b_mod]
+print('valid for mod vs high alt:', len(valid))
+"
+short same len: 0
+long same len: 840
+valid for mod vs high alt: 280
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv')
+print('n_a distribution:')
+print(df['n_a'].value_counts())
+print('n_b distribution:')
+print(df['n_b'].value_counts())
+print('pairs distribution:')
+print(df.groupby(['n_a', 'n_b']).size())
+"
+n_a distribution:
+n_a
+8    1327
+7     429
+6     327
+4     204
+5     163
+3      65
+2      45
+Name: count, dtype: int64
+n_b distribution:
+n_b
+8    1393
+7     411
+6     313
+4     196
+5     157
+3      55
+2      35
+Name: count, dtype: int64
+pairs distribution:
+n_a  n_b
+2    7       20
+     8       25
+3    6       47
+     8       18
+4    6       15
+     7       36
+     8      153
+5    7       20
+     8      143
+6    3       33
+     4       25
+     6       40
+     7       65
+     8      164
+7    2       20
+     4       44
+     5       20
+     6       55
+     7      120
+     8      170
+8    2       15
+     3       22
+     4      127
+     5      137
+     6      156
+     7      150
+     8      720
+dtype: int64
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv')
+print('1. max_run_penalty:', len(df[(abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1) & (df['max_run_a'] != df['max_run_b'])]))
+print('2. length_preference:', len(df[df['n_a'] != df['n_b']]))
+print('3. periodicity_penalty:', len(df[(abs(df['p_alts_a'] - df['p_alts_b']) < 0.15) & (abs(df['imbalance_a'] - df['imbalance_b']) < 0.15) & (df['periodicity_a'] != df['periodicity_b'])]))
+a_bal = (df['imbalance_a'] == 0) & (df['imbalance_b'] > 0) & (df['imbalance_b'] <= 0.3)
+b_bal = (df['imbalance_b'] == 0) & (df['imbalance_a'] > 0) & (df['imbalance_a'] <= 0.3)
+print('4. exact_balance_preference:', sum(a_bal | b_bal))
+print('5. repetitive_motif_penalty:', len(df[(abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & (abs(df['max_run_a'] - df['max_run_b']) <= 1) & (df['rep_motifs_a'] != df['rep_motifs_b'])]))
+print('6. alternating_motif_preference:', len(df[(abs(df['p_alts_a'] - df['p_alts_b']) < 0.1) & (df['alt_motifs_a'] != df['alt_motifs_b'])]))
+a_mod = (df['imbalance_a'] >= 0.1) & (df['imbalance_a'] <= 0.3) & (df['imbalance_b'] >= 0.5)
+b_mod = (df['imbalance_b'] >= 0.1) & (df['imbalance_b'] <= 0.3) & (df['imbalance_a'] >= 0.5)
+print('7. extreme_imbalance_penalty:', sum(a_mod | b_mod))
+print('8. length_preference_for_balanced:', len(df[(df['imbalance_a'] <= 0.25) & (df['imbalance_b'] <= 0.25) & (df['n_a'] != df['n_b'])]))
+"
+1. max_run_penalty: 720
+2. length_preference: 1680
+3. periodicity_penalty: 160
+4. exact_balance_preference: 640
+5. repetitive_motif_penalty: 840
+6. alternating_motif_preference: 280
+7. extreme_imbalance_penalty: 520
+8. length_preference_for_balanced: 520
+[0m
+[0m$ [0mmkdir -p /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/max_run_penalty.py
+# name: max_run_penalty
+# description: Choice rate for the sequence with the shorter maximum run length, conditioned on the sequences having similar alternation rates.
+def test_statistic(df):
+    subset = df[abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1]
+    valid = subset[subset['max_run_a'] != subset['max_run_b']]
+    if len(valid) == 0: return 0.0
+    
+    chose_smaller_run = ((valid['max_run_a'] < valid['max_run_b']) & (valid['chose_left'] == 1)) | \
+                        ((valid['max_run_a'] > valid['max_run_b']) & (valid['chose_left'] == 0))
+    return float(chose_smaller_run.mean())
+EOF
+
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/length_preference.py
+# name: length_preference
+# description: The average choice rate for the longer sequence across all pairs where the two sequences have different lengths.
+def test_statistic(df):
+    valid = df[df['n_a'] != df['n_b']]
+    if len(valid) == 0: return 0.0
+    
+    chose_longer = ((valid['n_a'] > valid['n_b']) & (valid['chose_left'] == 1)) | \
+                   ((valid['n_a'] < valid['n_b']) & (valid['chose_left'] == 0))
+    return float(chose_longer.mean())
+EOF
+
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/periodicity_penalty.py
+# name: periodicity_penalty
+# description: The choice rate for the less periodic sequence, conditioned on the sequences having similar alternation rates and imbalances.
+def test_statistic(df):
+    subset = df[(abs(df['p_alts_a'] - df['p_alts_b']) < 0.15) & 
+                (abs(df['imbalance_a'] - df['imbalance_b']) < 0.15)]
+    valid = subset[subset['periodicity_a'] != subset['periodicity_b']]
+    if len(valid) == 0: return 0.0
+    
+    chose_less_periodic = ((valid['periodicity_a'] < valid['periodicity_b']) & (valid['chose_left'] == 1)) | \
+                          ((valid['periodicity_a'] > valid['periodicity_b']) & (valid['chose_left'] == 0))
+    return float(chose_less_periodic.mean())
+EOF
+
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/exact_balance_preference.py
+# name: exact_balance_preference
+# description: The choice rate for exactly balanced sequences (imbalance=0) over slightly imbalanced ones (0 < imbalance <= 0.3).
+def test_statistic(df):
+    a_bal = (df['imbalance_a'] == 0) & (df['imbalance_b'] > 0) & (df['imbalance_b'] <= 0.3)
+    b_bal = (df['imbalance_b'] == 0) & (df['imbalance_a'] > 0) & (df['imbalance_a'] <= 0.3)
+    valid = df[a_bal | b_bal]
+    if len(valid) == 0: return 0.0
+    
+    chose_bal = (a_bal & (valid['chose_left'] == 1)) | (b_bal & (valid['chose_left'] == 0))
+    return float(chose_bal.mean())
+EOF
+
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/repetitive_motif_penalty.py
+# name: repetitive_motif_penalty
+# description: Choice rate for the sequence with fewer repetitive motifs, conditioned on similar maximum run length and alternation rate.
+def test_statistic(df):
+    subset = df[(abs(df['p_alts_a'] - df['p_alts_b']) < 0.2) & 
+                (abs(df['max_run_a'] - df['max_run_b']) <= 1)]
+    valid = subset[subset['rep_motifs_a'] != subset['rep_motifs_b']]
+    if len(valid) == 0: return 0.0
+    
+    chose_fewer_motifs = ((valid['rep_motifs_a'] < valid['rep_motifs_b']) & (valid['chose_left'] == 1)) | \
+                         ((valid['rep_motifs_a'] > valid['rep_motifs_b']) & (valid['chose_left'] == 0))
+    return float(chose_fewer_motifs.mean())
+EOF
+
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/alternating_motif_preference.py
+# name: alternating_motif_preference
+# description: The average choice rate for the sequence with more alternating motifs, conditioned on similar overall alternation rates.
+def test_statistic(df):
+    subset = df[abs(df['p_alts_a'] - df['p_alts_b']) < 0.1]
+    valid = subset[subset['alt_motifs_a'] != subset['alt_motifs_b']]
+    if len(valid) == 0: return 0.0
+    
+    chose_more_alt_motifs = ((valid['alt_motifs_a'] > valid['alt_motifs_b']) & (valid['chose_left'] == 1)) | \
+                            ((valid['alt_motifs_a'] < valid['alt_motifs_b']) & (valid['chose_left'] == 0))
+    return float(chose_more_alt_motifs.mean())
+EOF
+
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/extreme_imbalance_penalty.py
+# name: extreme_imbalance_penalty
+# description: The choice rate for moderately imbalanced sequences (0.1 <= imbalance <= 0.3) over extremely imbalanced sequences (imbalance >= 0.5).
+def test_statistic(df):
+    a_mod = (df['imbalance_a'] >= 0.1) & (df['imbalance_a'] <= 0.3) & (df['imbalance_b'] >= 0.5)
+    b_mod = (df['imbalance_b'] >= 0.1) & (df['imbalance_b'] <= 0.3) & (df['imbalance_a'] >= 0.5)
+    valid = df[a_mod | b_mod]
+    if len(valid) == 0: return 0.0
+    
+    chose_mod = (a_mod & (valid['chose_left'] == 1)) | (b_mod & (valid['chose_left'] == 0))
+    return float(chose_mod.mean())
+EOF
+
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/length_preference_for_balanced.py
+# name: length_preference_for_balanced
+# description: The choice rate for the longer sequence when both sequences are well-balanced (imbalance <= 0.25).
+def test_statistic(df):
+    subset = df[(df['imbalance_a'] <= 0.25) & (df['imbalance_b'] <= 0.25)]
+    valid = subset[subset['n_a'] != subset['n_b']]
+    if len(valid) == 0: return 0.0
+    
+    chose_longer = ((valid['n_a'] > valid['n_b']) & (valid['chose_left'] == 1)) | \
+                   ((valid['n_a'] < valid['n_b']) & (valid['chose_left'] == 0))
+    return float(chose_longer.mean())
+EOF
+[0m
+[0m$ [0mls -la /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/
+total 40
+drwx------+ 2 benpry ngoodman 4096 Jun 21 17:23 .
+drwx------+ 4 benpry ngoodman 4096 Jun 21 17:23 ..
+-rw-------+ 1 benpry ngoodman  631 Jun 21 17:23 alternating_motif_preference.py
+-rw-------+ 1 benpry ngoodman  568 Jun 21 17:23 exact_balance_preference.py
+-rw-------+ 1 benpry ngoodman  598 Jun 21 17:23 extreme_imbalance_penalty.py
+-rw-------+ 1 benpry ngoodman  545 Jun 21 17:23 length_preference_for_balanced.py
+-rw-------+ 1 benpry ngoodman  459 Jun 21 17:23 length_preference.py
+-rw-------+ 1 benpry ngoodman  597 Jun 21 17:23 max_run_penalty.py
+-rw-------+ 1 benpry ngoodman  701 Jun 21 17:23 periodicity_penalty.py
+-rw-------+ 1 benpry ngoodman  687 Jun 21 17:23 repetitive_motif_penalty.py
+[0m
+[0m$ [0mpython3 -m py_compile /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/*.py
+[0m
+[0m$ [0mecho "Done creating test statistics."
+Done creating test statistics.
+[0m
+I have examined the `CRITIQUE_CONTEXT.md` instructions, the incumbent `inner_loop_model` code, and the dataset to formulate targeted test statistics. 
+
+The incumbent model strictly relies on an alternating rate and an absolute "imbalance" relative to a strictly positive "ideal" prototype, utilizing standard Euclidean-style quadratic penalties. Given these properties, the model completely omits considerations of:
+1. Local structural configurations (maximum run lengths, repeating/alternating motifs).
+2. Global periodicity (e.g. repeated structures even with identical `p_alts`).
+3. Sequence length dependencies (it calculates properties over proportions without normalizing by length, preventing it from distinguishing between short/long sequences matching the same parameters).
+
+I have proposed 8 targeted, conditional test statistics to measure where human behavior likely diverges from this singular mechanism. They have been written as standalone Python files to `test_stats/`:
+
+1. **`max_run_penalty.py`**: Probes the preference for strictly shorter maximum run lengths between sequences holding similar overall alternation rates.
+2. **`length_preference.py`**: Tests if there is a fundamental human preference for longer sequences when lengths differ, a dynamic the model treats indifferently.
+3. **`periodicity_penalty.py`**: Assesses if people explicitly penalize purely periodic sequences despite identical ideal imbalance/alternation parameterization.
+4. **`exact_balance_preference.py`**: Contrasts exactly balanced sequences with slightly imbalanced ones to see if the hypothesis's posited strictly positive `theta_imb` truly captures human aesthetics correctly. 
+5. **`repetitive_motif_penalty.py`**: Examines the penalty applied to sequences laden with repetitive motifs while tightly holding max run length and alternation fixed.
+6. **`alternating_motif_preference.py`**: Looks at the value of alternating local motifs conditional on the overall `p_alts` matched closely.
+7. **`extreme_imbalance_penalty.py`**: Tests the human preference for moderately imbalanced sequences versus highly imbalanced ones to see if quadratic acceleration reliably replicates real aversion.
+8. **`length_preference_for_balanced.py`**: Conditional metric isolating whether people particularly prefer longer sequences specifically when well-balanced.
+
+Following the instructions specified at the end of the prompt, these statistics are prepared in your working directory and are ready for the automated pipeline to execute the posterior-predictive harness and synthesize the resulting `critiques.md`.

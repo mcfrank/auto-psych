@@ -1,0 +1,254 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md CANDIDATE_BRIEF.md existing_hypotheses.md critiques.md
+cat: CONTEXT.md
+[0m
+[0m$ [0mls -la /scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo
+total 22236
+drwxr-xr-x+ 15 benpry ngoodman     4096 Jun 21 17:26 .
+drwx------+  3 benpry ngoodman     4096 Jun 21 14:15 ..
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 20 20:47 .claude
+-rw-r--r--+  1 benpry ngoodman     1724 Jun 17 11:41 CLEANUP_PLAN.md
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 18 12:21 diagrams
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 18 12:21 docs
+-rw-r--r--+  1 benpry ngoodman     1593 Jun 20 01:44 extract_pdf.py
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 19 14:06 .firebase
+-rw-------+  1 benpry ngoodman      617 Jun 21 16:13 firebase.generated.json
+-rw-r--r--+  1 benpry ngoodman      612 Jun 18 23:34 firebase.json
+-rw-r--r--+  1 benpry ngoodman       58 Jun 19 13:13 .firebaserc
+-rw-r--r--+  1 benpry ngoodman       58 Jun 17 14:47 .firebaserc.example
+-rw-r--r--+  1 benpry ngoodman      224 Jun 19 12:56 firebase.viewer.json
+-rw-r--r--+  1 benpry ngoodman      503 Jun 18 23:34 firestore.rules
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 21 14:24 functions
+-rw-r--r--+  1 benpry ngoodman     1212 Jun 20 14:05 .gitignore
+-rw-r--r--+  1 benpry ngoodman 21915053 Jun 20 01:46 gt.txt
+-rw-------+  1 benpry ngoodman        0 Jun 21 14:15 .here
+-rw-r--r--+  1 benpry ngoodman     1070 Jun 17 11:41 LICENSE
+-rw-r--r--+  1 benpry ngoodman      466 Jun 21 14:16 opencode.json
+-rw-r--r--+  1 benpry ngoodman    11807 Jun 20 15:19 PROBLEMS.md
+drwxr-xr-x+  6 benpry ngoodman     4096 Jun 20 14:46 projects
+drwx------+  4 benpry ngoodman     4096 Jun 21 16:14 public
+-rw-r--r--+  1 benpry ngoodman     3034 Jun 20 15:02 pyproject.toml
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 19 11:42 .pytest_cache
+-rw-r--r--+  1 benpry ngoodman        5 Jun 20 15:02 .python-version
+-rw-r--r--+  1 benpry ngoodman    12449 Jun 20 16:40 README.md
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 19 17:36 .ruff_cache
+drwxr-xr-x+  5 benpry ngoodman     4096 Jun 19 13:11 scripts
+-rw-r--r--+  1 benpry ngoodman      791 Jun 19 13:13 .secrets.example
+drwxr-xr-x+ 13 benpry ngoodman     4096 Jun 20 01:39 src
+-rw-r--r--+  1 benpry ngoodman    12167 Jun 20 15:19 SUMMARY.md
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 20 23:26 templates
+drwxr-xr-x+  3 benpry ngoodman    12288 Jun 21 13:42 tests
+-rw-r--r--+  1 benpry ngoodman   683270 Jun 20 14:41 uv.lock
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1/CONTEXT.md
+# Inner Loop — round 0, candidate 1 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1/CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1/existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -1632.53
+
+Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -1722.85
+
+Random-looking sequences are those with low simple-description penalties like long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -1631.89
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular process (a mixture of a complexity-penalized motif process and a biased coin).
+
+## window_typicality  — posterior 0.000, ELPD-LOO -1711.20
+
+Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random.
+
+## inner_loop_model  — posterior 0.719, ELPD-LOO -1618.54
+
+Random-looking sequences are judged by their Euclidean distance to a messy prototype with a strictly positive ideal imbalance and an ideal alternation rate, with quadratic asymmetric penalties.
+
+## falk_konold_difficulty  — posterior 0.000, ELPD-LOO -1756.79
+
+Random-looking sequences are those that are cognitively harder to encode into chunks, as quantified by Falk and Konold's Difficulty Predictor (the number of repetition motifs plus twice the number of alternation motifs) normalized by sequence length.
+
+## manhattan_messy_prototype  — posterior 0.281, ELPD-LOO -1619.58
+
+Random-looking sequences are judged by their Manhattan (absolute) distance to a messy prototype with a strictly positive ideal imbalance and an ideal alternation rate, with absolute-value penalties that are asymmetric for alternation rate.
+
+## iter0_candidate0
+
+Random-looking sequences are judged by their deviation from a messy prototype (an ideal positive imbalance and ideal alternation rate), but the cognitive penalty grows as a quartic (power of 4) function of the deviation rather than a quadratic one. This different functional form creates a much wider, flatter tolerance for near-ideal sequences but imposes significantly harsher penalties on extreme deviations like exact balance or severe imbalance.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/critique/critiques.md
+# Critique of `inner_loop_model`
+
+5 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **length_preference_for_balanced** — The choice rate for the longer sequence when both sequences are well-balanced (imbalance <= 0.25). (observed 0.538 vs null mean 0.457, z=3.70, p=0.00995, q=0.0265) [survives FDR]
+- **exact_balance_preference** — The choice rate for exactly balanced sequences (imbalance=0) over slightly imbalanced ones (0 < imbalance <= 0.3). (observed 0.0844 vs null mean 0.102, z=-3.20, p=0.00995, q=0.0265) [survives FDR]
+- **extreme_imbalance_penalty** — The choice rate for moderately imbalanced sequences (0.1 <= imbalance <= 0.3) over extremely imbalanced sequences (imbalance >= 0.5). (observed 0.106 vs null mean 0.0914, z=3.00, p=0.00995, q=0.0265) [survives FDR]
+- **length_preference** — The average choice rate for the longer sequence across all pairs where the two sequences have different lengths. (observed 0.56 vs null mean 0.524, z=2.96, p=0.0199, q=0.0398) [survives FDR]
+- **periodicity_penalty** — The choice rate for the less periodic sequence, conditioned on the sequences having similar alternation rates and imbalances. (observed 0.4 vs null mean 0.488, z=-2.27, p=0.0398, q=0.0637)
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1/existing_hypotheses.md | grep -A 2 inner_loop_model
+## inner_loop_model  — posterior 0.719, ELPD-LOO -1618.54
+
+Random-looking sequences are judged by their Euclidean distance to a messy prototype with a strictly positive ideal imbalance and an ideal alternation rate, with quadratic asymmetric penalties.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/inner_loop_model.py
+cat: /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/inner_loop_model.py
+[0m
+[0m$ [0mfind /scratch/users/benpry/auto-psych/outer_loop_live/run2 -name "inner_loop_model.py"
+/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/cognitive_models/inner_loop_model.py
+/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/inner_loop_model.py
+/scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment1/cognitive_models/inner_loop_model.py
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/models/inner_loop_model.py
+"""PyMC model for the Euclidean messy-prototype hypothesis.
+
+Random-looking sequences are judged by their Euclidean distance to a "messy" prototype: rather than expecting perfectly balanced counts, people apply a "too-perfect" heuristic and judge sequences against a prototype with a strictly positive ideal imbalance. The cognitive penalty accelerates quadratically with deviations from this ideal imbalance and an ideal alternation rate, creating a wide tolerance for near-ideal sequences while remaining asymmetric to penalize under-alternating sequences more harshly.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    theta_imb = pm.Uniform("theta_imb", lower=0.0, upper=1.0)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    # Asymmetry parameter: < 0.5 means over-alternation is penalized less than under-alternation
+    asym = pm.Uniform("asym", lower=0.01, upper=0.99)
+
+    beta = pm.Uniform("beta", lower=0.2, upper=30.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+
+    # Quadratic asymmetric distance for alternation rate
+    diff_alt_a = p_alts_a - theta_alt
+    alt_penalty_a = pm.math.switch(
+        diff_alt_a > 0,
+        2.0 * asym * (diff_alt_a**2),
+        2.0 * (1.0 - asym) * (diff_alt_a**2),
+    )
+
+    diff_alt_b = p_alts_b - theta_alt
+    alt_penalty_b = pm.math.switch(
+        diff_alt_b > 0,
+        2.0 * asym * (diff_alt_b**2),
+        2.0 * (1.0 - asym) * (diff_alt_b**2),
+    )
+
+    # Quadratic distance for messy imbalance prototype
+    imb_penalty_a = (imbalance_a - theta_imb) ** 2
+    imb_penalty_b = (imbalance_b - theta_imb) ** 2
+
+    score_a = -(balance_weight * imb_penalty_a + alt_weight * alt_penalty_a)
+    score_b = -(balance_weight * imb_penalty_b + alt_weight * alt_penalty_b)
+
+    # Sigmoid link to probability
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+
+    # Likelihood
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 2 /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,TTTHHTTT,THTTTTHH,1,0,,8,2,2,3,3,0,8,3,3,4,2,1,0.25,0.2857142857142857,0.2857142857142857,0.5,0.5,0.375,0.42857142857142855,0.42857142857142855,0.25,0.5
+[0m
+[0m$ [0mawk -F',' 'NR>1 {print $9}' /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/responses.csv | sort | uniq
+2
+3
+4
+5
+6
+7
+8
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1/hypothesis.md
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run2/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1/candidate.py
+Wrote file successfully.
+[0m
+[0m$ [0mcd /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1 && test -s hypothesis.md && echo "hypothesis.md OK" && python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+Traceback (most recent call last):
+  File "<string>", line 3, in <module>
+ModuleNotFoundError: No module named 'src'
+[0m
+[0m$ [0mcd /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1 && PYTHONPATH=/scratch/users/benpry/auto-psych/outer_loop_live/runs/run2/repo python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run2/data/subjective_randomness/experiment2/model_loop/iter_0/candidate_1/hypothesis.md
+Hypothesis: Random-looking sequences are judged by an evidence accumulation process where each item in the sequence provides a baseline "weight of evidence" for randomness, which is then discounted by the sequence's quadratic deviation from a messy prototype (an ideal positive imbalance and ideal alternation rate). This mechanism naturally creates a preference for longer sequences when they are near-ideal, but more heavily penalizes long sequences that clearly deviate from the prototype.
+[0m
+I have read the context files, analyzed the critiques, and successfully created both `hypothesis.md` and `candidate.py` in the required directory.
+
+### Summary of Actions
+1. **Hypothesis Formulation**: I reviewed `critiques.md`, which indicated a strong missing preference for longer sequences (both generally, and particularly when sequences are well-balanced). To address this, I formulated the **evidence accumulation messy-prototype** hypothesis. It posits that people accumulate a "weight of evidence" per item, which is then discounted by quadratic deviations from a messy prototype. This naturally predicts that longer sequences will be preferred when they are near the prototype.
+2. **Model Implementation**: I implemented the proposed hypothesis in `candidate.py` as a module-level PyMC model. The model calculates the accumulation `score = n * (base_evidence - penalty)` using `n_a` and `n_b` data containers. All requirements for numerical stability, proper bounds, and correctly formatted `pm.Data` instances (with a 1-element placeholder) have been met.
+3. **Verification**: I ran the requested self-check command to verify the file outputs and confirm the model successfully exposes the `chose_left` data node to the pipeline for PyMC inference. Everything works as expected.

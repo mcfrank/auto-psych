@@ -1,0 +1,449 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mls -la
+total 28
+drwx------+ 2 benpry ngoodman 4096 Jun 21 19:41 .
+drwx------+ 5 benpry ngoodman 4096 Jun 21 19:41 ..
+-rw-------+ 1 benpry ngoodman   44 Jun 21 19:41 agent.jsonl
+-rw-------+ 1 benpry ngoodman  427 Jun 21 19:41 CANDIDATE_BRIEF.md
+-rw-------+ 1 benpry ngoodman 2293 Jun 21 19:41 CONTEXT.md
+-rw-------+ 1 benpry ngoodman  674 Jun 21 19:41 critiques.md
+-rw-------+ 1 benpry ngoodman 3915 Jun 21 19:41 existing_hypotheses.md
+[0m
+[0m$ [0mcat CONTEXT.md CANDIDATE_BRIEF.md existing_hypotheses.md critiques.md
+# Inner Loop — round 0, candidate 1 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat critiques.md
+# Critique of `linear_accumulated_typicality`
+
+1 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **max_run_penalty** — Proportion of times sequence A is chosen when it has a longer max run than B, but similar alternation rates (abs(p_alts_a - p_alts_b) <= 0.1). (observed 0.378 vs null mean 0.524, z=-2.43, p=0.00995, q=0.0796)
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -2330.85
+
+Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -2411.18
+
+Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -2335.55
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -2460.92
+
+Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).
+
+## accumulated_alternation_typicality  — posterior 0.000, ELPD-LOO -2317.52
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this typicality is based entirely on how closely the sequence's alternation rate matches a mental prototype, completely ignoring the overall proportion of heads and tails.
+
+## linear_accumulated_typicality  — posterior 0.620, ELPD-LOO -2290.63
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal head proportion and alternation rate is linear (absolute difference) rather than quadratic, treating extreme deviations proportionally to small ones.
+
+## inner_loop_model  — posterior 0.074, ELPD-LOO -2292.76
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, evaluating how well a sequence conforms to a mental prototype for heads and alternations.
+
+## power_law_accumulated_typicality  — posterior 0.036, ELPD-LOO -2293.12
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this evidence integration exhibits diminishing returns scaling according to a power-law function of sequence length, which prevents extremely long sequences from disproportionately dominating judgments.
+
+## leaky_accumulated_typicality  — posterior 0.028, ELPD-LOO -2293.22
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its events, but working memory for past events is leaky with exponential decay, meaning the total accumulated randomness score saturates for longer sequences.
+
+## asymmetric_alternation_typicality  — posterior 0.242, ELPD-LOO -2291.12
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal alternation rate is asymmetric: sequences that under-alternate (cluster) are heavily penalized, while those that over-alternate are penalized much less severely.
+
+## iter0_candidate0
+
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but we refine how alternation typicality is evaluated. Rather than penalizing the sequence's global average alternation rate, people evaluate typicality at the level of individual runs (streaks): they accumulate a penalty for each run that grows quadratically with how much its length deviates from an ideal run length. This non-linear run-level penalty explains why sequences with atypically long streaks are judged as significantly less random even when their overall alternation rates match.
+[0m
+[0m$ [0mgrep -A 20 window_typicality ../../../../../models/pymc_models.py
+grep: ../../../../../models/pymc_models.py: No such file or directory
+[0m
+[0m$ [0mfind /scratch/users/benpry/auto-psych/outer_loop_live/run1/repo -name "*.py" | grep models
+find: ‘/scratch/users/benpry/auto-psych/outer_loop_live/run1/repo’: No such file or directory
+[0m
+[0m$ [0mfind /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo -name "*.py" | grep models
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models/bayesian_diagnosticity.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models/prototype_similarity.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models/window_typicality.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models/encoding_compressibility.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/ground_truth_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/subjective_randomness/impossible_models/longer_runs_more_random.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/subjective_randomness/impossible_models/more_imbalance_more_random.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/subjective_randomness/impossible_models/more_heads_more_random.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/subjective_randomness/impossible_models/fewer_heads_more_random.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/subjective_randomness/impossible_models/__init__.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/monitor/models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/models/theorist/predictions.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/models/theorist/__init__.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/models/theorist/loader.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/models/project/ground_truth.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/models/project/__init__.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/models/pymc_inference.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/models/__init__.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/viewer/models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain_core/language_models/_compat_bridge.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain_core/language_models/chat_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain_core/language_models/fake_chat_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain_core/language_models/model_profile.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain_core/language_models/llms.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain_core/language_models/base.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain_core/language_models/fake.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain_core/language_models/_utils.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain_core/language_models/chat_model_stream.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain_core/language_models/__init__.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/fontTools/varLib/models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/httpx/_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/httpcore/_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/scipy/odr/_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/scipy/odr/models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/scipy/_lib/cobyqa/models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/charset_normalizer/models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain_google_genai/chat_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/generativeai/models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/generativeai/generative_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_generate_videos.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_generate_content_stream.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_recontext_image.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_compute_tokens.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_list.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_edit_image.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_embed.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_upscale_image.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_count_tokens.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_generate_content.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_generate_images.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/__init__.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/shared/models/test_segment_image.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_videos.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_tools.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_config_zero_value.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_image_generation.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_recontext_image.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_update.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_compute_tokens.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_get.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_thought.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_model.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_mcp.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_part.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_list.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_edit_image.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/constants.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_delete.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_upscale_image.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_from_apikey.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_function_call_streaming.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_multi_regional.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_count_tokens.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_http_options.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_cached_content.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_embed_content.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_images.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/__init__.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_generate_content_media_resolution.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/tests/models/test_segment_image.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/google/genai/_interactions/_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain/chat_models/base.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langchain/chat_models/__init__.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/numba/core/datamodel/models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/numba/cuda/models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/numba/tests/test_errormodels.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/langsmith/sandbox/_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/.venv/lib/python3.11/site-packages/requests/models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/tests/test_subjective_randomness_pymc_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/tests/fixtures/pymc_models/representativeness.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/tests/fixtures/pymc_models/bayesian_fair_coin.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/tests/fixtures/pymc_models/simulate.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/tests/test_models.py
+/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/projects/subjective_randomness/ground_truth_models.py
+[0m
+[0m$ [0mhead -n 5 /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,TH,TTTTHHTH,0,1,,2,1,1,1,0,1,8,3,3,4,2,1,0.5,1.0,0.0,0.0,0.0,0.375,0.42857142857142855,0.42857142857142855,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],2,HTHTTTTH,HT,1,0,,8,3,4,4,2,1,2,1,1,1,0,1,0.375,0.5714285714285714,0.42857142857142855,0.25,0.25,0.5,1.0,0.0,0.0,0.0
+0,[REDACTED_PROLIFIC_ID],3,THHHHHTT,TTHHTTT,0,1,,8,5,2,5,3,0,7,2,2,3,3,0,0.625,0.2857142857142857,0.5714285714285714,0.25,0.5,0.2857142857142857,0.3333333333333333,0.3333333333333333,0.4285714285714286,0.4285714285714286
+0,[REDACTED_PROLIFIC_ID],4,TTTTTT,HHHHHHHT,0,1,,6,0,0,6,1,0,8,7,1,7,2,0,0.0,0.0,1.0,1.0,1.0,0.875,0.14285714285714285,0.8571428571428571,0.75,0.75
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models/window_typicality.py
+"""PyMC adapter for the Hahn & Warren (2009) finite-window model family.
+
+Randomness peaks when the longest run is typical of a fair coin viewed through a
+limited memory window: e = log2(min(n, window)). Runs longer than e are penalised
+(the streak-aversion effect); runs shorter than e are penalised by the smaller
+``over_alt_penalty`` weight. See the pure-Python twin in
+``model_families/window_typicality.py`` for the full rationale.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+def _score(n, max_run, window, over_alt_penalty):
+    n_f = pt.cast(n, "float64")
+    max_run_f = pt.cast(max_run, "float64")
+    expected_run = pt.log2(pt.minimum(n_f, window))
+    too_long = pt.softplus(max_run_f - expected_run)
+    too_short = pt.softplus(expected_run - max_run_f)
+    return -(too_long + over_alt_penalty * too_short)
+
+
+with pm.Model() as model:
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="int64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    window = pm.Uniform("window", lower=2.0, upper=8.0)
+    over_alt_penalty = pm.Uniform("over_alt_penalty", lower=0.0, upper=1.0)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    score_a = _score(n_a, max_run_a, window, over_alt_penalty)
+    score_b = _score(n_b, max_run_b, window, over_alt_penalty)
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat > hypothesis.md << 'EOF'
+People evaluate the randomness of a sequence by focusing entirely on the length of its longest streak of identical outcomes, heavily penalizing sequences where a long contiguous streak occupies a large proportion of the total sequence length.
+EOF
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/candidate_0/candidate.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but we refine how alternation typicality is evaluated. Rather than penalizing the sequence's global average alternation rate, people evaluate typicality at the level of individual runs (streaks): they accumulate a penalty for each run that grows quadratically with how much its length deviates from an ideal run length. This non-linear run-level penalty explains why sequences with atypically long streaks are judged as significantly less random even when their overall alternation rates match.
+"""
+
+import re
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    """Return run-level features needed to compute the accumulated quadratic run penalty."""
+    def get_runs(seq):
+        seq = seq.strip().upper()
+        if not seq: 
+            return []
+        return [len(m.group(0)) for m in re.finditer(r'(H+|T+)', seq)]
+    
+    def run_sq(runs):
+        return sum(r**2 for r in runs)
+        
+    runs_a = get_runs(sequence_a)
+    runs_b = get_runs(sequence_b)
+    
+    return {
+        "run_sq_a": float(run_sq(runs_a)),
+        "run_sq_b": float(run_sq(runs_b)),
+        "n_runs_a": float(len(runs_a)),
+        "n_runs_b": float(len(runs_b))
+    }
+
+with pm.Model() as model:
+    # Stimulus inputs (precomputed and our custom run features)
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    run_sq_a = pm.Data("run_sq_a", np.zeros(1, dtype="float64"))
+    n_runs_a = pm.Data("n_runs_a", np.zeros(1, dtype="float64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    run_sq_b = pm.Data("run_sq_b", np.zeros(1, dtype="float64"))
+    n_runs_b = pm.Data("n_runs_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_run_len = pm.Uniform("ideal_run_len", lower=1.0, upper=5.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_run = pm.HalfNormal("w_run", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Calculate empirical head proportion (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    # Calculate the run-level penalty: sum((L_i - ideal_run_len)^2)
+    # Using the algebraic expansion: sum(L_i^2) - 2 * ideal_run_len * sum(L_i) + ideal_run_len^2 * n_runs
+    # Note: sum(L_i) is exactly the total sequence length (n_a).
+    n_a_f = pt.cast(n_a, "float64")
+    n_b_f = pt.cast(n_b, "float64")
+    
+    run_penalty_a = run_sq_a - 2.0 * ideal_run_len * n_a_f + pt.square(ideal_run_len) * n_runs_a
+    run_penalty_b = run_sq_b - 2.0 * ideal_run_len * n_b_f + pt.square(ideal_run_len) * n_runs_b
+
+    # Head proportion penalty is linear (absolute difference)
+    p_penalty_a = pt.abs(p_a - ideal_p)
+    p_penalty_b = pt.abs(p_b - ideal_p)
+
+    # Total randomness score is the accumulated typicality over the sequence length,
+    # minus the accumulated penalties for head proportion and run lengths.
+    rand_a = n_a_f * base_typ - w_p * n_a_f * p_penalty_a - w_run * run_penalty_a
+    rand_b = n_b_f * base_typ - w_p * n_b_f * p_penalty_b - w_run * run_penalty_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat > hypothesis.md << 'EOF'
+People evaluate the randomness of a sequence based solely on the length of its longest contiguous streak of identical outcomes, exponentially penalizing sequences with longer maximum streaks.
+EOF
+[0m
+[0m$ [0mcat > hypothesis.md << 'EOF'
+People evaluate the randomness of a sequence based solely on the length of its longest contiguous streak of identical outcomes, proportionally penalizing sequences with longer maximum streaks.
+EOF
+[0m
+[0m$ [0mcat > hypothesis.md << 'EOF'
+People evaluate the randomness of a sequence based solely on the proportion of the sequence occupied by its longest contiguous streak of identical outcomes, penalizing sequences where a single streak dominates the sequence length.
+EOF
+[0m
+[0m$ [0mcat > candidate.py << 'EOF'
+"""
+People evaluate the randomness of a sequence based solely on the proportion of the sequence occupied by its longest contiguous streak of identical outcomes, penalizing sequences where a single streak dominates the sequence length.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs 
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameter for the penalty weight
+    penalty_weight = pm.HalfNormal("penalty_weight", sigma=5.0)
+
+    # Optional side bias
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=1.0)
+
+    # The randomness score is just the negative penalty on the normalized max run length
+    # A larger max run proportion means a larger penalty (more negative score)
+    score_a = -penalty_weight * max_run_norm_a
+    score_b = -penalty_weight * max_run_norm_b
+
+    p_left_raw = pm.math.sigmoid(score_a - score_b + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+python3 -c "
+from pathlib import Path
+import sys
+
+# Need to make sure the script can find src.models.pymc_inference
+sys.path.append('/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo')
+
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+hypothesis.md OK
+observed: chose_left
+[0m
+[0m$ [0mcat candidate.py
+"""
+People evaluate the randomness of a sequence based solely on the proportion of the sequence occupied by its longest contiguous streak of identical outcomes, penalizing sequences where a single streak dominates the sequence length.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs 
+    max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
+    max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
+
+    # Free cognitive parameter for the penalty weight
+    penalty_weight = pm.HalfNormal("penalty_weight", sigma=5.0)
+
+    # Optional side bias
+    side_bias = pm.Normal("side_bias", mu=0.0, sigma=1.0)
+
+    # The randomness score is just the negative penalty on the normalized max run length
+    # A larger max run proportion means a larger penalty (more negative score)
+    score_a = -penalty_weight * max_run_norm_a
+    score_b = -penalty_weight * max_run_norm_b
+
+    p_left_raw = pm.math.sigmoid(score_a - score_b + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+I have successfully written the plain-English hypothesis and the corresponding PyMC model! 
+
+The proposed hypothesis addresses the significant discrepancy noted in `critiques.md` regarding the `max_run_penalty`, where the previous best models failed to adequately penalize sequences possessing a long unbroken maximum streak. This model evaluates randomness strictly through the normalized magnitude of the longest contiguous streak, capturing the idea that participants are uniquely averse to a single streak dominating the sequence.
+
+Both `hypothesis.md` and `candidate.py` have been placed in the target directory and the PyMC model self-check has passed.

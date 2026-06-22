@@ -1,0 +1,16 @@
+reserved_for_new: 0.0
+theories:
+  bayesian_diagnosticity: 0.005514
+  binomial_feature_surprise: 0.0
+  encoding_compressibility: 0.0
+  falk_konold_complexity: 0.0
+  gaussian_smoothed_prototype: 0.0
+  inner_loop_model: 0.0
+  iter0_candidate0: 0.0
+  iter0_candidate1: 0.0
+  iter0_candidate2: 0.0
+  iter1_candidate0: 0.994486
+  iter1_candidate2: 0.0
+  prototype_similarity: 0.0
+  smoothed_prototype_distance: 0.0
+  window_typicality: 0.0

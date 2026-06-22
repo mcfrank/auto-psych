@@ -1,0 +1,290 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead ../../../run3/data/subjective_randomness/experiment2/CONTEXT.md
+[0m
+[0m$ [0mmkdir -p /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models && ls -l /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/cognitive_models
+total 17
+-rw-------+ 1 benpry ngoodman 4073 Jun 21 14:17 bayesian_diagnosticity.py
+-rw-------+ 1 benpry ngoodman 1581 Jun 21 14:17 encoding_compressibility.py
+-rw-------+ 1 benpry ngoodman 2342 Jun 21 16:10 inner_loop_model.py
+-rw-------+ 1 benpry ngoodman  975 Jun 21 16:10 models_manifest.yaml
+-rw-------+ 1 benpry ngoodman 1171 Jun 21 14:17 prototype_similarity.py
+-rw-------+ 1 benpry ngoodman 1737 Jun 21 14:17 window_typicality.py
+[0m
+[0m→ [0mRead src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+[0m→ [0mRead ../../../run3/data/subjective_randomness/experiment1/model_loop/report.md
+[0m
+[0m$ [0mcp -r /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/cognitive_models/* /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/
+[0m→ [0mRead ../../../run3/data/subjective_randomness/experiment2/cognitive_models/models_manifest.yaml
+[0m→ [0mRead ../../../run3/data/subjective_randomness/experiment2/cognitive_models/inner_loop_model.py
+[0m→ [0mRead ../../../run3/data/subjective_randomness/experiment2/cognitive_models/encoding_compressibility.py
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/cognitive_models/smoothed_prototype_distance.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/inner_loop_model.py">
+ERROR [29:19] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [29:27] "cast" is not exported from module "pytensor.tensor"
+ERROR [30:19] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [30:27] "cast" is not exported from module "pytensor.tensor"
+ERROR [32:19] "maximum" is not exported from module "pytensor.tensor"
+ERROR [32:27] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [33:19] "maximum" is not exported from module "pytensor.tensor"
+ERROR [33:27] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [34:24] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [34:32] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [35:32] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:41] "abs" is not exported from module "pytensor.tensor"
+ERROR [44:41] "abs" is not exported from module "pytensor.tensor"
+ERROR [48:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+
+LSP errors detected in this file, please fix:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/smoothed_prototype_distance.py">
+ERROR [37:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [38:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [40:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [40:29] "maximum" is not exported from module "pytensor.tensor"
+ERROR [40:37] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:29] "maximum" is not exported from module "pytensor.tensor"
+ERROR [41:37] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [49:24] "abs" is not exported from module "pytensor.tensor"
+ERROR [50:24] "abs" is not exported from module "pytensor.tensor"
+ERROR [61:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/cognitive_models/falk_konold_complexity.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/inner_loop_model.py">
+ERROR [29:19] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [29:27] "cast" is not exported from module "pytensor.tensor"
+ERROR [30:19] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [30:27] "cast" is not exported from module "pytensor.tensor"
+ERROR [32:19] "maximum" is not exported from module "pytensor.tensor"
+ERROR [32:27] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [33:19] "maximum" is not exported from module "pytensor.tensor"
+ERROR [33:27] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [34:24] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [34:32] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [35:32] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:41] "abs" is not exported from module "pytensor.tensor"
+ERROR [44:41] "abs" is not exported from module "pytensor.tensor"
+ERROR [48:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/smoothed_prototype_distance.py">
+ERROR [37:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [38:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [40:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [40:29] "maximum" is not exported from module "pytensor.tensor"
+ERROR [40:37] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:29] "maximum" is not exported from module "pytensor.tensor"
+ERROR [41:37] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [49:24] "abs" is not exported from module "pytensor.tensor"
+ERROR [50:24] "abs" is not exported from module "pytensor.tensor"
+ERROR [61:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+
+LSP errors detected in this file, please fix:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/falk_konold_complexity.py">
+ERROR [25:19] "cast" is not exported from module "pytensor.tensor"
+ERROR [25:24] Operator "+" not supported for types "SharedVariable | TensorConstant[Unknown]" and "SharedVariable | TensorConstant[Unknown]"
+  Operator "+" not supported for types "SharedVariable" and "SharedVariable"
+ERROR [26:19] "cast" is not exported from module "pytensor.tensor"
+ERROR [26:24] Operator "+" not supported for types "SharedVariable | TensorConstant[Unknown]" and "SharedVariable | TensorConstant[Unknown]"
+  Operator "+" not supported for types "SharedVariable" and "SharedVariable"
+ERROR [29:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [30:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/cognitive_models/models_manifest.yaml
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/inner_loop_model.py">
+ERROR [29:19] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [29:27] "cast" is not exported from module "pytensor.tensor"
+ERROR [30:19] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [30:27] "cast" is not exported from module "pytensor.tensor"
+ERROR [32:19] "maximum" is not exported from module "pytensor.tensor"
+ERROR [32:27] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [33:19] "maximum" is not exported from module "pytensor.tensor"
+ERROR [33:27] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [34:24] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [34:32] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [35:32] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:41] "abs" is not exported from module "pytensor.tensor"
+ERROR [44:41] "abs" is not exported from module "pytensor.tensor"
+ERROR [48:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/smoothed_prototype_distance.py">
+ERROR [37:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [38:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [40:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [40:29] "maximum" is not exported from module "pytensor.tensor"
+ERROR [40:37] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:29] "maximum" is not exported from module "pytensor.tensor"
+ERROR [41:37] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [49:24] "abs" is not exported from module "pytensor.tensor"
+ERROR [50:24] "abs" is not exported from module "pytensor.tensor"
+ERROR [61:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/falk_konold_complexity.py">
+ERROR [25:19] "cast" is not exported from module "pytensor.tensor"
+ERROR [25:24] Operator "+" not supported for types "SharedVariable | TensorConstant[Unknown]" and "SharedVariable | TensorConstant[Unknown]"
+  Operator "+" not supported for types "SharedVariable" and "SharedVariable"
+ERROR [26:19] "cast" is not exported from module "pytensor.tensor"
+ERROR [26:24] Operator "+" not supported for types "SharedVariable | TensorConstant[Unknown]" and "SharedVariable | TensorConstant[Unknown]"
+  Operator "+" not supported for types "SharedVariable" and "SharedVariable"
+ERROR [29:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [30:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m$ [0mcd /scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo && python3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+for m_name in ['smoothed_prototype_distance', 'falk_konold_complexity']:
+    print(f'Validating {m_name}...')
+    m = load_pymc_model(m_name, Path('/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models'))
+    print('pm.Data inputs:', pm_data_inputs(m))
+    print('observed response container:', observed_response_data(m))
+print('OK')
+"
+Validating smoothed_prototype_distance...
+pm.Data inputs: ['n_a', 'n_b', 'imbalance_a', 'imbalance_b', 'p_alts_a', 'p_alts_b', 'chose_left']
+observed response container: chose_left
+Validating falk_konold_complexity...
+pm.Data inputs: ['n_a', 'n_b', 'rep_motifs_a', 'alt_motifs_a', 'rep_motifs_b', 'alt_motifs_b', 'chose_left']
+observed response container: chose_left
+OK
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/cognitive_models/theory_report.md
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/inner_loop_model.py">
+ERROR [29:19] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [29:27] "cast" is not exported from module "pytensor.tensor"
+ERROR [30:19] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [30:27] "cast" is not exported from module "pytensor.tensor"
+ERROR [32:19] "maximum" is not exported from module "pytensor.tensor"
+ERROR [32:27] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [33:19] "maximum" is not exported from module "pytensor.tensor"
+ERROR [33:27] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [34:24] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [34:32] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "sqrt" is not exported from module "pytensor.tensor"
+ERROR [35:32] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:41] "abs" is not exported from module "pytensor.tensor"
+ERROR [44:41] "abs" is not exported from module "pytensor.tensor"
+ERROR [48:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/smoothed_prototype_distance.py">
+ERROR [37:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [38:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [40:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [40:29] "maximum" is not exported from module "pytensor.tensor"
+ERROR [40:37] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:29] "maximum" is not exported from module "pytensor.tensor"
+ERROR [41:37] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [49:24] "abs" is not exported from module "pytensor.tensor"
+ERROR [50:24] "abs" is not exported from module "pytensor.tensor"
+ERROR [61:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/falk_konold_complexity.py">
+ERROR [25:19] "cast" is not exported from module "pytensor.tensor"
+ERROR [25:24] Operator "+" not supported for types "SharedVariable | TensorConstant[Unknown]" and "SharedVariable | TensorConstant[Unknown]"
+  Operator "+" not supported for types "SharedVariable" and "SharedVariable"
+ERROR [26:19] "cast" is not exported from module "pytensor.tensor"
+ERROR [26:24] Operator "+" not supported for types "SharedVariable | TensorConstant[Unknown]" and "SharedVariable | TensorConstant[Unknown]"
+  Operator "+" not supported for types "SharedVariable" and "SharedVariable"
+ERROR [29:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [30:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m$ [0mls -l /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/*.py
+-rw-------+ 1 benpry ngoodman 4073 Jun 21 16:10 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/bayesian_diagnosticity.py
+-rw-------+ 1 benpry ngoodman 1581 Jun 21 16:10 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/encoding_compressibility.py
+-rw-------+ 1 benpry ngoodman 1736 Jun 21 16:11 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/falk_konold_complexity.py
+-rw-------+ 1 benpry ngoodman 2342 Jun 21 16:10 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/inner_loop_model.py
+-rw-------+ 1 benpry ngoodman 1171 Jun 21 16:10 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/prototype_similarity.py
+-rw-------+ 1 benpry ngoodman 2894 Jun 21 16:11 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/smoothed_prototype_distance.py
+-rw-------+ 1 benpry ngoodman 1737 Jun 21 16:10 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/window_typicality.py
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/models_manifest.yaml
+models:
+- name: prototype_similarity
+  rationale: 'Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.'
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.'
+- name: bayesian_diagnosticity
+  rationale: 'Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.'
+- name: window_typicality
+  rationale: 'Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).'
+- name: inner_loop_model
+  rationale: 'People judge the randomness of a sequence by comparing its features (head proportion and alternation rate) to a subjective ideal, but their psychological penalty for deviations is scaled by the square root of the sequence length, reflecting an intuitive sensitivity to the standard error of small samples.'
+- name: smoothed_prototype_distance
+  rationale: 'People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal.'
+- name: falk_konold_complexity
+  rationale: 'People judge the randomness of a sequence by its structural complexity when parsed into continuous alternating and repeating sub-sequences (Falk & Konold''s difficulty of encoding), perceiving sequences with a lower rate of sub-sequences as simpler and therefore less random.'
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/theory_report.md
+# Theory Report — Experiment 2
+
+## smoothed_prototype_distance
+**Hypothesis:** People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal.
+**Motivation:** The best model from Experiment 1 (`iter1_candidate2`) succeeded by scaling deviations by the square root of the sequence length, providing a statistical tolerance for small samples. This model refines that hypothesis by substituting an unbounded square-root scaling with a Bayesian pseudo-count mechanism (Laplace smoothing), offering an alternative rationalization for length-dependence that naturally bounds the maximum deviation while strongly discounting small samples.
+**Mechanism:** The model replaces raw proportions (e.g., $h/n$) with smoothed estimates (e.g., $(h+c)/(n+2c)$). The deviation from the ideal is therefore attenuated by a discount factor $n/(n+K)$ that approaches 1 for long sequences but strongly shrinks the penalty for short sequences, directly capturing length-sensitive tolerance within a unified Bayesian estimation framework.
+
+## falk_konold_complexity
+**Hypothesis:** People judge the randomness of a sequence by its structural complexity when parsed into continuous alternating and repeating sub-sequences (Falk & Konold's difficulty of encoding), perceiving sequences with a lower rate of sub-sequences as simpler and therefore less random.
+**Motivation:** While earlier models focused on basic counts like max run length or specific motifs, Falk & Konold's parsing theory posits that human observers break sequences into subjective chunks of identical symbols or strictly alternating symbols. This is a theoretically distinct structural complexity measure not captured by existing models.
+**Mechanism:** The model sums the number of alternating motifs (`alt_motifs`) and repeating motifs (`rep_motifs`), dividing by the sequence length to compute the sub-sequence rate. A higher rate indicates a more highly fractured (complex) sequence, which is evaluated as more random.
+[0m
+I have completed the task.
+
+1. **Copied Previous Models:** I have populated `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models` with the standard set of 5 prior models from experiment 1 plus the inner loop's newly distilled best model (`inner_loop_model.py`), correctly excluding any interim inner-loop zoo candidates.
+2. **Proposed New Models:** I added two theoretically distinct hypotheses to test against the set:
+   - **`smoothed_prototype_distance`:** A Bayesian refinement of `inner_loop_model`. Instead of linearly scaling the prototype deviation by `sqrt(n)` (which theoretically grows unboundedly), it uses Bayesian estimation with pseudo-counts. This naturally regularizes proportions from short sequences with an attenuation factor of `n / (n + K)`, smoothing extreme values without punishing sequences infinitely as $n \to \infty$.
+   - **`falk_konold_complexity`:** A structural complexity hypothesis drawn from the literature (Falk & Konold, 1997). It models perceived randomness strictly via the subjective sub-sequence chunk rate (number of maximal alternating and repeating runs normalized by sequence length), evaluating sequences with fewer sub-sequences as subjectively simpler and less random.
+3. **Validation:** I have verified both newly proposed models are valid PyMC models, feature column names correspond exactly to the `responses.csv` schema (`imbalance_a`, `p_alts_a`, `rep_motifs_a`, `alt_motifs_a`, etc.), and proper type casting is utilized.
+4. **Manifest and Reporting:** Updated `models_manifest.yaml` mapping all 7 current models to their plain-English hypotheses, and recorded my rationale for the new models in `theory_report.md`.

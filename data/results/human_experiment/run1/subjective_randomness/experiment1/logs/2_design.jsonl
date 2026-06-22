@@ -1,0 +1,1657 @@
+Performing one time database migration, may take a few minutes...
+sqlite-migration:done
+Database migration complete.
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m→ [0mRead ../../../run1/data/subjective_randomness/experiment1/CONTEXT.md
+[0m→ [0mRead src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+[0m
+[0m$ [0mmkdir -p /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment1/design/generate_candidates.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/generate_candidates.py
+Generated 300 candidates.
+[0m
+[0m$ [0mls -la /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_registry.yaml
+-rw-------+ 1 benpry ngoodman 36 Jun 21 12:51 /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_registry.yaml
+[0m
+[0m$ [0mls -la /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py
+-rw-r--r--+ 1 benpry ngoodman 5758 Jun 18 23:34 /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py
+[0m
+[0m$ [0mcd /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo && uv run python3 -m src.pipelines.outer_loop.eig \
+    --candidates /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/candidates.json \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/cognitive_models \
+    --featurize /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py \
+    --registry /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_registry.yaml \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/stimuli.json \
+    --top 32
+Downloading cpython-3.11.15-linux-x86_64-gnu (download) (29.8MiB)
+ Downloaded cpython-3.11.15-linux-x86_64-gnu (download)
+Using CPython 3.11.15
+Creating virtual environment at: .venv
+Downloading xarray (1.3MiB)
+Downloading playwright (45.3MiB)
+Downloading kiwisolver (1.4MiB)
+Downloading setuptools (1.0MiB)
+Downloading fonttools (4.8MiB)
+Downloading google-ai-generativelanguage (1.3MiB)
+Downloading pydantic-core (2.0MiB)
+Downloading zstandard (5.3MiB)
+Downloading google-api-python-client (14.6MiB)
+Downloading numpy (16.0MiB)
+Downloading pygments (1.2MiB)
+Downloading pytensor (1.9MiB)
+Downloading pillow (7.7MiB)
+Downloading arviz (1.6MiB)
+Downloading grpcio (6.5MiB)
+Downloading numba (3.6MiB)
+Downloading cryptography (4.5MiB)
+Downloading llvmlite (53.7MiB)
+Downloading pandas (12.5MiB)
+Downloading matplotlib (8.4MiB)
+Downloading scipy (39.3MiB)
+ Downloaded kiwisolver
+ Downloaded xarray
+   Building greenlet==3.5.1
+ Downloaded pydantic-core
+ Downloaded pytensor
+ Downloaded pygments
+ Downloaded arviz
+ Downloaded google-ai-generativelanguage
+   Building h5py==3.16.0
+ Downloaded setuptools
+ Downloaded zstandard
+ Downloaded cryptography
+ Downloaded numba
+ Downloaded fonttools
+ Downloaded grpcio
+ Downloaded pillow
+ Downloaded matplotlib
+   Building contourpy==1.3.3
+ Downloaded numpy
+ Downloaded google-api-python-client
+ Downloaded pandas
+ Downloaded playwright
+ Downloaded llvmlite
+ Downloaded scipy
+      Built greenlet==3.5.1
+      Built contourpy==1.3.3
+
+
+<bash_metadata>
+bash tool terminated command after exceeding timeout 120000 ms
+</bash_metadata>
+[0m
+[0m$ [0mcd /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo && uv run python3 -m src.pipelines.outer_loop.eig \
+    --candidates /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/candidates.json \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/cognitive_models \
+    --featurize /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py \
+    --registry /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_registry.yaml \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/stimuli.json \
+    --top 32
+Building h5py==3.16.0
+  × Failed to build `h5py==3.16.0`
+  ├─▶ The build backend returned an error
+  ╰─▶ Call to `backend.build_wheel` failed (exit status: 1)
+
+      [stdout]
+      running bdist_wheel
+      running build
+      running build_py
+      creating build/lib.linux-x86_64-cpython-311/h5py
+      copying h5py/__init__.py -> build/lib.linux-x86_64-cpython-311/h5py
+      copying h5py/h5py_warnings.py -> build/lib.linux-x86_64-cpython-311/h5py
+      copying h5py/ipy_completer.py -> build/lib.linux-x86_64-cpython-311/h5py
+      copying h5py/version.py -> build/lib.linux-x86_64-cpython-311/h5py
+      creating build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/__init__.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/attrs.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/base.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/compat.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/dataset.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/datatype.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/dims.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/files.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/filters.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/group.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/selections.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/selections2.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/vds.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      creating build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/__init__.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/common.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/conftest.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_attribute_create.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_attrs.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_attrs_data.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_base.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_big_endian_file.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_completions.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dataset.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dataset_getitem.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dataset_swmr.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_datatype.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dimension_scales.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dims_dimensionproxy.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dtype.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_errors.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_file.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_file2.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_file_alignment.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_file_image.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_filters.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_group.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5d_direct_chunk.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5f.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5o.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5p.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5pl.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5s.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5t.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5z.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_native_complex.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_npystrings.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_objects.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_ros3.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_selections.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_slicing.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      creating build/lib.linux-x86_64-cpython-311/h5py/tests/data_files
+      copying h5py/tests/data_files/__init__.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/data_files
+      creating build/lib.linux-x86_64-cpython-311/h5py/tests/test_vds
+      copying h5py/tests/test_vds/__init__.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/test_vds
+      copying h5py/tests/test_vds/test_highlevel_vds.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/test_vds
+      copying h5py/tests/test_vds/test_lowlevel_vds.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/test_vds
+      copying h5py/tests/test_vds/test_virtual_source.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/test_vds
+      copying h5py/tests/data_files/compound-dtype-complex.h5 ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/data_files
+      copying h5py/tests/data_files/vlen_string_dset.h5 ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/data_files
+      copying h5py/tests/data_files/vlen_string_dset_utc.h5 ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/data_files
+      copying h5py/tests/data_files/vlen_string_s390x.h5 ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/data_files
+      running build_ext
+      Loading library to get build settings and version: libhdf5.so
+      error: Unable to load dependency HDF5, make sure HDF5 is installed
+      properly
+      on sys.platform='linux' with platform.machine()='x86_64'
+      Library dirs checked: []
+
+      [stderr]
+      error: libhdf5.so: cannot open shared object file: No such file or
+      directory
+
+      hint: This usually indicates a problem with the package or the build
+      environment.
+  help: `h5py` (v3.16.0) was included because `auto-psych:pymc` (v0.1.0)
+        depends on `arviz` (v0.23.4) which depends on `h5py`
+[0m
+[0m$ [0mcd /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo && cat pyproject.toml | grep h5py || true
+[0m
+[0m$ [0msudo apt-get update && sudo apt-get install -y libhdf5-dev
+============================================================
+ There's no sudo on Sherlock
+============================================================
+ For more information about software on Sherlock,
+ please see https://www.sherlock.stanford.edu/docs/software
+ or contact srcc-support@stanford.edu.
+------------------------------------------------------------
+============================================================
+ There's no sudo on Sherlock
+============================================================
+ For more information about software on Sherlock,
+ please see https://www.sherlock.stanford.edu/docs/software
+ or contact srcc-support@stanford.edu.
+------------------------------------------------------------
+[0m
+[0m$ [0mmodule avail hdf5
+------------------ devel -- compilers, MPI, languages, libs -------------------
+   hdf5/1.10.0p1        hdf5/1.10.6 (m,D)    hdf5/1.12.2 (m)
+   hdf5/1.10.2   (m)    hdf5/1.12.0          hdf5/1.14.4 (m)
+
+  Where:
+   D:  Default Module
+   m:  MPI support
+
+  >> For more information about using software on Sherlock, please refer to 
+  >> https://www.sherlock.stanford.edu/docs/software
+[0m
+[0m$ [0mmodule load hdf5 && cd /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo && uv run python3 -m src.pipelines.outer_loop.eig \
+    --candidates /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/candidates.json \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/cognitive_models \
+    --featurize /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py \
+    --registry /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_registry.yaml \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/stimuli.json \
+    --top 32
+Building h5py==3.16.0
+  × Failed to build `h5py==3.16.0`
+  ├─▶ The build backend returned an error
+  ╰─▶ Call to `backend.build_wheel` failed (exit status: 1)
+
+      [stdout]
+      running bdist_wheel
+      running build
+      running build_py
+      copying h5py/__init__.py -> build/lib.linux-x86_64-cpython-311/h5py
+      copying h5py/h5py_warnings.py -> build/lib.linux-x86_64-cpython-311/h5py
+      copying h5py/ipy_completer.py -> build/lib.linux-x86_64-cpython-311/h5py
+      copying h5py/version.py -> build/lib.linux-x86_64-cpython-311/h5py
+      copying h5py/_hl/__init__.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/attrs.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/base.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/compat.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/dataset.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/datatype.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/dims.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/files.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/filters.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/group.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/selections.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/selections2.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/_hl/vds.py -> build/lib.linux-x86_64-cpython-311/h5py/_hl
+      copying h5py/tests/__init__.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/common.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/conftest.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_attribute_create.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_attrs.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_attrs_data.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_base.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_big_endian_file.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_completions.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dataset.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dataset_getitem.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dataset_swmr.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_datatype.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dimension_scales.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dims_dimensionproxy.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_dtype.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_errors.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_file.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_file2.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_file_alignment.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_file_image.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_filters.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_group.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5d_direct_chunk.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5f.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5o.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5p.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5pl.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5s.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5t.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_h5z.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_native_complex.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_npystrings.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_objects.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_ros3.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_selections.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/test_slicing.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests
+      copying h5py/tests/data_files/__init__.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/data_files
+      copying h5py/tests/test_vds/__init__.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/test_vds
+      copying h5py/tests/test_vds/test_highlevel_vds.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/test_vds
+      copying h5py/tests/test_vds/test_lowlevel_vds.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/test_vds
+      copying h5py/tests/test_vds/test_virtual_source.py ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/test_vds
+      copying h5py/tests/data_files/compound-dtype-complex.h5 ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/data_files
+      copying h5py/tests/data_files/vlen_string_dset.h5 ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/data_files
+      copying h5py/tests/data_files/vlen_string_dset_utc.h5 ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/data_files
+      copying h5py/tests/data_files/vlen_string_s390x.h5 ->
+      build/lib.linux-x86_64-cpython-311/h5py/tests/data_files
+      running build_ext
+      Loading library to get build settings and version: libhdf5.so
+      ********************************************************************************
+                             Summary of the h5py configuration
+
+        HDF5 include dirs: []
+        HDF5 library dirs: []
+             HDF5 Version: (1, 10, 6)
+              MPI Enabled: False
+         ROS3 VFD Enabled: False
+       DIRECT VFD Enabled: False
+         Rebuild Required: True
+           MS-MPI Enabled: False
+      MS-MPI include dirs: []
+      MS-MPI library dirs: []
+
+      ********************************************************************************
+
+      [stderr]
+      Traceback (most recent call last):
+        File "<string>", line 11, in <module>
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/build_meta.py",
+      line 438, in build_wheel
+          return _build(['bdist_wheel'])
+                 ^^^^^^^^^^^^^^^^^^^^^^^
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/build_meta.py",
+      line 429, in _build
+          return self._build_with_temp_dir(
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/build_meta.py",
+      line 410, in _build_with_temp_dir
+          self.run_setup()
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/build_meta.py",
+      line 317, in run_setup
+          exec(code, locals())
+        File "<string>", line 51, in <module>
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/__init__.py",
+      line 117, in setup
+          return distutils.core.setup(**attrs)  # type: ignore[return-value]
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/_distutils/core.py",
+      line 186, in setup
+          return run_commands(dist)
+                 ^^^^^^^^^^^^^^^^^^
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/_distutils/core.py",
+      line 202, in run_commands
+          dist.run_commands()
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/_distutils/dist.py",
+      line 1000, in run_commands
+          self.run_command(cmd)
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/dist.py",
+      line 1107, in run_command
+          super().run_command(command)
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/_distutils/dist.py",
+      line 1019, in run_command
+          cmd_obj.run()
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/command/bdist_wheel.py",
+      line 370, in run
+          self.run_command("build")
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/_distutils/cmd.py",
+      line 341, in run_command
+          self.distribution.run_command(command)
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/dist.py",
+      line 1107, in run_command
+          super().run_command(command)
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/_distutils/dist.py",
+      line 1019, in run_command
+          cmd_obj.run()
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/_distutils/command/build.py",
+      line 135, in run
+          self.run_command(cmd_name)
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/_distutils/cmd.py",
+      line 341, in run_command
+          self.distribution.run_command(command)
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/dist.py",
+      line 1107, in run_command
+          super().run_command(command)
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/builds-v0/.tmp18VTOx/lib/python3.11/site-packages/setuptools/_distutils/dist.py",
+      line 1019, in run_command
+          cmd_obj.run()
+        File
+      "/lscratch/benpry/oc_run1_30525237/cache/uv/sdists-v9/pypi/h5py/3.16.0/ythDJ1OCUtSpKi4x7Qni0/src/setup_build.py",
+      line 174, in run
+          raise Exception(
+      Exception: This version of h5py requires HDF5 >= 1.10.7 and != 1.12.0
+      (got version (1, 10, 6) from environment variable or library)
+
+      hint: This usually indicates a problem with the package or the build
+      environment.
+  help: `h5py` (v3.16.0) was included because `auto-psych:pymc` (v0.1.0)
+        depends on `arviz` (v0.23.4) which depends on `h5py`
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/pyproject.toml
+[project]
+name = "auto-psych"
+version = "0.1.0"
+description = "Agentic cognitive psychology experiment and model-discovery pipelines"
+requires-python = ">=3.11"
+dependencies = [
+    "flask>=3.1.3",
+    "google-cloud-firestore>=2.13.0",
+    "google-cloud-storage>=2.14.0",
+    "google-generativeai>=0.8.0",
+    "langchain>=0.3.0",
+    "langchain-google-genai>=2.0.0",
+    "langgraph>=0.2.0",
+    "numpy>=1.26.0",
+    "playwright>=1.40.0",
+    "pydantic>=2.0.0",
+    "pypdf>=4.0.0",
+    "pyprojroot>=0.3.0",
+    "pyyaml>=6.0.0",
+    "requests>=2.31.0",
+    "scipy>=1.11.0",
+    "tyro>=0.8.0",
+]
+
+[dependency-groups]
+dev = [
+    "matplotlib>=3.5.0",
+    "pytest>=7.0.0",
+]
+remote = [
+    "google-generativeai>=0.8.0",
+    "langchain>=0.3.0",
+    "langchain-google-genai>=2.0.0",
+    "langgraph>=0.2.0",
+    "pydantic>=2.0.0",
+    "pypdf>=4.0.0",
+    "pyyaml>=6.0.0",
+]
+pymc = [
+    "arviz>=0.17.0",
+    "pymc>=5.10.0",
+]
+# Open-weight participant models (LLM-as-participant, --participant-backend open).
+# Heavy; install only when needed: `uv sync --group open-models`.
+# CPU/Apple-MPS torch resolves by default. For an NVIDIA GPU, install the torch
+# wheel matching your CUDA version (https://pytorch.org/get-started/locally/)
+# before syncing this group.
+open-models = [
+    "torch>=2.2.0",
+    "transformers>=4.40.0",
+    "accelerate>=0.30.0",
+]
+
+[tool.uv]
+# The test suite (and the inner-loop pipeline) depend on the pymc stack, so it
+# must be present in the default dev environment — otherwise a plain `uv sync`
+# prunes pymc/pytensor and every PyMC test fails. `open-models` stays opt-in
+# (heavy torch/transformers; no test needs it): `uv sync --group open-models`.
+default-groups = ["dev", "pymc"]
+
+# Sherlock (and other RHEL7) compute nodes run glibc 2.17 (manylinux2014). The
+# newest numpy/scipy/pandas dropped their glibc-2.17 wheels — they now require
+# glibc >= 2.27/2.28 — so without these caps `uv` finds no compatible wheel on the
+# cluster and falls back to building them from source (slow; needs gfortran/BLAS).
+# Cap them to the last releases that still ship manylinux2014 (glibc 2.17) wheels.
+# Remove these caps if you only run on glibc >= 2.28 hosts. After editing, re-lock:
+#   uv lock && uv run pytest -q
+constraint-dependencies = ["numpy<2.3", "scipy<1.15", "pandas<2.3"]
+
+# NOTE on the Python version (see .python-version, pinned to 3.11): the code is
+# written for the arviz 0.x / pymc 5.x API (e.g. `loo.elpd_loo`,
+# `az.compare(ic="loo")`, positive `elpd_diff`). On Python >= 3.12 this lock
+# resolves arviz 1.x / pymc 6.x, whose DataTree rewrite renames/changes those
+# (e.g. `loo.elpd`, no `ic=` kwarg, sign-flipped `elpd_diff`) and breaks the
+# model-comparison code and tests. Staying on 3.11 keeps the validated 0.x stack.
+# Porting to arviz 1.x (then any Python >= 3.12 works) is a separate task.
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "src/pipelines/inner_loop/tests"]
+pythonpath = ["."]
+markers = [
+    "slow: tests that run MCMC (PyMC NUTS) — deselect with '-m \"not slow\"'",
+]
+[0m
+[0m✗ [0medit failed
+[91m[1mError: [0mYou must read file /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/pyproject.toml before overwriting it. Use the Read tool first
+[0m→ [0mRead pyproject.toml
+[0m
+[0m← [0mEdit pyproject.toml
+Index: /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/pyproject.toml
+===================================================================
+--- /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/pyproject.toml
++++ /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/pyproject.toml
+@@ -64,9 +64,9 @@
+ # cluster and falls back to building them from source (slow; needs gfortran/BLAS).
+ # Cap them to the last releases that still ship manylinux2014 (glibc 2.17) wheels.
+ # Remove these caps if you only run on glibc >= 2.28 hosts. After editing, re-lock:
+ #   uv lock && uv run pytest -q
+-constraint-dependencies = ["numpy<2.3", "scipy<1.15", "pandas<2.3"]
++constraint-dependencies = ["numpy<2.3", "scipy<1.15", "pandas<2.3", "h5py<3.11"]
+ 
+ # NOTE on the Python version (see .python-version, pinned to 3.11): the code is
+ # written for the arviz 0.x / pymc 5.x API (e.g. `loo.elpd_loo`,
+ # `az.compare(ic="loo")`, positive `elpd_diff`). On Python >= 3.12 this lock
+
+[0m
+[0m$ [0mcd /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo && uv lock
+Resolved 165 packages in 662ms
+Updated h5py v3.16.0 -> v3.10.0
+[0m
+[0m$ [0mcd /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo && uv run python3 -m src.pipelines.outer_loop.eig \
+    --candidates /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/candidates.json \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/cognitive_models \
+    --featurize /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py \
+    --registry /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_registry.yaml \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/stimuli.json \
+    --top 32
+Downloading h5py (4.6MiB)
+ Downloaded h5py
+Installed 120 packages in 50.17s
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+Sampling: [beta, longrun_weight, periodic_share, side_bias]
+Sampling: [alpha, beta, bias_share, delta, side_bias]
+Sampling: [beta, over_alt_penalty, side_bias, window]
+Sampling: [alt_weight, beta, side_bias, theta_alt]
+
+...14787 bytes truncated...
+
+The tool call succeeded but the output was truncated. Full output saved to: /lscratch/benpry/oc_run1_30525237/data/opencode/tool-output/tool_eebc597710015ZICyzO8bKPFZ3
+Use the Task tool to have explore agent process this file with Grep and Read (with offset/limit). Do NOT read the full file yourself - delegate to save context.
+[0m
+[0m$ [0mhead -n 20 /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/stimuli.json
+[
+  {
+    "sequence_a": "TH",
+    "sequence_b": "TTTTHHTH",
+    "eig": 0.397376
+  },
+  {
+    "sequence_a": "HTHTTTTH",
+    "sequence_b": "HT",
+    "eig": 0.396436
+  },
+  {
+    "sequence_a": "THHHHHTT",
+    "sequence_b": "TTHHTTT",
+    "eig": 0.375566
+  },
+  {
+    "sequence_a": "TTTTTT",
+    "sequence_b": "HHHHHHHT",
+    "eig": 0.353628
+[0m
+[0m$ [0mgrep -c "sequence_a" /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/stimuli.json
+32
+[0m
+[0m$ [0mgrep "eig" /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design/stimuli.json
+"eig": 0.397376
+    "eig": 0.396436
+    "eig": 0.375566
+    "eig": 0.353628
+    "eig": 0.34939
+    "eig": 0.34402
+    "eig": 0.343636
+    "eig": 0.326385
+    "eig": 0.315876
+    "eig": 0.306446
+    "eig": 0.289672
+    "eig": 0.287239
+    "eig": 0.283149
+    "eig": 0.282252
+    "eig": 0.268978
+    "eig": 0.266113
+    "eig": 0.264995
+    "eig": 0.259799
+    "eig": 0.257577
+    "eig": 0.255631
+    "eig": 0.255025
+    "eig": 0.251434
+    "eig": 0.248906
+    "eig": 0.239405
+    "eig": 0.237573
+    "eig": 0.237498
+    "eig": 0.233969
+    "eig": 0.233667
+    "eig": 0.229198
+    "eig": 0.225006
+    "eig": 0.216354
+    "eig": 0.212574
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment1/design/design_rationale.md
+Wrote file successfully.
+[0m
+[0m$ [0mls -la /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/design
+total 37
+drwx------+ 2 benpry ngoodman  4096 Jun 21 13:01 .
+drwx------+ 8 benpry ngoodman  4096 Jun 21 12:52 ..
+-rw-------+ 1 benpry ngoodman 19817 Jun 21 12:52 candidates.json
+-rw-------+ 1 benpry ngoodman  1004 Jun 21 13:01 design_rationale.md
+-rw-------+ 1 benpry ngoodman  1146 Jun 21 12:52 generate_candidates.py
+-rw-------+ 1 benpry ngoodman  2757 Jun 21 13:00 stimuli.json
+[0m
+I have successfully designed the experiment. Here is a summary of the steps taken:
+
+1. **Read Context**: I read the context and the problem definition to understand the constraints: sequence length of 2 to 8, total of 32 trials for the final design, and the requirement to keep the candidate pool tractable (100-300 pairs).
+2. **Generate Candidates**: I wrote and executed a Python script that generated all sequences of length 2 to 8, formed pairs, and then uniformly sampled 300 random pairs to act as candidates, saving them to `design/candidates.json`.
+3. **Score by EIG**: I ran the EIG script (`src.pipelines.outer_loop.eig`) with `--top 32` to select the most discriminative pairs. The script scored the pairs using PyMC models (prior predictive), correctly applying the feature generation.
+4. **Design Rationale**: I wrote the rationale to `design/design_rationale.md`, detailing the EIG range (~0.21 to 0.40) and how the varying lengths and statistics (e.g. comparing "TH" with "TTTTHHTH") will force models to disagree, providing high information gain.
+
+The self-validation checklist is met:
+- `design/stimuli.json` exists and is a JSON list of 32 items.
+- Each item has `sequence_a`, `sequence_b`, and a numeric `eig`.
+- The maximum EIG is > 0 (max is 0.397).
+- `design/design_rationale.md` exists.

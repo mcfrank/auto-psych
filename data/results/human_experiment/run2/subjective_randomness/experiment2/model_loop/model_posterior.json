@@ -1,0 +1,155 @@
+{
+  "posteriors": {
+    "prototype_similarity": 0.0,
+    "encoding_compressibility": 0.0,
+    "bayesian_diagnosticity": 0.0,
+    "window_typicality": 0.0,
+    "inner_loop_model": 0.0,
+    "falk_konold_difficulty": 0.0,
+    "manhattan_messy_prototype": 0.0,
+    "iter0_candidate0": 0.0,
+    "iter0_candidate1": 0.619759,
+    "iter0_candidate2": 0.013854,
+    "iter1_candidate0": 0.366387,
+    "iter1_candidate1": 0.0,
+    "iter1_candidate2": 0.0
+  },
+  "elpd_loo": {
+    "prototype_similarity": -1632.526,
+    "encoding_compressibility": -1722.8504,
+    "bayesian_diagnosticity": -1631.8874,
+    "window_typicality": -1711.2048,
+    "inner_loop_model": -1618.538,
+    "falk_konold_difficulty": -1756.792,
+    "manhattan_messy_prototype": -1619.5777,
+    "iter0_candidate0": -1663.6462,
+    "iter0_candidate1": -1598.0712,
+    "iter0_candidate2": -1600.772,
+    "iter1_candidate0": -1598.4969,
+    "iter1_candidate1": -1699.3919,
+    "iter1_candidate2": -1618.7057
+  },
+  "n_trials": 2560,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "prototype_similarity": 26,
+    "encoding_compressibility": 35,
+    "bayesian_diagnosticity": 78,
+    "window_typicality": 34,
+    "inner_loop_model": 40,
+    "falk_konold_difficulty": 31,
+    "manhattan_messy_prototype": 38,
+    "iter0_candidate0": 36,
+    "iter0_candidate1": 47,
+    "iter0_candidate2": 69,
+    "iter1_candidate0": 49,
+    "iter1_candidate1": 41,
+    "iter1_candidate2": 68
+  },
+  "comparison": {
+    "iter0_candidate1": {
+      "rank": 0,
+      "elpd_loo": -1598.07124612101,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.22568295574877856,
+      "loo_unreliable": false
+    },
+    "iter1_candidate0": {
+      "rank": 1,
+      "elpd_loo": -1598.4968869712457,
+      "elpd_diff": 0.4256408502356219,
+      "dse": 2.159809228965224,
+      "weight": 7.18835682980961e-13,
+      "loo_unreliable": false
+    },
+    "iter0_candidate2": {
+      "rank": 2,
+      "elpd_loo": -1600.7720136243156,
+      "elpd_diff": 2.7007675033057588,
+      "dse": 7.663475643486597,
+      "weight": 0.5008431381176885,
+      "loo_unreliable": false
+    },
+    "inner_loop_model": {
+      "rank": 3,
+      "elpd_loo": -1618.5379834241426,
+      "elpd_diff": 20.466737303132625,
+      "dse": 8.531723531012018,
+      "weight": 0.0013479534380230539,
+      "loo_unreliable": false
+    },
+    "iter1_candidate2": {
+      "rank": 4,
+      "elpd_loo": -1618.7056904712535,
+      "elpd_diff": 20.63444435024344,
+      "dse": 5.995421613926514,
+      "weight": 6.159527776066279e-13,
+      "loo_unreliable": false
+    },
+    "manhattan_messy_prototype": {
+      "rank": 5,
+      "elpd_loo": -1619.5777006021724,
+      "elpd_diff": 21.506454481162567,
+      "dse": 8.80483402564743,
+      "weight": 0.2712170021087679,
+      "loo_unreliable": false
+    },
+    "bayesian_diagnosticity": {
+      "rank": 6,
+      "elpd_loo": -1631.887424367792,
+      "elpd_diff": 33.81617824678213,
+      "dse": 8.991297540228539,
+      "weight": 0.0,
+      "loo_unreliable": false
+    },
+    "prototype_similarity": {
+      "rank": 7,
+      "elpd_loo": -1632.5260258407088,
+      "elpd_diff": 34.45477971969902,
+      "dse": 10.205363774401981,
+      "weight": 0.0,
+      "loo_unreliable": false
+    },
+    "iter0_candidate0": {
+      "rank": 8,
+      "elpd_loo": -1663.6462469876985,
+      "elpd_diff": 65.57500086668854,
+      "dse": 11.571304646546212,
+      "weight": 3.963714935700108e-13,
+      "loo_unreliable": false
+    },
+    "iter1_candidate1": {
+      "rank": 9,
+      "elpd_loo": -1699.3919328172356,
+      "elpd_diff": 101.32068669622547,
+      "dse": 15.128799846656682,
+      "weight": 4.3346609532009597e-13,
+      "loo_unreliable": false
+    },
+    "window_typicality": {
+      "rank": 10,
+      "elpd_loo": -1711.2048228215535,
+      "elpd_diff": 113.13357670054368,
+      "dse": 16.35375632372165,
+      "weight": 0.0009089505835461291,
+      "loo_unreliable": false
+    },
+    "encoding_compressibility": {
+      "rank": 11,
+      "elpd_loo": -1722.8503998496335,
+      "elpd_diff": 124.77915372862354,
+      "dse": 16.30391167581448,
+      "weight": 4.267240383206035e-13,
+      "loo_unreliable": false
+    },
+    "falk_konold_difficulty": {
+      "rank": 12,
+      "elpd_loo": -1756.791960063415,
+      "elpd_diff": 158.7207139424052,
+      "dse": 17.177903107356332,
+      "weight": 1.6181642546633616e-12,
+      "loo_unreliable": false
+    }
+  }
+}

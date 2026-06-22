@@ -1,0 +1,186 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CRITIQUE_CONTEXT.md
+# Critique context
+
+**Incumbent (best) model:** `linear_accumulated_typicality`
+**Incumbent model code:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/models/linear_accumulated_typicality.py`
+**Incumbent hypothesis:** People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal head proportion and alternation rate is linear (absolute difference) rather than quadratic, treating extreme deviations proportionally to small ones.
+
+**Responses CSV:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv`
+**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+**Model set directory:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/models`
+
+Propose **8** test statistics. Write each to `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/test_stats/<name>.py` as a function `test_statistic(df)` returning a scalar, with `# name:` and `# description:` header comments.
+
+You do **not** need to run anything. After you write the statistics, the pipeline runs the posterior-predictive harness automatically over `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/test_stats` and records the results:
+
+```bash
+python3 -m src.critique.ppc \
+    --responses /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv \
+    --model linear_accumulated_typicality \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/models \
+    --test-stats-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/test_stats \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/ppc_results.json \
+    --cache-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/.fit_cache \
+    --n-replicates 200 \
+    --significance-alpha 0.05
+```
+
+That writes `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/ppc_results.json` with a two-sided empirical p-value per statistic (200 posterior-predictive replicates). A statistic is a **significant discrepancy** when its `p_value` ≤ 0.05 (raw, no multiple-comparisons correction).
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/models/linear_accumulated_typicality.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal head proportion and alternation rate is linear (absolute difference) rather than quadratic, treating extreme deviations proportionally to small ones.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate per-event typicality using linear (absolute) deviations
+    typ_a = base_typ - (
+        w_p * pt.abs(p_a - ideal_p) + w_alt * pt.abs(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.abs(p_b - ideal_p) + w_alt * pt.abs(alt_rate_b - ideal_alt)
+    )
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = n_a * typ_a
+    rand_b = n_b * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 20 /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,TH,TTTTHHTH,0,1,,2,1,1,1,0,1,8,3,3,4,2,1,0.5,1.0,0.0,0.0,0.0,0.375,0.42857142857142855,0.42857142857142855,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],2,HTHTTTTH,HT,1,0,,8,3,4,4,2,1,2,1,1,1,0,1,0.375,0.5714285714285714,0.42857142857142855,0.25,0.25,0.5,1.0,0.0,0.0,0.0
+0,[REDACTED_PROLIFIC_ID],3,THHHHHTT,TTHHTTT,0,1,,8,5,2,5,3,0,7,2,2,3,3,0,0.625,0.2857142857142857,0.5714285714285714,0.25,0.5,0.2857142857142857,0.3333333333333333,0.3333333333333333,0.4285714285714286,0.4285714285714286
+0,[REDACTED_PROLIFIC_ID],4,TTTTTT,HHHHHHHT,0,1,,6,0,0,6,1,0,8,7,1,7,2,0,0.0,0.0,1.0,1.0,1.0,0.875,0.14285714285714285,0.8571428571428571,0.75,0.75
+0,[REDACTED_PROLIFIC_ID],5,HH,HHTTTT,0,1,,2,2,0,2,1,0,6,2,1,4,2,0,1.0,0.0,1.0,1.0,0.0,0.3333333333333333,0.2,0.6,0.33333333333333337,0.33333333333333326
+0,[REDACTED_PROLIFIC_ID],6,HHTTTTHH,HHHTHHHT,0,1,,8,4,2,4,3,0,8,6,3,3,4,0,0.5,0.2857142857142857,0.42857142857142855,0.0,0.5,0.75,0.42857142857142855,0.2857142857142857,0.5,1.0
+0,[REDACTED_PROLIFIC_ID],7,TTHTTTHT,TTTHHHHT,1,0,,8,2,4,3,3,1,8,4,2,4,3,0,0.25,0.5714285714285714,0.2857142857142857,0.5,1.0,0.5,0.2857142857142857,0.42857142857142855,0.0,0.0
+0,[REDACTED_PROLIFIC_ID],8,HTTTTHHH,TTHHTT,0,1,,8,4,2,4,3,0,6,2,2,2,3,0,0.5,0.2857142857142857,0.42857142857142855,0.0,0.25,0.3333333333333333,0.4,0.2,0.33333333333333337,0.33333333333333326
+0,[REDACTED_PROLIFIC_ID],9,HTT,THHHHTHT,0,1,,3,1,1,2,2,0,8,5,4,4,2,1,0.3333333333333333,0.5,0.5,0.33333333333333337,0.0,0.625,0.5714285714285714,0.42857142857142855,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],10,TTTHTHTT,HTTTTTH,1,0,,8,2,4,3,2,1,7,2,2,5,3,0,0.25,0.5714285714285714,0.2857142857142857,0.5,0.5,0.2857142857142857,0.3333333333333333,0.6666666666666666,0.4285714285714286,0.7142857142857142
+0,[REDACTED_PROLIFIC_ID],11,HHTHHT,THHHHTTH,1,0,,6,4,3,2,4,0,8,5,3,4,4,0,0.6666666666666666,0.6,0.2,0.33333333333333326,1.0,0.625,0.42857142857142855,0.42857142857142855,0.25,0.5
+0,[REDACTED_PROLIFIC_ID],12,THTTTHT,HTTTTHH,1,0,,7,2,4,3,1,2,7,3,2,4,3,0,0.2857142857142857,0.6666666666666666,0.3333333333333333,0.4285714285714286,0.7142857142857142,0.42857142857142855,0.3333333333333333,0.5,0.1428571428571429,0.4285714285714286
+0,[REDACTED_PROLIFIC_ID],13,HHHTHHTH,HHHHHTTT,1,0,,8,6,4,3,3,1,8,5,1,5,2,0,0.75,0.5714285714285714,0.2857142857142857,0.5,0.5,0.625,0.14285714285714285,0.5714285714285714,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],14,TTHHTTTH,HTH,1,0,,8,3,3,3,4,0,3,2,2,1,0,1,0.375,0.42857142857142855,0.2857142857142857,0.25,0.75,0.6666666666666666,1.0,0.0,0.33333333333333326,0.33333333333333326
+0,[REDACTED_PROLIFIC_ID],15,TTHTTTH,HTTTHHHH,1,0,,7,2,3,3,4,0,8,5,2,4,3,0,0.2857142857142857,0.5,0.3333333333333333,0.4285714285714286,0.4285714285714286,0.625,0.2857142857142857,0.42857142857142855,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],16,TTHH,THTHHHHT,0,1,,4,2,1,2,2,0,8,5,4,4,2,1,0.5,0.3333333333333333,0.3333333333333333,0.0,0.0,0.625,0.5714285714285714,0.42857142857142855,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],17,TTTTHTHH,TTT,1,0,,8,3,3,4,2,1,3,0,0,3,1,0,0.375,0.42857142857142855,0.42857142857142855,0.25,0.25,0.0,0.0,1.0,1.0,1.0
+0,[REDACTED_PROLIFIC_ID],18,HTHHHT,THHHHTTH,0,1,,6,4,3,3,2,1,8,5,3,4,4,0,0.6666666666666666,0.6,0.4,0.33333333333333326,0.6666666666666667,0.625,0.42857142857142855,0.42857142857142855,0.25,0.5
+0,[REDACTED_PROLIFIC_ID],19,THHHHTH,HTHHHTHH,0,1,,7,5,3,4,2,1,8,6,4,3,3,1,0.7142857142857143,0.5,0.5,0.4285714285714286,0.1428571428571428,0.75,0.5714285714285714,0.2857142857142857,0.5,1.0
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/check_subsets.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 check_subsets.py
+Total trials: 3840
+1. Extreme proportion deviation: 123
+2. Extreme alternation rate vs normal: 185
+3. Max run length difference: 73
+4. Periodicity difference: 206
+5. Length effect (n_a > n_b): 1381
+6. Asymmetry Heads vs Tails: 207
+7. Short vs Long sequences: 371
+8. Under vs Over alternation: 57
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/check_subsets2.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 check_subsets2.py
+Length penalty scaling mask sum: 440
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/check_subsets3.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 check_subsets3.py
+Under vs Over alternation mask sum: 148
+[0m
+[0m$ [0mmkdir -p test_stats
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/test_stats/extreme_proportion_penalty.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/test_stats/extreme_alternation_penalty.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/test_stats/max_run_length_aversion.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/test_stats/periodicity_aversion.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/test_stats/length_penalty_scaling.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/test_stats/heads_vs_tails_asymmetry.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/test_stats/short_vs_long_preference.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/model_loop/iter_1/critique/test_stats/under_vs_over_alternation.py
+Wrote file successfully.
+[0m
+[0m$ [0mls test_stats
+extreme_alternation_penalty.py
+extreme_proportion_penalty.py
+heads_vs_tails_asymmetry.py
+length_penalty_scaling.py
+max_run_length_aversion.py
+periodicity_aversion.py
+short_vs_long_preference.py
+under_vs_over_alternation.py
+[0m
+I have reviewed the `linear_accumulated_typicality` model and the dataset, identified the plausible behavioural patterns this single mechanism might fail to capture, and written the 8 requested test statistics to the `test_stats/` directory.
+
+The test statistics target the following potential model failures:
+1. **`extreme_proportion_penalty`**: Captures whether humans penalize extreme proportion imbalances (e.g., all heads) non-linearly (more severely) compared to the model's absolute-difference linear assumption.
+2. **`extreme_alternation_penalty`**: Tests whether sequences with exactly 0 or 100% alternations are penalized non-linearly compared to more moderate rates.
+3. **`max_run_length_aversion`**: Checks if humans have an independent aversion to long unbroken runs of heads or tails, controlling for overall proportion and alternation rate (which the model ignores).
+4. **`periodicity_aversion`**: Tests if highly periodic sequences are perceived as less random, independent of their simple alternation count.
+5. **`length_penalty_scaling`**: Tests whether the "unrandomness" penalty accumulates linearly over sequence length, or if humans average the typicality differently for sequences of different lengths.
+6. **`heads_vs_tails_asymmetry`**: Explores whether the proportion penalty is symmetrical around 0.5, or if humans are biased towards preferring (or rejecting) head-heavy vs tail-heavy sequences.
+7. **`short_vs_long_preference`**: Evaluates the model's baseline additive length penalty by measuring the base rate of choosing very short over longer sequences. 
+8. **`under_vs_over_alternation`**: Tests for an asymmetry in the penalty for clumpiness (under-alternating) versus predictability (over-alternating) that a symmetric linear penalty would miss.
+
+The statistics are committed and ready for the posterior-predictive harness to run.

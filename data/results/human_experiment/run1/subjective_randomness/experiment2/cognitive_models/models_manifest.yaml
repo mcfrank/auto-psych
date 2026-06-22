@@ -1,0 +1,27 @@
+models:
+- name: prototype_similarity
+  rationale: Random-looking sequences are close to a prototype with balanced H/T counts
+    and an ideal alternation rate.
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+    long runs, periodic templates, and imbalance.'
+- name: bayesian_diagnosticity
+  rationale: 'Randomness is the log-likelihood ratio of a fair coin versus a regular
+    process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018)
+    and a biased coin. Merges the former diagnosticity and statistical-inference accounts.'
+- name: window_typicality
+  rationale: Random-looking sequences have a longest run typical of a fair coin seen
+    through a limited memory window; over-long streaks look non-random (Hahn & Warren
+    2009).
+- name: accumulated_alternation_typicality
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its length, but this typicality is based entirely on
+    how closely the sequence's alternation rate matches a mental prototype, completely
+    ignoring the overall proportion of heads and tails.
+- name: linear_accumulated_typicality
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its length, but their penalty for deviating from the
+    ideal head proportion and alternation rate is linear (absolute difference) rather
+    than quadratic, treating extreme deviations proportionally to small ones.
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.

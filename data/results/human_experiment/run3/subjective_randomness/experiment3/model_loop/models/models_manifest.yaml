@@ -1,0 +1,74 @@
+models:
+- name: prototype_similarity
+  rationale: Random-looking sequences are close to a prototype with balanced H/T counts
+    and an ideal alternation rate.
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+    long runs, periodic templates, and imbalance.'
+- name: bayesian_diagnosticity
+  rationale: 'Randomness is the log-likelihood ratio of a fair coin versus a regular
+    process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018)
+    and a biased coin. Merges the former diagnosticity and statistical-inference accounts.'
+- name: window_typicality
+  rationale: Random-looking sequences have a longest run typical of a fair coin seen
+    through a limited memory window; over-long streaks look non-random (Hahn & Warren
+    2009).
+- name: smoothed_prototype_distance
+  rationale: People judge the randomness of a sequence by comparing its feature proportions
+    to a subjective ideal, but they estimate these proportions using Bayesian smoothing
+    with subjective pseudo-counts, naturally tolerating extreme imbalances in short
+    sequences because their prior pulls the estimates toward the ideal.
+- name: falk_konold_complexity
+  rationale: People judge the randomness of a sequence by its structural complexity
+    when parsed into continuous alternating and repeating sub-sequences (Falk & Konold's
+    difficulty of encoding), perceiving sequences with a lower rate of sub-sequences
+    as simpler and therefore less random.
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+- name: gaussian_smoothed_prototype
+  rationale: People judge randomness by estimating a sequence's feature proportions
+    using Bayesian smoothing and evaluating its similarity to a subjective ideal,
+    where this similarity follows a Gaussian generalization gradient that disproportionately
+    penalizes glaring squared deviations.
+- name: binomial_feature_surprise
+  rationale: People judge the randomness of a sequence by intuitively calculating
+    the exact Binomial probability of its observed number of heads and alternations
+    under a subjective ideal, naturally penalizing deviations more strictly in longer
+    sequences without needing ad-hoc smoothing.
+- name: iter0_candidate0
+  rationale: People judge the randomness of a sequence by comparing its smoothed feature
+    proportions to a subjective ideal, but instead of expecting exact perfection,
+    they expect a 'typical' amount of sampling variation. They penalize sequences
+    based on the absolute difference between their smoothed deviations and these expected
+    typical deviations, naturally penalizing exactly balanced sequences as suspiciously
+    artificial.
+- name: iter0_candidate1
+  rationale: People judge the randomness of a sequence by computing its likelihood
+    under a Gambler's Fallacy mental model, expecting that the probability of a coin
+    switching states increases the longer it produces the same outcome. They penalize
+    sequences containing long runs because each successive identical flip violates
+    a progressively stronger subjective expectation of an alternation.
+- name: iter0_candidate2
+  rationale: People evaluate the randomness of a sequence by intuitively parsing it
+    into runs of identical outcomes and estimating the likelihood of these run lengths.
+    Instead of a standard geometric expectation, they assume the length of any streak
+    follows a subjective Poisson distribution, which inherently applies a severe factorial
+    penalty to excessively long runs and seamlessly accounts for both streak aversion
+    and the preference for alternations without mixing separate heuristics.
+- name: iter1_candidate0
+  rationale: "People judge the randomness of a sequence by computing its Bayesian\
+    \ diagnosticity\u2014the log-likelihood ratio of a fair coin versus a subjective\
+    \ \"regular\" generative process. We refine this model by adding an \"artificial\
+    \ balance\" component to the regular hypothesis, representing a generator that\
+    \ intentionally targets an exact equal count of heads and tails. This explains\
+    \ why people strongly penalize perfectly symmetric sequences, recognizing them\
+    \ as suspiciously contrived rather than naturally random."
+- name: iter1_candidate2
+  rationale: "People judge the randomness of a sequence by computing its Bayesian\
+    \ diagnosticity\u2014the log-likelihood ratio of a fair coin versus a subjective\
+    \ \"regular\" generative process. We model this regular hypothesis as a two-state\
+    \ Markov chain with symmetric Beta priors on its transition probabilities, an\
+    \ alternative that effortlessly assigns high marginal probability to sequences\
+    \ with glaring anomalies like over-long streaks, global imbalance, or artificial\
+    \ perfect alternation, thereby heavily penalizing them as non-random without blending\
+    \ multiple ad-hoc heuristics."

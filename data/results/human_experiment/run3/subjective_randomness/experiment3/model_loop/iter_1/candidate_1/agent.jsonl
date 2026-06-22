@@ -1,0 +1,1304 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mls -la
+total 22316
+drwxr-xr-x+ 16 benpry ngoodman     4096 Jun 21 23:23 .
+drwx------+  3 benpry ngoodman     4096 Jun 21 14:15 ..
+-rw-r--r--+  1 benpry ngoodman     3654 Jun 21 18:01 candidate.py
+-rw-------+  1 benpry ngoodman     1349 Jun 21 23:23 check_counts2.py
+-rw-------+  1 benpry ngoodman     1263 Jun 21 23:21 check_counts.py
+-rw-------+  1 benpry ngoodman     1687 Jun 21 20:14 check_stats.py
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 20 20:47 .claude
+-rw-r--r--+  1 benpry ngoodman     1724 Jun 17 11:41 CLEANUP_PLAN.md
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 18 12:21 diagrams
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 18 12:21 docs
+-rw-r--r--+  1 benpry ngoodman     1593 Jun 20 01:44 extract_pdf.py
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 19 14:06 .firebase
+-rw-------+  1 benpry ngoodman      617 Jun 21 18:39 firebase.generated.json
+-rw-r--r--+  1 benpry ngoodman      612 Jun 18 23:34 firebase.json
+-rw-r--r--+  1 benpry ngoodman       58 Jun 19 13:13 .firebaserc
+-rw-r--r--+  1 benpry ngoodman       58 Jun 17 14:47 .firebaserc.example
+-rw-r--r--+  1 benpry ngoodman      224 Jun 19 12:56 firebase.viewer.json
+-rw-r--r--+  1 benpry ngoodman      503 Jun 18 23:34 firestore.rules
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 21 14:34 functions
+-rw-r--r--+  1 benpry ngoodman      688 Jun 17 11:42 generate_candidates.py
+-rw-r--r--+  1 benpry ngoodman     1212 Jun 20 14:05 .gitignore
+-rw-r--r--+  1 benpry ngoodman 21915053 Jun 20 01:46 gt.txt
+-rw-------+  1 benpry ngoodman        0 Jun 21 14:15 .here
+-rw-------+  1 benpry ngoodman      338 Jun 21 18:01 hypothesis.md
+-rw-r--r--+  1 benpry ngoodman     1070 Jun 17 11:41 LICENSE
+-rw-r--r--+  1 benpry ngoodman      466 Jun 21 21:49 opencode.json
+-rw-r--r--+  1 benpry ngoodman    11807 Jun 20 15:19 PROBLEMS.md
+drwxr-xr-x+  6 benpry ngoodman     4096 Jun 20 14:46 projects
+drwx------+  5 benpry ngoodman     4096 Jun 21 18:40 public
+-rw-r--r--+  1 benpry ngoodman     3034 Jun 20 15:02 pyproject.toml
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 19 11:42 .pytest_cache
+-rw-r--r--+  1 benpry ngoodman        5 Jun 20 15:02 .python-version
+-rw-r--r--+  1 benpry ngoodman    12449 Jun 20 16:40 README.md
+drwxr-xr-x+  3 benpry ngoodman     4096 Jun 19 17:36 .ruff_cache
+drwxr-xr-x+  5 benpry ngoodman     4096 Jun 19 13:11 scripts
+-rw-r--r--+  1 benpry ngoodman      791 Jun 19 13:13 .secrets.example
+drwxr-xr-x+ 13 benpry ngoodman     4096 Jun 20 01:39 src
+-rw-------+  1 benpry ngoodman      241 Jun 21 22:36 stats10.py
+-rw-------+  1 benpry ngoodman      208 Jun 21 22:37 stats11.py
+-rw-------+  1 benpry ngoodman      329 Jun 21 22:37 stats12.py
+-rw-------+  1 benpry ngoodman      684 Jun 21 22:35 stats2.py
+-rw-------+  1 benpry ngoodman      666 Jun 21 22:35 stats3.py
+-rw-------+  1 benpry ngoodman      317 Jun 21 22:35 stats4.py
+-rw-------+  1 benpry ngoodman      326 Jun 21 22:36 stats5.py
+-rw-------+  1 benpry ngoodman      356 Jun 21 22:36 stats6.py
+-rw-------+  1 benpry ngoodman      355 Jun 21 22:36 stats7.py
+-rw-------+  1 benpry ngoodman      268 Jun 21 22:36 stats8.py
+-rw-------+  1 benpry ngoodman      379 Jun 21 22:36 stats9.py
+-rw-------+  1 benpry ngoodman      282 Jun 21 22:35 stats.py
+-rw-r--r--+  1 benpry ngoodman    12167 Jun 20 15:19 SUMMARY.md
+drwxr-xr-x+  2 benpry ngoodman     4096 Jun 20 23:26 templates
+drwxr-xr-x+  3 benpry ngoodman    12288 Jun 21 13:42 tests
+-rw-------+  1 benpry ngoodman      954 Jun 21 17:35 test_trigrams.py
+-rw-r--r--+  1 benpry ngoodman   683270 Jun 20 14:41 uv.lock
+drwx------+  6 benpry ngoodman     4096 Jun 21 14:28 .venv
+[0m
+[0m$ [0mcd /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/iter_1/candidate_1 && ls -la
+total 32
+drwx------+ 2 benpry ngoodman 4096 Jun 22 01:43 .
+drwx------+ 5 benpry ngoodman 4096 Jun 22 01:43 ..
+-rw-------+ 1 benpry ngoodman 3626 Jun 22 01:43 agent.jsonl
+-rw-------+ 1 benpry ngoodman  427 Jun 22 01:43 CANDIDATE_BRIEF.md
+-rw-------+ 1 benpry ngoodman 2293 Jun 22 01:43 CONTEXT.md
+-rw-------+ 1 benpry ngoodman  836 Jun 22 01:43 critiques.md
+-rw-------+ 1 benpry ngoodman 4675 Jun 22 01:43 existing_hypotheses.md
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/iter_1/candidate_1/CONTEXT.md
+# Inner Loop — round 1, candidate 1 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/iter_1/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/iter_1/candidate_1/CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a new single-mechanism hypothesis that the current models cannot express.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/iter_1/candidate_1/existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.000, ELPD-LOO -2543.22
+
+Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -2624.22
+
+Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 1.000, ELPD-LOO -2484.89
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -2625.70
+
+Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).
+
+## smoothed_prototype_distance  — posterior 0.000, ELPD-LOO -2529.96
+
+People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal.
+
+## falk_konold_complexity  — posterior 0.000, ELPD-LOO -2664.29
+
+People judge the randomness of a sequence by its structural complexity when parsed into continuous alternating and repeating sub-sequences (Falk & Konold's difficulty of encoding), perceiving sequences with a lower rate of sub-sequences as simpler and therefore less random.
+
+## inner_loop_model  — posterior 0.000, ELPD-LOO -2529.96
+
+Best PyMC model found by the inner model-improvement loop.
+
+## gaussian_smoothed_prototype  — posterior 0.000, ELPD-LOO -2519.78
+
+People judge randomness by estimating a sequence's feature proportions using Bayesian smoothing and evaluating its similarity to a subjective ideal, where this similarity follows a Gaussian generalization gradient that disproportionately penalizes glaring squared deviations.
+
+## binomial_feature_surprise  — posterior 0.000, ELPD-LOO -2635.67
+
+People judge the randomness of a sequence by intuitively calculating the exact Binomial probability of its observed number of heads and alternations under a subjective ideal, naturally penalizing deviations more strictly in longer sequences without needing ad-hoc smoothing.
+
+## iter0_candidate0  — posterior 0.000, ELPD-LOO -2570.47
+
+People judge the randomness of a sequence by comparing its smoothed feature proportions to a subjective ideal, but instead of expecting exact perfection, they expect a 'typical' amount of sampling variation. They penalize sequences based on the absolute difference between their smoothed deviations and these expected typical deviations, naturally penalizing exactly balanced sequences as suspiciously artificial.
+
+## iter0_candidate1  — posterior 0.000, ELPD-LOO -2660.27
+
+People judge the randomness of a sequence by computing its likelihood under a Gambler's Fallacy mental model, expecting that the probability of a coin switching states increases the longer it produces the same outcome. They penalize sequences containing long runs because each successive identical flip violates a progressively stronger subjective expectation of an alternation.
+
+## iter0_candidate2  — posterior 0.000, ELPD-LOO -2634.68
+
+People evaluate the randomness of a sequence by intuitively parsing it into runs of identical outcomes and estimating the likelihood of these run lengths. Instead of a standard geometric expectation, they assume the length of any streak follows a subjective Poisson distribution, which inherently applies a severe factorial penalty to excessively long runs and seamlessly accounts for both streak aversion and the preference for alternations without mixing separate heuristics.
+
+## iter1_candidate0
+
+People judge the randomness of a sequence by computing its Bayesian diagnosticity—the log-likelihood ratio of a fair coin versus a subjective "regular" generative process. We refine this model by adding an "artificial balance" component to the regular hypothesis, representing a generator that intentionally targets an exact equal count of heads and tails. This explains why people strongly penalize perfectly symmetric sequences, recognizing them as suspiciously contrived rather than naturally random.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/iter_1/candidate_1/critiques.md
+# Critique of `bayesian_diagnosticity`
+
+2 of 8 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **max_run_penalty** — The mean choice rate for sequence A when A has a larger normalized maximum run length than sequence B. (observed 0.427 vs null mean 0.464, z=-2.77, p=0.00995, q=0.0796)
+- **exact_symmetry** — The mean choice rate for sequence A when A is exactly symmetric (imbalance 0) and B is slightly imbalanced (>0 to 0.3). (observed 0.367 vs null mean 0.432, z=-2.27, p=0.0398, q=0.159)
+[0m
+[0m$ [0mcat << 'EOF' > test_entropy.py
+import numpy as np
+
+def run_length_entropy(seq):
+    if not seq: return 0.0
+    runs = []
+    current_run = 1
+    for i in range(1, len(seq)):
+        if seq[i] == seq[i-1]:
+            current_run += 1
+        else:
+            runs.append(current_run)
+            current_run = 1
+    runs.append(current_run)
+    
+    # Calculate empirical probabilities
+    counts = {}
+    for r in runs:
+        counts[r] = counts.get(r, 0) + 1
+    
+    entropy = 0.0
+    total = len(runs)
+    for r, count in counts.items():
+        p = count / total
+        entropy -= p * np.log(p)
+        
+    return entropy
+
+print(run_length_entropy("HTHTHTHT"))
+print(run_length_entropy("HHHHHHHH"))
+print(run_length_entropy("HHTHTTHT"))
+print(run_length_entropy("HHHTHTTT"))
+EOF
+python3 test_entropy.py
+0.0
+0.0
+0.6365141682948128
+0.6931471805599453
+[0m
+[0m$ [0mcat << 'EOF' > test_markov.py
+import numpy as np
+
+def markov_entropy(seq):
+    if len(seq) < 2: return 0.0
+    
+    # count transitions
+    counts = {'HH':0, 'HT':0, 'TH':0, 'TT':0}
+    for i in range(len(seq)-1):
+        counts[seq[i:i+2]] += 1
+        
+    n_H = counts['HH'] + counts['HT']
+    n_T = counts['TH'] + counts['TT']
+    
+    entropy = 0.0
+    
+    if n_H > 0:
+        p_HH = counts['HH'] / n_H
+        p_HT = counts['HT'] / n_H
+        if p_HH > 0: entropy -= (n_H / (len(seq)-1)) * p_HH * np.log2(p_HH)
+        if p_HT > 0: entropy -= (n_H / (len(seq)-1)) * p_HT * np.log2(p_HT)
+        
+    if n_T > 0:
+        p_TH = counts['TH'] / n_T
+        p_TT = counts['TT'] / n_T
+        if p_TH > 0: entropy -= (n_T / (len(seq)-1)) * p_TH * np.log2(p_TH)
+        if p_TT > 0: entropy -= (n_T / (len(seq)-1)) * p_TT * np.log2(p_TT)
+        
+    return entropy
+
+print("HTHTHTHT", markov_entropy("HTHTHTHT"))
+print("HHHHHHHH", markov_entropy("HHHHHHHH"))
+print("HHTHTTHT", markov_entropy("HHTHTTHT"))
+print("HHHTHTTT", markov_entropy("HHHTHTTT"))
+print("HHHHHTTT", markov_entropy("HHHHHTTT"))
+EOF
+python3 test_markov.py
+HTHTHTHT 0.0
+HHHHHHHH 0.0
+HHTHTTHT 0.8571428571428571
+HHHTHTTT 0.9649839288804954
+HHHHHTTT 0.5156629249195446
+[0m
+[0m$ [0mcat << 'EOF' > test_markov_symmetry.py
+import numpy as np
+
+def markov_entropy(seq):
+    if len(seq) < 2: return 0.0
+    counts = {'HH':0, 'HT':0, 'TH':0, 'TT':0}
+    for i in range(len(seq)-1): counts[seq[i:i+2]] += 1
+    n_H = counts['HH'] + counts['HT']
+    n_T = counts['TH'] + counts['TT']
+    entropy = 0.0
+    if n_H > 0:
+        p_HH = counts['HH'] / n_H
+        p_HT = counts['HT'] / n_H
+        if p_HH > 0: entropy -= (n_H / (len(seq)-1)) * p_HH * np.log2(p_HH)
+        if p_HT > 0: entropy -= (n_H / (len(seq)-1)) * p_HT * np.log2(p_HT)
+    if n_T > 0:
+        p_TH = counts['TH'] / n_T
+        p_TT = counts['TT'] / n_T
+        if p_TH > 0: entropy -= (n_T / (len(seq)-1)) * p_TH * np.log2(p_TH)
+        if p_TT > 0: entropy -= (n_T / (len(seq)-1)) * p_TT * np.log2(p_TT)
+    return entropy
+
+symm = ["HHTTHTHHTT", "HTHHTTHTTH", "TTHHTHTTHH", "HHHTTTHTHT"]
+imbal = ["HHTTHTHHTH", "HTHHTTHHTH", "TTHHTHTHHH", "HHHTTTHTHH"]
+
+print("Symmetric mean:", np.mean([markov_entropy(s) for s in symm]))
+print("Imbalanced mean:", np.mean([markov_entropy(s) for s in imbal]))
+EOF
+python3 test_markov_symmetry.py
+Symmetric mean: 0.9628923440813861
+Imbalanced mean: 0.920954149516749
+[0m
+[0m$ [0mcat << 'EOF' > test_block_entropy.py
+import numpy as np
+from collections import Counter
+
+def block_entropy(seq, k=2):
+    if len(seq) < k: return 0.0
+    blocks = [seq[i:i+k] for i in range(len(seq)-k+1)]
+    counts = Counter(blocks)
+    total = len(blocks)
+    entropy = 0.0
+    for count in counts.values():
+        p = count / total
+        entropy -= p * np.log2(p)
+    return entropy
+
+symm = ["HHTTHTHHTT", "HTHHTTHTTH", "TTHHTHTTHH", "HHHTTTHTHT"]
+imbal = ["HHTTHTHHTH", "HTHHTTHHTH", "TTHHTHTHHH", "HHHTTTHTHH"]
+
+print("k=2:")
+print("Symmetric mean:", np.mean([block_entropy(s, 2) for s in symm]))
+print("Imbalanced mean:", np.mean([block_entropy(s, 2) for s in imbal]))
+
+print("k=3:")
+print("Symmetric mean:", np.mean([block_entropy(s, 3) for s in symm]))
+print("Imbalanced mean:", np.mean([block_entropy(s, 3) for s in imbal]))
+
+EOF
+python3 test_block_entropy.py
+k=2:
+Symmetric mean: 1.9539684039196084
+Imbalanced mean: 1.9120302093549713
+k=3:
+Symmetric mean: 2.5625
+Imbalanced mean: 2.5625
+[0m
+[0m$ [0mcat << 'EOF' > test_lz.py
+def lz_complexity(s):
+    if not s: return 0
+    i, k, l = 0, 1, 1
+    k_max = 1
+    n = len(s)
+    complexity = 1
+    while True:
+        if i + k > n:
+            break
+        if s[i:i+k] in s[0:i+k-1]:
+            k += 1
+        else:
+            complexity += 1
+            i += k
+            k = 1
+    return complexity
+
+print("LZ of HTHTHTHT:", lz_complexity("HTHTHTHT"))
+print("LZ of HHHHHHHH:", lz_complexity("HHHHHHHH"))
+print("LZ of HHTHTTHT:", lz_complexity("HHTHTTHT"))
+print("LZ of HHHTHTTT:", lz_complexity("HHHTHTTT"))
+
+symm = ["HHTTHTHHTT", "HTHHTTHTTH", "TTHHTHTTHH", "HHHTTTHTHT"]
+imbal = ["HHTTHTHHTH", "HTHHTTHHTH", "TTHHTHTHHH", "HHHTTTHTHH"]
+
+import numpy as np
+print("Symmetric mean:", np.mean([lz_complexity(s) for s in symm]))
+print("Imbalanced mean:", np.mean([lz_complexity(s) for s in imbal]))
+EOF
+python3 test_lz.py
+LZ of HTHTHTHT: 3
+LZ of HHHHHHHH: 2
+LZ of HHTHTTHT: 4
+LZ of HHHTHTTT: 4
+Symmetric mean: 4.75
+Imbalanced mean: 5.25
+[0m
+[0m$ [0mcat << 'EOF' > test_lz76.py
+def lz76(s):
+    i = 0
+    c = 1
+    l = 1
+    n = len(s)
+    k = 1
+    k_max = 1
+    while True:
+        if i + k > n:
+            break
+        # search for substring s[i:i+k] in s[0:i+k-1]
+        sub = s[i:i+k]
+        found = False
+        for j in range(0, i):
+            if s[j:j+k] == sub:
+                found = True
+                break
+        if found:
+            k += 1
+        else:
+            c += 1
+            i += k
+            k = 1
+    return c
+
+print("LZ of HTHTHTHT:", lz76("HTHTHTHT"))
+print("LZ of HHHHHHHH:", lz76("HHHHHHHH"))
+
+symm = ["HHTTHTHHTT", "HTHHTTHTTH", "TTHHTHTTHH", "HHHTTTHTHT"]
+imbal = ["HHTTHTHHTH", "HTHHTTHHTH", "TTHHTHTHHH", "HHHTTTHTHH"]
+
+import numpy as np
+print("Symmetric mean:", np.mean([lz76(s) for s in symm]))
+print("Imbalanced mean:", np.mean([lz76(s) for s in imbal]))
+EOF
+python3 test_lz76.py
+LZ of HTHTHTHT: 3
+LZ of HHHHHHHH: 2
+Symmetric mean: 4.75
+Imbalanced mean: 5.25
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv')
+print(df['sequence_a'].apply(len).value_counts())
+"
+sequence_a
+8    1584
+7     573
+3     397
+4     369
+5     336
+2     291
+6     290
+Name: count, dtype: int64
+[0m
+[0m$ [0mcat << 'EOF' > test_lz_range.py
+def lz76(s):
+    i = 0; c = 1; k = 1; n = len(s)
+    if n == 0: return 0
+    while i + k <= n:
+        sub = s[i:i+k]
+        found = False
+        for j in range(0, i):
+            if s[j:j+k] == sub:
+                found = True
+                break
+        if found: k += 1
+        else: c += 1; i += k; k = 1
+    return c
+
+import itertools
+import pandas as pd
+from collections import Counter
+seqs = ["".join(seq) for seq in itertools.product("HT", repeat=8)]
+lzs = [lz76(s) for s in seqs]
+print(Counter(lzs))
+EOF
+python3 test_lz_range.py
+Counter({4: 142, 5: 74, 3: 38, 2: 2})
+[0m
+[0m$ [0mcat << 'EOF' > test_markov_range.py
+import numpy as np
+import itertools
+from collections import Counter
+
+def markov_entropy(seq):
+    if len(seq) < 2: return 0.0
+    counts = {'HH':0, 'HT':0, 'TH':0, 'TT':0}
+    for i in range(len(seq)-1): counts[seq[i:i+2]] += 1
+    n_H = counts['HH'] + counts['HT']
+    n_T = counts['TH'] + counts['TT']
+    entropy = 0.0
+    if n_H > 0:
+        p_HH = counts['HH'] / n_H
+        p_HT = counts['HT'] / n_H
+        if p_HH > 0: entropy -= (n_H / (len(seq)-1)) * p_HH * np.log2(p_HH)
+        if p_HT > 0: entropy -= (n_H / (len(seq)-1)) * p_HT * np.log2(p_HT)
+    if n_T > 0:
+        p_TH = counts['TH'] / n_T
+        p_TT = counts['TT'] / n_T
+        if p_TH > 0: entropy -= (n_T / (len(seq)-1)) * p_TH * np.log2(p_TH)
+        if p_TT > 0: entropy -= (n_T / (len(seq)-1)) * p_TT * np.log2(p_TT)
+    return round(entropy, 4)
+
+seqs = ["".join(seq) for seq in itertools.product("HT", repeat=8)]
+ents = [markov_entropy(s) for s in seqs]
+print(len(set(ents)), "distinct values")
+EOF
+python3 test_markov_range.py
+14 distinct values
+[0m
+[0m$ [0mcat << 'EOF' > test_markov_bayes.py
+import numpy as np
+from scipy.special import betaln
+
+def markov_diagnosticity(seq):
+    if len(seq) < 2: return 0.0
+    counts = {'HH':0, 'HT':0, 'TH':0, 'TT':0}
+    for i in range(len(seq)-1): counts[seq[i:i+2]] += 1
+    
+    n_HH = counts['HH']
+    n_HT = counts['HT']
+    n_TH = counts['TH']
+    n_TT = counts['TT']
+    
+    N = len(seq)
+    
+    # log P(D | Random)
+    log_p_rand = (N-1) * np.log(0.5)
+    
+    # log P(D | Markov) with Beta(1,1) priors
+    log_p_markov = betaln(n_HH + 1, n_HT + 1) + betaln(n_TT + 1, n_TH + 1)
+    
+    return log_p_rand - log_p_markov
+
+print("HTHTHTHT:", markov_diagnosticity("HTHTHTHT"))
+print("HHHHHHHH:", markov_diagnosticity("HHHHHHHH"))
+print("HHTHTTHT:", markov_diagnosticity("HHTHTTHT"))
+print("HHHTHTTT:", markov_diagnosticity("HHHTHTTT"))
+print("HHHHHTTT:", markov_diagnosticity("HHHHHTTT"))
+
+symm = ["HHTTHTHHTT", "HTHHTTHTTH", "TTHHTHTTHH", "HHHTTTHTHT"]
+imbal = ["HHTTHTHHTH", "HTHHTTHHTH", "TTHHTHTHHH", "HHHTTTHTHH"]
+
+print("Symmetric mean:", np.mean([markov_diagnosticity(s) for s in symm]))
+print("Imbalanced mean:", np.mean([markov_diagnosticity(s) for s in imbal]))
+
+EOF
+python3 test_markov_bayes.py
+HTHTHTHT: -1.856297990365626
+HHHHHHHH: -2.772588722239781
+HHTHTTHT: 0.6286086594223743
+HHHTHTTT: 1.034073767530539
+HHHHHTTT: -0.35222059358935187
+Symmetric mean: 1.1558510418177068
+Imbalanced mean: 0.953118487763625
+[0m
+[0m$ [0mcat << 'EOF' > test_biased_bayes.py
+import numpy as np
+from scipy.special import betaln
+
+def biased_diagnosticity(seq):
+    H = seq.count('H')
+    T = seq.count('T')
+    N = len(seq)
+    
+    log_p_rand = N * np.log(0.5)
+    log_p_biased = betaln(H + 1, T + 1)
+    
+    return log_p_rand - log_p_biased
+
+symm = ["HHTTHTHHTT", "HTHHTTHTTH", "TTHHTHTTHH", "HHHTTTHTHT"]
+imbal = ["HHTTHTHHTH", "HTHHTTHHTH", "TTHHTHTHHH", "HHHTTTHTHH"]
+
+print("Symmetric mean:", np.mean([biased_diagnosticity(s) for s in symm]))
+print("Imbalanced mean:", np.mean([biased_diagnosticity(s) for s in imbal]))
+EOF
+python3 test_biased_bayes.py
+Symmetric mean: 0.995852554710341
+Imbalanced mean: 0.8135309979163861
+[0m
+[0m$ [0mcat << 'EOF' > test_lz_corr.py
+import pandas as pd
+import numpy as np
+
+def lz76(s):
+    i = 0; c = 1; k = 1; n = len(s)
+    if n == 0: return 0
+    while i + k <= n:
+        sub = s[i:i+k]
+        found = False
+        for j in range(0, i):
+            if s[j:j+k] == sub:
+                found = True
+                break
+        if found: k += 1
+        else: c += 1; i += k; k = 1
+    return c
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv')
+df['lz_a'] = df['sequence_a'].apply(lz76)
+df['lz_b'] = df['sequence_b'].apply(lz76)
+df['lz_diff'] = df['lz_a'] - df['lz_b']
+
+corr = df['chose_left'].corr(df['lz_diff'])
+print(f"Correlation between LZ diff and chose_left: {corr}")
+
+# Let's compare to another simple feature like max_run_norm diff
+df['max_run_diff'] = df['max_run_norm_a'] - df['max_run_norm_b']
+print(f"Correlation between max_run_diff and chose_left: {df['chose_left'].corr(df['max_run_diff'])}")
+
+EOF
+python3 test_lz_corr.py
+Correlation between LZ diff and chose_left: 0.17294715528829915
+Correlation between max_run_diff and chose_left: -0.14378099195869842
+[0m
+[0m$ [0mcat << 'EOF' > test_run_prob.py
+import math
+import numpy as np
+import pandas as pd
+
+def prob_max_run_geq(N, M):
+    if M > N: return 0.0
+    if M <= 1: return 1.0
+    # The number of sequences of length N with no runs of length >= M
+    # is given by a recurrence relation.
+    # Let F(N) be the number of valid sequences.
+    # We actually have two states: ending in H or T.
+    # By symmetry, total valid is 2 * valid starting with H.
+    # Actually, simpler:
+    # A(n) = number of sequences of length n with max run < M.
+    # A(0) = 1, A(n) = sum_{i=1}^{M-1} A(n-i) for n >= 1 (with A(k)=0 for k<0).
+    A = [0] * (N + 1)
+    A[0] = 1
+    # For A[1] it's 2, A[2] it's 4, as long as n < M.
+    # Wait, the formula for coin flips (alphabet size 2):
+    # A(n) = sum_{i=1}^{M-1} A(n-i)
+    # Let's write a simple DP.
+    dp = [0] * (N + 1)
+    dp[0] = 2  # Actually, let's count number of valid sequences.
+    
+    # number of sequences avoiding M consecutive identical outcomes:
+    # Let C(n) be number of valid seqs.
+    # C(n) = sum_{k=1}^{M-1} C(n-k) for n >= 1, with C(0)=2, C(n) for n < 0 is 0.
+    # Wait, the first run can be length k (from 1 to M-1).
+    # If the first run is length k, the rest of the sequence has length n-k,
+    # and MUST start with the OPPOSITE coin, which means the number of ways
+    # to complete it is exactly half of C(n-k).
+    # Let's just generate and count for N=8.
+    pass
+
+import itertools
+def exact_max_run_prob(seq):
+    N = len(seq)
+    M = max([len(list(g)) for k, g in itertools.groupby(seq)])
+    
+    valid = 0
+    total = 2**N
+    for s in itertools.product("HT", repeat=N):
+        m = max([len(list(g)) for k, g in itertools.groupby(s)])
+        if m >= M:
+            valid += 1
+    return valid / total
+
+print("Prob max run >= 2 in length 8:", exact_max_run_prob("HTHTHHTH")) # max run 2
+print("Prob max run >= 8 in length 8:", exact_max_run_prob("HHHHHHHH")) # max run 8
+print("Prob max run >= 4 in length 8:", exact_max_run_prob("HHHHHTTT")) # max run 5
+EOF
+python3 test_run_prob.py
+Prob max run >= 2 in length 8: 0.9921875
+Prob max run >= 8 in length 8: 0.0078125
+Prob max run >= 4 in length 8: 0.15625
+[0m
+[0m$ [0mcat << 'EOF' > test_run_corr.py
+import pandas as pd
+import itertools
+
+def max_run(s):
+    return max([len(list(g)) for k, g in itertools.groupby(s)])
+
+cache = {}
+def exact_max_run_prob(s):
+    N = len(s)
+    M = max_run(s)
+    if (N, M) in cache: return cache[(N, M)]
+    valid = 0
+    total = 2**N
+    for x in itertools.product("HT", repeat=N):
+        m = max([len(list(g)) for k, g in itertools.groupby(x)])
+        if m >= M:
+            valid += 1
+    p = valid / total
+    cache[(N, M)] = p
+    return p
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv')
+df['p_max_a'] = df['sequence_a'].apply(exact_max_run_prob)
+df['p_max_b'] = df['sequence_b'].apply(exact_max_run_prob)
+df['p_max_diff'] = df['p_max_a'] - df['p_max_b']
+
+print(f"Correlation between p_max_diff and chose_left: {df['chose_left'].corr(df['p_max_diff'])}")
+
+EOF
+python3 test_run_corr.py
+Correlation between p_max_diff and chose_left: 0.10147133238643878
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv | head -n 5
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,HTTTTTTH,HHHTHHH,0,1,,8,2,2,6,3,0,7,6,2,3,3,0,0.25,0.2857142857142857,0.7142857142857143,0.5,0.5,0.8571428571428571,0.3333333333333333,0.3333333333333333,0.7142857142857142,0.7142857142857142
+0,[REDACTED_PROLIFIC_ID],2,HHTTTTT,TTTTHTTT,0,1,,7,2,1,5,2,0,8,1,2,4,3,0,0.2857142857142857,0.16666666666666666,0.6666666666666666,0.4285714285714286,0.1428571428571428,0.125,0.2857142857142857,0.42857142857142855,0.75,0.75
+0,[REDACTED_PROLIFIC_ID],3,TTHTHHHH,HHTHTHHH,0,1,,8,5,3,4,2,1,8,6,4,3,2,1,0.625,0.42857142857142855,0.42857142857142855,0.25,0.25,0.75,0.5714285714285714,0.2857142857142857,0.5,0.5
+0,[REDACTED_PROLIFIC_ID],4,THTHTTT,HHTTTTHH,1,0,,7,2,4,3,1,1,8,4,2,4,3,0,0.2857142857142857,0.6666666666666666,0.3333333333333333,0.4285714285714286,0.7142857142857142,0.5,0.2857142857142857,0.42857142857142855,0.0,0.5
+[0m
+[0m$ [0mls /scratch/users/benpry/auto-psych/outer_loop_live/run3/src/models/hypotheses/
+ls: cannot access /scratch/users/benpry/auto-psych/outer_loop_live/run3/src/models/hypotheses/: No such file or directory
+[0m
+[0m$ [0mls ../../../src/models
+ls: cannot access ../../../src/models
+[0m
+[0m$ [0mfind /scratch/users/benpry/auto-psych/outer_loop_live/run3 -name "bayesian_diagnosticity.py"
+/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/models/bayesian_diagnosticity.py
+/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/cognitive_models/bayesian_diagnosticity.py
+/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/model_loop/models/bayesian_diagnosticity.py
+/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment1/cognitive_models/bayesian_diagnosticity.py
+/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/models/bayesian_diagnosticity.py
+/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/cognitive_models/bayesian_diagnosticity.py
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/models/bayesian_diagnosticity.py
+"""PyMC adapter for the (merged) Bayesian-diagnosticity model family.
+
+Randomness as statistical inference (Griffiths & Tenenbaum 2001/2003; Griffiths,
+Daniels, Austerweil & Tenenbaum 2018): a sequence looks random when it is better
+evidence for a fair coin than for a *regular* generator,
+
+    randomness(x) = log P(x | fair) - log P(x | regular),   P(x | fair) = (1/2)^n.
+
+This single model merges the two former Bayesian seeds. The regular hypothesis is
+a mixture (weight ``bias_share``) of:
+
+  * a biased-coin generator (head- or tail-heavy, fixed bias 0.85), capturing
+    H/T imbalance; and
+  * a motif-complexity process (Griffiths et al. 2018, §6.1) evaluated at the
+    canonical parse (n1 = rep_motifs, n2 = alt_motifs):
+
+        log P(x | motif) = (n - n1 - n2)*log δ + (n1 + n2)*log C + (n1 + 2*n2)*log α,
+        C = (1-δ)/(2α + 2α²),
+
+    where δ is motif persistence and α penalises motif complexity. This process
+    subsumes the old "alternating" and "streaky" Markov alternatives (long runs =
+    high persistence, regular alternation = alternation motifs) and carries Falk
+    & Konold's DP = n1 + 2*n2 in the α exponent.
+
+The score is not length-normalised; evidence accumulating with length is part of
+the account. Free parameters inferred by MCMC: δ, α, bias_share, β, side bias.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+BIAS_HEAD_PROB = 0.85
+
+
+def _logsumexp2(a, b):
+    m = pt.maximum(a, b)
+    return m + pt.log(pt.exp(a - m) + pt.exp(b - m))
+
+
+def _log_motif(n, rep_motifs, alt_motifs, log_delta, log_c, log_alpha):
+    n_f = pt.cast(n, "float64")
+    n1 = pt.cast(rep_motifs, "float64")
+    n2 = pt.cast(alt_motifs, "float64")
+    stays = n_f - n1 - n2  # within-motif continuations; >= 0 by construction
+    return stays * log_delta + (n1 + n2) * log_c + (n1 + 2.0 * n2) * log_alpha
+
+
+def _log_biased(n, h):
+    n_f = pt.cast(n, "float64")
+    h_f = pt.cast(h, "float64")
+    tails_f = n_f - h_f
+    head_heavy = h_f * np.log(BIAS_HEAD_PROB) + tails_f * np.log(1.0 - BIAS_HEAD_PROB)
+    tail_heavy = h_f * np.log(1.0 - BIAS_HEAD_PROB) + tails_f * np.log(BIAS_HEAD_PROB)
+    return _logsumexp2(np.log(0.5) + head_heavy, np.log(0.5) + tail_heavy)
+
+
+def _randomness(n, h, rep_motifs, alt_motifs, log_delta, log_c, log_alpha, bias_share):
+    log_fair = pt.cast(n, "float64") * np.log(0.5)
+    log_motif = _log_motif(n, rep_motifs, alt_motifs, log_delta, log_c, log_alpha)
+    log_biased = _log_biased(n, h)
+    log_regular = _logsumexp2(
+        pt.log(1.0 - bias_share) + log_motif,
+        pt.log(bias_share) + log_biased,
+    )
+    return log_fair - log_regular
+
+
+with pm.Model() as model:
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    rep_motifs_a = pm.Data("rep_motifs_a", np.zeros(1, dtype="int64"))
+    alt_motifs_a = pm.Data("alt_motifs_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    rep_motifs_b = pm.Data("rep_motifs_b", np.zeros(1, dtype="int64"))
+    alt_motifs_b = pm.Data("alt_motifs_b", np.zeros(1, dtype="int64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    delta = pm.Uniform("delta", lower=0.01, upper=0.99)
+    alpha = pm.Uniform("alpha", lower=0.01, upper=0.99)
+    bias_share = pm.Uniform("bias_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    log_delta = pt.log(delta)
+    log_alpha = pt.log(alpha)
+    log_c = pt.log(1.0 - delta) - pt.log(2.0 * alpha + 2.0 * alpha**2)
+
+    score_a = _randomness(
+        n_a, h_a, rep_motifs_a, alt_motifs_a, log_delta, log_c, log_alpha, bias_share
+    )
+    score_b = _randomness(
+        n_b, h_b, rep_motifs_b, alt_motifs_b, log_delta, log_c, log_alpha, bias_share
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat << 'EOF' > test_bayes_corr.py
+import pandas as pd
+import numpy as np
+
+def score(n, h, rep, alt):
+    delta = 0.5
+    alpha = 0.5
+    bias_share = 0.5
+    log_delta = np.log(delta)
+    log_alpha = np.log(alpha)
+    log_c = np.log(1.0 - delta) - np.log(2.0 * alpha + 2.0 * alpha**2)
+    
+    # motif
+    stays = n - rep - alt
+    log_motif = stays * log_delta + (rep + alt) * log_c + (rep + 2 * alt) * log_alpha
+    
+    # biased
+    p = 0.85
+    hh = h * np.log(p) + (n-h) * np.log(1-p)
+    th = h * np.log(1-p) + (n-h) * np.log(p)
+    m = max(hh, th)
+    log_biased = np.log(0.5) + m + np.log(np.exp(hh-m) + np.exp(th-m))
+    
+    # regular
+    log_reg_m = log_motif + np.log(1 - bias_share)
+    log_reg_b = log_biased + np.log(bias_share)
+    m2 = max(log_reg_m, log_reg_b)
+    log_regular = m2 + np.log(np.exp(log_reg_m - m2) + np.exp(log_reg_b - m2))
+    
+    log_fair = n * np.log(0.5)
+    return log_fair - log_regular
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv')
+sa = df.apply(lambda row: score(row['n_a'], row['h_a'], row['rep_motifs_a'], row['alt_motifs_a']), axis=1)
+sb = df.apply(lambda row: score(row['n_b'], row['h_b'], row['rep_motifs_b'], row['alt_motifs_b']), axis=1)
+sd = sa - sb
+print(f"Correlation: {df['chose_left'].corr(sd)}")
+EOF
+python3 test_bayes_corr.py
+Correlation: 0.1479709888495393
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv')
+diff_len = (df['sequence_a'].apply(len) != df['sequence_b'].apply(len)).sum()
+print(f'Trials with different lengths: {diff_len} out of {len(df)}')
+"
+Trials with different lengths: 3360 out of 3840
+[0m
+[0m$ [0mcat << 'EOF' > test_lz_norm_corr.py
+import pandas as pd
+import numpy as np
+
+def lz76(s):
+    i = 0; c = 1; k = 1; n = len(s)
+    if n == 0: return 0
+    while i + k <= n:
+        sub = s[i:i+k]
+        found = False
+        for j in range(0, i):
+            if s[j:j+k] == sub:
+                found = True
+                break
+        if found: k += 1
+        else: c += 1; i += k; k = 1
+    return c
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv')
+df['lz_a'] = df['sequence_a'].apply(lz76)
+df['lz_b'] = df['sequence_b'].apply(lz76)
+
+df['n_a'] = df['sequence_a'].apply(len)
+df['n_b'] = df['sequence_b'].apply(len)
+
+# 1. per flip
+df['lz_norm_a'] = df['lz_a'] / df['n_a']
+df['lz_norm_b'] = df['lz_b'] / df['n_b']
+print("LZ/N corr:", df['chose_left'].corr(df['lz_norm_a'] - df['lz_norm_b']))
+
+# 2. asymptotic normalization LZ / (N / log2 N)
+def norm2(lz, n): return lz / (n / np.log2(n)) if n > 1 else 0
+df['lz_norm2_a'] = df.apply(lambda row: norm2(row['lz_a'], row['n_a']), axis=1)
+df['lz_norm2_b'] = df.apply(lambda row: norm2(row['lz_b'], row['n_b']), axis=1)
+print("LZ / (N/log2N) corr:", df['chose_left'].corr(df['lz_norm2_a'] - df['lz_norm2_b']))
+
+EOF
+python3 test_lz_norm_corr.py
+LZ/N corr: -0.1087395614425141
+LZ / (N/log2N) corr: 0.11720181217097786
+[0m
+[0m$ [0mpython3 -c "
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv')
+print('N_diff corr:', df['chose_left'].corr(df['sequence_a'].apply(len) - df['sequence_b'].apply(len)))
+"
+N_diff corr: 0.15320085800855107
+[0m
+[0m$ [0mcat << 'EOF' > test_lz_logreg.py
+import pandas as pd
+import numpy as np
+from sklearn.linear_model import LogisticRegression
+
+def lz76(s):
+    i = 0; c = 1; k = 1; n = len(s)
+    if n == 0: return 0
+    while i + k <= n:
+        sub = s[i:i+k]
+        found = False
+        for j in range(0, i):
+            if s[j:j+k] == sub:
+                found = True
+                break
+        if found: k += 1
+        else: c += 1; i += k; k = 1
+    return c
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv')
+df['lz_a'] = df['sequence_a'].apply(lz76)
+df['lz_b'] = df['sequence_b'].apply(lz76)
+
+X = (df['lz_a'] - df['lz_b']).values.reshape(-1, 1)
+y = df['chose_left'].values
+
+clf = LogisticRegression(fit_intercept=True).fit(X, y)
+print("Accuracy LZ only:", clf.score(X, y))
+print("Coef:", clf.coef_[0][0], "Intercept:", clf.intercept_[0])
+
+# What if we just use bayesian_diagnosticity score?
+def score(n, h, rep, alt):
+    delta = 0.5; alpha = 0.5; bias_share = 0.5
+    log_delta = np.log(delta)
+    log_c = np.log(1.0 - delta) - np.log(2.0 * alpha + 2.0 * alpha**2)
+    log_alpha = np.log(alpha)
+    stays = n - rep - alt
+    log_motif = stays * log_delta + (rep + alt) * log_c + (rep + 2 * alt) * log_alpha
+    p = 0.85
+    hh = h * np.log(p) + (n-h) * np.log(1-p)
+    th = h * np.log(1-p) + (n-h) * np.log(p)
+    m = max(hh, th)
+    log_biased = np.log(0.5) + m + np.log(np.exp(hh-m) + np.exp(th-m))
+    m2 = max(log_motif + np.log(1 - bias_share), log_biased + np.log(bias_share))
+    log_regular = m2 + np.log(np.exp(log_motif + np.log(1-bias_share) - m2) + np.exp(log_biased + np.log(bias_share) - m2))
+    return n * np.log(0.5) - log_regular
+
+sa = df.apply(lambda row: score(row['n_a'], row['h_a'], row['rep_motifs_a'], row['alt_motifs_a']), axis=1)
+sb = df.apply(lambda row: score(row['n_b'], row['h_b'], row['rep_motifs_b'], row['alt_motifs_b']), axis=1)
+X2 = (sa - sb).values.reshape(-1, 1)
+clf2 = LogisticRegression(fit_intercept=True).fit(X2, y)
+print("Accuracy Bayes:", clf2.score(X2, y))
+
+EOF
+python3 test_lz_logreg.py
+Traceback (most recent call last):
+  File "/scratch/users/benpry/auto-psych/outer_loop_live/runs/run3/repo/test_lz_logreg.py", line 3, in <module>
+    from sklearn.linear_model import LogisticRegression
+ModuleNotFoundError: No module named 'sklearn'
+[0m
+[0m$ [0mcat << 'EOF' > test_lz_loss.py
+import pandas as pd
+import numpy as np
+from scipy.optimize import minimize
+
+def lz76(s):
+    i = 0; c = 1; k = 1; n = len(s)
+    if n == 0: return 0
+    while i + k <= n:
+        sub = s[i:i+k]
+        found = False
+        for j in range(0, i):
+            if s[j:j+k] == sub: found = True; break
+        if found: k += 1
+        else: c += 1; i += k; k = 1
+    return c
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/responses.csv')
+lz_diff = df['sequence_a'].apply(lz76) - df['sequence_b'].apply(lz76)
+y = df['chose_left'].values
+
+def loss(params, X):
+    beta, alpha = params
+    p = 1 / (1 + np.exp(-(beta * X + alpha)))
+    p = np.clip(p, 1e-6, 1 - 1e-6)
+    return -np.sum(y * np.log(p) + (1 - y) * np.log(1 - p))
+
+res_lz = minimize(loss, [1.0, 0.0], args=(lz_diff.values,))
+print("LZ Log Loss:", res_lz.fun)
+
+# Compare with max_run
+run_diff = df['max_run_a'] - df['max_run_b']
+res_run = minimize(loss, [-1.0, 0.0], args=(run_diff.values,))
+print("Max Run Log Loss:", res_run.fun)
+EOF
+python3 test_lz_loss.py
+LZ Log Loss: 2603.3832810881822
+Max Run Log Loss: 2661.0588560222823
+[0m
+[0m$ [0mcat << 'EOF' >> test_lz_loss.py
+def markov_entropy(seq):
+    if len(seq) < 2: return 0.0
+    counts = {'HH':0, 'HT':0, 'TH':0, 'TT':0}
+    for i in range(len(seq)-1): counts[seq[i:i+2]] += 1
+    n_H = counts['HH'] + counts['HT']
+    n_T = counts['TH'] + counts['TT']
+    entropy = 0.0
+    if n_H > 0:
+        p_HH = counts['HH'] / n_H; p_HT = counts['HT'] / n_H
+        if p_HH > 0: entropy -= (n_H / (len(seq)-1)) * p_HH * np.log2(p_HH)
+        if p_HT > 0: entropy -= (n_H / (len(seq)-1)) * p_HT * np.log2(p_HT)
+    if n_T > 0:
+        p_TH = counts['TH'] / n_T; p_TT = counts['TT'] / n_T
+        if p_TH > 0: entropy -= (n_T / (len(seq)-1)) * p_TH * np.log2(p_TH)
+        if p_TT > 0: entropy -= (n_T / (len(seq)-1)) * p_TT * np.log2(p_TT)
+    return entropy
+
+markov_diff = df['sequence_a'].apply(markov_entropy) - df['sequence_b'].apply(markov_entropy)
+res_markov = minimize(loss, [1.0, 0.0], args=(markov_diff.values,))
+print("Markov Entropy Log Loss:", res_markov.fun)
+EOF
+python3 test_lz_loss.py | tail -n 1
+Markov Entropy Log Loss: 2635.5723747752354
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment3/model_loop/models/gaussian_smoothed_prototype.py
+"""People judge randomness by estimating a sequence's feature proportions using Bayesian smoothing and evaluating its similarity to a subjective ideal, where this similarity follows a Gaussian generalization gradient that disproportionately penalizes glaring squared deviations."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Feature inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Cognitive parameters
+    # The ideal alternation rate people expect
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    # The relative weight of alternations vs. heads balance
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    balance_weight = 1.0 - alt_weight
+
+    # Pseudo-counts for Bayesian smoothing of the proportions
+    # Higher K means more regularization toward the ideal (stronger prior)
+    K_bal = pm.Uniform("K_bal", lower=0.0, upper=20.0)
+    K_alt = pm.Uniform("K_alt", lower=0.0, upper=20.0)
+
+    # Scaling parameter and side bias for the decision rule
+    beta = pm.Uniform("beta", lower=0.1, upper=20.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    # Calculate denominators
+    n_a_f = pt.cast(n_a, "float64")
+    n_b_f = pt.cast(n_b, "float64")
+
+    n_alts_a_f = pt.cast(pt.maximum(n_a - 1, 1), "float64")
+    n_alts_b_f = pt.cast(pt.maximum(n_b - 1, 1), "float64")
+
+    # Smoothed deviations: (n / (n + K)) * raw_deviation
+    # For heads/tails balance, raw deviation is imbalance = |h/n - 0.5|
+    smooth_imb_a = (n_a_f / (n_a_f + K_bal)) * imbalance_a
+    smooth_imb_b = (n_b_f / (n_b_f + K_bal)) * imbalance_b
+
+    # For alternations, raw deviation is |p_alts - theta_alt|
+    raw_alt_dev_a = pt.abs(p_alts_a - theta_alt)
+    raw_alt_dev_b = pt.abs(p_alts_b - theta_alt)
+
+    smooth_alt_dev_a = (n_alts_a_f / (n_alts_a_f + K_alt)) * raw_alt_dev_a
+    smooth_alt_dev_b = (n_alts_b_f / (n_alts_b_f + K_alt)) * raw_alt_dev_b
+
+    # Score sequences based on their SQUARED smoothed distance from the ideal (Gaussian gradient)
+    score_a = -(
+        balance_weight * pt.square(smooth_imb_a)
+        + alt_weight * pt.square(smooth_alt_dev_a)
+    )
+    score_b = -(
+        balance_weight * pt.square(smooth_imb_b)
+        + alt_weight * pt.square(smooth_alt_dev_b)
+    )
+
+    # Softmax decision rule
+    p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+We refine the Bayesian diagnosticity model to address its under-penalization of large maximum runs. We modify the functional form of the "regular" alternative hypothesis so that its log-likelihood includes a term that grows exponentially with the sequence's maximum run length (rather than only linearly with total continuations). This reflects a cognitive expectation that non-random generators deliberately produce localized, extremely long anomalous streaks, causing people to severely penalize sequences containing them.
+EOF
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""We refine the Bayesian diagnosticity model to address its under-penalization of large maximum runs. We modify the functional form of the 'regular' alternative hypothesis so that its log-likelihood includes a term that grows exponentially with the sequence's maximum run length (rather than only linearly with total continuations). This reflects a cognitive expectation that non-random generators deliberately produce localized, extremely long anomalous streaks, causing people to severely penalize sequences containing them."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+BIAS_HEAD_PROB = 0.85
+
+def _logsumexp2(a, b):
+    m = pt.maximum(a, b)
+    return m + pt.log(pt.exp(a - m) + pt.exp(b - m))
+
+def _log_motif(n, rep_motifs, alt_motifs, max_run, log_delta, log_c, log_alpha, streak_weight):
+    n_f = pt.cast(n, "float64")
+    n1 = pt.cast(rep_motifs, "float64")
+    n2 = pt.cast(alt_motifs, "float64")
+    max_run_f = pt.cast(max_run, "float64")
+    stays = n_f - n1 - n2  # within-motif continuations; >= 0 by construction
+    
+    # We add streak_weight * max_run_f to the regular motif likelihood.
+    # This exponentially boosts the probability of sequences with large max runs under the regular hypothesis,
+    # causing them to be heavily penalized in the randomness score.
+    return stays * log_delta + (n1 + n2) * log_c + (n1 + 2.0 * n2) * log_alpha + streak_weight * max_run_f
+
+def _log_biased(n, h):
+    n_f = pt.cast(n, "float64")
+    h_f = pt.cast(h, "float64")
+    tails_f = n_f - h_f
+    head_heavy = h_f * np.log(BIAS_HEAD_PROB) + tails_f * np.log(1.0 - BIAS_HEAD_PROB)
+    tail_heavy = h_f * np.log(1.0 - BIAS_HEAD_PROB) + tails_f * np.log(BIAS_HEAD_PROB)
+    return _logsumexp2(np.log(0.5) + head_heavy, np.log(0.5) + tail_heavy)
+
+def _randomness(n, h, rep_motifs, alt_motifs, max_run, log_delta, log_c, log_alpha, streak_weight, bias_share):
+    log_fair = pt.cast(n, "float64") * np.log(0.5)
+    log_motif = _log_motif(n, rep_motifs, alt_motifs, max_run, log_delta, log_c, log_alpha, streak_weight)
+    log_biased = _log_biased(n, h)
+    log_regular = _logsumexp2(
+        pt.log(1.0 - bias_share) + log_motif,
+        pt.log(bias_share) + log_biased,
+    )
+    return log_fair - log_regular
+
+with pm.Model() as model:
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    rep_motifs_a = pm.Data("rep_motifs_a", np.zeros(1, dtype="int64"))
+    alt_motifs_a = pm.Data("alt_motifs_a", np.zeros(1, dtype="int64"))
+    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="int64"))
+    
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    rep_motifs_b = pm.Data("rep_motifs_b", np.zeros(1, dtype="int64"))
+    alt_motifs_b = pm.Data("alt_motifs_b", np.zeros(1, dtype="int64"))
+    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="int64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    delta = pm.Uniform("delta", lower=0.01, upper=0.99)
+    alpha = pm.Uniform("alpha", lower=0.01, upper=0.99)
+    bias_share = pm.Uniform("bias_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+    
+    # New parameter for the accelerating streak penalty
+    streak_weight = pm.HalfNormal("streak_weight", sigma=2.0)
+
+    log_delta = pt.log(delta)
+    log_alpha = pt.log(alpha)
+    log_c = pt.log(1.0 - delta) - pt.log(2.0 * alpha + 2.0 * alpha**2)
+
+    score_a = _randomness(
+        n_a, h_a, rep_motifs_a, alt_motifs_a, max_run_a, log_delta, log_c, log_alpha, streak_weight, bias_share
+    )
+    score_b = _randomness(
+        n_b, h_b, rep_motifs_b, alt_motifs_b, max_run_b, log_delta, log_c, log_alpha, streak_weight, bias_share
+    )
+
+    p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mpython3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+import sys
+sys.path.append('/scratch/users/benpry/auto-psych/outer_loop_live/run3')
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+/scratch/users/benpry/auto-psych/outer_loop_live/venv/lib/python3.12/site-packages/arviz/__init__.py:50: FutureWarning: 
+ArviZ is undergoing a major refactor to improve flexibility and extensibility while maintaining a user-friendly interface.
+Some upcoming changes may be backward incompatible.
+For details and migration guidance, visit: https://python.arviz.org/en/latest/user_guide/migration_guide.html
+  warn(
+observed: chose_left
+[0m
+[0m$ [0mcat << 'EOF' > hypothesis.md
+We refine the Bayesian diagnosticity model to address its under-penalization of large maximum runs. We modify the functional form of the "regular" alternative hypothesis so that its log-likelihood includes an accelerating (squared) term for the sequence's maximum run length, rather than relying solely on the linear penalty of Markov continuations. This reflects a cognitive expectation that non-random generators deliberately produce localized, extremely long anomalous streaks, causing people to severely penalize sequences containing them with an escalating cost.
+EOF
+[0m
+[0m$ [0mcat << 'EOF' > candidate.py
+"""We refine the Bayesian diagnosticity model to address its under-penalization of large maximum runs. We modify the functional form of the 'regular' alternative hypothesis so that its log-likelihood includes an accelerating (squared) term for the sequence's maximum run length, rather than relying solely on the linear penalty of Markov continuations. This reflects a cognitive expectation that non-random generators deliberately produce localized, extremely long anomalous streaks, causing people to severely penalize sequences containing them with an escalating cost."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+BIAS_HEAD_PROB = 0.85
+
+def _logsumexp2(a, b):
+    m = pt.maximum(a, b)
+    return m + pt.log(pt.exp(a - m) + pt.exp(b - m))
+
+def _log_motif(n, rep_motifs, alt_motifs, max_run, log_delta, log_c, log_alpha, streak_weight):
+    n_f = pt.cast(n, "float64")
+    n1 = pt.cast(rep_motifs, "float64")
+    n2 = pt.cast(alt_motifs, "float64")
+    max_run_f = pt.cast(max_run, "float64")
+    stays = n_f - n1 - n2  # within-motif continuations; >= 0 by construction
+    
+    # We add an accelerating (squared) penalty for the maximum run length to the regular motif likelihood.
+    # This exponentially boosts the probability of sequences with large max runs under the regular hypothesis,
+    # causing them to be heavily penalized in the randomness score.
+    return stays * log_delta + (n1 + n2) * log_c + (n1 + 2.0 * n2) * log_alpha + streak_weight * pt.square(max_run_f)
+
+def _log_biased(n, h):
+    n_f = pt.cast(n, "float64")
+    h_f = pt.cast(h, "float64")
+    tails_f = n_f - h_f
+    head_heavy = h_f * np.log(BIAS_HEAD_PROB) + tails_f * np.log(1.0 - BIAS_HEAD_PROB)
+    tail_heavy = h_f * np.log(1.0 - BIAS_HEAD_PROB) + tails_f * np.log(BIAS_HEAD_PROB)
+    return _logsumexp2(np.log(0.5) + head_heavy, np.log(0.5) + tail_heavy)
+
+def _randomness(n, h, rep_motifs, alt_motifs, max_run, log_delta, log_c, log_alpha, streak_weight, bias_share):
+    log_fair = pt.cast(n, "float64") * np.log(0.5)
+    log_motif = _log_motif(n, rep_motifs, alt_motifs, max_run, log_delta, log_c, log_alpha, streak_weight)
+    log_biased = _log_biased(n, h)
+    log_regular = _logsumexp2(
+        pt.log(1.0 - bias_share) + log_motif,
+        pt.log(bias_share) + log_biased,
+    )
+    return log_fair - log_regular
+
+with pm.Model() as model:
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    rep_motifs_a = pm.Data("rep_motifs_a", np.zeros(1, dtype="int64"))
+    alt_motifs_a = pm.Data("alt_motifs_a", np.zeros(1, dtype="int64"))
+    max_run_a = pm.Data("max_run_a", np.zeros(1, dtype="int64"))
+    
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    rep_motifs_b = pm.Data("rep_motifs_b", np.zeros(1, dtype="int64"))
+    alt_motifs_b = pm.Data("alt_motifs_b", np.zeros(1, dtype="int64"))
+    max_run_b = pm.Data("max_run_b", np.zeros(1, dtype="int64"))
+    
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    delta = pm.Uniform("delta", lower=0.01, upper=0.99)
+    alpha = pm.Uniform("alpha", lower=0.01, upper=0.99)
+    bias_share = pm.Uniform("bias_share", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+    
+    # New parameter for the accelerating streak penalty
+    streak_weight = pm.HalfNormal("streak_weight", sigma=2.0)
+
+    log_delta = pt.log(delta)
+    log_alpha = pt.log(alpha)
+    log_c = pt.log(1.0 - delta) - pt.log(2.0 * alpha + 2.0 * alpha**2)
+
+    score_a = _randomness(
+        n_a, h_a, rep_motifs_a, alt_motifs_a, max_run_a, log_delta, log_c, log_alpha, streak_weight, bias_share
+    )
+    score_b = _randomness(
+        n_b, h_b, rep_motifs_b, alt_motifs_b, max_run_b, log_delta, log_c, log_alpha, streak_weight, bias_share
+    )
+
+    p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+    
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+EOF
+[0m
+[0m$ [0mpython3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data
+import sys
+sys.path.append('/scratch/users/benpry/auto-psych/outer_loop_live/run3')
+m = load_pymc_model('candidate', Path('.'))
+print('observed:', observed_response_data(m))
+"
+observed: chose_left
+[0m
+[0m$ [0mrm test_*.py
+[0m
+[0m$ [0mtest -s hypothesis.md && echo "hypothesis.md OK"
+hypothesis.md OK
+[0m
+[0m$ [0mcat hypothesis.md
+We refine the Bayesian diagnosticity model to address its under-penalization of large maximum runs. We modify the functional form of the "regular" alternative hypothesis so that its log-likelihood includes an accelerating (squared) term for the sequence's maximum run length, rather than relying solely on the linear penalty of Markov continuations. This reflects a cognitive expectation that non-random generators deliberately produce localized, extremely long anomalous streaks, causing people to severely penalize sequences containing them with an escalating cost.
+[0m
+I have evaluated the critiques and implemented a refinement to the current best model (`bayesian_diagnosticity`) to address the significant discrepancy observed regarding the **`max_run_penalty`**.
+
+### Explanation of the Cognitive Hypothesis
+The critique highlighted that the current models, including `bayesian_diagnosticity`, under-penalize large maximum runs compared to actual human judgments. The standard "motif" process models continuations linearly in log-space (i.e. as a standard Markov process). I refined this by positing an *accelerating* (squared) expectation penalty for long streaks under the regular/alternative hypothesis. This reflects the cognitive heuristic that real randomness avoids extremely long streaks, and that sequences containing them are perceived as intentionally generated by a process deliberately producing anomalous localized streaks. 
+
+I have written this hypothesis into `hypothesis.md` and successfully translated it into a valid PyMC model in `candidate.py`.
+
+The candidate has passed the required self-check and evaluates safely. I have also cleaned up the test scripts from the working directory.

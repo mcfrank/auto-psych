@@ -1,0 +1,145 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CRITIQUE_CONTEXT.md
+cat: CRITIQUE_CONTEXT.md
+[0m
+[0m$ [0mcat CRITIQUE_CONTEXT.md
+# Critique context
+
+**Incumbent (best) model:** `prototype_similarity`
+**Incumbent model code:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/models/prototype_similarity.py`
+**Incumbent hypothesis:** Random-looking sequences are close to a prototype with balanced H/T counts
+and an ideal alternation rate.
+
+**Responses CSV:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv`
+**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+**Model set directory:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/models`
+
+Propose **8** test statistics. Write each to `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats/<name>.py` as a function `test_statistic(df)` returning a scalar, with `# name:` and `# description:` header comments.
+
+You do **not** need to run anything. After you write the statistics, the pipeline runs the posterior-predictive harness automatically over `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats` and records the results:
+
+```bash
+python3 -m src.critique.ppc \
+    --responses /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv \
+    --model prototype_similarity \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/models \
+    --test-stats-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/ppc_results.json \
+    --cache-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/.fit_cache \
+    --n-replicates 200 \
+    --significance-alpha 0.05
+```
+
+That writes `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/ppc_results.json` with a two-sided empirical p-value per statistic (200 posterior-predictive replicates). A statistic is a **significant discrepancy** when its `p_value` ≤ 0.05 (raw, no multiple-comparisons correction).
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/models/prototype_similarity.py
+"""PyMC adapter for the prototype-similarity model family."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+
+with pm.Model() as model:
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    beta = pm.Uniform("beta", lower=0.2, upper=12.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    balance_weight = 1.0 - alt_weight
+    score_a = -(
+        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
+    )
+    score_b = -(
+        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
+    )
+
+    p_left = pm.Deterministic(
+        "p_left",
+        pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
+    )
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 5 /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,TH,TTTTHHTH,0,1,,2,1,1,1,0,1,8,3,3,4,2,1,0.5,1.0,0.0,0.0,0.0,0.375,0.42857142857142855,0.42857142857142855,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],2,HTHTTTTH,HT,1,0,,8,3,4,4,2,1,2,1,1,1,0,1,0.375,0.5714285714285714,0.42857142857142855,0.25,0.25,0.5,1.0,0.0,0.0,0.0
+0,[REDACTED_PROLIFIC_ID],3,THHHHHTT,TTHHTTT,0,1,,8,5,2,5,3,0,7,2,2,3,3,0,0.625,0.2857142857142857,0.5714285714285714,0.25,0.5,0.2857142857142857,0.3333333333333333,0.3333333333333333,0.4285714285714286,0.4285714285714286
+0,[REDACTED_PROLIFIC_ID],4,TTTTTT,HHHHHHHT,0,1,,6,0,0,6,1,0,8,7,1,7,2,0,0.0,0.0,1.0,1.0,1.0,0.875,0.14285714285714285,0.8571428571428571,0.75,0.75
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/check_masks.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython check_masks.py
+Length: 960 trials
+Max Run: 120 trials
+Rep Motifs: 200 trials
+Periodicity: 1200 trials
+Heads vs Tails: 40 trials
+Length Imbalance: 40 trials
+Extreme Alt: 120 trials
+Alt Motifs: 80 trials
+[0m
+[0m$ [0mwc -l /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv
+1281 /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/responses.csv
+[0m
+[0m$ [0mmkdir -p test_stats
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats/length_preference.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats/max_run_aversion.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats/rep_motif_aversion.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats/periodicity_aversion.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats/heads_tails_asymmetry.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats/length_dependent_imbalance.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats/extreme_alternation_aversion.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats/alt_motif_aversion.py
+Wrote file successfully.
+[0m
+[0m$ [0mls -1 test_stats/
+alt_motif_aversion.py
+extreme_alternation_aversion.py
+heads_tails_asymmetry.py
+length_dependent_imbalance.py
+length_preference.py
+max_run_aversion.py
+periodicity_aversion.py
+rep_motif_aversion.py
+[0m
+[0m$ [0mpython -m py_compile test_stats/*.py
+[0m
+[0m$ [0mrm check_masks.py
+I have reviewed the `prototype_similarity` model and the available data columns, and authored 8 distinct posterior-predictive test statistics to evaluate potential failures of the model. 
+
+The test statistics focus on sequence features the incumbent model currently ignores or treats symmetrically:
+1. **Length Preference (`length_preference.py`)**: Tests if people have a baseline preference for longer sequences when lengths differ.
+2. **Max Run Aversion (`max_run_aversion.py`)**: Tests if people prefer sequences with a smaller maximum run length (normalized) when alternation and imbalance are otherwise similar.
+3. **Repetition Motif Aversion (`rep_motif_aversion.py`)**: Tests whether a higher density of repetition motifs decreases perceived randomness. 
+4. **Periodicity Aversion (`periodicity_aversion.py`)**: Probes the preference against highly periodic sequences.
+5. **Heads vs. Tails Asymmetry (`heads_tails_asymmetry.py`)**: Examines whether participants exhibit a bias towards "heads" (or "tails") for sequences that are otherwise equally imbalanced. 
+6. **Length-Dependent Imbalance (`length_dependent_imbalance.py`)**: Checks if a high imbalance score is penalized more severely in longer sequences than shorter ones. 
+7. **Extreme Alternation Aversion (`extreme_alternation_aversion.py`)**: Probes a potential non-linear or extreme penalty for perfectly alternating sequences compared to moderately alternating ones.
+8. **Alternation Motif Aversion (`alt_motif_aversion.py`)**: Tests if a higher density of localized alternating motifs reduces perceived randomness beyond the global alternation rate.
+
+All 8 files have been placed in `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment1/model_loop/iter_0/critique/test_stats/`. As requested in your final instruction, I have left the execution of the posterior-predictive harness and the writing of `critiques.md` to the automated pipeline.

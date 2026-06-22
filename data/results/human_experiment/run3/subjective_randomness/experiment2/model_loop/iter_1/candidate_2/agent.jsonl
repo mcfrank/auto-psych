@@ -1,0 +1,207 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat CONTEXT.md
+# Inner Loop — round 1, candidate 2 of 3
+
+Responses CSV: `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/responses.csv`
+Columns in the responses CSV: `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+
+Read the columns you need as `pm.Data` containers, matching each container name to a column. **Only numeric columns can back a `pm.Data`** — the precomputed integer/float feature columns and `chose_left`.
+
+The raw H/T sequence strings `sequence_a` and `sequence_b` are **not numeric** and cannot be a `pm.Data` directly. To make your hypothesis depend on an aspect of the sequence the precomputed features discard — order, position, recency, or specific sub-sequences — define a module-level `compute_features(sequence_a, sequence_b) -> dict[str, float]` in `candidate.py`. The pipeline runs it on the raw sequences for every trial and exposes each returned key as a column you read with a matching `pm.Data`. This extends the feature space beyond the precomputed columns above.
+
+Work in two steps:
+1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.
+2. Write `candidate.py` — a module-level PyMC model implementing only that
+   hypothesis.
+
+`existing_hypotheses.md` lists the hypotheses already in the model set and
+how well each fits. Read it so you propose a *distinct* or *refined*
+hypothesis — never a blend of several.
+
+`critiques.md` (/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_1/critique/critiques.md) is a posterior-predictive critique of
+the current **best** model: the test statistics on which it significantly
+fails to reproduce the data, each with the direction of the discrepancy
+and a raw p plus an FDR-adjusted q. These are *exploratory* screens, not
+confirmatory tests — several are checked per round, so prefer a
+discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such
+discrepancy to motivate a single mechanism that would close that gap.
+[0m
+[0m$ [0mcat CANDIDATE_BRIEF.md
+# Candidate Brief
+
+Propose a simpler or higher-variance single-mechanism hypothesis if progress has stalled.
+
+Your candidate must express **exactly one** cognitive hypothesis. Do not average, weight, or mix cues or mechanisms from several hypotheses into a single model — a blended mega-model is not a hypothesis.
+
+If `critiques.md` is present, prioritise a hypothesis that addresses one of the significant discrepancies it reports.
+[0m
+[0m$ [0mcat existing_hypotheses.md
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how well it currently explains the data. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## prototype_similarity  — posterior 0.004, ELPD-LOO -1720.11
+
+Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+
+## encoding_compressibility  — posterior 0.000, ELPD-LOO -1765.14
+
+Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.
+
+## bayesian_diagnosticity  — posterior 0.000, ELPD-LOO -1723.64
+
+Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.
+
+## window_typicality  — posterior 0.000, ELPD-LOO -1769.42
+
+Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).
+
+## inner_loop_model  — posterior 0.000, ELPD-LOO -1726.02
+
+People judge the randomness of a sequence by comparing its features (head proportion and alternation rate) to a subjective ideal, but their psychological penalty for deviations is scaled by the square root of the sequence length, reflecting an intuitive sensitivity to the standard error of small samples.
+
+## smoothed_prototype_distance  — posterior 0.811, ELPD-LOO -1714.40
+
+People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal.
+
+## falk_konold_complexity  — posterior 0.000, ELPD-LOO -1774.59
+
+People judge the randomness of a sequence by its structural complexity when parsed into continuous alternating and repeating sub-sequences (Falk & Konold's difficulty of encoding), perceiving sequences with a lower rate of sub-sequences as simpler and therefore less random.
+
+## iter0_candidate0  — posterior 0.185, ELPD-LOO -1715.18
+
+People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but their ideal template includes an expectation for higher-order alternating motifs (like HTHT) in addition to basic heads/tails balance and simple bigram alternations.
+
+## iter0_candidate2  — posterior 0.000, ELPD-LOO -1769.01
+
+People judge the randomness of a sequence by its smoothed distance from a subjective prototype, but this prototype tracks the proportion of 4-item alternating motifs (like HTHT) instead of simple bigram alternations, viewing these longer, more complex alternations as the primary structural signature of local randomness.
+
+## iter1_candidate0
+
+People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal using Bayesian smoothing, but their sensitivity to these deviations follows a Gaussian-like generalization gradient. Instead of penalizing deviations linearly, they disproportionately penalize sequences that exhibit extreme, glaring deviations on any single feature dimension, while easily tolerating small differences from the prototype.
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_1/critique/critiques.md
+# Critique of `smoothed_prototype_distance`
+
+0 of 23 test statistics show a significant discrepancy (p ≤ 0.05), over 200 posterior-predictive replicates.
+
+No statistic showed a significant discrepancy — the incumbent fits these checks.
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_logp.py
+Wrote file successfully.
+[0m
+[0m$ [0mpython3 test_logp.py
+It works!
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_graph.py
+Wrote file successfully.
+
+LSP errors detected in this file, please fix:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_graph.py">
+ERROR [20:19] "maximum" is not exported from module "pytensor.tensor"
+ERROR [20:30] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [25:19] "maximum" is not exported from module "pytensor.tensor"
+ERROR [25:30] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_graph.py
+Wrote file successfully.
+
+LSP errors detected in this file, please fix:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_graph.py">
+ERROR [19:19] "clip" is not exported from module "pytensor.tensor"
+ERROR [19:24] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [20:19] "clip" is not exported from module "pytensor.tensor"
+ERROR [20:24] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+</diagnostics>
+[0m
+[0m$ [0mpython3 test_graph.py
+Graph built successfully!
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/hypothesis.md
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_graph.py">
+ERROR [19:19] "clip" is not exported from module "pytensor.tensor"
+ERROR [19:24] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [20:19] "clip" is not exported from module "pytensor.tensor"
+ERROR [20:24] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_zeros.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_graph.py">
+ERROR [19:19] "clip" is not exported from module "pytensor.tensor"
+ERROR [19:24] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [20:19] "clip" is not exported from module "pytensor.tensor"
+ERROR [20:24] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+</diagnostics>
+[0m
+[0m$ [0mpython3 test_zeros.py
+Works for zeros!
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_max.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_graph.py">
+ERROR [19:19] "clip" is not exported from module "pytensor.tensor"
+ERROR [19:24] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [20:19] "clip" is not exported from module "pytensor.tensor"
+ERROR [20:24] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+</diagnostics>
+
+LSP errors detected in this file, please fix:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_max.py">
+ERROR [6:28] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+</diagnostics>
+[0m
+[0m$ [0mpython3 test_max.py
+Works!
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/candidate.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_graph.py">
+ERROR [19:19] "clip" is not exported from module "pytensor.tensor"
+ERROR [19:24] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [20:19] "clip" is not exported from module "pytensor.tensor"
+ERROR [20:24] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/test_max.py">
+ERROR [6:28] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+</diagnostics>
+
+LSP errors detected in this file, please fix:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_1/candidate_2/candidate.py">
+ERROR [30:35] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [31:35] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+</diagnostics>
+[0m
+[93m[1m! [0mpermission requested: external_directory (/scratch/users/benpry/auto-psych/outer_loop_live/run3/*); auto-rejecting
+[0m✗ [0mbash failed
+[91m[1mError: [0mThe user rejected permission to use this specific tool call.

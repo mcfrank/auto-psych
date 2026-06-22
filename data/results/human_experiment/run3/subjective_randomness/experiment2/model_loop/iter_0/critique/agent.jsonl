@@ -1,0 +1,222 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/CRITIQUE_CONTEXT.md
+# Critique context
+
+**Incumbent (best) model:** `smoothed_prototype_distance`
+**Incumbent model code:** `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/models/smoothed_prototype_distance.py`
+**Incumbent hypothesis:** People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal.
+
+**Responses CSV:** `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/responses.csv`
+**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+**Model set directory:** `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/models`
+
+Propose **8** test statistics. Write each to `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/<name>.py` as a function `test_statistic(df)` returning a scalar, with `# name:` and `# description:` header comments.
+
+You do **not** need to run anything. After you write the statistics, the pipeline runs the posterior-predictive harness automatically over `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats` and records the results:
+
+```bash
+python3 -m src.critique.ppc \
+    --responses /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/responses.csv \
+    --model smoothed_prototype_distance \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/models \
+    --test-stats-dir /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/ppc_results.json \
+    --cache-dir /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/.fit_cache \
+    --n-replicates 200 \
+    --significance-alpha 0.05
+```
+
+That writes `/scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/ppc_results.json` with a two-sided empirical p-value per statistic (200 posterior-predictive replicates). A statistic is a **significant discrepancy** when its `p_value` ≤ 0.05 (raw, no multiple-comparisons correction).
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/models/smoothed_prototype_distance.py
+"""People judge the randomness of a sequence by comparing its feature proportions to a subjective ideal, but they estimate these proportions using Bayesian smoothing with subjective pseudo-counts, naturally tolerating extreme imbalances in short sequences because their prior pulls the estimates toward the ideal."""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Feature inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+
+    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
+    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+
+    p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
+    p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
+
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+
+    # Cognitive parameters
+    # The ideal alternation rate people expect
+    theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
+    # The relative weight of alternations vs. heads balance
+    alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
+    balance_weight = 1.0 - alt_weight
+
+    # Pseudo-counts for Bayesian smoothing of the proportions
+    # Higher K means more regularization toward the ideal (stronger prior)
+    K_bal = pm.Uniform("K_bal", lower=0.0, upper=20.0)
+    K_alt = pm.Uniform("K_alt", lower=0.0, upper=20.0)
+
+    # Scaling parameter and side bias for the decision rule
+    beta = pm.Uniform("beta", lower=0.1, upper=20.0)
+    side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
+
+    # Calculate denominators
+    n_a_f = pt.cast(n_a, "float64")
+    n_b_f = pt.cast(n_b, "float64")
+
+    n_alts_a_f = pt.cast(pt.maximum(n_a - 1, 1), "float64")
+    n_alts_b_f = pt.cast(pt.maximum(n_b - 1, 1), "float64")
+
+    # Smoothed deviations: (n / (n + K)) * raw_deviation
+    # For heads/tails balance, raw deviation is imbalance = |h/n - 0.5|
+    smooth_imb_a = (n_a_f / (n_a_f + K_bal)) * imbalance_a
+    smooth_imb_b = (n_b_f / (n_b_f + K_bal)) * imbalance_b
+
+    # For alternations, raw deviation is |p_alts - theta_alt|
+    raw_alt_dev_a = pt.abs(p_alts_a - theta_alt)
+    raw_alt_dev_b = pt.abs(p_alts_b - theta_alt)
+
+    smooth_alt_dev_a = (n_alts_a_f / (n_alts_a_f + K_alt)) * raw_alt_dev_a
+    smooth_alt_dev_b = (n_alts_b_f / (n_alts_b_f + K_alt)) * raw_alt_dev_b
+
+    # Score sequences based on their smoothed distance from the ideal (higher distance = lower score)
+    score_a = -(balance_weight * smooth_imb_a + alt_weight * smooth_alt_dev_a)
+    score_b = -(balance_weight * smooth_imb_b + alt_weight * smooth_alt_dev_b)
+
+    # Softmax decision rule
+    p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 5 /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,HTTTTTTH,HHHTHHH,0,1,,8,2,2,6,3,0,7,6,2,3,3,0,0.25,0.2857142857142857,0.7142857142857143,0.5,0.5,0.8571428571428571,0.3333333333333333,0.3333333333333333,0.7142857142857142,0.7142857142857142
+0,[REDACTED_PROLIFIC_ID],2,HHTTTTT,TTTTHTTT,0,1,,7,2,1,5,2,0,8,1,2,4,3,0,0.2857142857142857,0.16666666666666666,0.6666666666666666,0.4285714285714286,0.1428571428571428,0.125,0.2857142857142857,0.42857142857142855,0.75,0.75
+0,[REDACTED_PROLIFIC_ID],3,TTHTHHHH,HHTHTHHH,0,1,,8,5,3,4,2,1,8,6,4,3,2,1,0.625,0.42857142857142855,0.42857142857142855,0.25,0.25,0.75,0.5714285714285714,0.2857142857142857,0.5,0.5
+0,[REDACTED_PROLIFIC_ID],4,THTHTTT,HHTTTTHH,1,0,,7,2,4,3,1,1,8,4,2,4,3,0,0.2857142857142857,0.6666666666666666,0.3333333333333333,0.4285714285714286,0.7142857142857142,0.5,0.2857142857142857,0.42857142857142855,0.0,0.5
+[0m
+[0m$ [0mmkdir -p /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/max_run_preference.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/rep_motifs_aversion.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/alt_motifs_preference.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/periodicity_aversion.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/perfect_alternation_aversion.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/short_sequence_imbalance_penalty.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/length_preference_matched_features.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/heads_vs_tails_bias.py
+Wrote file successfully.
+[0m
+[0m$ [0mls -la /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/
+total 33
+drwx------+ 2 benpry ngoodman 4096 Jun 21 17:18 .
+drwx------+ 4 benpry ngoodman 4096 Jun 21 17:17 ..
+-rw-------+ 1 benpry ngoodman  461 Jun 21 17:17 alt_motifs_preference.py
+-rw-------+ 1 benpry ngoodman  517 Jun 21 17:18 heads_vs_tails_bias.py
+-rw-------+ 1 benpry ngoodman  549 Jun 21 17:18 length_preference_matched_features.py
+-rw-------+ 1 benpry ngoodman  619 Jun 21 17:17 max_run_preference.py
+-rw-------+ 1 benpry ngoodman  482 Jun 21 17:18 perfect_alternation_aversion.py
+-rw-------+ 1 benpry ngoodman  451 Jun 21 17:17 periodicity_aversion.py
+-rw-------+ 1 benpry ngoodman  532 Jun 21 17:17 rep_motifs_aversion.py
+-rw-------+ 1 benpry ngoodman  867 Jun 21 17:18 short_sequence_imbalance_penalty.py
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/max_run_preference.py
+import numpy as np
+import pandas as pd
+
+
+# name: max_run_preference
+# description: The response rate for sequence A when sequence A has a smaller normalized maximum run length than sequence B, restricting to trials where imbalance is similar, testing if people penalize long runs beyond basic feature proportions.
+def test_statistic(df):
+    # Condition on similar imbalance to isolate max_run effect
+    mask = (np.abs(df["imbalance_a"] - df["imbalance_b"]) < 0.1) & (
+        df["max_run_norm_a"] < df["max_run_norm_b"]
+    )
+    if mask.sum() == 0:
+        return np.nan
+    return df.loc[mask, "chose_left"].mean()
+[0m
+[0m$ [0mfor f in /scratch/users/benpry/auto-psych/outer_loop_live/run3/data/subjective_randomness/experiment2/model_loop/iter_0/critique/test_stats/*.py; do head -n 5 "$f"; echo ""; done
+import numpy as np
+import pandas as pd
+
+
+# name: alt_motifs_preference
+
+import numpy as np
+import pandas as pd
+
+
+# name: heads_vs_tails_bias
+
+import numpy as np
+import pandas as pd
+
+
+# name: length_preference_matched_features
+
+import numpy as np
+import pandas as pd
+
+
+# name: max_run_preference
+
+import numpy as np
+import pandas as pd
+
+
+# name: perfect_alternation_aversion
+
+import numpy as np
+import pandas as pd
+
+
+# name: periodicity_aversion
+
+import numpy as np
+import pandas as pd
+
+
+# name: rep_motifs_aversion
+
+import numpy as np
+import pandas as pd
+
+
+# name: short_sequence_imbalance_penalty
+[0m
+I have successfully analyzed the incumbent `smoothed_prototype_distance` model and proposed 8 targeted test statistics to probe its potential failures. I have written these to the `test_stats/` directory in the critique folder, as requested.
+
+Here is a summary of the statistics I implemented:
+
+1. **`max_run_preference`**: Tests if people penalize sequences with larger maximal run lengths (controlling for overall sequence imbalance) since the incumbent model only considers the overall head/tail balance and bigram alternation rate.
+2. **`rep_motifs_aversion`**: Tests if people have a specific aversion to sequences with repeating trigram motifs (like HHH or TTT) independent of simple alternation rates.
+3. **`alt_motifs_preference`**: Examines whether sequences with more alternating motifs (like HTH) are considered more random, looking purely at differences not captured by the bigram rate.
+4. **`periodicity_aversion`**: Checks if sequences with higher periodicity are seen as less random, as the current model ignores repeating long-range structures.
+5. **`perfect_alternation_aversion`**: Analyzes sequences with an alternation proportion of exactly 1.0 (e.g., HTHTHT), testing if deterministic alternation is penalized more heavily than linear distance from a subjective ideal alternation rate.
+6. **`short_sequence_imbalance_penalty`**: Computes the correlation between imbalance advantage and choice for very short sequences ($N \le 5$) to test if the model's Bayesian small-sample smoothing captures the true penalty humans assign.
+7. **`length_preference_matched_features`**: Examines whether absolute sequence length influences choice when both sequences share matching proportions of imbalance and alternations.
+8. **`heads_vs_tails_bias`**: Tests for an asymmetric preference between heads and tails, since the current model aggregates this away using absolute imbalance.
+
+Since the instructions specify that I do not need to run the harness or manually construct `critiques.md`, everything is now in place for the automated pipeline to execute the posterior-predictive checks.

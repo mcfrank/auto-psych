@@ -1,0 +1,416 @@
+Performing one time database migration, may take a few minutes...
+sqlite-migration:done
+Database migration complete.
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/data/subjective_randomness/experiment3/model_loop/iter_0/critique/CRITIQUE_CONTEXT.md
+cat: /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/data/subjective_randomness/experiment3/model_loop/iter_0/critique/CRITIQUE_CONTEXT.md: No such file or directory
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/CRITIQUE_CONTEXT.md
+# Critique context
+
+**Incumbent (best) model:** `linear_accumulated_typicality`
+**Incumbent model code:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/models/linear_accumulated_typicality.py`
+**Incumbent hypothesis:** People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal head proportion and alternation rate is linear (absolute difference) rather than quadratic, treating extreme deviations proportionally to small ones.
+
+**Responses CSV:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv`
+**Columns (DataFrame your test statistics receive):** `participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b`
+**Model set directory:** `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/models`
+
+Propose **8** test statistics. Write each to `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/<name>.py` as a function `test_statistic(df)` returning a scalar, with `# name:` and `# description:` header comments.
+
+You do **not** need to run anything. After you write the statistics, the pipeline runs the posterior-predictive harness automatically over `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats` and records the results:
+
+```bash
+python3 -m src.critique.ppc \
+    --responses /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv \
+    --model linear_accumulated_typicality \
+    --models-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/models \
+    --test-stats-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats \
+    --out /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/ppc_results.json \
+    --cache-dir /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/.fit_cache \
+    --n-replicates 200 \
+    --significance-alpha 0.05
+```
+
+That writes `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/ppc_results.json` with a two-sided empirical p-value per statistic (200 posterior-predictive replicates). A statistic is a **significant discrepancy** when its `p_value` ≤ 0.05 (raw, no multiple-comparisons correction).
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/models/linear_accumulated_typicality.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal head proportion and alternation rate is linear (absolute difference) rather than quadratic, treating extreme deviations proportionally to small ones.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate per-event typicality using linear (absolute) deviations
+    typ_a = base_typ - (
+        w_p * pt.abs(p_a - ideal_p) + w_alt * pt.abs(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.abs(p_b - ideal_p) + w_alt * pt.abs(alt_rate_b - ideal_alt)
+    )
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = n_a * typ_a
+    rand_b = n_b * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mhead -n 5 /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv
+participant_id,participant_id_str,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,n_a,h_a,alts_a,max_run_a,rep_motifs_a,alt_motifs_a,n_b,h_b,alts_b,max_run_b,rep_motifs_b,alt_motifs_b,p_a,p_alts_a,max_run_norm_a,imbalance_a,periodicity_a,p_b,p_alts_b,max_run_norm_b,imbalance_b,periodicity_b
+0,[REDACTED_PROLIFIC_ID],1,TH,TTTTHHTH,0,1,,2,1,1,1,0,1,8,3,3,4,2,1,0.5,1.0,0.0,0.0,0.0,0.375,0.42857142857142855,0.42857142857142855,0.25,0.25
+0,[REDACTED_PROLIFIC_ID],2,HTHTTTTH,HT,1,0,,8,3,4,4,2,1,2,1,1,1,0,1,0.375,0.5714285714285714,0.42857142857142855,0.25,0.25,0.5,1.0,0.0,0.0,0.0
+0,[REDACTED_PROLIFIC_ID],3,THHHHHTT,TTHHTTT,0,1,,8,5,2,5,3,0,7,2,2,3,3,0,0.625,0.2857142857142857,0.5714285714285714,0.25,0.5,0.2857142857142857,0.3333333333333333,0.3333333333333333,0.4285714285714286,0.4285714285714286
+0,[REDACTED_PROLIFIC_ID],4,TTTTTT,HHHHHHHT,0,1,,6,0,0,6,1,0,8,7,1,7,2,0,0.0,0.0,1.0,1.0,1.0,0.875,0.14285714285714285,0.8571428571428571,0.75,0.75
+[0m
+[0m$ [0mcat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/test_harness_check.py
+import pandas as pd
+import numpy as np
+
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv')
+
+def stat1(df):
+    typical_a = (df['p_a'] >= 0.4) & (df['p_a'] <= 0.6) & (df['p_alts_a'] >= 0.4) & (df['p_alts_a'] <= 0.6)
+    typical_b = (df['p_b'] >= 0.4) & (df['p_b'] <= 0.6) & (df['p_alts_b'] >= 0.4) & (df['p_alts_b'] <= 0.6)
+    subset = df[typical_a & typical_b & (df['n_a'] != df['n_b'])]
+    if len(subset) == 0: return 0.0
+    chose_longer = ((df['n_a'] > df['n_b']) & df['chose_left']) | ((df['n_b'] > df['n_a']) & (df['chose_left']==0))
+    return chose_longer.mean(), len(subset)
+
+def stat2(df):
+    subset = df[(df['max_run_a'] > df['max_run_b'] + 1) & (abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1)]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+def stat3(df):
+    subset = df[(abs(df['p_a'] - 0.5) > 0.35) & (abs(df['p_b'] - 0.5) > 0.15) & (abs(df['p_b'] - 0.5) < 0.25)]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+def stat4(df):
+    subset = df[(df['p_alts_a'] < 0.2) & (df['p_alts_b'] > 0.3) & (df['p_alts_b'] < 0.4)]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+def stat5(df):
+    subset = df[(df['p_a'] >= 0.4) & (df['p_a'] <= 0.6) & (df['p_b'] >= 0.4) & (df['p_b'] <= 0.6) & (df['p_alts_a'] > 0.8) & (df['p_alts_b'] < 0.2)]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+def stat6(df):
+    subset = df[(df['rep_motifs_a'] > df['rep_motifs_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1)]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+def stat7(df):
+    imbalanced_a = abs(df['p_a'] - 0.5) > 0.3
+    imbalanced_b = abs(df['p_b'] - 0.5) > 0.3
+    subset = df[imbalanced_a & imbalanced_b & (df['n_a'] != df['n_b'])]
+    if len(subset) == 0: return 0.0, 0
+    chose_longer = ((df['n_a'] > df['n_b']) & df['chose_left']) | ((df['n_b'] > df['n_a']) & (df['chose_left']==0))
+    return chose_longer.mean(), len(subset)
+
+def stat8(df):
+    subset = df[(df['alt_motifs_a'] > df['alt_motifs_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1)]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+print("Stat 1:", stat1(df))
+print("Stat 2:", stat2(df))
+print("Stat 3:", stat3(df))
+print("Stat 4:", stat4(df))
+print("Stat 5:", stat5(df))
+print("Stat 6:", stat6(df))
+print("Stat 7:", stat7(df))
+print("Stat 8:", stat8(df))
+
+EOF
+python /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/test_harness_check.py
+Stat 1: 0.0
+Stat 2: (np.float64(0.3783783783783784), 74)
+Stat 3: (np.float64(0.2711864406779661), 59)
+Stat 4: (np.float64(0.234375), 64)
+Stat 5: (0.0, 0)
+Stat 6: (np.float64(0.528), 250)
+Stat 7: (np.float64(0.4505208333333333), 120)
+Stat 8: (np.float64(0.41333333333333333), 150)
+[0m
+[0m$ [0mcat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/test_harness_check_2.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv')
+
+def stat1(df):
+    typical_a = (df['p_a'] >= 0.3) & (df['p_a'] <= 0.7) & (df['p_alts_a'] >= 0.3) & (df['p_alts_a'] <= 0.7)
+    typical_b = (df['p_b'] >= 0.3) & (df['p_b'] <= 0.7) & (df['p_alts_b'] >= 0.3) & (df['p_alts_b'] <= 0.7)
+    subset = df[typical_a & typical_b & (df['n_a'] != df['n_b'])]
+    if len(subset) == 0: return 0.0, 0
+    chose_longer = ((df['n_a'] > df['n_b']) & df['chose_left']) | ((df['n_b'] > df['n_a']) & (df['chose_left']==0))
+    return chose_longer.mean(), len(subset)
+
+def stat5(df):
+    # over vs under alternation
+    subset = df[(df['p_alts_a'] > 0.7) & (df['p_alts_b'] < 0.3)]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+print("Stat 1 (relaxed):", stat1(df))
+print("Stat 5 (relaxed):", stat5(df))
+EOF
+python /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/test_harness_check_2.py
+Stat 1 (relaxed): (np.float64(0.4505208333333333), 240)
+Stat 5 (relaxed): (np.float64(0.7445652173913043), 184)
+[0m
+[0m$ [0mcat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/test_harness_check_3.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv')
+
+def stat6(df):
+    subset = df[(df['n_a'] == df['n_b']) & (df['rep_motifs_a'] > df['rep_motifs_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1)]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+def stat8(df):
+    subset = df[(df['n_a'] == df['n_b']) & (df['alt_motifs_a'] > df['alt_motifs_b']) & (abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1)]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+print("Stat 6 (same length):", stat6(df))
+print("Stat 8 (same length):", stat8(df))
+EOF
+python /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/test_harness_check_3.py
+Stat 6 (same length): (0.0, 0)
+Stat 8 (same length): (0.0, 0)
+[0m
+[0m$ [0mpython3 -c "import pandas as pd; df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv'); print(df[['n_a', 'n_b']].drop_duplicates())"
+n_a  n_b
+0       2    8
+1       8    2
+2       8    7
+3       6    8
+4       2    6
+5       8    8
+7       8    6
+8       3    8
+11      7    7
+13      8    3
+14      7    8
+15      4    8
+20      4    7
+21      3    7
+22      7    5
+23      8    4
+24      5    8
+26      5    6
+27      5    7
+31      6    7
+36      6    2
+53      7    3
+58      6    5
+120     8    5
+148     7    4
+159     7    6
+1290    6    6
+1296    7    2
+1328    2    7
+[0m
+[0m$ [0mcat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/test_harness_check_4.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv')
+
+def stat6(df):
+    subset = df[(df['rep_motifs_a'] / df['n_a']) > (df['rep_motifs_b'] / df['n_b']) + 0.1]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+def stat8(df):
+    subset = df[(df['alt_motifs_a'] / df['n_a']) > (df['alt_motifs_b'] / df['n_b']) + 0.1]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+print("Stat 6 (norm):", stat6(df))
+print("Stat 8 (norm):", stat8(df))
+EOF
+python /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/test_harness_check_4.py
+Stat 6 (norm): (np.float64(0.5113369820172009), 1279)
+Stat 8 (norm): (np.float64(0.6123748862602366), 1099)
+[0m
+[0m$ [0mcat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/test_harness_check_5.py
+import pandas as pd
+df = pd.read_csv('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/responses.csv')
+
+def stat6(df):
+    subset = df[((df['rep_motifs_a'] / df['n_a']) > (df['rep_motifs_b'] / df['n_b']) + 0.1) & (abs(df['p_alts_a'] - df['p_alts_b']) <= 0.2)]
+    if len(subset) == 0: return 0.0, 0
+    return subset['chose_left'].mean(), len(subset)
+
+print("Stat 6 (norm + p_alts):", stat6(df))
+EOF
+python /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/test_harness_check_5.py
+Stat 6 (norm + p_alts): (np.float64(0.530214424951267), 513)
+[0m
+[0m$ [0mmkdir -p /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats
+[0m
+[0m$ [0mcat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/length_preference_typical.py
+# name: length_preference_typical
+# description: Proportion of trials where the longer sequence is chosen, among trials where both sequences are typical (0.3 <= p <= 0.7, 0.3 <= p_alts <= 0.7).
+import pandas as pd
+
+def test_statistic(df):
+    typical_a = (df['p_a'] >= 0.3) & (df['p_a'] <= 0.7) & (df['p_alts_a'] >= 0.3) & (df['p_alts_a'] <= 0.7)
+    typical_b = (df['p_b'] >= 0.3) & (df['p_b'] <= 0.7) & (df['p_alts_b'] >= 0.3) & (df['p_alts_b'] <= 0.7)
+    subset = df[typical_a & typical_b & (df['n_a'] != df['n_b'])]
+    if len(subset) == 0: return 0.0
+    chose_longer = ((df['n_a'] > df['n_b']) & df['chose_left']) | ((df['n_b'] > df['n_a']) & (df['chose_left'] == 0))
+    return float(chose_longer.mean())
+EOF
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/length_preference_imbalanced.py
+# name: length_preference_imbalanced
+# description: Proportion of trials where the longer sequence is chosen, among trials where both sequences are highly imbalanced (abs(p - 0.5) > 0.3).
+import pandas as pd
+
+def test_statistic(df):
+    imbalanced_a = (abs(df['p_a'] - 0.5) > 0.3)
+    imbalanced_b = (abs(df['p_b'] - 0.5) > 0.3)
+    subset = df[imbalanced_a & imbalanced_b & (df['n_a'] != df['n_b'])]
+    if len(subset) == 0: return 0.0
+    chose_longer = ((df['n_a'] > df['n_b']) & df['chose_left']) | ((df['n_b'] > df['n_a']) & (df['chose_left'] == 0))
+    return float(chose_longer.mean())
+EOF
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/max_run_penalty.py
+# name: max_run_penalty
+# description: Proportion of times sequence A is chosen when it has a longer max run than B, but similar alternation rates (abs(p_alts_a - p_alts_b) <= 0.1).
+import pandas as pd
+
+def test_statistic(df):
+    subset = df[(df['max_run_a'] > df['max_run_b'] + 1) & (abs(df['p_alts_a'] - df['p_alts_b']) <= 0.1)]
+    if len(subset) == 0: return 0.0
+    return float(subset['chose_left'].mean())
+EOF
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/extreme_vs_moderate_imbalance.py
+# name: extreme_vs_moderate_imbalance
+# description: Proportion of times sequence A is chosen when it has extreme imbalance (abs(p - 0.5) > 0.35) while B has moderate imbalance (0.15 < abs(p - 0.5) < 0.25).
+import pandas as pd
+
+def test_statistic(df):
+    subset = df[(abs(df['p_a'] - 0.5) > 0.35) & (abs(df['p_b'] - 0.5) > 0.15) & (abs(df['p_b'] - 0.5) < 0.25)]
+    if len(subset) == 0: return 0.0
+    return float(subset['chose_left'].mean())
+EOF
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/extreme_under_alternation.py
+# name: extreme_under_alternation
+# description: Proportion of times sequence A is chosen when it has extreme under-alternation (p_alts < 0.2) while B has moderate under-alternation (0.3 < p_alts < 0.4).
+import pandas as pd
+
+def test_statistic(df):
+    subset = df[(df['p_alts_a'] < 0.2) & (df['p_alts_b'] > 0.3) & (df['p_alts_b'] < 0.4)]
+    if len(subset) == 0: return 0.0
+    return float(subset['chose_left'].mean())
+EOF
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/over_vs_under_alternation.py
+# name: over_vs_under_alternation
+# description: Proportion of times sequence A is chosen when it over-alternates (p_alts > 0.7) and B under-alternates (p_alts < 0.3).
+import pandas as pd
+
+def test_statistic(df):
+    subset = df[(df['p_alts_a'] > 0.7) & (df['p_alts_b'] < 0.3)]
+    if len(subset) == 0: return 0.0
+    return float(subset['chose_left'].mean())
+EOF
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/repeated_motifs_penalty.py
+# name: repeated_motifs_penalty
+# description: Proportion of times sequence A is chosen when it has a higher density of repeated motifs than B, despite having similar overall alternation rates.
+import pandas as pd
+
+def test_statistic(df):
+    subset = df[((df['rep_motifs_a'] / df['n_a']) > (df['rep_motifs_b'] / df['n_b']) + 0.1) & (abs(df['p_alts_a'] - df['p_alts_b']) <= 0.2)]
+    if len(subset) == 0: return 0.0
+    return float(subset['chose_left'].mean())
+EOF
+cat << 'EOF' > /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/alternating_motifs_preference.py
+# name: alternating_motifs_preference
+# description: Proportion of times sequence A is chosen when it has a higher density of alternating motifs than B, despite having similar overall alternation rates.
+import pandas as pd
+
+def test_statistic(df):
+    subset = df[((df['alt_motifs_a'] / df['n_a']) > (df['alt_motifs_b'] / df['n_b']) + 0.1) & (abs(df['p_alts_a'] - df['p_alts_b']) <= 0.2)]
+    if len(subset) == 0: return 0.0
+    return float(subset['chose_left'].mean())
+EOF
+[0m
+[0m$ [0mls -la /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/
+total 40
+drwx------+ 2 benpry ngoodman 4096 Jun 21 19:31 .
+drwx------+ 4 benpry ngoodman 4096 Jun 21 19:31 ..
+-rw-------+ 1 benpry ngoodman  471 Jun 21 19:31 alternating_motifs_preference.py
+-rw-------+ 1 benpry ngoodman  421 Jun 21 19:31 extreme_under_alternation.py
+-rw-------+ 1 benpry ngoodman  445 Jun 21 19:31 extreme_vs_moderate_imbalance.py
+-rw-------+ 1 benpry ngoodman  593 Jun 21 19:31 length_preference_imbalanced.py
+-rw-------+ 1 benpry ngoodman  713 Jun 21 19:31 length_preference_typical.py
+-rw-------+ 1 benpry ngoodman  414 Jun 21 19:31 max_run_penalty.py
+-rw-------+ 1 benpry ngoodman  360 Jun 21 19:31 over_vs_under_alternation.py
+-rw-------+ 1 benpry ngoodman  462 Jun 21 19:31 repeated_motifs_penalty.py
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/length_preference_typical.py
+# name: length_preference_typical
+# description: Proportion of trials where the longer sequence is chosen, among trials where both sequences are typical (0.3 <= p <= 0.7, 0.3 <= p_alts <= 0.7).
+import pandas as pd
+
+def test_statistic(df):
+    typical_a = (df['p_a'] >= 0.3) & (df['p_a'] <= 0.7) & (df['p_alts_a'] >= 0.3) & (df['p_alts_a'] <= 0.7)
+    typical_b = (df['p_b'] >= 0.3) & (df['p_b'] <= 0.7) & (df['p_alts_b'] >= 0.3) & (df['p_alts_b'] <= 0.7)
+    subset = df[typical_a & typical_b & (df['n_a'] != df['n_b'])]
+    if len(subset) == 0: return 0.0
+    chose_longer = ((df['n_a'] > df['n_b']) & df['chose_left']) | ((df['n_b'] > df['n_a']) & (df['chose_left'] == 0))
+    return float(chose_longer.mean())
+[0m
+I have reviewed the incumbent `linear_accumulated_typicality` model and the dataset features. Based on the model's mechanisms (linear penalty for deviation from an ideal proportion and ideal alternation rate, strictly accumulated over the sequence length without consideration for max run length or local motifs), I identified several key behavioural patterns it might mispredict.
+
+I have created the 8 requested test statistics inside the target directory `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop/iter_0/critique/test_stats/`:
+
+1. `length_preference_typical.py` - Probes if people truly accumulate (multiply by length) typicality for sequences that are generally typical.
+2. `length_preference_imbalanced.py` - Probes if the accumulation holds for extremely imbalanced sequences.
+3. `max_run_penalty.py` - Tests if humans penalize max run length, a feature completely ignored by the current model.
+4. `extreme_vs_moderate_imbalance.py` - Checks if there's a non-linear (e.g. quadratic) rejection of extreme imbalances compared to what a linear model predicts.
+5. `extreme_under_alternation.py` - Checks for a non-linear rejection of extremely clustered sequences.
+6. `over_vs_under_alternation.py` - Tests for asymmetry around the ideal alternation rate (over-alternating vs under-alternating).
+7. `repeated_motifs_penalty.py` - Tests if local clumps/repeats are penalized beyond the global alternation rate.
+8. `alternating_motifs_preference.py` - Tests if local alternating motifs have an independent effect.
+
+As instructed, I will leave the execution of the posterior-predictive harness and the writing of `critiques.md` to the automated pipeline.

@@ -1,0 +1,71 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "prototype_similarity",
+    "posteriors": {
+      "prototype_similarity": 0.998098,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.001902,
+      "window_typicality": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -864.2061,
+      "encoding_compressibility": -889.6299,
+      "bayesian_diagnosticity": -867.8689,
+      "window_typicality": -887.5123
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "prototype_similarity",
+    "posteriors": {
+      "prototype_similarity": 0.997166,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 0.001901,
+      "window_typicality": 0.0,
+      "iter0_candidate0": 0.000932,
+      "iter0_candidate1": 2e-06,
+      "iter0_candidate2": 0.0
+    },
+    "elpd_loo": {
+      "prototype_similarity": -864.2061,
+      "encoding_compressibility": -889.6299,
+      "bayesian_diagnosticity": -867.8689,
+      "window_typicality": -887.5123,
+      "iter0_candidate0": -871.4319,
+      "iter0_candidate1": -877.1882,
+      "iter0_candidate2": -886.3907
+    }
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "iter1_candidate2",
+    "posteriors": {
+      "prototype_similarity": 0.015369,
+      "encoding_compressibility": 0.0,
+      "bayesian_diagnosticity": 2.9e-05,
+      "window_typicality": 0.0,
+      "iter0_candidate0": 1.4e-05,
+      "iter0_candidate1": 0.0,
+      "iter0_candidate2": 0.0,
+      "iter1_candidate0": 0.052079,
+      "iter1_candidate1": 0.000178,
+      "iter1_candidate2": 0.932331
+    },
+    "elpd_loo": {
+      "prototype_similarity": -864.2061,
+      "encoding_compressibility": -889.6299,
+      "bayesian_diagnosticity": -867.8689,
+      "window_typicality": -887.5123,
+      "iter0_candidate0": -871.4319,
+      "iter0_candidate1": -877.1882,
+      "iter0_candidate2": -886.3907,
+      "iter1_candidate0": -862.9857,
+      "iter1_candidate1": -868.4658,
+      "iter1_candidate2": -859.7008
+    }
+  }
+]

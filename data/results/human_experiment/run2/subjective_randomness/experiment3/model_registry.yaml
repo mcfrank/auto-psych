@@ -1,0 +1,17 @@
+reserved_for_new: 0.0
+theories:
+  bayesian_diagnosticity: 0.0
+  encoding_compressibility: 0.0
+  evidence_accumulation_per_run: 0.45998745998746
+  evidence_accumulation_periodicity: 0.0
+  falk_konold_difficulty: 0.0
+  inner_loop_model: 0.492015492015492
+  iter0_candidate0: 0.0
+  iter0_candidate1: 0.0
+  iter0_candidate2: 0.03181103181103181
+  iter1_candidate0: 0.0
+  iter1_candidate1: 0.016186016186016186
+  iter1_candidate2: 0.0
+  manhattan_messy_prototype: 0.0
+  prototype_similarity: 0.0
+  window_typicality: 0.0

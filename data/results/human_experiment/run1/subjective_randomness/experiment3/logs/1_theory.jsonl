@@ -1,0 +1,726 @@
+[0m
+> build · gemini-3.1-pro-preview
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/CONTEXT.md
+# CONTEXT — experiment 3, agent 1_theory
+
+**Project:** subjective_randomness
+**Experiment number:** 3
+**Repo root:** /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo
+**This experiment directory:** /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3
+
+## Key paths
+
+- Problem definition: `/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md`
+- Cognitive models dir: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models`
+- Design dir: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/design`
+- Experiment dir: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/experiment`
+- Data dir: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/data`
+- Responses: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/data/responses.csv`
+- Model registry: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_registry.yaml`
+- Inner model loop dir: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/model_loop`
+
+## Previous experiment paths
+
+- Previous cognitive models: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/cognitive_models`
+- Previous model registry: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_registry.yaml`
+- Previous model loop report: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/report.md`
+- Previous model posterior: `/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/model_posterior.json`
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md
+# Subjective randomness: problem definition
+
+The domain of inquiry is the subjective perception of randomness by humans judges. We seek an explantory theory of which sequences humans find more or less random. To explore this we use an forced-choice experimental paradigm, in which participants are asked to choose the more random sequence from a pair.
+
+## Task
+
+On each trial, the participant sees **two sequences of coin flips** (H and T) and chooses which sequence looks **more random**. This is a classic paradigm for studying representativeness and alternation biases (e.g. Griffiths, "The Rational Basis of Representativeness").
+
+## Stimulus design schema
+
+- **Stimulus**: A pair of two sequences of H and T. Each sequence is a string (e.g. `"HHT"`, `"HTHTHT"`, `"HHTHTTHT"`). The two sequences in a pair **may have different lengths** (e.g. length 4 vs length 6).
+- **Response**: Which sequence was chosen (e.g. "left" / "right").
+
+## Experiment design constraints
+
+- **Total trials per experiment: 32.** At ~5 s per self-paced trial this is roughly
+  **3 minutes of judgments** (≈4 minutes including consent, instructions, and
+  debrief). The ~5 s/trial rate is grounded in the closest prior paradigm: Reimers,
+  Donkin & Le Pelley (2018) ran a 2AFC short-H/T-string button task of **120 trials
+  in ~10 minutes** (≈5 s/trial including instruction reading).
+- **Sequence length: 2 to 8** (inclusive).
+
+The default design (`--design-mode exhaustive`) enumerates **every** distinct H/T
+pair over lengths 2–8 (≈129k pairs) and greedily selects the 32 pairs that
+jointly carry the most information about which model is correct — a diverse set
+spread across distinctions, not 32 near-duplicates of the single highest-EIG
+contrast.
+
+## Experiment presentation (reproduce VERBATIM — identical across all experiments)
+
+The implemented jsPsych experiment must be identical in every experiment and every
+run; **only the stimuli change.** Use the wording below exactly (do not
+paraphrase), **button responses only**, and the data contract above (`chose_left`,
+`sequence_a`, `sequence_b`).
+
+> **Rendering note (the wording below is Markdown — convert it to HTML).** The
+> `**bold**` spans must render as `<strong>` in the experiment; participants must
+> never see literal asterisks. Put each paragraph in its own `<p>`, and wrap the
+> instructions and debrief in the skeleton's `<div class="auto-psych-prose">`
+> (constrained-width, left-aligned) so the text does not span the full screen.
+
+- **Instructions** (first screen, button labelled `Begin`) — use this wording exactly:
+  > In this study, you will look at sequences of coin flips and judge how
+  > **random** they look.
+  >
+  > Imagine flipping a fair coin over and over. Each flip is equally likely to come
+  > up Heads (H) or Tails (T), and every flip is independent — the coin has no
+  > memory, so what came before does not change what comes next.
+  >
+  > On each trial you will see **two** sequences of coin flips, side by side. The
+  > two sequences may be **different lengths**. Your task is to pick the **one
+  > sequence that looks more random** to you — the one that looks more like it was
+  > produced by genuinely random coin flipping.
+  >
+  > Different people have different impressions of what makes a sequence look
+  > random, and there are no right or wrong answers. We are interested in your own
+  > honest impression, so go with your gut. You will complete **32 trials**, which
+  > takes about 4 minutes. Your responses are anonymous.
+
+  > **Wording rationale (not shown to participants).** This instruction is grounded
+  > in the subjective-randomness literature, which warns that naming the structural
+  > cues under study (run length / "streakiness", alternation / "switching", H–T
+  > balance) coaches participants and confounds the measurement (Nickerson, 2002,
+  > *Psychol. Rev.*; Reimers, Donkin & Le Pelley, 2018, *Cognition*). The accepted
+  > practice is to define the generating process — a *fair coin*, 50/50,
+  > independent flips — but leave the meaning of "random-looking" for the
+  > participant to supply from their own intuition (Williams & Griffiths, 2013,
+  > *JEP:General*, Exp. 3 nested condition; Griffiths, Daniels, Austerweil &
+  > Tenenbaum, 2018, *Cognitive Psychology*). The question phrasing "which … looks
+  > more random" follows the canonical 2AFC framing (Griffiths & Tenenbaum, 2003;
+  > Bar-Hillel & Wagenaar, 1991, "which … is most like a coin?"). The earlier draft
+  > of this instruction named "too streaky / too regular in switching" examples —
+  > exactly the run-length and alternation cues being measured — and was removed for
+  > this reason.
+
+- **Per-trial choice prompt** (shown above the two sequences):
+  > Which sequence looks more random?
+
+- **Display**: the two sequences side by side, **left = `sequence_a`, right =
+  `sequence_b`**, in a monospace font.
+
+- **Choice buttons**: exactly two — `Left` (records `chose_left = 1`) and `Right`
+  (records `chose_left = 0`).
+
+- **Trials run back-to-back: do NOT show a fixation cross, blank screen, or any
+  inter-trial screen between trials.** The next pair appears immediately after a
+  response (a small `post_trial_gap` of a few hundred ms is fine; no fixation).
+
+- **Debrief** (final screen, button labelled `Finish`):
+  > Thank you for participating! Your responses help us understand how people
+  > perceive randomness in sequences of coin flips. When you click **Finish**,
+  > your responses will be submitted and you will be **redirected back to Prolific**
+  > to complete the study and receive your completion code.
+
+Do **not** add a consent screen — the deployment injects the IRB consent gate as
+the first page automatically.
+
+## Models
+
+Each model is a **PyMC model** in `cognitive_models/<name>.py`. At module load
+the file builds, at top level, `with pm.Model() as model: ...` containing:
+
+- One `pm.Data` container per stimulus feature the theory uses (see the
+  feature-column list below). Each container must have a **1-element placeholder**
+  of the correct dtype (e.g. `np.zeros(1, dtype="int64")`); the pipeline calls
+  `pm.set_data(...)` to swap in real data before sampling.
+- Priors over the theory's free cognitive parameters (e.g. softmax temperature,
+  Beta prior on bias). MCMC infers these — they are **not** hyperparameters.
+- A `pm.Bernoulli("response", p=p_left, observed=chose_left)` likelihood, where
+  the `observed=` argument is the **exact** `chose_left = pm.Data("chose_left", ...)`
+  tensor (not a derived copy).
+- A `pm.Deterministic("p_left", ...)` exposing per-trial P(chose_left=1).
+
+The pipeline fits each model on the preprocessed responses, scores it by
+`arviz.loo` (ELPD-LOO), and uses posterior-predictive samples for correlations
+and posterior predictive checks. No callable-style `def model_name(stimulus,
+response_options)` functions — that is the old contract and is no longer used.
+
+## Preprocessed data schema
+
+`model_loop/responses.csv` is produced by the project's `preprocess.py` helper.
+It carries the raw columns (`participant_id`, `trial_index`, `sequence_a`,
+`sequence_b`, `chose_left`) **plus** the following numeric feature columns, one
+per sequence (`_a` and `_b`). Use these names verbatim in your `pm.Data(...)`
+containers.
+
+| Column           | Type  | Meaning                                          |
+| ---------------- | ----- | ------------------------------------------------ |
+| `n_a`, `n_b`     | int   | Length of the sequence                           |
+| `h_a`, `h_b`     | int   | Number of H's                                    |
+| `p_a`, `p_b`     | float | Head proportion (`h / n`)                        |
+| `alts_a`, `alts_b`     | int   | Alternation count (transitions H↔T)        |
+| `p_alts_a`, `p_alts_b` | float | Alternation proportion (`alts / (n-1)`)    |
+| `max_run_a`, `max_run_b` | int | Longest constant-character run                |
+| `max_run_norm_a`, `max_run_norm_b` | float | Longest run scaled to `[0, 1]`      |
+| `imbalance_a`, `imbalance_b` | float | Distance from balanced H/T counts          |
+| `periodicity_a`, `periodicity_b` | float | Match to a short repeating template       |
+| `rep_motifs_a`, `rep_motifs_b` | int | Repetition motifs (n1: maximal constant runs) in the Falk & Konold parse |
+| `alt_motifs_a`, `alt_motifs_b` | int | Alternation motifs (n2: maximal alternating sub-sequences) in the parse |
+
+And the observed response: `chose_left` ∈ {0, 1} — 1 means the participant
+chose sequence A. Use `chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))`
+in every model and pass it to `pm.Bernoulli(..., observed=chose_left)`.
+
+You may pick any subset of these feature columns per theory. You do not need
+to use them all — only the ones the theory commits to.
+
+## Running the active outer loop
+
+```bash
+# 1. Preprocess a raw responses CSV (adds the feature columns above)
+uv run python scripts/subjective_randomness/preprocess.py \
+    --input-csv data/subjective_randomness/experiment1/responses.csv \
+    --output-csv data/subjective_randomness/responses.csv
+
+# 2. Run the outer loop (theory → design → collect → model loop)
+uv run python -m src.pipelines.outer_loop.run \
+    --project subjective_randomness \
+    --experiment 1 \
+    --ground-truth-model length_sensitive_alternation
+```
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/model_loop/report.md
+# Inner Model Loop Report
+
+Each model below is ONE distinct cognitive hypothesis. The posterior mass shows which single hypothesis best explains the data — it is **not** a recipe to combine the top models into a blend.
+
+- Best model: **inner_loop_model** (posterior=0.550, elpd_loo=-1491.38)
+- Trials: 2560
+- Models compared: 13
+
+## Posterior over models (ELPD-LOO)
+
+| model | posterior | elpd_loo |
+| --- | --- | --- |
+| inner_loop_model | 0.5504 | -1491.38 |
+| iter1_candidate1 | 0.2460 | -1491.83 |
+| iter0_candidate0 | 0.1221 | -1492.83 |
+| iter0_candidate1 | 0.0808 | -1493.10 |
+| linear_accumulated_typicality | 0.0008 | -1497.97 |
+| prototype_similarity | 0.0000 | -1535.68 |
+| encoding_compressibility | 0.0000 | -1614.88 |
+| bayesian_diagnosticity | 0.0000 | -1539.38 |
+| window_typicality | 0.0000 | -1654.87 |
+| accumulated_alternation_typicality | 0.0000 | -1512.62 |
+| iter0_candidate2 | 0.0000 | -1506.17 |
+| iter1_candidate0 | 0.0000 | -1512.34 |
+| iter1_candidate2 | 0.0000 | -1521.97 |
+
+## Hypotheses
+
+- **inner_loop_model**: People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, rather than merely evaluating its average properties. They evaluate how well a sequence conforms to a mental prototype—represented by an ideal proportion of heads and alternations—and integrate this fit across all events.
+- **iter1_candidate1**: People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal alternation rate is asymmetric. Because human intuition strongly associates randomness with frequent switching, sequences that under-alternate (cluster) are heavily penalized, while those that over-alternate are penalized much less severely.
+- **iter0_candidate0**: People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this evidence integration exhibits diminishing returns. Rather than growing linearly, the accumulated typicality scales according to a power-law function of sequence length, which prevents extremely long sequences from disproportionately dominating judgments and explains why the preference for longer sequences saturates.
+- **iter0_candidate1**: People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its events, but working memory for past events is leaky. The evidence contributed by each event decays exponentially over time, meaning the total accumulated randomness score saturates for longer sequences, which prevents large differences in sequence length from having an oversized effect on choice.
+- **linear_accumulated_typicality**: People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but their penalty for deviating from the ideal head proportion and alternation rate is linear (absolute difference) rather than quadratic, treating extreme deviations proportionally to small ones.
+- **prototype_similarity**: Random-looking sequences are close to a prototype with balanced H/T counts and an ideal alternation rate.
+- **encoding_compressibility**: Random-looking sequences are those with low simple-description penalties: long runs, periodic templates, and imbalance.
+- **bayesian_diagnosticity**: Randomness is the log-likelihood ratio of a fair coin versus a regular process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018) and a biased coin. Merges the former diagnosticity and statistical-inference accounts.
+- **window_typicality**: Random-looking sequences have a longest run typical of a fair coin seen through a limited memory window; over-long streaks look non-random (Hahn & Warren 2009).
+- **accumulated_alternation_typicality**: People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but this typicality is based entirely on how closely the sequence's alternation rate matches a mental prototype, completely ignoring the overall proportion of heads and tails.
+- **iter0_candidate2**: People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its events, but their choice between two sequences is governed by Weber's law. Instead of comparing the absolute difference in accumulated typicality, they evaluate this difference relative to the total length of both sequences. This relative comparison explains why the preference for a longer sequence saturates, as a given absolute difference in sequence length has a much weaker perceptual effect when the sequences being compared are already long.
+- **iter1_candidate0**: People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but the typicality of each event is strictly positive and bounded. Instead of an unbounded penalty that can drive the per-event score negative, typicality consists of a positive baseline plus an exponentially decaying similarity to a mental prototype. This guarantees that even highly unnatural sequences accumulate positive randomness as they grow, explaining why people still prefer longer sequences when both options are heavily clustered.
+- **iter1_candidate2**: People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, but rather than penalizing deviations from an "ideal" alternation rate, they treat alternations as inherently random and thus monotonically rewarding. Because their per-event typicality includes a linear reward for alternation rate rather than a quadratic penalty, sequences with more total alternations naturally accumulate higher randomness scores, explaining both why people prefer highly over-alternating sequences and why they still prefer longer sequences even when both options are heavily clustered.
+
+## Distinguishability (arviz.compare, PSIS-LOO)
+
+`elpd_diff` and `dse` are relative to the best model. A model is only clearly worse than the best when `elpd_diff > 2 * dse`; models within ~2·dse of the top are statistically indistinguishable. `LOO reliable` is False when PSIS-LOO flagged this model's estimate as untrustworthy (many high Pareto-k points) — its row should be read with caution.
+
+| model | elpd_diff | dse | distinguishable from best | weight | LOO reliable |
+| --- | --- | --- | --- | --- | --- |
+| inner_loop_model ←selected | 0.00 | 0.00 | — (best) | 0.651 | yes |
+| iter1_candidate1 | 0.46 | 0.10 | yes | 0.000 | yes |
+| iter0_candidate0 | 1.46 | 2.08 | no (within ~2·dse) | 0.000 | yes |
+| iter0_candidate1 | 1.72 | 1.66 | no (within ~2·dse) | 0.000 | yes |
+| linear_accumulated_typicality | 6.59 | 5.73 | no (within ~2·dse) | 0.245 | yes |
+| iter0_candidate2 | 14.79 | 3.20 | yes | 0.000 | yes |
+| iter1_candidate0 | 20.96 | 7.43 | yes | 0.000 | yes |
+| accumulated_alternation_typicality | 21.24 | 6.77 | yes | 0.000 | no ⚠ |
+| iter1_candidate2 | 30.59 | 8.17 | yes | 0.000 | yes |
+| prototype_similarity | 44.30 | 10.96 | yes | 0.000 | yes |
+| bayesian_diagnosticity | 48.00 | 9.42 | yes | 0.000 | yes |
+| encoding_compressibility | 123.50 | 17.96 | yes | 0.104 | yes |
+| window_typicality | 163.50 | 18.92 | yes | 0.000 | yes |
+[0m
+[0m$ [0mls /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/cognitive_models/
+accumulated_alternation_typicality.py
+bayesian_diagnosticity.py
+encoding_compressibility.py
+inner_loop_model.py
+linear_accumulated_typicality.py
+models_manifest.yaml
+prototype_similarity.py
+theory_report.md
+window_typicality.py
+[0m
+[0m$ [0mmkdir -p /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/ && cp /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/cognitive_models/*.py /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/ && cp /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment2/cognitive_models/models_manifest.yaml /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/inner_loop_model.py
+"""
+People evaluate the randomness of a sequence by accumulating a subjective sense of typicality over its length, rather than merely evaluating its average properties. They evaluate how well a sequence conforms to a mental prototype—represented by an ideal proportion of heads and alternations—and integrate this fit across all events. Because this typicality is accumulated, longer sequences that match the prototype accrue a higher total randomness score, while longer sequences that deviate strongly accumulate a heavier penalty, explaining why humans prefer longer sequences when average rates are equal.
+"""
+
+import numpy as np
+import pymc as pm
+import pytensor.tensor as pt
+
+with pm.Model() as model:
+    # Stimulus inputs
+    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
+    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
+    alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
+
+    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
+    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
+
+    # Free cognitive parameters
+    ideal_p = pm.Beta("ideal_p", alpha=2.0, beta=2.0)
+    ideal_alt = pm.Beta("ideal_alt", alpha=2.0, beta=2.0)
+
+    # Weights for the deviations
+    w_p = pm.HalfNormal("w_p", sigma=5.0)
+    w_alt = pm.HalfNormal("w_alt", sigma=5.0)
+
+    # Base typicality per event
+    base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
+
+    # Calculate empirical rates (safeguard against division by zero)
+    p_a = h_a / pt.maximum(n_a, 1)
+    p_b = h_b / pt.maximum(n_b, 1)
+
+    alt_rate_a = alts_a / pt.maximum(n_a - 1, 1)
+    alt_rate_b = alts_b / pt.maximum(n_b - 1, 1)
+
+    # Calculate per-event typicality as a base rate minus the deviation penalty
+    typ_a = base_typ - (
+        w_p * pt.square(p_a - ideal_p) + w_alt * pt.square(alt_rate_a - ideal_alt)
+    )
+    typ_b = base_typ - (
+        w_p * pt.square(p_b - ideal_p) + w_alt * pt.square(alt_rate_b - ideal_alt)
+    )
+
+    # Total randomness score is the accumulated typicality over the sequence length
+    rand_a = n_a * typ_a
+    rand_b = n_b * typ_b
+
+    # Choice probability
+    p_left_raw = pm.math.sigmoid(rand_a - rand_b)
+    p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))
+
+    # Observed response
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)
+[0m
+[0m$ [0mcat /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/models_manifest.yaml
+models:
+- name: prototype_similarity
+  rationale: Random-looking sequences are close to a prototype with balanced H/T counts
+    and an ideal alternation rate.
+- name: encoding_compressibility
+  rationale: 'Random-looking sequences are those with low simple-description penalties:
+    long runs, periodic templates, and imbalance.'
+- name: bayesian_diagnosticity
+  rationale: 'Randomness is the log-likelihood ratio of a fair coin versus a regular
+    process: a mixture of a complexity-penalized motif process (Griffiths et al. 2018)
+    and a biased coin. Merges the former diagnosticity and statistical-inference accounts.'
+- name: window_typicality
+  rationale: Random-looking sequences have a longest run typical of a fair coin seen
+    through a limited memory window; over-long streaks look non-random (Hahn & Warren
+    2009).
+- name: accumulated_alternation_typicality
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its length, but this typicality is based entirely on
+    how closely the sequence's alternation rate matches a mental prototype, completely
+    ignoring the overall proportion of heads and tails.
+- name: linear_accumulated_typicality
+  rationale: People evaluate the randomness of a sequence by accumulating a subjective
+    sense of typicality over its length, but their penalty for deviating from the
+    ideal head proportion and alternation rate is linear (absolute difference) rather
+    than quadratic, treating extreme deviations proportionally to small ones.
+- name: inner_loop_model
+  rationale: Best PyMC model found by the inner model-improvement loop.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/cognitive_models/power_law_accumulated_typicality.py
+Wrote file successfully.
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/cognitive_models/leaky_accumulated_typicality.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/power_law_accumulated_typicality.py">
+ERROR [35:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [36:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [36:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [38:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [42:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [42:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [44:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [44:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [45:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [45:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [50:18] "square" is not exported from module "pytensor.tensor"
+ERROR [50:53] "square" is not exported from module "pytensor.tensor"
+ERROR [53:18] "square" is not exported from module "pytensor.tensor"
+ERROR [53:53] "square" is not exported from module "pytensor.tensor"
+ERROR [57:17] "pow" is not exported from module "pytensor.tensor"
+ERROR [57:24] "cast" is not exported from module "pytensor.tensor"
+... and 3 more
+</diagnostics>
+
+LSP errors detected in this file, please fix:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/leaky_accumulated_typicality.py">
+ERROR [32:16] "clip" is not exported from module "pytensor.tensor"
+ERROR [35:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [36:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [36:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [38:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [42:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [42:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [44:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [44:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [45:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [45:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [50:18] "square" is not exported from module "pytensor.tensor"
+ERROR [50:53] "square" is not exported from module "pytensor.tensor"
+ERROR [53:18] "square" is not exported from module "pytensor.tensor"
+ERROR [53:53] "square" is not exported from module "pytensor.tensor"
+ERROR [57:27] "pow" is not exported from module "pytensor.tensor"
+... and 8 more
+</diagnostics>
+[0m
+[0m$ [0muv run pyright /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/inner_loop_model.py
+error: Failed to spawn: `pyright`
+[0m
+[0m$ [0mpython3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+for m_name in ['power_law_accumulated_typicality', 'leaky_accumulated_typicality']:
+    m = load_pymc_model(m_name, Path('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models'))
+    print(f'Model {m_name}:')
+    print('pm.Data inputs:', pm_data_inputs(m))
+    print('observed response container:', observed_response_data(m))
+    print('OK')
+"
+Model power_law_accumulated_typicality:
+pm.Data inputs: ['n_a', 'h_a', 'alts_a', 'n_b', 'h_b', 'alts_b', 'chose_left']
+observed response container: chose_left
+OK
+Model leaky_accumulated_typicality:
+pm.Data inputs: ['n_a', 'h_a', 'alts_a', 'n_b', 'h_b', 'alts_b', 'chose_left']
+observed response container: chose_left
+OK
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/cognitive_models/asymmetric_alternation_typicality.py
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/power_law_accumulated_typicality.py">
+ERROR [35:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [36:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [36:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [38:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [42:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [42:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [44:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [44:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [45:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [45:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [50:18] "square" is not exported from module "pytensor.tensor"
+ERROR [50:53] "square" is not exported from module "pytensor.tensor"
+ERROR [53:18] "square" is not exported from module "pytensor.tensor"
+ERROR [53:53] "square" is not exported from module "pytensor.tensor"
+ERROR [57:17] "pow" is not exported from module "pytensor.tensor"
+ERROR [57:24] "cast" is not exported from module "pytensor.tensor"
+... and 3 more
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/leaky_accumulated_typicality.py">
+ERROR [32:16] "clip" is not exported from module "pytensor.tensor"
+ERROR [35:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [36:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [36:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [38:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [42:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [42:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [44:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [44:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [45:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [45:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [50:18] "square" is not exported from module "pytensor.tensor"
+ERROR [50:53] "square" is not exported from module "pytensor.tensor"
+ERROR [53:18] "square" is not exported from module "pytensor.tensor"
+ERROR [53:53] "square" is not exported from module "pytensor.tensor"
+ERROR [57:27] "pow" is not exported from module "pytensor.tensor"
+... and 8 more
+</diagnostics>
+
+LSP errors detected in this file, please fix:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/asymmetric_alternation_typicality.py">
+ERROR [33:20] "maximum" is not exported from module "pytensor.tensor"
+ERROR [33:11] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [34:20] "maximum" is not exported from module "pytensor.tensor"
+ERROR [34:11] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [36:30] "maximum" is not exported from module "pytensor.tensor"
+ERROR [36:38] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [36:18] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [37:30] "maximum" is not exported from module "pytensor.tensor"
+ERROR [37:38] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [37:18] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [41:24] "switch" is not exported from module "pytensor.tensor"
+ERROR [43:26] "square" is not exported from module "pytensor.tensor"
+ERROR [44:25] "square" is not exported from module "pytensor.tensor"
+ERROR [48:24] "switch" is not exported from module "pytensor.tensor"
+ERROR [50:26] "square" is not exported from module "pytensor.tensor"
+ERROR [51:25] "square" is not exported from module "pytensor.tensor"
+ERROR [55:34] "square" is not exported from module "pytensor.tensor"
+ERROR [56:34] "square" is not exported from module "pytensor.tensor"
+ERROR [64:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m$ [0mpython3 -c "
+from pathlib import Path
+from src.models.pymc_inference import load_pymc_model, observed_response_data, pm_data_inputs
+m_name = 'asymmetric_alternation_typicality'
+m = load_pymc_model(m_name, Path('/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models'))
+print(f'Model {m_name}:')
+print('pm.Data inputs:', pm_data_inputs(m))
+print('observed response container:', observed_response_data(m))
+print('OK')
+"
+Model asymmetric_alternation_typicality:
+pm.Data inputs: ['n_a', 'h_a', 'alts_a', 'n_b', 'h_b', 'alts_b', 'chose_left']
+observed response container: chose_left
+OK
+[0m
+[0m✗ [0mwrite failed
+[91m[1mError: [0mYou must read file /scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/models_manifest.yaml before overwriting it. Use the Read tool first
+[0m→ [0mRead ../../../run1/data/subjective_randomness/experiment3/cognitive_models/models_manifest.yaml
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/cognitive_models/models_manifest.yaml
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/power_law_accumulated_typicality.py">
+ERROR [35:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [36:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [36:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [38:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [42:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [42:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [44:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [44:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [45:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [45:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [50:18] "square" is not exported from module "pytensor.tensor"
+ERROR [50:53] "square" is not exported from module "pytensor.tensor"
+ERROR [53:18] "square" is not exported from module "pytensor.tensor"
+ERROR [53:53] "square" is not exported from module "pytensor.tensor"
+ERROR [57:17] "pow" is not exported from module "pytensor.tensor"
+ERROR [57:24] "cast" is not exported from module "pytensor.tensor"
+... and 3 more
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/leaky_accumulated_typicality.py">
+ERROR [32:16] "clip" is not exported from module "pytensor.tensor"
+ERROR [35:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [36:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [36:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [38:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [42:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [42:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [44:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [44:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [45:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [45:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [50:18] "square" is not exported from module "pytensor.tensor"
+ERROR [50:53] "square" is not exported from module "pytensor.tensor"
+ERROR [53:18] "square" is not exported from module "pytensor.tensor"
+ERROR [53:53] "square" is not exported from module "pytensor.tensor"
+ERROR [57:27] "pow" is not exported from module "pytensor.tensor"
+... and 8 more
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/asymmetric_alternation_typicality.py">
+ERROR [33:20] "maximum" is not exported from module "pytensor.tensor"
+ERROR [33:11] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [34:20] "maximum" is not exported from module "pytensor.tensor"
+ERROR [34:11] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [36:30] "maximum" is not exported from module "pytensor.tensor"
+ERROR [36:38] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [36:18] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [37:30] "maximum" is not exported from module "pytensor.tensor"
+ERROR [37:38] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [37:18] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [41:24] "switch" is not exported from module "pytensor.tensor"
+ERROR [43:26] "square" is not exported from module "pytensor.tensor"
+ERROR [44:25] "square" is not exported from module "pytensor.tensor"
+ERROR [48:24] "switch" is not exported from module "pytensor.tensor"
+ERROR [50:26] "square" is not exported from module "pytensor.tensor"
+ERROR [51:25] "square" is not exported from module "pytensor.tensor"
+ERROR [55:34] "square" is not exported from module "pytensor.tensor"
+ERROR [56:34] "square" is not exported from module "pytensor.tensor"
+ERROR [64:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+[0m← [0mWrite ../../../run1/data/subjective_randomness/experiment3/cognitive_models/theory_report.md
+Wrote file successfully.
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/power_law_accumulated_typicality.py">
+ERROR [35:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [36:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [36:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [38:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [42:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [42:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [44:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [44:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [45:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [45:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [50:18] "square" is not exported from module "pytensor.tensor"
+ERROR [50:53] "square" is not exported from module "pytensor.tensor"
+ERROR [53:18] "square" is not exported from module "pytensor.tensor"
+ERROR [53:53] "square" is not exported from module "pytensor.tensor"
+ERROR [57:17] "pow" is not exported from module "pytensor.tensor"
+ERROR [57:24] "cast" is not exported from module "pytensor.tensor"
+... and 3 more
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/leaky_accumulated_typicality.py">
+ERROR [32:16] "clip" is not exported from module "pytensor.tensor"
+ERROR [35:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [35:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [36:16] "cast" is not exported from module "pytensor.tensor"
+ERROR [36:24] "maximum" is not exported from module "pytensor.tensor"
+ERROR [38:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [39:14] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [41:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [42:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [42:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [44:21] "cast" is not exported from module "pytensor.tensor"
+ERROR [44:50] "maximum" is not exported from module "pytensor.tensor"
+ERROR [45:12] "cast" is not exported from module "pytensor.tensor"
+ERROR [45:17] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [50:18] "square" is not exported from module "pytensor.tensor"
+ERROR [50:53] "square" is not exported from module "pytensor.tensor"
+ERROR [53:18] "square" is not exported from module "pytensor.tensor"
+ERROR [53:53] "square" is not exported from module "pytensor.tensor"
+ERROR [57:27] "pow" is not exported from module "pytensor.tensor"
+... and 8 more
+</diagnostics>
+
+LSP errors detected in other files:
+<diagnostics file="/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/cognitive_models/asymmetric_alternation_typicality.py">
+ERROR [33:20] "maximum" is not exported from module "pytensor.tensor"
+ERROR [33:11] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [34:20] "maximum" is not exported from module "pytensor.tensor"
+ERROR [34:11] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [36:30] "maximum" is not exported from module "pytensor.tensor"
+ERROR [36:38] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [36:18] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [37:30] "maximum" is not exported from module "pytensor.tensor"
+ERROR [37:38] Operator "-" not supported for types "SharedVariable | TensorConstant[Unknown]" and "Literal[1]"
+  Operator "-" not supported for types "SharedVariable" and "Literal[1]"
+ERROR [37:18] Operator "/" not supported for types "SharedVariable | TensorConstant[Unknown]" and "None"
+  Operator "/" not supported for types "SharedVariable" and "None"
+ERROR [41:24] "switch" is not exported from module "pytensor.tensor"
+ERROR [43:26] "square" is not exported from module "pytensor.tensor"
+ERROR [44:25] "square" is not exported from module "pytensor.tensor"
+ERROR [48:24] "switch" is not exported from module "pytensor.tensor"
+ERROR [50:26] "square" is not exported from module "pytensor.tensor"
+ERROR [51:25] "square" is not exported from module "pytensor.tensor"
+ERROR [55:34] "square" is not exported from module "pytensor.tensor"
+ERROR [56:34] "square" is not exported from module "pytensor.tensor"
+ERROR [64:44] "clip" is not exported from module "pytensor.tensor"
+</diagnostics>
+[0m
+I have completed the theory agent task for Experiment 3.
+
+**Actions taken:**
+1. Read the previous model-loop report from Experiment 2, which identified that `iter0_candidate0` (diminishing returns on sequence length), `iter0_candidate1` (exponential decay leaky integration), and `iter1_candidate1` (asymmetric penalty for alternation deviations) performed extremely well (the first two were statistically indistinguishable from the top model).
+2. Copied the valid carry-forward theory models and `inner_loop_model.py` from Experiment 2's `cognitive_models` into Experiment 3's `cognitive_models`.
+3. Created three new models that formalize the top hypotheses from the previous inner loop:
+   - `power_law_accumulated_typicality.py`: Replaces the linear sequence length multiplier with a power-law transformation to capture diminishing returns of evidence integration for longer sequences.
+   - `leaky_accumulated_typicality.py`: Replaces the direct multiplication by sequence length with an effective length under exponential decay, testing if the preference saturation for longer sequences is driven by leaky working memory.
+   - `asymmetric_alternation_typicality.py`: Replaces the symmetric quadratic penalty for deviating from the ideal alternation rate with an asymmetric penalty that severely penalizes clustering while being lenient on over-alternation.
+4. Added these models to `models_manifest.yaml` with clear, single-sentence rationales stating the hypotheses.
+5. Wrote `theory_report.md` documenting the new models, their motivation from the inner loop report, and their precise mechanisms. 
+
+All newly proposed models run successfully and pass the strict `pm.Data` input structural requirements for the automated pipeline.
