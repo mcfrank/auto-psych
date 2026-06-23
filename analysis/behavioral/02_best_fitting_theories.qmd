@@ -1,0 +1,247 @@
+---
+title: "02 — Best-fitting theories: mega-analytic model comparison"
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    code-fold: true
+    df-print: kable
+    fig-width: 9
+    fig-height: 5
+execute:
+  warning: false
+  message: false
+---
+
+# Purpose
+
+This is the **mega-analytic model comparison** for the paper. We pool the human
+behavioral data (3 runs × 3 rounds × 40 participants × 32 trials = 11,520
+forced-choice trials) and ask which theory best accounts for the collective
+dataset.
+
+The model set (`mega_models.json`):
+
+- **4 canonical seed theories** the outer loop started from — *prototype
+  similarity*, *encoding compressibility*, *Bayesian diagnosticity*, *window
+  typicality*.
+- **4 overall run winners** the loop discovered — the best model of each run's
+  final round (run 2 ended in a near-tie, so it contributes two).
+
+Each is a population-level PyMC model fit with the project's own inference
+harness (`src/models/pymc_inference.py`). The fitting (`fit_mega_models.py`,
+run on Sherlock) produces two schemes:
+
+- **`mega`** — every model fit on **all** the data, scored in-sample
+  (ELPD-LOO + RMSE/R²). The headline "collective fit."
+- **`heldout`** — selection-debiased: each winner was *discovered* on one run, so
+  we refit it (and the seeds) only on the **other two runs**. We report the fit
+  on those two training runs (`heldout_train`, ELPD-LOO) and genuine
+  out-of-sample prediction of the held-out run (`heldout_oos`).
+
+```{r setup}
+library(tidyverse)
+library(here)
+library(glue)
+
+theme_set(theme_bw(base_size = 12))
+options(dplyr.summarise.inform = FALSE)
+
+metrics_path <- here("analysis", "behavioral", "data", "mega_model_metrics.csv")
+preds_path   <- here("analysis", "behavioral", "data", "mega_model_predictions.csv")
+```
+
+```{r guard}
+#| echo: false
+#| results: asis
+if (!file.exists(metrics_path) || !file.exists(preds_path)) {
+  cat(
+    "::: callout-important\n",
+    "## Fit outputs not found\n\n",
+    "Run the fitting step first — it writes `mega_model_metrics.csv` and ",
+    "`mega_model_predictions.csv` to `analysis/behavioral/data/`:\n\n",
+    "```bash\n",
+    "sbatch analysis/behavioral/slurm/run_mega_comparison.sbatch   # on Sherlock\n",
+    "python analysis/behavioral/fit_mega_models.py                 # or locally\n",
+    "```\n",
+    ":::\n",
+    sep = ""
+  )
+  knitr::knit_exit()
+}
+```
+
+```{r load}
+metrics <- read_csv(metrics_path, show_col_types = FALSE) |>
+  mutate(kind = factor(kind, levels = c("seed", "winner")))
+preds <- read_csv(preds_path, show_col_types = FALSE)
+
+# Headline comparison = the mega scheme (all data, in-sample).
+mega <- metrics |> filter(scheme == "mega", eval == "in_sample")
+model_levels <- mega |> arrange(elpd_rank) |> pull(label)
+
+preds_mega <- preds |> filter(scheme == "mega", eval == "in_sample")
+```
+
+# Mega comparison (all data)
+
+Models ordered by ELPD-LOO (higher = better). `Δelpd` is the gap from the best
+model; `dse` its standard error.
+
+```{r table}
+mega |>
+  transmute(
+    Model = label, Kind = kind, Params = n_params,
+    `ELPD-LOO` = round(elpd_loo, 1), `± SE` = round(elpd_se, 1),
+    `Δelpd` = round(elpd_diff, 1), dse = round(elpd_dse, 1),
+    RMSE = round(rmse, 3), `R² trial` = round(r2_trial, 3),
+    `R² stim` = round(r2_stimulus, 3), `Acc.` = round(accuracy, 3),
+    `LOO ok` = !loo_unreliable
+  ) |>
+  knitr::kable(caption = "Mega-analytic model comparison on the pooled human data")
+```
+
+```{r elpd-plot}
+mega |>
+  mutate(label = factor(label, levels = rev(model_levels))) |>
+  ggplot(aes(x = elpd_loo, y = label, color = kind)) +
+  geom_pointrange(aes(xmin = elpd_loo - elpd_se, xmax = elpd_loo + elpd_se)) +
+  scale_color_manual(values = c(seed = "grey50", winner = "firebrick"), name = NULL) +
+  labs(x = "ELPD-LOO (higher is better)", y = NULL,
+       title = "Predictive fit of each theory on the pooled data") +
+  theme(legend.position = "bottom")
+```
+
+Difference from the best model (± 2 dse). A model whose interval clears 0 is
+reliably worse than the best.
+
+```{r delpd-plot}
+mega |>
+  filter(elpd_rank > 0) |>
+  mutate(label = factor(label, levels = rev(model_levels))) |>
+  ggplot(aes(x = elpd_diff, y = label, color = kind)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_pointrange(aes(xmin = elpd_diff - 2 * elpd_dse, xmax = elpd_diff + 2 * elpd_dse)) +
+  scale_color_manual(values = c(seed = "grey50", winner = "firebrick"), name = NULL) +
+  labs(x = "Δ ELPD-LOO from best model (± 2 dse)", y = NULL,
+       title = "Gap to the best-fitting theory") +
+  theme(legend.position = "bottom")
+```
+
+```{r rmse-r2}
+mega |>
+  select(label, kind, rmse, r2_trial, r2_stimulus) |>
+  pivot_longer(c(rmse, r2_trial, r2_stimulus), names_to = "metric", values_to = "value") |>
+  mutate(metric = recode(metric, rmse = "RMSE (lower better)",
+                         r2_trial = "R² (trial-level)", r2_stimulus = "R² (stimulus-level)"),
+         label = factor(label, levels = rev(model_levels))) |>
+  ggplot(aes(x = value, y = label, fill = kind)) +
+  geom_col() +
+  facet_wrap(~ metric, scales = "free_x") +
+  scale_fill_manual(values = c(seed = "grey60", winner = "firebrick"), name = NULL) +
+  labs(x = NULL, y = NULL, title = "Point-prediction fit metrics") +
+  theme(legend.position = "bottom")
+```
+
+## Stimulus-level calibration
+
+Empirical vs. predicted P(choose left) for each distinct ordered stimulus, for
+the best model of each kind (best seed, best winner). On-diagonal = calibrated.
+
+```{r calibration}
+best_by_kind <- mega |> group_by(kind) |> slice_min(elpd_rank, n = 1) |>
+  ungroup() |> select(name, label, kind)
+
+preds_mega |>
+  semi_join(best_by_kind, by = c("model" = "name")) |>
+  group_by(model, sequence_a, sequence_b) |>
+  summarise(obs = mean(chose_left), pred = mean(p_left), .groups = "drop") |>
+  left_join(best_by_kind, by = c("model" = "name")) |>
+  ggplot(aes(x = pred, y = obs)) +
+  geom_abline(slope = 1, intercept = 0, linetype = "dashed", color = "grey50") +
+  geom_point(aes(color = kind), alpha = 0.4, size = 1) +
+  facet_wrap(~ label) +
+  scale_color_manual(values = c(seed = "grey40", winner = "firebrick"), guide = "none") +
+  coord_equal(xlim = c(0, 1), ylim = c(0, 1)) +
+  labs(x = "Predicted P(choose left)", y = "Empirical proportion choosing left",
+       title = "Stimulus-level calibration (best seed vs. best winner)")
+```
+
+# Held-out generalization (selection-debiased)
+
+The winners were *discovered* on the human data, so their mega-scheme edge over
+the seeds is partly selection optimism. Here we remove it: for each winner we
+refit it — and the seeds — **only on the two runs it did not come from**, and
+compare on identical data.
+
+## Fit on the two non-home runs (`heldout_train`)
+
+This is the debiased comparison: within each held-out run, do the winner(s)
+discovered elsewhere still out-fit the seeds on data that played no role in
+selecting them? ELPD-LOO on the two training runs.
+
+```{r heldout-train}
+ho_train <- metrics |> filter(scheme == "heldout", eval == "heldout_train")
+
+ho_train |>
+  group_by(held_out_run) |>
+  mutate(rank_in_group = rank(elpd_rank)) |>
+  ungroup() |>
+  mutate(facet = glue("held out run {held_out_run}\n(fit on the other two)")) |>
+  ggplot(aes(x = elpd_diff, y = reorder(label, -elpd_diff), color = kind)) +
+  geom_vline(xintercept = 0, linetype = "dashed", color = "grey50") +
+  geom_pointrange(aes(xmin = elpd_diff - 2 * elpd_dse, xmax = elpd_diff + 2 * elpd_dse)) +
+  facet_wrap(~ facet, scales = "free_y") +
+  scale_color_manual(values = c(seed = "grey50", winner = "firebrick"), name = NULL) +
+  labs(x = "Δ ELPD-LOO from best in group (± 2 dse)", y = NULL,
+       title = "Debiased fit: winners vs seeds on the runs that didn't produce them") +
+  theme(legend.position = "bottom")
+```
+
+```{r heldout-train-table}
+ho_train |>
+  filter(kind == "winner") |>
+  transmute(`Held-out run` = held_out_run, Winner = label,
+            `ELPD rank (of group)` = elpd_rank,
+            `Δelpd vs best` = round(elpd_diff, 1), dse = round(elpd_dse, 1),
+            `R² stim` = round(r2_stimulus, 3)) |>
+  knitr::kable(caption = "Each winner's standing among the seeds when refit on its two non-home runs (rank 0 = best)")
+```
+
+## Out-of-sample prediction of the held-out run (`heldout_oos`)
+
+Genuine out-of-sample: models fit on two runs, predicting the third. (For a
+winner's *own* run this still reflects that run's role in its selection, so read
+the seeds' OOS curve as the reference and the winners as "does the discovered
+form transfer.") Stimulus-level R² on the held-out run.
+
+```{r heldout-oos}
+metrics |>
+  filter(scheme == "heldout", eval == "heldout_oos") |>
+  mutate(facet = glue("predict run {held_out_run}")) |>
+  ggplot(aes(x = r2_stimulus, y = reorder(label, r2_stimulus), fill = kind)) +
+  geom_col() +
+  facet_wrap(~ facet, scales = "free_y") +
+  scale_fill_manual(values = c(seed = "grey60", winner = "firebrick"), name = NULL) +
+  labs(x = "Out-of-sample R² (stimulus-level) on the held-out run", y = NULL,
+       title = "Generalization to a run excluded from fitting") +
+  theme(legend.position = "bottom")
+```
+
+# Notes & caveats
+
+- **ELPD-LOO** is PSIS-LOO (`arviz.loo`) on each model's pointwise
+  log-likelihood; `dse` is the SE of the pairwise difference (`arviz.compare`).
+  `LOO ok` flags unreliable PSIS (high Pareto-k).
+- **RMSE / Brier** and **R²** use posterior-mean `p_left` vs. observed 0/1
+  choice. Stimulus-level R² (predicted vs. empirical choice proportion per
+  distinct ordered stimulus) is the most interpretable "does it predict the
+  choice curve" number.
+- **Why a held-out scheme.** The mega scheme is in-sample for the winners (they
+  were discovered on these data); ELPD-LOO controls in-fit overfitting but not
+  model-*selection* overfitting. `heldout_train` is the clean debiased test —
+  each winner refit on the two runs that had no role in selecting it, compared to
+  seeds on identical data.
+- **Pooling.** One population-level fit per model (the models have no
+  participant-level parameters). Run/round enter only the held-out splits and the
+  diagnostics, not the within-fit likelihood.
