@@ -1,0 +1,61 @@
+{
+  "_comment": "Model set for the 'mega-analytic model comparison' (notebook 02). 4 canonical seed theories + the 4 overall run winners (run2 tied -> two models). Each model .py is copied VERBATIM (preserving any module-level compute_features) into a working models_dir by fit_mega_models.py and fit on the pooled human data. Sources are repo-relative paths. `source_run` is the run a winner was discovered on (null for seeds); the held-out scheme evaluates each winner only on the runs that did NOT produce it.",
+  "models": [
+    {
+      "name": "seed_prototype_similarity",
+      "kind": "seed",
+      "label": "Prototype similarity",
+      "source": "src/pipelines/outer_loop/projects/subjective_randomness/seed_models/prototype_similarity.py",
+      "source_run": null
+    },
+    {
+      "name": "seed_encoding_compressibility",
+      "kind": "seed",
+      "label": "Encoding compressibility",
+      "source": "src/pipelines/outer_loop/projects/subjective_randomness/seed_models/encoding_compressibility.py",
+      "source_run": null
+    },
+    {
+      "name": "seed_bayesian_diagnosticity",
+      "kind": "seed",
+      "label": "Bayesian diagnosticity",
+      "source": "src/pipelines/outer_loop/projects/subjective_randomness/seed_models/bayesian_diagnosticity.py",
+      "source_run": null
+    },
+    {
+      "name": "seed_window_typicality",
+      "kind": "seed",
+      "label": "Window typicality",
+      "source": "src/pipelines/outer_loop/projects/subjective_randomness/seed_models/window_typicality.py",
+      "source_run": null
+    },
+    {
+      "name": "run1_minkowski_typicality",
+      "kind": "winner",
+      "label": "Minkowski accumulated typicality (run 1)",
+      "source": "data/results/human_experiment/run1/subjective_randomness/experiment3/model_loop/models/iter1_candidate0.py",
+      "source_run": 1
+    },
+    {
+      "name": "run2_evidence_accum_per_item",
+      "kind": "winner",
+      "label": "Evidence accumulation, per item (run 2)",
+      "source": "data/results/human_experiment/run2/subjective_randomness/experiment3/cognitive_models/inner_loop_model.py",
+      "source_run": 2
+    },
+    {
+      "name": "run2_evidence_accum_per_run",
+      "kind": "winner",
+      "label": "Evidence accumulation, per run (run 2, tied)",
+      "source": "data/results/human_experiment/run2/subjective_randomness/experiment3/cognitive_models/evidence_accumulation_per_run.py",
+      "source_run": 2
+    },
+    {
+      "name": "run3_bayes_artificial_balance",
+      "kind": "winner",
+      "label": "Bayesian diagnosticity + artificial balance (run 3)",
+      "source": "data/results/human_experiment/run3/subjective_randomness/experiment3/model_loop/models/iter1_candidate0.py",
+      "source_run": 3
+    }
+  ]
+}

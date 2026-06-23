@@ -64,3 +64,10 @@ scratch/
 # Large generated text dumps (e.g. PDF text-extraction output from extract_pdf.py).
 # gt.txt (~21 MB) is already tracked — untrack it with: git rm --cached gt.txt
 gt.txt
+
+# Large regenerable mega-analysis predictions (fit via analysis/behavioral/fit_mega_models.py)
+analysis/behavioral/data/mega_model_predictions.csv
+
+# Quarto render artifacts (regenerate with quarto render)
+analysis/behavioral/*.html
+analysis/behavioral/*_files/
