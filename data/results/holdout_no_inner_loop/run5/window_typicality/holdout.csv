@@ -1,0 +1,4 @@
+gt_model,experiment,step,iteration,global_step,best_model,pearson_r,rmse,pearson_r_bma,rmse_bma
+window_typicality,1,0,,0,prototype_similarity,0.7941392015755052,0.23388176857388868,0.7941392015755052,0.23388176857388868
+window_typicality,2,0,,1,length_scaled_alternation,0.7838787409150724,0.21893516752749512,0.7838787409150724,0.21893516752749512
+window_typicality,3,0,,2,length_scaled_alternation,0.784443148248146,0.21832972047965832,0.784443148248146,0.21832972047965832

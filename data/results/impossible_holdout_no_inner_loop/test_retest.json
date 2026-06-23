@@ -1,0 +1,98 @@
+{
+  "runs_root": "/scratch/users/benpry/auto-psych/impossible_holdout_test_retest_no_inner_loop",
+  "metric": "pearson_r",
+  "n_runs_found": 5,
+  "runs_found": [
+    "run1",
+    "run2",
+    "run3",
+    "run4",
+    "run5"
+  ],
+  "runs_missing_tidy": [],
+  "gt_models": [
+    "fewer_heads_more_random",
+    "longer_runs_more_random",
+    "more_heads_more_random",
+    "more_imbalance_more_random"
+  ],
+  "runs_in_complete_matrix": [
+    "run1",
+    "run2",
+    "run3",
+    "run4",
+    "run5"
+  ],
+  "icc_2_1": -0.0136299886142596,
+  "mean_pairwise_corr": -0.0027070162994869127,
+  "per_gt_model": {
+    "fewer_heads_more_random": {
+      "n_runs": 5,
+      "mean": 0.55792244390838,
+      "sd": 0.4307358942125559,
+      "cv": 0.7720354305791108,
+      "min": 0.0786839379647508,
+      "max": 0.9996643355528737,
+      "values": [
+        0.078684,
+        0.11107,
+        0.813396,
+        0.786798,
+        0.999664
+      ],
+      "modal_best_model": "window_typicality",
+      "best_model_agreement": 0.2
+    },
+    "longer_runs_more_random": {
+      "n_runs": 5,
+      "mean": 0.5922171506075056,
+      "sd": 0.13729898697253096,
+      "cv": 0.23183892400226425,
+      "min": 0.4853846448258321,
+      "max": 0.7893008721722954,
+      "values": [
+        0.789301,
+        0.683609,
+        0.485385,
+        0.489166,
+        0.513625
+      ],
+      "modal_best_model": "pure_alternation_rate",
+      "best_model_agreement": 0.2
+    },
+    "more_heads_more_random": {
+      "n_runs": 5,
+      "mean": 0.391164870868671,
+      "sd": 0.3420713184401596,
+      "cv": 0.8744939638380922,
+      "min": 0.18170753103266643,
+      "max": 0.9999459489506637,
+      "values": [
+        0.181708,
+        0.251763,
+        0.999946,
+        0.274467,
+        0.247942
+      ],
+      "modal_best_model": "bayesian_diagnosticity",
+      "best_model_agreement": 0.8
+    },
+    "more_imbalance_more_random": {
+      "n_runs": 5,
+      "mean": 0.7946124359504496,
+      "sd": 0.4589418433723994,
+      "cv": 0.5775669025660933,
+      "min": -0.026367679358770914,
+      "max": 0.9999867540156856,
+      "values": [
+        0.99977,
+        0.999835,
+        0.999838,
+        0.999987,
+        -0.026368
+      ],
+      "modal_best_model": "pure_imbalance",
+      "best_model_agreement": 0.4
+    }
+  }
+}

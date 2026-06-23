@@ -1,0 +1,4 @@
+gt_model,experiment,step,iteration,global_step,best_model,pearson_r,rmse,pearson_r_bma,rmse_bma
+more_heads_more_random,1,0,,0,bayesian_diagnosticity,0.18618764511327557,0.5444357280684883,0.18618764511327557,0.5444357280684883
+more_heads_more_random,2,0,,1,bayesian_diagnosticity,0.2289889346127748,0.4892139996233907,0.2289889346127748,0.4892139996233907
+more_heads_more_random,3,0,,2,bayesian_diagnosticity,0.2517626391529987,0.4553269980317418,0.2517626391529987,0.4553269980317418
