@@ -1,0 +1,19 @@
+\begin{table}[ht]
+\centering
+\caption{Mega-analytic model comparison on the pooled human data (11,520 trials). Models ordered by ELPD-LOO; $\Delta$ELPD is the difference from the best model and SE($\Delta$) its standard error. $k$ = free parameters; RMSE$_{\mathrm{stim}}$ and $R^2_{\mathrm{stim}}$ are computed at the stimulus level (model prediction vs.\ empirical choice proportion per distinct ordered stimulus); Acc.\ = trial-level choice-prediction accuracy.} 
+\label{tab:mega-comparison}
+\begin{tabular}{llrrrrrrr}
+  \toprule
+Model & Type & $k$ & ELPD-LOO & $\Delta$ELPD & SE($\Delta$) & RMSE$_{\mathrm{stim}}$ & $R^2_{\mathrm{stim}}$ & Acc. \\ 
+  \midrule
+Minkowski accumulated typicality (run 1) & Winner & 6 & -7152.2 & 0.0 & 0.0 & 0.131 & 0.664 & 0.661 \\ 
+  Evidence accumulation, per item (run 2) & Winner & 7 & -7180.3 & 28.1 & 9.3 & 0.133 & 0.651 & 0.661 \\ 
+  Evidence accumulation, per run (run 2, tied) & Winner & 7 & -7197.8 & 45.5 & 9.4 & 0.136 & 0.635 & 0.660 \\ 
+  Bayesian diagnosticity + artificial balance (run 3) & Winner & 6 & -7254.3 & 102.1 & 16.9 & 0.145 & 0.587 & 0.651 \\ 
+  Bayesian diagnosticity & Seed & 5 & -7281.9 & 129.7 & 18.8 & 0.149 & 0.563 & 0.657 \\ 
+  Prototype similarity & Seed & 4 & -7365.1 & 212.9 & 18.5 & 0.158 & 0.513 & 0.640 \\ 
+  Window typicality & Seed & 4 & -7659.3 & 507.1 & 33.0 & 0.187 & 0.310 & 0.595 \\ 
+  Encoding compressibility & Seed & 4 & -7661.4 & 509.2 & 31.8 & 0.187 & 0.316 & 0.605 \\ 
+   \bottomrule
+\end{tabular}
+\end{table}
