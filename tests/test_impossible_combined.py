@@ -108,6 +108,25 @@ def test_cli_pools_impossible_runs_into_figures(tmp_path):
     assert "more_heads_more_random" in text and "longer_runs_more_random" in text
 
 
+def test_cli_name_suffix_appears_in_output_filenames(tmp_path):
+    runs_root = tmp_path / "impossible_holdout_no_inner_loop"
+    _write_tree(runs_root)
+
+    out_dir = tmp_path / "figs"
+    cli.main(
+        cli.Args(
+            runs_root=runs_root,
+            out_dir=out_dir,
+            metric="rmse",
+            name_suffix="_no_inner_loop",
+        )
+    )
+
+    assert (out_dir / "impossible_combined_no_inner_loop_rmse.pdf").exists()
+    assert (out_dir / "impossible_combined_no_inner_loop.csv").exists()
+    assert not (out_dir / "impossible_combined_rmse.pdf").exists()
+
+
 def test_cli_fails_loudly_when_no_runs_found(tmp_path):
     with pytest.raises(FileNotFoundError, match="holdout.json"):
         cli.main(cli.Args(runs_root=tmp_path / "empty", out_dir=tmp_path / "out"))
