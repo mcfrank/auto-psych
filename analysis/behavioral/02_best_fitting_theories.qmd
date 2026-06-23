@@ -83,6 +83,39 @@ model_levels <- mega |> arrange(elpd_rank) |> pull(label)
 preds_mega <- preds |> filter(scheme == "mega", eval == "in_sample")
 ```
 
+```{r latex-helper}
+library(xtable)
+tables_dir <- here("analysis", "behavioral", "tables")
+if (!dir.exists(tables_dir)) dir.create(tables_dir, recursive = TRUE)
+
+# Emit a booktabs LaTeX table: write it to a .tex file (for \input) and print it
+# inline as a copy-pastable block. Column names may contain raw LaTeX (math).
+emit_latex <- function(df, caption, label, file, align) {
+  xt <- xtable(df, caption = caption, label = label, align = align)
+  opts <- list(booktabs = TRUE, include.rownames = FALSE,
+               caption.placement = "top", comment = FALSE,
+               sanitize.text.function = identity,
+               sanitize.colnames.function = identity)
+  do.call(print, c(list(xt, file = file.path(tables_dir, file)), opts))
+  do.call(print, c(list(xt), opts))
+}
+
+# Shared column formatting for the two results tables.
+fmt_rows <- function(d) {
+  d |> transmute(
+    Model = label,
+    Type  = str_to_title(as.character(kind)),
+    `$k$` = sprintf("%d", as.integer(n_params)),
+    `ELPD-LOO`            = sprintf("%.1f", elpd_loo),
+    `$\\Delta$ELPD`       = sprintf("%.1f", elpd_diff),
+    `SE($\\Delta$)`       = sprintf("%.1f", elpd_dse),
+    RMSE                  = sprintf("%.3f", rmse),
+    `$R^2_{\\mathrm{stim}}$` = sprintf("%.3f", r2_stimulus),
+    `Acc.`                = sprintf("%.3f", accuracy)
+  )
+}
+```
+
 # Mega comparison (all data)
 
 Models ordered by ELPD-LOO (higher = better). `Δelpd` is the gap from the best
@@ -99,6 +132,20 @@ mega |>
     `LOO ok` = !loo_unreliable
   ) |>
   knitr::kable(caption = "Mega-analytic model comparison on the pooled human data")
+```
+
+LaTeX (booktabs) for the manuscript — written to `tables/mega_comparison.tex` and
+shown here for pasting. `SE($\Delta$)` is the SE of the ELPD difference from the
+best model (loo-compare convention); all models had reliable PSIS-LOO.
+
+```{r mega-latex}
+#| echo: false
+mega |> arrange(elpd_rank) |> fmt_rows() |>
+  emit_latex(
+    caption = "Mega-analytic model comparison on the pooled human data (11,520 trials). Models ordered by ELPD-LOO; $\\Delta$ELPD is the difference from the best model and SE($\\Delta$) its standard error. $k$ = free parameters; $R^2_{\\mathrm{stim}}$ = stimulus-level $R^2$; Acc.\\ = choice-prediction accuracy.",
+    label = "tab:mega-comparison",
+    file = "mega_comparison.tex",
+    align = "lllrrrrrrr")
 ```
 
 ```{r elpd-plot}
@@ -206,6 +253,23 @@ ho_train |>
             `Δelpd vs best` = round(elpd_diff, 1), dse = round(elpd_dse, 1),
             `R² stim` = round(r2_stimulus, 3)) |>
   knitr::kable(caption = "Each winner's standing among the seeds when refit on its two non-home runs (rank 0 = best)")
+```
+
+LaTeX (booktabs) for the manuscript — full debiased comparison, grouped by
+held-out run, written to `tables/heldout_comparison.tex`:
+
+```{r heldout-latex}
+#| echo: false
+ho_sorted <- ho_train |> arrange(held_out_run, elpd_rank)
+ho_sorted |>
+  fmt_rows() |>
+  mutate(`Held-out run` = ho_sorted$held_out_run, .before = 1) |>
+  mutate(`Held-out run` = ifelse(duplicated(`Held-out run`), "", as.character(`Held-out run`))) |>
+  emit_latex(
+    caption = "Selection-debiased comparison: each winner refit on the two runs that did not produce it (ELPD-LOO on those two training runs), grouped by held-out run. Within each block, rank~0 is the best fit. Columns as in Table~\\ref{tab:mega-comparison}.",
+    label = "tab:heldout-comparison",
+    file = "heldout_comparison.tex",
+    align = "llllrrrrrrr")
 ```
 
 ## Out-of-sample prediction of the held-out run (`heldout_oos`)
