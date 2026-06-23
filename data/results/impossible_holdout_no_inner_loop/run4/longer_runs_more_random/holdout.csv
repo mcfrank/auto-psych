@@ -1,0 +1,4 @@
+gt_model,experiment,step,iteration,global_step,best_model,pearson_r,rmse,pearson_r_bma,rmse_bma
+longer_runs_more_random,1,0,,0,prototype_similarity,0.28503117406376444,0.22182699296000366,0.2820800028756888,0.22207644944016233
+longer_runs_more_random,2,0,,1,prototype_similarity,0.4528533247560737,0.20269101690147717,0.4528486047116025,0.20269156602708746
+longer_runs_more_random,3,0,,2,l2_prototype_similarity,0.4891655353823756,0.2002207461410416,0.4924950456555045,0.19985770202771658

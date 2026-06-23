@@ -1,0 +1,4 @@
+gt_model,experiment,step,iteration,global_step,best_model,pearson_r,rmse,pearson_r_bma,rmse_bma
+encoding_compressibility,1,0,,0,prototype_similarity,0.9038932872108058,0.08110181906272397,0.9038932872108058,0.08110181906272397
+encoding_compressibility,2,0,,1,prototype_similarity,0.9111198901699454,0.0782505216806114,0.9440169088963692,0.07884126347835496
+encoding_compressibility,3,0,,2,pure_balance,0.9097688794442006,0.07774192567240501,0.9101531869296346,0.07757665123791867

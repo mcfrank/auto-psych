@@ -1,0 +1,4 @@
+gt_model,experiment,step,iteration,global_step,best_model,pearson_r,rmse,pearson_r_bma,rmse_bma
+more_imbalance_more_random,1,0,,0,window_typicality,-0.5939420230854967,0.3295348414654326,-0.5939420230854967,0.3295348414654326
+more_imbalance_more_random,2,0,,1,window_typicality,-0.5931454660535375,0.3311402587642,-0.5930306264777362,0.3310960256801594
+more_imbalance_more_random,3,0,,2,binomial_alternation,-0.026367679358770914,0.2868333888470237,-0.026367679358770914,0.2868333888470237

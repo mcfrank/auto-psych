@@ -1,0 +1,4 @@
+gt_model,experiment,step,iteration,global_step,best_model,pearson_r,rmse,pearson_r_bma,rmse_bma
+fewer_heads_more_random,1,0,,0,encoding_compressibility,0.03679041255998081,0.5038177334796804,0.03679041255998081,0.5038177334796804
+fewer_heads_more_random,2,0,,1,window_typicality,0.08097119478892875,0.4790524080990517,0.08097119478892875,0.4790524080990517
+fewer_heads_more_random,3,0,,2,window_typicality,0.0786839379647508,0.4872572823169583,0.0786839379647508,0.4872572823169583
