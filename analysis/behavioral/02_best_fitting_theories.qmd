@@ -229,6 +229,77 @@ preds_mega |>
        title = "Stimulus-level calibration (best seed vs. best winner)")
 ```
 
+## Noise ceiling on stimulus-level R²
+
+Each stimulus's empirical choice proportion is estimated from a finite number of
+participants, so it carries sampling noise of $\theta(1-\theta)/n$. Even a
+*perfect* model — one that predicted each stimulus's true choice probability
+exactly — could not reach $R^2 = 1$ against these noisy proportions. The ceiling
+is the **reliability** of the proportions (signal variance / total variance),
+which we estimate two ways: a variance decomposition, and a split-half
+(Spearman–Brown) reliability. The R² tables are *not* noise-corrected; this just
+contextualises how much of the *explainable* variance the models capture.
+
+```{r noise-ceiling}
+m1 <- unique(preds_mega$model)[1]   # obs is model-independent; take one copy of each trial
+one_model <- preds_mega |> filter(model == m1)
+
+obs_stim <- one_model |>
+  group_by(sequence_a, sequence_b) |>
+  summarise(n = n(), obs = mean(chose_left), .groups = "drop")
+
+# Method 1 — variance decomposition (unweighted across stimuli, matching R²_stim)
+V_tot <- var(obs_stim$obs)
+noise_var <- with(obs_stim, obs * (1 - obs) / (n - 1))   # per-stimulus sampling var
+N_bar <- mean(noise_var[obs_stim$n > 1])
+ceiling_analytic <- 1 - N_bar / V_tot
+
+# Method 2 — split-half reliability, Spearman–Brown corrected to full sample
+split_rel <- function(seed) {
+  set.seed(seed)
+  one_model |>
+    group_by(sequence_a, sequence_b) |>
+    mutate(half = sample(rep(1:2, length.out = n()))) |>
+    group_by(sequence_a, sequence_b, half) |>
+    summarise(p = mean(chose_left), .groups = "drop") |>
+    pivot_wider(names_from = half, values_from = p, names_prefix = "h") |>
+    filter(!is.na(h1), !is.na(h2)) |>
+    summarise(r = cor(h1, h2)) |>
+    pull(r)
+}
+r_half <- mean(vapply(1:200, split_rel, numeric(1)))
+ceiling_sb <- 2 * r_half / (1 + r_half)
+
+ceiling <- ceiling_analytic
+best_r2 <- mega |> slice_min(elpd_rank, n = 1) |> pull(r2_stimulus)
+
+glue(
+  "Median {median(obs_stim$n)} obs/stimulus (range {min(obs_stim$n)}–{max(obs_stim$n)}, ",
+  "{nrow(obs_stim)} stimuli). Noise ceiling on stimulus-level R² = ",
+  "{round(ceiling_analytic, 3)} (variance decomposition) / {round(ceiling_sb, 3)} ",
+  "(split-half, Spearman–Brown). Best model R²_stim = {round(best_r2, 3)} → ",
+  "{round(100 * best_r2 / ceiling)}% of the explainable variance."
+)
+```
+
+```{r noise-ceiling-plot}
+mega |>
+  mutate(label = factor(label, levels = rev(model_levels))) |>
+  ggplot(aes(x = r2_stimulus, y = label, fill = kind)) +
+  geom_col() +
+  geom_vline(xintercept = ceiling, linetype = "dashed", linewidth = 0.7) +
+  annotate("text", x = ceiling, y = 0.6, label = "noise ceiling",
+           hjust = 1.05, vjust = 0, size = 3.2) +
+  scale_fill_manual(values = c(seed = "grey60", winner = "firebrick"), name = NULL) +
+  scale_x_continuous(limits = c(0, 1)) +
+  labs(x = "Stimulus-level R²", y = NULL,
+       title = "Stimulus-level R² against the noise ceiling",
+       subtitle = glue("Dashed line = reliability of the choice proportions ",
+                       "({round(ceiling, 2)}); the best model reaches ",
+                       "{round(100 * best_r2 / ceiling)}% of it")) +
+  theme(legend.position = "bottom")
+```
+
 # Held-out generalization (selection-debiased)
 
 The winners were *discovered* on the human data, so their mega-scheme edge over
@@ -320,6 +391,11 @@ metrics |>
   every model clusters near 0.5 and the metric understates the differences. (Both
   trial- and stimulus-level values are in `mega_model_metrics.csv` /
   `mega_model_predictions.csv` if needed.)
+- **Noise ceiling.** With a median of 20 participants per ordered stimulus, the
+  empirical choice proportions are themselves noisy, capping the achievable
+  stimulus-level R² at the proportions' reliability (~0.80 here). The tables
+  report raw, un-noise-corrected R²; the ceiling is given only to contextualise
+  it (the best model reaches ~83% of the explainable variance).
 - **Why a held-out scheme.** The mega scheme is in-sample for the winners (they
   were discovered on these data); ELPD-LOO controls in-fit overfitting but not
   model-*selection* overfitting. `heldout_train` is the clean debiased test —
