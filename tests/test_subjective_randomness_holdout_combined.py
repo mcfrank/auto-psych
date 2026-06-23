@@ -241,6 +241,20 @@ def test_holdout_trajectories_ggplot_returns_a_ggplot_object():
     assert isinstance(holdout_trajectories_ggplot(agg), plotnine.ggplot)
 
 
+def test_holdout_ggplot_default_x_label():
+    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
+    plot = holdout_trajectories_ggplot(agg)
+    assert plot.labels.x == "inner-loop scoring step"
+
+
+def test_holdout_ggplot_accepts_a_custom_x_label():
+    # The no-inner-loop ablation has one step per experiment, so its caller
+    # relabels the x axis to "experiment".
+    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
+    plot = holdout_trajectories_ggplot(agg, x_label="experiment")
+    assert plot.labels.x == "experiment"
+
+
 def test_plot_combined_writes_a_figure(tmp_path):
     agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
     out = tmp_path / "combined_rmse.pdf"
@@ -273,3 +287,28 @@ def test_cli_combines_run_tree_into_figures(tmp_path):
     assert (out_dir / "holdout_combined_rmse.pdf").exists()
     assert (out_dir / "holdout_combined_pearson_r.pdf").exists()
     assert (out_dir / "holdout_combined.csv").exists()
+
+
+def test_cli_name_suffix_appears_in_output_filenames(tmp_path):
+    runs_root = tmp_path / "holdout_no_inner_loop"
+    for run_name, result in (("run1", RUN_A), ("run2", RUN_B)):
+        gt = result["gt_runs"][0]["gt_model"]
+        dest = runs_root / run_name / gt
+        dest.mkdir(parents=True)
+        (dest / "holdout.json").write_text(json.dumps(result), encoding="utf-8")
+
+    cli = _load_cli()
+    out_dir = tmp_path / "figs"
+    cli.main(
+        cli.Args(
+            runs_root=runs_root,
+            out_dir=out_dir,
+            metric="rmse",
+            name_suffix="_no_inner_loop",
+        )
+    )
+
+    assert (out_dir / "holdout_combined_no_inner_loop_rmse.pdf").exists()
+    assert (out_dir / "holdout_combined_no_inner_loop.csv").exists()
+    # The un-suffixed default name is not written when a suffix is given.
+    assert not (out_dir / "holdout_combined_rmse.pdf").exists()
