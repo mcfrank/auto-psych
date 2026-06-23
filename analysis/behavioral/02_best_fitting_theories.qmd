@@ -76,8 +76,23 @@ metrics <- read_csv(metrics_path, show_col_types = FALSE) |>
   mutate(kind = factor(kind, levels = c("seed", "winner")))
 preds <- read_csv(preds_path, show_col_types = FALSE)
 
+# Stimulus-level RMSE: per distinct ordered stimulus, the model's mean predicted
+# P(left) vs the empirical choice proportion, then RMSE across stimuli (one point
+# each, matching the stimulus-level R² definition). We report this rather than
+# trial-level RMSE, which is floor-compressed by Bernoulli noise (the achievable
+# range is only ~[0.45 oracle, 0.50 chance], so all models look alike near 0.5).
+stim_rmse <- preds |>
+  group_by(scheme, eval, held_out_run, model, sequence_a, sequence_b) |>
+  summarise(obs = mean(chose_left), pred = mean(p_left), .groups = "drop") |>
+  group_by(scheme, eval, held_out_run, model) |>
+  summarise(rmse_stim = sqrt(mean((obs - pred)^2)), .groups = "drop")
+
+add_rmse_stim <- function(m) {
+  left_join(m, stim_rmse, by = c("scheme", "eval", "held_out_run", "name" = "model"))
+}
+
 # Headline comparison = the mega scheme (all data, in-sample).
-mega <- metrics |> filter(scheme == "mega", eval == "in_sample")
+mega <- metrics |> filter(scheme == "mega", eval == "in_sample") |> add_rmse_stim()
 model_levels <- mega |> arrange(elpd_rank) |> pull(label)
 
 preds_mega <- preds |> filter(scheme == "mega", eval == "in_sample")
@@ -109,7 +124,7 @@ fmt_rows <- function(d) {
     `ELPD-LOO`            = sprintf("%.1f", elpd_loo),
     `$\\Delta$ELPD`       = sprintf("%.1f", elpd_diff),
     `SE($\\Delta$)`       = sprintf("%.1f", elpd_dse),
-    RMSE                  = sprintf("%.3f", rmse),
+    `RMSE$_{\\mathrm{stim}}$` = sprintf("%.3f", rmse_stim),
     `$R^2_{\\mathrm{stim}}$` = sprintf("%.3f", r2_stimulus),
     `Acc.`                = sprintf("%.3f", accuracy)
   )
@@ -127,7 +142,7 @@ mega |>
     Model = label, Kind = kind, Params = n_params,
     `ELPD-LOO` = round(elpd_loo, 1), `± SE` = round(elpd_se, 1),
     `Δelpd` = round(elpd_diff, 1), dse = round(elpd_dse, 1),
-    RMSE = round(rmse, 3), `R² trial` = round(r2_trial, 3),
+    `RMSE stim` = round(rmse_stim, 3), `R² trial` = round(r2_trial, 3),
     `R² stim` = round(r2_stimulus, 3), `Acc.` = round(accuracy, 3),
     `LOO ok` = !loo_unreliable
   ) |>
@@ -142,7 +157,7 @@ best model (loo-compare convention); all models had reliable PSIS-LOO.
 #| echo: false
 mega |> arrange(elpd_rank) |> fmt_rows() |>
   emit_latex(
-    caption = "Mega-analytic model comparison on the pooled human data (11,520 trials). Models ordered by ELPD-LOO; $\\Delta$ELPD is the difference from the best model and SE($\\Delta$) its standard error. $k$ = free parameters; $R^2_{\\mathrm{stim}}$ = stimulus-level $R^2$; Acc.\\ = choice-prediction accuracy.",
+    caption = "Mega-analytic model comparison on the pooled human data (11,520 trials). Models ordered by ELPD-LOO; $\\Delta$ELPD is the difference from the best model and SE($\\Delta$) its standard error. $k$ = free parameters; RMSE$_{\\mathrm{stim}}$ and $R^2_{\\mathrm{stim}}$ are computed at the stimulus level (model prediction vs.\\ empirical choice proportion per distinct ordered stimulus); Acc.\\ = trial-level choice-prediction accuracy.",
     label = "tab:mega-comparison",
     file = "mega_comparison.tex",
     align = "lllrrrrrrr")
@@ -177,9 +192,9 @@ mega |>
 
 ```{r rmse-r2}
 mega |>
-  select(label, kind, rmse, r2_trial, r2_stimulus) |>
-  pivot_longer(c(rmse, r2_trial, r2_stimulus), names_to = "metric", values_to = "value") |>
-  mutate(metric = recode(metric, rmse = "RMSE (lower better)",
+  select(label, kind, rmse_stim, r2_trial, r2_stimulus) |>
+  pivot_longer(c(rmse_stim, r2_trial, r2_stimulus), names_to = "metric", values_to = "value") |>
+  mutate(metric = recode(metric, rmse_stim = "RMSE (stimulus-level)",
                          r2_trial = "R² (trial-level)", r2_stimulus = "R² (stimulus-level)"),
          label = factor(label, levels = rev(model_levels))) |>
   ggplot(aes(x = value, y = label, fill = kind)) +
@@ -228,7 +243,7 @@ discovered elsewhere still out-fit the seeds on data that played no role in
 selecting them? ELPD-LOO on the two training runs.
 
 ```{r heldout-train}
-ho_train <- metrics |> filter(scheme == "heldout", eval == "heldout_train")
+ho_train <- metrics |> filter(scheme == "heldout", eval == "heldout_train") |> add_rmse_stim()
 
 ho_train |>
   group_by(held_out_run) |>
@@ -297,10 +312,14 @@ metrics |>
 - **ELPD-LOO** is PSIS-LOO (`arviz.loo`) on each model's pointwise
   log-likelihood; `dse` is the SE of the pairwise difference (`arviz.compare`).
   `LOO ok` flags unreliable PSIS (high Pareto-k).
-- **RMSE / Brier** and **R²** use posterior-mean `p_left` vs. observed 0/1
-  choice. Stimulus-level R² (predicted vs. empirical choice proportion per
-  distinct ordered stimulus) is the most interpretable "does it predict the
-  choice curve" number.
+- **RMSE and R²** use posterior-mean `p_left`. The tables report both at the
+  **stimulus level** — model prediction vs. empirical choice proportion per
+  distinct ordered stimulus — which is the interpretable "does it predict the
+  choice curve" scale. *Trial-level* RMSE (vs. the 0/1 choice) is floor-compressed
+  by Bernoulli noise: its achievable range is only ~[0.45 oracle, 0.50 chance], so
+  every model clusters near 0.5 and the metric understates the differences. (Both
+  trial- and stimulus-level values are in `mega_model_metrics.csv` /
+  `mega_model_predictions.csv` if needed.)
 - **Why a held-out scheme.** The mega scheme is in-sample for the winners (they
   were discovered on these data); ELPD-LOO controls in-fit overfitting but not
   model-*selection* overfitting. `heldout_train` is the clean debiased test —
