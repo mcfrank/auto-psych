@@ -119,6 +119,51 @@ def test_aggregate_sem_halves_the_std_for_two_runs():
     assert best0["err"] == pytest.approx(0.1, abs=1e-6)
 
 
+def test_aggregate_drops_nan_and_inf_like_none():
+    # Impossible ground truths can make a metric NaN (constant prediction ->
+    # undefined correlation) or unbounded; those points must be dropped from a
+    # step's sample exactly like an explicit None, not crash statistics.stdev.
+    nan, inf = float("nan"), float("inf")
+    run_bad = {
+        "gt_runs": [
+            _gt_run(
+                "m",
+                [
+                    {"global_step": 0, "step": 0, "experiment": 1,
+                     "pearson_r": 0.8, "rmse": 0.2, "pearson_r_bma": 0.8, "rmse_bma": 0.2},
+                    {"global_step": 1, "step": 1, "experiment": 1,
+                     "pearson_r": nan, "rmse": inf, "pearson_r_bma": nan, "rmse_bma": inf},
+                ],
+                baseline={"mean_r": 0.3, "per_model": {"s1": nan, "s2": 0.45}},
+                fitted_baseline={"per_model": {"s1": {"pearson_r": 0.5, "rmse": 0.3}}},
+            )
+        ]
+    }
+    run_ok = {
+        "gt_runs": [
+            _gt_run(
+                "m",
+                [
+                    {"global_step": 0, "step": 0, "experiment": 1,
+                     "pearson_r": 0.6, "rmse": 0.4, "pearson_r_bma": 0.6, "rmse_bma": 0.4},
+                    {"global_step": 1, "step": 1, "experiment": 1,
+                     "pearson_r": 0.9, "rmse": 0.1, "pearson_r_bma": 0.9, "rmse_bma": 0.1},
+                ],
+                baseline={"mean_r": 0.3, "per_model": {"s1": 0.35, "s2": 0.45}},
+                fitted_baseline={"per_model": {"s1": {"pearson_r": 0.5, "rmse": 0.3}}},
+            )
+        ]
+    }
+    agg = aggregate_holdout_trajectories([run_bad, run_ok], metric="pearson_r", error="std")
+    best = {p["global_step"]: p for p in agg["gt_models"][0]["best"]}
+    # Step 0 averages both finite values; step 1 keeps only the finite run.
+    assert best[0]["mean"] == pytest.approx(0.7) and best[0]["n"] == 2
+    assert best[1]["mean"] == pytest.approx(0.9) and best[1]["n"] == 1
+    # The NaN sibling-seed value is dropped from the default-param baseline.
+    baseline = agg["gt_models"][0]["baselines"]["baseline"]
+    assert baseline["mean"] == pytest.approx(0.45)  # best of {NaN, 0.45} and {0.45}
+
+
 def test_aggregate_baselines_use_best_seed_not_mean():
     # The baseline is the BEST sibling seed per run, then pooled across runs.
     # RMSE: best = the min-RMSE sibling. fitted per run = [0.30, 0.40] -> 0.35.
@@ -160,13 +205,35 @@ def test_combined_frames_carry_error_band_bounds_for_plotnine():
     assert step0["ymax"] == pytest.approx(0.3 + 0.1414213562, abs=1e-6)
 
     baselines = frames["baselines"]
-    fitted = baselines[baselines["series"] == "best seed (fit to all data)"].iloc[0]
+    fitted = baselines[baselines["series"] == "best other seed model"].iloc[0]
     assert fitted["mean"] == pytest.approx(0.35)  # min-RMSE sibling per run: [0.30, 0.40]
 
     boundaries = frames["boundaries"]
     assert list(boundaries["boundary"]) == [2]
     # The dotted line is drawn half a step before the new experiment begins.
     assert boundaries.iloc[0]["x"] == pytest.approx(1.5)
+
+
+def test_combined_frames_relabel_the_fitted_baseline():
+    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse", error="std")
+    # Default (holdout): the fitted-seed baseline is the best *other* seed model.
+    default = set(holdout_combined_frames(agg)["baselines"]["series"])
+    assert "best other seed model" in default
+    assert "best seed model" not in default
+    # Impossible callers hold out no seed, so it is just "best seed model".
+    relabeled = set(
+        holdout_combined_frames(agg, fitted_baseline_label="best seed model")[
+            "baselines"
+        ]["series"]
+    )
+    assert "best seed model" in relabeled
+    assert "best other seed model" not in relabeled
+
+
+def test_holdout_ggplot_accepts_a_fitted_baseline_label():
+    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
+    plot = holdout_trajectories_ggplot(agg, fitted_baseline_label="best seed model")
+    assert isinstance(plot, plotnine.ggplot)
 
 
 def test_holdout_trajectories_ggplot_returns_a_ggplot_object():
@@ -176,7 +243,7 @@ def test_holdout_trajectories_ggplot_returns_a_ggplot_object():
 
 def test_plot_combined_writes_a_figure(tmp_path):
     agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
-    out = tmp_path / "combined_rmse.png"
+    out = tmp_path / "combined_rmse.pdf"
     plot_holdout_trajectories_combined(agg, out)
     assert out.exists() and out.stat().st_size > 0
 
@@ -203,6 +270,6 @@ def test_cli_combines_run_tree_into_figures(tmp_path):
     out_dir = tmp_path / "figs"
     cli.main(cli.Args(runs_root=runs_root, out_dir=out_dir, metric="both"))
 
-    assert (out_dir / "holdout_combined_rmse.png").exists()
-    assert (out_dir / "holdout_combined_pearson_r.png").exists()
+    assert (out_dir / "holdout_combined_rmse.pdf").exists()
+    assert (out_dir / "holdout_combined_pearson_r.pdf").exists()
     assert (out_dir / "holdout_combined.csv").exists()

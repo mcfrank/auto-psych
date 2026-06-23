@@ -1,0 +1,46 @@
+run,experiment,model,model_label,kind,elpd_loo,elpd_rel,dse,xmin,xmax
+run1,experiment1,iter1_candidate0,best agent model,best agent model,-771.4876,-0.0,0.0,-0.0,0.0
+run1,experiment1,prototype_similarity,prototype_similarity,seed model,-793.6785,-22.19084092302775,7.542311734515684,-29.733152657543435,-14.648529188512066
+run1,experiment1,encoding_compressibility,encoding_compressibility,seed model,-841.678,-70.19030356395105,13.554351274640021,-83.74465483859107,-56.63595228931103
+run1,experiment1,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-794.2392,-22.751513642834215,6.558581360645414,-29.31009500347963,-16.1929322821888
+run1,experiment1,window_typicality,window_typicality,seed model,-855.6762,-84.18858027511045,13.272126532387729,-97.46070680749818,-70.91645374272272
+run1,experiment2,inner_loop_model,best agent model,best agent model,-1491.379,-0.0,0.0,-0.0,0.0
+run1,experiment2,prototype_similarity,prototype_similarity,seed model,-1535.6774,-44.29835554692408,10.958843246505548,-55.25719879342962,-33.339512300418534
+run1,experiment2,encoding_compressibility,encoding_compressibility,seed model,-1614.8826,-123.5036355621773,17.962685287441715,-141.46632084961902,-105.54095027473558
+run1,experiment2,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-1539.3776,-47.99861101101277,9.42422674642776,-57.42283775744053,-38.57438426458501
+run1,experiment2,window_typicality,window_typicality,seed model,-1654.8744,-163.49544133833206,18.921308090340514,-182.41674942867257,-144.57413324799154
+run1,experiment3,iter1_candidate0,best agent model,best agent model,-2286.2612,-0.0,0.0,-0.0,0.0
+run1,experiment3,prototype_similarity,prototype_similarity,seed model,-2330.8547,-44.59353948101305,11.63808202091512,-56.231621501928174,-32.95545746009793
+run1,experiment3,encoding_compressibility,encoding_compressibility,seed model,-2411.1808,-124.91963663335164,19.130102202843297,-144.04973883619493,-105.78953443050835
+run1,experiment3,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-2335.5517,-49.29045913955596,11.60138044919177,-60.891839588747736,-37.68907869036419
+run1,experiment3,window_typicality,window_typicality,seed model,-2460.9177,-174.65645719869121,20.08329582323076,-194.73975302192198,-154.57316137546044
+run2,experiment1,iter1_candidate0,best agent model,best agent model,-788.8256,-0.0,0.0,-0.0,0.0
+run2,experiment1,prototype_similarity,prototype_similarity,seed model,-809.5582,-20.73264983706941,5.585533551046918,-26.318183388116328,-15.147116286022491
+run2,experiment1,encoding_compressibility,encoding_compressibility,seed model,-842.4965,-53.670964846029136,11.415193666641319,-65.08615851267045,-42.25577117938782
+run2,experiment1,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-813.6858,-24.860184971336484,8.73370469144607,-33.59388966278255,-16.126480279890416
+run2,experiment1,window_typicality,window_typicality,seed model,-838.5174,-49.6917824885501,11.312302651657523,-61.00408514020763,-38.37947983689258
+run2,experiment2,iter0_candidate1,best agent model,best agent model,-1598.0712,-0.0,0.0,-0.0,0.0
+run2,experiment2,prototype_similarity,prototype_similarity,seed model,-1632.526,-34.45477971969902,10.205363774401981,-44.660143494101,-24.249415945297038
+run2,experiment2,encoding_compressibility,encoding_compressibility,seed model,-1722.8504,-124.77915372862354,16.30391167581448,-141.08306540443803,-108.47524205280907
+run2,experiment2,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-1631.8874,-33.81617824678213,8.991297540228539,-42.80747578701067,-24.824880706553593
+run2,experiment2,window_typicality,window_typicality,seed model,-1711.2048,-113.13357670054368,16.35375632372165,-129.48733302426533,-96.77982037682203
+run2,experiment3,inner_loop_model,best agent model,best agent model,-2418.9895,-0.0,0.0,-0.0,0.0
+run2,experiment3,prototype_similarity,prototype_similarity,seed model,-2453.2596,-34.27003132348118,10.684171048047405,-44.95420237152858,-23.585860275433774
+run2,experiment3,encoding_compressibility,encoding_compressibility,seed model,-2573.9587,-154.96920229502166,19.044026244151986,-174.01322853917364,-135.92517605086968
+run2,experiment3,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-2449.2827,-30.293150642677567,10.158370240676563,-40.45152088335413,-20.134780402001006
+run2,experiment3,window_typicality,window_typicality,seed model,-2561.2303,-142.2407385582671,18.490478762371794,-160.7312173206389,-123.75025979589532
+run3,experiment1,iter1_candidate2,best agent model,best agent model,-859.7008,-0.0,0.0,-0.0,0.0
+run3,experiment1,prototype_similarity,prototype_similarity,seed model,-864.2061,-4.50532772130539,4.7233924989815845,-9.228720220286974,0.2180647776761946
+run3,experiment1,encoding_compressibility,encoding_compressibility,seed model,-889.6299,-29.92911781302347,7.562318241960532,-37.491436054984,-22.366799571062938
+run3,experiment1,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-867.8689,-8.168100366498678,6.58764557611432,-14.755745942612997,-1.5804547903843575
+run3,experiment1,window_typicality,window_typicality,seed model,-887.5123,-27.81154686474882,6.860575458355634,-34.67212232310445,-20.950971406393187
+run3,experiment2,smoothed_prototype_distance,best agent model,best agent model,-1714.403,-0.0,0.0,-0.0,0.0
+run3,experiment2,prototype_similarity,prototype_similarity,seed model,-1720.1058,-5.702798615463674,3.881069698560604,-9.58386831402428,-1.8217289169030702
+run3,experiment2,encoding_compressibility,encoding_compressibility,seed model,-1765.1448,-50.74184975810112,9.684791876422901,-60.42664163452402,-41.05705788167822
+run3,experiment2,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-1723.6407,-9.237682787316947,7.728982986975033,-16.96666577429198,-1.5086998003419145
+run3,experiment2,window_typicality,window_typicality,seed model,-1769.4198,-55.01681572657013,9.874715128173982,-64.8915308547441,-45.14210059839615
+run3,experiment3,iter1_candidate0,best agent model,best agent model,-2479.648,-0.0,0.0,-0.0,0.0
+run3,experiment3,prototype_similarity,prototype_similarity,seed model,-2543.2172,-63.56915743643658,12.698936280379838,-76.26809371681642,-50.87022115605674
+run3,experiment3,encoding_compressibility,encoding_compressibility,seed model,-2624.215,-144.56692852108614,16.50624122529606,-161.0731697463822,-128.06068729579007
+run3,experiment3,bayesian_diagnosticity,bayesian_diagnosticity,seed model,-2484.893,-5.244960073571139,3.5725328069355173,-8.817492880506656,-1.672427266635622
+run3,experiment3,window_typicality,window_typicality,seed model,-2625.704,-146.0559413437594,19.28140064413984,-165.33734198789924,-126.77454069961956
