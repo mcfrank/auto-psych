@@ -14,7 +14,7 @@ gt_models:
   window_typicality:
 
 n_experiments: 3
-n_participants: 30
+n_participants: 40  # match the live human experiment (full_run.yaml: 40/experiment)
 seed: 7
 
 inner_loop:

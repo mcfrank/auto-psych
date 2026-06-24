@@ -1,0 +1,7 @@
+model_a,model_b,rmse
+run1/iter1_candidate0,run2/inner_loop_model,0.053840
+run1/iter1_candidate0,run2/evidence_accumulation_per_run,0.052481
+run1/iter1_candidate0,run3/iter1_candidate0,0.092259
+run2/inner_loop_model,run2/evidence_accumulation_per_run,0.028831
+run2/inner_loop_model,run3/iter1_candidate0,0.077277
+run2/evidence_accumulation_per_run,run3/iter1_candidate0,0.078683

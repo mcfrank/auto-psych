@@ -1,0 +1,5 @@
+model,run1/iter1_candidate0,run2/inner_loop_model,run2/evidence_accumulation_per_run,run3/iter1_candidate0
+run1/iter1_candidate0,0.000000,0.053840,0.052481,0.092259
+run2/inner_loop_model,0.053840,0.000000,0.028831,0.077277
+run2/evidence_accumulation_per_run,0.052481,0.028831,0.000000,0.078683
+run3/iter1_candidate0,0.092259,0.077277,0.078683,0.000000

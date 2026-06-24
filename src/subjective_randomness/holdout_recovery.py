@@ -63,9 +63,10 @@ from src.subjective_randomness.stimulus_design import (
 
 PROJECT_ID = "subjective_randomness"
 
-# Design EIG defaults — match the 2_design prompt's documented CLI invocation,
-# so harness-scored stimuli are equivalent to what the agent would have written.
-DESIGN_TOP_N = 20
+# Design EIG defaults — match the 2_design prompt's documented CLI invocation
+# (`--top 32`, 200 prior-predictive samples), so the deterministic fallback below
+# selects the same top-N the design agent itself writes in the live human runs.
+DESIGN_TOP_N = 32
 DESIGN_EIG_SAMPLES = 200
 DESIGN_EIG_SEED = 42
 
@@ -319,24 +320,23 @@ def run_holdout_experiments(
                     backend=backend,
                 )
 
-        # Design: the agent proposes a candidate pool (design/candidates.json);
-        # turning it into stimuli.json by EIG is deterministic, so the harness
-        # finishes that step if the agent backgrounded it. On resume an existing
-        # valid candidate pool is reused instead of re-running the costly agent.
+        # Design: use the SAME prompt as the live human experiment (the default
+        # `2_design`), in which the agent both proposes the candidate pool AND
+        # scores it by EIG into design/stimuli.json (--top 32). _ensure_design_stimuli
+        # stays wired as a deterministic safety net: it is a no-op when the agent
+        # already wrote stimuli.json, and finishes the EIG scoring itself only if
+        # the agent backgrounded it. On resume an existing valid candidate pool is
+        # reused instead of re-running the costly agent.
         if not (resume and _stage_done("2_design", exp_dir)):
             if not (resume and _has_candidate_pool(exp_dir)):
                 write_context(exp_dir, "2_design", project_id, exp_num, prev_exp_dir)
-                # Candidate-generation-only prompt: the agent proposes the pool,
-                # and _ensure_design_stimuli scores it by EIG to produce
-                # stimuli.json (run as post_spawn, before validation) — so the
-                # agent never runs the slow EIG command.
                 _spawn_with_repair(
                     "2_design",
                     exp_dir,
                     allowed_dirs=allowed_dirs,
                     agent_timeout_sec=agent_timeout_sec,
                     backend=backend,
-                    prompt_key="2_design_candidates_only",
+                    prompt_key="2_design",
                     post_spawn=lambda: _ensure_design_stimuli(exp_dir, project_id),
                 )
             else:

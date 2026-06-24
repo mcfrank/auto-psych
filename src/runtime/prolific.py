@@ -173,6 +173,46 @@ def get_study(study_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
         return (None, str(e))
 
 
+def list_submissions(
+    study_id: str,
+) -> Tuple[Optional[list], Optional[str]]:
+    """GET /studies/{id}/submissions/ , following pagination.
+
+    Returns (submissions_list, error_message). Each submission dict carries
+    'status' (e.g. 'APPROVED', 'AWAITING REVIEW', 'RETURNED', 'TIMED-OUT') and,
+    once the participant has finished, 'time_taken' (seconds between starting
+    and submitting).
+
+    Prolific paginates this endpoint, but unhelpfully: it returns a non-null
+    ``_links.next.href`` even on the last page, where the link degenerates to
+    ``?limit=0&offset=0`` and re-serves the same rows. Blindly following it
+    loops forever. So we dedupe by submission id and stop as soon as a page
+    contributes nothing new (a ``visited`` set is a further backstop against a
+    self-referential href).
+    """
+    submissions: list = []
+    seen_ids: set = set()
+    visited_urls: set = set()
+    url: Optional[str] = f"{_BASE}/studies/{study_id}/submissions/"
+    try:
+        while url and url not in visited_urls:
+            visited_urls.add(url)
+            r = requests.get(url, headers=_headers(), timeout=30)
+            if r.status_code != 200:
+                return (None, f"GET {url} {r.status_code}: {r.text[:500]}")
+            data = r.json()
+            new = [s for s in data.get("results", []) if s.get("id") not in seen_ids]
+            if not new:
+                break
+            seen_ids.update(s.get("id") for s in new)
+            submissions.extend(new)
+            next_link = (data.get("_links") or {}).get("next") or {}
+            url = next_link.get("href") if isinstance(next_link, dict) else None
+        return (submissions, None)
+    except Exception as e:
+        return (None, str(e))
+
+
 def get_submission_counts(
     study_id: str,
 ) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
