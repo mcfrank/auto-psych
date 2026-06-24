@@ -680,6 +680,11 @@ _DEFAULT_PARAMS_LABEL = "best seed (default params)"
 # outside the seed family), so its caller passes "best seed model" instead.
 DEFAULT_FITTED_BASELINE_LABEL = "best other seed model"
 
+# The x axis counts inner-loop scoring steps in the full pipeline. The
+# no-inner-loop ablation has a single step per experiment, so its callers pass
+# a different label (e.g. "experiment").
+DEFAULT_TRAJECTORY_X_LABEL = "inner-loop scoring step"
+
 # ColorBrewer Dark2 (qualitative), keyed by role so the fitted baseline can be
 # relabelled without losing its color/linetype.
 _SERIES_COLOR_BY_ROLE = {"best": "#1B9E77", "fitted": "#D95F02", "default": "#7570B3"}
@@ -841,6 +846,7 @@ def holdout_trajectories_ggplot(
     aggregated: Mapping[str, Any],
     *,
     fitted_baseline_label: str = DEFAULT_FITTED_BASELINE_LABEL,
+    x_label: str = DEFAULT_TRAJECTORY_X_LABEL,
 ):
     """Build the pooled holdout-recovery figure as a plotnine ``ggplot``.
 
@@ -934,7 +940,7 @@ def holdout_trajectories_ggplot(
         + scale_color_manual(values=series_colors, name="")
         + scale_fill_manual(values=series_colors, name="")
         + scale_linetype_manual(values=series_linetypes, name="")
-        + labs(x="inner-loop scoring step", y=spec["combined_ylabel"])
+        + labs(x=x_label, y=spec["combined_ylabel"])
         + theme_minimal()
         # Compact layout (tight panels), but larger, legible text throughout.
         + theme(
@@ -973,20 +979,22 @@ def plot_holdout_trajectories_combined(
     out_path: Path,
     *,
     fitted_baseline_label: str = DEFAULT_FITTED_BASELINE_LABEL,
+    x_label: str = DEFAULT_TRAJECTORY_X_LABEL,
 ) -> None:
     """Render :func:`holdout_trajectories_ggplot` to ``out_path``.
 
     A thin save wrapper kept for the CLI and back-compatibility; for manual
     formatting, build the figure with :func:`holdout_trajectories_ggplot` and
     save it yourself. ``fitted_baseline_label`` renames the fitted-seed baseline
-    series (see :func:`holdout_trajectories_ggplot`).
+    series and ``x_label`` renames the x axis (see
+    :func:`holdout_trajectories_ggplot`).
     """
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     # bbox_inches="tight" trims margins to the content so the compact panels keep
     # their size while the title and axis labels never clip at the figure edge.
     holdout_trajectories_ggplot(
-        aggregated, fitted_baseline_label=fitted_baseline_label
+        aggregated, fitted_baseline_label=fitted_baseline_label, x_label=x_label
     ).save(out_path, dpi=150, verbose=False, bbox_inches="tight")
 
 

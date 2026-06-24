@@ -45,6 +45,7 @@ sys.path.insert(0, str(here()))
 
 from src.subjective_randomness.config import resolve_path  # noqa: E402
 from src.subjective_randomness.reporting import (  # noqa: E402
+    DEFAULT_TRAJECTORY_X_LABEL,
     aggregate_holdout_trajectories,
     plot_holdout_trajectories_combined,
 )
@@ -85,6 +86,12 @@ class Args:
     error: Literal["sem", "std", "ci95"] = "sem"
     """Spread shown by the error bars/band: standard error, standard deviation,
     or a 95% normal interval half-width."""
+    x_label: str = DEFAULT_TRAJECTORY_X_LABEL
+    """X-axis label. The default fits the full pipeline; the no-inner-loop ablation
+    has one step per experiment, so pass ``--x-label experiment`` for it."""
+    name_suffix: str = ""
+    """Appended to the output filename stem to mark a variant, e.g.
+    ``--name-suffix _no_inner_loop`` -> ``impossible_combined_no_inner_loop_rmse.pdf``."""
 
 
 def find_run_files(runs_root: Path) -> List[Path]:
@@ -152,19 +159,23 @@ def main(args: Args) -> None:
     out_dir.mkdir(parents=True, exist_ok=True)
 
     # One CSV holds every metric's pooled points; figures are per metric.
+    stem = f"impossible_combined{args.name_suffix}"
     all_rows: List[Mapping[str, Any]] = []
     for metric in metrics:
         aggregated = aggregate_holdout_trajectories(
             results, metric=metric, error=args.error
         )
-        figure_path = out_dir / f"impossible_combined_{metric}.pdf"
+        figure_path = out_dir / f"{stem}_{metric}.pdf"
         plot_holdout_trajectories_combined(
-            aggregated, figure_path, fitted_baseline_label=FITTED_BASELINE_LABEL
+            aggregated,
+            figure_path,
+            fitted_baseline_label=FITTED_BASELINE_LABEL,
+            x_label=args.x_label,
         )
         print(f"Wrote {metric} figure to {figure_path}")
         all_rows.extend(tidy_rows(aggregated))
 
-    csv_path = out_dir / "impossible_combined.csv"
+    csv_path = out_dir / f"{stem}.csv"
     write_tidy_csv(all_rows, csv_path, columns=TIDY_COLUMNS)
     print(f"Wrote tidy pooled CSV to {csv_path}")
 

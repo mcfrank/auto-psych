@@ -7,6 +7,8 @@ theory failures (_3/_12/_13).
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 
 from src.subjective_randomness import holdout_recovery
@@ -56,13 +58,70 @@ def test_holdout_raises_after_exhausting_repairs(tmp_path, monkeypatch):
 
 
 def test_holdout_post_spawn_runs_before_validation(tmp_path, monkeypatch):
-    """The design stage scores the candidate pool into stimuli.json after each
-    spawn and before validation — modelled by post_spawn."""
+    """The design stage runs its post_spawn hook (the deterministic EIG fallback
+    that finishes stimuli.json) after each spawn and before validation."""
     _stub(monkeypatch, [True])
     calls = []
     holdout_recovery._spawn_with_repair(
         "2_design", tmp_path, allowed_dirs=[tmp_path], agent_timeout_sec=10,
-        backend="opencode", prompt_key="2_design_candidates_only",
+        backend="opencode", prompt_key="2_design",
         post_spawn=lambda: calls.append("ensure_stimuli"), max_repairs=2,
     )
     assert calls == ["ensure_stimuli"]
+
+
+def test_holdout_design_uses_human_experiment_prompt(tmp_path, monkeypatch):
+    """Recovery must design experiments with the SAME prompt as the live human
+    experiment: the default ``2_design`` agent (proposes candidates AND scores
+    them by EIG), not the candidates-only variant. Guards against regressing to
+    ``2_design_candidates_only``, which made the recovery designs diverge from the
+    human runs.
+    """
+
+    spawns: list[tuple[str, object]] = []
+
+    def fake_spawn(
+        agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None,
+        prompt_key=None, repair_feedback=None,
+    ):
+        spawns.append((agent_key, prompt_key))
+        return True, ""
+
+    def fake_inner_loop(exp_dir, **kwargs):
+        loop = Path(exp_dir) / "model_loop"
+        loop.mkdir(parents=True, exist_ok=True)
+        (loop / "history.json").write_text("[]", encoding="utf-8")
+
+    monkeypatch.setattr(holdout_recovery, "spawn_cc_agent", fake_spawn)
+    monkeypatch.setattr(holdout_recovery, "validate_cc_output", lambda *a, **k: (True, "ok"))
+    monkeypatch.setattr(holdout_recovery, "resolve_generating_params", lambda *a, **k: {})
+    monkeypatch.setattr(
+        holdout_recovery, "ensure_experiment_dirs",
+        lambda d: Path(d).mkdir(parents=True, exist_ok=True),
+    )
+    monkeypatch.setattr(holdout_recovery, "init_registry", lambda *a, **k: None)
+    monkeypatch.setattr(holdout_recovery, "seed_experiment_models_from_project", lambda *a, **k: True)
+    monkeypatch.setattr(holdout_recovery, "write_context", lambda *a, **k: None)
+    monkeypatch.setattr(holdout_recovery, "_ensure_design_stimuli", lambda *a, **k: None)
+    monkeypatch.setattr(
+        holdout_recovery, "load_stimuli",
+        lambda p: [{"sequence_a": "HT", "sequence_b": "HH"}],
+    )
+    monkeypatch.setattr(
+        holdout_recovery, "generate_responses",
+        lambda *a, **k: [{"sequence_a": "HT", "sequence_b": "HH", "chose_left": 1}],
+    )
+    monkeypatch.setattr(holdout_recovery, "write_responses_csv", lambda *a, **k: None)
+    monkeypatch.setattr(holdout_recovery, "run_inner_model_loop_programmatic", fake_inner_loop)
+    monkeypatch.setattr(holdout_recovery, "update_registry_from_interpretation", lambda *a, **k: None)
+
+    holdout_recovery.run_holdout_experiments(
+        "prototype_similarity", {}, tmp_path / "run",
+        seed_models_dir=tmp_path / "seeds",
+        n_experiments=1, n_participants=2,
+        inner_loop_iterations=1, candidate_count=1,
+        fit_kwargs={}, backend="opencode",
+    )
+
+    design_prompts = [pk for (ak, pk) in spawns if ak == "2_design"]
+    assert design_prompts == ["2_design"], spawns
