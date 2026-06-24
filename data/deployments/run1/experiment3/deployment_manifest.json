@@ -1,0 +1,75 @@
+{
+  "agent_backend": "opencode",
+  "collection_owner": "unknown",
+  "collection_session_id": "session_subjective_randomness-e3-run1-20260621T232601Z-nogit",
+  "created_at": "2026-06-21T23:26:01Z",
+  "deploy_target": "firebase",
+  "deployment_id": "deploy_subjective_randomness-e3-run1-20260621T232601Z-nogit",
+  "experiment_id": "subjective_randomness_experiment3",
+  "experiment_url": "https://auto-psych-2c5da.web.app/e3-run1/",
+  "firebase_config_path": "/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/firebase.generated.json",
+  "firebase_project": "auto-psych-2c5da",
+  "firebase_region": "us-central1",
+  "git_commit": null,
+  "git_dirty": null,
+  "hosting_path": "e3-run1",
+  "metadata": {
+    "prolific_payload": {
+      "completion_codes": [
+        {
+          "actions": [
+            {
+              "action": "AUTOMATICALLY_APPROVE"
+            }
+          ],
+          "code": "AUTO_PSYCH_COMPLETE_FULL",
+          "code_type": "COMPLETED"
+        }
+      ],
+      "description": "In this study, you will see a series of coin flip results and be asked to judge which is more random.",
+      "device_compatibility": [
+        "desktop"
+      ],
+      "estimated_completion_time": 5,
+      "external_study_url": "https://auto-psych-2c5da.web.app/e3-run1/?participant_id={{%PROLIFIC_PID%}}&PROLIFIC_PID={{%PROLIFIC_PID%}}&STUDY_ID={{%STUDY_ID%}}&SESSION_ID={{%SESSION_ID%}}",
+      "filters": [
+        {
+          "filter_id": "current-country-of-residence",
+          "selected_values": [
+            "1"
+          ]
+        },
+        {
+          "filter_id": "fluent-languages",
+          "selected_values": [
+            "19"
+          ]
+        },
+        {
+          "filter_id": "approval_rate",
+          "selected_range": {
+            "lower": 98,
+            "upper": 100
+          }
+        }
+      ],
+      "internal_name": "auto-psych deploy_subjective_randomness-e3-run1-20260621T232601Z-nogit",
+      "name": "Which sequence is more random?",
+      "prolific_id_option": "url_parameters",
+      "reward": 100,
+      "total_available_places": 40
+    },
+    "prolific_published": true
+  },
+  "project_id": "subjective_randomness",
+  "prolific_completion_code": "AUTO_PSYCH_COMPLETE_FULL",
+  "prolific_mode": "live",
+  "prolific_redirect_url": "https://app.prolific.com/submissions/complete?cc=AUTO_PSYCH_COMPLETE_FULL",
+  "prolific_study_id": "[REDACTED_PROLIFIC_ID]",
+  "results_api_url": "https://auto-psych-2c5da.web.app",
+  "run_id": 3,
+  "source_experiment_dir": "/scratch/users/benpry/auto-psych/outer_loop_live/run1/data/subjective_randomness/experiment3/experiment",
+  "staged_public_dir": "/scratch/users/benpry/auto-psych/outer_loop_live/runs/run1/repo/public/e3-run1",
+  "study_id": "study_subjective_randomness",
+  "total_available_places": 40
+}
