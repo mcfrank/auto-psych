@@ -303,6 +303,42 @@ def test_holdout_ggplot_accepts_a_custom_x_label():
     assert plot.labels.x == "experiment"
 
 
+def test_holdout_ggplot_default_strip_text_size():
+    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
+    plot = holdout_trajectories_ggplot(agg)
+    assert plot.theme.themeables.property("strip_text", "size") == 17
+
+
+def test_holdout_ggplot_accepts_a_custom_strip_text_size():
+    # Impossible recovery has long facet names (e.g. "more_imbalance_more_random")
+    # that overlap at the default size, so its caller shrinks the panel headings.
+    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
+    plot = holdout_trajectories_ggplot(agg, strip_text_size=13)
+    assert plot.theme.themeables.property("strip_text", "size") == 13
+
+
+def test_plot_combined_forwards_strip_text_size(tmp_path):
+    # The save wrapper must thread strip_text_size through to the ggplot builder.
+    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
+    captured = {}
+    import src.subjective_randomness.reporting as reporting
+
+    original = reporting.holdout_trajectories_ggplot
+
+    def _spy(aggregated, **kwargs):
+        captured.update(kwargs)
+        return original(aggregated, **kwargs)
+
+    reporting.holdout_trajectories_ggplot = _spy
+    try:
+        reporting.plot_holdout_trajectories_combined(
+            agg, tmp_path / "out.pdf", strip_text_size=13
+        )
+    finally:
+        reporting.holdout_trajectories_ggplot = original
+    assert captured.get("strip_text_size") == 13
+
+
 def test_plot_combined_writes_a_figure(tmp_path):
     agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
     out = tmp_path / "combined_rmse.pdf"
