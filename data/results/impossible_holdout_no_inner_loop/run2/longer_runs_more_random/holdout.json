@@ -1,8 +1,8 @@
 {
   "project_id": "subjective_randomness",
-  "seed_models_dir": "/scratch/users/benpry/auto-psych/impossible_holdout_test_retest_no_inner_loop/run2/longer_runs_more_random/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models",
+  "seed_models_dir": "/scratch/users/benpry/auto-psych/impossible_holdout_test_retest_no_inner_loop_v2/run2/longer_runs_more_random/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models",
   "n_experiments": 3,
-  "n_participants": 30,
+  "n_participants": 40,
   "inner_loop": {
     "max_iterations": 0,
     "candidate_count": 3
@@ -37,75 +37,75 @@
         "beta": 4.0,
         "side_bias": 0.0
       },
-      "run_root": "/scratch/users/benpry/auto-psych/impossible_holdout_test_retest_no_inner_loop/run2/longer_runs_more_random/repo/_runs/longer_runs_more_random",
-      "n_eval_stimuli": 129736,
-      "n_eval_dropped": 59,
+      "run_root": "/scratch/users/benpry/auto-psych/impossible_holdout_test_retest_no_inner_loop_v2/run2/longer_runs_more_random/repo/_runs/longer_runs_more_random",
+      "n_eval_stimuli": 129699,
+      "n_eval_dropped": 96,
       "trajectory": [
         {
           "experiment": 1,
           "step": 0,
           "iteration": null,
           "global_step": 0,
-          "best_model": "prototype_similarity",
-          "pearson_r": 0.3748259782523371,
-          "rmse": 0.27718100577415383,
-          "pearson_r_bma": 0.1334531487018763,
-          "rmse_bma": 0.2819890449885093
+          "best_model": "bayesian_diagnosticity",
+          "pearson_r": -0.6406665708863327,
+          "rmse": 0.298031987576891,
+          "pearson_r_bma": -0.5438066436936686,
+          "rmse_bma": 0.2667865995773345
         },
         {
           "experiment": 2,
           "step": 0,
           "iteration": null,
           "global_step": 1,
-          "best_model": "pure_alternation",
-          "pearson_r": 0.5031885120551344,
-          "rmse": 0.22430572291158932,
-          "pearson_r_bma": 0.500674025888598,
-          "rmse_bma": 0.224678759670972
+          "best_model": "prototype_similarity",
+          "pearson_r": 0.48660256720372336,
+          "rmse": 0.20294027112767876,
+          "pearson_r_bma": -0.07875490005608728,
+          "rmse_bma": 0.2384649523297971
         },
         {
           "experiment": 3,
           "step": 0,
           "iteration": null,
           "global_step": 2,
-          "best_model": "binomial_alternation",
-          "pearson_r": 0.6836094357949493,
-          "rmse": 0.20770555213521494,
-          "pearson_r_bma": 0.6836094357949493,
-          "rmse_bma": 0.20770555213521494
+          "best_model": "pure_alternation_bias",
+          "pearson_r": 0.5114610293350187,
+          "rmse": 0.1972998967536068,
+          "pearson_r_bma": 0.5104762976986629,
+          "rmse_bma": 0.19740971912038324
         }
       ],
       "baseline": {
-        "mean_r": -0.7329951491456501,
+        "mean_r": -0.7331788753836687,
         "per_model": {
-          "prototype_similarity": -0.7589310651311366,
-          "encoding_compressibility": -0.7118752725735896,
-          "bayesian_diagnosticity": -0.5891777713375581,
-          "window_typicality": -0.8719964875403159
+          "prototype_similarity": -0.7591263028161626,
+          "encoding_compressibility": -0.712045237517962,
+          "bayesian_diagnosticity": -0.5895495687575348,
+          "window_typicality": -0.8719943924430155
         }
       },
       "fitted_baseline": {
         "per_model": {
           "bayesian_diagnosticity": {
-            "pearson_r": -0.5588755476124467,
-            "rmse": 0.30525718932933904
+            "pearson_r": -0.4986920548278013,
+            "rmse": 0.2947997320690045
           },
           "encoding_compressibility": {
-            "pearson_r": 0.07563776701855121,
-            "rmse": 0.2411705945474959
+            "pearson_r": 0.06712686928041496,
+            "rmse": 0.22621003656194782
           },
           "prototype_similarity": {
-            "pearson_r": 0.4984662897029443,
-            "rmse": 0.22932248489146081
+            "pearson_r": 0.5027118428191815,
+            "rmse": 0.20098948288108814
           },
           "window_typicality": {
-            "pearson_r": -0.7223782693403676,
-            "rmse": 0.27373193135162044
+            "pearson_r": -0.656407314639607,
+            "rmse": 0.2528747244752763
           }
         },
-        "mean_r": -0.1767874400578297,
-        "mean_rmse": 0.26237055002997905,
-        "n_responses": 3600
+        "mean_r": -0.14631516434195296,
+        "mean_rmse": 0.24371849399682916,
+        "n_responses": 7680
       },
       "leakage": {
         "files": [
@@ -188,19 +188,13 @@
             "gt_named": false
           },
           {
-            "path": "experiment2/cognitive_models/pure_alternation.py",
+            "path": "experiment2/cognitive_models/pure_motif_complexity.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment2/cognitive_models/pure_balance.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
-            "path": "experiment2/cognitive_models/streak_aversion.py",
+            "path": "experiment2/cognitive_models/pure_streak_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -236,19 +230,13 @@
             "gt_named": false
           },
           {
-            "path": "experiment2/model_loop/models/pure_alternation.py",
+            "path": "experiment2/model_loop/models/pure_motif_complexity.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment2/model_loop/models/pure_balance.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
-            "path": "experiment2/model_loop/models/streak_aversion.py",
+            "path": "experiment2/model_loop/models/pure_streak_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -266,12 +254,6 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/binomial_alternation.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
             "path": "experiment3/cognitive_models/encoding_compressibility.py",
             "identical": false,
             "mentions_gt_params": false,
@@ -284,31 +266,31 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/length_sensitive_alternation.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
             "path": "experiment3/cognitive_models/prototype_similarity.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/pure_alternation.py",
+            "path": "experiment3/cognitive_models/pure_alternation_bias.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/pure_balance.py",
+            "path": "experiment3/cognitive_models/pure_balance_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/streak_aversion.py",
+            "path": "experiment3/cognitive_models/pure_motif_complexity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/cognitive_models/pure_streak_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -326,12 +308,6 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/binomial_alternation.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
             "path": "experiment3/model_loop/models/encoding_compressibility.py",
             "identical": false,
             "mentions_gt_params": false,
@@ -344,31 +320,31 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/length_sensitive_alternation.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
             "path": "experiment3/model_loop/models/prototype_similarity.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/pure_alternation.py",
+            "path": "experiment3/model_loop/models/pure_alternation_bias.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/pure_balance.py",
+            "path": "experiment3/model_loop/models/pure_balance_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/streak_aversion.py",
+            "path": "experiment3/model_loop/models/pure_motif_complexity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/pure_streak_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -402,9 +378,8 @@
             "encoding_compressibility",
             "bayesian_diagnosticity",
             "window_typicality",
-            "pure_alternation",
-            "pure_balance",
-            "streak_aversion",
+            "pure_motif_complexity",
+            "pure_streak_aversion",
             "inner_loop_model"
           ]
         },
@@ -415,11 +390,10 @@
             "encoding_compressibility",
             "bayesian_diagnosticity",
             "window_typicality",
-            "pure_alternation",
-            "pure_balance",
-            "streak_aversion",
-            "binomial_alternation",
-            "length_sensitive_alternation",
+            "pure_motif_complexity",
+            "pure_streak_aversion",
+            "pure_alternation_bias",
+            "pure_balance_aversion",
             "inner_loop_model"
           ]
         }

@@ -1,8 +1,8 @@
 {
   "project_id": "subjective_randomness",
-  "seed_models_dir": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop/run1/bayesian_diagnosticity/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models",
+  "seed_models_dir": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop_v2/run1/bayesian_diagnosticity/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models",
   "n_experiments": 3,
-  "n_participants": 30,
+  "n_participants": 40,
   "inner_loop": {
     "max_iterations": 0,
     "candidate_count": 3
@@ -16,13 +16,19 @@
   "eval_pool": {
     "n_pairs": 500,
     "lengths": [
+      1,
+      2,
+      3,
+      4,
+      5,
       6,
+      7,
       8
     ],
     "seed": 11,
     "min_remaining": 100,
-    "exhaustive": false,
-    "predict_max_draws": null
+    "exhaustive": true,
+    "predict_max_draws": 500
   },
   "gt_runs": [
     {
@@ -34,9 +40,9 @@
         "beta": 4.0,
         "side_bias": 0.0
       },
-      "run_root": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop/run1/bayesian_diagnosticity/repo/_runs/bayesian_diagnosticity",
-      "n_eval_stimuli": 500,
-      "n_eval_dropped": 0,
+      "run_root": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop_v2/run1/bayesian_diagnosticity/repo/_runs/bayesian_diagnosticity",
+      "n_eval_stimuli": 129699,
+      "n_eval_dropped": 96,
       "trajectory": [
         {
           "experiment": 1,
@@ -44,60 +50,60 @@
           "iteration": null,
           "global_step": 0,
           "best_model": "prototype_similarity",
-          "pearson_r": 0.9392764783099226,
-          "rmse": 0.14502551822912943,
-          "pearson_r_bma": 0.9378387896372616,
-          "rmse_bma": 0.14653998921361175
+          "pearson_r": 0.8775386604600626,
+          "rmse": 0.20621262999452553,
+          "pearson_r_bma": 0.8775386604600626,
+          "rmse_bma": 0.20621262999452553
         },
         {
           "experiment": 2,
           "step": 0,
           "iteration": null,
           "global_step": 1,
-          "best_model": "encoding_compressibility",
-          "pearson_r": 0.8322224205565417,
-          "rmse": 0.22804281240535965,
-          "pearson_r_bma": 0.8322224205565417,
-          "rmse_bma": 0.22804281240535965
+          "best_model": "prototype_similarity",
+          "pearson_r": 0.8948672940577416,
+          "rmse": 0.18931603307517225,
+          "pearson_r_bma": 0.8948672940577416,
+          "rmse_bma": 0.18931603307517225
         },
         {
           "experiment": 3,
           "step": 0,
           "iteration": null,
           "global_step": 2,
-          "best_model": "encoding_compressibility",
-          "pearson_r": 0.8353641618355019,
-          "rmse": 0.22514030264149903,
-          "pearson_r_bma": 0.8353641618355019,
-          "rmse_bma": 0.22514030264149903
+          "best_model": "prototype_similarity",
+          "pearson_r": 0.9061905260807329,
+          "rmse": 0.18524140213806847,
+          "pearson_r_bma": 0.9061905260807329,
+          "rmse_bma": 0.18524140213806847
         }
       ],
       "baseline": {
-        "mean_r": 0.7580414130652694,
+        "mean_r": 0.6978373047107981,
         "per_model": {
-          "prototype_similarity": 0.8755236944564776,
-          "encoding_compressibility": 0.7833022606544333,
-          "window_typicality": 0.615298284084897
+          "prototype_similarity": 0.8083984426448061,
+          "encoding_compressibility": 0.7143190844845797,
+          "window_typicality": 0.5707943870030081
         }
       },
       "fitted_baseline": {
         "per_model": {
           "encoding_compressibility": {
-            "pearson_r": 0.8499864021750384,
-            "rmse": 0.21704126900481926
+            "pearson_r": 0.879914077951901,
+            "rmse": 0.20210768718344319
           },
           "prototype_similarity": {
-            "pearson_r": 0.917152024038036,
-            "rmse": 0.18049510709409936
+            "pearson_r": 0.9041843189237819,
+            "rmse": 0.18406043324983978
           },
           "window_typicality": {
-            "pearson_r": 0.4865978272139101,
-            "rmse": 0.36776000273903675
+            "pearson_r": 0.5572766754198589,
+            "rmse": 0.3648315865846493
           }
         },
-        "mean_r": 0.7512454178089948,
-        "mean_rmse": 0.25509879294598514,
-        "n_responses": 3600
+        "mean_r": 0.7804583574318472,
+        "mean_rmse": 0.2503332356726441,
+        "n_responses": 7680
       },
       "leakage": {
         "files": [
@@ -144,9 +150,15 @@
             "gt_named": false
           },
           {
-            "path": "experiment2/cognitive_models/bayesian_markov.py",
+            "path": "experiment2/cognitive_models/bayesian_fair_coin.py",
             "identical": false,
             "mentions_gt_params": true,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/cognitive_models/binomial_alternation.py",
+            "identical": false,
+            "mentions_gt_params": false,
             "gt_named": false
           },
           {
@@ -174,9 +186,15 @@
             "gt_named": false
           },
           {
-            "path": "experiment2/model_loop/models/bayesian_markov.py",
+            "path": "experiment2/model_loop/models/bayesian_fair_coin.py",
             "identical": false,
             "mentions_gt_params": true,
+            "gt_named": false
+          },
+          {
+            "path": "experiment2/model_loop/models/binomial_alternation.py",
+            "identical": false,
+            "mentions_gt_params": false,
             "gt_named": false
           },
           {
@@ -204,9 +222,15 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/bayesian_markov.py",
+            "path": "experiment3/cognitive_models/bayesian_fair_coin.py",
             "identical": false,
             "mentions_gt_params": true,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/cognitive_models/binomial_alternation.py",
+            "identical": false,
+            "mentions_gt_params": false,
             "gt_named": false
           },
           {
@@ -240,9 +264,15 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/bayesian_markov.py",
+            "path": "experiment3/model_loop/models/bayesian_fair_coin.py",
             "identical": false,
             "mentions_gt_params": true,
+            "gt_named": false
+          },
+          {
+            "path": "experiment3/model_loop/models/binomial_alternation.py",
+            "identical": false,
+            "mentions_gt_params": false,
             "gt_named": false
           },
           {
@@ -296,7 +326,8 @@
             "prototype_similarity",
             "encoding_compressibility",
             "window_typicality",
-            "bayesian_markov",
+            "binomial_alternation",
+            "bayesian_fair_coin",
             "inner_loop_model"
           ]
         },
@@ -306,7 +337,8 @@
             "prototype_similarity",
             "encoding_compressibility",
             "window_typicality",
-            "bayesian_markov",
+            "binomial_alternation",
+            "bayesian_fair_coin",
             "motif_complexity",
             "inner_loop_model"
           ]
