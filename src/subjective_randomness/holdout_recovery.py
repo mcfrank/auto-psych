@@ -825,6 +825,8 @@ def reevaluate_trajectories(
     *,
     seed_models_dir: Path,
     cache_dir: Optional[Path],
+    gt_models_dir: Optional[Path] = None,
+    eval_pool_override: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Recompute every ground truth's trajectory from its finished run tree.
 
@@ -835,19 +837,53 @@ def reevaluate_trajectories(
     loop already finished can be re-analyzed (e.g. to add a baseline or
     regenerate the figure) without re-running any agents. Returns a new result;
     the input is not mutated.
+
+    ``gt_models_dir`` (default: ``seed_models_dir``) is where each ground-truth
+    generator lives. Pass the impossible-models directory to re-score a run
+    whose ground truth sits outside the seed pool.
+
+    ``eval_pool_override`` re-derives the held-out stimulus set instead of
+    reading each run's recorded ``eval_stimuli.json``. The run's *training*
+    pairs are still excluded (holdout is preserved), but the pool is rebuilt
+    from the override's ``lengths``/``exhaustive``/``n_pairs``/``seed``/
+    ``min_remaining`` (and ``predict_max_draws`` thins prediction). This is how
+    runs whose original eval pools differed (a sampled set vs. the exhaustive
+    space) are re-scored on one common pool. The enriched result then advertises
+    the pool it actually scored on (its top-level ``eval_pool`` and each
+    ``gt_run``'s ``n_eval_stimuli``/``n_eval_dropped`` are updated).
     """
     seed_models_dir = Path(seed_models_dir)
+    gt_models_dir = Path(gt_models_dir) if gt_models_dir is not None else None
     n_experiments = int(result["n_experiments"])
     fit_kwargs = dict(result.get("fit_kwargs", {}))
-    predict_max_draws = dict(result.get("eval_pool", {})).get("predict_max_draws")
+
+    eval_pool = (
+        dict(eval_pool_override)
+        if eval_pool_override is not None
+        else dict(result.get("eval_pool", {}))
+    )
+    predict_max_draws = eval_pool.get("predict_max_draws")
 
     all_seed_models = set(resolve_generating_params(None, seed_models_dir))
     new_runs: List[Dict[str, Any]] = []
     for gt_run in result["gt_runs"]:
         run_root = Path(gt_run["run_root"])
-        eval_stimuli = json.loads(
-            (run_root / "eval_stimuli.json").read_text(encoding="utf-8")
-        )
+        rebuilt: Optional[Dict[str, Any]] = None
+        if eval_pool_override is not None:
+            rebuilt = build_eval_stimuli(
+                run_root,
+                n_experiments=n_experiments,
+                n_pairs=int(eval_pool.get("n_pairs", 0)),
+                lengths=tuple(eval_pool["lengths"]),
+                seed=int(eval_pool.get("seed", 0)),
+                min_remaining=int(eval_pool.get("min_remaining", 1)),
+                exhaustive=bool(eval_pool.get("exhaustive", False)),
+            )
+            eval_stimuli = rebuilt["stimuli"]
+        else:
+            eval_stimuli = json.loads(
+                (run_root / "eval_stimuli.json").read_text(encoding="utf-8")
+            )
         other_seeds = sorted(all_seed_models - {gt_run["gt_model"]})
         trajectory = evaluate_trajectory(
             run_root,
@@ -858,6 +894,7 @@ def reevaluate_trajectories(
             n_experiments=n_experiments,
             cache_dir=cache_dir,
             fit_kwargs=fit_kwargs,
+            gt_models_dir=gt_models_dir,
             predict_max_draws=predict_max_draws,
         )
         baseline = seed_baseline_correlation(
@@ -865,6 +902,7 @@ def reevaluate_trajectories(
             gt_run["params"],
             eval_stimuli,
             seed_models_dir=seed_models_dir,
+            gt_models_dir=gt_models_dir,
         )
         fitted_baseline = fitted_seed_baseline_correlation(
             run_root,
@@ -876,17 +914,24 @@ def reevaluate_trajectories(
             other_seed_models=other_seeds,
             cache_dir=cache_dir,
             fit_kwargs=fit_kwargs,
+            gt_models_dir=gt_models_dir,
             predict_max_draws=predict_max_draws,
         )
-        new_runs.append(
-            {
-                **gt_run,
-                "trajectory": trajectory,
-                "baseline": baseline,
-                "fitted_baseline": fitted_baseline,
-            }
-        )
-    return {**result, "gt_runs": new_runs}
+        new_run = {
+            **gt_run,
+            "trajectory": trajectory,
+            "baseline": baseline,
+            "fitted_baseline": fitted_baseline,
+        }
+        if rebuilt is not None:
+            new_run["n_eval_stimuli"] = len(rebuilt["stimuli"])
+            new_run["n_eval_dropped"] = rebuilt["n_dropped"]
+        new_runs.append(new_run)
+
+    enriched = {**result, "gt_runs": new_runs}
+    if eval_pool_override is not None:
+        enriched["eval_pool"] = {**dict(result.get("eval_pool", {})), **eval_pool}
+    return enriched
 
 
 # ─────────────────────────────────────────────

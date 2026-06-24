@@ -1193,6 +1193,96 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
     assert result["gt_runs"][0]["trajectory"] == [{"placeholder": True}]
 
 
+def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeypatch):
+    # With an eval_pool_override the reevaluation IGNORES the run's on-disk
+    # eval_stimuli.json and rebuilds the held-out pool exhaustively from the
+    # training data, so every finished run is re-scored on the SAME stimulus
+    # space regardless of the (sampled vs exhaustive) pool its original run used.
+    # gt_models_dir is also threaded through, so an impossible ground truth whose
+    # generator lives outside the seed pool can be re-scored too.
+    run_root = tmp_path / "runs" / "prototype_similarity"
+    _write_loop_artifacts(run_root, 1, [_history_step(0, None, "model_a")])
+    # One length-2 pair appears in training, so it is excluded from the pool.
+    _write_training_responses(run_root, 1, [{"sequence_a": "HH", "sequence_b": "HT"}])
+    # A deliberately tiny on-disk eval set the override must NOT read.
+    (run_root / "eval_stimuli.json").write_text(
+        json.dumps(EVAL_STIMULI), encoding="utf-8"
+    )
+
+    seen_gt_dirs = []
+
+    def fake_p_left(model_name, models_dir, stimuli, params, **kw):
+        if model_name == "prototype_similarity":  # the ground truth
+            seen_gt_dirs.append(Path(models_dir))
+        return np.linspace(0.1, 0.9, len(stimuli))
+
+    monkeypatch.setattr(holdout_recovery, "p_left_fixed_params", fake_p_left)
+    monkeypatch.setattr(
+        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+    )
+    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+
+    class Fitted:
+        model = None
+
+        def predict_p_left(self, stim_data, **kw):
+            return np.linspace(0.1, 0.9, stim_data["n"])
+
+    monkeypatch.setattr(
+        holdout_recovery, "fit_model",
+        lambda name, models_dir, responses_path, **kw: Fitted(),
+    )
+
+    gt_models_dir = tmp_path / "impossible_gt"
+    result = {
+        "n_experiments": 1,
+        "fit_kwargs": {},
+        "seed_models_dir": str(SEED_MODELS_DIR),
+        "eval_pool": {"n_pairs": 500, "lengths": [6, 8], "seed": 11,
+                      "exhaustive": False},
+        "gt_runs": [
+            {
+                "gt_model": "prototype_similarity",
+                "params": {"theta_alt": 0.65},
+                "run_root": str(run_root),
+                "n_eval_stimuli": len(EVAL_STIMULI),
+                "n_eval_dropped": 0,
+                "trajectory": [{"placeholder": True}],
+            }
+        ],
+    }
+
+    enriched = reevaluate_trajectories(
+        result,
+        seed_models_dir=SEED_MODELS_DIR,
+        cache_dir=None,
+        gt_models_dir=gt_models_dir,
+        eval_pool_override={
+            "exhaustive": True,
+            "lengths": [2],
+            "min_remaining": 1,
+            "predict_max_draws": None,
+        },
+    )
+
+    gt_run = enriched["gt_runs"][0]
+    # Exhaustive length-2 pool is C(4,2)=6 pairs; the one trained pair is dropped,
+    # so 5 survive — not the 3 of the ignored on-disk eval_stimuli.json.
+    assert gt_run["n_eval_stimuli"] == 5
+    assert gt_run["n_eval_dropped"] == 1
+    # The enriched result advertises the pool it actually scored on.
+    assert enriched["eval_pool"]["exhaustive"] is True
+    assert enriched["eval_pool"]["lengths"] == [2]
+    # The ground-truth p_left was read from the override gt_models_dir, not seeds.
+    assert seen_gt_dirs and all(d == gt_models_dir for d in seen_gt_dirs)
+    # Metrics are still recomputed (identical preds -> r=1, rmse=0).
+    assert gt_run["trajectory"][0]["pearson_r"] == pytest.approx(1.0)
+    assert gt_run["trajectory"][0]["rmse"] == pytest.approx(0.0)
+    # The input result is not mutated.
+    assert result["gt_runs"][0]["trajectory"] == [{"placeholder": True}]
+    assert result["eval_pool"]["exhaustive"] is False
+
+
 def test_evaluate_trajectory_fails_loudly_without_history(tmp_path, monkeypatch):
     run_root = tmp_path / "run"
     (run_root / "experiment1" / "model_loop").mkdir(parents=True)

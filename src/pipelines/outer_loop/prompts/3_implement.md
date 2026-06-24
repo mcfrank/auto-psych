@@ -107,44 +107,6 @@ In short: the consent gate is added for you, so your timeline begins with the
 
     const timeline = [];
 
-<<<<<<< HEAD
-  // 1. Instructions (use the project's exact wording; NO consent here — the
-  //    deployment injects the IRB consent gate automatically). Render the wording
-  //    as HTML inside the .auto-psych-prose container: one <p> per paragraph, and
-  //    convert Markdown bold/italic in the wording into <strong>/<em> tags.
-  //    NEVER emit raw Markdown asterisks to participants.
-  timeline.push({
-    type: jsPsychHtmlButtonResponse,
-    stimulus:
-      '<div class="auto-psych-prose">' +
-        '<p>INSTRUCTIONS_PARAGRAPH_1</p>' +
-        '<p>INSTRUCTIONS_PARAGRAPH_2 …</p>' +   // one <p> per paragraph; <strong> for bold
-      '</div>',
-    choices: ['Begin']
-  });
-
-  // 2. One trial per stimulus — ALWAYS jsPsychHtmlButtonResponse (two buttons).
-  //    COUNTERBALANCE the side: randomly show one of the pair on the left each
-  //    trial, and RECORD the presented order (sequence_a = the sequence shown on
-  //    the LEFT). This decouples content from physical side so a side bias is
-  //    identifiable. Math.random() runs once per stimulus when each participant's
-  //    browser builds the timeline, so the side varies across participants/trials.
-  STIMULI.forEach(function (s) {
-    var swap = Math.random() < 0.5;
-    var left = swap ? s.sequence_b : s.sequence_a;
-    var right = swap ? s.sequence_a : s.sequence_b;
-    timeline.push({
-      type: jsPsychHtmlButtonResponse,
-      stimulus:
-        '<p>CHOICE_PROMPT_FROM_PROBLEM_DEFINITION</p>' +
-        '<div class="auto-psych-pair">' +
-          '<div class="auto-psych-seq">' + left + '</div>' +
-          '<div class="auto-psych-seq">' + right + '</div>' +
-        '</div>',
-      choices: ['LEFT_CHOICE_LABEL', 'RIGHT_CHOICE_LABEL'],   // first button = left
-      data: { sequence_a: left, sequence_b: right },          // PRESENTED order
-      on_finish: function (data) { data.chose_left = data.response === 0 ? 1 : 0; }
-=======
     // 1. Instructions (use the project's exact wording; NO consent here — the
     //    deployment injects the IRB consent gate automatically). Render the wording
     //    as HTML inside the .auto-psych-prose container: one <p> per paragraph, and
@@ -157,21 +119,28 @@ In short: the consent gate is added for you, so your timeline begins with the
           '<p>INSTRUCTIONS_PARAGRAPH_2 …</p>' +   // one <p> per paragraph; <strong> for bold
         '</div>',
       choices: ['Begin']
->>>>>>> be48bff (prevent models from adding a second consent form)
     });
 
     // 2. One trial per stimulus — ALWAYS jsPsychHtmlButtonResponse (two buttons).
+    //    COUNTERBALANCE the side: randomly show one of the pair on the left each
+    //    trial, and RECORD the presented order (sequence_a = the sequence shown on
+    //    the LEFT). This decouples content from physical side so a side bias is
+    //    identifiable. Math.random() runs once per stimulus when each participant's
+    //    browser builds the timeline, so the side varies across participants/trials.
     STIMULI.forEach(function (s) {
+      var swap = Math.random() < 0.5;
+      var left = swap ? s.sequence_b : s.sequence_a;
+      var right = swap ? s.sequence_a : s.sequence_b;
       timeline.push({
         type: jsPsychHtmlButtonResponse,
         stimulus:
           '<p>CHOICE_PROMPT_FROM_PROBLEM_DEFINITION</p>' +
           '<div class="auto-psych-pair">' +
-            '<div class="auto-psych-seq">' + s.sequence_a + '</div>' +
-            '<div class="auto-psych-seq">' + s.sequence_b + '</div>' +
+            '<div class="auto-psych-seq">' + left + '</div>' +
+            '<div class="auto-psych-seq">' + right + '</div>' +
           '</div>',
-        choices: ['LEFT_CHOICE_LABEL', 'RIGHT_CHOICE_LABEL'],   // left = first/sequence_a
-        data: { sequence_a: s.sequence_a, sequence_b: s.sequence_b },
+        choices: ['LEFT_CHOICE_LABEL', 'RIGHT_CHOICE_LABEL'],   // first button = left
+        data: { sequence_a: left, sequence_b: right },          // PRESENTED order
         on_finish: function (data) { data.chose_left = data.response === 0 ? 1 : 0; }
       });
     });
