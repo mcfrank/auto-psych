@@ -41,21 +41,24 @@ def test_featurize_stimulus_counts_heads_alternations_runs():
 
 
 def test_parse_motifs_matches_falk_konold_examples():
-    pp = _load()
+    # Motif parsing lives canonically in features.py now (preprocess.py re-exports
+    # only featurize_stimulus), so test it at its source.
+    from src.subjective_randomness.features import parse_motifs
+
     # Falk & Konold (1997) Difficulty Predictor parse: HHTTHTHT -> two runs
     # (HH, TT) plus one alternating sub-sequence (HTHT), so DP = 2*1 + 1*2 = 4.
-    assert pp._parse_motifs("HHTTHTHT") == (2, 1)
+    assert parse_motifs("HHTTHTHT") == (2, 1)
     # A fully alternating sequence is a single alternation motif.
-    assert pp._parse_motifs("HTHTHT") == (0, 1)
+    assert parse_motifs("HTHTHT") == (0, 1)
     # A single constant run is one repetition motif.
-    assert pp._parse_motifs("HHHHHH") == (1, 0)
+    assert parse_motifs("HHHHHH") == (1, 0)
     # An isolated single symbol between runs is itself a repetition motif.
-    assert pp._parse_motifs("HHTHH") == (3, 0)
+    assert parse_motifs("HHTHH") == (3, 0)
     # A length-2 alternation (one transition) counts as one alternation motif.
-    assert pp._parse_motifs("HHTH") == (1, 1)
+    assert parse_motifs("HHTH") == (1, 1)
     # Degenerate inputs.
-    assert pp._parse_motifs("H") == (1, 0)
-    assert pp._parse_motifs("") == (0, 0)
+    assert parse_motifs("H") == (1, 0)
+    assert parse_motifs("") == (0, 0)
 
 
 def test_featurize_stimulus_adds_motif_parse_counts():

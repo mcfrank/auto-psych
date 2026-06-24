@@ -25,7 +25,7 @@ gt_models:
   more_imbalance_more_random: { beta: 4.0, side_bias: 0.0 }
 
 n_experiments: 3
-n_participants: 30
+n_participants: 40  # match the live human experiment (full_run.yaml: 40/experiment)
 seed: 7
 
 inner_loop:
