@@ -399,11 +399,16 @@ cmd_handle() {
 # active -- number of managed jobs still queued or running (loop exit signal).
 # ===========================================================================
 cmd_active() {
-  local me_job="${SLURM_JOB_ID:-}" arrayid n total=0
+  local me_job="${SLURM_JOB_ID:-}" arrayid total=0
+  # One query for all my active jobs, then count managed ids among them. NB:
+  # `squeue -j <purged-id>` prints "Invalid job id specified" to STDOUT and exits
+  # 0, so a per-id loop would miscount finished jobs as active -- avoid it. The
+  # `^[0-9]+$` filter drops any such error text.
+  local active_ids
+  active_ids="$(squeue --me -h -t R,PD,CF,CG -O ArrayJobID 2>/dev/null | tr -d ' ' | grep -E '^[0-9]+$' | sort -u)"
   while read -r arrayid; do
     [[ -z "$arrayid" || "$arrayid" == "$me_job" ]] && continue
-    n="$(squeue -j "$arrayid" -h -t R,PD,CF,CG 2>/dev/null | grep -c . || true)"
-    total=$(( total + ${n:-0} ))
+    grep -qx "$arrayid" <<<"$active_ids" && total=$(( total + 1 ))
   done < "$MANAGED_FILE"
   echo "$total"
 }

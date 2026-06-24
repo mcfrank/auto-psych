@@ -38,6 +38,15 @@ PYTENSOR_BASE="${L_SCRATCH:-/tmp}/pytensor_reanalyze_${SLURM_ARRAY_JOB_ID:-0}_${
 mkdir -p "$PYTENSOR_BASE"
 export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"
 
+# Per-task XDG cache on node-local SSD. On import, arviz writes a "warn once per
+# day" stamp under $XDG_CACHE_HOME/arviz via a tmp-file + os.replace. _env.sh
+# points XDG_CACHE_HOME at the SHARED $WORK_ROOT/.cache, so concurrent array
+# tasks race on that single stamp file and intermittently die with
+# `FileNotFoundError: .../arviz/daily_warning.tmp -> daily_warning`. Give each
+# task its own cache dir (like the run array isolates XDG per task) to kill the race.
+export XDG_CACHE_HOME="${L_SCRATCH:-/tmp}/xdg_cache_reanalyze_${SLURM_ARRAY_JOB_ID:-0}_${TASK}"
+mkdir -p "$XDG_CACHE_HOME"
+
 echo "[task $TASK] re-scoring $RESULT_JSON on the exhaustive pool"
 # --lengths takes several ints; REANALYZE_LENGTHS is a space-separated list, so
 # it must stay unquoted for word-splitting. cache-dir / seed-models-dir / the
