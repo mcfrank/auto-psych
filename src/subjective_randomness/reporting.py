@@ -903,6 +903,7 @@ def holdout_trajectories_ggplot(
     *,
     fitted_baseline_label: str = DEFAULT_FITTED_BASELINE_LABEL,
     x_label: str = DEFAULT_TRAJECTORY_X_LABEL,
+    strip_text_size: float = 17,
 ):
     """Build the pooled holdout-recovery figure as a plotnine ``ggplot``.
 
@@ -920,7 +921,9 @@ def holdout_trajectories_ggplot(
     Colors, line types, and series order come from :func:`_series_styling`;
     ``fitted_baseline_label`` renames the fitted-seed baseline series (holdout
     recovery uses the default "best other seed model"; impossible recovery, which
-    holds out no seed, passes "best seed model").
+    holds out no seed, passes "best seed model"). ``strip_text_size`` sets the
+    per-panel heading font in points; callers with long facet names (impossible
+    recovery) pass a smaller value so adjacent headings do not overlap.
     """
     from plotnine import (
         aes,
@@ -1008,7 +1011,7 @@ def holdout_trajectories_ggplot(
             legend_box_spacing=0.0,
             axis_title=element_text(size=17),
             axis_text=element_text(size=14),
-            strip_text=element_text(size=17),
+            strip_text=element_text(size=strip_text_size),
             legend_text=element_text(size=15),
             panel_spacing=0.02,
         )
@@ -1054,21 +1057,26 @@ def plot_holdout_trajectories_combined(
     *,
     fitted_baseline_label: str = DEFAULT_FITTED_BASELINE_LABEL,
     x_label: str = DEFAULT_TRAJECTORY_X_LABEL,
+    strip_text_size: float = 17,
 ) -> None:
     """Render :func:`holdout_trajectories_ggplot` to ``out_path``.
 
     A thin save wrapper kept for the CLI and back-compatibility; for manual
     formatting, build the figure with :func:`holdout_trajectories_ggplot` and
     save it yourself. ``fitted_baseline_label`` renames the fitted-seed baseline
-    series and ``x_label`` renames the x axis (see
-    :func:`holdout_trajectories_ggplot`).
+    series, ``x_label`` renames the x axis, and ``strip_text_size`` sets the
+    per-panel heading font (shrunk by callers with long facet names, e.g.
+    impossible recovery) (see :func:`holdout_trajectories_ggplot`).
     """
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     # bbox_inches="tight" trims margins to the content so the compact panels keep
     # their size while the title and axis labels never clip at the figure edge.
     holdout_trajectories_ggplot(
-        aggregated, fitted_baseline_label=fitted_baseline_label, x_label=x_label
+        aggregated,
+        fitted_baseline_label=fitted_baseline_label,
+        x_label=x_label,
+        strip_text_size=strip_text_size,
     ).save(out_path, dpi=150, verbose=False, bbox_inches="tight")
 
 
