@@ -1,0 +1,125 @@
+scheme,held_out_run,name,kind,source_run,label,param,posterior_mean,posterior_sd
+mega,,seed_prototype_similarity,seed,,Prototype similarity,theta_alt,0.693,0.006
+mega,,seed_prototype_similarity,seed,,Prototype similarity,alt_weight,0.861,0.016
+mega,,seed_prototype_similarity,seed,,Prototype similarity,beta,3.414,0.118
+mega,,seed_prototype_similarity,seed,,Prototype similarity,side_bias,-0.007,0.02
+mega,,seed_encoding_compressibility,seed,,Encoding compressibility,longrun_weight,0.979,0.011
+mega,,seed_encoding_compressibility,seed,,Encoding compressibility,periodic_share,0.245,0.217
+mega,,seed_encoding_compressibility,seed,,Encoding compressibility,beta,1.624,0.068
+mega,,seed_encoding_compressibility,seed,,Encoding compressibility,side_bias,-0.007,0.019
+mega,,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,delta,0.743,0.046
+mega,,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,alpha,0.066,0.023
+mega,,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,bias_share,0.023,0.005
+mega,,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,beta,0.413,0.032
+mega,,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,side_bias,-0.002,0.02
+mega,,seed_window_typicality,seed,,Window typicality,window,7.974,0.026
+mega,,seed_window_typicality,seed,,Window typicality,over_alt_penalty,0.032,0.03
+mega,,seed_window_typicality,seed,,Window typicality,beta,0.494,0.022
+mega,,seed_window_typicality,seed,,Window typicality,side_bias,-0.009,0.019
+mega,,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),ideal_p,0.427,0.011
+mega,,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),ideal_alt,0.714,0.009
+mega,,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),w_p,0.319,0.037
+mega,,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),w_alt,0.582,0.032
+mega,,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),base_typ,0.223,0.012
+mega,,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),penalty_power,1.351,0.08
+mega,,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",theta_alt,0.806,0.019
+mega,,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",theta_imb,0.03,0.025
+mega,,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",alt_weight,0.936,0.014
+mega,,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",asym,0.861,0.034
+mega,,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",base_evidence,0.078,0.014
+mega,,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",beta,2.448,0.549
+mega,,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",side_bias,-0.007,0.02
+mega,,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",theta_alt,0.619,0.016
+mega,,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",theta_imb,0.041,0.029
+mega,,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",alt_weight,0.84,0.02
+mega,,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",asym,0.409,0.054
+mega,,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",base_evidence,0.141,0.013
+mega,,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",beta,2.042,0.122
+mega,,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",side_bias,-0.007,0.02
+mega,,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),delta,0.685,0.025
+mega,,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),alpha,0.092,0.017
+mega,,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),weights[0],0.944,0.008
+mega,,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),weights[1],0.033,0.007
+mega,,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),weights[2],0.023,0.009
+mega,,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),gamma,0.564,0.206
+mega,,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),beta,0.662,0.056
+mega,,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),side_bias,-0.004,0.02
+heldout,1,seed_prototype_similarity,seed,,Prototype similarity,theta_alt,0.687,0.014
+heldout,1,seed_prototype_similarity,seed,,Prototype similarity,alt_weight,0.907,0.024
+heldout,1,seed_prototype_similarity,seed,,Prototype similarity,beta,2.919,0.15
+heldout,1,seed_prototype_similarity,seed,,Prototype similarity,side_bias,0.022,0.024
+heldout,1,seed_encoding_compressibility,seed,,Encoding compressibility,longrun_weight,0.975,0.015
+heldout,1,seed_encoding_compressibility,seed,,Encoding compressibility,periodic_share,0.311,0.252
+heldout,1,seed_encoding_compressibility,seed,,Encoding compressibility,beta,1.187,0.082
+heldout,1,seed_encoding_compressibility,seed,,Encoding compressibility,side_bias,0.023,0.023
+heldout,1,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,delta,0.748,0.038
+heldout,1,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,alpha,0.054,0.018
+heldout,1,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,bias_share,0.022,0.006
+heldout,1,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,beta,0.383,0.029
+heldout,1,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,side_bias,0.026,0.024
+heldout,1,seed_window_typicality,seed,,Window typicality,window,7.942,0.058
+heldout,1,seed_window_typicality,seed,,Window typicality,over_alt_penalty,0.061,0.054
+heldout,1,seed_window_typicality,seed,,Window typicality,beta,0.416,0.028
+heldout,1,seed_window_typicality,seed,,Window typicality,side_bias,0.022,0.023
+heldout,1,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),ideal_p,0.41,0.017
+heldout,1,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),ideal_alt,0.714,0.014
+heldout,1,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),w_p,0.276,0.044
+heldout,1,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),w_alt,0.559,0.043
+heldout,1,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),base_typ,0.202,0.015
+heldout,1,run1_minkowski_typicality,winner,1,Minkowski accumulated typicality (run 1),penalty_power,1.33,0.105
+heldout,2,seed_prototype_similarity,seed,,Prototype similarity,theta_alt,0.694,0.008
+heldout,2,seed_prototype_similarity,seed,,Prototype similarity,alt_weight,0.846,0.02
+heldout,2,seed_prototype_similarity,seed,,Prototype similarity,beta,3.257,0.136
+heldout,2,seed_prototype_similarity,seed,,Prototype similarity,side_bias,-0.042,0.024
+heldout,2,seed_encoding_compressibility,seed,,Encoding compressibility,longrun_weight,0.962,0.025
+heldout,2,seed_encoding_compressibility,seed,,Encoding compressibility,periodic_share,0.271,0.233
+heldout,2,seed_encoding_compressibility,seed,,Encoding compressibility,beta,1.617,0.081
+heldout,2,seed_encoding_compressibility,seed,,Encoding compressibility,side_bias,-0.042,0.024
+heldout,2,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,delta,0.715,0.049
+heldout,2,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,alpha,0.076,0.027
+heldout,2,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,bias_share,0.032,0.006
+heldout,2,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,beta,0.443,0.031
+heldout,2,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,side_bias,-0.033,0.024
+heldout,2,seed_window_typicality,seed,,Window typicality,window,7.97,0.03
+heldout,2,seed_window_typicality,seed,,Window typicality,over_alt_penalty,0.047,0.042
+heldout,2,seed_window_typicality,seed,,Window typicality,beta,0.545,0.03
+heldout,2,seed_window_typicality,seed,,Window typicality,side_bias,-0.048,0.023
+heldout,2,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",theta_alt,0.804,0.02
+heldout,2,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",theta_imb,0.029,0.025
+heldout,2,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",alt_weight,0.93,0.017
+heldout,2,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",asym,0.866,0.036
+heldout,2,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",base_evidence,0.073,0.015
+heldout,2,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",beta,2.531,0.57
+heldout,2,run2_evidence_accum_per_item,winner,2,"Evidence accumulation, per item (run 2)",side_bias,-0.044,0.024
+heldout,2,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",theta_alt,0.618,0.018
+heldout,2,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",theta_imb,0.041,0.031
+heldout,2,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",alt_weight,0.836,0.023
+heldout,2,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",asym,0.416,0.059
+heldout,2,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",base_evidence,0.141,0.016
+heldout,2,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",beta,2.022,0.153
+heldout,2,run2_evidence_accum_per_run,winner,2,"Evidence accumulation, per run (run 2, tied)",side_bias,-0.044,0.025
+heldout,3,seed_prototype_similarity,seed,,Prototype similarity,theta_alt,0.686,0.007
+heldout,3,seed_prototype_similarity,seed,,Prototype similarity,alt_weight,0.834,0.015
+heldout,3,seed_prototype_similarity,seed,,Prototype similarity,beta,4.226,0.164
+heldout,3,seed_prototype_similarity,seed,,Prototype similarity,side_bias,-0.002,0.025
+heldout,3,seed_encoding_compressibility,seed,,Encoding compressibility,longrun_weight,0.981,0.009
+heldout,3,seed_encoding_compressibility,seed,,Encoding compressibility,periodic_share,0.237,0.214
+heldout,3,seed_encoding_compressibility,seed,,Encoding compressibility,beta,2.129,0.089
+heldout,3,seed_encoding_compressibility,seed,,Encoding compressibility,side_bias,-0.005,0.024
+heldout,3,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,delta,0.706,0.07
+heldout,3,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,alpha,0.11,0.046
+heldout,3,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,bias_share,0.019,0.005
+heldout,3,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,beta,0.462,0.054
+heldout,3,seed_bayesian_diagnosticity,seed,,Bayesian diagnosticity,side_bias,0.003,0.024
+heldout,3,seed_window_typicality,seed,,Window typicality,window,7.964,0.036
+heldout,3,seed_window_typicality,seed,,Window typicality,over_alt_penalty,0.034,0.032
+heldout,3,seed_window_typicality,seed,,Window typicality,beta,0.527,0.025
+heldout,3,seed_window_typicality,seed,,Window typicality,side_bias,-0.003,0.024
+heldout,3,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),delta,0.612,0.021
+heldout,3,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),alpha,0.155,0.02
+heldout,3,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),weights[0],0.941,0.009
+heldout,3,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),weights[1],0.011,0.008
+heldout,3,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),weights[2],0.048,0.012
+heldout,3,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),gamma,0.293,0.104
+heldout,3,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),beta,0.897,0.083
+heldout,3,run3_bayes_artificial_balance,winner,3,Bayesian diagnosticity + artificial balance (run 3),side_bias,0.0,0.025
