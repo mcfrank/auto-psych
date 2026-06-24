@@ -1,8 +1,8 @@
 {
   "project_id": "subjective_randomness",
-  "seed_models_dir": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop/run2/prototype_similarity/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models",
+  "seed_models_dir": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop_v2/run2/prototype_similarity/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models",
   "n_experiments": 3,
-  "n_participants": 30,
+  "n_participants": 40,
   "inner_loop": {
     "max_iterations": 0,
     "candidate_count": 3
@@ -16,13 +16,19 @@
   "eval_pool": {
     "n_pairs": 500,
     "lengths": [
+      1,
+      2,
+      3,
+      4,
+      5,
       6,
+      7,
       8
     ],
     "seed": 11,
     "min_remaining": 100,
-    "exhaustive": false,
-    "predict_max_draws": null
+    "exhaustive": true,
+    "predict_max_draws": 500
   },
   "gt_runs": [
     {
@@ -33,9 +39,9 @@
         "beta": 4.0,
         "side_bias": 0.0
       },
-      "run_root": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop/run2/prototype_similarity/repo/_runs/prototype_similarity",
-      "n_eval_stimuli": 499,
-      "n_eval_dropped": 1,
+      "run_root": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop_v2/run2/prototype_similarity/repo/_runs/prototype_similarity",
+      "n_eval_stimuli": 129751,
+      "n_eval_dropped": 44,
       "trajectory": [
         {
           "experiment": 1,
@@ -43,60 +49,60 @@
           "iteration": null,
           "global_step": 0,
           "best_model": "encoding_compressibility",
-          "pearson_r": 0.8999814826760834,
-          "rmse": 0.10386180799518,
-          "pearson_r_bma": 0.9000421885118582,
-          "rmse_bma": 0.10384029115106368
+          "pearson_r": 0.9089974394685645,
+          "rmse": 0.09498586948078415,
+          "pearson_r_bma": 0.9526132684860928,
+          "rmse_bma": 0.09193631138695668
         },
         {
           "experiment": 2,
           "step": 0,
           "iteration": null,
           "global_step": 1,
-          "best_model": "encoding_compressibility",
-          "pearson_r": 0.8926364999937741,
-          "rmse": 0.09493538818125284,
-          "pearson_r_bma": 0.8926364999937741,
-          "rmse_bma": 0.09493538818125284
+          "best_model": "bayesian_diagnosticity",
+          "pearson_r": 0.9083961254287183,
+          "rmse": 0.09928479800177434,
+          "pearson_r_bma": 0.915806762954144,
+          "rmse_bma": 0.09771730610352554
         },
         {
           "experiment": 3,
           "step": 0,
           "iteration": null,
           "global_step": 2,
-          "best_model": "perfect_balance",
-          "pearson_r": 0.8804990023363216,
-          "rmse": 0.09509384847747686,
-          "pearson_r_bma": 0.8813555821088433,
-          "rmse_bma": 0.09489247529518446
+          "best_model": "bayesian_diagnosticity",
+          "pearson_r": 0.92492344039798,
+          "rmse": 0.09271889538945198,
+          "pearson_r_bma": 0.9338197628033316,
+          "rmse_bma": 0.09028997383218954
         }
       ],
       "baseline": {
-        "mean_r": 0.8200625739778195,
+        "mean_r": 0.7775992788100506,
         "per_model": {
-          "encoding_compressibility": 0.822202115460932,
-          "bayesian_diagnosticity": 0.8751891498231793,
-          "window_typicality": 0.7627964566493471
+          "encoding_compressibility": 0.7957555958528105,
+          "bayesian_diagnosticity": 0.8084574391767022,
+          "window_typicality": 0.7285848014006391
         }
       },
       "fitted_baseline": {
         "per_model": {
           "bayesian_diagnosticity": {
-            "pearson_r": 0.9537913128740785,
-            "rmse": 0.06296429473236835
+            "pearson_r": 0.9156661235678872,
+            "rmse": 0.09738949260618344
           },
           "encoding_compressibility": {
-            "pearson_r": 0.8904836428085919,
-            "rmse": 0.09441186369360431
+            "pearson_r": 0.916638479272651,
+            "rmse": 0.08485478303044587
           },
           "window_typicality": {
-            "pearson_r": 0.7340696788877357,
-            "rmse": 0.16636041310059993
+            "pearson_r": 0.7718887913353755,
+            "rmse": 0.15633019704720846
           }
         },
-        "mean_r": 0.8594482115234686,
-        "mean_rmse": 0.10791219050885753,
-        "n_responses": 3600
+        "mean_r": 0.8680644647253045,
+        "mean_rmse": 0.11285815756127926,
+        "n_responses": 7680
       },
       "leakage": {
         "files": [
@@ -143,7 +149,7 @@
             "gt_named": false
           },
           {
-            "path": "experiment2/cognitive_models/alternation_rate.py",
+            "path": "experiment2/cognitive_models/alternation_bias.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -173,7 +179,7 @@
             "gt_named": false
           },
           {
-            "path": "experiment2/model_loop/models/alternation_rate.py",
+            "path": "experiment2/model_loop/models/alternation_bias.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -203,7 +209,7 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/alternation_rate.py",
+            "path": "experiment3/cognitive_models/alternation_bias.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -215,13 +221,13 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/difficulty_of_encoding.py",
+            "path": "experiment3/cognitive_models/encoding_compressibility.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/encoding_compressibility.py",
+            "path": "experiment3/cognitive_models/global_imbalance.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -233,7 +239,7 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/perfect_balance.py",
+            "path": "experiment3/cognitive_models/pure_streak_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -245,7 +251,7 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/alternation_rate.py",
+            "path": "experiment3/model_loop/models/alternation_bias.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -257,13 +263,13 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/difficulty_of_encoding.py",
+            "path": "experiment3/model_loop/models/encoding_compressibility.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/encoding_compressibility.py",
+            "path": "experiment3/model_loop/models/global_imbalance.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -275,7 +281,7 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/perfect_balance.py",
+            "path": "experiment3/model_loop/models/pure_streak_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -307,7 +313,7 @@
             "encoding_compressibility",
             "bayesian_diagnosticity",
             "window_typicality",
-            "alternation_rate",
+            "alternation_bias",
             "inner_loop_model"
           ]
         },
@@ -317,9 +323,9 @@
             "encoding_compressibility",
             "bayesian_diagnosticity",
             "window_typicality",
-            "alternation_rate",
-            "difficulty_of_encoding",
-            "perfect_balance",
+            "alternation_bias",
+            "pure_streak_aversion",
+            "global_imbalance",
             "inner_loop_model"
           ]
         }

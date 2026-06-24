@@ -1,8 +1,8 @@
 {
   "project_id": "subjective_randomness",
-  "seed_models_dir": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop/run3/encoding_compressibility/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models",
+  "seed_models_dir": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop_v2/run3/encoding_compressibility/repo/src/pipelines/outer_loop/projects/subjective_randomness/seed_models",
   "n_experiments": 3,
-  "n_participants": 30,
+  "n_participants": 40,
   "inner_loop": {
     "max_iterations": 0,
     "candidate_count": 3
@@ -16,13 +16,19 @@
   "eval_pool": {
     "n_pairs": 500,
     "lengths": [
+      1,
+      2,
+      3,
+      4,
+      5,
       6,
+      7,
       8
     ],
     "seed": 11,
     "min_remaining": 100,
-    "exhaustive": false,
-    "predict_max_draws": null
+    "exhaustive": true,
+    "predict_max_draws": 500
   },
   "gt_runs": [
     {
@@ -33,9 +39,9 @@
         "beta": 4.0,
         "side_bias": 0.0
       },
-      "run_root": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop/run3/encoding_compressibility/repo/_runs/encoding_compressibility",
-      "n_eval_stimuli": 498,
-      "n_eval_dropped": 2,
+      "run_root": "/scratch/users/benpry/auto-psych/holdout_test_retest_no_inner_loop_v2/run3/encoding_compressibility/repo/_runs/encoding_compressibility",
+      "n_eval_stimuli": 129699,
+      "n_eval_dropped": 96,
       "trajectory": [
         {
           "experiment": 1,
@@ -43,10 +49,10 @@
           "iteration": null,
           "global_step": 0,
           "best_model": "prototype_similarity",
-          "pearson_r": 0.910042533292119,
-          "rmse": 0.08749378609933693,
-          "pearson_r_bma": 0.9101984550486946,
-          "rmse_bma": 0.08736751627618511
+          "pearson_r": 0.8625849529432081,
+          "rmse": 0.10132362960011197,
+          "pearson_r_bma": 0.8625849529432081,
+          "rmse_bma": 0.10132362960011197
         },
         {
           "experiment": 2,
@@ -54,10 +60,10 @@
           "iteration": null,
           "global_step": 1,
           "best_model": "prototype_similarity",
-          "pearson_r": 0.9120740444718486,
-          "rmse": 0.07788205695673973,
-          "pearson_r_bma": 0.9121379235525551,
-          "rmse_bma": 0.07787753054389095
+          "pearson_r": 0.8783072825139929,
+          "rmse": 0.09379586798600702,
+          "pearson_r_bma": 0.8783072825139929,
+          "rmse_bma": 0.09379586798600702
         },
         {
           "experiment": 3,
@@ -65,38 +71,38 @@
           "iteration": null,
           "global_step": 2,
           "best_model": "prototype_similarity",
-          "pearson_r": 0.9121701024226745,
-          "rmse": 0.07879644954719649,
-          "pearson_r_bma": 0.9122779793147979,
-          "rmse_bma": 0.07877544203297468
+          "pearson_r": 0.8825940974557437,
+          "rmse": 0.09338197687188195,
+          "pearson_r_bma": 0.8825940974557437,
+          "rmse_bma": 0.09338197687188195
         }
       ],
       "baseline": {
-        "mean_r": 0.7509552208224948,
+        "mean_r": 0.7109770665858658,
         "per_model": {
-          "prototype_similarity": 0.823496212868394,
-          "bayesian_diagnosticity": 0.7830419856239395,
-          "window_typicality": 0.646327463975151
+          "prototype_similarity": 0.7958444789466214,
+          "bayesian_diagnosticity": 0.7145247972259653,
+          "window_typicality": 0.6225619235850106
         }
       },
       "fitted_baseline": {
         "per_model": {
           "bayesian_diagnosticity": {
-            "pearson_r": 0.9055012297264136,
-            "rmse": 0.08312162989687148
+            "pearson_r": 0.8629964061665771,
+            "rmse": 0.12274841741250467
           },
           "prototype_similarity": {
-            "pearson_r": 0.9114723218479579,
-            "rmse": 0.07812847268610643
+            "pearson_r": 0.878827671818063,
+            "rmse": 0.0933075514003604
           },
           "window_typicality": {
-            "pearson_r": 0.6802749145246798,
-            "rmse": 0.16164873933177396
+            "pearson_r": 0.6558351844648065,
+            "rmse": 0.17419222989099076
           }
         },
-        "mean_r": 0.8324161553663504,
-        "mean_rmse": 0.10763294730491728,
-        "n_responses": 3600
+        "mean_r": 0.7992197541498155,
+        "mean_rmse": 0.13008273290128528,
+        "n_responses": 7680
       },
       "leakage": {
         "files": [
@@ -149,25 +155,19 @@
             "gt_named": false
           },
           {
+            "path": "experiment2/cognitive_models/encoding_complexity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
             "path": "experiment2/cognitive_models/inner_loop_model.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment2/cognitive_models/pattern_compressibility.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
             "path": "experiment2/cognitive_models/prototype_similarity.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
-            "path": "experiment2/cognitive_models/streak_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -185,25 +185,19 @@
             "gt_named": false
           },
           {
+            "path": "experiment2/model_loop/models/encoding_complexity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
             "path": "experiment2/model_loop/models/inner_loop_model.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
-            "path": "experiment2/model_loop/models/pattern_compressibility.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
             "path": "experiment2/model_loop/models/prototype_similarity.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
-            "path": "experiment2/model_loop/models/streak_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -221,7 +215,7 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/chunk_complexity.py",
+            "path": "experiment3/cognitive_models/encoding_complexity.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -233,19 +227,13 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/cognitive_models/pattern_compressibility.py",
+            "path": "experiment3/cognitive_models/periodicity_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
             "path": "experiment3/cognitive_models/prototype_similarity.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
-            "path": "experiment3/cognitive_models/pure_alternation.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -269,7 +257,7 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/chunk_complexity.py",
+            "path": "experiment3/model_loop/models/encoding_complexity.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -281,19 +269,13 @@
             "gt_named": false
           },
           {
-            "path": "experiment3/model_loop/models/pattern_compressibility.py",
+            "path": "experiment3/model_loop/models/periodicity_aversion.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
           },
           {
             "path": "experiment3/model_loop/models/prototype_similarity.py",
-            "identical": false,
-            "mentions_gt_params": false,
-            "gt_named": false
-          },
-          {
-            "path": "experiment3/model_loop/models/pure_alternation.py",
             "identical": false,
             "mentions_gt_params": false,
             "gt_named": false
@@ -331,8 +313,7 @@
             "prototype_similarity",
             "bayesian_diagnosticity",
             "window_typicality",
-            "pattern_compressibility",
-            "streak_aversion",
+            "encoding_complexity",
             "inner_loop_model"
           ]
         },
@@ -342,10 +323,9 @@
             "prototype_similarity",
             "bayesian_diagnosticity",
             "window_typicality",
-            "pattern_compressibility",
+            "encoding_complexity",
             "streak_aversion",
-            "chunk_complexity",
-            "pure_alternation",
+            "periodicity_aversion",
             "inner_loop_model"
           ]
         }
