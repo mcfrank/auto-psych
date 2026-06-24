@@ -230,6 +230,54 @@ def test_combined_frames_relabel_the_fitted_baseline():
     assert "best other seed model" not in relabeled
 
 
+def test_combined_frames_label_experiment_rounds():
+    # RUN_A/RUN_B span two outer experiments (boundary at global_step 2), so the
+    # single ground-truth panel gets two "exp. round N" labels.
+    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse", error="std")
+    rounds = holdout_combined_frames(agg)["rounds"]
+    assert list(rounds["round"]) == [1, 2]
+    assert list(rounds["label"]) == ["exp.\nround 1", "exp.\nround 2"]
+    # Each label sits inside its own region. The boundary line is at x = 1.5
+    # (global_step 2 - 0.5); the step range is [0, 2] so xmin = -0.5, xmax = 2.5.
+    r1 = rounds[rounds["round"] == 1].iloc[0]
+    r2 = rounds[rounds["round"] == 2].iloc[0]
+    assert -0.5 <= r1["x"] < 1.5
+    assert 1.5 <= r2["x"] < 2.5
+    # Labels are faceted by ground truth like every other frame.
+    assert set(rounds["facet"].dropna()) == {"m"}
+
+
+def test_round_labels_only_on_the_leftmost_panel():
+    # Two ground truths -> two facets. The "exp. round N" labels should appear
+    # only in the leftmost (first, by sorted gt name) panel, not be repeated.
+    two_gt = {
+        "gt_runs": [
+            _gt_run(
+                name,
+                [
+                    {"global_step": 0, "step": 0, "experiment": 1,
+                     "pearson_r": 0.8, "rmse": 0.2, "pearson_r_bma": 0.7, "rmse_bma": 0.3},
+                    {"global_step": 1, "step": 0, "experiment": 2,
+                     "pearson_r": 0.9, "rmse": 0.1, "pearson_r_bma": 0.8, "rmse_bma": 0.2},
+                ],
+                baseline={"mean_r": 0.5, "per_model": {"s1": 0.45}},
+                fitted_baseline={"per_model": {"s1": {"pearson_r": 0.55, "rmse": 0.35}}},
+            )
+            for name in ("aaa", "zzz")
+        ]
+    }
+    rounds = holdout_combined_frames(aggregate_holdout_trajectories([two_gt], metric="rmse"))["rounds"]
+    assert set(rounds["gt_model"]) == {"aaa"}  # leftmost facet only
+    assert list(rounds["round"]) == [1, 2]
+
+
+def test_holdout_ggplot_draws_experiment_round_labels():
+    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
+    plot = holdout_trajectories_ggplot(agg)
+    geoms = [type(layer.geom).__name__ for layer in plot.layers]
+    assert "geom_text" in geoms
+
+
 def test_holdout_ggplot_accepts_a_fitted_baseline_label():
     agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse")
     plot = holdout_trajectories_ggplot(agg, fitted_baseline_label="best seed model")

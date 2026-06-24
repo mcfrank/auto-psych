@@ -19,8 +19,11 @@ Analysis of the human Prolific data in
 ## Mega-analytic fit (Python + PyMC)
 
 `fit_mega_models.py` fits one population-level model per theory on the **pooled**
-human data and writes `data/mega_model_metrics.csv` and
-`data/mega_model_predictions.csv`. It reuses the project harness verbatim
+human data and writes `data/mega_model_metrics.csv`,
+`data/mega_model_predictions.csv`, and `data/mega_model_posterior_means.csv`
+(the posterior mean + sd of each fitted parameter, one tidy row per
+scheme/held-out-run/model/parameter; vector parameters unpacked into
+`name[0]`, `name[1]`, ...). It reuses the project harness verbatim
 (`src/subjective_randomness/features.py`, `src/models/pymc_inference.py`).
 
 Model set (`mega_models.json`): 4 canonical seed theories + the 4 overall run
