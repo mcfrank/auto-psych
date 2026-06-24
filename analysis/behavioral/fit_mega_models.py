@@ -24,8 +24,12 @@ Two schemes (run both by default):
            are refit per training pair so every comparison is on identical data.
 
 Outputs (to --out-dir, default analysis/behavioral/data):
-  mega_model_metrics.csv       one row per (scheme, held_out_run, eval, model)
-  mega_model_predictions.csv   tidy long per-trial posterior-mean p_left + choice
+  mega_model_metrics.csv          one row per (scheme, held_out_run, eval, model)
+  mega_model_predictions.csv      tidy long per-trial posterior-mean p_left + choice
+  mega_model_posterior_means.csv  tidy long posterior mean+sd of each fitted
+                                  parameter, one row per (scheme, held_out_run,
+                                  model, parameter); vector params unpacked into
+                                  name[0], name[1], ...
 
 Usage:
     python analysis/behavioral/fit_mega_models.py            # both schemes
@@ -170,6 +174,30 @@ def count_free_params(name: str, models_dir: Path) -> int:
     return len(load_pymc_model(name, models_dir).free_RVs)
 
 
+def posterior_param_means(idata, param_names) -> List[Dict[str, Any]]:
+    """One ``{param, posterior_mean, posterior_sd}`` record per scalar parameter.
+
+    ``param_names`` must be the model's fitted (free) parameters — pass
+    ``[rv.name for rv in fitted.model.free_RVs]`` so the per-trial Deterministic
+    ``p_left`` (an 11,520-long vector, also stored in the posterior) is excluded.
+    Vector-valued parameters (e.g. a length-3 Dirichlet ``weights``) are unpacked
+    by ArviZ into ``weights[0]``, ``weights[1]``, ... so every record is one
+    scalar quantity. ``kind="stats"`` keeps this to the posterior mean/sd without
+    recomputing R-hat/ESS.
+    """
+    import arviz as az
+
+    summary = az.summary(idata, var_names=list(param_names), kind="stats")
+    return [
+        {
+            "param": str(param),
+            "posterior_mean": float(row["mean"]),
+            "posterior_sd": float(row["sd"]),
+        }
+        for param, row in summary.iterrows()
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Fit a set of models on one training set; score on one or more eval sets.
 # ---------------------------------------------------------------------------
@@ -180,8 +208,9 @@ def fit_group(models, train_meta, work, featurized_dir, fit_kwargs, cache_dir,
     `evals` is a list of (eval_tag, eval_meta, is_train) tuples. ELPD-LOO is
     attached only to the eval whose data IS the training set (is_train=True),
     since PSIS-LOO cross-validates the fitted points. Returns
-    (metric_rows, pred_rows, idatas) where idatas maps model name -> InferenceData
-    (for the in-train az.compare done by the caller).
+    (metric_rows, pred_rows, param_rows, idatas) where idatas maps model name ->
+    InferenceData (for the in-train az.compare done by the caller) and param_rows
+    holds one posterior-mean record per fitted parameter (per fit, not per eval).
     """
     from src.models.pymc_inference import fit_model, make_stim_data
 
@@ -192,7 +221,7 @@ def fit_group(models, train_meta, work, featurized_dir, fit_kwargs, cache_dir,
     for tag, em, is_train in evals:
         eval_feat[tag] = train_feat if is_train else write_featurized(em, featurized_dir / f"eval_{tag}.csv")
 
-    metric_rows, pred_rows, idatas = [], [], {}
+    metric_rows, pred_rows, param_rows, idatas = [], [], [], {}
     for m in models:
         name = m["name"]
         print(f"[mega] {scheme} ho={held_out_run} fit {name} "
@@ -200,6 +229,16 @@ def fit_group(models, train_meta, work, featurized_dir, fit_kwargs, cache_dir,
         fitted = fit_model(name, work, train_csv, cache_dir=cache_dir, **fit_kwargs)
         idatas[name] = fitted.idata
         elpd_loo = fitted.elpd_loo()
+
+        # Posterior mean (+ sd) of each fitted parameter. Tied to the fit (the
+        # training set), so recorded once here rather than per eval set.
+        free_param_names = [rv.name for rv in fitted.model.free_RVs]
+        for pm_rec in posterior_param_means(fitted.idata, free_param_names):
+            param_rows.append({
+                "scheme": scheme, "held_out_run": held_out_run,
+                "name": name, "kind": m["kind"], "source_run": m.get("source_run"),
+                "label": m["label"], **pm_rec,
+            })
 
         for tag, em, is_train in evals:
             feat = eval_feat[tag]
@@ -224,7 +263,7 @@ def fit_group(models, train_meta, work, featurized_dir, fit_kwargs, cache_dir,
                     "sequence_a": mm["sequence_a"], "sequence_b": mm["sequence_b"],
                     "chose_left": mm["chose_left"], "model": name, "p_left": float(p),
                 })
-    return metric_rows, pred_rows, idatas
+    return metric_rows, pred_rows, param_rows, idatas
 
 
 def attach_compare(metric_rows, idatas, scheme, held_out_run):
@@ -257,8 +296,8 @@ def main() -> None:
     ap.add_argument("--out-dir", type=Path, default=REPO_ROOT / "analysis" / "behavioral" / "data")
     ap.add_argument("--cache-dir", type=Path, default=None)
     ap.add_argument("--scheme", choices=["mega", "heldout", "both"], default="both")
-    ap.add_argument("--draws", type=int, default=2000)
-    ap.add_argument("--tune", type=int, default=1000)
+    ap.add_argument("--draws", type=int, default=3000)
+    ap.add_argument("--tune", type=int, default=2000)
     ap.add_argument("--chains", type=int, default=4)
     ap.add_argument("--cores", type=int, default=4)
     ap.add_argument("--seed", type=int, default=42)
@@ -280,16 +319,16 @@ def main() -> None:
     fit_kwargs = dict(draws=args.draws, tune=args.tune, chains=args.chains,
                       cores=args.cores, random_seed=args.seed)
 
-    all_metrics, all_preds = [], []
+    all_metrics, all_preds, all_params = [], [], []
 
     if args.scheme in ("mega", "both"):
         meta = pooled_rows()
         fdir = work / "feat_mega"; fdir.mkdir()
-        mrows, prows, idatas = fit_group(
+        mrows, prows, parrows, idatas = fit_group(
             models, meta, work, fdir, fit_kwargs, args.cache_dir,
             evals=[("in_sample", meta, True)], scheme="mega", held_out_run=None)
         attach_compare(mrows, idatas, "mega", None)
-        all_metrics += mrows; all_preds += prows
+        all_metrics += mrows; all_preds += prows; all_params += parrows
 
     if args.scheme in ("heldout", "both"):
         for r in all_runs:
@@ -299,13 +338,13 @@ def main() -> None:
             train_meta = pooled_rows(runs=set(all_runs) - {r})
             oos_meta = pooled_rows(runs={r})
             fdir = work / f"feat_ho{r}"; fdir.mkdir()
-            mrows, prows, idatas = fit_group(
+            mrows, prows, parrows, idatas = fit_group(
                 grp, train_meta, work, fdir, fit_kwargs, args.cache_dir,
                 evals=[("heldout_train", train_meta, True),
                        ("heldout_oos", oos_meta, False)],
                 scheme="heldout", held_out_run=r)
             attach_compare(mrows, idatas, "heldout", r)
-            all_metrics += mrows; all_preds += prows
+            all_metrics += mrows; all_preds += prows; all_params += parrows
 
     # --- write outputs ------------------------------------------------------
     metric_cols = ["scheme", "held_out_run", "eval", "name", "kind", "source_run",
@@ -326,9 +365,19 @@ def main() -> None:
         w.writeheader()
         w.writerows(all_preds)
 
+    param_cols = ["scheme", "held_out_run", "name", "kind", "source_run", "label",
+                  "param", "posterior_mean", "posterior_sd"]
+    params_path = args.out_dir / "mega_model_posterior_means.csv"
+    with params_path.open("w", encoding="utf-8", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=param_cols, lineterminator="\n")
+        w.writeheader()
+        for rec in all_params:
+            w.writerow({k: rec.get(k) for k in param_cols})
+
     shutil.rmtree(work, ignore_errors=True)
     print(f"[mega] wrote {metrics_path} ({len(all_metrics)} rows)")
     print(f"[mega] wrote {preds_path} ({len(all_preds)} rows)")
+    print(f"[mega] wrote {params_path} ({len(all_params)} rows)")
 
 
 if __name__ == "__main__":
