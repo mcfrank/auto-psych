@@ -58,6 +58,11 @@ DEFAULT_RUNS_ROOT = Path("data/results/impossible_holdout_test_retest")
 # model as in holdout recovery, where the ground truth is itself a seed).
 FITTED_BASELINE_LABEL = "best seed model"
 
+# Impossible ground-truth names are long (e.g. "more_imbalance_more_random"), so
+# the default panel-heading size overlaps adjacent facets. Shrink it for these
+# figures; the shorter-named holdout-recovery figures keep the default.
+STRIP_TEXT_SIZE = 15
+
 # Both metrics the recovery figure understands, in the order figures are written.
 ALL_METRICS = ("rmse", "pearson_r")
 
@@ -171,6 +176,7 @@ def main(args: Args) -> None:
             figure_path,
             fitted_baseline_label=FITTED_BASELINE_LABEL,
             x_label=args.x_label,
+            strip_text_size=STRIP_TEXT_SIZE,
         )
         print(f"Wrote {metric} figure to {figure_path}")
         all_rows.extend(tidy_rows(aggregated))
