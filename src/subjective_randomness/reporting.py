@@ -685,6 +685,10 @@ DEFAULT_FITTED_BASELINE_LABEL = "best other seed model"
 # a different label (e.g. "experiment").
 DEFAULT_TRAJECTORY_X_LABEL = "inner-loop scoring step"
 
+# Horizontal inset (in step units) of an "exp. round N" label from the left edge
+# of its experiment region, so the left-justified text clears the boundary line.
+_ROUND_LABEL_X_PAD = 0.25
+
 # ColorBrewer Dark2 (qualitative), keyed by role so the fitted baseline can be
 # relabelled without losing its color/linetype.
 _SERIES_COLOR_BY_ROLE = {"best": "#1B9E77", "fitted": "#D95F02", "default": "#7570B3"}
@@ -734,6 +738,11 @@ def holdout_combined_frames(
     * ``boundaries`` — one row per outer-experiment boundary, with ``boundary``
       (the step a new experiment begins) and ``x`` = ``boundary - 0.5`` (where
       the marker line is drawn).
+    * ``rounds`` — the "exp. round N" labels, on the leftmost panel only: one
+      row per experiment region (the spans between the boundary lines) of that
+      panel, with ``round`` (1-based), a two-line ``label`` (``"exp.\\nround
+      N"``), and ``x``, the left-justified text position just inside the region's
+      left edge.
     """
     import pandas as pd
 
@@ -747,6 +756,7 @@ def holdout_combined_frames(
     traj_rows: List[Mapping[str, Any]] = []
     baseline_rows: List[Mapping[str, Any]] = []
     boundary_rows: List[Mapping[str, Any]] = []
+    round_rows: List[Mapping[str, Any]] = []
     for panel in panels:
         gt = panel["gt_model"]
         facet = gt.replace("_", " ")
@@ -788,6 +798,25 @@ def holdout_combined_frames(
                     "facet": facet,
                     "boundary": boundary,
                     "x": boundary - 0.5,
+                }
+            )
+
+    # "exp. round N" labels go on the leftmost panel only (one shared key for the
+    # whole figure, not repeated in every facet). The boundary lines (at
+    # boundary - 0.5) cut [xmin, xmax] into one region per experiment; label each
+    # region just inside its left edge.
+    if panels:
+        first = panels[0]
+        region_lefts = [xmin] + [b - 0.5 for b in first["experiment_boundaries"]]
+        for index, left in enumerate(region_lefts):
+            round_number = index + 1
+            round_rows.append(
+                {
+                    "gt_model": first["gt_model"],
+                    "facet": first["gt_model"].replace("_", " "),
+                    "round": round_number,
+                    "label": f"exp.\nround {round_number}",
+                    "x": left + _ROUND_LABEL_X_PAD,
                 }
             )
 
@@ -839,7 +868,34 @@ def holdout_combined_frames(
             ],
         ),
         "boundaries": _framed(boundary_rows, ["gt_model", "facet", "boundary", "x"]),
+        "rounds": _framed(
+            round_rows, ["gt_model", "facet", "round", "label", "x"]
+        ),
     }
+
+
+def _round_label_placement(spec: Mapping[str, Any], trajectory, baselines):
+    """Where to seat the "exp. round N" labels and the y-limit that gives them room.
+
+    Returns ``(label_y, ylim)``. The labels always sit in a band above the data:
+
+    * A fixed metric axis (Pearson r, near the +1 ceiling) leaves no headroom, so
+      the ceiling is lifted above the window's top and ``ylim`` is the raised
+      window. The labels go in the new band.
+    * RMSE autoscales up from 0, so the labels go a margin above the highest
+      plotted point (an error-bar or baseline-band top); the mapped y then lifts
+      the axis on its own and ``ylim`` is ``None``.
+    """
+    if spec["ylim"] is not None:
+        lo, hi = spec["ylim"]
+        span = hi - lo
+        return hi + 0.10 * span, (lo, hi + 0.16 * span)
+    tops = [
+        value
+        for value in (*trajectory["ymax"], *baselines["ymax"])
+        if _is_finite(value)
+    ]
+    return (max(tops) if tops else 1.0) * 1.3, None
 
 
 def holdout_trajectories_ggplot(
@@ -878,6 +934,7 @@ def holdout_trajectories_ggplot(
         geom_line,
         geom_point,
         geom_rect,
+        geom_text,
         geom_vline,
         ggplot,
         labs,
@@ -894,10 +951,11 @@ def holdout_trajectories_ggplot(
     frames = holdout_combined_frames(
         aggregated, fitted_baseline_label=fitted_baseline_label
     )
-    trajectory, baselines, boundaries = (
+    trajectory, baselines, boundaries, rounds = (
         frames["trajectory"],
         frames["baselines"],
         frames["boundaries"],
+        frames["rounds"],
     )
     n_panels = max(len(aggregated["gt_models"]), 1)
     # Integer x ticks at the actual inner-loop steps (no 2.5/7.5 fractions).
@@ -948,10 +1006,10 @@ def holdout_trajectories_ggplot(
             legend_position="bottom",
             legend_title=element_blank(),
             legend_box_spacing=0.0,
-            axis_title=element_text(size=13),
-            axis_text=element_text(size=11),
-            strip_text=element_text(size=13),
-            legend_text=element_text(size=12),
+            axis_title=element_text(size=17),
+            axis_text=element_text(size=14),
+            strip_text=element_text(size=17),
+            legend_text=element_text(size=15),
             panel_spacing=0.02,
         )
     )
@@ -965,10 +1023,26 @@ def holdout_trajectories_ggplot(
             color="grey",
             size=1.5,
         )
+    # "exp. round N" labels for the regions between the boundaries, seated in a
+    # band above the data. The y is carried as a mapped column, not a constant
+    # param, so it trains the scale and lifts the autoscaled RMSE axis; the fixed
+    # Pearson-r axis instead gets its ceiling raised below (see label_ylim).
+    label_y, label_ylim = _round_label_placement(spec, trajectory, baselines)
+    if len(rounds):
+        plot = plot + geom_text(
+            rounds.assign(y=label_y),
+            aes(x="x", y="y", label="label"),
+            ha="left",
+            va="top",
+            size=12,
+            color="#444444",
+            lineheight=0.9,
+        )
     if spec["zero_line"]:
         plot = plot + geom_hline(yintercept=0.0, color="grey", size=0.3)
     if spec["ylim"] is not None:
-        plot = plot + coord_cartesian(ylim=spec["ylim"])
+        # Use the label-aware window (raised ceiling) when labels are drawn.
+        plot = plot + coord_cartesian(ylim=label_ylim if len(rounds) else spec["ylim"])
     else:
         plot = plot + expand_limits(y=0.0)  # RMSE: keep the floor at 0
     return plot
