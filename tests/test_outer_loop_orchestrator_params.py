@@ -35,14 +35,18 @@ def _seeded_names(exp_dir: Path) -> set[str]:
 def test_seed_exclude_filters_files_and_manifest(tmp_path):
     exp_dir = tmp_path / "experiment1"
     assert orch.seed_experiment_models_from_project(
-        exp_dir, PROJECT, exclude=("prototype_similarity",)
+        exp_dir, PROJECT, exclude=("minkowski_accumulated_typicality",)
     )
-    assert not (exp_dir / "cognitive_models" / "prototype_similarity.py").exists()
-    assert (exp_dir / "cognitive_models" / "bayesian_diagnosticity.py").exists()
+    assert not (
+        exp_dir / "cognitive_models" / "minkowski_accumulated_typicality.py"
+    ).exists()
+    assert (
+        exp_dir / "cognitive_models" / "artificial_balance_diagnosticity.py"
+    ).exists()
     assert _seeded_names(exp_dir) == {
-        "bayesian_diagnosticity",
-        "encoding_compressibility",
-        "window_typicality",
+        "evidence_accumulation_messy_prototype",
+        "evidence_accumulation_per_run",
+        "artificial_balance_diagnosticity",
     }
 
 
@@ -79,6 +83,8 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
 
     def fake_inner_loop(responses_path, results_dir, **inner_kwargs):
         captured["inner_kwargs"] = inner_kwargs
+        # Mirror the real return contract: the caller exports result["best_model"].
+        return {"best_model": "stub_best"}
 
     monkeypatch.setattr(
         orch, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
@@ -88,7 +94,9 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
         lambda project_dir: captured.setdefault("featurizer_dir", project_dir) and None,
     )
     monkeypatch.setattr(orch, "_write_feature_csv", lambda rows, fz, out: out)
-    monkeypatch.setattr(orch, "_export_inner_loop_model", lambda e, l: e)
+    monkeypatch.setattr(
+        orch, "_export_inner_loop_model", lambda e, l, *, best_model: e
+    )
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
         fake_inner_loop,

@@ -35,6 +35,7 @@ import yaml
 from src.models.pymc_inference import fit_model, make_stim_data, pm_data_inputs
 from src.pipelines.outer_loop.eig import annotate as annotate_eig
 from src.pipelines.outer_loop.orchestrator import (
+    carry_forward_cognitive_models,
     ensure_experiment_dirs,
     init_registry,
     outer_project_dir,
@@ -52,6 +53,7 @@ from src.subjective_randomness.model_recovery import (
     generate_responses,
     p_left_fixed_params,
     resolve_generating_params,
+    seed_model_names,
     write_responses_csv,
 )
 from src.subjective_randomness.recover import pearson_r
@@ -248,13 +250,15 @@ def run_holdout_experiments(
 ) -> List[Path]:
     """Run the full agentic pipeline for ``n_experiments`` with a held-out GT.
 
-    Experiment 1 is seeded with every project seed model *except* ``gt_model``;
-    experiments >= 2 run the real theory agent. Each experiment runs the real
-    design agent, collects responses programmatically from the held-out model
-    (fixed params, ``pm.do``), and runs the inner model loop (which records the
-    per-step ``history.json`` this analysis consumes). Every stage's output is
-    validated and any failure raises — a half-run experiment is never silently
-    carried forward.
+    Experiment 1 is seeded with every live-pool seed model *except* ``gt_model``
+    (when the GT is in the pool at all — an old-registry or impossible GT simply
+    is not); experiments >= 2 carry the previous experiment's cognitive_models
+    forward, exactly as the live pipeline does (there is no theorist agent).
+    Each experiment runs the real design agent, collects responses
+    programmatically from the held-out model (fixed params, ``pm.do``), and runs
+    the inner model loop (which records the per-step ``history.json`` this
+    analysis consumes). Every stage's output is validated and any failure
+    raises — a half-run experiment is never silently carried forward.
 
     With ``resume=True`` a stopped run continues: stages whose output already
     validates are skipped, and everything from the first invalid stage on is
@@ -264,17 +268,22 @@ def run_holdout_experiments(
     """
     run_root = Path(run_root)
     seed_models_dir = Path(seed_models_dir)
-    # The agent seed pool comes from the project assets (seed_models_dir); the
+    # seed_models_dir is the GT/baseline registry; the agent seed pool always
+    # comes from the live project assets (project_seed_models_dir). The
     # ground-truth generator may live elsewhere (e.g. the impossible-models dir).
     gt_models_dir = (
         Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
     )
-    # Hold the GT out of experiment 1's seed pool whenever it IS a project seed
-    # model (the normal holdout) — keyed off the seed manifest, not the dir, so a
-    # GT read from a separate gt_models_dir (e.g. a pristine copy used to keep the
-    # GT file off the agent's sandbox) is still correctly excluded from seeding.
-    # An impossible GT is not in the seed manifest, so nothing is excluded.
-    gt_is_seed_model = gt_model in resolve_generating_params(None, seed_models_dir)
+    # Hold the GT out of experiment 1's seed pool whenever it IS in the pool's
+    # own manifest — the *live project* seed manifest that seeding below reads,
+    # which need not match ``seed_models_dir`` (the GT/baseline registry). Since
+    # the hero-run seed swap the live pool holds the promoted replicate winners
+    # while the registry keeps the original validated models, so an old-registry
+    # GT is simply absent from the pool and nothing is excluded (same semantics
+    # as an impossible GT). Membership is checked by manifest *name* only — no
+    # pure-Python family twin is needed for pool models.
+    pool_names = seed_model_names(project_seed_models_dir(project_id))
+    gt_is_seed_model = gt_model in pool_names
     seed_exclude = (gt_model,) if gt_is_seed_model else ()
     exp_dirs: List[Path] = []
 
@@ -292,8 +301,11 @@ def run_holdout_experiments(
         if prev_exp_dir is not None:
             allowed_dirs.append(prev_exp_dir)
 
-        # Theory: seeded holdout set in experiment 1, real agent afterwards.
-        if not (resume and _stage_done("1_theory", exp_dir)):
+        # Model set: seeded pool in experiment 1; experiments >= 2 carry the
+        # previous experiment's cognitive_models forward. There is no theorist
+        # agent — new hypotheses enter only via the inner loop, exactly as in
+        # the live pipeline this harness validates.
+        if not (resume and _stage_done("models", exp_dir)):
             if exp_num == 1:
                 seeded = seed_experiment_models_from_project(
                     exp_dir, project_id, exclude=seed_exclude
@@ -309,16 +321,9 @@ def run_holdout_experiments(
                             else ""
                         )
                     )
-                _require_valid("1_theory", exp_dir)
             else:
-                write_context(exp_dir, "1_theory", project_id, exp_num, prev_exp_dir)
-                _spawn_with_repair(
-                    "1_theory",
-                    exp_dir,
-                    allowed_dirs=allowed_dirs,
-                    agent_timeout_sec=agent_timeout_sec,
-                    backend=backend,
-                )
+                carry_forward_cognitive_models(prev_exp_dir, exp_dir)
+            _require_valid("models", exp_dir)
 
         # Design: use the SAME prompt as the live human experiment (the default
         # `2_design`), in which the agent both proposes the candidate pool AND
@@ -864,7 +869,9 @@ def reevaluate_trajectories(
     )
     predict_max_draws = eval_pool.get("predict_max_draws")
 
-    all_seed_models = set(resolve_generating_params(None, seed_models_dir))
+    # Names only — the fitted-seed baseline fits these by MCMC, so no
+    # pure-Python family twin (and no default params) is required here.
+    all_seed_models = set(seed_model_names(seed_models_dir))
     new_runs: List[Dict[str, Any]] = []
     for gt_run in result["gt_runs"]:
         run_root = Path(gt_run["run_root"])
@@ -1056,9 +1063,13 @@ def run_holdout_recovery_from_config(
 
     Config keys:
         project_id        project whose pipeline assets drive the agents
-        seed_models_dir   the project's seed-model directory (must match
-                          ``project_seed_models_dir(project_id)`` — exp 1 is
-                          seeded from the project assets)
+        seed_models_dir   the GT/baseline registry: models with pure-Python
+                          family twins used to generate ground-truth data and
+                          fixed-param baselines. Experiment 1's agent seed pool
+                          always comes from ``project_seed_models_dir(project_id)``
+                          and may deliberately differ (since the hero-run seed
+                          promotion the live pool holds the replicate winners,
+                          which have no family twins).
         gt_models         null | [names] | {name: params|null}; null params ->
                           the family's DEFAULT_PARAMS
         n_experiments, n_participants, seed
@@ -1075,14 +1086,11 @@ def run_holdout_recovery_from_config(
     (impossible models have no ``model_families`` defaults to fall back on).
     """
     project_id = config.get("project_id", PROJECT_ID)
+    # seed_models_dir is the GT/baseline registry and is allowed to differ from
+    # the live project seed pool (see docstring). Its adequacy is validated
+    # eagerly just below: resolving the configured gt_models imports each GT's
+    # pure-Python family twin and raises loudly if one is missing.
     seed_models_dir = resolve_path(config["seed_models_dir"], config_path)
-    project_seed_dir = project_seed_models_dir(project_id)
-    if seed_models_dir.resolve() != project_seed_dir.resolve():
-        raise ValueError(
-            f"seed_models_dir ({seed_models_dir}) must be the project's seed "
-            f"directory ({project_seed_dir}): experiment 1 is seeded from the "
-            f"project assets, so a different generator set would be incoherent."
-        )
     gt_models_dir = (
         Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
     )
@@ -1137,9 +1145,12 @@ def run_holdout_recovery_from_config(
         "seed": int(pool_cfg.get("seed", 11)),
         "min_remaining": int(pool_cfg.get("min_remaining", 100)),
         # Exhaustive: use every distinct same-length pair for the lengths, not an
-        # n_pairs sample. predict_max_draws thins the posterior for the held-out
-        # prediction so the (draws x n_stim) array stays bounded on a big pool.
-        "exhaustive": bool(pool_cfg.get("exhaustive", False)),
+        # n_pairs sample. Defaults to TRUE so seed-holdout and impossible-holdout
+        # results are never reported on mismatched pools (the 500-pair sample
+        # once needed a manual reanalysis pass to reconcile); pass
+        # `exhaustive: false` explicitly to sample. predict_max_draws thins the
+        # posterior so the (draws x n_stim) array stays bounded on a big pool.
+        "exhaustive": bool(pool_cfg.get("exhaustive", True)),
         "predict_max_draws": (
             int(predict_max_draws_cfg) if predict_max_draws_cfg is not None else None
         ),
@@ -1148,7 +1159,9 @@ def run_holdout_recovery_from_config(
     results_root = Path(results_root)
     # Every project seed model — the fitted-seed baseline for each ground truth
     # fits the *other* seed models (all of these except that GT).
-    all_seed_models = set(resolve_generating_params(None, seed_models_dir))
+    # Names only — the fitted-seed baseline fits these by MCMC, so no
+    # pure-Python family twin (and no default params) is required here.
+    all_seed_models = set(seed_model_names(seed_models_dir))
     gt_runs: List[Dict[str, Any]] = []
     for gt_model, gt_params in gt_params_by_model.items():
         run_root = results_root / gt_model

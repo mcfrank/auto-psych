@@ -1,20 +1,40 @@
+# Hero-run seed set (promoted 2026-07): the best-fitting models discovered by
+# the three human replicate runs. The original hand-written seeds
+# (prototype_similarity, encoding_compressibility, bayesian_diagnosticity,
+# window_typicality) remain on disk for reference but are no longer active —
+# only the models listed here seed a run.
 models:
-  - name: prototype_similarity
+  # run1/experiment3 winner (was iter1_candidate0, P(best)=0.969)
+  - name: minkowski_accumulated_typicality
     rationale: |
-      Random-looking sequences are close to a prototype with balanced H/T counts
-      and an ideal alternation rate.
-  - name: encoding_compressibility
+      People evaluate the randomness of a sequence by accumulating a subjective
+      sense of typicality over its length, computing each event's typicality as
+      a penalty based on its distance from a mental prototype, with the distance
+      raised to a freely inferred Minkowski-like exponent so extreme feature
+      deviations are disproportionately punished.
+  # run2/experiment3 winner (was the exported inner_loop_model, P(best)=0.492)
+  - name: evidence_accumulation_messy_prototype
     rationale: |
-      Random-looking sequences are those with low simple-description penalties:
-      long runs, periodic templates, and imbalance.
-  - name: bayesian_diagnosticity
+      Random-looking sequences are judged by an evidence-accumulation process
+      where each item provides a baseline weight of evidence for randomness,
+      discounted by the sequence's quadratic (and asymmetric, for alternation)
+      deviation from a messy prototype — an ideal positive imbalance and ideal
+      alternation rate — so near-ideal longer sequences are preferred while
+      clearly deviant long sequences are penalized more heavily.
+  # run2/experiment3 runner-up (P(best)=0.460, near-tie with the winner)
+  - name: evidence_accumulation_per_run
     rationale: |
-      Randomness is the log-likelihood ratio of a fair coin versus a regular
-      process: a mixture of a complexity-penalized motif process (Griffiths et
-      al. 2018) and a biased coin. Merges the former diagnosticity and
-      statistical-inference accounts.
-  - name: window_typicality
+      Random-looking sequences are judged by an evidence-accumulation process
+      where each distinct run (streak of identical outcomes) — rather than each
+      item — provides a baseline weight of evidence for randomness, discounted
+      by the sequence's quadratic deviation from a messy prototype, so periodic
+      patterns with artificially few runs are penalized without a separate
+      periodicity cue.
+  # run3/experiment3 winner (was iter1_candidate0, P(best)=0.994)
+  - name: artificial_balance_diagnosticity
     rationale: |
-      Random-looking sequences have a longest run typical of a fair coin seen
-      through a limited memory window; over-long streaks look non-random (Hahn &
-      Warren 2009).
+      People judge randomness by Bayesian diagnosticity — the log-likelihood
+      ratio of a fair coin versus a subjective "regular" generative process —
+      where the regular process includes an "artificial balance" generator that
+      targets an exactly equal count of heads and tails, explaining why people
+      penalize suspiciously symmetric sequences as contrived rather than random.

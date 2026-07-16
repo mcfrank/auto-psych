@@ -1,0 +1,57 @@
+# ============================================================================
+#  Config for the HERO run: the scaled-up discovery run seeded with the four
+#  best models from the three human replicates (see seed_models manifest).
+#  This is the PER-RUN config; start_full_run.sh launches K parallel copies.
+#
+#  Launch:  CONFIG=scripts/outer_loop_live/hero_run.yaml \
+#           bash scripts/outer_loop_live/start_full_run.sh
+#           (K=<n> to change the number of parallel runs.)
+#
+#  Differences from full_run.yaml: deeper inner-loop search (4 rounds x 7
+#  candidates, one exploration lens each), novelty gate + pruning at their
+#  defaults made explicit, and concurrent candidate agents.
+# ============================================================================
+
+# --- what to run -----------------------------------------------------------
+project: subjective_randomness
+run_label: hero                    # cosmetic — submit_parallel overrides per run.
+experiments: 3                     # per run, in sequence (design k uses k-1's posterior)
+design_mode: agent                 # model-informed candidate pool + in-agent EIG
+coding_agent: opencode
+prolific_mode: live                # REAL recruiting + payment
+# Going live requires BOTH prolific_mode: live AND this flag — uncomment it
+# as the final, conscious act before launching (run.py enforces the gate too).
+# confirm_live_recruitment: true
+
+# --- where / how it runs (Slurm + Firebase) --------------------------------
+firebase_project: auto-psych-2c5da
+walltime: "1-23:00:00"             # 47h — deeper search than full_run, still generous
+qos: ""                            # "" = default normal QoS
+
+# --- the Prolific study (per experiment) -----------------------------------
+prolific:
+  participants: 40                 # per experiment -> total_available_places
+  reward_per_hour: 1200            # cents/hour ($12/hr)
+  estimated_completion_time: 5     # minutes -> ~$1.00/participant
+  name: "Which sequence is more random?"
+  description: >-
+    In this study, you will see a series of coin flip results and be asked to judge which is more random.
+  device_compatibility: [desktop]
+  completion_code: AUTO_PSYCH_COMPLETE_HERO
+  min_approval_rate: 98            # percent; Prolific approval-rate floor
+
+# --- modeling / inner loop -------------------------------------------------
+modeling:
+  inner_loop_iterations: 4         # candidate-improvement rounds per experiment
+  inner_loop_candidates: 7         # one candidate per exploration lens (DEFAULT_CANDIDATE_HINTS)
+  draws: 3000
+  tune: 2000
+  chains: 4
+  # Exploration knobs (explicit here so the run's settings are self-documenting;
+  # these match the inner-loop defaults). hints_file: uncomment to override the
+  # built-in lens battery with a custom YAML list.
+  # hints_file: scripts/outer_loop_live/hero_hints.yaml
+  novelty_rmse_threshold: 0.02     # reject near-duplicate candidates (p_left RMSE)
+  prune_dse_multiplier: 2.0        # prune agent models beyond 2*dse of the best...
+  prune_weight_floor: 0.01         # ...whose stacking weight is also below 1%
+  candidate_parallelism: 7         # spawn a round's candidate agents concurrently

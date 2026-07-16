@@ -51,10 +51,12 @@ def test_inner_model_loop_exports_best_pymc_model(tmp_path):
     assert posterior["posteriors"]["bayesian_fair_coin"] > 0.7
     assert (loop_dir / "report.md").read_text().strip()
 
-    # Best model exported verbatim as a PyMC model + listed in the manifest.
-    exported = models_dir / "inner_loop_model.py"
-    assert exported.exists()
-    assert "pm.Model" in exported.read_text()
+    # The best model is a seed that is already in cognitive_models, so the
+    # export adds NOTHING: no inner_loop_model copy (a duplicate would split
+    # posterior mass with its twin in every later comparison), manifest
+    # unchanged.
+    assert (models_dir / "bayesian_fair_coin.py").exists()
+    assert not (models_dir / "inner_loop_model.py").exists()
     manifest = yaml.safe_load((models_dir / "models_manifest.yaml").read_text())
     names = [m["name"] if isinstance(m, dict) else m for m in manifest["models"]]
-    assert "inner_loop_model" in names
+    assert names == ["bayesian_fair_coin", "representativeness"]

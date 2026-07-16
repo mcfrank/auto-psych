@@ -61,6 +61,12 @@ REPO_ROOT = Path(__file__).resolve().parent.parent.parent
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
+from src.models.mcmc_defaults import (  # noqa: E402  (needs sys.path above)
+    PRODUCTION_CHAINS,
+    PRODUCTION_DRAWS,
+    PRODUCTION_TUNE,
+)
+
 # Best-effort wall-clock limit (seconds) for one agent-authored test statistic, so
 # a runaway/infinite statistic cannot hang the in-process critique harness (which
 # runs outside the critique agent's own subprocess timeout). See ``_time_limit``.
@@ -527,11 +533,12 @@ class Args:
     discrepancy (no multiple-comparisons correction)."""
     seed: int = 42
     """Seed for posterior-predictive sampling."""
-    draws: int = 2000
-    """MCMC draws (only used if the fit is not already cached)."""
-    tune: int = 2000
+    draws: int = PRODUCTION_DRAWS
+    """MCMC draws (only used if the fit is not already cached;
+    src.models.mcmc_defaults)."""
+    tune: int = PRODUCTION_TUNE
     """MCMC tuning steps (only used if the fit is not already cached)."""
-    chains: int = 4
+    chains: int = PRODUCTION_CHAINS
     """MCMC chains (only used if the fit is not already cached)."""
 
 

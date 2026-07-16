@@ -55,6 +55,27 @@ collection_sessions/{collection_session_id}/responses/{participant_id}
 - Get Prolific token/workspace access.
 - Confirm Prolific reward, participant count, title/description, completion code, IRB/consent, and launch approval.
 
+## Endpoint auth (added 2026-07, before the hero run)
+
+The Cloud Functions are no longer open:
+
+- `/results` (all participant data) and `/register_session` require the shared
+  secret in an `x-results-token` header. Generate one with
+  `openssl rand -hex 32`, export it as `AUTO_PSYCH_RESULTS_TOKEN` in every
+  environment that deploys or collects, and keep it out of git. Deploy staging
+  writes it into `functions/.env` (gitignored) so the deployed functions hold
+  the same value; a deploy without the env var fails loudly.
+- `/submit` only accepts collection sessions the deployment registered via
+  `/register_session` (this happens automatically right after the functions
+  deploy, before any Prolific study is published). Drive-by POSTs with
+  fabricated session ids get 403. The legacy `project_id`/`run_id` submit path
+  was removed.
+- Each stored response now carries `consented_at` — the timestamp of the
+  participant's "I agree" click on the injected consent gate.
+- `--prolific-mode live` additionally requires `--confirm-live-recruitment`
+  (config launchers: `confirm_live_recruitment: true` in the yaml), so going
+  live is always a second, explicit act.
+
 ## External TODOs
 
 - [x] Get Mike's Firebase project id: `auto-psych-2c5da`.

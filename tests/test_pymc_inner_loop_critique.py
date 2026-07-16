@@ -70,15 +70,20 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
     monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
     # Admission also gates on a finite ELPD-LOO; stub it finite for stub candidates.
     monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: -100.0)
+    # Novelty gate is covered by test_novelty_gate.py; neutralize it here.
+    monkeypatch.setattr(
+        pymc_orchestrator, "_min_prediction_rmse",
+        lambda *a, **k: (None, float("inf")),
+    )
 
 
 def _patch_candidates(monkeypatch, captured_critique_paths):
-    def fake_spawn(candidate_dir, **kwargs):
+    def fake_spawn(candidate_dir, docs, **kwargs):
         (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
         (candidate_dir / "hypothesis.md").write_text("People use H.\n", encoding="utf-8")
-        # Record whether the candidate's context points at a critique file.
-        context = (candidate_dir / "CONTEXT.md").read_text(encoding="utf-8")
-        captured_critique_paths.append("critiques.md" in context)
+        # Record whether the critique was injected into the candidate's docs
+        # (it is inlined into the prompt, not merely pointed at).
+        captured_critique_paths.append(bool(docs.get("critiques")))
         return True
 
     monkeypatch.setattr(pymc_orchestrator, "_spawn_candidate_agent", fake_spawn)

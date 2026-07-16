@@ -3,7 +3,11 @@
 # correlation between the loop's best model and the ground truth on a large
 # held-out stimulus set at every inner-loop scoring step.
 project_id: subjective_randomness
-seed_models_dir: src/pipelines/outer_loop/projects/subjective_randomness/seed_models
+# The GT/baseline registry: the original validated model set (with pure-Python
+# family twins for data generation). Deliberately NOT the live project
+# seed_models dir — since the hero-run promotion that manifest holds the
+# replicate winners, which have no family twins.
+seed_models_dir: src/subjective_randomness/pymc_model_families
 
 # null | [names] | {name: params|null} — the same shapes as model_recovery's
 # generating_models (null/missing params -> the family's DEFAULT_PARAMS).
@@ -29,10 +33,14 @@ agent:
 # Held-out evaluation stimuli. Pairs the design agents happened to use for
 # training are excluded after the run; fail loudly if fewer than min_remaining
 # survive.
+# Exhaustive: evaluate on every distinct same-length pair for the lengths, so
+# seed-holdout results are directly comparable to the impossible-holdout runs
+# (which have always used the exhaustive pool). predict_max_draws thins the
+# posterior so the (draws x n_stim) prediction array stays bounded.
 eval_pool:
-  n_pairs: 500
-  lengths: [6, 8]
-  seed: 11
+  exhaustive: true
+  lengths: [1, 2, 3, 4, 5, 6, 7, 8]
+  predict_max_draws: 500
   min_remaining: 100
 
 fit:

@@ -68,12 +68,17 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
     monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
     # Admission also gates on a finite ELPD-LOO; stub it finite for stub candidates.
     monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: -100.0)
+    # Novelty gate is covered by test_novelty_gate.py; neutralize it here.
+    monkeypatch.setattr(
+        pymc_orchestrator, "_min_prediction_rmse",
+        lambda *a, **k: (None, float("inf")),
+    )
 
 
 def _patch_candidates(monkeypatch):
     """Each spawned agent writes a candidate; validation is stubbed to accept."""
 
-    def fake_spawn(candidate_dir, **kwargs):
+    def fake_spawn(candidate_dir, docs, **kwargs):
         (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
         (candidate_dir / "hypothesis.md").write_text(
             "People use heuristic H.\n", encoding="utf-8"

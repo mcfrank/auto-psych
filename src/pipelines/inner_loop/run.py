@@ -33,19 +33,43 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 import tyro
+import yaml
 
 # Ensure repo root on path so "import src..." works when run as a module/script.
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
+from src.models.mcmc_defaults import (
+    PRODUCTION_CHAINS,
+    PRODUCTION_DRAWS,
+    PRODUCTION_TUNE,
+)
 from src.pipelines.inner_loop.pymc_orchestrator import (
     DEFAULT_COMPLEXITY_PRIOR_CONST,
+    DEFAULT_NOVELTY_RMSE_THRESHOLD,
+    DEFAULT_PRUNE_DSE_MULTIPLIER,
+    DEFAULT_PRUNE_WEIGHT_FLOOR,
     run_pymc_inner_loop,
 )
 from src.runtime.coding_agent import select_backend
+
+
+def load_hints_file(path: Path) -> List[str]:
+    """Load exploration hints: a YAML list of strings, one hint per entry."""
+    path = Path(path)
+    if not path.exists():
+        raise FileNotFoundError(f"Hints file not found: {path}")
+    data = yaml.safe_load(path.read_text(encoding="utf-8"))
+    if not isinstance(data, list) or not all(
+        isinstance(h, str) and h.strip() for h in data
+    ):
+        raise ValueError(
+            f"Hints file must be a YAML list of non-empty strings: {path}"
+        )
+    return [h.strip() for h in data]
 
 
 @dataclass
@@ -65,11 +89,11 @@ class Args:
     complexity_prior: float = DEFAULT_COMPLEXITY_PRIOR_CONST
     """Log-prior per model = CONST * non-comment line count (negative penalises
     complex models). Defaults to a gentle Occam backstop; pass 0.0 to disable."""
-    draws: int = 500
-    """MCMC posterior draws per chain."""
-    tune: int = 500
+    draws: int = PRODUCTION_DRAWS
+    """MCMC posterior draws per chain (src.models.mcmc_defaults; pass lower values for quick local runs)."""
+    tune: int = PRODUCTION_TUNE
     """MCMC tuning (warmup) steps per chain."""
-    chains: int = 2
+    chains: int = PRODUCTION_CHAINS
     """MCMC chains."""
     cache_dir: Optional[Path] = None
     """Optional directory to persist .nc fits across runs."""
@@ -77,6 +101,20 @@ class Args:
     """Coding-agent backend for candidate generation. Defaults to CODING_AGENT env, then 'opencode'."""
     agent_timeout_sec: int = 900
     """Per-candidate coding-agent timeout in seconds."""
+    hints_file: Optional[Path] = None
+    """YAML list of exploration hints cycled across a round's candidates
+    (default: the built-in DEFAULT_CANDIDATE_HINTS lens battery)."""
+    novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD
+    """Reject a candidate whose p_left is within this RMSE of an admitted
+    model's on the observed stimuli (0 disables the novelty gate)."""
+    prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER
+    """Prune agent models with elpd_diff > multiplier*dse AND stacking weight
+    below the floor after each scoring pass (0 disables pruning)."""
+    prune_weight_floor: float = DEFAULT_PRUNE_WEIGHT_FLOOR
+    """Stacking-weight floor for pruning (see --prune-dse-multiplier)."""
+    candidate_parallelism: Optional[int] = None
+    """Concurrent candidate agents per round (default: all of the round's
+    candidates at once; 1 = sequential)."""
 
 
 def main(args: Args) -> None:
@@ -94,6 +132,7 @@ def main(args: Args) -> None:
         sys.exit(1)
 
     backend = select_backend(args.coding_agent) if args.max_iterations > 0 else None
+    hints = load_hints_file(args.hints_file) if args.hints_file else None
 
     result = run_pymc_inner_loop(
         responses_path,
@@ -106,6 +145,11 @@ def main(args: Args) -> None:
         agent_timeout_sec=args.agent_timeout_sec,
         backend=backend,
         fit_kwargs={"draws": args.draws, "tune": args.tune, "chains": args.chains},
+        candidate_hints=hints,
+        novelty_rmse_threshold=args.novelty_rmse_threshold,
+        prune_dse_multiplier=args.prune_dse_multiplier,
+        prune_weight_floor=args.prune_weight_floor,
+        candidate_parallelism=args.candidate_parallelism,
     )
 
     best = result["best_model"]

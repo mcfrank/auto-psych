@@ -26,9 +26,103 @@ CONSENT_GATE_MARKER = "auto-psych-consent-gate"
 SUBMIT_BRIDGE_MARKER = "auto-psych-submit-bridge"
 CONSENT_TEXT_PATH = REPO_ROOT / "templates" / "consent.txt"
 
+# Shared admin secret for the token-guarded Cloud Function endpoints
+# (/results reads and /register_session). The deployer's environment provides
+# it; deploy staging writes it into functions/.env (gitignored) so the deployed
+# functions hold the same value.
+RESULTS_TOKEN_ENV = "AUTO_PSYCH_RESULTS_TOKEN"
+
 
 class DeploymentError(RuntimeError):
     """Raised when Firebase staging or deployment fails."""
+
+
+def results_token() -> str:
+    """The admin token for /results and /register_session — loud when unset.
+
+    Without the token anyone who loads the public experiment page (which
+    necessarily carries the collection_session_id) could read every
+    participant's data, so a Firebase deploy refuses to proceed without it.
+    """
+    token = os.environ.get(RESULTS_TOKEN_ENV, "").strip()
+    if not token:
+        raise DeploymentError(
+            f"{RESULTS_TOKEN_ENV} is not set. Generate a secret (e.g. "
+            f"`openssl rand -hex 32`), export it in the deploying environment, "
+            f"and keep it available to collection (it authenticates /results "
+            f"reads and /register_session)."
+        )
+    return token
+
+
+def write_functions_env(repo_root: Path) -> Path:
+    """Provision functions/.env with the admin token before a functions deploy.
+
+    Firebase Functions v1 loads ``functions/.env`` (dotenv) at deploy time, so
+    this is how the deployed /results and /register_session endpoints learn the
+    shared secret. The file is gitignored; it is rewritten on every deploy from
+    the deployer's environment.
+    """
+    env_path = repo_root / "functions" / ".env"
+    env_path.write_text(f"RESULTS_TOKEN={results_token()}\n", encoding="utf-8")
+    return env_path
+
+
+def register_collection_session(manifest: DeploymentManifest) -> None:
+    """Register the deployment's collection session with the live functions.
+
+    /submit only accepts registered sessions (so drive-by POSTs cannot
+    fabricate participant rows); this runs right after the functions deploy and
+    BEFORE any Prolific study is published, and raises on any failure — an
+    unregistered session would silently reject every real participant.
+    """
+    import urllib.request
+
+    base_url = manifest.results_api_url or manifest.experiment_url
+    if not base_url:
+        raise DeploymentError(
+            "Cannot register the collection session: manifest has no "
+            "results_api_url/experiment_url to derive the functions host from."
+        )
+    # The /register_session rewrite lives at the hosting root, alongside
+    # /submit and /results.
+    scheme, rest = base_url.split("//", 1)
+    host = rest.split("/", 1)[0]
+    url = f"{scheme}//{host}/register_session"
+    payload = json.dumps(
+        {
+            "collection_session_id": manifest.collection_session_id,
+            "project_id": manifest.project_id,
+            "run_id": manifest.run_id,
+            "deployment_id": manifest.deployment_id,
+        }
+    ).encode("utf-8")
+    req = urllib.request.Request(
+        url,
+        data=payload,
+        method="POST",
+        headers={
+            "Content-Type": "application/json",
+            "x-results-token": results_token(),
+        },
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=60) as response:
+            if response.status != 200:
+                raise DeploymentError(
+                    f"register_session returned HTTP {response.status}"
+                )
+    except DeploymentError:
+        raise
+    except Exception as exc:
+        raise DeploymentError(
+            f"Could not register collection session "
+            f"{manifest.collection_session_id!r} at {url}: {exc}"
+        ) from exc
+    print(
+        f"  [deploy] Registered collection session {manifest.collection_session_id}",
+        flush=True,
+    )
 
 
 def load_consent_html() -> str:
@@ -92,6 +186,9 @@ _CONSENT_GATE_JS = """
     var t = e.target;
     if (t && t.id === MARKER + "-agree") {
       window.__autoPsychConsented = true;
+      // Consent record: the submit bridge includes this timestamp in the
+      // payload so every stored response carries when consent was given.
+      window.__autoPsychConsentedAt = new Date().toISOString();
       if (observer) observer.disconnect();
       if (gate.parentNode) gate.parentNode.removeChild(gate);
     }
@@ -189,6 +286,7 @@ def ensure_submit_bridge(index_html: str) -> str:
         prolific_study_id_from_url: params.get("STUDY_ID"),
         prolific_session_id: params.get("SESSION_ID"),
         trials: window.__experimentData,
+        consented_at: window.__autoPsychConsentedAt || null,
         submitted_at_client: new Date().toISOString(),
         user_agent: navigator.userAgent
       }};
@@ -284,6 +382,13 @@ def write_firebase_config(config_path: Path, manifest: DeploymentManifest) -> Pa
             {
                 "source": "/results",
                 "function": {"functionId": "results", "region": manifest.firebase_region},
+            },
+            {
+                "source": "/register_session",
+                "function": {
+                    "functionId": "register_session",
+                    "region": manifest.firebase_region,
+                },
             },
         ],
     }

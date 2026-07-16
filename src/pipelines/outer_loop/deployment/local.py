@@ -8,9 +8,12 @@ from pathlib import Path
 from .firebase import (
     firebase_project_from_rc,
     load_experiment_config,
+    register_collection_session,
+    results_token,
     run_firebase_deploy,
     stage_experiment,
     write_firebase_config,
+    write_functions_env,
 )
 from .manifest import build_manifest, write_client_config, write_manifest
 from .prolific import build_prolific_plan, create_draft_study, publish_study
@@ -37,6 +40,10 @@ def run_deployment(
     resolved_project = firebase_project or firebase_project_from_rc(repo_root)
     if deploy_target == "firebase" and not resolved_project:
         raise RuntimeError("Firebase deploy requires --firebase-project or a real .firebaserc")
+    if deploy_target == "firebase":
+        # Fail before any staging or Prolific work if the admin token for the
+        # protected endpoints (/results, /register_session) is missing.
+        results_token()
 
     existing_config = load_experiment_config(exp_dir)
     manifest = build_manifest(
@@ -95,12 +102,18 @@ def run_deployment(
     write_manifest(exp_dir, manifest)
 
     if deploy_target == "firebase":
+        # Provision the functions' shared secret before deploying them, then
+        # register this deployment's collection session — /submit only accepts
+        # registered sessions, so registration must succeed BEFORE any
+        # participant can arrive (and long before a study is published).
+        write_functions_env(repo_root)
         run_firebase_deploy(repo_root, manifest, firebase_config_path)
-        # No Firestore metadata write here: participant data flows through the
-        # /submit and /results Cloud Functions (which write/read the responses
-        # subcollection directly, with their own admin credentials), so the
-        # pipeline needs no server-side Firestore access. The deployment record
-        # lives in deployment_manifest.json on disk.
+        register_collection_session(manifest)
+        # No other Firestore metadata write here: participant data flows
+        # through the /submit and /results Cloud Functions (which write/read
+        # the responses subcollection directly, with their own admin
+        # credentials), so the pipeline needs no server-side Firestore access.
+        # The deployment record lives in deployment_manifest.json on disk.
         #
         # Publish ONLY for live mode. Test mode leaves the study as a DRAFT you
         # preview yourself; none mode creates no study to publish.

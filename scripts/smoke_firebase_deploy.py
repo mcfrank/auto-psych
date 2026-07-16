@@ -190,10 +190,13 @@ def _deploy(args: Args, exp_dir: Path):
 
 
 def _fetch_results_csv(results_api_url: str, collection_session_id: str) -> str:
+    # /results is token-guarded; _results_request fails loudly if the shared
+    # secret (AUTO_PSYCH_RESULTS_TOKEN) is missing from the environment.
+    from src.pipelines.outer_loop.collect import _results_request
+
     query = urllib.parse.urlencode({"collection_session_id": collection_session_id})
     url = f"{results_api_url.rstrip('/')}/results?{query}"
-    req = urllib.request.Request(url, headers={"User-Agent": "auto-psych-smoke"})
-    with urllib.request.urlopen(req, timeout=60) as response:
+    with urllib.request.urlopen(_results_request(url), timeout=60) as response:
         return response.read().decode("utf-8")
 
 

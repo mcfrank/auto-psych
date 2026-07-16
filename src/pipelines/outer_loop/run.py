@@ -9,7 +9,7 @@ Usage:
   python3 -m src.pipelines.outer_loop.run --project subjective_randomness --experiment 1
   python3 -m src.pipelines.outer_loop.run --project subjective_randomness --experiments 3
   python3 -m src.pipelines.outer_loop.run --project subjective_randomness --experiments 4-6
-  python3 -m src.pipelines.outer_loop.run --project subjective_randomness --experiment 1 --agent 1_theory
+  python3 -m src.pipelines.outer_loop.run --project subjective_randomness --experiment 1 --agent 2_design
 """
 
 from __future__ import annotations
@@ -29,8 +29,18 @@ import tyro
 REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
+from src.models.mcmc_defaults import (
+    DESIGN_TWIN_CHAINS,
+    DESIGN_TWIN_DRAWS,
+    DESIGN_TWIN_TUNE,
+    PRODUCTION_CHAINS,
+    PRODUCTION_DRAWS,
+    PRODUCTION_TUNE,
+)
+from src.pipelines.inner_loop.run import load_hints_file
 from src.pipelines.outer_loop.deployment import write_smoke_experiment
 from src.pipelines.outer_loop.orchestrator import (
+    carry_forward_cognitive_models,
     ensure_experiment_dirs,
     experiment_dir,
     get_ground_truth_models,
@@ -49,7 +59,11 @@ from src.pipelines.outer_loop.orchestrator import (
 from src.pipelines.outer_loop.participants import DEFAULT_OPEN_MODEL
 from src.runtime.coding_agent import select_backend
 
-AGENT_KEYS = ["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]
+# The pipeline stages. There is no theorist agent: experiment 1's model set is
+# seeded from the project's seed_models (required), experiments >= 2 carry the
+# previous experiment's cognitive_models forward, and new hypotheses enter only
+# via the inner loop (5_model_loop).
+AGENT_KEYS = ["2_design", "3_implement", "4_collect", "5_model_loop"]
 
 DEFAULT_N_PARTICIPANTS = 5
 
@@ -92,6 +106,11 @@ def _run_agent(
     n_critique_proposals: Optional[int] = None,
     critique_alpha: Optional[float] = None,
     max_validation_repairs: int = 2,
+    candidate_hints: Optional[list] = None,
+    novelty_rmse_threshold: Optional[float] = None,
+    prune_dse_multiplier: Optional[float] = None,
+    prune_weight_floor: Optional[float] = None,
+    candidate_parallelism: Optional[int] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output stays invalid.
 
@@ -126,6 +145,11 @@ def _run_agent(
             enable_critique=enable_critique,
             n_critique_proposals=n_critique_proposals,
             critique_alpha=critique_alpha,
+            candidate_hints=candidate_hints,
+            novelty_rmse_threshold=novelty_rmse_threshold,
+            prune_dse_multiplier=prune_dse_multiplier,
+            prune_weight_floor=prune_weight_floor,
+            candidate_parallelism=candidate_parallelism,
         )
         _validate_or_exit(agent_key, exp_dir, validate)
     else:
@@ -265,7 +289,16 @@ def _posterior_design_inputs(exp_dir: Path, prev_exp_dir: Path):
                 f"none found in src/subjective_randomness/model_families/."
             ) from exc
         fitted = fit_model(
-            name, models_dir, responses, cache_dir=cache_dir, draws=500, tune=500, chains=2
+            name,
+            models_dir,
+            responses,
+            cache_dir=cache_dir,
+            # Deliberately cheaper than the production settings: the design
+            # step only needs posterior-predictive means to weight EIG
+            # scenarios (src.models.mcmc_defaults).
+            draws=DESIGN_TWIN_DRAWS,
+            tune=DESIGN_TWIN_TUNE,
+            chains=DESIGN_TWIN_CHAINS,
         )
         param_sets_by_model[name] = posterior_param_sets(
             fitted.idata, list(family.PARAM_BOUNDS), n_draws=200
@@ -355,6 +388,11 @@ def _run_experiment(
     design_mode: str = "agent",
     run_label: Optional[str] = None,
     max_validation_repairs: int = 2,
+    candidate_hints: Optional[list] = None,
+    novelty_rmse_threshold: Optional[float] = None,
+    prune_dse_multiplier: Optional[float] = None,
+    prune_weight_floor: Optional[float] = None,
+    candidate_parallelism: Optional[int] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
@@ -404,33 +442,55 @@ def _run_experiment(
         )
         return
 
-    seeded_models = False
+    # Establish this experiment's model set (idempotent: an existing valid
+    # cognitive_models/ is left alone, so --resume and --agent reruns are safe).
+    # There is no theorist agent — experiment 1 REQUIRES project seed models,
+    # and experiments >= 2 carry the previous experiment's set forward.
     if exp_num == 1:
-        seeded_models = seed_experiment_models_from_project(exp_dir_path, project_id)
-        if seeded_models:
+        if seed_experiment_models_from_project(exp_dir_path, project_id):
             print(
                 f"  [seed] Copied project seed models into {exp_dir_path / 'cognitive_models'}",
                 flush=True,
             )
-            if validate:
-                ok, msg = validate_cc_output("1_theory", exp_dir_path)
-                if ok:
-                    print(f"  [ok] seeded theory: {msg}", flush=True)
-                else:
-                    print(f"  [error] Seed validation failed: {msg}", file=sys.stderr)
-                    sys.exit(1)
+    else:
+        # carry_forward raises loudly if the previous experiment never
+        # completed (no manifest to carry).
+        if carry_forward_cognitive_models(
+            experiment_dir(project_id, exp_num - 1), exp_dir_path
+        ):
+            print(
+                f"  [carry-forward] Copied experiment {exp_num - 1}'s cognitive_models "
+                f"into {exp_dir_path / 'cognitive_models'}",
+                flush=True,
+            )
+    if validate:
+        ok, msg = validate_cc_output("models", exp_dir_path)
+        if ok:
+            print(f"  [ok] model set: {msg}", flush=True)
+        else:
+            hint = (
+                " (experiment 1 requires project seed models in "
+                f"{outer_project_dir(project_id) / 'seed_models'} — there is no "
+                "theorist agent to write them)"
+                if exp_num == 1
+                else ""
+            )
+            print(
+                f"  [error] Model-set validation failed: {msg}{hint}",
+                file=sys.stderr,
+            )
+            sys.exit(1)
 
     prev_exp_dir = experiment_dir(project_id, exp_num - 1) if exp_num > 1 else None
     if prev_exp_dir and not prev_exp_dir.exists():
         prev_exp_dir = None
 
     keys_to_run = [agent_filter] if agent_filter else AGENT_KEYS
-    if seeded_models and agent_filter is None:
-        keys_to_run = [key for key in keys_to_run if key != "1_theory"]
 
     for agent_key in keys_to_run:
         # Exhaustive design replaces the 2_design coding agent. It runs at the
-        # design stage (after 1_theory) so experiments >= 2 see the current models.
+        # design stage (after the model set is seeded / carried forward) so
+        # experiments >= 2 see the current models.
         if agent_key == "2_design" and design_mode == "exhaustive":
             _write_exhaustive_design(
                 exp_dir_path, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir
@@ -471,6 +531,11 @@ def _run_experiment(
             n_critique_proposals=n_critique_proposals,
             critique_alpha=critique_alpha,
             max_validation_repairs=max_validation_repairs,
+            candidate_hints=candidate_hints,
+            novelty_rmse_threshold=novelty_rmse_threshold,
+            prune_dse_multiplier=prune_dse_multiplier,
+            prune_weight_floor=prune_weight_floor,
+            candidate_parallelism=candidate_parallelism,
         )
         if agent_key == "3_implement" and deploy_target != "none":
             print(f"\n{'=' * 60}", flush=True)
@@ -520,7 +585,7 @@ class Args:
     experiments: Optional[str] = None
     """Experiments to run: N (1..N) or A-B (e.g. 4-6). Overrides --experiment."""
     agent: Optional[
-        Literal["1_theory", "2_design", "3_implement", "4_collect", "5_model_loop"]
+        Literal["2_design", "3_implement", "4_collect", "5_model_loop"]
     ] = None
     """Run only this agent. Omit for full pipeline."""
     design_mode: Literal["agent", "exhaustive"] = "agent"
@@ -576,11 +641,12 @@ class Args:
     """Run only deployment for an existing experiment; do not spawn a coding agent."""
     prepare_smoke_experiment: bool = False
     """Write a tiny implemented experiment before deploying, useful for smoke tests."""
-    draws: int = 2000
-    """MCMC posterior draws per chain for inner-loop model fits."""
-    tune: int = 2000
+    draws: int = PRODUCTION_DRAWS
+    """MCMC posterior draws per chain for inner-loop model fits
+    (src.models.mcmc_defaults)."""
+    tune: int = PRODUCTION_TUNE
     """MCMC tuning (warmup) steps per chain for inner-loop model fits."""
-    chains: int = 4
+    chains: int = PRODUCTION_CHAINS
     """MCMC chains for inner-loop model fits."""
     critique: bool = True
     """Run a CriticAL posterior-predictive critique of the incumbent before each
@@ -592,9 +658,39 @@ class Args:
     """Raw p-value threshold for flagging a critique discrepancy (a Benjamini-
     Hochberg FDR-adjusted q is reported alongside it). None ⇒ inner-loop default
     of 0.05; lower = stricter."""
+    hints_file: Optional[Path] = None
+    """YAML list of exploration hints cycled across a round's candidates
+    (None ⇒ the inner loop's built-in lens battery)."""
+    novelty_rmse_threshold: Optional[float] = None
+    """Reject a candidate whose p_left is within this RMSE of an admitted
+    model's (None ⇒ inner-loop default 0.02; 0 disables the gate)."""
+    prune_dse_multiplier: Optional[float] = None
+    """Prune agent models with elpd_diff > multiplier*dse AND negligible
+    stacking weight after each scoring pass (None ⇒ inner-loop default 2.0;
+    0 disables pruning)."""
+    prune_weight_floor: Optional[float] = None
+    """Stacking-weight floor for pruning (None ⇒ inner-loop default 0.01)."""
+    candidate_parallelism: Optional[int] = None
+    """Concurrent candidate agents per inner-loop round (None ⇒ all of a
+    round's candidates at once; 1 = sequential)."""
+    confirm_live_recruitment: bool = False
+    """Required alongside --prolific-mode live: going live recruits and PAYS
+    real participants, so it must be a second, explicit act (mirrors
+    smoke_firebase_deploy's --confirm-production)."""
 
 
 def main(args: Args) -> None:
+    # Money gate first — before any filesystem or network work. A YAML flag
+    # alone must never be able to start real recruitment.
+    if args.prolific_mode == "live" and not args.confirm_live_recruitment:
+        print(
+            "Error: --prolific-mode live recruits and PAYS real participants. "
+            "Pass --confirm-live-recruitment to confirm this is intentional "
+            "(config launchers: set `confirm_live_recruitment: true`).",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
     project_id = args.project
     prob_path = outer_project_dir(project_id) / "problem_definition.md"
     if not prob_path.exists():
@@ -635,6 +731,10 @@ def main(args: Args) -> None:
     os.environ["CODING_AGENT"] = backend
 
     fit_kwargs = {"draws": args.draws, "tune": args.tune, "chains": args.chains}
+
+    # Load exploration hints once; a broken hints file must fail before any
+    # experiment work starts, not mid-run at the first candidate round.
+    candidate_hints = load_hints_file(args.hints_file) if args.hints_file else None
 
     # One label per invocation, shared across this run's experiments, so parallel
     # runs deploy to distinct /e{N}-{label}/ hosting paths instead of colliding.
@@ -693,6 +793,11 @@ def main(args: Args) -> None:
             design_mode=args.design_mode,
             run_label=run_label,
             max_validation_repairs=args.max_validation_repairs,
+            candidate_hints=candidate_hints,
+            novelty_rmse_threshold=args.novelty_rmse_threshold,
+            prune_dse_multiplier=args.prune_dse_multiplier,
+            prune_weight_floor=args.prune_weight_floor,
+            candidate_parallelism=args.candidate_parallelism,
         )
 
     print("\nAll experiments complete.", flush=True)

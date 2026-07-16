@@ -1,9 +1,9 @@
 # Cognitive Hypothesis → PyMC Model (inner loop)
 
 You are proposing one candidate **hypothesis** about how people make these
-judgments. You do this in two steps: first state the hypothesis in plain
-English, then translate that single hypothesis into a PyMC model the pipeline
-fits with MCMC and compares by ELPD-LOO.
+judgments. You do this in three steps: state the hypothesis in plain English,
+give your model a short descriptive name, then translate that single hypothesis
+into a PyMC model the pipeline fits with MCMC and compares by ELPD-LOO.
 
 Read these files in the current working directory before deciding what to write:
 
@@ -33,7 +33,16 @@ Write `hypothesis.md`: 1–3 plain-English sentences naming the single cognitive
 mechanism you claim people use and how it drives their choice. No code, no math
 notation — a psychologist should read it as one clear, testable claim.
 
-## Step 2 — `candidate.py`
+## Step 2 — `model_name.txt`
+
+Write `model_name.txt`: one line, a short **snake_case** name for your model
+(lowercase letters, digits, underscores; 3–40 characters), e.g.
+`recency_weighted_runs` or `motif_surprise_accumulator`. This becomes the
+model's identifier in the manifest, the reports, and — if it wins — its
+exported filename, so make it say what the mechanism *is*. Do not reuse a name
+from `existing_hypotheses.md`, and do not use generic names like `new_model`.
+
+## Step 3 — `candidate.py`
 
 Translate the hypothesis in `hypothesis.md` into a PyMC model. It must build a
 PyMC model **at module level** inside a `with pm.Model() as model:` block. The
@@ -147,12 +156,15 @@ with pm.Model() as model:
 
 ## Self-check
 
-Before stopping, confirm both files exist — `hypothesis.md` (non-empty) and a
-`candidate.py` that imports and exposes a `pm.Model`. A candidate with no
-`hypothesis.md` is rejected.
+Before stopping, confirm all three files exist — `hypothesis.md` (non-empty),
+`model_name.txt` (one snake_case line), and a `candidate.py` that imports and
+exposes a `pm.Model`. A candidate with no `hypothesis.md` is rejected; a
+missing or invalid `model_name.txt` demotes your model to an auto-generated
+name.
 
 ```bash
 test -s hypothesis.md && echo "hypothesis.md OK"
+test -s model_name.txt && echo "model_name.txt OK"
 python3 -c "
 from pathlib import Path
 from src.models.pymc_inference import load_pymc_model, observed_response_data

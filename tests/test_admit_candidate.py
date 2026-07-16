@@ -52,6 +52,11 @@ def _stub_fittable(monkeypatch, ok=True, reason=""):
     monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
     # Admission also gates on a finite ELPD-LOO (reuses the fit); stub it finite.
     monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: -100.0)
+    # Novelty gate is covered by test_novelty_gate.py; neutralize it here.
+    monkeypatch.setattr(
+        pymc_orchestrator, "_min_prediction_rmse",
+        lambda *a, **k: (None, float("inf")),
+    )
 
 
 def _stub_fit_raises(monkeypatch):
