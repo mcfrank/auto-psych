@@ -5,7 +5,11 @@
 # the held-out correlation should stay low. Mirrors holdout_recovery.yaml; the
 # only structural difference is gt_models_dir + explicit {beta, side_bias} params.
 project_id: subjective_randomness
-seed_models_dir: src/pipelines/outer_loop/projects/subjective_randomness/seed_models
+# The GT/baseline registry: the original validated model set (with pure-Python
+# family twins for data generation). Deliberately NOT the live project
+# seed_models dir — since the hero-run promotion that manifest holds the
+# replicate winners, which have no family twins.
+seed_models_dir: src/subjective_randomness/pymc_model_families
 
 # Impossible ground-truth models live OUTSIDE the seed pool (this directory has
 # no models_manifest.yaml) so the agents never see them. Each is a PyMC file

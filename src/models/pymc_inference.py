@@ -767,3 +767,16 @@ def fit_models_cached(
 def clear_fit_cache() -> None:
     """Clear the in-process fit cache. Useful for tests."""
     _FIT_CACHE.clear()
+
+
+def evict_fit_cache(model_name: str) -> int:
+    """Drop every cached fit for ``model_name``; return how many were evicted.
+
+    Used when the inner loop prunes a losing model — its InferenceData would
+    otherwise stay resident in the in-process cache for the rest of the run.
+    The cache key leads with the model name (see ``_cache_key``).
+    """
+    keys = [k for k in _FIT_CACHE if k and k[0] == model_name]
+    for k in keys:
+        del _FIT_CACHE[k]
+    return len(keys)

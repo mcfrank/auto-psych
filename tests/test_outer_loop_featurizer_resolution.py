@@ -34,10 +34,12 @@ def test_inner_loop_resolves_featurizer_from_assets_dir(tmp_path, monkeypatch):
     )
     monkeypatch.setattr(orch, "_load_project_featurizer", fake_loader)
     monkeypatch.setattr(orch, "_write_feature_csv", lambda rows, fz, out: out)
-    monkeypatch.setattr(orch, "_export_inner_loop_model", lambda e, l: e)
+    monkeypatch.setattr(
+        orch, "_export_inner_loop_model", lambda e, l, *, best_model: e
+    )
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
-        lambda *a, **k: None,
+        lambda *a, **k: {"best_model": "stub_best"},
     )
 
     orch.run_inner_model_loop_programmatic(exp_dir, max_iterations=0, candidate_count=0)

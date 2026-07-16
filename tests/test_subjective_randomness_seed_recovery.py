@@ -38,11 +38,13 @@ def test_seed_experiment_models_from_project_copies_active_seed_set(tmp_path):
     manifest = yaml.safe_load((models_dir / "models_manifest.yaml").read_text())
     names = [m["name"] for m in manifest["models"]]
 
+    # The hero-run seed set: the best-fitting models discovered by the three
+    # human replicate runs (promoted 2026-07; see seed manifest for provenance).
     assert names == [
-        "prototype_similarity",
-        "encoding_compressibility",
-        "bayesian_diagnosticity",
-        "window_typicality",
+        "minkowski_accumulated_typicality",
+        "evidence_accumulation_messy_prototype",
+        "evidence_accumulation_per_run",
+        "artificial_balance_diagnosticity",
     ]
     for name in names:
         model = load_pymc_model(name, models_dir)

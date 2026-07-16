@@ -2,10 +2,11 @@
 """Evaluate hidden-ground-truth recovery for subjective randomness.
 
 The outer loop can generate data from a callable ground-truth model that is not
-listed among the seed PyMC families. After each experiment exports an
-``inner_loop_model`` into ``cognitive_models/``, this script refits that exported
-model on the experiment's pooled feature CSV and compares its heldout
-``p_left`` predictions to the hidden ground truth.
+listed among the seed PyMC families. After each experiment the inner loop's
+best model is recorded in ``cognitive_models/`` (under its own descriptive
+name; legacy runs exported a copy named ``inner_loop_model``). This script
+refits that best model on the experiment's pooled feature CSV and compares its
+heldout ``p_left`` predictions to the hidden ground truth.
 """
 
 from __future__ import annotations
@@ -160,25 +161,39 @@ def evaluate_experiment(
     exp_dir = experiment_dir(project_id, exp_num)
     models_dir = exp_dir / "cognitive_models"
     responses_path = exp_dir / "model_loop" / "responses.csv"
-    exported_model = models_dir / "inner_loop_model.py"
+    summary = posterior_summary(exp_dir)
+
+    # The inner loop's best model lives in cognitive_models under its own
+    # descriptive name (a winning seed stays in place; a winning candidate is
+    # exported). Legacy runs exported a copy named `inner_loop_model` instead.
+    best = summary.get("best_model")
+    if best is not None and (models_dir / f"{best}.py").exists():
+        model_name = best
+    elif (models_dir / "inner_loop_model.py").exists():
+        model_name = "inner_loop_model"
+    else:
+        model_name = None
 
     result: Dict[str, Any] = {
         "experiment": exp_num,
         "experiment_dir": str(exp_dir),
-        "model": "inner_loop_model",
-        "posterior_summary": posterior_summary(exp_dir),
+        "model": model_name,
+        "posterior_summary": summary,
     }
-    if not exported_model.exists():
-        result["error"] = f"Missing exported model: {exported_model}"
+    if model_name is None:
+        result["error"] = (
+            f"Best model {best!r} has no file in {models_dir} and no legacy "
+            f"inner_loop_model.py export exists"
+        )
         return result
     if not responses_path.exists():
         result["error"] = f"Missing feature responses CSV: {responses_path}"
         return result
 
-    model = load_pymc_model("inner_loop_model", models_dir)
+    model = load_pymc_model(model_name, models_dir)
     stim_data = make_stim_data(model, rows)
     fitted = fit_model(
-        "inner_loop_model",
+        model_name,
         models_dir,
         responses_path,
         cache_dir=exp_dir / "model_loop" / "evaluation_cache",

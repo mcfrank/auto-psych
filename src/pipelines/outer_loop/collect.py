@@ -6,6 +6,7 @@ import csv
 import io
 import json
 import multiprocessing
+import os
 import random
 import re
 import subprocess
@@ -616,7 +617,7 @@ def _collect_live(
     agent_log(out_dir, "Collect (live): fetching results from Firebase")
     url = _results_url(results_api_url, config, project_id, run_id)
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "auto-psych"})
+        req = _results_request(url)
         with urllib.request.urlopen(req, timeout=60) as response:
             body = response.read().decode("utf-8")
     except Exception as exc:
@@ -678,7 +679,12 @@ def _collect_from_firebase(
     run_id = config.get("run_id", "")
     collection_session_id = config.get("collection_session_id")
     if not collection_session_id and not (project_id and run_id):
-        return []
+        # A mis-wired config must not silently read as "no participants yet".
+        raise ValueError(
+            "Results-API collection needs `collection_session_id` (or both "
+            "`project_id` and `run_id`) in the experiment config; got neither. "
+            "Was the deployment step's config merge skipped?"
+        )
 
     experiment_url = config.get("experiment_url")
     batch_id = _unique_batch_id()
@@ -803,7 +809,7 @@ def _collect_from_firebase(
 
     url = _results_url(results_api_url, config, project_id, run_id)
     try:
-        req = urllib.request.Request(url, headers={"User-Agent": "auto-psych"})
+        req = _results_request(url)
         with urllib.request.urlopen(req, timeout=60) as response:
             body = response.read().decode("utf-8")
     except Exception as exc:
@@ -846,6 +852,28 @@ def _results_url(base_url: str, config: dict[str, Any], project_id: str, run_id:
     else:
         query = urllib.parse.urlencode({"run_id": str(run_id), "project_id": str(project_id)})
     return f"{base_url.rstrip('/')}/results?{query}"
+
+
+def _results_request(url: str) -> urllib.request.Request:
+    """Build the (authenticated) /results request.
+
+    The deployed /results endpoint is token-guarded — without the token anyone
+    with the public config could read all participant data. A missing token in
+    the collecting environment is a misconfiguration and fails loudly rather
+    than surfacing as a 403 that reads like "no participants yet". Local test
+    servers (plain http) are exempt.
+    """
+    headers = {"User-Agent": "auto-psych"}
+    if url.startswith("https://"):
+        token = os.environ.get("AUTO_PSYCH_RESULTS_TOKEN", "").strip()
+        if not token:
+            raise RuntimeError(
+                "AUTO_PSYCH_RESULTS_TOKEN is not set — cannot fetch the "
+                "token-guarded /results endpoint. Export the same secret the "
+                "deployment provisioned into functions/.env."
+            )
+        headers["x-results-token"] = token
+    return urllib.request.Request(url, headers=headers)
 
 
 def _server_reachable(url: str, timeout_sec: float = 2.0) -> bool:
@@ -912,7 +940,14 @@ def _collect_from_browser(
                 (logs_dir / "browser_error.txt").write_text(msg, encoding="utf-8")
                 return []
 
-    project_id = config.get("project_id", "")
+    project_id = config.get("project_id") or ""
+    if not project_id:
+        # Participant ids and steering context are keyed by project; a blank
+        # value means the experiment config is mis-wired — fail loudly.
+        raise ValueError(
+            "Browser collection needs a non-empty `project_id` in the "
+            "experiment config."
+        )
     run_id = config.get("run_id", 0)
     batch_id = _unique_batch_id()
     participant_ids = [
@@ -986,8 +1021,8 @@ def _collect_from_browser(
                             done, llm_used = _drive_experiment_with_llm(
                                 page,
                                 min(timeout_ms, _DRIVE_TIMEOUT_MS),
-                                config.get("project_id", ""),
-                                config.get("run_id", 0),
+                                project_id,
+                                run_id,
                                 logs_dir,
                             )
                             log_status(

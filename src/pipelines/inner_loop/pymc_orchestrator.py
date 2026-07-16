@@ -26,15 +26,25 @@ Layout under ``results_dir``::
 
 from __future__ import annotations
 
+import csv
 import json
 import math
+import re
 import shutil
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
+import numpy as np
 import yaml
 
-from src.models.pymc_inference import fit_model, load_pymc_model, model_logp_is_finite
+from src.models.pymc_inference import (
+    evict_fit_cache,
+    fit_model,
+    load_pymc_model,
+    make_stim_data,
+    model_logp_is_finite,
+)
 from src.model_comparison.likelihood import log_likelihood
 from src.model_comparison.posterior import compare_table, model_posterior
 from src.runtime.config import REPO_ROOT
@@ -65,6 +75,51 @@ CRITIQUE_PPC_REPLICATES = 200
 # model (e.g. a full Bayesian model), so keep the magnitude small.
 DEFAULT_COMPLEXITY_PRIOR_CONST = -0.05
 
+# Pruning: after each scoring pass, an agent-conjectured model is dropped when
+# it is BOTH statistically distinguishable from the best (elpd_diff >
+# multiplier·dse) AND carries negligible stacking weight (< floor). The seeded
+# set is never pruned. Multiplier 0 disables pruning.
+DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
+DEFAULT_PRUNE_WEIGHT_FLOOR = 0.01
+
+# Novelty gate: a candidate whose posterior-mean p_left is within this RMSE of
+# an admitted model's (on the observed stimuli) is a re-skinned duplicate, not
+# a new hypothesis — reject it at admission. 0.02 sits just below the closest
+# genuinely-distinct pair observed across the human replicates (run2's two
+# winners, RMSE 0.029). Set to 0 to disable.
+DEFAULT_NOVELTY_RMSE_THRESHOLD = 0.02
+
+# Exploration lenses, one per candidate per round (candidate_idx % len). Each
+# is a distinct way to search the hypothesis space; together they push rounds
+# toward genuine novelty rather than conservative revision of the incumbent
+# (the old 3-hint rotation pushed novelty in only one candidate of three).
+# Every lens still demands exactly ONE mechanism per model. Override per run
+# with the `candidate_hints` parameter / `--hints-file` knob.
+DEFAULT_CANDIDATE_HINTS = [
+    "Refine one existing hypothesis within its single mechanism — e.g. a "
+    "different functional form, prior, or normalization. Do NOT graft cues "
+    "from other models onto it.",
+    "Propose a mechanism from a genuinely different psychological process "
+    "family than anything in the current set — one the current models cannot "
+    "express, not a variant of them.",
+    "Propose a single mechanism whose predictions would disagree most sharply "
+    "with the current best model somewhere in the stimulus space — and say in "
+    "your hypothesis where that disagreement lives.",
+    "Build a mechanism around information the current models ignore. If the "
+    "precomputed columns cannot express it, derive the exact statistic your "
+    "hypothesis needs from the raw sequences with `compute_features` (order, "
+    "position, recency, specific sub-sequences).",
+    "Propose a process-level account — a memory limit, attention window, "
+    "encoding cost, or sequential-updating process — rather than another "
+    "statistical summary of the stimulus.",
+    "Take a normative account (e.g. Bayesian inference over candidate "
+    "generators) and add exactly one principled distortion: a bias, a "
+    "resource limit, or a mis-weighting.",
+    "Propose something simpler or higher-variance than anything in the set — "
+    "if it is wrong, the model comparison will say so loudly, and that is "
+    "informative.",
+]
+
 
 # ─────────────────────────────────────────────
 # Model-set ("zoo") helpers
@@ -94,6 +149,60 @@ def _write_manifest(models_dir: Path, entries: List[Dict[str, str]]) -> None:
     (models_dir / "models_manifest.yaml").write_text(
         yaml.safe_dump({"models": entries}, sort_keys=False), encoding="utf-8"
     )
+
+
+# Agent-chosen model names: short snake_case slugs. The auto pattern and the
+# export names are reserved so agent names never collide with pipeline
+# machinery (the carried-manifest validator rejects zoo names outright).
+_MODEL_NAME_RE = re.compile(r"[a-z][a-z0-9_]{2,40}")
+_ZOO_NAME_RE = re.compile(r"iter\d+_candidate\d+")
+_RESERVED_MODEL_NAMES = frozenset({"inner_loop_model", "best_model"})
+
+
+def _resolve_candidate_name(
+    candidate_dir: Path, models_dir: Path, *, fallback: str
+) -> str:
+    """The admitted name for a candidate: the agent's slug or the auto fallback.
+
+    The agent writes ``model_name.txt`` (snake_case) alongside ``hypothesis.md``
+    so discovered models carry meaningful, run-unique identifiers instead of
+    ``iterN_candidateM`` (which collided across runs and carries no meaning). A
+    missing or invalid name falls back to the auto name with a loud log — a bad
+    name never sinks an otherwise good candidate. A name already in the model
+    set is uniquified with a numeric suffix.
+    """
+    name_path = Path(candidate_dir) / "model_name.txt"
+    if not name_path.exists():
+        print(
+            f"  [name] {name_path} not written — admitting as {fallback!r}",
+            flush=True,
+        )
+        return fallback
+    raw = name_path.read_text(encoding="utf-8").strip()
+    if (
+        not _MODEL_NAME_RE.fullmatch(raw)
+        or _ZOO_NAME_RE.fullmatch(raw)
+        or raw in _RESERVED_MODEL_NAMES
+    ):
+        print(
+            f"  [name] invalid model name {raw!r} (need a short snake_case slug, "
+            f"not a reserved or auto-generated name) — admitting as {fallback!r}",
+            flush=True,
+        )
+        return fallback
+    existing = set(_manifest_names(models_dir))
+    if raw in existing:
+        suffix = 2
+        while f"{raw}_{suffix}" in existing:
+            suffix += 1
+        unique = f"{raw}_{suffix}"
+        print(
+            f"  [name] {raw!r} is already in the model set — admitting as "
+            f"{unique!r}",
+            flush=True,
+        )
+        return unique
+    return raw
 
 
 def _seed_model_set(seed_models_dir: Path, models_dir: Path) -> List[Dict[str, str]]:
@@ -209,6 +318,111 @@ def _drop_nonfinite_elpd_models(
     _write_manifest(models_dir, keep)
 
 
+def _min_prediction_rmse(
+    model_name: str,
+    models_dir: Path,
+    responses_path: Path,
+    *,
+    cache_dir: Optional[Path] = None,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+) -> Tuple[Optional[str], float]:
+    """Min RMSE between ``model_name``'s p_left and each admitted model's.
+
+    Predictions are posterior means on the observed stimuli, computed from the
+    cached fits (this runs after the admission fit-gate and after scoring has
+    fit every admitted model, so no new MCMC happens here). Returns the
+    nearest model's name and the RMSE — ``(None, inf)`` when the set holds no
+    other model.
+    """
+    with Path(responses_path).open(encoding="utf-8") as f:
+        rows = list(csv.DictReader(f))
+
+    def posterior_mean_p_left(name: str) -> np.ndarray:
+        fitted = fit_model(
+            name, models_dir, responses_path, cache_dir=cache_dir, **(fit_kwargs or {})
+        )
+        stim_data = make_stim_data(fitted.model, rows)
+        return np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
+
+    candidate_p = posterior_mean_p_left(model_name)
+    nearest: Optional[str] = None
+    nearest_rmse = float("inf")
+    for name in _manifest_names(models_dir):
+        if name == model_name:
+            continue
+        rmse = float(np.sqrt(np.mean((candidate_p - posterior_mean_p_left(name)) ** 2)))
+        if rmse < nearest_rmse:
+            nearest, nearest_rmse = name, rmse
+    return nearest, nearest_rmse
+
+
+def _prune_losers(
+    models_dir: Path,
+    responses_path: Path,
+    *,
+    protected: set,
+    cache_dir: Optional[Path],
+    fit_kwargs: Optional[Dict[str, Any]],
+    dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER,
+    weight_floor: float = DEFAULT_PRUNE_WEIGHT_FLOOR,
+) -> List[str]:
+    """Drop agent-conjectured models that obviously lose; return their names.
+
+    "Obviously lose" means BOTH: statistically distinguishable from the best
+    (``elpd_diff > dse_multiplier·dse``) AND negligible stacking weight
+    (< ``weight_floor``) — a model failing only one test may still be a live
+    rival. ``protected`` names (the seeded set) are never pruned: they are the
+    baselines the run reports against. Pruned files move to ``models/pruned/``
+    (an audit trail, not a deletion) and their cached fits are evicted so the
+    in-process memory footprint stops growing with dead models.
+
+    Honest framing: within a run, re-scoring a loser is a cache hit, so the
+    savings are memory, az.compare size, and a focused existing_hypotheses.md —
+    not avoided MCMC.
+    """
+    if dse_multiplier <= 0:
+        return []
+    names = _manifest_names(models_dir)
+    if len(names) < 2:
+        return []
+    comparison = compare_table(
+        responses_path, models_dir, cache_dir=cache_dir, **(fit_kwargs or {})
+    )
+    to_prune = [
+        name
+        for name in names
+        if name not in protected
+        and name in comparison
+        and comparison[name]["dse"] > 0
+        and comparison[name]["elpd_diff"] > dse_multiplier * comparison[name]["dse"]
+        and comparison[name]["weight"] < weight_floor
+    ]
+    if not to_prune:
+        return []
+
+    pruned_dir = models_dir / "pruned"
+    pruned_dir.mkdir(exist_ok=True)
+    for name in to_prune:
+        row = comparison[name]
+        for suffix in (".py", ".hypothesis.md"):
+            src = models_dir / f"{name}{suffix}"
+            if src.exists():
+                shutil.move(str(src), str(pruned_dir / f"{name}{suffix}"))
+        evict_fit_cache(name)
+        print(
+            f"  [prune] {name}: elpd_diff {row['elpd_diff']:.1f} > "
+            f"{dse_multiplier}·dse ({row['dse']:.1f}) and stacking weight "
+            f"{row['weight']:.4f} < {weight_floor} — moved to models/pruned/.",
+            flush=True,
+        )
+    remaining = set(names) - set(to_prune)
+    _write_manifest(
+        models_dir,
+        [e for e in _manifest_entries(models_dir) if e.get("name") in remaining],
+    )
+    return to_prune
+
+
 def _admit_candidate(
     candidate_file: Path,
     models_dir: Path,
@@ -217,6 +431,7 @@ def _admit_candidate(
     *,
     cache_dir: Optional[Path] = None,
     fit_kwargs: Optional[Dict[str, Any]] = None,
+    novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
 ) -> bool:
     """Validate a candidate and, if valid, admit it to the model set.
 
@@ -331,6 +546,29 @@ def _admit_candidate(
         )
         return False
 
+    # Novelty gate: a candidate that predicts like an existing model is a
+    # re-skinned duplicate under a new name — it would split posterior mass
+    # with its twin in every later comparison. Uses the cached fits from the
+    # gates above and prior scoring, so this adds no MCMC.
+    if novelty_rmse_threshold > 0:
+        nearest, rmse = _min_prediction_rmse(
+            model_name,
+            models_dir,
+            responses_path,
+            cache_dir=cache_dir,
+            fit_kwargs=fit_kwargs,
+        )
+        if nearest is not None and rmse < novelty_rmse_threshold:
+            staged.unlink(missing_ok=True)
+            print(
+                f"  [reject] {model_name}: predicts like existing model "
+                f"{nearest!r} (p_left RMSE {rmse:.4f} < "
+                f"{novelty_rmse_threshold}) — a near-duplicate, not a new "
+                f"hypothesis.",
+                flush=True,
+            )
+            return False
+
     shutil.copyfile(hypothesis_file, models_dir / f"{model_name}.hypothesis.md")
 
     # Rebuild the manifest, preserving every existing entry's rationale (its
@@ -362,12 +600,13 @@ def _write_existing_hypotheses(
     candidate_dir: Path,
     models_dir: Path,
     current_posterior: Optional[Dict[str, Any]],
-) -> None:
+) -> str:
     """Write the hypotheses already in the model set + how well each fits.
 
     Each model's hypothesis is its manifest rationale; its fit is its current
     ELPD-LOO posterior mass. The candidate agent reads this to pick a *distinct*
     or *refined* hypothesis — never to merge the top models into a blend.
+    Returns the written text (it is also injected into the agent's prompt).
     """
     posteriors = (current_posterior or {}).get("posteriors", {})
     elpd = (current_posterior or {}).get("elpd_loo", {})
@@ -392,6 +631,7 @@ def _write_existing_hypotheses(
         "several.\n\n" + body
     )
     (candidate_dir / "existing_hypotheses.md").write_text(text, encoding="utf-8")
+    return text
 
 
 def _write_candidate_context(
@@ -403,7 +643,18 @@ def _write_candidate_context(
     candidate_count: int,
     current_posterior: Optional[Dict[str, Any]],
     critique_path: Optional[Path] = None,
-) -> None:
+    hints: Optional[List[str]] = None,
+) -> Dict[str, Optional[str]]:
+    """Write the candidate's context documents and return their text.
+
+    The files (CONTEXT.md, CANDIDATE_BRIEF.md, existing_hypotheses.md,
+    critiques.md) stay on disk for audit/reproducibility, but the returned
+    strings are what actually reach the agent — they are injected verbatim
+    into its prompt (see ``_build_candidate_prompt``), so steering content is
+    never optional reading. ``hints`` overrides the default exploration
+    lenses; hint ``candidate_idx % len(hints)`` goes into this candidate's
+    brief.
+    """
     candidate_dir.mkdir(parents=True, exist_ok=True)
     with responses_path.open(encoding="utf-8") as f:
         header = f.readline().strip()
@@ -434,14 +685,16 @@ def _write_candidate_context(
         ]
     lines += [
         "",
-        "Work in two steps:",
+        "Work in three steps:",
         "1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.",
-        "2. Write `candidate.py` — a module-level PyMC model implementing only that",
+        "2. Write `model_name.txt` — a short snake_case name for the model (it",
+        "   becomes the model's identifier everywhere downstream).",
+        "3. Write `candidate.py` — a module-level PyMC model implementing only that",
         "   hypothesis.",
         "",
         "`existing_hypotheses.md` lists the hypotheses already in the model set and",
         "how well each fits. Read it so you propose a *distinct* or *refined*",
-        "hypothesis — never a blend of several.",
+        "hypothesis — never a blend of several — under a name not already taken.",
     ]
     if critique_path is not None:
         lines += [
@@ -454,21 +707,18 @@ def _write_candidate_context(
             "discrepancy that survives the FDR (`q ≤ alpha`). Use the strongest such",
             "discrepancy to motivate a single mechanism that would close that gap.",
         ]
-    (candidate_dir / "CONTEXT.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    context_text = "\n".join(lines) + "\n"
+    (candidate_dir / "CONTEXT.md").write_text(context_text, encoding="utf-8")
 
-    _write_existing_hypotheses(candidate_dir, models_dir, current_posterior)
+    hypotheses_text = _write_existing_hypotheses(
+        candidate_dir, models_dir, current_posterior
+    )
+    critiques_text: Optional[str] = None
     if critique_path is not None and critique_path.exists():
-        shutil.copyfile(critique_path, candidate_dir / "critiques.md")
+        critiques_text = critique_path.read_text(encoding="utf-8")
+        (candidate_dir / "critiques.md").write_text(critiques_text, encoding="utf-8")
 
-    hints = [
-        "Refine one existing hypothesis within its single mechanism — e.g. a "
-        "different functional form, prior, or normalization. Do NOT graft cues "
-        "from other models onto it.",
-        "Propose a new single-mechanism hypothesis that the current models cannot "
-        "express.",
-        "Propose a simpler or higher-variance single-mechanism hypothesis if "
-        "progress has stalled.",
-    ]
+    hints = list(hints) if hints else list(DEFAULT_CANDIDATE_HINTS)
     critique_note = (
         "\nIf `critiques.md` is present, prioritise a hypothesis that addresses one of "
         "the significant discrepancies it reports.\n"
@@ -485,9 +735,44 @@ def _write_candidate_context(
     )
     (candidate_dir / "CANDIDATE_BRIEF.md").write_text(brief, encoding="utf-8")
 
+    return {
+        "context": context_text,
+        "brief": brief,
+        "existing_hypotheses": hypotheses_text,
+        "critiques": critiques_text,
+    }
+
+
+def _build_candidate_prompt(
+    candidate_dir: Path, docs: Dict[str, Optional[str]]
+) -> str:
+    """The candidate agent's full prompt: task instructions + injected context.
+
+    Every context document is inlined as a delimited section so the agent
+    cannot skip the round brief, the current hypotheses, or the critique. The
+    same documents exist as files in the working directory for reference.
+    """
+    sections = [
+        f"{_THEORY_PROMPT.read_text(encoding='utf-8')}",
+        "---",
+        f"Your working directory for this candidate is `{candidate_dir}`.\n"
+        f"Write `hypothesis.md` (your single hypothesis in plain English), "
+        f"`model_name.txt` (a short snake_case name for the model), and "
+        f"`candidate.py` (a PyMC model implementing only it) into that "
+        f"directory.\n\n"
+        f"The context documents below are also on disk there for reference.",
+        f"## CONTEXT.md\n\n{docs['context']}",
+        f"## CANDIDATE_BRIEF.md\n\n{docs['brief']}",
+        f"## existing_hypotheses.md\n\n{docs['existing_hypotheses']}",
+    ]
+    if docs.get("critiques"):
+        sections.append(f"## critiques.md\n\n{docs['critiques']}")
+    return "\n\n".join(sections) + "\n"
+
 
 def _spawn_candidate_agent(
     candidate_dir: Path,
+    docs: Dict[str, Optional[str]],
     *,
     models_dir: Path,
     responses_path: Path,
@@ -504,14 +789,7 @@ def _spawn_candidate_agent(
     # candidate.py ever gets written. The critique agent runs from REPO_ROOT for
     # the same reason. The candidate_dir is named explicitly below since it is no
     # longer the cwd.
-    prompt = (
-        f"{_THEORY_PROMPT.read_text(encoding='utf-8')}\n\n"
-        f"---\n\nYour working directory for this candidate is `{candidate_dir}`.\n"
-        f"Read `CONTEXT.md`, `CANDIDATE_BRIEF.md`, `existing_hypotheses.md`, and "
-        f"`critiques.md` (if present) in that directory. Then write `hypothesis.md` "
-        f"(your single hypothesis in plain English) and `candidate.py` (a PyMC model "
-        f"implementing only it) into that same directory.\n"
-    )
+    prompt = _build_candidate_prompt(candidate_dir, docs)
     log_path = candidate_dir / "agent.jsonl"
     # For the Claude backend (which honours allowed_dirs via --add-dir) grant the
     # candidate's workspace plus the responses CSV and model set it references.
@@ -937,6 +1215,11 @@ def run_pymc_inner_loop(
     n_critique_proposals: int = CRITIQUE_N_PROPOSALS,
     critique_significance_alpha: float = CRITIQUE_SIGNIFICANCE_ALPHA,
     n_critique_replicates: int = CRITIQUE_PPC_REPLICATES,
+    candidate_hints: Optional[List[str]] = None,
+    novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
+    prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER,
+    prune_weight_floor: float = DEFAULT_PRUNE_WEIGHT_FLOOR,
+    candidate_parallelism: Optional[int] = None,
 ) -> Dict[str, Any]:
     """Run the PyMC inner model loop and export the best model.
 
@@ -967,6 +1250,23 @@ def run_pymc_inner_loop(
         Test statistics the critique agent proposes per round, the raw p-value
         threshold for a significant discrepancy, and the posterior-predictive replicates
         forming each statistic's null distribution.
+    candidate_hints
+        Exploration lenses cycled across a round's candidates (``None`` ⇒
+        ``DEFAULT_CANDIDATE_HINTS``). With ``candidate_count <= len(hints)``
+        every candidate in a round works a distinct lens.
+    novelty_rmse_threshold
+        Reject a candidate whose posterior-mean ``p_left`` is within this RMSE
+        of an admitted model's on the observed stimuli (``0`` disables).
+    prune_dse_multiplier, prune_weight_floor
+        After each scoring pass, drop agent models that are BOTH statistically
+        distinguishable from the best (``elpd_diff > multiplier·dse``) AND
+        carry stacking weight below the floor. The seeded set is never pruned;
+        multiplier ``0`` disables pruning.
+    candidate_parallelism
+        Concurrent candidate agents per round (``None`` ⇒ all of the round's
+        candidates at once; ``1`` ⇒ sequential). Agents are CLI subprocesses,
+        so this is a pure wall-clock lever; admission is always sequential in
+        candidate order, keeping runs deterministic.
 
     Returns a dict with ``best_model``, ``posteriors``, ``elpd_loo`` and paths.
     """
@@ -975,7 +1275,10 @@ def run_pymc_inner_loop(
     results_dir.mkdir(parents=True, exist_ok=True)
     models_dir = results_dir / "models"
 
-    _seed_model_set(Path(seed_models_dir), models_dir)
+    seeded_entries = _seed_model_set(Path(seed_models_dir), models_dir)
+    # The seeded set is pruning-protected: these are the baselines the run
+    # reports against, so they stay in the comparison even when they lose.
+    protected_names = {e.get("name") for e in seeded_entries if e.get("name")}
     _drop_unfittable_models(models_dir, responses_path)
     fit_kwargs = fit_kwargs or {}
     # A carried-forward model can score a finite ELPD on a prior experiment's data
@@ -1008,9 +1311,13 @@ def run_pymc_inner_loop(
                 agent_timeout_sec=agent_timeout_sec,
                 backend=backend,
             )
+        # Stage 1 — write every candidate's context, then spawn the agents
+        # concurrently: each is a CLI subprocess whose latency dominates the
+        # round, and they are independent given the shared round context.
+        candidate_dirs = []
         for idx in range(candidate_count):
             candidate_dir = round_dir / f"candidate_{idx}"
-            _write_candidate_context(
+            docs = _write_candidate_context(
                 candidate_dir,
                 responses_path,
                 models_dir,
@@ -1019,27 +1326,67 @@ def run_pymc_inner_loop(
                 candidate_count,
                 posterior,
                 critique_path=critique_path,
+                hints=candidate_hints,
             )
-            if not _spawn_candidate_agent(
+            candidate_dirs.append((idx, candidate_dir, docs))
+
+        def spawn(item) -> bool:
+            _, candidate_dir, docs = item
+            return _spawn_candidate_agent(
                 candidate_dir,
+                docs,
                 models_dir=models_dir,
                 responses_path=responses_path,
                 agent_timeout_sec=agent_timeout_sec,
                 backend=backend,
-            ):
+            )
+
+        workers = min(candidate_parallelism or candidate_count, candidate_count)
+        if workers > 1:
+            with ThreadPoolExecutor(max_workers=workers) as pool:
+                spawn_ok = list(pool.map(spawn, candidate_dirs))
+        else:
+            spawn_ok = [spawn(item) for item in candidate_dirs]
+
+        # Stage 2 — admit sequentially in candidate order: admission mutates
+        # the manifest, uniquifies names, and runs MCMC + the novelty gate, so
+        # a fixed order keeps runs deterministic (earlier candidates win ties).
+        for (idx, candidate_dir, _), ok in zip(candidate_dirs, spawn_ok):
+            if not ok:
                 continue
             _admit_candidate(
                 candidate_dir / "candidate.py",
                 models_dir,
-                model_name=f"iter{iteration}_candidate{idx}",
+                model_name=_resolve_candidate_name(
+                    candidate_dir,
+                    models_dir,
+                    fallback=f"iter{iteration}_candidate{idx}",
+                ),
                 responses_path=responses_path,
                 cache_dir=cache_dir,
                 fit_kwargs=fit_kwargs,
+                novelty_rmse_threshold=novelty_rmse_threshold,
             )
         posterior = _score(
             responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
         )
-        _record_history_step(history, results_dir, posterior, iteration=iteration)
+        pruned = _prune_losers(
+            models_dir,
+            responses_path,
+            protected=protected_names,
+            cache_dir=cache_dir,
+            fit_kwargs=fit_kwargs,
+            dse_multiplier=prune_dse_multiplier,
+            weight_floor=prune_weight_floor,
+        )
+        if pruned:
+            # Re-normalize over the surviving set (cached fits — no new MCMC).
+            posterior = _score(
+                responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
+            )
+        _record_history_step(
+            history, results_dir, posterior, iteration=iteration, pruned=pruned
+        )
 
     comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
     result = _export(results_dir, models_dir, posterior, comparison)
@@ -1057,21 +1404,25 @@ def _record_history_step(
     results_dir: Path,
     posterior: Dict[str, Any],
     iteration: Optional[int],
+    pruned: Optional[List[str]] = None,
 ) -> None:
     """Append one scoring step to the history and persist it immediately.
 
     The file is rewritten after every step so a crashed run still leaves the
-    trajectory up to its last completed scoring.
+    trajectory up to its last completed scoring. ``pruned`` records any models
+    dropped by the pruning pass this step (the posterior in the entry is over
+    the surviving set).
     """
-    history.append(
-        {
-            "step": len(history),
-            "iteration": iteration,
-            "best_model": _best_model(posterior),
-            "posteriors": dict(posterior["posteriors"]),
-            "elpd_loo": dict(posterior["elpd_loo"]),
-        }
-    )
+    entry = {
+        "step": len(history),
+        "iteration": iteration,
+        "best_model": _best_model(posterior),
+        "posteriors": dict(posterior["posteriors"]),
+        "elpd_loo": dict(posterior["elpd_loo"]),
+    }
+    if pruned:
+        entry["pruned"] = list(pruned)
+    history.append(entry)
     (results_dir / "history.json").write_text(
         json.dumps(history, indent=2), encoding="utf-8"
     )

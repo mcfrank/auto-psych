@@ -30,9 +30,10 @@ from src.subjective_randomness.holdout_recovery import (
 from src.subjective_randomness.model_recovery import p_left_fixed_params
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SEED_MODELS_DIR = (
-    REPO_ROOT / "src/pipelines/outer_loop/projects/subjective_randomness/seed_models"
-)
+# The recovery GT/baseline registry: the original validated model set with
+# pure-Python family twins. NOT the live project seed_models dir, which since
+# the hero-run promotion holds the replicate winners (no family twins).
+SEED_MODELS_DIR = REPO_ROOT / "src/subjective_randomness/pymc_model_families"
 IMPOSSIBLE_MODELS_DIR = REPO_ROOT / "src/subjective_randomness/impossible_models"
 
 DESIGN_STIMULI = [
@@ -42,19 +43,14 @@ DESIGN_STIMULI = [
 
 
 def _stub_spawn_cc_agent(calls):
-    """Stand-in for the theory/design coding agents (mirrors the seed-model test)."""
+    """Stand-in for the design coding agent (mirrors the seed-model test).
+
+    Design is the only spawned agent stage: the model set is seeded / carried
+    forward programmatically, so any other key is an error."""
 
     def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None):
         calls.append((agent_key, Path(exp_dir).name))
-        if agent_key == "1_theory":
-            exp_num = int(exp_dir.name.removeprefix("experiment"))
-            prev_models = exp_dir.parent / f"experiment{exp_num - 1}" / "cognitive_models"
-            dest = exp_dir / "cognitive_models"
-            dest.mkdir(parents=True, exist_ok=True)
-            for path in prev_models.iterdir():
-                if path.is_file():
-                    shutil.copyfile(path, dest / path.name)
-        elif agent_key == "2_design":
+        if agent_key == "2_design":
             design_dir = exp_dir / "design"
             design_dir.mkdir(parents=True, exist_ok=True)
             (design_dir / "stimuli.json").write_text(
@@ -93,7 +89,10 @@ def _stub_generate_responses(calls):
     return generate
 
 
-def _stub_inner_loop(history_best="encoding_compressibility"):
+def _stub_inner_loop(history_best):
+    # ``history_best`` must be a model present in the experiment's seeded
+    # cognitive_models — a live-pool winner, since these tests seed from the
+    # real project assets (the impossible GT lives in a separate directory).
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
             backend=None, cache_dir=None, project_id=None, agent_timeout_sec=900):
         loop_dir = exp_dir / "model_loop"
@@ -105,6 +104,15 @@ def _stub_inner_loop(history_best="encoding_compressibility"):
 
         posteriors = {history_best: 0.8, "bayesian_diagnosticity": 0.2}
         elpd = {history_best: -10.0, "bayesian_diagnosticity": -12.0}
+        # Mirror the real export: az.compare's stacking weights, which the
+        # registry updater requires (it refuses a posterior file without them).
+        comparison = {
+            history_best: {"rank": 0, "elpd_loo": -10.0, "elpd_diff": 0.0,
+                           "dse": 0.0, "weight": 0.7, "loo_unreliable": False},
+            "bayesian_diagnosticity": {"rank": 1, "elpd_loo": -12.0,
+                                       "elpd_diff": 2.0, "dse": 1.5,
+                                       "weight": 0.3, "loo_unreliable": False},
+        }
         history = [
             {"step": 0, "iteration": None, "best_model": history_best,
              "posteriors": posteriors, "elpd_loo": elpd},
@@ -113,23 +121,16 @@ def _stub_inner_loop(history_best="encoding_compressibility"):
         ]
         (loop_dir / "history.json").write_text(json.dumps(history), encoding="utf-8")
         (loop_dir / "model_posterior.json").write_text(
-            json.dumps({"posteriors": posteriors, "elpd_loo": elpd, "n_trials": 4}),
+            json.dumps({"posteriors": posteriors, "elpd_loo": elpd,
+                        "n_trials": 4, "comparison": comparison}),
             encoding="utf-8",
         )
         (loop_dir / "report.md").write_text("# stub report\n", encoding="utf-8")
         (loop_dir / "responses.csv").write_text("chose_left\n1\n", encoding="utf-8")
 
-        # Mirror _export_inner_loop_model: best model into cognitive_models + manifest.
-        shutil.copyfile(
-            cognitive_dir / f"{history_best}.py",
-            cognitive_dir / "inner_loop_model.py",
-        )
-        manifest_path = cognitive_dir / "models_manifest.yaml"
-        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-        manifest["models"] = [
-            m for m in manifest["models"] if m.get("name") != "inner_loop_model"
-        ] + [{"name": "inner_loop_model", "rationale": "stub"}]
-        manifest_path.write_text(yaml.safe_dump(manifest), encoding="utf-8")
+        # Mirror _export_inner_loop_model's new semantics: ``history_best`` is
+        # already in cognitive_models (a pool model that won), so nothing is
+        # copied and the manifest is unchanged.
         return loop_dir
 
     return run
@@ -155,7 +156,9 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
         holdout_recovery, "generate_responses", _stub_generate_responses(collect_calls)
     )
     monkeypatch.setattr(
-        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop()
+        holdout_recovery,
+        "run_inner_model_loop_programmatic",
+        _stub_inner_loop("minkowski_accumulated_typicality"),
     )
     # The GT reference p_left is stubbed (varied, so correlation is defined);
     # the impossible PyMC model file is exercised by the unit tests, not here.
@@ -207,10 +210,12 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     )
     seeded_names = {m["name"] for m in seeded["models"]}
     assert "more_heads_more_random" not in seeded_names
+    # The live pool holds the promoted replicate winners (hero-run seed set).
     assert {
-        "prototype_similarity",
-        "bayesian_diagnosticity",
-        "encoding_compressibility",
+        "minkowski_accumulated_typicality",
+        "evidence_accumulation_messy_prototype",
+        "evidence_accumulation_per_run",
+        "artificial_balance_diagnosticity",
     } <= seeded_names
 
     # Every response is generated from the impossible GT, read from the SEPARATE
@@ -406,7 +411,9 @@ def test_impossible_holdout_exhaustive_eval_thins_posterior(tmp_path, monkeypatc
         holdout_recovery, "generate_responses", _stub_generate_responses([])
     )
     monkeypatch.setattr(
-        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop()
+        holdout_recovery,
+        "run_inner_model_loop_programmatic",
+        _stub_inner_loop("minkowski_accumulated_typicality"),
     )
     monkeypatch.setattr(
         holdout_recovery,

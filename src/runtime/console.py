@@ -4,12 +4,10 @@ import sys
 from typing import Optional
 
 AGENT_DISPLAY_NAMES = {
-    "1_theory": "Theory",
     "2_design": "Design",
     "3_implement": "Implement",
     "4_collect": "Collect data",
-    "5_analyze": "Analyze",
-    "6_interpret": "Interpret",
+    "5_model_loop": "Model loop",
 }
 
 

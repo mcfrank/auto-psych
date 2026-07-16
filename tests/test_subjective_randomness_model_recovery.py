@@ -29,9 +29,10 @@ from src.subjective_randomness.model_recovery import (
 from src.subjective_randomness.features import featurize_stimulus
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-SEED_MODELS_DIR = (
-    REPO_ROOT / "src/pipelines/outer_loop/projects/subjective_randomness/seed_models"
-)
+# The recovery GT/baseline registry: the original validated model set with
+# pure-Python family twins. NOT the live project seed_models dir, which since
+# the hero-run promotion holds the replicate winners (no family twins).
+SEED_MODELS_DIR = REPO_ROOT / "src/subjective_randomness/pymc_model_families"
 
 # Two stimuli the prototype-similarity model should rate very differently:
 # a clearly "more random looking" alternating pair vs. a long-run pair.

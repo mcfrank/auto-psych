@@ -71,3 +71,4 @@ analysis/behavioral/data/mega_model_predictions.csv
 # Quarto render artifacts (regenerate with quarto render)
 analysis/behavioral/*.html
 analysis/behavioral/*_files/
+functions/.env

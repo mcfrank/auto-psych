@@ -143,6 +143,54 @@ def seed_experiment_models_from_project(
     return True
 
 
+def carry_forward_cognitive_models(prev_exp_dir: Path, exp_dir: Path) -> bool:
+    """Copy the previous experiment's cognitive_models/ into a new experiment.
+
+    This replaces the removed outer-loop theorist agent's one mechanical job:
+    experiments >= 2 start from the previous experiment's model set (the carried
+    models plus the inner loop's exported best). New hypotheses enter only via
+    the inner loop.
+
+    Mirrors ``seed_experiment_models_from_project``: returns True on copy and
+    False when the destination already has a manifest (so ``--resume`` never
+    overwrites an existing model set). A missing or empty previous manifest, or
+    a manifest entry without its ``.py`` file, raises — a later experiment must
+    never start from a silently truncated model set.
+    """
+    prev_dir = Path(prev_exp_dir) / "cognitive_models"
+    prev_manifest = prev_dir / "models_manifest.yaml"
+    if not prev_manifest.exists():
+        raise FileNotFoundError(
+            f"Cannot carry the model set forward: {prev_manifest} does not exist "
+            f"(did experiment '{Path(prev_exp_dir).name}' complete?)"
+        )
+
+    dest_dir = Path(exp_dir) / "cognitive_models"
+    dest_manifest = dest_dir / "models_manifest.yaml"
+    if dest_manifest.exists():
+        return False
+
+    manifest = yaml.safe_load(prev_manifest.read_text(encoding="utf-8")) or {}
+    entries = manifest.get("models") or []
+    if not entries:
+        raise ValueError(f"Previous manifest has no models: {prev_manifest}")
+
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    for entry in entries:
+        name = entry.get("name") if isinstance(entry, dict) else entry
+        if not name:
+            raise ValueError(f"Previous manifest has a model with no name: {prev_manifest}")
+        src = prev_dir / f"{name}.py"
+        if not src.exists():
+            raise FileNotFoundError(
+                f"Carried model {name!r} has no file at {src}; the previous "
+                f"experiment's model set is incomplete."
+            )
+        shutil.copyfile(src, dest_dir / f"{name}.py")
+    shutil.copyfile(prev_manifest, dest_manifest)
+    return True
+
+
 # ─────────────────────────────────────────────
 # CONTEXT.md writer
 # ─────────────────────────────────────────────
@@ -186,6 +234,39 @@ def write_context(
             f"- Previous model registry: `{prev_exp_dir / 'model_registry.yaml'}`",
             f"- Previous model loop report: `{prev_exp_dir / 'model_loop' / 'report.md'}`",
             f"- Previous model posterior: `{prev_exp_dir / 'model_loop' / 'model_posterior.json'}`",
+        ]
+
+    if agent_key == "2_design":
+        # The design agent's candidate pool bounds what EIG can select, so the
+        # agent must know the competing hypotheses to target their
+        # disagreements. Inline each model's hypothesis here (small text);
+        # implementations stay on disk at the cognitive-models path above. By
+        # design time the model set MUST exist (seeded or carried forward) — a
+        # missing manifest is a pipeline bug, so this fails loudly.
+        manifest_path = exp_dir / "cognitive_models" / "models_manifest.yaml"
+        if not manifest_path.exists():
+            raise FileNotFoundError(
+                f"Design context needs the model set, but {manifest_path} does "
+                f"not exist — the model set must be seeded/carried forward "
+                f"before the design stage."
+            )
+        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+        lines += [
+            "",
+            "## Current model set (the hypotheses your design must discriminate)",
+            "",
+        ]
+        for entry in manifest.get("models") or []:
+            name = entry.get("name") if isinstance(entry, dict) else entry
+            rationale = " ".join(
+                ((entry.get("rationale") or "") if isinstance(entry, dict) else "").split()
+            )
+            lines.append(f"- **{name}**: {rationale}")
+        lines += [
+            "",
+            "Read each model's `.py` in the cognitive-models dir for its exact "
+            "functional form, and `model_registry.yaml` for the current weight "
+            "on each model (absent/empty registry = uniform).",
         ]
 
     if extra:
@@ -640,41 +721,76 @@ def _write_feature_csv(
     return out_path
 
 
-def _export_inner_loop_model(
-    exp_dir: Path, loop_dir: Path, model_name: str = "inner_loop_model"
-) -> Path:
-    """Copy the inner loop's best PyMC model into `cognitive_models/` + manifest.
+_ZOO_NAME_RE = re.compile(r"iter\d+_candidate\d+")
 
-    The exported file is the winning PyMC model verbatim (a module-level
-    `model: pm.Model`), so the next experiment's theorist and the comparison
-    machinery consume it under the same contract as any other model.
+
+def _export_inner_loop_model(exp_dir: Path, loop_dir: Path, *, best_model: str) -> Path:
+    """Record the inner loop's best model in `cognitive_models/` + manifest.
+
+    The export keeps the model's own descriptive name and its hypothesis as the
+    manifest rationale, and only copies when the best model is genuinely new: a
+    seed (or a previously exported model) that wins again is already in the
+    set, and re-exporting it under a second name would split posterior mass
+    between two identical models in every later experiment. A fallback
+    auto-named winner (``iterN_candidateM`` — the agent wrote no usable
+    ``model_name.txt``) exports under the legacy stable name
+    ``inner_loop_model``, because zoo names must never enter the carried
+    manifest (the model-set validator rejects them).
     """
-    best_model = loop_dir / "best_model.py"
-    if not best_model.exists():
-        raise FileNotFoundError(f"Inner loop did not produce {best_model}")
+    zoo_dir = loop_dir / "models"
+    src = zoo_dir / f"{best_model}.py"
+    zoo_manifest = yaml.safe_load(
+        (zoo_dir / "models_manifest.yaml").read_text(encoding="utf-8")
+    ) or {}
+    rationales = {
+        m.get("name"): (m.get("rationale") or "").strip()
+        for m in zoo_manifest.get("models") or []
+        if isinstance(m, dict)
+    }
+    if best_model not in rationales or not src.exists():
+        raise ValueError(
+            f"Best model {best_model!r} is not in the inner-loop zoo "
+            f"({zoo_dir}); cannot export it."
+        )
+    if not rationales[best_model]:
+        raise ValueError(
+            f"Best model {best_model!r} has an empty rationale in the zoo "
+            f"manifest; every exported model must state its hypothesis."
+        )
+
     out_dir = exp_dir / "cognitive_models"
     out_dir.mkdir(parents=True, exist_ok=True)
-    model_path = out_dir / f"{model_name}.py"
-    shutil.copyfile(best_model, model_path)
-
     manifest_path = out_dir / "models_manifest.yaml"
     manifest = {"models": []}
     if manifest_path.exists():
         manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or manifest
     models = manifest.setdefault("models", [])
-    models = [
-        m for m in models if not (isinstance(m, dict) and m.get("name") == model_name)
-    ]
-    models.append(
-        {
-            "name": model_name,
-            "rationale": "Best PyMC model found by the inner model-improvement loop.",
-        }
-    )
+    existing = {m.get("name") for m in models if isinstance(m, dict)}
+
+    if best_model in existing:
+        print(
+            f"  [inner-loop] Best model {best_model!r} is already in "
+            f"cognitive_models — nothing to export.",
+            flush=True,
+        )
+        return out_dir / f"{best_model}.py"
+
+    export_name = best_model
+    if _ZOO_NAME_RE.fullmatch(best_model):
+        export_name = "inner_loop_model"
+        suffix = 2
+        while export_name in existing:
+            export_name = f"inner_loop_model_{suffix}"
+            suffix += 1
+
+    model_path = out_dir / f"{export_name}.py"
+    shutil.copyfile(src, model_path)
+    models.append({"name": export_name, "rationale": rationales[best_model]})
     manifest["models"] = models
     manifest_path.write_text(
         yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8"
     )
+    print(f"  [inner-loop] Exported best model as {model_path}", flush=True)
     return model_path
 
 
@@ -692,6 +808,11 @@ def run_inner_model_loop_programmatic(
     enable_critique: bool = True,
     n_critique_proposals: Optional[int] = None,
     critique_alpha: Optional[float] = None,
+    candidate_hints: Optional[List[str]] = None,
+    novelty_rmse_threshold: Optional[float] = None,
+    prune_dse_multiplier: Optional[float] = None,
+    prune_weight_floor: Optional[float] = None,
+    candidate_parallelism: Optional[int] = None,
 ) -> Path:
     """Run the PyMC inner model loop over pooled outer-loop data.
 
@@ -741,7 +862,18 @@ def run_inner_model_loop_programmatic(
         extra["n_critique_proposals"] = n_critique_proposals
     if critique_alpha is not None:
         extra["critique_significance_alpha"] = critique_alpha
-    run_pymc_inner_loop(
+    # None ⇒ inherit run_pymc_inner_loop's defaults for the exploration knobs.
+    if candidate_hints is not None:
+        extra["candidate_hints"] = list(candidate_hints)
+    if novelty_rmse_threshold is not None:
+        extra["novelty_rmse_threshold"] = novelty_rmse_threshold
+    if prune_dse_multiplier is not None:
+        extra["prune_dse_multiplier"] = prune_dse_multiplier
+    if prune_weight_floor is not None:
+        extra["prune_weight_floor"] = prune_weight_floor
+    if candidate_parallelism is not None:
+        extra["candidate_parallelism"] = candidate_parallelism
+    result = run_pymc_inner_loop(
         responses_path,
         loop_dir,
         seed_models_dir=seed_models_dir,
@@ -754,8 +886,7 @@ def run_inner_model_loop_programmatic(
         enable_critique=enable_critique,
         **extra,
     )
-    model_path = _export_inner_loop_model(exp_dir, loop_dir)
-    print(f"  [inner-loop] Exported {model_path}", flush=True)
+    _export_inner_loop_model(exp_dir, loop_dir, best_model=result["best_model"])
     return loop_dir
 
 
@@ -767,7 +898,11 @@ def run_inner_model_loop_programmatic(
 def validate_cc_output(agent_key: str, exp_dir: Path) -> tuple[bool, str]:
     """Validate agent output. Returns (ok, message)."""
     validators = {
-        "1_theory": _validate_theory,
+        # "models" is not an agent stage: it validates the experiment's
+        # cognitive_models/ set after seeding (experiment 1) or carry-forward
+        # (experiments >= 2). The theorist agent that used to produce this
+        # output was removed — new hypotheses enter only via the inner loop.
+        "models": _validate_model_set,
         "2_design": _validate_design,
         "3_implement": _validate_implement,
         "4_collect": _validate_collect,
@@ -777,7 +912,7 @@ def validate_cc_output(agent_key: str, exp_dir: Path) -> tuple[bool, str]:
     return fn(exp_dir) if fn else (True, "No validator for this agent")
 
 
-def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
+def _validate_model_set(exp_dir: Path) -> tuple[bool, str]:
     """Validate that every manifest model is a loadable PyMC model.
 
     Each `<name>.py` must define a module-level `model: pm.Model` with exactly
@@ -787,8 +922,8 @@ def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
     sys.path.insert(0, str(REPO_ROOT))
     from src.models.pymc_inference import load_pymc_model, observed_response_data  # type: ignore
 
-    theorist_dir = exp_dir / "cognitive_models"
-    manifest_path = theorist_dir / "models_manifest.yaml"
+    models_dir = exp_dir / "cognitive_models"
+    manifest_path = models_dir / "models_manifest.yaml"
     if not manifest_path.exists():
         return False, f"models_manifest.yaml not found at {manifest_path}"
     try:
@@ -837,13 +972,14 @@ def _validate_theory(exp_dir: Path) -> tuple[bool, str]:
                 "'rationale' in models_manifest.yaml naming the single cognitive "
                 "hypothesis it implements",
             )
-        if not (theorist_dir / f"{name}.py").exists():
+        if not (models_dir / f"{name}.py").exists():
             return (
                 False,
-                f"Model '{name}' has no {theorist_dir}/{name}.py (theorist must provide each model file)",
+                f"Model '{name}' has no {models_dir}/{name}.py (every manifest "
+                f"entry needs its model file)",
             )
         try:
-            model = load_pymc_model(name, theorist_dir)
+            model = load_pymc_model(name, models_dir)
         except Exception as e:
             return False, f"Model '{name}' is not a loadable PyMC model: {e}"
         try:
@@ -1017,7 +1153,6 @@ def _validate_model_loop(exp_dir: Path) -> tuple[bool, str]:
     loop_dir = exp_dir / "model_loop"
     report = loop_dir / "report.md"
     posterior = loop_dir / "model_posterior.json"
-    exported_model = exp_dir / "cognitive_models" / "inner_loop_model.py"
 
     if not posterior.exists():
         return False, "model_loop/model_posterior.json not found"
@@ -1025,14 +1160,35 @@ def _validate_model_loop(exp_dir: Path) -> tuple[bool, str]:
         data = json.loads(posterior.read_text(encoding="utf-8"))
         if "posteriors" not in data:
             return False, "model_loop/model_posterior.json missing 'posteriors'"
+        if not data.get("comparison"):
+            # The registry updater needs the az.compare stacking weights.
+            return False, "model_loop/model_posterior.json missing 'comparison'"
     except Exception as e:
         return False, f"Invalid model_posterior.json: {e}"
     if not report.exists():
         return False, "model_loop/report.md not found"
     if not report.read_text(encoding="utf-8").strip():
         return False, "model_loop/report.md is empty"
-    if not exported_model.exists():
-        return False, "cognitive_models/inner_loop_model.py not found"
+
+    # The best model must be in this experiment's model set — either it was
+    # already there (a seed that won again) or the export copied it in. A
+    # fallback auto-named winner exports under the legacy `inner_loop_model`.
+    best = max(data["posteriors"], key=lambda m: data["posteriors"][m])
+    required = "inner_loop_model" if _ZOO_NAME_RE.fullmatch(best) else best
+    models_dir = exp_dir / "cognitive_models"
+    manifest_path = models_dir / "models_manifest.yaml"
+    if not manifest_path.exists():
+        return False, f"models_manifest.yaml not found at {manifest_path}"
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
+    names = {
+        m.get("name") for m in manifest.get("models") or [] if isinstance(m, dict)
+    }
+    if required not in names or not (models_dir / f"{required}.py").exists():
+        return (
+            False,
+            f"best model {required!r} is not in cognitive_models (manifest + .py "
+            f"file required — was the inner-loop export skipped?)",
+        )
     return True, f"Model loop valid ({len(report.read_text())} char report)"
 
 
@@ -1052,17 +1208,21 @@ def init_registry(exp_dir: Path) -> None:
 
 
 def update_registry_from_interpretation(exp_dir: Path) -> None:
-    """Record the inner model loop's posterior over models in model_registry.yaml.
+    """Record the inner loop's stacking weights over models in model_registry.yaml.
 
-    The inner loop writes ``model_loop/model_posterior.json`` with a ``posteriors``
-    map (model_name -> probability). We copy those weights verbatim (renormalized
-    to sum to 1) into this experiment's registry ``theories`` so downstream design
-    — e.g. the posterior-weighted EIG of a later experiment — sees the *real*
-    per-model posterior mass. (Previously this wrote a hard-coded
-    ``{"inner_loop_model": 1.0}``, discarding the computed posterior and emitting a
-    weight keyed by a model name with no pure-Python family twin, which broke the
-    exhaustive posterior-design path.) No-op if the posterior file is missing or
-    malformed.
+    The registry is the model prior for the next experiment's EIG design, so it
+    must spread mass over every model that is predictively plausible. The inner
+    loop's ``posteriors`` map (softmax of total ELPD-LOO) is knowingly
+    overconfident — it reads ~1.0 for one model even when rivals are within
+    noise (see ``model_comparison/posterior.py``) — and a design prior that
+    collapses to one model makes EIG stop discriminating among live rivals. We
+    therefore record the **stacking weights** from ``az.compare`` (persisted per
+    model in ``model_posterior.json``'s ``comparison`` block), which are
+    computed exactly for weighting predictive distributions.
+
+    This runs only after a model loop completed, so a missing or malformed
+    export means the pipeline is broken — every such case raises loudly rather
+    than silently leaving a stale registry to steer the next design.
     """
     sys.path.insert(0, str(REPO_ROOT))
     from src.registry import write_registry  # type: ignore
@@ -1071,26 +1231,39 @@ def update_registry_from_interpretation(exp_dir: Path) -> None:
     registry_path = exp_dir / "model_registry.yaml"
 
     if not posterior_path.exists():
-        return
+        raise FileNotFoundError(
+            f"Cannot update the design registry: {posterior_path} does not exist "
+            f"(the inner model loop should have exported it)."
+        )
     try:
         data = json.loads(posterior_path.read_text(encoding="utf-8"))
-    except Exception:
-        return
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Malformed JSON in {posterior_path}: {exc}") from exc
 
-    posteriors = data.get("posteriors")
-    if not isinstance(posteriors, dict) or not posteriors:
-        return
-    weights = {
-        str(name): float(p)
-        for name, p in posteriors.items()
-        if isinstance(p, (int, float)) and math.isfinite(float(p)) and float(p) >= 0.0
-    }
+    comparison = data.get("comparison")
+    if not isinstance(comparison, dict) or not comparison:
+        raise ValueError(
+            f"{posterior_path} has no 'comparison' block: the inner loop must "
+            f"export az.compare's stacking weights for the registry."
+        )
+    weights = {}
+    for name, row in comparison.items():
+        w = row.get("weight") if isinstance(row, dict) else None
+        if not isinstance(w, (int, float)) or not math.isfinite(float(w)) or w < 0.0:
+            raise ValueError(
+                f"Model {name!r} in {posterior_path} has no usable stacking "
+                f"weight (got {w!r})."
+            )
+        weights[str(name)] = float(w)
     total = sum(weights.values())
     if total <= 0:
-        return
-    weights = {name: p / total for name, p in weights.items()}
+        raise ValueError(
+            f"Stacking weights in {posterior_path} sum to {total}; cannot form "
+            f"a model prior for the next design."
+        )
+    weights = {name: w / total for name, w in weights.items()}
     write_registry(registry_path, weights, reserved_for_new=0.0)
     print(
-        "  [registry] Recorded inner-loop posterior over models in model_registry.yaml",
+        "  [registry] Recorded inner-loop stacking weights in model_registry.yaml",
         flush=True,
     )

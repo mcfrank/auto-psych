@@ -46,8 +46,15 @@ def _spawn(tmp_path, monkeypatch):
     responses_path = tmp_path / "model_loop" / "responses.csv"
     responses_path.write_text("a,b\n1,2\n", encoding="utf-8")
 
+    docs = {
+        "context": "ctx",
+        "brief": "brief",
+        "existing_hypotheses": "hyps",
+        "critiques": None,
+    }
     pymc_orchestrator._spawn_candidate_agent(
         candidate_dir,
+        docs,
         models_dir=models_dir,
         responses_path=responses_path,
         agent_timeout_sec=10,

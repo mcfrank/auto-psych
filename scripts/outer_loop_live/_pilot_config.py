@@ -76,6 +76,13 @@ def main() -> None:
     prolific_mode = str(cfg.get("prolific_mode") or "test")  # safe default: test, not live
     if prolific_mode not in VALID_PROLIFIC_MODES:
         die(f"`prolific_mode` must be one of {sorted(VALID_PROLIFIC_MODES)}")
+    confirm_live = bool(cfg.get("confirm_live_recruitment", False))
+    if prolific_mode == "live" and not confirm_live:
+        die(
+            "`prolific_mode: live` recruits and PAYS real participants. Add "
+            "`confirm_live_recruitment: true` to the config to confirm this "
+            "is intentional (run.py enforces the same gate)."
+        )
     firebase_project = str(cfg.get("firebase_project") or "")
     walltime = str(cfg.get("walltime") or "1-00:00:00")
     qos = str(cfg.get("qos") or "")
@@ -174,6 +181,7 @@ def main() -> None:
         "DESIGN_MODE": design_mode,
         "CODING_AGENT": coding_agent,
         "PROLIFIC_MODE": prolific_mode,
+        "CONFIRM_LIVE_RECRUITMENT": "1" if confirm_live else "",
         "FIREBASE_PROJECT": firebase_project,
         "WALLTIME": walltime,
         "QOS": qos,
@@ -183,6 +191,12 @@ def main() -> None:
         "DRAWS": mdl.get("draws", ""),
         "TUNE": mdl.get("tune", ""),
         "CHAINS": mdl.get("chains", ""),
+        # Hero-run exploration knobs ("" ⇒ inner-loop defaults).
+        "HINTS_FILE": mdl.get("hints_file", ""),
+        "NOVELTY_RMSE_THRESHOLD": mdl.get("novelty_rmse_threshold", ""),
+        "PRUNE_DSE_MULTIPLIER": mdl.get("prune_dse_multiplier", ""),
+        "PRUNE_WEIGHT_FLOOR": mdl.get("prune_weight_floor", ""),
+        "CANDIDATE_PARALLELISM": mdl.get("candidate_parallelism", ""),
     }
     for k, v in out.items():
         print(f"export {k}={shlex.quote(str(v))}")

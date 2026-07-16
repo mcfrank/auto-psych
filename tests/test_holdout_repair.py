@@ -40,7 +40,7 @@ def _stub(monkeypatch, validate_results):
 def test_holdout_repairs_then_passes(tmp_path, monkeypatch):
     fb = _stub(monkeypatch, [False, True])
     holdout_recovery._spawn_with_repair(
-        "1_theory", tmp_path, allowed_dirs=[tmp_path],
+        "2_design", tmp_path, allowed_dirs=[tmp_path],
         agent_timeout_sec=10, backend="opencode", max_repairs=2,
     )
     assert len(fb) == 2  # re-spawned to repair
@@ -52,7 +52,7 @@ def test_holdout_raises_after_exhausting_repairs(tmp_path, monkeypatch):
     _stub(monkeypatch, [False, False, False])
     with pytest.raises(RuntimeError):
         holdout_recovery._spawn_with_repair(
-            "1_theory", tmp_path, allowed_dirs=[tmp_path],
+            "2_design", tmp_path, allowed_dirs=[tmp_path],
             agent_timeout_sec=10, backend="opencode", max_repairs=2,
         )
 
@@ -73,9 +73,9 @@ def test_holdout_post_spawn_runs_before_validation(tmp_path, monkeypatch):
 def test_holdout_design_uses_human_experiment_prompt(tmp_path, monkeypatch):
     """Recovery must design experiments with the SAME prompt as the live human
     experiment: the default ``2_design`` agent (proposes candidates AND scores
-    them by EIG), not the candidates-only variant. Guards against regressing to
-    ``2_design_candidates_only``, which made the recovery designs diverge from the
-    human runs.
+    them by EIG). A candidates-only prompt variant once made the recovery
+    designs diverge from the human runs; that prompt file has been deleted, and
+    this test guards against reintroducing a recovery-specific design prompt.
     """
 
     spawns: list[tuple[str, object]] = []

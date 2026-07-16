@@ -118,6 +118,14 @@ EXTRA=()
 [[ -n "${CHAINS:-}" ]]                 && EXTRA+=(--chains "$CHAINS")
 [[ -n "${INNER_LOOP_ITERATIONS:-}" ]]  && EXTRA+=(--inner-loop-iterations "$INNER_LOOP_ITERATIONS")
 [[ -n "${INNER_LOOP_CANDIDATES:-}" ]]  && EXTRA+=(--inner-loop-candidates "$INNER_LOOP_CANDIDATES")
+[[ -n "${HINTS_FILE:-}" ]]             && EXTRA+=(--hints-file "$HINTS_FILE")
+[[ -n "${NOVELTY_RMSE_THRESHOLD:-}" ]] && EXTRA+=(--novelty-rmse-threshold "$NOVELTY_RMSE_THRESHOLD")
+[[ -n "${PRUNE_DSE_MULTIPLIER:-}" ]]   && EXTRA+=(--prune-dse-multiplier "$PRUNE_DSE_MULTIPLIER")
+[[ -n "${PRUNE_WEIGHT_FLOOR:-}" ]]     && EXTRA+=(--prune-weight-floor "$PRUNE_WEIGHT_FLOOR")
+[[ -n "${CANDIDATE_PARALLELISM:-}" ]]  && EXTRA+=(--candidate-parallelism "$CANDIDATE_PARALLELISM")
+# Money gate: run.py refuses --prolific-mode live without this flag; the config
+# bridge only exports it when the yaml sets `confirm_live_recruitment: true`.
+[[ -n "${CONFIRM_LIVE_RECRUITMENT:-}" ]] && EXTRA+=(--confirm-live-recruitment)
 
 echo "[run] label=$RUN_LABEL worktree=$RUN_WORKTREE out=$AUTO_PSYCH_OUTPUT_DIR $EXP_DESC N=$N_PARTICIPANTS design=$DESIGN_MODE"
 

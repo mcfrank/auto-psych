@@ -116,9 +116,11 @@ def _scan_theory(exp_dir: Path) -> TheoryStage:
         name = entry["name"]
         rationale = (entry.get("rationale") or "").strip()
         code = _read_text(cm_dir / f"{name}.py") or ""
-        # `inner_loop_model` is not a theory-step seed: it is the previous run's
-        # inner-loop winner, exported into cognitive_models/ as the carry-forward
-        # seed for the *next* experiment (see _export_inner_loop_model).
+        # Legacy runs exported each experiment's inner-loop winner as a copy
+        # named `inner_loop_model` (with a boilerplate rationale) — flag those.
+        # Since the descriptive-naming change (2026-07), winners are exported
+        # under their own names with real hypotheses, which this heuristic
+        # cannot distinguish from seeds; they render as ordinary models.
         is_carried = name == "inner_loop_model" or "inner model-improvement loop" in rationale.lower()
         models.append(
             CognitiveModel(

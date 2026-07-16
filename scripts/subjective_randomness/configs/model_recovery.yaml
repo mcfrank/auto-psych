@@ -6,7 +6,11 @@
 # generating-model x recovered-model confusion matrix: a well-behaved pipeline
 # should put most posterior mass on the diagonal.
 
-seed_models_dir: src/pipelines/outer_loop/projects/subjective_randomness/seed_models
+# The GT/baseline registry: the original validated model set (with pure-Python
+# family twins for data generation). Deliberately NOT the live project
+# seed_models dir — since the hero-run promotion that manifest holds the
+# replicate winners, which have no family twins.
+seed_models_dir: src/subjective_randomness/pymc_model_families
 stimuli_path: data/subjective_randomness/parameter_recovery/stimuli.json
 
 # Synthetic participants per generating model (more participants -> sharper,

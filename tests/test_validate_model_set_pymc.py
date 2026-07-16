@@ -1,6 +1,6 @@
-"""Fast tests for the PyMC theory validator (no MCMC).
+"""Fast tests for the PyMC model-set validator (no MCMC).
 
-`_validate_theory` must accept an experiment whose `cognitive_models/` holds
+`_validate_model_set` must accept an experiment whose `cognitive_models/` holds
 agent-written **PyMC models** (module-level `model: pm.Model`) and reject ones
 that are missing, unloadable, or lack a proper observed-response container.
 Validation only builds the model graph — it never samples.
@@ -11,7 +11,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from src.pipelines.outer_loop.orchestrator import _validate_theory
+from src.pipelines.outer_loop.orchestrator import _validate_model_set
 
 FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pymc_models"
 
@@ -30,13 +30,13 @@ def _seed(exp_dir: Path, names) -> Path:
 
 def test_valid_pymc_models_pass(tmp_path):
     _seed(tmp_path, ["bayesian_fair_coin", "representativeness"])
-    ok, msg = _validate_theory(tmp_path)
+    ok, msg = _validate_model_set(tmp_path)
     assert ok, msg
 
 
 def test_missing_manifest_fails(tmp_path):
     (tmp_path / "cognitive_models").mkdir(parents=True)
-    ok, msg = _validate_theory(tmp_path)
+    ok, msg = _validate_model_set(tmp_path)
     assert not ok
     assert "manifest" in msg.lower()
 
@@ -48,7 +48,7 @@ def test_manifest_model_without_file_fails(tmp_path):
         "models:\n  - name: ghost\n    rationale: People use ghost.\n",
         encoding="utf-8",
     )
-    ok, msg = _validate_theory(tmp_path)
+    ok, msg = _validate_model_set(tmp_path)
     assert not ok
     assert "ghost" in msg
 
@@ -69,7 +69,7 @@ def test_model_without_observed_rv_fails(tmp_path):
         "models:\n  - name: no_obs\n    rationale: People use no_obs.\n",
         encoding="utf-8",
     )
-    ok, msg = _validate_theory(tmp_path)
+    ok, msg = _validate_model_set(tmp_path)
     assert not ok
     assert "no_obs" in msg
 
@@ -81,7 +81,7 @@ def test_model_without_rationale_fails(tmp_path):
     (tmp_path / "cognitive_models" / "models_manifest.yaml").write_text(
         "models:\n  - name: bayesian_fair_coin\n", encoding="utf-8"
     )
-    ok, msg = _validate_theory(tmp_path)
+    ok, msg = _validate_model_set(tmp_path)
     assert not ok
     assert "bayesian_fair_coin" in msg
     assert "hypothesis" in msg.lower()
