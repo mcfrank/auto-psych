@@ -1,10 +1,13 @@
 # Live outer-loop runs on Sherlock (real Prolific participants)
 
-Runs `src/pipelines/outer_loop/run.py` in **`--mode live`**: Claude Code agents
-propose models → design stimuli → implement a jsPsych experiment → it is
-**deployed to Firebase Hosting** + Cloud Functions → a **Prolific study** is
-created and published → the run polls for human submissions (≤ 2 h/experiment),
-fetches results from Firestore, and runs the inner model loop.
+Runs `src/pipelines/outer_loop/run.py` in **`--mode live`**: the model set is
+seeded from the project's `seed_models/` (experiment 1) or carried forward from
+the previous experiment (there is no theorist agent) → a coding agent designs
+stimuli by EIG → implements a jsPsych experiment → it is **deployed to Firebase
+Hosting** + Cloud Functions → a **Prolific study** is created and published →
+the run polls for human submissions (≤ 2 h/experiment), fetches results from
+the token-guarded `/results` endpoint, and runs the inner model loop (where all
+new models are conjectured).
 
 Everything runs in a Slurm job (never on the login node). Compute nodes have
 outbound internet, so they reach Anthropic (Claude Code), Prolific, Firebase,
@@ -12,12 +15,23 @@ and the npm registry directly.
 
 ## Files
 
-- `pilot.yaml` — **the one config file you edit.** Project, run label, #experiments,
-  design mode, Slurm walltime/qos, the Prolific study (participants/reward/length/
-  name), and the modeling settings — all here.
-- `run_pilot.sh` — **the launcher.** Reads `pilot.yaml`, renders the project's
-  `prolific_config.yaml`, prints a cost summary, asks you to confirm, then submits.
-- `_pilot_config.py` — helper used by `run_pilot.sh` (parse/validate/render/cost).
+- `pilot.yaml` — config for a **small single pilot**. Project, run label,
+  #experiments, design mode, Slurm walltime/qos, the Prolific study
+  (participants/reward/length/name), and the modeling settings — all here.
+- `full_run.yaml` / `hero_run.yaml` — per-run configs for the **full-scale
+  runs** launched via `start_full_run.sh` (K parallel copies). `hero_run.yaml`
+  is the scaled-up discovery config: 4 inner-loop rounds × 7 candidates (one
+  exploration lens each), the novelty gate + pruning knobs made explicit, and
+  concurrent candidate agents.
+- `run_pilot.sh` — **the pilot launcher.** Reads `pilot.yaml`, renders the
+  project's `prolific_config.yaml`, prints a cost summary, asks you to confirm,
+  then submits.
+- `start_full_run.sh` — **the full-run launcher**: `CONFIG=<yaml>` +
+  `K=<parallel runs>`; validates the config, then submits K isolated runs via
+  `submit_parallel.sh`.
+- `_pilot_config.py` — helper used by both launchers
+  (parse/validate/render/cost; also enforces the live-recruitment gate at
+  config time).
 - `_env.sh` — shared env: modules (`gcc/14.2.0`, `nodejs`, `claude-code`, `uv`),
   caches/state off `$HOME`, secrets, CA certs, the deploy lock, threading.
 - `setup.sbatch` — **run once per `WORK_ROOT`**: builds the shared uv venv
@@ -41,6 +55,13 @@ and the npm registry directly.
      ```
      Paste the printed token as `FIREBASE_TOKEN=...`. This lets `firebase deploy`
      run non-interactively on a compute node.
+   - `AUTO_PSYCH_RESULTS_TOKEN` — the shared secret guarding the `/results`
+     and `/register_session` Cloud Function endpoints. Generate once
+     (`openssl rand -hex 32`) and use the SAME value everywhere that deploys or
+     collects: the deploy writes it into `functions/.env` (gitignored) so the
+     deployed functions hold it, and every `/results` fetch sends it as a
+     header. A Firebase deploy or a live collection **fails loudly** without
+     it.
    - `GOOGLE_API_KEY` — only needed for simulated/Gemini paths; a pure live human
      run does not use it.
 
@@ -83,19 +104,42 @@ asks you to type **`yes`** (this recruits real humans and spends real money),
 then submits the job and tells you how to monitor and how to stop. `CONFIRM=yes`
 skips the prompt.
 
+**Live-recruitment gate.** `prolific_mode: live` additionally requires
+`confirm_live_recruitment: true` in the config — the config bridge refuses to
+launch without it, and `run.py` independently enforces the same gate
+(`--confirm-live-recruitment`). This makes going live a second, deliberate act
+on top of the yaml mode flag; `test`/`none` modes need no confirmation.
+
 **To stop a pilot:** stop/pause the study **in the Prolific dashboard** (that is
 what halts recruiting and charges) — `scancel` only stops the pipeline job, not
 an already-published study.
 
-> ⚠️ **Multi-experiment caveat.** Only **single-experiment** runs are validated.
-> `experiments: >1` with `design_mode: exhaustive` runs the posterior-design path,
-> which requires a pure-Python family twin in
-> `src/subjective_randomness/model_families/` for **every** model carried into
-> experiment ≥2 — including the inner loop's exported `inner_loop_model` and any
-> new agent-proposed models, which have **no twin** — so it will raise at the
-> experiment-2 design step *after* experiment 1's participants are already paid.
-> For a sequence, either use `design_mode: agent` or first do a simulated
-> multi-experiment dry-run (below). Keep `experiments: 1` for a safe first pilot.
+> ⚠️ **Multi-experiment caveat.** `experiments: >1` with `design_mode:
+> exhaustive` runs the posterior-design path, which requires a pure-Python
+> family twin in `src/subjective_randomness/model_families/` for **every**
+> model carried into experiment ≥2 — including the inner loop's exported best
+> model and the promoted winner seeds, which have **no twin** — so it will
+> raise at the experiment-2 design step *after* experiment 1's participants are
+> already paid. Use `design_mode: agent` for any sequence (the full/hero
+> configs do), and dry-run a simulated multi-experiment sequence (below) before
+> spending money.
+
+## Run the full / hero configuration (K parallel runs)
+
+```bash
+cd ~/auto-psych
+bash scripts/outer_loop_live/start_full_run.sh                              # full_run.yaml, K=3
+CONFIG=scripts/outer_loop_live/hero_run.yaml K=3 \
+  bash scripts/outer_loop_live/start_full_run.sh                            # the hero run
+```
+
+Same gates as the pilot path: the config is validated (Prolific token, cost
+summary, `confirm_live_recruitment`) before anything launches, and you confirm
+interactively (`CONFIRM=yes` skips). `RUNS="2 3"` relaunches only those run
+indices. All modeling knobs come from the yaml's `modeling:` block — including
+the hero-run exploration knobs (`hints_file`, `novelty_rmse_threshold`,
+`prune_dse_multiplier`, `prune_weight_floor`, `candidate_parallelism`), which
+map onto the same-named `run.py` flags.
 
 ## Run (advanced: direct / parallel)
 

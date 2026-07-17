@@ -112,9 +112,11 @@ value.
 
 Parameter recovery (above) asks whether one model can recover its *own*
 parameters. *Closed-ended model recovery* asks a different question: if a known
-seed model generated the data, does the inner model loop — comparing the
-*closed* set of seed models, with no agent-proposed candidates — put its
-posterior mass back on the true model?
+model generated the data, does the inner model loop — comparing a *closed* set
+of models, with no agent-proposed candidates — put its posterior mass back on
+the true model? (The model set throughout this harness is the frozen recovery
+registry, `src/subjective_randomness/pymc_model_families` — not the live seed
+pool; see Holdout Recovery below for the distinction.)
 
 For each generating seed model, the pipeline fixes that model's PyMC parameters,
 samples synthetic choices over the stimuli, runs the inner loop
@@ -150,13 +152,24 @@ test of whether the loop can re-identify the generating process.
 ## Holdout Recovery — the Full Agentic Loop vs. a Held-Out Ground Truth
 
 Closed-ended recovery (above) keeps the true model *in* the candidate set.
-*Holdout recovery* removes it: each seed model in turn is held out as the
-ground truth — its fixed-param PyMC model generates every synthetic response —
-while the full agentic outer+inner loop starts from the *remaining* seed models
-and tries to recover the held-out process. Real agents do the work: the design
-agent chooses each experiment's stimuli by EIG, the theory agent proposes
-models between experiments, and the inner loop's candidate agents conjecture
-new PyMC models that are fit by MCMC and compared by ELPD-LOO.
+*Holdout recovery* removes it: each ground-truth model in turn generates every
+synthetic response from fixed parameters, while the full agentic outer+inner
+loop starts from the live seed pool and tries to recover the held-out process.
+
+Two distinct model sets are involved. Ground truths come from the frozen
+recovery registry (`src/subjective_randomness/pymc_model_families` — the
+original validated model set, whose pure-Python family twins provide the fixed
+generating parameters and baselines; the config's `seed_models_dir` points
+there). The **live seed pool** is separate: since the hero-run promotion it
+holds the best models discovered by the human replicates, so a registry ground
+truth is simply absent from the pool — the same situation as an impossible
+ground truth, with nothing to exclude.
+
+Real agents do the work: the design agent chooses each experiment's stimuli by
+EIG, the model set is carried forward between experiments (there is no theory
+agent — new hypotheses enter only via the inner loop), and the inner loop's
+candidate agents conjecture new PyMC models that are fit by MCMC and compared
+by ELPD-LOO.
 
 After **every inner-loop scoring step** (the initial seed-set fit and each
 candidate round, in every experiment) the then-best model's posterior-predictive
@@ -197,7 +210,12 @@ Details worth knowing:
 - **Held-out eval set.** The design agents choose training stimuli freely, so
   holdout is enforced *after* the run: any eval-pool pair that appeared (in
   either order) in any of the run's training data is dropped, and the run fails
-  loudly if fewer than `eval_pool.min_remaining` stimuli survive.
+  loudly if fewer than `eval_pool.min_remaining` stimuli survive. The pool is
+  **exhaustive by default** (every distinct same-length pair for
+  `eval_pool.lengths`, with `predict_max_draws` thinning the posterior so the
+  prediction array stays bounded) so seed-holdout and impossible-holdout runs
+  are always evaluated on comparable pools; set `eval_pool.exhaustive: false`
+  plus `n_pairs` for a sampled pool.
 - **Per-step history.** The inner loop now writes `model_loop/history.json`
   (best model + posterior after the seed fit and after every candidate round);
   the trajectory evaluation refits each step's best model through the shared
