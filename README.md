@@ -1,11 +1,34 @@
 # Auto-psych
 
+An automated cognitive-science discovery pipeline. Coding agents iteratively
+conjecture computational cognitive models (PyMC) of human judgment — currently
+of *subjective randomness* ("which sequence looks more random?") — design
+maximally informative experiments, run them on real participants (Prolific +
+Firebase) or simulated ones, and let Bayesian model comparison decide which
+hypothesis survives.
+
 Active development is organized around two explicit loops:
 
-- `src/pipelines/outer_loop`: experiment loop. Coding agents propose models, design stimuli, implement experiments, collect data, then hand observed data to the inner model loop.
-- `src/pipelines/inner_loop`: cognitive-model improvement loop. It fits and compares candidate **PyMC** models by ELPD-LOO, exports the best model, and maintains the model-zoo/posterior artifacts. Before each candidate round it runs a CriticAL posterior-predictive critique (`src/critique`) of the incumbent best model and feeds the resulting `critiques.md` to the candidate agents.
-
-The old LangGraph/LangChain pipeline, Cloud Run entrypoint, and SLURM submitter have been removed.
+- `src/pipelines/outer_loop`: **experiment loop**. Each experiment starts from
+  a model set — seeded from the project's `seed_models/` in experiment 1
+  (currently the best models discovered by three earlier human replicate runs)
+  and carried forward verbatim afterwards; there is no theorist agent. A design
+  agent reads the competing models and builds a stimulus pool targeting their
+  disagreements, scored by expected information gain (EIG) under the current
+  model weights; an implement agent builds the jsPsych experiment; collection
+  gathers responses; then the observed data go to the inner model loop.
+- `src/pipelines/inner_loop`: **model-discovery loop** — the only place new
+  hypotheses enter. Each round it critiques the incumbent best model with a
+  CriticAL posterior-predictive check (`src/critique`), then spawns candidate
+  agents in parallel, each steered by a distinct exploration lens, to write one
+  new single-mechanism PyMC model apiece (self-named via `model_name.txt`).
+  Candidates are admitted only if they fit by MCMC, achieve finite ELPD-LOO,
+  and are **genuinely novel** (a candidate predicting within 0.02 RMSE of an
+  existing model's `p_left` is rejected as a duplicate). After each scoring
+  pass, agent models that are statistically distinguishable losers with
+  negligible stacking weight are pruned (the seeded set never is). The winner
+  is recorded in `cognitive_models/` under its own name, and az.compare's
+  stacking weights become the model prior for the next experiment's design.
 
 ## Setup
 
@@ -30,6 +53,51 @@ uv sync --group open-models
 install the `torch` wheel matching your CUDA version from
 <https://pytorch.org/get-started/locally/> first, then run the sync above.
 
+## Entry Points
+
+Everything below is run with `uv run` from the repo root. Each CLI is a `tyro`
+dataclass — `--help` lists every knob with its documented default.
+
+**The pipeline**
+
+| Command | What it does |
+|---|---|
+| `python -m src.pipelines.outer_loop.run` | The main pipeline: per experiment, seed/carry-forward the model set → `2_design` → `3_implement` (+ Firebase deploy when `--deploy-target firebase`) → `4_collect` → `5_model_loop`. `--agent <stage>` reruns one stage; `--resume` continues an existing tree. |
+| `python -m src.pipelines.inner_loop.run` | The inner model loop standalone, on an already-featurized responses CSV + a seed-model dir. Exposes all discovery knobs (`--hints-file`, `--novelty-rmse-threshold`, `--prune-*`, `--candidate-parallelism`). |
+| `python -m src.pipelines.outer_loop.eig` | EIG-scores a candidate stimulus pool against a model dir (prior-predictive; `--registry` weights the models). The design agent runs this itself; it is also usable directly. |
+| `python -m src.critique.ppc` | The CriticAL posterior-predictive harness: computes agent-proposed test statistics on observed vs. replicated data (raw p + BH-FDR q). Run by the critique agent; usable standalone on any fitted model. |
+| `python -m src.model_comparison.posterior` | Fit + ELPD-LOO-compare every model in a manifest dir on a responses CSV. |
+
+**Cluster launchers (live runs — real money)** — see
+`scripts/outer_loop_live/README.md` for the full runbook:
+
+| Command | What it does |
+|---|---|
+| `bash scripts/outer_loop_live/run_pilot.sh` | Small single pilot from `pilot.yaml`: validates config + Prolific token, prints cost, confirms, submits one Slurm job. |
+| `CONFIG=scripts/outer_loop_live/hero_run.yaml bash scripts/outer_loop_live/start_full_run.sh` | K parallel isolated runs of a full-scale config (`full_run.yaml` / `hero_run.yaml`). Live recruitment additionally requires `confirm_live_recruitment: true` in the yaml. |
+| `sbatch scripts/outer_loop_live/setup.sbatch` | One-time cluster environment build (venv, functions deps, firebase CLI). |
+| `python scripts/smoke_firebase_deploy.py` | Real Firebase deploy smoke: stages, deploys, drives simulated participants through the live page, and round-trips data via the token-guarded `/submit`/`/results` functions. `--confirm-production` gates it. |
+
+**Validation harnesses (does the pipeline recover known ground truths?)** — see
+`scripts/subjective_randomness/README.md`:
+
+| Command | What it does |
+|---|---|
+| `python scripts/subjective_randomness/model_recovery.py` | Closed-ended recovery: confusion matrix over the frozen registry models (no agents). |
+| `python scripts/subjective_randomness/holdout_recovery.py` | Full agentic loop vs. a held-out registry ground truth; per-step recovery trajectory. |
+| `python scripts/subjective_randomness/impossible_holdout_recovery.py` | Same, with deliberately-weird "impossible" ground truths outside every model family. |
+| `python scripts/subjective_randomness/reanalyze_holdout_exhaustive.py` | Re-evaluate finished holdout runs on the exhaustive stimulus pool (no agents, cached fits). |
+| `scripts/subjective_randomness/slurm/` | Sherlock submitters for the above (test–retest replicates + no-inner-loop ablations). |
+
+**Inspecting results**
+
+| Command | What it does |
+|---|---|
+| `python -m src.viewer.server` | Browser explorer for finished runs on disk (models, designs, critiques, posterior trajectories, transcripts). |
+| `python -m src.viewer.freeze` | Freeze curated runs into a static site for public hosting. |
+| `python -m src.monitor.server` | Live dashboard for an **in-progress** human study (Firestore + Prolific; flags degenerate data early). |
+| `scripts/analysis/*.py` | Post-hoc analyses of the human runs (model-similarity RMSE, fit comparisons, combined recovery figures). |
+
 ## Run The Active Outer Loop
 
 ```bash
@@ -48,15 +116,18 @@ uv run python -m src.pipelines.outer_loop.run --project subjective_randomness --
 
 `--mode` selects how stage `4_collect` gathers responses:
 
-- `simulated_participants` (default): synthetic data from the theorist's PyMC
-  models (or a `--ground-truth-model`). No browser.
+- `simulated_participants` (default): synthetic data from the experiment's
+  PyMC model set (or a `--ground-truth-model`). No browser.
 - `simulated_participants_nobrowser`: **LLM-as-participant** — each synthetic
   participant answers every stimulus directly via a language model. The jsPsych
   `3_implement` stage is skipped in a full run.
 - `live`: real participants via Prolific + Firebase. Requires a deployed
   experiment to collect from (run with `--deploy-target firebase --prolific-mode
-  live`); it reads submissions from the results API / Firestore and refuses to
-  fall back to synthetic data if no deployment is configured.
+  live --confirm-live-recruitment`); it reads submissions from the token-guarded
+  `/results` Cloud Function and refuses to fall back to synthetic data if no
+  deployment is configured. Live deploys and collection both need
+  `AUTO_PSYCH_RESULTS_TOKEN` in the environment (the shared secret for
+  `/results` and `/register_session`; see `docs/deployment_handoff.md`).
 
 For `simulated_participants_nobrowser`, choose the participant-model backend:
 
@@ -77,7 +148,7 @@ overrides the default model id. The open backend loads the named model locally;
 e.g. `Qwen/Qwen2.5-0.5B-Instruct`, for quick runs).
 
 **This participant model is separate from the coding-agent backend.** The
-theory / design / implement stages (and inner-loop candidate generation) are
+design / implement stages (and inner-loop candidate + critique generation) are
 driven by `--coding-agent` (opencode by default); `--participant-backend` /
 `--hf-model` only choose the model that *answers trials* during `4_collect`.
 
@@ -117,12 +188,21 @@ The inner loop writes:
 
 ```text
 model_loop/
+model_loop/models/                             # the model zoo (seeds + admitted candidates, each with <name>.hypothesis.md)
+model_loop/models/pruned/                      # models pruned as clear losers (audit trail)
+model_loop/model_posterior.json                # posterior + ELPD-LOO + az.compare table (stacking weights)
+model_loop/history.json                        # best model + posterior after every scoring step
 model_loop/iter_<i>/critique/test_stats/*.py   # proposed test statistics
 model_loop/iter_<i>/critique/ppc_results.json  # empirical + FDR-adjusted p-values
 model_loop/iter_<i>/critique/critiques.md      # significant discrepancies of the incumbent
-cognitive_models/inner_loop_model.py
-cognitive_models/models_manifest.yaml
+cognitive_models/<winning_model>.py            # a NEW winning candidate, exported under its own name
+cognitive_models/models_manifest.yaml          # the carried model set (name + hypothesis rationale)
 ```
+
+A winning candidate is exported into `cognitive_models/` under the descriptive
+name its agent chose; a seed that wins again is already in the set, so nothing
+is copied. `model_registry.yaml` records az.compare's stacking weights over the
+final set — the model prior weighting the next experiment's EIG design.
 
 ## Browse Run Results
 
@@ -222,36 +302,35 @@ src/
   pipelines/
     outer_loop/
       run.py                 # `python -m src.pipelines.outer_loop.run` (entry point)
-      orchestrator.py        # stage spawning, programmatic collect/deploy/inner-loop, validators
+      orchestrator.py        # seed/carry-forward, stage spawning, programmatic collect/deploy/inner-loop, validators
       collect.py             # collection modes (simulated / LLM-as-participant / live)
       participants.py        # closed (Gemini) + open (HuggingFace) participant models
       llm.py eig.py
-      prompts/               # 1_theory / 2_design / 3_implement / 4_collect_* prompts
+      prompts/               # 2_design / 3_implement / 4_collect_* prompts (no theorist stage)
       projects/<project>/    # problem_definition.md, ground_truth_models.py, preprocess.py, seed_models/
       deployment/            # firebase.py firestore.py prolific.py manifest.py local.py smoke.py
     inner_loop/
       run.py                 # `python -m src.pipelines.inner_loop.run` (entry point)
-      pymc_orchestrator.py   # seed/score/critique/candidate rounds, export best model
+      pymc_orchestrator.py   # seed/score/critique/candidate rounds, novelty gate, pruning, export
       prompts/               # pymc_theory.md + critique.md
   critique/
     ppc.py                   # CriticAL posterior-predictive check (empirical p + BH-FDR)
   model_comparison/
-    posterior.py             # ELPD-LOO softmax posterior over models + az.compare table
+    posterior.py             # ELPD-LOO softmax posterior over models + az.compare table (stacking)
     likelihood.py            # ELPD-LOO of one model
   models/
     pymc_inference.py        # load/fit (MCMC) agent-written PyMC models, PPC sampling, caching
+    mcmc_defaults.py         # the ONE source of MCMC sampler defaults for every entry point
     theorist/                # loader.py + predictions.py (pure-Python prediction callables)
     project/                 # ground_truth.py
-  subjective_randomness/     # standalone research library: model families, recovery, stimulus design
+  subjective_randomness/     # research library: model families, recovery harnesses, stimulus design
+                             # (pymc_model_families/ = the frozen recovery registry — see its README)
   runtime/
     coding_agent.py          # backend-agnostic Claude Code / opencode subprocess launcher
     config.py console.py observability.py prolific.py
-  experiments/
-    state.py state_loader.py problem_definition.py references.py
   registry/
-    io.py                    # per-run model_registry.yaml (theory -> probability)
-  validation/
-    validators.py stages/    # per-stage output validators
+    io.py                    # per-run model_registry.yaml (model -> weight, the EIG design prior)
+  experiments/ validation/   # LEGACY (old pipeline) — not used by the live loops
   viewer/                    # browser-based run explorer (Flask + static SPA)
     server.py                # `python -m src.viewer.server`
     freeze.py                # `python -m src.viewer.freeze` -> static snapshot for web hosting
@@ -264,5 +343,6 @@ src/
 ## Tests
 
 ```bash
-uv run --group dev pytest tests src/pipelines/inner_loop/tests -q
+uv run --group dev pytest -q                  # everything, including real-MCMC tests (~2 min)
+uv run --group dev pytest -q -m "not slow"    # fast suite (~30 s) — skips MCMC sampling
 ```

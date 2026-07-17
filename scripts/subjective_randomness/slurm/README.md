@@ -116,16 +116,17 @@ Output lands in `$WORK_ROOT` (default
 The inner-loop ablation runs the **same** pipeline with
 `--inner-loop-iterations 0`, so the inner model loop does **zero**
 candidate-conjecturing rounds. At 0 iterations the inner loop spawns no agents
-at all — it only fits and ELPD-LOO-scores the theorist's own models (the
-experiment-1 seed set, plus whatever the theory agent proposes in experiments
-≥ 2) and records the single seed-scoring step the trajectory needs. The
-outer-loop agents (theory, design) and synthetic collection still run in full,
-so the only thing removed is the inner candidate/critique search:
+at all — it only fits and ELPD-LOO-scores the carried model set (the
+experiment-1 seed pool, carried forward verbatim into experiments ≥ 2; there is
+no theorist agent) and records the single seed-scoring step the trajectory
+needs. The design agent and synthetic collection still run in full, so the only
+thing removed is the inner candidate/critique search:
 
 ```
-full pipeline:  theory → design → collect → [inner loop: fit + critique +
-                conjecture N rounds of new PyMC models] → score
-ablation:       theory → design → collect → [fit + score theorist's models] → score
+full pipeline:  seed/carry-forward → design → collect → [inner loop: fit +
+                critique + conjecture N rounds of new PyMC models] → score
+ablation:       seed/carry-forward → design → collect → [fit + score the
+                carried models] → score
 ```
 
 Comparing the ablation against the full run isolates how much of the recovery
