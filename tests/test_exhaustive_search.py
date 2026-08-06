@@ -105,6 +105,107 @@ def test_audit_quotient_is_a_noop_with_no_modules_or_no_multi_member_classes():
     es.audit_quotient(singleton_classes, FAMILIES)  # nothing to sample -> no-op
 
 
+def test_build_score_table_and_pair_probabilities_match_predict_left_default_params():
+    classes = ss.build_sequence_classes(range(2, 9))
+    reps = classes.representatives
+    table = es.build_score_table(FAMILIES, reps)
+    assert table.scores.shape == (len(reps), len(FAMILIES), 1)
+
+    rng = np.random.default_rng(0)
+    n = len(reps)
+    ii = rng.integers(0, n, size=200)
+    jj = rng.integers(0, n, size=200)
+    keep = ii != jj
+    ii, jj = ii[keep], jj[keep]
+    got = es.pair_probabilities(table, ii, jj)
+
+    for row in range(len(ii)):
+        stim = {"sequence_a": reps[ii[row]], "sequence_b": reps[jj[row]]}
+        for k, module in enumerate(FAMILIES):
+            direct = min(max(module.predict_left(stim), 1e-6), 1.0 - 1e-6)
+            assert np.isclose(got[row, k], direct, atol=1e-9), (module.MODEL_NAME, stim)
+
+
+@pytest.mark.parametrize("n_draws", [1, 8, 50])
+def test_pair_probabilities_matches_parameter_averaged_predict_left(n_draws):
+    classes = ss.build_sequence_classes(range(2, 9))
+    reps = classes.representatives
+    table = es.build_score_table(FAMILIES, reps, param_samples=n_draws, seed=42)
+    assert table.scores.shape[-1] == n_draws
+
+    rng = np.random.default_rng(1)
+    n = len(reps)
+    ii = rng.integers(0, n, size=100)
+    jj = rng.integers(0, n, size=100)
+    keep = ii != jj
+    ii, jj = ii[keep], jj[keep]
+    got = es.pair_probabilities(table, ii, jj)
+
+    for row in range(len(ii)):
+        stim = {"sequence_a": reps[ii[row]], "sequence_b": reps[jj[row]]}
+        for k, module in enumerate(FAMILIES):
+            draws = table.param_draws[module.MODEL_NAME]
+            direct = float(np.mean([module.predict_left(stim, d) for d in draws]))
+            direct = min(max(direct, 1e-6), 1.0 - 1e-6)
+            assert np.isclose(got[row, k], direct, atol=1e-9), (module.MODEL_NAME, stim)
+
+
+def test_build_score_table_rejects_ragged_draw_counts():
+    with pytest.raises(ValueError, match="same number of parameter draws"):
+        es.build_score_table(
+            FAMILIES,
+            ["HT", "TH"],
+            param_sets_by_model={
+                window_typicality.MODEL_NAME: [dict(window_typicality.DEFAULT_PARAMS)],
+                encoding_compressibility.MODEL_NAME: [dict(encoding_compressibility.DEFAULT_PARAMS)] * 2,
+                prototype_similarity.MODEL_NAME: [dict(prototype_similarity.DEFAULT_PARAMS)],
+                bayesian_diagnosticity.MODEL_NAME: [dict(bayesian_diagnosticity.DEFAULT_PARAMS)],
+            },
+        )
+
+
+def test_build_score_table_requires_at_least_one_model():
+    with pytest.raises(ValueError, match="at least one model"):
+        es.build_score_table([], ["HT"])
+
+
+@pytest.mark.parametrize("draw_block", [1, 7, 37, 1000])
+def test_pair_probabilities_is_draw_block_invariant(draw_block):
+    classes = ss.build_sequence_classes(range(2, 9))
+    reps = classes.representatives
+    table = es.build_score_table(FAMILIES, reps, param_samples=37, seed=9)
+    rng = np.random.default_rng(2)
+    n = len(reps)
+    ii = rng.integers(0, n, size=150)
+    jj = rng.integers(0, n, size=150)
+    keep = ii != jj
+    ii, jj = ii[keep], jj[keep]
+    ref = es.pair_probabilities(table, ii, jj, draw_block=1)
+    got = es.pair_probabilities(table, ii, jj, draw_block=draw_block)
+    assert np.allclose(got, ref, atol=1e-12)
+
+
+def test_audit_decomposition_passes_for_the_real_families():
+    classes = ss.build_sequence_classes(range(2, 9))
+    table = es.build_score_table(FAMILIES, classes.representatives, param_samples=20, seed=5)
+    es.audit_decomposition(table, FAMILIES, classes.representatives, n_probe_pairs=64, seed=5)
+
+
+def test_audit_decomposition_catches_a_broken_pair_probabilities():
+    classes = ss.build_sequence_classes(range(2, 9))
+    table = es.build_score_table(FAMILIES, classes.representatives, param_samples=5, seed=5)
+    # Corrupt the beta row for one model to simulate a param-ordering bug.
+    broken = es.ScoreTable(
+        model_names=table.model_names,
+        scores=table.scores,
+        beta=table.beta * 0.0,  # wrong: drops all model discrimination
+        side_bias=table.side_bias,
+        param_draws=table.param_draws,
+    )
+    with pytest.raises(es.ExhaustiveSearchError):
+        es.audit_decomposition(broken, FAMILIES, classes.representatives, n_probe_pairs=64, seed=5)
+
+
 def test_audit_quotient_samples_new_param_draws_not_just_defaults():
     """A declaration that only happens to be right at DEFAULT_PARAMS but wrong
     elsewhere in PARAM_BOUNDS should still be caught."""
