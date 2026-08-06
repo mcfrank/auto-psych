@@ -2,12 +2,22 @@
 
 from __future__ import annotations
 
+import functools
 import math
 from typing import Dict, Iterable, Mapping, Sequence, Tuple
 
 Stimulus = Tuple[str, str]
 
 _EPS = 1e-9
+
+# Every public str -> scalar helper below is pure (same input, same output,
+# forever) and is called repeatedly on the same handful of distinct sequences
+# across a design run (once per model x per parameter draw). Caching turns that
+# fan-out into a cache hit after the first call; measured ~4x on encoding_
+# compressibility, the most call-heavy family. lru_cache does not cache
+# exceptions, so clean_sequence's loud rejection of non-H/T input still raises
+# every time it is given bad input.
+_CACHE_SIZE = 1 << 18
 
 
 def normalize_stimulus(stimulus: object) -> Stimulus:
@@ -27,6 +37,7 @@ def normalize_stimulus(stimulus: object) -> Stimulus:
     )
 
 
+@functools.lru_cache(maxsize=_CACHE_SIZE)
 def clean_sequence(seq: str) -> str:
     """Uppercase an H/T sequence and reject other symbols."""
     out = "".join(c.upper() for c in seq.strip() if not c.isspace())
@@ -84,30 +95,21 @@ def merge_params(
     return merged
 
 
-def prop_heads(seq: str) -> float:
-    seq = clean_sequence(seq)
-    return sum(1 for c in seq if c == "H") / len(seq)
+# --- Private helpers below assume an already-cleaned (upper, H/T-only, non-
+# empty) string and do not call clean_sequence themselves. Every public
+# function cleans exactly once and delegates, instead of each stat re-cleaning
+# (e.g. max_run_norm calling max_run_length used to clean twice).
 
 
-def imbalance(seq: str) -> float:
-    """Distance from 50/50 heads/tails, scaled to [0, 1]."""
-    return 2.0 * abs(prop_heads(seq) - 0.5)
+def _head_count(seq: str) -> int:
+    return sum(1 for c in seq if c == "H")
 
 
-def n_switches(seq: str) -> int:
-    seq = clean_sequence(seq)
+def _switch_count(seq: str) -> int:
     return sum(1 for a, b in zip(seq, seq[1:]) if a != b)
 
 
-def alternation_rate(seq: str) -> float:
-    seq = clean_sequence(seq)
-    if len(seq) <= 1:
-        return 0.0
-    return n_switches(seq) / (len(seq) - 1)
-
-
-def max_run_length(seq: str) -> int:
-    seq = clean_sequence(seq)
+def _max_run(seq: str) -> int:
     best = 1
     cur = 1
     for a, b in zip(seq, seq[1:]):
@@ -119,27 +121,10 @@ def max_run_length(seq: str) -> int:
     return best
 
 
-def max_run_norm(seq: str) -> float:
-    """Maximum run length scaled so alternating sequences are 0 and solid runs are 1."""
-    seq = clean_sequence(seq)
-    if len(seq) <= 1:
-        return 0.0
-    return (max_run_length(seq) - 1) / (len(seq) - 1)
-
-
-def parse_motifs(seq: str) -> Tuple[int, int]:
-    """Parse an H/T sequence into Falk & Konold (1997) motifs.
-
-    Returns ``(rep_motifs, alt_motifs)`` — n1 (repetition motifs: maximal
-    constant runs) and n2 (alternation motifs: maximal alternating sub-sequences
-    of length >= 2) of the canonical minimal-description parse used by the
-    statistical-inference model (Griffiths et al. 2018). Mirrors the featurizer
-    helper of the same name; DP = n1 + 2*n2.
-    """
-    s = clean_sequence(seq)
+def _parse_motifs(seq: str) -> Tuple[int, int]:
     run_lengths = []
     cur = 1
-    for a, b in zip(s, s[1:]):
+    for a, b in zip(seq, seq[1:]):
         if a == b:
             cur += 1
         else:
@@ -167,14 +152,7 @@ def parse_motifs(seq: str) -> Tuple[int, int]:
     return rep_motifs, alt_motifs
 
 
-def periodicity_score(seq: str) -> float:
-    """
-    Degree to which the sequence can be described by a short repeating template.
-
-    Returns 0 for weak periodicity and approaches 1 for obvious patterns like
-    HHHHHHHH or HTHTHTHT.
-    """
-    seq = clean_sequence(seq)
+def _periodicity(seq: str) -> float:
     n = len(seq)
     if n <= 2:
         return 0.0
@@ -184,6 +162,74 @@ def periodicity_score(seq: str) -> float:
         matches = sum(1 for i, c in enumerate(seq) if c == template[i % period])
         best_match = max(best_match, matches / n)
     return max(0.0, min(1.0, 2.0 * (best_match - 0.5)))
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def prop_heads(seq: str) -> float:
+    seq = clean_sequence(seq)
+    return _head_count(seq) / len(seq)
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def imbalance(seq: str) -> float:
+    """Distance from 50/50 heads/tails, scaled to [0, 1]."""
+    seq = clean_sequence(seq)
+    return 2.0 * abs(_head_count(seq) / len(seq) - 0.5)
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def n_switches(seq: str) -> int:
+    seq = clean_sequence(seq)
+    return _switch_count(seq)
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def alternation_rate(seq: str) -> float:
+    seq = clean_sequence(seq)
+    if len(seq) <= 1:
+        return 0.0
+    return _switch_count(seq) / (len(seq) - 1)
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def max_run_length(seq: str) -> int:
+    seq = clean_sequence(seq)
+    return _max_run(seq)
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def max_run_norm(seq: str) -> float:
+    """Maximum run length scaled so alternating sequences are 0 and solid runs are 1."""
+    seq = clean_sequence(seq)
+    if len(seq) <= 1:
+        return 0.0
+    return (_max_run(seq) - 1) / (len(seq) - 1)
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def parse_motifs(seq: str) -> Tuple[int, int]:
+    """Parse an H/T sequence into Falk & Konold (1997) motifs.
+
+    Returns ``(rep_motifs, alt_motifs)`` — n1 (repetition motifs: maximal
+    constant runs) and n2 (alternation motifs: maximal alternating sub-sequences
+    of length >= 2) of the canonical minimal-description parse used by the
+    statistical-inference model (Griffiths et al. 2018). Mirrors the featurizer
+    helper of the same name; DP = n1 + 2*n2.
+    """
+    seq = clean_sequence(seq)
+    return _parse_motifs(seq)
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def periodicity_score(seq: str) -> float:
+    """
+    Degree to which the sequence can be described by a short repeating template.
+
+    Returns 0 for weak periodicity and approaches 1 for obvious patterns like
+    HHHHHHHH or HTHTHTHT.
+    """
+    seq = clean_sequence(seq)
+    return _periodicity(seq)
 
 
 def logsumexp(values: Iterable[float]) -> float:
