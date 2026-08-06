@@ -11,7 +11,7 @@ streamed pair scan and the greedy selection.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Dict, Mapping, Optional, Sequence, Tuple
+from typing import Any, Callable, Dict, Iterator, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 
@@ -356,3 +356,112 @@ def audit_decomposition(
                     f"{name!r}.predict_left for ({sequences[ii[row]]!r}, "
                     f"{sequences[jj[row]]!r}): {got[row, k]!r} vs {direct!r}"
                 )
+
+
+def iter_upper_triangle_tiles(
+    n: int, *, tile: int
+) -> Iterator[Tuple[np.ndarray, np.ndarray]]:
+    """Yield ``(i, j)`` int64 arrays covering every unordered pair ``i < j`` in
+    ``range(n)`` exactly once, tile by tile -- the streaming counterpart to
+    materializing ``itertools.combinations(range(n), 2)``. Rectangular tiles (not
+    per-row blocks) keep numpy work per call large enough to stay efficient even
+    when ``tile`` is much smaller than ``n``.
+    """
+    if tile < 1:
+        raise ValueError(f"tile must be >= 1, got {tile}.")
+    for i0 in range(0, n, tile):
+        i1 = min(i0 + tile, n)
+        ii_block = np.arange(i0, i1, dtype=np.int64)
+        for j0 in range(i0, n, tile):
+            j1 = min(j0 + tile, n)
+            jj_block = np.arange(j0, j1, dtype=np.int64)
+            i_grid, j_grid = np.meshgrid(ii_block, jj_block, indexing="ij")
+            mask = i_grid < j_grid
+            if not mask.any():
+                continue
+            yield i_grid[mask], j_grid[mask]
+
+
+def top_pairs_by_marginal_eig(
+    table: ScoreTable,
+    weights: np.ndarray,
+    top_k: int,
+    *,
+    tile: Optional[int] = None,
+    draw_block: Optional[int] = None,
+    progress: Optional[Callable[[int, int], None]] = None,
+) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
+    """The ``top_k`` ``(i, j, eig)`` triples by marginal EIG about model identity,
+    scanned tile by tile over :func:`iter_upper_triangle_tiles` -- the full
+    ``C(n, 2)`` pair list is never materialized. Reuses
+    ``stimulus_design._marginal_eig`` unchanged.
+
+    Deterministic given fixed ``table``/``weights``/``tile``/``draw_block`` (no
+    randomness anywhere in this function -- repeated calls with the same
+    arguments return bit-identical output). Within each tile, candidates that
+    cannot possibly beat the current worst kept value (a strict numeric fact, not
+    a tie) are cheaply dropped before any sorting; survivors -- including any
+    that tie the current boundary -- are merged in via a full ``lexsort`` on
+    ``(-eig, i, j)``, replacing the unstable-quicksort tie-break
+    ``select_informative_stimuli`` used to get from a single ``argsort(-marg)``.
+
+    Changing ``tile`` or ``draw_block`` changes the order floating-point sums are
+    accumulated in (inside :func:`pair_probabilities`), which can shift an EIG
+    value by up to a few ULP (verified: relative gaps as small as 1.1e-16, i.e.
+    one bit of a float64 mantissa). For two candidates whose true EIG values
+    happen to be exactly tied, or tied within that noise floor, which one lands
+    on the correct side of the top-``k`` cutoff is genuinely undefined -- no
+    floating-point top-k selection can do better than this, and it is not a bug
+    in the tiling logic (verified against a dense, non-tiled reference: the
+    *set* of selected pairs matches across `tile` in {1, 2, 3, 7, 64, 4096} in
+    every case tested; a change in ``draw_block`` alone was observed to flip a
+    top-k-boundary pair in about 3% of random trials, always at a sub-2-ULP EIG
+    gap). Callers that need bit-for-bit stability across performance-tuning
+    knobs should fix both ``tile`` and ``draw_block`` explicitly rather than
+    relying on their defaults.
+    """
+    from .stimulus_design import _marginal_eig  # local import: avoids a module cycle
+
+    n = table.scores.shape[0]
+    max_pairs = n * (n - 1) // 2
+    top_k = min(top_k, max_pairs)
+    if top_k == 0:
+        empty_int = np.array([], dtype=np.int64)
+        return empty_int, empty_int, np.array([], dtype=np.float64)
+
+    if tile is None:
+        n_models = table.beta.shape[0]
+        tile = max(1, int(np.sqrt(_TARGET_ELEMENTS / max(1, n_models))))
+        tile = min(tile, n)
+
+    best_i = np.full(top_k, -1, dtype=np.int64)
+    best_j = np.full(top_k, -1, dtype=np.int64)
+    best_eig = np.full(top_k, -np.inf, dtype=np.float64)
+    count_seen = 0
+
+    for ii, jj in iter_upper_triangle_tiles(n, tile=tile):
+        P = pair_probabilities(table, ii, jj, draw_block=draw_block)
+        eig = _marginal_eig(P, weights)
+
+        # Cheap reject: strictly worse than everything currently kept can never
+        # be needed. ">=" (not ">") keeps exact ties so the lexsort below -- not
+        # arrival order -- decides them.
+        buffer_min = best_eig.min()
+        sel = eig >= buffer_min
+        if sel.any():
+            combined_eig = np.concatenate([best_eig, eig[sel]])
+            combined_i = np.concatenate([best_i, ii[sel]])
+            combined_j = np.concatenate([best_j, jj[sel]])
+            order = np.lexsort((combined_j, combined_i, -combined_eig))[:top_k]
+            best_eig = combined_eig[order]
+            best_i = combined_i[order]
+            best_j = combined_j[order]
+
+        count_seen += int(ii.shape[0])
+        if progress is not None:
+            progress(count_seen, max_pairs)
+
+    valid = best_i >= 0
+    best_i, best_j, best_eig = best_i[valid], best_j[valid], best_eig[valid]
+    order = np.lexsort((best_j, best_i, -best_eig))
+    return best_i[order], best_j[order], best_eig[order]

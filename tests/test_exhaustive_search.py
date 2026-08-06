@@ -227,3 +227,118 @@ def test_audit_quotient_samples_new_param_draws_not_just_defaults():
         es.audit_quotient(
             classes, [_RightAtDefaultsOnly], n_probe_classes=2000, n_param_draws=5, seed=3
         )
+
+
+# --- top_pairs_by_marginal_eig / iter_upper_triangle_tiles ------------------------
+
+
+def _dense_reference(table, weights, top_k, *, draw_block=None):
+    """Brute-force reference: materialize every pair, score, sort. Used only in
+    tests -- this is exactly what top_pairs_by_marginal_eig avoids doing."""
+    from src.subjective_randomness.stimulus_design import _marginal_eig
+
+    n = table.scores.shape[0]
+    i, j = np.triu_indices(n, k=1)
+    p = es.pair_probabilities(table, i, j, draw_block=draw_block)
+    eig = _marginal_eig(p, weights)
+    order = np.lexsort((j, i, -eig))[:top_k]
+    return i[order], j[order], eig[order]
+
+
+def test_iter_upper_triangle_tiles_covers_every_pair_exactly_once():
+    n = 17
+    seen = set()
+    total = 0
+    for ii, jj in es.iter_upper_triangle_tiles(n, tile=5):
+        assert np.all(ii < jj)
+        for a, b in zip(ii.tolist(), jj.tolist()):
+            assert (a, b) not in seen
+            seen.add((a, b))
+            total += 1
+    assert total == n * (n - 1) // 2
+
+
+def test_iter_upper_triangle_tiles_rejects_bad_tile():
+    with pytest.raises(ValueError, match="tile must be"):
+        list(es.iter_upper_triangle_tiles(10, tile=0))
+
+
+@pytest.mark.parametrize("tile", [1, 2, 3, 7, 64, 4096])
+def test_top_pairs_matches_dense_reference_across_tile_sizes(tile):
+    classes = ss.build_sequence_classes((3, 4))
+    table = es.build_score_table(FAMILIES, classes.representatives, param_samples=20, seed=1)
+    w = np.full(len(FAMILIES), 1 / len(FAMILIES))
+
+    ref_i, ref_j, ref_eig = _dense_reference(table, w, top_k=10)
+    got_i, got_j, got_eig = es.top_pairs_by_marginal_eig(table, w, top_k=10, tile=tile)
+    assert np.array_equal(ref_i, got_i)
+    assert np.array_equal(ref_j, got_j)
+    assert np.allclose(ref_eig, got_eig, atol=1e-12)
+
+
+def test_top_pairs_is_exactly_deterministic_given_fixed_arguments():
+    """No randomness anywhere in this function -- repeated calls with identical
+    arguments must return bit-identical output."""
+    classes = ss.build_sequence_classes((3, 4, 5), seed=3)
+    table = es.build_score_table(FAMILIES, classes.representatives, param_samples=20, seed=3)
+    w = np.full(len(FAMILIES), 1 / len(FAMILIES))
+    a = es.top_pairs_by_marginal_eig(table, w, top_k=12, tile=9, draw_block=6)
+    b = es.top_pairs_by_marginal_eig(table, w, top_k=12, tile=9, draw_block=6)
+    assert np.array_equal(a[0], b[0]) and np.array_equal(a[1], b[1])
+    assert np.array_equal(a[2], b[2])  # exact, not just allclose -- no float noise possible here
+
+
+def test_top_pairs_draw_block_variation_yields_the_same_set_within_machine_precision():
+    """Changing draw_block changes floating-point summation order inside
+    pair_probabilities, which can shift an EIG value by ~1 ULP. When two
+    candidates are tied within that noise floor, which one lands on the correct
+    side of the top-k cutoff is genuinely undefined by floating point -- not a
+    bug in the tiling/merge logic. This test asserts what IS guaranteed: the
+    selected EIG values agree to within a tiny tolerance, and any set mismatch
+    only ever happens exactly at the top-k boundary with an ULP-scale gap."""
+    classes = ss.build_sequence_classes((3, 4, 5), seed=0)
+    table = es.build_score_table(FAMILIES, classes.representatives, param_samples=20, seed=0)
+    w = np.full(len(FAMILIES), 1 / len(FAMILIES))
+    top_k = 15
+
+    ref_i, ref_j, ref_eig = es.top_pairs_by_marginal_eig(table, w, top_k=top_k, tile=64, draw_block=1)
+    for draw_block in (3, 7, 13):
+        gi, gj, geig = es.top_pairs_by_marginal_eig(
+            table, w, top_k=top_k, tile=64, draw_block=draw_block
+        )
+        assert np.allclose(np.sort(ref_eig), np.sort(geig), atol=1e-9)
+        set_ref = set(zip(ref_i.tolist(), ref_j.tolist()))
+        set_got = set(zip(gi.tolist(), gj.tolist()))
+        if set_ref != set_got:
+            # Any discrepancy must be a single boundary swap at an ULP-scale gap.
+            assert len(set_ref ^ set_got) == 2
+            assert abs(ref_eig[-1] - geig[-1]) < 1e-12
+
+
+def test_top_pairs_handles_top_k_larger_than_available_pairs():
+    classes = ss.build_sequence_classes((3, 4))
+    table = es.build_score_table(FAMILIES, classes.representatives)
+    w = np.full(len(FAMILIES), 1 / len(FAMILIES))
+    n = len(classes.representatives)
+    i, j, eig = es.top_pairs_by_marginal_eig(table, w, top_k=10_000)
+    assert len(i) == n * (n - 1) // 2
+
+
+def test_top_pairs_handles_top_k_zero():
+    classes = ss.build_sequence_classes((3, 4))
+    table = es.build_score_table(FAMILIES, classes.representatives)
+    w = np.full(len(FAMILIES), 1 / len(FAMILIES))
+    i, j, eig = es.top_pairs_by_marginal_eig(table, w, top_k=0)
+    assert len(i) == len(j) == len(eig) == 0
+
+
+def test_top_pairs_ties_break_by_ascending_i_then_j():
+    """Single model, coarse pool -> many exact EIG ties, exercising the lexsort
+    tie-break deterministically rather than incidentally."""
+    classes = ss.build_sequence_classes((6,))
+    table = es.build_score_table([window_typicality], classes.representatives)
+    w = np.array([1.0])
+    i, j, eig = es.top_pairs_by_marginal_eig(table, w, top_k=30, tile=5)
+    for k in range(len(eig) - 1):
+        if np.isclose(eig[k], eig[k + 1], atol=1e-15):
+            assert (i[k], j[k]) < (i[k + 1], j[k + 1])
