@@ -293,12 +293,8 @@ def select_informative_stimuli(
     chosen: List[int] = []
     for _ in range(k):
         rem = np.array(remaining)
-        # Tentative log-belief if each remaining candidate were added: (N, R, K).
-        r = responses[:, rem]  # (N, R)
-        contrib = r[:, :, None] * logP[rem][None] + (1.0 - r)[:, :, None] * log1mP[rem][None]
-        tentative = log_belief[:, None, :] + contrib  # (N, R, K)
-        ent = _posterior_entropy(tentative)  # (N, R)
-        best = remaining[int(np.argmin(ent.mean(axis=0)))]
+        mean_ent = _mean_posterior_entropy(log_belief, responses, logP, log1mP, rem)
+        best = remaining[int(np.argmin(mean_ent))]
         chosen.append(best)
         remaining.remove(best)
         log_belief = log_belief + (
@@ -328,6 +324,47 @@ def _posterior_entropy(log_belief: "np.ndarray") -> "np.ndarray":
     probs = np.exp(shifted)
     probs /= probs.sum(axis=-1, keepdims=True)
     return -(probs * np.log(np.clip(probs, 1e-12, 1.0))).sum(axis=-1)
+
+
+def _mean_posterior_entropy(
+    log_belief: "np.ndarray",
+    responses: "np.ndarray",
+    logP: "np.ndarray",
+    log1mP: "np.ndarray",
+    idx: "np.ndarray",
+    *,
+    chunk: int = 256,
+) -> "np.ndarray":
+    """Mean (over scenarios) posterior entropy after tentatively adding each
+    candidate in ``idx``, chunked over the candidate axis to bound peak memory —
+    the unchunked version materializes an ``(n_scenarios, len(idx), n_models)``
+    tensor (plus several same-shaped temporaries inside :func:`_posterior_entropy`)
+    all at once, which is what drove ``select_informative_stimuli``'s peak memory
+    (measured 319MB on a 3000-candidate pool at ``n_scenarios=512``).
+
+    Bit-identical to the unchunked computation, not merely close: each
+    candidate's tentative belief and entropy depends only on its own column of
+    ``responses``/``logP``/``log1mP``, so chunking the candidate axis never
+    reassociates a floating-point sum — unlike chunking over parameter draws
+    (see ``exhaustive_search.pair_probabilities``), which does. The one change
+    from the original expression, ``np.where(r != 0, logP, log1mP)`` in place of
+    ``r*logP + (1-r)*log1mP``, is also exact rather than approximate: ``responses``
+    is built from a boolean comparison cast to float
+    (``(unif < p_true).astype(float)``), so ``r`` is always exactly ``0.0`` or
+    ``1.0``, and IEEE754 guarantees ``1.0*a + 0.0*b == a`` and ``0.0*a + 1.0*b ==
+    b`` exactly (``log1mP``/``logP`` are always finite — ``P`` is clipped away
+    from 0 and 1 in :func:`_predict_matrix`), so the two expressions select the
+    identical stored float either way.
+    """
+    out = np.empty(len(idx), dtype=np.float64)
+    for start in range(0, len(idx), chunk):
+        cols = idx[start : start + chunk]
+        r = responses[:, cols]  # (N, C)
+        contrib = np.where(r[:, :, None] != 0.0, logP[cols][None], log1mP[cols][None])
+        tentative = log_belief[:, None, :] + contrib  # (N, C, K)
+        ent = _posterior_entropy(tentative)  # (N, C)
+        out[start : start + chunk] = ent.mean(axis=0)
+    return out
 
 
 def build_exhaustive_design(

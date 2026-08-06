@@ -7,7 +7,11 @@ the chosen set carries about model identity, so it spreads across distinctions.
 
 from __future__ import annotations
 
+import numpy as np
+
 from src.subjective_randomness.stimulus_design import (
+    _mean_posterior_entropy,
+    _posterior_entropy,
     build_exhaustive_design,
     default_model_family_names,
     posterior_param_sets,
@@ -154,6 +158,50 @@ def test_build_exhaustive_design_with_explicit_posterior_params():
     )
     assert len(sel) == 4
     assert all("sequence_a" in s and "sequence_b" in s for s in sel)
+
+
+def test_build_exhaustive_design_golden_output_unchanged_by_chunked_entropy():
+    """Pins the exact output of the greedy loop with today's real families,
+    unchanged before and after replacing the unchunked (n_scenarios, R, K) tensor
+    computation with the chunked _mean_posterior_entropy helper -- proof this was
+    a pure speed/memory refactor, not a behavior change."""
+    sel = build_exhaustive_design(k=5, lengths=(3, 4), n_scenarios=200, prefilter=200, seed=0)
+    assert [
+        (s["sequence_a"], s["sequence_b"], s["eig"], s["selection_order"]) for s in sel
+    ] == [
+        ("HTH", "HTTH", 0.149885, 0),
+        ("TTT", "HHHH", 0.125002, 1),
+        ("HHH", "TTTT", 0.125002, 2),
+        ("THT", "HHTT", 0.120592, 3),
+        ("THT", "THHT", 0.149885, 4),
+    ]
+
+
+def test_mean_posterior_entropy_is_bit_identical_to_unchunked_formula():
+    rng = np.random.default_rng(0)
+    n_scenarios, n_pool, n_models = 64, 300, 3
+    log_belief = np.log(rng.dirichlet(np.ones(n_models), size=n_scenarios))
+    logP = np.log(rng.uniform(1e-6, 1 - 1e-6, size=(n_pool, n_models)))
+    log1mP = np.log(1.0 - np.exp(logP))
+    responses = (rng.random((n_scenarios, n_pool)) < rng.random((n_scenarios, n_pool))).astype(float)
+    idx = np.arange(n_pool)
+
+    def unchunked(log_belief, responses, logP, log1mP, idx):
+        r = responses[:, idx]
+        contrib = r[:, :, None] * logP[idx][None] + (1.0 - r)[:, :, None] * log1mP[idx][None]
+        tentative = log_belief[:, None, :] + contrib
+        return _posterior_entropy(tentative).mean(axis=0)
+
+    ref = unchunked(log_belief, responses, logP, log1mP, idx)
+    for chunk in (1, 7, 300, 10_000):
+        got = _mean_posterior_entropy(log_belief, responses, logP, log1mP, idx, chunk=chunk)
+        assert np.array_equal(ref, got), f"chunk={chunk} not bit-identical"
+
+    # Also with a non-contiguous subset, as the greedy loop's `remaining` array is.
+    subset = np.array(sorted(rng.choice(n_pool, size=100, replace=False)))
+    ref_sub = unchunked(log_belief, responses, logP, log1mP, subset)
+    got_sub = _mean_posterior_entropy(log_belief, responses, logP, log1mP, subset, chunk=17)
+    assert np.array_equal(ref_sub, got_sub)
 
 
 def test_selection_is_deterministic_and_returns_k_from_input():
