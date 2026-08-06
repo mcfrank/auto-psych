@@ -57,6 +57,17 @@ PARAM_BOUNDS: Dict[str, tuple[float, float]] = {
     "side_bias": (-2.0, 2.0),
 }
 
+# Declarative only -- see prototype_similarity.py's SUFFICIENT_STATS comment for
+# what reads this. score_sequence above reads len(seq) and max_run_length(seq),
+# nothing else. Verified (tests/test_sequence_stats.py): no two sequences
+# agreeing on these ever get different scores.
+SUFFICIENT_STATS: tuple[str, ...] = ("n", "max_run")
+
+# n and max_run_length both depend only on the run-transition pattern, never on
+# which symbol is H vs T, so this family is exactly invariant under H<->T
+# complementation.
+COMPLEMENT_INVARIANT: bool = True
+
 
 def score_sequence(seq: str, params: Mapping[str, float] | None = None) -> float:
     p = merge_params(DEFAULT_PARAMS, params)

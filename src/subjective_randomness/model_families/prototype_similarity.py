@@ -36,6 +36,20 @@ PARAM_BOUNDS: Dict[str, tuple[float, float]] = {
     "side_bias": (-2.0, 2.0),
 }
 
+# Declarative only -- read by exhaustive_search.quotient_stat_names /
+# complement_invariant to build a safe (never over-merging) equivalence quotient
+# over the sequence space for design-time search. score_sequence above reads the
+# sequence only through imbalance() and alternation_rate(); alternation_rate is an
+# exact linear rescaling of the alts/(n-1) statistic, hence "p_alts" here (see
+# sequence_stats.CANONICAL_STAT_NAMES). Verified (tests/test_sequence_stats.py):
+# no two sequences agreeing on these ever get different scores.
+SUFFICIENT_STATS: tuple[str, ...] = ("imbalance", "p_alts")
+
+# imbalance() and alternation_rate() are both provably invariant under H<->T
+# complementation (imbalance = 2|h/n-0.5| is symmetric in h<->n-h; alternation_rate
+# depends only on the run-transition pattern, not which symbol is which).
+COMPLEMENT_INVARIANT: bool = True
+
 
 def score_sequence(seq: str, params: Mapping[str, float] | None = None) -> float:
     p = merge_params(DEFAULT_PARAMS, params)
