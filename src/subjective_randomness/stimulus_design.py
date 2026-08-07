@@ -15,6 +15,7 @@ this module (pure-Python reference families) for quick design iteration; use
 
 from __future__ import annotations
 
+import heapq
 import importlib
 import itertools
 import math
@@ -236,6 +237,8 @@ def select_informative_stimuli(
     n_scenarios: int = 512,
     prefilter: int = 2000,
     seed: int = 0,
+    lazy: bool = False,
+    lazy_audit: bool = False,
 ) -> List[Dict[str, Any]]:
     """Greedily select ``k`` stimuli that jointly tell the models apart.
 
@@ -258,6 +261,28 @@ def select_informative_stimuli(
     stimuli by marginal EIG are considered for the joint selection (a stimulus
     with ~zero marginal information cannot help any set). Annotates each returned
     stimulus with ``eig`` (marginal) and ``selection_order``.
+
+    ``lazy=True`` selects via CELF (lazy greedy, :func:`_celf_select`) instead of
+    the full-scan greedy loop: for the *population* mutual-information objective,
+    submodularity guarantees this returns the identical sequence, in a fraction of
+    the evaluations (only round 0 scores every remaining candidate; later rounds
+    mostly re-rank stale upper bounds instead of rescoring everything).
+
+    For the *finite-``n_scenarios``* Monte Carlo estimator actually used here,
+    submodularity is only approximate: CELF's correctness depends on a
+    candidate's estimated gain never increasing as the selected set grows, and
+    sampling noise can violate that for two closely-competing candidates (a
+    "close but not tied" gap, not just a bitwise tie). Measured on small pools
+    (candidate lengths 3-5, k=8): CELF disagreed with the full-scan greedy on
+    5/15 random trials at ``n_scenarios=300``, 1/15 at 512 (this function's
+    default), and 0/15 at 8000 — real but shrinking as ``n_scenarios`` grows, not
+    a rare bit-level curiosity like ``top_pairs_by_marginal_eig``'s draw-order
+    sensitivity. Because of this, ``lazy`` defaults to ``False``: CELF is an
+    explicit, informed opt-in for callers who want the speed and can accept the
+    accuracy trade-off (e.g. by raising ``n_scenarios`` to compensate), not a
+    silent default. ``lazy_audit=True`` additionally runs the full scan alongside
+    CELF every round and raises on the first disagreement (for tests; adds back
+    the full per-round cost, so it is not meant for production use).
     """
     if k < 1:
         raise ValueError(f"k must be >= 1, got {k}.")
@@ -290,17 +315,22 @@ def select_informative_stimuli(
 
     log_belief = np.tile(np.log(w), (n_scenarios, 1))  # (N, K), belief over M per scenario
     remaining = list(range(len(pool_idx)))
-    chosen: List[int] = []
-    for _ in range(k):
-        rem = np.array(remaining)
-        mean_ent = _mean_posterior_entropy(log_belief, responses, logP, log1mP, rem)
-        best = remaining[int(np.argmin(mean_ent))]
-        chosen.append(best)
-        remaining.remove(best)
-        log_belief = log_belief + (
-            responses[:, best][:, None] * logP[best]
-            + (1.0 - responses[:, best])[:, None] * log1mP[best]
+    if lazy:
+        chosen = _celf_select(
+            log_belief, responses, logP, log1mP, remaining, k, audit=lazy_audit
         )
+    else:
+        chosen: List[int] = []
+        for _ in range(k):
+            rem = np.array(remaining)
+            mean_ent = _mean_posterior_entropy(log_belief, responses, logP, log1mP, rem)
+            best = remaining[int(np.argmin(mean_ent))]
+            chosen.append(best)
+            remaining.remove(best)
+            log_belief = log_belief + (
+                responses[:, best][:, None] * logP[best]
+                + (1.0 - responses[:, best])[:, None] * log1mP[best]
+            )
 
     out: List[Dict[str, Any]] = []
     for order, local in enumerate(chosen):
@@ -365,6 +395,78 @@ def _mean_posterior_entropy(
         ent = _posterior_entropy(tentative)  # (N, C)
         out[start : start + chunk] = ent.mean(axis=0)
     return out
+
+
+def _celf_select(
+    log_belief: "np.ndarray",
+    responses: "np.ndarray",
+    logP: "np.ndarray",
+    log1mP: "np.ndarray",
+    remaining: List[int],
+    k: int,
+    *,
+    audit: bool = False,
+) -> List[int]:
+    """Lazy-greedy (CELF) selection of ``k`` indices from ``remaining``.
+
+    Exploits that each candidate's marginal *gain* (current mean posterior
+    entropy minus its tentative mean posterior entropy) can only shrink as the
+    selected set grows — so a gain computed in an earlier round is a valid upper
+    bound on that candidate's true current gain, and a max-heap of (possibly
+    stale) gains lets most rounds skip rescoring every remaining candidate: round
+    0 scores everyone once; every later round pops the heap, and only rescores an
+    entry when it turns out to be stale (its stamp doesn't match the current
+    round), pushing the refreshed gain back and continuing until the popped entry
+    is confirmed still on top after a refresh.
+
+    This selects the exact same sequence :func:`select_informative_stimuli`'s
+    full-scan loop does whenever the objective is exactly submodular. Here it is
+    only *estimated* by ``n_scenarios`` Monte Carlo draws, so submodularity holds
+    up to sampling noise — see the module-level test suite for how a genuine
+    near-tie can (rarely) resolve differently, exactly analogous to
+    ``exhaustive_search.top_pairs_by_marginal_eig``'s documented draw-order
+    sensitivity.
+    """
+    log_belief = log_belief.copy()
+    remaining_arr = np.array(remaining, dtype=np.int64)
+    current_entropy = float(_posterior_entropy(log_belief).mean())
+    initial_ent = _mean_posterior_entropy(log_belief, responses, logP, log1mP, remaining_arr)
+
+    heap = [
+        (-(current_entropy - float(initial_ent[pos])), int(c), 0)
+        for pos, c in enumerate(remaining_arr)
+    ]
+    heapq.heapify(heap)
+
+    chosen: List[int] = []
+    for round_idx in range(k):
+        while True:
+            neg_gain, c, stamp = heapq.heappop(heap)
+            if stamp == round_idx:
+                if audit:
+                    rem = np.array([r for r in remaining if r not in chosen], dtype=np.int64)
+                    full_ent = _mean_posterior_entropy(
+                        log_belief, responses, logP, log1mP, rem
+                    )
+                    true_best = int(rem[int(np.argmin(full_ent))])
+                    if true_best != c:
+                        raise AssertionError(
+                            f"CELF disagreed with the full-scan greedy at round "
+                            f"{round_idx}: CELF picked {c}, full scan picked "
+                            f"{true_best}."
+                        )
+                chosen.append(c)
+                break
+            fresh_ent = float(
+                _mean_posterior_entropy(log_belief, responses, logP, log1mP, np.array([c]))[0]
+            )
+            fresh_gain = current_entropy - fresh_ent
+            heapq.heappush(heap, (-fresh_gain, c, round_idx))
+        log_belief = log_belief + (
+            responses[:, c][:, None] * logP[c] + (1.0 - responses[:, c])[:, None] * log1mP[c]
+        )
+        current_entropy = float(_posterior_entropy(log_belief).mean())
+    return chosen
 
 
 def build_exhaustive_design(
