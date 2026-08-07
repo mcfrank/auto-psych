@@ -228,6 +228,55 @@ def _weight_vector(
     return raw / raw.sum()
 
 
+def _greedy_select_indices(
+    P_pool: "np.ndarray",
+    w: "np.ndarray",
+    k: int,
+    *,
+    n_scenarios: int = 512,
+    seed: int = 0,
+    lazy: bool = False,
+    lazy_audit: bool = False,
+) -> List[int]:
+    """The greedy-selection core of :func:`select_informative_stimuli`, factored
+    out so callers that already have a pool's ``(pool_size, n_models)``
+    probability matrix (e.g. ``build_exhaustive_design``'s fast path, which
+    computes it via ``exhaustive_search.pair_probabilities`` instead of scalar
+    ``predict_fns`` calls) can run the same Monte Carlo greedy without paying to
+    rebuild ``P`` through ``_predict_matrix``. Returns indices into ``P_pool``'s
+    rows, in selection order -- exactly what ``select_informative_stimuli``'s own
+    ``chosen`` list held before this extraction.
+    """
+    if k > len(P_pool):
+        raise ValueError(f"Requested k={k} but only {len(P_pool)} candidates in the pool.")
+    logP = np.log(P_pool)
+    log1mP = np.log(1.0 - P_pool)
+
+    rng = np.random.default_rng(seed)
+    true_model = rng.choice(len(w), size=n_scenarios, p=w)  # (N,)
+    unif = rng.random((n_scenarios, len(P_pool)))  # (N, Mp), common random numbers
+    p_true = P_pool[:, true_model].T  # (N, Mp): true model's p_left per scenario/candidate
+    responses = (unif < p_true).astype(float)  # (N, Mp)
+
+    log_belief = np.tile(np.log(w), (n_scenarios, 1))  # (N, K), belief over M per scenario
+    remaining = list(range(len(P_pool)))
+    if lazy:
+        return _celf_select(log_belief, responses, logP, log1mP, remaining, k, audit=lazy_audit)
+
+    chosen: List[int] = []
+    for _ in range(k):
+        rem = np.array(remaining)
+        mean_ent = _mean_posterior_entropy(log_belief, responses, logP, log1mP, rem)
+        best = remaining[int(np.argmin(mean_ent))]
+        chosen.append(best)
+        remaining.remove(best)
+        log_belief = log_belief + (
+            responses[:, best][:, None] * logP[best]
+            + (1.0 - responses[:, best])[:, None] * log1mP[best]
+        )
+    return chosen
+
+
 def select_informative_stimuli(
     stimuli: Sequence[Mapping[str, Any]],
     predict_fns: Mapping[str, PredictFn],
@@ -304,33 +353,10 @@ def select_informative_stimuli(
     pool_size = min(len(stimuli), max(int(prefilter), k))
     pool_idx = np.argsort(-marg)[:pool_size]
     Pp = P[pool_idx]  # (Mp, K)
-    logP = np.log(Pp)
-    log1mP = np.log(1.0 - Pp)
 
-    rng = np.random.default_rng(seed)
-    true_model = rng.choice(len(names), size=n_scenarios, p=w)  # (N,)
-    unif = rng.random((n_scenarios, len(pool_idx)))  # (N, Mp), common random numbers
-    p_true = Pp[:, true_model].T  # (N, Mp): true model's p_left per scenario/candidate
-    responses = (unif < p_true).astype(float)  # (N, Mp)
-
-    log_belief = np.tile(np.log(w), (n_scenarios, 1))  # (N, K), belief over M per scenario
-    remaining = list(range(len(pool_idx)))
-    if lazy:
-        chosen = _celf_select(
-            log_belief, responses, logP, log1mP, remaining, k, audit=lazy_audit
-        )
-    else:
-        chosen: List[int] = []
-        for _ in range(k):
-            rem = np.array(remaining)
-            mean_ent = _mean_posterior_entropy(log_belief, responses, logP, log1mP, rem)
-            best = remaining[int(np.argmin(mean_ent))]
-            chosen.append(best)
-            remaining.remove(best)
-            log_belief = log_belief + (
-                responses[:, best][:, None] * logP[best]
-                + (1.0 - responses[:, best])[:, None] * log1mP[best]
-            )
+    chosen = _greedy_select_indices(
+        Pp, w, k, n_scenarios=n_scenarios, seed=seed, lazy=lazy, lazy_audit=lazy_audit
+    )
 
     out: List[Dict[str, Any]] = []
     for order, local in enumerate(chosen):
@@ -480,15 +506,18 @@ def build_exhaustive_design(
     n_scenarios: int = 512,
     prefilter: int = 3000,
     seed: int = 0,
+    max_length: int = 20,
+    lazy: bool = True,
+    on_quotient_violation: str = "fallback",
+    legacy_compat: bool = False,
 ) -> List[Dict[str, Any]]:
     """Select ``k`` jointly-informative pairs from the *full* H/T pair space.
 
-    Enumerates every distinct unordered pair over the given ``lengths``
-    (:func:`enumerate_all_pairs`), scores them under the pure-Python reference
-    families (the synced twins of the PyMC seed models), and greedily picks a
-    diverse ``k`` via :func:`select_informative_stimuli` — replacing an agent's
-    hand-written candidate pool with a principled, reproducible design over the
-    whole space.
+    Enumerates every distinct unordered pair over the given ``lengths``, scores
+    them under the pure-Python reference families (the synced twins of the PyMC
+    seed models), and greedily picks a diverse ``k`` via
+    :func:`select_informative_stimuli` — replacing an agent's hand-written
+    candidate pool with a principled, reproducible design over the whole space.
 
     Predictions account for parameter uncertainty: by default ``p_left`` is
     averaged over ``param_samples`` prior draws (experiment 1). Pass
@@ -496,37 +525,181 @@ def build_exhaustive_design(
     and ``model_weights`` (posterior model probabilities) to design later
     experiments under the current posterior instead of the prior.
 
-    Two-stage for speed: cheap point predictions prefilter the (~129k) pool to the
-    top ``prefilter`` by marginal EIG, then the expensive parameter-averaged
-    predictions and greedy joint selection run only on that pool.
+    The default path never materializes the pair space or rescoring it one
+    ``predict_left`` call at a time:
+
+    1. Enumerate every sequence, quotient it into feature-equivalence classes
+       (``sequence_stats.build_sequence_classes``) using the *union* of the
+       model set's own declared ``SUFFICIENT_STATS``
+       (``exhaustive_search.quotient_stat_names`` — the full 11-statistic
+       superset if any model lacks a declaration, so an undeclared model is
+       never over-merged), additionally folding H<->T complements when every
+       model unanimously declares ``COMPLEMENT_INVARIANT``. The quotient is
+       then audited (``exhaustive_search.audit_quotient``) against every
+       model's actual ``score_sequence`` rather than trusted outright; see
+       ``on_quotient_violation``.
+    2. Score every class representative once at each model's ``DEFAULT_PARAMS``
+       (``exhaustive_search.build_score_table``) and scan every class pair for
+       marginal EIG in tiles, without ever materializing the full pair list
+       (``exhaustive_search.top_pairs_by_marginal_eig``), to prefilter to the
+       top ``prefilter`` pairs.
+    3. Re-score only the classes that prefiltered pool actually touches — at
+       most ``2 * prefilter`` classes, independent of ``lengths`` — averaged
+       over ``param_samples``/``param_sets_by_model`` draws, then run the same
+       greedy joint-information selection (:func:`_greedy_select_indices`) the
+       legacy path used, directly on the resulting probability matrix.
+
+    ``lazy`` (default ``True`` here, unlike :func:`select_informative_stimuli`'s
+    own conservative default) selects CELF for the step-3 greedy. Measured: at
+    this function's production defaults, the full-scan greedy alone (every other
+    speedup applied) still costs ~3.7s of a ~4-5s total — CELF is what actually
+    gets the whole default pipeline down near the target ~0.5s at
+    ``lengths=(2..8)``. That is traded against the real (not merely
+    theoretical) MC-estimator divergence documented on
+    ``select_informative_stimuli`` — pass ``lazy=False`` here to keep every other
+    speedup but fall back to the exact full-scan greedy.
+
+    ``legacy_compat=True`` instead runs the original algorithm exactly as
+    written before this pipeline existed — no quotienting, the original
+    shared-RNG-stream prior-draw generation (every model's prior draws come off
+    an identical ``np.random.default_rng(seed)`` stream, correlating their
+    shared parameters like ``beta``/``side_bias`` — a known quirk, fixed
+    separately and later since fixing it changes output), and the plain
+    full-scan greedy (``lazy`` is ignored) — kept specifically so a golden test
+    can pin that the fast path above is a faithful acceleration, not a
+    different computation. It does not scale the way the default path does
+    (materializes every pair up front) and is not meant for production use at
+    ``lengths`` beyond the historical default.
+
+    ``on_quotient_violation`` controls what happens if the audit in step 1 finds
+    a model that actually distinguishes two sequences the quotient merged
+    (``exhaustive_search.QuotientViolation``): ``"fallback"`` (default) prints a
+    warning and rebuilds with the identity quotient (no merging at all --
+    ``sequence_stats.identity_classes``), so an outer-loop run in progress
+    degrades to a slower-but-correct design instead of crashing; ``"raise"``
+    propagates the error.
     """
     names = list(model_names) if model_names else default_model_family_names()
-    candidates = enumerate_all_pairs(lengths)
 
-    # Stage 1 — cheap point predictions to prefilter the full pool by marginal EIG.
-    point_P = _predict_matrix(candidates, family_predict_fns(names))
+    if legacy_compat:
+        candidates = enumerate_all_pairs(lengths)
+        point_P = _predict_matrix(candidates, family_predict_fns(names))
+        w = _weight_vector(names, model_weights)
+        pool_size = min(len(candidates), max(int(prefilter), k))
+        pool_idx = np.argsort(-_marginal_eig(point_P, w))[:pool_size]
+        pool = [candidates[int(i)] for i in pool_idx]
+        scoring_fns = family_predict_fns(
+            names,
+            param_samples=param_samples,
+            param_sets_by_model=param_sets_by_model,
+            seed=seed,
+        )
+        return select_informative_stimuli(
+            pool,
+            scoring_fns,
+            k,
+            model_weights=model_weights,
+            n_scenarios=n_scenarios,
+            prefilter=pool_size,
+            seed=seed,
+            lazy=False,
+        )
+
+    from . import exhaustive_search as es  # local import: avoids a module cycle
+    from . import sequence_stats as ss
+
+    modules = [
+        importlib.import_module(f"src.subjective_randomness.model_families.{name}")
+        for name in names
+    ]
     w = _weight_vector(names, model_weights)
-    pool_size = min(len(candidates), max(int(prefilter), k))
-    pool_idx = np.argsort(-_marginal_eig(point_P, w))[:pool_size]
-    pool = [candidates[int(i)] for i in pool_idx]
 
-    # Stage 2 — accurate (parameter-averaged) predictions on the pool only, then
-    # the greedy joint-information selection (prefilter is now a no-op).
-    scoring_fns = family_predict_fns(
-        names,
-        param_samples=param_samples,
+    stat_names = es.quotient_stat_names(modules)
+    complement_canonical = es.complement_invariant(modules)
+    classes = ss.build_sequence_classes(
+        lengths,
+        stat_names=stat_names,
+        complement_canonical=complement_canonical,
+        max_length=max_length,
+        seed=seed,
+    )
+    try:
+        es.audit_quotient(classes, modules, seed=seed)
+    except es.QuotientViolation as exc:
+        if on_quotient_violation == "raise":
+            raise
+        if on_quotient_violation != "fallback":
+            raise ValueError(
+                f"Unknown on_quotient_violation={on_quotient_violation!r}; "
+                "expected 'fallback' or 'raise'."
+            ) from exc
+        print(
+            f"  [design] quotient audit failed ({exc}); falling back to the "
+            "identity quotient (no merging) for this design.",
+            flush=True,
+        )
+        classes = ss.identity_classes(lengths, max_length=max_length)
+
+    # Stage 1 — cheap point-parameter scores prefilter the class-pair space by
+    # marginal EIG, streamed in tiles (never materializes the full pair list).
+    point_table = es.build_score_table(modules, classes.representatives)
+    pool_size = max(int(prefilter), k)
+    i_idx, j_idx, _ = es.top_pairs_by_marginal_eig(point_table, w, pool_size)
+    if len(i_idx) < k:
+        # top_pairs_by_marginal_eig silently clips to however many distinct
+        # class-pairs actually exist -- a narrow quotient (e.g. a model set that
+        # collapses everything to very few classes) can make that smaller than
+        # k. select_informative_stimuli raises rather than silently returning
+        # fewer than requested; match that here instead of letting the greedy
+        # loop crash on an exhausted pool.
+        raise ValueError(
+            f"Only {len(i_idx)} distinct class-pair(s) available after "
+            f"quotienting {classes.n_sequences} sequences to {classes.n_classes} "
+            f"classes over lengths {tuple(sorted(set(lengths)))}; cannot select "
+            f"k={k}. Widen `lengths`, or pass on_quotient_violation aside -- this "
+            "is the quotient legitimately having too little to work with, not a "
+            "quotient-safety issue."
+        )
+
+    # Stage 2 — accurate (parameter-averaged) scores on only the classes the
+    # prefiltered pool touches (<= 2*prefilter, independent of `lengths`).
+    used = np.unique(np.concatenate([i_idx, j_idx]))
+    used_seqs = [classes.representatives[int(u)] for u in used]
+    remap = {int(g): local for local, g in enumerate(used)}
+    table = es.build_score_table(
+        modules,
+        used_seqs,
         param_sets_by_model=param_sets_by_model,
+        param_samples=param_samples if param_sets_by_model is None else None,
         seed=seed,
     )
-    return select_informative_stimuli(
-        pool,
-        scoring_fns,
-        k,
-        model_weights=model_weights,
-        n_scenarios=n_scenarios,
-        prefilter=pool_size,
-        seed=seed,
-    )
+    # n_probe_pairs is lower than audit_decomposition's own default (64): its
+    # cost scales with n_probe_pairs * n_models * n_draws, and at this
+    # function's production draw counts (param_samples up to a few hundred) the
+    # default probe count is measurably not free (~0.7s). A systematic
+    # decomposition bug (the only thing this check can catch -- see its
+    # docstring) shows up on essentially any probed pair, so a smaller sample
+    # still catches it while keeping this a genuinely cheap safety net here.
+    es.audit_decomposition(table, modules, used_seqs, seed=seed, n_probe_pairs=16)
+
+    i_local = np.array([remap[int(v)] for v in i_idx])
+    j_local = np.array([remap[int(v)] for v in j_idx])
+    P_pool = es.pair_probabilities(table, i_local, j_local)  # (pool_size, K)
+
+    chosen = _greedy_select_indices(P_pool, w, k, n_scenarios=n_scenarios, seed=seed, lazy=lazy)
+
+    marg_pool = _marginal_eig(P_pool, w)
+    out: List[Dict[str, Any]] = []
+    for order, local in enumerate(chosen):
+        out.append(
+            {
+                "sequence_a": used_seqs[i_local[local]],
+                "sequence_b": used_seqs[j_local[local]],
+                "eig": round(float(marg_pool[local]), 6),
+                "selection_order": order,
+            }
+        )
+    return out
 
 
 def default_model_family_names() -> List[str]:
