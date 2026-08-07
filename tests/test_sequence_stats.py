@@ -208,3 +208,44 @@ def test_representative_choice_is_not_always_lexicographically_first():
     ]
     assert multi_member, "expected at least one class with >3 members at length 8"
     assert not all(rep.startswith("H") for rep in multi_member)
+
+
+# --- identity_classes ("no quotienting" fallback) ---------------------------
+
+
+def test_identity_classes_has_one_class_per_sequence():
+    classes = ss.identity_classes(range(2, 9))
+    assert classes.n_classes == classes.n_sequences == 508
+    assert all(size == 1 for size in classes.sizes)
+    assert len(set(classes.representatives)) == 508  # every sequence is distinct
+
+
+def test_identity_classes_stats_match_vectorized_stats_for_length():
+    classes = ss.identity_classes((5,))
+    columns, bits = ss.stats_for_length(5)
+    reps = ss._bits_to_strings(bits)
+    assert list(classes.representatives) == reps
+    for name in ss.CANONICAL_STAT_NAMES:
+        assert np.array_equal(classes.stats[name], columns[name])
+
+
+@pytest.mark.parametrize(
+    "kwargs,match",
+    [
+        ({"lengths": ()}, "non-empty"),
+        ({"lengths": (0,)}, ">= 1"),
+        ({"lengths": (25,)}, "max_length"),
+    ],
+)
+def test_identity_classes_rejects_bad_input(kwargs, match):
+    with pytest.raises(ValueError, match=match):
+        ss.identity_classes(**kwargs)
+
+
+def test_identity_classes_never_merges_even_exact_complement_pairs():
+    """The whole point of identity_classes: unlike build_sequence_classes with
+    complement_canonical=True, it must not merge anything at all, including the
+    two most obviously "equivalent" sequences."""
+    classes = ss.identity_classes((4,))
+    assert "HHHH" in classes.representatives
+    assert "TTTT" in classes.representatives
