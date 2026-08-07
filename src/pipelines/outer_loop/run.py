@@ -314,6 +314,7 @@ def _write_exhaustive_design(
     prev_exp_dir: Optional[Path] = None,
     k: int = 32,
     lengths=(2, 3, 4, 5, 6, 7, 8),
+    max_length: int = 20,
 ) -> None:
     """Deterministically select the design's stimuli by exhaustive enumeration.
 
@@ -323,6 +324,10 @@ def _write_exhaustive_design(
     the model parameter *priors* with uniform model weights; experiments >= 2 use
     the previous experiment's posterior (model weights and parameter draws). Only
     implemented for subjective_randomness (it scores under its reference families).
+
+    ``max_length`` bounds how long a sequence ``build_exhaustive_design`` will
+    enumerate (independent of ``lengths``, which is the *requested* range --
+    raise ``max_length`` to request lengths beyond its default of 20).
     """
     if project_id != "subjective_randomness":
         print(
@@ -334,7 +339,7 @@ def _write_exhaustive_design(
     from src.subjective_randomness.stimulus_design import build_exhaustive_design
 
     if exp_num <= 1 or prev_exp_dir is None:
-        stimuli = build_exhaustive_design(k=k, lengths=tuple(lengths))
+        stimuli = build_exhaustive_design(k=k, lengths=tuple(lengths), max_length=max_length)
         basis = "parameter priors + uniform model weights"
     else:
         names, param_sets_by_model, weights = _posterior_design_inputs(exp_dir, prev_exp_dir)
@@ -344,6 +349,7 @@ def _write_exhaustive_design(
             model_names=names,
             param_sets_by_model=param_sets_by_model,
             model_weights=weights,
+            max_length=max_length,
         )
         basis = f"experiment {exp_num - 1} posterior (model weights + parameter draws)"
 

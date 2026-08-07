@@ -368,3 +368,44 @@ def build_sequence_classes(
         complement_canonical=complement_canonical,
         n_sequences=n_sequences,
     )
+
+
+def identity_classes(lengths: Sequence[int], *, max_length: int = 20) -> SequenceClasses:
+    """Every sequence of ``lengths`` is its own singleton class -- the "no
+    quotienting" fallback for when a model set's quotient can't be trusted (see
+    ``exhaustive_search.audit_quotient``: a declaration that turns out to be
+    stale or wrong, or a model that reads something outside
+    ``CANONICAL_STAT_NAMES`` entirely, e.g. raw sequence position). Safe by
+    construction -- nothing is ever merged -- at the cost of getting none of
+    :func:`build_sequence_classes`'s collapse (508 sequences stay 508 classes at
+    ``lengths=(2..8)``, not 291). Affordable at the default exhaustive-design
+    lengths; ``build_exhaustive_design`` is expected to keep ``lengths`` modest
+    when it falls back to this.
+    """
+    lengths = tuple(sorted(set(lengths)))
+    if not lengths:
+        raise ValueError("lengths must be non-empty.")
+    if any(length < 1 for length in lengths):
+        raise ValueError(f"Sequence lengths must be >= 1, got {lengths}.")
+    if any(length > max_length for length in lengths):
+        raise ValueError(
+            f"Sequence lengths are capped at max_length={max_length} (got {lengths})."
+        )
+
+    reps: list[str] = []
+    stat_cols: Dict[str, list[np.ndarray]] = {name: [] for name in CANONICAL_STAT_NAMES}
+    for length in lengths:
+        columns, bits = stats_for_length(length)
+        reps.extend(_bits_to_strings(bits))
+        for name in CANONICAL_STAT_NAMES:
+            stat_cols[name].append(columns[name])
+
+    n_total = len(reps)
+    return SequenceClasses(
+        representatives=tuple(reps),
+        sizes=np.ones(n_total, dtype=np.int64),
+        stats={name: np.concatenate(cols) for name, cols in stat_cols.items()},
+        stat_names=CANONICAL_STAT_NAMES,
+        complement_canonical=False,
+        n_sequences=n_total,
+    )
