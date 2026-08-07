@@ -14,6 +14,8 @@ from src.subjective_randomness.stimulus_design import (
     _posterior_entropy,
     build_exhaustive_design,
     default_model_family_names,
+    enumerate_all_pairs,
+    family_predict_fns,
     posterior_param_sets,
     select_discriminating_stimuli,
     select_informative_stimuli,
@@ -202,6 +204,97 @@ def test_mean_posterior_entropy_is_bit_identical_to_unchunked_formula():
     ref_sub = unchunked(log_belief, responses, logP, log1mP, subset)
     got_sub = _mean_posterior_entropy(log_belief, responses, logP, log1mP, subset, chunk=17)
     assert np.array_equal(ref_sub, got_sub)
+
+
+# --- CELF (lazy=True) --------------------------------------------------------
+
+
+def test_lazy_defaults_to_off_and_matches_full_scan_by_construction():
+    """lazy=False (the default) must run the exact same code path as before this
+    change -- select_informative_stimuli's default output must be untouched."""
+    predict_fns = _toy_predict_fns()
+    stimuli = [_stim("C_vs_AB"), _stim("C_vs_AB_2"), _stim("A_vs_B")]
+    default = select_informative_stimuli(stimuli, predict_fns, k=2, n_scenarios=2000, seed=0)
+    explicit_off = select_informative_stimuli(
+        stimuli, predict_fns, k=2, n_scenarios=2000, seed=0, lazy=False
+    )
+    assert [s["kind"] for s in default] == [s["kind"] for s in explicit_off]
+
+
+def test_build_exhaustive_design_golden_is_untouched_by_adding_celf():
+    """build_exhaustive_design doesn't pass lazy= anywhere -- adding the lazy
+    option must not change its (already pinned) default output."""
+    sel = build_exhaustive_design(k=5, lengths=(3, 4), n_scenarios=200, prefilter=200, seed=0)
+    assert [
+        (s["sequence_a"], s["sequence_b"], s["eig"], s["selection_order"]) for s in sel
+    ] == [
+        ("HTH", "HTTH", 0.149885, 0),
+        ("TTT", "HHHH", 0.125002, 1),
+        ("HHH", "TTTT", 0.125002, 2),
+        ("THT", "HHTT", 0.120592, 3),
+        ("THT", "THHT", 0.149885, 4),
+    ]
+
+
+def test_celf_matches_full_scan_on_a_clean_toy_case():
+    """On the well-separated toy table (large gaps between candidates' gains,
+    plenty of scenarios), CELF must select identically to the full scan."""
+    predict_fns = _toy_predict_fns()
+    stimuli = [_stim("C_vs_AB"), _stim("C_vs_AB_2"), _stim("A_vs_B")]
+    plain = select_informative_stimuli(stimuli, predict_fns, k=2, n_scenarios=4000, seed=0)
+    lazy = select_informative_stimuli(
+        stimuli, predict_fns, k=2, n_scenarios=4000, seed=0, lazy=True, lazy_audit=True
+    )
+    assert [s["kind"] for s in plain] == [s["kind"] for s in lazy]
+
+
+def test_celf_is_deterministic_given_seed():
+    names = default_model_family_names()
+    fns = family_predict_fns(names, param_samples=30, seed=2)
+    cands = enumerate_all_pairs((3, 4, 5))
+    a = select_informative_stimuli(cands, fns, k=6, n_scenarios=500, prefilter=200, seed=2, lazy=True)
+    b = select_informative_stimuli(cands, fns, k=6, n_scenarios=500, prefilter=200, seed=2, lazy=True)
+    assert [(s["sequence_a"], s["sequence_b"]) for s in a] == [
+        (s["sequence_a"], s["sequence_b"]) for s in b
+    ]
+
+
+def test_celf_returns_a_valid_k_sized_distinct_selection_even_when_it_diverges():
+    """Documented finding: CELF can disagree with the full-scan greedy under this
+    finite-scenario estimator (measured up to ~1/3 of trials at small
+    n_scenarios). Whether or not it disagrees on a given seed, the output must
+    still be a valid size-k selection of distinct candidates."""
+    names = default_model_family_names()
+    fns = family_predict_fns(names, param_samples=30, seed=3)
+    cands = enumerate_all_pairs((3, 4, 5))
+    out = select_informative_stimuli(
+        cands, fns, k=8, n_scenarios=300, prefilter=300, seed=3, lazy=True
+    )
+    assert len(out) == 8
+    keys = {(s["sequence_a"], s["sequence_b"]) for s in out}
+    assert len(keys) == 8
+    assert all("eig" in s and "selection_order" in s for s in out)
+
+
+def test_lazy_audit_detects_a_known_divergence():
+    """Pins a concrete (seed, params) case (found empirically) where CELF
+    disagrees with the full-scan greedy under n_scenarios=300, proving
+    lazy_audit actually catches real divergence rather than always passing."""
+    names = default_model_family_names()
+    fns = family_predict_fns(names, param_samples=30, seed=1)
+    cands = enumerate_all_pairs((3, 4, 5))
+    try:
+        select_informative_stimuli(
+            cands, fns, k=8, n_scenarios=300, prefilter=300, seed=1, lazy=True, lazy_audit=True
+        )
+    except AssertionError as exc:
+        assert "CELF disagreed with the full-scan greedy" in str(exc)
+    else:
+        raise AssertionError(
+            "expected lazy_audit=True to catch a known CELF/full-scan divergence "
+            "at this (seed, n_scenarios) -- if this no longer reproduces, the "
+            "audit mechanism itself may have broken silently."
+        )
 
 
 def test_selection_is_deterministic_and_returns_k_from_input():
