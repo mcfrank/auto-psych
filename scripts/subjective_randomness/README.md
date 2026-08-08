@@ -5,9 +5,11 @@ subjective-randomness design can recover known parameters — and re-identify
 the generating model — from simulated choices.
 
 The importable library code lives in `src/subjective_randomness/`; these are the
-runnable command-line entry points. The canonical model families live in
-`src/subjective_randomness/model_families/`. Data (stimuli and
-responses) lives under `data/subjective_randomness/`.
+runnable command-line entry points. The PyMC model families and the manifest
+that says which of them are active live in
+`src/subjective_randomness/pymc_model_families/`, their pure-Python twins in
+`src/subjective_randomness/model_families/`. Data (stimuli and responses) lives
+under `data/subjective_randomness/`.
 
 ## Whole Pipeline in One Command
 
@@ -156,14 +158,14 @@ Closed-ended recovery (above) keeps the true model *in* the candidate set.
 synthetic response from fixed parameters, while the full agentic outer+inner
 loop starts from the live seed pool and tries to recover the held-out process.
 
-Two distinct model sets are involved. Ground truths come from the frozen
-recovery registry (`src/subjective_randomness/pymc_model_families` — the
-original validated model set, whose pure-Python family twins provide the fixed
-generating parameters and baselines; the config's `seed_models_dir` points
-there). The **live seed pool** is separate: since the hero-run promotion it
-holds the best models discovered by the human replicates, so a registry ground
-truth is simply absent from the pool — the same situation as an impossible
-ground truth, with nothing to exclude.
+Ground truths come from the recovery registry
+(`src/subjective_randomness/pymc_model_families`, the config's
+`seed_models_dir`), whose pure-Python family twins provide the fixed generating
+parameters and baselines. The **live seed pool** mirrors that registry's
+manifest, so a ground truth drawn from the active set is genuinely held out of
+experiment 1's seed pool. A ground truth the registry keeps only on disk (a
+model the 2026-08 consolidation superseded, or an impossible theory) is absent
+from the pool already, and nothing is excluded.
 
 Real agents do the work: the design agent chooses each experiment's stimuli by
 EIG, the model set is carried forward between experiments (there is no theory

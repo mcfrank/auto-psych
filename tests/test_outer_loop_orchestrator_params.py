@@ -35,18 +35,14 @@ def _seeded_names(exp_dir: Path) -> set[str]:
 def test_seed_exclude_filters_files_and_manifest(tmp_path):
     exp_dir = tmp_path / "experiment1"
     assert orch.seed_experiment_models_from_project(
-        exp_dir, PROJECT, exclude=("minkowski_accumulated_typicality",)
+        exp_dir, PROJECT, exclude=("falk_konold_dp",)
     )
-    assert not (
-        exp_dir / "cognitive_models" / "minkowski_accumulated_typicality.py"
-    ).exists()
-    assert (
-        exp_dir / "cognitive_models" / "artificial_balance_diagnosticity.py"
-    ).exists()
+    assert not (exp_dir / "cognitive_models" / "falk_konold_dp.py").exists()
+    assert (exp_dir / "cognitive_models" / "local_representativeness.py").exists()
     assert _seeded_names(exp_dir) == {
-        "evidence_accumulation_messy_prototype",
-        "evidence_accumulation_per_run",
-        "artificial_balance_diagnosticity",
+        "motif_hmm",
+        "finite_experience_occurrence",
+        "local_representativeness",
     }
 
 

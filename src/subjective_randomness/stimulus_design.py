@@ -19,11 +19,12 @@ import heapq
 import importlib
 import itertools
 import math
-from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
-import yaml
+
+from src.models.model_manifest import read_manifest_names
+from src.subjective_randomness.pymc_model_families import REGISTRY_DIR
 
 # A predictor maps a stimulus ({"sequence_a", "sequence_b"}) to P(choose left).
 PredictFn = Callable[[Mapping[str, str]], float]
@@ -746,11 +747,7 @@ def default_model_family_names() -> List[str]:
     importable for archival refits but are deliberately NOT picked up here —
     enumerating the package directory would resurrect them.
     """
-    manifest_path = (
-        Path(__file__).resolve().parent / "pymc_model_families" / "models_manifest.yaml"
-    )
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-    return [entry["name"] for entry in manifest["models"]]
+    return read_manifest_names(REGISTRY_DIR)
 
 
 def _point_predictor(module: Any) -> PredictFn:

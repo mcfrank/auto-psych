@@ -37,9 +37,10 @@ from src.subjective_randomness.recover import pearson_r
 from src.subjective_randomness.stimulus_design import generate_candidate_pool
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
-# The recovery GT/baseline registry: the original validated model set with
-# pure-Python family twins. NOT the live project seed_models dir, which since
-# the hero-run promotion holds the replicate winners (no family twins).
+# The recovery GT/baseline registry: the models with pure-Python family twins,
+# and the single source of truth for the active seed set (the live project
+# seed_models dir mirrors this manifest). It also keeps superseded models on
+# disk, so a superseded ground truth can be generated without being in the pool.
 SEED_MODELS_DIR = REPO_ROOT / "src/subjective_randomness/pymc_model_families"
 
 DESIGN_STIMULI = [
@@ -100,9 +101,10 @@ def _stub_generate_responses(calls):
 
 def _stub_inner_loop(history_best):
     # ``history_best`` must be a model present in the experiment's seeded
-    # cognitive_models: a live-pool winner (e.g. minkowski_accumulated_typicality)
-    # when the real project seeding runs, or an old registry name when the test
-    # builds its own fixture manifest (e.g. _complete_experiment_on_disk).
+    # cognitive_models: one of the live pool's faithful seeds (e.g.
+    # local_representativeness) when the real project seeding runs, or a
+    # superseded name when the test builds its own fixture manifest (e.g.
+    # _complete_experiment_on_disk).
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
             backend=None, agent_model=None, cache_dir=None, project_id=None,
             agent_timeout_sec=900):
@@ -166,7 +168,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         holdout_recovery, "generate_responses", _stub_generate_responses(collect_calls)
     )
     monkeypatch.setattr(
-        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop("minkowski_accumulated_typicality")
+        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop("local_representativeness")
     )
     monkeypatch.setattr(
         holdout_recovery,
@@ -214,9 +216,10 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         cache_dir=tmp_path / "cache",
     )
 
-    # The held-out model never enters experiment 1's seed set. Since the
-    # hero-run seed promotion the live pool holds the replicate winners, so an
-    # old-registry GT is out-of-pool by construction (nothing to exclude).
+    # The held-out model never enters experiment 1's seed set. The GT here is
+    # the superseded prototype_similarity, which the 2026-08 consolidation
+    # dropped from the active set, so it is out-of-pool by construction and
+    # nothing is excluded.
     run_root = tmp_path / "runs" / "prototype_similarity"
     exp1_models = run_root / "experiment1" / "cognitive_models"
     assert not (exp1_models / "prototype_similarity.py").exists()
@@ -225,13 +228,13 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     )
     seeded_names = {m["name"] for m in seeded["models"]}
     assert "prototype_similarity" not in seeded_names
-    # Manifest read after the full run: exactly the four live-pool winners —
-    # the stub best model is one of them, so the export adds nothing.
+    # Manifest read after the full run: exactly the four faithful seeds — the
+    # stub best model is one of them, so the export adds nothing.
     assert seeded_names == {
-        "minkowski_accumulated_typicality",
-        "evidence_accumulation_messy_prototype",
-        "evidence_accumulation_per_run",
-        "artificial_balance_diagnosticity",
+        "falk_konold_dp",
+        "motif_hmm",
+        "finite_experience_occurrence",
+        "local_representativeness",
     }
 
     # Design is the only spawned agent: exp 1's model set is seeded and exp 2's
@@ -257,7 +260,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert [row["experiment"] for row in trajectory] == [1, 1, 2, 2]
     assert [row["iteration"] for row in trajectory] == [None, 0, None, 0]
     assert all(
-        row["best_model"] == "minkowski_accumulated_typicality" for row in trajectory
+        row["best_model"] == "local_representativeness" for row in trajectory
     )
     assert all(row["pearson_r"] == pytest.approx(1.0) for row in trajectory)
     assert all(row["rmse"] == pytest.approx(0.0) for row in trajectory)
@@ -278,10 +281,10 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
 
     # Evaluation refits go through the shared MCMC cache. The BMA fits every
     # posterior-weighted model (the stub posterior holds the winner best model
-    # plus motif_hmm), and the fitted-seed baseline fits the registry models.
+    # plus motif_hmm — both seeds), and the fitted-seed baseline fits the
+    # registry models, so together they cover exactly the faithful set.
     assert all(c["cache_dir"] == tmp_path / "cache" for c in fit_calls)
     assert {c["name"] for c in fit_calls} == {
-        "minkowski_accumulated_typicality",
         "falk_konold_dp",
         "motif_hmm",
         "finite_experience_occurrence",
@@ -326,10 +329,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert usage_summary["n_calls"] == 2
     assert usage_summary["total_tokens"] == 220
     assert usage_summary["by_source"]["outer:2_design"]["n_calls"] == 2
-    assert (
-        "minkowski_accumulated_typicality"
-        in gt_run["experiments"][1]["manifest_models"]
-    )
+    assert "local_representativeness" in gt_run["experiments"][1]["manifest_models"]
 
 
 # ── harness error path ──────────────────────────────────────────────
@@ -675,7 +675,7 @@ def test_design_stage_scores_candidates_when_agent_leaves_no_stimuli(
         holdout_recovery, "generate_responses", _stub_generate_responses([])
     )
     monkeypatch.setattr(
-        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop("minkowski_accumulated_typicality")
+        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop("local_representativeness")
     )
 
     run_holdout_experiments(
@@ -721,7 +721,7 @@ def test_design_stage_uses_agent_stimuli_without_rescoring(tmp_path, monkeypatch
         holdout_recovery, "generate_responses", _stub_generate_responses([])
     )
     monkeypatch.setattr(
-        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop("minkowski_accumulated_typicality")
+        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop("local_representativeness")
     )
 
     run_holdout_experiments(
@@ -1731,16 +1731,15 @@ def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypa
     gt_run = result["gt_runs"][0]
     trajectory = gt_run["trajectory"]
     assert len(trajectory) == 1  # seed-only scoring step
-    # The held-out GT (prototype_similarity, from the old registry) is not in
-    # the live pool at all; the recovered best model is whichever of the pool's
-    # winner seeds best fits the small design sample. This is a
-    # pipeline/caching smoke test, so we only require a valid seeded model,
-    # not a specific winner.
+    # The held-out GT (the superseded prototype_similarity) is not in the live
+    # pool at all; the recovered best model is whichever faithful seed best
+    # fits the small design sample. This is a pipeline/caching smoke test, so
+    # we only require a valid seeded model, not a specific winner.
     assert trajectory[0]["best_model"] in {
-        "minkowski_accumulated_typicality",
-        "evidence_accumulation_messy_prototype",
-        "evidence_accumulation_per_run",
-        "artificial_balance_diagnosticity",
+        "falk_konold_dp",
+        "motif_hmm",
+        "finite_experience_occurrence",
+        "local_representativeness",
     }
     r = trajectory[0]["pearson_r"]
     assert r is not None and -1.0 <= r <= 1.0

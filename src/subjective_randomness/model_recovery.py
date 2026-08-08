@@ -26,8 +26,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 import numpy as np
-import yaml
 
+from src.models.model_manifest import read_manifest_names
 from src.models.pymc_inference import load_pymc_model, make_stim_data
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from src.subjective_randomness.config import resolve_path
@@ -41,9 +41,7 @@ PASSTHROUGH_COLS = ["sequence_a", "sequence_b"]
 
 def seed_model_names(seed_models_dir: Path) -> List[str]:
     """Read the ordered seed-model names from the directory's manifest."""
-    manifest_path = Path(seed_models_dir) / "models_manifest.yaml"
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-    return [entry["name"] for entry in manifest["models"]]
+    return read_manifest_names(seed_models_dir)
 
 
 def _family_default_params(name: str) -> Dict[str, float]:

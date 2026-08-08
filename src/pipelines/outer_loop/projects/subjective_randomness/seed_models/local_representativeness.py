@@ -1,12 +1,19 @@
-"""PyMC adapter for the prototype-similarity model family."""
+"""PyMC adapter for the Kahneman & Tversky local-representativeness family.
+
+``prototype_similarity`` with K&T (1972)'s locality restored: the balance
+term is the worst H/T imbalance over sliding windows of length min(n, 4)
+(the featurizer's ``local_imbalance`` column) instead of whole-sequence
+imbalance. See the pure-Python twin in
+``model_families/local_representativeness.py`` for the full rationale.
+"""
 
 import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
 with pm.Model() as model:
-    imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
-    imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
+    local_imbalance_a = pm.Data("local_imbalance_a", np.zeros(1, dtype="float64"))
+    local_imbalance_b = pm.Data("local_imbalance_b", np.zeros(1, dtype="float64"))
     p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
     p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
     chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
@@ -18,10 +25,10 @@ with pm.Model() as model:
 
     balance_weight = 1.0 - alt_weight
     score_a = -(
-        balance_weight * imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
+        balance_weight * local_imbalance_a + alt_weight * pt.abs(p_alts_a - theta_alt)
     )
     score_b = -(
-        balance_weight * imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
+        balance_weight * local_imbalance_b + alt_weight * pt.abs(p_alts_b - theta_alt)
     )
 
     p_left = pm.Deterministic(

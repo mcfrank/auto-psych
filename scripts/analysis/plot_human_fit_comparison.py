@@ -51,10 +51,12 @@ from src.subjective_randomness.tidy import write_tidy_csv  # noqa: E402
 
 DEFAULT_RUNS_ROOT = Path("data/results/human_experiment")
 
-# The four hand-written cognitive theories that seed every experiment. Defined in
-# src/pipelines/outer_loop/projects/subjective_randomness/seed_models/models_manifest.yaml;
-# every other model in a posterior (iterN_candidateK, inner_loop_model, and any
-# carried-forward named model) was proposed by an agent.
+# The four hand-written cognitive theories that seeded the human runs analysed
+# here (the live seed pool as it stood then; it now mirrors the 2026-08
+# literature-faithful registry, and the winners those runs promoted are archived
+# under seed_models/archive_hero_run_2026_07/). Every other model in a posterior
+# (iterN_candidateK, inner_loop_model, and any carried-forward named model) was
+# proposed by an agent.
 SEED_MODELS: Tuple[str, ...] = (
     "prototype_similarity",
     "encoding_compressibility",
