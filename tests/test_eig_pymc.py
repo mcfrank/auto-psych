@@ -116,6 +116,48 @@ def test_annotate_drops_model_that_cannot_bind_to_stimulus(
     assert "participant_re" in capsys.readouterr().out  # dropped loudly
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        ImportError("No module named 'sklearn'"),
+        SyntaxError("invalid syntax"),
+        AttributeError("module 'pymc' has no attribute 'Nomral'"),
+    ],
+    ids=["import", "syntax", "attribute"],
+)
+def test_screen_raises_when_a_model_is_simply_broken(tmp_path, monkeypatch, error):
+    """Screening exists to drop models that cannot *bind to a stimulus row*.
+
+    Broken code is a different failure: dropping it would quietly shrink the
+    hypothesis space and renormalize EIG over the survivors, so the researcher
+    would never learn their model never ran. Those raise.
+    """
+
+    def boom(name, models_dir):
+        raise error
+
+    monkeypatch.setattr("src.models.pymc_inference.load_pymc_model_cached", boom)
+    with pytest.raises(RuntimeError, match="broken"):
+        eig_mod._screen_usable_models(["m"], tmp_path, {"sequence_a": "HT"})
+
+
+def test_screen_still_drops_an_unbindable_model_loudly(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(
+        "src.models.pymc_inference.load_pymc_model_cached", lambda name, d: name
+    )
+
+    def fake_bind(model, rows):
+        if model == "needs_participant":
+            raise KeyError("participant_id")
+
+    monkeypatch.setattr("src.models.pymc_inference.make_stim_data", fake_bind)
+    usable = eig_mod._screen_usable_models(
+        ["needs_participant", "fine"], tmp_path, {"sequence_a": "HT"}
+    )
+    assert usable == ["fine"]
+    assert "needs_participant" in capsys.readouterr().out
+
+
 def test_annotate_raises_when_no_model_can_bind(tmp_path):
     """If no model can be evaluated on a stimulus, fail loudly rather than emit
     meaningless EIGs."""

@@ -32,7 +32,7 @@ def _manifest(tmp_path):
         firebase_project="auto-psych-test",
         firebase_region="us-central1",
         n_participants=2,
-        repo_root=tmp_path,
+        repo_root=REPO_ROOT,
     )
     return exp_dir, manifest
 

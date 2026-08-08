@@ -44,14 +44,14 @@ def run_validation(state: Dict[str, Any], agent_key: str) -> Dict[str, Any]:
     run_id = state.get("run_id", 0)
     rdir = run_dir_for_state(project_id, run_id, state)
     validator_fn = AGENT_VALIDATORS.get(agent_key)
-    if not validator_fn:
-        return {
-            **state,
-            "validation_ok": True,
-            "validation_feedback": "",
-            "validation_retry_count": 0,
-            "last_validated_agent": agent_key,
-        }
+    if validator_fn is None:
+        # Reporting validation_ok for a stage we cannot validate is the worst
+        # possible answer: the pipeline advances on unchecked output and no one
+        # can tell it from a genuine pass.
+        raise KeyError(
+            f"No validator registered for agent {agent_key!r}; validatable "
+            f"stages are {sorted(AGENT_VALIDATORS)}."
+        )
 
     v = validator_fn(rdir)
     retry_count = state.get("validation_retry_count", 0)

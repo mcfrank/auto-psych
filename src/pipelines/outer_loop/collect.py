@@ -110,7 +110,43 @@ def _poll_prolific_until_target(
     return completed
 
 
+def _playwright_errors() -> tuple[type[BaseException], ...]:
+    """Exception types Playwright raises for *page-level* trouble.
+
+    ``playwright.sync_api.Error`` (whose ``TimeoutError`` is a subclass) covers
+    the outcomes the steering loop legitimately has to survive: the page
+    navigated mid-call so the execution context was destroyed, an element went
+    stale, the page/browser was closed. Everything else — a TypeError from a
+    wrong call signature, an AttributeError from a renamed helper — is a bug in
+    this module and must propagate rather than be read as "the screen was
+    empty".
+    """
+    from playwright.sync_api import Error as PlaywrightError
+
+    return (PlaywrightError,)
+
+
+def _experiment_data_present(page) -> bool:
+    """Has jsPsych published ``window.__experimentData`` yet?
+
+    Polled every drive-loop tick. A Playwright page error here means the page
+    is mid-navigation, in which case the data provably is not readable yet, so
+    ``False`` is the correct answer (and logging it once a tick would bury the
+    real messages). Any other exception propagates.
+    """
+    try:
+        return bool(page.evaluate("typeof window.__experimentData !== 'undefined'"))
+    except _playwright_errors():
+        return False
+
+
 def _get_screen_content(page) -> str:
+    """Return the visible experiment text, or ``""`` when it cannot be read.
+
+    Only a Playwright page error is tolerated (see :func:`_playwright_errors`),
+    and it is logged: a screen that silently reads as empty would send the
+    steering LLM a blank prompt and, through it, an arbitrary choice.
+    """
     try:
         return (
             page.evaluate(
@@ -124,7 +160,13 @@ def _get_screen_content(page) -> str:
             )
             or ""
         )
-    except Exception:
+    except _playwright_errors() as exc:
+        print(
+            f"  [steering] could not read the screen ({type(exc).__name__}: {exc}); "
+            "treating it as empty",
+            file=sys.stderr,
+            flush=True,
+        )
         return ""
 
 
@@ -189,25 +231,55 @@ _LEFT_KEYS = {"f", "arrowleft"}
 _RIGHT_KEYS = {"j", "arrowright"}
 
 
+def _press_key_or_raise(page, key: str, what: str, click_error: Exception | None) -> None:
+    """Press ``key``; raise if that fails too, naming both failed modalities.
+
+    The keyboard is the last resort after the button modality was tried. If it
+    also fails the trial simply did not advance — and the historical behavior
+    (swallow both errors) left the drive loop spinning to its 3-minute timeout
+    with nothing logged, which is how a modality mismatch produced a whole run
+    of degenerate one-sided data before anyone noticed.
+    """
+    try:
+        page.keyboard.press(key)
+    except Exception as exc:
+        raise RuntimeError(
+            f"{what}: neither a button click nor a {key!r} key press worked "
+            f"(click: {click_error!r}; key: {type(exc).__name__}: {exc}). The "
+            "trial did not advance — check that the steering modality matches "
+            "the modality the experiment actually renders."
+        ) from exc
+
+
 def _click_random_choice(page) -> None:
     """Advance a trial by an UNBIASED random choice.
 
     When buttons are present, click a uniformly-random one (so a declined or
     unparseable LLM action never silently biases toward the first option);
-    otherwise press a random directional key.
+    otherwise press a random directional key. A failed click falls back to the
+    keyboard — but says so, and raises if the keyboard fails as well.
     """
+    click_error: Exception | None = None
     try:
         buttons = page.locator("button.jspsych-btn")
         count = buttons.count()
         if count > 0:
             buttons.nth(random.randrange(count)).click(timeout=1000)
             return
-    except Exception:
-        pass
-    try:
-        page.keyboard.press(random.choice(["f", "j"]))
-    except Exception:
-        pass
+    except _playwright_errors() as exc:
+        # Only a Playwright page error earns the keyboard fallback. A bug in
+        # this module must NOT be papered over by a key press that "works" —
+        # that is how f/j got pressed at button trials for a whole run.
+        click_error = exc
+        print(
+            f"  [steering] random button click failed ({type(exc).__name__}: {exc}); "
+            "falling back to a random key press",
+            file=sys.stderr,
+            flush=True,
+        )
+    _press_key_or_raise(
+        page, random.choice(["f", "j"]), "could not advance the trial", click_error
+    )
 
 
 def _act_key(page, key: str) -> None:
@@ -217,9 +289,11 @@ def _act_key(page, key: str) -> None:
     button and right keys (j/ArrowRight) to the last, so the participant's
     left/right decision lands on the right option whether the experiment uses
     keyboard or button responses. A single-button screen (consent/instructions)
-    is advanced by clicking it. Falls back to an actual key press.
+    is advanced by clicking it. Falls back to an actual key press — loudly, and
+    raising if that fails too (see :func:`_press_key_or_raise`).
     """
     lowered = key.lower()
+    click_error: Exception | None = None
     try:
         buttons = page.locator("button.jspsych-btn")
         count = buttons.count()
@@ -235,12 +309,15 @@ def _act_key(page, key: str) -> None:
                 idx = random.randrange(count)
             buttons.nth(idx).click(timeout=1000)
             return
-    except Exception:
-        pass
-    try:
-        page.keyboard.press(key)
-    except Exception:
-        pass
+    except _playwright_errors() as exc:  # see _click_random_choice
+        click_error = exc
+        print(
+            f"  [steering] button click for key {key!r} failed "
+            f"({type(exc).__name__}: {exc}); falling back to a key press",
+            file=sys.stderr,
+            flush=True,
+        )
+    _press_key_or_raise(page, key, f"could not apply the {key!r} choice", click_error)
 
 
 def _drive_experiment_with_llm(
@@ -251,25 +328,35 @@ def _drive_experiment_with_llm(
     logs_dir: Path,
     state: dict | None = None,
 ) -> tuple[bool, bool]:
-    try:
-        llm = get_llm()
-    except Exception:
-        return (False, False)
+    """Steer one participant through the experiment with the LLM.
+
+    Returns ``(finished, llm_used)``. ``llm_used=False`` now means exactly one
+    thing — the project ships no ``4_collect_steering`` prompt, so there is
+    nothing to steer with and the caller should fall back to blind clicking.
+    An LLM that cannot be constructed (missing API key, missing dependency) is
+    a *configuration* error and raises: silently demoting every simulated
+    participant to blind random clicking produces data that looks collected but
+    carries no signal.
+    """
+    llm = get_llm()
 
     steering_prompt = load_prompt_for_run(
         project_id, run_id, "4_collect_steering", state
     )
     if not steering_prompt.strip():
+        print(
+            f"  [steering] no 4_collect_steering prompt for project {project_id!r} "
+            f"run {run_id}; falling back to blind clicking",
+            file=sys.stderr,
+            flush=True,
+        )
         return (False, False)
 
     deadline = time.monotonic() + (timeout_ms / 1000.0)
     context_parts: list[str] = []
     while time.monotonic() < deadline:
-        try:
-            if page.evaluate("typeof window.__experimentData !== 'undefined'"):
-                return (True, True)
-        except Exception:
-            pass
+        if _experiment_data_present(page):
+            return (True, True)
 
         screen_text = _get_screen_content(page) or "(loading or empty screen)"
         if screen_text.strip() in ("+", ""):
@@ -300,11 +387,26 @@ def _drive_experiment_with_llm(
         action = _parse_steering_action(response)
         if action is None:
             # Unparseable reply: advance without biasing toward either side.
+            print(
+                f"  [steering] unparseable reply {response.strip()[:80]!r}; "
+                "advancing with a random choice",
+                file=sys.stderr,
+                flush=True,
+            )
             _click_random_choice(page)
         elif action[0] == "click":
             try:
                 page.get_by_role("button", name=action[1]).click(timeout=2000)
-            except Exception:
+            except _playwright_errors() as exc:
+                # The LLM named a button this screen does not have. Expected
+                # (it is generating free text), but never silent: an unnoticed
+                # stream of these means every trial was decided by the RNG.
+                print(
+                    f"  [steering] no clickable button named {action[1]!r} "
+                    f"({type(exc).__name__}); advancing with a random choice",
+                    file=sys.stderr,
+                    flush=True,
+                )
                 _click_random_choice(page)
         else:
             # Directional key: lands on the correct button for button trials.
@@ -315,13 +417,7 @@ def _drive_experiment_with_llm(
             context_parts = context_parts[-(_LLM_CONTEXT_MAX_SCREENS * 4) :]
         time.sleep(0.1)
 
-    try:
-        return (
-            bool(page.evaluate("typeof window.__experimentData !== 'undefined'")),
-            True,
-        )
-    except Exception:
-        return (False, True)
+    return (_experiment_data_present(page), True)
 
 
 def _drive_experiment_to_finish(page, timeout_ms: int = _DRIVE_TIMEOUT_MS) -> bool:
@@ -334,17 +430,11 @@ def _drive_experiment_to_finish(page, timeout_ms: int = _DRIVE_TIMEOUT_MS) -> bo
     deadline = time.monotonic() + (timeout_ms / 1000.0)
     step_sec = _DRIVE_INTERVAL_MS / 1000.0
     while time.monotonic() < deadline:
-        try:
-            if page.evaluate("typeof window.__experimentData !== 'undefined'"):
-                return True
-        except Exception:
-            pass
+        if _experiment_data_present(page):
+            return True
         _click_random_choice(page)
         time.sleep(step_sec)
-    try:
-        return bool(page.evaluate("typeof window.__experimentData !== 'undefined'"))
-    except Exception:
-        return False
+    return _experiment_data_present(page)
 
 
 def _rows_from_trial_data(
@@ -605,18 +695,25 @@ def _collect_live(
     )
 
     agent_log(out_dir, "Collect (live): waiting for Prolific study (poll every 30s)")
+    # A missing study/results URL, or a failed fetch, must never return [] — an
+    # empty row list is indistinguishable from "the study ran and nobody
+    # responded", and downstream that becomes a silently under-powered (or
+    # synthetic) analysis of a study real participants were paid for.
     if not study_id:
-        agent_log(
-            out_dir,
-            "Collect (live): error - no prolific_study_id in config; Prolific flow not configured",
+        msg = (
+            "live collection needs `prolific_study_id` in the experiment config, "
+            "but it is absent — the Prolific flow was never configured for this "
+            "run. Deploy with --deploy-target firebase --prolific-mode live."
         )
-        return []
+        agent_log(out_dir, f"Collect (live): error - {msg}")
+        raise RuntimeError(msg)
     if not results_api_url:
-        agent_log(
-            out_dir,
-            "Collect (live): error - no results_api_url/experiment_url to fetch results",
+        msg = (
+            "live collection needs `results_api_url` (or `experiment_url`) in the "
+            "experiment config to fetch responses, but neither is set."
         )
-        return []
+        agent_log(out_dir, f"Collect (live): error - {msg}")
+        raise RuntimeError(msg)
 
     _poll_prolific_until_target(study_id, int(target_places), out_dir)
 
@@ -628,7 +725,11 @@ def _collect_live(
             body = response.read().decode("utf-8")
     except Exception as exc:
         agent_log(out_dir, f"Collect (live): results fetch failed: {exc}")
-        return []
+        raise RuntimeError(
+            f"live results fetch failed for {url}: {type(exc).__name__}: {exc}. "
+            "The participants' data is on the server — refusing to report zero "
+            "responses. Fix the endpoint/credentials and re-collect."
+        ) from exc
 
     rows: list[dict[str, Any]] = []
     if body.strip():
@@ -705,11 +806,12 @@ def _collect_from_firebase(
     if experiment_url and n_participants > 0:
         try:
             from playwright.sync_api import sync_playwright
-        except ImportError:
+        except ImportError as exc:
+            # A missing dependency is a config error, not "no participants".
             msg = "playwright not installed; run: pip install playwright && playwright install chromium"
             print(msg, file=sys.stderr, flush=True)
             (logs_dir / "browser_error.txt").write_text(msg, encoding="utf-8")
-            return []
+            raise RuntimeError(msg) from exc
 
         nav_timeout_ms = 60_000
         n_parallel = (
@@ -819,10 +921,15 @@ def _collect_from_firebase(
         with urllib.request.urlopen(req, timeout=60) as response:
             body = response.read().decode("utf-8")
     except Exception as exc:
+        # As in _collect_live: a failed fetch is not "no responses".
         err_msg = f"Firebase results fetch failed: {exc}"
         print(err_msg, file=sys.stderr, flush=True)
         (logs_dir / "browser_error.txt").write_text(err_msg, encoding="utf-8")
-        return []
+        raise RuntimeError(
+            f"Firebase results fetch failed for {url}: {type(exc).__name__}: {exc}. "
+            "Refusing to report zero responses for a collection that may have "
+            "produced data."
+        ) from exc
 
     rows: list[dict[str, Any]] = []
     if not body.strip():
@@ -883,11 +990,17 @@ def _results_request(url: str) -> urllib.request.Request:
 
 
 def _server_reachable(url: str, timeout_sec: float = 2.0) -> bool:
+    """Is something serving ``url``? Used to decide whether to start a local server.
+
+    Only connection-level failures (``OSError`` covers ``URLError``, refused
+    connections and timeouts) count as "not reachable". Anything else is a bug
+    here, not an unreachable server, and propagates.
+    """
     try:
         req = urllib.request.Request(url, headers={"User-Agent": "auto-psych"})
         urllib.request.urlopen(req, timeout=timeout_sec)
         return True
-    except Exception:
+    except OSError:
         return False
 
 
@@ -1061,8 +1174,17 @@ def _collect_from_browser(
                         finally:
                             try:
                                 page.close()
-                            except Exception:
-                                pass
+                            except _playwright_errors() as exc:
+                                # An already-closed/crashed page is survivable —
+                                # the participant's rows are already read — but
+                                # a crashed browser explains later failures, so
+                                # say it happened.
+                                print(
+                                    f"  Run {participant_id + 1}/{n_participants}: "
+                                    f"page.close() failed ({type(exc).__name__}: {exc})",
+                                    file=sys.stderr,
+                                    flush=True,
+                                )
                         if data is not None and isinstance(data, list):
                             rows.extend(
                                 _rows_from_trial_data(
@@ -1156,12 +1278,26 @@ def generate_llm_participant_rows(
             )
         try:
             for trial_index, stimulus in enumerate(stimuli):
+                # A malformed stimulus must fail here, at its source: defaulting
+                # a missing key to "" would show the participant a blank option
+                # and record an empty sequence as if it were a real trial.
+                missing = [
+                    key
+                    for key in ("sequence_a", "sequence_b")
+                    if not stimulus.get(key)
+                ]
+                if missing:
+                    raise ValueError(
+                        f"stimulus {trial_index} is missing/empty {missing}: "
+                        f"{stimulus!r}. Fix the design's stimuli.json rather than "
+                        "presenting a blank option."
+                    )
                 # Randomize which sequence is shown on the left per trial; the
                 # presented order is what we show AND what we record (a = left).
                 swap = prng.random() < 0.5
                 left, right = _present_sides(
-                    str(stimulus.get("sequence_a", "")),
-                    str(stimulus.get("sequence_b", "")),
+                    str(stimulus["sequence_a"]),
+                    str(stimulus["sequence_b"]),
                     swap,
                 )
                 user_msg = (
@@ -1428,8 +1564,9 @@ def _generate_from_models(
                     stimulus_tuple, RESPONSE_OPTIONS, [model_name], theorist_dir
                 )
             if not preds:
-                # No prediction means the model failed to load/run on this
-                # stimulus. Substituting a coin flip would emit pure noise labeled
+                # Backstop. get_model_predictions now raises rather than dropping
+                # a model, so this fires only if a registry callable returns
+                # nothing. Substituting a coin flip would emit pure noise labeled
                 # as this model's ground-truth data and feed it straight into model
                 # comparison. Fail loudly instead of fabricating data.
                 raise RuntimeError(
