@@ -1,12 +1,21 @@
-"""Hahn & Warren (2009) finite-window model of subjective randomness.
+"""Finite-window longest-run typicality model of subjective randomness.
 
-"Perceptions of randomness: Why three heads are better than one" (Psychological
-Review, 116(2), 454-461). People experience sequences through a limited memory
-window of length ``window``; a sequence looks random when its longest run is
-*typical* of what a fair coin produces within that window, and non-random when a
-salient streak exceeds the window-expected longest run. Because long runs are
-rarely encountered inside a short window, this rational account reproduces both
-the aversion to streaks and the preference for over-alternation.
+Loosely inspired by Hahn & Warren (2009), "Perceptions of randomness: Why three
+heads are better than four" (Psychological Review, 116(2), 454-461): because
+human experience of coin flips is finite and filtered through limited short-term
+memory, long runs are genuinely rare in experience, so streak aversion and a
+preference for moderate over-alternation are apt rather than erroneous.
+
+FIDELITY NOTE: this model is a heuristic adaptation, not an implementation of
+Hahn & Warren's analysis. Their formal quantity is the probability that a given
+substring occurs at least once within a finite global sequence of ~10-20
+experienced flips (implemented faithfully in the
+``finite_experience_occurrence`` family). The longest-run-typicality score
+below — comparing the observed longest run against a log2 approximation to the
+expected longest run — comes from the longest-run literature (e.g. Schilling,
+1990), not from Hahn & Warren, and orders some sequences differently than their
+occurrence probabilities do (e.g. their analysis gives HHTT and HHHT identical
+wait times; this score does not).
 
 The expected longest run of a fair coin over an effective length
 ``m = min(n, window)`` is approximated by ``log2(m)``. Randomness is penalised

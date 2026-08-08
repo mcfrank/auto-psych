@@ -11,23 +11,35 @@ with P(x | fair) = (1/2)^n. This model merges the two Bayesian seeds that used
 to be separate. The regular hypothesis is a mixture of two complementary
 non-random generators:
 
-  * a **motif-complexity process** (Griffiths et al. 2018, §6.1), evaluated at
-    the canonical minimal-description parse (n1 repetition motifs, n2 alternation
-    motifs). For that parse,
+  * a **motif-complexity process** (Griffiths et al. 2018, "Probabilistic
+    machines and the Chomsky hierarchy"), evaluated at a fixed
+    minimal-description parse (n1 repetition motifs, n2 alternation motifs,
+    minimising DP = n1 + 2*n2 per Falk & Konold, 1997). For that parse,
 
         log P(x | motif) = (n - n1 - n2)*log δ + (n1 + n2)*log C + (n1 + 2*n2)*log α
 
-    with C = (1-δ)/(2α + 2α²); δ is motif persistence and α penalises motif
-    complexity. This single process subsumes the old "alternating" and "streaky"
-    Markov alternatives — long runs are explained by high persistence, regular
-    alternation by alternation motifs — and carries Falk & Konold's Difficulty
-    Predictor DP = n1 + 2*n2 in the α exponent.
-  * a **biased-coin** generator (head- or tail-heavy), which captures the H/T
-    imbalance the motif process is blind to.
+    with C = (1-δ)/(2α + 2α²); δ is per-symbol motif persistence and α
+    penalises motif complexity. This single process subsumes the old
+    "alternating" and "streaky" Markov alternatives — long runs are explained
+    by high persistence, regular alternation by alternation motifs — and
+    carries Falk & Konold's Difficulty Predictor DP = n1 + 2*n2 in the α
+    exponent. FIDELITY NOTE: the paper's own base model *marginalises* over all
+    parses (their Eq. 8, an HMM forward sum), and from their Experiment 1
+    onward drops C in favour of a row-normalised transition matrix; this fixed
+    best-parse, unnormalised-C form matches the earlier variant they use to
+    reanalyse Falk & Konold's data and to derive the DP equivalence. The
+    ``motif_hmm`` family implements the marginalised row-normalised model.
+  * a **biased-coin** generator (head- or tail-heavy, fixed bias 0.85), which
+    captures the H/T imbalance the motif process is blind to. FIDELITY NOTE:
+    no biased-coin regular hypothesis for binary sequences appears anywhere in
+    Griffiths et al. (2018); this component is our extension in the spirit of
+    the weighted-coin alternative hypotheses of Tenenbaum & Griffiths (2001),
+    and the 0.85 bias value is a modeling choice, not taken from any paper.
 
 ``bias_share`` is the mixture weight on the biased-coin alternative; the rest
 goes to the motif process. The score is *not* length-normalised — accumulating
-evidence with sequence length is a property of the Bayesian account.
+evidence with sequence length is a property of the Bayesian account (Griffiths
+et al. 2018 make this point explicitly against raw DP).
 
 Free cognitive parameters: δ (motif persistence), α (complexity penalty),
 bias_share (weight on the biased-coin alternative), β (choice sensitivity), and
@@ -55,7 +67,10 @@ MODEL_NAME = "bayesian_diagnosticity"
 
 DEFAULT_PARAMS: Dict[str, float] = {
     "delta": 0.5,
-    "alpha": 0.35,  # near (sqrt(3)-1)/2, the DP-equivalent value from the paper
+    # Near (sqrt(3)-1)/2 ≈ 0.366: with delta = 0.5 AND best-parse scoring, the
+    # motif model reduces to -DP*log(alpha) (Griffiths et al. 2018, "The
+    # Difficulty Predictor as a special case"). Both conditions are required.
+    "alpha": 0.35,
     "bias_share": 0.30,
     "beta": 4.0,
     "side_bias": 0.0,
@@ -88,7 +103,7 @@ _BIAS_HEAD_PROB = 0.85
 
 
 def _log_motif(n: int, rep_motifs: int, alt_motifs: int, delta: float, alpha: float) -> float:
-    """Log P(x | motif process) at the canonical parse (Griffiths et al. 2018)."""
+    """Log P(x | motif process) at the fixed minimal-DP parse (Griffiths et al. 2018)."""
     stays = n - rep_motifs - alt_motifs  # within-motif continuations; >= 0
     log_c = math.log(1.0 - delta) - math.log(2.0 * alpha + 2.0 * alpha**2)
     return (

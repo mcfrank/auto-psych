@@ -30,9 +30,6 @@ REPO_ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(REPO_ROOT))
 
 from src.models.mcmc_defaults import (
-    DESIGN_TWIN_CHAINS,
-    DESIGN_TWIN_DRAWS,
-    DESIGN_TWIN_TUNE,
     PRODUCTION_CHAINS,
     PRODUCTION_DRAWS,
     PRODUCTION_TUNE,
@@ -58,6 +55,14 @@ from src.pipelines.outer_loop.orchestrator import (
 )
 from src.pipelines.outer_loop.participants import DEFAULT_OPEN_MODEL
 from src.runtime.coding_agent import select_backend
+from src.runtime.token_usage import (
+    format_summary,
+    records_marker,
+    records_since,
+    start_usage_log,
+    summarize,
+    write_usage_report,
+)
 
 # The pipeline stages. There is no theorist agent: experiment 1's model set is
 # seeded from the project's seed_models (required), experiments >= 2 carry the
@@ -217,95 +222,6 @@ def _validate_or_exit(agent_key: str, exp_dir: Path, validate: bool) -> None:
         sys.exit(1)
 
 
-def _posterior_design_inputs(exp_dir: Path, prev_exp_dir: Path):
-    """Posterior model weights + per-model posterior parameter sets from the prior run.
-
-    For experiments >= 2, EIG is computed under the previous experiment's
-    posterior: model weights from its ``model_registry.yaml`` and per-model
-    parameter draws obtained by fitting the current (carried-forward) models on
-    the previous experiment's responses. Each model must have a pure-Python family
-    twin (so its posterior draws can score the ~129k candidate pool quickly);
-    fails loudly otherwise.
-    """
-    import importlib
-
-    import yaml
-
-    from src.models.pymc_inference import fit_model
-    from src.models.theorist.loader import get_model_names_from_manifest
-    from src.registry.io import load_registry
-    from src.subjective_randomness.stimulus_design import posterior_param_sets
-
-    models_dir = exp_dir / "cognitive_models"
-    manifest_path = models_dir / "models_manifest.yaml"
-    if not manifest_path.exists():
-        raise RuntimeError(f"Exhaustive posterior design needs models at {manifest_path}")
-    names = get_model_names_from_manifest(
-        yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}, models_dir
-    )
-    if not names:
-        raise RuntimeError(f"No loadable models in {models_dir} for exhaustive design.")
-
-    responses = prev_exp_dir / "data" / "responses.csv"
-    if not responses.exists():
-        raise RuntimeError(
-            f"Exhaustive posterior design needs experiment {prev_exp_dir.name}'s "
-            f"responses at {responses}, but it is missing."
-        )
-    registry = load_registry(prev_exp_dir / "model_registry.yaml")
-    raw_weights = registry.get("theories") or {}
-    # Align the previous experiment's posterior to THIS experiment's model set.
-    # Model identities are not guaranteed to carry across experiments (the inner
-    # loop renames candidates each round), so keep only weights whose model name
-    # still exists here and renormalize. Fall back to a uniform model prior when
-    # none overlap, rather than crashing or letting a single carried-over name
-    # dominate every EIG scenario.
-    aligned = {
-        n: float(raw_weights[n])
-        for n in names
-        if isinstance(raw_weights.get(n), (int, float)) and raw_weights[n] > 0
-    }
-    if aligned:
-        weights = aligned
-    else:
-        print(
-            f"  [design] previous posterior over {sorted(raw_weights)} does not "
-            f"overlap this experiment's models {names}; using a uniform model prior.",
-            flush=True,
-        )
-        weights = {n: 1.0 / len(names) for n in names}
-
-    cache_dir = exp_dir / "design" / "_fit_cache"
-    param_sets_by_model = {}
-    for name in names:
-        try:
-            family = importlib.import_module(
-                f"src.subjective_randomness.model_families.{name}"
-            )
-        except ModuleNotFoundError as exc:
-            raise RuntimeError(
-                f"--design-mode exhaustive (experiment >= 2) needs a pure-Python family "
-                f"twin for model {name!r} to score the candidate pool under its posterior; "
-                f"none found in src/subjective_randomness/model_families/."
-            ) from exc
-        fitted = fit_model(
-            name,
-            models_dir,
-            responses,
-            cache_dir=cache_dir,
-            # Deliberately cheaper than the production settings: the design
-            # step only needs posterior-predictive means to weight EIG
-            # scenarios (src.models.mcmc_defaults).
-            draws=DESIGN_TWIN_DRAWS,
-            tune=DESIGN_TWIN_TUNE,
-            chains=DESIGN_TWIN_CHAINS,
-        )
-        param_sets_by_model[name] = posterior_param_sets(
-            fitted.idata, list(family.PARAM_BOUNDS), n_draws=200
-        )
-    return names, param_sets_by_model, weights
-
-
 def _write_exhaustive_design(
     exp_dir: Path,
     project_id: str,
@@ -319,15 +235,15 @@ def _write_exhaustive_design(
     """Deterministically select the design's stimuli by exhaustive enumeration.
 
     Replaces the 2_design coding agent: enumerates every H/T pair over the given
-    lengths and greedily picks ``k`` jointly-informative pairs (diverse over model
-    distinctions), writing ``design/stimuli.json``. Experiment 1 averages EIG over
-    the model parameter *priors* with uniform model weights; experiments >= 2 use
-    the previous experiment's posterior (model weights and parameter draws). Only
-    implemented for subjective_randomness (it scores under its reference families).
-
-    ``max_length`` bounds how long a sequence ``build_exhaustive_design`` will
-    enumerate (independent of ``lengths``, which is the *requested* range --
-    raise ``max_length`` to request lengths beyond its default of 20).
+    lengths, scores it under the experiment's ACTUAL PyMC model set (batched
+    per-draw p_left), and greedily picks the ``k`` stimuli with maximal joint
+    EIG about model identity, writing ``design/stimuli.json``. Experiment 1
+    scores from the models' prior predictive with uniform model weights;
+    experiments >= 2 fit each model on the previous experiment's responses and
+    score from its posterior predictive, with model weights from the previous
+    registry (weights over models absent here fall back to uniform, loudly).
+    Works for any PyMC model in the set — no pure-Python family twin needed.
+    Only implemented for subjective_randomness (H/T pair enumeration).
     """
     if project_id != "subjective_randomness":
         print(
@@ -336,22 +252,31 @@ def _write_exhaustive_design(
             file=sys.stderr,
         )
         sys.exit(1)
-    from src.subjective_randomness.stimulus_design import build_exhaustive_design
+    from src.pipelines.outer_loop import eig as eig_mod
 
+    models_dir = exp_dir / "cognitive_models"
+    featurize = (
+        Path(__file__).resolve().parent / "projects" / project_id / "preprocess.py"
+    )
     if exp_num <= 1 or prev_exp_dir is None:
-        stimuli = build_exhaustive_design(k=k, lengths=tuple(lengths), max_length=max_length)
-        basis = "parameter priors + uniform model weights"
-    else:
-        names, param_sets_by_model, weights = _posterior_design_inputs(exp_dir, prev_exp_dir)
-        stimuli = build_exhaustive_design(
-            k=k,
+        stimuli = eig_mod.design_exhaustive(
+            models_dir,
+            featurize_path=featurize,
             lengths=tuple(lengths),
-            model_names=names,
-            param_sets_by_model=param_sets_by_model,
-            model_weights=weights,
-            max_length=max_length,
+            n_select=k,
         )
-        basis = f"experiment {exp_num - 1} posterior (model weights + parameter draws)"
+        basis = "prior predictive + uniform model weights"
+    else:
+        stimuli = eig_mod.design_exhaustive(
+            models_dir,
+            prev_exp_dir / "model_registry.yaml",
+            featurize_path=featurize,
+            lengths=tuple(lengths),
+            n_select=k,
+            responses_csv=prev_exp_dir / "data" / "responses.csv",
+            fit_cache_dir=exp_dir / "design" / "_fit_cache",
+        )
+        basis = f"experiment {exp_num - 1} posterior (model weights + parameter posteriors)"
 
     design_dir = exp_dir / "design"
     design_dir.mkdir(parents=True, exist_ok=True)
@@ -412,6 +337,87 @@ def _run_experiment(
     ensure_experiment_dirs(exp_dir_path)
     init_registry(exp_dir_path)
 
+    # Track every LLM spend (coding agents, participant/steering calls) for this
+    # experiment. The report is written in a finally so a failed or aborted run
+    # still accounts for the tokens it already used.
+    usage_marker = start_usage_log(exp_dir_path / "token_usage.jsonl")
+    try:
+        _run_experiment_stages(
+            project_id=project_id,
+            exp_num=exp_num,
+            exp_dir_path=exp_dir_path,
+            mode=mode,
+            n_participants=n_participants,
+            validate=validate,
+            ground_truth_model=ground_truth_model,
+            agent_filter=agent_filter,
+            inner_loop_iterations=inner_loop_iterations,
+            inner_loop_candidates=inner_loop_candidates,
+            fit_kwargs=fit_kwargs,
+            backend=backend,
+            participant_backend=participant_backend,
+            participant_model=participant_model,
+            deploy_target=deploy_target,
+            collection_owner=collection_owner,
+            firebase_project=firebase_project,
+            firebase_region=firebase_region,
+            prolific_mode=prolific_mode,
+            deploy_only=deploy_only,
+            prepare_smoke_experiment=prepare_smoke_experiment,
+            enable_critique=enable_critique,
+            n_critique_proposals=n_critique_proposals,
+            critique_alpha=critique_alpha,
+            design_mode=design_mode,
+            run_label=run_label,
+            max_validation_repairs=max_validation_repairs,
+            candidate_hints=candidate_hints,
+            novelty_rmse_threshold=novelty_rmse_threshold,
+            prune_dse_multiplier=prune_dse_multiplier,
+            prune_weight_floor=prune_weight_floor,
+            candidate_parallelism=candidate_parallelism,
+        )
+    finally:
+        write_usage_report(
+            exp_dir_path, usage_marker, heading=f"experiment {exp_num}"
+        )
+
+
+def _run_experiment_stages(
+    *,
+    project_id: str,
+    exp_num: int,
+    exp_dir_path: Path,
+    mode: str,
+    n_participants: int,
+    validate: bool,
+    ground_truth_model: Optional[str],
+    agent_filter: Optional[str],
+    inner_loop_iterations: int,
+    inner_loop_candidates: int,
+    fit_kwargs: Optional[dict],
+    backend: Optional[str],
+    participant_backend: str,
+    participant_model: Optional[str],
+    deploy_target: str,
+    collection_owner: str,
+    firebase_project: Optional[str],
+    firebase_region: str,
+    prolific_mode: str,
+    deploy_only: bool,
+    prepare_smoke_experiment: bool,
+    enable_critique: bool,
+    n_critique_proposals: Optional[int],
+    critique_alpha: Optional[float],
+    design_mode: str,
+    run_label: Optional[str],
+    max_validation_repairs: int,
+    candidate_hints: Optional[list],
+    novelty_rmse_threshold: Optional[float],
+    prune_dse_multiplier: Optional[float],
+    prune_weight_floor: Optional[float],
+    candidate_parallelism: Optional[int],
+) -> None:
+    """The body of one experiment, from smoke prep through the agent stages."""
     if prepare_smoke_experiment:
         smoke_dir = write_smoke_experiment(exp_dir_path)
         print(f"  [smoke] Wrote deployment smoke experiment: {smoke_dir}", flush=True)
@@ -770,6 +776,7 @@ def main(args: Args) -> None:
         )
         exp_ids = exp_ids[:1]
 
+    run_usage_marker = records_marker()
     for exp_num in exp_ids:
         _run_experiment(
             project_id=project_id,
@@ -807,6 +814,11 @@ def main(args: Args) -> None:
         )
 
     print("\nAll experiments complete.", flush=True)
+    run_summary = summarize(records_since(run_usage_marker))
+    print(
+        format_summary(run_summary, f"run total ({len(exp_ids)} experiment(s))"),
+        flush=True,
+    )
 
 
 if __name__ == "__main__":

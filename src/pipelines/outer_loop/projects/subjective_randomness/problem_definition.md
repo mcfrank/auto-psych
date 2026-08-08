@@ -135,8 +135,11 @@ containers.
 | `max_run_norm_a`, `max_run_norm_b` | float | Longest run scaled to `[0, 1]`      |
 | `imbalance_a`, `imbalance_b` | float | Distance from balanced H/T counts          |
 | `periodicity_a`, `periodicity_b` | float | Match to a short repeating template       |
-| `rep_motifs_a`, `rep_motifs_b` | int | Repetition motifs (n1: maximal constant runs) in the Falk & Konold parse |
-| `alt_motifs_a`, `alt_motifs_b` | int | Alternation motifs (n2: maximal alternating sub-sequences) in the parse |
+| `rep_motifs_a`, `rep_motifs_b` | int | Repetition motifs (n1: constant-run chunks) in the minimal-DP Falk & Konold parse |
+| `alt_motifs_a`, `alt_motifs_b` | int | Alternation motifs (n2: alternating chunks) in the minimal-DP parse; DP = n1 + 2·n2 |
+| `sym1_a`…`sym8_a`, `sym1_b`…`sym8_b` | int | Raw symbols as 0/1 (H = 1), zero-padded past `n` |
+| `occ_n10_a`, `occ_n20_a`, `occ_n50_a` (and `_b`) | float | P(sequence occurs at least once within 10/20/50 fair flips; Hahn & Warren 2009) |
+| `local_imbalance_a`, `local_imbalance_b` | float | Worst H/T imbalance over sliding length-4 windows (K&T local representativeness) |
 
 And the observed response: `chose_left` ∈ {0, 1} — 1 means the participant
 chose sequence A. Use `chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))`

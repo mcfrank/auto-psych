@@ -29,7 +29,8 @@ def _spawn(tmp_path, monkeypatch):
     captured = {}
 
     def fake_run_coding_agent(
-        prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend
+        prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
+        model=None,
     ):
         captured["prompt"] = prompt
         captured["cwd"] = cwd

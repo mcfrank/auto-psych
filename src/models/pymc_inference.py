@@ -394,30 +394,91 @@ def prior_predict_p_left(
     return out
 
 
-def expected_information_gain_prior_pymc(
-    feature_row: Dict[str, Any],
+def prior_predict_p_left_draws(
     model_names: List[str],
     models_dir: Path,
+    feature_rows: List[Dict[str, Any]],
     *,
-    model_weights: Optional[Dict[str, float]] = None,
+    var_name: str = "p_left",
     n_samples: int = 200,
     seed: int = 42,
-) -> float:
-    """EIG of a candidate stimulus computed from prior-predictive p_left per model.
+) -> Dict[str, np.ndarray]:
+    """Per-draw prior-predictive `p_left` for each model over a *batch* of stimuli.
 
-    Standard formula: EIG = H(M) - E_R[H(M|R)] in bits.
-    `feature_row` must include every pm.Data input of the models (including a
-    dummy observed-response value, which is ignored for p_left).
+    Binds all ``feature_rows`` into the model's ``pm.Data`` containers at once
+    and runs a single ``sample_prior_predictive`` per model, so the fixed
+    per-call cost (graph compilation, sampling setup) is paid once per model
+    instead of once per model *per stimulus*. Returns
+    ``{model_name: array of shape (n_draws, n_rows)}`` — the full draws, which
+    joint-EIG selection needs to see the correlation that shared parameters
+    induce between stimuli within a model.
+
+    With the same ``seed``, the prior parameter draws are identical to the
+    per-row path's (priors do not depend on the data).
     """
-    import math
+    if not feature_rows:
+        raise ValueError("feature_rows must be non-empty.")
+    pm = _import_pymc()
+    out: Dict[str, np.ndarray] = {}
+    for name in model_names:
+        model = load_pymc_model_cached(name, models_dir)
+        stim_data = make_stim_data(model, feature_rows)
+        with model:
+            pm.set_data(stim_data)
+            ppc = pm.sample_prior_predictive(
+                draws=n_samples,
+                var_names=[var_name],
+                random_seed=seed,
+            )
+        arr = ppc.prior[var_name].values  # shape: (chain, draw, n_rows)
+        draws = arr.reshape(-1, arr.shape[-1])
+        if draws.shape != (n_samples, len(feature_rows)):
+            raise ValueError(
+                f"Model {name!r}: batched {var_name} has shape {arr.shape}, "
+                f"expected per-stimulus axis of length {len(feature_rows)} — "
+                "is the model's p_left per-stimulus?"
+            )
+        out[name] = draws
+    return out
 
-    preds = prior_predict_p_left(
+
+def prior_predict_p_left_batch(
+    model_names: List[str],
+    models_dir: Path,
+    feature_rows: List[Dict[str, Any]],
+    *,
+    var_name: str = "p_left",
+    n_samples: int = 200,
+    seed: int = 42,
+) -> Dict[str, np.ndarray]:
+    """Prior-predictive mean of `p_left` for each model over a *batch* of stimuli.
+
+    Mean over the draws of :func:`prior_predict_p_left_draws`; returns
+    ``{model_name: array of shape (n_rows,)}``. With the same ``seed`` the
+    means match :func:`prior_predict_p_left` row for row.
+    """
+    draws = prior_predict_p_left_draws(
         model_names,
         models_dir,
-        feature_row,
+        feature_rows,
+        var_name=var_name,
         n_samples=n_samples,
         seed=seed,
     )
+    return {name: arr.mean(axis=0) for name, arr in draws.items()}
+
+
+def eig_from_prior_means(
+    preds: Dict[str, float],
+    model_weights: Optional[Dict[str, float]] = None,
+) -> float:
+    """EIG (bits) of one stimulus from per-model prior-predictive p_left means.
+
+    Standard formula: EIG = H(M) - E_R[H(M|R)] for a binary response R, with
+    the model prior taken from `model_weights` (uniform if omitted/degenerate).
+    """
+    import math
+
     if not preds:
         return 0.0
     if model_weights:
@@ -445,6 +506,31 @@ def expected_information_gain_prior_pymc(
     h_m = -sum(p * math.log2(p) for p in p_model.values() if p > 0)
     h_m_given_r = p_left * h_given_r(True) + p_right * h_given_r(False)
     return max(0.0, h_m - h_m_given_r)
+
+
+def expected_information_gain_prior_pymc(
+    feature_row: Dict[str, Any],
+    model_names: List[str],
+    models_dir: Path,
+    *,
+    model_weights: Optional[Dict[str, float]] = None,
+    n_samples: int = 200,
+    seed: int = 42,
+) -> float:
+    """EIG of a candidate stimulus computed from prior-predictive p_left per model.
+
+    Standard formula: EIG = H(M) - E_R[H(M|R)] in bits.
+    `feature_row` must include every pm.Data input of the models (including a
+    dummy observed-response value, which is ignored for p_left).
+    """
+    preds = prior_predict_p_left(
+        model_names,
+        models_dir,
+        feature_row,
+        n_samples=n_samples,
+        seed=seed,
+    )
+    return eig_from_prior_means(preds, model_weights)
 
 
 def _sha256_file(path: Path) -> str:
@@ -507,7 +593,7 @@ class FittedModel:
     idata: Any  # az.InferenceData
     fingerprint: str
 
-    def predict_p_left(
+    def predict_p_left_draws(
         self,
         stim_data: Dict[str, np.ndarray],
         *,
@@ -515,17 +601,18 @@ class FittedModel:
         seed: int = 42,
         max_draws: Optional[int] = None,
     ) -> np.ndarray:
-        """Posterior-mean p_left for each stimulus row in `stim_data`.
+        """Per-draw posterior-predictive p_left for each stimulus row.
 
         `stim_data` must include every pm.Data input expected by the model
         (the observed-response container can be set to dummies — it is unused).
-        Returns shape (n_stim,).
+        Returns shape (n_draws, n_stim) with chains flattened — the posterior
+        counterpart of ``prior_predict_p_left_draws``, e.g. for joint-EIG
+        stimulus selection under a fitted model.
 
-        ``max_draws`` thins the posterior to at most that many samples before the
-        posterior-predictive pass. The intermediate ``(chain, draw, n_stim)``
-        array scales with draws × n_stim, so thinning keeps memory bounded when
-        predicting over very large stimulus sets (e.g. an exhaustive eval pool);
-        the posterior *mean* is essentially unchanged by using fewer samples.
+        ``max_draws`` thins the posterior to at most that many samples before
+        the posterior-predictive pass. The intermediate array scales with
+        draws × n_stim, so thinning keeps memory bounded when predicting over
+        very large stimulus sets (e.g. an exhaustive design pool).
         """
         pm = _import_pymc()
         idata = self.idata if max_draws is None else _thin_posterior(self.idata, max_draws)
@@ -537,8 +624,33 @@ class FittedModel:
                 random_seed=seed,
                 progressbar=False,
             )
-        arr = pp.posterior_predictive[var_name]
-        return arr.mean(("chain", "draw")).values
+        arr = pp.posterior_predictive[var_name].values  # (chain, draw, n_stim)
+        draws = arr.reshape(-1, arr.shape[-1])
+        n_stim = len(next(iter(stim_data.values())))
+        if draws.shape[1] != n_stim:
+            raise ValueError(
+                f"Model {self.name!r}: posterior-predictive {var_name} has shape "
+                f"{arr.shape}, expected per-stimulus axis of length {n_stim} — "
+                "is the model's p_left per-stimulus?"
+            )
+        return draws
+
+    def predict_p_left(
+        self,
+        stim_data: Dict[str, np.ndarray],
+        *,
+        var_name: str = "p_left",
+        seed: int = 42,
+        max_draws: Optional[int] = None,
+    ) -> np.ndarray:
+        """Posterior-mean p_left for each stimulus row in `stim_data`.
+
+        Mean over the draws of :meth:`predict_p_left_draws`; returns shape
+        (n_stim,). See that method for the `stim_data` and `max_draws` contract.
+        """
+        return self.predict_p_left_draws(
+            stim_data, var_name=var_name, seed=seed, max_draws=max_draws
+        ).mean(axis=0)
 
     def elpd_loo(self) -> float:
         """Expected log pointwise predictive density (PSIS-LOO).

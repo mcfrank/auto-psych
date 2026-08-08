@@ -1,0 +1,35 @@
+{
+  "n_calls": 8,
+  "n_calls_missing_usage": 0,
+  "input_tokens": 580465,
+  "output_tokens": 28265,
+  "reasoning_tokens": 74151,
+  "cache_read_tokens": 2602310,
+  "cache_write_tokens": 0,
+  "total_tokens": 3285191,
+  "cost_usd": 2.9103839999999996,
+  "by_source": {
+    "inner:candidate": {
+      "n_calls": 6,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 187518,
+      "output_tokens": 10542,
+      "reasoning_tokens": 53188,
+      "cache_read_tokens": 474931,
+      "cache_write_tokens": 0,
+      "total_tokens": 726179,
+      "cost_usd": 1.2347822000000002
+    },
+    "inner:critique": {
+      "n_calls": 2,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 392947,
+      "output_tokens": 17723,
+      "reasoning_tokens": 20963,
+      "cache_read_tokens": 2127379,
+      "cache_write_tokens": 0,
+      "total_tokens": 2559012,
+      "cost_usd": 1.6756018
+    }
+  }
+}
