@@ -22,6 +22,7 @@ from typing import Any, Callable
 
 import yaml
 
+from src.pipelines.outer_loop.featurizer import Featurizer, load_featurizer
 from src.pipelines.outer_loop.llm import get_llm, invoke_llm, load_prompt_for_run
 from src.runtime.config import DEFAULT_MAX_VALIDATION_RETRIES, agent_dir_for_state
 from src.runtime.console import agent_header, log_status
@@ -1302,21 +1303,15 @@ def _collect_llm_participant(
     return rows
 
 
-def _load_featurizer(featurize_path: Path | None):
-    """Return featurize_stimulus(seq_a, seq_b) from a module path, or None."""
+def _load_featurizer(featurize_path: Path | None) -> Featurizer | None:
+    """Return featurize_stimulus(seq_a, seq_b) from a module path.
+
+    None only when no featurizer was configured at all; a configured-but-broken
+    one raises (see ``featurizer.load_featurizer``).
+    """
     if featurize_path is None:
         return None
-    import importlib.util
-
-    featurize_path = Path(featurize_path)
-    if not featurize_path.exists():
-        raise FileNotFoundError(f"featurize module not found: {featurize_path}")
-    spec = importlib.util.spec_from_file_location("_collect_featurize", featurize_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot load featurize module from {featurize_path}")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return getattr(mod, "featurize_stimulus", None)
+    return load_featurizer(featurize_path)
 
 
 def _present_sides(seq_a: str, seq_b: str, swap: bool) -> tuple[str, str]:

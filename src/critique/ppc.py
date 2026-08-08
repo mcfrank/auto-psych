@@ -56,10 +56,14 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
+from pyprojroot import here
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
+# Ensure repo root on path so "import src..." works when run as a module/script.
+# Must precede the src imports below, hence here() rather than the canonical
+# src.runtime.config.REPO_ROOT (which resolves the root the same way).
+_repo_root = str(here())
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
 
 from src.models.mcmc_defaults import (  # noqa: E402  (needs sys.path above)
     PRODUCTION_CHAINS,

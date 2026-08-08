@@ -142,6 +142,31 @@ def test_cli_module_help_runs(module, expected_flag):
     assert expected_flag in result.stdout
 
 
+@pytest.mark.parametrize(
+    "script,expected_flag",
+    [
+        # Standalone scripts (not importable as `src.*` modules), so the help
+        # smoke is the only guard on their tyro dataclasses.
+        (
+            "src/pipelines/outer_loop/projects/subjective_randomness/evaluate_recovery.py",
+            "--ground-truth-model",
+        ),
+        ("scripts/smoke_open_participant.py", "--hf-model"),
+        ("analysis/behavioral/fit_mega_models.py", "--scheme"),
+    ],
+)
+def test_cli_script_help_runs(script, expected_flag):
+    result = subprocess.run(
+        [sys.executable, script, "--help"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    assert expected_flag in result.stdout
+
+
 # ── output-path contract (the `Outputs:` line printed by outer run) ──
 
 

@@ -37,7 +37,6 @@ identity (src.models.eig_selection):
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import sys
 from dataclasses import dataclass
@@ -45,29 +44,23 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 import tyro
+from pyprojroot import here
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT))
+# Ensure repo root on path so "import src..." works when run as a module/script.
+# Must precede the (function-level) src imports below, hence here() rather than
+# the canonical src.runtime.config.REPO_ROOT (same resolution).
+sys.path.insert(0, str(here()))
 
 
 def _load_featurizer(
     featurize_path: Optional[Path],
 ) -> Optional[Callable[[str, str], Dict[str, Any]]]:
+    """Return the project's featurize_stimulus, or None if --featurize was omitted."""
     if featurize_path is None:
         return None
-    featurize_path = Path(featurize_path)
-    if not featurize_path.exists():
-        raise FileNotFoundError(f"featurize module not found: {featurize_path}")
-    spec = importlib.util.spec_from_file_location("_eig_featurize", featurize_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot load featurize module from {featurize_path}")
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules["_eig_featurize"] = mod
-    spec.loader.exec_module(mod)
-    fn = getattr(mod, "featurize_stimulus", None)
-    if fn is None:
-        raise AttributeError(f"{featurize_path} has no featurize_stimulus()")
-    return fn
+    from src.pipelines.outer_loop.featurizer import load_featurizer  # type: ignore
+
+    return load_featurizer(featurize_path)
 
 
 def _load_model_names(models_dir: Path) -> List[str]:
