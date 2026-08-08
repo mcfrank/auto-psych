@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
 
 import numpy as np
@@ -25,6 +26,10 @@ REGISTRY_DIR = REPO_ROOT / "src/subjective_randomness/pymc_model_families"
 def _load_eval():
     spec = importlib.util.spec_from_file_location("_sr_eval", EVAL)
     mod = importlib.util.module_from_spec(spec)
+    # Registered before exec: the module defines its tyro Args dataclass at
+    # import time, and @dataclass resolves string annotations through
+    # sys.modules[cls.__module__].
+    sys.modules[spec.name] = mod
     spec.loader.exec_module(mod)
     return mod
 

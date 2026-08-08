@@ -27,15 +27,16 @@ Feature columns per sequence (`a` and `b`):
 from __future__ import annotations
 
 import sys
-from pathlib import Path
+
+from pyprojroot import here
 
 # Loaded by path (importlib.spec_from_file_location), so `src` is not guaranteed
 # to be importable yet — put the repo root on sys.path before importing the
-# canonical featurizer. REPO_ROOT is five parents up:
-# src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py
-_REPO_ROOT = Path(__file__).resolve().parents[5]
-if str(_REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(_REPO_ROOT))
+# canonical featurizer. The root has to be resolved without importing `src`,
+# hence here() rather than src.runtime.config.REPO_ROOT (same resolution).
+_repo_root = str(here())
+if _repo_root not in sys.path:
+    sys.path.insert(0, _repo_root)
 
 from src.subjective_randomness.features import featurize_stimulus  # noqa: E402
 

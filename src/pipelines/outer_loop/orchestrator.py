@@ -11,7 +11,6 @@ Responsibilities:
 from __future__ import annotations
 
 import csv
-import importlib.util
 import json
 import math
 import os
@@ -29,9 +28,10 @@ from src.models.model_manifest import (
     read_manifest_entries,
     read_manifest_names,
 )
+from src.pipelines.outer_loop.featurizer import Featurizer, load_featurizer
 from src.runtime.coding_agent import run_coding_agent
+from src.runtime.config import REPO_ROOT
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 # ─────────────────────────────────────────────
@@ -671,27 +671,19 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict]:
     return rows
 
 
-def _load_project_featurizer(
-    project_dir: Path,
-) -> Optional[Callable[[str, str], Dict[str, Any]]]:
+def _load_project_featurizer(project_dir: Path) -> Optional[Featurizer]:
     """Return `featurize_stimulus` from `<project_dir>/preprocess.py` if present.
 
     A project supplies this to turn raw stimulus fields (e.g. H/T sequences)
     into the numeric feature columns its PyMC models read via `pm.Data`. Returns
-    None if the project has no preprocess module — then responses are assumed to
-    already carry the feature columns.
+    None only if the project has no preprocess module — then responses are
+    assumed to already carry the feature columns. A preprocess module that
+    exists but cannot be loaded raises (see `featurizer.load_featurizer`).
     """
     path = project_dir / "preprocess.py"
     if not path.exists():
         return None
-    spec = importlib.util.spec_from_file_location(
-        f"_preprocess_{project_dir.name}", path
-    )
-    if spec is None or spec.loader is None:
-        return None
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return getattr(mod, "featurize_stimulus", None)
+    return load_featurizer(path)
 
 
 def _write_feature_csv(

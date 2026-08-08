@@ -26,12 +26,14 @@ missing; 3 = model failed to load.
 
 from __future__ import annotations
 
-import argparse
 import sys
-from pathlib import Path
+from dataclasses import dataclass
+from typing import Annotated
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-sys.path.insert(0, str(REPO_ROOT))
+import tyro
+from pyprojroot import here
+
+sys.path.insert(0, str(here()))
 
 from src.pipelines.outer_loop.collect import generate_llm_participant_rows
 from src.pipelines.outer_loop.llm import load_prompt_for_run
@@ -48,14 +50,17 @@ STIMULI = [
 ]
 
 
-def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument(
-        "--hf-model", default=SMOKE_MODEL, help=f"HF model id (default: {SMOKE_MODEL})"
-    )
-    ap.add_argument("-n", "--n-participants", type=int, default=2)
-    args = ap.parse_args()
+@dataclass
+class Args:
+    """Smoke-test the open-weights LLM-as-participant path in isolation."""
 
+    hf_model: str = SMOKE_MODEL
+    """HF model id."""
+    n_participants: Annotated[int, tyro.conf.arg(aliases=["-n"])] = 2
+    """How many simulated participants to run over the toy stimuli."""
+
+
+def main(args: Args) -> None:
     prompt = load_prompt_for_run(
         "subjective_randomness", 1, "4_collect_participant", None
     )
@@ -109,4 +114,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(tyro.cli(Args))

@@ -1,10 +1,22 @@
-"""Shared sequence features and choice helpers for subjective-randomness models."""
+"""Shared sequence features and choice helpers for subjective-randomness models.
+
+The sequence statistics themselves live in ``src/subjective_randomness/features.py``
+— the featurizer that turns raw H/T pairs into the numeric columns the PyMC
+models read — and this module wraps them for the pure-Python model families:
+each wrapper cleans its input once (``clean_sequence``) and caches on the raw
+string. Keeping one implementation means a PyMC model fitted on featurizer
+columns and its pure-Python twin can never disagree about what "periodicity" or
+"local imbalance" means.
+"""
 
 from __future__ import annotations
 
 import functools
 import math
 from typing import Dict, Iterable, Mapping, Sequence, Tuple
+
+from .. import features
+from ..features import LOCAL_WINDOW  # noqa: F401  re-exported for model families
 
 Stimulus = Tuple[str, str]
 
@@ -121,44 +133,6 @@ def _max_run(seq: str) -> int:
     return best
 
 
-def _parse_motifs(seq: str) -> Tuple[int, int]:
-    n = len(seq)
-
-    # best[i] = lexicographically minimal (DP cost, chunk count) over all
-    # partitions of seq[:i] into constant-run chunks (cost 1) and strictly
-    # alternating chunks of length >= 2 (cost 2).
-    unreachable = (n * 2 + 1, n + 1)
-    best = [(0, 0)] + [unreachable] * n
-    for i in range(1, n + 1):
-        for j in range(i - 1, -1, -1):
-            chunk = seq[j:i]
-            if all(c == chunk[0] for c in chunk):
-                cost = 1
-            elif all(a != b for a, b in zip(chunk, chunk[1:])):
-                cost = 2
-            else:
-                continue
-            candidate = (best[j][0] + cost, best[j][1] + 1)
-            if candidate < best[i]:
-                best[i] = candidate
-    dp, chunks = best[n]
-    rep_motifs = 2 * chunks - dp
-    alt_motifs = dp - chunks
-    return rep_motifs, alt_motifs
-
-
-def _periodicity(seq: str) -> float:
-    n = len(seq)
-    if n <= 2:
-        return 0.0
-    best_match = 0.5
-    for period in range(1, (n // 2) + 1):
-        template = seq[:period]
-        matches = sum(1 for i, c in enumerate(seq) if c == template[i % period])
-        best_match = max(best_match, matches / n)
-    return max(0.0, min(1.0, 2.0 * (best_match - 0.5)))
-
-
 @functools.lru_cache(maxsize=_CACHE_SIZE)
 def prop_heads(seq: str) -> float:
     seq = clean_sequence(seq)
@@ -214,12 +188,9 @@ def parse_motifs(seq: str) -> Tuple[int, int]:
     XX|XOXO, DP 3). DP ties are broken toward the fewest chunks (the most
     compressed description), which makes (n1, n2) unique. For example
     HHTTHTHT -> {HH, TT} repetition + {HTHT} alternation -> (2, 1), DP = 4;
-    HTHHTH -> {HTH, HTH} -> (0, 2), DP = 4. The same algorithm as the
-    featurizer helper of the same name in ``features.py``, deliberately
-    duplicated so that module stays importable without this package.
+    HTHHTH -> {HTH, HTH} -> (0, 2), DP = 4. Implemented in ``features.py``.
     """
-    seq = clean_sequence(seq)
-    return _parse_motifs(seq)
+    return features.parse_motifs(clean_sequence(seq))
 
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
@@ -228,13 +199,9 @@ def periodicity_score(seq: str) -> float:
     Degree to which the sequence can be described by a short repeating template.
 
     Returns 0 for weak periodicity and approaches 1 for obvious patterns like
-    HHHHHHHH or HTHTHTHT.
+    HHHHHHHH or HTHTHTHT. Implemented in ``features.py``.
     """
-    seq = clean_sequence(seq)
-    return _periodicity(seq)
-
-
-LOCAL_WINDOW = 4
+    return features.periodicity_score(clean_sequence(seq))
 
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
@@ -242,18 +209,10 @@ def local_imbalance(seq: str) -> float:
     """Worst H/T imbalance over sliding windows of length min(n, LOCAL_WINDOW).
 
     2*|prop_heads - 0.5| of the most imbalanced window (Kahneman & Tversky
-    1972: representativeness holds "locally in each of its parts"). Mirrors
-    the featurizer helper of the same name in ``features.py``.
+    1972: representativeness holds "locally in each of its parts").
+    Implemented in ``features.py``.
     """
-    s = clean_sequence(seq)
-    n = len(s)
-    window = min(n, LOCAL_WINDOW)
-    worst = 0.0
-    for start in range(n - window + 1):
-        chunk = s[start : start + window]
-        heads = sum(1 for c in chunk if c == "H")
-        worst = max(worst, 2.0 * abs(heads / window - 0.5))
-    return worst
+    return features.local_imbalance(clean_sequence(seq))
 
 
 def occurrence_probability(pattern: str, n_global: int) -> float:
@@ -261,53 +220,9 @@ def occurrence_probability(pattern: str, n_global: int) -> float:
 
     The quantity of Hahn & Warren (2009): the probability that a length-k
     string appears at least once within a finite global sequence of fair coin
-    flips. Computed exactly by evolving the distribution over KMP
-    prefix-automaton states (state = length of the longest pattern prefix
-    matching the current suffix; reaching state k absorbs).
+    flips. Implemented in ``features.py``.
     """
-    p = clean_sequence(pattern)
-    k = len(p)
-    if n_global < 0:
-        raise ValueError(f"n_global must be >= 0, got {n_global}")
-    if n_global < k:
-        return 0.0
-
-    # next_state[state][symbol] for states 0..k-1 via KMP failure links.
-    failure = [0] * k
-    for i in range(1, k):
-        j = failure[i - 1]
-        while j > 0 and p[i] != p[j]:
-            j = failure[j - 1]
-        failure[i] = j + 1 if p[i] == p[j] else 0
-
-    def next_state(state: int, symbol: str) -> int:
-        while True:
-            if symbol == p[state]:
-                return state + 1
-            if state == 0:
-                return 0
-            state = failure[state - 1]
-
-    transitions = [
-        {symbol: next_state(state, symbol) for symbol in "HT"} for state in range(k)
-    ]
-
-    dist = [0.0] * k
-    dist[0] = 1.0
-    absorbed = 0.0
-    for _ in range(n_global):
-        new_dist = [0.0] * k
-        for state, mass in enumerate(dist):
-            if mass == 0.0:
-                continue
-            for symbol in "HT":
-                target = transitions[state][symbol]
-                if target == k:
-                    absorbed += 0.5 * mass
-                else:
-                    new_dist[target] += 0.5 * mass
-        dist = new_dist
-    return absorbed
+    return features.occurrence_probability(clean_sequence(pattern), n_global)
 
 
 def logsumexp(values: Iterable[float]) -> float:

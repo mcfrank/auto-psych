@@ -7,9 +7,8 @@ from pathlib import Path
 from typing import Any, Dict
 
 import yaml
-from pyprojroot import here
 
-REPO_ROOT = here()
+from src.runtime.config import REPO_ROOT
 
 
 def resolve_path(path_value: str | Path, config_path: Path | None = None) -> Path:

@@ -45,9 +45,12 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 import tyro
+from pyprojroot import here
 
-REPO_ROOT = Path(__file__).resolve().parent.parent.parent
-sys.path.insert(0, str(REPO_ROOT))
+# Ensure repo root on path so "import src..." works when run as a module/script.
+# Must precede the (function-level) src imports below, hence here() rather than
+# the canonical src.runtime.config.REPO_ROOT (same resolution).
+sys.path.insert(0, str(here()))
 
 
 def model_complexity(model_name: str, models_dir: Path) -> int:

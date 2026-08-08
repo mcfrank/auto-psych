@@ -24,10 +24,13 @@ from pathlib import Path
 from typing import Literal, Optional
 
 import tyro
+from pyprojroot import here
 
-# Ensure repo root on path
-REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT))
+# Ensure repo root on path, so "import src..." works when this file is run
+# directly and not only as `python -m src.pipelines.outer_loop.run`. This has to
+# happen before the src imports below, hence here() rather than the canonical
+# src.runtime.config.REPO_ROOT (which resolves the root the same way).
+sys.path.insert(0, str(here()))
 
 from src.models.mcmc_defaults import (
     PRODUCTION_CHAINS,

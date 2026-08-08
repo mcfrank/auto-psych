@@ -4,8 +4,14 @@ import os
 from pathlib import Path
 from typing import Any, Dict, Optional
 
-# Repo root (parent of src/)
-REPO_ROOT = Path(__file__).resolve().parents[2]
+from pyprojroot import here
+
+# The one repo root: everything under src/ imports it from here rather than
+# counting `Path(__file__).parents[N]` for itself (nine such counts had drifted
+# into three different spellings, each silently wrong if its file ever moved).
+# Modules that must bootstrap `sys.path` before `src` is importable call
+# pyprojroot's here() directly — the same resolution as this one.
+REPO_ROOT = here()
 
 # Top-level defaults retained for shared support modules.
 DEFAULT_SIMULATED_N_PARTICIPANTS = 5
