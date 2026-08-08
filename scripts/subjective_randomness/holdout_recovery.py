@@ -89,6 +89,10 @@ class Args:
     """Override the per-agent timeout in seconds."""
     backend: Optional[Literal["claude", "opencode"]] = None
     """Override the coding-agent backend (default: config, then CODING_AGENT env)."""
+    agent_model: Optional[str] = None
+    """Override the coding-agent model id (default: the config's agent.model,
+    then the backend's default). Per-backend format — opencode wants
+    `provider/model`, e.g. fireworks-ai/accounts/fireworks/models/deepseek-v4-flash-0731."""
     resume: bool = False
     """Continue a stopped run: skip ground truths with a trajectory.json and,
     within incomplete runs, skip stages whose output already validates."""
@@ -142,6 +146,7 @@ def main(args: Args) -> None:
         seed_override=args.seed,
         cache_dir=cache_dir,
         backend_override=args.backend,
+        agent_model_override=args.agent_model,
         agent_timeout_override=args.agent_timeout_sec,
         resume=args.resume,
     )

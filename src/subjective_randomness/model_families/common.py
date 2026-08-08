@@ -232,6 +232,82 @@ def periodicity_score(seq: str) -> float:
     return _periodicity(seq)
 
 
+LOCAL_WINDOW = 4
+
+
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def local_imbalance(seq: str) -> float:
+    """Worst H/T imbalance over sliding windows of length min(n, LOCAL_WINDOW).
+
+    2*|prop_heads - 0.5| of the most imbalanced window (Kahneman & Tversky
+    1972: representativeness holds "locally in each of its parts"). Mirrors
+    the featurizer helper of the same name in ``features.py``.
+    """
+    s = clean_sequence(seq)
+    n = len(s)
+    window = min(n, LOCAL_WINDOW)
+    worst = 0.0
+    for start in range(n - window + 1):
+        chunk = s[start : start + window]
+        heads = sum(1 for c in chunk if c == "H")
+        worst = max(worst, 2.0 * abs(heads / window - 0.5))
+    return worst
+
+
+def occurrence_probability(pattern: str, n_global: int) -> float:
+    """P(``pattern`` occurs as a contiguous substring of ``n_global`` fair flips).
+
+    The quantity of Hahn & Warren (2009): the probability that a length-k
+    string appears at least once within a finite global sequence of fair coin
+    flips. Computed exactly by evolving the distribution over KMP
+    prefix-automaton states (state = length of the longest pattern prefix
+    matching the current suffix; reaching state k absorbs).
+    """
+    p = clean_sequence(pattern)
+    k = len(p)
+    if n_global < 0:
+        raise ValueError(f"n_global must be >= 0, got {n_global}")
+    if n_global < k:
+        return 0.0
+
+    # next_state[state][symbol] for states 0..k-1 via KMP failure links.
+    failure = [0] * k
+    for i in range(1, k):
+        j = failure[i - 1]
+        while j > 0 and p[i] != p[j]:
+            j = failure[j - 1]
+        failure[i] = j + 1 if p[i] == p[j] else 0
+
+    def next_state(state: int, symbol: str) -> int:
+        while True:
+            if symbol == p[state]:
+                return state + 1
+            if state == 0:
+                return 0
+            state = failure[state - 1]
+
+    transitions = [
+        {symbol: next_state(state, symbol) for symbol in "HT"} for state in range(k)
+    ]
+
+    dist = [0.0] * k
+    dist[0] = 1.0
+    absorbed = 0.0
+    for _ in range(n_global):
+        new_dist = [0.0] * k
+        for state, mass in enumerate(dist):
+            if mass == 0.0:
+                continue
+            for symbol in "HT":
+                target = transitions[state][symbol]
+                if target == k:
+                    absorbed += 0.5 * mass
+                else:
+                    new_dist[target] += 0.5 * mass
+        dist = new_dist
+    return absorbed
+
+
 def logsumexp(values: Iterable[float]) -> float:
     vals = list(values)
     if not vals:

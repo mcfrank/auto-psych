@@ -32,6 +32,24 @@ def test_prompt_inlines_all_context_documents(tmp_path):
     assert "candidate.py" in prompt
 
 
+def test_prompt_demands_absolute_output_paths(tmp_path):
+    """The agent's shell runs from REPO_ROOT (opencode grant discovery), so a
+    relative `> hypothesis.md` lands in the repo checkout — a live run's
+    candidate did exactly that, clobbering a tracked file and getting its
+    candidate rejected as "no candidate.py written". The prompt must spell out
+    that every output write needs the candidate directory's absolute path."""
+    docs = {
+        "context": "ctx",
+        "brief": "brief",
+        "existing_hypotheses": "hyps",
+        "critiques": None,
+    }
+    candidate_dir = tmp_path / "candidate_0"
+    prompt = _build_candidate_prompt(candidate_dir, docs)
+    assert f"{candidate_dir}/candidate.py" in prompt
+    assert "NOT the candidate directory" in prompt
+
+
 def test_prompt_omits_critiques_section_when_absent(tmp_path):
     docs = {
         "context": "ctx",

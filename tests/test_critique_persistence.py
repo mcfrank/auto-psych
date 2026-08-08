@@ -121,7 +121,10 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
 
     captured = {}
 
-    def fake_run(prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend):
+    def fake_run(
+        prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
+        model=None,
+    ):
         captured["prompt"] = prompt
         captured["cwd"] = cwd
         return True, ""

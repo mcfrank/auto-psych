@@ -1,0 +1,439 @@
+[holdout] Ground truth: local_representativeness -> /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_faithful/holdout_runs/local_representativeness
+  [agent] Spawning 2_design (log: /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_faithful/holdout_runs/local_representativeness/experiment1/logs/2_design.jsonl)
+  [step] tokens=11806  cost=$0.0261
+  [step] tokens=13000  cost=$0.0288
+  [step] tokens=15998  cost=$0.0194
+  [step] tokens=18256  cost=$0.0204
+  [step] tokens=18836  cost=$0.0185
+  [step] tokens=19285  cost=$0.0417
+  [step] tokens=19720  cost=$0.0407
+  [step] tokens=20371  cost=$0.0134
+  [step] tokens=21123  cost=$0.0187
+  [step] tokens=21509  cost=$0.0450
+  [step] tokens=21718  cost=$0.0444
+  … I have completed the task. Here is a summary of the actions taken:
+  [step] tokens=22163  cost=$0.0176
+  [agent] 2_design completed.
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [ideal_p, ideal_alt, w_p, w_alt, base_typ, penalty_power]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 91 seconds.
+There were 12 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] minkowski_accumulated_typicality: 12 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [theta_alt, theta_imb, alt_weight, asym, base_evidence, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 38 seconds.
+There were 3 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] evidence_accumulation_messy_prototype: 3 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [theta_alt, theta_imb, alt_weight, asym, base_evidence, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 26 seconds.
+There were 22 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] evidence_accumulation_per_run: 22 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [delta, alpha, weights, gamma, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 243 seconds.
+There was 1 divergence after tuning. Increase `target_accept` or reparameterize.
+  [warn] artificial_balance_diagnosticity: 1 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+  [critique] critiquing incumbent 'evidence_accumulation_per_run'
+Sampling: [response]
+  [step] tokens=11848  cost=$0.0249
+  [step] tokens=11981  cost=$0.0250
+  [step] tokens=14483  cost=$0.0167
+  [step] tokens=16903  cost=$0.0217
+  [step] tokens=31204  cost=$0.1296
+  [step] tokens=33703  cost=$0.0470
+  [step] tokens=34049  cost=$0.0713
+  [step] tokens=34408  cost=$0.0722
+  [step] tokens=34757  cost=$0.0175
+  [step] tokens=35080  cost=$0.0179
+  [step] tokens=35423  cost=$0.0188
+  [step] tokens=35894  cost=$0.0211
+  [step] tokens=36399  cost=$0.0225
+  [step] tokens=36706  cost=$0.0212
+  [step] tokens=39249  cost=$0.0860
+  [step] tokens=39483  cost=$0.0804
+  [step] tokens=41087  cost=$0.0948
+  … I have reviewed the incumbent `evidence_accumulation_per_run` model, the data schema, and the task requirements. Based o
+  [step] tokens=42110  cost=$0.0270
+  [critique] PPC: 0/8 statistics show a significant discrepancy
+  [oc] [91m[1mError: [0mUnexpected error
+  [oc] [91m[1mError: [0mUnexpected error
+  [oc] database is locked
+  [oc] database is locked
+  [tokens] WARNING: opencode run for 'inner:candidate' reported no token usage; this run's spend is uncounted
+  [tokens] WARNING: opencode run for 'inner:candidate' reported no token usage; this run's spend is uncounted
+  [step] tokens=18901  cost=$0.0846
+  [step] tokens=20588  cost=$0.0259
+  [step] tokens=21578  cost=$0.0211
+  [step] tokens=21731  cost=$0.0132
+  … I have implemented the new hypothesis as requested, refining the incumbent `evidence_accumulation_per_run` by changing i
+  [step] tokens=22344  cost=$0.0189
+  [name] /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_faithful/holdout_runs/local_representativeness/experiment1/model_loop/iter_0/candidate_0/model_name.txt not written — admitting as 'iter0_candidate0'
+  [reject] iter0_candidate0: no candidate.py written
+  [critique] critiquing incumbent 'evidence_accumulation_per_run'
+[holdout] Ground truth: local_representativeness -> /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_faithful/holdout_runs/local_representativeness
+  [holdout] Resume: models already valid in experiment1 — skipping
+  [holdout] Resume: 2_design already valid in experiment1 — skipping
+  [holdout] Resume: 4_collect already valid in experiment1 — skipping
+  [critique] critiquing incumbent 'evidence_accumulation_per_run'
+[holdout] Ground truth: local_representativeness -> /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_faithful/holdout_runs/local_representativeness
+  [holdout] Resume: models already valid in experiment1 — skipping
+  [holdout] Resume: 2_design already valid in experiment1 — skipping
+  [holdout] Resume: 4_collect already valid in experiment1 — skipping
+  [critique] critiquing incumbent 'evidence_accumulation_per_run'
+  [step] tokens=11906  cost=$0.0256
+  [step] tokens=13434  cost=$0.0293
+  [step] tokens=15001  cost=$0.0347
+  [step] tokens=17192  cost=$0.0185
+  [step] tokens=18252  cost=$0.0192
+  [step] tokens=18545  cost=$0.0165
+  [step] tokens=19216  cost=$0.0104
+  [step] tokens=19588  cost=$0.0409
+  [step] tokens=20660  cost=$0.0167
+  [step] tokens=21549  cost=$0.0157
+  [step] tokens=22987  cost=$0.0279
+  [step] tokens=23822  cost=$0.0151
+  [step] tokens=25064  cost=$0.0227
+  [step] tokens=25683  cost=$0.0163
+  [step] tokens=26071  cost=$0.0166
+  [step] tokens=26939  cost=$0.0224
+  [step] tokens=29361  cost=$0.0198
+  [step] tokens=30527  cost=$0.0237
+  [step] tokens=31765  cost=$0.0246
+  [step] tokens=33624  cost=$0.0361
+  [step] tokens=34816  cost=$0.0189
+  [step] tokens=36079  cost=$0.0233
+  [step] tokens=36526  cost=$0.0211
+  [step] tokens=37011  cost=$0.0217
+  [step] tokens=37869  cost=$0.0192
+  [step] tokens=38655  cost=$0.0189
+  [step] tokens=39710  cost=$0.0235
+  [critique] agent wrote no test statistics — using default battery
+  [critique] wrote 47 default test statistics
+Sampling: [response]
+  [critique] PPC: 0/47 statistics show a significant discrepancy
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [theta_alt, theta_imb, alt_weight, asym, base_evidence, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 32 seconds.
+[holdout] Ground truth: local_representativeness -> /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_faithful/holdout_runs/local_representativeness
+  [holdout] Resume: models already valid in experiment1 — skipping
+  [holdout] Resume: 2_design already valid in experiment1 — skipping
+  [holdout] Resume: 4_collect already valid in experiment1 — skipping
+  [critique] critiquing incumbent 'evidence_accumulation_per_run'
+Sampling: [response]
+  [step] tokens=12061  cost=$0.0275
+  [step] tokens=13499  cost=$0.0139
+  [step] tokens=14810  cost=$0.0103
+  [step] tokens=19960  cost=$0.0538
+  [step] tokens=21544  cost=$0.0253
+  [step] tokens=21853  cost=$0.0153
+  [step] tokens=22652  cost=$0.0214
+  [step] tokens=23071  cost=$0.0178
+  [step] tokens=23961  cost=$0.0241
+  [step] tokens=24965  cost=$0.0190
+  [step] tokens=26103  cost=$0.0226
+  [step] tokens=26649  cost=$0.0163
+  [step] tokens=26952  cost=$0.0175
+  [step] tokens=27270  cost=$0.0183
+  [step] tokens=27580  cost=$0.0187
+  [step] tokens=28064  cost=$0.0216
+  [step] tokens=28477  cost=$0.0206
+  [step] tokens=28907  cost=$0.0139
+  [step] tokens=29667  cost=$0.0186
+  [step] tokens=31635  cost=$0.0342
+  [step] tokens=32429  cost=$0.0192
+  [step] tokens=32734  cost=$0.0205
+  [step] tokens=32992  cost=$0.0206
+  [step] tokens=33234  cost=$0.0209
+  [step] tokens=33530  cost=$0.0142
+  [step] tokens=33830  cost=$0.0149
+  [step] tokens=34067  cost=$0.0148
+  [step] tokens=34366  cost=$0.0160
+  [step] tokens=34487  cost=$0.0145
+  [step] tokens=35131  cost=$0.0176
+  [step] tokens=35622  cost=$0.0181
+  … I have analyzed the incumbent `evidence_accumulation_per_run` model and the dataset. The model's core hypothesis relies 
+  [step] tokens=36584  cost=$0.0247
+  [critique] PPC: 0/8 statistics show a significant discrepancy
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [theta_alt, theta_imb, alt_weight, asym, base_evidence, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 32 seconds.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [weight]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 2 seconds.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/diagnostics.py:596: RuntimeWarning: invalid value encountered in scalar divide
+  (between_chain_variance / within_chain_variance + num_samples - 1) / (num_samples)
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] local_representativeness: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [ideal_entropy, tau]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 4 seconds.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/diagnostics.py:596: RuntimeWarning: invalid value encountered in scalar divide
+  (between_chain_variance / within_chain_variance + num_samples - 1) / (num_samples)
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] run_length_entropy: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] local_representativeness: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] run_length_entropy: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] PSIS-LOO for 'local_representativeness' is unreliable (many high Pareto-k points); its ELPD-LOO and any posterior built from it may be off.
+  [warn] PSIS-LOO for 'run_length_entropy' is unreliable (many high Pareto-k points); its ELPD-LOO and any posterior built from it may be off.
+  [oc] [91m[1mError: [0mUnexpected error
+  [oc] [91m[1mError: [0mUnexpected error
+  [oc] database is locked
+  [oc] database is locked
+  [oc] opencode session store locked (attempt 1); retrying in 2s
+  [oc] opencode session store locked (attempt 1); retrying in 2s
+  [step] tokens=15337  cost=$0.0251
+  [step] tokens=16323  cost=$0.0113
+  [step] tokens=16429  cost=$0.0114
+  [step] tokens=17506  cost=$0.0137
+  [step] tokens=18745  cost=$0.0172
+  [step] tokens=20378  cost=$0.0159
+  [step] tokens=20139  cost=$0.0755
+  [step] tokens=23073  cost=$0.0294
+  [step] tokens=22347  cost=$0.0216
+  [step] tokens=23208  cost=$0.0226
+  [step] tokens=23441  cost=$0.0169
+  [step] tokens=25891  cost=$0.0373
+  [step] tokens=23193  cost=$0.1121
+  … I have successfully created all three required files for your new candidate model:
+  [step] tokens=23735  cost=$0.0180
+  [step] tokens=26403  cost=$0.0164
+  [step] tokens=26180  cost=$0.0304
+  … I have proposed the **`local_representativeness`** hypothesis, which assumes people judge randomness by evaluating short
+  [step] tokens=26540  cost=$0.0156
+  [step] tokens=26722  cost=$0.0179
+  … I have implemented `linear_evidence_accumulation_per_run` as a refinement of the incumbent `evidence_accumulation_per_ru
+  [step] tokens=27003  cost=$0.0174
+  [prune] run_length_entropy: elpd_diff 95.4 > 2.0·dse (13.1) and stacking weight 0.0000 < 0.01 — moved to models/pruned/.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] local_representativeness: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+  [critique] critiquing incumbent 'evidence_accumulation_per_run'
+Sampling: [response]
+  [step] tokens=11954  cost=$0.0116
+  [step] tokens=13435  cost=$0.0142
+  [step] tokens=14662  cost=$0.0082
+  [step] tokens=18279  cost=$0.0359
+  [step] tokens=19289  cost=$0.0172
+  [step] tokens=20053  cost=$0.0131
+  [step] tokens=20345  cost=$0.0118
+  [step] tokens=20521  cost=$0.0119
+  [step] tokens=20863  cost=$0.0143
+  [step] tokens=21395  cost=$0.0159
+  [step] tokens=22001  cost=$0.0183
+  [step] tokens=22310  cost=$0.0158
+  [step] tokens=22682  cost=$0.0170
+  [step] tokens=22933  cost=$0.0173
+  [step] tokens=24774  cost=$0.0156
+  [step] tokens=25212  cost=$0.0152
+  [step] tokens=25636  cost=$0.0156
+  [step] tokens=26010  cost=$0.0156
+  [step] tokens=26273  cost=$0.0161
+  [step] tokens=26661  cost=$0.0171
+  [step] tokens=27194  cost=$0.0198
+  [step] tokens=27643  cost=$0.0197
+  [step] tokens=28052  cost=$0.0191
+  [step] tokens=28303  cost=$0.0199
+  [step] tokens=29357  cost=$0.0192
+  [step] tokens=30094  cost=$0.0158
+  [step] tokens=30397  cost=$0.0155
+  [step] tokens=31595  cost=$0.0261
+  [step] tokens=32067  cost=$0.0183
+  [step] tokens=32366  cost=$0.0201
+  [step] tokens=32765  cost=$0.0210
+  [step] tokens=33072  cost=$0.0208
+  [step] tokens=33333  cost=$0.0137
+  [step] tokens=33885  cost=$0.0167
+  [step] tokens=34638  cost=$0.0197
+  [step] tokens=35232  cost=$0.0181
+  [step] tokens=35531  cost=$0.0174
+  [step] tokens=35809  cost=$0.0185
+  [step] tokens=36295  cost=$0.0193
+  [step] tokens=36901  cost=$0.0234
+  [step] tokens=37238  cost=$0.0210
+  [step] tokens=38462  cost=$0.0326
+  [step] tokens=39095  cost=$0.0165
+  [step] tokens=39576  cost=$0.0176
+  [step] tokens=41855  cost=$0.0418
+  [step] tokens=42695  cost=$0.0230
+  [step] tokens=43011  cost=$0.0164
+  [step] tokens=43528  cost=$0.0187
+  [step] tokens=43789  cost=$0.0167
+  [step] tokens=44483  cost=$0.0232
+  [step] tokens=45878  cost=$0.0318
+  [step] tokens=46002  cost=$0.0207
+  [step] tokens=47025  cost=$0.0290
+  … I have proposed the 8 test statistics and written them to `test_stats/` as requested. 
+  [step] tokens=47872  cost=$0.0198
+  [critique] PPC: 0/8 statistics show a significant discrepancy
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [tau, ideal_p, ideal_alt, w_imb, w_alt]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 20 seconds.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/diagnostics.py:596: RuntimeWarning: invalid value encountered in scalar divide
+  (between_chain_variance / within_chain_variance + num_samples - 1) / (num_samples)
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] exponential_discount_per_run: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [tau]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 2 seconds.
+There were 8 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] algorithmic_complexity: 8 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/diagnostics.py:596: RuntimeWarning: invalid value encountered in scalar divide
+  (between_chain_variance / within_chain_variance + num_samples - 1) / (num_samples)
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] algorithmic_complexity: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [w_base, w_imb, w_alt, ideal_alt]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 10 seconds.
+There were 2 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] accumulated_local_representativeness: 2 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] local_representativeness: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] exponential_discount_per_run: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] algorithmic_complexity: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] PSIS-LOO for 'exponential_discount_per_run' is unreliable (many high Pareto-k points); its ELPD-LOO and any posterior built from it may be off.
+  [warn] PSIS-LOO for 'local_representativeness' is unreliable (many high Pareto-k points); its ELPD-LOO and any posterior built from it may be off.
+  [warn] PSIS-LOO for 'algorithmic_complexity' is unreliable (many high Pareto-k points); its ELPD-LOO and any posterior built from it may be off.
+  [oc] [91m[1mError: [0mUnexpected error
+  [oc] database is locked
+  [oc] opencode session store locked (attempt 1); retrying in 2s
+  [step] tokens=21194  cost=$0.0861
+  [step] tokens=23621  cost=$0.0252
+  [step] tokens=23945  cost=$0.0183
+  … I have formulated a refined cognitive hypothesis based on `evidence_accumulation_per_run` and implemented it as a PyMC m
+  [step] tokens=24318  cost=$0.0191
+  [step] tokens=28973  cost=$0.1868
+  … I have written all three files for the candidate, proposing a new hypothesis based on **Algorithmic Complexity (Lempel-Z
+  [step] tokens=33312  cost=$0.0445
+  [step] tokens=32987  cost=$0.2349
+  [step] tokens=38104  cost=$0.0529
+  [step] tokens=38361  cost=$0.0198
+  … I have created the hypothesis, model name, and the PyMC model in the designated candidate directory. 
+  [step] tokens=38771  cost=$0.0217
+  [prune] exponential_discount_per_run: elpd_diff 20.1 > 2.0·dse (6.7) and stacking weight 0.0071 < 0.01 — moved to models/pruned/.
+  [prune] algorithmic_complexity: elpd_diff 104.5 > 2.0·dse (13.4) and stacking weight 0.0000 < 0.01 — moved to models/pruned/.
+  [prune] accumulated_local_representativeness: elpd_diff 64.0 > 2.0·dse (10.7) and stacking weight 0.0000 < 0.01 — moved to models/pruned/.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] local_representativeness: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] PSIS-LOO for 'local_representativeness' is unreliable (many high Pareto-k points); its ELPD-LOO and any posterior built from it may be off.
+  [inner-loop] Best model 'evidence_accumulation_per_run' is already in cognitive_models — nothing to export.
+  [registry] Recorded inner-loop stacking weights in model_registry.yaml
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 3 seconds.
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [short_weight, mid_share, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 11 seconds.
+There were 5 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] finite_experience_occurrence: 5 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [delta, alpha, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 207 seconds.
+There were 178 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] motif_hmm: 178 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Sampling: []
+  [tokens] holdout recovery: 3,285,191 tokens over 8 LLM call(s)  cost=$2.91
+  [tokens]   input=580,465 output=28,265 reasoning=74,151 cache_read=2,602,310 cache_write=0
+  [tokens]   inner:candidate: 726,179 tokens (6 call(s))
+  [tokens]   inner:critique: 2,559,012 tokens (2 call(s))
+
+Wrote holdout-recovery result to /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_faithful/holdout.json
+  local_representativeness: 3 steps, final r=0.928 (best=evidence_accumulation_per_run, 129763 eval stimuli, 32 dropped) leakage flags: gt-param-mention, gt-named-file
+Wrote tidy trajectory CSV to /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_faithful/holdout.csv
+Wrote trajectory figure to /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_faithful/holdout.png

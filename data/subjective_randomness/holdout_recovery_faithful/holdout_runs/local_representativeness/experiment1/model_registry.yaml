@@ -1,0 +1,8 @@
+reserved_for_new: 0.0
+theories:
+  artificial_balance_diagnosticity: 2.1663839444916584e-13
+  evidence_accumulation_messy_prototype: 9.132086471201909e-14
+  evidence_accumulation_per_run: 0.9228016282157208
+  linear_evidence_accumulation_per_run: 7.268071236000714e-15
+  local_representativeness: 0.07719837178396402
+  minkowski_accumulated_typicality: 0.0

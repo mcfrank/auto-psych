@@ -1,0 +1,46 @@
+{
+  "n_calls": 9,
+  "n_calls_missing_usage": 0,
+  "input_tokens": 226698,
+  "output_tokens": 62223,
+  "reasoning_tokens": 0,
+  "cache_read_tokens": 1419410,
+  "cache_write_tokens": 0,
+  "total_tokens": 1708331,
+  "cost_usd": 0.08890364,
+  "by_source": {
+    "inner:candidate": {
+      "n_calls": 6,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 143133,
+      "output_tokens": 41526,
+      "reasoning_tokens": 0,
+      "cache_read_tokens": 897385,
+      "cache_write_tokens": 0,
+      "total_tokens": 1082044,
+      "cost_usd": 0.05679268
+    },
+    "inner:critique": {
+      "n_calls": 2,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 44621,
+      "output_tokens": 11426,
+      "reasoning_tokens": 0,
+      "cache_read_tokens": 157106,
+      "cache_write_tokens": 0,
+      "total_tokens": 213153,
+      "cost_usd": 0.013845188
+    },
+    "outer:2_design": {
+      "n_calls": 1,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 38944,
+      "output_tokens": 9271,
+      "reasoning_tokens": 0,
+      "cache_read_tokens": 364919,
+      "cache_write_tokens": 0,
+      "total_tokens": 413134,
+      "cost_usd": 0.018265772000000003
+    }
+  }
+}

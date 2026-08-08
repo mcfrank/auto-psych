@@ -46,6 +46,14 @@ PROTOTYPE_PARAMS = {
     "beta": 4.0,
     "side_bias": 0.0,
 }
+# Defaults of the active local_representativeness family (the faithful
+# replacement for prototype_similarity in the consolidated seed set).
+LOCAL_REP_PARAMS = {
+    "theta_alt": 0.65,
+    "alt_weight": 0.75,
+    "beta": 4.0,
+    "side_bias": 0.0,
+}
 
 
 # ── feature_rows (public: consumed by holdout_recovery) ─────────────
@@ -287,30 +295,35 @@ def test_generate_responses_rejects_incomplete_params():
 
 def test_default_generating_params_covers_every_seed_model():
     params = default_generating_params(SEED_MODELS_DIR)
+    # The registry holds only the literature-faithful seed set (2026-08
+    # consolidation); the superseded originals stay on disk but inactive.
     assert set(params) == {
-        "prototype_similarity",
-        "encoding_compressibility",
-        "bayesian_diagnosticity",
-        "window_typicality",
+        "falk_konold_dp",
+        "motif_hmm",
+        "finite_experience_occurrence",
+        "local_representativeness",
     }
     # Each default must name exactly the PyMC model's free parameters, so it can
     # drive the fixed-parameter generator without a loud failure.
-    assert set(params["prototype_similarity"]) == {
+    assert set(params["local_representativeness"]) == {
         "theta_alt",
         "alt_weight",
         "beta",
         "side_bias",
     }
-    assert set(params["bayesian_diagnosticity"]) == {
+    assert set(params["motif_hmm"]) == {
         "delta",
         "alpha",
-        "bias_share",
         "beta",
         "side_bias",
     }
-    assert set(params["window_typicality"]) == {
-        "window",
-        "over_alt_penalty",
+    assert set(params["falk_konold_dp"]) == {
+        "beta",
+        "side_bias",
+    }
+    assert set(params["finite_experience_occurrence"]) == {
+        "short_weight",
+        "mid_share",
         "beta",
         "side_bias",
     }
@@ -325,10 +338,10 @@ def test_resolve_generating_params_none_uses_all_seed_defaults():
 
 
 def test_resolve_generating_params_list_selects_subset_with_defaults():
-    resolved = resolve_generating_params(["prototype_similarity"], SEED_MODELS_DIR)
-    assert set(resolved) == {"prototype_similarity"}
-    assert resolved["prototype_similarity"] == (
-        default_generating_params(SEED_MODELS_DIR)["prototype_similarity"]
+    resolved = resolve_generating_params(["local_representativeness"], SEED_MODELS_DIR)
+    assert set(resolved) == {"local_representativeness"}
+    assert resolved["local_representativeness"] == (
+        default_generating_params(SEED_MODELS_DIR)["local_representativeness"]
     )
 
 
@@ -340,19 +353,19 @@ def test_resolve_generating_params_rejects_invalid_type():
 
 def test_resolve_generating_params_dict_overrides_and_fills_nulls():
     spec = {
-        "prototype_similarity": {
+        "local_representativeness": {
             "theta_alt": 0.5,
             "alt_weight": 0.5,
             "beta": 6.0,
             "side_bias": 0.1,
         },
-        "bayesian_diagnosticity": None,  # null -> fall back to family defaults
+        "motif_hmm": None,  # null -> fall back to family defaults
     }
     resolved = resolve_generating_params(spec, SEED_MODELS_DIR)
-    assert set(resolved) == {"prototype_similarity", "bayesian_diagnosticity"}
-    assert resolved["prototype_similarity"]["beta"] == 6.0
-    assert resolved["bayesian_diagnosticity"] == (
-        default_generating_params(SEED_MODELS_DIR)["bayesian_diagnosticity"]
+    assert set(resolved) == {"local_representativeness", "motif_hmm"}
+    assert resolved["local_representativeness"]["beta"] == 6.0
+    assert resolved["motif_hmm"] == (
+        default_generating_params(SEED_MODELS_DIR)["motif_hmm"]
     )
 
 
@@ -430,7 +443,7 @@ def test_run_closed_ended_recovery_assembles_confusion(tmp_path):
     result = run_closed_ended_recovery(
         STIMULI * 4,  # a few stimuli so LOO has something to chew on
         SEED_MODELS_DIR,
-        generating_params={"prototype_similarity": PROTOTYPE_PARAMS},
+        generating_params={"local_representativeness": LOCAL_REP_PARAMS},
         n_participants=12,
         results_root=tmp_path / "recovery",
         fit_kwargs={"draws": 50, "tune": 50, "chains": 2},
@@ -439,15 +452,15 @@ def test_run_closed_ended_recovery_assembles_confusion(tmp_path):
 
     seed_set = set(result["seed_models"])
     assert seed_set == {
-        "prototype_similarity",
-        "encoding_compressibility",
-        "bayesian_diagnosticity",
-        "window_typicality",
+        "falk_konold_dp",
+        "motif_hmm",
+        "finite_experience_occurrence",
+        "local_representativeness",
     }
     assert len(result["generating"]) == 1
 
     record = result["generating"][0]
-    assert record["generating_model"] == "prototype_similarity"
+    assert record["generating_model"] == "local_representativeness"
     # Every seed model is scored; the posterior is a distribution over them.
     assert set(record["posteriors"]) == seed_set
     # Posteriors are stored rounded to 6 dp; the sum can drift by a few ULPs of
@@ -455,14 +468,16 @@ def test_run_closed_ended_recovery_assembles_confusion(tmp_path):
     assert abs(sum(record["posteriors"].values()) - 1.0) < 1e-5
     assert record["best_model"] in seed_set
     assert record["recovered_correct"] == (
-        record["best_model"] == "prototype_similarity"
+        record["best_model"] == "local_representativeness"
     )
 
     # The PSIS-LOO comparison table (elpd_diff/dse per model) is carried through
     # so downstream analysis can judge whether a recovery is statistically clear.
     assert set(record["comparison"]) == seed_set
-    top = record["comparison"]["prototype_similarity"]
+    top = record["comparison"]["local_representativeness"]
     assert {"rank", "elpd_diff", "dse", "weight"} <= set(top)
 
     # The per-model inner-loop artifacts were written to disk.
-    assert (tmp_path / "recovery" / "prototype_similarity" / "responses.csv").exists()
+    assert (
+        tmp_path / "recovery" / "local_representativeness" / "responses.csv"
+    ).exists()

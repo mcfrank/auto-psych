@@ -10,17 +10,23 @@ This single model merges the two former Bayesian seeds. The regular hypothesis i
 a mixture (weight ``bias_share``) of:
 
   * a biased-coin generator (head- or tail-heavy, fixed bias 0.85), capturing
-    H/T imbalance; and
-  * a motif-complexity process (Griffiths et al. 2018, §6.1) evaluated at the
-    canonical parse (n1 = rep_motifs, n2 = alt_motifs):
+    H/T imbalance — NOTE: our extension in the spirit of Tenenbaum & Griffiths
+    (2001); no biased-coin hypothesis appears in Griffiths et al. (2018), and
+    the 0.85 value is a modeling choice; and
+  * a motif-complexity process (Griffiths et al. 2018) evaluated at the fixed
+    minimal-DP parse (n1 = rep_motifs, n2 = alt_motifs, minimising
+    DP = n1 + 2*n2 per Falk & Konold, 1997):
 
         log P(x | motif) = (n - n1 - n2)*log δ + (n1 + n2)*log C + (n1 + 2*n2)*log α,
         C = (1-δ)/(2α + 2α²),
 
-    where δ is motif persistence and α penalises motif complexity. This process
-    subsumes the old "alternating" and "streaky" Markov alternatives (long runs =
-    high persistence, regular alternation = alternation motifs) and carries Falk
-    & Konold's DP = n1 + 2*n2 in the α exponent.
+    where δ is per-symbol motif persistence and α penalises motif complexity.
+    This process subsumes the old "alternating" and "streaky" Markov
+    alternatives (long runs = high persistence, regular alternation =
+    alternation motifs) and carries Falk & Konold's DP = n1 + 2*n2 in the α
+    exponent. The paper's own base model marginalises over parses (their
+    Eq. 8) and later drops C for a row-normalised transition matrix; see the
+    ``motif_hmm`` family for that faithful form.
 
 The score is not length-normalised; evidence accumulating with length is part of
 the account. Free parameters inferred by MCMC: δ, α, bias_share, β, side bias.

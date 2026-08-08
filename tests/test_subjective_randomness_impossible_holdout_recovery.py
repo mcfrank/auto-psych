@@ -48,7 +48,7 @@ def _stub_spawn_cc_agent(calls):
     Design is the only spawned agent stage: the model set is seeded / carried
     forward programmatically, so any other key is an error."""
 
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None):
+    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None, model=None):
         calls.append((agent_key, Path(exp_dir).name))
         if agent_key == "2_design":
             design_dir = exp_dir / "design"
@@ -94,7 +94,8 @@ def _stub_inner_loop(history_best):
     # cognitive_models — a live-pool winner, since these tests seed from the
     # real project assets (the impossible GT lives in a separate directory).
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
-            backend=None, cache_dir=None, project_id=None, agent_timeout_sec=900):
+            backend=None, agent_model=None, cache_dir=None, project_id=None,
+            agent_timeout_sec=900):
         loop_dir = exp_dir / "model_loop"
         models_dir = loop_dir / "models"
         models_dir.mkdir(parents=True, exist_ok=True)
@@ -232,10 +233,10 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     # The fitted-seed baseline fits all normal seeds (none excluded, since the
     # impossible GT is not in the project seed set).
     assert set(gt_run["fitted_baseline"]["per_model"]) == {
-        "prototype_similarity",
-        "bayesian_diagnosticity",
-        "encoding_compressibility",
-        "window_typicality",
+        "falk_konold_dp",
+        "motif_hmm",
+        "finite_experience_occurrence",
+        "local_representativeness",
     }
 
     # Leakage is audited and robust to the impossible GT having no model_families

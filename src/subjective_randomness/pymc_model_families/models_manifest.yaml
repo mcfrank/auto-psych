@@ -1,20 +1,37 @@
+# Active seed set (2026-08 fidelity consolidation): the four
+# literature-faithful models, each replacing the superseded original it was
+# built to correct (falk_konold_dp <- encoding_compressibility, motif_hmm <-
+# bayesian_diagnosticity, finite_experience_occurrence <- window_typicality,
+# local_representativeness <- prototype_similarity). The superseded model
+# files and their pure-Python twins remain on disk so old run artifacts can
+# still be refit, but only the models listed here are active — for recovery,
+# fitted/no-learning baselines, and EIG stimulus design defaults alike (the
+# manifest is the single source of truth; see default_model_family_names).
 models:
-  - name: prototype_similarity
+  - name: falk_konold_dp
     rationale: |
-      Random-looking sequences are close to a prototype with balanced H/T counts
-      and an ideal alternation rate.
-  - name: encoding_compressibility
+      Sequences seem random to the extent they are hard to encode mentally:
+      randomness = the Difficulty Predictor DP = pure runs + 2*alternating
+      runs under the DP-minimising parse, unnormalised by length (Falk &
+      Konold 1997, p. 308). No free cognitive parameters.
+  - name: motif_hmm
     rationale: |
-      Random-looking sequences are those with low simple-description penalties:
-      long runs, periodic templates, and imbalance.
-  - name: bayesian_diagnosticity
+      Randomness = log-likelihood ratio of a fair coin versus Griffiths et
+      al. (2018)'s six-state motif HMM (repeating H, T, HT, TH; per-symbol
+      persistence delta, complexity penalty alpha^k), row-normalised and
+      marginalised over parses exactly as published — the faithful form of
+      the statistical-inference account.
+  - name: finite_experience_occurrence
     rationale: |
-      Randomness is the log-likelihood ratio of a fair coin versus a regular
-      process: a mixture of a complexity-penalized motif process (Griffiths et
-      al. 2018) and a biased coin. Merges the former diagnosticity and
-      statistical-inference accounts.
-  - name: window_typicality
+      A string seems random to the extent one actually encounters it when
+      watching a fair coin for a finite stretch: randomness = log expected
+      probability of occurring at least once in a global stream of 10/20/50
+      flips (Hahn & Warren 2009), with a stick-breaking prior over the
+      experience length. Penalises long runs AND perfect alternation.
+  - name: local_representativeness
     rationale: |
-      Random-looking sequences have a longest run typical of a fair coin seen
-      through a limited memory window; over-long streaks look non-random (Hahn &
-      Warren 2009).
+      Kahneman & Tversky (1972): a random-looking sequence is balanced not
+      only globally but "locally in each of its parts". Prototype distance
+      with the balance term judged as the worst H/T imbalance over sliding
+      length-4 windows, so globally balanced but clumped sequences are
+      penalised, plus distance from an ideal alternation rate.

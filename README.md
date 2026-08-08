@@ -197,6 +197,8 @@ model_loop/iter_<i>/critique/ppc_results.json  # empirical + FDR-adjusted p-valu
 model_loop/iter_<i>/critique/critiques.md      # significant discrepancies of the incumbent
 cognitive_models/<winning_model>.py            # a NEW winning candidate, exported under its own name
 cognitive_models/models_manifest.yaml          # the carried model set (name + hypothesis rationale)
+token_usage.jsonl                              # one line per LLM call/agent run (tokens + cost, labelled by stage)
+token_usage_summary.json                       # the experiment's total token spend, overall and per stage
 ```
 
 A winning candidate is exported into `cognitive_models/` under the descriptive

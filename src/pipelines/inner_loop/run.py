@@ -55,6 +55,7 @@ from src.pipelines.inner_loop.pymc_orchestrator import (
     run_pymc_inner_loop,
 )
 from src.runtime.coding_agent import select_backend
+from src.runtime.token_usage import start_usage_log, write_usage_report
 
 
 def load_hints_file(path: Path) -> List[str]:
@@ -134,23 +135,29 @@ def main(args: Args) -> None:
     backend = select_backend(args.coding_agent) if args.max_iterations > 0 else None
     hints = load_hints_file(args.hints_file) if args.hints_file else None
 
-    result = run_pymc_inner_loop(
-        responses_path,
-        results_dir,
-        seed_models_dir=seed_models_dir,
-        max_iterations=args.max_iterations,
-        candidate_count=args.candidate_count,
-        complexity_prior_const=args.complexity_prior,
-        cache_dir=args.cache_dir,
-        agent_timeout_sec=args.agent_timeout_sec,
-        backend=backend,
-        fit_kwargs={"draws": args.draws, "tune": args.tune, "chains": args.chains},
-        candidate_hints=hints,
-        novelty_rmse_threshold=args.novelty_rmse_threshold,
-        prune_dse_multiplier=args.prune_dse_multiplier,
-        prune_weight_floor=args.prune_weight_floor,
-        candidate_parallelism=args.candidate_parallelism,
-    )
+    # Track the loop's LLM spend (candidate/critique agents). The report is
+    # written in a finally so an aborted loop still accounts for what it used.
+    usage_marker = start_usage_log(results_dir / "token_usage.jsonl")
+    try:
+        result = run_pymc_inner_loop(
+            responses_path,
+            results_dir,
+            seed_models_dir=seed_models_dir,
+            max_iterations=args.max_iterations,
+            candidate_count=args.candidate_count,
+            complexity_prior_const=args.complexity_prior,
+            cache_dir=args.cache_dir,
+            agent_timeout_sec=args.agent_timeout_sec,
+            backend=backend,
+            fit_kwargs={"draws": args.draws, "tune": args.tune, "chains": args.chains},
+            candidate_hints=hints,
+            novelty_rmse_threshold=args.novelty_rmse_threshold,
+            prune_dse_multiplier=args.prune_dse_multiplier,
+            prune_weight_floor=args.prune_weight_floor,
+            candidate_parallelism=args.candidate_parallelism,
+        )
+    finally:
+        write_usage_report(results_dir, usage_marker, heading="inner loop")
 
     best = result["best_model"]
     print(
