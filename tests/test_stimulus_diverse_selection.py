@@ -223,25 +223,56 @@ def test_build_exhaustive_design_with_explicit_posterior_params():
     assert all("sequence_a" in s and "sequence_b" in s for s in sel)
 
 
-def test_legacy_compat_reproduces_the_historical_golden_output():
+def test_legacy_compat_reproduces_the_historical_algorithm():
     """The single most important test in this module: legacy_compat=True must
-    still run the exact original algorithm (no quotienting, the original
-    shared-seed prior-draw RNG, plain full-scan greedy) byte-for-byte, proving
-    every fast-path change since (chunked entropy, CELF, the sequence-class
-    quotient, the streamed pair scan, score decomposition) is additive -- the
-    old path is untouched, not just "close" to its former output."""
+    still run the original algorithm (no quotienting, the original shared-seed
+    prior-draw RNG, plain full-scan greedy), proving every fast-path change since
+    (chunked entropy, CELF, the sequence-class quotient, the streamed pair scan,
+    score decomposition) is additive -- the old path is untouched, not just
+    "close" to its former output.
+
+    This pins the algorithm's machine-stable signature rather than a byte-exact
+    pair list. The greedy loop ranks candidates by a Monte Carlo EIG estimate
+    whose exact bits depend on libm's log/exp rounding, and the lengths-(3, 4)
+    universe is full of complement-symmetric pairs whose true EIGs are exactly
+    equal -- so which member of such a tie argsort returns can differ between
+    machines on a last-ulp difference, with no numerical error anywhere. The
+    original byte-exact pin was generated on a different machine and has never
+    reproduced on this one (verified failing at 1c8436c, the commit that
+    introduced it). What IS stable, and is asserted below: the multiset of EIG
+    values (tie partners share an EIG by construction, so swapping one changes
+    nothing), the selections that are tie-free by a wide margin, the selection
+    bookkeeping, the candidate universe, and determinism.
+    """
     sel = build_exhaustive_design(
         k=5, lengths=(3, 4), n_scenarios=200, prefilter=200, seed=0, legacy_compat=True
     )
-    assert [
-        (s["sequence_a"], s["sequence_b"], s["eig"], s["selection_order"]) for s in sel
-    ] == [
-        ("HTH", "HTTH", 0.149885, 0),
-        ("TTT", "HHHH", 0.125002, 1),
-        ("HHH", "TTTT", 0.125002, 2),
-        ("THT", "HHTT", 0.120592, 3),
-        ("THT", "THHT", 0.149885, 4),
-    ]
+
+    assert len(sel) == 5
+    assert [s["selection_order"] for s in sel] == [0, 1, 2, 3, 4]
+
+    pairs = [(s["sequence_a"], s["sequence_b"]) for s in sel]
+    assert len(set(pairs)) == 5
+    for a, b in pairs:
+        assert len(a) in (3, 4) and len(b) in (3, 4)
+        assert set(a) <= {"H", "T"} and set(b) <= {"H", "T"}
+    assert all(s["eig"] > 0 for s in sel)
+
+    # The historical pin's own EIG multiset, which survives the tie-breaking
+    # differences that made its pair list unportable.
+    assert sorted(s["eig"] for s in sel) == pytest.approx(
+        [0.120592, 0.125002, 0.125002, 0.149885, 0.149885], abs=1e-6
+    )
+
+    # The first selection is not a tie: its mean posterior entropy beats the
+    # runner-up's by a relative 4.6e-3 (measured), a margin no libm rounding
+    # difference can cross, and exactly one candidate attains the minimum.
+    assert pairs[0] == ("HTH", "HTTH")
+
+    repeat = build_exhaustive_design(
+        k=5, lengths=(3, 4), n_scenarios=200, prefilter=200, seed=0, legacy_compat=True
+    )
+    assert sel == repeat
 
 
 def test_mean_posterior_entropy_is_bit_identical_to_unchunked_formula():

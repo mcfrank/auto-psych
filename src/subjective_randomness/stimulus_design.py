@@ -28,10 +28,15 @@ import yaml
 # A predictor maps a stimulus ({"sequence_a", "sequence_b"}) to P(choose left).
 PredictFn = Callable[[Mapping[str, str]], float]
 
+# Sorted, because the legacy path was written when it called
+# default_model_family_names(), which enumerated this package with pkgutil and
+# sorted the result. Model order is not cosmetic here: it permutes the columns of
+# the prediction matrix (changing the float summation order in _marginal_eig) and
+# permutes which model each sampled scenario identity means in the greedy loop.
 _LEGACY_COMPAT_MODEL_FAMILIES: Tuple[str, ...] = (
-    "prototype_similarity",
-    "encoding_compressibility",
     "bayesian_diagnosticity",
+    "encoding_compressibility",
+    "prototype_similarity",
     "window_typicality",
 )
 
