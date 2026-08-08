@@ -25,11 +25,20 @@ def load_registry(registry_path: Path) -> Dict[str, Any]:
         # accumulated theory probability; fail loudly instead.
         raise ValueError(f"Could not parse model registry at {path}: {exc}") from exc
     theories = data.get("theories") or data.get("probabilities") or {}
+    # Coercing a malformed block to a default is the same silent-data-loss bug
+    # as swallowing the parse error above: it would hand the designer a prior
+    # that no experiment produced.
     if not isinstance(theories, dict):
-        theories = {}
+        raise ValueError(
+            f"Model registry at {path} has a malformed `theories` block: expected "
+            f"a mapping of model_name -> probability, got {type(theories).__name__}."
+        )
     reserved = data.get("reserved_for_new", DEFAULT_RESERVED_FOR_NEW)
-    if not isinstance(reserved, (int, float)):
-        reserved = DEFAULT_RESERVED_FOR_NEW
+    if isinstance(reserved, bool) or not isinstance(reserved, (int, float)):
+        raise ValueError(
+            f"Model registry at {path} has a malformed `reserved_for_new`: expected "
+            f"a number, got {reserved!r}."
+        )
     return {"theories": dict(theories), "reserved_for_new": float(reserved)}
 
 

@@ -34,7 +34,16 @@ def experiment_number_from_dir(exp_dir: Path) -> int:
 
 
 def git_metadata(repo_root: Path) -> dict[str, Any]:
-    def _git(*args: str) -> str | None:
+    """Record the commit (and dirtiness) a deployment was built from.
+
+    Provenance is the whole point of the manifest — it is what ties a live
+    study, and the data real participants produced in it, back to the code that
+    generated the stimuli. A failed git call therefore raises instead of
+    degrading to ``git_commit: null``, which would look like a successful
+    deployment while leaving it permanently unattributable.
+    """
+
+    def _git(*args: str) -> str:
         try:
             result = subprocess.run(
                 ["git", *args],
@@ -44,15 +53,18 @@ def git_metadata(repo_root: Path) -> dict[str, Any]:
                 text=True,
                 timeout=10,
             )
-        except Exception:
-            return None
+        except (OSError, subprocess.SubprocessError) as exc:
+            detail = (getattr(exc, "stderr", "") or "").strip() or str(exc)
+            raise RuntimeError(
+                f"`git {' '.join(args)}` failed in {repo_root} ({detail}); cannot "
+                "record deployment provenance. Deploy from the git checkout the "
+                "experiment code lives in."
+            ) from exc
         return result.stdout.strip()
 
-    commit = _git("rev-parse", "HEAD")
-    status = _git("status", "--porcelain")
     return {
-        "git_commit": commit,
-        "git_dirty": None if status is None else bool(status),
+        "git_commit": _git("rev-parse", "HEAD"),
+        "git_dirty": bool(_git("status", "--porcelain")),
     }
 
 
@@ -143,7 +155,7 @@ def build_manifest(
     resolved_run_id = run_id if run_id is not None else experiment_number_from_dir(exp_dir)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     git = git_metadata(repo_root)
-    short_sha = (git.get("git_commit") or "nogit")[:7]
+    short_sha = git["git_commit"][:7]
     experiment_id = f"{project_id}_experiment{resolved_run_id}"
     # The run label (an explicit --run-label, or a unique auto token) makes the
     # deployment/session ids and hosting path unique PER RUN, so parallel runs
@@ -187,8 +199,8 @@ def build_manifest(
         hosting_path=hosting_path,
         hosting_site=hosting_site,
         total_available_places=n_participants,
-        git_commit=git.get("git_commit"),
-        git_dirty=git.get("git_dirty"),
+        git_commit=git["git_commit"],
+        git_dirty=git["git_dirty"],
         source_experiment_dir=str(exp_dir / "experiment"),
     )
     return manifest

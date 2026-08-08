@@ -79,14 +79,28 @@ class LiveFirestoreSource:
 
 
 class LiveProlificSource:
-    """Reads study status and submission counts via the Prolific API client."""
+    """Reads study status and submission counts via the Prolific API client.
+
+    ``src.runtime.prolific`` reports API failures through its ``(value, error)``
+    return but *raises* on a missing ``PROLIFIC_API_TOKEN``, so that a
+    two-hour collection poll cannot mistake a config error for a flaky
+    endpoint. The monitor's contract is the opposite: it must stay up and show
+    that recruitment status is unavailable. That single translation happens
+    here, explicitly, rather than at every call site.
+    """
 
     def study_status(self, study_id: str) -> tuple[dict[str, Any] | None, str | None]:
         from src.runtime.prolific import get_study
 
-        return get_study(study_id)
+        try:
+            return get_study(study_id)
+        except ValueError as exc:
+            return (None, f"Prolific is not configured: {exc}")
 
     def submission_counts(self, study_id: str) -> tuple[dict[str, Any] | None, str | None]:
         from src.runtime.prolific import get_submission_counts
 
-        return get_submission_counts(study_id)
+        try:
+            return get_submission_counts(study_id)
+        except ValueError as exc:
+            return (None, f"Prolific is not configured: {exc}")

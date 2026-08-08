@@ -92,8 +92,13 @@ def _screen_usable_models(
     annotation. Probe each model against a representative featurized stimulus,
     drop the unbindable ones loudly, and keep the rest; fail only if none can
     be evaluated.
+
+    This is the ONE place the pipeline is allowed to omit a model from the
+    hypothesis set, and only for the data-binding reason above: a model that
+    fails because its *code* is broken (``BROKEN_MODEL_CODE_ERRORS``) raises.
     """
     from src.models.pymc_inference import (  # type: ignore
+        BROKEN_MODEL_CODE_ERRORS,
         load_pymc_model_cached,
         make_stim_data,
     )
@@ -102,6 +107,13 @@ def _screen_usable_models(
     for name in model_names:
         try:
             make_stim_data(load_pymc_model_cached(name, models_dir), [probe_row])
+        except BROKEN_MODEL_CODE_ERRORS as e:
+            raise RuntimeError(
+                f"model {name!r} in {models_dir} is broken "
+                f"({type(e).__name__}: {e}). That is a code error, not a "
+                "stimulus-binding mismatch — fix the model rather than letting "
+                "EIG silently renormalize over the models that happen to load."
+            ) from e
         except Exception as e:  # noqa: BLE001 — unbindable model can't be scored
             print(
                 f"  [drop] EIG: model {name!r} cannot be evaluated on a "

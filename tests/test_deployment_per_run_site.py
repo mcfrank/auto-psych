@@ -10,9 +10,14 @@ project site is used (backward compat for single pilots).
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 from src.pipelines.outer_loop.deployment.firebase import write_firebase_config
 from src.pipelines.outer_loop.deployment.manifest import build_manifest
+
+# git provenance is read from the real checkout: build_manifest refuses to
+# record a null commit, and a bare tmp_path is not a git repo.
+REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def _build(tmp_path, monkeypatch, site_env):
@@ -33,7 +38,7 @@ def _build(tmp_path, monkeypatch, site_env):
         firebase_project="auto-psych-2c5da",
         firebase_region="us-central1",
         n_participants=40,
-        repo_root=tmp_path,
+        repo_root=REPO_ROOT,
         run_label="run2",
     )
 

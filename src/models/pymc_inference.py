@@ -289,6 +289,21 @@ def extract_observed(csv_path: Path, model) -> Dict[str, np.ndarray]:
     return out
 
 
+# Errors that mean the *harness* (or the environment) is broken rather than
+# "this model cannot be fit to this data". Reporting them through a
+# (False, reason) screening contract would reject every candidate for a reason
+# that has nothing to do with the candidates, so they propagate. Shared with
+# ``src.pipelines.outer_loop.eig._screen_usable_models``, which screens models
+# for the same kind of reason.
+BROKEN_MODEL_CODE_ERRORS = (
+    ImportError,
+    SyntaxError,
+    IndentationError,
+    NameError,
+    AttributeError,
+)
+
+
 def model_logp_is_finite(
     name: str, models_dir: Path, responses_path: Path
 ) -> tuple[bool, str]:
@@ -308,6 +323,11 @@ def model_logp_is_finite(
     at the initial point. This is still not a full guarantee (a logp that only
     NaNs once NUTS jitters off the initial point can slip through), but it catches
     the common non-finite-gradient failure that a logp-only check misses.
+
+    ``(False, reason)`` states one thing only: *this model cannot be fit to this
+    data*. A broken harness (see ``BROKEN_MODEL_CODE_ERRORS``) is not that, and
+    propagates — otherwise a missing dependency would silently condemn every
+    candidate the inner loop generated.
     """
     pm = _import_pymc()
     model = load_pymc_model(name, models_dir)
@@ -315,6 +335,8 @@ def model_logp_is_finite(
         observed = extract_observed(responses_path, model)
         with model:
             pm.set_data(observed)
+    except BROKEN_MODEL_CODE_ERRORS:
+        raise
     except Exception as e:
         # A candidate (or seed) model that references feature columns the
         # responses don't carry — e.g. it declares extra pm.Data inputs without
@@ -325,12 +347,16 @@ def model_logp_is_finite(
     try:
         point = model.initial_point()
         logp = float(model.compile_logp()(point))
+    except BROKEN_MODEL_CODE_ERRORS:
+        raise
     except Exception as e:  # a graph that cannot even be evaluated
         return False, f"logp evaluation raised: {type(e).__name__}: {e}"
     if not math.isfinite(logp):
         return False, f"non-finite logp ({logp}) at the initial point"
     try:
         grad = np.asarray(model.compile_dlogp()(point), dtype=float)
+    except BROKEN_MODEL_CODE_ERRORS:
+        raise
     except Exception as e:
         return False, f"gradient evaluation raised: {type(e).__name__}: {e}"
     if not np.all(np.isfinite(grad)):
@@ -810,6 +836,31 @@ def fit_model(
     return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
 
 
+def _divergence_count(idata: Any) -> Optional[int]:
+    """Number of divergent transitions, or None if the trace does not record any.
+
+    None is a real answer, not a failure: a sampler that is not NUTS (a model
+    with discrete parameters falls back to Metropolis) writes no ``diverging``
+    stat. It is deliberately NOT folded into 0 — "no divergences" and "nobody
+    checked" must not look the same. Anything else raises.
+    """
+    sample_stats = getattr(idata, "sample_stats", None)
+    if sample_stats is None or "diverging" not in sample_stats:
+        return None
+    return int(sample_stats["diverging"].values.sum())
+
+
+def _max_rhat(idata: Any) -> float:
+    """Largest R-hat across variables; NaN when ArviZ cannot compute one.
+
+    ArviZ returns NaN (not an error) for a single-chain trace, where R-hat is
+    undefined. That NaN is reported as "unverified", never as "converged".
+    """
+    az = _import_arviz()
+    rhat = az.rhat(idata)
+    return max((float(rhat[v].max()) for v in rhat.data_vars), default=float("nan"))
+
+
 def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
     """Loudly surface NUTS trouble (divergences, poor R-hat) for a fresh fit.
 
@@ -818,25 +869,36 @@ def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
     value is exactly the silent-quality trap the project's fail-loud rule guards
     against. Print an attributed warning so a degraded fit is visible in the run
     log. Only called on a real sample (not on a cache hit).
+
+    A diagnostic that could not be computed is itself warned about: previously a
+    missing ``diverging`` stat read as 0 divergences and an unavailable R-hat as
+    NaN, i.e. the two values that mean "this fit is healthy".
     """
-    az = _import_arviz()
-    try:
-        n_div = int(idata.sample_stats["diverging"].values.sum())
-    except Exception:
-        n_div = 0
-    if n_div > 0:
+    n_div = _divergence_count(idata)
+    if n_div is None:
+        print(
+            f"  [warn] {name}: the trace records no divergence statistic, so "
+            "sampling quality could NOT be checked (did the sampler fall back "
+            "off NUTS?).",
+            file=sys.stderr,
+            flush=True,
+        )
+    elif n_div > 0:
         print(
             f"  [warn] {name}: {n_div} divergence(s) during sampling; the posterior "
             "may be biased — treat its ELPD-LOO with caution.",
             file=sys.stderr,
             flush=True,
         )
-    try:
-        rhat = az.rhat(idata)
-        max_rhat = max(float(rhat[v].max()) for v in rhat.data_vars)
-    except Exception:
-        max_rhat = float("nan")
-    if math.isfinite(max_rhat) and max_rhat > 1.01:
+    max_rhat = _max_rhat(idata)
+    if not math.isfinite(max_rhat):
+        print(
+            f"  [warn] {name}: R-hat is unavailable (got {max_rhat}); convergence "
+            "was NOT verified — a single-chain fit cannot report one.",
+            file=sys.stderr,
+            flush=True,
+        )
+    elif max_rhat > 1.01:
         print(
             f"  [warn] {name}: max R-hat={max_rhat:.3f} (>1.01); chains may not have "
             "converged.",

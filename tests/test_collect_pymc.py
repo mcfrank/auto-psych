@@ -62,11 +62,17 @@ def test_generate_from_pymc_models_shapes_and_columns(tmp_path):
         assert {"participant_id", "trial_index"} <= set(r)
 
 
-def test_generate_from_models_raises_when_model_yields_no_prediction():
-    """A model that produces no prediction must fail loudly, not coin-flip data."""
+def test_generate_from_models_raises_when_the_model_cannot_be_resolved():
+    """A model that produces no prediction must fail loudly, not coin-flip data.
+
+    This used to surface as ``RuntimeError("no prediction")``: the loader error
+    was swallowed inside ``get_model_predictions``, which returned ``{}``, and
+    ``_generate_from_models`` noticed the empty dict one frame later. Since the
+    fail-loud sweep the original error propagates instead, so the message names
+    the actual problem (no theorist_dir) rather than its symptom.
+    """
     stimuli = [{"sequence_a": "HHHT", "sequence_b": "HTHT"}]
-    # No registry entry and no theorist_dir -> get_model_predictions returns {}.
-    with pytest.raises(RuntimeError, match="no prediction"):
+    with pytest.raises(KeyError, match="theorist_dir required"):
         _generate_from_models(
             stimuli, ["nonexistent_model"], n_participants=1, theorist_dir=None
         )

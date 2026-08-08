@@ -2,6 +2,20 @@
 Prolific API client for creating studies, test participants, and polling submissions.
 Token is read from .secrets (PROLIFIC_API_TOKEN) or env PROLIFIC_API_TOKEN.
 Project-level settings: projects/<project_id>/prolific_config.yaml
+
+Error contract — ONE rule for every wrapper here. Each returns
+``(value, error_message)`` where ``error_message`` is non-None for exactly one
+class of outcome: **the API call itself failed** — a non-2xx response, or a
+transport error (``requests.RequestException``). Callers treat that as
+recoverable and retryable; ``_poll_prolific_until_target`` in particular logs it
+and keeps polling for up to two hours.
+
+Everything else raises:
+- a missing/invalid ``PROLIFIC_API_TOKEN`` (``_headers``) is a *configuration*
+  error — folding it into the error string made a two-hour poll repeat the same
+  message every 30 seconds and then report "0 participants";
+- programming errors in this module are bugs, and must not masquerade as a
+  flaky Prolific endpoint.
 """
 
 import os
@@ -88,7 +102,7 @@ def get_me() -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
         if r.status_code != 200:
             return (None, f"GET /users/me/ {r.status_code}: {r.text[:500]}")
         return (r.json(), None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))
 
 
@@ -111,7 +125,7 @@ def create_test_participant(email: str) -> Tuple[Optional[str], Optional[str]]:
             )
         data = r.json()
         return (data.get("participant_id") or data.get("id"), None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))
 
 
@@ -124,7 +138,7 @@ def get_filters() -> Tuple[Optional[list], Optional[str]]:
             return (None, f"GET /filters/ {r.status_code}: {r.text[:500]}")
         data = r.json()
         return (data.get("results", data) if isinstance(data, dict) else data, None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))
 
 
@@ -142,7 +156,7 @@ def create_study(payload: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]
             return (None, f"POST /studies/ {r.status_code}: {r.text[:500]}")
         data = r.json()
         return (data.get("id"), None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))
 
 
@@ -158,7 +172,7 @@ def publish_study(study_id: str) -> Tuple[bool, Optional[str]]:
         if r.status_code != 200:
             return (False, f"POST transition PUBLISH {r.status_code}: {r.text[:500]}")
         return (True, None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (False, str(e))
 
 
@@ -169,7 +183,7 @@ def get_study(study_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
         if r.status_code != 200:
             return (None, f"GET /studies/{study_id}/ {r.status_code}: {r.text[:500]}")
         return (r.json(), None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))
 
 
@@ -209,7 +223,7 @@ def list_submissions(
             next_link = (data.get("_links") or {}).get("next") or {}
             url = next_link.get("href") if isinstance(next_link, dict) else None
         return (submissions, None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))
 
 
@@ -229,5 +243,5 @@ def get_submission_counts(
                 f"GET /studies/{study_id}/submissions/counts/ {r.status_code}: {r.text[:500]}",
             )
         return (r.json(), None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))

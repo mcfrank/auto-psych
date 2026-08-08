@@ -172,3 +172,28 @@ def test_prolific_error_surfaces_without_breaking_detail(data_root: Path):
     # The Firestore-derived data is still present; the Prolific failure is shown.
     assert detail["n_responses"] == 1
     assert "503" in detail["prolific"]["error"]
+
+
+# ── The live Prolific adapter upholds the ProlificSource contract ──────────
+#
+# ``src.runtime.prolific`` raises on a missing PROLIFIC_API_TOKEN (a config
+# error must not masquerade as a flaky endpoint). The monitor's contract is the
+# opposite — a dashboard has to stay up and *show* that recruitment status is
+# unavailable — so the adapter translates that one error at the boundary,
+# explicitly, instead of every call site guessing.
+
+
+def test_live_prolific_source_reports_a_missing_token_instead_of_crashing(monkeypatch):
+    import src.runtime.prolific as prol
+    from src.monitor.sources import LiveProlificSource
+
+    monkeypatch.setattr(prol, "_get_token", lambda: None)
+    source = LiveProlificSource()
+
+    data, err = source.study_status("study1")
+    assert data is None
+    assert "PROLIFIC_API_TOKEN" in err
+
+    counts, counts_err = source.submission_counts("study1")
+    assert counts is None
+    assert "PROLIFIC_API_TOKEN" in counts_err

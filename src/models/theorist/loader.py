@@ -1,8 +1,11 @@
 """Resolve model callables from a theorist run directory."""
 
 import importlib.util
+import logging
 from pathlib import Path
 from typing import Callable, List, Optional
+
+logger = logging.getLogger(__name__)
 
 # Callable type: (stimulus, response_options) -> dict[str, float]
 ModelCallable = Callable[..., dict]
@@ -47,7 +50,19 @@ def get_model_callable(
         and getattr(getattr(mod, name), "__module__", None) == mod.__name__
     ]
     if len(own_callables) == 1:
-        return own_callables[0]
+        # Explicit, logged fallback: which symbol got bound decides every
+        # prediction attributed to this model, so it must be visible in the run
+        # log rather than inferred from behavior.
+        fallback = own_callables[0]
+        logger.warning(
+            "%s defines no function named %r; binding its only public callable %r "
+            "instead. Rename that function to %r to make the entry point explicit.",
+            py_path,
+            model_name,
+            getattr(fallback, "__name__", repr(fallback)),
+            model_name,
+        )
+        return fallback
     raise ValueError(
         f"{py_path} defines no function named '{model_name}' and "
         f"{'several' if own_callables else 'no'} public module-level callables were "

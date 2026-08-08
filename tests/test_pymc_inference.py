@@ -280,3 +280,71 @@ def test_prior_predict_p_left_batch_matches_per_row():
         per_row = pi.prior_predict_p_left(names, FIXTURE_DIR, row, n_samples=50, seed=11)
         for name in names:
             assert batch[name][i] == pytest.approx(per_row[name], abs=1e-8)
+
+
+# ── Sampling diagnostics must never fabricate a clean result ────────────────
+#
+# `_warn_sampling_diagnostics` used to read a missing `diverging` stat as
+# "0 divergences" and an un-computable R-hat as NaN, i.e. exactly the two
+# values that mean "this fit is fine". A fit whose quality could not be checked
+# must say so instead of impersonating a healthy one.
+
+
+class _FakeDataArray:
+    """Minimal stand-in for the xarray DataArray in ``idata.sample_stats``."""
+
+    def __init__(self, values):
+        self.values = values
+
+
+class _FakeSampleStats:
+    def __init__(self, values: dict):
+        self._values = values
+
+    def __contains__(self, key):
+        return key in self._values
+
+    def __getitem__(self, key):
+        return self._values[key]
+
+
+class _FakeIdata:
+    def __init__(self, sample_stats=None):
+        if sample_stats is not None:
+            self.sample_stats = sample_stats
+
+
+def test_diagnostics_report_that_divergences_could_not_be_checked(capsys, monkeypatch):
+    monkeypatch.setattr(pi, "_max_rhat", lambda idata: 1.0)
+    pi._warn_sampling_diagnostics("m", _FakeIdata())
+    err = capsys.readouterr().err
+    assert "divergence" in err.lower()
+    assert "could not" in err.lower() or "no divergence statistic" in err.lower()
+
+
+def test_diagnostics_report_an_unavailable_rhat(capsys, monkeypatch):
+    monkeypatch.setattr(pi, "_max_rhat", lambda idata: float("nan"))
+    stats = _FakeSampleStats({"diverging": _FakeDataArray(np.zeros(10))})
+    pi._warn_sampling_diagnostics("m", _FakeIdata(stats))
+    err = capsys.readouterr().err
+    assert "r-hat" in err.lower()
+
+
+def test_diagnostics_stay_quiet_for_a_healthy_fit(capsys, monkeypatch):
+    monkeypatch.setattr(pi, "_max_rhat", lambda idata: 1.001)
+    stats = _FakeSampleStats({"diverging": _FakeDataArray(np.zeros(10))})
+    pi._warn_sampling_diagnostics("m", _FakeIdata(stats))
+    assert capsys.readouterr().err == ""
+
+
+def test_diagnostics_propagate_unexpected_errors(monkeypatch):
+    class _Exploding:
+        def __contains__(self, key):
+            return True
+
+        def __getitem__(self, key):
+            raise TypeError("sample_stats is not subscriptable like that")
+
+    monkeypatch.setattr(pi, "_max_rhat", lambda idata: 1.0)
+    with pytest.raises(TypeError):
+        pi._warn_sampling_diagnostics("m", _FakeIdata(_Exploding()))
