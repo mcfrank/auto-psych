@@ -73,13 +73,60 @@ def _bits_to_strings(bits: np.ndarray) -> list[str]:
     return ["".join(row) for row in chars]
 
 
+def _motif_stats(bits: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+    """Vectorized ``(rep_motifs, alt_motifs)`` of the Falk & Konold minimal-DP
+    parse for every row of ``bits`` — the same dynamic program as
+    ``common.parse_motifs`` (partition into constant-run chunks costing 1 and
+    strictly alternating chunks of length >= 2 costing 2, minimising total cost
+    and then chunk count), run over every row at once.
+    """
+    n_rows, length = bits.shape
+
+    # const_len[:, j] / alt_len[:, j]: length of the longest constant / strictly
+    # alternating chunk starting at position j, so "is seq[j:i] a legal chunk?"
+    # is one comparison against the span rather than a re-scan of the chunk.
+    const_len = np.ones((n_rows, length), dtype=np.int64)
+    alt_len = np.ones((n_rows, length), dtype=np.int64)
+    for j in range(length - 2, -1, -1):
+        same_next = bits[:, j] == bits[:, j + 1]
+        const_len[:, j] = np.where(same_next, const_len[:, j + 1] + 1, 1)
+        alt_len[:, j] = np.where(same_next, 1, alt_len[:, j + 1] + 1)
+
+    # best[:, i] is the minimal (DP cost, chunk count) over all partitions of the
+    # first i symbols, packed as ``cost * scale + chunks`` so that plain integer
+    # order is the lexicographic (fewest DP, then fewest chunks) order the parse
+    # is defined by. A partition never has more than ``length`` chunks, which is
+    # below ``scale``, so the packing is exact.
+    scale = length + 1
+    unreachable = (2 * length + 1) * scale + length + 1
+    best = np.full((n_rows, length + 1), unreachable, dtype=np.int64)
+    best[:, 0] = 0
+    for i in range(1, length + 1):
+        for j in range(i):
+            span = i - j
+            best[:, i] = np.minimum(
+                best[:, i],
+                np.where(const_len[:, j] >= span, best[:, j] + scale + 1, unreachable),
+            )
+            if span >= 2:
+                best[:, i] = np.minimum(
+                    best[:, i],
+                    np.where(
+                        alt_len[:, j] >= span, best[:, j] + 2 * scale + 1, unreachable
+                    ),
+                )
+
+    dp, chunks = np.divmod(best[:, length], scale)
+    return 2 * chunks - dp, dp - chunks
+
+
 def _run_and_motif_stats(
     bits: np.ndarray,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
     """Vectorized ``(alts, max_run, rep_motifs, alt_motifs)`` for every row of
     ``bits`` (an ``(N, L)`` array). Verified bit-exact against
-    ``common.n_switches`` / ``max_run_length`` / ``parse_motifs`` for every
-    sequence of length 1-14."""
+    ``common.n_switches`` / ``max_run_length`` / ``parse_motifs`` (the minimal-DP
+    parse) for every sequence of length 1-14."""
     n_rows, length = bits.shape
     if length == 1:
         alts = np.zeros(n_rows, dtype=np.int64)
@@ -102,28 +149,7 @@ def _run_and_motif_stats(
         best = np.maximum(best, cur)
     max_run = best
 
-    # Falk & Konold motifs via a boundary mask. e[:, i] is True iff there is a run
-    # boundary immediately before position i (e[:, 0] and e[:, length] are the
-    # sequence's own edges, always boundaries). x[:, i] is True iff position i is an
-    # isolated (length-1) run: boundaries on both sides. `starts` marks the first
-    # position of a maximal run of consecutive singleton runs; `ge2` marks those
-    # stretches with >= 2 singleton runs (one alternation motif each, per Falk &
-    # Konold's parse — see common.parse_motifs).
-    e = np.ones((n_rows, length + 1), dtype=bool)
-    e[:, 1:length] = b
-    x = e[:, :length] & e[:, 1:]
-    xl = np.zeros_like(x)
-    xl[:, 1:] = x[:, :-1]
-    xr = np.zeros_like(x)
-    xr[:, :-1] = x[:, 1:]
-    starts = x & ~xl
-    ge2 = starts & xr
-
-    n_runs = 1 + alts
-    alt_motifs = ge2.sum(axis=1).astype(np.int64)
-    rep_motifs = (
-        (n_runs - x.sum(axis=1)) + (starts.sum(axis=1) - alt_motifs)
-    ).astype(np.int64)
+    rep_motifs, alt_motifs = _motif_stats(bits)
     return alts, max_run, rep_motifs, alt_motifs
 
 
