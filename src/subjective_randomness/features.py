@@ -99,8 +99,10 @@ def parse_motifs(seq: str) -> tuple[int, int]:
     XX|XOXO, DP 3). DP ties are broken toward the fewest chunks (the most
     compressed description), which makes (n1, n2) unique. For example
     HHTTHTHT -> {HH, TT} repetition + {HTHT} alternation -> (2, 1), DP = 4;
-    HTHHTH -> {HTH, HTH} -> (0, 2), DP = 4. Mirrors the model-family helper of
-    the same name in ``model_families/common.py``.
+    HTHHTH -> {HTH, HTH} -> (0, 2), DP = 4. The same algorithm as the
+    model-family helper of the same name in ``model_families/common.py``,
+    deliberately duplicated so this module stays importable without that
+    package.
     """
     s = seq.strip().upper()
     n = len(s)

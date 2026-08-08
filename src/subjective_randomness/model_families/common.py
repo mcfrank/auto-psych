@@ -122,33 +122,28 @@ def _max_run(seq: str) -> int:
 
 
 def _parse_motifs(seq: str) -> Tuple[int, int]:
-    run_lengths = []
-    cur = 1
-    for a, b in zip(seq, seq[1:]):
-        if a == b:
-            cur += 1
-        else:
-            run_lengths.append(cur)
-            cur = 1
-    run_lengths.append(cur)
+    n = len(seq)
 
-    rep_motifs = 0
-    alt_motifs = 0
-    i = 0
-    n_runs = len(run_lengths)
-    while i < n_runs:
-        if run_lengths[i] == 1:
-            j = i
-            while j < n_runs and run_lengths[j] == 1:
-                j += 1
-            if j - i >= 2:
-                alt_motifs += 1
+    # best[i] = lexicographically minimal (DP cost, chunk count) over all
+    # partitions of seq[:i] into constant-run chunks (cost 1) and strictly
+    # alternating chunks of length >= 2 (cost 2).
+    unreachable = (n * 2 + 1, n + 1)
+    best = [(0, 0)] + [unreachable] * n
+    for i in range(1, n + 1):
+        for j in range(i - 1, -1, -1):
+            chunk = seq[j:i]
+            if all(c == chunk[0] for c in chunk):
+                cost = 1
+            elif all(a != b for a, b in zip(chunk, chunk[1:])):
+                cost = 2
             else:
-                rep_motifs += 1
-            i = j
-        else:
-            rep_motifs += 1
-            i += 1
+                continue
+            candidate = (best[j][0] + cost, best[j][1] + 1)
+            if candidate < best[i]:
+                best[i] = candidate
+    dp, chunks = best[n]
+    rep_motifs = 2 * chunks - dp
+    alt_motifs = dp - chunks
     return rep_motifs, alt_motifs
 
 
@@ -210,11 +205,18 @@ def max_run_norm(seq: str) -> float:
 def parse_motifs(seq: str) -> Tuple[int, int]:
     """Parse an H/T sequence into Falk & Konold (1997) motifs.
 
-    Returns ``(rep_motifs, alt_motifs)`` — n1 (repetition motifs: maximal
-    constant runs) and n2 (alternation motifs: maximal alternating sub-sequences
-    of length >= 2) of the canonical minimal-description parse used by the
-    statistical-inference model (Griffiths et al. 2018). Mirrors the featurizer
-    helper of the same name; DP = n1 + 2*n2.
+    Returns ``(rep_motifs, alt_motifs)`` — n1 (repetition motifs: constant-run
+    chunks) and n2 (alternation motifs: strictly alternating chunks of length
+    >= 2) of the Difficulty Predictor parse, for which DP = n1 + 2*n2. Falk &
+    Konold (1997, p. 308) define the parse as the partition of the sequence
+    into such chunks that "achieve[s] the lowest possible number" — chunk
+    boundaries need not respect run boundaries (their example: XXXOXO ->
+    XX|XOXO, DP 3). DP ties are broken toward the fewest chunks (the most
+    compressed description), which makes (n1, n2) unique. For example
+    HHTTHTHT -> {HH, TT} repetition + {HTHT} alternation -> (2, 1), DP = 4;
+    HTHHTH -> {HTH, HTH} -> (0, 2), DP = 4. The same algorithm as the
+    featurizer helper of the same name in ``features.py``, deliberately
+    duplicated so that module stays importable without this package.
     """
     seq = clean_sequence(seq)
     return _parse_motifs(seq)
