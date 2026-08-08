@@ -285,7 +285,12 @@ def _drive_experiment_with_llm(
         )
         user_msg = "\n".join(context_parts)
         try:
-            response = invoke_llm(system=steering_prompt, user=user_msg, llm=llm)
+            response = invoke_llm(
+                system=steering_prompt,
+                user=user_msg,
+                llm=llm,
+                source="browser_steering",
+            )
         except Exception as exc:
             print(f"  [LLM steering error] {exc}", file=sys.stderr, flush=True)
             (logs_dir / "llm_steering_error.txt").write_text(str(exc), encoding="utf-8")

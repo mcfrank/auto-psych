@@ -84,18 +84,22 @@ def test_annotate_drops_model_that_cannot_bind_to_stimulus(
 ):
     """A model needing a non-stimulus column (participant_id) is screened out of
     the EIG set — loudly — instead of crashing the whole annotation; the EIG runs
-    over the remaining, stimulus-predictable models. EIG is stubbed so the screen
-    (a real load + make_stim_data bind check) is what's exercised, not sampling."""
+    over the remaining, stimulus-predictable models. The batched prior-predictive
+    pass is stubbed so the screen (a real load + make_stim_data bind check) is
+    what's exercised, not sampling."""
+    import numpy as np
+
     models_dir = _seed_with_participant_model(tmp_path)
 
     seen: dict = {}
 
-    def fake_eig(feature_row, model_names, models_dir, **kwargs):
+    def fake_batch(model_names, models_dir, rows, **kwargs):
         seen["names"] = list(model_names)
-        return 0.5
+        # Distinct means -> a known EIG: 1 - H_b(0.8) = 0.278072 bits.
+        return {m: np.array([p] * len(rows)) for m, p in zip(model_names, (0.8, 0.2))}
 
     monkeypatch.setattr(
-        "src.models.pymc_inference.expected_information_gain_prior_pymc", fake_eig
+        "src.models.pymc_inference.prior_predict_p_left_batch", fake_batch
     )
 
     out = eig_mod.annotate(
@@ -104,7 +108,7 @@ def test_annotate_drops_model_that_cannot_bind_to_stimulus(
         featurize_path=FEATURIZE,
     )
 
-    assert out[0]["eig"] == 0.5
+    assert out[0]["eig"] == pytest.approx(0.278072)
     # The participant-requiring model was screened out before EIG; the others stay.
     assert "participant_re" not in seen["names"]
     assert "bayesian_fair_coin" in seen["names"]
@@ -166,6 +170,126 @@ def test_annotate_featurizes_so_models_can_read_columns(tmp_path):
         candidates, models_dir, featurize_path=FEATURIZE, n_samples=100
     )
     assert out[0]["eig"] >= 0.0
+
+
+def test_exhaustive_design_selects_joint_eig_set(tmp_path):
+    """--exhaustive mode: enumerate the pair universe, score under the PyMC
+    models, and greedily select the max-joint-EIG set — no candidates file and
+    no agent-conjectured stimuli involved."""
+    import json
+
+    models_dir = _seed(tmp_path)
+    out = tmp_path / "stimuli.json"
+    args = eig_mod.Args(
+        candidates=None,
+        models_dir=models_dir,
+        featurize=FEATURIZE,
+        out=out,
+        exhaustive=True,
+        lengths=(3, 4),
+        select=5,
+        n_samples=25,
+        n_scenarios=300,
+    )
+    eig_mod.main(args)
+
+    stimuli = json.loads(out.read_text(encoding="utf-8"))
+    assert len(stimuli) == 5
+    keys = set()
+    for rank, item in enumerate(stimuli, start=1):
+        assert set("HT") >= set(item["sequence_a"]) and len(item["sequence_a"]) in (3, 4)
+        assert set("HT") >= set(item["sequence_b"]) and len(item["sequence_b"]) in (3, 4)
+        assert isinstance(item["eig"], float) and item["eig"] >= 0.0
+        assert item["selection_rank"] == rank
+        assert 0.0 <= item["joint_eig_bits"] <= 1.0 + 1e-9  # 2 models -> <= 1 bit
+        keys.add((item["sequence_a"], item["sequence_b"]))
+    assert len(keys) == 5
+    # Joint EIG grows along the greedy order.
+    assert stimuli[-1]["joint_eig_bits"] >= stimuli[0]["joint_eig_bits"] - 0.02
+
+    # Deterministic: rerunning produces the same design.
+    out2 = tmp_path / "stimuli2.json"
+    eig_mod.main(
+        eig_mod.Args(
+            candidates=None, models_dir=models_dir, featurize=FEATURIZE, out=out2,
+            exhaustive=True, lengths=(3, 4), select=5, n_samples=25, n_scenarios=300,
+        )
+    )
+    assert json.loads(out2.read_text(encoding="utf-8")) == stimuli
+
+
+def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
+    """With a responses CSV, exhaustive design scores the pool from each
+    model's *posterior*-predictive p_left (fit on those responses) instead of
+    the prior — no pure-Python twin involved."""
+    import json
+
+    models_dir = _seed(tmp_path)
+    responses = FIXTURE_DIR / "responses.csv"
+    cache = tmp_path / "fit_cache"
+
+    stimuli = eig_mod.design_exhaustive(
+        models_dir,
+        featurize_path=FEATURIZE,
+        lengths=(3, 4),
+        n_select=4,
+        n_samples=50,
+        n_scenarios=300,
+        responses_csv=responses,
+        fit_cache_dir=cache,
+        fit_draws=100,
+        fit_tune=100,
+        fit_chains=2,
+    )
+
+    assert len(stimuli) == 4
+    for rank, item in enumerate(stimuli, start=1):
+        assert isinstance(item["eig"], float) and item["eig"] >= 0.0
+        assert item["selection_rank"] == rank
+    # The models were actually fitted (cache holds one posterior per model).
+    assert len(list(cache.glob("*.nc"))) == 2
+    # Round-trips through JSON like the design stage requires.
+    json.dumps(stimuli)
+
+
+def test_exhaustive_design_posterior_mode_missing_responses_fails_loudly(tmp_path):
+    models_dir = _seed(tmp_path)
+    with pytest.raises(FileNotFoundError, match="responses"):
+        eig_mod.design_exhaustive(
+            models_dir,
+            featurize_path=FEATURIZE,
+            lengths=(3, 4),
+            n_select=4,
+            responses_csv=tmp_path / "nope.csv",
+        )
+
+
+def test_exhaustive_mode_argument_validation(tmp_path):
+    models_dir = _seed(tmp_path)
+    # --exhaustive needs --select.
+    with pytest.raises(SystemExit):
+        eig_mod.main(
+            eig_mod.Args(candidates=None, models_dir=models_dir, exhaustive=True)
+        )
+    # Legacy mode needs --candidates.
+    with pytest.raises(SystemExit):
+        eig_mod.main(eig_mod.Args(candidates=None, models_dir=models_dir))
+    # The two modes are mutually exclusive.
+    with pytest.raises(SystemExit):
+        eig_mod.main(
+            eig_mod.Args(
+                candidates=tmp_path / "candidates.json", models_dir=models_dir,
+                exhaustive=True, select=5,
+            )
+        )
+    # --responses (posterior design) only makes sense with --exhaustive.
+    with pytest.raises(SystemExit):
+        eig_mod.main(
+            eig_mod.Args(
+                candidates=tmp_path / "candidates.json", models_dir=models_dir,
+                responses=FIXTURE_DIR / "responses.csv",
+            )
+        )
 
 
 def test_missing_manifest_raises(tmp_path):

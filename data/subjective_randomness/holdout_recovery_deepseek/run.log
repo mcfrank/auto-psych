@@ -1,0 +1,313 @@
+[holdout] Ground truth: local_representativeness -> /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_deepseek/holdout_runs/local_representativeness
+  [agent] Spawning 2_design (log: /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_deepseek/holdout_runs/local_representativeness/experiment1/logs/2_design.jsonl)
+  [step] tokens=10484  cost=$0.0015
+  [step] tokens=11651  cost=$0.0005
+  [step] tokens=15376  cost=$0.0009
+  [step] tokens=22668  cost=$0.0016
+  [step] tokens=23657  cost=$0.0008
+  … Registry has no model weights (`theories: {}`), so the prior over models is uniform — experiment 1. Let me check the fea
+  [step] tokens=31384  cost=$0.0021
+  … Now I understand the models. Key functional distinctions:
+  [step] tokens=33893  cost=$0.0016
+  [step] tokens=36454  cost=$0.0018
+  [step] tokens=36583  cost=$0.0013
+  … Now run EIG in the foreground, waiting for completion:
+  [step] tokens=36947  cost=$0.0011
+  … EIG completed: 32 stimuli selected, EIG range 0.358–0.407 bits. Let me verify the outputs.
+  [step] tokens=37387  cost=$0.0012
+  … All checks pass. Now writing the design rationale.
+  [step] tokens=38642  cost=$0.0014
+  [step] tokens=38781  cost=$0.0012
+  … Design complete. Self-validation checklist:
+  [step] tokens=39227  cost=$0.0012
+  [agent] 2_design completed.
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [ideal_p, ideal_alt, w_p, w_alt, base_typ, penalty_power]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 119 seconds.
+There were 1968 divergences after tuning. Increase `target_accept` or reparameterize.
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+  [warn] minkowski_accumulated_typicality: 1968 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+  [warn] minkowski_accumulated_typicality: max R-hat=1.433 (>1.01); chains may not have converged.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:1042: RuntimeWarning: overflow encountered in exp
+  weights = 1 / np.exp(len_scale - len_scale[:, None]).sum(axis=1)
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [theta_alt, theta_imb, alt_weight, asym, base_evidence, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 82 seconds.
+There were 12 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] evidence_accumulation_messy_prototype: 12 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [theta_alt, theta_imb, alt_weight, asym, base_evidence, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 74 seconds.
+There were 8 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] evidence_accumulation_per_run: 8 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [delta, alpha, weights, gamma, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 648 seconds.
+There were 7 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] artificial_balance_diagnosticity: 7 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:1042: RuntimeWarning: overflow encountered in exp
+  weights = 1 / np.exp(len_scale - len_scale[:, None]).sum(axis=1)
+  [critique] critiquing incumbent 'minkowski_accumulated_typicality'
+Sampling: [response]
+  [step] tokens=10640  cost=$0.0015
+  [step] tokens=12895  cost=$0.0007
+  … Now I understand the model. It uses only `n`, `h` (→ proportion `p`), and `alts` (→ alternation rate). It **ignores** ev
+  [step] tokens=20808  cost=$0.0022
+  … Wrote 8 test statistics in `test_stats/`, each targeting a structural feature the incumbent's mechanism ignores. Each is
+  [step] tokens=21184  cost=$0.0012
+  [critique] PPC: 0/8 statistics show a significant discrepancy
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [ideal_p, ideal_alt, w_p, w_alt, base_typ, penalty_power, length_power]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 145 seconds.
+There were 330 divergences after tuning. Increase `target_accept` or reparameterize.
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+The effective sample size per chain is smaller than 100 for some parameters.  A higher number is needed for reliable rhat and ess computation. See https://arxiv.org/abs/1903.08008 for details
+  [warn] typicality_length_power: 330 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+  [warn] typicality_length_power: max R-hat=1.045 (>1.01); chains may not have converged.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+  [step] tokens=13304  cost=$0.0019
+  [step] tokens=13486  cost=$0.0020
+  [step] tokens=14282  cost=$0.0006
+  [step] tokens=14461  cost=$0.0005
+  … Let me look at the existing model implementations to understand patterns and the data generating setup.
+  [step] tokens=16533  cost=$0.0010
+  … Now I understand the incumbent. I'll refine the best model's accumulation mechanism with a different functional form — a
+  [step] tokens=17409  cost=$0.0009
+  [step] tokens=17353  cost=$0.0007
+  [step] tokens=17540  cost=$0.0006
+  … I'll start by reviewing the context files and data to design a genuinely distinct hypothesis.
+  [step] tokens=16453  cost=$0.0028
+  … Now let me examine the data to ground the hypothesis in what actually predicts choices.
+  [step] tokens=23470  cost=$0.0017
+  [step] tokens=18651  cost=$0.0008
+  [step] tokens=17314  cost=$0.0010
+  [step] tokens=17575  cost=$0.0006
+  [step] tokens=18944  cost=$0.0007
+  … All three files written and valid. The candidate, `typicality_length_power`, is a single-mechanism refinement of the win
+  [step] tokens=19077  cost=$0.0006
+  … The incumbent fits all statistics, so I'll propose a genuinely different process family: **compression / Köolmogorov-com
+  [step] tokens=19915  cost=$0.0009
+  [step] tokens=20048  cost=$0.0007
+  [step] tokens=25160  cost=$0.0014
+  [step] tokens=20822  cost=$0.0008
+  … Now let me verify the model loads and has finite logp:
+  [step] tokens=21088  cost=$0.0007
+  [step] tokens=21304  cost=$0.0007
+  … The data confirms imbalance (`-0.296`) and alternation (`+0.247`) drive choices — both already captured by the incumbent
+  [step] tokens=25483  cost=$0.0009
+  [step] tokens=25617  cost=$0.0008
+  [step] tokens=26184  cost=$0.0009
+  [step] tokens=26478  cost=$0.0009
+  … All three files written and verified; the model imports with `chose_left` recognized as the response node.
+  [step] tokens=26658  cost=$0.0008
+  … Model loads, exposes `chose_left`, and has finite logp + gradient. Let me remove an unused stray line I left in:
+  [step] tokens=21555  cost=$0.0007
+  … All three files are in place and verified.
+  [step] tokens=21715  cost=$0.0007
+  [reject] typicality_length_power: predicts like existing model 'minkowski_accumulated_typicality' (p_left RMSE 0.0071 < 0.02) — a near-duplicate, not a new hypothesis.
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [kappa]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 2 seconds.
+There were 21 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] runlength_encoding_complexity: 21 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [sensitivity, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 2 seconds.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:1042: RuntimeWarning: overflow encountered in exp
+  weights = 1 / np.exp(len_scale - len_scale[:, None]).sum(axis=1)
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:1042: RuntimeWarning: overflow encountered in exp
+  weights = 1 / np.exp(len_scale - len_scale[:, None]).sum(axis=1)
+  [prune] runlength_encoding_complexity: elpd_diff 69.3 > 2.0·dse (11.7) and stacking weight 0.0000 < 0.01 — moved to models/pruned/.
+  [prune] longest_streak_avoidance: elpd_diff 47.6 > 2.0·dse (10.3) and stacking weight 0.0008 < 0.01 — moved to models/pruned/.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:1042: RuntimeWarning: overflow encountered in exp
+  weights = 1 / np.exp(len_scale - len_scale[:, None]).sum(axis=1)
+  [critique] critiquing incumbent 'minkowski_accumulated_typicality'
+Sampling: [response]
+  [step] tokens=10667  cost=$0.0015
+  [step] tokens=11950  cost=$0.0005
+  [step] tokens=17817  cost=$0.0016
+  [step] tokens=17983  cost=$0.0008
+  [step] tokens=18207  cost=$0.0006
+  … The incumbent uses only `n`, `h` (→`p`), and `alts` (→`alt_rate`); it is order-free and linear in length, ignoring `max_
+  [step] tokens=23419  cost=$0.0016
+  [step] tokens=23630  cost=$0.0010
+  … Wrote 8 test statistics targeting the incumbent's blind spots and mechanism forms.
+  [step] tokens=23953  cost=$0.0008
+  [critique] PPC: 0/8 statistics show a significant discrepancy
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [ideal_p, ideal_alt, w_p, w_alt, base_typ, penalty_power]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 73 seconds.
+There were 45 divergences after tuning. Increase `target_accept` or reparameterize.
+The rhat statistic is larger than 1.01 for some parameters. This indicates problems during sampling. See https://arxiv.org/abs/1903.08008 for details
+  [warn] recency_window_accumulated_typicality: 45 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/diagnostics.py:596: RuntimeWarning: invalid value encountered in scalar divide
+  (between_chain_variance / within_chain_variance + num_samples - 1) / (num_samples)
+  [warn] recency_window_accumulated_typicality: max R-hat=1.015 (>1.01); chains may not have converged.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] recency_window_accumulated_typicality: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [tau, beta]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 4 seconds.
+There were 2 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] alternation_surprise_accumulator: 2 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [alpha, beta]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 4 seconds.
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:1042: RuntimeWarning: overflow encountered in exp
+  weights = 1 / np.exp(len_scale - len_scale[:, None]).sum(axis=1)
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] recency_window_accumulated_typicality: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:1042: RuntimeWarning: overflow encountered in exp
+  weights = 1 / np.exp(len_scale - len_scale[:, None]).sum(axis=1)
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] PSIS-LOO for 'recency_window_accumulated_typicality' is unreliable (many high Pareto-k points); its ELPD-LOO and any posterior built from it may be off.
+  [oc] [91m[1mError: [0mUnexpected error
+  [oc] database is locked
+  [oc] [91m[1mError: [0mUnexpected error
+  [oc] database is locked
+  [oc] opencode session store locked (attempt 1); retrying in 2s
+  [oc] opencode session store locked (attempt 1); retrying in 2s
+  [step] tokens=13271  cost=$0.0019
+  [step] tokens=14222  cost=$0.0006
+  [step] tokens=20281  cost=$0.0013
+  … The incumbent `minkowski_accumulated_typicality` passes all critiques and uses only global aggregates (`n`, `h`, `alts`)
+  [step] tokens=24865  cost=$0.0016
+  [step] tokens=16047  cost=$0.0027
+  [step] tokens=16544  cost=$0.0009
+  [step] tokens=25000  cost=$0.0010
+  [step] tokens=26261  cost=$0.0011
+  … Now let me verify all three files and that the model loads:
+  [step] tokens=26556  cost=$0.0010
+  [step] tokens=26819  cost=$0.0008
+  [step] tokens=27038  cost=$0.0008
+  … All three files written and the model loads correctly through the pipeline (`observed: chose_left`).
+  [step] tokens=27168  cost=$0.0008
+  … A narrow stimulus set (runs + single alternations, max length 8) dominated by a near-perfect incumbent. All five existin
+  [step] tokens=19336  cost=$0.0013
+  [step] tokens=20192  cost=$0.0011
+  … Now verify with the self-check:
+  [step] tokens=20426  cost=$0.0007
+  [step] tokens=20664  cost=$0.0007
+  … All three files written and the self-check passes (`observed: chose_left`, featurizer columns registered, `p_left` finit
+  [step] tokens=21001  cost=$0.0007
+  … I'll read the referenced files, then produce the three deliverables.
+  [step] tokens=21967  cost=$0.0043
+  … The critique shows the incumbent fits all checks, so I'll propose a genuinely *different* process family — an online/seq
+  [step] tokens=25183  cost=$0.0021
+  … Now the model name and implementation:
+  [step] tokens=26840  cost=$0.0012
+  [step] tokens=27859  cost=$0.0012
+  … Now verifying the model loads and exposes the response container:
+  [step] tokens=28231  cost=$0.0010
+  … Validated. Generated three files:
+  [step] tokens=28394  cost=$0.0009
+  [prune] alternation_surprise_accumulator: elpd_diff 62.2 > 2.0·dse (11.6) and stacking weight 0.0023 < 0.01 — moved to models/pruned/.
+  [prune] recency_weighted_repetition: elpd_diff 22.9 > 2.0·dse (7.6) and stacking weight 0.0000 < 0.01 — moved to models/pruned/.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:1042: RuntimeWarning: overflow encountered in exp
+  weights = 1 / np.exp(len_scale - len_scale[:, None]).sum(axis=1)
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] recency_window_accumulated_typicality: PSIS-LOO is unreliable (many high Pareto-k points); its ELPD-LOO may be inaccurate.
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:1042: RuntimeWarning: overflow encountered in exp
+  weights = 1 / np.exp(len_scale - len_scale[:, None]).sum(axis=1)
+/Users/ben/Documents/auto-psych/.venv/lib/python3.11/site-packages/arviz/stats/stats.py:782: UserWarning: Estimated shape parameter of Pareto distribution is greater than 0.70 for one or more samples. You should consider using a more robust model, this is because importance sampling is less likely to work well if the marginal posterior and LOO posterior are very different. This is more likely to happen with a non-robust model and highly influential observations.
+  warnings.warn(
+  [warn] PSIS-LOO for 'recency_window_accumulated_typicality' is unreliable (many high Pareto-k points); its ELPD-LOO and any posterior built from it may be off.
+  [inner-loop] Best model 'minkowski_accumulated_typicality' is already in cognitive_models — nothing to export.
+  [registry] Recorded inner-loop stacking weights in model_registry.yaml
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 4 seconds.
+There were 6 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] falk_konold_dp: 6 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [short_weight, mid_share, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 10 seconds.
+Sampling: []
+Initializing NUTS using jitter+adapt_diag...
+Sequential sampling (4 chains in 1 job)
+NUTS: [delta, alpha, beta, side_bias]
+Sampling 4 chains for 1_000 tune and 2_000 draw iterations (4_000 + 8_000 draws total) took 198 seconds.
+There were 10 divergences after tuning. Increase `target_accept` or reparameterize.
+  [warn] motif_hmm: 10 divergence(s) during sampling; the posterior may be biased — treat its ELPD-LOO with caution.
+Sampling: []
+  [tokens] holdout recovery: 1,708,331 tokens over 9 LLM call(s)  cost=$0.09
+  [tokens]   input=226,698 output=62,223 reasoning=0 cache_read=1,419,410 cache_write=0
+  [tokens]   inner:candidate: 1,082,044 tokens (6 call(s))
+  [tokens]   inner:critique: 213,153 tokens (2 call(s))
+  [tokens]   outer:2_design: 413,134 tokens (1 call(s))
+
+Wrote holdout-recovery result to /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_deepseek/holdout.json
+  local_representativeness: 3 steps, final r=-0.434 (best=minkowski_accumulated_typicality, 129763 eval stimuli, 32 dropped) leakage flags: gt-param-mention
+Wrote tidy trajectory CSV to /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_deepseek/holdout.csv
+Wrote trajectory figure to /Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_deepseek/holdout.png

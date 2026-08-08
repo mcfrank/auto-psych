@@ -47,6 +47,7 @@ from src.pipelines.outer_loop.orchestrator import (
     validate_cc_output,
     write_context,
 )
+from src.runtime.token_usage import start_usage_log, write_usage_report
 from src.subjective_randomness.config import resolve_path
 from src.subjective_randomness.model_recovery import (
     feature_rows,
@@ -100,6 +101,7 @@ def _spawn_with_repair(
     allowed_dirs: List[Path],
     agent_timeout_sec: int,
     backend: Optional[str],
+    agent_model: Optional[str] = None,
     prompt_key: Optional[str] = None,
     post_spawn: Optional[Callable[[], None]] = None,
     max_repairs: int = 2,
@@ -123,6 +125,7 @@ def _spawn_with_repair(
             backend=backend,
             prompt_key=prompt_key,
             repair_feedback=repair_feedback,
+            model=agent_model,
         )
         if not ok:
             print(
@@ -245,6 +248,7 @@ def run_holdout_experiments(
     seed: int = 0,
     agent_timeout_sec: int = 900,
     backend: Optional[str] = None,
+    agent_model: Optional[str] = None,
     resume: bool = False,
     gt_models_dir: Optional[Path] = None,
 ) -> List[Path]:
@@ -341,6 +345,7 @@ def run_holdout_experiments(
                     allowed_dirs=allowed_dirs,
                     agent_timeout_sec=agent_timeout_sec,
                     backend=backend,
+                    agent_model=agent_model,
                     prompt_key="2_design",
                     post_spawn=lambda: _ensure_design_stimuli(exp_dir, project_id),
                 )
@@ -378,6 +383,7 @@ def run_holdout_experiments(
                 candidate_count=candidate_count,
                 fit_kwargs=dict(fit_kwargs),
                 backend=backend,
+                agent_model=agent_model,
                 cache_dir=cache_dir,
                 project_id=project_id,
                 agent_timeout_sec=agent_timeout_sec,
@@ -1049,6 +1055,7 @@ def run_holdout_recovery_from_config(
     seed_override: Optional[int] = None,
     cache_dir: Optional[Path] = None,
     backend_override: Optional[str] = None,
+    agent_model_override: Optional[str] = None,
     agent_timeout_override: Optional[int] = None,
     resume: bool = False,
     gt_models_dir: Optional[Path] = None,
@@ -1134,6 +1141,7 @@ def run_holdout_recovery_from_config(
     agent_cfg = dict(config.get("agent", {}))
     agent_timeout_sec = agent_timeout_override or int(agent_cfg.get("timeout_sec", 900))
     backend = backend_override or agent_cfg.get("backend")
+    agent_model = agent_model_override or agent_cfg.get("model")
 
     fit_kwargs = {**dict(config.get("fit", {})), **dict(fit_overrides or {})}
 
@@ -1157,6 +1165,55 @@ def run_holdout_recovery_from_config(
     }
 
     results_root = Path(results_root)
+    # Track every LLM spend (design + inner-loop agents) across the whole
+    # recovery run. The report is written in a finally so an aborted run still
+    # accounts for the tokens it already used.
+    usage_marker = start_usage_log(results_root / "token_usage.jsonl")
+    try:
+        return _run_holdout_recovery_resolved(
+            gt_params_by_model,
+            results_root,
+            seed_models_dir=seed_models_dir,
+            gt_models_dir=gt_models_dir,
+            project_id=project_id,
+            n_experiments=n_experiments,
+            n_participants=n_participants,
+            inner_loop_iterations=inner_loop_iterations,
+            candidate_count=candidate_count,
+            fit_kwargs=fit_kwargs,
+            eval_pool=eval_pool,
+            seed=seed,
+            agent_timeout_sec=agent_timeout_sec,
+            backend=backend,
+            agent_model=agent_model,
+            cache_dir=cache_dir,
+            resume=resume,
+        )
+    finally:
+        write_usage_report(results_root, usage_marker, heading="holdout recovery")
+
+
+def _run_holdout_recovery_resolved(
+    gt_params_by_model: Dict[str, Dict[str, float]],
+    results_root: Path,
+    *,
+    seed_models_dir: Path,
+    gt_models_dir: Path,
+    project_id: str,
+    n_experiments: int,
+    n_participants: int,
+    inner_loop_iterations: int,
+    candidate_count: int,
+    fit_kwargs: Dict[str, Any],
+    eval_pool: Dict[str, Any],
+    seed: int,
+    agent_timeout_sec: int,
+    backend: Optional[str],
+    agent_model: Optional[str],
+    cache_dir: Optional[Path],
+    resume: bool,
+) -> Dict[str, Any]:
+    """The recovery loop proper, after all config resolution and validation."""
     # Every project seed model — the fitted-seed baseline for each ground truth
     # fits the *other* seed models (all of these except that GT).
     # Names only — the fitted-seed baseline fits these by MCMC, so no
@@ -1198,6 +1255,7 @@ def run_holdout_recovery_from_config(
             seed=seed,
             agent_timeout_sec=agent_timeout_sec,
             backend=backend,
+            agent_model=agent_model,
             resume=resume,
             gt_models_dir=gt_models_dir,
         )

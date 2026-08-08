@@ -1,0 +1,63 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "minkowski_accumulated_typicality",
+    "posteriors": {
+      "minkowski_accumulated_typicality": 0.99618,
+      "evidence_accumulation_messy_prototype": 0.000281,
+      "evidence_accumulation_per_run": 0.003328,
+      "artificial_balance_diagnosticity": 0.000211
+    },
+    "elpd_loo": {
+      "minkowski_accumulated_typicality": -816.2601,
+      "evidence_accumulation_messy_prototype": -824.2348,
+      "evidence_accumulation_per_run": -821.7617,
+      "artificial_balance_diagnosticity": -822.9179
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "minkowski_accumulated_typicality",
+    "posteriors": {
+      "minkowski_accumulated_typicality": 0.99618,
+      "evidence_accumulation_messy_prototype": 0.000281,
+      "evidence_accumulation_per_run": 0.003328,
+      "artificial_balance_diagnosticity": 0.000211
+    },
+    "elpd_loo": {
+      "minkowski_accumulated_typicality": -816.2601,
+      "evidence_accumulation_messy_prototype": -824.2348,
+      "evidence_accumulation_per_run": -821.7617,
+      "artificial_balance_diagnosticity": -822.9179
+    },
+    "pruned": [
+      "runlength_encoding_complexity",
+      "longest_streak_avoidance"
+    ]
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "minkowski_accumulated_typicality",
+    "posteriors": {
+      "minkowski_accumulated_typicality": 0.912363,
+      "evidence_accumulation_messy_prototype": 0.000257,
+      "evidence_accumulation_per_run": 0.003048,
+      "artificial_balance_diagnosticity": 0.000194,
+      "recency_window_accumulated_typicality": 0.084138
+    },
+    "elpd_loo": {
+      "minkowski_accumulated_typicality": -816.2601,
+      "evidence_accumulation_messy_prototype": -824.2348,
+      "evidence_accumulation_per_run": -821.7617,
+      "artificial_balance_diagnosticity": -822.9179,
+      "recency_window_accumulated_typicality": -817.3436
+    },
+    "pruned": [
+      "alternation_surprise_accumulator",
+      "recency_weighted_repetition"
+    ]
+  }
+]

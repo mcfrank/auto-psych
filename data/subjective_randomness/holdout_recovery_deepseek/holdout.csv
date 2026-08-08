@@ -1,0 +1,4 @@
+gt_model,experiment,step,iteration,global_step,best_model,pearson_r,rmse,pearson_r_bma,rmse_bma
+local_representativeness,1,0,,0,minkowski_accumulated_typicality,-0.4336198448502646,0.43406451960545195,-0.43181752011574276,0.43218416225154294
+local_representativeness,1,1,0,1,minkowski_accumulated_typicality,-0.4336198448502646,0.43406451960545195,-0.43181752011574276,0.43218416225154294
+local_representativeness,1,2,1,2,minkowski_accumulated_typicality,-0.4336198448502646,0.43406451960545195,-0.4206103791852049,0.41107926345993223

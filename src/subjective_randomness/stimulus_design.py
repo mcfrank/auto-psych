@@ -18,10 +18,11 @@ from __future__ import annotations
 import importlib
 import itertools
 import math
-import pkgutil
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
+import yaml
 
 # A predictor maps a stimulus ({"sequence_a", "sequence_b"}) to P(choose left).
 PredictFn = Callable[[Mapping[str, str]], float]
@@ -63,9 +64,26 @@ def generate_candidate_pool(
     rng = np.random.default_rng(seed)
     seen: set = set()
     pool: List[Dict[str, str]] = []
+    max_pairs_by_length = {
+        length: len(seqs) * (len(seqs) - 1) // 2
+        for length, seqs in sequences_by_length.items()
+    }
+    taken_by_length = {length: 0 for length in sequences_by_length}
     lengths_cycle = list(lengths)
     while len(pool) < n_pairs:
+        if not lengths_cycle:
+            raise RuntimeError(
+                "All lengths exhausted before reaching n_pairs; the total-pairs "
+                "feasibility check above should have caught this."
+            )
         length = lengths_cycle[len(pool) % len(lengths_cycle)]
+        # A short length can run out of distinct pairs before its round-robin
+        # share is met (length 4 has only 120); once exhausted, every further
+        # draw for it would be rejected forever, so hand its remaining slots to
+        # the other lengths.
+        if taken_by_length[length] == max_pairs_by_length[length]:
+            lengths_cycle.remove(length)
+            continue
         seqs = sequences_by_length[length]
         i, j = rng.integers(0, len(seqs), size=2)
         if i == j:
@@ -74,6 +92,7 @@ def generate_candidate_pool(
         if key in seen:
             continue
         seen.add(key)
+        taken_by_length[length] += 1
         pool.append({"sequence_a": key[0], "sequence_b": key[1]})
     return pool
 
@@ -391,14 +410,18 @@ def build_exhaustive_design(
 
 
 def default_model_family_names() -> List[str]:
-    """Names of the pure-Python reference model families (excludes ``common``)."""
-    import src.subjective_randomness.model_families as families_pkg
+    """Active seed-model names from the recovery registry manifest.
 
-    return sorted(
-        module.name
-        for module in pkgutil.iter_modules(families_pkg.__path__)
-        if module.name != "common"
+    The manifest (``pymc_model_families/models_manifest.yaml``) is the single
+    source of truth for the active seed set. Superseded family modules stay
+    importable for archival refits but are deliberately NOT picked up here —
+    enumerating the package directory would resurrect them.
+    """
+    manifest_path = (
+        Path(__file__).resolve().parent / "pymc_model_families" / "models_manifest.yaml"
     )
+    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    return [entry["name"] for entry in manifest["models"]]
 
 
 def _point_predictor(module: Any) -> PredictFn:

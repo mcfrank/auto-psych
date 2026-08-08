@@ -292,6 +292,7 @@ def spawn_cc_agent(
     backend: Optional[str] = None,
     prompt_key: Optional[str] = None,
     repair_feedback: Optional[str] = None,
+    model: Optional[str] = None,
 ) -> tuple[bool, str]:
     """
     Spawn a coding agent (Claude Code or opencode) for the given agent_key.
@@ -303,6 +304,8 @@ def spawn_cc_agent(
     Bash still runs from REPO_ROOT so python3 -m src.* imports work.
     Streams output to exp_dir/logs/<agent_key>.jsonl and prints live summaries.
     `backend` selects the agent CLI; None resolves via CODING_AGENT/default.
+    `model` overrides the backend's default agent model (verbatim, per-backend
+    format — e.g. opencode wants `provider/model`).
     Returns (success, final_result_text).
     """
     prompt_path = PROMPTS_DIR / f"{prompt_key or agent_key}.md"
@@ -339,6 +342,8 @@ def spawn_cc_agent(
         allowed_dirs=dirs,
         timeout_secs=timeout_secs,
         backend=backend,
+        model=model,
+        usage_label=f"outer:{agent_key}",
     )
     if success:
         print(f"  [agent] {agent_key} completed.", flush=True)
@@ -801,6 +806,7 @@ def run_inner_model_loop_programmatic(
     candidate_count: int,
     fit_kwargs: Optional[Dict[str, Any]] = None,
     backend: Optional[str] = None,
+    agent_model: Optional[str] = None,
     cache_dir: Optional[Path] = None,
     project_id: Optional[str] = None,
     agent_timeout_sec: int = 900,
@@ -882,6 +888,7 @@ def run_inner_model_loop_programmatic(
         cache_dir=cache_dir,
         agent_timeout_sec=agent_timeout_sec,
         backend=backend,
+        agent_model=agent_model,
         fit_kwargs=fit_kwargs,
         enable_critique=enable_critique,
         **extra,

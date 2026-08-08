@@ -20,7 +20,7 @@ def _stub(monkeypatch, validate_results):
 
     def fake_spawn(
         agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None,
-        prompt_key=None, repair_feedback=None,
+        prompt_key=None, repair_feedback=None, model=None,
     ):
         spawn_feedback.append(repair_feedback)
         return True, ""
@@ -82,7 +82,7 @@ def test_holdout_design_uses_human_experiment_prompt(tmp_path, monkeypatch):
 
     def fake_spawn(
         agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None,
-        prompt_key=None, repair_feedback=None,
+        prompt_key=None, repair_feedback=None, model=None,
     ):
         spawns.append((agent_key, prompt_key))
         return True, ""

@@ -70,9 +70,17 @@ def load_prompt_for_run(
 
 
 def invoke_llm(
-    system: str, user: str, llm: Any = None, timeout: int | None = None
+    system: str,
+    user: str,
+    llm: Any = None,
+    timeout: int | None = None,
+    source: str = "llm",
 ) -> str:
-    """Send a system + user message pair to the LLM and normalize the reply to text."""
+    """Send a system + user message pair to the LLM and normalize the reply to text.
+
+    Records the call's token usage to :mod:`src.runtime.token_usage` under
+    ``source`` (e.g. ``"participant"``, ``"browser_steering"``).
+    """
     from langchain_core.messages import HumanMessage, SystemMessage
 
     if llm is None:
@@ -82,8 +90,45 @@ def invoke_llm(
     if timeout is not None:
         invoke_kwargs["timeout"] = timeout
     response = llm.invoke(messages, **invoke_kwargs)
+    _record_llm_usage(response, llm=llm, source=source)
     content = response.content if hasattr(response, "content") else response
     return _content_to_str(content)
+
+
+def _record_llm_usage(response: Any, *, llm: Any, source: str) -> None:
+    """Record a LangChain reply's ``usage_metadata`` to the run's usage log.
+
+    LangChain reports cache reads and reasoning as SUBSETS of input/output
+    (``*_token_details``); the usage log wants disjoint components, so they are
+    split out here. A reply without usage metadata is recorded as
+    ``usage_missing`` — the spend happened but is unknown — with a loud warning
+    rather than a crash, so one flaky reply cannot abort a whole run.
+    """
+    from src.runtime.token_usage import record_usage
+
+    model = getattr(llm, "model", None)
+    usage = getattr(response, "usage_metadata", None)
+    if not usage:
+        print(
+            f"  [tokens] WARNING: LLM reply for {source!r} carried no "
+            f"usage_metadata; this call's spend is uncounted",
+            flush=True,
+        )
+        record_usage(
+            source=source, backend="langchain", model=model, usage_missing=True
+        )
+        return
+    cache_read = int(usage.get("input_token_details", {}).get("cache_read", 0))
+    reasoning = int(usage.get("output_token_details", {}).get("reasoning", 0))
+    record_usage(
+        source=source,
+        backend="langchain",
+        model=model,
+        input_tokens=int(usage.get("input_tokens", 0)) - cache_read,
+        output_tokens=int(usage.get("output_tokens", 0)) - reasoning,
+        reasoning_tokens=reasoning,
+        cache_read_tokens=cache_read,
+    )
 
 
 def _read_secret(key: str) -> str | None:

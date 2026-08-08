@@ -1,10 +1,13 @@
-"""PyMC adapter for the Hahn & Warren (2009) finite-window model family.
+"""PyMC adapter for the finite-window longest-run typicality model family.
 
-Randomness peaks when the longest run is typical of a fair coin viewed through a
-limited memory window: e = log2(min(n, window)). Runs longer than e are penalised
-(the streak-aversion effect); runs shorter than e are penalised by the smaller
-``over_alt_penalty`` weight. See the pure-Python twin in
-``model_families/window_typicality.py`` for the full rationale.
+Loosely inspired by Hahn & Warren (2009): randomness peaks when the longest run
+is typical of a fair coin viewed through a limited memory window,
+e = log2(min(n, window)). Runs longer than e are penalised (streak aversion);
+runs shorter than e are penalised by the smaller ``over_alt_penalty`` weight.
+This is a heuristic adaptation, NOT Hahn & Warren's own occurrence-probability
+analysis — see ``finite_experience_occurrence`` for the faithful model, and the
+pure-Python twin in ``model_families/window_typicality.py`` for the full
+rationale and fidelity notes.
 """
 
 import numpy as np

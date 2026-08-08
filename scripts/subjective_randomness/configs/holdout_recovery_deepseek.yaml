@@ -1,0 +1,42 @@
+# Holdout recovery with the literature-faithful registry models as ground
+# truths. Each GT (falk_konold_dp, motif_hmm, finite_experience_occurrence,
+# local_representativeness) generates fixed-param synthetic data; the agentic
+# loop is seeded with the live project pool (the hero-run replicate winners),
+# so every GT here is out-of-pool by construction — the question is whether
+# the loop discovers a model that approximates the faithful theory.
+project_id: subjective_randomness
+# The GT/baseline registry: the four literature-faithful models, all with
+# pure-Python family twins for data generation.
+seed_models_dir: src/subjective_randomness/pymc_model_families
+
+# null params -> the family's DEFAULT_PARAMS.
+gt_models:
+  falk_konold_dp:
+  motif_hmm:
+  finite_experience_occurrence:
+  local_representativeness:
+
+n_experiments: 3
+n_participants: 40  # match the live human experiment (full_run.yaml: 40/experiment)
+seed: 7
+
+inner_loop:
+  max_iterations: 2
+  candidate_count: 3
+
+agent:
+  timeout_sec: 900
+  backend: opencode # null -> CODING_AGENT env var, then "claude"
+  model: fireworks-ai/accounts/fireworks/models/deepseek-v4-flash-0731
+
+# Held-out evaluation stimuli (see holdout_recovery.yaml for the rationale).
+eval_pool:
+  exhaustive: true
+  lengths: [1, 2, 3, 4, 5, 6, 7, 8]
+  predict_max_draws: 500
+  min_remaining: 100
+
+fit:
+  draws: 2000
+  tune: 1000
+  chains: 4

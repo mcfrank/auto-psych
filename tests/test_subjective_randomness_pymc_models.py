@@ -58,16 +58,43 @@ EXPECTED_INPUTS = {
         "max_run_b",
         "chose_left",
     },
+    "falk_konold_dp": {
+        "rep_motifs_a",
+        "alt_motifs_a",
+        "rep_motifs_b",
+        "alt_motifs_b",
+        "chose_left",
+    },
+    "motif_hmm": {
+        "n_a",
+        "n_b",
+        *{f"sym{i}_{side}" for i in range(1, 9) for side in ("a", "b")},
+        "chose_left",
+    },
+    "finite_experience_occurrence": {
+        *{f"occ_n{w}_{side}" for w in (10, 20, 50) for side in ("a", "b")},
+        "chose_left",
+    },
+    "local_representativeness": {
+        "local_imbalance_a",
+        "local_imbalance_b",
+        "p_alts_a",
+        "p_alts_b",
+        "chose_left",
+    },
 }
 
 
 def test_subjective_randomness_manifest_lists_loadable_pymc_models():
+    # Active registry = the literature-faithful set only (2026-08
+    # consolidation). The superseded originals remain in EXPECTED_INPUTS below
+    # because their files must stay loadable for archival refits.
     manifest = yaml.safe_load((MODEL_DIR / "models_manifest.yaml").read_text())
     assert get_model_names_from_manifest(manifest, MODEL_DIR) == [
-        "prototype_similarity",
-        "encoding_compressibility",
-        "bayesian_diagnosticity",
-        "window_typicality",
+        "falk_konold_dp",
+        "motif_hmm",
+        "finite_experience_occurrence",
+        "local_representativeness",
     ]
 
 

@@ -760,6 +760,13 @@ def _build_candidate_prompt(
         f"`model_name.txt` (a short snake_case name for the model), and "
         f"`candidate.py` (a PyMC model implementing only it) into that "
         f"directory.\n\n"
+        f"IMPORTANT: your shell runs from the repository checkout, NOT the "
+        f"candidate directory. A relative write like `> candidate.py` lands in "
+        f"the wrong place and your candidate is rejected. Always write to the "
+        f"absolute paths:\n"
+        f"  {candidate_dir}/hypothesis.md\n"
+        f"  {candidate_dir}/model_name.txt\n"
+        f"  {candidate_dir}/candidate.py\n\n"
         f"The context documents below are also on disk there for reference.",
         f"## CONTEXT.md\n\n{docs['context']}",
         f"## CANDIDATE_BRIEF.md\n\n{docs['brief']}",
@@ -778,6 +785,7 @@ def _spawn_candidate_agent(
     responses_path: Path,
     agent_timeout_sec: int,
     backend: Optional[str],
+    agent_model: Optional[str] = None,
 ) -> bool:
     from src.runtime.coding_agent import run_coding_agent
 
@@ -800,6 +808,8 @@ def _spawn_candidate_agent(
         allowed_dirs=[candidate_dir, models_dir, responses_path.parent],
         timeout_secs=agent_timeout_sec,
         backend=backend,
+        model=agent_model,
+        usage_label="inner:candidate",
     )
     return success
 
@@ -921,6 +931,7 @@ def _spawn_critique_agent(
     n_replicates: int,
     agent_timeout_sec: int,
     backend: Optional[str],
+    agent_model: Optional[str] = None,
 ) -> bool:
     """Critique the incumbent: seed its fit, write context, spawn the critique agent.
 
@@ -971,6 +982,8 @@ def _spawn_critique_agent(
         allowed_dirs=[critique_dir, models_dir, responses_path.parent],
         timeout_secs=agent_timeout_sec,
         backend=backend,
+        model=agent_model,
+        usage_label="inner:critique",
     )
     # Run the PPC harness ourselves so the results are always persisted, rather
     # than relying on the agent to have run it.
@@ -1156,6 +1169,7 @@ def _run_critique_round(
     n_replicates: int,
     agent_timeout_sec: int,
     backend: Optional[str],
+    agent_model: Optional[str] = None,
 ) -> Optional[Path]:
     """Critique the current incumbent before a candidate round; return critiques.md.
 
@@ -1179,6 +1193,7 @@ def _run_critique_round(
             n_replicates=n_replicates,
             agent_timeout_sec=agent_timeout_sec,
             backend=backend,
+            agent_model=agent_model,
         )
     except Exception as e:  # a critique failure must not kill a long inner-loop run
         print(f"  [critique] skipped — {type(e).__name__}: {e}", flush=True)
@@ -1210,6 +1225,7 @@ def run_pymc_inner_loop(
     cache_dir: Optional[Path] = None,
     agent_timeout_sec: int = 900,
     backend: Optional[str] = None,
+    agent_model: Optional[str] = None,
     fit_kwargs: Optional[Dict[str, Any]] = None,
     enable_critique: bool = True,
     n_critique_proposals: int = CRITIQUE_N_PROPOSALS,
@@ -1310,6 +1326,7 @@ def run_pymc_inner_loop(
                 n_replicates=n_critique_replicates,
                 agent_timeout_sec=agent_timeout_sec,
                 backend=backend,
+                agent_model=agent_model,
             )
         # Stage 1 — write every candidate's context, then spawn the agents
         # concurrently: each is a CLI subprocess whose latency dominates the
@@ -1339,6 +1356,7 @@ def run_pymc_inner_loop(
                 responses_path=responses_path,
                 agent_timeout_sec=agent_timeout_sec,
                 backend=backend,
+                agent_model=agent_model,
             )
 
         workers = min(candidate_parallelism or candidate_count, candidate_count)

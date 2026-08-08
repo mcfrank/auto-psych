@@ -1,0 +1,1 @@
+People judge the randomness of a sequence by intuitively estimating its algorithmic compressibility; sequences that can be mentally parsed into fewer novel chunks—whether due to long identical streaks or rigidly repeating alternating patterns—are perceived as highly structured and therefore less random.
