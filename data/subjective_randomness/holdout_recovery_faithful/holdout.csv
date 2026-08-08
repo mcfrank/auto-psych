@@ -1,0 +1,4 @@
+gt_model,experiment,step,iteration,global_step,best_model,pearson_r,rmse,pearson_r_bma,rmse_bma
+local_representativeness,1,0,,0,evidence_accumulation_per_run,0.9283606635541976,0.08227271751272648,0.9283606635541976,0.08227271751272648
+local_representativeness,1,1,0,1,evidence_accumulation_per_run,0.9283606635541976,0.08227271751272648,0.9280106856414131,0.08243835540774608
+local_representativeness,1,2,1,2,evidence_accumulation_per_run,0.9283606635541976,0.08227271751272648,0.9280106856414131,0.08243835540774608

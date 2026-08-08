@@ -80,7 +80,11 @@ class ClosedParticipantModel:
         from src.pipelines.outer_loop.llm import invoke_llm
 
         return invoke_llm(
-            system=system, user=user, llm=self._llm, timeout=self.REQUEST_TIMEOUT_SEC
+            system=system,
+            user=user,
+            llm=self._llm,
+            timeout=self.REQUEST_TIMEOUT_SEC,
+            source="participant",
         )
 
 

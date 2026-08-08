@@ -19,6 +19,7 @@ import pytest
 import yaml
 
 import src.subjective_randomness.holdout_recovery as holdout_recovery
+from src.runtime import token_usage
 from src.subjective_randomness.holdout_recovery import (
     TRAJECTORY_COLUMNS,
     build_eval_stimuli,
@@ -52,8 +53,16 @@ def _stub_spawn_cc_agent(calls):
     the inner loop — the model set is seeded/carried forward programmatically).
     Writes a valid EIG-annotated stimuli.json."""
 
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None):
-        calls.append((agent_key, Path(exp_dir).name))
+    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None, model=None):
+        calls.append((agent_key, Path(exp_dir).name, model))
+        # Mirror the real spawn: every agent run records its token usage.
+        token_usage.record_usage(
+            source=f"outer:{agent_key}",
+            backend="opencode",
+            model="stub",
+            input_tokens=100,
+            output_tokens=10,
+        )
         if agent_key == "2_design":
             design_dir = exp_dir / "design"
             design_dir.mkdir(parents=True, exist_ok=True)
@@ -95,7 +104,8 @@ def _stub_inner_loop(history_best):
     # when the real project seeding runs, or an old registry name when the test
     # builds its own fixture manifest (e.g. _complete_experiment_on_disk).
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
-            backend=None, cache_dir=None, project_id=None, agent_timeout_sec=900):
+            backend=None, agent_model=None, cache_dir=None, project_id=None,
+            agent_timeout_sec=900):
         loop_dir = exp_dir / "model_loop"
         models_dir = loop_dir / "models"
         models_dir.mkdir(parents=True, exist_ok=True)
@@ -103,16 +113,16 @@ def _stub_inner_loop(history_best):
         for path in cognitive_dir.glob("*.py"):
             shutil.copyfile(path, models_dir / path.name)
 
-        posteriors = {history_best: 0.8, "bayesian_diagnosticity": 0.2}
-        elpd = {history_best: -10.0, "bayesian_diagnosticity": -12.0}
+        posteriors = {history_best: 0.8, "motif_hmm": 0.2}
+        elpd = {history_best: -10.0, "motif_hmm": -12.0}
         # Mirror the real export: az.compare's stacking weights, which the
         # registry updater requires (it refuses a posterior file without them).
         comparison = {
             history_best: {"rank": 0, "elpd_loo": -10.0, "elpd_diff": 0.0,
                            "dse": 0.0, "weight": 0.7, "loo_unreliable": False},
-            "bayesian_diagnosticity": {"rank": 1, "elpd_loo": -12.0,
-                                       "elpd_diff": 2.0, "dse": 1.5,
-                                       "weight": 0.3, "loo_unreliable": False},
+            "motif_hmm": {"rank": 1, "elpd_loo": -12.0,
+                          "elpd_diff": 2.0, "dse": 1.5,
+                          "weight": 0.3, "loo_unreliable": False},
         }
         history = [
             {"step": 0, "iteration": None, "best_model": history_best,
@@ -185,7 +195,11 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         "n_participants": 3,
         "seed": 5,
         "inner_loop": {"max_iterations": 1, "candidate_count": 1},
-        "agent": {"timeout_sec": 60, "backend": None},
+        "agent": {
+            "timeout_sec": 60,
+            "backend": None,
+            "model": "fireworks-ai/test-model",
+        },
         # Explicitly sampled (exhaustive is now the default): the stub test only
         # needs a small pool.
         "eval_pool": {"n_pairs": 40, "lengths": [6], "seed": 11,
@@ -221,10 +235,11 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     }
 
     # Design is the only spawned agent: exp 1's model set is seeded and exp 2's
-    # is carried forward programmatically (no theorist agent).
+    # is carried forward programmatically (no theorist agent). The config's
+    # agent.model reaches every spawn.
     assert agent_calls == [
-        ("2_design", "experiment1"),
-        ("2_design", "experiment2"),
+        ("2_design", "experiment1", "fireworks-ai/test-model"),
+        ("2_design", "experiment2", "fireworks-ai/test-model"),
     ]
 
     # Collection always samples from the held-out ground truth, with a fresh
@@ -250,32 +265,36 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert all(row["pearson_r_bma"] == pytest.approx(1.0) for row in trajectory)
     assert all(row["rmse_bma"] == pytest.approx(0.0) for row in trajectory)
     # The fitted-seed baseline (one flat number, seeds fit on all data) recovers
-    # it too, since every stub prediction is identical.
+    # it too, since every stub prediction is identical. The GT is the
+    # superseded prototype_similarity, no longer in the registry, so no seed
+    # is excluded and the baseline covers the whole faithful set.
     assert set(gt_run["fitted_baseline"]["per_model"]) == {
-        "bayesian_diagnosticity",
-        "encoding_compressibility",
-        "window_typicality",
+        "falk_konold_dp",
+        "motif_hmm",
+        "finite_experience_occurrence",
+        "local_representativeness",
     }
     assert gt_run["fitted_baseline"]["mean_r"] == pytest.approx(1.0)
 
     # Evaluation refits go through the shared MCMC cache. The BMA fits every
     # posterior-weighted model (the stub posterior holds the winner best model
-    # plus bayesian_diagnosticity), and the fitted-seed baseline fits the other
-    # registry models.
+    # plus motif_hmm), and the fitted-seed baseline fits the registry models.
     assert all(c["cache_dir"] == tmp_path / "cache" for c in fit_calls)
     assert {c["name"] for c in fit_calls} == {
         "minkowski_accumulated_typicality",
-        "encoding_compressibility",
-        "bayesian_diagnosticity",
-        "window_typicality",
+        "falk_konold_dp",
+        "motif_hmm",
+        "finite_experience_occurrence",
+        "local_representativeness",
     }
 
     # The no-learning baseline averages the other seed models (default params)
     # against the GT; with identical stub predictions every correlation is 1.
     assert set(gt_run["baseline"]["per_model"]) == {
-        "bayesian_diagnosticity",
-        "encoding_compressibility",
-        "window_typicality",
+        "falk_konold_dp",
+        "motif_hmm",
+        "finite_experience_occurrence",
+        "local_representativeness",
     }
     assert gt_run["baseline"]["mean_r"] == pytest.approx(1.0)
 
@@ -294,6 +313,19 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         gt_run["experiments"][1]["manifest_models"]
         == gt_run["experiments"][0]["manifest_models"]
     )
+
+    # The run persists its LLM token spend: one JSONL record per agent run
+    # (the two design agents here) plus a summary of the whole recovery run.
+    usage_lines = (
+        (tmp_path / "runs" / "token_usage.jsonl").read_text().splitlines()
+    )
+    assert len(usage_lines) == 2
+    usage_summary = json.loads(
+        (tmp_path / "runs" / "token_usage_summary.json").read_text()
+    )
+    assert usage_summary["n_calls"] == 2
+    assert usage_summary["total_tokens"] == 220
+    assert usage_summary["by_source"]["outer:2_design"]["n_calls"] == 2
     assert (
         "minkowski_accumulated_typicality"
         in gt_run["experiments"][1]["manifest_models"]
@@ -469,7 +501,7 @@ def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
         resume=True,
     )
 
-    assert agent_calls == [("2_design", "experiment2")]
+    assert agent_calls == [("2_design", "experiment2", None)]
     assert [c["seed"] for c in collect_calls] == [7]  # seed + exp_num, exp2 only
     assert loop_calls == ["experiment2"]
 
@@ -615,7 +647,7 @@ def _stub_annotate_eig(calls):
 def _spawn_writing_candidates(calls, pool=CANDIDATE_POOL):
     """Design agent that writes only candidates.json (backgrounded EIG, no stimuli)."""
 
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None):
+    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None, model=None):
         calls.append((agent_key, Path(exp_dir).name))
         if agent_key == "2_design":
             design_dir = exp_dir / "design"
@@ -1211,9 +1243,10 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
     # The no-learning baseline is attached (other seeds vs. GT, all stubbed equal).
     baseline = enriched["gt_runs"][0]["baseline"]
     assert set(baseline["per_model"]) == {
-        "bayesian_diagnosticity",
-        "encoding_compressibility",
-        "window_typicality",
+        "falk_konold_dp",
+        "motif_hmm",
+        "finite_experience_occurrence",
+        "local_representativeness",
     }
     assert baseline["mean_r"] == pytest.approx(1.0)
     # The original result is not mutated.

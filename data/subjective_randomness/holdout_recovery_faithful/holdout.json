@@ -1,0 +1,187 @@
+{
+  "project_id": "subjective_randomness",
+  "seed_models_dir": "/Users/ben/Documents/auto-psych/src/subjective_randomness/pymc_model_families",
+  "n_experiments": 1,
+  "n_participants": 40,
+  "inner_loop": {
+    "max_iterations": 2,
+    "candidate_count": 3
+  },
+  "fit_kwargs": {
+    "draws": 2000,
+    "tune": 1000,
+    "chains": 4
+  },
+  "seed": 7,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100,
+    "exhaustive": true,
+    "predict_max_draws": 500
+  },
+  "gt_runs": [
+    {
+      "gt_model": "local_representativeness",
+      "params": {
+        "theta_alt": 0.65,
+        "alt_weight": 0.75,
+        "beta": 4.0,
+        "side_bias": 0.0
+      },
+      "run_root": "/Users/ben/Documents/auto-psych/data/subjective_randomness/holdout_recovery_faithful/holdout_runs/local_representativeness",
+      "n_eval_stimuli": 129763,
+      "n_eval_dropped": 32,
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "evidence_accumulation_per_run",
+          "pearson_r": 0.9283606635541976,
+          "rmse": 0.08227271751272648,
+          "pearson_r_bma": 0.9283606635541976,
+          "rmse_bma": 0.08227271751272648
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "evidence_accumulation_per_run",
+          "pearson_r": 0.9283606635541976,
+          "rmse": 0.08227271751272648,
+          "pearson_r_bma": 0.9280106856414131,
+          "rmse_bma": 0.08243835540774608
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "evidence_accumulation_per_run",
+          "pearson_r": 0.9283606635541976,
+          "rmse": 0.08227271751272648,
+          "pearson_r_bma": 0.9280106856414131,
+          "rmse_bma": 0.08243835540774608
+        }
+      ],
+      "baseline": {
+        "mean_r": 0.5393649078883207,
+        "per_model": {
+          "falk_konold_dp": 0.7386158323793476,
+          "motif_hmm": 0.8519354907833556,
+          "finite_experience_occurrence": 0.027543400502258765
+        }
+      },
+      "fitted_baseline": {
+        "per_model": {
+          "falk_konold_dp": {
+            "pearson_r": 0.7527571577295241,
+            "rmse": 0.12958351662368717
+          },
+          "finite_experience_occurrence": {
+            "pearson_r": 0.01520229039860418,
+            "rmse": 0.19874004439145518
+          },
+          "motif_hmm": {
+            "pearson_r": 0.8592675296748732,
+            "rmse": 0.11759931944527097
+          }
+        },
+        "mean_r": 0.5424089926010005,
+        "mean_rmse": 0.1486409601534711,
+        "n_responses": 1280
+      },
+      "leakage": {
+        "files": [
+          {
+            "path": "experiment1/cognitive_models/artificial_balance_diagnosticity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/cognitive_models/evidence_accumulation_messy_prototype.py",
+            "identical": false,
+            "mentions_gt_params": true,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/cognitive_models/evidence_accumulation_per_run.py",
+            "identical": false,
+            "mentions_gt_params": true,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/cognitive_models/minkowski_accumulated_typicality.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/artificial_balance_diagnosticity.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/evidence_accumulation_messy_prototype.py",
+            "identical": false,
+            "mentions_gt_params": true,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/evidence_accumulation_per_run.py",
+            "identical": false,
+            "mentions_gt_params": true,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/linear_evidence_accumulation_per_run.py",
+            "identical": false,
+            "mentions_gt_params": true,
+            "gt_named": false
+          },
+          {
+            "path": "experiment1/model_loop/models/local_representativeness.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": true
+          },
+          {
+            "path": "experiment1/model_loop/models/minkowski_accumulated_typicality.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "gt_named": false
+          }
+        ],
+        "any_identical": false,
+        "any_mention": true,
+        "any_gt_named": true
+      },
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "minkowski_accumulated_typicality",
+            "evidence_accumulation_messy_prototype",
+            "evidence_accumulation_per_run",
+            "artificial_balance_diagnosticity"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "posteriors": {
+    "minkowski_accumulated_typicality": 0.912363,
+    "evidence_accumulation_messy_prototype": 0.000257,
+    "evidence_accumulation_per_run": 0.003048,
+    "artificial_balance_diagnosticity": 0.000194,
+    "recency_window_accumulated_typicality": 0.084138
+  },
+  "elpd_loo": {
+    "minkowski_accumulated_typicality": -816.2601,
+    "evidence_accumulation_messy_prototype": -824.2348,
+    "evidence_accumulation_per_run": -821.7617,
+    "artificial_balance_diagnosticity": -822.9179,
+    "recency_window_accumulated_typicality": -817.3436
+  },
+  "n_trials": 1280,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "minkowski_accumulated_typicality": 43,
+    "evidence_accumulation_messy_prototype": 47,
+    "evidence_accumulation_per_run": 47,
+    "artificial_balance_diagnosticity": 79,
+    "recency_window_accumulated_typicality": 69
+  },
+  "comparison": {
+    "minkowski_accumulated_typicality": {
+      "rank": 0,
+      "elpd_loo": -816.2600725782562,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.5092223960851493,
+      "loo_unreliable": false
+    },
+    "recency_window_accumulated_typicality": {
+      "rank": 1,
+      "elpd_loo": -817.3436488741578,
+      "elpd_diff": 1.0835762959015547,
+      "dse": 6.083100194379806,
+      "weight": 0.4681155150716029,
+      "loo_unreliable": true
+    },
+    "evidence_accumulation_per_run": {
+      "rank": 2,
+      "elpd_loo": -821.7616996743222,
+      "elpd_diff": 5.501627096066034,
+      "dse": 4.812368912875657,
+      "weight": 7.685978620717245e-16,
+      "loo_unreliable": false
+    },
+    "artificial_balance_diagnosticity": {
+      "rank": 3,
+      "elpd_loo": -822.9178791347604,
+      "elpd_diff": 6.657806556504212,
+      "dse": 5.299659343194111,
+      "weight": 0.022662088843246227,
+      "loo_unreliable": false
+    },
+    "evidence_accumulation_messy_prototype": {
+      "rank": 4,
+      "elpd_loo": -824.2347706520704,
+      "elpd_diff": 7.974698073814215,
+      "dse": 4.4467098951502155,
+      "weight": 1.662309101663926e-15,
+      "loo_unreliable": false
+    }
+  }
+}

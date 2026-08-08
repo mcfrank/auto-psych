@@ -130,40 +130,37 @@ def max_run_norm(seq: str) -> float:
 def parse_motifs(seq: str) -> Tuple[int, int]:
     """Parse an H/T sequence into Falk & Konold (1997) motifs.
 
-    Returns ``(rep_motifs, alt_motifs)`` — n1 (repetition motifs: maximal
-    constant runs) and n2 (alternation motifs: maximal alternating sub-sequences
-    of length >= 2) of the canonical minimal-description parse used by the
-    statistical-inference model (Griffiths et al. 2018). Mirrors the featurizer
-    helper of the same name; DP = n1 + 2*n2.
+    Returns ``(rep_motifs, alt_motifs)`` — n1 (repetition motifs: constant-run
+    chunks) and n2 (alternation motifs: strictly alternating chunks of length
+    >= 2) of the Difficulty Predictor parse, for which DP = n1 + 2*n2. Falk &
+    Konold define the parse as the partition minimising DP (boundaries may
+    split runs, e.g. HTHHTH -> HTH|HTH); DP ties are broken toward the fewest
+    chunks, making (n1, n2) unique. Mirrors the featurizer helper of the same
+    name in ``features.py``.
     """
     s = clean_sequence(seq)
-    run_lengths = []
-    cur = 1
-    for a, b in zip(s, s[1:]):
-        if a == b:
-            cur += 1
-        else:
-            run_lengths.append(cur)
-            cur = 1
-    run_lengths.append(cur)
+    n = len(s)
 
-    rep_motifs = 0
-    alt_motifs = 0
-    i = 0
-    n_runs = len(run_lengths)
-    while i < n_runs:
-        if run_lengths[i] == 1:
-            j = i
-            while j < n_runs and run_lengths[j] == 1:
-                j += 1
-            if j - i >= 2:
-                alt_motifs += 1
+    # best[i] = lexicographically minimal (DP cost, chunk count) over all
+    # partitions of s[:i] into constant-run chunks (cost 1) and strictly
+    # alternating chunks of length >= 2 (cost 2).
+    unreachable = (n * 2 + 1, n + 1)
+    best = [(0, 0)] + [unreachable] * n
+    for i in range(1, n + 1):
+        for j in range(i - 1, -1, -1):
+            chunk = s[j:i]
+            if all(c == chunk[0] for c in chunk):
+                cost = 1
+            elif all(a != b for a, b in zip(chunk, chunk[1:])):
+                cost = 2
             else:
-                rep_motifs += 1
-            i = j
-        else:
-            rep_motifs += 1
-            i += 1
+                continue
+            candidate = (best[j][0] + cost, best[j][1] + 1)
+            if candidate < best[i]:
+                best[i] = candidate
+    dp, chunks = best[n]
+    rep_motifs = 2 * chunks - dp
+    alt_motifs = dp - chunks
     return rep_motifs, alt_motifs
 
 
@@ -184,6 +181,81 @@ def periodicity_score(seq: str) -> float:
         matches = sum(1 for i, c in enumerate(seq) if c == template[i % period])
         best_match = max(best_match, matches / n)
     return max(0.0, min(1.0, 2.0 * (best_match - 0.5)))
+
+
+LOCAL_WINDOW = 4
+
+
+def local_imbalance(seq: str) -> float:
+    """Worst H/T imbalance over sliding windows of length min(n, LOCAL_WINDOW).
+
+    2*|prop_heads - 0.5| of the most imbalanced window (Kahneman & Tversky
+    1972: representativeness holds "locally in each of its parts"). Mirrors
+    the featurizer helper of the same name in ``features.py``.
+    """
+    s = clean_sequence(seq)
+    n = len(s)
+    window = min(n, LOCAL_WINDOW)
+    worst = 0.0
+    for start in range(n - window + 1):
+        chunk = s[start : start + window]
+        heads = sum(1 for c in chunk if c == "H")
+        worst = max(worst, 2.0 * abs(heads / window - 0.5))
+    return worst
+
+
+def occurrence_probability(pattern: str, n_global: int) -> float:
+    """P(``pattern`` occurs as a contiguous substring of ``n_global`` fair flips).
+
+    The quantity of Hahn & Warren (2009): the probability that a length-k
+    string appears at least once within a finite global sequence of fair coin
+    flips. Computed exactly by evolving the distribution over KMP
+    prefix-automaton states (state = length of the longest pattern prefix
+    matching the current suffix; reaching state k absorbs).
+    """
+    p = clean_sequence(pattern)
+    k = len(p)
+    if n_global < 0:
+        raise ValueError(f"n_global must be >= 0, got {n_global}")
+    if n_global < k:
+        return 0.0
+
+    # next_state[state][symbol] for states 0..k-1 via KMP failure links.
+    failure = [0] * k
+    for i in range(1, k):
+        j = failure[i - 1]
+        while j > 0 and p[i] != p[j]:
+            j = failure[j - 1]
+        failure[i] = j + 1 if p[i] == p[j] else 0
+
+    def next_state(state: int, symbol: str) -> int:
+        while True:
+            if symbol == p[state]:
+                return state + 1
+            if state == 0:
+                return 0
+            state = failure[state - 1]
+
+    transitions = [
+        {symbol: next_state(state, symbol) for symbol in "HT"} for state in range(k)
+    ]
+
+    dist = [0.0] * k
+    dist[0] = 1.0
+    absorbed = 0.0
+    for _ in range(n_global):
+        new_dist = [0.0] * k
+        for state, mass in enumerate(dist):
+            if mass == 0.0:
+                continue
+            for symbol in "HT":
+                target = transitions[state][symbol]
+                if target == k:
+                    absorbed += 0.5 * mass
+                else:
+                    new_dist[target] += 0.5 * mass
+        dist = new_dist
+    return absorbed
 
 
 def logsumexp(values: Iterable[float]) -> float:

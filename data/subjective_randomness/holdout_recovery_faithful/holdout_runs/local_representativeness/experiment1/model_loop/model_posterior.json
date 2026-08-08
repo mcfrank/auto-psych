@@ -1,0 +1,78 @@
+{
+  "posteriors": {
+    "minkowski_accumulated_typicality": 0.0,
+    "evidence_accumulation_messy_prototype": 0.0,
+    "evidence_accumulation_per_run": 0.992099,
+    "artificial_balance_diagnosticity": 0.0,
+    "linear_evidence_accumulation_per_run": 0.007901,
+    "local_representativeness": 0.0
+  },
+  "elpd_loo": {
+    "minkowski_accumulated_typicality": -809.3974,
+    "evidence_accumulation_messy_prototype": -835.5375,
+    "evidence_accumulation_per_run": -782.3944,
+    "artificial_balance_diagnosticity": -825.2851,
+    "linear_evidence_accumulation_per_run": -787.2272,
+    "local_representativeness": -845.6426
+  },
+  "n_trials": 1280,
+  "complexity_prior_const": -0.05,
+  "complexities": {
+    "minkowski_accumulated_typicality": 43,
+    "evidence_accumulation_messy_prototype": 47,
+    "evidence_accumulation_per_run": 47,
+    "artificial_balance_diagnosticity": 79,
+    "linear_evidence_accumulation_per_run": 47,
+    "local_representativeness": 36
+  },
+  "comparison": {
+    "evidence_accumulation_per_run": {
+      "rank": 0,
+      "elpd_loo": -782.3943698342975,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "weight": 0.922801628215755,
+      "loo_unreliable": false
+    },
+    "linear_evidence_accumulation_per_run": {
+      "rank": 1,
+      "elpd_loo": -787.2272176855721,
+      "elpd_diff": 4.832847851274478,
+      "dse": 3.225491028149913,
+      "weight": 7.268071236000984e-15,
+      "loo_unreliable": false
+    },
+    "minkowski_accumulated_typicality": {
+      "rank": 2,
+      "elpd_loo": -809.3974366657209,
+      "elpd_diff": 27.003066831423244,
+      "dse": 7.403519750088603,
+      "weight": 0.0,
+      "loo_unreliable": false
+    },
+    "artificial_balance_diagnosticity": {
+      "rank": 3,
+      "elpd_loo": -825.2850975766482,
+      "elpd_diff": 42.89072774235061,
+      "dse": 8.081050427175827,
+      "weight": 2.1663839444917386e-13,
+      "loo_unreliable": false
+    },
+    "evidence_accumulation_messy_prototype": {
+      "rank": 4,
+      "elpd_loo": -835.53752628394,
+      "elpd_diff": 53.14315644964241,
+      "dse": 9.57257548351993,
+      "weight": 9.132086471202248e-14,
+      "loo_unreliable": false
+    },
+    "local_representativeness": {
+      "rank": 5,
+      "elpd_loo": -845.6426480889617,
+      "elpd_diff": 63.24827825466403,
+      "dse": 11.837129094526873,
+      "weight": 0.07719837178396688,
+      "loo_unreliable": true
+    }
+  }
+}

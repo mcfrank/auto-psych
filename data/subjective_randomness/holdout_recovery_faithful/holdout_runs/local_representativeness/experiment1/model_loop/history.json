@@ -1,0 +1,69 @@
+[
+  {
+    "step": 0,
+    "iteration": null,
+    "best_model": "evidence_accumulation_per_run",
+    "posteriors": {
+      "minkowski_accumulated_typicality": 0.0,
+      "evidence_accumulation_messy_prototype": 0.0,
+      "evidence_accumulation_per_run": 1.0,
+      "artificial_balance_diagnosticity": 0.0
+    },
+    "elpd_loo": {
+      "minkowski_accumulated_typicality": -809.3974,
+      "evidence_accumulation_messy_prototype": -835.5375,
+      "evidence_accumulation_per_run": -782.3944,
+      "artificial_balance_diagnosticity": -825.2851
+    }
+  },
+  {
+    "step": 1,
+    "iteration": 0,
+    "best_model": "evidence_accumulation_per_run",
+    "posteriors": {
+      "minkowski_accumulated_typicality": 0.0,
+      "evidence_accumulation_messy_prototype": 0.0,
+      "evidence_accumulation_per_run": 0.992099,
+      "artificial_balance_diagnosticity": 0.0,
+      "linear_evidence_accumulation_per_run": 0.007901,
+      "local_representativeness": 0.0
+    },
+    "elpd_loo": {
+      "minkowski_accumulated_typicality": -809.3974,
+      "evidence_accumulation_messy_prototype": -835.5375,
+      "evidence_accumulation_per_run": -782.3944,
+      "artificial_balance_diagnosticity": -825.2851,
+      "linear_evidence_accumulation_per_run": -787.2272,
+      "local_representativeness": -845.6426
+    },
+    "pruned": [
+      "run_length_entropy"
+    ]
+  },
+  {
+    "step": 2,
+    "iteration": 1,
+    "best_model": "evidence_accumulation_per_run",
+    "posteriors": {
+      "minkowski_accumulated_typicality": 0.0,
+      "evidence_accumulation_messy_prototype": 0.0,
+      "evidence_accumulation_per_run": 0.992099,
+      "artificial_balance_diagnosticity": 0.0,
+      "linear_evidence_accumulation_per_run": 0.007901,
+      "local_representativeness": 0.0
+    },
+    "elpd_loo": {
+      "minkowski_accumulated_typicality": -809.3974,
+      "evidence_accumulation_messy_prototype": -835.5375,
+      "evidence_accumulation_per_run": -782.3944,
+      "artificial_balance_diagnosticity": -825.2851,
+      "linear_evidence_accumulation_per_run": -787.2272,
+      "local_representativeness": -845.6426
+    },
+    "pruned": [
+      "exponential_discount_per_run",
+      "algorithmic_complexity",
+      "accumulated_local_representativeness"
+    ]
+  }
+]

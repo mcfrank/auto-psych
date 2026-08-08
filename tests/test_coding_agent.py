@@ -57,6 +57,9 @@ def test_build_command_opencode_uses_provider_model_and_no_add_dir(tmp_path):
     )
     assert cmd[0] == "opencode"
     assert cmd[1] == "run"
+    # JSON event output is load-bearing: token-usage tracking parses the
+    # step_finish events, and the result text comes from the text events.
+    assert "--format" in cmd and "json" in cmd
     assert "-m" in cmd
     # opencode model ids are provider-prefixed (provider/model); assert the
     # format rather than a specific provider so swapping the default backend

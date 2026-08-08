@@ -1,0 +1,48 @@
+{
+  "model_names": [
+    "minkowski_accumulated_typicality",
+    "evidence_accumulation_messy_prototype",
+    "evidence_accumulation_per_run",
+    "artificial_balance_diagnosticity"
+  ],
+  "n_models": 4,
+  "n_samples": 200,
+  "lengths": [
+    4,
+    5,
+    6,
+    7,
+    8
+  ],
+  "universe_size": 122760,
+  "max_abs_eig_diff": 3.649641843739282e-07,
+  "warmup_seconds": 16.47657079200144,
+  "fits": {
+    "per_stimulus": {
+      "intercept_s": 0.06326983336096158,
+      "slope_s_per_stimulus": 0.5339564549948251,
+      "slope_resolved": true
+    },
+    "batched": {
+      "intercept_s": 0.5361278676574838,
+      "slope_s_per_stimulus": 0.000154856996377885,
+      "slope_resolved": true
+    }
+  },
+  "projections_max_candidates": {
+    "per_stimulus": {
+      "60s": 112,
+      "600s": 1123,
+      "3600s": 6742
+    },
+    "batched": {
+      "60s": 383992,
+      "600s": 3871080,
+      "3600s": 23243792
+    }
+  },
+  "predicted_universe_seconds": {
+    "per_stimulus": 65548.5576849981,
+    "batched": 19.546372743006646
+  }
+}
