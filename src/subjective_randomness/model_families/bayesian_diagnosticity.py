@@ -84,6 +84,21 @@ PARAM_BOUNDS: Dict[str, tuple[float, float]] = {
     "side_bias": (-2.0, 2.0),
 }
 
+# Declarative only -- see prototype_similarity.py's SUFFICIENT_STATS comment for
+# what reads this. score_sequence above reads n, rep_motifs, alt_motifs (all via
+# parse_motifs) and the raw head count (via _log_biased). Verified
+# (tests/test_sequence_stats.py): no two sequences agreeing on these ever get
+# different scores.
+SUFFICIENT_STATS: tuple[str, ...] = ("n", "h", "rep_motifs", "alt_motifs")
+
+# _log_biased marginalizes head-heavy and tail-heavy bias at equal (0.5) prior
+# weight, and swapping h <-> n-h exactly swaps which of the two logsumexp terms is
+# which -- logsumexp is symmetric in its arguments, so the total is unchanged.
+# Unlike the other three families, this one reads raw head count (not the already
+# H<->T-symmetric imbalance()), so this invariance is a genuine algebraic fact
+# about _log_biased, not a property of the statistic it reads.
+COMPLEMENT_INVARIANT: bool = True
+
 _BIAS_HEAD_PROB = 0.85
 
 

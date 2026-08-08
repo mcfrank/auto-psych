@@ -230,6 +230,7 @@ def _write_exhaustive_design(
     prev_exp_dir: Optional[Path] = None,
     k: int = 32,
     lengths=(2, 3, 4, 5, 6, 7, 8),
+    max_length: int = 20,
 ) -> None:
     """Deterministically select the design's stimuli by exhaustive enumeration.
 
