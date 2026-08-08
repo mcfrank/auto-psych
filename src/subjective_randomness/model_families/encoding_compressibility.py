@@ -39,6 +39,17 @@ PARAM_BOUNDS: Dict[str, tuple[float, float]] = {
     "side_bias": (-2.0, 2.0),
 }
 
+# Declarative only -- see prototype_similarity.py's SUFFICIENT_STATS comment for
+# what reads this. score_sequence above reads max_run_norm(), periodicity_score(),
+# and imbalance(). Verified (tests/test_sequence_stats.py): no two sequences
+# agreeing on these ever get different scores.
+SUFFICIENT_STATS: tuple[str, ...] = ("max_run_norm", "periodicity", "imbalance")
+
+# max_run_norm, periodicity_score, and imbalance are all provably invariant under
+# H<->T complementation (each depends only on the run-transition/repeat pattern or
+# on |h/n-0.5|, never on which symbol is H vs T).
+COMPLEMENT_INVARIANT: bool = True
+
 
 def feature_weights(params: Mapping[str, float]) -> Dict[str, float]:
     longrun = max(
