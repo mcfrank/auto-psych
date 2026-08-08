@@ -20,7 +20,7 @@ Outputs (in ``--out-dir``): ``joint_eig_selection_timings.csv``,
 ``joint_eig_selection_summary.json``, and ``joint_eig_selection.png``.
 
 Usage:
-    # Default: 4 hero-run seed models, k=32, pools up to the full universe.
+    # Default: the 4 live seed models, k=32, pools up to the full universe.
     uv run python scripts/analysis/benchmark_joint_eig_selection.py
 
     # Smaller sweep, more scenarios:

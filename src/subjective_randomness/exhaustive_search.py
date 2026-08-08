@@ -56,10 +56,10 @@ def complement_invariant(modules: Sequence[Any]) -> bool:
 
     Requires **unanimous** ``COMPLEMENT_INVARIANT = True`` across every module —
     an undeclared module, an explicit ``False``, or an empty model set all default
-    to ``False``. This must never be hardcoded True: the live PyMC seed
+    to ``False``. This must never be hardcoded True: the archived hero-run seed
     ``minkowski_accumulated_typicality`` has a free ``ideal_p != 0.5`` and is
-    genuinely complement-*sensitive*, so a model set that includes it (or its
-    pure-Python twin, if one is ever added) must not fold complements.
+    genuinely complement-*sensitive*, so a model set that includes such a model
+    must not fold complements.
     """
     if not modules:
         return False

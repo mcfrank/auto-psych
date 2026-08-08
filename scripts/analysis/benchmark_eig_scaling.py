@@ -25,7 +25,7 @@ run), ``eig_scaling_summary.json`` (fits, projections, universe size), and
 ``eig_scaling.png`` (timing curves).
 
 Usage:
-    # Default: the 4 hero-run seed models, pipeline n_samples=200, lengths 4-8.
+    # Default: the 4 live seed models, pipeline n_samples=200, lengths 4-8.
     uv run python scripts/analysis/benchmark_eig_scaling.py
 
     # Another model set / bigger batched sizes / registry-weighted model prior.

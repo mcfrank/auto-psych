@@ -19,6 +19,7 @@ EVAL = (
     REPO_ROOT
     / "src/pipelines/outer_loop/projects/subjective_randomness/evaluate_recovery.py"
 )
+REGISTRY_DIR = REPO_ROOT / "src/subjective_randomness/pymc_model_families"
 
 
 def _load_eval():
@@ -38,14 +39,14 @@ def test_seed_experiment_models_from_project_copies_active_seed_set(tmp_path):
     manifest = yaml.safe_load((models_dir / "models_manifest.yaml").read_text())
     names = [m["name"] for m in manifest["models"]]
 
-    # The hero-run seed set: the best-fitting models discovered by the three
-    # human replicate runs (promoted 2026-07; see seed manifest for provenance).
-    assert names == [
-        "minkowski_accumulated_typicality",
-        "evidence_accumulation_messy_prototype",
-        "evidence_accumulation_per_run",
-        "artificial_balance_diagnosticity",
-    ]
+    # The live seed pool mirrors the registry manifest, which is the single
+    # source of truth for the active seed set (the literature-faithful four).
+    # The two diverged once — the hero-run winners were promoted into the pool
+    # in 2026-07, the faithful set consolidated into the registry in 2026-08 —
+    # and every recovery helper that resolves a seed name to its pure-Python
+    # twin broke silently. Asserting equality here is the tripwire.
+    registry = yaml.safe_load((REGISTRY_DIR / "models_manifest.yaml").read_text())
+    assert names == [m["name"] for m in registry["models"]]
     for name in names:
         model = load_pymc_model(name, models_dir)
         assert observed_response_data(model) == "chose_left"

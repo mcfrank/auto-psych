@@ -1,7 +1,19 @@
-"""Canonical parametric model families for subjective-randomness studies.
+"""Pure-Python twins of the subjective-randomness PyMC model families.
 
-These modules are hand-authored project assets. Generated experiment folders
-may copy or wrap them, but the canonical definitions should live here.
+Each module here implements the same likelihood as its PyMC adapter in
+``../pymc_model_families/``, as a plain callable with a ``DEFAULT_PARAMS``
+dict. Recovery uses the twins to generate ground-truth data at fixed
+parameters and to define the no-learning baseline, and the test suite uses
+them to check each PyMC adapter against an independent implementation.
+
+Which models are *active* is not decided here: the registry manifest
+(``pymc_model_families/models_manifest.yaml``) is the single source of truth,
+and the outer loop's live seed pool mirrors it. The families the 2026-08
+fidelity consolidation superseded (``bayesian_diagnosticity``,
+``encoding_compressibility``, ``prototype_similarity``, ``window_typicality``)
+stay importable so pre-consolidation run artifacts can still be refit — hence
+the exports below are a superset of the active set. Adding a module here does
+not activate it; adding it to the registry manifest does.
 """
 
 from . import bayesian_diagnosticity

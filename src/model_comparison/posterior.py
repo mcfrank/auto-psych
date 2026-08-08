@@ -138,19 +138,14 @@ def compare_table(
 
     Returns a plain dict keyed by model name (JSON-serialisable).
     """
-    import yaml  # type: ignore
     import arviz as az  # type: ignore
-    from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
+    from src.models.model_manifest import read_loadable_model_names  # type: ignore
     from src.models.pymc_inference import fit_models_cached  # type: ignore
 
     responses_path = Path(responses_path)
     models_dir = Path(models_dir)
 
-    manifest_path = models_dir / "models_manifest.yaml"
-    if not manifest_path.exists():
-        raise FileNotFoundError(f"models_manifest.yaml not found at {manifest_path}")
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-    model_names = get_model_names_from_manifest(manifest, models_dir)
+    model_names = read_loadable_model_names(models_dir)
     if not model_names:
         raise ValueError(f"No loadable models found in {models_dir}")
 
@@ -217,18 +212,13 @@ def model_posterior(
     Returns a dict with `posteriors`, `elpd_loo`, `n_trials`, and (if
     complexity_prior_const != 0) `complexity_prior_const` + `complexities`.
     """
-    import yaml  # type: ignore
-    from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
+    from src.models.model_manifest import read_loadable_model_names  # type: ignore
     from src.model_comparison import likelihood as _likelihood  # type: ignore
 
     responses_path = Path(responses_path)
     models_dir = Path(models_dir)
 
-    manifest_path = models_dir / "models_manifest.yaml"
-    if not manifest_path.exists():
-        raise FileNotFoundError(f"models_manifest.yaml not found at {manifest_path}")
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-    model_names = get_model_names_from_manifest(manifest, models_dir)
+    model_names = read_loadable_model_names(models_dir)
     if not model_names:
         raise ValueError(f"No loadable models found in {models_dir}")
 

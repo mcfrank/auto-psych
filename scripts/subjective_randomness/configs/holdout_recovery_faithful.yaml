@@ -1,9 +1,10 @@
 # Holdout recovery with the literature-faithful registry models as ground
 # truths. Each GT (falk_konold_dp, motif_hmm, finite_experience_occurrence,
 # local_representativeness) generates fixed-param synthetic data; the agentic
-# loop is seeded with the live project pool (the hero-run replicate winners),
-# so every GT here is out-of-pool by construction — the question is whether
-# the loop discovers a model that approximates the faithful theory.
+# loop is seeded with the live project pool, which mirrors this registry, so
+# the GT is held out of that pool and the loop starts from the other three —
+# the question is whether it discovers a model that approximates the held-out
+# faithful theory.
 project_id: subjective_randomness
 # The GT/baseline registry: the four literature-faithful models, all with
 # pure-Python family twins for data generation.

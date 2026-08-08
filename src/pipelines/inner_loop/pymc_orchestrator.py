@@ -38,6 +38,7 @@ from typing import Any, Dict, List, Optional, Tuple
 import numpy as np
 import yaml
 
+from src.models.model_manifest import manifest_path, read_manifest_entries
 from src.models.pymc_inference import (
     evict_fit_cache,
     fit_model,
@@ -127,26 +128,21 @@ DEFAULT_CANDIDATE_HINTS = [
 
 
 def _manifest_entries(models_dir: Path) -> List[Dict[str, str]]:
-    """Full manifest entries (``name`` + ``rationale``), normalised to dicts."""
-    manifest_path = models_dir / "models_manifest.yaml"
-    if not manifest_path.exists():
-        return []
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-    out: List[Dict[str, str]] = []
-    for entry in manifest.get("models") or []:
-        if isinstance(entry, dict):
-            out.append(entry)
-        elif entry:
-            out.append({"name": entry})
-    return out
+    """Full manifest entries (``name`` + ``rationale``) for the zoo directory.
+
+    A missing manifest reads as an empty model set here — the zoo's manifest
+    only appears once the seed set has been copied in, and several helpers
+    below run against a directory that is still being built up.
+    """
+    return read_manifest_entries(models_dir, missing_ok=True)
 
 
 def _manifest_names(models_dir: Path) -> List[str]:
-    return [e["name"] for e in _manifest_entries(models_dir) if e.get("name")]
+    return [e["name"] for e in _manifest_entries(models_dir)]
 
 
 def _write_manifest(models_dir: Path, entries: List[Dict[str, str]]) -> None:
-    (models_dir / "models_manifest.yaml").write_text(
+    manifest_path(models_dir).write_text(
         yaml.safe_dump({"models": entries}, sort_keys=False), encoding="utf-8"
     )
 
@@ -213,27 +209,20 @@ def _seed_model_set(seed_models_dir: Path, models_dir: Path) -> List[Dict[str, s
     seed model.
     """
     models_dir.mkdir(parents=True, exist_ok=True)
-    seed_manifest_path = seed_models_dir / "models_manifest.yaml"
-    if not seed_manifest_path.exists():
-        raise FileNotFoundError(
-            f"seed_models_dir has no models_manifest.yaml: {seed_manifest_path}"
-        )
-    seed_manifest = yaml.safe_load(seed_manifest_path.read_text(encoding="utf-8")) or {}
 
     entries: List[Dict[str, str]] = []
-    for entry in seed_manifest.get("models") or []:
-        name = entry.get("name") if isinstance(entry, dict) else entry
-        if not name:
-            continue
+    for entry in read_manifest_entries(seed_models_dir):
+        name = entry["name"]
         src = seed_models_dir / f"{name}.py"
         if not src.exists():
             raise FileNotFoundError(f"Seed model {name!r} has no file at {src}")
         shutil.copyfile(src, models_dir / f"{name}.py")
-        rationale = entry.get("rationale", "") if isinstance(entry, dict) else ""
-        entries.append({"name": name, "rationale": rationale or "Seed model."})
+        entries.append(
+            {"name": name, "rationale": entry.get("rationale", "") or "Seed model."}
+        )
 
     if not entries:
-        raise ValueError(f"No seed models found in {seed_manifest_path}")
+        raise ValueError(f"No seed models found in {manifest_path(seed_models_dir)}")
     _write_manifest(models_dir, entries)
     return entries
 
@@ -249,9 +238,7 @@ def _drop_unfittable_models(models_dir: Path, responses_path: Path) -> None:
     """
     keep: List[Dict[str, str]] = []
     for entry in _manifest_entries(models_dir):
-        name = entry.get("name")
-        if not name:
-            continue
+        name = entry["name"]
         fittable, reason = model_logp_is_finite(name, models_dir, responses_path)
         if fittable:
             keep.append(entry)
@@ -288,9 +275,7 @@ def _drop_nonfinite_elpd_models(
     fit_kwargs = fit_kwargs or {}
     keep: List[Dict[str, str]] = []
     for entry in _manifest_entries(models_dir):
-        name = entry.get("name")
-        if not name:
-            continue
+        name = entry["name"]
         try:
             elpd = log_likelihood(
                 name, responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs
@@ -418,7 +403,7 @@ def _prune_losers(
     remaining = set(names) - set(to_prune)
     _write_manifest(
         models_dir,
-        [e for e in _manifest_entries(models_dir) if e.get("name") in remaining],
+        [e for e in _manifest_entries(models_dir) if e["name"] in remaining],
     )
     return to_prune
 
@@ -576,8 +561,8 @@ def _admit_candidate(
     entries: List[Dict[str, str]] = []
     seen = set()
     for entry in _manifest_entries(models_dir):
-        name = entry.get("name")
-        if not name or name in seen:
+        name = entry["name"]
+        if name in seen:
             continue
         seen.add(name)
         entries.append(dict(entry))
@@ -612,9 +597,7 @@ def _write_existing_hypotheses(
     elpd = (current_posterior or {}).get("elpd_loo", {})
     blocks: List[str] = []
     for entry in _manifest_entries(models_dir):
-        name = entry.get("name")
-        if not name:
-            continue
+        name = entry["name"]
         hypothesis = (entry.get("rationale") or "").strip() or "(no stated hypothesis)"
         header = f"## {name}"
         if name in posteriors:
@@ -1490,7 +1473,6 @@ def _export(
     hypotheses = {
         e["name"]: (e.get("rationale") or "").strip()
         for e in _manifest_entries(models_dir)
-        if e.get("name")
     }
     ranked = sorted(posterior["posteriors"].items(), key=lambda kv: kv[1], reverse=True)
     lines = [

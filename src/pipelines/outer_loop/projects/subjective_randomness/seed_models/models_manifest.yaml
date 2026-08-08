@@ -1,40 +1,46 @@
-# Hero-run seed set (promoted 2026-07): the best-fitting models discovered by
-# the three human replicate runs. The original hand-written seeds
-# (prototype_similarity, encoding_compressibility, bayesian_diagnosticity,
-# window_typicality) remain on disk for reference but are no longer active —
-# only the models listed here seed a run.
+# The live seed pool: what the outer loop copies into experiment 1's
+# cognitive_models/. This file MIRRORS the registry manifest at
+# src/subjective_randomness/pymc_model_families/models_manifest.yaml, which is
+# the single source of truth for the active seed set — to change the seed set,
+# edit the registry manifest and copy it (plus the model files) here.
+# test_subjective_randomness_seed_recovery.py asserts the two agree; the
+# 2026-07 hero-run pool that used to live here (and diverged from the registry
+# for a month) is preserved under archive_hero_run_2026_07/.
+#
+# Active seed set (2026-08 fidelity consolidation): the four
+# literature-faithful models, each replacing the superseded original it was
+# built to correct (falk_konold_dp <- encoding_compressibility, motif_hmm <-
+# bayesian_diagnosticity, finite_experience_occurrence <- window_typicality,
+# local_representativeness <- prototype_similarity). The superseded model
+# files and their pure-Python twins remain on disk (in the registry) so old
+# run artifacts can still be refit, but only the models listed here are
+# active — for recovery, fitted/no-learning baselines, and EIG stimulus design
+# defaults alike (see stimulus_design.default_model_family_names).
 models:
-  # run1/experiment3 winner (was iter1_candidate0, P(best)=0.969)
-  - name: minkowski_accumulated_typicality
+  - name: falk_konold_dp
     rationale: |
-      People evaluate the randomness of a sequence by accumulating a subjective
-      sense of typicality over its length, computing each event's typicality as
-      a penalty based on its distance from a mental prototype, with the distance
-      raised to a freely inferred Minkowski-like exponent so extreme feature
-      deviations are disproportionately punished.
-  # run2/experiment3 winner (was the exported inner_loop_model, P(best)=0.492)
-  - name: evidence_accumulation_messy_prototype
+      Sequences seem random to the extent they are hard to encode mentally:
+      randomness = the Difficulty Predictor DP = pure runs + 2*alternating
+      runs under the DP-minimising parse, unnormalised by length (Falk &
+      Konold 1997, p. 308). No free cognitive parameters.
+  - name: motif_hmm
     rationale: |
-      Random-looking sequences are judged by an evidence-accumulation process
-      where each item provides a baseline weight of evidence for randomness,
-      discounted by the sequence's quadratic (and asymmetric, for alternation)
-      deviation from a messy prototype — an ideal positive imbalance and ideal
-      alternation rate — so near-ideal longer sequences are preferred while
-      clearly deviant long sequences are penalized more heavily.
-  # run2/experiment3 runner-up (P(best)=0.460, near-tie with the winner)
-  - name: evidence_accumulation_per_run
+      Randomness = log-likelihood ratio of a fair coin versus Griffiths et
+      al. (2018)'s six-state motif HMM (repeating H, T, HT, TH; per-symbol
+      persistence delta, complexity penalty alpha^k), row-normalised and
+      marginalised over parses exactly as published — the faithful form of
+      the statistical-inference account.
+  - name: finite_experience_occurrence
     rationale: |
-      Random-looking sequences are judged by an evidence-accumulation process
-      where each distinct run (streak of identical outcomes) — rather than each
-      item — provides a baseline weight of evidence for randomness, discounted
-      by the sequence's quadratic deviation from a messy prototype, so periodic
-      patterns with artificially few runs are penalized without a separate
-      periodicity cue.
-  # run3/experiment3 winner (was iter1_candidate0, P(best)=0.994)
-  - name: artificial_balance_diagnosticity
+      A string seems random to the extent one actually encounters it when
+      watching a fair coin for a finite stretch: randomness = log expected
+      probability of occurring at least once in a global stream of 10/20/50
+      flips (Hahn & Warren 2009), with a stick-breaking prior over the
+      experience length. Penalises long runs AND perfect alternation.
+  - name: local_representativeness
     rationale: |
-      People judge randomness by Bayesian diagnosticity — the log-likelihood
-      ratio of a fair coin versus a subjective "regular" generative process —
-      where the regular process includes an "artificial balance" generator that
-      targets an exactly equal count of heads and tails, explaining why people
-      penalize suspiciously symmetric sequences as contrived rather than random.
+      Kahneman & Tversky (1972): a random-looking sequence is balanced not
+      only globally but "locally in each of its parts". Prototype distance
+      with the balance term judged as the worst H/T imbalance over sliding
+      length-4 windows, so globally balanced but clumped sequences are
+      penalised, plus distance from an ideal alternation rate.
