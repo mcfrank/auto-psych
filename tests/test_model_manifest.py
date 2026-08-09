@@ -128,6 +128,18 @@ def test_non_mapping_manifest_raises(tmp_path):
         read_manifest_entries(tmp_path)
 
 
+def test_manifest_without_models_key_raises(tmp_path):
+    _write_manifest(tmp_path, "metadata: only\n")
+    with pytest.raises(ValueError, match="models"):
+        read_manifest_entries(tmp_path)
+
+
+def test_non_list_models_block_raises(tmp_path):
+    _write_manifest(tmp_path, "models: one_model\n")
+    with pytest.raises(ValueError, match="list"):
+        read_manifest_entries(tmp_path)
+
+
 def test_entry_without_a_name_raises(tmp_path):
     # Silently skipping it would drop a model from the set without a trace.
     _write_manifest(tmp_path, "models:\n  - rationale: People do A.\n")
@@ -135,7 +147,20 @@ def test_entry_without_a_name_raises(tmp_path):
         read_manifest_entries(tmp_path)
 
 
-def test_read_loadable_model_names_keeps_only_models_with_a_file(tmp_path):
+def test_non_string_model_name_raises(tmp_path):
+    _write_manifest(tmp_path, "models:\n  - name: 42\n")
+    with pytest.raises(ValueError, match="string"):
+        read_manifest_entries(tmp_path)
+
+
+def test_duplicate_model_name_raises(tmp_path):
+    _write_manifest(tmp_path, "models:\n  - name: repeated\n  - name: repeated\n")
+    with pytest.raises(ValueError, match="duplicate.*repeated"):
+        read_manifest_entries(tmp_path)
+
+
+def test_read_loadable_model_names_raises_for_a_missing_file(tmp_path):
     _write_manifest(tmp_path, "models:\n  - name: present\n  - name: ghost\n")
     (tmp_path / "present.py").write_text("", encoding="utf-8")
-    assert read_loadable_model_names(tmp_path) == ["present"]
+    with pytest.raises(FileNotFoundError, match="ghost"):
+        read_loadable_model_names(tmp_path)

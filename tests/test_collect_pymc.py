@@ -78,6 +78,26 @@ def test_generate_from_models_raises_when_the_model_cannot_be_resolved():
         )
 
 
+@pytest.mark.parametrize(
+    "prediction",
+    [
+        {"right": 1.0},
+        {"left": 1.2, "right": -0.2},
+        {"left": 0.4, "right": 0.4},
+        {"left": float("nan"), "right": float("nan")},
+    ],
+)
+def test_ground_truth_generation_rejects_invalid_probabilities(prediction):
+    stimuli = [{"sequence_a": "HHHT", "sequence_b": "HTHT"}]
+    with pytest.raises((TypeError, ValueError), match="ground-truth model"):
+        _generate_from_models(
+            stimuli,
+            ["bad"],
+            n_participants=1,
+            model_registry={"bad": lambda stimulus, options: prediction},
+        )
+
+
 @pytest.mark.slow
 def test_generate_is_deterministic_under_fixed_seed(tmp_path):
     models_dir = _seed(tmp_path)

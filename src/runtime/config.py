@@ -41,12 +41,12 @@ def project_assets_dir(project_id: str) -> Path:
 
 def problem_definition_path(project_id: str) -> Path:
     """Return path to problem definition markdown file."""
-    return project_dir(project_id) / "problem_definition.md"
+    return project_assets_dir(project_id) / "problem_definition.md"
 
 
 def references_dir(project_id: str) -> Path:
     """Return path to project references directory (PDFs, .md, .txt)."""
-    return project_dir(project_id) / "references"
+    return project_assets_dir(project_id) / "references"
 
 
 def run_dir(project_id: str, run_id: int) -> Path:
@@ -82,4 +82,4 @@ def prompts_used_dir(project_id: str, run_id: int) -> Path:
 
 def project_prompts_dir(project_id: str) -> Path:
     """Return path to project-specific prompt overrides."""
-    return project_dir(project_id) / "prompts"
+    return project_assets_dir(project_id) / "prompts"

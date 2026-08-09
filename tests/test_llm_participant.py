@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import csv
 import json
+import threading
+import time
 
 import pytest
 
@@ -85,6 +87,38 @@ def test_unparseable_and_errors_are_counted(tmp_path):
     assert stats["n_rows"] == len(rows) == 0
 
 
+def test_model_concurrency_limit_is_respected():
+    class SingleThreadedModel:
+        name = "fake:single-threaded"
+        max_concurrency = 1
+
+        def __init__(self):
+            self.active_calls = 0
+            self.high_water_mark = 0
+            self.lock = threading.Lock()
+
+        def answer(self, system, user):
+            with self.lock:
+                self.active_calls += 1
+                self.high_water_mark = max(self.high_water_mark, self.active_calls)
+            time.sleep(0.005)
+            with self.lock:
+                self.active_calls -= 1
+            return "ANSWER: left"
+
+    model = SingleThreadedModel()
+    rows, stats = generate_llm_participant_rows(
+        STIMULI,
+        n_participants=4,
+        participant_model=model,
+        prompt_text="x",
+        max_workers=4,
+    )
+
+    assert stats["n_rows"] == len(rows) == 8
+    assert model.high_water_mark == 1
+
+
 def test_only_committed_answers_parse_loose_mentions_are_unparseable():
     from src.pipelines.outer_loop.collect import _parse_participant_answer
 
@@ -142,3 +176,39 @@ def test_run_collect_programmatic_nobrowser_writes_csv(tmp_path, monkeypatch):
     rows = list(csv.DictReader(csv_path.open(encoding="utf-8")))
     assert len(rows) == 2 * len(STIMULI)
     assert REQUIRED_COLUMNS <= set(rows[0].keys())
+
+
+def test_programmatic_nobrowser_rejects_partial_collection(tmp_path, monkeypatch):
+    """A few valid rows must not disguise failed or unparseable trials."""
+    from src.pipelines.outer_loop import orchestrator
+
+    class PartialParticipant:
+        name = "fake:partial"
+
+        def answer(self, system, user):
+            if "HHHHH" in user:
+                raise RuntimeError("backend failure")
+            return "ANSWER: left"
+
+    monkeypatch.setattr(
+        participants, "get_participant_model", lambda b, m=None: PartialParticipant()
+    )
+    exp_dir = tmp_path / "experiment1"
+    (exp_dir / "design").mkdir(parents=True)
+    (exp_dir / "design" / "stimuli.json").write_text(
+        json.dumps(STIMULI), encoding="utf-8"
+    )
+
+    with pytest.raises(RuntimeError, match="incomplete.*expected 4.*received 2"):
+        orchestrator.run_collect_programmatic(
+            exp_dir,
+            mode="simulated_participants_nobrowser",
+            n_participants=2,
+            project_id="subjective_randomness",
+        )
+
+    stats = json.loads(
+        (exp_dir / "data" / "collection_stats.json").read_text(encoding="utf-8")
+    )
+    assert stats["n_errors"] == 2
+    assert not (exp_dir / "data" / "responses.csv").exists()

@@ -54,16 +54,36 @@ def read_manifest_entries(
         manifest = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
         raise ValueError(f"Invalid YAML in {MANIFEST_FILENAME} at {path}: {exc}") from exc
-    if manifest is None:
-        manifest = {}
     if not isinstance(manifest, dict):
         raise ValueError(f"{path} must be a mapping with a 'models' key")
+    if "models" not in manifest:
+        raise ValueError(f"{path} must contain a 'models' list")
+    raw_entries = manifest["models"]
+    if not isinstance(raw_entries, list):
+        raise ValueError(
+            f"{path} has a malformed 'models' block: expected a list, "
+            f"got {type(raw_entries).__name__}"
+        )
 
     entries: List[Dict[str, str]] = []
-    for entry in manifest.get("models") or []:
-        normalised = entry if isinstance(entry, dict) else {"name": entry}
-        if not normalised.get("name"):
+    seen_names: set[str] = set()
+    for entry in raw_entries:
+        if not isinstance(entry, (dict, str)):
+            raise ValueError(
+                f"{path} has a model entry that is neither a mapping nor a string: "
+                f"{entry!r}"
+            )
+        normalised = dict(entry) if isinstance(entry, dict) else {"name": entry}
+        name = normalised.get("name")
+        if not name:
             raise ValueError(f"{path} has a model entry with no name: {entry!r}")
+        if not isinstance(name, str):
+            raise ValueError(
+                f"{path} has a model name that is not a string: {name!r}"
+            )
+        if name in seen_names:
+            raise ValueError(f"{path} has duplicate model name {name!r}")
+        seen_names.add(name)
         entries.append(normalised)
     return entries
 
@@ -76,15 +96,18 @@ def read_manifest_names(
 
 
 def read_loadable_model_names(models_dir: PathLike) -> List[str]:
-    """Manifest names whose ``<name>.py`` actually exists in ``models_dir``.
+    """Manifest names after verifying every ``<name>.py`` exists.
 
-    Fitting and comparison need the implementation, not just the name, so a
-    listed-but-missing model is skipped here. Callers check the result for
-    emptiness — an empty model set is what they must refuse.
+    A manifest defines the hypothesis set. Silently omitting a listed model
+    would change that set, so an incomplete directory raises and names every
+    missing implementation.
     """
     models_dir = Path(models_dir)
-    return [
-        name
-        for name in read_manifest_names(models_dir)
-        if (models_dir / f"{name}.py").exists()
-    ]
+    names = read_manifest_names(models_dir)
+    missing = [name for name in names if not (models_dir / f"{name}.py").is_file()]
+    if missing:
+        raise FileNotFoundError(
+            f"Manifest at {manifest_path(models_dir)} lists model file(s) that do "
+            f"not exist: {missing}"
+        )
+    return names

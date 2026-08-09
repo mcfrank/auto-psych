@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import csv
+import hashlib
 
 import numpy as np
 import pytest
@@ -209,6 +210,20 @@ def test_eig_from_prior_means_degenerate_p_left_is_zero():
     assert pi.eig_from_prior_means({"m1": 1.0, "m2": 1.0}) == 0.0
 
 
+@pytest.mark.parametrize("prediction", [-0.1, 1.1, float("nan"), float("inf")])
+def test_eig_from_prior_means_rejects_invalid_probability(prediction):
+    with pytest.raises(ValueError, match="m1"):
+        pi.eig_from_prior_means({"m1": prediction, "m2": 0.5})
+
+
+@pytest.mark.parametrize("weight", [-1.0, float("nan"), float("inf")])
+def test_eig_from_prior_means_rejects_invalid_weight(weight):
+    with pytest.raises(ValueError, match="m1"):
+        pi.eig_from_prior_means(
+            {"m1": 0.8, "m2": 0.2}, {"m1": weight, "m2": 1.0}
+        )
+
+
 @pytest.mark.slow
 def test_fitted_model_predict_p_left_draws_shape_and_mean_consistency(tmp_path):
     """Posterior-predictive per-draw p_left: shape (n_draws, n_stim), values in
@@ -346,3 +361,62 @@ def test_diagnostics_propagate_unexpected_errors(monkeypatch):
     monkeypatch.setattr(pi, "_max_rhat", lambda idata: 1.0)
     with pytest.raises(TypeError):
         pi._warn_sampling_diagnostics("m", _FakeIdata(_Exploding()))
+
+
+def test_in_process_cache_hits_rerun_sampling_diagnostics(tmp_path, monkeypatch):
+    models_dir = tmp_path / "models"
+    models_dir.mkdir()
+    (models_dir / "m.py").write_text("# model\n", encoding="utf-8")
+    responses = tmp_path / "responses.csv"
+    responses.write_text("chose_left\n1\n", encoding="utf-8")
+    idata = object()
+    cached = pi.FittedModel(name="m", model=object(), idata=idata, fingerprint="fp")
+    key = pi._cache_key("m", models_dir, responses, {})
+    pi._FIT_CACHE[key] = cached
+    checked = []
+    monkeypatch.setattr(
+        pi, "_warn_sampling_diagnostics", lambda name, value: checked.append((name, value))
+    )
+
+    result = pi.fit_models_cached(["m"], models_dir, responses)
+
+    assert result == {"m": cached}
+    assert checked == [("m", idata)]
+    pi.clear_fit_cache()
+
+
+def test_disk_cache_hits_rerun_sampling_diagnostics(tmp_path, monkeypatch):
+    models_dir = tmp_path / "models"
+    models_dir.mkdir()
+    model_path = models_dir / "m.py"
+    model_path.write_text("# model\n", encoding="utf-8")
+    responses = tmp_path / "responses.csv"
+    responses.write_text("chose_left\n1\n", encoding="utf-8")
+    signature = pi._sampler_signature(pi._FIT_DEFAULTS)
+    fingerprint = hashlib.sha256(
+        (pi._sha256_file(model_path) + pi._sha256_file(responses) + signature).encode(
+            "utf-8"
+        )
+    ).hexdigest()[:16]
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    (cache_dir / f"m.{fingerprint}.nc").touch()
+    idata = object()
+
+    class _FakeArviz:
+        @staticmethod
+        def from_netcdf(path):
+            return idata
+
+    monkeypatch.setattr(pi, "_import_pymc", lambda: object())
+    monkeypatch.setattr(pi, "_import_arviz", lambda: _FakeArviz())
+    monkeypatch.setattr(pi, "load_pymc_model", lambda name, directory: object())
+    checked = []
+    monkeypatch.setattr(
+        pi, "_warn_sampling_diagnostics", lambda name, value: checked.append((name, value))
+    )
+
+    fitted = pi.fit_model("m", models_dir, responses, cache_dir=cache_dir)
+
+    assert fitted.idata is idata
+    assert checked == [("m", idata)]

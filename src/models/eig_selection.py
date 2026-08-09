@@ -38,6 +38,8 @@ from typing import Dict, List, Optional, Sequence, Tuple
 
 import numpy as np
 
+from src.registry.io import validate_theory_weights
+
 # Numeric floor for probabilities entering logs. The PyMC models already clip
 # p_left to [1e-6, 1 - 1e-6]; this only guards hand-built arrays at 0 or 1.
 _P_CLIP = 1e-12
@@ -83,7 +85,8 @@ def _model_prior(
     is zero falls back to uniform rather than failing.
     """
     if model_weights:
-        w = np.array([model_weights.get(n, 0.0) for n in names], dtype=float)
+        validated = validate_theory_weights(model_weights)
+        w = np.array([validated.get(n, 0.0) for n in names], dtype=float)
         if w.sum() <= 0:
             w = np.ones(len(names))
     else:

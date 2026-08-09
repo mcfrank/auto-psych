@@ -65,7 +65,6 @@ The dead `run_collect` subtree in `collect.py` (superseded by `orchestrator.run_
 ## Known follow-ups (documented, not done)
 
 - Fast-suite wall time is dominated by `test_stimulus_diverse_selection.py` (~66s of ~92s) — the lever if the suite needs speeding up.
-- `_server_reachable` / `_start_experiment_server` / `_run_one_participant_browser` in `collect.py` became orphaned when the dead `run_collect` subtree left; they were off the approved deletion list (and two fail-loud tests cover `_server_reachable`) — needs a keep-or-delete decision.
 - A transient LLM API error mid-run still degrades that one simulated participant to blind clicking (logged to stderr and `llm_steering_error.txt`) — the last remaining silent-ish degradation.
 - The two EIG stacks (pure-Python `stimulus_design.py` vs PyMC `outer_loop/eig.py`) remain separate by design; unifying them is research-risky.
 - Optional: git history rewrite to actually shrink the 801 MB `.git` (requires co-author coordination); firebase config consolidation; the dormant `test_models.py` / `test_theorist_output.py` pair.

@@ -12,12 +12,24 @@ import json
 
 import pytest
 
+from src.pipelines.inner_loop import pymc_orchestrator
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 
 @pytest.mark.slow
-def test_inner_loop_seeds_fits_and_selects_best(tmp_path):
+def test_inner_loop_seeds_fits_and_selects_best(tmp_path, monkeypatch):
+    # Keep this as an export integration test. The tiny fixture's stochastic
+    # Pareto-k warning is covered separately by deterministic refusal tests.
+    real_compare = pymc_orchestrator._compare
+
+    def comparison_for_export_test(*args, **kwargs):
+        return {
+            name: {**row, "loo_unreliable": False}
+            for name, row in real_compare(*args, **kwargs).items()
+        }
+
+    monkeypatch.setattr(pymc_orchestrator, "_compare", comparison_for_export_test)
     results_dir = tmp_path / "model_loop"
 
     result = run_pymc_inner_loop(

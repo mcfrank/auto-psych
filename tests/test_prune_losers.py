@@ -13,9 +13,10 @@ audit trail, not a deletion).
 from __future__ import annotations
 
 import yaml
+import pytest
 
 from src.pipelines.inner_loop import pymc_orchestrator
-from src.pipelines.inner_loop.pymc_orchestrator import _prune_losers
+from src.pipelines.inner_loop.pymc_orchestrator import _export, _prune_losers
 
 
 def _models_dir(tmp_path, names):
@@ -123,6 +124,50 @@ def test_indistinguishable_or_weighted_models_stay(tmp_path, monkeypatch):
         fit_kwargs=None,
     )
     assert pruned == []
+
+
+def test_unreliable_loo_prevents_pruning(tmp_path, monkeypatch, capsys):
+    models_dir = _models_dir(tmp_path, ["seed_a", "dead_end"])
+    rows = {
+        "seed_a": _row(0, 0.0, 0.0, 0.995),
+        "dead_end": _row(1, 12.0, 2.0, 0.005),
+    }
+    rows["dead_end"]["loo_unreliable"] = True
+    evicted = _stub_comparison(monkeypatch, rows)
+
+    pruned = _prune_losers(
+        models_dir,
+        tmp_path / "responses.csv",
+        protected={"seed_a"},
+        cache_dir=None,
+        fit_kwargs=None,
+    )
+
+    assert pruned == []
+    assert (models_dir / "dead_end.py").exists()
+    assert evicted == []
+    assert "unreliable" in capsys.readouterr().err.lower()
+
+
+def test_unreliable_selected_model_prevents_result_export(tmp_path):
+    models_dir = _models_dir(tmp_path, ["selected", "runner_up"])
+    results_dir = tmp_path / "results"
+    results_dir.mkdir()
+    posterior = {
+        "posteriors": {"selected": 0.8, "runner_up": 0.2},
+        "elpd_loo": {"selected": -10.0, "runner_up": -11.0},
+        "n_trials": 20,
+    }
+    comparison = {
+        "selected": {**_row(0, 0.0, 0.0, 0.8), "loo_unreliable": True},
+        "runner_up": _row(1, 1.0, 1.0, 0.2),
+    }
+
+    with pytest.raises(RuntimeError, match="selected.*LOO.*unreliable"):
+        _export(results_dir, models_dir, posterior, comparison)
+
+    assert not (results_dir / "best_model.py").exists()
+    assert not (results_dir / "model_posterior.json").exists()
 
 
 def test_zero_multiplier_disables_pruning(tmp_path, monkeypatch):

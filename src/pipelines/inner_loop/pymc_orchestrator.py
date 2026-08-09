@@ -31,6 +31,7 @@ import json
 import math
 import re
 import shutil
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -373,6 +374,17 @@ def _prune_losers(
     comparison = compare_table(
         responses_path, models_dir, cache_dir=cache_dir, **(fit_kwargs or {})
     )
+    unreliable = sorted(
+        name for name, row in comparison.items() if row.get("loo_unreliable")
+    )
+    if unreliable:
+        print(
+            "  [warn] Skipping model pruning because LOO is unreliable for: "
+            + ", ".join(unreliable),
+            file=sys.stderr,
+            flush=True,
+        )
+        return []
     to_prune = [
         name
         for name in names
@@ -1462,12 +1474,23 @@ def _export(
     comparison: Optional[Dict[str, Dict[str, float]]] = None,
 ) -> Dict[str, Any]:
     comparison = comparison or {}
+    best_model = _best_model(posterior)
+    if comparison and best_model not in comparison:
+        raise RuntimeError(
+            f"Cannot export selected model {best_model!r}: its LOO comparison row "
+            "is missing."
+        )
+    if comparison.get(best_model, {}).get("loo_unreliable"):
+        raise RuntimeError(
+            f"Cannot export selected model {best_model!r}: its LOO estimate is "
+            "unreliable. Improve the fit or data before selecting a model."
+        )
+
     payload = {**posterior, "comparison": comparison}
     (results_dir / "model_posterior.json").write_text(
         json.dumps(payload, indent=2), encoding="utf-8"
     )
 
-    best_model = _best_model(posterior)
     shutil.copyfile(models_dir / f"{best_model}.py", results_dir / "best_model.py")
 
     hypotheses = {

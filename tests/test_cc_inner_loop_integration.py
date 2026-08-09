@@ -12,11 +12,24 @@ import pytest
 import yaml
 
 from src.pipelines.outer_loop.orchestrator import run_inner_model_loop_programmatic
+from src.pipelines.inner_loop import pymc_orchestrator
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 
 @pytest.mark.slow
-def test_inner_model_loop_exports_best_pymc_model(tmp_path):
+def test_inner_model_loop_exports_best_pymc_model(tmp_path, monkeypatch):
+    # This test exercises the outer-to-inner export wiring on a deliberately
+    # tiny fixture. Its real PSIS diagnostic is unstable at this sample size;
+    # the fail-loud reliability gate has dedicated deterministic tests.
+    real_compare = pymc_orchestrator._compare
+
+    def comparison_for_export_test(*args, **kwargs):
+        return {
+            name: {**row, "loo_unreliable": False}
+            for name, row in real_compare(*args, **kwargs).items()
+        }
+
+    monkeypatch.setattr(pymc_orchestrator, "_compare", comparison_for_export_test)
     exp_dir = tmp_path / "project" / "experiment1"
 
     # Seed the experiment's model set with the two fixture PyMC models.

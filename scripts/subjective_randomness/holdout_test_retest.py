@@ -227,7 +227,7 @@ def main(args: Args) -> None:
             f"{'n/a' if mean is None else f'{mean:.3f}'} "
             f"sd={'n/a' if sd is None else f'{sd:.3f}'} "
             f"(n={s['n_runs']}), best-model agreement="
-            f"{'n/a' if s['best_model_agreement'] is None else f'{s['best_model_agreement']:.2f}'}"
+            f"{'n/a' if s['best_model_agreement'] is None else format(s['best_model_agreement'], '.2f')}"
             f" -> {s['modal_best_model']}"
         )
 

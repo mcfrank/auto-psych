@@ -19,6 +19,7 @@ import pytest
 import yaml
 
 import src.subjective_randomness.holdout_recovery as holdout_recovery
+from src.pipelines.inner_loop import pymc_orchestrator
 from src.runtime import token_usage
 from src.subjective_randomness.holdout_recovery import (
     TRAJECTORY_COLUMNS,
@@ -1680,6 +1681,20 @@ def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypa
         return True, "ok"
 
     monkeypatch.setattr(holdout_recovery, "spawn_cc_agent", design_only_spawn)
+    # This smoke test targets the fit-cache/trajectory chain on a very small
+    # synthetic sample. Preserve the real comparison but neutralize its unstable
+    # Pareto-k flag; deterministic tests separately prove unsafe export refuses.
+    real_compare = pymc_orchestrator._compare
+
+    def comparison_for_pipeline_smoke_test(*args, **kwargs):
+        return {
+            name: {**row, "loo_unreliable": False}
+            for name, row in real_compare(*args, **kwargs).items()
+        }
+
+    monkeypatch.setattr(
+        pymc_orchestrator, "_compare", comparison_for_pipeline_smoke_test
+    )
 
     config = {
         "project_id": "subjective_randomness",

@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import pytest
 
-from src.registry.io import DEFAULT_RESERVED_FOR_NEW, load_registry
+from src.registry.io import DEFAULT_RESERVED_FOR_NEW, load_registry, normalize_theories
 
 
 def _write(tmp_path, text: str):
@@ -42,3 +42,31 @@ def test_non_numeric_reserved_for_new_raises(tmp_path):
     path = _write(tmp_path, "theories:\n  a: 1.0\nreserved_for_new: lots\n")
     with pytest.raises(ValueError, match="reserved_for_new"):
         load_registry(path)
+
+
+def test_non_mapping_registry_root_raises(tmp_path):
+    path = _write(tmp_path, "- theories\n- reserved_for_new\n")
+    with pytest.raises(ValueError, match="mapping"):
+        load_registry(path)
+
+
+@pytest.mark.parametrize("weight", [-0.1, ".nan", ".inf", "lots", True])
+def test_invalid_theory_weight_raises(tmp_path, weight):
+    rendered = str(weight).lower() if isinstance(weight, bool) else weight
+    path = _write(tmp_path, f"theories:\n  a: {rendered}\nreserved_for_new: 0.25\n")
+    with pytest.raises(ValueError, match="a"):
+        load_registry(path)
+
+
+@pytest.mark.parametrize("reserved", [-0.1, 1.1, ".nan", ".inf"])
+def test_out_of_range_reserved_mass_raises(tmp_path, reserved):
+    path = _write(
+        tmp_path, f"theories:\n  a: 0.5\nreserved_for_new: {reserved}\n"
+    )
+    with pytest.raises(ValueError, match="reserved_for_new"):
+        load_registry(path)
+
+
+def test_normalize_rejects_negative_weight():
+    with pytest.raises(ValueError, match="a"):
+        normalize_theories({"a": -1.0, "b": 2.0})

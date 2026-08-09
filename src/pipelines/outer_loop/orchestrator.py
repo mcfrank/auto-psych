@@ -28,6 +28,7 @@ from src.models.model_manifest import (
     read_manifest_entries,
     read_manifest_names,
 )
+from src.models.project.ground_truth import get_ground_truth_models
 from src.pipelines.outer_loop.featurizer import Featurizer, load_featurizer
 from src.runtime.coding_agent import run_coding_agent
 from src.runtime.config import PROJECT_ASSETS_DIR, REPO_ROOT
@@ -66,22 +67,6 @@ def experiment_dir(project_id: str, exp_num: int) -> Path:
 def project_seed_models_dir(project_id: str) -> Path:
     """Return the optional project seed-model directory."""
     return outer_project_dir(project_id) / "seed_models"
-
-
-def get_ground_truth_models(project_id: str) -> Dict:
-    """Load GROUND_TRUTH_MODELS from src/pipelines/outer_loop/projects/<project>/ground_truth_models.py."""
-    import importlib.util
-
-    path = outer_project_dir(project_id) / "ground_truth_models.py"
-    if not path.exists():
-        return {}
-    spec = importlib.util.spec_from_file_location(f"gt_{project_id}", path)
-    if spec is None or spec.loader is None:
-        return {}
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    registry = getattr(mod, "GROUND_TRUTH_MODELS", None)
-    return dict(registry) if isinstance(registry, dict) else {}
 
 
 def ensure_experiment_dirs(exp_dir: Path) -> None:
@@ -366,9 +351,9 @@ def _collect_llm_participant_programmatic(
     """LLM-as-participant collection for the active (programmatic) outer loop.
 
     Resolves the participant prompt and the participant-model backend, then runs
-    the shared generation loop. Failures (no stimuli, missing prompt, model init
-    error) degrade to an empty result with a logged reason rather than raising,
-    so one bad run does not abort the experiment.
+    the shared generation loop. The result must contain one response for every
+    participant/stimulus pair; partial collections are saved as diagnostics and
+    rejected before they can reach model fitting.
     """
     from src.pipelines.outer_loop.collect import generate_llm_participant_rows
     from src.pipelines.outer_loop.llm import load_prompt_for_run
@@ -419,6 +404,17 @@ def _collect_llm_participant_programmatic(
         f"  [collect] {stats['n_rows']} rows (unparseable={stats['n_unparseable']}, errors={stats['n_errors']})",
         flush=True,
     )
+    stats_path = data_dir / "collection_stats.json"
+    stats_path.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
+    expected_rows = n_participants * len(stimuli)
+    if stats["n_rows"] != expected_rows:
+        raise RuntimeError(
+            "LLM participant collection was incomplete: "
+            f"expected {expected_rows} responses but received {stats['n_rows']} "
+            f"(unparseable={stats['n_unparseable']}, errors={stats['n_errors']}). "
+            f"Diagnostics were written to {stats_path}; refusing to model a "
+            "partial dataset."
+        )
     return rows
 
 

@@ -196,26 +196,6 @@ def test_drive_with_llm_reports_a_missing_steering_prompt(tmp_path, monkeypatch,
     assert "4_collect_steering" in capsys.readouterr().err
 
 
-# ── Server reachability: connection failures only ──────────────────────────
-
-
-def test_server_reachable_is_false_on_a_connection_error(monkeypatch):
-    def boom(*args, **kwargs):
-        raise urllib.error.URLError("connection refused")
-
-    monkeypatch.setattr(collect.urllib.request, "urlopen", boom)
-    assert collect._server_reachable("http://127.0.0.1:8765") is False
-
-
-def test_server_reachable_propagates_programming_errors(monkeypatch):
-    def boom(*args, **kwargs):
-        raise TypeError("urlopen() got an unexpected keyword argument")
-
-    monkeypatch.setattr(collect.urllib.request, "urlopen", boom)
-    with pytest.raises(TypeError):
-        collect._server_reachable("http://127.0.0.1:8765")
-
-
 # ── Live collection: never return [] for a config or fetch failure ─────────
 
 
