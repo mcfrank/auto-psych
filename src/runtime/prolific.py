@@ -1,7 +1,7 @@
 """
 Prolific API client for creating studies, test participants, and polling submissions.
 Token is read from .secrets (PROLIFIC_API_TOKEN) or env PROLIFIC_API_TOKEN.
-Project-level settings: projects/<project_id>/prolific_config.yaml
+Project-level settings: src/pipelines/outer_loop/projects/<project_id>/prolific_config.yaml
 
 Error contract — ONE rule for every wrapper here. Each returns
 ``(value, error_message)`` where ``error_message`` is non-None for exactly one
@@ -24,7 +24,7 @@ from typing import Any, Dict, Optional, Tuple
 import requests
 import yaml
 
-from src.runtime.config import REPO_ROOT, project_dir
+from src.runtime.config import REPO_ROOT, project_assets_dir
 
 # Defaults when prolific_config.yaml is missing or partial
 DEFAULT_ESTIMATED_COMPLETION_MINUTES = 5
@@ -33,11 +33,11 @@ DEFAULT_COMPLETION_CODE = "AUTO_PSYCH_COMPLETE"
 
 def load_prolific_config(project_id: str) -> Dict[str, Any]:
     """
-    Load projects/<project_id>/prolific_config.yaml with defaults.
+    Load the project's prolific_config.yaml with defaults.
     Keys: estimated_completion_time (min), completion_code, test_participant_email (for test_prolific),
     total_available_places, reward (cents), name, description, etc.
     """
-    path = project_dir(project_id) / "prolific_config.yaml"
+    path = project_assets_dir(project_id) / "prolific_config.yaml"
     out = {
         "estimated_completion_time": DEFAULT_ESTIMATED_COMPLETION_MINUTES,
         "completion_code": DEFAULT_COMPLETION_CODE,

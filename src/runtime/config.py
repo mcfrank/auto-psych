@@ -16,15 +16,27 @@ REPO_ROOT = here()
 # Top-level defaults retained for shared support modules.
 DEFAULT_SIMULATED_N_PARTICIPANTS = 5
 DEFAULT_MAX_VALIDATION_RETRIES = 3
+# Run *outputs* of the agent pipeline (projects/<id>/run<N>/…).
 # Override via PIPELINE_PROJECTS_DIR for Cloud Run (e.g. /app/projects)
 PROJECTS_DIR = Path(os.environ.get("PIPELINE_PROJECTS_DIR", REPO_ROOT / "projects"))
+# Project *assets* — problem_definition.md, ground_truth_models.py, preprocess.py,
+# seed_models/, references/, prolific_config.yaml. These ship with the package
+# next to the outer loop that reads them, and are deliberately NOT under
+# PROJECTS_DIR: the two roots each held a copy of the assets for a while, and the
+# root copies silently went stale while the pipeline ran the ones under src/.
+PROJECT_ASSETS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects"
 PROMPTS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "prompts"
 SECRETS_PATH = REPO_ROOT / ".secrets"
 
 
 def project_dir(project_id: str) -> Path:
-    """Return path to project directory."""
+    """Return path to project run-output directory."""
     return PROJECTS_DIR / project_id
+
+
+def project_assets_dir(project_id: str) -> Path:
+    """Return path to the project's checked-in assets directory."""
+    return PROJECT_ASSETS_DIR / project_id
 
 
 def problem_definition_path(project_id: str) -> Path:

@@ -26,6 +26,17 @@ def _get_ground_truth_models():
     return get_ground_truth_models("subjective_randomness")
 
 
+def test_loader_sees_the_live_ground_truth_registry():
+    """The loader must read the assets the outer loop actually runs.
+
+    It resolved against the root ``projects/`` tree, which held a stale two-model
+    shadow of the registry; the outer loop meanwhile ran the four-model file under
+    ``src/pipelines/outer_loop/projects/``. The hidden models are the tell.
+    """
+    names = set(_get_ground_truth_models())
+    assert {"length_sensitive_alternation", "recency_weighted_alternation"} <= names
+
+
 @pytest.mark.parametrize("model_name", list(_get_ground_truth_models().keys()))
 def test_model_returns_dict(model_name):
     models = _get_ground_truth_models()

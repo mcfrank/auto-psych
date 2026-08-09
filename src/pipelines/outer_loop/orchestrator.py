@@ -30,7 +30,7 @@ from src.models.model_manifest import (
 )
 from src.pipelines.outer_loop.featurizer import Featurizer, load_featurizer
 from src.runtime.coding_agent import run_coding_agent
-from src.runtime.config import REPO_ROOT
+from src.runtime.config import PROJECT_ASSETS_DIR, REPO_ROOT
 
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
@@ -41,7 +41,7 @@ PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 def outer_projects_dir() -> Path:
     """Project *assets* (problem_definition.md, ground_truth_models.py, preprocess.py)."""
-    return REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects"
+    return PROJECT_ASSETS_DIR
 
 
 def outer_project_dir(project_id: str) -> Path:
