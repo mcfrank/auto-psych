@@ -8,7 +8,6 @@ which fits models via MCMC, is covered by the `slow`-marked integration test.
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import numpy as np
 import pytest
@@ -27,8 +26,9 @@ from src.subjective_randomness.model_recovery import (
     write_responses_csv,
 )
 from src.subjective_randomness.features import featurize_stimulus
+from tests.model_registry import FAITHFUL_MODEL_NAMES
+from tests.paths import REPO_ROOT
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
 # The recovery GT/baseline registry: the models with pure-Python family twins,
 # and the single source of truth for the active seed set (the live project
 # seed_models dir mirrors this manifest). It also keeps superseded models on
@@ -298,12 +298,7 @@ def test_default_generating_params_covers_every_seed_model():
     params = default_generating_params(SEED_MODELS_DIR)
     # The registry holds only the literature-faithful seed set (2026-08
     # consolidation); the superseded originals stay on disk but inactive.
-    assert set(params) == {
-        "falk_konold_dp",
-        "motif_hmm",
-        "finite_experience_occurrence",
-        "local_representativeness",
-    }
+    assert set(params) == FAITHFUL_MODEL_NAMES
     # Each default must name exactly the PyMC model's free parameters, so it can
     # drive the fixed-parameter generator without a loud failure.
     assert set(params["local_representativeness"]) == {
@@ -452,12 +447,7 @@ def test_run_closed_ended_recovery_assembles_confusion(tmp_path):
     )
 
     seed_set = set(result["seed_models"])
-    assert seed_set == {
-        "falk_konold_dp",
-        "motif_hmm",
-        "finite_experience_occurrence",
-        "local_representativeness",
-    }
+    assert seed_set == FAITHFUL_MODEL_NAMES
     assert len(result["generating"]) == 1
 
     record = result["generating"][0]

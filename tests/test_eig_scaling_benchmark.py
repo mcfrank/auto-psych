@@ -15,28 +15,19 @@ test_eig_pymc.py.
 from __future__ import annotations
 
 import csv
-import importlib.util
 import json
 import math
-from pathlib import Path
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-FIXTURE_MODELS = REPO_ROOT / "tests" / "fixtures" / "pymc_models"
-SCRIPT = REPO_ROOT / "scripts" / "analysis" / "benchmark_eig_scaling.py"
+from tests.paths import ANALYSIS_SCRIPTS_DIR, PYMC_MODEL_FIXTURES_DIR, load_script_module
+
+SCRIPT = ANALYSIS_SCRIPTS_DIR / "benchmark_eig_scaling.py"
 
 
 def _load_benchmark():
     """Load the benchmark script as a module (its helpers are under test)."""
-    import sys
-
-    spec = importlib.util.spec_from_file_location("benchmark_eig_scaling", SCRIPT)
-    assert spec is not None and spec.loader is not None
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = mod
-    spec.loader.exec_module(mod)
-    return mod
+    return load_script_module(SCRIPT)
 
 
 def test_pair_universe_size_matches_enumeration():
@@ -98,7 +89,7 @@ def test_benchmark_end_to_end(tmp_path):
     mod = _load_benchmark()
 
     result = mod.run_benchmark(
-        models_dir=FIXTURE_MODELS,
+        models_dir=PYMC_MODEL_FIXTURES_DIR,
         per_stim_sizes=(2, 3),
         batched_sizes=(4, 8),
         n_samples=25,

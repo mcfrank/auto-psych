@@ -35,8 +35,10 @@ from src.subjective_randomness.holdout_recovery import (
 )
 from src.subjective_randomness.recover import pearson_r
 from src.subjective_randomness.stimulus_design import generate_candidate_pool
+from tests.model_registry import FAITHFUL_MODEL_NAMES
+from tests.recovery_fixtures import CannedPredictionFit
+from tests.paths import REPO_ROOT
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
 # The recovery GT/baseline registry: the models with pure-Python family twins,
 # and the single source of truth for the active seed set (the live project
 # seed_models dir mirrors this manifest). It also keeps superseded models on
@@ -149,13 +151,6 @@ def _stub_inner_loop(history_best):
     return run
 
 
-class _FakeFitted:
-    model = None
-
-    def predict_p_left(self, stim_data):
-        return np.linspace(0.1, 0.9, stim_data["n"])
-
-
 def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monkeypatch):
     agent_calls = []
     collect_calls = []
@@ -185,7 +180,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
 
     def fake_fit_model(name, models_dir, responses_path, *, cache_dir=None, **kw):
         fit_calls.append({"name": name, "cache_dir": cache_dir})
-        return _FakeFitted()
+        return CannedPredictionFit()
 
     monkeypatch.setattr(holdout_recovery, "fit_model", fake_fit_model)
 
@@ -230,12 +225,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert "prototype_similarity" not in seeded_names
     # Manifest read after the full run: exactly the four faithful seeds — the
     # stub best model is one of them, so the export adds nothing.
-    assert seeded_names == {
-        "falk_konold_dp",
-        "motif_hmm",
-        "finite_experience_occurrence",
-        "local_representativeness",
-    }
+    assert seeded_names == FAITHFUL_MODEL_NAMES
 
     # Design is the only spawned agent: exp 1's model set is seeded and exp 2's
     # is carried forward programmatically (no theorist agent). The config's
@@ -271,12 +261,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # it too, since every stub prediction is identical. The GT is the
     # superseded prototype_similarity, no longer in the registry, so no seed
     # is excluded and the baseline covers the whole faithful set.
-    assert set(gt_run["fitted_baseline"]["per_model"]) == {
-        "falk_konold_dp",
-        "motif_hmm",
-        "finite_experience_occurrence",
-        "local_representativeness",
-    }
+    assert set(gt_run["fitted_baseline"]["per_model"]) == FAITHFUL_MODEL_NAMES
     assert gt_run["fitted_baseline"]["mean_r"] == pytest.approx(1.0)
 
     # Evaluation refits go through the shared MCMC cache. The BMA fits every
@@ -284,21 +269,11 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # plus motif_hmm — both seeds), and the fitted-seed baseline fits the
     # registry models, so together they cover exactly the faithful set.
     assert all(c["cache_dir"] == tmp_path / "cache" for c in fit_calls)
-    assert {c["name"] for c in fit_calls} == {
-        "falk_konold_dp",
-        "motif_hmm",
-        "finite_experience_occurrence",
-        "local_representativeness",
-    }
+    assert {c["name"] for c in fit_calls} == FAITHFUL_MODEL_NAMES
 
     # The no-learning baseline averages the other seed models (default params)
     # against the GT; with identical stub predictions every correlation is 1.
-    assert set(gt_run["baseline"]["per_model"]) == {
-        "falk_konold_dp",
-        "motif_hmm",
-        "finite_experience_occurrence",
-        "local_representativeness",
-    }
+    assert set(gt_run["baseline"]["per_model"]) == FAITHFUL_MODEL_NAMES
     assert gt_run["baseline"]["mean_r"] == pytest.approx(1.0)
 
     # The eval set is recorded, sized, and leakage-audited.
@@ -1242,12 +1217,7 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
     assert enriched["gt_runs"][0]["fitted_baseline"]["mean_r"] == pytest.approx(1.0)
     # The no-learning baseline is attached (other seeds vs. GT, all stubbed equal).
     baseline = enriched["gt_runs"][0]["baseline"]
-    assert set(baseline["per_model"]) == {
-        "falk_konold_dp",
-        "motif_hmm",
-        "finite_experience_occurrence",
-        "local_representativeness",
-    }
+    assert set(baseline["per_model"]) == FAITHFUL_MODEL_NAMES
     assert baseline["mean_r"] == pytest.approx(1.0)
     # The original result is not mutated.
     assert result["gt_runs"][0]["trajectory"] == [{"placeholder": True}]
@@ -1735,12 +1705,7 @@ def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypa
     # pool at all; the recovered best model is whichever faithful seed best
     # fits the small design sample. This is a pipeline/caching smoke test, so
     # we only require a valid seeded model, not a specific winner.
-    assert trajectory[0]["best_model"] in {
-        "falk_konold_dp",
-        "motif_hmm",
-        "finite_experience_occurrence",
-        "local_representativeness",
-    }
+    assert trajectory[0]["best_model"] in FAITHFUL_MODEL_NAMES
     r = trajectory[0]["pearson_r"]
     assert r is not None and -1.0 <= r <= 1.0
     assert trajectory[0]["rmse"] >= 0.0

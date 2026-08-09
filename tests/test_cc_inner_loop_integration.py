@@ -7,14 +7,12 @@ models by MCMC, scores them by ELPD-LOO, and exports the best model back into
 
 import json
 import shutil
-from pathlib import Path
 
 import pytest
 import yaml
 
 from src.pipelines.outer_loop.orchestrator import run_inner_model_loop_programmatic
-
-FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pymc_models"
+from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 
 @pytest.mark.slow
@@ -25,15 +23,15 @@ def test_inner_model_loop_exports_best_pymc_model(tmp_path):
     models_dir = exp_dir / "cognitive_models"
     models_dir.mkdir(parents=True)
     for name in ("bayesian_fair_coin", "representativeness"):
-        shutil.copyfile(FIXTURE_DIR / f"{name}.py", models_dir / f"{name}.py")
+        shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / f"{name}.py", models_dir / f"{name}.py")
     shutil.copyfile(
-        FIXTURE_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
+        PYMC_MODEL_FIXTURES_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
     )
 
     # Pooled responses already carry the feature columns the models read.
     data_dir = exp_dir / "data"
     data_dir.mkdir(parents=True)
-    shutil.copyfile(FIXTURE_DIR / "responses.csv", data_dir / "responses.csv")
+    shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / "responses.csv", data_dir / "responses.csv")
 
     loop_dir = run_inner_model_loop_programmatic(
         exp_dir,

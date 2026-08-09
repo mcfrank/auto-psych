@@ -14,10 +14,10 @@ import csv
 import json
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from src.subjective_randomness.pipeline import key_results_text, run_pipeline
+from tests.recovery_fixtures import CannedPosteriorFit
 
 STIMULI = [
     {"sequence_a": "HHHHTTTT", "sequence_b": "HTHTHTHT"},
@@ -27,30 +27,6 @@ STIMULI = [
 ]
 
 
-class _FakeParam:
-    def __init__(self, values):
-        self.values = np.array(values, dtype=float)
-
-
-class _FakeIdata:
-    def __init__(self, params):
-        self.posterior = {name: _FakeParam(values) for name, values in params.items()}
-
-
-class _FakeFitted:
-    fingerprint = "fake-fit"
-
-    def __init__(self):
-        self.idata = _FakeIdata(
-            {
-                "theta_alt": [[0.60, 0.70], [0.65, 0.67]],
-                "alt_weight": [[0.50, 0.55], [0.58, 0.57]],
-                "beta": [[3.8, 4.2], [4.0, 4.1]],
-                "side_bias": [[-0.1, 0.0], [0.1, 0.0]],
-            }
-        )
-
-
 @pytest.fixture
 def fake_fit_model(monkeypatch):
     """Replace MCMC with a canned posterior; capture the sampling settings."""
@@ -58,7 +34,7 @@ def fake_fit_model(monkeypatch):
 
     def _fake(name, **kwargs):
         captured.update(kwargs)
-        return _FakeFitted()
+        return CannedPosteriorFit()
 
     monkeypatch.setattr("src.models.pymc_inference.fit_model", _fake)
     return captured

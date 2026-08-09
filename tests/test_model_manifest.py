@@ -30,8 +30,8 @@ from src.models.model_manifest import (
     read_manifest_entries,
     read_manifest_names,
 )
+from tests.paths import REPO_ROOT
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
 REGISTRY_DIR = REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families"
 LIVE_SEED_DIR = (
     REPO_ROOT

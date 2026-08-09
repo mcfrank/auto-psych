@@ -11,62 +11,53 @@ script be re-run safely.
 
 from __future__ import annotations
 
-import importlib.util
-import sys
-from pathlib import Path
+import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = REPO_ROOT / "scripts" / "sanitize_prompt_listings.py"
+from tests.paths import SCRIPTS_DIR, load_script_module
 
 
-def _load_cli():
-    """Load the standalone script as a module so its helpers are the units."""
-    spec = importlib.util.spec_from_file_location("sanitize_prompt_listings", SCRIPT)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
+@pytest.fixture(scope="module")
+def cli():
+    """The standalone script, loaded as a module — its helpers are the units."""
+    return load_script_module(SCRIPTS_DIR / "sanitize_prompt_listings.py")
 
 
-cli = _load_cli()
-
-
-def test_em_dash_becomes_double_hyphen():
+def test_em_dash_becomes_double_hyphen(cli):
     assert cli.sanitize_text("here — the") == "here -- the"
 
 
-def test_en_dash_becomes_hyphen():
+def test_en_dash_becomes_hyphen(cli):
     assert cli.sanitize_text("roughly 100–300 pairs") == "roughly 100-300 pairs"
 
 
-def test_ellipsis_becomes_three_dots():
+def test_ellipsis_becomes_three_dots(cli):
     assert cli.sanitize_text("PARAGRAPH_2 …</p>") == "PARAGRAPH_2 ...</p>"
 
 
-def test_less_than_or_equal_becomes_ascii():
+def test_less_than_or_equal_becomes_ascii(cli):
     assert cli.sanitize_text("p ≤ alpha") == "p <= alpha"
 
 
-def test_rightwards_arrow_becomes_ascii():
+def test_rightwards_arrow_becomes_ascii(cli):
     assert cli.sanitize_text("Hypothesis → PyMC") == "Hypothesis -> PyMC"
 
 
-def test_digit_dash_digit_regression():
+def test_digit_dash_digit_regression(cli):
     """The exact string whose en-dash scrambled to '-24' in the rendered PDF."""
     assert cli.sanitize_text("write a 2–4 sentence") == "write a 2-4 sentence"
 
 
-def test_pure_ascii_is_unchanged():
+def test_pure_ascii_is_unchanged(cli):
     text = "def test_statistic(df):\n    return value  # a single float\n"
     assert cli.sanitize_text(text) == text
 
 
-def test_sanitize_is_idempotent():
+def test_sanitize_is_idempotent(cli):
     raw = "discrepancy — distinct; p ≤ a; 2–4; x → y; foo …"
     once = cli.sanitize_text(raw)
     assert cli.sanitize_text(once) == once
 
 
-def test_result_is_pure_ascii():
+def test_result_is_pure_ascii(cli):
     raw = "all of: — – … ≤ →"
     assert cli.sanitize_text(raw).isascii()

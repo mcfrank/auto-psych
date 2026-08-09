@@ -11,27 +11,10 @@ from __future__ import annotations
 
 import threading
 
-import yaml
 
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
-
-
-def _make_seed_models(tmp_path):
-    seed_dir = tmp_path / "seed_models"
-    seed_dir.mkdir()
-    (seed_dir / "model_a.py").write_text("# stub model_a\n", encoding="utf-8")
-    (seed_dir / "models_manifest.yaml").write_text(
-        yaml.safe_dump({"models": [{"name": "model_a"}]}, sort_keys=False),
-        encoding="utf-8",
-    )
-    return seed_dir
-
-
-def _make_responses(tmp_path):
-    responses = tmp_path / "responses.csv"
-    responses.write_text("chose_left,n_a\n1,6\n0,6\n", encoding="utf-8")
-    return responses
+from tests.inner_loop_fixtures import write_responses, write_seed_models
 
 
 def _patch_loop_internals(monkeypatch):
@@ -63,9 +46,9 @@ def _run(tmp_path, monkeypatch, spawn, **kwargs):
     _patch_loop_internals(monkeypatch)
     monkeypatch.setattr(pymc_orchestrator, "_spawn_candidate_agent", spawn)
     return run_pymc_inner_loop(
-        responses_path=_make_responses(tmp_path),
+        responses_path=write_responses(tmp_path),
         results_dir=tmp_path / "model_loop",
-        seed_models_dir=_make_seed_models(tmp_path),
+        seed_models_dir=write_seed_models(tmp_path, ["model_a"]),
         max_iterations=1,
         candidate_count=3,
         enable_critique=False,
