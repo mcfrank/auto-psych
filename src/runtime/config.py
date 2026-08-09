@@ -63,11 +63,6 @@ def agent_dir_for_state(
     return run_dir_for_state(project_id, run_id, state) / agent_key
 
 
-def batches_dir(project_id: str) -> Path:
-    """Return path to project batches output directory (e.g. data/subjective_randomness/batches)."""
-    return REPO_ROOT / "data" / project_id / "batches"
-
-
 def prompts_used_dir(project_id: str, run_id: int) -> Path:
     """Return path to prompts_used archive for a run."""
     return run_dir(project_id, run_id) / "prompts_used"

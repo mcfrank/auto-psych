@@ -106,29 +106,6 @@ def get_me() -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
         return (None, str(e))
 
 
-def create_test_participant(email: str) -> Tuple[Optional[str], Optional[str]]:
-    """
-    POST /researchers/participants/ to create a test participant.
-    Returns (participant_id, error_message). Email must not be already registered on Prolific.
-    """
-    try:
-        r = requests.post(
-            f"{_BASE}/researchers/participants/",
-            headers=_headers(),
-            json={"email": email},
-            timeout=30,
-        )
-        if r.status_code not in (200, 201):
-            return (
-                None,
-                f"POST /researchers/participants/ {r.status_code}: {r.text[:500]}",
-            )
-        data = r.json()
-        return (data.get("participant_id") or data.get("id"), None)
-    except requests.RequestException as e:
-        return (None, str(e))
-
-
 def get_filters() -> Tuple[Optional[list], Optional[str]]:
     """GET /filters/ . Returns (filters_list, error_message). Each entry is a
     filter spec with 'filter_id' and (for select filters) a 'choices' map."""

@@ -199,13 +199,6 @@ def _compile_test_statistic(code: str) -> Callable[[Any], Any]:
     return fn
 
 
-def _execute_test_statistic(code: str, df: Any) -> float:
-    """Compile ``code`` and evaluate it once against ``df`` (copied). Back-compat
-    single-shot helper; the hot path uses :func:`_compile_test_statistic` to
-    compile once and call many times."""
-    return float(_compile_test_statistic(code)(df.copy()))
-
-
 # ─────────────────────────────────────────────
 # Posterior-predictive evaluation
 # ─────────────────────────────────────────────

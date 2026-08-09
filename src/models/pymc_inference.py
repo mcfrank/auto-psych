@@ -580,17 +580,6 @@ def _sampler_signature(fit_kwargs: Dict[str, Any]) -> str:
     return ";".join(f"{k}={merged[k]}" for k in sorted(_FIT_DEFAULTS))
 
 
-def _sha256_dict_arrays(d: Dict[str, np.ndarray]) -> str:
-    h = hashlib.sha256()
-    for k in sorted(d.keys()):
-        h.update(k.encode("utf-8"))
-        h.update(b"\x00")
-        h.update(np.ascontiguousarray(d[k]).tobytes())
-        h.update(np.array(d[k].shape, dtype="int64").tobytes())
-        h.update(d[k].dtype.str.encode("utf-8"))
-    return h.hexdigest()
-
-
 def _thin_posterior(idata: Any, max_draws: int) -> Any:
     """Subsample an InferenceData's posterior to at most ``max_draws`` samples.
 
