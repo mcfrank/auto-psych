@@ -22,7 +22,7 @@ def load_state_from_run(
     mode: str = "simulated_participants",
 ) -> Dict[str, Any]:
     """
-    Build PipelineState by scanning the run directory (or reference_run_id's dir)
+    Build a pipeline state dict by scanning the run directory (or reference_run_id's dir)
     for existing artifacts. Used to re-run a single agent or run downstream agents
     in isolation using outputs from a previous run.
     """
