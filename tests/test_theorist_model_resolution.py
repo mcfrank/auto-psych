@@ -16,7 +16,7 @@ import logging
 
 import pytest
 
-from src.models.theorist.loader import get_model_callable
+from src.models.theorist.loader import get_model_callable, get_model_names_from_manifest
 from src.models.theorist.predictions import get_model_predictions
 
 STIMULUS = ("HHTT", "HTHT")
@@ -32,6 +32,12 @@ def _write_model(theorist_dir, name: str, body: str):
 def test_predictions_raise_when_a_model_cannot_be_loaded(tmp_path):
     with pytest.raises(FileNotFoundError, match="absent_model"):
         get_model_predictions(STIMULUS, RESPONSES, ["absent_model"], tmp_path)
+
+
+def test_manifest_resolution_raises_when_a_listed_model_file_is_missing(tmp_path):
+    manifest = {"models": [{"name": "absent_model"}]}
+    with pytest.raises(FileNotFoundError, match="absent_model"):
+        get_model_names_from_manifest(manifest, tmp_path)
 
 
 def test_predictions_raise_when_no_theorist_dir_is_given():

@@ -77,6 +77,35 @@ def _seed_with_participant_model(tmp_path):
     return models_dir
 
 
+def test_eig_rejects_a_manifest_with_a_missing_model_file(tmp_path):
+    """EIG must never renormalize over only the model files that happen to exist."""
+    models_dir = tmp_path / "cognitive_models"
+    models_dir.mkdir()
+    (models_dir / "present.py").write_text("", encoding="utf-8")
+    (models_dir / "models_manifest.yaml").write_text(
+        "models:\n  - name: present\n  - name: missing_model\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(FileNotFoundError, match="missing_model"):
+        eig_mod._load_model_names(models_dir)
+
+
+def test_explicit_missing_registry_raises(tmp_path):
+    with pytest.raises(FileNotFoundError, match="registry"):
+        eig_mod._load_model_weights(tmp_path / "missing_registry.yaml")
+
+
+def test_eig_registry_rejects_negative_weights(tmp_path):
+    registry = tmp_path / "model_registry.yaml"
+    registry.write_text(
+        "theories:\n  a: -0.5\n  b: 1.5\nreserved_for_new: 0.0\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="a"):
+        eig_mod._load_model_weights(registry)
+
+
 def test_annotate_drops_model_that_cannot_bind_to_stimulus(
     tmp_path, monkeypatch, capsys
 ):

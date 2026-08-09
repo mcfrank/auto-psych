@@ -73,12 +73,14 @@ def _load_model_names(models_dir: Path) -> List[str]:
 
 
 def _load_model_weights(registry_path: Optional[Path]) -> Dict[str, float]:
-    import yaml
+    if registry_path is None:
+        return {}
+    from src.registry.io import load_registry  # type: ignore
 
-    if registry_path and Path(registry_path).exists():
-        reg = yaml.safe_load(Path(registry_path).read_text(encoding="utf-8")) or {}
-        return reg.get("theories", {}) or {}
-    return {}
+    path = Path(registry_path)
+    if not path.is_file():
+        raise FileNotFoundError(f"Explicit model registry does not exist: {path}")
+    return dict(load_registry(path)["theories"])
 
 
 def _screen_usable_models(

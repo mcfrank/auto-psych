@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import csv
 import io
+import math
 import multiprocessing
 import os
 import random
 import re
-import subprocess
 import sys
 import time
 import urllib.parse
@@ -23,6 +23,7 @@ from src.pipelines.outer_loop.featurizer import Featurizer, load_featurizer
 from src.pipelines.outer_loop.llm import get_llm, invoke_llm, load_prompt_for_run
 from src.runtime.console import log_status
 from src.models.theorist.predictions import get_model_predictions
+from src.models.probability import validate_probability_distribution
 from src.runtime.observability import agent_log
 
 
@@ -206,8 +207,14 @@ def check_response_variation(rows: list[dict[str, Any]]) -> tuple[bool, str]:
     for row in rows:
         raw = row.get("chose_left")
         if raw is None or raw == "":
-            continue
-        values.append(int(float(raw)))
+            return False, "collected row has a missing chose_left value"
+        try:
+            numeric = float(raw)
+        except (TypeError, ValueError):
+            return False, f"collected row has invalid chose_left={raw!r}; expected binary 0 or 1"
+        if not math.isfinite(numeric) or numeric not in (0.0, 1.0):
+            return False, f"collected row has invalid chose_left={raw!r}; expected binary 0 or 1"
+        values.append(int(numeric))
     if not values:
         return False, "collected rows have no parseable chose_left values"
     if len(values) >= 2 and len(set(values)) == 1:
@@ -429,97 +436,6 @@ def _drive_experiment_to_finish(page, timeout_ms: int = _DRIVE_TIMEOUT_MS) -> bo
         _click_random_choice(page)
         time.sleep(step_sec)
     return _experiment_data_present(page)
-
-
-def _rows_from_trial_data(
-    trials: list[dict[str, Any]],
-    participant_id: int,
-    participant_id_str: str | None = None,
-) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    for trial_index, trial in enumerate(trials):
-        if "sequence_a" not in trial or "sequence_b" not in trial:
-            continue
-        chose_left = trial.get("chose_left")
-        if chose_left is None:
-            continue
-        row = {
-            "participant_id": participant_id,
-            "trial_index": trial_index,
-            "sequence_a": str(trial["sequence_a"]),
-            "sequence_b": str(trial["sequence_b"]),
-            "chose_left": int(bool(chose_left)),
-            "chose_right": 1 - int(bool(chose_left)),
-            "model": "",
-        }
-        if participant_id_str is not None:
-            row["participant_id_str"] = participant_id_str
-        rows.append(row)
-    return rows
-
-
-def _run_one_participant_browser(
-    args: tuple,
-) -> tuple[int, list[dict[str, Any]] | None, str | None]:
-    (
-        participant_index,
-        participant_id_str,
-        experiment_url,
-        project_id,
-        run_id,
-        timeout_ms,
-        logs_dir_path,
-    ) = args
-    logs_dir = Path(logs_dir_path) if logs_dir_path else None
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        return (participant_index, None, "playwright not installed")
-    try:
-        with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
-            try:
-                page = browser.new_page()
-                goto_url = (
-                    experiment_url
-                    + ("&" if "?" in experiment_url else "?")
-                    + "participant_id="
-                    + urllib.parse.quote(participant_id_str)
-                )
-                page.goto(goto_url, wait_until="load", timeout=timeout_ms)
-                done, _ = _drive_experiment_with_llm(
-                    page,
-                    min(timeout_ms, _DRIVE_TIMEOUT_MS),
-                    project_id,
-                    run_id,
-                    logs_dir,
-                )
-                if not done:
-                    done = _drive_experiment_to_finish(
-                        page, min(timeout_ms, _DRIVE_TIMEOUT_MS)
-                    )
-                if not done:
-                    return (
-                        participant_index,
-                        None,
-                        "timed out before experiment finished",
-                    )
-                data = page.evaluate("window.__experimentData")
-            finally:
-                browser.close()
-        if data is None or not isinstance(data, list):
-            return (participant_index, None, "no __experimentData")
-        return (
-            participant_index,
-            _rows_from_trial_data(data, participant_index, participant_id_str),
-            None,
-        )
-    except Exception as exc:
-        if logs_dir:
-            (logs_dir / f"p{participant_index}_error.txt").write_text(
-                str(exc), encoding="utf-8"
-            )
-        return (participant_index, None, str(exc))
 
 
 def _run_one_participant_firebase(args: tuple) -> tuple[int, bool, str | None]:
@@ -844,43 +760,6 @@ def _results_request(url: str) -> urllib.request.Request:
     return urllib.request.Request(url, headers=headers)
 
 
-def _server_reachable(url: str, timeout_sec: float = 2.0) -> bool:
-    """Is something serving ``url``? Used to decide whether to start a local server.
-
-    Only connection-level failures (``OSError`` covers ``URLError``, refused
-    connections and timeouts) count as "not reachable". Anything else is a bug
-    here, not an unreachable server, and propagates.
-    """
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "auto-psych"})
-        urllib.request.urlopen(req, timeout=timeout_sec)
-        return True
-    except OSError:
-        return False
-
-
-def _start_experiment_server(
-    experiment_path: str, port: int
-) -> subprocess.Popen | None:
-    exp_dir = Path(experiment_path)
-    if not exp_dir.exists():
-        return None
-    return subprocess.Popen(
-        [
-            sys.executable,
-            "-m",
-            "http.server",
-            str(port),
-            "--bind",
-            "127.0.0.1",
-            "--directory",
-            str(exp_dir),
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-
 def _parse_participant_answer(text: str) -> str | None:
     """Parse a participant reply into ``"left"``/``"right"``, or ``None`` if it did
     not clearly commit to one.
@@ -921,7 +800,9 @@ def generate_llm_participant_rows(
     Model-agnostic: ``participant_model`` is any object exposing
     ``.answer(system, user) -> str`` and a ``.name`` (see
     ``participants.ParticipantModel``), so the closed (API) and open (Hugging
-    Face) backends share this one loop. Each participant answers every stimulus;
+    Face) backends share this one loop. A backend may expose a positive integer
+    ``max_concurrency`` to limit simultaneous calls on its shared instance. Each
+    participant answers every stimulus;
     unparseable replies and per-trial errors are counted but never abort the run.
     If ``transcripts_dir`` is given, one Markdown transcript per participant is
     written there.
@@ -1022,7 +903,13 @@ def generate_llm_participant_rows(
         return rows_p, unparseable, errors
 
     results: list[tuple[list[dict[str, Any]], int, int] | None] = [None] * n_participants
-    workers = max(1, min(max_workers, n_participants))
+    model_limit = getattr(participant_model, "max_concurrency", max_workers)
+    if isinstance(model_limit, bool) or not isinstance(model_limit, int) or model_limit < 1:
+        raise ValueError(
+            f"participant model max_concurrency must be a positive integer, got "
+            f"{model_limit!r}"
+        )
+    workers = max(1, min(max_workers, model_limit, n_participants))
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {
             executor.submit(_run_participant, pid): pid for pid in range(n_participants)
@@ -1186,7 +1073,12 @@ def _generate_from_models(
                     "responses. Check the model loads and returns a left/right "
                     "distribution."
                 )
-            p_left = preds[model_name].get("left", 0.5)
+            distribution = validate_probability_distribution(
+                preds[model_name],
+                RESPONSE_OPTIONS,
+                context=f"ground-truth model {model_name!r}",
+            )
+            p_left = distribution["left"]
             chose_left = rng.random() < p_left
             rows.append(
                 {

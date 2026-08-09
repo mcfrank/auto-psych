@@ -6,6 +6,7 @@ from typing import Any, Dict
 import yaml
 
 from src.models.theorist.loader import get_model_callable, get_model_names_from_manifest
+from src.models.probability import validate_probability_distribution
 from src.validation.types import Validated
 
 
@@ -57,16 +58,12 @@ def validate_theorist_output(run_dir: Path) -> Validated:
             preds = fn(test_stimulus, response_options)
         except Exception as exc:
             return Validated(False, f"Model '{name}' raised: {exc}", details)
-        if not isinstance(preds, dict):
-            return Validated(False, f"Model '{name}' did not return a dict", details)
-        for key in response_options:
-            if key not in preds:
-                return Validated(False, f"Model '{name}' missing key '{key}'", details)
-        total = sum(preds[key] for key in response_options)
-        if abs(total - 1.0) > 1e-5:
-            return Validated(
-                False, f"Model '{name}' probabilities sum to {total}", details
+        try:
+            validate_probability_distribution(
+                preds, response_options, context=f"Model {name!r}"
             )
+        except (TypeError, ValueError) as exc:
+            return Validated(False, str(exc), details)
 
     return Validated(
         True, "Theorist output valid; all models run and return scores", details

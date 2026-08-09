@@ -25,6 +25,9 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from src.models.probability import validate_probability, validate_probability_array
+from src.registry.io import validate_theory_weights
+
 # Imports of pymc / arviz / pytensor are local in each function so that
 # loading this module is cheap when only e.g. cache utilities are used.
 
@@ -415,7 +418,10 @@ def prior_predict_p_left(
                 var_names=[var_name],
                 random_seed=seed,
             )
-        arr = ppc.prior[var_name].values  # shape: (chain, draw, n_stim=1)
+        arr = validate_probability_array(
+            ppc.prior[var_name].values,
+            context=f"Model {name!r} prior-predictive {var_name}",
+        )  # shape: (chain, draw, n_stim=1)
         out[name] = float(arr.mean())
     return out
 
@@ -456,7 +462,10 @@ def prior_predict_p_left_draws(
                 var_names=[var_name],
                 random_seed=seed,
             )
-        arr = ppc.prior[var_name].values  # shape: (chain, draw, n_rows)
+        arr = validate_probability_array(
+            ppc.prior[var_name].values,
+            context=f"Model {name!r} prior-predictive {var_name}",
+        )  # shape: (chain, draw, n_rows)
         draws = arr.reshape(-1, arr.shape[-1])
         if draws.shape != (n_samples, len(feature_rows)):
             raise ValueError(
@@ -507,8 +516,13 @@ def eig_from_prior_means(
 
     if not preds:
         return 0.0
+    preds = {
+        name: validate_probability(value, context=f"prediction for model {name!r}")
+        for name, value in preds.items()
+    }
     if model_weights:
-        total_w = sum(model_weights.get(m, 0.0) for m in preds)
+        model_weights = validate_theory_weights(model_weights)
+        total_w = math.fsum(model_weights.get(m, 0.0) for m in preds)
         if total_w <= 0:
             p_model = {m: 1.0 / len(preds) for m in preds}
         else:
@@ -639,7 +653,10 @@ class FittedModel:
                 random_seed=seed,
                 progressbar=False,
             )
-        arr = pp.posterior_predictive[var_name].values  # (chain, draw, n_stim)
+        arr = validate_probability_array(
+            pp.posterior_predictive[var_name].values,
+            context=f"Model {self.name!r} posterior-predictive {var_name}",
+        )  # (chain, draw, n_stim)
         draws = arr.reshape(-1, arr.shape[-1])
         n_stim = len(next(iter(stim_data.values())))
         if draws.shape[1] != n_stim:
@@ -802,6 +819,7 @@ def fit_model(
 
     if nc_path is not None and nc_path.exists():
         idata = az.from_netcdf(str(nc_path))
+        _warn_sampling_diagnostics(name, idata)
         return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
 
     observed = extract_observed(responses_path, model)
@@ -851,13 +869,14 @@ def _max_rhat(idata: Any) -> float:
 
 
 def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
-    """Loudly surface NUTS trouble (divergences, poor R-hat) for a fresh fit.
+    """Loudly surface NUTS trouble (divergences, poor R-hat) for a fit.
 
     These are advisory, not fatal — ArviZ still returns usable arrays — but a fit
     with divergences or R-hat > 1.01 is suspect, and accepting its ELPD at face
     value is exactly the silent-quality trap the project's fail-loud rule guards
     against. Print an attributed warning so a degraded fit is visible in the run
-    log. Only called on a real sample (not on a cache hit).
+    log. Diagnostics are rerun on cache hits so loading a suspect stored fit
+    cannot make its warning disappear from a later run.
 
     A diagnostic that could not be computed is itself warned about: previously a
     missing ``diverging`` stat read as 0 divergences and an unavailable R-hat as
@@ -917,6 +936,7 @@ def fit_models_cached(
         key = _cache_key(name, models_dir, responses_path, fit_kwargs)
         cached = _FIT_CACHE.get(key)
         if cached is not None:
+            _warn_sampling_diagnostics(name, cached.idata)
             out[name] = cached
             continue
         fitted = fit_model(
