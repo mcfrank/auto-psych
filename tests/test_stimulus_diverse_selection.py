@@ -22,6 +22,7 @@ from src.subjective_randomness.stimulus_design import (
     select_informative_stimuli,
 )
 
+from tests.paths import PYMC_MODEL_FIXTURES_DIR
 # Three models A/B/C; each stimulus "kind" induces a fixed p_left per model.
 #   C_vs_AB / C_vs_AB_2 : near-duplicates, both separate C from {A, B} (high EIG)
 #   A_vs_B              : separates A from B (lower marginal EIG, complementary)
@@ -78,13 +79,11 @@ def test_build_exhaustive_design_enumerates_and_selects_k():
 def _seed_experiment_models(exp_dir):
     """Copy the fixture PyMC models into exp_dir/cognitive_models."""
     import shutil
-    from pathlib import Path
 
-    fixture_dir = Path(__file__).parent / "fixtures" / "pymc_models"
     models_dir = exp_dir / "cognitive_models"
     models_dir.mkdir(parents=True)
     for name in ("bayesian_fair_coin.py", "representativeness.py", "models_manifest.yaml"):
-        shutil.copyfile(fixture_dir / name, models_dir / name)
+        shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / name, models_dir / name)
     return models_dir
 
 

@@ -37,8 +37,15 @@ def find_conflict_marker_lines(text: str) -> list[int]:
     return flagged
 
 
-def _tracked_src_text_files() -> list[Path]:
-    root = here()
+def _tracked_src_text_files(root: Path | None = None) -> list[Path]:
+    """Tracked files under ``src/`` that still exist in the working tree.
+
+    ``git ls-files`` lists the index, which keeps naming a file that has been
+    deleted in the worktree but not yet staged. There is no content to scan for
+    such a path, so it is skipped rather than read (reading it raised
+    ``FileNotFoundError`` and took the whole test down mid-refactor).
+    """
+    root = here() if root is None else root
     out = subprocess.run(
         ["git", "ls-files", "src"],
         cwd=root,
@@ -46,7 +53,8 @@ def _tracked_src_text_files() -> list[Path]:
         text=True,
         check=True,
     )
-    return [root / line for line in out.stdout.splitlines() if line]
+    paths = (root / line for line in out.stdout.splitlines() if line)
+    return [path for path in paths if path.is_file()]
 
 
 def test_scanner_flags_full_conflict_block():
@@ -69,6 +77,20 @@ def test_scanner_ignores_markdown_setext_heading():
 def test_scanner_flags_start_marker_alone():
     text = f"prose\n{_START}HEAD\nmore prose\n"
     assert find_conflict_marker_lines(text) == [2]
+
+
+def test_tracked_file_listing_skips_worktree_deletions(tmp_path):
+    """A staged-but-not-yet-committed deletion must not crash the scan."""
+    subprocess.run(["git", "init", "-q"], cwd=tmp_path, check=True)
+    src = tmp_path / "src"
+    src.mkdir()
+    (src / "kept.py").write_text("x = 1\n", encoding="utf-8")
+    (src / "deleted.py").write_text("y = 2\n", encoding="utf-8")
+    subprocess.run(["git", "add", "src"], cwd=tmp_path, check=True)
+
+    (src / "deleted.py").unlink()  # deleted in the worktree, still in the index
+
+    assert _tracked_src_text_files(tmp_path) == [src / "kept.py"]
 
 
 def test_no_conflict_markers_in_tracked_src_files():

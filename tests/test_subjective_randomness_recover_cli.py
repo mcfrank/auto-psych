@@ -8,15 +8,13 @@ flag cannot silently regress. The recovery business logic is tested elsewhere.
 from __future__ import annotations
 
 import csv
-import importlib.util
 import json
-import sys
 from pathlib import Path
 
 import pytest
 import tyro
+from tests.paths import REPO_ROOT, load_script_module
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
 SCRIPTS = REPO_ROOT / "scripts" / "subjective_randomness"
 
 # Canned runner outputs so the --tidy-csv branch can be exercised end-to-end
@@ -60,15 +58,7 @@ CONFUSION_TIDY_COLUMNS = {
 
 
 def _load_script(name: str):
-    path = SCRIPTS / name
-    mod_name = f"_sr_script_{name[:-3]}"
-    spec = importlib.util.spec_from_file_location(mod_name, path)
-    mod = importlib.util.module_from_spec(spec)
-    # Register before exec so the @dataclass Args can resolve its own module
-    # (dataclasses looks the class's module up in sys.modules).
-    sys.modules[mod_name] = mod
-    spec.loader.exec_module(mod)
-    return mod
+    return load_script_module(SCRIPTS / name, f"_sr_script_{name[:-3]}")
 
 
 def test_pymc_recover_cli_tidy_csv_defaults_none_and_parses_path():

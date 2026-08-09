@@ -1,11 +1,10 @@
 import json
-from pathlib import Path
 
 from src.pipelines.outer_loop.deployment.local import run_deployment
 
 # The manifest records the git commit it deployed from, so the deployment must
 # run against a real checkout (a bare tmp_path has no provenance to record).
-REPO_ROOT = Path(__file__).resolve().parent.parent
+from tests.paths import REPO_ROOT
 
 
 def test_dry_run_deployment_writes_manifest_config_and_staging(tmp_path):

@@ -12,15 +12,14 @@ import shutil
 from pathlib import Path
 
 from src.pipelines.outer_loop.orchestrator import _validate_model_set
-
-FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pymc_models"
+from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 
 def _seed(exp_dir: Path, names) -> Path:
     models_dir = exp_dir / "cognitive_models"
     models_dir.mkdir(parents=True)
     for name in names:
-        shutil.copyfile(FIXTURE_DIR / f"{name}.py", models_dir / f"{name}.py")
+        shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / f"{name}.py", models_dir / f"{name}.py")
     manifest = "models:\n" + "".join(
         f"  - name: {n}\n    rationale: People use mechanism {n}.\n" for n in names
     )

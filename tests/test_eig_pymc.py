@@ -9,17 +9,15 @@ Uses prior-predictive sampling (fast-ish, no NUTS) — marked slow to be safe.
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
 
 import pytest
 import yaml
 
 from src.pipelines.outer_loop import eig as eig_mod
+from tests.paths import PYMC_MODEL_FIXTURES_DIR, REPO_ROOT
 
-FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pymc_models"
 FEATURIZE = (
-    Path(__file__).resolve().parent.parent
-    / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
+    REPO_ROOT / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
 )
 
 # A model with a participant-level random effect: it needs a `participant_id`
@@ -54,9 +52,9 @@ def _seed(tmp_path):
     models_dir = tmp_path / "cognitive_models"
     models_dir.mkdir(parents=True)
     for name in ("bayesian_fair_coin", "representativeness"):
-        shutil.copyfile(FIXTURE_DIR / f"{name}.py", models_dir / f"{name}.py")
+        shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / f"{name}.py", models_dir / f"{name}.py")
     shutil.copyfile(
-        FIXTURE_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
+        PYMC_MODEL_FIXTURES_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
     )
     return models_dir
 
@@ -260,14 +258,19 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     assert json.loads(out2.read_text(encoding="utf-8")) == stimuli
 
 
+@pytest.mark.slow
 def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
     """With a responses CSV, exhaustive design scores the pool from each
     model's *posterior*-predictive p_left (fit on those responses) instead of
-    the prior — no pure-Python twin involved."""
+    the prior — no pure-Python twin involved.
+
+    Marked slow: unlike the prior-only tests above, this one runs real NUTS
+    (two chains per model), which is what every other MCMC test in the suite is
+    marked for."""
     import json
 
     models_dir = _seed(tmp_path)
-    responses = FIXTURE_DIR / "responses.csv"
+    responses = PYMC_MODEL_FIXTURES_DIR / "responses.csv"
     cache = tmp_path / "fit_cache"
 
     stimuli = eig_mod.design_exhaustive(
@@ -329,7 +332,7 @@ def test_exhaustive_mode_argument_validation(tmp_path):
         eig_mod.main(
             eig_mod.Args(
                 candidates=tmp_path / "candidates.json", models_dir=models_dir,
-                responses=FIXTURE_DIR / "responses.csv",
+                responses=PYMC_MODEL_FIXTURES_DIR / "responses.csv",
             )
         )
 

@@ -9,10 +9,7 @@ per-model panels as the single-run figure but with error bars across runs.
 
 from __future__ import annotations
 
-import importlib.util
 import json
-import sys
-from pathlib import Path
 
 import plotnine
 import pytest
@@ -24,8 +21,13 @@ from src.subjective_randomness.reporting import (
     plot_holdout_trajectories_combined,
 )
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS = REPO_ROOT / "scripts" / "analysis"
+from tests.paths import ANALYSIS_SCRIPTS_DIR, load_script_module
+
+
+@pytest.fixture(scope="module")
+def cli():
+    """The analysis script, loaded as a module — its helpers are the units."""
+    return load_script_module(ANALYSIS_SCRIPTS_DIR / "plot_holdout_combined.py")
 
 
 def _gt_run(gt_model: str, traj_rows, *, baseline, fitted_baseline):
@@ -346,17 +348,7 @@ def test_plot_combined_writes_a_figure(tmp_path):
     assert out.exists() and out.stat().st_size > 0
 
 
-def _load_cli():
-    spec = importlib.util.spec_from_file_location(
-        "plot_holdout_combined", SCRIPTS / "plot_holdout_combined.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-def test_cli_combines_run_tree_into_figures(tmp_path):
+def test_cli_combines_run_tree_into_figures(cli, tmp_path):
     runs_root = tmp_path / "holdout_test_retest"
     for run_name, result in (("run1", RUN_A), ("run2", RUN_B)):
         gt = result["gt_runs"][0]["gt_model"]
@@ -364,7 +356,6 @@ def test_cli_combines_run_tree_into_figures(tmp_path):
         dest.mkdir(parents=True)
         (dest / "holdout.json").write_text(json.dumps(result), encoding="utf-8")
 
-    cli = _load_cli()
     out_dir = tmp_path / "figs"
     cli.main(cli.Args(runs_root=runs_root, out_dir=out_dir, metric="both"))
 
@@ -373,7 +364,7 @@ def test_cli_combines_run_tree_into_figures(tmp_path):
     assert (out_dir / "holdout_combined.csv").exists()
 
 
-def test_cli_name_suffix_appears_in_output_filenames(tmp_path):
+def test_cli_name_suffix_appears_in_output_filenames(cli, tmp_path):
     runs_root = tmp_path / "holdout_no_inner_loop"
     for run_name, result in (("run1", RUN_A), ("run2", RUN_B)):
         gt = result["gt_runs"][0]["gt_model"]
@@ -381,7 +372,6 @@ def test_cli_name_suffix_appears_in_output_filenames(tmp_path):
         dest.mkdir(parents=True)
         (dest / "holdout.json").write_text(json.dumps(result), encoding="utf-8")
 
-    cli = _load_cli()
     out_dir = tmp_path / "figs"
     cli.main(
         cli.Args(

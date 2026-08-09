@@ -2,9 +2,6 @@
 
 from __future__ import annotations
 
-import importlib.util
-import sys
-from pathlib import Path
 
 import numpy as np
 import yaml
@@ -14,8 +11,8 @@ from src.pipelines.outer_loop.orchestrator import (
     get_ground_truth_models,
     seed_experiment_models_from_project,
 )
+from tests.paths import REPO_ROOT, load_script_module
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
 EVAL = (
     REPO_ROOT
     / "src/pipelines/outer_loop/projects/subjective_randomness/evaluate_recovery.py"
@@ -24,14 +21,7 @@ REGISTRY_DIR = REPO_ROOT / "src/subjective_randomness/pymc_model_families"
 
 
 def _load_eval():
-    spec = importlib.util.spec_from_file_location("_sr_eval", EVAL)
-    mod = importlib.util.module_from_spec(spec)
-    # Registered before exec: the module defines its tyro Args dataclass at
-    # import time, and @dataclass resolves string annotations through
-    # sys.modules[cls.__module__].
-    sys.modules[spec.name] = mod
-    spec.loader.exec_module(mod)
-    return mod
+    return load_script_module(EVAL, "_sr_eval")
 
 
 def test_seed_experiment_models_from_project_copies_active_seed_set(tmp_path):

@@ -12,7 +12,6 @@ test stubs ``sample_synthetic_responses`` so it never runs MCMC.
 from __future__ import annotations
 
 import math
-from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -27,8 +26,8 @@ from src.critique.ppc import (
     run_ppc_for_model,
 )
 from src.models.pymc_inference import FittedModel, load_pymc_model
+from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
-FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pymc_models"
 
 MEAN_RESPONSE_CODE = (
     "# name: mean_response\n"
@@ -121,7 +120,7 @@ def _fitted_with_stub_ppc(synthetic: np.ndarray) -> FittedModel:
     ``observed_response_data``; ``sample_synthetic_responses`` is replaced with a
     deterministic stub so the frame builder is exercised without sampling.
     """
-    model = load_pymc_model("bayesian_fair_coin", FIXTURE_DIR)
+    model = load_pymc_model("bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR)
     fitted = FittedModel(name="bayesian_fair_coin", model=model, idata=None, fingerprint="x")
     fitted.sample_synthetic_responses = (  # type: ignore[method-assign]
         lambda stim_data, n_datasets, seed=42: np.asarray(synthetic)[:n_datasets]
@@ -130,14 +129,14 @@ def _fitted_with_stub_ppc(synthetic: np.ndarray) -> FittedModel:
 
 
 def test_build_critique_frames_swaps_response_for_each_replicate():
-    df = pd.read_csv(FIXTURE_DIR / "responses.csv")
+    df = pd.read_csv(PYMC_MODEL_FIXTURES_DIR / "responses.csv")
     n = len(df)
     # Two synthetic datasets: all-zeros and all-ones responses.
     synthetic = np.vstack([np.zeros(n, dtype=int), np.ones(n, dtype=int)])
     fitted = _fitted_with_stub_ppc(synthetic)
 
     human_df, model_dfs = build_critique_frames(
-        fitted, FIXTURE_DIR / "responses.csv", n_replicates=2, seed=0
+        fitted, PYMC_MODEL_FIXTURES_DIR / "responses.csv", n_replicates=2, seed=0
     )
 
     # Human frame holds the real observed responses and all feature columns.
@@ -153,7 +152,7 @@ def test_build_critique_frames_swaps_response_for_each_replicate():
 
 
 def test_evaluate_test_stat_dir_marks_significant(tmp_path, monkeypatch):
-    df = pd.read_csv(FIXTURE_DIR / "responses.csv")
+    df = pd.read_csv(PYMC_MODEL_FIXTURES_DIR / "responses.csv")
     n = len(df)
     # All replicates predict every response is 0; observed mean is well above 0,
     # so the mean-response statistic is a strong, significant discrepancy. 200
@@ -173,7 +172,7 @@ def test_evaluate_test_stat_dir_marks_significant(tmp_path, monkeypatch):
 
     out = evaluate_test_stat_dir(
         fitted,
-        FIXTURE_DIR / "responses.csv",
+        PYMC_MODEL_FIXTURES_DIR / "responses.csv",
         stats_dir,
         n_replicates=200,
         seed=0,
@@ -202,8 +201,8 @@ def test_run_ppc_for_model_end_to_end_real_mcmc(tmp_path):
 
     out = run_ppc_for_model(
         "bayesian_fair_coin",
-        FIXTURE_DIR,
-        FIXTURE_DIR / "responses.csv",
+        PYMC_MODEL_FIXTURES_DIR,
+        PYMC_MODEL_FIXTURES_DIR / "responses.csv",
         stats_dir,
         cache_dir=tmp_path / "cache",
         n_replicates=200,

@@ -17,8 +17,8 @@ from src.pipelines.outer_loop.collect import (
     _generate_from_models,
     _generate_from_pymc_models,
 )
+from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
-FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pymc_models"
 FEATURIZE = (
     Path(__file__).resolve().parent.parent
     / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
@@ -29,9 +29,9 @@ def _seed(tmp_path):
     models_dir = tmp_path / "cognitive_models"
     models_dir.mkdir(parents=True)
     for name in ("bayesian_fair_coin", "representativeness"):
-        shutil.copyfile(FIXTURE_DIR / f"{name}.py", models_dir / f"{name}.py")
+        shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / f"{name}.py", models_dir / f"{name}.py")
     shutil.copyfile(
-        FIXTURE_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
+        PYMC_MODEL_FIXTURES_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
     )
     return models_dir
 

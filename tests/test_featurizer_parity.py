@@ -9,15 +9,13 @@ incomparable.
 
 from __future__ import annotations
 
-import importlib.util
 from itertools import product
-from pathlib import Path
 
 import pytest
 
 from src.subjective_randomness.features import featurize_stimulus as feat_library
+from tests.paths import REPO_ROOT, load_script_module
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
 PREPROCESS = (
     REPO_ROOT / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
 )
@@ -25,10 +23,7 @@ PREPROCESS = (
 
 def _load_preprocess_by_path():
     """Load preprocess.py exactly as the pipeline does (by file path)."""
-    spec = importlib.util.spec_from_file_location("_sr_preprocess_parity", PREPROCESS)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return load_script_module(PREPROCESS, "_sr_preprocess_parity")
 
 
 def _all_sequences(max_len: int):

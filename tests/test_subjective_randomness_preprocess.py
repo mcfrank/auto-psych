@@ -2,22 +2,17 @@
 
 from __future__ import annotations
 
-import importlib.util
-from pathlib import Path
-
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+from tests.paths import REPO_ROOT, load_script_module
+
 PREPROCESS = (
     REPO_ROOT / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
 )
 
 
 def _load():
-    spec = importlib.util.spec_from_file_location("_sr_preprocess", PREPROCESS)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return load_script_module(PREPROCESS, "_sr_preprocess")
 
 
 def test_featurize_stimulus_counts_heads_alternations_runs():

@@ -10,27 +10,16 @@ Deterministic ``p_left``) are excluded.
 
 from __future__ import annotations
 
-import importlib.util
-import sys
-from pathlib import Path
-
 import numpy as np
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = REPO_ROOT / "analysis" / "behavioral" / "fit_mega_models.py"
+from tests.paths import REPO_ROOT, load_script_module
 
 
-def _load_cli():
-    """Load the standalone analysis script as a module (its helpers are the units)."""
-    spec = importlib.util.spec_from_file_location("fit_mega_models", SCRIPT)
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-cli = _load_cli()
+@pytest.fixture(scope="module")
+def cli():
+    """The standalone analysis script, loaded as a module — its helpers are the units."""
+    return load_script_module(REPO_ROOT / "analysis" / "behavioral" / "fit_mega_models.py")
 
 
 def _toy_idata():
@@ -47,7 +36,7 @@ def _toy_idata():
     return az.from_dict(posterior=posterior)
 
 
-def test_scalar_and_vector_params_extracted():
+def test_scalar_and_vector_params_extracted(cli):
     """Scalars stay scalar; a vector param is unpacked into name[0], name[1], ..."""
     rows = cli.posterior_param_means(_toy_idata(), ["theta_alt", "weights"])
     by_param = {r["param"]: r for r in rows}
@@ -59,7 +48,7 @@ def test_scalar_and_vector_params_extracted():
     assert by_param["theta_alt"]["posterior_sd"] > 0
 
 
-def test_only_requested_params_returned():
+def test_only_requested_params_returned(cli):
     """The per-trial Deterministic ``p_left`` is not a fitted parameter and must be
     excluded — only the names passed in (the model's free RVs) appear."""
     rows = cli.posterior_param_means(_toy_idata(), ["theta_alt", "weights"])

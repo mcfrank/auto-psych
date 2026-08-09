@@ -8,10 +8,10 @@ from src.pipelines.outer_loop.deployment.manifest import (
     write_client_config,
     write_manifest,
 )
+from tests.paths import REPO_ROOT
 
 # Provenance is the point of the manifest, so git metadata is read from the real
 # checkout rather than a bare tmp_path (which is not a repo and now fails loudly).
-REPO_ROOT = Path(__file__).resolve().parent.parent
 
 
 def test_git_metadata_records_the_real_commit():

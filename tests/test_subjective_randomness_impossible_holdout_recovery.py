@@ -28,8 +28,10 @@ from src.subjective_randomness.holdout_recovery import (
     run_impossible_holdout_recovery_from_config,
 )
 from src.subjective_randomness.model_recovery import p_left_fixed_params
+from tests.model_registry import FAITHFUL_MODEL_NAMES
+from tests.recovery_fixtures import CannedPredictionFit
+from tests.paths import REPO_ROOT
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
 # The recovery GT/baseline registry: the models with pure-Python family twins,
 # and the single source of truth for the active seed set (the live project
 # seed_models dir mirrors this manifest). It also keeps superseded models on
@@ -139,13 +141,6 @@ def _stub_inner_loop(history_best):
     return run
 
 
-class _FakeFitted:
-    model = None
-
-    def predict_p_left(self, stim_data):
-        return np.linspace(0.1, 0.9, stim_data["n"])
-
-
 def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     tmp_path, monkeypatch
 ):
@@ -179,7 +174,7 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     monkeypatch.setattr(
         holdout_recovery,
         "fit_model",
-        lambda name, models_dir, responses_path, *, cache_dir=None, **kw: _FakeFitted(),
+        lambda name, models_dir, responses_path, *, cache_dir=None, **kw: CannedPredictionFit(),
     )
 
     config = {
@@ -214,12 +209,7 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     seeded_names = {m["name"] for m in seeded["models"]}
     assert "more_heads_more_random" not in seeded_names
     # The live pool mirrors the registry: the four literature-faithful seeds.
-    assert {
-        "falk_konold_dp",
-        "motif_hmm",
-        "finite_experience_occurrence",
-        "local_representativeness",
-    } <= seeded_names
+    assert FAITHFUL_MODEL_NAMES <= seeded_names
 
     # Every response is generated from the impossible GT, read from the SEPARATE
     # impossible-models directory (not the seed dir).
@@ -234,12 +224,7 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
 
     # The fitted-seed baseline fits all normal seeds (none excluded, since the
     # impossible GT is not in the project seed set).
-    assert set(gt_run["fitted_baseline"]["per_model"]) == {
-        "falk_konold_dp",
-        "motif_hmm",
-        "finite_experience_occurrence",
-        "local_representativeness",
-    }
+    assert set(gt_run["fitted_baseline"]["per_model"]) == FAITHFUL_MODEL_NAMES
 
     # Leakage is audited and robust to the impossible GT having no model_families
     # counterpart: no distinctive params to mention, no identical copy.

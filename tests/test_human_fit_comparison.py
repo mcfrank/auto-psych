@@ -14,30 +14,19 @@ seed models against the single best agent-proposed model, with the best agent at
 
 from __future__ import annotations
 
-import importlib.util
 import json
-import sys
 from pathlib import Path
 
 import plotnine
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS = REPO_ROOT / "scripts" / "analysis"
+from tests.paths import ANALYSIS_SCRIPTS_DIR, load_script_module
 
 
-def _load_cli():
-    """Load the analysis script as a module (its helpers are the unit under test)."""
-    spec = importlib.util.spec_from_file_location(
-        "plot_human_fit_comparison", SCRIPTS / "plot_human_fit_comparison.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-cli = _load_cli()
+@pytest.fixture(scope="module")
+def cli():
+    """The analysis script, loaded as a module — its helpers are the units."""
+    return load_script_module(ANALYSIS_SCRIPTS_DIR / "plot_human_fit_comparison.py")
 
 
 # A single cell's posterior, hand-built so every plotted number is checkable.
@@ -101,7 +90,7 @@ SEEDS_B = {
 # --- unit: extracting plotted rows from one cell ---------------------------
 
 
-def test_seed_vs_best_agent_rows_picks_best_agent_and_all_seeds():
+def test_seed_vs_best_agent_rows_picks_best_agent_and_all_seeds(cli):
     rows = cli.seed_vs_best_agent_rows(UNIT_CELL)
     by_model = {r["model"]: r for r in rows}
     # Exactly the four seeds plus the single best agent model — the also-ran is dropped.
@@ -116,7 +105,7 @@ def test_seed_vs_best_agent_rows_picks_best_agent_and_all_seeds():
     assert by_model["prototype_similarity"]["kind"] == "seed model"
 
 
-def test_seed_vs_best_agent_rows_use_elpd_relative_to_best_agent():
+def test_seed_vs_best_agent_rows_use_elpd_relative_to_best_agent(cli):
     rows = {r["model"]: r for r in cli.seed_vs_best_agent_rows(UNIT_CELL)}
     # The best agent is the reference: at 0 with no error.
     assert rows["agent_winner"]["elpd_rel"] == pytest.approx(0.0)
@@ -134,7 +123,7 @@ def test_seed_vs_best_agent_rows_use_elpd_relative_to_best_agent():
     assert proto["run"] == "run1" and proto["experiment"] == "experiment1"
 
 
-def test_seed_vs_best_agent_rows_tolerate_rounded_elpd_loo():
+def test_seed_vs_best_agent_rows_tolerate_rounded_elpd_loo(cli):
     # The stored top-level elpd_loo is rounded (~4 dp) while comparison.elpd_diff is
     # full precision; disagreements within rounding must be accepted, not rejected.
     cell = {
@@ -150,7 +139,7 @@ def test_seed_vs_best_agent_rows_tolerate_rounded_elpd_loo():
     assert rows["prototype_similarity"]["elpd_rel"] == pytest.approx(-10.00012345)
 
 
-def test_seed_vs_best_agent_rows_reject_gross_elpd_mismatch():
+def test_seed_vs_best_agent_rows_reject_gross_elpd_mismatch(cli):
     # A whole-unit disagreement between elpd_loo and the compare table is a real
     # inconsistency and must still fail loudly.
     cell = {
@@ -163,7 +152,7 @@ def test_seed_vs_best_agent_rows_reject_gross_elpd_mismatch():
         cli.seed_vs_best_agent_rows(cell)
 
 
-def test_seed_vs_best_agent_rows_fail_when_a_seed_is_missing():
+def test_seed_vs_best_agent_rows_fail_when_a_seed_is_missing(cli):
     cell = {**UNIT_CELL, "elpd_loo": {
         k: v for k, v in UNIT_CELL["elpd_loo"].items() if k != "window_typicality"
     }}
@@ -171,7 +160,7 @@ def test_seed_vs_best_agent_rows_fail_when_a_seed_is_missing():
         cli.seed_vs_best_agent_rows(cell)
 
 
-def test_seed_vs_best_agent_rows_fail_when_best_agent_is_not_rank_zero():
+def test_seed_vs_best_agent_rows_fail_when_best_agent_is_not_rank_zero(cli):
     # Make a seed the overall best: the best agent is no longer rank 0, so the
     # dse-relative-to-best-agent error bars are unavailable and we must refuse.
     cell = {
@@ -194,7 +183,7 @@ def test_seed_vs_best_agent_rows_fail_when_best_agent_is_not_rank_zero():
 # --- unit: locating and labelling cells on disk ----------------------------
 
 
-def test_find_posterior_files_globs_run_experiment_tree(tmp_path):
+def test_find_posterior_files_globs_run_experiment_tree(cli, tmp_path):
     made = []
     for run in ("run1", "run2"):
         for exp in ("experiment1", "experiment2"):
@@ -207,7 +196,7 @@ def test_find_posterior_files_globs_run_experiment_tree(tmp_path):
     assert found == sorted(made)
 
 
-def test_cell_label_reads_run_and_experiment_from_path():
+def test_cell_label_reads_run_and_experiment_from_path(cli):
     p = Path(
         "data/results/human_experiment/run2/subjective_randomness/"
         "experiment3/model_loop/model_posterior.json"
@@ -231,7 +220,7 @@ def _two_by_two_cells():
     ]
 
 
-def test_human_fit_rows_cover_every_cell():
+def test_human_fit_rows_cover_every_cell(cli):
     rows = cli.human_fit_rows(_two_by_two_cells())
     cells = {(r["run"], r["experiment"]) for r in rows}
     assert cells == {
@@ -242,14 +231,14 @@ def test_human_fit_rows_cover_every_cell():
     assert len(rows) == 20
 
 
-def test_prettify_label_spaces_underscores_and_run_numbers():
+def test_prettify_label_spaces_underscores_and_run_numbers(cli):
     assert cli.prettify_label("prototype_similarity") == "prototype similarity"
     assert cli.prettify_label("run1") == "run 1"
     assert cli.prettify_label("experiment3") == "experiment 3"
     assert cli.prettify_label("best agent model") == "best agent model"
 
 
-def test_forest_frame_orders_models_with_best_agent_on_top():
+def test_forest_frame_orders_models_with_best_agent_on_top(cli):
     frame = cli.human_fit_forest_frame(cli.human_fit_rows(_two_by_two_cells()))
     order = list(frame["model_label"].cat.categories)
     # plotnine draws the last category at the top of the y-axis. Labels are
@@ -264,39 +253,39 @@ def test_forest_frame_orders_models_with_best_agent_on_top():
     }
 
 
-def test_forest_frame_prettifies_facet_labels():
+def test_forest_frame_prettifies_facet_labels(cli):
     frame = cli.human_fit_forest_frame(cli.human_fit_rows(_two_by_two_cells()))
     assert set(frame["run"].cat.categories) == {"run 1", "run 2"}
     assert set(frame["experiment"].cat.categories) == {"experiment 1", "experiment 2"}
 
 
-def test_forest_ggplot_returns_a_ggplot():
+def test_forest_ggplot_returns_a_ggplot(cli):
     frame = cli.human_fit_forest_frame(cli.human_fit_rows(_two_by_two_cells()))
     assert isinstance(cli.human_fit_forest_ggplot(frame), plotnine.ggplot)
 
 
-def test_select_cells_filters_to_one_experiment():
+def test_select_cells_filters_to_one_experiment(cli):
     chosen = cli.select_cells(_two_by_two_cells(), "experiment2")
     assert {c["experiment"] for c in chosen} == {"experiment2"}
     assert len(chosen) == 2  # one per run
 
 
-def test_select_cells_none_keeps_all():
+def test_select_cells_none_keeps_all(cli):
     assert len(cli.select_cells(_two_by_two_cells(), None)) == 4
 
 
-def test_select_cells_unknown_experiment_fails_loudly():
+def test_select_cells_unknown_experiment_fails_loudly(cli):
     with pytest.raises(ValueError, match="experiment9"):
         cli.select_cells(_two_by_two_cells(), "experiment9")
 
 
-def test_forest_ggplot_handles_a_single_experiment():
+def test_forest_ggplot_handles_a_single_experiment(cli):
     cells = cli.select_cells(_two_by_two_cells(), "experiment1")
     frame = cli.human_fit_forest_frame(cli.human_fit_rows(cells))
     assert isinstance(cli.human_fit_forest_ggplot(frame), plotnine.ggplot)
 
 
-def test_plot_human_fit_forest_writes_a_figure(tmp_path):
+def test_plot_human_fit_forest_writes_a_figure(cli, tmp_path):
     frame = cli.human_fit_forest_frame(cli.human_fit_rows(_two_by_two_cells()))
     out = tmp_path / "human_fit.pdf"
     cli.plot_human_fit_forest(frame, out)
@@ -306,7 +295,7 @@ def test_plot_human_fit_forest_writes_a_figure(tmp_path):
 # --- integration: the CLI over a run tree ----------------------------------
 
 
-def test_cli_builds_figure_and_csv_from_run_tree(tmp_path):
+def test_cli_builds_figure_and_csv_from_run_tree(cli, tmp_path):
     runs_root = tmp_path / "human_experiment"
     for cell in _two_by_two_cells():
         d = (runs_root / cell["run"] / "subjective_randomness"
@@ -325,7 +314,7 @@ def test_cli_builds_figure_and_csv_from_run_tree(tmp_path):
     assert "best agent model" in text and "prototype_similarity" in text
 
 
-def test_cli_filters_to_one_experiment(tmp_path):
+def test_cli_filters_to_one_experiment(cli, tmp_path):
     runs_root = tmp_path / "human_experiment"
     for cell in _two_by_two_cells():
         d = (runs_root / cell["run"] / "subjective_randomness"
@@ -345,6 +334,6 @@ def test_cli_filters_to_one_experiment(tmp_path):
     assert "experiment2" in text and "experiment1" not in text
 
 
-def test_cli_fails_loudly_when_no_runs_found(tmp_path):
+def test_cli_fails_loudly_when_no_runs_found(cli, tmp_path):
     with pytest.raises(FileNotFoundError, match="model_posterior.json"):
         cli.main(cli.Args(runs_root=tmp_path / "empty", out_dir=tmp_path / "out"))
