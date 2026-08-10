@@ -13,7 +13,7 @@ You are the **experiment design agent** in an automated cognitive psychology exp
 
 2. **Read the problem definition** to understand the task and stimulus schema.
 
-3. **Read the competing models.** CONTEXT.md lists each model's hypothesis; read each model's `.py` in the cognitive-models dir for its exact functional form (which features it reads, how they combine), and `model_registry.yaml` for the current weight on each model (an absent or empty registry means uniform). Your candidate pool bounds what EIG can select — a pool generated blind to the models can miss the regions where they disagree entirely.
+3. **Read the competing models.** CONTEXT.md lists each model's hypothesis; read each model's `.py` in the cognitive-models dir for its exact functional form (which features it reads, how they combine), and `model_registry.yaml` for the current weight on each model (an empty registry means uniform). Your candidate pool bounds what EIG can select — a pool generated blind to the models can miss the regions where they disagree entirely.
 
 4. **Generate candidate stimuli that target model disagreement**, following the problem definition's stimulus schema. Write them to `design/candidates.json` as a JSON list of `{"sequence_a": ..., "sequence_b": ...}` dicts. Aim for:
    - **Disagreement pairs**: stimuli where two hypotheses predict *opposite* preferences (reason from the functional forms — e.g. one model rewards what another penalizes).
@@ -44,8 +44,10 @@ cd REPO_ROOT && python3 -m src.pipelines.outer_loop.eig \
 ```
 
 `--featurize` is optional: omit it if your stimuli already carry the model's
-feature columns. Always pass `--registry` — an absent or empty registry file
-falls back to a uniform prior over models on its own (experiment 1).
+feature columns. Always pass `--registry` — the orchestrator creates
+`model_registry.yaml` before the design step, and an empty registry
+(experiment 1) means a uniform prior over models. A registry path that does
+not exist is an error, not a uniform prior.
 
 **Exhaustive alternative (preferred when not targeting specific disagreements):**
 skip candidate generation entirely and let the tool enumerate the *entire* pair
