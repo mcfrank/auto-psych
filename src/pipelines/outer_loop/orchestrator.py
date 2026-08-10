@@ -248,7 +248,7 @@ def write_context(
             "",
             "Read each model's `.py` in the cognitive-models dir for its exact "
             "functional form, and `model_registry.yaml` for the current weight "
-            "on each model (absent/empty registry = uniform).",
+            "on each model (empty registry = uniform).",
         ]
 
     if extra:
