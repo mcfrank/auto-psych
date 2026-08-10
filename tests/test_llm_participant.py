@@ -87,6 +87,60 @@ def test_unparseable_and_errors_are_counted(tmp_path):
     assert stats["n_rows"] == len(rows) == 0
 
 
+def test_transient_backend_error_is_retried_once_within_a_trial():
+    """A single flaky API call must not cost the trial its response.
+
+    The downstream completeness gate rejects any collection with a missing
+    response, so without a retry one transient blip aborts the whole (paid)
+    collection. Each trial gets exactly one second chance.
+    """
+
+    class TransientlyFailing:
+        name = "fake:transient"
+
+        def __init__(self):
+            self.calls: dict[str, int] = {}
+
+        def answer(self, system, user):
+            attempt = self.calls[user] = self.calls.get(user, 0) + 1
+            if attempt == 1:
+                raise RuntimeError("transient backend blip")
+            return "ANSWER: left"
+
+    rows, stats = generate_llm_participant_rows(
+        STIMULI,
+        n_participants=1,
+        participant_model=TransientlyFailing(),
+        prompt_text="x",
+    )
+    assert stats["n_errors"] == 0
+    assert stats["n_rows"] == len(rows) == len(STIMULI)
+
+
+def test_uncommitted_reply_is_retried_once_within_a_trial():
+    class WaffleThenCommit:
+        name = "fake:waffle"
+
+        def __init__(self):
+            self.calls: dict[str, int] = {}
+
+        def answer(self, system, user):
+            attempt = self.calls[user] = self.calls.get(user, 0) + 1
+            if attempt == 1:
+                return "hmm, hard to say really"
+            return "ANSWER: right"
+
+    rows, stats = generate_llm_participant_rows(
+        STIMULI,
+        n_participants=1,
+        participant_model=WaffleThenCommit(),
+        prompt_text="x",
+    )
+    assert stats["n_unparseable"] == 0
+    assert stats["n_rows"] == len(rows) == len(STIMULI)
+    assert all(row["chose_left"] == 0 for row in rows)
+
+
 def test_model_concurrency_limit_is_respected():
     class SingleThreadedModel:
         name = "fake:single-threaded"
@@ -212,3 +266,12 @@ def test_programmatic_nobrowser_rejects_partial_collection(tmp_path, monkeypatch
     )
     assert stats["n_errors"] == 2
     assert not (exp_dir / "data" / "responses.csv").exists()
+    # The rows that WERE collected are paid LLM output: they must be preserved
+    # for diagnosis under a name modeling never reads, not discarded.
+    rejected = list(
+        csv.DictReader(
+            (exp_dir / "data" / "responses_rejected.csv").open(encoding="utf-8")
+        )
+    )
+    assert len(rejected) == 2
+    assert all(row["sequence_a"] != "HHHHH" != row["sequence_b"] for row in rejected)

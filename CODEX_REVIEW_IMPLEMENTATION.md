@@ -102,3 +102,37 @@ The final tree was checked with:
 The remaining warnings are ArviZ Pareto-k warnings from deliberately small MCMC
 fixtures. They are retained as visible warnings; production model export now
 blocks the corresponding unreliable selected result.
+
+## Post-review adjustments (2026-08-09)
+
+A follow-up review of this implementation accepted it with four adjustments:
+
+1. **Registry docs matched to the new contract.** `_load_model_weights` now
+   raises on a missing registry file, but `prompts/2_design.md` and the
+   CONTEXT.md text in `orchestrator.py` still promised "absent registry =
+   uniform". Both now say: the orchestrator creates `model_registry.yaml`
+   before design, an *empty* registry means uniform, a *missing* path is an
+   error. (In orchestrated runs `init_registry` always precedes design, so the
+   raise cannot fire there.)
+2. **Incomplete LLM collections are retried and preserved, not just refused.**
+   Each participant trial now gets one retry on a transient backend error or
+   an uncommitted reply (`_TRIAL_ATTEMPTS` in `collect.py`; the side
+   assignment is drawn before the attempts, so counterbalancing is
+   unaffected). If the collection still comes up short, the rows that were
+   collected — paid LLM output — are saved to `responses_rejected.csv` before
+   the completeness gate raises, instead of being discarded with only the
+   counts.
+3. **Pruning reliability gate narrowed.** Any single unreliable LOO row used
+   to disable all pruning, so one flaky agent-written candidate could make the
+   active model set grow-only for the rest of a run. Now: an unreliable rank-0
+   baseline still blocks all pruning (every `elpd_diff` is measured against
+   it), and a model whose own row is unreliable is never pruned on it — but a
+   reliable clear loser is pruned even when an unreliable bystander exists.
+4. **A refused export still writes `model_posterior.json`.** The reliability
+   gate in `_export` now fires after the posterior + comparison record is on
+   disk (it is a diagnostic record, not an endorsement) and continues to block
+   `best_model.py`. A refused run can therefore be diagnosed from its own
+   results directory.
+
+Verified after the adjustments: full pytest suite (fast + slow) green, ruff
+clean on every touched file.

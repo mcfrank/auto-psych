@@ -408,12 +408,22 @@ def _collect_llm_participant_programmatic(
     stats_path.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
     expected_rows = n_participants * len(stimuli)
     if stats["n_rows"] != expected_rows:
+        # The rows that WERE collected are paid LLM output. Preserve them for
+        # diagnosis (and possible salvage) under a name modeling never reads
+        # before refusing the partial dataset.
+        rejected_path = data_dir / "responses_rejected.csv"
+        if rows:
+            with rejected_path.open("w", newline="", encoding="utf-8") as fh:
+                writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+                writer.writeheader()
+                writer.writerows(rows)
         raise RuntimeError(
             "LLM participant collection was incomplete: "
             f"expected {expected_rows} responses but received {stats['n_rows']} "
             f"(unparseable={stats['n_unparseable']}, errors={stats['n_errors']}). "
-            f"Diagnostics were written to {stats_path}; refusing to model a "
-            "partial dataset."
+            f"Diagnostics were written to {stats_path}"
+            + (f"; partial rows saved to {rejected_path}" if rows else "")
+            + "; refusing to model a partial dataset."
         )
     return rows
 
