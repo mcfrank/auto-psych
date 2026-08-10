@@ -374,22 +374,40 @@ def _prune_losers(
     comparison = compare_table(
         responses_path, models_dir, cache_dir=cache_dir, **(fit_kwargs or {})
     )
+    if not comparison:
+        return []
+    # Reliability gates are deliberately narrow. Every elpd_diff is measured
+    # against the rank-0 baseline, so an unreliable baseline poisons every
+    # comparison and blocks all pruning. Beyond that, a model is only shielded
+    # by its OWN unreliable row — agent-written candidates trip Pareto-k
+    # warnings routinely, and one flaky bystander must not switch pruning off
+    # wholesale (the active set would then only ever grow).
+    baseline = min(comparison, key=lambda name: comparison[name]["rank"])
+    if comparison[baseline].get("loo_unreliable"):
+        print(
+            f"  [warn] Skipping model pruning: baseline model {baseline!r} "
+            "(rank 0) has an unreliable LOO estimate, so every elpd_diff "
+            "against it is untrustworthy.",
+            file=sys.stderr,
+            flush=True,
+        )
+        return []
     unreliable = sorted(
         name for name, row in comparison.items() if row.get("loo_unreliable")
     )
     if unreliable:
         print(
-            "  [warn] Skipping model pruning because LOO is unreliable for: "
+            "  [warn] Not pruning models with unreliable LOO estimates: "
             + ", ".join(unreliable),
             file=sys.stderr,
             flush=True,
         )
-        return []
     to_prune = [
         name
         for name in names
         if name not in protected
         and name in comparison
+        and not comparison[name].get("loo_unreliable")
         and comparison[name]["dse"] > 0
         and comparison[name]["elpd_diff"] > dse_multiplier * comparison[name]["dse"]
         and comparison[name]["weight"] < weight_floor
@@ -1475,6 +1493,15 @@ def _export(
 ) -> Dict[str, Any]:
     comparison = comparison or {}
     best_model = _best_model(posterior)
+
+    # Write the posterior + comparison record BEFORE the reliability gate: it is
+    # a diagnostic record of what the run concluded, not an endorsement of the
+    # selection. If the gate refuses below, this file is what explains why.
+    payload = {**posterior, "comparison": comparison}
+    (results_dir / "model_posterior.json").write_text(
+        json.dumps(payload, indent=2), encoding="utf-8"
+    )
+
     if comparison and best_model not in comparison:
         raise RuntimeError(
             f"Cannot export selected model {best_model!r}: its LOO comparison row "
@@ -1485,11 +1512,6 @@ def _export(
             f"Cannot export selected model {best_model!r}: its LOO estimate is "
             "unreliable. Improve the fit or data before selecting a model."
         )
-
-    payload = {**posterior, "comparison": comparison}
-    (results_dir / "model_posterior.json").write_text(
-        json.dumps(payload, indent=2), encoding="utf-8"
-    )
 
     shutil.copyfile(models_dir / f"{best_model}.py", results_dir / "best_model.py")
 

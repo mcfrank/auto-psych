@@ -784,6 +784,12 @@ def _parse_participant_answer(text: str) -> str | None:
     return None
 
 
+# Attempts per trial (1 + one retry). The completeness gate downstream rejects
+# any collection missing a response, so a trial gets a single second chance at
+# a transient backend error or an uncommitted reply before it is counted.
+_TRIAL_ATTEMPTS = 2
+
+
 def generate_llm_participant_rows(
     stimuli: list[dict[str, Any]],
     n_participants: int,
@@ -863,25 +869,38 @@ def generate_llm_participant_rows(
                     f"  Right: {right}\n\n"
                     "Reply with exactly one line: `ANSWER: left` or `ANSWER: right`."
                 )
-                try:
-                    response = participant_model.answer(prompt_text, user_msg)
-                except Exception as exc:
-                    errors += 1
+                # One retry per trial: the downstream completeness gate rejects
+                # any collection with a missing response, so a single transient
+                # backend error or uncommitted reply would otherwise abort the
+                # whole (paid) collection. ``swap`` was drawn before the
+                # attempts, so a retry re-presents the identical trial and the
+                # counterbalancing stays reproducible.
+                choice = None
+                for attempt in range(1, _TRIAL_ATTEMPTS + 1):
+                    retry_note = "" if attempt == 1 else f" (retry {attempt - 1})"
+                    try:
+                        response = participant_model.answer(prompt_text, user_msg)
+                    except Exception as exc:
+                        if transcript is not None:
+                            transcript.write(
+                                f"## Trial {trial_index}{retry_note}\n- left: `{left}`\n- right: `{right}`\n\n"
+                                f"**Model error:** {exc}\n\n"
+                            )
+                        if attempt == _TRIAL_ATTEMPTS:
+                            errors += 1
+                        continue
+                    choice = _parse_participant_answer(response)
                     if transcript is not None:
                         transcript.write(
-                            f"## Trial {trial_index}\n- left: `{left}`\n- right: `{right}`\n\n"
-                            f"**Model error:** {exc}\n\n"
+                            f"## Trial {trial_index}{retry_note}\n- left: `{left}`\n- right: `{right}`\n\n"
+                            f"**Reply:**\n```\n{response.strip()}\n```\n\n"
+                            f"**Parsed:** {choice if choice else 'UNPARSEABLE'}\n\n"
                         )
-                    continue
-                choice = _parse_participant_answer(response)
-                if transcript is not None:
-                    transcript.write(
-                        f"## Trial {trial_index}\n- left: `{left}`\n- right: `{right}`\n\n"
-                        f"**Reply:**\n```\n{response.strip()}\n```\n\n"
-                        f"**Parsed:** {choice if choice else 'UNPARSEABLE'}\n\n"
-                    )
+                    if choice is not None:
+                        break
+                    if attempt == _TRIAL_ATTEMPTS:
+                        unparseable += 1
                 if choice is None:
-                    unparseable += 1
                     continue
                 chose_left = choice == "left"
                 rows_p.append(
