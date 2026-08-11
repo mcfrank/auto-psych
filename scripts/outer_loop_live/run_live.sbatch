@@ -9,9 +9,10 @@
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.out
 #
-# Run ONE live experiment end-to-end: theory/design/implement (coding agents) ->
-# deploy to Firebase -> create + publish a Prolific study -> poll for human
-# submissions (<= 2 h/experiment) -> fetch results -> inner model loop.
+# Run ONE live experiment end-to-end: exhaustive EIG design (programmatic) ->
+# implement (coding agent) -> deploy to Firebase -> create + publish a Prolific
+# study -> poll for human submissions (<= 2 h/experiment) -> fetch results ->
+# inner model loop.
 #
 # No GPU: the coding agents are remote, participants are real humans, and only
 # the inner-loop MCMC runs locally (CPU). For sequences longer than ~2 days add
@@ -27,7 +28,7 @@
 #   RUN_WORKTREE           per-run repo copy (its own public/, functions/, opencode.json)
 #   AUTO_PSYCH_OUTPUT_DIR  this run's data tree (avoids experiment{N}/ collisions)
 #   CODING_AGENT (opencode)  PROJECT (subjective_randomness)  EXPERIMENT (1)
-#   N_PARTICIPANTS (1)  FIREBASE_PROJECT  DESIGN_MODE (agent|exhaustive)
+#   N_PARTICIPANTS (1)  FIREBASE_PROJECT
 
 set -euo pipefail
 SLURM_DIR="${OUTER_LIVE_SLURM_DIR:-${SLURM_SUBMIT_DIR:-$(pwd)}}"
@@ -37,7 +38,6 @@ PROJECT="${PROJECT:-subjective_randomness}"
 EXPERIMENT="${EXPERIMENT:-1}"
 N_PARTICIPANTS="${N_PARTICIPANTS:-1}"
 FIREBASE_PROJECT="${FIREBASE_PROJECT:-auto-psych-2c5da}"
-DESIGN_MODE="${DESIGN_MODE:-agent}"
 RUN_LABEL="${RUN_LABEL:-run-${SLURM_JOB_ID:-manual}}"
 RUN_WORKTREE="${RUN_WORKTREE:-$REPO}"
 export AUTO_PSYCH_OUTPUT_DIR="${AUTO_PSYCH_OUTPUT_DIR:-$WORK_ROOT/${RUN_LABEL}/data}"
@@ -127,7 +127,7 @@ EXTRA=()
 # bridge only exports it when the yaml sets `confirm_live_recruitment: true`.
 [[ -n "${CONFIRM_LIVE_RECRUITMENT:-}" ]] && EXTRA+=(--confirm-live-recruitment)
 
-echo "[run] label=$RUN_LABEL worktree=$RUN_WORKTREE out=$AUTO_PSYCH_OUTPUT_DIR $EXP_DESC N=$N_PARTICIPANTS design=$DESIGN_MODE"
+echo "[run] label=$RUN_LABEL worktree=$RUN_WORKTREE out=$AUTO_PSYCH_OUTPUT_DIR $EXP_DESC N=$N_PARTICIPANTS"
 
 # RESUME_AGENTS (optional, stage keys separated by ':' or space, e.g.
 # "4_collect:5_model_loop"): re-run only those stages of an existing experiment
@@ -146,7 +146,6 @@ if [[ -n "${RESUME_AGENTS:-}" ]]; then
       --deploy-target firebase \
       --prolific-mode "${PROLIFIC_MODE:-test}" \
       --firebase-project "$FIREBASE_PROJECT" \
-      --design-mode "$DESIGN_MODE" \
       --run-label "$RUN_LABEL" \
       --n-participants "$N_PARTICIPANTS" \
       --coding-agent "$CODING_AGENT" \
@@ -163,7 +162,6 @@ else
     --deploy-target firebase \
     --prolific-mode "${PROLIFIC_MODE:-test}" \
     --firebase-project "$FIREBASE_PROJECT" \
-    --design-mode "$DESIGN_MODE" \
     --run-label "$RUN_LABEL" \
     --n-participants "$N_PARTICIPANTS" \
     --coding-agent "$CODING_AGENT" \

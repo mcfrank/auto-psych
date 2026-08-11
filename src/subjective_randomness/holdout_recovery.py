@@ -2,11 +2,11 @@
 
 The analysis holds one seed model out as the "ground truth": its fixed-param
 PyMC model generates every synthetic response, while the outer+inner loop —
-real theory and design agents, real candidate-conjecturing agents, MCMC fits
-compared by ELPD-LOO — starts from the *remaining* seed models and tries to
-recover the held-out process. After every inner-loop scoring step we ask: how
-well does the then-best model predict the ground truth's ``p_left`` on a large
-held-out stimulus set (Pearson r and RMSE)?
+the programmatic exhaustive EIG design, real candidate-conjecturing agents,
+MCMC fits compared by ELPD-LOO — starts from the *remaining* seed models and
+tries to recover the held-out process. After every inner-loop scoring step we
+ask: how well does the then-best model predict the ground truth's ``p_left``
+on a large held-out stimulus set (Pearson r and RMSE)?
 
 Layout under ``results_root`` (one run per held-out model)::
 
@@ -15,8 +15,9 @@ Layout under ``results_root`` (one run per held-out model)::
         eval_stimuli.json      # held-out stimulus set (post-run exclusion)
         trajectory.json        # per-step correlation trajectory + leakage audit
 
-The expensive seams (`spawn_cc_agent`, `generate_responses`, `fit_model`, ...)
-are imported at module level so tests can monkeypatch them here.
+The expensive seams (`run_design_programmatic`, `generate_responses`,
+`fit_model`, ...) are imported at module level so tests can monkeypatch them
+here.
 """
 
 from __future__ import annotations
@@ -27,25 +28,22 @@ import importlib
 import json
 import shutil
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Set, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 import numpy as np
 import yaml
 
 from src.models.pymc_inference import fit_model, make_stim_data, pm_data_inputs
-from src.pipelines.outer_loop.eig import annotate as annotate_eig
 from src.pipelines.outer_loop.orchestrator import (
     carry_forward_cognitive_models,
     ensure_experiment_dirs,
     init_registry,
-    outer_project_dir,
     project_seed_models_dir,
+    run_design_programmatic,
     run_inner_model_loop_programmatic,
     seed_experiment_models_from_project,
-    spawn_cc_agent,
     update_registry_from_interpretation,
     validate_cc_output,
-    write_context,
 )
 from src.runtime.token_usage import start_usage_log, write_usage_report
 from src.subjective_randomness.config import resolve_path
@@ -66,13 +64,6 @@ from src.subjective_randomness.stimulus_design import (
 
 PROJECT_ID = "subjective_randomness"
 
-# Design EIG defaults — match the 2_design prompt's documented CLI invocation
-# (`--top 32`, 200 prior-predictive samples), so the deterministic fallback below
-# selects the same top-N the design agent itself writes in the live human runs.
-DESIGN_TOP_N = 32
-DESIGN_EIG_SAMPLES = 200
-DESIGN_EIG_SEED = 42
-
 TRAJECTORY_COLUMNS = [
     "gt_model",
     "experiment",
@@ -92,123 +83,6 @@ def _require_valid(agent_key: str, exp_dir: Path) -> None:
     ok, msg = validate_cc_output(agent_key, exp_dir)
     if not ok:
         raise RuntimeError(f"{agent_key} output invalid in {exp_dir}: {msg}")
-
-
-def _spawn_with_repair(
-    agent_key: str,
-    exp_dir: Path,
-    *,
-    allowed_dirs: List[Path],
-    agent_timeout_sec: int,
-    backend: Optional[str],
-    agent_model: Optional[str] = None,
-    prompt_key: Optional[str] = None,
-    post_spawn: Optional[Callable[[], None]] = None,
-    max_repairs: int = 2,
-) -> None:
-    """Spawn a coding-agent stage and validate it, repairing on failure.
-
-    A validation failure is fed back to the agent as ``repair_feedback`` and the
-    stage is re-spawned, up to ``max_repairs`` extra times. Only an exhausted
-    budget raises — so one fixable agent mistake (a malformed YAML manifest, a
-    model using a missing PyMC op) is repaired in place instead of aborting the
-    whole holdout task. ``post_spawn`` runs after each spawn and before validation
-    (e.g. EIG-scoring the design candidate pool into ``stimuli.json``).
-    """
-    repair_feedback: Optional[str] = None
-    for attempt in range(max_repairs + 1):
-        ok, _ = spawn_cc_agent(
-            agent_key,
-            exp_dir,
-            allowed_dirs=allowed_dirs,
-            timeout_secs=agent_timeout_sec,
-            backend=backend,
-            prompt_key=prompt_key,
-            repair_feedback=repair_feedback,
-            model=agent_model,
-        )
-        if not ok:
-            print(
-                f"  [holdout] Warning: {agent_key} agent exited without success "
-                f"in {exp_dir}",
-                flush=True,
-            )
-        if post_spawn is not None:
-            post_spawn()
-        valid, msg = validate_cc_output(agent_key, exp_dir)
-        if valid:
-            return
-        if attempt < max_repairs:
-            print(
-                f"  [holdout] [repair] {agent_key} failed validation "
-                f"(attempt {attempt + 1}/{max_repairs + 1}): {msg}\n"
-                f"  [holdout] [repair] feeding the error back to the agent to fix in place",
-                flush=True,
-            )
-            repair_feedback = msg
-        else:
-            raise RuntimeError(
-                f"{agent_key} output invalid in {exp_dir} after "
-                f"{max_repairs + 1} attempt(s): {msg}"
-            )
-
-
-def _has_candidate_pool(exp_dir: Path) -> bool:
-    """True when ``design/candidates.json`` exists and parses to a non-empty list."""
-    path = exp_dir / "design" / "candidates.json"
-    if not path.exists():
-        return False
-    try:
-        data = json.loads(path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError:
-        return False
-    return isinstance(data, list) and len(data) > 0
-
-
-def _ensure_design_stimuli(
-    exp_dir: Path,
-    project_id: str,
-    *,
-    top_n: int = DESIGN_TOP_N,
-    n_samples: int = DESIGN_EIG_SAMPLES,
-    seed: int = DESIGN_EIG_SEED,
-) -> None:
-    """Guarantee ``design/stimuli.json`` exists after the design step.
-
-    The design agent's creative job is the candidate pool
-    (``design/candidates.json``); scoring it by EIG into the top-N stimuli is
-    deterministic. Agents sometimes background that slow scoring and end their
-    turn before ``stimuli.json`` is written, leaving only ``candidates.json`` —
-    so when ``stimuli.json`` is missing the harness runs the EIG annotation
-    itself rather than stalling on a step it can finish deterministically.
-    """
-    design_dir = exp_dir / "design"
-    stimuli_path = design_dir / "stimuli.json"
-    if stimuli_path.exists():
-        return
-    candidates_path = design_dir / "candidates.json"
-    if not candidates_path.exists():
-        return  # nothing to score — _require_valid raises the clear missing-file error
-    candidates = json.loads(candidates_path.read_text(encoding="utf-8"))
-    if not isinstance(candidates, list) or not candidates:
-        raise ValueError(
-            f"design/candidates.json is not a non-empty list: {candidates_path}"
-        )
-    featurize_path = outer_project_dir(project_id) / "preprocess.py"
-    annotated = annotate_eig(
-        candidates,
-        exp_dir / "cognitive_models",
-        exp_dir / "model_registry.yaml",
-        featurize_path=featurize_path if featurize_path.exists() else None,
-        n_samples=n_samples,
-        seed=seed,
-    )
-    stimuli_path.write_text(json.dumps(annotated[:top_n], indent=2), encoding="utf-8")
-    print(
-        f"  [holdout] Design agent left no stimuli.json in {exp_dir.name}; scored "
-        f"{len(candidates)} candidate(s) by EIG -> top {min(top_n, len(annotated))}",
-        flush=True,
-    )
 
 
 def _stage_done(agent_key: str, exp_dir: Path) -> bool:
@@ -258,11 +132,12 @@ def run_holdout_experiments(
     (when the GT is in the pool at all — an old-registry or impossible GT simply
     is not); experiments >= 2 carry the previous experiment's cognitive_models
     forward, exactly as the live pipeline does (there is no theorist agent).
-    Each experiment runs the real design agent, collects responses
-    programmatically from the held-out model (fixed params, ``pm.do``), and runs
-    the inner model loop (which records the per-step ``history.json`` this
-    analysis consumes). Every stage's output is validated and any failure
-    raises — a half-run experiment is never silently carried forward.
+    Each experiment runs the programmatic exhaustive EIG design, collects
+    responses programmatically from the held-out model (fixed params,
+    ``pm.do``), and runs the inner model loop (which records the per-step
+    ``history.json`` this analysis consumes). Every stage's output is validated
+    and any failure raises — a half-run experiment is never silently carried
+    forward.
 
     With ``resume=True`` a stopped run continues: stages whose output already
     validates are skipped, and everything from the first invalid stage on is
@@ -301,9 +176,6 @@ def run_holdout_experiments(
         ensure_experiment_dirs(exp_dir)
         init_registry(exp_dir)
         prev_exp_dir = run_root / f"experiment{exp_num - 1}" if exp_num > 1 else None
-        allowed_dirs = [exp_dir, outer_project_dir(project_id)]
-        if prev_exp_dir is not None:
-            allowed_dirs.append(prev_exp_dir)
 
         # Model set: seeded pool in experiment 1; experiments >= 2 carry the
         # previous experiment's cognitive_models forward. There is no theorist
@@ -329,30 +201,14 @@ def run_holdout_experiments(
                 carry_forward_cognitive_models(prev_exp_dir, exp_dir)
             _require_valid("models", exp_dir)
 
-        # Design: use the SAME prompt as the live human experiment (the default
-        # `2_design`), in which the agent both proposes the candidate pool AND
-        # scores it by EIG into design/stimuli.json (--top 32). _ensure_design_stimuli
-        # stays wired as a deterministic safety net: it is a no-op when the agent
-        # already wrote stimuli.json, and finishes the EIG scoring itself only if
-        # the agent backgrounded it. On resume an existing valid candidate pool is
-        # reused instead of re-running the costly agent.
+        # Design: the SAME programmatic exhaustive EIG selection as the live
+        # pipeline (no design agent). Experiments >= 2 design from the previous
+        # experiment's posterior (models fit on its responses, registry weights).
         if not (resume and _stage_done("2_design", exp_dir)):
-            if not (resume and _has_candidate_pool(exp_dir)):
-                write_context(exp_dir, "2_design", project_id, exp_num, prev_exp_dir)
-                _spawn_with_repair(
-                    "2_design",
-                    exp_dir,
-                    allowed_dirs=allowed_dirs,
-                    agent_timeout_sec=agent_timeout_sec,
-                    backend=backend,
-                    agent_model=agent_model,
-                    prompt_key="2_design",
-                    post_spawn=lambda: _ensure_design_stimuli(exp_dir, project_id),
-                )
-            else:
-                # Resume with an existing candidate pool: rebuild stimuli + validate.
-                _ensure_design_stimuli(exp_dir, project_id)
-                _require_valid("2_design", exp_dir)
+            run_design_programmatic(
+                exp_dir, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir
+            )
+            _require_valid("2_design", exp_dir)
 
         # Collect: every response comes from the held-out ground truth. The
         # per-experiment seed offset gives repeated stimuli fresh Bernoulli draws.
@@ -436,10 +292,10 @@ def build_eval_stimuli(
 ) -> Dict[str, Any]:
     """Generate the held-out eval pool, excluding every pair used in training.
 
-    The design agents choose training stimuli freely, so holdout is guaranteed
-    *after* the run: any pool pair that appeared (in either order) in any of
-    the run's ``responses.csv`` files is dropped. The surviving set is fixed and
-    shared across every trajectory step.
+    The design stage picks training stimuli by EIG, wherever in the pair space
+    they fall, so holdout is guaranteed *after* the run: any pool pair that
+    appeared (in either order) in any of the run's ``responses.csv`` files is
+    dropped. The surviving set is fixed and shared across every trajectory step.
 
     With ``exhaustive=True`` the pool is *every* distinct unordered pair over all
     sequences of the given ``lengths`` (``enumerate_all_pairs``, cross-length
@@ -1165,8 +1021,8 @@ def run_holdout_recovery_from_config(
     }
 
     results_root = Path(results_root)
-    # Track every LLM spend (design + inner-loop agents) across the whole
-    # recovery run. The report is written in a finally so an aborted run still
+    # Track every LLM spend (the inner-loop agents) across the whole recovery
+    # run. The report is written in a finally so an aborted run still
     # accounts for the tokens it already used.
     usage_marker = start_usage_log(results_root / "token_usage.jsonl")
     try:

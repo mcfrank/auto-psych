@@ -141,11 +141,9 @@ def _scan_design(exp_dir: Path) -> DesignStage:
     if stimuli is None:
         stimuli = _read_json(exp_dir / "experiment" / "stimuli.json")
     stimuli = stimuli or []
-    candidates = _read_json(design_dir / "candidates.json") or []
     return DesignStage(
         rationale_md=_read_text(design_dir / "design_rationale.md"),
         n_stimuli=len(stimuli) if stimuli else None,
-        n_candidates=len(candidates) if candidates else None,
         stimuli=stimuli,
     )
 

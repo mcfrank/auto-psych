@@ -167,7 +167,7 @@ def test_run_coding_agent_claude_records_usage(tmp_path, monkeypatch):
         cwd=tmp_path,
         log_path=tmp_path / "log.jsonl",
         backend="claude",
-        usage_label="outer:2_design",
+        usage_label="outer:3_implement",
         on_summary=None,
     )
 
@@ -177,7 +177,7 @@ def test_run_coding_agent_claude_records_usage(tmp_path, monkeypatch):
     records = token_usage.records_since(marker)
     assert len(records) == 1
     rec = records[0]
-    assert rec.source == "outer:2_design"
+    assert rec.source == "outer:3_implement"
     assert rec.backend == "claude"
     assert rec.input_tokens == 40
     assert rec.output_tokens == 15
@@ -357,7 +357,7 @@ exit 1
 def test_record_usage_accumulates_and_summarizes():
     marker = token_usage.records_marker()
     token_usage.record_usage(
-        source="outer:2_design",
+        source="outer:3_implement",
         backend="claude",
         model="m",
         input_tokens=10,
@@ -382,7 +382,7 @@ def test_record_usage_accumulates_and_summarizes():
     assert summary["total_tokens"] == 110 + 55 + 25 + 7
     assert summary["cost_usd"] == pytest.approx(0.01)
     assert summary["n_calls_missing_usage"] == 0
-    assert set(summary["by_source"]) == {"outer:2_design", "participant"}
+    assert set(summary["by_source"]) == {"outer:3_implement", "participant"}
     assert summary["by_source"]["participant"]["total_tokens"] == 182
 
 
@@ -514,9 +514,9 @@ def test_spawn_cc_agent_labels_usage_by_stage(tmp_path, monkeypatch):
     from src.pipelines.outer_loop import orchestrator as orch
 
     captured = _capture_run_coding_agent(monkeypatch, orch)
-    ok, _ = orch.spawn_cc_agent(agent_key="2_design", exp_dir=tmp_path)
+    ok, _ = orch.spawn_cc_agent(agent_key="3_implement", exp_dir=tmp_path)
     assert ok
-    assert captured["usage_label"] == "outer:2_design"
+    assert captured["usage_label"] == "outer:3_implement"
 
 
 def test_candidate_agent_labels_usage(tmp_path, monkeypatch):
@@ -603,7 +603,7 @@ def test_participant_model_labels_usage(monkeypatch):
 def test_write_usage_report_persists_and_prints(tmp_path, capsys):
     marker = token_usage.records_marker()
     token_usage.record_usage(
-        source="outer:2_design",
+        source="outer:3_implement",
         backend="opencode",
         model="m",
         input_tokens=5,
@@ -614,7 +614,7 @@ def test_write_usage_report_persists_and_prints(tmp_path, capsys):
     on_disk = json.loads((tmp_path / "token_usage_summary.json").read_text())
     assert on_disk == summary
     assert on_disk["total_tokens"] == 7
-    assert on_disk["by_source"]["outer:2_design"]["n_calls"] == 1
+    assert on_disk["by_source"]["outer:3_implement"]["n_calls"] == 1
     out = capsys.readouterr().out
     assert "experiment 1" in out
     assert "7" in out
@@ -635,7 +635,7 @@ def test_run_experiment_persists_usage_log(tmp_path, monkeypatch):
 
     def fake_run_agent(**kwargs):
         token_usage.record_usage(
-            source="outer:2_design", backend="opencode", model="m", input_tokens=3
+            source="outer:3_implement", backend="opencode", model="m", input_tokens=3
         )
 
     monkeypatch.setattr(run_mod, "_run_agent", fake_run_agent)
@@ -646,7 +646,7 @@ def test_run_experiment_persists_usage_log(tmp_path, monkeypatch):
         mode="simulated_participants",
         n_participants=1,
         validate=False,
-        agent_filter="2_design",
+        agent_filter="3_implement",
     )
 
     assert (exp_dir / "token_usage.jsonl").exists()

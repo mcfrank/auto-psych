@@ -1,38 +1,27 @@
 """
-Annotate candidate stimuli with Expected Information Gain (EIG) over PyMC models.
+Exhaustive stimulus design by Expected Information Gain (EIG) over PyMC models.
 
-Each stimulus has "sequence_a"/"sequence_b" keys. The cognitive models are PyMC
-models (module-level `model: pm.Model`); EIG is computed from each model's
-**prior-predictive** p_left for the stimulus — no MCMC fit is needed at design
-time. Raw stimuli are featurized (via the project's `featurize_stimulus`) into
-the numeric columns the models read through `pm.Data`. EIG is added as a float
-field; stimuli are sorted by EIG descending on output.
+Enumerate EVERY sequence pair over the given lengths, score all of them in one
+batched per-draw pass per PyMC model (module-level `model: pm.Model`), and
+greedily select the set with maximal *joint* EIG about model identity
+(src.models.eig_selection). Raw stimuli are featurized (via the project's
+`featurize_stimulus`) into the numeric columns the models read through
+`pm.Data`. Without a responses CSV the per-draw p_left comes from each model's
+prior predictive (no MCMC fit needed); with one, each model is first fitted on
+those responses and the design is scored from its posterior predictive.
 
 Usage (CLI):
     python3 -m src.pipelines.outer_loop.eig \\
-        --candidates candidates.json \\
-        --models-dir PATH/cognitive_models \\
-        --featurize  PATH/projects/<project>/preprocess.py \\
-        --registry   PATH/model_registry.yaml \\
-        --out        PATH/design/stimuli.json \\
-        --top        20
-
-    # --out defaults to stdout if omitted
-    # --top defaults to all stimuli (no truncation)
-    # --registry is optional (uniform prior over models if omitted)
-    # --featurize is optional (omit if candidates already carry feature columns)
-
-Exhaustive design mode (no candidates file): enumerate EVERY sequence pair over
-the given lengths, score all of them in one batched prior-predictive pass per
-model, and greedily select the set with maximal *joint* EIG about model
-identity (src.models.eig_selection):
-
-    python3 -m src.pipelines.outer_loop.eig \\
-        --exhaustive --select 32 --lengths 4 5 6 7 8 \\
+        --select 32 --lengths 4 5 6 7 8 \\
         --models-dir PATH/cognitive_models \\
         --featurize  PATH/projects/<project>/preprocess.py \\
         --registry   PATH/model_registry.yaml \\
         --out        PATH/design/stimuli.json
+
+    # --out defaults to stdout if omitted
+    # --registry is optional (uniform prior over models if omitted)
+    # --featurize is optional (omit if the models read raw sequence columns)
+    # --responses PREV/data/responses.csv scores from the posterior predictive
 """
 
 from __future__ import annotations
@@ -144,58 +133,6 @@ def _feature_row(
     return row
 
 
-def annotate(
-    candidates: List[Dict[str, Any]],
-    models_dir: Path,
-    registry_path: Optional[Path] = None,
-    *,
-    featurize_path: Optional[Path] = None,
-    n_samples: int = 200,
-    seed: int = 42,
-) -> List[Dict[str, Any]]:
-    """Annotate each candidate with an "eig" key and sort by EIG descending.
-
-    candidates: list of dicts, each with "sequence_a"/"sequence_b" (and possibly
-        already-derived feature columns).
-    models_dir: cognitive_models/ directory (models_manifest.yaml + PyMC .py files).
-    registry_path: optional model_registry.yaml for a weighted model prior.
-    featurize_path: optional path to a module exposing featurize_stimulus(seq_a,
-        seq_b) -> dict of numeric feature columns. If given, those columns are
-        merged into each stimulus before EIG so the PyMC models can read them.
-    n_samples: prior-predictive draws per model.
-
-    All candidates are scored in one batched prior-predictive pass per model
-    (identical values to the historical per-stimulus path with the same seed,
-    ~3,500x faster).
-    """
-    from src.models.pymc_inference import (  # type: ignore
-        eig_from_prior_means,
-        prior_predict_p_left_batch,
-    )
-
-    models_dir = Path(models_dir)
-    model_names = _load_model_names(models_dir)
-    model_weights = _load_model_weights(registry_path)
-    featurize = _load_featurizer(featurize_path)
-
-    if not candidates:
-        return []
-    rows = [_feature_row(item, featurize) for item in candidates]
-    model_names = _screen_usable_models(model_names, models_dir, rows[0])
-
-    means = prior_predict_p_left_batch(
-        model_names, models_dir, rows, n_samples=n_samples, seed=seed
-    )
-    results = []
-    for i, item in enumerate(candidates):
-        preds = {m: float(means[m][i]) for m in means}
-        eig_val = eig_from_prior_means(preds, model_weights or None)
-        results.append({**item, "eig": round(eig_val, 6)})
-
-    results.sort(key=lambda x: -x["eig"])
-    return results
-
-
 def _posterior_p_left_draws(
     model_names: List[str],
     models_dir: Path,
@@ -272,7 +209,7 @@ def design_exhaustive(
     draws — sequential design informed by the previous experiment.
 
     Returns stimuli in selection (greedy) order, each with:
-      - "eig": the stimulus's marginal EIG (bits), same meaning as `annotate`;
+      - "eig": the stimulus's marginal EIG (bits);
       - "selection_rank": 1-based greedy pick order;
       - "joint_eig_bits": in-sample joint EIG of the set up to this stimulus.
     """
@@ -355,36 +292,29 @@ def design_exhaustive(
 
 @dataclass
 class Args:
-    """Annotate candidate stimuli with EIG over PyMC models and sort descending."""
+    """Exhaustively enumerate the pair universe and select the max-joint-EIG set."""
 
     models_dir: Path
     """Path to the cognitive_models/ directory."""
-    candidates: Optional[Path] = None
-    """JSON file with a list of {sequence_a, sequence_b} dicts (legacy mode)."""
     featurize: Optional[Path] = None
     """Path to a module exposing featurize_stimulus() (e.g. projects/<project>/preprocess.py)."""
     registry: Optional[Path] = None
     """Path to model_registry.yaml (optional; uniform prior if omitted)."""
     out: Optional[Path] = None
     """Output JSON file path (default: stdout)."""
-    top: Optional[int] = None
-    """Keep only the top N stimuli by EIG (legacy mode only)."""
     n_samples: int = 200
-    """Prior-predictive draws per model."""
-    exhaustive: bool = False
-    """Ignore --candidates: enumerate the full pair universe over --lengths and
-    select the max-joint-EIG set of --select stimuli."""
+    """Per-draw p_left samples per model (prior- or posterior-predictive)."""
     lengths: tuple = (4, 5, 6, 7, 8)
     """Sequence lengths for the exhaustive pair universe."""
-    select: Optional[int] = None
-    """Stimulus-set size for exhaustive joint-EIG selection (required with --exhaustive)."""
+    select: int = 32
+    """Stimulus-set size for the joint-EIG selection."""
     n_scenarios: int = 1000
-    """Monte Carlo scenarios for joint-EIG gain estimation (exhaustive mode)."""
+    """Monte Carlo scenarios for joint-EIG gain estimation."""
     seed: int = 42
-    """Seed for prior draws and selection scenarios."""
+    """Seed for predictive draws and selection scenarios."""
     responses: Optional[Path] = None
     """Previous experiment's responses.csv: fit each model on it and design from
-    the POSTERIOR predictive instead of the prior (exhaustive mode only)."""
+    the POSTERIOR predictive instead of the prior."""
     fit_cache: Optional[Path] = None
     """Cache dir for the design-time MCMC fits (with --responses)."""
 
@@ -404,63 +334,19 @@ def _write_output(stimuli: List[Dict[str, Any]], out: Optional[Path]) -> None:
 
 
 def main(args: Args) -> None:
-    if args.exhaustive and args.candidates is not None:
-        print(
-            "Error: --exhaustive enumerates the whole pair universe; "
-            "--candidates must not also be given.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    if not args.exhaustive and args.responses is not None:
-        print(
-            "Error: --responses (posterior design) requires --exhaustive.",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-
-    if args.exhaustive:
-        if args.select is None:
-            print("Error: --exhaustive requires --select N.", file=sys.stderr)
-            sys.exit(1)
-        selected = design_exhaustive(
-            models_dir=args.models_dir,
-            registry_path=args.registry,
-            featurize_path=args.featurize,
-            lengths=tuple(args.lengths),
-            n_select=args.select,
-            n_samples=args.n_samples,
-            n_scenarios=args.n_scenarios,
-            seed=args.seed,
-            responses_csv=args.responses,
-            fit_cache_dir=args.fit_cache,
-        )
-        _write_output(selected, args.out)
-        return
-
-    if args.candidates is None:
-        print(
-            "Error: --candidates is required (or use --exhaustive --select N).",
-            file=sys.stderr,
-        )
-        sys.exit(1)
-    candidates = json.loads(args.candidates.read_text(encoding="utf-8"))
-    if not isinstance(candidates, list):
-        print("Error: candidates file must contain a JSON list", file=sys.stderr)
-        sys.exit(1)
-
-    annotated = annotate(
-        candidates=candidates,
+    selected = design_exhaustive(
         models_dir=args.models_dir,
         registry_path=args.registry,
         featurize_path=args.featurize,
+        lengths=tuple(args.lengths),
+        n_select=args.select,
         n_samples=args.n_samples,
+        n_scenarios=args.n_scenarios,
         seed=args.seed,
+        responses_csv=args.responses,
+        fit_cache_dir=args.fit_cache,
     )
-
-    if args.top is not None:
-        annotated = annotated[: args.top]
-    _write_output(annotated, args.out)
+    _write_output(selected, args.out)
 
 
 if __name__ == "__main__":

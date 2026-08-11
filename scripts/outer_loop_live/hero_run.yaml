@@ -15,8 +15,8 @@
 # --- what to run -----------------------------------------------------------
 project: subjective_randomness
 run_label: hero                    # cosmetic — submit_parallel overrides per run.
-experiments: 3                     # per run, in sequence (design k uses k-1's posterior)
-design_mode: agent                 # model-informed candidate pool + in-agent EIG
+experiments: 3                     # per run, in sequence (design k uses k-1's posterior;
+                                   # stimulus design is always the exhaustive joint-EIG selection)
 coding_agent: opencode
 prolific_mode: live                # REAL recruiting + payment
 # Going live requires BOTH prolific_mode: live AND this flag — uncomment it

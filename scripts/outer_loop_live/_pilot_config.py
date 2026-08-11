@@ -31,7 +31,6 @@ from src.pipelines.outer_loop.deployment.prolific import (  # noqa: E402
 )
 
 PROLIFIC_SERVICE_FEE = 0.33  # ~33%; verify the current rate in your Prolific account
-VALID_DESIGN_MODES = {"exhaustive", "agent"}
 VALID_CODING_AGENTS = {"opencode", "claude"}
 VALID_PROLIFIC_MODES = {"test", "live", "none"}
 
@@ -67,9 +66,11 @@ def main() -> None:
     experiments = int(cfg.get("experiments") or 1)
     if experiments < 1:
         die("`experiments` must be >= 1")
-    design_mode = str(cfg.get("design_mode") or "exhaustive")
-    if design_mode not in VALID_DESIGN_MODES:
-        die(f"`design_mode` must be one of {sorted(VALID_DESIGN_MODES)}")
+    if "design_mode" in cfg:
+        die(
+            "`design_mode` was removed: the design stage is always the "
+            "programmatic exhaustive EIG selection — delete the key."
+        )
     coding_agent = str(cfg.get("coding_agent") or "opencode")
     if coding_agent not in VALID_CODING_AGENTS:
         die(f"`coding_agent` must be one of {sorted(VALID_CODING_AGENTS)}")
@@ -151,7 +152,7 @@ def main() -> None:
     print(f"  task length       : {minutes:g} min", file=w)
     print(f"  reward            : ${reward/100:,.2f}/participant  (~${reward/minutes*60/100:,.2f}/hr)", file=w)
     print(f"  eligibility       : US residents, English-fluent, approval >= {min_approval}%", file=w)
-    print(f"  experiments       : {experiments}  (design={design_mode}; coding agent={coding_agent})", file=w)
+    print(f"  experiments       : {experiments}  (design=exhaustive; coding agent={coding_agent})", file=w)
     if prolific_mode == "test":
         print("  prolific mode     : TEST — creates a DRAFT study (NOT published); preview it in "
               "Prolific with a made-up PROLIFIC_PID, then it stops (no collect/model).", file=w)
@@ -178,7 +179,6 @@ def main() -> None:
         "PROJECT": project,
         "RUN_LABEL": run_label,
         "N_EXPERIMENTS": experiments,
-        "DESIGN_MODE": design_mode,
         "CODING_AGENT": coding_agent,
         "PROLIFIC_MODE": prolific_mode,
         "CONFIRM_LIVE_RECRUITMENT": "1" if confirm_live else "",

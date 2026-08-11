@@ -42,25 +42,20 @@ DESIGN_STIMULI = [
 ]
 
 
-def _stub_spawn_cc_agent(calls):
-    """Stand-in for the design coding agent (mirrors the seed-model test).
+def _stub_design(calls):
+    """Stand-in for the programmatic exhaustive design (mirrors the seed-model
+    test). The holdout harness spawns no agents itself — only the inner loop
+    does, internally."""
 
-    Design is the only spawned agent stage: the model set is seeded / carried
-    forward programmatically, so any other key is an error."""
+    def design(exp_dir, project_id, *, exp_num=1, prev_exp_dir=None, **kwargs):
+        calls.append((Path(exp_dir).name, exp_num))
+        design_dir = Path(exp_dir) / "design"
+        design_dir.mkdir(parents=True, exist_ok=True)
+        (design_dir / "stimuli.json").write_text(
+            json.dumps(DESIGN_STIMULI), encoding="utf-8"
+        )
 
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None, model=None):
-        calls.append((agent_key, Path(exp_dir).name))
-        if agent_key == "2_design":
-            design_dir = exp_dir / "design"
-            design_dir.mkdir(parents=True, exist_ok=True)
-            (design_dir / "stimuli.json").write_text(
-                json.dumps(DESIGN_STIMULI), encoding="utf-8"
-            )
-        else:
-            raise AssertionError(f"Unexpected agent spawned: {agent_key}")
-        return True, "ok"
-
-    return spawn
+    return design
 
 
 def _stub_generate_responses(calls):
@@ -147,11 +142,11 @@ class _FakeFitted:
 def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     tmp_path, monkeypatch
 ):
-    agent_calls = []
+    design_calls = []
     collect_calls = []
 
     monkeypatch.setattr(
-        holdout_recovery, "spawn_cc_agent", _stub_spawn_cc_agent(agent_calls)
+        holdout_recovery, "run_design_programmatic", _stub_design(design_calls)
     )
     monkeypatch.setattr(
         holdout_recovery, "generate_responses", _stub_generate_responses(collect_calls)
@@ -407,7 +402,7 @@ def test_impossible_holdout_exhaustive_eval_thins_posterior(tmp_path, monkeypatc
             predict_max_draws_seen.append(max_draws)
             return np.linspace(0.1, 0.9, stim_data["n"])
 
-    monkeypatch.setattr(holdout_recovery, "spawn_cc_agent", _stub_spawn_cc_agent([]))
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
     monkeypatch.setattr(
         holdout_recovery, "generate_responses", _stub_generate_responses([])
     )

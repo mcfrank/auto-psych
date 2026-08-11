@@ -3,8 +3,8 @@
 The holdout config's ``agent.model`` key was previously read by nothing: every
 opencode agent silently ran the backend's default (Gemini). Running recovery
 with a different hosted model (e.g. DeepSeek via Fireworks) requires the
-chosen id to reach all three spawn sites — the outer design agent and the
-inner loop's candidate and critique agents.
+chosen id to reach all three spawn sites — the outer implement agent and
+the inner loop's candidate and critique agents.
 """
 
 from __future__ import annotations
@@ -29,7 +29,7 @@ def _capture_run_coding_agent(monkeypatch, target_module):
 
 def test_spawn_cc_agent_threads_model(tmp_path, monkeypatch):
     captured = _capture_run_coding_agent(monkeypatch, orch)
-    ok, _ = orch.spawn_cc_agent(agent_key="2_design", exp_dir=tmp_path, model=AGENT_MODEL)
+    ok, _ = orch.spawn_cc_agent(agent_key="3_implement", exp_dir=tmp_path, model=AGENT_MODEL)
     assert ok
     assert captured["model"] == AGENT_MODEL
 

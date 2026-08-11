@@ -2,10 +2,10 @@
 
 This repository implements an **automated psychology research loop**: a system in
 which LLM "coding agents" (Claude Code or opencode) and statistical machinery
-together propose cognitive theories, design stimuli, build and deploy a web
-experiment, collect data (from synthetic models, an LLM-as-participant, or real
-humans on Prolific), and then iteratively fit, criticize, and improve
-probabilistic cognitive models of that data.
+together propose cognitive theories, select maximally informative stimuli, build
+and deploy a web experiment, collect data (from synthetic models, an
+LLM-as-participant, or real humans on Prolific), and then iteratively fit,
+criticize, and improve probabilistic cognitive models of that data.
 
 The system is organized as **two nested loops**:
 
@@ -37,7 +37,7 @@ Python:
 | Stage | Driver | What it does |
 |---|---|---|
 | `1_theory` | coding agent (or seeded) | Writes PyMC cognitive models (`cognitive_models/<name>.py`) + `models_manifest.yaml`, each model carrying a one-sentence hypothesis ("rationale"). Experiment 1 can instead **seed** models from `projects/<project>/seed_models/`. |
-| `2_design` | coding agent **or** `exhaustive` | Selects stimuli into `design/stimuli.json`. `--design-mode exhaustive` replaces the agent: it enumerates the full H/T pair space and greedily picks a diverse, jointly-informative set by expected information gain (EIG). For experiments ≥2 the EIG is computed under the *previous* experiment's posterior. |
+| `2_design` | programmatic | Selects stimuli into `design/stimuli.json` by exhaustive enumeration: every H/T pair over the configured lengths is scored and a diverse, jointly-informative set is picked greedily by expected information gain (EIG). For experiments ≥2 the EIG is computed under the *previous* experiment's posterior. There is no design agent. |
 | `3_implement` | coding agent | Writes a jsPsych browser experiment (`experiment/index.html` + `config.json`). Skipped in `simulated_participants_nobrowser` mode. |
 | *(deployment)* | programmatic | After implement, optionally deploy to Firebase Hosting + create a Prolific study (`--deploy-target`, `--prolific-mode`). |
 | `4_collect` | programmatic | Collects responses → `data/responses.csv` (see collection modes below). |
@@ -143,7 +143,7 @@ Two parallel locations hold this project's code:
     periodicity, compressibility, etc.).
   - `stimulus_design.py` — exhaustive H/T pair enumeration + greedy EIG selection
     (`build_exhaustive_design`, `select_informative_stimuli`) used by the outer
-    loop's exhaustive design mode.
+    loop's design stage.
   - `model_recovery.py`, `recover.py`, `pymc_recover.py` — generate data from a
     known model/params and check the pipeline recovers them.
   - `holdout_recovery.py`, `adaptive_recovery.py` — held-out cross-validation and

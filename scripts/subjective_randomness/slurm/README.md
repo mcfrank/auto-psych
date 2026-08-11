@@ -119,8 +119,8 @@ candidate-conjecturing rounds. At 0 iterations the inner loop spawns no agents
 at all — it only fits and ELPD-LOO-scores the carried model set (the
 experiment-1 seed pool, carried forward verbatim into experiments ≥ 2; there is
 no theorist agent) and records the single seed-scoring step the trajectory
-needs. The design agent and synthetic collection still run in full, so the only
-thing removed is the inner candidate/critique search:
+needs. The exhaustive EIG design and synthetic collection still run in full, so
+the only thing removed is the inner candidate/critique search:
 
 ```
 full pipeline:  seed/carry-forward → design → collect → [inner loop: fit +

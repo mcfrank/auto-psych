@@ -27,7 +27,7 @@ ml load gcc/14.2.0 2>/dev/null || ml load gcc 2>/dev/null || true
 # Pin Node 24: firebase-tools 15.x supports Node 20/22/24, NOT 25 (the bare
 # `nodejs` module is 25.3.0 -> EBADENGINE). Fall back if 24 is unavailable.
 ml load nodejs/24.13.0 2>/dev/null || ml load nodejs/24 2>/dev/null || ml load nodejs 2>/dev/null || true
-# Coding-agent backends for theory/design/implement + inner loop. opencode is
+# Coding-agent backends for the implement stage + inner loop. opencode is
 # the default (opencode + Gemini); claude-code is available via coding_agent: claude.
 ml load opencode 2>/dev/null || true
 ml load claude-code 2>/dev/null || true

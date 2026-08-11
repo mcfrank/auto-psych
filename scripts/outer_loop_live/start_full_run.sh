@@ -34,7 +34,7 @@ if ! CFG_ENV="$("$VENV_PY" "$DIR/_pilot_config.py" "$CONFIG" --check)"; then
   exit 1
 fi
 eval "$CFG_ENV"  # PROJECT N_EXPERIMENTS N_PARTICIPANTS PROLIFIC_MODE WALLTIME QOS
-                 # DESIGN_MODE CODING_AGENT FIREBASE_PROJECT DRAWS TUNE CHAINS INNER_LOOP_*
+                 # CODING_AGENT FIREBASE_PROJECT DRAWS TUNE CHAINS INNER_LOOP_*
 
 # --- 2. Render the project's prolific_config.yaml from this config -----------
 "$VENV_PY" "$DIR/_pilot_config.py" "$CONFIG" --render-only

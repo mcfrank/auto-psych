@@ -30,7 +30,6 @@ class TheoryStage(BaseModel):
 class DesignStage(BaseModel):
     rationale_md: str | None = None
     n_stimuli: int | None = None
-    n_candidates: int | None = None
     stimuli: list[dict] = []
 
 

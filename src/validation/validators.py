@@ -12,7 +12,6 @@ from src.runtime.config import run_dir_for_state
 from src.runtime.observability import append_validation_failure
 from src.validation.stages.analysis import validate_analyst_output
 from src.validation.stages.collect import validate_collect_output
-from src.validation.stages.design import validate_designer_output
 from src.validation.stages.implement import validate_implementer_output
 from src.validation.stages.interpret import validate_interpreter_output
 from src.validation.stages.theory import validate_theorist_output
@@ -21,7 +20,6 @@ from src.validation.types import Validated
 
 AGENT_VALIDATORS = {
     "1_theory": validate_theorist_output,
-    "2_design": validate_designer_output,
     "3_implement": validate_implementer_output,
     "4_collect": validate_collect_output,
     "5_analyze": validate_analyst_output,
@@ -30,7 +28,6 @@ AGENT_VALIDATORS = {
 
 NODE_TO_AGENT_KEY = {
     "theory": "1_theory",
-    "design": "2_design",
     "implement": "3_implement",
     "collect": "4_collect",
     "analyze": "5_analyze",

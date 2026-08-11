@@ -12,11 +12,13 @@ Active development is organized around two explicit loops:
 - `src/pipelines/outer_loop`: **experiment loop**. Each experiment starts from
   a model set — seeded from the project's `seed_models/` in experiment 1
   (currently the best models discovered by three earlier human replicate runs)
-  and carried forward verbatim afterwards; there is no theorist agent. A design
-  agent reads the competing models and builds a stimulus pool targeting their
-  disagreements, scored by expected information gain (EIG) under the current
-  model weights; an implement agent builds the jsPsych experiment; collection
-  gathers responses; then the observed data go to the inner model loop.
+  and carried forward verbatim afterwards; there is no theorist agent. The
+  design stage is programmatic (no design agent): it enumerates the full H/T
+  pair space and greedily selects the jointly most informative stimulus set by
+  expected information gain (EIG) under the current model weights (experiments
+  ≥2 design from the previous experiment's posterior); an implement agent
+  builds the jsPsych experiment; collection gathers responses; then the
+  observed data go to the inner model loop.
 - `src/pipelines/inner_loop`: **model-discovery loop** — the only place new
   hypotheses enter. Each round it critiques the incumbent best model with a
   CriticAL posterior-predictive check (`src/critique`), then spawns candidate
@@ -62,9 +64,9 @@ dataclass — `--help` lists every knob with its documented default.
 
 | Command | What it does |
 |---|---|
-| `python -m src.pipelines.outer_loop.run` | The main pipeline: per experiment, seed/carry-forward the model set → `2_design` → `3_implement` (+ Firebase deploy when `--deploy-target firebase`) → `4_collect` → `5_model_loop`. `--agent <stage>` reruns one stage; `--resume` continues an existing tree. |
+| `python -m src.pipelines.outer_loop.run` | The main pipeline: per experiment, seed/carry-forward the model set → `2_design` (programmatic exhaustive EIG selection) → `3_implement` (+ Firebase deploy when `--deploy-target firebase`) → `4_collect` → `5_model_loop`. `--agent <stage>` reruns one stage; `--resume` continues an existing tree. |
 | `python -m src.pipelines.inner_loop.run` | The inner model loop standalone, on an already-featurized responses CSV + a seed-model dir. Exposes all discovery knobs (`--hints-file`, `--novelty-rmse-threshold`, `--prune-*`, `--candidate-parallelism`). |
-| `python -m src.pipelines.outer_loop.eig` | EIG-scores a candidate stimulus pool against a model dir (prior-predictive; `--registry` weights the models). The design agent runs this itself; it is also usable directly. |
+| `python -m src.pipelines.outer_loop.eig` | Exhaustive stimulus design against a model dir: enumerates every H/T pair over `--lengths` and greedily selects the max-joint-EIG set of `--select` stimuli (prior-predictive; `--registry` weights the models, `--responses` designs from the posterior). The pipeline's design stage runs this logic; the CLI is also usable directly. |
 | `python -m src.critique.ppc` | The CriticAL posterior-predictive harness: computes agent-proposed test statistics on observed vs. replicated data (raw p + BH-FDR q). Run by the critique agent; usable standalone on any fitted model. |
 | `python -m src.model_comparison.posterior` | Fit + ELPD-LOO-compare every model in a manifest dir on a responses CSV. |
 
@@ -148,7 +150,7 @@ overrides the default model id. The open backend loads the named model locally;
 e.g. `Qwen/Qwen2.5-0.5B-Instruct`, for quick runs).
 
 **This participant model is separate from the coding-agent backend.** The
-design / implement stages (and inner-loop candidate + critique generation) are
+implement stage (and inner-loop candidate + critique generation) is
 driven by `--coding-agent` (opencode by default); `--participant-backend` /
 `--hf-model` only choose the model that *answers trials* during `4_collect`.
 
@@ -308,7 +310,7 @@ src/
       collect.py             # collection modes (simulated / LLM-as-participant / live)
       participants.py        # closed (Gemini) + open (HuggingFace) participant models
       llm.py eig.py
-      prompts/               # 2_design / 3_implement / 4_collect_* prompts (no theorist stage)
+      prompts/               # 3_implement / 4_collect_* prompts (no theorist or design stage)
       projects/<project>/    # problem_definition.md, ground_truth_models.py, preprocess.py, seed_models/
       deployment/            # firebase.py firestore.py prolific.py manifest.py local.py smoke.py
     inner_loop/

@@ -13,9 +13,8 @@ project: subjective_randomness     # project under projects/<project>/
 run_label: pilot3                  # names the run: URL path /e{k}-{label}/, output dir, session ids
 experiments: 2                     # how many experiments to run, in sequence (1..N). Each is its
                                    # own deploy + Prolific study; experiment k's design uses k-1's posterior.
-design_mode: agent                 # agent = an agent proposes stimuli, EIG scored on the real PyMC models
-                                   # (no family twins; works for multi-experiment) | exhaustive = twin-based
-coding_agent: opencode             # backend for ALL coding agents (theory/design/inner loop):
+                                   # (Stimulus design is always the exhaustive joint-EIG selection.)
+coding_agent: opencode             # backend for ALL coding agents (implement/inner loop):
                                    # opencode (opencode + Gemini, default) | claude (Claude Code)
 prolific_mode: live                # test = create a DRAFT study (NOT published) + deploy, then STOP so you
                                    #        can preview it (open it in Prolific, use a made-up PROLIFIC_PID);
