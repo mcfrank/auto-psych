@@ -2,7 +2,7 @@
 
 Responsibilities:
   * validate the config;
-  * render the `prolific:` block to projects/<project>/prolific_config.yaml
+  * render the `prolific:` block to the project's prolific_config.yaml
     (the file the pipeline reads), unless --check is passed;
   * print a cost/scope summary and validate the Prolific token (to STDERR);
   * emit run + modeling settings as `export KEY=value` lines (to STDOUT) for the
@@ -23,6 +23,7 @@ import yaml
 REPO_ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(REPO_ROOT))
 
+from src.runtime.config import project_assets_dir  # noqa: E402
 from src.runtime.prolific import get_me, load_prolific_config  # noqa: E402
 from src.pipelines.outer_loop.deployment.prolific import (  # noqa: E402
     DEFAULT_MIN_APPROVAL_RATE,
@@ -99,10 +100,11 @@ def main() -> None:
     if not isinstance(mdl, dict):
         die("`modeling` must be a mapping")
 
-    # --- render projects/<project>/prolific_config.yaml from the prolific block
+    # --- render the project's prolific_config.yaml from the prolific block.
+    # Same resolution the pipeline's loader uses, so what we render is what runs.
     rendered = {k: v for k, v in pro.items() if k != "participants"}
     rendered["total_available_places"] = participants
-    pcfg_path = REPO_ROOT / "projects" / project / "prolific_config.yaml"
+    pcfg_path = project_assets_dir(project) / "prolific_config.yaml"
     if not check_only:
         if not pcfg_path.parent.is_dir():
             die(f"no project dir for {project!r} at {pcfg_path.parent}")

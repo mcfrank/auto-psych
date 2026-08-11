@@ -1,8 +1,11 @@
 """Resolve model callables from a theorist run directory."""
 
 import importlib.util
+import logging
 from pathlib import Path
 from typing import Callable, List, Optional
+
+logger = logging.getLogger(__name__)
 
 # Callable type: (stimulus, response_options) -> dict[str, float]
 ModelCallable = Callable[..., dict]
@@ -47,7 +50,19 @@ def get_model_callable(
         and getattr(getattr(mod, name), "__module__", None) == mod.__name__
     ]
     if len(own_callables) == 1:
-        return own_callables[0]
+        # Explicit, logged fallback: which symbol got bound decides every
+        # prediction attributed to this model, so it must be visible in the run
+        # log rather than inferred from behavior.
+        fallback = own_callables[0]
+        logger.warning(
+            "%s defines no function named %r; binding its only public callable %r "
+            "instead. Rename that function to %r to make the entry point explicit.",
+            py_path,
+            model_name,
+            getattr(fallback, "__name__", repr(fallback)),
+            model_name,
+        )
+        return fallback
     raise ValueError(
         f"{py_path} defines no function named '{model_name}' and "
         f"{'several' if own_callables else 'no'} public module-level callables were "
@@ -59,20 +74,33 @@ def get_model_names_from_manifest(
     manifest: dict, theorist_dir: Optional[Path] = None
 ) -> List[str]:
     """
-    Return model names from manifest that are loadable: <name>.py exists in theorist_dir.
-    No global library fallback; we only use the theorist's run outputs.
+    Return manifest model names after verifying every implementation exists.
+
+    No global library fallback; the manifest defines the complete hypothesis
+    set in ``theorist_dir``. Missing or malformed entries raise instead of
+    shrinking that set.
     """
-    theorist_dir = Path(theorist_dir) if theorist_dir else None
-    models = manifest.get("models") or []
-    names = []
-    for m in models:
-        name = (
-            m.get("name")
-            if isinstance(m, dict)
-            else (m if isinstance(m, str) else None)
+    if not isinstance(manifest, dict):
+        raise ValueError("model manifest must be a mapping")
+    models = manifest.get("models")
+    if not isinstance(models, list):
+        raise ValueError("model manifest must contain a 'models' list")
+    if theorist_dir is None:
+        raise ValueError("theorist_dir is required to resolve manifest model files")
+
+    theorist_dir = Path(theorist_dir)
+    names: List[str] = []
+    for entry in models:
+        name = entry.get("name") if isinstance(entry, dict) else entry
+        if not isinstance(name, str) or not name:
+            raise ValueError(f"invalid model manifest entry: {entry!r}")
+        if name in names:
+            raise ValueError(f"duplicate model name in manifest: {name!r}")
+        names.append(name)
+
+    missing = [name for name in names if not (theorist_dir / f"{name}.py").is_file()]
+    if missing:
+        raise FileNotFoundError(
+            f"Manifest lists model file(s) missing from {theorist_dir}: {missing}"
         )
-        if not name:
-            continue
-        if theorist_dir and (theorist_dir / f"{name}.py").exists():
-            names.append(name)
     return names

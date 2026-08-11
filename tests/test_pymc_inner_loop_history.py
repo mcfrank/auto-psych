@@ -10,40 +10,10 @@ from __future__ import annotations
 
 import json
 
-import yaml
 
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
-
-
-def _make_seed_models(tmp_path):
-    seed_dir = tmp_path / "seed_models"
-    seed_dir.mkdir()
-    for name in ("model_a", "model_b"):
-        (seed_dir / f"{name}.py").write_text(f"# stub {name}\n", encoding="utf-8")
-    (seed_dir / "models_manifest.yaml").write_text(
-        yaml.safe_dump(
-            {"models": [{"name": "model_a"}, {"name": "model_b"}]}, sort_keys=False
-        ),
-        encoding="utf-8",
-    )
-    return seed_dir
-
-
-def _make_responses(tmp_path):
-    responses = tmp_path / "responses.csv"
-    responses.write_text("chose_left,n_a\n1,6\n0,6\n", encoding="utf-8")
-    return responses
-
-
-def _posterior(best, others):
-    names = [best] + list(others)
-    posteriors = {name: (0.7 if name == best else 0.3 / len(others)) for name in names}
-    return {
-        "posteriors": posteriors,
-        "elpd_loo": {name: -10.0 - i for i, name in enumerate(names)},
-        "n_trials": 2,
-    }
+from tests.inner_loop_fixtures import canned_posterior, write_responses, write_seed_models
 
 
 def _patch_scoring(monkeypatch, posteriors_per_call):
@@ -95,17 +65,17 @@ def test_inner_loop_writes_history_entry_per_scoring_step(tmp_path, monkeypatch)
     _patch_scoring(
         monkeypatch,
         [
-            _posterior("model_a", ["model_b"]),
-            _posterior("iter0_candidate0", ["model_a", "model_b"]),
-            _posterior("iter1_candidate0", ["model_a", "model_b", "iter0_candidate0"]),
+            canned_posterior("model_a", ["model_b"]),
+            canned_posterior("iter0_candidate0", ["model_a", "model_b"]),
+            canned_posterior("iter1_candidate0", ["model_a", "model_b", "iter0_candidate0"]),
         ],
     )
     _patch_candidates(monkeypatch)
 
     result = run_pymc_inner_loop(
-        _make_responses(tmp_path),
+        write_responses(tmp_path),
         tmp_path / "results",
-        seed_models_dir=_make_seed_models(tmp_path),
+        seed_models_dir=write_seed_models(tmp_path),
         max_iterations=2,
         candidate_count=1,
     )
@@ -127,12 +97,12 @@ def test_inner_loop_writes_history_entry_per_scoring_step(tmp_path, monkeypatch)
 
 
 def test_inner_loop_history_seed_only_has_single_step(tmp_path, monkeypatch):
-    _patch_scoring(monkeypatch, [_posterior("model_b", ["model_a"])])
+    _patch_scoring(monkeypatch, [canned_posterior("model_b", ["model_a"])])
 
     result = run_pymc_inner_loop(
-        _make_responses(tmp_path),
+        write_responses(tmp_path),
         tmp_path / "results",
-        seed_models_dir=_make_seed_models(tmp_path),
+        seed_models_dir=write_seed_models(tmp_path),
         max_iterations=0,
     )
 

@@ -3,11 +3,26 @@ import pytest
 import src.runtime.prolific as prol
 
 
+def test_prolific_config_resolves_against_the_project_assets_dir():
+    """The Prolific config is a project *asset*, so it lives with the others.
+
+    It used to be read from the root ``projects/<id>/`` tree, which also held a
+    stale shadow copy of ``problem_definition.md`` and ``ground_truth_models.py``
+    while the outer loop read the real ones from
+    ``src/pipelines/outer_loop/projects/<id>/``. One asset root, one answer.
+    """
+    from src.pipelines.outer_loop.orchestrator import outer_project_dir
+
+    assert prol.project_assets_dir("subjective_randomness") == outer_project_dir(
+        "subjective_randomness"
+    )
+
+
 def test_load_prolific_config_raises_on_malformed_yaml(tmp_path, monkeypatch):
     proj = tmp_path / "badproj"
     proj.mkdir()
     (proj / "prolific_config.yaml").write_text("reward: [unclosed\n", encoding="utf-8")
-    monkeypatch.setattr(prol, "project_dir", lambda pid: tmp_path / pid)
+    monkeypatch.setattr(prol, "project_assets_dir", lambda pid: tmp_path / pid)
 
     with pytest.raises(ValueError, match="Malformed Prolific config"):
         prol.load_prolific_config("badproj")
@@ -19,7 +34,7 @@ def test_load_prolific_config_overrides_defaults(tmp_path, monkeypatch):
     (proj / "prolific_config.yaml").write_text(
         "reward_per_hour: 1200\nestimated_completion_time: 5\n", encoding="utf-8"
     )
-    monkeypatch.setattr(prol, "project_dir", lambda pid: tmp_path / pid)
+    monkeypatch.setattr(prol, "project_assets_dir", lambda pid: tmp_path / pid)
 
     cfg = prol.load_prolific_config("goodproj")
     assert cfg["reward_per_hour"] == 1200
@@ -99,3 +114,42 @@ def test_list_submissions_returns_error_on_non_200(monkeypatch):
     submissions, err = prol.list_submissions("study1")
     assert submissions is None
     assert "403" in err
+
+
+# ── One contract for the (value, error) API wrappers ───────────────────────
+#
+# Every wrapper returns (value, error). `error` means exactly one thing: the
+# Prolific API call itself failed — a non-2xx response, or a network/transport
+# error. Configuration errors (no API token) and programming errors are NOT
+# funnelled into that string, because callers treat `error` as "the study is
+# temporarily unreachable" and keep polling: a missing token used to make
+# `_poll_prolific_until_target` log the same message every 30s for two hours.
+
+
+def test_missing_token_raises_instead_of_becoming_an_error_string(monkeypatch):
+    monkeypatch.setattr(prol, "_get_token", lambda: None)
+    with pytest.raises(ValueError, match="PROLIFIC_API_TOKEN"):
+        prol.get_submission_counts("study1")
+
+
+def test_transport_failure_is_reported_through_the_error_member(monkeypatch):
+    monkeypatch.setattr(prol, "_headers", lambda: {"Authorization": "Token x"})
+
+    def boom(url, **kw):
+        raise prol.requests.ConnectionError("connection reset by peer")
+
+    monkeypatch.setattr(prol.requests, "get", boom)
+    counts, err = prol.get_submission_counts("study1")
+    assert counts is None
+    assert "connection reset" in err
+
+
+def test_programming_errors_propagate(monkeypatch):
+    monkeypatch.setattr(prol, "_headers", lambda: {"Authorization": "Token x"})
+
+    def boom(url, **kw):
+        raise AttributeError("module 'requests' has no attribute 'gett'")
+
+    monkeypatch.setattr(prol.requests, "get", boom)
+    with pytest.raises(AttributeError):
+        prol.get_submission_counts("study1")

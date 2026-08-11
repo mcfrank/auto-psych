@@ -1,7 +1,21 @@
 """
 Prolific API client for creating studies, test participants, and polling submissions.
 Token is read from .secrets (PROLIFIC_API_TOKEN) or env PROLIFIC_API_TOKEN.
-Project-level settings: projects/<project_id>/prolific_config.yaml
+Project-level settings: src/pipelines/outer_loop/projects/<project_id>/prolific_config.yaml
+
+Error contract — ONE rule for every wrapper here. Each returns
+``(value, error_message)`` where ``error_message`` is non-None for exactly one
+class of outcome: **the API call itself failed** — a non-2xx response, or a
+transport error (``requests.RequestException``). Callers treat that as
+recoverable and retryable; ``_poll_prolific_until_target`` in particular logs it
+and keeps polling for up to two hours.
+
+Everything else raises:
+- a missing/invalid ``PROLIFIC_API_TOKEN`` (``_headers``) is a *configuration*
+  error — folding it into the error string made a two-hour poll repeat the same
+  message every 30 seconds and then report "0 participants";
+- programming errors in this module are bugs, and must not masquerade as a
+  flaky Prolific endpoint.
 """
 
 import os
@@ -10,7 +24,7 @@ from typing import Any, Dict, Optional, Tuple
 import requests
 import yaml
 
-from src.runtime.config import REPO_ROOT, project_dir
+from src.runtime.config import REPO_ROOT, project_assets_dir
 
 # Defaults when prolific_config.yaml is missing or partial
 DEFAULT_ESTIMATED_COMPLETION_MINUTES = 5
@@ -19,11 +33,11 @@ DEFAULT_COMPLETION_CODE = "AUTO_PSYCH_COMPLETE"
 
 def load_prolific_config(project_id: str) -> Dict[str, Any]:
     """
-    Load projects/<project_id>/prolific_config.yaml with defaults.
+    Load the project's prolific_config.yaml with defaults.
     Keys: estimated_completion_time (min), completion_code, test_participant_email (for test_prolific),
     total_available_places, reward (cents), name, description, etc.
     """
-    path = project_dir(project_id) / "prolific_config.yaml"
+    path = project_assets_dir(project_id) / "prolific_config.yaml"
     out = {
         "estimated_completion_time": DEFAULT_ESTIMATED_COMPLETION_MINUTES,
         "completion_code": DEFAULT_COMPLETION_CODE,
@@ -88,30 +102,7 @@ def get_me() -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
         if r.status_code != 200:
             return (None, f"GET /users/me/ {r.status_code}: {r.text[:500]}")
         return (r.json(), None)
-    except Exception as e:
-        return (None, str(e))
-
-
-def create_test_participant(email: str) -> Tuple[Optional[str], Optional[str]]:
-    """
-    POST /researchers/participants/ to create a test participant.
-    Returns (participant_id, error_message). Email must not be already registered on Prolific.
-    """
-    try:
-        r = requests.post(
-            f"{_BASE}/researchers/participants/",
-            headers=_headers(),
-            json={"email": email},
-            timeout=30,
-        )
-        if r.status_code not in (200, 201):
-            return (
-                None,
-                f"POST /researchers/participants/ {r.status_code}: {r.text[:500]}",
-            )
-        data = r.json()
-        return (data.get("participant_id") or data.get("id"), None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))
 
 
@@ -124,7 +115,7 @@ def get_filters() -> Tuple[Optional[list], Optional[str]]:
             return (None, f"GET /filters/ {r.status_code}: {r.text[:500]}")
         data = r.json()
         return (data.get("results", data) if isinstance(data, dict) else data, None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))
 
 
@@ -142,7 +133,7 @@ def create_study(payload: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]
             return (None, f"POST /studies/ {r.status_code}: {r.text[:500]}")
         data = r.json()
         return (data.get("id"), None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))
 
 
@@ -158,7 +149,7 @@ def publish_study(study_id: str) -> Tuple[bool, Optional[str]]:
         if r.status_code != 200:
             return (False, f"POST transition PUBLISH {r.status_code}: {r.text[:500]}")
         return (True, None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (False, str(e))
 
 
@@ -169,7 +160,7 @@ def get_study(study_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:
         if r.status_code != 200:
             return (None, f"GET /studies/{study_id}/ {r.status_code}: {r.text[:500]}")
         return (r.json(), None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))
 
 
@@ -209,7 +200,7 @@ def list_submissions(
             next_link = (data.get("_links") or {}).get("next") or {}
             url = next_link.get("href") if isinstance(next_link, dict) else None
         return (submissions, None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))
 
 
@@ -229,5 +220,5 @@ def get_submission_counts(
                 f"GET /studies/{study_id}/submissions/counts/ {r.status_code}: {r.text[:500]}",
             )
         return (r.json(), None)
-    except Exception as e:
+    except requests.RequestException as e:
         return (None, str(e))

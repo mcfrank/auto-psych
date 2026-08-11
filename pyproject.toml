@@ -78,7 +78,7 @@ constraint-dependencies = ["numpy<2.3", "scipy<1.15", "pandas<2.3"]
 # Porting to arviz 1.x (then any Python >= 3.12 works) is a separate task.
 
 [tool.pytest.ini_options]
-testpaths = ["tests", "src/pipelines/inner_loop/tests"]
+testpaths = ["tests"]
 pythonpath = ["."]
 markers = [
     "slow: tests that run MCMC (PyMC NUTS) — deselect with '-m \"not slow\"'",

@@ -39,21 +39,20 @@ def get_model_predictions(
     Return predictions for each model: { model_name: { response: prob } }.
     Models are resolved only from theorist_dir (1_theory/<name>.py). No global library.
     stimulus may be a tuple (seq_a, seq_b) or a dict with keys sequence_a, sequence_b.
+
+    Every requested model appears in the result, or the call raises. A model
+    that cannot be loaded or that crashes while predicting is NOT dropped:
+    downstream consumers (EIG, ground-truth generation, model weighting)
+    renormalize over whatever they receive, so a silently missing model changes
+    the science while looking like a smaller hypothesis space. If you genuinely
+    want to skip unusable models, screen them explicitly first — see
+    ``src.pipelines.outer_loop.eig._screen_usable_models``.
     """
     from src.models.theorist.loader import get_model_callable
 
     stimulus = _normalize_stimulus(stimulus)
     out = {}
     for name in model_names:
-        try:
-            fn = get_model_callable(name, theorist_dir)
-            out[name] = fn(stimulus, response_options)
-        except Exception as exc:
-            # A model that fails to load or raises while predicting is dropped
-            # from the result, but log it: a silently vanished model skews any
-            # downstream weighting/EIG, and "predicts nothing" must be
-            # distinguishable from "crashed". (Catch broadly — a malformed
-            # callable can raise TypeError/AttributeError, not just ValueError.)
-            logger.warning("dropping model %r — %s: %s", name, type(exc).__name__, exc)
-            continue
+        fn = get_model_callable(name, theorist_dir)
+        out[name] = fn(stimulus, response_options)
     return out

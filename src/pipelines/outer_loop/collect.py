@@ -4,12 +4,11 @@ from __future__ import annotations
 
 import csv
 import io
-import json
+import math
 import multiprocessing
 import os
 import random
 import re
-import subprocess
 import sys
 import time
 import urllib.parse
@@ -20,14 +19,11 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-import yaml
-
+from src.pipelines.outer_loop.featurizer import Featurizer, load_featurizer
 from src.pipelines.outer_loop.llm import get_llm, invoke_llm, load_prompt_for_run
-from src.runtime.config import DEFAULT_MAX_VALIDATION_RETRIES, agent_dir_for_state
-from src.runtime.console import agent_header, log_status
-from src.models.project.ground_truth import get_ground_truth_models
-from src.models.theorist.loader import get_model_names_from_manifest
+from src.runtime.console import log_status
 from src.models.theorist.predictions import get_model_predictions
+from src.models.probability import validate_probability_distribution
 from src.runtime.observability import agent_log
 
 
@@ -109,7 +105,43 @@ def _poll_prolific_until_target(
     return completed
 
 
+def _playwright_errors() -> tuple[type[BaseException], ...]:
+    """Exception types Playwright raises for *page-level* trouble.
+
+    ``playwright.sync_api.Error`` (whose ``TimeoutError`` is a subclass) covers
+    the outcomes the steering loop legitimately has to survive: the page
+    navigated mid-call so the execution context was destroyed, an element went
+    stale, the page/browser was closed. Everything else — a TypeError from a
+    wrong call signature, an AttributeError from a renamed helper — is a bug in
+    this module and must propagate rather than be read as "the screen was
+    empty".
+    """
+    from playwright.sync_api import Error as PlaywrightError
+
+    return (PlaywrightError,)
+
+
+def _experiment_data_present(page) -> bool:
+    """Has jsPsych published ``window.__experimentData`` yet?
+
+    Polled every drive-loop tick. A Playwright page error here means the page
+    is mid-navigation, in which case the data provably is not readable yet, so
+    ``False`` is the correct answer (and logging it once a tick would bury the
+    real messages). Any other exception propagates.
+    """
+    try:
+        return bool(page.evaluate("typeof window.__experimentData !== 'undefined'"))
+    except _playwright_errors():
+        return False
+
+
 def _get_screen_content(page) -> str:
+    """Return the visible experiment text, or ``""`` when it cannot be read.
+
+    Only a Playwright page error is tolerated (see :func:`_playwright_errors`),
+    and it is logged: a screen that silently reads as empty would send the
+    steering LLM a blank prompt and, through it, an arbitrary choice.
+    """
     try:
         return (
             page.evaluate(
@@ -123,7 +155,13 @@ def _get_screen_content(page) -> str:
             )
             or ""
         )
-    except Exception:
+    except _playwright_errors() as exc:
+        print(
+            f"  [steering] could not read the screen ({type(exc).__name__}: {exc}); "
+            "treating it as empty",
+            file=sys.stderr,
+            flush=True,
+        )
         return ""
 
 
@@ -169,8 +207,14 @@ def check_response_variation(rows: list[dict[str, Any]]) -> tuple[bool, str]:
     for row in rows:
         raw = row.get("chose_left")
         if raw is None or raw == "":
-            continue
-        values.append(int(float(raw)))
+            return False, "collected row has a missing chose_left value"
+        try:
+            numeric = float(raw)
+        except (TypeError, ValueError):
+            return False, f"collected row has invalid chose_left={raw!r}; expected binary 0 or 1"
+        if not math.isfinite(numeric) or numeric not in (0.0, 1.0):
+            return False, f"collected row has invalid chose_left={raw!r}; expected binary 0 or 1"
+        values.append(int(numeric))
     if not values:
         return False, "collected rows have no parseable chose_left values"
     if len(values) >= 2 and len(set(values)) == 1:
@@ -188,25 +232,55 @@ _LEFT_KEYS = {"f", "arrowleft"}
 _RIGHT_KEYS = {"j", "arrowright"}
 
 
+def _press_key_or_raise(page, key: str, what: str, click_error: Exception | None) -> None:
+    """Press ``key``; raise if that fails too, naming both failed modalities.
+
+    The keyboard is the last resort after the button modality was tried. If it
+    also fails the trial simply did not advance — and the historical behavior
+    (swallow both errors) left the drive loop spinning to its 3-minute timeout
+    with nothing logged, which is how a modality mismatch produced a whole run
+    of degenerate one-sided data before anyone noticed.
+    """
+    try:
+        page.keyboard.press(key)
+    except Exception as exc:
+        raise RuntimeError(
+            f"{what}: neither a button click nor a {key!r} key press worked "
+            f"(click: {click_error!r}; key: {type(exc).__name__}: {exc}). The "
+            "trial did not advance — check that the steering modality matches "
+            "the modality the experiment actually renders."
+        ) from exc
+
+
 def _click_random_choice(page) -> None:
     """Advance a trial by an UNBIASED random choice.
 
     When buttons are present, click a uniformly-random one (so a declined or
     unparseable LLM action never silently biases toward the first option);
-    otherwise press a random directional key.
+    otherwise press a random directional key. A failed click falls back to the
+    keyboard — but says so, and raises if the keyboard fails as well.
     """
+    click_error: Exception | None = None
     try:
         buttons = page.locator("button.jspsych-btn")
         count = buttons.count()
         if count > 0:
             buttons.nth(random.randrange(count)).click(timeout=1000)
             return
-    except Exception:
-        pass
-    try:
-        page.keyboard.press(random.choice(["f", "j"]))
-    except Exception:
-        pass
+    except _playwright_errors() as exc:
+        # Only a Playwright page error earns the keyboard fallback. A bug in
+        # this module must NOT be papered over by a key press that "works" —
+        # that is how f/j got pressed at button trials for a whole run.
+        click_error = exc
+        print(
+            f"  [steering] random button click failed ({type(exc).__name__}: {exc}); "
+            "falling back to a random key press",
+            file=sys.stderr,
+            flush=True,
+        )
+    _press_key_or_raise(
+        page, random.choice(["f", "j"]), "could not advance the trial", click_error
+    )
 
 
 def _act_key(page, key: str) -> None:
@@ -216,9 +290,11 @@ def _act_key(page, key: str) -> None:
     button and right keys (j/ArrowRight) to the last, so the participant's
     left/right decision lands on the right option whether the experiment uses
     keyboard or button responses. A single-button screen (consent/instructions)
-    is advanced by clicking it. Falls back to an actual key press.
+    is advanced by clicking it. Falls back to an actual key press — loudly, and
+    raising if that fails too (see :func:`_press_key_or_raise`).
     """
     lowered = key.lower()
+    click_error: Exception | None = None
     try:
         buttons = page.locator("button.jspsych-btn")
         count = buttons.count()
@@ -234,12 +310,15 @@ def _act_key(page, key: str) -> None:
                 idx = random.randrange(count)
             buttons.nth(idx).click(timeout=1000)
             return
-    except Exception:
-        pass
-    try:
-        page.keyboard.press(key)
-    except Exception:
-        pass
+    except _playwright_errors() as exc:  # see _click_random_choice
+        click_error = exc
+        print(
+            f"  [steering] button click for key {key!r} failed "
+            f"({type(exc).__name__}: {exc}); falling back to a key press",
+            file=sys.stderr,
+            flush=True,
+        )
+    _press_key_or_raise(page, key, f"could not apply the {key!r} choice", click_error)
 
 
 def _drive_experiment_with_llm(
@@ -250,25 +329,35 @@ def _drive_experiment_with_llm(
     logs_dir: Path,
     state: dict | None = None,
 ) -> tuple[bool, bool]:
-    try:
-        llm = get_llm()
-    except Exception:
-        return (False, False)
+    """Steer one participant through the experiment with the LLM.
+
+    Returns ``(finished, llm_used)``. ``llm_used=False`` now means exactly one
+    thing — the project ships no ``4_collect_steering`` prompt, so there is
+    nothing to steer with and the caller should fall back to blind clicking.
+    An LLM that cannot be constructed (missing API key, missing dependency) is
+    a *configuration* error and raises: silently demoting every simulated
+    participant to blind random clicking produces data that looks collected but
+    carries no signal.
+    """
+    llm = get_llm()
 
     steering_prompt = load_prompt_for_run(
         project_id, run_id, "4_collect_steering", state
     )
     if not steering_prompt.strip():
+        print(
+            f"  [steering] no 4_collect_steering prompt for project {project_id!r} "
+            f"run {run_id}; falling back to blind clicking",
+            file=sys.stderr,
+            flush=True,
+        )
         return (False, False)
 
     deadline = time.monotonic() + (timeout_ms / 1000.0)
     context_parts: list[str] = []
     while time.monotonic() < deadline:
-        try:
-            if page.evaluate("typeof window.__experimentData !== 'undefined'"):
-                return (True, True)
-        except Exception:
-            pass
+        if _experiment_data_present(page):
+            return (True, True)
 
         screen_text = _get_screen_content(page) or "(loading or empty screen)"
         if screen_text.strip() in ("+", ""):
@@ -299,11 +388,26 @@ def _drive_experiment_with_llm(
         action = _parse_steering_action(response)
         if action is None:
             # Unparseable reply: advance without biasing toward either side.
+            print(
+                f"  [steering] unparseable reply {response.strip()[:80]!r}; "
+                "advancing with a random choice",
+                file=sys.stderr,
+                flush=True,
+            )
             _click_random_choice(page)
         elif action[0] == "click":
             try:
                 page.get_by_role("button", name=action[1]).click(timeout=2000)
-            except Exception:
+            except _playwright_errors() as exc:
+                # The LLM named a button this screen does not have. Expected
+                # (it is generating free text), but never silent: an unnoticed
+                # stream of these means every trial was decided by the RNG.
+                print(
+                    f"  [steering] no clickable button named {action[1]!r} "
+                    f"({type(exc).__name__}); advancing with a random choice",
+                    file=sys.stderr,
+                    flush=True,
+                )
                 _click_random_choice(page)
         else:
             # Directional key: lands on the correct button for button trials.
@@ -314,13 +418,7 @@ def _drive_experiment_with_llm(
             context_parts = context_parts[-(_LLM_CONTEXT_MAX_SCREENS * 4) :]
         time.sleep(0.1)
 
-    try:
-        return (
-            bool(page.evaluate("typeof window.__experimentData !== 'undefined'")),
-            True,
-        )
-    except Exception:
-        return (False, True)
+    return (_experiment_data_present(page), True)
 
 
 def _drive_experiment_to_finish(page, timeout_ms: int = _DRIVE_TIMEOUT_MS) -> bool:
@@ -333,108 +431,11 @@ def _drive_experiment_to_finish(page, timeout_ms: int = _DRIVE_TIMEOUT_MS) -> bo
     deadline = time.monotonic() + (timeout_ms / 1000.0)
     step_sec = _DRIVE_INTERVAL_MS / 1000.0
     while time.monotonic() < deadline:
-        try:
-            if page.evaluate("typeof window.__experimentData !== 'undefined'"):
-                return True
-        except Exception:
-            pass
+        if _experiment_data_present(page):
+            return True
         _click_random_choice(page)
         time.sleep(step_sec)
-    try:
-        return bool(page.evaluate("typeof window.__experimentData !== 'undefined'"))
-    except Exception:
-        return False
-
-
-def _rows_from_trial_data(
-    trials: list[dict[str, Any]],
-    participant_id: int,
-    participant_id_str: str | None = None,
-) -> list[dict[str, Any]]:
-    rows: list[dict[str, Any]] = []
-    for trial_index, trial in enumerate(trials):
-        if "sequence_a" not in trial or "sequence_b" not in trial:
-            continue
-        chose_left = trial.get("chose_left")
-        if chose_left is None:
-            continue
-        row = {
-            "participant_id": participant_id,
-            "trial_index": trial_index,
-            "sequence_a": str(trial["sequence_a"]),
-            "sequence_b": str(trial["sequence_b"]),
-            "chose_left": int(bool(chose_left)),
-            "chose_right": 1 - int(bool(chose_left)),
-            "model": "",
-        }
-        if participant_id_str is not None:
-            row["participant_id_str"] = participant_id_str
-        rows.append(row)
-    return rows
-
-
-def _run_one_participant_browser(
-    args: tuple,
-) -> tuple[int, list[dict[str, Any]] | None, str | None]:
-    (
-        participant_index,
-        participant_id_str,
-        experiment_url,
-        project_id,
-        run_id,
-        timeout_ms,
-        logs_dir_path,
-    ) = args
-    logs_dir = Path(logs_dir_path) if logs_dir_path else None
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        return (participant_index, None, "playwright not installed")
-    try:
-        with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(headless=True)
-            try:
-                page = browser.new_page()
-                goto_url = (
-                    experiment_url
-                    + ("&" if "?" in experiment_url else "?")
-                    + "participant_id="
-                    + urllib.parse.quote(participant_id_str)
-                )
-                page.goto(goto_url, wait_until="load", timeout=timeout_ms)
-                done, _ = _drive_experiment_with_llm(
-                    page,
-                    min(timeout_ms, _DRIVE_TIMEOUT_MS),
-                    project_id,
-                    run_id,
-                    logs_dir,
-                )
-                if not done:
-                    done = _drive_experiment_to_finish(
-                        page, min(timeout_ms, _DRIVE_TIMEOUT_MS)
-                    )
-                if not done:
-                    return (
-                        participant_index,
-                        None,
-                        "timed out before experiment finished",
-                    )
-                data = page.evaluate("window.__experimentData")
-            finally:
-                browser.close()
-        if data is None or not isinstance(data, list):
-            return (participant_index, None, "no __experimentData")
-        return (
-            participant_index,
-            _rows_from_trial_data(data, participant_index, participant_id_str),
-            None,
-        )
-    except Exception as exc:
-        if logs_dir:
-            (logs_dir / f"p{participant_index}_error.txt").write_text(
-                str(exc), encoding="utf-8"
-            )
-        return (participant_index, None, str(exc))
+    return _experiment_data_present(page)
 
 
 def _run_one_participant_firebase(args: tuple) -> tuple[int, bool, str | None]:
@@ -483,110 +484,6 @@ def _run_one_participant_firebase(args: tuple) -> tuple[int, bool, str | None]:
         return (participant_index, False, str(exc))
 
 
-def run_collect(state: dict[str, Any]) -> dict[str, Any]:
-    project_id = state["project_id"]
-    run_id = state["run_id"]
-    if state.get("last_validated_agent") != "4_collect":
-        state = {**state, "validation_retry_count": 0, "validation_feedback": ""}
-    if state.get("validation_retry_count", 0) == 0:
-        agent_header("4_collect", run_id, state.get("total_runs"), state.get("mode"))
-    elif state.get("validation_retry_count", 0) > 0:
-        max_retries = state.get(
-            "max_validation_retries", DEFAULT_MAX_VALIDATION_RETRIES
-        )
-        log_status(
-            f"Repeating due to validation failure (attempt {state['validation_retry_count']}/{max_retries})"
-        )
-
-    out_dir = agent_dir_for_state(project_id, run_id, "4_collect", state)
-    out_dir.mkdir(parents=True, exist_ok=True)
-    attempt = (state.get("validation_retry_count") or 0) + 1
-    validation_feedback = (state.get("validation_feedback") or "").strip()
-    agent_log(out_dir, "=== 4_collect start ===")
-    agent_log(
-        out_dir,
-        f"project_id={project_id!r} run_id={run_id} attempt={attempt} mode={state.get('mode')!r}",
-    )
-    if validation_feedback:
-        agent_log(out_dir, f"Validation feedback: {validation_feedback[:500]}")
-
-    logs_dir = out_dir / "logs"
-    logs_dir.mkdir(exist_ok=True)
-
-    stimuli_path = Path(state["stimuli_path"])
-    stimuli = json.loads(stimuli_path.read_text()) if stimuli_path.exists() else []
-    manifest_path = Path(state["theorist_manifest_path"])
-    manifest = (
-        yaml.safe_load(manifest_path.read_text()) if manifest_path.exists() else {}
-    )
-    theorist_dir = manifest_path.parent if manifest_path.exists() else None
-    model_names = (
-        get_model_names_from_manifest(manifest, theorist_dir) if theorist_dir else []
-    )
-
-    config_path = Path(state["deployment_config_path"])
-    config = json.loads(config_path.read_text()) if config_path.exists() else {}
-
-    ground_truth_model = state.get("ground_truth_model")
-    if state.get("mode") in ("live", "test_prolific"):
-        rows = _collect_live(state, config, out_dir, logs_dir)
-    elif ground_truth_model:
-        n_participants = config.get("simulated_n_participants", 5)
-        registry = get_ground_truth_models(project_id)
-        if ground_truth_model not in registry:
-            agent_log(
-                out_dir,
-                f"Ground-truth model {ground_truth_model!r} not in project registry {list(registry.keys())}; skipping data generation.",
-            )
-            rows = []
-        else:
-            agent_log(
-                out_dir,
-                f"Ground-truth model={ground_truth_model!r}; generating data from project ground-truth only (no browser).",
-            )
-            rows = _generate_from_models(
-                stimuli, [ground_truth_model], n_participants, model_registry=registry
-            )
-        model_names = [ground_truth_model]
-        (logs_dir / "ground_truth_model.txt").write_text(
-            ground_truth_model, encoding="utf-8"
-        )
-    elif state.get("mode") == "simulated_participants_nobrowser":
-        agent_log(
-            out_dir,
-            "Mode=simulated_participants_nobrowser; using LLM-as-participant (no browser, no Firebase).",
-        )
-        rows = _collect_llm_participant(state, config, out_dir, logs_dir, stimuli)
-        model_names = ["llm_participant"]
-    else:
-        rows = _collect_simulated(
-            state, config, out_dir, logs_dir, stimuli, model_names, theorist_dir
-        )
-
-    batch_id = Path(state["batch_dir"]).name if state.get("batch_dir") else ""
-    for row in rows:
-        row["batch_id"] = batch_id
-
-    csv_path = out_dir / "responses.csv"
-    agent_log(out_dir, f"collected n_rows={len(rows) if rows else 0}")
-    if rows:
-        with csv_path.open("w", newline="", encoding="utf-8") as handle:
-            writer = csv.DictWriter(handle, fieldnames=list(rows[0].keys()))
-            writer.writeheader()
-            writer.writerows(rows)
-
-    n_participants = (
-        config.get("simulated_n_participants", 5)
-        if state.get("mode") not in ("live", "test_prolific")
-        else len(rows)
-    )
-    (logs_dir / "n_participants.txt").write_text(str(n_participants), encoding="utf-8")
-    (logs_dir / "model_names.txt").write_text("\n".join(model_names), encoding="utf-8")
-    agent_log(out_dir, f"wrote {csv_path.name}")
-    agent_log(out_dir, "=== 4_collect end ===")
-    return {**state, "simulated_data_path": str(csv_path)}
-
-
 def _collect_live(
     state: dict[str, Any],
     config: dict[str, Any],
@@ -604,18 +501,25 @@ def _collect_live(
     )
 
     agent_log(out_dir, "Collect (live): waiting for Prolific study (poll every 30s)")
+    # A missing study/results URL, or a failed fetch, must never return [] — an
+    # empty row list is indistinguishable from "the study ran and nobody
+    # responded", and downstream that becomes a silently under-powered (or
+    # synthetic) analysis of a study real participants were paid for.
     if not study_id:
-        agent_log(
-            out_dir,
-            "Collect (live): error - no prolific_study_id in config; Prolific flow not configured",
+        msg = (
+            "live collection needs `prolific_study_id` in the experiment config, "
+            "but it is absent — the Prolific flow was never configured for this "
+            "run. Deploy with --deploy-target firebase --prolific-mode live."
         )
-        return []
+        agent_log(out_dir, f"Collect (live): error - {msg}")
+        raise RuntimeError(msg)
     if not results_api_url:
-        agent_log(
-            out_dir,
-            "Collect (live): error - no results_api_url/experiment_url to fetch results",
+        msg = (
+            "live collection needs `results_api_url` (or `experiment_url`) in the "
+            "experiment config to fetch responses, but neither is set."
         )
-        return []
+        agent_log(out_dir, f"Collect (live): error - {msg}")
+        raise RuntimeError(msg)
 
     _poll_prolific_until_target(study_id, int(target_places), out_dir)
 
@@ -627,7 +531,11 @@ def _collect_live(
             body = response.read().decode("utf-8")
     except Exception as exc:
         agent_log(out_dir, f"Collect (live): results fetch failed: {exc}")
-        return []
+        raise RuntimeError(
+            f"live results fetch failed for {url}: {type(exc).__name__}: {exc}. "
+            "The participants' data is on the server — refusing to report zero "
+            "responses. Fix the endpoint/credentials and re-collect."
+        ) from exc
 
     rows: list[dict[str, Any]] = []
     if body.strip():
@@ -635,41 +543,6 @@ def _collect_live(
             rows.append(dict(row))
     agent_log(out_dir, f"Collect (live): got {len(rows)} rows from /results")
     return rows
-
-
-def _collect_simulated(
-    state: dict[str, Any],
-    config: dict[str, Any],
-    out_dir: Path,
-    logs_dir: Path,
-    stimuli: list[dict[str, Any]],
-    model_names: list[str],
-    theorist_dir: Path | None = None,
-) -> list[dict[str, Any]]:
-    n_participants = config.get("simulated_n_participants", 5)
-    experiment_url = config.get("experiment_url")
-    results_api_url = config.get("results_api_url")
-
-    agent_log(
-        out_dir,
-        f"n_participants={n_participants} experiment_url={bool(experiment_url)} results_api_url={bool(results_api_url)}",
-    )
-    if results_api_url:
-        return _collect_from_firebase(
-            state, config, results_api_url, n_participants, out_dir, logs_dir
-        )
-    if experiment_url:
-        return _collect_from_browser(
-            config, experiment_url, n_participants, out_dir, logs_dir
-        )
-    if not model_names:
-        agent_log(
-            out_dir, "no theorist models loadable; cannot generate data without URL"
-        )
-        return []
-    return _generate_from_models(
-        stimuli, model_names, n_participants, theorist_dir=theorist_dir
-    )
 
 
 def _collect_from_firebase(
@@ -704,11 +577,12 @@ def _collect_from_firebase(
     if experiment_url and n_participants > 0:
         try:
             from playwright.sync_api import sync_playwright
-        except ImportError:
+        except ImportError as exc:
+            # A missing dependency is a config error, not "no participants".
             msg = "playwright not installed; run: pip install playwright && playwright install chromium"
             print(msg, file=sys.stderr, flush=True)
             (logs_dir / "browser_error.txt").write_text(msg, encoding="utf-8")
-            return []
+            raise RuntimeError(msg) from exc
 
         nav_timeout_ms = 60_000
         n_parallel = (
@@ -818,10 +692,15 @@ def _collect_from_firebase(
         with urllib.request.urlopen(req, timeout=60) as response:
             body = response.read().decode("utf-8")
     except Exception as exc:
+        # As in _collect_live: a failed fetch is not "no responses".
         err_msg = f"Firebase results fetch failed: {exc}"
         print(err_msg, file=sys.stderr, flush=True)
         (logs_dir / "browser_error.txt").write_text(err_msg, encoding="utf-8")
-        return []
+        raise RuntimeError(
+            f"Firebase results fetch failed for {url}: {type(exc).__name__}: {exc}. "
+            "Refusing to report zero responses for a collection that may have "
+            "produced data."
+        ) from exc
 
     rows: list[dict[str, Any]] = []
     if not body.strip():
@@ -881,207 +760,6 @@ def _results_request(url: str) -> urllib.request.Request:
     return urllib.request.Request(url, headers=headers)
 
 
-def _server_reachable(url: str, timeout_sec: float = 2.0) -> bool:
-    try:
-        req = urllib.request.Request(url, headers={"User-Agent": "auto-psych"})
-        urllib.request.urlopen(req, timeout=timeout_sec)
-        return True
-    except Exception:
-        return False
-
-
-def _start_experiment_server(
-    experiment_path: str, port: int
-) -> subprocess.Popen | None:
-    exp_dir = Path(experiment_path)
-    if not exp_dir.exists():
-        return None
-    return subprocess.Popen(
-        [
-            sys.executable,
-            "-m",
-            "http.server",
-            str(port),
-            "--bind",
-            "127.0.0.1",
-            "--directory",
-            str(exp_dir),
-        ],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-
-def _collect_from_browser(
-    config: dict[str, Any],
-    experiment_url: str,
-    n_participants: int,
-    out_dir: Path,
-    logs_dir: Path,
-) -> list[dict[str, Any]]:
-    try:
-        from playwright.sync_api import sync_playwright
-    except ImportError:
-        msg = "playwright not installed; run: pip install playwright && playwright install chromium"
-        print(msg, file=sys.stderr, flush=True)
-        (logs_dir / "browser_error.txt").write_text(msg, encoding="utf-8")
-        return []
-
-    server_proc: subprocess.Popen | None = None
-    if not _server_reachable(experiment_url):
-        experiment_path = config.get("experiment_path", "")
-        port = config.get("server_port", 8765)
-        server_proc = _start_experiment_server(experiment_path, port)
-        if server_proc is not None:
-            for _ in range(15):
-                time.sleep(0.5)
-                if _server_reachable(experiment_url):
-                    break
-            if not _server_reachable(experiment_url):
-                server_proc.terminate()
-                server_proc.wait(timeout=3)
-                msg = "Started server but it did not become reachable; falling back to model-based data."
-                print(msg, file=sys.stderr, flush=True)
-                (logs_dir / "browser_error.txt").write_text(msg, encoding="utf-8")
-                return []
-
-    project_id = config.get("project_id") or ""
-    if not project_id:
-        # Participant ids and steering context are keyed by project; a blank
-        # value means the experiment config is mis-wired — fail loudly.
-        raise ValueError(
-            "Browser collection needs a non-empty `project_id` in the "
-            "experiment config."
-        )
-    run_id = config.get("run_id", 0)
-    batch_id = _unique_batch_id()
-    participant_ids = [
-        f"{project_id}_run{run_id}_{batch_id}_p{i}" for i in range(n_participants)
-    ]
-    (logs_dir / "participant_ids.txt").write_text(
-        "\n".join(participant_ids), encoding="utf-8"
-    )
-    log_status(f"Participant IDs for this run: {logs_dir / 'participant_ids.txt'}")
-
-    rows: list[dict[str, Any]] = []
-    timeout_ms = 120_000
-    n_parallel = (
-        min(n_participants, MAX_PARALLEL_PARTICIPANTS)
-        if MAX_PARALLEL_PARTICIPANTS >= 2
-        else 1
-    )
-    try:
-        if n_parallel >= 2 and n_participants >= 2:
-            log_status(
-                f"Running {n_participants} browser participant(s) (local, {n_parallel} in parallel)..."
-            )
-            worker_args = [
-                (
-                    participant_id,
-                    participant_ids[participant_id],
-                    experiment_url,
-                    project_id,
-                    run_id,
-                    timeout_ms,
-                    str(logs_dir),
-                )
-                for participant_id in range(n_participants)
-            ]
-            with multiprocessing.Pool(processes=n_parallel) as pool:
-                results = pool.map(_run_one_participant_browser, worker_args)
-            for idx, participant_rows, err in sorted(
-                results, key=lambda result: result[0]
-            ):
-                if err:
-                    print(
-                        f"  Participant {idx + 1}/{n_participants}: {err}",
-                        file=sys.stderr,
-                        flush=True,
-                    )
-                elif participant_rows:
-                    rows.extend(participant_rows)
-            if n_participants:
-                log_status("Steering: LLM (Gemini)")
-            log_status(f"Done. Got {len(rows)} response rows.")
-        else:
-            log_status(f"Running {n_participants} browser participant(s) (local)...")
-            with sync_playwright() as playwright:
-                browser = playwright.chromium.launch(headless=True)
-                try:
-                    for participant_id in range(n_participants):
-                        participant_id_str = participant_ids[participant_id]
-                        goto_url = (
-                            experiment_url
-                            + ("&" if "?" in experiment_url else "?")
-                            + "participant_id="
-                            + urllib.parse.quote(participant_id_str)
-                        )
-                        log_status(
-                            f"Participant {participant_id + 1}/{n_participants} in progress..."
-                        )
-                        page = browser.new_page()
-                        data = None
-                        try:
-                            page.goto(goto_url, wait_until="load", timeout=timeout_ms)
-                            done, llm_used = _drive_experiment_with_llm(
-                                page,
-                                min(timeout_ms, _DRIVE_TIMEOUT_MS),
-                                project_id,
-                                run_id,
-                                logs_dir,
-                            )
-                            log_status(
-                                "Steering: LLM (Gemini)"
-                                if llm_used
-                                else "Steering: blind (LLM unavailable or prompt missing)"
-                            )
-                            if not done:
-                                if llm_used:
-                                    log_status(
-                                        "LLM did not finish in time; falling back to blind steering."
-                                    )
-                                done = _drive_experiment_to_finish(
-                                    page, min(timeout_ms, _DRIVE_TIMEOUT_MS)
-                                )
-                            if done:
-                                data = page.evaluate("window.__experimentData")
-                            else:
-                                print(
-                                    f"  Run {participant_id + 1}/{n_participants}: timed out before experiment finished.",
-                                    file=sys.stderr,
-                                    flush=True,
-                                )
-                        except Exception as exc:
-                            print(
-                                f"  Run {participant_id + 1}/{n_participants} error: {exc}",
-                                file=sys.stderr,
-                                flush=True,
-                            )
-                        finally:
-                            try:
-                                page.close()
-                            except Exception:
-                                pass
-                        if data is not None and isinstance(data, list):
-                            rows.extend(
-                                _rows_from_trial_data(
-                                    data, participant_id, participant_id_str
-                                )
-                            )
-                finally:
-                    browser.close()
-            log_status(f"Done. Got {len(rows)} response rows.")
-    finally:
-        if server_proc is not None and server_proc.poll() is None:
-            server_proc.terminate()
-            try:
-                server_proc.wait(timeout=3)
-            except subprocess.TimeoutExpired:
-                server_proc.kill()
-
-    return rows
-
-
 def _parse_participant_answer(text: str) -> str | None:
     """Parse a participant reply into ``"left"``/``"right"``, or ``None`` if it did
     not clearly commit to one.
@@ -1106,6 +784,12 @@ def _parse_participant_answer(text: str) -> str | None:
     return None
 
 
+# Attempts per trial (1 + one retry). The completeness gate downstream rejects
+# any collection missing a response, so a trial gets a single second chance at
+# a transient backend error or an uncommitted reply before it is counted.
+_TRIAL_ATTEMPTS = 2
+
+
 def generate_llm_participant_rows(
     stimuli: list[dict[str, Any]],
     n_participants: int,
@@ -1122,7 +806,9 @@ def generate_llm_participant_rows(
     Model-agnostic: ``participant_model`` is any object exposing
     ``.answer(system, user) -> str`` and a ``.name`` (see
     ``participants.ParticipantModel``), so the closed (API) and open (Hugging
-    Face) backends share this one loop. Each participant answers every stimulus;
+    Face) backends share this one loop. A backend may expose a positive integer
+    ``max_concurrency`` to limit simultaneous calls on its shared instance. Each
+    participant answers every stimulus;
     unparseable replies and per-trial errors are counted but never abort the run.
     If ``transcripts_dir`` is given, one Markdown transcript per participant is
     written there.
@@ -1155,12 +841,26 @@ def generate_llm_participant_rows(
             )
         try:
             for trial_index, stimulus in enumerate(stimuli):
+                # A malformed stimulus must fail here, at its source: defaulting
+                # a missing key to "" would show the participant a blank option
+                # and record an empty sequence as if it were a real trial.
+                missing = [
+                    key
+                    for key in ("sequence_a", "sequence_b")
+                    if not stimulus.get(key)
+                ]
+                if missing:
+                    raise ValueError(
+                        f"stimulus {trial_index} is missing/empty {missing}: "
+                        f"{stimulus!r}. Fix the design's stimuli.json rather than "
+                        "presenting a blank option."
+                    )
                 # Randomize which sequence is shown on the left per trial; the
                 # presented order is what we show AND what we record (a = left).
                 swap = prng.random() < 0.5
                 left, right = _present_sides(
-                    str(stimulus.get("sequence_a", "")),
-                    str(stimulus.get("sequence_b", "")),
+                    str(stimulus["sequence_a"]),
+                    str(stimulus["sequence_b"]),
                     swap,
                 )
                 user_msg = (
@@ -1169,25 +869,38 @@ def generate_llm_participant_rows(
                     f"  Right: {right}\n\n"
                     "Reply with exactly one line: `ANSWER: left` or `ANSWER: right`."
                 )
-                try:
-                    response = participant_model.answer(prompt_text, user_msg)
-                except Exception as exc:
-                    errors += 1
+                # One retry per trial: the downstream completeness gate rejects
+                # any collection with a missing response, so a single transient
+                # backend error or uncommitted reply would otherwise abort the
+                # whole (paid) collection. ``swap`` was drawn before the
+                # attempts, so a retry re-presents the identical trial and the
+                # counterbalancing stays reproducible.
+                choice = None
+                for attempt in range(1, _TRIAL_ATTEMPTS + 1):
+                    retry_note = "" if attempt == 1 else f" (retry {attempt - 1})"
+                    try:
+                        response = participant_model.answer(prompt_text, user_msg)
+                    except Exception as exc:
+                        if transcript is not None:
+                            transcript.write(
+                                f"## Trial {trial_index}{retry_note}\n- left: `{left}`\n- right: `{right}`\n\n"
+                                f"**Model error:** {exc}\n\n"
+                            )
+                        if attempt == _TRIAL_ATTEMPTS:
+                            errors += 1
+                        continue
+                    choice = _parse_participant_answer(response)
                     if transcript is not None:
                         transcript.write(
-                            f"## Trial {trial_index}\n- left: `{left}`\n- right: `{right}`\n\n"
-                            f"**Model error:** {exc}\n\n"
+                            f"## Trial {trial_index}{retry_note}\n- left: `{left}`\n- right: `{right}`\n\n"
+                            f"**Reply:**\n```\n{response.strip()}\n```\n\n"
+                            f"**Parsed:** {choice if choice else 'UNPARSEABLE'}\n\n"
                         )
-                    continue
-                choice = _parse_participant_answer(response)
-                if transcript is not None:
-                    transcript.write(
-                        f"## Trial {trial_index}\n- left: `{left}`\n- right: `{right}`\n\n"
-                        f"**Reply:**\n```\n{response.strip()}\n```\n\n"
-                        f"**Parsed:** {choice if choice else 'UNPARSEABLE'}\n\n"
-                    )
+                    if choice is not None:
+                        break
+                    if attempt == _TRIAL_ATTEMPTS:
+                        unparseable += 1
                 if choice is None:
-                    unparseable += 1
                     continue
                 chose_left = choice == "left"
                 rows_p.append(
@@ -1209,7 +922,13 @@ def generate_llm_participant_rows(
         return rows_p, unparseable, errors
 
     results: list[tuple[list[dict[str, Any]], int, int] | None] = [None] * n_participants
-    workers = max(1, min(max_workers, n_participants))
+    model_limit = getattr(participant_model, "max_concurrency", max_workers)
+    if isinstance(model_limit, bool) or not isinstance(model_limit, int) or model_limit < 1:
+        raise ValueError(
+            f"participant model max_concurrency must be a positive integer, got "
+            f"{model_limit!r}"
+        )
+    workers = max(1, min(max_workers, model_limit, n_participants))
     with ThreadPoolExecutor(max_workers=workers) as executor:
         futures = {
             executor.submit(_run_participant, pid): pid for pid in range(n_participants)
@@ -1237,86 +956,15 @@ def generate_llm_participant_rows(
     return rows, stats
 
 
-def _collect_llm_participant(
-    state: dict[str, Any],
-    config: dict[str, Any],
-    out_dir: Path,
-    logs_dir: Path,
-    stimuli: list[dict[str, Any]],
-) -> list[dict[str, Any]]:
-    from src.pipelines.outer_loop.participants import get_participant_model
+def _load_featurizer(featurize_path: Path | None) -> Featurizer | None:
+    """Return featurize_stimulus(seq_a, seq_b) from a module path.
 
-    project_id = state["project_id"]
-    run_id = state["run_id"]
-    n_participants = int(config.get("simulated_n_participants", 5))
-    backend = config.get("participant_backend", "closed")
-    model_name = config.get("participant_model")
-
-    participant_prompt = load_prompt_for_run(
-        project_id, run_id, "4_collect_participant", state
-    )
-    if not participant_prompt.strip():
-        agent_log(
-            out_dir,
-            "LLM-participant: no 4_collect_participant.md prompt found; cannot run.",
-        )
-        return []
-
-    try:
-        participant_model = get_participant_model(backend, model_name)
-    except Exception as exc:
-        agent_log(
-            out_dir,
-            f"LLM-participant: failed to initialize participant model ({backend}): {exc}",
-        )
-        return []
-
-    def _log_progress(participant_id: int, n_rows: int) -> None:
-        print(
-            f"  [collect] participant {participant_id + 1}/{n_participants} done "
-            f"({n_rows} responses)",
-            flush=True,
-        )
-
-    rows, stats = generate_llm_participant_rows(
-        stimuli,
-        n_participants,
-        participant_model=participant_model,
-        prompt_text=participant_prompt,
-        transcripts_dir=out_dir / "transcripts",
-        progress=_log_progress,
-    )
-
-    agent_log(
-        out_dir,
-        f"LLM-participant ({participant_model.name}): emitted {stats['n_rows']} rows from "
-        f"{stats['n_participants']} participants over {stats['n_stimuli']} stimuli "
-        f"(unparseable={stats['n_unparseable']}, errors={stats['n_errors']})",
-    )
-    (logs_dir / "llm_participant_summary.txt").write_text(
-        f"participant_model={participant_model.name}\n"
-        + "\n".join(f"{k}={v}" for k, v in stats.items())
-        + "\n",
-        encoding="utf-8",
-    )
-    return rows
-
-
-def _load_featurizer(featurize_path: Path | None):
-    """Return featurize_stimulus(seq_a, seq_b) from a module path, or None."""
+    None only when no featurizer was configured at all; a configured-but-broken
+    one raises (see ``featurizer.load_featurizer``).
+    """
     if featurize_path is None:
         return None
-    import importlib.util
-
-    featurize_path = Path(featurize_path)
-    if not featurize_path.exists():
-        raise FileNotFoundError(f"featurize module not found: {featurize_path}")
-    spec = importlib.util.spec_from_file_location("_collect_featurize", featurize_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot load featurize module from {featurize_path}")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return getattr(mod, "featurize_stimulus", None)
+    return load_featurizer(featurize_path)
 
 
 def _present_sides(seq_a: str, seq_b: str, swap: bool) -> tuple[str, str]:
@@ -1433,8 +1081,9 @@ def _generate_from_models(
                     stimulus_tuple, RESPONSE_OPTIONS, [model_name], theorist_dir
                 )
             if not preds:
-                # No prediction means the model failed to load/run on this
-                # stimulus. Substituting a coin flip would emit pure noise labeled
+                # Backstop. get_model_predictions now raises rather than dropping
+                # a model, so this fires only if a registry callable returns
+                # nothing. Substituting a coin flip would emit pure noise labeled
                 # as this model's ground-truth data and feed it straight into model
                 # comparison. Fail loudly instead of fabricating data.
                 raise RuntimeError(
@@ -1443,7 +1092,12 @@ def _generate_from_models(
                     "responses. Check the model loads and returns a left/right "
                     "distribution."
                 )
-            p_left = preds[model_name].get("left", 0.5)
+            distribution = validate_probability_distribution(
+                preds[model_name],
+                RESPONSE_OPTIONS,
+                context=f"ground-truth model {model_name!r}",
+            )
+            p_left = distribution["left"]
             chose_left = rng.random() < p_left
             rows.append(
                 {

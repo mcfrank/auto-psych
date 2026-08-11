@@ -11,6 +11,8 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
+
 from src.models.pymc_inference import model_logp_is_finite
 
 _GOOD = """
@@ -61,3 +63,43 @@ def test_nan_model_is_flagged_unfittable(tmp_path):
     ok, reason = model_logp_is_finite("bad", models_dir, _responses(tmp_path))
     assert not ok
     assert "logp" in reason.lower()
+
+
+def test_missing_data_column_is_a_fittability_failure_not_a_crash(tmp_path):
+    """The gate's whole job: an unbindable model is reported, not raised."""
+    models_dir = tmp_path / "models"
+    models_dir.mkdir()
+    (models_dir / "extra.py").write_text(
+        _GOOD.replace(
+            'x_b = pm.Data("x_b", np.zeros(1, dtype="float64"))',
+            'x_b = pm.Data("x_b", np.zeros(1, dtype="float64"))\n'
+            '    absent = pm.Data("absent", np.zeros(1, dtype="float64"))',
+        ),
+        encoding="utf-8",
+    )
+    ok, reason = model_logp_is_finite("extra", models_dir, _responses(tmp_path))
+    assert not ok
+    assert "absent" in reason
+
+
+def test_a_broken_harness_error_propagates_instead_of_reading_as_unfittable(
+    tmp_path, monkeypatch
+):
+    """(False, reason) means "this model cannot be fit to this data".
+
+    An ImportError means the *harness* is broken — every model would be
+    reported unfittable and the inner loop would reject a whole generation of
+    candidates for a reason that has nothing to do with them.
+    """
+    from src.models import pymc_inference as pi
+
+    models_dir = tmp_path / "models"
+    models_dir.mkdir()
+    (models_dir / "good.py").write_text(_GOOD, encoding="utf-8")
+
+    def boom(csv_path, model):
+        raise ImportError("No module named 'pandas'")
+
+    monkeypatch.setattr(pi, "extract_observed", boom)
+    with pytest.raises(ImportError):
+        pi.model_logp_is_finite("good", models_dir, _responses(tmp_path))

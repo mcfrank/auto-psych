@@ -1,16 +1,22 @@
-"""Shared pytest fixtures for auto-psych tests."""
+"""Shared pytest fixtures for auto-psych tests.
+
+Filesystem paths and the standalone-script loader live in ``tests/paths.py``;
+they are plain module constants because most test modules need them at import
+time (in a decorator, or to build another path), which a fixture cannot serve.
+"""
 
 import sys
-import tempfile
 from pathlib import Path
 
 import pytest
 
-# Ensure project root is on path so "import src..." works when running pytest
-REPO_ROOT = Path(__file__).resolve().parent.parent
-if str(REPO_ROOT) not in sys.path:
-    sys.path.insert(0, str(REPO_ROOT))
-FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures"
+# Bootstrap: put the repo root on sys.path so `import src...` works, before
+# anything (including tests.paths) is imported from it.
+_REPO_ROOT = Path(__file__).resolve().parent.parent
+if str(_REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(_REPO_ROOT))
+
+from tests.paths import FIXTURES_DIR  # noqa: E402  (needs the bootstrap above)
 
 
 def pytest_configure(config):

@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import csv
 import json
+import threading
+import time
 
 import pytest
 
@@ -85,6 +87,92 @@ def test_unparseable_and_errors_are_counted(tmp_path):
     assert stats["n_rows"] == len(rows) == 0
 
 
+def test_transient_backend_error_is_retried_once_within_a_trial():
+    """A single flaky API call must not cost the trial its response.
+
+    The downstream completeness gate rejects any collection with a missing
+    response, so without a retry one transient blip aborts the whole (paid)
+    collection. Each trial gets exactly one second chance.
+    """
+
+    class TransientlyFailing:
+        name = "fake:transient"
+
+        def __init__(self):
+            self.calls: dict[str, int] = {}
+
+        def answer(self, system, user):
+            attempt = self.calls[user] = self.calls.get(user, 0) + 1
+            if attempt == 1:
+                raise RuntimeError("transient backend blip")
+            return "ANSWER: left"
+
+    rows, stats = generate_llm_participant_rows(
+        STIMULI,
+        n_participants=1,
+        participant_model=TransientlyFailing(),
+        prompt_text="x",
+    )
+    assert stats["n_errors"] == 0
+    assert stats["n_rows"] == len(rows) == len(STIMULI)
+
+
+def test_uncommitted_reply_is_retried_once_within_a_trial():
+    class WaffleThenCommit:
+        name = "fake:waffle"
+
+        def __init__(self):
+            self.calls: dict[str, int] = {}
+
+        def answer(self, system, user):
+            attempt = self.calls[user] = self.calls.get(user, 0) + 1
+            if attempt == 1:
+                return "hmm, hard to say really"
+            return "ANSWER: right"
+
+    rows, stats = generate_llm_participant_rows(
+        STIMULI,
+        n_participants=1,
+        participant_model=WaffleThenCommit(),
+        prompt_text="x",
+    )
+    assert stats["n_unparseable"] == 0
+    assert stats["n_rows"] == len(rows) == len(STIMULI)
+    assert all(row["chose_left"] == 0 for row in rows)
+
+
+def test_model_concurrency_limit_is_respected():
+    class SingleThreadedModel:
+        name = "fake:single-threaded"
+        max_concurrency = 1
+
+        def __init__(self):
+            self.active_calls = 0
+            self.high_water_mark = 0
+            self.lock = threading.Lock()
+
+        def answer(self, system, user):
+            with self.lock:
+                self.active_calls += 1
+                self.high_water_mark = max(self.high_water_mark, self.active_calls)
+            time.sleep(0.005)
+            with self.lock:
+                self.active_calls -= 1
+            return "ANSWER: left"
+
+    model = SingleThreadedModel()
+    rows, stats = generate_llm_participant_rows(
+        STIMULI,
+        n_participants=4,
+        participant_model=model,
+        prompt_text="x",
+        max_workers=4,
+    )
+
+    assert stats["n_rows"] == len(rows) == 8
+    assert model.high_water_mark == 1
+
+
 def test_only_committed_answers_parse_loose_mentions_are_unparseable():
     from src.pipelines.outer_loop.collect import _parse_participant_answer
 
@@ -142,3 +230,48 @@ def test_run_collect_programmatic_nobrowser_writes_csv(tmp_path, monkeypatch):
     rows = list(csv.DictReader(csv_path.open(encoding="utf-8")))
     assert len(rows) == 2 * len(STIMULI)
     assert REQUIRED_COLUMNS <= set(rows[0].keys())
+
+
+def test_programmatic_nobrowser_rejects_partial_collection(tmp_path, monkeypatch):
+    """A few valid rows must not disguise failed or unparseable trials."""
+    from src.pipelines.outer_loop import orchestrator
+
+    class PartialParticipant:
+        name = "fake:partial"
+
+        def answer(self, system, user):
+            if "HHHHH" in user:
+                raise RuntimeError("backend failure")
+            return "ANSWER: left"
+
+    monkeypatch.setattr(
+        participants, "get_participant_model", lambda b, m=None: PartialParticipant()
+    )
+    exp_dir = tmp_path / "experiment1"
+    (exp_dir / "design").mkdir(parents=True)
+    (exp_dir / "design" / "stimuli.json").write_text(
+        json.dumps(STIMULI), encoding="utf-8"
+    )
+
+    with pytest.raises(RuntimeError, match="incomplete.*expected 4.*received 2"):
+        orchestrator.run_collect_programmatic(
+            exp_dir,
+            mode="simulated_participants_nobrowser",
+            n_participants=2,
+            project_id="subjective_randomness",
+        )
+
+    stats = json.loads(
+        (exp_dir / "data" / "collection_stats.json").read_text(encoding="utf-8")
+    )
+    assert stats["n_errors"] == 2
+    assert not (exp_dir / "data" / "responses.csv").exists()
+    # The rows that WERE collected are paid LLM output: they must be preserved
+    # for diagnosis under a name modeling never reads, not discarded.
+    rejected = list(
+        csv.DictReader(
+            (exp_dir / "data" / "responses_rejected.csv").open(encoding="utf-8")
+        )
+    )
+    assert len(rejected) == 2
+    assert all(row["sequence_a"] != "HHHHH" != row["sequence_b"] for row in rejected)

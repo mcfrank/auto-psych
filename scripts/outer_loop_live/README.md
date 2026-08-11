@@ -69,8 +69,8 @@ and the npm registry directly.
 3. **Study + run config** — set everything in `scripts/outer_loop_live/pilot.yaml`
    (participants, reward, task length, study name/description, #experiments,
    walltime). `run_pilot.sh` renders
-   `projects/<project>/prolific_config.yaml` from it on launch, so **that file is
-   now auto-generated — edit `pilot.yaml`, not it.**
+   `src/pipelines/outer_loop/projects/<project>/prolific_config.yaml` from it on
+   launch, so **that file is now auto-generated — edit `pilot.yaml`, not it.**
 
 4. **IRB consent** — deployment hard-requires a consent gate; confirm
    `templates/consent.txt` is your IRB-approved wording (it is injected as a
@@ -217,7 +217,8 @@ Slurm logs: `$WORK_ROOT/slurm_logs/`. Browse with
 - **Browser-based simulation does NOT run on the el7 compute nodes.** Modes that
   drive a headless browser on the cluster — `--mode simulated_participants` *with
   `--deploy-target firebase`* (Firebase browser sim) and the local
-  `_collect_from_browser` path — need Playwright, whose bundled Node requires
+  browser-driven collection in `collect.py` — need Playwright, whose bundled Node
+  requires
   glibc ≥ 2.27 (Sherlock has 2.17), so `playwright install` fails. This does
   **not** affect live runs: real Prolific participants use their own browsers;
   the cluster only deploys, manages the study, and fetches results. To generate

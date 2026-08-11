@@ -11,7 +11,6 @@ Responsibilities:
 from __future__ import annotations
 
 import csv
-import importlib.util
 import json
 import math
 import os
@@ -23,9 +22,17 @@ from typing import Any, Callable, Dict, List, Optional, Sequence
 
 import yaml
 
+from src.models.model_manifest import (
+    manifest_path,
+    read_loadable_model_names,
+    read_manifest_entries,
+    read_manifest_names,
+)
+from src.models.project.ground_truth import get_ground_truth_models
+from src.pipelines.outer_loop.featurizer import Featurizer, load_featurizer
 from src.runtime.coding_agent import run_coding_agent
+from src.runtime.config import PROJECT_ASSETS_DIR, REPO_ROOT
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
 PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 # ─────────────────────────────────────────────
@@ -35,7 +42,7 @@ PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 def outer_projects_dir() -> Path:
     """Project *assets* (problem_definition.md, ground_truth_models.py, preprocess.py)."""
-    return REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects"
+    return PROJECT_ASSETS_DIR
 
 
 def outer_project_dir(project_id: str) -> Path:
@@ -62,22 +69,6 @@ def project_seed_models_dir(project_id: str) -> Path:
     return outer_project_dir(project_id) / "seed_models"
 
 
-def get_ground_truth_models(project_id: str) -> Dict:
-    """Load GROUND_TRUTH_MODELS from src/pipelines/outer_loop/projects/<project>/ground_truth_models.py."""
-    import importlib.util
-
-    path = outer_project_dir(project_id) / "ground_truth_models.py"
-    if not path.exists():
-        return {}
-    spec = importlib.util.spec_from_file_location(f"gt_{project_id}", path)
-    if spec is None or spec.loader is None:
-        return {}
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    registry = getattr(mod, "GROUND_TRUTH_MODELS", None)
-    return dict(registry) if isinstance(registry, dict) else {}
-
-
 def ensure_experiment_dirs(exp_dir: Path) -> None:
     for sub in ["cognitive_models", "design", "experiment", "data", "model_loop"]:
         (exp_dir / sub).mkdir(parents=True, exist_ok=True)
@@ -98,28 +89,27 @@ def seed_experiment_models_from_project(
     seed set raise rather than silently seeding the wrong model set.
     """
     seed_dir = project_seed_models_dir(project_id)
-    seed_manifest = seed_dir / "models_manifest.yaml"
+    seed_manifest = manifest_path(seed_dir)
     if not seed_manifest.exists():
         return False
 
     dest_dir = exp_dir / "cognitive_models"
-    dest_manifest = dest_dir / "models_manifest.yaml"
+    dest_manifest = manifest_path(dest_dir)
     if dest_manifest.exists():
         return False
 
-    manifest = yaml.safe_load(seed_manifest.read_text(encoding="utf-8")) or {}
-    entries = manifest.get("models") or []
+    entries = read_manifest_entries(seed_dir)
     if not entries:
         raise ValueError(f"Seed manifest has no models: {seed_manifest}")
 
-    names = [e.get("name") if isinstance(e, dict) else e for e in entries]
+    names = [entry["name"] for entry in entries]
     unknown = set(exclude) - set(names)
     if unknown:
         raise ValueError(
             f"exclude names models not in the seed manifest: {sorted(unknown)} "
-            f"(available: {sorted(n for n in names if n)})"
+            f"(available: {sorted(names)})"
         )
-    kept = [e for e, name in zip(entries, names) if name not in set(exclude)]
+    kept = [entry for entry in entries if entry["name"] not in set(exclude)]
     if not kept:
         raise ValueError(
             f"Excluding {sorted(exclude)} empties the seed set from {seed_manifest}"
@@ -127,9 +117,7 @@ def seed_experiment_models_from_project(
 
     dest_dir.mkdir(parents=True, exist_ok=True)
     for entry in kept:
-        name = entry.get("name") if isinstance(entry, dict) else entry
-        if not name:
-            continue
+        name = entry["name"]
         src = seed_dir / f"{name}.py"
         if not src.exists():
             raise FileNotFoundError(f"Seed model {name!r} has no file at {src}")
@@ -158,7 +146,7 @@ def carry_forward_cognitive_models(prev_exp_dir: Path, exp_dir: Path) -> bool:
     never start from a silently truncated model set.
     """
     prev_dir = Path(prev_exp_dir) / "cognitive_models"
-    prev_manifest = prev_dir / "models_manifest.yaml"
+    prev_manifest = manifest_path(prev_dir)
     if not prev_manifest.exists():
         raise FileNotFoundError(
             f"Cannot carry the model set forward: {prev_manifest} does not exist "
@@ -166,20 +154,17 @@ def carry_forward_cognitive_models(prev_exp_dir: Path, exp_dir: Path) -> bool:
         )
 
     dest_dir = Path(exp_dir) / "cognitive_models"
-    dest_manifest = dest_dir / "models_manifest.yaml"
+    dest_manifest = manifest_path(dest_dir)
     if dest_manifest.exists():
         return False
 
-    manifest = yaml.safe_load(prev_manifest.read_text(encoding="utf-8")) or {}
-    entries = manifest.get("models") or []
+    entries = read_manifest_entries(prev_dir)
     if not entries:
         raise ValueError(f"Previous manifest has no models: {prev_manifest}")
 
     dest_dir.mkdir(parents=True, exist_ok=True)
     for entry in entries:
-        name = entry.get("name") if isinstance(entry, dict) else entry
-        if not name:
-            raise ValueError(f"Previous manifest has a model with no name: {prev_manifest}")
+        name = entry["name"]
         src = prev_dir / f"{name}.py"
         if not src.exists():
             raise FileNotFoundError(
@@ -336,9 +321,9 @@ def _collect_llm_participant_programmatic(
     """LLM-as-participant collection for the active (programmatic) outer loop.
 
     Resolves the participant prompt and the participant-model backend, then runs
-    the shared generation loop. Failures (no stimuli, missing prompt, model init
-    error) degrade to an empty result with a logged reason rather than raising,
-    so one bad run does not abort the experiment.
+    the shared generation loop. The result must contain one response for every
+    participant/stimulus pair; partial collections are saved as diagnostics and
+    rejected before they can reach model fitting.
     """
     from src.pipelines.outer_loop.collect import generate_llm_participant_rows
     from src.pipelines.outer_loop.llm import load_prompt_for_run
@@ -389,6 +374,27 @@ def _collect_llm_participant_programmatic(
         f"  [collect] {stats['n_rows']} rows (unparseable={stats['n_unparseable']}, errors={stats['n_errors']})",
         flush=True,
     )
+    stats_path = data_dir / "collection_stats.json"
+    stats_path.write_text(json.dumps(stats, indent=2) + "\n", encoding="utf-8")
+    expected_rows = n_participants * len(stimuli)
+    if stats["n_rows"] != expected_rows:
+        # The rows that WERE collected are paid LLM output. Preserve them for
+        # diagnosis (and possible salvage) under a name modeling never reads
+        # before refusing the partial dataset.
+        rejected_path = data_dir / "responses_rejected.csv"
+        if rows:
+            with rejected_path.open("w", newline="", encoding="utf-8") as fh:
+                writer = csv.DictWriter(fh, fieldnames=list(rows[0].keys()))
+                writer.writeheader()
+                writer.writerows(rows)
+        raise RuntimeError(
+            "LLM participant collection was incomplete: "
+            f"expected {expected_rows} responses but received {stats['n_rows']} "
+            f"(unparseable={stats['n_unparseable']}, errors={stats['n_errors']}). "
+            f"Diagnostics were written to {stats_path}"
+            + (f"; partial rows saved to {rejected_path}" if rows else "")
+            + "; refusing to model a partial dataset."
+        )
     return rows
 
 
@@ -488,11 +494,10 @@ def run_collect_programmatic(
         _generate_from_pymc_models,
         check_response_variation,
     )
-    from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
 
     stimuli_path = exp_dir / "design" / "stimuli.json"
-    manifest_path = exp_dir / "cognitive_models" / "models_manifest.yaml"
     theorist_dir = exp_dir / "cognitive_models"
+    theorist_manifest = manifest_path(theorist_dir)
 
     stimuli: List[Dict[str, Any]] = []
     if stimuli_path.exists():
@@ -521,7 +526,7 @@ def run_collect_programmatic(
         "mode": mode,
         "deployment_config_path": str(config_path),
         "stimuli_path": str(stimuli_path),
-        "theorist_manifest_path": str(manifest_path),
+        "theorist_manifest_path": str(theorist_manifest),
     }
 
     # Track whether rows came from actual participants (browser / Firebase /
@@ -590,9 +595,8 @@ def run_collect_programmatic(
         # Theorist models are PyMC models: sample synthetic responses from their
         # prior-predictive p_left, featurizing each stimulus first.
         model_names: List[str] = []
-        if manifest_path.exists():
-            manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-            model_names = get_model_names_from_manifest(manifest, theorist_dir)
+        if theorist_manifest.exists():
+            model_names = read_loadable_model_names(theorist_dir)
         if not model_names:
             print(
                 f"  [collect] Warning: no loadable models in {theorist_dir} — cannot generate data",
@@ -707,27 +711,19 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict]:
     return rows
 
 
-def _load_project_featurizer(
-    project_dir: Path,
-) -> Optional[Callable[[str, str], Dict[str, Any]]]:
+def _load_project_featurizer(project_dir: Path) -> Optional[Featurizer]:
     """Return `featurize_stimulus` from `<project_dir>/preprocess.py` if present.
 
     A project supplies this to turn raw stimulus fields (e.g. H/T sequences)
     into the numeric feature columns its PyMC models read via `pm.Data`. Returns
-    None if the project has no preprocess module — then responses are assumed to
-    already carry the feature columns.
+    None only if the project has no preprocess module — then responses are
+    assumed to already carry the feature columns. A preprocess module that
+    exists but cannot be loaded raises (see `featurizer.load_featurizer`).
     """
     path = project_dir / "preprocess.py"
     if not path.exists():
         return None
-    spec = importlib.util.spec_from_file_location(
-        f"_preprocess_{project_dir.name}", path
-    )
-    if spec is None or spec.loader is None:
-        return None
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return getattr(mod, "featurize_stimulus", None)
+    return load_featurizer(path)
 
 
 def _write_feature_csv(
@@ -775,13 +771,9 @@ def _export_inner_loop_model(exp_dir: Path, loop_dir: Path, *, best_model: str) 
     """
     zoo_dir = loop_dir / "models"
     src = zoo_dir / f"{best_model}.py"
-    zoo_manifest = yaml.safe_load(
-        (zoo_dir / "models_manifest.yaml").read_text(encoding="utf-8")
-    ) or {}
     rationales = {
-        m.get("name"): (m.get("rationale") or "").strip()
-        for m in zoo_manifest.get("models") or []
-        if isinstance(m, dict)
+        entry["name"]: (entry.get("rationale") or "").strip()
+        for entry in read_manifest_entries(zoo_dir)
     }
     if best_model not in rationales or not src.exists():
         raise ValueError(
@@ -796,12 +788,9 @@ def _export_inner_loop_model(exp_dir: Path, loop_dir: Path, *, best_model: str) 
 
     out_dir = exp_dir / "cognitive_models"
     out_dir.mkdir(parents=True, exist_ok=True)
-    manifest_path = out_dir / "models_manifest.yaml"
-    manifest = {"models": []}
-    if manifest_path.exists():
-        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or manifest
-    models = manifest.setdefault("models", [])
-    existing = {m.get("name") for m in models if isinstance(m, dict)}
+    out_manifest = manifest_path(out_dir)
+    models = read_manifest_entries(out_dir, missing_ok=True)
+    existing = {entry["name"] for entry in models}
 
     if best_model in existing:
         print(
@@ -822,9 +811,8 @@ def _export_inner_loop_model(exp_dir: Path, loop_dir: Path, *, best_model: str) 
     model_path = out_dir / f"{export_name}.py"
     shutil.copyfile(src, model_path)
     models.append({"name": export_name, "rationale": rationales[best_model]})
-    manifest["models"] = models
-    manifest_path.write_text(
-        yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8"
+    out_manifest.write_text(
+        yaml.safe_dump({"models": models}, sort_keys=False), encoding="utf-8"
     )
     print(f"  [inner-loop] Exported best model as {model_path}", flush=True)
     return model_path
@@ -961,31 +949,20 @@ def _validate_model_set(exp_dir: Path) -> tuple[bool, str]:
     from src.models.pymc_inference import load_pymc_model, observed_response_data  # type: ignore
 
     models_dir = exp_dir / "cognitive_models"
-    manifest_path = models_dir / "models_manifest.yaml"
-    if not manifest_path.exists():
-        return False, f"models_manifest.yaml not found at {manifest_path}"
+    # A validator reports; it does not raise. Anything the manifest reader
+    # refuses (missing file, unparseable YAML, a nameless entry) becomes the
+    # feedback the repair loop hands back to the agent.
     try:
-        data = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-    except Exception as e:
-        return False, f"Invalid YAML in models_manifest.yaml: {e}"
-    if not isinstance(data, dict):
-        return False, "models_manifest.yaml is not a dict"
-    models = data.get("models") or []
-    if not models:
-        return False, "models_manifest.yaml has no models"
+        entries = read_manifest_entries(models_dir)
+    except (FileNotFoundError, ValueError) as e:
+        return False, str(e)
+    if not entries:
+        return False, f"{manifest_path(models_dir)} has no models"
 
     # Each entry carries the model name and its rationale — the one-sentence
     # natural-language hypothesis the model implements. A model with no stated
     # hypothesis is rejected: every model must be a specific, testable claim.
-    entries = [
-        (m.get("name"), (m.get("rationale") or "").strip())
-        if isinstance(m, dict)
-        else (m, "")
-        for m in models
-    ]
-    names = [name for name, _ in entries]
-    if not all(names):
-        return False, "models_manifest.yaml has a model with no name"
+    names = [entry["name"] for entry in entries]
 
     # Only the previous experiment's cognitive_models/ carries forward (its theory
     # models + the single exported best `inner_loop_model`). The inner loop's
@@ -1002,8 +979,9 @@ def _validate_model_set(exp_dir: Path) -> tuple[bool, str]:
             "`inner_loop_model`); never copy candidates from model_loop/models/.",
         )
 
-    for name, rationale in entries:
-        if not rationale:
+    for entry in entries:
+        name = entry["name"]
+        if not (entry.get("rationale") or "").strip():
             return (
                 False,
                 f"Model '{name}' states no hypothesis: every model needs a non-empty "
@@ -1214,13 +1192,10 @@ def _validate_model_loop(exp_dir: Path) -> tuple[bool, str]:
     best = max(data["posteriors"], key=lambda m: data["posteriors"][m])
     required = "inner_loop_model" if _ZOO_NAME_RE.fullmatch(best) else best
     models_dir = exp_dir / "cognitive_models"
-    manifest_path = models_dir / "models_manifest.yaml"
-    if not manifest_path.exists():
-        return False, f"models_manifest.yaml not found at {manifest_path}"
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-    names = {
-        m.get("name") for m in manifest.get("models") or [] if isinstance(m, dict)
-    }
+    try:
+        names = set(read_manifest_names(models_dir))
+    except (FileNotFoundError, ValueError) as e:
+        return False, str(e)
     if required not in names or not (models_dir / f"{required}.py").exists():
         return (
             False,

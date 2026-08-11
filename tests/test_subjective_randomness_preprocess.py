@@ -2,22 +2,17 @@
 
 from __future__ import annotations
 
-import importlib.util
-from pathlib import Path
-
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
+from tests.paths import REPO_ROOT, load_script_module
+
 PREPROCESS = (
     REPO_ROOT / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
 )
 
 
 def _load():
-    spec = importlib.util.spec_from_file_location("_sr_preprocess", PREPROCESS)
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod
+    return load_script_module(PREPROCESS, "_sr_preprocess")
 
 
 def test_featurize_stimulus_counts_heads_alternations_runs():
@@ -56,9 +51,9 @@ def test_parse_motifs_matches_falk_konold_examples():
     assert parse_motifs("HHTHH") == (3, 0)
     # A length-2 alternation (one transition) counts as one alternation motif.
     assert parse_motifs("HHTH") == (1, 1)
-    # Degenerate inputs.
+    # Degenerate input: a lone symbol is one repetition motif; the empty
+    # sequence is rejected (see test_sequence_helpers_reject_empty_input).
     assert parse_motifs("H") == (1, 0)
-    assert parse_motifs("") == (0, 0)
 
 
 def test_parse_motifs_uses_minimal_falk_konold_parse():
@@ -159,6 +154,33 @@ def test_featurize_stimulus_rejects_sequences_longer_than_max():
     pp = _load()
     with pytest.raises(ValueError, match="longer than"):
         pp.featurize_stimulus("HHHHHHHHH", "HT")  # length 9 > 8
+
+
+def test_featurize_stimulus_rejects_empty_sequences():
+    # An empty sequence is never a legitimate trial — it means upstream
+    # breakage (a stimulus dict without `sequence_a`, a truncated
+    # responses.csv). The featurizer used to fill such a row with zeros, which
+    # is indistinguishable from a real all-tails trial; the model-family twins
+    # in model_families/common.py have always raised. Both now raise.
+    pp = _load()
+    with pytest.raises(ValueError, match="must not be empty"):
+        pp.featurize_stimulus("", "HT")
+    with pytest.raises(ValueError, match="must not be empty"):
+        pp.featurize_stimulus("HT", "   ")
+
+
+def test_sequence_helpers_reject_empty_input():
+    from src.subjective_randomness import features
+
+    for call in (
+        lambda: features.parse_motifs(""),
+        lambda: features.sequence_features("", "a"),
+        lambda: features.local_imbalance(""),
+        lambda: features.periodicity_score(""),
+        lambda: features.occurrence_probability("", 20),
+    ):
+        with pytest.raises(ValueError, match="must not be empty"):
+            call()
 
 
 def test_featurize_stimulus_keys_match_pm_data_names():

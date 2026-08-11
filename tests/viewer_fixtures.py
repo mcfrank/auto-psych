@@ -14,6 +14,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 # A 1x1 transparent PNG — stands in for an analysis figure on disk.
 PNG_1X1 = bytes.fromhex(
     "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c4"
@@ -167,3 +169,9 @@ def build_demo_tree(root: Path) -> Path:
     _write(ta / "critique" / "test_stats" / "mean_solve_rate.py",
            "def test_statistic(df):\n    \"\"\"Mean solve rate across all problems.\"\"\"\n    return float(df['solved'].mean())\n")
     return root
+
+
+@pytest.fixture
+def data_root(tmp_path: Path) -> Path:
+    """The demo tree on disk — the input every viewer test scans or serves."""
+    return build_demo_tree(tmp_path / "data")

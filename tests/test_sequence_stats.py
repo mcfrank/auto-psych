@@ -90,7 +90,7 @@ def test_vectorized_stats_are_bit_exact_vs_scalar_common_slow(length):
 
 @pytest.mark.parametrize(
     "max_length,expected_classes",
-    [(8, 291), (10, 934), (12, 2696), (14, 7221), (16, 17545)],
+    [(8, 291), (10, 948), (12, 2788), (14, 7538), (16, 18583)],
 )
 def test_full_superset_class_counts_are_golden(max_length, expected_classes):
     classes = ss.build_sequence_classes(range(2, max_length + 1))

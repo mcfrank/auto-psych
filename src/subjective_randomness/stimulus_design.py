@@ -19,19 +19,25 @@ import heapq
 import importlib
 import itertools
 import math
-from pathlib import Path
 from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
-import yaml
+
+from src.models.model_manifest import read_manifest_names
+from src.subjective_randomness.pymc_model_families import REGISTRY_DIR
 
 # A predictor maps a stimulus ({"sequence_a", "sequence_b"}) to P(choose left).
 PredictFn = Callable[[Mapping[str, str]], float]
 
+# Sorted, because the legacy path was written when it called
+# default_model_family_names(), which enumerated this package with pkgutil and
+# sorted the result. Model order is not cosmetic here: it permutes the columns of
+# the prediction matrix (changing the float summation order in _marginal_eig) and
+# permutes which model each sampled scenario identity means in the greedy loop.
 _LEGACY_COMPAT_MODEL_FAMILIES: Tuple[str, ...] = (
-    "prototype_similarity",
-    "encoding_compressibility",
     "bayesian_diagnosticity",
+    "encoding_compressibility",
+    "prototype_similarity",
     "window_typicality",
 )
 
@@ -741,11 +747,7 @@ def default_model_family_names() -> List[str]:
     importable for archival refits but are deliberately NOT picked up here —
     enumerating the package directory would resurrect them.
     """
-    manifest_path = (
-        Path(__file__).resolve().parent / "pymc_model_families" / "models_manifest.yaml"
-    )
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
-    return [entry["name"] for entry in manifest["models"]]
+    return read_manifest_names(REGISTRY_DIR)
 
 
 def _point_predictor(module: Any) -> PredictFn:

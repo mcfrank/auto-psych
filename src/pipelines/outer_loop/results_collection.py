@@ -41,6 +41,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
+from src.runtime.formatting import format_number
+
 # Directories / files that are never results. ``.fit_cache`` holds the multi-100MB
 # MCMC ``.nc`` traces; the rest are build/output cruft that can reappear in a tree.
 EXCLUDE_DIR_NAMES = {".fit_cache", "node_modules", "__pycache__", ".git"}
@@ -310,14 +312,6 @@ def summarize_model_posterior(posterior: dict) -> dict:
     }
 
 
-def _fmt(value: object, ndigits: int = 3) -> str:
-    if value is None:
-        return "n/a"
-    if isinstance(value, (int, float)):
-        return f"{value:.{ndigits}f}"
-    return str(value)
-
-
 def render_human_experiment_summary(records: list[dict], source: str) -> str:
     """Render a compact Markdown summary of a live (human) outer-loop run."""
     runs = sorted({r["run"] for r in records})
@@ -349,9 +343,11 @@ def render_human_experiment_summary(records: list[dict], source: str) -> str:
             continue
         lines.append(
             f"| {r['run']} | {r['experiment']} | {r.get('best_model', 'n/a')} | "
-            f"{_fmt(r.get('best_posterior'))} | {r.get('n_participants', 'n/a')} | "
+            f"{format_number(r.get('best_posterior'))} | "
+            f"{r.get('n_participants', 'n/a')} | "
             f"{r.get('n_trials', 'n/a')} | {r.get('runner_up', 'n/a')} | "
-            f"{_fmt(r.get('runner_up_delta_elpd'), 2)} | {_fmt(r.get('runner_up_dse'), 2)} |"
+            f"{format_number(r.get('runner_up_delta_elpd'), 2)} | "
+            f"{format_number(r.get('runner_up_dse'), 2)} |"
         )
     lines.append("")
 

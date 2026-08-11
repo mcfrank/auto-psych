@@ -12,15 +12,13 @@ so the Monte Carlo estimate must land near the closed-form value.
 
 from __future__ import annotations
 
-from pathlib import Path
 
 import numpy as np
 import pytest
 
 from src.models import pymc_inference as pi
 from src.models.eig_selection import estimate_joint_eig, select_n_joint_eig
-
-FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pymc_models"
+from tests.paths import ANALYSIS_SCRIPTS_DIR, PYMC_MODEL_FIXTURES_DIR, load_script_module
 
 
 def test_estimate_joint_eig_matches_closed_form_single_stimulus():
@@ -118,22 +116,12 @@ def test_select_n_joint_eig_validates_inputs():
 @pytest.mark.slow
 def test_selection_benchmark_end_to_end(tmp_path):
     """The selection-scaling benchmark runs on the fixture models."""
-    import importlib.util
     import json
-    import sys
 
-    script = (
-        Path(__file__).resolve().parent.parent
-        / "scripts" / "analysis" / "benchmark_joint_eig_selection.py"
-    )
-    spec = importlib.util.spec_from_file_location("benchmark_joint_eig_selection", script)
-    assert spec is not None and spec.loader is not None
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = mod
-    spec.loader.exec_module(mod)
+    mod = load_script_module(ANALYSIS_SCRIPTS_DIR / "benchmark_joint_eig_selection.py")
 
     result = mod.run_benchmark(
-        models_dir=FIXTURE_DIR,
+        models_dir=PYMC_MODEL_FIXTURES_DIR,
         pool_sizes=(20, 40),
         exhaustive=False,
         lengths=(4, 5),
@@ -182,7 +170,7 @@ def test_select_n_joint_eig_end_to_end_on_pymc_models():
     names = ["bayesian_fair_coin", "representativeness"]
     pi.clear_model_cache()
     draws = pi.prior_predict_p_left_draws(
-        names, FIXTURE_DIR, rows, n_samples=50, seed=5
+        names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=50, seed=5
     )
     assert set(draws.keys()) == set(names)
     for name in names:

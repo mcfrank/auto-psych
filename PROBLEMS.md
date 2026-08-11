@@ -1,5 +1,10 @@
 # Auto-psych — Problems & Resolutions
 
+> **Historical record.** This is the write-up of one 2026 code review, kept for
+> the rationale behind the decisions — not a live to-do list. Most items are
+> fixed, and the file/line references have since drifted; `git log` is the
+> authority on the current code.
+
 Findings from a code review of `src/` (~18k LOC), now annotated with how each was
 resolved. **Status** is one of:
 
@@ -111,8 +116,8 @@ context-managed. `likelihood.py` likewise context-manages its reader.
 The active writer (`src/pipelines/outer_loop/orchestrator.py`
 `run_collect_programmatic`, which already gates via `check_response_variation`)
 now writes the **union** of all row keys with `restval=""`, so heterogeneous
-live/Firebase rows don't raise or drop data. (`collect.run_collect` is dead code —
-no callers; flagged for removal.)
+live/Firebase rows don't raise or drop data. (`collect.run_collect` was the dead,
+callerless twin of that writer; it has since been deleted.)
 
 ### M9. Non-atomic Firestore metadata write — **FIXED**
 `src/pipelines/outer_loop/deployment/firestore.py` (`write_metadata`) now writes

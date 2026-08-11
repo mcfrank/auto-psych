@@ -56,6 +56,13 @@ def test_single_row_is_not_flagged_as_degenerate():
     assert ok
 
 
+@pytest.mark.parametrize("invalid", [2, -1, 0.25, "nan", "left"])
+def test_invalid_binary_choices_fail(invalid):
+    ok, msg = check_response_variation(_rows([invalid, 1]))
+    assert not ok
+    assert "binary" in msg.lower() or "invalid" in msg.lower()
+
+
 # ── Integration: the guard is wired into the active programmatic collector ──
 
 

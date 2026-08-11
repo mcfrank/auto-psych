@@ -3,10 +3,10 @@
 # correlation between the loop's best model and the ground truth on a large
 # held-out stimulus set at every inner-loop scoring step.
 project_id: subjective_randomness
-# The GT/baseline registry: the original validated model set (with pure-Python
-# family twins for data generation). Deliberately NOT the live project
-# seed_models dir — since the hero-run promotion that manifest holds the
-# replicate winners, which have no family twins.
+# The GT/baseline registry: the model set with pure-Python family twins for
+# data generation. The GTs below are the models the 2026-08 consolidation
+# superseded: still on disk here, but no longer in the registry manifest or the
+# live seed pool, so they are out-of-pool by construction.
 seed_models_dir: src/subjective_randomness/pymc_model_families
 
 # null | [names] | {name: params|null} — the same shapes as model_recovery's

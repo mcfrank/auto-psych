@@ -1,10 +1,30 @@
 from pathlib import Path
 
+import pytest
+
 from src.pipelines.outer_loop.deployment.manifest import (
     build_manifest,
+    git_metadata,
     write_client_config,
     write_manifest,
 )
+from tests.paths import REPO_ROOT
+
+# Provenance is the point of the manifest, so git metadata is read from the real
+# checkout rather than a bare tmp_path (which is not a repo and now fails loudly).
+
+
+def test_git_metadata_records_the_real_commit():
+    meta = git_metadata(REPO_ROOT)
+    assert isinstance(meta["git_commit"], str) and len(meta["git_commit"]) == 40
+    assert isinstance(meta["git_dirty"], bool)
+
+
+def test_git_metadata_raises_outside_a_checkout(tmp_path):
+    # Provenance is the point of the manifest: a live study whose manifest says
+    # git_commit=null can never be attributed to the code that produced it.
+    with pytest.raises(RuntimeError, match="provenance"):
+        git_metadata(tmp_path)
 
 
 def test_manifest_contains_required_provenance(tmp_path):
@@ -46,7 +66,7 @@ def _firebase_manifest(tmp_path, run_id, run_label=None):
         firebase_project="auto-psych-2c5da",
         firebase_region="us-central1",
         n_participants=5,
-        repo_root=tmp_path,
+        repo_root=REPO_ROOT,
         run_label=run_label,
     )
 
@@ -92,7 +112,7 @@ def test_manifest_and_client_config_are_written(tmp_path):
         firebase_project=None,
         firebase_region="us-central1",
         n_participants=5,
-        repo_root=tmp_path,
+        repo_root=REPO_ROOT,
     )
 
     manifest_path = write_manifest(exp_dir, manifest)

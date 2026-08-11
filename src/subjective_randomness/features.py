@@ -87,6 +87,23 @@ LOCAL_WINDOW = 4
 REQUIRED_INPUT_COLS = {"sequence_a", "sequence_b", "chose_left"}
 
 
+def clean_sequence(seq: str) -> str:
+    """Uppercase an H/T sequence and reject empty input.
+
+    An empty sequence is never a legitimate trial — it means upstream breakage
+    (a stimulus without ``sequence_a``, a truncated responses.csv) — so every
+    helper below raises rather than emitting a zero-filled feature row that
+    reads like a real observation. The model families' ``clean_sequence``
+    (``model_families/common.py``) makes the same call and additionally rejects
+    non-H/T symbols; this module keeps its own copy so it stays importable
+    without the model-family package.
+    """
+    s = seq.strip().upper()
+    if not s:
+        raise ValueError("Sequence must not be empty")
+    return s
+
+
 def parse_motifs(seq: str) -> tuple[int, int]:
     """Parse an H/T sequence into Falk & Konold (1997) motifs.
 
@@ -99,13 +116,11 @@ def parse_motifs(seq: str) -> tuple[int, int]:
     XX|XOXO, DP 3). DP ties are broken toward the fewest chunks (the most
     compressed description), which makes (n1, n2) unique. For example
     HHTTHTHT -> {HH, TT} repetition + {HTHT} alternation -> (2, 1), DP = 4;
-    HTHHTH -> {HTH, HTH} -> (0, 2), DP = 4. Mirrors the model-family helper of
-    the same name in ``model_families/common.py``.
+    HTHHTH -> {HTH, HTH} -> (0, 2), DP = 4. The model-family helper of the same
+    name in ``model_families/common.py`` wraps this one.
     """
-    s = seq.strip().upper()
+    s = clean_sequence(seq)
     n = len(s)
-    if n == 0:
-        return 0, 0
 
     # best[i] = lexicographically minimal (DP cost, chunk count) over all
     # partitions of s[:i] into constant-run chunks (cost 1) and strictly
@@ -132,7 +147,7 @@ def parse_motifs(seq: str) -> tuple[int, int]:
 
 def sequence_features(seq: str, suffix: str) -> Dict[str, int]:
     """Integer features derived from a single H/T sequence string."""
-    s = seq.strip().upper()
+    s = clean_sequence(seq)
     n = len(s)
     h = sum(1 for c in s if c == "H")
     alts = sum(1 for i in range(1, n) if s[i] != s[i - 1])
@@ -173,12 +188,16 @@ def sequence_features(seq: str, suffix: str) -> Dict[str, int]:
 def sequence_features_float(
     seq: str, suffix: str, n: int, alts: int, h: int, max_run: int
 ) -> Dict[str, float]:
-    """Float features (proportions) derived alongside the integer features."""
+    """Float features (proportions) derived alongside the integer features.
+
+    ``n >= 1`` here: ``sequence_features`` has already rejected empty input, so
+    only the length-1 case (no transitions to average over) needs a guard.
+    """
     return {
-        f"p_{suffix}": (h / n) if n > 0 else 0.0,
+        f"p_{suffix}": h / n,
         f"p_alts_{suffix}": (alts / (n - 1)) if n > 1 else 0.0,
         f"max_run_norm_{suffix}": ((max_run - 1) / (n - 1)) if n > 1 else 0.0,
-        f"imbalance_{suffix}": 2.0 * abs((h / n) - 0.5) if n > 0 else 0.0,
+        f"imbalance_{suffix}": 2.0 * abs((h / n) - 0.5),
         f"periodicity_{suffix}": periodicity_score(seq),
         **{
             f"occ_n{w}_{suffix}": occurrence_probability(seq, w)
@@ -192,15 +211,12 @@ def local_imbalance(seq: str) -> float:
     """Worst H/T imbalance over sliding windows of length min(n, LOCAL_WINDOW).
 
     2*|prop_heads - 0.5| of the most imbalanced window — 0 when every window
-    is balanced, 1 when some window is a single symbol repeated. Mirrors the
-    model-family helper of the same name in ``model_families/common.py``.
+    is balanced, 1 when some window is a single symbol repeated. The
+    model-family helper of the same name in ``model_families/common.py`` wraps
+    this one.
     """
-    s = seq.strip().upper()
+    s = clean_sequence(seq)
     n = len(s)
-    if n == 0:
-        # Degenerate-row filler, matching this featurizer's 0.0 convention for
-        # empty sequences (the model-family twin fails loudly instead).
-        return 0.0
     window = min(n, LOCAL_WINDOW)
     worst = 0.0
     for start in range(n - window + 1):
@@ -216,15 +232,11 @@ def occurrence_probability(pattern: str, n_global: int) -> float:
     The quantity of Hahn & Warren (2009), computed exactly by evolving the
     distribution over KMP prefix-automaton states (state = length of the
     longest pattern prefix matching the current suffix; reaching the full
-    pattern absorbs). Mirrors the model-family helper of the same name in
-    ``model_families/common.py``.
+    pattern absorbs). The model-family helper of the same name in
+    ``model_families/common.py`` wraps this one.
     """
-    p = pattern.strip().upper()
+    p = clean_sequence(pattern)
     k = len(p)
-    if k == 0:
-        # Degenerate-row filler, matching this featurizer's 0.0 convention for
-        # empty sequences (the model-family twin fails loudly instead).
-        return 0.0
     if n_global < 0:
         raise ValueError(f"n_global must be >= 0, got {n_global}")
     if n_global < k:
@@ -268,8 +280,12 @@ def occurrence_probability(pattern: str, n_global: int) -> float:
 
 
 def periodicity_score(seq: str) -> float:
-    """Degree to which a sequence matches a short repeating template."""
-    s = seq.strip().upper()
+    """Degree to which a sequence matches a short repeating template.
+
+    The model-family helper of the same name in ``model_families/common.py``
+    wraps this one.
+    """
+    s = clean_sequence(seq)
     n = len(s)
     if n <= 2:
         return 0.0

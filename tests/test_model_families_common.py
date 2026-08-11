@@ -73,26 +73,29 @@ def ref_max_run_norm(seq: str) -> float:
 
 
 def ref_parse_motifs(seq: str) -> tuple[int, int]:
-    # Independent re-derivation via itertools.groupby run lengths.
-    run_lengths = [len(list(g)) for _, g in itertools.groupby(seq)]
-    rep_motifs = 0
-    alt_motifs = 0
-    i = 0
-    n_runs = len(run_lengths)
-    while i < n_runs:
-        if run_lengths[i] == 1:
-            j = i
-            while j < n_runs and run_lengths[j] == 1:
-                j += 1
-            if j - i >= 2:
-                alt_motifs += 1
+    """Minimal-DP parse by exhaustive partition search: over every way of cutting
+    ``seq``, keep the lexicographically smallest (DP cost, chunk count) whose
+    chunks are all constant runs (cost 1) or strictly alternating runs of length
+    >= 2 (cost 2). Exponential in ``len(seq)``, and shares no code with either
+    dynamic-programming implementation."""
+    n = len(seq)
+    best = None
+    for mask in range(1 << (n - 1)):
+        cuts = [0] + [i + 1 for i in range(n - 1) if mask >> i & 1] + [n]
+        dp = chunks = 0
+        for start, end in zip(cuts, cuts[1:]):
+            chunk = seq[start:end]
+            if all(c == chunk[0] for c in chunk):
+                dp += 1
+            elif all(a != b for a, b in zip(chunk, chunk[1:])):
+                dp += 2
             else:
-                rep_motifs += 1
-            i = j
+                break
+            chunks += 1
         else:
-            rep_motifs += 1
-            i += 1
-    return rep_motifs, alt_motifs
+            best = min(best, (dp, chunks)) if best is not None else (dp, chunks)
+    dp, chunks = best
+    return 2 * chunks - dp, dp - chunks
 
 
 def ref_periodicity_score(seq: str) -> float:
@@ -116,7 +119,6 @@ def ref_periodicity_score(seq: str) -> float:
         (common.alternation_rate, ref_alternation_rate),
         (common.max_run_length, ref_max_run_length),
         (common.max_run_norm, ref_max_run_norm),
-        (common.parse_motifs, ref_parse_motifs),
         (common.periodicity_score, ref_periodicity_score),
     ],
 )
@@ -124,6 +126,15 @@ def test_refactored_stats_match_independent_reference(fn, ref):
     """Every stat, refactored to clean once + cache, matches a fresh re-derivation."""
     for seq in _all_sequences(max_length=12):
         assert fn(seq) == ref(seq), f"{fn.__name__}({seq!r})"
+
+
+def test_parse_motifs_matches_a_brute_force_minimal_partition_reference():
+    """Falk & Konold's parse is the DP-minimising partition, ties broken toward the
+    fewest chunks -- checked against exhaustive partition search rather than against
+    a second copy of the same dynamic program. The shorter length bound than the
+    other stats is the price of the reference being exponential."""
+    for seq in _all_sequences(max_length=10):
+        assert common.parse_motifs(seq) == ref_parse_motifs(seq), seq
 
 
 def test_clean_sequence_exception_behavior_preserved():

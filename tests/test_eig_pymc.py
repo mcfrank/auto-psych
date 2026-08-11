@@ -13,17 +13,15 @@ marked slow to be safe.
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
 
 import pytest
 import yaml
 
 from src.pipelines.outer_loop import eig as eig_mod
+from tests.paths import PYMC_MODEL_FIXTURES_DIR, REPO_ROOT
 
-FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pymc_models"
 FEATURIZE = (
-    Path(__file__).resolve().parent.parent
-    / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
+    REPO_ROOT / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
 )
 
 # A model with a participant-level random effect: it needs a `participant_id`
@@ -58,9 +56,9 @@ def _seed(tmp_path):
     models_dir = tmp_path / "cognitive_models"
     models_dir.mkdir(parents=True)
     for name in ("bayesian_fair_coin", "representativeness"):
-        shutil.copyfile(FIXTURE_DIR / f"{name}.py", models_dir / f"{name}.py")
+        shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / f"{name}.py", models_dir / f"{name}.py")
     shutil.copyfile(
-        FIXTURE_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
+        PYMC_MODEL_FIXTURES_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
     )
     return models_dir
 
@@ -81,6 +79,35 @@ def _seed_with_participant_model(tmp_path):
         yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8"
     )
     return models_dir
+
+
+def test_eig_rejects_a_manifest_with_a_missing_model_file(tmp_path):
+    """EIG must never renormalize over only the model files that happen to exist."""
+    models_dir = tmp_path / "cognitive_models"
+    models_dir.mkdir()
+    (models_dir / "present.py").write_text("", encoding="utf-8")
+    (models_dir / "models_manifest.yaml").write_text(
+        "models:\n  - name: present\n  - name: missing_model\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(FileNotFoundError, match="missing_model"):
+        eig_mod._load_model_names(models_dir)
+
+
+def test_explicit_missing_registry_raises(tmp_path):
+    with pytest.raises(FileNotFoundError, match="registry"):
+        eig_mod._load_model_weights(tmp_path / "missing_registry.yaml")
+
+
+def test_eig_registry_rejects_negative_weights(tmp_path):
+    registry = tmp_path / "model_registry.yaml"
+    registry.write_text(
+        "theories:\n  a: -0.5\n  b: 1.5\nreserved_for_new: 0.0\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="a"):
+        eig_mod._load_model_weights(registry)
 
 
 def test_design_drops_model_that_cannot_bind_to_stimulus(
@@ -125,6 +152,48 @@ def test_design_drops_model_that_cannot_bind_to_stimulus(
     assert "bayesian_fair_coin" in seen["names"]
     assert "representativeness" in seen["names"]
     assert "participant_re" in capsys.readouterr().out  # dropped loudly
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        ImportError("No module named 'sklearn'"),
+        SyntaxError("invalid syntax"),
+        AttributeError("module 'pymc' has no attribute 'Nomral'"),
+    ],
+    ids=["import", "syntax", "attribute"],
+)
+def test_screen_raises_when_a_model_is_simply_broken(tmp_path, monkeypatch, error):
+    """Screening exists to drop models that cannot *bind to a stimulus row*.
+
+    Broken code is a different failure: dropping it would quietly shrink the
+    hypothesis space and renormalize EIG over the survivors, so the researcher
+    would never learn their model never ran. Those raise.
+    """
+
+    def boom(name, models_dir):
+        raise error
+
+    monkeypatch.setattr("src.models.pymc_inference.load_pymc_model_cached", boom)
+    with pytest.raises(RuntimeError, match="broken"):
+        eig_mod._screen_usable_models(["m"], tmp_path, {"sequence_a": "HT"})
+
+
+def test_screen_still_drops_an_unbindable_model_loudly(tmp_path, monkeypatch, capsys):
+    monkeypatch.setattr(
+        "src.models.pymc_inference.load_pymc_model_cached", lambda name, d: name
+    )
+
+    def fake_bind(model, rows):
+        if model == "needs_participant":
+            raise KeyError("participant_id")
+
+    monkeypatch.setattr("src.models.pymc_inference.make_stim_data", fake_bind)
+    usable = eig_mod._screen_usable_models(
+        ["needs_participant", "fine"], tmp_path, {"sequence_a": "HT"}
+    )
+    assert usable == ["fine"]
+    assert "needs_participant" in capsys.readouterr().out
 
 
 def test_design_raises_when_no_model_can_bind(tmp_path):
@@ -192,14 +261,19 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     assert json.loads(out2.read_text(encoding="utf-8")) == stimuli
 
 
+@pytest.mark.slow
 def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
     """With a responses CSV, exhaustive design scores the pool from each
     model's *posterior*-predictive p_left (fit on those responses) instead of
-    the prior — no pure-Python twin involved."""
+    the prior — no pure-Python twin involved.
+
+    Marked slow: unlike the prior-only tests above, this one runs real NUTS
+    (two chains per model), which is what every other MCMC test in the suite is
+    marked for."""
     import json
 
     models_dir = _seed(tmp_path)
-    responses = FIXTURE_DIR / "responses.csv"
+    responses = PYMC_MODEL_FIXTURES_DIR / "responses.csv"
     cache = tmp_path / "fit_cache"
 
     stimuli = eig_mod.design_exhaustive(

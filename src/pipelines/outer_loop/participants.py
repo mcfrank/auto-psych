@@ -68,6 +68,8 @@ class ClosedParticipantModel:
     # Bound each participant API call so a single stuck request can't hang the
     # whole collection (a normal reply takes a few seconds).
     REQUEST_TIMEOUT_SEC = 60
+    # Hosted requests are independent and the client supports concurrent calls.
+    max_concurrency = 8
 
     def __init__(self, model: Optional[str] = None) -> None:
         from src.pipelines.outer_loop.llm import get_llm
@@ -126,6 +128,10 @@ class OpenParticipantModel:
     template when present (falling back to a plain system+user concatenation),
     samples a short continuation, and returns the newly generated text only.
     """
+
+    # ``generate`` mutates model state and consumes torch's process-global RNG.
+    # The collection loop therefore serializes calls to a shared local model.
+    max_concurrency = 1
 
     def __init__(
         self,
