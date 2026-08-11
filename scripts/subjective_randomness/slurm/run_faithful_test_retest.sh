@@ -16,7 +16,8 @@
 #     this list against the config's gt_models and aborts (afterok) if they
 #     drift.
 #   * full-strength config (scripts/.../configs/holdout_recovery_faithful.yaml:
-#     n_experiments=3, inner loop 2x3, draws=2000/tune=1000/chains=4).
+#     n_experiments=3, inner loop 2x3, draws=4000/tune=3000/chains=4,
+#     target_accept=0.99).
 #
 # Keep GT_MODELS below in sync with the registry manifest
 # (src/subjective_randomness/pymc_model_families/models_manifest.yaml) and the

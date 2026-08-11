@@ -38,6 +38,11 @@ eval_pool:
   min_remaining: 100
 
 fit:
-  draws: 2000
-  tune: 1000
+  draws: 4000
+  tune: 3000
   chains: 4
+  # Lifted off PyMC's implicit 0.8 to shrink divergences and stabilise the
+  # PSIS-LOO tail (high Pareto-k on the best-fitting model was hard-failing the
+  # inner loop's export gate). Flows through config["fit"] -> fit_kwargs ->
+  # fit_model -> pm.sample, and is folded into the fit-cache signature.
+  target_accept: 0.99
