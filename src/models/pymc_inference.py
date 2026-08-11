@@ -25,6 +25,12 @@ from typing import Any, Dict, List, Optional
 
 import numpy as np
 
+from src.models.mcmc_defaults import (
+    PRODUCTION_CHAINS,
+    PRODUCTION_DRAWS,
+    PRODUCTION_TARGET_ACCEPT,
+    PRODUCTION_TUNE,
+)
 from src.models.probability import validate_probability, validate_probability_array
 from src.registry.io import validate_theory_weights
 
@@ -581,11 +587,20 @@ def _sha256_file(path: Path) -> str:
 
 # Default MCMC sampler settings for ``fit_model``, kept as a single source of
 # truth so the cache key can fold the *resolved* settings in. A fit's posterior
-# depends on draws/tune/chains/cores/seed, so a cache keyed only on (model, data)
-# would silently reuse a posterior sampled under different settings if a cache_dir
-# is shared across callers that request different settings (e.g. a standalone CLI
-# run pointed at the inner loop's cache_dir).
-_FIT_DEFAULTS = {"draws": 2000, "tune": 2000, "chains": 4, "cores": 1, "random_seed": 42}
+# depends on draws/tune/chains/cores/seed/target_accept, so a cache keyed only on
+# (model, data) would silently reuse a posterior sampled under different settings
+# if a cache_dir is shared across callers that request different settings (e.g. a
+# standalone CLI run pointed at the inner loop's cache_dir). draws/tune/chains/
+# target_accept derive from src.models.mcmc_defaults so the production values live
+# in exactly one place (no drift with the CLI defaults).
+_FIT_DEFAULTS = {
+    "draws": PRODUCTION_DRAWS,
+    "tune": PRODUCTION_TUNE,
+    "chains": PRODUCTION_CHAINS,
+    "cores": 1,
+    "random_seed": 42,
+    "target_accept": PRODUCTION_TARGET_ACCEPT,
+}
 
 
 def _sampler_signature(fit_kwargs: Dict[str, Any]) -> str:
@@ -775,6 +790,7 @@ def fit_model(
     chains: int = _FIT_DEFAULTS["chains"],
     cores: int = _FIT_DEFAULTS["cores"],
     random_seed: int = _FIT_DEFAULTS["random_seed"],
+    target_accept: float = _FIT_DEFAULTS["target_accept"],
 ) -> FittedModel:
     """Load the named PyMC model, fit it on `responses_path`, return a FittedModel.
 
@@ -806,6 +822,7 @@ def fit_model(
                     "chains": chains,
                     "cores": cores,
                     "random_seed": random_seed,
+                    "target_accept": target_accept,
                 }
             )
         ).encode("utf-8")
@@ -830,6 +847,7 @@ def fit_model(
             tune=tune,
             chains=chains,
             cores=cores,
+            target_accept=target_accept,
             progressbar=False,
             random_seed=random_seed,
             idata_kwargs={"log_likelihood": True},

@@ -1267,7 +1267,13 @@ def update_registry_from_interpretation(exp_dir: Path) -> None:
                 f"Model {name!r} in {posterior_path} has no usable stacking "
                 f"weight (got {w!r})."
             )
-        weights[str(name)] = float(w)
+        # A model whose PSIS-LOO estimate arviz flagged unreliable must not steer
+        # the next experiment's EIG: we cannot trust its predictive discrimination.
+        # Zero its prior mass (kept in the registry for transparency) and let the
+        # reliable models' weights renormalize below. If EVERY model is unreliable
+        # the total falls to 0 and the guard beneath raises loudly.
+        unreliable = bool(row.get("loo_unreliable")) if isinstance(row, dict) else False
+        weights[str(name)] = 0.0 if unreliable else float(w)
     total = sum(weights.values())
     if total <= 0:
         raise ValueError(

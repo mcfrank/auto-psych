@@ -120,6 +120,70 @@ def test_cache_key_changes_when_sampler_settings_change(tmp_path):
     assert default == explicit
 
 
+class _StopSampling(Exception):
+    """Raised by the fake sampler once it has captured pm.sample's kwargs."""
+
+
+def _write_fair_coin_responses(path):
+    with path.open("w", newline="") as f:
+        w = csv.DictWriter(f, fieldnames=["n_a", "h_a", "n_b", "h_b", "chose_left"])
+        w.writeheader()
+        w.writerow({"n_a": "10", "h_a": "5", "n_b": "10", "h_b": "5", "chose_left": "1"})
+        w.writerow({"n_a": "12", "h_a": "8", "n_b": "8", "h_b": "4", "chose_left": "0"})
+
+
+def test_fit_model_funnels_centralized_production_settings_into_pm_sample(
+    tmp_path, monkeypatch
+):
+    """Every fit routes the centralized production sampler config into pm.sample,
+    including an EXPLICIT target_accept — so NUTS no longer silently uses PyMC's
+    0.8 default, and 'what settings did this run use?' has one answer."""
+    import pymc as pm
+
+    from src.models import mcmc_defaults as md
+
+    captured = {}
+
+    def fake_sample(*args, **kwargs):
+        captured.update(kwargs)
+        raise _StopSampling
+
+    monkeypatch.setattr(pm, "sample", fake_sample)
+
+    csv_path = tmp_path / "responses.csv"
+    _write_fair_coin_responses(csv_path)
+
+    with pytest.raises(_StopSampling):
+        pi.fit_model("bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR, csv_path)
+
+    assert captured["draws"] == md.PRODUCTION_DRAWS
+    assert captured["tune"] == md.PRODUCTION_TUNE
+    assert captured["chains"] == md.PRODUCTION_CHAINS
+    assert captured["target_accept"] == md.PRODUCTION_TARGET_ACCEPT
+
+
+def test_fit_defaults_derive_from_centralized_production_config():
+    """_FIT_DEFAULTS must not re-declare the production sampler literals — it
+    derives them from src.models.mcmc_defaults so the CLI defaults and the
+    fit-model fallback can never drift apart."""
+    from src.models import mcmc_defaults as md
+
+    assert pi._FIT_DEFAULTS["draws"] == md.PRODUCTION_DRAWS
+    assert pi._FIT_DEFAULTS["tune"] == md.PRODUCTION_TUNE
+    assert pi._FIT_DEFAULTS["chains"] == md.PRODUCTION_CHAINS
+    assert pi._FIT_DEFAULTS["target_accept"] == md.PRODUCTION_TARGET_ACCEPT
+
+
+def test_sampler_signature_distinguishes_target_accept():
+    """target_accept is part of the resolved sampler settings, so a fit sampled
+    at 0.8 must not be reused for a request at 0.99 (cache correctness)."""
+    sig = pi._sampler_signature({})
+    assert "target_accept=" in sig
+    assert pi._sampler_signature({"target_accept": 0.8}) != pi._sampler_signature(
+        {"target_accept": 0.99}
+    )
+
+
 def test_thin_posterior_subsamples_to_at_most_max_draws():
     import arviz as az
 

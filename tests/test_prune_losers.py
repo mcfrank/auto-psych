@@ -229,7 +229,10 @@ def test_unreliable_baseline_blocks_all_pruning(tmp_path, monkeypatch, capsys):
     assert "unreliable" in capsys.readouterr().err.lower()
 
 
-def test_unreliable_selected_model_prevents_result_export(tmp_path):
+def test_unreliable_argmax_exports_best_reliable_model(tmp_path):
+    """When the posterior argmax has an unreliable PSIS-LOO estimate but another
+    model's estimate is reliable, the loop exports the best *reliable* model
+    rather than hard-failing — the unreliable winner is excluded, not fatal."""
     models_dir = _models_dir(tmp_path, ["selected", "runner_up"])
     results_dir = tmp_path / "results"
     results_dir.mkdir()
@@ -243,11 +246,71 @@ def test_unreliable_selected_model_prevents_result_export(tmp_path):
         "runner_up": _row(1, 1.0, 1.0, 0.2),
     }
 
-    with pytest.raises(RuntimeError, match="selected.*LOO.*unreliable"):
+    result = _export(results_dir, models_dir, posterior, comparison)
+
+    assert result["best_model"] == "runner_up"
+    assert (results_dir / "best_model.py").exists()
+    # The exclusion is recorded loudly, not silently: the report names the argmax
+    # that was dropped as unreliable so the human reader is never misled into
+    # thinking the exported model was the top-posterior one.
+    report = (results_dir / "report.md").read_text(encoding="utf-8")
+    assert "excluded from selection" in report
+    assert "selected" in report
+    payload = json.loads(
+        (results_dir / "model_posterior.json").read_text(encoding="utf-8")
+    )
+    assert payload["comparison"]["selected"]["loo_unreliable"] is True
+
+
+def test_export_records_excluded_unreliable_models(tmp_path):
+    """Excluded-as-unreliable models are recorded structurally (result dict +
+    model_posterior.json), not only in the prose report, so downstream
+    aggregation can audit which fits were dropped and why."""
+    models_dir = _models_dir(tmp_path, ["selected", "runner_up"])
+    results_dir = tmp_path / "results"
+    results_dir.mkdir()
+    posterior = {
+        "posteriors": {"selected": 0.8, "runner_up": 0.2},
+        "elpd_loo": {"selected": -10.0, "runner_up": -11.0},
+        "n_trials": 20,
+    }
+    comparison = {
+        "selected": {**_row(0, 0.0, 0.0, 0.8), "loo_unreliable": True},
+        "runner_up": _row(1, 1.0, 1.0, 0.2),
+    }
+
+    result = _export(results_dir, models_dir, posterior, comparison)
+
+    assert result["best_model"] == "runner_up"
+    assert result["excluded_unreliable"] == ["selected"]
+    payload = json.loads(
+        (results_dir / "model_posterior.json").read_text(encoding="utf-8")
+    )
+    assert payload["excluded_unreliable"] == ["selected"]
+
+
+def test_export_raises_when_no_model_has_reliable_loo(tmp_path):
+    """If EVERY model's PSIS-LOO estimate is unreliable there is nothing
+    trustworthy to export — the loop must still fail loudly, and the diagnostic
+    record must land so the refusal can be understood after the fact."""
+    models_dir = _models_dir(tmp_path, ["selected", "runner_up"])
+    results_dir = tmp_path / "results"
+    results_dir.mkdir()
+    posterior = {
+        "posteriors": {"selected": 0.8, "runner_up": 0.2},
+        "elpd_loo": {"selected": -10.0, "runner_up": -11.0},
+        "n_trials": 20,
+    }
+    comparison = {
+        "selected": {**_row(0, 0.0, 0.0, 0.8), "loo_unreliable": True},
+        "runner_up": {**_row(1, 1.0, 1.0, 0.2), "loo_unreliable": True},
+    }
+
+    with pytest.raises(RuntimeError, match="no .*reliable"):
         _export(results_dir, models_dir, posterior, comparison)
 
     # The refusal blocks best_model.py, not the record of WHY it refused:
-    # model_posterior.json (posterior + comparison, unreliable flag included)
+    # model_posterior.json (posterior + comparison, unreliable flags included)
     # must land on disk so a refused run can be diagnosed after the fact.
     assert not (results_dir / "best_model.py").exists()
     payload = json.loads(
