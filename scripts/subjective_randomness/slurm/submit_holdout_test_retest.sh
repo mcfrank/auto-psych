@@ -21,8 +21,15 @@ export HOLDOUT_SLURM_DIR
 # --- knobs (exported so --export=ALL carries them into every job) ----------
 export N_REPEATS="${N_REPEATS:-5}"
 # Must match the config's gt_models keys (the setup job validates this).
-export GT_MODELS="${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity window_typicality}"
-export SEED_MODELS_REL="${SEED_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}"
+# Default: the literature-faithful registry models — the active seed set since
+# the 2026-08 consolidation. Override GT_MODELS + CONFIG together to run the
+# superseded pre-consolidation set (configs/holdout_recovery.yaml).
+export GT_MODELS="${GT_MODELS:-falk_konold_dp motif_hmm finite_experience_occurrence local_representativeness}"
+export CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"
+# The GT/baseline registry (config seed_models_dir; the setup job validates the
+# match). The pristine GT snapshot is staged from here, and the array deletes
+# the held-out model from this dir in each task's repo copy.
+export SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_families}"
 read -r -a _GTS <<< "$GT_MODELS"
 export N_GTS="${#_GTS[@]}"
 TOTAL=$(( N_REPEATS * N_GTS ))
@@ -52,7 +59,6 @@ ARRAY_SPEC="1-${TOTAL}%${MAX_PARALLEL}"
 
 # Optional pass-throughs (only export if the caller set them).
 [[ -n "${BASE_SEED:-}" ]] && export BASE_SEED
-[[ -n "${CONFIG:-}"    ]] && export CONFIG
 [[ -n "${REPO:-}"      ]] && export REPO
 # Inner-loop ablation knob: INNER_LOOP_ITERATIONS=0 makes every array task pass
 # --inner-loop-iterations 0, so the inner model loop only fits/scores the
