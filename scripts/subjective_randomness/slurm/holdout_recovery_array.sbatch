@@ -14,9 +14,15 @@
 #
 # LEAK PREVENTION (opencode has no read sandbox and runs with cwd = its repo):
 #   * each task runs from its OWN rsync copy of the repo on $SCRATCH;
-#   * the copy EXCLUDES ground_truth_models.py / evaluate_recovery.py and has
-#     THIS task's held-out seed-model file deleted, so the GT recipe is not on
-#     the agent's disk at all;
+#   * the copy EXCLUDES ground_truth_models.py / evaluate_recovery.py, the
+#     literature-model test files, and gt.txt (the source paper the faithful
+#     models implement), and has THIS task's held-out model deleted from BOTH
+#     PyMC locations (the registry $SEED_MODELS_REL and the live seed pool), so
+#     the GT recipe is not on the agent's disk;
+#   * the ONE remaining on-disk copy of the GT recipe is the pure-Python family
+#     twin (src/subjective_randomness/model_families/<gt>.py) — the parent
+#     imports it for DEFAULT_PARAMS so it cannot be deleted; opencode read/
+#     glob/grep denies cover it (and both model-family dirs wholesale);
 #   * the parent reads the GT generator via --gt-models-dir from the pristine
 #     snapshot staged by the setup job ($WORK_ROOT/gt_models_src), which sits
 #     outside every agent's cwd. Seeding still excludes the GT (exclusion keys
@@ -42,10 +48,16 @@ unset UV_PROJECT_ENVIRONMENT UV_CACHE_DIR UV_PYTHON
 
 # --- task -> (repeat, ground-truth model) ----------------------------------
 BASE_SEED="${BASE_SEED:-0}"
-read -r -a GTS <<< "${GT_MODELS:-bayesian_diagnosticity encoding_compressibility prototype_similarity window_typicality}"
+read -r -a GTS <<< "${GT_MODELS:-falk_konold_dp motif_hmm finite_experience_occurrence local_representativeness}"
 N_GTS="${N_GTS:-${#GTS[@]}}"
-SEED_MODELS_REL="${SEED_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}"
-CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery.yaml}"
+# The GT/baseline registry (config seed_models_dir) — where the GT's PyMC file
+# is deleted from the copy and where the pristine snapshot was staged from.
+SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_families}"
+# The live project seed pool experiment 1 is seeded from. Since the 2026-08
+# consolidation it mirrors the registry, so an active-seed GT also has a copy
+# here that must go.
+POOL_MODELS_REL="${POOL_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}"
+CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"
 GT_MODELS_SRC="${GT_MODELS_SRC:-$WORK_ROOT/gt_models_src}"  # pristine GT snapshot
 
 TASK="${SLURM_ARRAY_TASK_ID:-1}"
@@ -78,39 +90,61 @@ echo "[task $TASK] repeat=$REPEAT gt=$GT seed=$SEED -> $RUN_DIR"
 [[ -f "$GT_MODELS_SRC/${GT}.py" ]] || { echo "ERROR: GT snapshot missing $GT_MODELS_SRC/${GT}.py (setup job didn't run?)" >&2; exit 1; }
 
 # --- isolated, sanitized repo copy on scratch ------------------------------
+# Besides caches/VCS, exclude every GT-recipe side channel the parent never
+# reads: the recovery-harness sources, the literature-model test files (they
+# encode each faithful model's behavior), and gt.txt (the extracted source
+# paper the faithful models implement).
 rsync -a \
   --exclude '.git' --exclude '.venv' --exclude 'data' \
   --exclude '__pycache__' --exclude '*.nc' \
   --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
   --exclude 'ground_truth_models.py' --exclude 'evaluate_recovery.py' \
+  --exclude 'test_literature_faithful_pymc.py' \
+  --exclude 'test_literature_model_families.py' \
+  --exclude 'gt.txt' --exclude 'REFACTOR_NOTES.md' \
   "$REPO"/ "$RUN_REPO"/
 
 # pyprojroot.here() sentinel (we excluded .git from the copy).
 touch "$RUN_REPO/.here"
 
-# Physically remove THIS task's held-out GT seed-model file from the copy.
-GT_FILE="$RUN_REPO/$SEED_MODELS_REL/${GT}.py"
-rm -f "$GT_FILE"
-[[ -e "$GT_FILE" ]] && { echo "ERROR: could not remove $GT_FILE" >&2; exit 1; }
-echo "[task $TASK] removed held-out GT from copy: $SEED_MODELS_REL/${GT}.py"
+# Physically remove THIS task's held-out GT PyMC file from the copy — from the
+# registry AND from the live seed pool (which mirrors the registry since the
+# 2026-08 consolidation; under a superseded-GT config the pool copy simply
+# doesn't exist). The pure-Python family twin stays: the parent imports it for
+# DEFAULT_PARAMS; opencode denies below make it unreadable to the agent.
+for gt_copy in "$RUN_REPO/$SEED_MODELS_REL/${GT}.py" "$RUN_REPO/$POOL_MODELS_REL/${GT}.py"; do
+  rm -f "$gt_copy"
+  if [[ -e "$gt_copy" ]]; then echo "ERROR: could not remove $gt_copy" >&2; exit 1; fi
+done
+echo "[task $TASK] removed held-out GT from copy: $SEED_MODELS_REL/${GT}.py + $POOL_MODELS_REL/${GT}.py"
 
 # Harden opencode permissions: deny reads of the off-limits paths, and grant
 # external access to the repo copy. The outer agents' cwd IS the repo copy so
 # they don't need it, but inner-loop candidate agents run with cwd = their
 # candidate dir and must reach the model zoo / project files above it. The GT
-# seed file is deleted and seed_models/ground_truth/evaluate are read-denied
-# (external_directory grants the *location*; the read deny still blocks the
-# *operation*), so the grant exposes nothing sensitive.
+# PyMC files are deleted; the denies additionally cover both model-family dirs
+# (the pure-Python twin of the GT must stay importable for the parent), the
+# seed pool, and the holdout configs (their gt_models keys name the held-out
+# model). external_directory grants the *location*; the read deny still blocks
+# the *operation*, so the grant exposes nothing sensitive.
 "$VENV_PY" - "$RUN_REPO/opencode.json" "$RUN_REPO" <<'PY'
 import json, sys, pathlib
 p = pathlib.Path(sys.argv[1])
 repo = sys.argv[2]
 cfg = json.loads(p.read_text()) if p.exists() else {"$schema": "https://opencode.ai/config.json"}
 perm = cfg.setdefault("permission", {})
-perm["read"] = {"*": "allow", "**/seed_models/**": "deny",
-                "**/ground_truth_models.py": "deny", "**/evaluate_recovery.py": "deny"}
-perm["glob"] = {"*": "allow", "**/seed_models/**": "deny"}
-perm["grep"] = {"*": "allow", "**/seed_models/**": "deny"}
+deny_globs = [
+    "**/seed_models/**",
+    "**/model_families/**",
+    "**/pymc_model_families/**",
+    "**/configs/holdout_recovery*.yaml",
+    "**/ground_truth_models.py",
+    "**/evaluate_recovery.py",
+    "**/gt.txt",
+]
+perm["read"] = {"*": "allow", **{g: "deny" for g in deny_globs}}
+perm["glob"] = {"*": "allow", **{g: "deny" for g in deny_globs}}
+perm["grep"] = {"*": "allow", **{g: "deny" for g in deny_globs}}
 ext = perm.setdefault("external_directory", {})
 ext[f"{repo}/**"] = "allow"
 ext[f"{repo}/*"] = "allow"

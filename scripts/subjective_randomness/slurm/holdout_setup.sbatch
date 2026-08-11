@@ -60,8 +60,10 @@ import src.pipelines.inner_loop.run                      # noqa: F401
 print("[setup] import chain OK")
 PY
 
-# Stage a pristine seed/GT-model snapshot outside any agent's sandbox.
-SEED_MODELS_REL="${SEED_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}"
+# Stage a pristine GT-registry snapshot outside any agent's sandbox. The
+# registry (config seed_models_dir) holds every GT's PyMC generator; the parent
+# reads the held-out model from this snapshot only, never from a repo copy.
+SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_families}"
 GT_MODELS_SRC="${GT_MODELS_SRC:-$WORK_ROOT/gt_models_src}"
 echo "[setup] staging pristine seed/GT models -> $GT_MODELS_SRC"
 mkdir -p "$GT_MODELS_SRC"
@@ -69,7 +71,7 @@ rsync -a "$REPO/$SEED_MODELS_REL"/ "$GT_MODELS_SRC"/
 
 # Validate that the array's GT list / seed path match the config and that the
 # snapshot contains every ground-truth model file.
-CFG_REL="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery.yaml}"
+CFG_REL="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"
 SRC_CONFIG="$REPO/$CFG_REL" GT_MODELS_SRC="$GT_MODELS_SRC" SEED_MODELS_REL="$SEED_MODELS_REL" \
 "$VENV_PY" - <<'PY'
 import os, sys, pathlib, yaml
