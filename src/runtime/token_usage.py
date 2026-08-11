@@ -84,13 +84,6 @@ def start_usage_log(sink_path: Path) -> int:
         return len(_records)
 
 
-def stop_usage_log() -> None:
-    """Detach the JSONL sink; recording continues in memory only."""
-    global _sink_path
-    with _lock:
-        _sink_path = None
-
-
 def reset_usage_log() -> None:
     """Drop all records and detach the sink (for tests)."""
     global _sink_path

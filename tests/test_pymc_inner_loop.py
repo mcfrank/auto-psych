@@ -9,23 +9,33 @@ scores them by ELPD-LOO, and exports the best. Slow (two NUTS fits) — runs in
 from __future__ import annotations
 
 import json
-from pathlib import Path
 
 import pytest
 
+from src.pipelines.inner_loop import pymc_orchestrator
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
-
-FIXTURE_DIR = Path(__file__).parent / "fixtures" / "pymc_models"
+from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 
 @pytest.mark.slow
-def test_inner_loop_seeds_fits_and_selects_best(tmp_path):
+def test_inner_loop_seeds_fits_and_selects_best(tmp_path, monkeypatch):
+    # Keep this as an export integration test. The tiny fixture's stochastic
+    # Pareto-k warning is covered separately by deterministic refusal tests.
+    real_compare = pymc_orchestrator._compare
+
+    def comparison_for_export_test(*args, **kwargs):
+        return {
+            name: {**row, "loo_unreliable": False}
+            for name, row in real_compare(*args, **kwargs).items()
+        }
+
+    monkeypatch.setattr(pymc_orchestrator, "_compare", comparison_for_export_test)
     results_dir = tmp_path / "model_loop"
 
     result = run_pymc_inner_loop(
-        responses_path=FIXTURE_DIR / "responses.csv",
+        responses_path=PYMC_MODEL_FIXTURES_DIR / "responses.csv",
         results_dir=results_dir,
-        seed_models_dir=FIXTURE_DIR,
+        seed_models_dir=PYMC_MODEL_FIXTURES_DIR,
         max_iterations=0,
         fit_kwargs={"draws": 300, "tune": 300, "chains": 2},
     )

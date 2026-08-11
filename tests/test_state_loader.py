@@ -1,43 +1,37 @@
 """Test state loader: load_state_from_run and minimal_state_for_agent produce expected paths."""
 
-import pytest
 from pathlib import Path
 
 from src.experiments.state_loader import load_state_from_run, minimal_state_for_agent
-from src.runtime.config import REPO_ROOT
-
-FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures"
+from tests.paths import FIXTURES_DIR
 
 
-def test_load_state_from_run_with_fixture_run_dir():
-    """With a run dir that has fixture-like structure, load_state_from_run returns expected keys."""
-    import tempfile
-    import shutil
+def test_load_state_from_run_with_fixture_run_dir(tmp_path, monkeypatch):
+    """With a run dir that has fixture-like structure, load_state_from_run returns expected keys.
 
-    run_dir = Path(tempfile.mkdtemp())
-    try:
-        (run_dir / "1_theory").mkdir()
-        (run_dir / "1_theory" / "models_manifest.yaml").write_text("models: []")
-        (run_dir / "design").mkdir()
-        (run_dir / "design" / "stimuli.json").write_text("[]")
-        # We need a project dir that contains this run
-        project_id = "test_project"
-        run_id = 99
-        projects_dir = REPO_ROOT / "projects"
-        project_dir = projects_dir / project_id
-        project_dir.mkdir(parents=True, exist_ok=True)
-        run_actual = project_dir / f"run{run_id}"
-        if run_actual.exists():
-            shutil.rmtree(run_actual)
-        shutil.copytree(run_dir, run_actual)
-        state = load_state_from_run(project_id, run_id)
-        assert state["project_id"] == project_id
-        assert state["run_id"] == run_id
-        assert "theorist_manifest_path" in state
-        assert "stimuli_path" in state
-        shutil.rmtree(run_actual, ignore_errors=True)
-    finally:
-        shutil.rmtree(run_dir, ignore_errors=True)
+    The projects root is redirected at ``src.runtime.config.PROJECTS_DIR`` (the
+    single place ``project_dir`` resolves it, and already the override point for
+    Cloud Run's ``PIPELINE_PROJECTS_DIR``) so the run lives under ``tmp_path``
+    instead of being written into — and then deleted from — the real repo tree.
+    """
+    monkeypatch.setattr("src.runtime.config.PROJECTS_DIR", tmp_path / "projects")
+
+    project_id = "test_project"
+    run_id = 99
+    run_dir = tmp_path / "projects" / project_id / f"run{run_id}"
+    (run_dir / "1_theory").mkdir(parents=True)
+    (run_dir / "1_theory" / "models_manifest.yaml").write_text("models: []")
+    (run_dir / "design").mkdir()
+    (run_dir / "design" / "stimuli.json").write_text("[]")
+
+    state = load_state_from_run(project_id, run_id)
+
+    assert state["project_id"] == project_id
+    assert state["run_id"] == run_id
+    assert state["theorist_manifest_path"] == str(
+        run_dir / "1_theory" / "models_manifest.yaml"
+    )
+    assert state["stimuli_path"] == str(run_dir / "design" / "stimuli.json")
 
 
 def test_minimal_state_for_agent_theorist():

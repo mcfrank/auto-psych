@@ -187,8 +187,8 @@ Two parallel locations hold this project's code:
   plus `reserved_for_new`).
 - `src/validation/` — stage validators (`stages/*.py`) and a `validators.py`
   wrapper used to record validation failures.
-- `src/experiments/` — experiment `state`/`state_loader`, `problem_definition`
-  parsing, `references.py` (assembles reference text from PDFs).
+- `src/experiments/state_loader.py` — rebuilds a pipeline `state` dict from an
+  existing run directory (for re-running a single agent).
 - `src/models/theorist/` — loads agent-written prediction callables and gathers
   their predictions.
 

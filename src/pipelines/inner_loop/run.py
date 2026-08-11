@@ -37,10 +37,12 @@ from typing import List, Literal, Optional
 
 import tyro
 import yaml
+from pyprojroot import here
 
 # Ensure repo root on path so "import src..." works when run as a module/script.
-REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT))
+# Must precede the src imports below, hence here() rather than the canonical
+# src.runtime.config.REPO_ROOT (which resolves the root the same way).
+sys.path.insert(0, str(here()))
 
 from src.models.mcmc_defaults import (
     PRODUCTION_CHAINS,

@@ -20,6 +20,8 @@ import shutil
 from dataclasses import dataclass
 from pathlib import Path
 
+from src.runtime.formatting import format_number
+
 # Artifact naming written by the Slurm pipeline (see slurm/holdout_analysis.sbatch
 # and slurm/holdout_recovery_array.sbatch).
 AGGREGATE_STEM = "test_retest"
@@ -125,15 +127,6 @@ def collect_results(
     )
 
 
-def _fmt(value: object, ndigits: int = 3) -> str:
-    """Format a number to ``ndigits`` decimals, or ``n/a`` for missing values."""
-    if value is None:
-        return "n/a"
-    if isinstance(value, (int, float)):
-        return f"{value:.{ndigits}f}"
-    return str(value)
-
-
 def render_test_retest_summary(summary: dict) -> str:
     """Render a compact Markdown summary from a ``test_retest.json`` payload."""
     metric = summary.get("metric", "pearson_r")
@@ -157,8 +150,11 @@ def render_test_retest_summary(summary: dict) -> str:
 
     lines.append("## Across-repeat reliability")
     lines.append("")
-    lines.append(f"- ICC(2,1): {_fmt(summary.get('icc_2_1'))}")
-    lines.append(f"- Mean pairwise correlation: {_fmt(summary.get('mean_pairwise_corr'))}")
+    lines.append(f"- ICC(2,1): {format_number(summary.get('icc_2_1'))}")
+    lines.append(
+        "- Mean pairwise correlation: "
+        f"{format_number(summary.get('mean_pairwise_corr'))}"
+    )
     lines.append("")
 
     lines.append(f"## Per ground-truth model (final-step {metric} across repeats)")
@@ -171,11 +167,11 @@ def render_test_retest_summary(summary: dict) -> str:
     for gt in gt_models or sorted(per_gt):
         stats = per_gt.get(gt, {})
         lines.append(
-            f"| {gt} | {stats.get('n_runs', 0)} | {_fmt(stats.get('mean'))} | "
-            f"{_fmt(stats.get('sd'))} | {_fmt(stats.get('cv'))} | "
-            f"{_fmt(stats.get('min'))} | {_fmt(stats.get('max'))} | "
+            f"| {gt} | {stats.get('n_runs', 0)} | {format_number(stats.get('mean'))} | "
+            f"{format_number(stats.get('sd'))} | {format_number(stats.get('cv'))} | "
+            f"{format_number(stats.get('min'))} | {format_number(stats.get('max'))} | "
             f"{stats.get('modal_best_model') or 'n/a'} | "
-            f"{_fmt(stats.get('best_model_agreement'), 2)} |"
+            f"{format_number(stats.get('best_model_agreement'), 2)} |"
         )
     lines.append("")
     return "\n".join(lines)

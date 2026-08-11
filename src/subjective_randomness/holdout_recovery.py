@@ -31,8 +31,8 @@ from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 import numpy as np
-import yaml
 
+from src.models.model_manifest import read_manifest_names
 from src.models.pymc_inference import fit_model, make_stim_data, pm_data_inputs
 from src.pipelines.outer_loop.orchestrator import (
     carry_forward_cognitive_models,
@@ -154,13 +154,12 @@ def run_holdout_experiments(
         Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
     )
     # Hold the GT out of experiment 1's seed pool whenever it IS in the pool's
-    # own manifest — the *live project* seed manifest that seeding below reads,
-    # which need not match ``seed_models_dir`` (the GT/baseline registry). Since
-    # the hero-run seed swap the live pool holds the promoted replicate winners
-    # while the registry keeps the original validated models, so an old-registry
-    # GT is simply absent from the pool and nothing is excluded (same semantics
-    # as an impossible GT). Membership is checked by manifest *name* only — no
-    # pure-Python family twin is needed for pool models.
+    # own manifest — the *live project* seed manifest that seeding below reads.
+    # The pool mirrors the registry manifest, so an active seed used as GT is
+    # excluded; a GT the registry keeps only for archival refits (a model the
+    # 2026-08 consolidation superseded) is simply absent from the pool and
+    # nothing is excluded, the same semantics as an impossible GT. Membership is
+    # checked by manifest *name* only.
     pool_names = seed_model_names(project_seed_models_dir(project_id))
     gt_is_seed_model = gt_model in pool_names
     seed_exclude = (gt_model,) if gt_is_seed_model else ()
@@ -890,12 +889,7 @@ def leakage_check(
 
 
 def _manifest_model_names(exp_dir: Path) -> List[str]:
-    manifest = yaml.safe_load(
-        (exp_dir / "cognitive_models" / "models_manifest.yaml").read_text(
-            encoding="utf-8"
-        )
-    )
-    return [m["name"] if isinstance(m, dict) else m for m in manifest["models"]]
+    return read_manifest_names(exp_dir / "cognitive_models")
 
 
 def run_holdout_recovery_from_config(
@@ -929,10 +923,10 @@ def run_holdout_recovery_from_config(
         seed_models_dir   the GT/baseline registry: models with pure-Python
                           family twins used to generate ground-truth data and
                           fixed-param baselines. Experiment 1's agent seed pool
-                          always comes from ``project_seed_models_dir(project_id)``
-                          and may deliberately differ (since the hero-run seed
-                          promotion the live pool holds the replicate winners,
-                          which have no family twins).
+                          always comes from ``project_seed_models_dir(project_id)``,
+                          which mirrors the registry manifest but also keeps
+                          superseded models on disk (so a superseded GT can be
+                          generated without ever entering the pool).
         gt_models         null | [names] | {name: params|null}; null params ->
                           the family's DEFAULT_PARAMS
         n_experiments, n_participants, seed

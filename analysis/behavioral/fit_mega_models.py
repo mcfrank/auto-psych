@@ -39,7 +39,6 @@ Usage:
 
 from __future__ import annotations
 
-import argparse
 import csv
 import json
 import math
@@ -47,10 +46,14 @@ import re
 import shutil
 import sys
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Literal, Optional
 
-REPO_ROOT = Path(__file__).resolve().parents[2]
+import tyro
+from pyprojroot import here
+
+REPO_ROOT = here()
 sys.path.insert(0, str(REPO_ROOT))
 
 HUMAN_ROOT = REPO_ROOT / "data" / "results" / "human_experiment"
@@ -291,21 +294,34 @@ def attach_compare(metric_rows, idatas, scheme, held_out_run):
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
-def main() -> None:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--out-dir", type=Path, default=REPO_ROOT / "analysis" / "behavioral" / "data")
-    ap.add_argument("--cache-dir", type=Path, default=None)
-    ap.add_argument("--scheme", choices=["mega", "heldout", "both"], default="both")
-    ap.add_argument("--draws", type=int, default=3000)
-    ap.add_argument("--tune", type=int, default=2000)
-    ap.add_argument("--chains", type=int, default=4)
-    ap.add_argument("--cores", type=int, default=4)
-    ap.add_argument("--seed", type=int, default=42)
-    ap.add_argument("--quick", action="store_true", help="draws=200 tune=200 chains=2")
-    args = ap.parse_args()
+@dataclass
+class Args:
+    """Mega-analytic model comparison on the human data."""
 
+    out_dir: Path = REPO_ROOT / "analysis" / "behavioral" / "data"
+    """Directory for the metrics/predictions/posterior-mean CSVs."""
+    cache_dir: Optional[Path] = None
+    """Optional directory to persist .nc fits (default: in-process cache only)."""
+    scheme: Literal["mega", "heldout", "both"] = "both"
+    """Which fitting scheme(s) to run."""
+    draws: int = 3000
+    """MCMC draws per chain."""
+    tune: int = 2000
+    """MCMC tuning steps per chain."""
+    chains: int = 4
+    """MCMC chains."""
+    cores: int = 4
+    """MCMC chains run in parallel."""
+    seed: int = 42
+    """Sampler random seed."""
+    quick: bool = False
+    """Tiny MCMC smoke test: draws=200 tune=200 chains=2 cores=2."""
+
+
+def main(args: Args) -> None:
+    draws, tune, chains, cores = args.draws, args.tune, args.chains, args.cores
     if args.quick:
-        args.draws, args.tune, args.chains, args.cores = 200, 200, 2, 2
+        draws, tune, chains, cores = 200, 200, 2, 2
 
     import arviz  # noqa: F401  (fail early if env is broken)
 
@@ -316,8 +332,8 @@ def main() -> None:
     all_runs = sorted({int(re.search(r"run(\d+)", str(p)).group(1))
                        for p in HUMAN_ROOT.glob("run*/subjective_randomness")})
 
-    fit_kwargs = dict(draws=args.draws, tune=args.tune, chains=args.chains,
-                      cores=args.cores, random_seed=args.seed)
+    fit_kwargs = dict(draws=draws, tune=tune, chains=chains,
+                      cores=cores, random_seed=args.seed)
 
     all_metrics, all_preds, all_params = [], [], []
 
@@ -381,4 +397,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(tyro.cli(Args))

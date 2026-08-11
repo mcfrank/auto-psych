@@ -1,19 +1,26 @@
 # Subjective Randomness PyMC Model Families
 
-These modules are PyMC adapters for the canonical pure-Python model families in
+These modules are PyMC adapters for the pure-Python model families in
 `../model_families/`. They use precomputed numeric columns from the featurizer in
 `src.subjective_randomness.features`, expose a deterministic `p_left`, and define
 the Bernoulli response likelihood expected by `src.models.pymc_inference`.
 
-Since the hero-run seed promotion (2026-07) this directory is also the frozen
-**recovery registry**: the recovery harnesses (`model_recovery.py`,
-`holdout_recovery.py`, and the impossible variant) point their
-`seed_models_dir` here, because ground-truth generation and fixed-parameter
-baselines need the pure-Python family twins that only these original models
-have. The *live* seed pool
-(`src/pipelines/outer_loop/projects/subjective_randomness/seed_models/`) is
-separate — it holds the promoted replicate winners (which have no twins) and
-evolves independently of this registry.
+This directory is the **recovery registry**, and its `models_manifest.yaml` is
+the single source of truth for which models are active. The recovery harnesses
+(`model_recovery.py`, `holdout_recovery.py`, and the impossible variant) point
+their `seed_models_dir` here, because ground-truth generation and
+fixed-parameter baselines need the pure-Python family twins. The outer loop's
+live seed pool
+(`src/pipelines/outer_loop/projects/subjective_randomness/seed_models/`) is a
+**mirror** of this manifest, not an independent set: to change the seed set,
+edit the manifest here and copy it plus the model files across.
+`tests/test_model_manifest.py` and
+`tests/test_subjective_randomness_seed_recovery.py` fail if the two diverge, or
+if a manifest name has no pure-Python twin. (They diverged once, between the
+hero-run promotion of 2026-07 and the reconciliation of 2026-08, which left
+`model_recovery.default_generating_params` raising `ModuleNotFoundError` for
+every pool model; the retired winners are archived under the seed pool's
+`archive_hero_run_2026_07/`.)
 
 The 2026-08 seed-model fidelity review **replaced** the original four models
 with literature-faithful versions (each with a pure-Python twin and
@@ -27,12 +34,13 @@ paper-derived test vectors in `tests/test_literature_model_families.py`):
 | `local_representativeness` | `prototype_similarity` | Kahneman & Tversky (1972) local representativeness |
 
 Only manifest-listed models are active — for recovery, the fitted and
-no-learning baselines, and the EIG design defaults
-(`stimulus_design.default_model_family_names` reads this manifest as the
-single source of truth). The superseded originals' `.py` files and twins
-remain on disk solely so pre-consolidation run artifacts can be refit; do not
-add them back to the manifest. New models enter the live hero-run pool only
-via the standard recovery/holdout comparison.
+no-learning baselines, the outer loop's seed pool, and the EIG design defaults
+(`stimulus_design.default_model_family_names` reads this manifest directly).
+The superseded originals' `.py` files and twins remain on disk solely so
+pre-consolidation run artifacts can be refit; do not add them back to the
+manifest. A newly discovered model earns its place here only through the
+standard recovery/holdout comparison — and needs a pure-Python twin in
+`../model_families/` before it can be added.
 
 Regenerate feature columns before fitting:
 

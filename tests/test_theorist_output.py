@@ -14,9 +14,7 @@ pytestmark = pytest.mark.skip(
 )
 
 from src.validation import validate_theorist_output, Validated
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
-FIXTURES_DIR = REPO_ROOT / "tests" / "fixtures"
+from tests.paths import FIXTURES_DIR
 
 
 def test_validate_theorist_output_with_fixture_manifest(tmp_path):

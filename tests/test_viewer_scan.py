@@ -12,12 +12,9 @@ from pathlib import Path
 import pytest
 
 from src.viewer.scan import scan_index, scan_run, scan_run_experiment
-from tests.viewer_fixtures import build_demo_tree
-
-
-@pytest.fixture
-def data_root(tmp_path: Path) -> Path:
-    return build_demo_tree(tmp_path / "data")
+# Imported so pytest discovers the fixture here; the tests below request it
+# by name rather than calling it.
+from tests.viewer_fixtures import data_root  # noqa: F401
 
 
 def test_find_runs_at_all_depths(data_root: Path):

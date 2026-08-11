@@ -61,9 +61,18 @@ remote_jobs/.env.local
 *_cache/
 scratch/
 
-# Large generated text dumps (e.g. PDF text-extraction output from extract_pdf.py).
-# gt.txt (~21 MB) is already tracked — untrack it with: git rm --cached gt.txt
+# Large generated text dumps (~21 MB of PDF-extraction output). Untracked in
+# 2026-08; the file itself is kept on disk.
 gt.txt
+
+# Regenerable ArviZ MCMC caches (648 MB under holdout_recovery alone). These were
+# tracked until 2026-08 and untracked with `git rm -r --cached`; the caches stay on
+# disk and are refilled by the next fit. Already matched by the `*_cache/` rule
+# above — spelled out here so the intent is not an accident of that pattern.
+data/**/mcmc_cache/
+
+# PID files written by the nohup drivers for long-running runs (data/**/run.pid)
+*.pid
 
 # Large regenerable mega-analysis predictions (fit via analysis/behavioral/fit_mega_models.py)
 analysis/behavioral/data/mega_model_predictions.csv

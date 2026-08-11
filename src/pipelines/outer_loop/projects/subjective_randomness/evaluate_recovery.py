@@ -11,20 +11,24 @@ heldout ``p_left`` predictions to the hidden ground truth.
 
 from __future__ import annotations
 
-import argparse
-import importlib.util
 import json
 import random
 import sys
+from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import numpy as np
+import tyro
+from pyprojroot import here
 
-REPO_ROOT = Path(__file__).resolve().parents[5]
-sys.path.insert(0, str(REPO_ROOT))
+# Run as a script and also loaded by path (importlib.spec_from_file_location),
+# so the repo root has to be resolved without importing `src` — here() rather
+# than the canonical src.runtime.config.REPO_ROOT (same resolution).
+sys.path.insert(0, str(here()))
 
 from src.models.pymc_inference import fit_model, load_pymc_model, make_stim_data
+from src.pipelines.outer_loop.featurizer import load_featurizer
 from src.pipelines.outer_loop.orchestrator import (
     experiment_dir,
     get_ground_truth_models,
@@ -34,20 +38,7 @@ from src.pipelines.outer_loop.orchestrator import (
 RESPONSE_OPTIONS = ["left", "right"]
 Stimulus = Tuple[str, str]
 
-
-def _load_featurizer():
-    path = Path(__file__).resolve().parent / "preprocess.py"
-    spec = importlib.util.spec_from_file_location(
-        "_subjective_randomness_preprocess", path
-    )
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot load featurizer from {path}")
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.featurize_stimulus
-
-
-featurize_stimulus = _load_featurizer()
+featurize_stimulus = load_featurizer(Path(__file__).resolve().parent / "preprocess.py")
 
 
 def parse_experiments(value: str) -> List[int]:
@@ -209,25 +200,35 @@ def evaluate_experiment(
     return result
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser(
-        description="Evaluate how well exported outer-loop models recover a hidden ground truth."
-    )
-    parser.add_argument("--project", default="subjective_randomness")
-    parser.add_argument("--ground-truth-model", required=True)
-    parser.add_argument(
-        "--experiments", default="1-3", help="N, A-B, or comma-separated ids"
-    )
-    parser.add_argument("--n-heldout", type=int, default=200)
-    parser.add_argument("--min-length", type=int, default=4)
-    parser.add_argument("--max-length", type=int, default=8)
-    parser.add_argument("--seed", type=int, default=123)
-    parser.add_argument("--draws", type=int, default=500)
-    parser.add_argument("--tune", type=int, default=500)
-    parser.add_argument("--chains", type=int, default=2)
-    parser.add_argument("--out", default=None, help="Optional JSON output path")
-    args = parser.parse_args()
+@dataclass
+class Args:
+    """Evaluate how well exported outer-loop models recover a hidden ground truth."""
 
+    ground_truth_model: str
+    """Hidden ground-truth model to recover (must be in the project's registry)."""
+    project: str = "subjective_randomness"
+    """Project id."""
+    experiments: str = "1-3"
+    """N, A-B, or comma-separated ids."""
+    n_heldout: int = 200
+    """Number of heldout stimulus pairs to score the refitted models on."""
+    min_length: int = 4
+    """Shortest heldout sequence length."""
+    max_length: int = 8
+    """Longest heldout sequence length."""
+    seed: int = 123
+    """Seed for the deterministic heldout stimulus draw."""
+    draws: int = 500
+    """MCMC draws per chain when refitting each experiment's best model."""
+    tune: int = 500
+    """MCMC tuning steps per chain."""
+    chains: int = 2
+    """MCMC chains."""
+    out: Optional[Path] = None
+    """Write JSON to this file (default: stdout)."""
+
+
+def main(args: Args) -> None:
     registry = get_ground_truth_models(args.project)
     if args.ground_truth_model not in registry:
         allowed = sorted(registry)
@@ -267,8 +268,8 @@ def main() -> None:
     }
 
     text = json.dumps(payload, indent=2)
-    if args.out:
-        Path(args.out).write_text(text, encoding="utf-8")
+    if args.out is not None:
+        args.out.write_text(text, encoding="utf-8")
         print(f"Wrote {args.out}")
     else:
         print(text)
@@ -287,4 +288,4 @@ def main() -> None:
 
 
 if __name__ == "__main__":
-    main()
+    main(tyro.cli(Args))

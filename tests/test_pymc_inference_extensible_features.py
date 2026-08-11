@@ -18,6 +18,7 @@ import pytest
 
 from src.models import pymc_inference as pi
 
+from tests.paths import PYMC_MODEL_FIXTURES_DIR
 # A model whose single hypothesis needs a feature the base 11 cannot express:
 # whether each sequence *ends* in H (a recency/position statistic, invisible to
 # the order-destroying aggregate features).
@@ -102,7 +103,7 @@ def test_load_attaches_declared_featurizer(tmp_path):
 def test_load_leaves_featurizer_none_when_absent():
     # The shipped seed/fixture model declares no compute_features.
     model = pi.load_pymc_model(
-        "bayesian_fair_coin", Path(__file__).parent / "fixtures" / "pymc_models"
+        "bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR
     )
     assert pi._model_extra_featurizer(model) is None
 

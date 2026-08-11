@@ -26,7 +26,6 @@ Usage (CLI):
 
 from __future__ import annotations
 
-import importlib.util
 import json
 import sys
 from dataclasses import dataclass
@@ -34,53 +33,43 @@ from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional
 
 import tyro
+from pyprojroot import here
 
-REPO_ROOT = Path(__file__).resolve().parents[3]
-sys.path.insert(0, str(REPO_ROOT))
+# Ensure repo root on path so "import src..." works when run as a module/script.
+# Must precede the (function-level) src imports below, hence here() rather than
+# the canonical src.runtime.config.REPO_ROOT (same resolution).
+sys.path.insert(0, str(here()))
 
 
 def _load_featurizer(
     featurize_path: Optional[Path],
 ) -> Optional[Callable[[str, str], Dict[str, Any]]]:
+    """Return the project's featurize_stimulus, or None if --featurize was omitted."""
     if featurize_path is None:
         return None
-    featurize_path = Path(featurize_path)
-    if not featurize_path.exists():
-        raise FileNotFoundError(f"featurize module not found: {featurize_path}")
-    spec = importlib.util.spec_from_file_location("_eig_featurize", featurize_path)
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot load featurize module from {featurize_path}")
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules["_eig_featurize"] = mod
-    spec.loader.exec_module(mod)
-    fn = getattr(mod, "featurize_stimulus", None)
-    if fn is None:
-        raise AttributeError(f"{featurize_path} has no featurize_stimulus()")
-    return fn
+    from src.pipelines.outer_loop.featurizer import load_featurizer  # type: ignore
+
+    return load_featurizer(featurize_path)
 
 
 def _load_model_names(models_dir: Path) -> List[str]:
-    import yaml
+    from src.models.model_manifest import read_loadable_model_names  # type: ignore
 
-    from src.models.theorist.loader import get_model_names_from_manifest  # type: ignore
-
-    manifest_path = models_dir / "models_manifest.yaml"
-    if not manifest_path.exists():
-        raise FileNotFoundError(f"models_manifest.yaml not found at {manifest_path}")
-    manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-    model_names = get_model_names_from_manifest(manifest, models_dir)
+    model_names = read_loadable_model_names(models_dir)
     if not model_names:
         raise ValueError(f"No loadable models found in {models_dir}")
     return model_names
 
 
 def _load_model_weights(registry_path: Optional[Path]) -> Dict[str, float]:
-    import yaml
+    if registry_path is None:
+        return {}
+    from src.registry.io import load_registry  # type: ignore
 
-    if registry_path and Path(registry_path).exists():
-        reg = yaml.safe_load(Path(registry_path).read_text(encoding="utf-8")) or {}
-        return reg.get("theories", {}) or {}
-    return {}
+    path = Path(registry_path)
+    if not path.is_file():
+        raise FileNotFoundError(f"Explicit model registry does not exist: {path}")
+    return dict(load_registry(path)["theories"])
 
 
 def _screen_usable_models(
@@ -94,8 +83,13 @@ def _screen_usable_models(
     annotation. Probe each model against a representative featurized stimulus,
     drop the unbindable ones loudly, and keep the rest; fail only if none can
     be evaluated.
+
+    This is the ONE place the pipeline is allowed to omit a model from the
+    hypothesis set, and only for the data-binding reason above: a model that
+    fails because its *code* is broken (``BROKEN_MODEL_CODE_ERRORS``) raises.
     """
     from src.models.pymc_inference import (  # type: ignore
+        BROKEN_MODEL_CODE_ERRORS,
         load_pymc_model_cached,
         make_stim_data,
     )
@@ -104,6 +98,13 @@ def _screen_usable_models(
     for name in model_names:
         try:
             make_stim_data(load_pymc_model_cached(name, models_dir), [probe_row])
+        except BROKEN_MODEL_CODE_ERRORS as e:
+            raise RuntimeError(
+                f"model {name!r} in {models_dir} is broken "
+                f"({type(e).__name__}: {e}). That is a code error, not a "
+                "stimulus-binding mismatch — fix the model rather than letting "
+                "EIG silently renormalize over the models that happen to load."
+            ) from e
         except Exception as e:  # noqa: BLE001 — unbindable model can't be scored
             print(
                 f"  [drop] EIG: model {name!r} cannot be evaluated on a "

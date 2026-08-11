@@ -5,38 +5,14 @@ from __future__ import annotations
 import csv
 from pathlib import Path
 
-import numpy as np
 import pytest
 
 from src.subjective_randomness import pymc_recover
-
-
-class _FakeParam:
-    def __init__(self, values):
-        self.values = np.array(values, dtype=float)
-
-
-class _FakeIdata:
-    def __init__(self, params):
-        self.posterior = {name: _FakeParam(values) for name, values in params.items()}
-
-
-class _FakeFitted:
-    fingerprint = "fake-fit"
-
-    def __init__(self):
-        self.idata = _FakeIdata(
-            {
-                "theta_alt": [[0.60, 0.70], [0.65, 0.67]],
-                "alt_weight": [[0.50, 0.55], [0.58, 0.57]],
-                "beta": [[3.8, 4.2], [4.0, 4.1]],
-                "side_bias": [[-0.1, 0.0], [0.1, 0.0]],
-            }
-        )
+from tests.recovery_fixtures import CannedPosteriorFit, FakeIdata
 
 
 def test_posterior_summary_extracts_requested_params():
-    idata = _FakeIdata({"alpha": [[0.0, 1.0], [2.0, 3.0]], "ignored": [[10.0]]})
+    idata = FakeIdata({"alpha": [[0.0, 1.0], [2.0, 3.0]], "ignored": [[10.0]]})
     summary = pymc_recover.posterior_summary(idata, ["alpha", "missing"])
     assert set(summary) == {"alpha"}
     assert summary["alpha"]["mean"] == 1.5
@@ -77,7 +53,7 @@ def test_run_pymc_recovery_samples_truths_when_config_has_no_true_params(
     }
     monkeypatch.setattr(
         "src.models.pymc_inference.fit_model",
-        lambda *args, **kwargs: _FakeFitted(),
+        lambda *args, **kwargs: CannedPosteriorFit(),
     )
 
     result = pymc_recover.run_pymc_recovery(
@@ -122,7 +98,7 @@ def test_run_pymc_recovery_uses_config_mcmc_block_when_no_kwargs_given(
 
     def fake_fit_model(name, models_dir, responses_path, **kwargs):
         captured.update(kwargs)
-        return _FakeFitted()
+        return CannedPosteriorFit()
 
     monkeypatch.setattr("src.models.pymc_inference.fit_model", fake_fit_model)
 
@@ -153,7 +129,7 @@ def test_run_pymc_recovery_explicit_kwargs_beat_config_mcmc_block(
 
     def fake_fit_model(name, models_dir, responses_path, **kwargs):
         captured.update(kwargs)
-        return _FakeFitted()
+        return CannedPosteriorFit()
 
     monkeypatch.setattr("src.models.pymc_inference.fit_model", fake_fit_model)
 
@@ -257,7 +233,7 @@ def test_run_pymc_recovery_writes_featurized_rows_and_report(tmp_path, monkeypat
         captured["models_dir"] = Path(models_dir)
         captured["responses_path"] = Path(responses_path)
         captured["kwargs"] = kwargs
-        return _FakeFitted()
+        return CannedPosteriorFit()
 
     monkeypatch.setattr("src.models.pymc_inference.fit_model", fake_fit_model)
 

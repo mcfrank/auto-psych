@@ -10,15 +10,18 @@ rather than crashing.
 
 from __future__ import annotations
 
-import importlib.util
 import json
-import sys
-from pathlib import Path
 
 import pytest
 
-REPO_ROOT = Path(__file__).resolve().parent.parent
-SCRIPTS = REPO_ROOT / "scripts" / "analysis"
+from tests.paths import ANALYSIS_SCRIPTS_DIR, load_script_module
+
+
+@pytest.fixture(scope="module")
+def cli():
+    """The analysis script, loaded as a module — its helpers are the units."""
+    return load_script_module(ANALYSIS_SCRIPTS_DIR / "plot_impossible_combined.py")
+
 
 GT_MODELS = ["more_heads_more_random", "longer_runs_more_random"]
 
@@ -69,30 +72,17 @@ def _write_tree(root):
             )
 
 
-def _load_cli():
-    spec = importlib.util.spec_from_file_location(
-        "plot_impossible_combined", SCRIPTS / "plot_impossible_combined.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    sys.modules[spec.name] = module
-    spec.loader.exec_module(module)
-    return module
-
-
-cli = _load_cli()
-
-
-def test_default_runs_root_points_at_impossible_results():
+def test_default_runs_root_points_at_impossible_results(cli):
     assert "impossible" in str(cli.Args().runs_root)
 
 
-def test_fitted_baseline_label_drops_the_other():
+def test_fitted_baseline_label_drops_the_other(cli):
     # No seed is held out for impossible ground truths, so the baseline is just
     # the best seed model (not the best *other* seed model as in holdout recovery).
     assert cli.FITTED_BASELINE_LABEL == "best seed model"
 
 
-def test_cli_pools_impossible_runs_into_figures(tmp_path):
+def test_cli_pools_impossible_runs_into_figures(cli, tmp_path):
     runs_root = tmp_path / "impossible_holdout_test_retest"
     _write_tree(runs_root)
 
@@ -108,7 +98,7 @@ def test_cli_pools_impossible_runs_into_figures(tmp_path):
     assert "more_heads_more_random" in text and "longer_runs_more_random" in text
 
 
-def test_cli_name_suffix_appears_in_output_filenames(tmp_path):
+def test_cli_name_suffix_appears_in_output_filenames(cli, tmp_path):
     runs_root = tmp_path / "impossible_holdout_no_inner_loop"
     _write_tree(runs_root)
 
@@ -127,6 +117,6 @@ def test_cli_name_suffix_appears_in_output_filenames(tmp_path):
     assert not (out_dir / "impossible_combined_rmse.pdf").exists()
 
 
-def test_cli_fails_loudly_when_no_runs_found(tmp_path):
+def test_cli_fails_loudly_when_no_runs_found(cli, tmp_path):
     with pytest.raises(FileNotFoundError, match="holdout.json"):
         cli.main(cli.Args(runs_root=tmp_path / "empty", out_dir=tmp_path / "out"))

@@ -22,6 +22,7 @@ from src.subjective_randomness.stimulus_design import (
     rank_stimuli,
     select_discriminating_stimuli,
 )
+from tests.model_registry import FAITHFUL_MODEL_NAMES, SUPERSEDED_MODEL_NAMES
 
 STIM = {"sequence_a": "HTHT", "sequence_b": "HHHH"}
 
@@ -97,15 +98,15 @@ def test_select_discriminating_stimuli_rejects_bad_k_and_empty():
 # ── real model families ─────────────────────────────────────────────
 
 
-def test_default_model_family_names_are_the_reference_families():
+def test_default_model_family_names_are_the_manifest_not_the_package():
     # The registry manifest is the single source of truth for the active seed
-    # set; superseded family modules stay importable but must not appear here.
-    assert set(default_model_family_names()) == {
-        "falk_konold_dp",
-        "motif_hmm",
-        "finite_experience_occurrence",
-        "local_representativeness",
-    }
+    # set. The regression this guards is enumerating the package directory
+    # instead: superseded family modules are still importable (and one is used
+    # as an out-of-pool holdout ground truth), so directory enumeration would
+    # silently resurrect them into every design and recovery run.
+    names = set(default_model_family_names())
+    assert names == FAITHFUL_MODEL_NAMES
+    assert not (names & SUPERSEDED_MODEL_NAMES)
 
 
 def test_family_predict_fns_score_real_stimuli_nonnegative_and_discriminating():

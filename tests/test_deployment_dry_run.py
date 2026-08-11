@@ -2,6 +2,10 @@ import json
 
 from src.pipelines.outer_loop.deployment.local import run_deployment
 
+# The manifest records the git commit it deployed from, so the deployment must
+# run against a real checkout (a bare tmp_path has no provenance to record).
+from tests.paths import REPO_ROOT
+
 
 def test_dry_run_deployment_writes_manifest_config_and_staging(tmp_path):
     exp_dir = tmp_path / "experiment2"
@@ -25,7 +29,7 @@ def test_dry_run_deployment_writes_manifest_config_and_staging(tmp_path):
         firebase_project=None,
         firebase_region="us-central1",
         n_participants=5,
-        repo_root=tmp_path,
+        repo_root=REPO_ROOT,
         run_label="t",
     )
 

@@ -16,9 +16,10 @@ without re-running any agents or resampling MCMC:
   pool — ``--predict-max-draws`` thins the posterior to keep that bounded).
 
 The ground-truth generator is located automatically: a normal seed model is read
-from ``--seed-models-dir`` (the canonical project seed dir, which still holds the
-held-out model — the agent's sandbox copy had it deleted, this one does not); an
-impossible ground truth is read from ``src/subjective_randomness/impossible_models``.
+from ``--seed-models-dir`` (the recovery registry, which keeps every model a
+holdout run may have held out — including the ones the 2026-08 consolidation
+superseded — whereas the agent's sandbox copy had the GT deleted); an impossible
+ground truth is read from ``src/subjective_randomness/impossible_models``.
 Override with ``--gt-models-dir`` if needed.
 
 By default the enriched JSON / CSV / figures overwrite the run's ``holdout.json``
@@ -43,16 +44,13 @@ from pyprojroot import here
 
 sys.path.insert(0, str(here()))
 
-from src.pipelines.outer_loop.orchestrator import (  # noqa: E402
-    project_seed_models_dir,
-)
 from src.subjective_randomness.config import resolve_path  # noqa: E402
 from src.subjective_randomness.holdout_recovery import (  # noqa: E402
-    PROJECT_ID,
     TRAJECTORY_COLUMNS,
     reevaluate_trajectories,
     trajectory_tidy_rows,
 )
+from src.subjective_randomness.pymc_model_families import REGISTRY_DIR  # noqa: E402
 from src.subjective_randomness.reporting import plot_holdout_trajectories  # noqa: E402
 from src.subjective_randomness.tidy import write_tidy_csv  # noqa: E402
 
@@ -85,8 +83,9 @@ class Args:
     is what makes the per-step refits free."""
     seed_models_dir: Optional[Path] = None
     """Seed-model directory holding the seed generators AND a normal ground
-    truth (default: the canonical project seed dir, which — unlike the agent's
-    sandbox copy — still contains every held-out model)."""
+    truth (default: the recovery registry, which — unlike the agent's sandbox
+    copy, and unlike the live seed pool since the 2026-08 consolidation — still
+    contains every held-out model, superseded ones included)."""
     gt_models_dir: Optional[Path] = None
     """Directory holding the ground-truth generator. Default: auto — the seed
     dir for a normal GT, the impossible-models dir for an impossible GT."""
@@ -127,7 +126,7 @@ def main(args: Args) -> None:
     seed_models_dir = (
         resolve_path(args.seed_models_dir)
         if args.seed_models_dir is not None
-        else project_seed_models_dir(result.get("project_id", PROJECT_ID))
+        else REGISTRY_DIR
     )
     gt_models_dir = _resolve_gt_models_dir(result, seed_models_dir, args.gt_models_dir)
 

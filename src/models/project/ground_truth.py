@@ -4,14 +4,14 @@ import importlib.util
 from pathlib import Path
 from typing import Any, Callable, Dict, List
 
-from src.runtime.config import project_dir
+from src.runtime.config import project_assets_dir
 
 
 def get_ground_truth_models(
     project_id: str,
 ) -> Dict[str, Callable[..., Dict[str, float]]]:
     """
-    Load GROUND_TRUTH_MODELS from projects/<project_id>/ground_truth_models.py.
+    Load GROUND_TRUTH_MODELS from the project's ground_truth_models.py asset.
     Returns name -> callable (stimulus, response_options) -> dict.
 
     An absent module legitimately means "this project has no ground-truth
@@ -20,7 +20,7 @@ def get_ground_truth_models(
     treating it as "no models" would make a ground-truth run collect from the
     wrong generator.
     """
-    proj = project_dir(project_id)
+    proj = project_assets_dir(project_id)
     path = proj / "ground_truth_models.py"
     if not path.exists():
         return {}

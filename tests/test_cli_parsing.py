@@ -21,8 +21,7 @@ from src.pipelines.outer_loop.eig import Args as EigArgs
 from src.pipelines.inner_loop.run import Args as InnerArgs
 from src.model_comparison.likelihood import Args as LikelihoodArgs
 from src.model_comparison.posterior import Args as PosteriorArgs
-
-REPO_ROOT = Path(__file__).resolve().parent.parent
+from tests.paths import REPO_ROOT
 
 
 # ── _parse_experiments ──────────────────────────────────────────────
@@ -139,6 +138,31 @@ def test_inner_run_cli_required_paths():
 def test_cli_module_help_runs(module, expected_flag):
     result = subprocess.run(
         [sys.executable, "-m", module, "--help"],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        timeout=120,
+    )
+    assert result.returncode == 0, result.stderr
+    assert expected_flag in result.stdout
+
+
+@pytest.mark.parametrize(
+    "script,expected_flag",
+    [
+        # Standalone scripts (not importable as `src.*` modules), so the help
+        # smoke is the only guard on their tyro dataclasses.
+        (
+            "src/pipelines/outer_loop/projects/subjective_randomness/evaluate_recovery.py",
+            "--ground-truth-model",
+        ),
+        ("scripts/smoke_open_participant.py", "--hf-model"),
+        ("analysis/behavioral/fit_mega_models.py", "--scheme"),
+    ],
+)
+def test_cli_script_help_runs(script, expected_flag):
+    result = subprocess.run(
+        [sys.executable, script, "--help"],
         cwd=REPO_ROOT,
         capture_output=True,
         text=True,
