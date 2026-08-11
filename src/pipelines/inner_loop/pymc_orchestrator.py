@@ -1430,6 +1430,36 @@ def _best_model(posterior: Dict[str, Any]) -> str:
     return max(posterior["posteriors"], key=lambda m: posterior["posteriors"][m])
 
 
+def _best_exportable_model(
+    posterior: Dict[str, Any], comparison: Dict[str, Dict[str, Any]]
+) -> str:
+    """The highest-posterior model whose PSIS-LOO estimate is reliable.
+
+    ``_best_model`` is the raw posterior argmax, but a model whose ELPD-LOO arviz
+    flagged as unreliable (many high Pareto-k points) must not be the exported
+    selection: its ELPD — and therefore its posterior mass — cannot be trusted.
+    We drop the unreliable models and pick the best of what remains. With no
+    comparison table (no reliability information available) we fall back to the
+    plain argmax. If NOTHING is reliable there is nothing trustworthy to export,
+    so we fail loudly rather than pick a model we know we cannot stand behind.
+    """
+    posteriors = posterior["posteriors"]
+    if not comparison:
+        return _best_model(posterior)
+    reliable = [
+        name
+        for name in posteriors
+        if name in comparison and not comparison[name].get("loo_unreliable")
+    ]
+    if not reliable:
+        raise RuntimeError(
+            "Cannot export a model: no model has a reliable PSIS-LOO estimate "
+            "(every candidate's ELPD-LOO was flagged unreliable — many high "
+            "Pareto-k points). Improve the fit or data before selecting a model."
+        )
+    return max(reliable, key=lambda name: posteriors[name])
+
+
 def _record_history_step(
     history: List[Dict[str, Any]],
     results_dir: Path,
@@ -1492,26 +1522,35 @@ def _export(
     comparison: Optional[Dict[str, Dict[str, float]]] = None,
 ) -> Dict[str, Any]:
     comparison = comparison or {}
-    best_model = _best_model(posterior)
+    argmax_model = _best_model(posterior)
+    # Models arviz flagged unreliable are excluded from selection AND from the
+    # next design's EIG prior; record them so the exclusion is auditable, not
+    # only visible in the prose report.
+    excluded_unreliable = sorted(
+        name
+        for name, row in comparison.items()
+        if isinstance(row, dict) and row.get("loo_unreliable")
+    )
 
-    # Write the posterior + comparison record BEFORE the reliability gate: it is
-    # a diagnostic record of what the run concluded, not an endorsement of the
-    # selection. If the gate refuses below, this file is what explains why.
-    payload = {**posterior, "comparison": comparison}
+    # Write the posterior + comparison record BEFORE selection: it is a
+    # diagnostic record of what the run concluded, not an endorsement of the
+    # selection. If _best_exportable_model refuses below (nothing reliable),
+    # this file is what explains why.
+    payload = {
+        **posterior,
+        "comparison": comparison,
+        "excluded_unreliable": excluded_unreliable,
+    }
     (results_dir / "model_posterior.json").write_text(
         json.dumps(payload, indent=2), encoding="utf-8"
     )
 
-    if comparison and best_model not in comparison:
-        raise RuntimeError(
-            f"Cannot export selected model {best_model!r}: its LOO comparison row "
-            "is missing."
-        )
-    if comparison.get(best_model, {}).get("loo_unreliable"):
-        raise RuntimeError(
-            f"Cannot export selected model {best_model!r}: its LOO estimate is "
-            "unreliable. Improve the fit or data before selecting a model."
-        )
+    # Exclude models whose PSIS-LOO estimate is unreliable rather than hard-
+    # failing on them; only when NOTHING is reliable does this raise.
+    best_model = _best_exportable_model(posterior, comparison)
+    argmax_excluded = best_model != argmax_model and comparison.get(
+        argmax_model, {}
+    ).get("loo_unreliable")
 
     shutil.copyfile(models_dir / f"{best_model}.py", results_dir / "best_model.py")
 
@@ -1538,6 +1577,15 @@ def _export(
         "| model | posterior | elpd_loo |",
         "| --- | --- | --- |",
     ]
+    if argmax_excluded:
+        idx = next(i for i, line in enumerate(lines) if line.startswith("- Best model:"))
+        lines.insert(
+            idx + 1,
+            f"- NOTE: the posterior argmax (**{argmax_model}**) was **excluded "
+            "from selection** — its PSIS-LOO estimate is unreliable (many high "
+            "Pareto-k points), so the exported model above is the best "
+            "*reliable* one instead.",
+        )
     lines += [
         f"| {name} | {p:.4f} | {posterior['elpd_loo'][name]:.2f} |"
         for name, p in ranked
@@ -1552,17 +1600,27 @@ def _export(
         # distinguishable only when elpd_diff is large vs dse (~elpd_diff > 2*dse).
         by_rank = sorted(comparison.items(), key=lambda kv: kv[1]["rank"])
         loo_top = by_rank[0][0] if by_rank else None
-        # The "Best model" above is the posterior argmax, which INCLUDES the
-        # complexity prior, so it can differ from this table's raw-ELPD rank-0.
-        # Call that out explicitly rather than letting the report contradict itself.
+        # The exported "Best model" can differ from this table's raw-ELPD rank-0
+        # for two reasons: normally it is the posterior argmax (which INCLUDES the
+        # complexity prior); but when the argmax was excluded as PSIS-LOO-
+        # unreliable it is instead the best *reliable* model. Describe whichever
+        # case applies rather than letting the report contradict itself.
         reconcile = ""
         if loo_top is not None and loo_top != best_model:
-            reconcile = (
-                f" NOTE: this table ranks by **raw** ELPD-LOO, so its top model "
-                f"(`{loo_top}`) differs from the **Best model** above "
-                f"(`{best_model}`), which is the posterior argmax *including the "
-                "complexity prior*. The exported `best_model.py` is the latter."
-            )
+            if argmax_excluded:
+                reconcile = (
+                    f" NOTE: this table's raw-ELPD top model (`{loo_top}`) is not "
+                    f"the exported **Best model** (`{best_model}`) — higher-ranked "
+                    "models were excluded as PSIS-LOO-unreliable (see the exclusion "
+                    "note above), so the export is the best *reliable* model."
+                )
+            else:
+                reconcile = (
+                    f" NOTE: this table ranks by **raw** ELPD-LOO, so its top model "
+                    f"(`{loo_top}`) differs from the **Best model** above "
+                    f"(`{best_model}`), which is the posterior argmax *including the "
+                    "complexity prior*. The exported `best_model.py` is the latter."
+                )
         lines += [
             "",
             "## Distinguishability (arviz.compare, PSIS-LOO)",
@@ -1598,6 +1656,7 @@ def _export(
         "posteriors": posterior["posteriors"],
         "elpd_loo": posterior["elpd_loo"],
         "comparison": comparison,
+        "excluded_unreliable": excluded_unreliable,
         "model_posterior_path": str(results_dir / "model_posterior.json"),
         "best_model_path": str(results_dir / "best_model.py"),
         "report_path": str(results_dir / "report.md"),

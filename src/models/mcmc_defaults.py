@@ -10,10 +10,14 @@ hard-coded 500/500/2).
 
 # Production sampling: full posteriors for model comparison (ELPD-LOO needs
 # reliable log-likelihood draws). Quick local runs should pass explicit lower
-# values rather than lowering these.
-PRODUCTION_DRAWS = 2000
-PRODUCTION_TUNE = 2000
+# values rather than lowering these. draws/tune raised and target_accept lifted
+# off PyMC's implicit 0.8 default to shrink divergences and stabilise the
+# PSIS-LOO tail — high Pareto-k on the best-fitting model was hard-failing the
+# inner loop's export gate.
+PRODUCTION_DRAWS = 4000
+PRODUCTION_TUNE = 3000
 PRODUCTION_CHAINS = 4
+PRODUCTION_TARGET_ACCEPT = 0.99
 
 # Design-time fits (posterior-informed exhaustive design, experiments >= 2):
 # cheaper on purpose — the design step only needs posterior-predictive means

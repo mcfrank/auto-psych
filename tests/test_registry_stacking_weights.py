@@ -99,3 +99,32 @@ def test_registry_all_zero_weights_raise(tmp_path):
     _write_posterior(tmp_path, _payload({"a": 0.0, "b": 0.0}))
     with pytest.raises(ValueError, match="weight"):
         update_registry_from_interpretation(tmp_path)
+
+
+def test_registry_excludes_unreliable_models_from_prior(tmp_path):
+    """A model whose PSIS-LOO estimate is unreliable must not inform the next
+    experiment's design: its stacking weight is zeroed and the mass redistributes
+    over the reliable models — even when arviz still handed it a large weight."""
+    payload = _payload({"reliable_a": 0.3, "unreliable_b": 0.5, "reliable_c": 0.2})
+    payload["comparison"]["unreliable_b"]["loo_unreliable"] = True
+    _write_posterior(tmp_path, payload)
+
+    update_registry_from_interpretation(tmp_path)
+
+    theories = _read_theories(tmp_path)
+    assert theories["unreliable_b"] == pytest.approx(0.0)
+    # 0.3 and 0.2 renormalize over the reliable models -> 0.6 / 0.4.
+    assert theories["reliable_a"] == pytest.approx(0.6)
+    assert theories["reliable_c"] == pytest.approx(0.4)
+
+
+def test_registry_all_unreliable_models_raise(tmp_path):
+    """If every model is unreliable there is no trustworthy prior to record — the
+    same loud failure as all-zero weights, not a silently degenerate registry."""
+    payload = _payload({"a": 0.6, "b": 0.4})
+    payload["comparison"]["a"]["loo_unreliable"] = True
+    payload["comparison"]["b"]["loo_unreliable"] = True
+    _write_posterior(tmp_path, payload)
+
+    with pytest.raises(ValueError, match="sum"):
+        update_registry_from_interpretation(tmp_path)
