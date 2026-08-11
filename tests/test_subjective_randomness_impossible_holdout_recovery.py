@@ -369,13 +369,13 @@ def test_build_eval_stimuli_exhaustive_enumerates_all_pairs(tmp_path):
         min_remaining=1,
         exhaustive=True,
     )
-    # Every pair over the 4 + 8 = 12 sequences, cross-length included:
-    # C(12, 2) = 66, none dropped (the training pair is length-6).
-    assert len(info["stimuli"]) == 66
+    # Every same-length pair: C(4, 2) + C(8, 2) = 34. None are dropped
+    # because the training pair has length 6.
+    assert len(info["stimuli"]) == 34
     assert info["n_dropped"] == 0
     assert all(len(s["sequence_a"]) in (2, 3) for s in info["stimuli"])
-    assert any(
-        len(s["sequence_a"]) != len(s["sequence_b"]) for s in info["stimuli"]
+    assert all(
+        len(s["sequence_a"]) == len(s["sequence_b"]) for s in info["stimuli"]
     )
 
 
@@ -444,10 +444,10 @@ def test_impossible_holdout_exhaustive_eval_thins_posterior(tmp_path, monkeypatc
     )
 
     gt_run = result["gt_runs"][0]
-    # Exhaustive enumeration over lengths 2,3 pools 12 sequences into C(12,2)=66
-    # pairs (cross-length included); the length-6 training pairs cannot overlap,
+    # Same-length enumeration gives C(4,2)+C(8,2)=34 pairs; the length-6
+    # training pairs cannot overlap,
     # so none are dropped.
-    assert gt_run["n_eval_stimuli"] == 66
+    assert gt_run["n_eval_stimuli"] == 34
     assert gt_run["n_eval_dropped"] == 0
     # Every held-out prediction thinned the posterior to the configured budget.
     assert predict_max_draws_seen

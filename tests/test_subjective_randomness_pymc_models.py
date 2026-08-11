@@ -72,15 +72,35 @@ EXPECTED_INPUTS = {
         *{f"sym{i}_{side}" for i in range(1, 9) for side in ("a", "b")},
         "chose_left",
     },
+    "motif_stack": {
+        "n_a",
+        "n_b",
+        *{f"sym{i}_{side}" for i in range(1, 9) for side in ("a", "b")},
+        *{
+            f"{pattern}_{side}"
+            for pattern in (
+                "mirror_symmetry",
+                "complement_symmetry",
+                "duplication",
+            )
+            for side in ("a", "b")
+        },
+        "chose_left",
+    },
     "finite_experience_occurrence": {
-        *{f"occ_n{w}_{side}" for w in (10, 20, 50) for side in ("a", "b")},
+        "n_a",
+        "n_b",
+        "occ_n20_a",
+        "occ_n20_b",
         "chose_left",
     },
     "local_representativeness": {
-        "local_imbalance_a",
-        "local_imbalance_b",
+        "multiscale_imbalance_a",
+        "multiscale_imbalance_b",
         "p_alts_a",
         "p_alts_b",
+        "periodicity_a",
+        "periodicity_b",
         "chose_left",
     },
 }
@@ -120,6 +140,23 @@ def test_featurize_stimulus_adds_pymc_adapter_features():
     assert features["periodicity_b"] == 0.5
 
 
+def test_featurize_stimulus_marks_stack_automaton_patterns():
+    mirror = featurize_stimulus("HHHTTHHH", "HHTTHHTT")
+    complement = featurize_stimulus("TTTTHHHH", "HHTHTTHT")
+
+    assert mirror["mirror_symmetry_a"] == 1
+    assert mirror["duplication_a"] == 0
+    assert mirror["duplication_b"] == 1
+    assert complement["complement_symmetry_a"] == 1
+    assert complement["mirror_symmetry_b"] == 0
+
+
+def test_featurizer_exposes_multiscale_local_balance():
+    features = featurize_stimulus("HHHHTTTT", "HHTTHHTT")
+
+    assert features["multiscale_imbalance_a"] > features["multiscale_imbalance_b"]
+
+
 @pytest.mark.parametrize("model_name", EXPECTED_INPUTS)
 def test_featurized_stimuli_fill_pymc_data_containers(model_name):
     model = load_pymc_model(model_name, MODEL_DIR)
@@ -136,3 +173,14 @@ def test_subjective_randomness_pymc_models_sample_prior_predictive():
     assert set(preds) == set(EXPECTED_INPUTS)
     for p_left in preds.values():
         assert 0.0 <= p_left <= 1.0
+
+
+@pytest.mark.parametrize(
+    "model_name", ["motif_stack", "finite_experience_occurrence"]
+)
+def test_paper_models_fail_loudly_on_cross_length_data(model_name):
+    row = featurize_stimulus("HT", "HTHT")
+    row["chose_left"] = 0
+
+    with pytest.raises(AssertionError, match="same-length"):
+        prior_predict_p_left([model_name], MODEL_DIR, row, n_samples=1)

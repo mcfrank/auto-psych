@@ -52,6 +52,7 @@ PROTOTYPE_PARAMS = {
 LOCAL_REP_PARAMS = {
     "theta_alt": 0.65,
     "alt_weight": 0.75,
+    "periodic_share": 0.45,
     "beta": 4.0,
     "side_bias": 0.0,
 }
@@ -304,12 +305,16 @@ def test_default_generating_params_covers_every_seed_model():
     assert set(params["local_representativeness"]) == {
         "theta_alt",
         "alt_weight",
+        "periodic_share",
         "beta",
         "side_bias",
     }
-    assert set(params["motif_hmm"]) == {
+    assert set(params["motif_stack"]) == {
         "delta",
         "alpha",
+        "repetition_weight",
+        "mirror_share",
+        "complement_share",
         "beta",
         "side_bias",
     }
@@ -318,8 +323,6 @@ def test_default_generating_params_covers_every_seed_model():
         "side_bias",
     }
     assert set(params["finite_experience_occurrence"]) == {
-        "short_weight",
-        "mid_share",
         "beta",
         "side_bias",
     }
@@ -355,13 +358,13 @@ def test_resolve_generating_params_dict_overrides_and_fills_nulls():
             "beta": 6.0,
             "side_bias": 0.1,
         },
-        "motif_hmm": None,  # null -> fall back to family defaults
+        "motif_stack": None,  # null -> fall back to family defaults
     }
     resolved = resolve_generating_params(spec, SEED_MODELS_DIR)
-    assert set(resolved) == {"local_representativeness", "motif_hmm"}
+    assert set(resolved) == {"local_representativeness", "motif_stack"}
     assert resolved["local_representativeness"]["beta"] == 6.0
-    assert resolved["motif_hmm"] == (
-        default_generating_params(SEED_MODELS_DIR)["motif_hmm"]
+    assert resolved["motif_stack"] == (
+        default_generating_params(SEED_MODELS_DIR)["motif_stack"]
     )
 
 

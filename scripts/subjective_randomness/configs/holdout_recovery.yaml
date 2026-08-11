@@ -12,10 +12,10 @@ seed_models_dir: src/subjective_randomness/pymc_model_families
 # null | [names] | {name: params|null} — the same shapes as model_recovery's
 # generating_models (null/missing params -> the family's DEFAULT_PARAMS).
 gt_models:
-  bayesian_diagnosticity:
-  encoding_compressibility:
-  prototype_similarity:
-  window_typicality:
+  falk_konold_dp:
+  motif_stack:
+  finite_experience_occurrence:
+  local_representativeness:
 
 n_experiments: 3
 n_participants: 40  # match the live human experiment (full_run.yaml: 40/experiment)

@@ -53,12 +53,12 @@ def test_quotient_stat_names_is_the_union_of_declarations():
     assert set(names) == expected
 
 
-def test_quotient_stat_names_falls_back_to_superset_when_any_module_undeclared():
-    assert es.quotient_stat_names(FAMILIES + [_Undeclared]) == ss.CANONICAL_STAT_NAMES
+def test_quotient_stat_names_disables_quotient_when_any_module_is_undeclared():
+    assert es.quotient_stat_names(FAMILIES + [_Undeclared]) is None
 
 
-def test_quotient_stat_names_falls_back_to_superset_when_empty():
-    assert es.quotient_stat_names([]) == ss.CANONICAL_STAT_NAMES
+def test_quotient_stat_names_disables_quotient_for_an_empty_model_set():
+    assert es.quotient_stat_names([]) is None
 
 
 def test_complement_invariant_requires_unanimous_true():
@@ -322,6 +322,21 @@ def test_top_pairs_handles_top_k_larger_than_available_pairs():
     n = len(classes.representatives)
     i, j, eig = es.top_pairs_by_marginal_eig(table, w, top_k=10_000)
     assert len(i) == n * (n - 1) // 2
+
+
+def test_top_pairs_can_restrict_candidates_to_matching_strata():
+    classes = ss.identity_classes((3, 4))
+    table = es.build_score_table(FAMILIES, classes.representatives)
+    weights = np.full(len(FAMILIES), 1 / len(FAMILIES))
+    strata = classes.stats["n"]
+
+    i, j, _eig = es.top_pairs_by_marginal_eig(
+        table, weights, top_k=10_000, strata=strata
+    )
+
+    assert np.all(strata[i] == strata[j])
+    expected_pairs = sum(count * (count - 1) // 2 for count in (2**3, 2**4))
+    assert len(i) == expected_pairs
 
 
 def test_top_pairs_handles_top_k_zero():

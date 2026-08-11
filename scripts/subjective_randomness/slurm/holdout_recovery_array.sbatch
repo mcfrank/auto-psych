@@ -48,7 +48,7 @@ unset UV_PROJECT_ENVIRONMENT UV_CACHE_DIR UV_PYTHON
 
 # --- task -> (repeat, ground-truth model) ----------------------------------
 BASE_SEED="${BASE_SEED:-0}"
-read -r -a GTS <<< "${GT_MODELS:-falk_konold_dp motif_hmm finite_experience_occurrence local_representativeness}"
+read -r -a GTS <<< "${GT_MODELS:-falk_konold_dp motif_stack finite_experience_occurrence local_representativeness}"
 N_GTS="${N_GTS:-${#GTS[@]}}"
 # The GT/baseline registry (config seed_models_dir) — where the GT's PyMC file
 # is deleted from the copy and where the pristine snapshot was staged from.

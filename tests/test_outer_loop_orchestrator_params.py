@@ -29,6 +29,22 @@ def _seeded_names(exp_dir: Path) -> set[str]:
     return {m["name"] for m in manifest["models"]}
 
 
+def test_live_seed_registry_contains_the_four_literature_anchors(tmp_path):
+    """Experiment 1 starts from the corrected, paper-anchored model set."""
+    exp_dir = tmp_path / "experiment1"
+
+    assert orch.seed_experiment_models_from_project(exp_dir, PROJECT)
+
+    assert _seeded_names(exp_dir) == {
+        "falk_konold_dp",
+        "motif_stack",
+        "finite_experience_occurrence",
+        "local_representativeness",
+    }
+    for model_name in _seeded_names(exp_dir):
+        assert (exp_dir / "cognitive_models" / f"{model_name}.py").is_file()
+
+
 # ── seed_experiment_models_from_project exclude ─────────────────────
 
 
@@ -40,7 +56,7 @@ def test_seed_exclude_filters_files_and_manifest(tmp_path):
     assert not (exp_dir / "cognitive_models" / "falk_konold_dp.py").exists()
     assert (exp_dir / "cognitive_models" / "local_representativeness.py").exists()
     assert _seeded_names(exp_dir) == {
-        "motif_hmm",
+        "motif_stack",
         "finite_experience_occurrence",
         "local_representativeness",
     }

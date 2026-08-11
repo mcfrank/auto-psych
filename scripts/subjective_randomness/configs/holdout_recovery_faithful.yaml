@@ -1,5 +1,5 @@
 # Holdout recovery with the literature-faithful registry models as ground
-# truths. Each GT (falk_konold_dp, motif_hmm, finite_experience_occurrence,
+# truths. Each GT (falk_konold_dp, motif_stack, finite_experience_occurrence,
 # local_representativeness) generates fixed-param synthetic data; the agentic
 # loop is seeded with the live project pool, which mirrors this registry, so
 # the GT is held out of that pool and the loop starts from the other three —
@@ -13,7 +13,7 @@ seed_models_dir: src/subjective_randomness/pymc_model_families
 # null params -> the family's DEFAULT_PARAMS.
 gt_models:
   falk_konold_dp:
-  motif_hmm:
+  motif_stack:
   finite_experience_occurrence:
   local_representativeness:
 

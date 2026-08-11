@@ -5,12 +5,12 @@ four models that implement their source theories exactly as published —
 
   * ``falk_konold_dp``: Falk & Konold (1997) Difficulty Predictor, minimal
     parse, unnormalised by length.
-  * ``motif_hmm``: Griffiths, Daniels, Austerweil & Tenenbaum (2018) motif
-    HMM, row-normalised transition matrix, marginalised over parses.
+  * ``motif_stack``: Griffiths, Daniels, Austerweil & Tenenbaum (2018)
+    four-motif stack automaton, maximised over paths and production methods.
   * ``finite_experience_occurrence``: Hahn & Warren (2009) probability of
     occurrence within a finite experienced global sequence.
   * ``local_representativeness``: Kahneman & Tversky (1972) local
-    representativeness — balance judged in local windows, plus alternation.
+    representativeness — multiscale balance plus explicit irregularity cues.
 
 Each PyMC adapter must load from the registry manifest, expose the standard
 ``p_left`` / ``chose_left`` contract, and agree with its pure-Python twin.
@@ -43,7 +43,7 @@ MODEL_DIR = (
 
 NEW_MODELS = [
     "falk_konold_dp",
-    "motif_hmm",
+    "motif_stack",
     "finite_experience_occurrence",
     "local_representativeness",
 ]
@@ -51,14 +51,14 @@ NEW_MODELS = [
 TEST_STIMULI = [
     {"sequence_a": "HHTHTTHT", "sequence_b": "HTHTHTHT"},
     {"sequence_a": "TTTTTTTT", "sequence_b": "HHTHTTHT"},
-    {"sequence_a": "HTHT", "sequence_b": "HHHHTTTT"},
-    {"sequence_a": "HTH", "sequence_b": "THTTHTH"},
+    {"sequence_a": "HTHT", "sequence_b": "HHHT"},
+    {"sequence_a": "HTH", "sequence_b": "THT"},
 ]
 
 
 def test_registry_manifest_is_exactly_the_literature_faithful_set():
     # 2026-08 consolidation: each faithful model replaced its superseded
-    # counterpart (falk_konold_dp <- encoding_compressibility, motif_hmm <-
+    # counterpart (falk_konold_dp <- encoding_compressibility, motif_stack <-
     # bayesian_diagnosticity, finite_experience_occurrence <-
     # window_typicality, local_representativeness <- prototype_similarity).
     manifest = yaml.safe_load((MODEL_DIR / "models_manifest.yaml").read_text())

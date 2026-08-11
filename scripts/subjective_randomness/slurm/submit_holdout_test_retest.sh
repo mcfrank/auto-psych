@@ -24,7 +24,7 @@ export N_REPEATS="${N_REPEATS:-5}"
 # Default: the literature-faithful registry models — the active seed set since
 # the 2026-08 consolidation. Override GT_MODELS + CONFIG together to run the
 # superseded pre-consolidation set (configs/holdout_recovery.yaml).
-export GT_MODELS="${GT_MODELS:-falk_konold_dp motif_hmm finite_experience_occurrence local_representativeness}"
+export GT_MODELS="${GT_MODELS:-falk_konold_dp motif_stack finite_experience_occurrence local_representativeness}"
 export CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"
 # The GT/baseline registry (config seed_models_dir; the setup job validates the
 # match). The pristine GT snapshot is staged from here, and the array deletes

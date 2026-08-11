@@ -296,14 +296,13 @@ def build_eval_stimuli(
     appeared (in either order) in any of the run's ``responses.csv`` files is
     dropped. The surviving set is fixed and shared across every trajectory step.
 
-    With ``exhaustive=True`` the pool is *every* distinct unordered pair over all
-    sequences of the given ``lengths`` (``enumerate_all_pairs``, cross-length
-    pairs included) rather than an ``n_pairs`` sample, so the correlation is
+    With ``exhaustive=True`` the pool is every distinct same-length unordered
+    pair at the given ``lengths`` rather than an ``n_pairs`` sample, so the correlation is
     measured over the whole stimulus space at those lengths (``n_pairs``/``seed``
     are then unused).
     """
     pool = (
-        enumerate_all_pairs(lengths)
+        enumerate_all_pairs(lengths, same_length_only=True)
         if exhaustive
         else generate_candidate_pool(n_pairs, lengths=tuple(lengths), seed=seed)
     )

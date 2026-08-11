@@ -233,7 +233,10 @@ def design_exhaustive(
     model_weights = _load_model_weights(registry_path)
     featurize = _load_featurizer(featurize_path)
 
-    pool = enumerate_all_pairs(list(lengths))
+    # The paper-anchored Hahn--Warren and Griffiths models are defined only
+    # within a common sequence length. Do not ask them to compare scores with
+    # different length-specific normalizers.
+    pool = enumerate_all_pairs(list(lengths), same_length_only=True)
     rows = [_feature_row(item, featurize) for item in pool]
     model_names = _screen_usable_models(model_names, models_dir, rows[0])
     if model_weights and not any(model_weights.get(n, 0.0) > 0 for n in model_names):

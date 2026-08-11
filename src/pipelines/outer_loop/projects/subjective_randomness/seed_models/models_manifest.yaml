@@ -9,7 +9,7 @@
 #
 # Active seed set (2026-08 fidelity consolidation): the four
 # literature-faithful models, each replacing the superseded original it was
-# built to correct (falk_konold_dp <- encoding_compressibility, motif_hmm <-
+# built to correct (falk_konold_dp <- encoding_compressibility, motif_stack <-
 # bayesian_diagnosticity, finite_experience_occurrence <- window_typicality,
 # local_representativeness <- prototype_similarity). The superseded model
 # files and their pure-Python twins remain on disk (in the registry) so old
@@ -23,24 +23,24 @@ models:
       randomness = the Difficulty Predictor DP = pure runs + 2*alternating
       runs under the DP-minimising parse, unnormalised by length (Falk &
       Konold 1997, p. 308). No free cognitive parameters.
-  - name: motif_hmm
+  - name: motif_stack
     rationale: |
       Randomness = log-likelihood ratio of a fair coin versus Griffiths et
-      al. (2018)'s six-state motif HMM (repeating H, T, HT, TH; per-symbol
-      persistence delta, complexity penalty alpha^k), row-normalised and
-      marginalised over parses exactly as published — the faithful form of
-      the statistical-inference account.
+      al. (2018)'s four-motif stack automaton: a row-normalised six-state
+      motif process augmented with mirror symmetry, complement symmetry, and
+      duplication production methods, using the paper's max-path/max-method
+      definition. Comparisons are restricted to equal-length sequences.
   - name: finite_experience_occurrence
     rationale: |
       A string seems random to the extent one actually encounters it when
-      watching a fair coin for a finite stretch: randomness = log expected
-      probability of occurring at least once in a global stream of 10/20/50
-      flips (Hahn & Warren 2009), with a stick-breaking prior over the
-      experience length. Penalises long runs AND perfect alternation.
+      watching a fair coin for the paper's focal finite stretch: randomness =
+      log probability of occurring at least once in 20 flips (Hahn & Warren
+      2009). Comparisons are restricted to equal-length sequences. Penalises
+      long runs and perfect alternation without fitted cognitive parameters.
   - name: local_representativeness
     rationale: |
-      Kahneman & Tversky (1972): a random-looking sequence is balanced not
-      only globally but "locally in each of its parts". Prototype distance
-      with the balance term judged as the worst H/T imbalance over sliding
-      length-4 windows, so globally balanced but clumped sequences are
-      penalised, plus distance from an ideal alternation rate.
+      A quantitative operationalization of Kahneman & Tversky (1972): local
+      balance is averaged across the whole sequence and sliding-window scales
+      2--4, while irregularity combines an over-alternating prototype with a
+      periodic-template penalty. This is theory-inspired because K&T did not
+      publish a unique quantitative scoring equation.

@@ -22,6 +22,7 @@ from . import falk_konold_dp
 from . import finite_experience_occurrence
 from . import local_representativeness
 from . import motif_hmm
+from . import motif_stack
 from . import prototype_similarity
 from . import window_typicality
 
@@ -32,6 +33,7 @@ __all__ = [
     "finite_experience_occurrence",
     "local_representativeness",
     "motif_hmm",
+    "motif_stack",
     "prototype_similarity",
     "window_typicality",
 ]

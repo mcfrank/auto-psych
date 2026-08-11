@@ -29,26 +29,25 @@ class QuotientViolation(ExhaustiveSearchError):
     one class."""
 
 
-def quotient_stat_names(modules: Sequence[Any]) -> Tuple[str, ...]:
+def quotient_stat_names(modules: Sequence[Any]) -> Optional[Tuple[str, ...]]:
     """The statistics safe to quotient on for this exact model set.
 
     Returns the **union** of every module's declared ``SUFFICIENT_STATS``. If
-    *any* module lacks a declaration (e.g. a model the inner loop invented this
-    round, with no time to have been audited), falls back to the full
-    ``sequence_stats.CANONICAL_STAT_NAMES`` superset — the finest quotient the
-    featurizer and every PyMC seed model can express, so an undeclared model
-    never gets over-merged by omission. An empty model set also falls back to the
-    superset (there is nothing to derive a narrower quotient from).
+    *any* module lacks a declaration, returns ``None`` to require identity
+    classes. The canonical-statistic superset is not a safe fallback: models such
+    as ``motif_stack`` and ``finite_experience_occurrence`` inspect the sequence's
+    exact ordering in ways those summary statistics do not determine. An empty
+    model set also returns ``None``.
     """
     if not modules:
-        return sequence_stats.CANONICAL_STAT_NAMES
+        return None
     names: set[str] = set()
     for module in modules:
         declared = getattr(module, "SUFFICIENT_STATS", None)
         if declared is None:
-            return sequence_stats.CANONICAL_STAT_NAMES
+            return None
         names.update(declared)
-    return tuple(sorted(names)) if names else sequence_stats.CANONICAL_STAT_NAMES
+    return tuple(sorted(names)) if names else None
 
 
 def complement_invariant(modules: Sequence[Any]) -> bool:
@@ -321,6 +320,7 @@ def audit_decomposition(
     n_probe_pairs: int = 64,
     seed: int = 0,
     atol: float = 1e-9,
+    strata: Optional[Sequence[Any]] = None,
 ) -> None:
     """Cross-check a handful of pairs' :func:`pair_probabilities` output against
     directly calling each module's ``predict_left`` with the same draws stored on
@@ -332,13 +332,30 @@ def audit_decomposition(
     if n_seqs < 2:
         return
     rng = np.random.default_rng(seed)
-    max_pairs = n_seqs * (n_seqs - 1) // 2
+    if strata is None:
+        eligible_groups = [np.arange(n_seqs, dtype=np.int64)]
+    else:
+        strata_array = np.asarray(strata)
+        if strata_array.shape != (n_seqs,):
+            raise ValueError(
+                f"strata must have shape ({n_seqs},), got {strata_array.shape}."
+            )
+        eligible_groups = [
+            np.flatnonzero(strata_array == value)
+            for value in np.unique(strata_array)
+            if np.count_nonzero(strata_array == value) >= 2
+        ]
+    max_pairs = sum(len(group) * (len(group) - 1) // 2 for group in eligible_groups)
     n_probe = min(n_probe_pairs, max_pairs)
+    if n_probe == 0:
+        return
 
-    ii = rng.integers(0, n_seqs, size=max(n_probe * 4, 16))
-    jj = rng.integers(0, n_seqs, size=max(n_probe * 4, 16))
-    keep = ii != jj
-    ii, jj = ii[keep][:n_probe], jj[keep][:n_probe]
+    ii = np.empty(n_probe, dtype=np.int64)
+    jj = np.empty(n_probe, dtype=np.int64)
+    for probe in range(n_probe):
+        group = eligible_groups[int(rng.integers(0, len(eligible_groups)))]
+        pair = rng.choice(group, size=2, replace=False)
+        ii[probe], jj[probe] = pair
 
     got = pair_probabilities(table, ii, jj)
     modules_by_name = {_model_name(m): m for m in modules}
@@ -390,11 +407,17 @@ def top_pairs_by_marginal_eig(
     tile: Optional[int] = None,
     draw_block: Optional[int] = None,
     progress: Optional[Callable[[int, int], None]] = None,
+    strata: Optional[Sequence[Any]] = None,
 ) -> Tuple[np.ndarray, np.ndarray, np.ndarray]:
     """The ``top_k`` ``(i, j, eig)`` triples by marginal EIG about model identity,
     scanned tile by tile over :func:`iter_upper_triangle_tiles` -- the full
     ``C(n, 2)`` pair list is never materialized. Reuses
     ``stimulus_design._marginal_eig`` unchanged.
+
+    If ``strata`` is provided, only pairs whose two entries have the same stratum
+    are eligible. The literature-faithful subjective-randomness design passes
+    sequence length here because two active models are defined only for
+    same-length judgments.
 
     Deterministic given fixed ``table``/``weights``/``tile``/``draw_block`` (no
     randomness anywhere in this function -- repeated calls with the same
@@ -423,7 +446,16 @@ def top_pairs_by_marginal_eig(
     from .stimulus_design import _marginal_eig  # local import: avoids a module cycle
 
     n = table.scores.shape[0]
-    max_pairs = n * (n - 1) // 2
+    strata_array: Optional[np.ndarray]
+    if strata is None:
+        strata_array = None
+        max_pairs = n * (n - 1) // 2
+    else:
+        strata_array = np.asarray(strata)
+        if strata_array.shape != (n,):
+            raise ValueError(f"strata must have shape ({n},), got {strata_array.shape}.")
+        _values, counts = np.unique(strata_array, return_counts=True)
+        max_pairs = int(np.sum(counts * (counts - 1) // 2))
     top_k = min(top_k, max_pairs)
     if top_k == 0:
         empty_int = np.array([], dtype=np.int64)
@@ -440,6 +472,11 @@ def top_pairs_by_marginal_eig(
     count_seen = 0
 
     for ii, jj in iter_upper_triangle_tiles(n, tile=tile):
+        if strata_array is not None:
+            same_stratum = strata_array[ii] == strata_array[jj]
+            ii, jj = ii[same_stratum], jj[same_stratum]
+            if len(ii) == 0:
+                continue
         P = pair_probabilities(table, ii, jj, draw_block=draw_block)
         eig = _marginal_eig(P, weights)
 

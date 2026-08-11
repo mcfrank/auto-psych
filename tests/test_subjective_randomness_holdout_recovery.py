@@ -121,14 +121,14 @@ def _stub_inner_loop(history_best):
         for path in cognitive_dir.glob("*.py"):
             shutil.copyfile(path, models_dir / path.name)
 
-        posteriors = {history_best: 0.8, "motif_hmm": 0.2}
-        elpd = {history_best: -10.0, "motif_hmm": -12.0}
+        posteriors = {history_best: 0.8, "motif_stack": 0.2}
+        elpd = {history_best: -10.0, "motif_stack": -12.0}
         # Mirror the real export: az.compare's stacking weights, which the
         # registry updater requires (it refuses a posterior file without them).
         comparison = {
             history_best: {"rank": 0, "elpd_loo": -10.0, "elpd_diff": 0.0,
                            "dse": 0.0, "weight": 0.7, "loo_unreliable": False},
-            "motif_hmm": {"rank": 1, "elpd_loo": -12.0,
+            "motif_stack": {"rank": 1, "elpd_loo": -12.0,
                           "elpd_diff": 2.0, "dse": 1.5,
                           "weight": 0.3, "loo_unreliable": False},
         }
@@ -282,7 +282,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
 
     # Evaluation refits go through the shared MCMC cache. The BMA fits every
     # posterior-weighted model (the stub posterior holds the winner best model
-    # plus motif_hmm — both seeds), and the fitted-seed baseline fits the
+    # plus motif_stack — both seeds), and the fitted-seed baseline fits the
     # registry models, so together they cover exactly the faithful set.
     assert all(c["cache_dir"] == tmp_path / "cache" for c in fit_calls)
     assert {c["name"] for c in fit_calls} == FAITHFUL_MODEL_NAMES
