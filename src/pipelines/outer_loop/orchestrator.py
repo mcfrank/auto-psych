@@ -236,39 +236,6 @@ def write_context(
             f"- Previous model posterior: `{prev_exp_dir / 'model_loop' / 'model_posterior.json'}`",
         ]
 
-    if agent_key == "2_design":
-        # The design agent's candidate pool bounds what EIG can select, so the
-        # agent must know the competing hypotheses to target their
-        # disagreements. Inline each model's hypothesis here (small text);
-        # implementations stay on disk at the cognitive-models path above. By
-        # design time the model set MUST exist (seeded or carried forward) — a
-        # missing manifest is a pipeline bug, so this fails loudly.
-        manifest_path = exp_dir / "cognitive_models" / "models_manifest.yaml"
-        if not manifest_path.exists():
-            raise FileNotFoundError(
-                f"Design context needs the model set, but {manifest_path} does "
-                f"not exist — the model set must be seeded/carried forward "
-                f"before the design stage."
-            )
-        manifest = yaml.safe_load(manifest_path.read_text(encoding="utf-8")) or {}
-        lines += [
-            "",
-            "## Current model set (the hypotheses your design must discriminate)",
-            "",
-        ]
-        for entry in manifest.get("models") or []:
-            name = entry.get("name") if isinstance(entry, dict) else entry
-            rationale = " ".join(
-                ((entry.get("rationale") or "") if isinstance(entry, dict) else "").split()
-            )
-            lines.append(f"- **{name}**: {rationale}")
-        lines += [
-            "",
-            "Read each model's `.py` in the cognitive-models dir for its exact "
-            "functional form, and `model_registry.yaml` for the current weight "
-            "on each model (absent/empty registry = uniform).",
-        ]
-
     if extra:
         lines += ["", "## Additional context", ""]
         for k, v in extra.items():
@@ -423,6 +390,70 @@ def _collect_llm_participant_programmatic(
         flush=True,
     )
     return rows
+
+
+def run_design_programmatic(
+    exp_dir: Path,
+    project_id: str,
+    *,
+    exp_num: int = 1,
+    prev_exp_dir: Optional[Path] = None,
+    k: int = 32,
+    lengths: Sequence[int] = (2, 3, 4, 5, 6, 7, 8),
+) -> None:
+    """Select the design's stimuli by exhaustive enumeration (no design agent).
+
+    Enumerates every H/T pair over the given lengths, scores it under the
+    experiment's ACTUAL PyMC model set (batched per-draw p_left), and greedily
+    picks the ``k`` stimuli with maximal joint EIG about model identity,
+    writing ``design/stimuli.json``. Experiment 1 scores from the models'
+    prior predictive with uniform model weights; experiments >= 2 fit each
+    model on the previous experiment's responses and score from its posterior
+    predictive, with model weights from the previous registry (weights over
+    models absent here fall back to uniform, loudly). Works for any PyMC model
+    in the set — no pure-Python family twin needed. Only implemented for
+    subjective_randomness (H/T pair enumeration).
+    """
+    if project_id != "subjective_randomness":
+        raise ValueError(
+            "Exhaustive design is only implemented for subjective_randomness "
+            f"(H/T pair enumeration); got {project_id!r}."
+        )
+    from src.pipelines.outer_loop import eig as eig_mod
+
+    models_dir = exp_dir / "cognitive_models"
+    featurize = outer_project_dir(project_id) / "preprocess.py"
+    if exp_num <= 1 or prev_exp_dir is None:
+        stimuli = eig_mod.design_exhaustive(
+            models_dir,
+            featurize_path=featurize,
+            lengths=tuple(lengths),
+            n_select=k,
+        )
+        basis = "prior predictive + uniform model weights"
+    else:
+        stimuli = eig_mod.design_exhaustive(
+            models_dir,
+            prev_exp_dir / "model_registry.yaml",
+            featurize_path=featurize,
+            lengths=tuple(lengths),
+            n_select=k,
+            responses_csv=prev_exp_dir / "data" / "responses.csv",
+            fit_cache_dir=exp_dir / "design" / "_fit_cache",
+        )
+        basis = f"experiment {exp_num - 1} posterior (model weights + parameter posteriors)"
+
+    design_dir = exp_dir / "design"
+    design_dir.mkdir(parents=True, exist_ok=True)
+    (design_dir / "stimuli.json").write_text(
+        json.dumps(stimuli, indent=2), encoding="utf-8"
+    )
+    print(
+        f"  [design] Exhaustive: enumerated all H/T pairs over lengths {tuple(lengths)}, "
+        f"selected {len(stimuli)} jointly-informative pairs ({basis}) -> "
+        f"{design_dir / 'stimuli.json'}",
+        flush=True,
+    )
 
 
 def run_collect_programmatic(

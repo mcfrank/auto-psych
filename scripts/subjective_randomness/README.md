@@ -165,11 +165,11 @@ holds the best models discovered by the human replicates, so a registry ground
 truth is simply absent from the pool — the same situation as an impossible
 ground truth, with nothing to exclude.
 
-Real agents do the work: the design agent chooses each experiment's stimuli by
-EIG, the model set is carried forward between experiments (there is no theory
-agent — new hypotheses enter only via the inner loop), and the inner loop's
-candidate agents conjecture new PyMC models that are fit by MCMC and compared
-by ELPD-LOO.
+The real pipeline does the work: the programmatic exhaustive design chooses
+each experiment's stimuli by joint EIG, the model set is carried forward
+between experiments (there is no theory agent — new hypotheses enter only via
+the inner loop), and the inner loop's candidate agents conjecture new PyMC
+models that are fit by MCMC and compared by ELPD-LOO.
 
 After **every inner-loop scoring step** (the initial seed-set fit and each
 candidate round, in every experiment) the then-best model's posterior-predictive
@@ -207,7 +207,8 @@ at the paths you pass.
 
 Details worth knowing:
 
-- **Held-out eval set.** The design agents choose training stimuli freely, so
+- **Held-out eval set.** The EIG design picks training stimuli from anywhere
+  in the pair space, so
   holdout is enforced *after* the run: any eval-pool pair that appeared (in
   either order) in any of the run's training data is dropped, and the run fails
   loudly if fewer than `eval_pool.min_remaining` stimuli survive. The pool is
@@ -229,23 +230,17 @@ Details worth knowing:
   byte-identical copies, mentions of the ground truth's distinctive parameter
   names, and files named after the ground truth — heuristics for auditing a
   run, not proof it was clean.
-- **Design = candidate pool + deterministic EIG.** The design agent's creative
-  job is to write `design/candidates.json` (a pool of stimulus pairs); scoring
-  it by EIG into the top-N `design/stimuli.json` is deterministic. Agents
-  sometimes background that slow scoring and end their turn before
-  `stimuli.json` exists — so when the agent leaves a candidate pool but no
-  stimuli, the harness runs the EIG annotation itself (top 20 by EIG) rather
-  than stalling. Keep candidate pools tractable (the prompt asks for ~100–300
-  pairs): EIG scores every candidate via prior-predictive sampling, so a pool
-  of thousands takes many minutes.
-- **Resume after a failure.** The harness stops loudly at the first agent
+- **Design = exhaustive joint EIG.** Each experiment's design is the same
+  programmatic exhaustive selection as the live pipeline: every H/T pair over
+  the design lengths is scored under the experiment's actual PyMC model set
+  and the jointly most informative set is picked greedily. No agent is
+  involved; the design is deterministic given the models and registry.
+- **Resume after a failure.** The harness stops loudly at the first
   stage whose output doesn't validate. Re-run the same command with `--resume`
   to continue: any ground truth that already has a `trajectory.json` is
   skipped, and within an incomplete run every stage whose output already
-  validates is skipped, so work restarts at the first invalid stage. If a
-  stopped design stage left a valid `candidates.json`, resume reuses it (it
-  scores the EIG and writes `stimuli.json` without re-running the expensive
-  design agent). A partial `model_loop/` from a crashed inner loop is wiped and
+  validates is skipped, so work restarts at the first invalid stage.
+  A partial `model_loop/` from a crashed inner loop is wiped and
   rerun (it is fully regenerable, and its MCMC fits are still in `mcmc_cache/`).
   If `--resume` finds a `trajectory.json` whose experiment count disagrees with
   the config's `n_experiments`, it fails loudly rather than mixing runs.
@@ -263,7 +258,7 @@ Details worth knowing:
 - **opencode permissions.** Agents run from the repo root, so opencode treats
   `/tmp` (and `/private/tmp`, `/var/folders`) as external directories and, in
   non-interactive `opencode run`, auto-rejects writes there — which silently
-  breaks design agents that stage temp files. The repo `opencode.json` grants
+  breaks agents that stage temp files. The repo `opencode.json` grants
   `external_directory` allow rules for those paths so this does not recur. If
   you point the pipeline at a different scratch directory, add it there too.
 

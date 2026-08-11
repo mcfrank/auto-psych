@@ -30,7 +30,7 @@ agent:
   backend: opencode # null -> CODING_AGENT env var, then "claude"
   model: google/gemini-3.1-pro-preview
 
-# Held-out evaluation stimuli. Pairs the design agents happened to use for
+# Held-out evaluation stimuli. Pairs the EIG designs happened to use for
 # training are excluded after the run; fail loudly if fewer than min_remaining
 # survive.
 # Exhaustive: evaluate on every distinct same-length pair for the lengths, so

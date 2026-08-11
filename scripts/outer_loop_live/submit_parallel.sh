@@ -12,7 +12,7 @@
 #
 # Usage:   bash scripts/outer_loop_live/submit_parallel.sh
 # Knobs:   K=3 EXPERIMENT=1 N_PARTICIPANTS=20 PROJECT=subjective_randomness \
-#          DESIGN_MODE=agent WORK_ROOT=$SCRATCH/auto-psych/outer_loop_live \
+#          WORK_ROOT=$SCRATCH/auto-psych/outer_loop_live \
 #            bash scripts/outer_loop_live/submit_parallel.sh
 #
 # Prereqs (see README.md): run setup.sbatch once; put PROLIFIC_API_TOKEN +
@@ -30,7 +30,6 @@ export PROJECT="${PROJECT:-subjective_randomness}"
 export EXPERIMENT="${EXPERIMENT:-1}"
 export N_PARTICIPANTS="${N_PARTICIPANTS:-1}"
 export FIREBASE_PROJECT="${FIREBASE_PROJECT:-auto-psych-2c5da}"
-export DESIGN_MODE="${DESIGN_MODE:-agent}"
 export CODING_AGENT="${CODING_AGENT:-opencode}"
 
 # Optional Slurm overrides (else use run_live.sbatch's directives). For a long

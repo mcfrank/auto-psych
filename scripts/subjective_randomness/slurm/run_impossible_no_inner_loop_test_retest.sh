@@ -12,7 +12,8 @@
 # randomness that humans could not plausibly use; the loop keeps the FULL normal
 # seed set and is *expected to fail* to recover them. Removing the inner loop
 # tests how that failure looks WITHOUT the agent's candidate model search: the
-# outer-loop theory/design agents still run, but the inner conjecture/critique
+# outer loop (seeding + exhaustive EIG design) still runs, but the inner
+# conjecture/critique
 # rounds that might otherwise stumble onto the weird generator are gone. Compare
 # against run_impossible_test_retest.sh to isolate the inner loop's contribution.
 #

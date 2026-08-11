@@ -1,11 +1,11 @@
 """Tests for ground-truth holdout recovery through the agentic loop.
 
 The integration test drives `run_holdout_recovery_from_config` end to end with
-the expensive seams stubbed out (coding agents, MCMC, fixed-param prior
-predictive), asserting the observable contract: the held-out model is excluded
-from experiment 1's seed set, agents run in pipeline order, and the trajectory
-correlates every inner-loop history step against the ground truth on a
-held-out stimulus set.
+the expensive seams stubbed out (the exhaustive design, the inner loop's
+coding agents, MCMC, fixed-param prior predictive), asserting the observable
+contract: the held-out model is excluded from experiment 1's seed set, stages
+run in pipeline order, and the trajectory correlates every inner-loop history
+step against the ground truth on a held-out stimulus set.
 """
 
 from __future__ import annotations
@@ -48,32 +48,26 @@ DESIGN_STIMULI = [
 ]
 
 
-def _stub_spawn_cc_agent(calls):
-    """Stand-in for the design coding agent (the only agent stage left besides
-    the inner loop — the model set is seeded/carried forward programmatically).
+def _stub_design(calls, stimuli=DESIGN_STIMULI):
+    """Stand-in for the programmatic exhaustive design (the holdout harness
+    spawns no agents itself — only the inner loop does, internally).
     Writes a valid EIG-annotated stimuli.json."""
 
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None, model=None):
-        calls.append((agent_key, Path(exp_dir).name, model))
-        # Mirror the real spawn: every agent run records its token usage.
-        token_usage.record_usage(
-            source=f"outer:{agent_key}",
-            backend="opencode",
-            model="stub",
-            input_tokens=100,
-            output_tokens=10,
-        )
-        if agent_key == "2_design":
-            design_dir = exp_dir / "design"
-            design_dir.mkdir(parents=True, exist_ok=True)
-            (design_dir / "stimuli.json").write_text(
-                json.dumps(DESIGN_STIMULI), encoding="utf-8"
+    def design(exp_dir, project_id, *, exp_num=1, prev_exp_dir=None, **kwargs):
+        calls.append(
+            (
+                Path(exp_dir).name,
+                exp_num,
+                Path(prev_exp_dir).name if prev_exp_dir is not None else None,
             )
-        else:
-            raise AssertionError(f"Unexpected agent spawned: {agent_key}")
-        return True, "ok"
+        )
+        design_dir = Path(exp_dir) / "design"
+        design_dir.mkdir(parents=True, exist_ok=True)
+        (design_dir / "stimuli.json").write_text(
+            json.dumps(stimuli), encoding="utf-8"
+        )
 
-    return spawn
+    return design
 
 
 def _stub_generate_responses(calls):
@@ -106,6 +100,15 @@ def _stub_inner_loop(history_best):
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
             backend=None, agent_model=None, cache_dir=None, project_id=None,
             agent_timeout_sec=900):
+        # Mirror the real inner loop: every candidate-agent run records its
+        # token usage (here one stub record per experiment's loop).
+        token_usage.record_usage(
+            source="inner:candidate",
+            backend="opencode",
+            model="stub",
+            input_tokens=100,
+            output_tokens=10,
+        )
         loop_dir = exp_dir / "model_loop"
         models_dir = loop_dir / "models"
         models_dir.mkdir(parents=True, exist_ok=True)
@@ -155,18 +158,25 @@ class _FakeFitted:
 
 
 def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monkeypatch):
-    agent_calls = []
+    design_calls = []
     collect_calls = []
     fit_calls = []
+    inner_loop_kwargs = []
 
     monkeypatch.setattr(
-        holdout_recovery, "spawn_cc_agent", _stub_spawn_cc_agent(agent_calls)
+        holdout_recovery, "run_design_programmatic", _stub_design(design_calls)
     )
     monkeypatch.setattr(
         holdout_recovery, "generate_responses", _stub_generate_responses(collect_calls)
     )
+    inner_stub = _stub_inner_loop("minkowski_accumulated_typicality")
+
+    def capturing_inner_loop(exp_dir, **kwargs):
+        inner_loop_kwargs.append(kwargs)
+        return inner_stub(exp_dir, **kwargs)
+
     monkeypatch.setattr(
-        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop("minkowski_accumulated_typicality")
+        holdout_recovery, "run_inner_model_loop_programmatic", capturing_inner_loop
     )
     monkeypatch.setattr(
         holdout_recovery,
@@ -234,12 +244,17 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         "artificial_balance_diagnosticity",
     }
 
-    # Design is the only spawned agent: exp 1's model set is seeded and exp 2's
-    # is carried forward programmatically (no theorist agent). The config's
-    # agent.model reaches every spawn.
-    assert agent_calls == [
-        ("2_design", "experiment1", "fireworks-ai/test-model"),
-        ("2_design", "experiment2", "fireworks-ai/test-model"),
+    # The design stage is programmatic (no agent): experiment 1 designs from
+    # the prior (no previous experiment) and experiment 2 from experiment 1's
+    # posterior. The config's agent.model reaches the inner loop, the only
+    # place agents are spawned.
+    assert design_calls == [
+        ("experiment1", 1, None),
+        ("experiment2", 2, "experiment1"),
+    ]
+    assert [k["agent_model"] for k in inner_loop_kwargs] == [
+        "fireworks-ai/test-model",
+        "fireworks-ai/test-model",
     ]
 
     # Collection always samples from the held-out ground truth, with a fresh
@@ -315,7 +330,8 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     )
 
     # The run persists its LLM token spend: one JSONL record per agent run
-    # (the two design agents here) plus a summary of the whole recovery run.
+    # (the two stub inner-loop rounds here) plus a summary of the whole
+    # recovery run.
     usage_lines = (
         (tmp_path / "runs" / "token_usage.jsonl").read_text().splitlines()
     )
@@ -325,7 +341,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     )
     assert usage_summary["n_calls"] == 2
     assert usage_summary["total_tokens"] == 220
-    assert usage_summary["by_source"]["outer:2_design"]["n_calls"] == 2
+    assert usage_summary["by_source"]["inner:candidate"]["n_calls"] == 2
     assert (
         "minkowski_accumulated_typicality"
         in gt_run["experiments"][1]["manifest_models"]
@@ -335,11 +351,11 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
 # ── harness error path ──────────────────────────────────────────────
 
 
-def test_run_holdout_experiments_raises_on_invalid_agent_output(tmp_path, monkeypatch):
-    # A design agent that produces nothing must stop the run loudly, naming the
+def test_run_holdout_experiments_raises_on_invalid_design_output(tmp_path, monkeypatch):
+    # A design stage that produces nothing must stop the run loudly, naming the
     # stage, instead of collecting data against a missing design.
     monkeypatch.setattr(
-        holdout_recovery, "spawn_cc_agent", lambda *a, **kw: (True, "did nothing")
+        holdout_recovery, "run_design_programmatic", lambda *a, **kw: None
     )
 
     with pytest.raises(RuntimeError, match="2_design"):
@@ -445,9 +461,10 @@ def test_run_holdout_experiments_refuses_existing_dir_without_resume(tmp_path):
 def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
     tmp_path, monkeypatch
 ):
-    # experiment1 is complete; experiment2 stopped after the theory stage (the
-    # design agent failed). Resume must rerun only experiment2's design,
-    # collect, and inner loop — never respawn work whose output validates.
+    # experiment1 is complete; experiment2 stopped after its model set was
+    # carried forward (the design stage failed). Resume must rerun only
+    # experiment2's design, collect, and inner loop — never redo work whose
+    # output validates.
     run_root = tmp_path / "run"
     _complete_experiment_on_disk(run_root, 1)
     exp2_models = run_root / "experiment2" / "cognitive_models"
@@ -467,12 +484,12 @@ def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
         encoding="utf-8",
     )
 
-    agent_calls = []
+    design_calls = []
     collect_calls = []
     loop_calls = []
 
     monkeypatch.setattr(
-        holdout_recovery, "spawn_cc_agent", _stub_spawn_cc_agent(agent_calls)
+        holdout_recovery, "run_design_programmatic", _stub_design(design_calls)
     )
     monkeypatch.setattr(
         holdout_recovery, "generate_responses", _stub_generate_responses(collect_calls)
@@ -501,7 +518,7 @@ def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
         resume=True,
     )
 
-    assert agent_calls == [("2_design", "experiment2", None)]
+    assert design_calls == [("experiment2", 2, "experiment1")]
     assert [c["seed"] for c in collect_calls] == [7]  # seed + exp_num, exp2 only
     assert loop_calls == ["experiment2"]
 
@@ -528,7 +545,7 @@ def test_run_holdout_experiments_resume_wipes_partial_model_loop(
     monkeypatch.setattr(
         holdout_recovery, "run_inner_model_loop_programmatic", checking_inner_loop
     )
-    monkeypatch.setattr(holdout_recovery, "spawn_cc_agent", _stub_spawn_cc_agent([]))
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
     monkeypatch.setattr(
         holdout_recovery, "generate_responses", _stub_generate_responses([])
     )
@@ -571,7 +588,7 @@ def test_from_config_resume_skips_completed_gt_runs(tmp_path, monkeypatch):
     def tripwire(*args, **kwargs):
         raise AssertionError("completed GT run must not re-run any work")
 
-    for seam in ("spawn_cc_agent", "seed_experiment_models_from_project",
+    for seam in ("run_design_programmatic", "seed_experiment_models_from_project",
                  "generate_responses", "run_inner_model_loop_programmatic",
                  "p_left_fixed_params", "fit_model"):
         monkeypatch.setattr(holdout_recovery, seam, tripwire)
@@ -599,7 +616,7 @@ def test_from_config_resume_rejects_stale_trajectory_experiment_count(
     run_root.mkdir(parents=True)
     (run_root / "trajectory.json").write_text(json.dumps(stale), encoding="utf-8")
     monkeypatch.setattr(
-        holdout_recovery, "spawn_cc_agent",
+        holdout_recovery, "run_design_programmatic",
         lambda *a, **kw: (_ for _ in ()).throw(AssertionError("must not run")),
     )
 
@@ -612,196 +629,6 @@ def test_from_config_resume_rejects_stale_trajectory_experiment_count(
         run_holdout_recovery_from_config(
             config, tmp_path / "config.yaml", tmp_path / "runs", resume=True
         )
-
-
-# ── design EIG fallback (agent backgrounded the scoring) ────────────
-
-PROTOTYPE_GT_PARAMS = {
-    "theta_alt": 0.65,
-    "alt_weight": 0.55,
-    "beta": 4.0,
-    "side_bias": 0.0,
-}
-CANDIDATE_POOL = [
-    {"sequence_a": "HTHTHT", "sequence_b": "HHHHHH"},
-    {"sequence_a": "HHHTTT", "sequence_b": "HTHTHT"},
-    {"sequence_a": "HHTTHH", "sequence_b": "TTTTTT"},
-]
-
-
-def _stub_annotate_eig(calls):
-    def annotate(candidates, models_dir, registry_path=None, *, featurize_path=None,
-                 n_samples=200, seed=42):
-        calls.append({"n": len(candidates), "models_dir": Path(models_dir),
-                      "featurize_path": featurize_path})
-        # Mirror the real annotate: add a descending eig and sort by it.
-        scored = [
-            {**c, "eig": round(1.0 - i * 0.1, 6)} for i, c in enumerate(candidates)
-        ]
-        scored.sort(key=lambda x: -x["eig"])
-        return scored
-
-    return annotate
-
-
-def _spawn_writing_candidates(calls, pool=CANDIDATE_POOL):
-    """Design agent that writes only candidates.json (backgrounded EIG, no stimuli)."""
-
-    def spawn(agent_key, exp_dir, allowed_dirs=None, timeout_secs=900, backend=None, prompt_key=None, repair_feedback=None, model=None):
-        calls.append((agent_key, Path(exp_dir).name))
-        if agent_key == "2_design":
-            design_dir = exp_dir / "design"
-            design_dir.mkdir(parents=True, exist_ok=True)
-            (design_dir / "candidates.json").write_text(
-                json.dumps(pool), encoding="utf-8"
-            )
-        return True, "ok"
-
-    return spawn
-
-
-def test_design_stage_scores_candidates_when_agent_leaves_no_stimuli(
-    tmp_path, monkeypatch
-):
-    run_root = tmp_path / "run"
-    annotate_calls = []
-    monkeypatch.setattr(
-        holdout_recovery, "spawn_cc_agent", _spawn_writing_candidates([])
-    )
-    monkeypatch.setattr(
-        holdout_recovery, "annotate_eig", _stub_annotate_eig(annotate_calls)
-    )
-    monkeypatch.setattr(
-        holdout_recovery, "generate_responses", _stub_generate_responses([])
-    )
-    monkeypatch.setattr(
-        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop("minkowski_accumulated_typicality")
-    )
-
-    run_holdout_experiments(
-        "prototype_similarity",
-        PROTOTYPE_GT_PARAMS,
-        run_root,
-        seed_models_dir=SEED_MODELS_DIR,
-        n_experiments=1,
-        n_participants=2,
-        inner_loop_iterations=0,
-        candidate_count=0,
-        fit_kwargs={},
-        seed=0,
-    )
-
-    # The harness scored the full candidate pool against this experiment's models.
-    assert len(annotate_calls) == 1
-    assert annotate_calls[0]["n"] == len(CANDIDATE_POOL)
-    assert annotate_calls[0]["models_dir"] == (
-        run_root / "experiment1" / "cognitive_models"
-    )
-    stimuli = json.loads(
-        (run_root / "experiment1" / "design" / "stimuli.json").read_text(
-            encoding="utf-8"
-        )
-    )
-    assert stimuli and all("eig" in s for s in stimuli)
-    assert stimuli == sorted(stimuli, key=lambda s: -s["eig"])  # EIG-descending
-
-
-def test_design_stage_uses_agent_stimuli_without_rescoring(tmp_path, monkeypatch):
-    # When the agent does produce stimuli.json, the harness must not re-score.
-    run_root = tmp_path / "run"
-    monkeypatch.setattr(
-        holdout_recovery, "spawn_cc_agent", _stub_spawn_cc_agent([])
-    )
-
-    def tripwire(*args, **kwargs):
-        raise AssertionError("annotate must not run when the agent wrote stimuli.json")
-
-    monkeypatch.setattr(holdout_recovery, "annotate_eig", tripwire)
-    monkeypatch.setattr(
-        holdout_recovery, "generate_responses", _stub_generate_responses([])
-    )
-    monkeypatch.setattr(
-        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop("minkowski_accumulated_typicality")
-    )
-
-    run_holdout_experiments(
-        "prototype_similarity",
-        PROTOTYPE_GT_PARAMS,
-        run_root,
-        seed_models_dir=SEED_MODELS_DIR,
-        n_experiments=1,
-        n_participants=2,
-        inner_loop_iterations=0,
-        candidate_count=0,
-        fit_kwargs={},
-        seed=0,
-    )
-    assert (run_root / "experiment1" / "design" / "stimuli.json").exists()
-
-
-def test_design_resume_reuses_existing_candidates_without_respawning_agent(
-    tmp_path, monkeypatch
-):
-    # experiment1 complete; experiment2 stopped after a design agent left a
-    # candidate pool but no stimuli.json. Resume must finish the EIG scoring
-    # without re-running the (expensive) design agent.
-    run_root = tmp_path / "run"
-    _complete_experiment_on_disk(run_root, 1)
-    exp2 = run_root / "experiment2"
-    exp2_models = exp2 / "cognitive_models"
-    exp2_models.mkdir(parents=True)
-    for name in ("bayesian_diagnosticity", "encoding_compressibility"):
-        shutil.copyfile(SEED_MODELS_DIR / f"{name}.py", exp2_models / f"{name}.py")
-    (exp2_models / "models_manifest.yaml").write_text(
-        yaml.safe_dump(
-            {"models": [
-                {"name": "bayesian_diagnosticity",
-                 "rationale": "Fair-coin diagnosticity hypothesis."},
-                {"name": "encoding_compressibility",
-                 "rationale": "Compressibility-penalty hypothesis."},
-            ]},
-            sort_keys=False,
-        ),
-        encoding="utf-8",
-    )
-    (exp2 / "design").mkdir()
-    (exp2 / "design" / "candidates.json").write_text(
-        json.dumps(CANDIDATE_POOL), encoding="utf-8"
-    )
-
-    spawn_calls = []
-    annotate_calls = []
-    monkeypatch.setattr(
-        holdout_recovery, "spawn_cc_agent", _stub_spawn_cc_agent(spawn_calls)
-    )
-    monkeypatch.setattr(
-        holdout_recovery, "annotate_eig", _stub_annotate_eig(annotate_calls)
-    )
-    monkeypatch.setattr(
-        holdout_recovery, "generate_responses", _stub_generate_responses([])
-    )
-    monkeypatch.setattr(
-        holdout_recovery, "run_inner_model_loop_programmatic", _stub_inner_loop("encoding_compressibility")
-    )
-
-    run_holdout_experiments(
-        "prototype_similarity",
-        PROTOTYPE_GT_PARAMS,
-        run_root,
-        seed_models_dir=SEED_MODELS_DIR,
-        n_experiments=2,
-        n_participants=2,
-        inner_loop_iterations=0,
-        candidate_count=0,
-        fit_kwargs={},
-        seed=5,
-        resume=True,
-    )
-
-    # No agent re-run for experiment2 (theory already valid, candidate pool reused).
-    assert spawn_calls == []
-    assert len(annotate_calls) == 1
-    assert (exp2 / "design" / "stimuli.json").exists()
 
 
 # ── eval pool with post-run exclusion ───────────────────────────────
@@ -1465,11 +1292,11 @@ def test_from_config_rejects_unknown_gt_model_override(tmp_path):
 def test_from_config_rejects_zero_overrides(tmp_path, monkeypatch):
     # An explicit 0 must fail loudly, not be silently swallowed by a falsy-`or`
     # fallback to the config default. The tripwire stub guarantees the guard
-    # fires before any experiment work (a real agent spawn) could start.
+    # fires before any experiment work (a design pass, model seeding) starts.
     def tripwire(*args, **kwargs):
         raise AssertionError("guard did not fire before the experiment loop")
 
-    monkeypatch.setattr(holdout_recovery, "spawn_cc_agent", tripwire)
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", tripwire)
     monkeypatch.setattr(
         holdout_recovery, "seed_experiment_models_from_project", tripwire
     )
@@ -1687,7 +1514,7 @@ def test_plot_holdout_cli_defaults_derive_from_result_path():
 
 @pytest.mark.slow
 def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypatch):
-    """End-to-end with real MCMC: only the coding agents are stubbed.
+    """End-to-end with real MCMC: only the exhaustive design is stubbed.
 
     Proves the history.json -> cached fit -> posterior-predictive chain works
     with real PyMC: the run's fits land in the shared cache and the trajectory
@@ -1700,16 +1527,11 @@ def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypa
         {"sequence_a": "THTHTH", "sequence_b": "TTTHHH", "eig": 0.4},
     ]
 
-    def design_only_spawn(agent_key, exp_dir, **kwargs):
-        assert agent_key == "2_design"  # single experiment: no theory agent
-        design_dir = exp_dir / "design"
-        design_dir.mkdir(parents=True, exist_ok=True)
-        (design_dir / "stimuli.json").write_text(
-            json.dumps(design_stimuli), encoding="utf-8"
-        )
-        return True, "ok"
-
-    monkeypatch.setattr(holdout_recovery, "spawn_cc_agent", design_only_spawn)
+    monkeypatch.setattr(
+        holdout_recovery,
+        "run_design_programmatic",
+        _stub_design([], stimuli=design_stimuli),
+    )
 
     config = {
         "project_id": "subjective_randomness",

@@ -48,13 +48,10 @@ def load_state_from_run(
     if ra.exists():
         state["theorist_rationale_path"] = str(ra)
 
-    # 2_design
-    st = rdir / "2_design" / "stimuli.json"
+    # design (programmatic exhaustive EIG selection)
+    st = rdir / "design" / "stimuli.json"
     if st.exists():
         state["stimuli_path"] = str(st)
-    dr = rdir / "2_design" / "design_rationale.md"
-    if dr.exists():
-        state["design_rationale_path"] = str(dr)
 
     # 3_implement (experiment_path = directory; config.json in same dir)
     exp_dir = rdir / "3_implement"
@@ -133,23 +130,17 @@ def minimal_state_for_agent(
         state["registry_path"] = str(rdir / "model_registry.yaml")
         return state
 
-    if agent_key == "2_design":
-        state["theorist_manifest_path"] = _path(
-            "1_theory", "models_manifest.yaml"
-        ) or str(fixtures_dir / "models_manifest.yaml")
-        return state
-
     if agent_key == "3_implement":
         state["theorist_manifest_path"] = _path(
             "1_theory", "models_manifest.yaml"
         ) or str(fixtures_dir / "models_manifest.yaml")
-        state["stimuli_path"] = _path("2_design", "stimuli.json") or str(
+        state["stimuli_path"] = _path("design", "stimuli.json") or str(
             fixtures_dir / "stimuli.json"
         )
         return state
 
     if agent_key == "4_collect":
-        state["stimuli_path"] = _path("2_design", "stimuli.json") or str(
+        state["stimuli_path"] = _path("design", "stimuli.json") or str(
             fixtures_dir / "stimuli.json"
         )
         state["theorist_manifest_path"] = _path(

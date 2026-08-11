@@ -2,8 +2,9 @@
 
 Runs `src/pipelines/outer_loop/run.py` in **`--mode live`**: the model set is
 seeded from the project's `seed_models/` (experiment 1) or carried forward from
-the previous experiment (there is no theorist agent) → a coding agent designs
-stimuli by EIG → implements a jsPsych experiment → it is **deployed to Firebase
+the previous experiment (there is no theorist agent) → the exhaustive joint-EIG
+selection designs the stimuli programmatically (no design agent) → a coding
+agent implements a jsPsych experiment → it is **deployed to Firebase
 Hosting** + Cloud Functions → a **Prolific study** is created and published →
 the run polls for human submissions (≤ 2 h/experiment), fetches results from
 the token-guarded `/results` endpoint, and runs the inner model loop (where all
@@ -16,7 +17,7 @@ and the npm registry directly.
 ## Files
 
 - `pilot.yaml` — config for a **small single pilot**. Project, run label,
-  #experiments, design mode, Slurm walltime/qos, the Prolific study
+  #experiments, Slurm walltime/qos, the Prolific study
   (participants/reward/length/name), and the modeling settings — all here.
 - `full_run.yaml` / `hero_run.yaml` — per-run configs for the **full-scale
   runs** launched via `start_full_run.sh` (K parallel copies). `hero_run.yaml`
@@ -67,7 +68,7 @@ and the npm registry directly.
 
 3. **Study + run config** — set everything in `scripts/outer_loop_live/pilot.yaml`
    (participants, reward, task length, study name/description, #experiments,
-   design mode, walltime). `run_pilot.sh` renders
+   walltime). `run_pilot.sh` renders
    `projects/<project>/prolific_config.yaml` from it on launch, so **that file is
    now auto-generated — edit `pilot.yaml`, not it.**
 
@@ -114,15 +115,12 @@ on top of the yaml mode flag; `test`/`none` modes need no confirmation.
 what halts recruiting and charges) — `scancel` only stops the pipeline job, not
 an already-published study.
 
-> ⚠️ **Multi-experiment caveat.** `experiments: >1` with `design_mode:
-> exhaustive` runs the posterior-design path, which requires a pure-Python
-> family twin in `src/subjective_randomness/model_families/` for **every**
-> model carried into experiment ≥2 — including the inner loop's exported best
-> model and the promoted winner seeds, which have **no twin** — so it will
-> raise at the experiment-2 design step *after* experiment 1's participants are
-> already paid. Use `design_mode: agent` for any sequence (the full/hero
-> configs do), and dry-run a simulated multi-experiment sequence (below) before
-> spending money.
+> **Multi-experiment note.** Stimulus design is always the programmatic
+> exhaustive joint-EIG selection. For `experiments: >1`, experiment k's design
+> fits the carried-forward PyMC models on experiment k-1's responses and scores
+> from their posterior predictive — no pure-Python family twins are involved.
+> Still dry-run a simulated multi-experiment sequence (below) before spending
+> money.
 
 ## Run the full / hero configuration (K parallel runs)
 

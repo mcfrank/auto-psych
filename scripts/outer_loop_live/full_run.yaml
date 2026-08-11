@@ -12,8 +12,8 @@
 project: subjective_randomness
 run_label: full                    # cosmetic here — submit_parallel overrides the
                                    # per-run label to run1/run2/run3.
-experiments: 3                     # experiments per run, in sequence (design k uses k-1's posterior)
-design_mode: agent
+experiments: 3                     # experiments per run, in sequence (design k uses k-1's posterior;
+                                   # stimulus design is always the exhaustive joint-EIG selection)
 coding_agent: opencode
 prolific_mode: live                # REAL recruiting + payment
 

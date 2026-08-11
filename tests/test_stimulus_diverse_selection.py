@@ -89,29 +89,29 @@ def _seed_experiment_models(exp_dir):
 
 
 @pytest.mark.slow
-def test_write_exhaustive_design_writes_stimuli_json(tmp_path):
+def test_run_design_programmatic_writes_stimuli_json(tmp_path):
     """Experiment 1: exhaustive design scores the experiment's ACTUAL PyMC
     model set from its prior predictive (no pure-Python twins involved)."""
     import json
 
-    from src.pipelines.outer_loop.run import _write_exhaustive_design
+    from src.pipelines.outer_loop.orchestrator import run_design_programmatic
 
     exp_dir = tmp_path / "experiment1"
     _seed_experiment_models(exp_dir)
-    _write_exhaustive_design(exp_dir, "subjective_randomness", k=4, lengths=(3, 4))
+    run_design_programmatic(exp_dir, "subjective_randomness", k=4, lengths=(3, 4))
     data = json.loads((exp_dir / "design" / "stimuli.json").read_text(encoding="utf-8"))
     assert isinstance(data, list) and len(data) == 4
     assert all("sequence_a" in s and "sequence_b" in s for s in data)
     assert all("eig" in s and "selection_rank" in s for s in data)
 
 
-def test_write_exhaustive_design_posterior_wiring(tmp_path, monkeypatch):
+def test_run_design_programmatic_posterior_wiring(tmp_path, monkeypatch):
     """Experiment >= 2: the previous experiment's responses and registry are
     threaded into design_exhaustive's posterior mode, with the fit cache under
     this experiment's design dir."""
     import json
 
-    from src.pipelines.outer_loop.run import _write_exhaustive_design
+    from src.pipelines.outer_loop.orchestrator import run_design_programmatic
 
     calls: dict = {}
 
@@ -134,7 +134,7 @@ def test_write_exhaustive_design_posterior_wiring(tmp_path, monkeypatch):
     exp_dir = tmp_path / "experiment2"
     exp_dir.mkdir()
 
-    _write_exhaustive_design(
+    run_design_programmatic(
         exp_dir, "subjective_randomness", exp_num=2, prev_exp_dir=prev,
         k=1, lengths=(3, 4),
     )

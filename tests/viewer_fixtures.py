@@ -63,7 +63,6 @@ def _full_experiment(exp: Path, *, with_critique_results: bool) -> None:
     _write(design / "stimuli.json", json.dumps([
         {"sequence_a": "HT", "sequence_b": "TH"},
         {"sequence_a": "HHTT", "sequence_b": "HTHT"}]))
-    _write(design / "candidates.json", json.dumps([{"sequence_a": "HT", "sequence_b": "TH"}] * 5))
 
     experiment = exp / "experiment"
     _write(experiment / "config.json", json.dumps(

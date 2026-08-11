@@ -1,9 +1,13 @@
-"""Tests for the PyMC EIG/design annotator.
+"""Tests for the exhaustive PyMC EIG design (src.pipelines.outer_loop.eig).
 
-`annotate` scores candidate stimuli by expected information gain over the PyMC
-model set, using prior-predictive p_left (no MCMC fit). It featurizes each raw
-stimulus via the project's `featurize_stimulus` before handing it to the models.
-Uses prior-predictive sampling (fast-ish, no NUTS) — marked slow to be safe.
+`design_exhaustive` enumerates the full H/T pair universe over the given
+lengths, scores every pair from each PyMC model's per-draw p_left (prior
+predictive, or posterior predictive when a responses CSV is given), and
+greedily selects the max-joint-EIG stimulus set. It featurizes each raw
+stimulus via the project's `featurize_stimulus` before handing it to the
+models. This is the pipeline's only design mode — there is no candidate-pool
+path. Uses prior-predictive sampling (fast-ish, no NUTS) — heavier cases are
+marked slow to be safe.
 """
 
 from __future__ import annotations
@@ -25,9 +29,9 @@ FEATURIZE = (
 # A model with a participant-level random effect: it needs a `participant_id`
 # pm.Data column that stimulus feature rows (n_a/h_a/...) never carry. It fits
 # fine on responses.csv (which has participant_id) but cannot be prior-predicted
-# on a bare stimulus — the operation EIG/design needs — so it must be screened
-# out of the EIG model set rather than crashing the whole annotation. This is the
-# shape that killed the impossible-holdout cell run4/more_imbalance.
+# on a bare stimulus — the operation the exhaustive design needs — so it must be
+# screened out of the EIG model set rather than crashing the whole design. This
+# is the shape that killed the impossible-holdout cell run4/more_imbalance.
 _PARTICIPANT_MODEL = """import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
@@ -79,35 +83,42 @@ def _seed_with_participant_model(tmp_path):
     return models_dir
 
 
-def test_annotate_drops_model_that_cannot_bind_to_stimulus(
+def test_design_drops_model_that_cannot_bind_to_stimulus(
     tmp_path, monkeypatch, capsys
 ):
     """A model needing a non-stimulus column (participant_id) is screened out of
-    the EIG set — loudly — instead of crashing the whole annotation; the EIG runs
-    over the remaining, stimulus-predictable models. The batched prior-predictive
-    pass is stubbed so the screen (a real load + make_stim_data bind check) is
-    what's exercised, not sampling."""
+    the EIG set — loudly — instead of crashing the whole design; the selection
+    runs over the remaining, stimulus-predictable models. The per-draw
+    prior-predictive pass is stubbed so the screen (a real load + make_stim_data
+    bind check) is what's exercised, not sampling."""
     import numpy as np
 
     models_dir = _seed_with_participant_model(tmp_path)
 
     seen: dict = {}
 
-    def fake_batch(model_names, models_dir, rows, **kwargs):
+    def fake_draws(model_names, models_dir, rows, *, n_samples=200, seed=42):
         seen["names"] = list(model_names)
-        # Distinct means -> a known EIG: 1 - H_b(0.8) = 0.278072 bits.
-        return {m: np.array([p] * len(rows)) for m, p in zip(model_names, (0.8, 0.2))}
+        # Distinct constant means -> a known EIG: 1 - H_b(0.8) = 0.278072 bits.
+        return {
+            m: np.full((n_samples, len(rows)), p)
+            for m, p in zip(model_names, (0.8, 0.2))
+        }
 
     monkeypatch.setattr(
-        "src.models.pymc_inference.prior_predict_p_left_batch", fake_batch
+        "src.models.pymc_inference.prior_predict_p_left_draws", fake_draws
     )
 
-    out = eig_mod.annotate(
-        [{"sequence_a": "HHHT", "sequence_b": "HTHT"}],
+    out = eig_mod.design_exhaustive(
         models_dir,
         featurize_path=FEATURIZE,
+        lengths=(3,),
+        n_select=2,
+        n_samples=25,
+        n_scenarios=200,
     )
 
+    assert len(out) == 2
     assert out[0]["eig"] == pytest.approx(0.278072)
     # The participant-requiring model was screened out before EIG; the others stay.
     assert "participant_re" not in seen["names"]
@@ -116,9 +127,9 @@ def test_annotate_drops_model_that_cannot_bind_to_stimulus(
     assert "participant_re" in capsys.readouterr().out  # dropped loudly
 
 
-def test_annotate_raises_when_no_model_can_bind(tmp_path):
+def test_design_raises_when_no_model_can_bind(tmp_path):
     """If no model can be evaluated on a stimulus, fail loudly rather than emit
-    meaningless EIGs."""
+    a meaningless design."""
     models_dir = tmp_path / "cognitive_models"
     models_dir.mkdir(parents=True)
     (models_dir / "participant_re.py").write_text(
@@ -133,59 +144,22 @@ def test_annotate_raises_when_no_model_can_bind(tmp_path):
     )
 
     with pytest.raises(ValueError, match="no models|cannot be evaluated|stimulus"):
-        eig_mod.annotate(
-            [{"sequence_a": "HHHT", "sequence_b": "HTHT"}],
-            models_dir,
-            featurize_path=FEATURIZE,
+        eig_mod.design_exhaustive(
+            models_dir, featurize_path=FEATURIZE, lengths=(3,), n_select=2
         )
 
 
-@pytest.mark.slow
-def test_annotate_adds_nonnegative_eig_and_sorts(tmp_path):
-    models_dir = _seed(tmp_path)
-    candidates = [
-        {"sequence_a": "HHHHH", "sequence_b": "HHHHH"},  # identical → low EIG
-        {"sequence_a": "HHHHHHHH", "sequence_b": "HTHTHTHT"},  # discriminating
-    ]
-    out = eig_mod.annotate(
-        candidates, models_dir, featurize_path=FEATURIZE, n_samples=100
-    )
-
-    assert len(out) == 2
-    for item in out:
-        assert "eig" in item
-        assert 0.0 <= item["eig"] <= 1.0  # 2 models → ≤ log2(2) = 1 bit
-        assert "sequence_a" in item and "sequence_b" in item
-    # Sorted descending by EIG.
-    assert out[0]["eig"] >= out[1]["eig"]
-
-
-@pytest.mark.slow
-def test_annotate_featurizes_so_models_can_read_columns(tmp_path):
-    """Without featurization the models' pm.Data columns are absent → this
-    proves the annotator derives n_a/h_a/... from raw sequences."""
-    models_dir = _seed(tmp_path)
-    candidates = [{"sequence_a": "HHHT", "sequence_b": "HTHT"}]
-    out = eig_mod.annotate(
-        candidates, models_dir, featurize_path=FEATURIZE, n_samples=100
-    )
-    assert out[0]["eig"] >= 0.0
-
-
 def test_exhaustive_design_selects_joint_eig_set(tmp_path):
-    """--exhaustive mode: enumerate the pair universe, score under the PyMC
-    models, and greedily select the max-joint-EIG set — no candidates file and
-    no agent-conjectured stimuli involved."""
+    """The CLI enumerates the pair universe, scores under the PyMC models, and
+    greedily selects the max-joint-EIG set."""
     import json
 
     models_dir = _seed(tmp_path)
     out = tmp_path / "stimuli.json"
     args = eig_mod.Args(
-        candidates=None,
         models_dir=models_dir,
         featurize=FEATURIZE,
         out=out,
-        exhaustive=True,
         lengths=(3, 4),
         select=5,
         n_samples=25,
@@ -211,8 +185,8 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     out2 = tmp_path / "stimuli2.json"
     eig_mod.main(
         eig_mod.Args(
-            candidates=None, models_dir=models_dir, featurize=FEATURIZE, out=out2,
-            exhaustive=True, lengths=(3, 4), select=5, n_samples=25, n_scenarios=300,
+            models_dir=models_dir, featurize=FEATURIZE, out=out2,
+            lengths=(3, 4), select=5, n_samples=25, n_scenarios=300,
         )
     )
     assert json.loads(out2.read_text(encoding="utf-8")) == stimuli
@@ -264,37 +238,9 @@ def test_exhaustive_design_posterior_mode_missing_responses_fails_loudly(tmp_pat
         )
 
 
-def test_exhaustive_mode_argument_validation(tmp_path):
-    models_dir = _seed(tmp_path)
-    # --exhaustive needs --select.
-    with pytest.raises(SystemExit):
-        eig_mod.main(
-            eig_mod.Args(candidates=None, models_dir=models_dir, exhaustive=True)
-        )
-    # Legacy mode needs --candidates.
-    with pytest.raises(SystemExit):
-        eig_mod.main(eig_mod.Args(candidates=None, models_dir=models_dir))
-    # The two modes are mutually exclusive.
-    with pytest.raises(SystemExit):
-        eig_mod.main(
-            eig_mod.Args(
-                candidates=tmp_path / "candidates.json", models_dir=models_dir,
-                exhaustive=True, select=5,
-            )
-        )
-    # --responses (posterior design) only makes sense with --exhaustive.
-    with pytest.raises(SystemExit):
-        eig_mod.main(
-            eig_mod.Args(
-                candidates=tmp_path / "candidates.json", models_dir=models_dir,
-                responses=FIXTURE_DIR / "responses.csv",
-            )
-        )
-
-
 def test_missing_manifest_raises(tmp_path):
     (tmp_path / "cognitive_models").mkdir(parents=True)
     with pytest.raises(FileNotFoundError):
-        eig_mod.annotate(
-            [{"sequence_a": "H", "sequence_b": "T"}], tmp_path / "cognitive_models"
+        eig_mod.design_exhaustive(
+            tmp_path / "cognitive_models", lengths=(3,), n_select=2
         )

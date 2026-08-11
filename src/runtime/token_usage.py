@@ -35,7 +35,7 @@ class UsageRecord:
     """Token usage of one LLM call (or one coding-agent run)."""
 
     source: str
-    """Pipeline stage that spent the tokens (e.g. ``outer:2_design``)."""
+    """Pipeline stage that spent the tokens (e.g. ``outer:3_implement``)."""
     backend: str
     """What produced the usage numbers: ``claude``, ``opencode``, ``langchain``."""
     model: Optional[str]

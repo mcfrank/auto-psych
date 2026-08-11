@@ -20,11 +20,10 @@ On each trial, the participant sees **two sequences of coin flips** (H and T) an
   in ~10 minutes** (≈5 s/trial including instruction reading).
 - **Sequence length: 2 to 8** (inclusive).
 
-The default design (`--design-mode exhaustive`) enumerates **every** distinct H/T
-pair over lengths 2–8 (≈129k pairs) and greedily selects the 32 pairs that
-jointly carry the most information about which model is correct — a diverse set
-spread across distinctions, not 32 near-duplicates of the single highest-EIG
-contrast.
+The design stage enumerates **every** distinct H/T pair over lengths 2–8 (≈129k
+pairs) and greedily selects the 32 pairs that jointly carry the most information
+about which model is correct — a diverse set spread across distinctions, not 32
+near-duplicates of the single highest-EIG contrast.
 
 ## Experiment presentation (reproduce VERBATIM — identical across all experiments)
 

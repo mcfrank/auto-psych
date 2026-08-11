@@ -97,13 +97,19 @@ def test_outer_run_cli_literal_choice_and_bool_flag():
     assert args.agent == "2_design"
     assert args.validate is True
     assert args.mode == "simulated_participants"  # default preserved
+    # The design stage is always the programmatic exhaustive selection; the
+    # removed agent mode must not resurface as a CLI knob.
+    assert not hasattr(args, "design_mode")
 
 
 def test_eig_cli_defaults_and_required():
-    args = tyro.cli(EigArgs, args=["--candidates", "c.json", "--models-dir", "m"])
-    assert args.candidates == Path("c.json")
-    assert args.top is None
+    args = tyro.cli(EigArgs, args=["--models-dir", "m"])
+    assert args.models_dir == Path("m")
+    assert args.select == 32
+    assert args.lengths == (4, 5, 6, 7, 8)
     assert args.n_samples == 200
+    # The candidate-pool mode is gone: exhaustive selection is the only mode.
+    assert not hasattr(args, "candidates")
 
 
 def test_inner_run_cli_required_paths():
@@ -126,7 +132,7 @@ def test_inner_run_cli_required_paths():
         ("src.model_comparison.likelihood", "--model"),
         ("src.model_comparison.posterior", "--models-dir"),
         ("src.pipelines.outer_loop.run", "--project"),
-        ("src.pipelines.outer_loop.eig", "--candidates"),
+        ("src.pipelines.outer_loop.eig", "--select"),
         ("src.pipelines.inner_loop.run", "--seed-models"),
     ],
 )

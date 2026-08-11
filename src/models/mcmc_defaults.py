@@ -15,7 +15,7 @@ PRODUCTION_DRAWS = 2000
 PRODUCTION_TUNE = 2000
 PRODUCTION_CHAINS = 4
 
-# Design-time family-twin fits (exhaustive design mode, experiments >= 2):
+# Design-time fits (posterior-informed exhaustive design, experiments >= 2):
 # cheaper on purpose — the design step only needs posterior-predictive means
 # to weight EIG scenarios, not publication-grade posteriors.
 DESIGN_TWIN_DRAWS = 500

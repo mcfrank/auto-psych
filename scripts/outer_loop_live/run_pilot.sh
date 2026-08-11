@@ -3,7 +3,7 @@
 #  Launch a PILOT human experiment on Sherlock, configured from ONE file.
 #
 #  Everything is set in scripts/outer_loop_live/pilot.yaml (or CONFIG=<path>):
-#  project, run label, #experiments, design mode, Slurm walltime/qos, the
+#  project, run label, #experiments, Slurm walltime/qos, the
 #  Prolific study (participants/reward/length/name), and the modeling settings.
 #  This launcher renders the project's prolific_config.yaml from that file,
 #  shows a cost summary, asks you to confirm, then submits the live run.
@@ -41,7 +41,7 @@ cd "$REPO"
 if ! PILOT_ENV="$("$VENV_PY" "$DIR/_pilot_config.py" "$CONFIG" --check)"; then
   exit 1
 fi
-eval "$PILOT_ENV"   # PROJECT RUN_LABEL N_EXPERIMENTS DESIGN_MODE FIREBASE_PROJECT WALLTIME QOS N_PARTICIPANTS DRAWS TUNE CHAINS INNER_LOOP_*
+eval "$PILOT_ENV"   # PROJECT RUN_LABEL N_EXPERIMENTS FIREBASE_PROJECT WALLTIME QOS N_PARTICIPANTS DRAWS TUNE CHAINS INNER_LOOP_*
 
 EXP_BASE="https://${FIREBASE_PROJECT}.web.app"
 echo
@@ -90,7 +90,7 @@ touch "$WT/.here"   # pyprojroot sentinel (.git is excluded from the copy)
 LOGDIR="$WORK_ROOT/slurm_logs"; mkdir -p "$LOGDIR"
 OUT="$WORK_ROOT/$RUN_LABEL/data"; mkdir -p "$OUT"
 
-EXPORTS="ALL,RUN_LABEL=$RUN_LABEL,RUN_WORKTREE=$WT,PROJECT=$PROJECT,DESIGN_MODE=$DESIGN_MODE,CODING_AGENT=$CODING_AGENT,PROLIFIC_MODE=$PROLIFIC_MODE,FIREBASE_PROJECT=$FIREBASE_PROJECT,N_PARTICIPANTS=$N_PARTICIPANTS,AUTO_PSYCH_OUTPUT_DIR=$OUT"
+EXPORTS="ALL,RUN_LABEL=$RUN_LABEL,RUN_WORKTREE=$WT,PROJECT=$PROJECT,CODING_AGENT=$CODING_AGENT,PROLIFIC_MODE=$PROLIFIC_MODE,FIREBASE_PROJECT=$FIREBASE_PROJECT,N_PARTICIPANTS=$N_PARTICIPANTS,AUTO_PSYCH_OUTPUT_DIR=$OUT"
 if (( N_EXPERIMENTS > 1 )); then EXPORTS="$EXPORTS,EXPERIMENTS=1-$N_EXPERIMENTS"; else EXPORTS="$EXPORTS,EXPERIMENT=1"; fi
 add() { [[ -n "${2:-}" ]] && EXPORTS="$EXPORTS,$1=$2" || true; }
 add DRAWS "${DRAWS:-}"
