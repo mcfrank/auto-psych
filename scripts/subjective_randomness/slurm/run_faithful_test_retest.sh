@@ -20,7 +20,7 @@
 #
 # Keep GT_MODELS below in sync with the registry manifest
 # (src/subjective_randomness/pymc_model_families/models_manifest.yaml) and the
-# config's gt_models keys. The current set: falk_konold_dp, motif_hmm,
+# config's gt_models keys. The current set: falk_konold_dp, motif_stack,
 # finite_experience_occurrence, local_representativeness.
 #
 # Usage:
@@ -45,7 +45,7 @@ export BASE_SEED="${BASE_SEED:-100}"
 
 # The faithful registry models — must match the config's gt_models keys exactly
 # (the setup job enforces this and aborts the whole chain if they differ).
-export GT_MODELS="${GT_MODELS:-falk_konold_dp motif_hmm finite_experience_occurrence local_representativeness}"
+export GT_MODELS="${GT_MODELS:-falk_konold_dp motif_stack finite_experience_occurrence local_representativeness}"
 
 # Full-strength faithful holdout config, and the registry it reads GTs from.
 export CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"

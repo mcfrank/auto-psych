@@ -242,6 +242,7 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     for rank, item in enumerate(stimuli, start=1):
         assert set("HT") >= set(item["sequence_a"]) and len(item["sequence_a"]) in (3, 4)
         assert set("HT") >= set(item["sequence_b"]) and len(item["sequence_b"]) in (3, 4)
+        assert len(item["sequence_a"]) == len(item["sequence_b"])
         assert isinstance(item["eig"], float) and item["eig"] >= 0.0
         assert item["selection_rank"] == rank
         assert 0.0 <= item["joint_eig_bits"] <= 1.0 + 1e-9  # 2 models -> <= 1 bit
@@ -259,6 +260,36 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
         )
     )
     assert json.loads(out2.read_text(encoding="utf-8")) == stimuli
+
+
+def test_exhaustive_design_never_scores_cross_length_pairs(tmp_path, monkeypatch):
+    import numpy as np
+
+    models_dir = _seed(tmp_path)
+    captured_rows = []
+
+    def fake_draws(model_names, models_dir, rows, *, n_samples=200, seed=42):
+        captured_rows.extend(rows)
+        return {
+            name: np.full((n_samples, len(rows)), probability)
+            for name, probability in zip(model_names, (0.8, 0.2))
+        }
+
+    monkeypatch.setattr(
+        "src.models.pymc_inference.prior_predict_p_left_draws", fake_draws
+    )
+
+    eig_mod.design_exhaustive(
+        models_dir,
+        featurize_path=FEATURIZE,
+        lengths=(3, 4),
+        n_select=2,
+        n_samples=5,
+        n_scenarios=20,
+    )
+
+    assert captured_rows
+    assert all(row["n_a"] == row["n_b"] for row in captured_rows)
 
 
 @pytest.mark.slow

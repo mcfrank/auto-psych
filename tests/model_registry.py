@@ -19,13 +19,16 @@ from src.subjective_randomness.pymc_model_families import REGISTRY_DIR
 # The superseded families each faithful model replaced. Their modules stay
 # importable (archival refits, and holdout runs use one as an out-of-pool
 # ground truth), so "not enumerating the package directory" is a property worth
-# asserting rather than assuming.
+# asserting rather than assuming. motif_hmm joined this set on 2026-08-10 when
+# the four-motif stack automaton (motif_stack) superseded it as the faithful
+# Griffiths et al. (2018) anchor.
 SUPERSEDED_MODEL_NAMES = frozenset(
     {
         "encoding_compressibility",
         "bayesian_diagnosticity",
         "window_typicality",
         "prototype_similarity",
+        "motif_hmm",
     }
 )
 

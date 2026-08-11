@@ -154,7 +154,6 @@ def test_complement_canonical_never_merges_distinguishable_sequences(module, dec
 
 
 def test_complement_canonical_merges_exact_complement_pairs():
-    comp = str.maketrans("HT", "TH")
     classes_plain = ss.build_sequence_classes((8,), stat_names=("n", "h", "rep_motifs", "alt_motifs"))
     classes_comp = ss.build_sequence_classes((8,), stat_names=("n", "h", "rep_motifs", "alt_motifs"), complement_canonical=True)
     assert classes_comp.n_classes < classes_plain.n_classes

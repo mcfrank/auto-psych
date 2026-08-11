@@ -333,6 +333,7 @@ def test_default_path_deliberately_differs_from_legacy_compat():
     assert len(default) == 5
     assert len(set(default_keys)) == 5
     assert all(s["eig"] > 0 for s in default)
+    assert all(len(s["sequence_a"]) == len(s["sequence_b"]) for s in default)
 
 
 def test_default_path_scales_past_the_old_length_12_cap():
@@ -344,6 +345,7 @@ def test_default_path_scales_past_the_old_length_12_cap():
     assert len({(s["sequence_a"], s["sequence_b"]) for s in sel}) == 8
     assert all(s["eig"] > 0 for s in sel)
     assert all(2 <= len(s["sequence_a"]) <= 12 and 2 <= len(s["sequence_b"]) <= 12 for s in sel)
+    assert all(len(s["sequence_a"]) == len(s["sequence_b"]) for s in sel)
 
 
 def test_max_length_is_threaded_to_sequence_classes():
@@ -457,15 +459,13 @@ def test_a_well_declared_model_never_triggers_the_fallback(monkeypatch, capsys):
     """Sanity check the negative of the two tests above: a model whose
     declaration is actually correct must not print the fallback warning.
 
-    A model declaring only "n" collapses every same-length sequence into one
-    class (it genuinely cannot distinguish them) -- with lengths=(3,4) that
-    leaves exactly one possible pair, so k=1 here, not a larger number (see
-    test_raises_a_clear_error_when_the_quotiented_pool_is_smaller_than_k for
-    what happens if you ask for more than the quotient has to offer)."""
+    The model deliberately declares the slightly finer (n, max_run) quotient;
+    it is still honest because its score reads only n, and it leaves eligible
+    same-length class pairs for the design."""
     _register_fake_family(
         monkeypatch,
         model_name="_test_honest_length_reader",
-        sufficient_stats=("n",),
+        sufficient_stats=("n", "max_run"),
         complement_invariant=True,
         score_fn=lambda seq, params=None: float(len(seq)),
     )
@@ -494,7 +494,7 @@ def test_raises_a_clear_error_when_the_quotiented_pool_is_smaller_than_k(monkeyp
         complement_invariant=True,
         score_fn=lambda seq, params=None: float(len(seq)),
     )
-    with pytest.raises(ValueError, match="Only 1 distinct class-pair"):
+    with pytest.raises(ValueError, match="Only 0 distinct class-pair"):
         build_exhaustive_design(
             k=4,
             lengths=(3, 4),
@@ -520,7 +520,7 @@ def test_celf_matches_full_scan_on_a_clean_toy_case():
 def test_celf_is_deterministic_given_seed():
     names = default_model_family_names()
     fns = family_predict_fns(names, param_samples=30, seed=2)
-    cands = enumerate_all_pairs((3, 4, 5))
+    cands = enumerate_all_pairs((3, 4, 5), same_length_only=True)
     a = select_informative_stimuli(cands, fns, k=6, n_scenarios=500, prefilter=200, seed=2, lazy=True)
     b = select_informative_stimuli(cands, fns, k=6, n_scenarios=500, prefilter=200, seed=2, lazy=True)
     assert [(s["sequence_a"], s["sequence_b"]) for s in a] == [
@@ -535,7 +535,7 @@ def test_celf_returns_a_valid_k_sized_distinct_selection_even_when_it_diverges()
     still be a valid size-k selection of distinct candidates."""
     names = default_model_family_names()
     fns = family_predict_fns(names, param_samples=30, seed=3)
-    cands = enumerate_all_pairs((3, 4, 5))
+    cands = enumerate_all_pairs((3, 4, 5), same_length_only=True)
     out = select_informative_stimuli(
         cands, fns, k=8, n_scenarios=300, prefilter=300, seed=3, lazy=True
     )
@@ -547,14 +547,14 @@ def test_celf_returns_a_valid_k_sized_distinct_selection_even_when_it_diverges()
 
 def test_lazy_audit_detects_a_known_divergence():
     """Pins a concrete (seed, params) case (found empirically) where CELF
-    disagrees with the full-scan greedy under n_scenarios=300, proving
+    disagrees with the full-scan greedy under n_scenarios=100, proving
     lazy_audit actually catches real divergence rather than always passing."""
     names = default_model_family_names()
-    fns = family_predict_fns(names, param_samples=30, seed=1)
-    cands = enumerate_all_pairs((3, 4, 5))
+    fns = family_predict_fns(names, param_samples=30, seed=0)
+    cands = enumerate_all_pairs((3, 4, 5), same_length_only=True)
     try:
         select_informative_stimuli(
-            cands, fns, k=8, n_scenarios=300, prefilter=300, seed=1, lazy=True, lazy_audit=True
+            cands, fns, k=8, n_scenarios=100, prefilter=300, seed=0, lazy=True, lazy_audit=True
         )
     except AssertionError as exc:
         assert "CELF disagreed with the full-scan greedy" in str(exc)

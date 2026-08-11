@@ -17,6 +17,8 @@ Feature columns per sequence (``a`` and ``b``):
     max_run_norm_<x>  max_run scaled to [0, 1]
     rep_motifs_<x>    repetition motifs in the minimal-DP motif parse (n1)
     alt_motifs_<x>    alternation motifs in the minimal-DP motif parse (n2)
+    mirror_symmetry_<x>, complement_symmetry_<x>, duplication_<x>
+                      stack-automaton production-method indicators
     imbalance_<x>     distance from 50/50 heads/tails
     periodicity_<x>   simple repeating-template score
     sym1_<x>..sym8_<x>  raw symbols as 0/1 (H=1), zero-padded past n
@@ -26,6 +28,8 @@ Feature columns per sequence (``a`` and ``b``):
     local_imbalance_<x>
                       worst H/T imbalance over sliding windows of length
                       min(n, 4) (Kahneman & Tversky 1972 local representativeness)
+    multiscale_imbalance_<x>
+                      mean imbalance globally and over local scales 2--4
 """
 
 from __future__ import annotations
@@ -50,6 +54,9 @@ INT_FEATURE_COLS = [
     "max_run_a",
     "rep_motifs_a",
     "alt_motifs_a",
+    "mirror_symmetry_a",
+    "complement_symmetry_a",
+    "duplication_a",
     *[f"sym{i}_a" for i in range(1, MAX_SEQ_LEN + 1)],
     "n_b",
     "h_b",
@@ -57,6 +64,9 @@ INT_FEATURE_COLS = [
     "max_run_b",
     "rep_motifs_b",
     "alt_motifs_b",
+    "mirror_symmetry_b",
+    "complement_symmetry_b",
+    "duplication_b",
     *[f"sym{i}_b" for i in range(1, MAX_SEQ_LEN + 1)],
 ]
 # Global experienced-sequence lengths for the Hahn & Warren (2009) occurrence
@@ -78,6 +88,8 @@ FLOAT_FEATURE_COLS = [
     *[f"occ_n{w}_b" for w in EXPERIENCE_LENGTHS],
     "local_imbalance_a",
     "local_imbalance_b",
+    "multiscale_imbalance_a",
+    "multiscale_imbalance_b",
 ]
 
 # Window length over which local representativeness is judged (Kahneman &
@@ -164,6 +176,16 @@ def sequence_features(seq: str, suffix: str) -> Dict[str, int]:
         if cur > max_run:
             max_run = cur
     rep_motifs, alt_motifs = parse_motifs(s)
+    prefix_length = (n + 1) // 2
+    prefix = s[:prefix_length]
+    mirrored_source = prefix[:-1] if n % 2 else prefix
+    sequence_suffix = s[prefix_length:]
+    complement = {"H": "T", "T": "H"}
+    mirror_symmetry = sequence_suffix == mirrored_source[::-1]
+    complement_symmetry = sequence_suffix == "".join(
+        complement[symbol] for symbol in mirrored_source[::-1]
+    )
+    duplication = n % 2 == 0 and sequence_suffix == prefix
     if n > MAX_SEQ_LEN:
         raise ValueError(
             f"sequence {s!r} is longer than the supported maximum of "
@@ -181,6 +203,9 @@ def sequence_features(seq: str, suffix: str) -> Dict[str, int]:
         f"max_run_{suffix}": max_run,
         f"rep_motifs_{suffix}": rep_motifs,
         f"alt_motifs_{suffix}": alt_motifs,
+        f"mirror_symmetry_{suffix}": int(mirror_symmetry),
+        f"complement_symmetry_{suffix}": int(complement_symmetry),
+        f"duplication_{suffix}": int(duplication),
         **symbols,
     }
 
@@ -204,6 +229,9 @@ def sequence_features_float(
             for w in EXPERIENCE_LENGTHS
         },
         f"local_imbalance_{suffix}": local_imbalance(seq),
+        f"multiscale_imbalance_{suffix}": (
+            multiscale_local_imbalance(seq) if n > 0 else 0.0
+        ),
     }
 
 
@@ -224,6 +252,30 @@ def local_imbalance(seq: str) -> float:
         heads = sum(1 for c in chunk if c == "H")
         worst = max(worst, 2.0 * abs(heads / window - 0.5))
     return worst
+
+
+def multiscale_local_imbalance(seq: str) -> float:
+    """Mean H/T imbalance across global and short local descriptions.
+
+    The global sequence and each sliding-window scale from two through four
+    receive equal weight. Within a scale, every window receives equal weight.
+    This makes the operationalization explicit and avoids allowing a single
+    worst window to determine the entire score. The model-family helper of the
+    same name in ``model_families/common.py`` wraps this one.
+    """
+    s = clean_sequence(seq)
+    n = len(s)
+    heads = sum(1 for c in s if c == "H")
+    global_imbalance = 2.0 * abs(heads / n - 0.5)
+    scale_scores = [global_imbalance]
+    for window in range(2, min(LOCAL_WINDOW, n - 1) + 1):
+        window_scores = []
+        for start in range(n - window + 1):
+            chunk = s[start : start + window]
+            chunk_heads = sum(1 for c in chunk if c == "H")
+            window_scores.append(2.0 * abs(chunk_heads / window - 0.5))
+        scale_scores.append(sum(window_scores) / len(window_scores))
+    return sum(scale_scores) / len(scale_scores)
 
 
 def occurrence_probability(pattern: str, n_global: int) -> float:

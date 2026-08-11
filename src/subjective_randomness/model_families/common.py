@@ -215,6 +215,18 @@ def local_imbalance(seq: str) -> float:
     return features.local_imbalance(clean_sequence(seq))
 
 
+@functools.lru_cache(maxsize=_CACHE_SIZE)
+def multiscale_local_imbalance(seq: str) -> float:
+    """Mean H/T imbalance across global and short local descriptions.
+
+    The global sequence and each sliding-window scale from two through four
+    receive equal weight. Within a scale, every window receives equal weight.
+    This makes the operationalization explicit and avoids allowing a single
+    worst window to determine the entire score. Implemented in ``features.py``.
+    """
+    return features.multiscale_local_imbalance(clean_sequence(seq))
+
+
 def occurrence_probability(pattern: str, n_global: int) -> float:
     """P(``pattern`` occurs as a contiguous substring of ``n_global`` fair flips).
 

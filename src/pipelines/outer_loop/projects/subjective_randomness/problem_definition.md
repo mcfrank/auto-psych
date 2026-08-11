@@ -8,7 +8,7 @@ On each trial, the participant sees **two sequences of coin flips** (H and T) an
 
 ## Stimulus design schema
 
-- **Stimulus**: A pair of two sequences of H and T. Each sequence is a string (e.g. `"HHT"`, `"HTHTHT"`, `"HHTHTTHT"`). The two sequences in a pair **may have different lengths** (e.g. length 4 vs length 6).
+- **Stimulus**: A pair of two sequences of H and T. Each sequence is a string (e.g. `"HHT"`, `"HTHTHT"`, `"HHTHTTHT"`). The two sequences in a pair always have the **same length**; lengths may vary between trials.
 - **Response**: Which sequence was chosen (e.g. "left" / "right").
 
 ## Experiment design constraints
@@ -20,7 +20,7 @@ On each trial, the participant sees **two sequences of coin flips** (H and T) an
   in ~10 minutes** (≈5 s/trial including instruction reading).
 - **Sequence length: 2 to 8** (inclusive).
 
-The design stage enumerates **every** distinct H/T pair over lengths 2–8 (≈129k
+The design stage enumerates **every same-length** distinct H/T pair over lengths 2–8 (≈43k
 pairs) and greedily selects the 32 pairs that jointly carry the most information
 about which model is correct — a diverse set spread across distinctions, not 32
 near-duplicates of the single highest-EIG contrast.
@@ -47,7 +47,7 @@ paraphrase), **button responses only**, and the data contract above (`chose_left
   > memory, so what came before does not change what comes next.
   >
   > On each trial you will see **two** sequences of coin flips, side by side. The
-  > two sequences may be **different lengths**. Your task is to pick the **one
+  > two sequences will have the **same length**. Your task is to pick the **one
   > sequence that looks more random** to you — the one that looks more like it was
   > produced by genuinely random coin flipping.
   >

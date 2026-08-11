@@ -213,6 +213,12 @@ def test_featurize_stimulus_keys_match_pm_data_names():
     expected |= {f"sym{i}_{side}" for i in range(1, 9) for side in ("a", "b")}
     expected |= {f"occ_n{w}_{side}" for w in (10, 20, 50) for side in ("a", "b")}
     expected |= {"local_imbalance_a", "local_imbalance_b"}
+    expected |= {
+        f"{feature}_{side}"
+        for feature in ("mirror_symmetry", "complement_symmetry", "duplication")
+        for side in ("a", "b")
+    }
+    expected |= {"multiscale_imbalance_a", "multiscale_imbalance_b"}
     assert set(feats) == expected
 
 

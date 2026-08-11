@@ -111,17 +111,21 @@ def generate_candidate_pool(
     return pool
 
 
-def enumerate_all_pairs(lengths: Sequence[int]) -> List[Dict[str, str]]:
+def enumerate_all_pairs(
+    lengths: Sequence[int], *, same_length_only: bool = False
+) -> List[Dict[str, str]]:
     """Every distinct unordered H/T pair over all sequences of the given lengths.
 
     The full ``2**L`` sequence space is enumerated for each length ``L`` in
     ``lengths`` and pooled into one sequence set; every unordered pair of two
-    distinct sequences from that pool is emitted (deterministic order),
-    *including cross-length pairs* (e.g. a length-5 sequence vs a length-7 one).
+    distinct sequences from that pool is emitted in deterministic order. By
+    default this includes cross-length pairs; ``same_length_only=True`` filters
+    them for paper-anchored models whose scores are only comparable within a
+    common length.
     This is the exhaustive counterpart to :func:`generate_candidate_pool`:
     instead of sampling ``n_pairs``, it returns the *whole* pair space over the
-    union of the lengths — every run/alternation/imbalance contrast both within
-    and across lengths. For lengths ``1..8`` the pool is 510 sequences, so
+    union of the lengths. For lengths ``1..8`` the unfiltered pool is 510
+    sequences, so
     ``C(510, 2) = 129,795`` pairs. Duplicate lengths are ignored; lengths are
     capped at 12 to bound enumeration.
     """
@@ -141,6 +145,7 @@ def enumerate_all_pairs(lengths: Sequence[int]) -> List[Dict[str, str]]:
     return [
         {"sequence_a": seq_a, "sequence_b": seq_b}
         for seq_a, seq_b in itertools.combinations(sequences, 2)
+        if not same_length_only or len(seq_a) == len(seq_b)
     ]
 
 
@@ -545,9 +550,9 @@ def build_exhaustive_design(
 ) -> List[Dict[str, Any]]:
     """Select ``k`` jointly-informative pairs from the *full* H/T pair space.
 
-    Enumerates every distinct unordered pair over the given ``lengths``, scores
-    them under the pure-Python reference families (the synced twins of the PyMC
-    seed models), and greedily picks a diverse ``k`` via
+    Enumerates every distinct unordered same-length pair over the given
+    ``lengths``, scores them under the pure-Python reference families (the synced
+    twins of the PyMC seed models), and greedily picks a diverse ``k`` via
     :func:`select_informative_stimuli` — replacing an agent's hand-written
     candidate pool with a principled, reproducible design over the whole space.
 
@@ -562,17 +567,19 @@ def build_exhaustive_design(
 
     1. Enumerate every sequence, quotient it into feature-equivalence classes
        (``sequence_stats.build_sequence_classes``) using the *union* of the
-       model set's own declared ``SUFFICIENT_STATS``
-       (``exhaustive_search.quotient_stat_names`` — the full 11-statistic
-       superset if any model lacks a declaration, so an undeclared model is
-       never over-merged), additionally folding H<->T complements when every
-       model unanimously declares ``COMPLEMENT_INVARIANT``. The quotient is
-       then audited (``exhaustive_search.audit_quotient``) against every
-       model's actual ``score_sequence`` rather than trusted outright; see
+       model set's own declared ``SUFFICIENT_STATS``. If any model lacks a
+       declaration, use identity classes: the exact sequence ordering used by
+       models such as ``motif_stack`` cannot be recovered from the canonical
+       summary-statistic superset. Otherwise, additionally fold H<->T
+       complements when every model unanimously declares
+       ``COMPLEMENT_INVARIANT``. The quotient is then audited
+       (``exhaustive_search.audit_quotient``) against every model's actual
+       ``score_sequence`` rather than trusted outright; see
        ``on_quotient_violation``.
     2. Score every class representative once at each model's ``DEFAULT_PARAMS``
        (``exhaustive_search.build_score_table``) and scan every class pair for
-       marginal EIG in tiles, without ever materializing the full pair list
+       marginal EIG in same-length strata and tiles, without ever materializing
+       the full pair list
        (``exhaustive_search.top_pairs_by_marginal_eig``), to prefilter to the
        top ``prefilter`` pairs.
     3. Re-score only the classes that prefiltered pool actually touches — at
@@ -652,14 +659,16 @@ def build_exhaustive_design(
     w = _weight_vector(names, model_weights)
 
     stat_names = es.quotient_stat_names(modules)
-    complement_canonical = es.complement_invariant(modules)
-    classes = ss.build_sequence_classes(
-        lengths,
-        stat_names=stat_names,
-        complement_canonical=complement_canonical,
-        max_length=max_length,
-        seed=seed,
-    )
+    if stat_names is None:
+        classes = ss.identity_classes(lengths, max_length=max_length)
+    else:
+        classes = ss.build_sequence_classes(
+            lengths,
+            stat_names=stat_names,
+            complement_canonical=es.complement_invariant(modules),
+            max_length=max_length,
+            seed=seed,
+        )
     try:
         es.audit_quotient(classes, modules, seed=seed)
     except es.QuotientViolation as exc:
@@ -681,7 +690,9 @@ def build_exhaustive_design(
     # marginal EIG, streamed in tiles (never materializes the full pair list).
     point_table = es.build_score_table(modules, classes.representatives)
     pool_size = max(int(prefilter), k)
-    i_idx, j_idx, _ = es.top_pairs_by_marginal_eig(point_table, w, pool_size)
+    i_idx, j_idx, _ = es.top_pairs_by_marginal_eig(
+        point_table, w, pool_size, strata=classes.stats["n"]
+    )
     if len(i_idx) < k:
         # top_pairs_by_marginal_eig silently clips to however many distinct
         # class-pairs actually exist -- a narrow quotient (e.g. a model set that
@@ -717,7 +728,15 @@ def build_exhaustive_design(
     # decomposition bug (the only thing this check can catch -- see its
     # docstring) shows up on essentially any probed pair, so a smaller sample
     # still catches it while keeping this a genuinely cheap safety net here.
-    es.audit_decomposition(table, modules, used_seqs, seed=seed, n_probe_pairs=16)
+    used_lengths = np.array([len(sequence) for sequence in used_seqs], dtype=np.int64)
+    es.audit_decomposition(
+        table,
+        modules,
+        used_seqs,
+        seed=seed,
+        n_probe_pairs=16,
+        strata=used_lengths,
+    )
 
     i_local = np.array([remap[int(v)] for v in i_idx])
     j_local = np.array([remap[int(v)] for v in j_idx])

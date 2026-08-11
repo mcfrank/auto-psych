@@ -5,20 +5,19 @@ Psychology, 3, 430-454), p. 435: "a representative sample is one in which the
 essential characteristics of the parent population are represented not only
 globally in the entire sample, but also locally in each of its parts."
 
-This is ``prototype_similarity`` with K&T's signature locality restored: the
-balance term is the *worst* H/T imbalance over sliding windows of length
-min(n, 4) (``local_imbalance``) rather than whole-sequence imbalance, so a
-globally balanced but locally clumped sequence (HHHHTTTT) is penalised where
-the global model is blind. The alternation term keeps the prototype form —
-distance from an ideal alternation rate ``theta_alt``, whose default above .5
-reflects the over-alternation K&T predict from local balance ("too many
-alternations and too few clusters").
+This is a quantitative operationalization rather than an equation supplied by
+K&T. It represents their two stated properties separately: local balance and
+irregularity. Local imbalance detects clumping; irregularity combines distance
+from an over-alternating prototype with a repeating-template penalty, so their
+examples HTHTHTHT and TTHHTTHH cannot look random merely because they are
+locally balanced.
 
-    score = -((1 - alt_weight) * local_imbalance + alt_weight * |p_alts - theta_alt|)
+    structural = (1-periodic_share)*|p_alts-theta_alt| + periodic_share*periodicity
+    score = -((1-alt_weight)*local_imbalance + alt_weight*structural)
 
-Free parameters: theta_alt, alt_weight, beta, side_bias. The window length is
-a fixed design constant (K&T give no numeric value; 4 matches the
-short-term-memory motivation used across this literature).
+Free parameters: theta_alt, alt_weight, periodic_share, beta, and side_bias.
+The maximum local scale is a fixed design constant; K&T give no numeric value,
+so four is an explicit short-term-memory operationalization.
 """
 
 from __future__ import annotations
@@ -30,9 +29,10 @@ from .common import (
     alternation_rate,
     choice_probability,
     distribution,
-    local_imbalance,
     merge_params,
+    multiscale_local_imbalance,
     normalize_stimulus,
+    periodicity_score,
 )
 
 MODEL_NAME = "local_representativeness"
@@ -44,13 +44,15 @@ DEFAULT_PARAMS: Dict[str, float] = {
     # the alternation/irregularity term can carry K&T's own example that
     # HTHTHTHT "fail[s] to reflect the randomness of the process" (p. 434).
     "alt_weight": 0.75,
+    "periodic_share": 0.45,
     "beta": 4.0,
     "side_bias": 0.0,
 }
 
 PARAM_BOUNDS: Dict[str, tuple[float, float]] = {
-    "theta_alt": (0.35, 0.95),
+    "theta_alt": (0.5001, 0.95),
     "alt_weight": (0.01, 0.99),
+    "periodic_share": (0.01, 0.99),
     "beta": (0.2, 12.0),
     "side_bias": (-2.0, 2.0),
 }
@@ -60,9 +62,14 @@ def score_sequence(seq: str, params: Mapping[str, float] | None = None) -> float
     p = merge_params(DEFAULT_PARAMS, params)
     alt_weight = max(0.0, min(1.0, p["alt_weight"]))
     balance_weight = 1.0 - alt_weight
-    balance_distance = local_imbalance(seq)
+    balance_distance = multiscale_local_imbalance(seq)
     alternation_distance = abs(alternation_rate(seq) - p["theta_alt"])
-    return -(balance_weight * balance_distance + alt_weight * alternation_distance)
+    periodic_share = max(0.0, min(1.0, p["periodic_share"]))
+    irregularity_distance = (
+        (1.0 - periodic_share) * alternation_distance
+        + periodic_share * periodicity_score(seq)
+    )
+    return -(balance_weight * balance_distance + alt_weight * irregularity_distance)
 
 
 def predict_left(

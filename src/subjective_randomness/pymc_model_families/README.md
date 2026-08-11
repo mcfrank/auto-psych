@@ -23,15 +23,15 @@ every pool model; the retired winners are archived under the seed pool's
 `archive_hero_run_2026_07/`.)
 
 The 2026-08 seed-model fidelity review **replaced** the original four models
-with literature-faithful versions (each with a pure-Python twin and
+with closer paper-anchored versions (each with a pure-Python twin and
 paper-derived test vectors in `tests/test_literature_model_families.py`):
 
 | Active model | Replaces | Faithful to |
 | --- | --- | --- |
 | `falk_konold_dp` | `encoding_compressibility` | Falk & Konold (1997) Difficulty Predictor, minimal parse |
-| `motif_hmm` | `bayesian_diagnosticity` | Griffiths et al. (2018) motif HMM, row-normalised, parse-marginalised |
+| `motif_stack` | `bayesian_diagnosticity` | Griffiths et al. (2018) four-motif stack automaton |
 | `finite_experience_occurrence` | `window_typicality` | Hahn & Warren (2009) occurrence probability in finite experience |
-| `local_representativeness` | `prototype_similarity` | Kahneman & Tversky (1972) local representativeness |
+| `local_representativeness` | `prototype_similarity` | Explicit quantitative operationalization of Kahneman & Tversky (1972) |
 
 Only manifest-listed models are active — for recovery, the fitted and
 no-learning baselines, the outer loop's seed pool, and the EIG design defaults
@@ -57,4 +57,3 @@ uv run python -m src.model_comparison.posterior \
   --responses data/subjective_randomness/responses.csv \
   --models-dir src/subjective_randomness/pymc_model_families
 ```
-

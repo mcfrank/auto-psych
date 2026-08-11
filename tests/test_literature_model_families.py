@@ -51,6 +51,24 @@ def _brute_force_p_regular(seq: str, delta: float, alpha: float) -> float:
 
 
 class TestFalkKonoldDP:
+    def test_pure_python_parser_finds_global_minimum(self):
+        from src.subjective_randomness.model_families.common import parse_motifs
+
+        # HTH | HTH is two alternating chunks (DP = 4). A greedy parser that
+        # commits at the central HH instead returns DP = 5.
+        assert parse_motifs("HTHHTH") == (0, 2)
+
+    def test_pure_python_and_featurizer_parsers_agree_exhaustively(self):
+        from src.subjective_randomness.features import parse_motifs as feature_parse
+        from src.subjective_randomness.model_families.common import (
+            parse_motifs as family_parse,
+        )
+
+        for length in range(1, 9):
+            for symbols in itertools.product("HT", repeat=length):
+                sequence = "".join(symbols)
+                assert family_parse(sequence) == feature_parse(sequence)
+
     def test_scores_are_the_difficulty_predictor(self):
         from src.subjective_randomness.model_families import falk_konold_dp
 
@@ -120,6 +138,22 @@ class TestMotifHMM:
         assert motif_hmm.score_sequence("HTHTHTHT") < irregular
 
 
+class TestMotifStack:
+    def test_paper_pattern_grammars_make_sequences_more_regular(self):
+        from src.subjective_randomness.model_families import motif_stack
+
+        asymmetric = "HHTHTTHT"
+        assert motif_stack.score_sequence("HHHTTHHH") < motif_stack.score_sequence(
+            asymmetric
+        )
+        assert motif_stack.score_sequence("TTTTHHHH") < motif_stack.score_sequence(
+            asymmetric
+        )
+        assert motif_stack.score_sequence("HHTTHHTT") < motif_stack.score_sequence(
+            asymmetric
+        )
+
+
 class TestOccurrenceProbability:
     def test_matches_hahn_warren_footnote_1_exactly(self):
         # H&W (2009) footnote 1: P(no run of 4 heads in n tosses) =
@@ -164,6 +198,26 @@ class TestOccurrenceProbability:
 
 
 class TestFiniteExperienceOccurrence:
+    def test_rejects_cross_length_comparisons(self):
+        from src.subjective_randomness.model_families import (
+            finite_experience_occurrence,
+        )
+
+        with pytest.raises(ValueError, match="same-length"):
+            finite_experience_occurrence.predict_left(("HT", "HTHT"))
+
+    def test_score_uses_the_papers_focal_twenty_flip_stream(self):
+        from src.subjective_randomness.model_families import (
+            finite_experience_occurrence,
+        )
+        from src.subjective_randomness.model_families.common import (
+            occurrence_probability,
+        )
+
+        assert finite_experience_occurrence.score_sequence("HHHT") == pytest.approx(
+            math.log(occurrence_probability("HHHT", 20))
+        )
+
     def test_streak_aversion_follows_occurrence_probability(self):
         from src.subjective_randomness.model_families import (
             finite_experience_occurrence,
@@ -199,6 +253,24 @@ class TestFiniteExperienceOccurrence:
 
 
 class TestLocalRepresentativeness:
+    def test_balance_is_aggregated_across_local_scales(self):
+        from src.subjective_randomness.model_families.common import (
+            multiscale_local_imbalance,
+        )
+
+        assert multiscale_local_imbalance(
+            "HHHHTTTT"
+        ) > multiscale_local_imbalance("HHTTHHTT")
+
+    def test_obvious_periodicity_is_not_mistaken_for_local_balance(self):
+        from src.subjective_randomness.model_families import local_representativeness
+
+        patterned = "TTHHTTHH"
+        irregular = "HHTHTTHT"
+        assert local_representativeness.score_sequence(
+            patterned
+        ) < local_representativeness.score_sequence(irregular)
+
     def test_locality_separates_globally_balanced_sequences(self):
         from src.subjective_randomness.model_families import local_representativeness
 

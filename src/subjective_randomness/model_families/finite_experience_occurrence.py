@@ -10,24 +10,16 @@ with probability ~.75 but HHHH only ~.48 (their footnote 1 / p. 458). A
 string seems random to the extent that it is the kind of thing one actually
 encounters when watching a fair coin:
 
-    score = log( sum_N w_N * P(occurs at least once in N flips) )
+    score = log P(occurs at least once in 20 flips)
 
-with the global experience length N uncertain over {10, 20, 50} (20 is the
-paper's focal, ecologically motivated illustration; 10 and 50 bracket it) and
-stick-breaking weights: w_10 = short_weight, w_20 = (1 - short_weight) *
-mid_share, w_50 = the remainder. This reproduces both signatures of the
-account: aversion to long runs AND aversion to perfect alternation (HTHT has
-the second-longest wait time of the length-4 strings, 20 vs 30 for HHHH).
+Twenty flips is the paper's focal finite stream. This reproduces both
+signatures of the account: aversion to long runs and aversion to perfect
+alternation (HTHT has the second-longest wait time of the length-4 strings,
+20 versus 30 for HHHH). The paper only compares equal-length strings inside a
+common stream, so the choice function rejects cross-length comparisons.
 
-CROSS-LENGTH CAVEAT: the paper only ever compares equal-length strings inside
-a common window. Comparing sequences of different lengths by raw occurrence
-probability — which mechanically favours shorter strings — is this model's
-auxiliary assumption, not Hahn & Warren's.
-
-Free parameters: short_weight, mid_share (the experience-length prior), and
-the choice rule's beta / side_bias. The paper itself is a normative analysis
-with no fitted parameters; the weights are the minimal cognitive addition
-needed to make it a choice model.
+Free parameters: only the choice rule's beta and side bias. The paper itself
+is a normative analysis and supplies no fitted cognitive parameters.
 """
 
 from __future__ import annotations
@@ -46,54 +38,38 @@ from .common import (
 
 MODEL_NAME = "finite_experience_occurrence"
 
-# Global experienced-sequence lengths; mirrors features.EXPERIENCE_LENGTHS.
-EXPERIENCE_LENGTHS = (10, 20, 50)
+EXPERIENCE_LENGTH = 20
 
 DEFAULT_PARAMS: Dict[str, float] = {
-    # Stick-breaking prior over the experience length N:
-    # w_10 = short_weight; w_20 = (1 - short_weight) * mid_share; w_50 = rest.
-    # Defaults put most mass on the paper's focal N = 20.
-    "short_weight": 0.15,
-    "mid_share": 0.70,
     "beta": 4.0,
     "side_bias": 0.0,
 }
 
 PARAM_BOUNDS: Dict[str, tuple[float, float]] = {
-    "short_weight": (0.01, 0.99),
-    "mid_share": (0.01, 0.99),
     "beta": (0.2, 12.0),
     "side_bias": (-2.0, 2.0),
 }
 
 
-def experience_weights(params: Mapping[str, float]) -> Dict[int, float]:
-    short = max(0.0, min(1.0, float(params["short_weight"])))
-    mid_share = max(0.0, min(1.0, float(params["mid_share"])))
-    w10 = short
-    w20 = (1.0 - short) * mid_share
-    w50 = (1.0 - short) * (1.0 - mid_share)
-    return {10: w10, 20: w20, 50: w50}
-
-
 def score_sequence(seq: str, params: Mapping[str, float] | None = None) -> float:
-    p = merge_params(DEFAULT_PARAMS, params)
-    weights = experience_weights(p)
-    expected_occurrence = sum(
-        weights[w] * occurrence_probability(seq, w) for w in EXPERIENCE_LENGTHS
-    )
-    if expected_occurrence <= 0.0:
+    occurrence = occurrence_probability(seq, EXPERIENCE_LENGTH)
+    if occurrence <= 0.0:
         raise ValueError(
             f"occurrence probability underflowed to zero for {seq!r}; "
-            f"weights={weights}"
+            f"experience_length={EXPERIENCE_LENGTH}"
         )
-    return math.log(expected_occurrence)
+    return math.log(occurrence)
 
 
 def predict_left(
     stimulus: Stimulus | Mapping[str, str], params: Mapping[str, float] | None = None
 ) -> float:
     seq_a, seq_b = normalize_stimulus(stimulus)
+    if len(seq_a) != len(seq_b):
+        raise ValueError(
+            "finite_experience_occurrence is defined only for same-length "
+            f"sequence comparisons; got lengths {len(seq_a)} and {len(seq_b)}"
+        )
     p = merge_params(DEFAULT_PARAMS, params)
     return choice_probability(score_sequence(seq_a, p), score_sequence(seq_b, p), p)
 

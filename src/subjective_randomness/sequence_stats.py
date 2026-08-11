@@ -3,10 +3,10 @@
 ``model_families/common.py`` computes the 9-11 sequence statistics one string at a
 time; exhaustive stimulus search needs them for every sequence of a given length at
 once. This module recomputes the same statistics with numpy over the full ``2**L``
-sequence space per length, and — since every model in the repo reads a sequence only
-through these statistics (see ``model_families/common.py`` docstrings) — groups
-sequences that agree on every statistic into one equivalence class. Design-time
-search only needs to score one representative per class.
+sequence space per length and groups sequences that agree on requested statistics
+into one equivalence class. Design-time search may score one representative per
+class only when every active model explicitly declares that those statistics are
+sufficient; exact-order models instead use :func:`identity_classes`.
 
 Nothing here changes what any model computes; it is purely a faster way to compute
 exactly the same 11 statistics the featurizer (``features.py``) and the pure-Python
@@ -17,12 +17,13 @@ time, plus the bookkeeping to detect which sequences are truly indistinguishable
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, Mapping, Optional, Sequence, Tuple
+from typing import Dict, Optional, Sequence, Tuple
 
 import numpy as np
 
-# The 11 per-sequence statistics the featurizer (features.py) and every model family
-# (model_families/common.py) read, stem names (no _a/_b suffix).
+# The original 11 per-sequence statistics shared by the featurizer and summary-
+# statistic model families, as stem names (no _a/_b suffix). This is not a safe
+# quotient for models that inspect exact sequence order.
 CANONICAL_STAT_NAMES: Tuple[str, ...] = (
     "n",
     "h",
@@ -313,16 +314,12 @@ def build_sequence_classes(
     """Enumerate every sequence of each length in ``lengths`` and quotient by the
     requested statistics, one representative per equivalence class.
 
-    ``stat_names=None`` uses the full 11-name superset — the finest, always-safe
-    quotient: it merges two sequences only when every statistic every model family
-    in this repo can read is identical between them (see
-    ``model_families/common.py``, which established that no model reads anything
-    beyond ``CANONICAL_STAT_NAMES``). A narrower ``stat_names`` (e.g. only the
-    statistics one specific model set declares reading) merges more aggressively;
-    callers are responsible for establishing that narrowing is safe for the models
-    they intend to score (see ``exhaustive_search.quotient_stat_names``, which
-    derives a safe subset from models' own declarations rather than hardcoding one
-    here).
+    ``stat_names=None`` uses the full 11-name summary-statistic superset. This is
+    safe only for model sets that explicitly declare those statistics sufficient;
+    it is not safe for exact-order models. A narrower ``stat_names`` merges more
+    aggressively. Callers are responsible for establishing safety (see
+    ``exhaustive_search.quotient_stat_names``); use :func:`identity_classes` when
+    any model lacks a sufficient-statistics declaration.
 
     Quotienting happens independently *within* each length — sequences of
     different lengths are never merged, even if some narrow ``stat_names`` request

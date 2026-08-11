@@ -17,11 +17,16 @@ Feature columns per sequence (`a` and `b`):
     max_run_<x>       longest constant run                (int)
     rep_motifs_<x>    repetition motifs in motif parse    (int)
     alt_motifs_<x>    alternation motifs in motif parse   (int)
+    mirror_symmetry_<x>, complement_symmetry_<x>, duplication_<x>
+                        stack-production indicators       (int)
     p_<x>             head proportion                     (float)
     p_alts_<x>        alternation proportion              (float)
     max_run_norm_<x>  longest run scaled to [0, 1]        (float)
     imbalance_<x>     distance from 50/50 heads/tails     (float)
     periodicity_<x>   short repeating-template score       (float)
+    occ_n20_<x>       occurrence probability in 20 flips   (float)
+    multiscale_imbalance_<x>
+                        global/local balance aggregate     (float)
 """
 
 from __future__ import annotations
