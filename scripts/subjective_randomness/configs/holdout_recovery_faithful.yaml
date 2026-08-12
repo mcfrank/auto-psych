@@ -41,8 +41,10 @@ fit:
   draws: 4000
   tune: 3000
   chains: 4
-  # Lifted off PyMC's implicit 0.8 to shrink divergences and stabilise the
-  # PSIS-LOO tail (high Pareto-k on the best-fitting model was hard-failing the
-  # inner loop's export gate). Flows through config["fit"] -> fit_kwargs ->
+  # Lifted off PyMC's implicit 0.8 to shrink divergences. 0.99 was tried first
+  # but caused NUTS to hang for many hours on weakly-identified models (tiny
+  # step size + max tree depth every iteration), so it is backed off to 0.95.
+  # The actual reliability fix is Phase-2 graceful exclusion of unreliable-LOO
+  # models, not cranking this. Flows through config["fit"] -> fit_kwargs ->
   # fit_model -> pm.sample, and is folded into the fit-cache signature.
-  target_accept: 0.99
+  target_accept: 0.95
