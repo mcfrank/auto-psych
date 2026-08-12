@@ -38,14 +38,14 @@ eval_pool:
   min_remaining: 100
 
 fit:
-  draws: 4000
-  tune: 3000
+  draws: 2000
+  tune: 1000
   chains: 4
-  # Lifted off PyMC's implicit 0.8 to shrink divergences. Both 0.99 and 0.95
-  # made NUTS hang for hours on motif_stack (its stick-broken mirror/complement
-  # shares are weakly identified, so a high acceptance target forces tiny steps
-  # + max tree depth every iteration). Backed off to 0.9; the actual reliability
-  # fix is Phase-2 graceful exclusion, not cranking this. A per-fit guardrail
-  # (max_treedepth / timeout) is the robust long-term fix. Flows through
-  # config["fit"] -> fit_kwargs -> fit_model -> pm.sample; in the cache signature.
+  # Reverted to the original 2000/1000: benchmarking showed the 4000/3000 bump
+  # only ~doubled fit time (motif_stack is inherently ~2h/fit at 2000/1000 — an
+  # expensive Viterbi likelihood, tree_depth ~6) with no reliability benefit;
+  # Phase-2 graceful exclusion is what fixes reliability. target_accept stays at
+  # 0.9: motif_stack fits finitely at <=0.9 (tree_depth ~6) but explodes toward
+  # the depth cap at >=0.95. Flows through config["fit"] -> fit_kwargs ->
+  # fit_model -> pm.sample; folded into the fit-cache signature.
   target_accept: 0.9
