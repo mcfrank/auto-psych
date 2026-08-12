@@ -41,10 +41,11 @@ fit:
   draws: 4000
   tune: 3000
   chains: 4
-  # Lifted off PyMC's implicit 0.8 to shrink divergences. 0.99 was tried first
-  # but caused NUTS to hang for many hours on weakly-identified models (tiny
-  # step size + max tree depth every iteration), so it is backed off to 0.95.
-  # The actual reliability fix is Phase-2 graceful exclusion of unreliable-LOO
-  # models, not cranking this. Flows through config["fit"] -> fit_kwargs ->
-  # fit_model -> pm.sample, and is folded into the fit-cache signature.
-  target_accept: 0.95
+  # Lifted off PyMC's implicit 0.8 to shrink divergences. Both 0.99 and 0.95
+  # made NUTS hang for hours on motif_stack (its stick-broken mirror/complement
+  # shares are weakly identified, so a high acceptance target forces tiny steps
+  # + max tree depth every iteration). Backed off to 0.9; the actual reliability
+  # fix is Phase-2 graceful exclusion, not cranking this. A per-fit guardrail
+  # (max_treedepth / timeout) is the robust long-term fix. Flows through
+  # config["fit"] -> fit_kwargs -> fit_model -> pm.sample; in the cache signature.
+  target_accept: 0.9
