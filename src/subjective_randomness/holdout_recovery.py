@@ -453,6 +453,27 @@ def _bma_prediction(
     return stacked
 
 
+def _resolve_model_dir(models_dir: Path, name: str) -> Path:
+    """Directory to load ``{name}.py`` from: the models dir, or its ``pruned/``
+    subdir if the model was pruned after the history step recorded it.
+
+    A trajectory step names models (its best, and every nonzero-weight rival) as
+    they stood at that step. A LATER pruning pass can move one of them to
+    ``models/pruned/`` (see ``_prune_losers``); the recorded history is still
+    valid, so reloading it for trajectory evaluation has to look where the file
+    went. This only *redirects* pruned models — when the model is not in
+    ``pruned/`` we return the models dir unchanged and let the loader raise its
+    own clear error for a genuinely missing file.
+    """
+    models_dir = Path(models_dir)
+    if (models_dir / f"{name}.py").exists():
+        return models_dir
+    pruned_dir = models_dir / "pruned"
+    if (pruned_dir / f"{name}.py").exists():
+        return pruned_dir
+    return models_dir
+
+
 def evaluate_trajectory(
     run_root: Path,
     gt_model: str,
@@ -509,7 +530,7 @@ def evaluate_trajectory(
             for name in needed:
                 fitted = fit_model(
                     name,
-                    loop_dir / "models",
+                    _resolve_model_dir(loop_dir / "models", name),
                     loop_dir / "responses.csv",
                     cache_dir=cache_dir,
                     **dict(fit_kwargs),

@@ -1568,3 +1568,31 @@ def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypa
     )
     assert {p.name for p in cache_dir.glob("*.nc")} == cached
     assert rows[0]["pearson_r"] == pytest.approx(r)
+
+
+def test_resolve_model_dir_finds_a_pruned_step_model(tmp_path):
+    """A trajectory step can name a model (its best or a nonzero-weight rival)
+    that a LATER pruning pass moved to models/pruned/. Reloading it for
+    trajectory evaluation must look there, not fail — the history is still
+    valid, the file just moved."""
+    from src.subjective_randomness.holdout_recovery import _resolve_model_dir
+
+    models = tmp_path / "models"
+    (models / "pruned").mkdir(parents=True)
+    (models / "kept.py").write_text("# kept\n", encoding="utf-8")
+    (models / "pruned" / "dropped.py").write_text("# dropped\n", encoding="utf-8")
+
+    assert _resolve_model_dir(models, "kept") == models
+    assert _resolve_model_dir(models, "dropped") == models / "pruned"
+
+
+def test_resolve_model_dir_defers_to_models_dir_when_absent(tmp_path):
+    """A model in neither models/ nor pruned/ resolves to the models dir so the
+    normal loader raises its clear 'model file not found' error — the resolver
+    only redirects pruned models, it does not own the missing-file failure (and
+    must not break callers that stub the loader without real .py files)."""
+    from src.subjective_randomness.holdout_recovery import _resolve_model_dir
+
+    models = tmp_path / "models"
+    models.mkdir()
+    assert _resolve_model_dir(models, "ghost") == models
