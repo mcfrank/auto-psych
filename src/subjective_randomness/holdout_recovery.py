@@ -949,6 +949,7 @@ def run_holdout_recovery_from_config(
     resume: bool = False,
     gt_models_dir: Optional[Path] = None,
     gt_family_dir: Optional[Path] = None,
+    summary_root: Optional[Path] = None,
     gt_params_by_model_override: Optional[Mapping[str, Mapping[str, float]]] = None,
 ) -> Dict[str, Any]:
     """Run holdout recovery for every configured ground-truth model.
@@ -1066,6 +1067,7 @@ def run_holdout_recovery_from_config(
             seed_models_dir=seed_models_dir,
             gt_models_dir=gt_models_dir,
             gt_family_dir=gt_family_dir,
+            summary_root=summary_root,
             project_id=project_id,
             n_experiments=n_experiments,
             n_participants=n_participants,
@@ -1091,6 +1093,7 @@ def _run_holdout_recovery_resolved(
     seed_models_dir: Path,
     gt_models_dir: Path,
     gt_family_dir: Optional[Path] = None,
+    summary_root: Optional[Path] = None,
     project_id: str,
     n_experiments: int,
     n_participants: int,
@@ -1114,7 +1117,12 @@ def _run_holdout_recovery_resolved(
     gt_runs: List[Dict[str, Any]] = []
     for gt_model, gt_params in gt_params_by_model.items():
         run_root = results_root / gt_model
-        trajectory_path = run_root / "trajectory.json"
+        # The trajectory summary embeds the GT's true params, so it is written
+        # OUTSIDE the agent's run tree (summary_root) rather than into
+        # results_root/<gt>/, which lives in the agent's cwd. Defaults to
+        # run_root when no summary_root is given (non-holdout callers / tests).
+        summary_dir = (summary_root / gt_model) if summary_root else run_root
+        trajectory_path = summary_dir / "trajectory.json"
         if resume and trajectory_path.exists():
             gt_run = json.loads(trajectory_path.read_text(encoding="utf-8"))
             n_recorded = len(gt_run.get("experiments", []))
@@ -1226,9 +1234,8 @@ def _run_holdout_recovery_resolved(
                 for exp_num, exp_dir in enumerate(exp_dirs, start=1)
             ],
         }
-        (run_root / "trajectory.json").write_text(
-            json.dumps(gt_run, indent=2), encoding="utf-8"
-        )
+        summary_dir.mkdir(parents=True, exist_ok=True)
+        trajectory_path.write_text(json.dumps(gt_run, indent=2), encoding="utf-8")
         gt_runs.append(gt_run)
 
     return {

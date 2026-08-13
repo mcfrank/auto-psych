@@ -211,6 +211,7 @@ EXTRA_FLAGS=""
   --tidy-csv "$RUN_DIR/holdout.csv" \
   --figure   "$RUN_DIR/holdout.png" \
   --results-root "$RUN_REPO/_runs" \
+  --summary-root "$WORK_ROOT/run${REPEAT}" \
   --cache-dir    "$RUN_DIR/mcmc_cache" \
   --resume $EXTRA_FLAGS
 

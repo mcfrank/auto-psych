@@ -56,6 +56,11 @@ class Args:
     """Optional correlation-vs-step plot (one line per held-out model)."""
     results_root: Optional[Path] = None
     """Where the per-model experiment trees go (default: <out dir>/<out stem>_runs)."""
+    summary_root: Optional[Path] = None
+    """Where each GT's params-bearing trajectory.json is written (default:
+    results_root). Point this OUTSIDE the agent's checkout so the held-out GT's
+    true parameters are never on the agent's disk (the experiment trees under
+    results_root stay in the agent's cwd; only the summary moves)."""
     cache_dir: Optional[Path] = None
     """PyMC .nc fit cache shared by the run and the trajectory evaluation
     (default: <out dir>/mcmc_cache — the cache is what makes the per-step
@@ -123,6 +128,9 @@ def main(args: Args) -> None:
     gt_family_dir = (
         resolve_path(args.gt_family_dir) if args.gt_family_dir is not None else None
     )
+    summary_root = (
+        resolve_path(args.summary_root) if args.summary_root is not None else None
+    )
 
     fit_overrides = {
         key: value
@@ -149,6 +157,7 @@ def main(args: Args) -> None:
         gt_model_override=args.gt_model,
         gt_models_dir=gt_models_dir,
         gt_family_dir=gt_family_dir,
+        summary_root=summary_root,
         n_experiments_override=args.n_experiments,
         n_participants_override=args.n_participants,
         inner_loop_overrides=inner_loop_overrides or None,

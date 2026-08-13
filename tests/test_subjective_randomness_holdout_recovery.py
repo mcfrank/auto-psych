@@ -220,7 +220,14 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         tmp_path / "config.yaml",
         tmp_path / "runs",
         cache_dir=tmp_path / "cache",
+        summary_root=tmp_path / "summaries",
     )
+
+    # The GT-params-bearing trajectory.json is written to summary_root (kept
+    # OUTSIDE the agent's run tree), not into runs/<gt>/ where the agent could
+    # read the true parameters. The run tree under runs/<gt>/ must not hold it.
+    assert (tmp_path / "summaries" / "prototype_similarity" / "trajectory.json").exists()
+    assert not (tmp_path / "runs" / "prototype_similarity" / "trajectory.json").exists()
 
     # The held-out model never enters experiment 1's seed set. The GT here is
     # the superseded prototype_similarity, which the 2026-08 consolidation
@@ -296,7 +303,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert gt_run["n_eval_stimuli"] + gt_run["n_eval_dropped"] == 40
     assert gt_run["n_eval_stimuli"] > 0
     assert gt_run["leakage"]["any_identical"] is False
-    assert (run_root / "trajectory.json").exists()
+    # trajectory.json now lives under summary_root (asserted above), not run_root.
     assert (run_root / "eval_stimuli.json").exists()
 
     # Per-experiment model sets are recorded for transparency. Experiment 2
