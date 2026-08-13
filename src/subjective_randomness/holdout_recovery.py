@@ -48,6 +48,7 @@ from src.pipelines.outer_loop.orchestrator import (
 from src.runtime.token_usage import start_usage_log, write_usage_report
 from src.subjective_randomness.config import resolve_path
 from src.subjective_randomness.model_recovery import (
+    _family_default_params,
     feature_rows,
     generate_responses,
     p_left_fixed_params,
@@ -575,6 +576,7 @@ def seed_baseline_correlation(
     *,
     seed_models_dir: Path,
     gt_models_dir: Optional[Path] = None,
+    gt_family_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """No-learning baseline: how well the *other* seed models predict the GT.
 
@@ -597,7 +599,7 @@ def seed_baseline_correlation(
         Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
     )
     gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
-    defaults = resolve_generating_params(None, seed_models_dir)
+    defaults = resolve_generating_params(None, seed_models_dir, gt_family_dir)
 
     per_model: Dict[str, Optional[float]] = {}
     for name, params in defaults.items():
@@ -827,22 +829,23 @@ def reevaluate_trajectories(
 # ─────────────────────────────────────────────
 
 
-def _distinctive_param_names(gt_model: str) -> Set[str]:
+def _distinctive_param_names(
+    gt_model: str, gt_family_dir: Optional[Path] = None
+) -> Set[str]:
     """The GT family's parameter names that other families do not share.
 
     An impossible ground truth has no pure-Python ``model_families`` counterpart;
     in that case there are no distinctive family params to leak, so the set is
     empty. (``beta``/``side_bias`` are shared by every family, so they are never
     distinctive anyway.) Only a *missing* family is tolerated — any other import
-    error in an existing family still propagates loudly.
+    error in an existing family still propagates loudly. ``gt_family_dir``
+    reroutes the held-out GT to a pristine off-cwd source.
     """
     try:
-        module = importlib.import_module(
-            f"src.subjective_randomness.model_families.{gt_model}"
-        )
+        params = _family_default_params(gt_model, gt_family_dir)
     except ModuleNotFoundError:
         return set()
-    return set(module.DEFAULT_PARAMS) - {"beta", "side_bias"}
+    return set(params) - {"beta", "side_bias"}
 
 
 def leakage_check(
@@ -852,6 +855,7 @@ def leakage_check(
     seed_models_dir: Path,
     n_experiments: int,
     gt_models_dir: Optional[Path] = None,
+    gt_family_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Audit a run for ground-truth leakage into agent-written models.
 
@@ -875,7 +879,18 @@ def leakage_check(
     gt_hash = hashlib.sha256(
         (gt_models_dir / f"{gt_model}.py").read_bytes()
     ).hexdigest()
-    distinctive = _distinctive_param_names(gt_model)
+    gt_params: Dict[str, float] = {}
+    try:
+        gt_params = _family_default_params(gt_model, gt_family_dir)
+    except ModuleNotFoundError:
+        pass
+    distinctive = set(gt_params) - {"beta", "side_bias"}
+    # Distinctive param VALUES an agent could paste from the leaked source. Drop
+    # trivially common values (0/0.5/1) that would false-positive everywhere; a
+    # pasted 4-decimal generating value is otherwise near-impossible by chance.
+    distinctive_values = {
+        str(gt_params[k]) for k in distinctive if gt_params[k] not in (0.0, 0.5, 1.0)
+    }
 
     files: List[Dict[str, Any]] = []
     for exp_num in range(1, n_experiments + 1):
@@ -892,6 +907,9 @@ def leakage_check(
                         "identical": hashlib.sha256(path.read_bytes()).hexdigest()
                         == gt_hash,
                         "mentions_gt_params": any(p in source for p in distinctive),
+                        "mentions_gt_values": any(
+                            v in source for v in distinctive_values
+                        ),
                         "gt_named": path.name == f"{gt_model}.py",
                     }
                 )
@@ -899,6 +917,7 @@ def leakage_check(
         "files": files,
         "any_identical": any(f["identical"] for f in files),
         "any_mention": any(f["mentions_gt_params"] for f in files),
+        "any_value_mention": any(f["mentions_gt_values"] for f in files),
         "any_gt_named": any(f["gt_named"] for f in files),
     }
 
@@ -929,6 +948,7 @@ def run_holdout_recovery_from_config(
     agent_timeout_override: Optional[int] = None,
     resume: bool = False,
     gt_models_dir: Optional[Path] = None,
+    gt_family_dir: Optional[Path] = None,
     gt_params_by_model_override: Optional[Mapping[str, Mapping[str, float]]] = None,
 ) -> Dict[str, Any]:
     """Run holdout recovery for every configured ground-truth model.
@@ -978,7 +998,7 @@ def run_holdout_recovery_from_config(
         }
     else:
         gt_params_by_model = resolve_generating_params(
-            config.get("gt_models"), seed_models_dir
+            config.get("gt_models"), seed_models_dir, gt_family_dir
         )
     if gt_model_override is not None:
         if gt_model_override not in gt_params_by_model:
@@ -1045,6 +1065,7 @@ def run_holdout_recovery_from_config(
             results_root,
             seed_models_dir=seed_models_dir,
             gt_models_dir=gt_models_dir,
+            gt_family_dir=gt_family_dir,
             project_id=project_id,
             n_experiments=n_experiments,
             n_participants=n_participants,
@@ -1069,6 +1090,7 @@ def _run_holdout_recovery_resolved(
     *,
     seed_models_dir: Path,
     gt_models_dir: Path,
+    gt_family_dir: Optional[Path] = None,
     project_id: str,
     n_experiments: int,
     n_participants: int,
@@ -1162,6 +1184,7 @@ def _run_holdout_recovery_resolved(
             seed_models_dir=seed_models_dir,
             n_experiments=n_experiments,
             gt_models_dir=gt_models_dir,
+            gt_family_dir=gt_family_dir,
         )
         baseline = seed_baseline_correlation(
             gt_model,
@@ -1169,6 +1192,7 @@ def _run_holdout_recovery_resolved(
             eval_info["stimuli"],
             seed_models_dir=seed_models_dir,
             gt_models_dir=gt_models_dir,
+            gt_family_dir=gt_family_dir,
         )
         fitted_baseline = fitted_seed_baseline_correlation(
             run_root,

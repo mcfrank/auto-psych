@@ -69,6 +69,12 @@ class Args:
     deleting the held-out model from the agent's working checkout. The GT is
     still excluded from the agent's seed set (exclusion keys off the seed
     manifest, not this path)."""
+    gt_family_dir: Optional[Path] = None
+    """Read the held-out GT's pure-Python model_family (DEFAULT_PARAMS) from this
+    pristine directory instead of importing it from the working checkout. Point
+    at a copy of src/subjective_randomness/model_families containing the held-out
+    <gt>.py, so the generative source + true params can be scrubbed from the
+    agent's cwd (they are read by parsing, never imported)."""
     n_experiments: Optional[int] = None
     """Override the config's number of outer-loop experiments per run."""
     n_participants: Optional[int] = None
@@ -114,6 +120,9 @@ def main(args: Args) -> None:
     gt_models_dir = (
         resolve_path(args.gt_models_dir) if args.gt_models_dir is not None else None
     )
+    gt_family_dir = (
+        resolve_path(args.gt_family_dir) if args.gt_family_dir is not None else None
+    )
 
     fit_overrides = {
         key: value
@@ -139,6 +148,7 @@ def main(args: Args) -> None:
         results_root,
         gt_model_override=args.gt_model,
         gt_models_dir=gt_models_dir,
+        gt_family_dir=gt_family_dir,
         n_experiments_override=args.n_experiments,
         n_participants_override=args.n_participants,
         inner_loop_overrides=inner_loop_overrides or None,
