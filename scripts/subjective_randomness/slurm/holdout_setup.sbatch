@@ -69,6 +69,17 @@ echo "[setup] staging pristine seed/GT models -> $GT_MODELS_SRC"
 mkdir -p "$GT_MODELS_SRC"
 rsync -a "$REPO/$SEED_MODELS_REL"/ "$GT_MODELS_SRC"/
 
+# Also stage the pure-Python model_families (DEFAULT_PARAMS + generative form)
+# to a pristine snapshot. The parent reads the held-out GT's family from here by
+# PARSING (never importing), so the generative source can be scrubbed from the
+# agent's checkout instead of merely deny-listed (an agent running its own
+# Python could otherwise read it).
+GT_FAMILY_REL="${GT_FAMILY_REL:-src/subjective_randomness/model_families}"
+GT_FAMILY_SRC="${GT_FAMILY_SRC:-$WORK_ROOT/gt_family_src}"
+echo "[setup] staging pristine model_families -> $GT_FAMILY_SRC"
+mkdir -p "$GT_FAMILY_SRC"
+rsync -a "$REPO/$GT_FAMILY_REL"/ "$GT_FAMILY_SRC"/
+
 # Validate that the array's GT list / seed path match the config and that the
 # snapshot contains every ground-truth model file.
 CFG_REL="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"
