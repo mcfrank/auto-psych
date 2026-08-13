@@ -43,13 +43,15 @@ fit:
   chains: 4
   # Original 2000/1000 draws (the 4000/3000 bump only doubled fit time with no
   # reliability benefit — Phase-2 exclusion is what fixes reliability), at the
-  # known-good target_accept=0.8.
+  # known-good target_accept=0.8. This explicit value deliberately overrides
+  # motif_stack's model-declared 0.9 (caller > model > defaults) — 0.8 is the
+  # run-economy choice benchmarked for this sweep as a whole.
   target_accept: 0.8
-  # NUTS tree-depth cap. motif_stack is weakly identified on adversarial data
-  # (its stick-broken mirror/complement shares), so uncapped NUTS runs the
-  # trajectory to the depth cap and the fit hangs for hours. Capping at 6 bounds
-  # hard fits to ~2h with 0 divergences (benchmarked on the hard data directly)
-  # and barely touches easy fits (natural depth ~5.7) — so the model still fits
-  # and competes, it just can't hang a task. Flows config["fit"] -> fit_kwargs
-  # -> fit_model -> pm.sample; folded into the fit-cache signature.
-  max_treedepth: 6
+  # No max_treedepth cap (PyMC's default 10 applies). A treedepth-6 cap lived
+  # here 2026-08-09..13 as a cost workaround: motif_stack is weakly identified
+  # on adversarial data (its stick-broken mirror/complement shares), and with
+  # its old per-trial Viterbi graph an uncapped stiff fit ran to full depth and
+  # hung for hours. The unique-sequence dedup (83041a6) cut its gradient ~19x,
+  # so a worst-case full-depth fit is now ~20 min — cheaper than the cap's
+  # hidden cost of truncated trajectories (higher autocorrelation, hence
+  # noisier ELPD, exactly on the weakly identified share parameters).
