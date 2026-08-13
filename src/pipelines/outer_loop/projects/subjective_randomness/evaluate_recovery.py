@@ -191,7 +191,12 @@ def evaluate_experiment(
         draws=draws,
         tune=tune,
         chains=chains,
-        cores=1,
+        # cores is deliberately not pinned: it resolves to PRODUCTION_CORES so the
+        # chains run in parallel. This used to pass cores=1, which matched the old
+        # default and would now silently keep this path sequential (measured 110 s
+        # -> 38 s for a 4-chain fit). Nothing here runs in a worker pool — the
+        # experiments below are evaluated in a plain sequential loop — so there is
+        # no oversubscription to avoid.
     )
     p_pred = np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
     result.update(metrics(p_true, p_pred))

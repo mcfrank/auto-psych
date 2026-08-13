@@ -70,8 +70,15 @@ def test_new_models_load_and_prior_predict(model_name):
     model = load_pymc_model(model_name, MODEL_DIR)
     assert observed_response_data(model) == "chose_left"
 
-    row = featurize_stimulus("HHTHTTHT", "HTHTHTHT")
-    row["chose_left"] = 0
+    # The raw sequences travel with the numeric features, as every production
+    # caller builds them (cf. `model_recovery.feature_rows`): motif_stack derives
+    # its pm.Data containers from the sequences via a `prepare_observed` hook.
+    row = {
+        "sequence_a": "HHTHTTHT",
+        "sequence_b": "HTHTHTHT",
+        **featurize_stimulus("HHTHTTHT", "HTHTHTHT"),
+        "chose_left": 0,
+    }
     preds = prior_predict_p_left([model_name], MODEL_DIR, row, n_samples=10)
     assert 0.0 <= preds[model_name] <= 1.0
 

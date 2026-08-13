@@ -19,6 +19,15 @@ PRODUCTION_TUNE = 3000
 PRODUCTION_CHAINS = 4
 PRODUCTION_TARGET_ACCEPT = 0.99
 
+# Chains run in parallel, one worker process each. This was 1 (i.e. the four
+# production chains ran *sequentially*) for no stated reason; measured
+# 2026-08-13 on macOS with chains=4, PyMC 5.28.5: cores=4 finished in 38 s vs
+# 110 s at cores=1, with no multiprocessing trouble. 4 matches
+# PRODUCTION_CHAINS, so every chain gets its own core and none queue behind
+# another. Callers that fit many models concurrently should pass cores=1
+# explicitly rather than lowering this, to avoid oversubscribing the machine.
+PRODUCTION_CORES = 4
+
 # Design-time fits (posterior-informed exhaustive design, experiments >= 2):
 # cheaper on purpose — the design step only needs posterior-predictive means
 # to weight EIG scenarios, not publication-grade posteriors.
