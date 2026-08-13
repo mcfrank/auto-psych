@@ -971,7 +971,7 @@ def test_seed_baseline_correlation_averages_other_seed_models(monkeypatch):
     monkeypatch.setattr(
         holdout_recovery,
         "resolve_generating_params",
-        lambda spec, seed_models_dir: {
+        lambda spec, seed_models_dir, gt_family_dir=None: {
             "gt": {"a": 1.0}, "other_a": {"a": 1.0}, "other_b": {"a": 1.0}
         },
     )
