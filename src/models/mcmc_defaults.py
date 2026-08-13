@@ -13,7 +13,11 @@ hard-coded 500/500/2).
 # values rather than lowering these. draws/tune raised and target_accept lifted
 # off PyMC's implicit 0.8 default to shrink divergences and stabilise the
 # PSIS-LOO tail — high Pareto-k on the best-fitting model was hard-failing the
-# inner loop's export gate.
+# inner loop's export gate. (2026-08-13 audit: that gate no longer exists — the
+# only hard ELPD gates today are on NON-FINITE values — so 0.99 stands as
+# cautious tail stabilisation, not as protection for a live check. A model
+# whose posterior geometry makes 0.99 needlessly expensive can declare its own
+# SAMPLER_SETTINGS in its model file; see motif_stack.)
 PRODUCTION_DRAWS = 4000
 PRODUCTION_TUNE = 3000
 PRODUCTION_CHAINS = 4
