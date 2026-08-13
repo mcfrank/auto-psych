@@ -260,6 +260,9 @@ def test_unreliable_argmax_exports_best_reliable_model(tmp_path):
         (results_dir / "model_posterior.json").read_text(encoding="utf-8")
     )
     assert payload["comparison"]["selected"]["loo_unreliable"] is True
+    # The exported selection is recorded so downstream validation keys off the
+    # reliable model, not the excluded argmax.
+    assert payload["best_model"] == "runner_up"
 
 
 def test_export_records_excluded_unreliable_models(tmp_path):

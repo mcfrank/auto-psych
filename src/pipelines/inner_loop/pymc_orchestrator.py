@@ -1552,6 +1552,16 @@ def _export(
         argmax_model, {}
     ).get("loo_unreliable")
 
+    # Re-record with the exported selection now that it is known: downstream
+    # validation/export must key off the model we actually exported (the best
+    # reliable one), not re-derive the posterior argmax (which may be an
+    # excluded, unreliable model). The earlier write above is the diagnostic
+    # that survives the no-reliable-model raise.
+    payload["best_model"] = best_model
+    (results_dir / "model_posterior.json").write_text(
+        json.dumps(payload, indent=2), encoding="utf-8"
+    )
+
     shutil.copyfile(models_dir / f"{best_model}.py", results_dir / "best_model.py")
 
     hypotheses = {
