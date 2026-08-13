@@ -160,6 +160,10 @@ def test_fit_model_funnels_centralized_production_settings_into_pm_sample(
     assert captured["tune"] == md.PRODUCTION_TUNE
     assert captured["chains"] == md.PRODUCTION_CHAINS
     assert captured["target_accept"] == md.PRODUCTION_TARGET_ACCEPT
+    # Chains run in parallel (this was cores=1, i.e. four chains one after
+    # another; measured 110 s -> 38 s at chains=4).
+    assert captured["cores"] == md.PRODUCTION_CORES
+    assert md.PRODUCTION_CORES == md.PRODUCTION_CHAINS
 
 
 def test_fit_defaults_derive_from_centralized_production_config():
@@ -171,6 +175,7 @@ def test_fit_defaults_derive_from_centralized_production_config():
     assert pi._FIT_DEFAULTS["draws"] == md.PRODUCTION_DRAWS
     assert pi._FIT_DEFAULTS["tune"] == md.PRODUCTION_TUNE
     assert pi._FIT_DEFAULTS["chains"] == md.PRODUCTION_CHAINS
+    assert pi._FIT_DEFAULTS["cores"] == md.PRODUCTION_CORES
     assert pi._FIT_DEFAULTS["target_accept"] == md.PRODUCTION_TARGET_ACCEPT
 
 

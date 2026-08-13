@@ -27,6 +27,7 @@ import numpy as np
 
 from src.models.mcmc_defaults import (
     PRODUCTION_CHAINS,
+    PRODUCTION_CORES,
     PRODUCTION_DRAWS,
     PRODUCTION_TARGET_ACCEPT,
     PRODUCTION_TUNE,
@@ -42,6 +43,10 @@ from src.registry.io import validate_theory_weights
 # featurizer (a ``compute_features(sequence_a, sequence_b) -> dict`` callable).
 _EXTRA_FEATURIZER_ATTR = "_auto_psych_extra_featurizer"
 
+# Attribute under which a loaded model carries its optional data-preparation
+# hook (a ``prepare_observed(rows) -> dict[str, np.ndarray]`` callable).
+_PREPARE_OBSERVED_ATTR = "_auto_psych_prepare_observed"
+
 
 def _import_pymc():
     import pymc as pm
@@ -55,6 +60,39 @@ def _import_arviz():
     return az
 
 
+def _exec_model_module(py_path: Path, *, mod_prefix: str):
+    """Import a model `.py` as a standalone module and return the module object.
+
+    Shared by :func:`load_pymc_model` (which then requires a module-level
+    ``model``) and :func:`model_sampler_settings` (which only needs a
+    module-level constant, and must work even for a file that builds no model).
+    ``mod_prefix`` keeps the two callers' ``sys.modules`` entries distinct.
+    """
+    py_path = Path(py_path)
+    if not py_path.exists():
+        raise FileNotFoundError(f"PyMC model file not found: {py_path}")
+    unique_mod_name = (
+        f"{mod_prefix}{py_path.stem}_"
+        f"{hashlib.sha1(str(py_path).encode()).hexdigest()[:8]}"
+    )
+    spec = importlib.util.spec_from_file_location(
+        unique_mod_name, py_path, submodule_search_locations=[]
+    )
+    if spec is None or spec.loader is None:
+        raise ImportError(f"Cannot build module spec for {py_path}")
+    mod = importlib.util.module_from_spec(spec)
+    sys.modules[unique_mod_name] = mod
+    # Compile the source bytes ourselves instead of ``spec.loader.exec_module``,
+    # which consults ``__pycache__``. importlib validates a cached ``.pyc`` by
+    # (mtime, size) only, so a model file rewritten in the same second to the
+    # same length — e.g. a candidate whose `0.9` became `0.8` — loads STALE
+    # bytecode. Reading the source directly makes "loaded model" always mean
+    # "what is on disk right now", and writes no bytecode cache to invalidate.
+    source = py_path.read_bytes()
+    exec(compile(source, str(py_path), "exec"), mod.__dict__)
+    return mod
+
+
 def load_pymc_model(name: str, models_dir: Path):
     """Import `models_dir/<name>.py` and return its module-level `model` attribute.
 
@@ -64,20 +102,7 @@ def load_pymc_model(name: str, models_dir: Path):
     pm = _import_pymc()
     models_dir = Path(models_dir)
     py_path = models_dir / f"{name}.py"
-    if not py_path.exists():
-        raise FileNotFoundError(f"PyMC model file not found: {py_path}")
-
-    unique_mod_name = (
-        f"_pymc_model_{name}_{hashlib.sha1(str(py_path).encode()).hexdigest()[:8]}"
-    )
-    spec = importlib.util.spec_from_file_location(
-        unique_mod_name, py_path, submodule_search_locations=[]
-    )
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot build module spec for {py_path}")
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[unique_mod_name] = mod
-    spec.loader.exec_module(mod)
+    mod = _exec_model_module(py_path, mod_prefix="_pymc_model_")
 
     model = getattr(mod, "model", None)
     if not isinstance(model, pm.Model):
@@ -99,6 +124,27 @@ def load_pymc_model(name: str, models_dir: Path):
             f"(sequence_a, sequence_b) -> dict, got {type(featurizer).__name__}"
         )
     setattr(model, _EXTRA_FEATURIZER_ATTR, featurizer)
+
+    # Optional model-owned data-preparation hook: a model may declare
+    # ``prepare_observed(rows) -> dict[str, np.ndarray]`` to build its ``pm.Data``
+    # arrays itself. The default convention maps one CSV column per container,
+    # which cannot express layouts where the containers are not all trial-aligned
+    # — e.g. motif_stack's unique-sequence table plus per-trial gather indices.
+    # When declared, it REPLACES the column-mapping path entirely.
+    prepare_observed = getattr(mod, "prepare_observed", None)
+    if prepare_observed is not None and not callable(prepare_observed):
+        raise TypeError(
+            f"{py_path}: `prepare_observed` must be a callable "
+            f"(rows) -> dict[str, np.ndarray], got {type(prepare_observed).__name__}"
+        )
+    if prepare_observed is not None and featurizer is not None:
+        raise ValueError(
+            f"{py_path} declares BOTH `prepare_observed` and `compute_features`. "
+            "They are alternative data-binding conventions — `prepare_observed` "
+            "owns every container, so an extra featurizer would be silently "
+            "ignored. Declare exactly one."
+        )
+    setattr(model, _PREPARE_OBSERVED_ATTR, prepare_observed)
     return model
 
 
@@ -231,6 +277,90 @@ def _augment_rows_with_features(
     return augmented
 
 
+def _model_prepare_observed(model):
+    """The model's optional ``prepare_observed`` callable, or ``None``."""
+    return getattr(model, _PREPARE_OBSERVED_ATTR, None)
+
+
+def _observed_via_hook(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
+    """Build every ``pm.Data`` array through the model's ``prepare_observed`` hook.
+
+    The hook owns the layout, so the harness cannot check it column by column.
+    It checks the contract instead, and fails loudly on any breach — a hook that
+    returned the wrong keys or a mis-shaped array would otherwise surface much
+    later as an inscrutable pytensor shape error, or worse, as a silently
+    mis-aligned likelihood:
+
+    - the returned keys must be exactly the model's ``pm.Data`` names;
+    - every value must be a numpy array whose rank matches the container's
+      placeholder, and whose dtype has the same *kind* (a float array for an
+      integer container would be truncated on binding);
+    - the observed-response container must have one entry per input row, which
+      is what makes ``p_left`` per-trial and keeps ELPD-LOO pointwise.
+
+    Exact dtype *width* is normalized here rather than demanded of the hook,
+    because the width is PyMC's choice, not the model's: ``pm.Data`` converts an
+    ``int64`` array to ``intX`` (int32 under PyMC 5.28), so a hook that hard-coded
+    a width would break on a different build. This mirrors what the
+    column-mapping path does with ``placeholder.dtype``.
+    """
+    prepare = _model_prepare_observed(model)
+    if prepare is None:
+        raise ValueError("Model declares no prepare_observed hook.")
+    out = prepare(list(rows))
+    if not isinstance(out, dict):
+        raise TypeError(
+            "prepare_observed must return a dict of pm.Data name -> numpy array, "
+            f"got {type(out).__name__}."
+        )
+    expected = set(pm_data_inputs(model))
+    got = set(out)
+    if got != expected:
+        missing = sorted(expected - got)
+        unexpected = sorted(got - expected)
+        raise ValueError(
+            "prepare_observed must return exactly the model's pm.Data containers. "
+            f"Missing: {missing}. Unexpected: {unexpected}."
+        )
+    bound: Dict[str, np.ndarray] = {}
+    for name in sorted(out):
+        arr = out[name]
+        if not isinstance(arr, np.ndarray):
+            raise TypeError(
+                f"prepare_observed returned {type(arr).__name__} for {name!r}; "
+                "every value must be a numpy array."
+            )
+        placeholder = model.named_vars[name].get_value()
+        if arr.ndim != placeholder.ndim:
+            raise ValueError(
+                f"prepare_observed returned a {arr.ndim}-D array for {name!r} but "
+                f"its pm.Data placeholder is {placeholder.ndim}-D."
+            )
+        if arr.dtype.kind != placeholder.dtype.kind:
+            raise ValueError(
+                f"prepare_observed returned dtype {arr.dtype} for {name!r} but its "
+                f"pm.Data placeholder is {placeholder.dtype} — the kinds differ, so "
+                "binding would silently reinterpret the values."
+            )
+        cast = arr.astype(placeholder.dtype, copy=False)
+        if not np.array_equal(cast, arr):
+            raise ValueError(
+                f"prepare_observed's {name!r} array does not survive the cast to the "
+                f"container's dtype {placeholder.dtype} (values out of range)."
+            )
+        bound[name] = cast
+    out = bound
+    response_name = observed_response_data(model)
+    n_response = len(out[response_name])
+    if n_response != len(rows):
+        raise ValueError(
+            f"prepare_observed returned {n_response} entries for the observed-response "
+            f"container {response_name!r} but was given {len(rows)} rows; the observed "
+            "response must stay one-per-trial."
+        )
+    return out
+
+
 def make_stim_data(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
     """Build a `pm.set_data` dict from a list of row dicts for a given model.
 
@@ -238,9 +368,13 @@ def make_stim_data(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
     from `rows`, cast to the placeholder's dtype. Useful for predict_p_left and
     sample_synthetic_responses, where the caller has rows but not a CSV file.
 
-    If the model declares a ``compute_features`` featurizer, its extra columns
-    are computed from each row's raw sequences first.
+    If the model declares a ``prepare_observed`` hook it builds every container
+    itself and the column mapping is skipped. Otherwise, if the model declares a
+    ``compute_features`` featurizer, its extra columns are computed from each
+    row's raw sequences first.
     """
+    if _model_prepare_observed(model) is not None:
+        return _observed_via_hook(model, rows)
     rows = _augment_rows_with_features(model, rows)
     inputs = pm_data_inputs(model)
     missing = [c for c in inputs if rows and c not in rows[0]]
@@ -269,10 +403,15 @@ def extract_observed(csv_path: Path, model) -> Dict[str, np.ndarray]:
 
     Dtype is inferred from the model's current pm.Data placeholder (int64,
     float64, etc.). Fails loudly if any expected column is missing.
+
+    A model that declares a ``prepare_observed`` hook builds its containers from
+    the raw CSV rows instead (see :func:`_observed_via_hook`).
     """
     rows = _read_csv_rows(csv_path)
     if not rows:
         raise ValueError(f"No rows in {csv_path}")
+    if _model_prepare_observed(model) is not None:
+        return _observed_via_hook(model, rows)
     rows = _augment_rows_with_features(model, rows)
 
     inputs = pm_data_inputs(model)
@@ -597,7 +736,7 @@ _FIT_DEFAULTS = {
     "draws": PRODUCTION_DRAWS,
     "tune": PRODUCTION_TUNE,
     "chains": PRODUCTION_CHAINS,
-    "cores": 1,
+    "cores": PRODUCTION_CORES,
     "random_seed": 42,
     "target_accept": PRODUCTION_TARGET_ACCEPT,
     # NUTS trajectory-length cap. 10 is PyMC's default (effectively uncapped). A
@@ -606,6 +745,92 @@ _FIT_DEFAULTS = {
     # hang a fit; the model still fits and competes, just with bounded cost.
     "max_treedepth": 10,
 }
+
+# Name of the optional module-level dict a model `.py` may declare to request
+# sampler settings suited to *its own* posterior geometry.
+SAMPLER_SETTINGS_NAME = "SAMPLER_SETTINGS"
+
+# Cache of validated per-model declarations, keyed by (path, content hash) so a
+# rewritten model file is always re-read (the inner loop rewrites candidates).
+_SAMPLER_SETTINGS_CACHE: Dict[tuple, Dict[str, Any]] = {}
+
+
+def _validated_sampler_settings(declared: Any, source: Path) -> Dict[str, Any]:
+    """Check a model's ``SAMPLER_SETTINGS`` declaration and return it as a dict.
+
+    Fails loudly rather than ignoring anything it does not understand: a typo'd
+    key (``targt_accept``) or a non-numeric value would otherwise silently leave
+    the model sampling under the global defaults, which is exactly the kind of
+    quiet mis-configuration this project forbids.
+    """
+    if not isinstance(declared, dict):
+        raise TypeError(
+            f"{source}: {SAMPLER_SETTINGS_NAME} must be a dict of sampler setting "
+            f"-> number, got {type(declared).__name__}."
+        )
+    for key, value in declared.items():
+        if key not in _FIT_DEFAULTS:
+            raise ValueError(
+                f"{source}: {SAMPLER_SETTINGS_NAME} declares unknown sampler "
+                f"setting {key!r}. Valid settings: {sorted(_FIT_DEFAULTS)}."
+            )
+        if isinstance(value, bool) or not isinstance(value, (int, float)):
+            raise TypeError(
+                f"{source}: {SAMPLER_SETTINGS_NAME}[{key!r}] must be a number, "
+                f"got {type(value).__name__} ({value!r})."
+            )
+        if not math.isfinite(float(value)):
+            raise ValueError(
+                f"{source}: {SAMPLER_SETTINGS_NAME}[{key!r}] is not finite ({value!r})."
+            )
+    return dict(declared)
+
+
+def model_sampler_settings(name: str, models_dir: Path) -> Dict[str, Any]:
+    """The validated sampler settings the model file declares (``{}`` if none).
+
+    Read by importing the file directly rather than through
+    :func:`load_pymc_model`, because the cache key must be computable for any
+    file the fitter will be handed — including one that builds no ``pm.Model``.
+    """
+    py_path = Path(models_dir) / f"{name}.py"
+    key = (str(py_path.resolve()), _sha256_file(py_path))
+    if key not in _SAMPLER_SETTINGS_CACHE:
+        mod = _exec_model_module(py_path, mod_prefix="_pymc_sampler_settings_")
+        _SAMPLER_SETTINGS_CACHE[key] = _validated_sampler_settings(
+            getattr(mod, SAMPLER_SETTINGS_NAME, {}), py_path
+        )
+    return dict(_SAMPLER_SETTINGS_CACHE[key])
+
+
+def resolve_fit_settings(
+    name: str, models_dir: Path, explicit: Optional[Dict[str, Any]] = None
+) -> Dict[str, Any]:
+    """Resolve the sampler settings for one fit. THE single resolution point.
+
+    Precedence, highest first:
+
+    1. an explicit caller value (anything in ``explicit`` that is not ``None``);
+    2. the model file's own ``SAMPLER_SETTINGS`` declaration;
+    3. :data:`_FIT_DEFAULTS` (the centralized production config).
+
+    ``None`` in ``explicit`` means "the caller did not ask for anything", which
+    is why ``fit_model``'s sampler arguments default to ``None`` instead of to
+    the production values — a pinned default is indistinguishable from a
+    deliberate request and would silently outrank the model's declaration.
+
+    Both cache keys (the on-disk ``.nc`` fingerprint and the in-process
+    ``_cache_key``) are built from the dict this returns, so they cannot
+    disagree about which settings a stored fit was sampled under.
+    """
+    given = {k: v for k, v in (explicit or {}).items() if v is not None}
+    unknown = sorted(set(given) - set(_FIT_DEFAULTS))
+    if unknown:
+        raise ValueError(
+            f"Unknown sampler setting(s) {unknown} requested for model {name!r}. "
+            f"Valid settings: {sorted(_FIT_DEFAULTS)}."
+        )
+    return {**_FIT_DEFAULTS, **model_sampler_settings(name, models_dir), **given}
 
 
 def _sampler_signature(fit_kwargs: Dict[str, Any]) -> str:
@@ -678,7 +903,12 @@ class FittedModel:
             context=f"Model {self.name!r} posterior-predictive {var_name}",
         )  # (chain, draw, n_stim)
         draws = arr.reshape(-1, arr.shape[-1])
-        n_stim = len(next(iter(stim_data.values())))
+        # Count trials from the observed-response container, which is per-trial by
+        # construction, rather than from an arbitrary first entry of ``stim_data``.
+        # Not every container is trial-aligned: a model using a ``prepare_observed``
+        # hook may bind a unique-sequence table whose length is unrelated to the
+        # number of stimuli, and dict order would decide whether this check passed.
+        n_stim = len(stim_data[observed_response_data(self.model)])
         if draws.shape[1] != n_stim:
             raise ValueError(
                 f"Model {self.name!r}: posterior-predictive {var_name} has shape "
@@ -780,7 +1010,7 @@ def _cache_key(
         name,
         _sha256_file(models_dir / f"{name}.py"),
         _sha256_file(csv_path),
-        _sampler_signature(fit_kwargs or {}),
+        _sampler_signature(resolve_fit_settings(name, models_dir, fit_kwargs)),
     )
 
 
@@ -790,15 +1020,22 @@ def fit_model(
     responses_path: Path,
     *,
     cache_dir: Optional[Path] = None,
-    draws: int = _FIT_DEFAULTS["draws"],
-    tune: int = _FIT_DEFAULTS["tune"],
-    chains: int = _FIT_DEFAULTS["chains"],
-    cores: int = _FIT_DEFAULTS["cores"],
-    random_seed: int = _FIT_DEFAULTS["random_seed"],
-    target_accept: float = _FIT_DEFAULTS["target_accept"],
-    max_treedepth: int = _FIT_DEFAULTS["max_treedepth"],
+    draws: Optional[int] = None,
+    tune: Optional[int] = None,
+    chains: Optional[int] = None,
+    cores: Optional[int] = None,
+    random_seed: Optional[int] = None,
+    target_accept: Optional[float] = None,
+    max_treedepth: Optional[int] = None,
 ) -> FittedModel:
     """Load the named PyMC model, fit it on `responses_path`, return a FittedModel.
+
+    Every sampler argument defaults to ``None``, meaning "unset — resolve it".
+    :func:`resolve_fit_settings` then applies an explicit caller value first, the
+    model file's own ``SAMPLER_SETTINGS`` declaration next, and the centralized
+    production defaults last. Defaulting these to the production values instead
+    would make "the caller wants 0.99" indistinguishable from "the caller said
+    nothing", silently overriding every model-declared setting.
 
     If `cache_dir` is given and `<cache_dir>/<name>.<fingerprint>.nc` exists,
     load idata from disk instead of refitting.
@@ -810,28 +1047,33 @@ def fit_model(
     responses_path = Path(responses_path)
     model = load_pymc_model(name, models_dir)
 
+    settings = resolve_fit_settings(
+        name,
+        models_dir,
+        {
+            "draws": draws,
+            "tune": tune,
+            "chains": chains,
+            "cores": cores,
+            "random_seed": random_seed,
+            "target_accept": target_accept,
+            "max_treedepth": max_treedepth,
+        },
+    )
+
     # Fingerprint from the model source + the responses-file bytes + the resolved
-    # sampler settings — the SAME inputs as the in-process ``_cache_key``. Keeping
-    # the two keyed identically means the on-disk ``.nc`` and the in-process cache
-    # can never disagree about which fit corresponds to a (model, data, sampler)
-    # triple, so the seeded critique always reuses exactly the fit the model
-    # comparison scored, and a fit sampled under different draws/chains is never
-    # silently reused for a request that asked for different settings.
+    # sampler settings — the SAME inputs as the in-process ``_cache_key``, which
+    # resolves through the same ``resolve_fit_settings``. Keeping the two keyed
+    # identically means the on-disk ``.nc`` and the in-process cache can never
+    # disagree about which fit corresponds to a (model, data, sampler) triple, so
+    # the seeded critique always reuses exactly the fit the model comparison
+    # scored, and a fit sampled under different draws/chains is never silently
+    # reused for a request that asked for different settings.
     fp = hashlib.sha256(
         (
             _sha256_file(models_dir / f"{name}.py")
             + _sha256_file(responses_path)
-            + _sampler_signature(
-                {
-                    "draws": draws,
-                    "tune": tune,
-                    "chains": chains,
-                    "cores": cores,
-                    "random_seed": random_seed,
-                    "target_accept": target_accept,
-                    "max_treedepth": max_treedepth,
-                }
-            )
+            + _sampler_signature(settings)
         ).encode("utf-8")
     ).hexdigest()[:16]
 
@@ -850,14 +1092,14 @@ def fit_model(
     with model:
         pm.set_data(observed)
         idata = pm.sample(
-            draws=draws,
-            tune=tune,
-            chains=chains,
-            cores=cores,
-            target_accept=target_accept,
-            max_treedepth=max_treedepth,
+            draws=settings["draws"],
+            tune=settings["tune"],
+            chains=settings["chains"],
+            cores=settings["cores"],
+            target_accept=settings["target_accept"],
+            max_treedepth=settings["max_treedepth"],
             progressbar=False,
-            random_seed=random_seed,
+            random_seed=settings["random_seed"],
             idata_kwargs={"log_likelihood": True},
         )
 

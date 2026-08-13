@@ -72,19 +72,18 @@ EXPECTED_INPUTS = {
         *{f"sym{i}_{side}" for i in range(1, 9) for side in ("a", "b")},
         "chose_left",
     },
+    # motif_stack does not read trial-aligned feature columns: it declares a
+    # `prepare_observed` hook and binds a unique-sequence table (scored once per
+    # DISTINCT sequence) plus per-trial gather indices. See
+    # tests/test_motif_stack_unique_sequence_graph.py.
     "motif_stack": {
-        "n_a",
-        "n_b",
-        *{f"sym{i}_{side}" for i in range(1, 9) for side in ("a", "b")},
-        *{
-            f"{pattern}_{side}"
-            for pattern in (
-                "mirror_symmetry",
-                "complement_symmetry",
-                "duplication",
-            )
-            for side in ("a", "b")
-        },
+        "seq_len",
+        "emission_mask",
+        "mirror_symmetry",
+        "complement_symmetry",
+        "duplication",
+        "idx_a",
+        "idx_b",
         "chose_left",
     },
     "finite_experience_occurrence": {
@@ -157,30 +156,50 @@ def test_featurizer_exposes_multiscale_local_balance():
     assert features["multiscale_imbalance_a"] > features["multiscale_imbalance_b"]
 
 
+def _stimulus_row(sequence_a: str, sequence_b: str) -> dict:
+    """A feature row as every production caller builds it.
+
+    The raw H/T sequences travel alongside the numeric features because models
+    may declare a `compute_features` featurizer or a `prepare_observed` hook,
+    both of which derive their inputs from the sequences rather than from the
+    fixed feature columns (cf. `model_recovery.feature_rows`).
+    """
+    return {
+        "sequence_a": sequence_a,
+        "sequence_b": sequence_b,
+        **featurize_stimulus(sequence_a, sequence_b),
+        "chose_left": 0,
+    }
+
+
 @pytest.mark.parametrize("model_name", EXPECTED_INPUTS)
 def test_featurized_stimuli_fill_pymc_data_containers(model_name):
     model = load_pymc_model(model_name, MODEL_DIR)
-    row = featurize_stimulus("HHTHTTHT", "HTHTHTHT")
-    row["chose_left"] = 0
-    stim_data = make_stim_data(model, [row])
+    stim_data = make_stim_data(model, [_stimulus_row("HHTHTTHT", "HTHTHTHT")])
     assert set(stim_data) == set(pm_data_inputs(model))
 
 
 def test_subjective_randomness_pymc_models_sample_prior_predictive():
-    row = featurize_stimulus("HHTHTTHT", "HTHTHTHT")
-    row["chose_left"] = 0
+    row = _stimulus_row("HHTHTTHT", "HTHTHTHT")
     preds = prior_predict_p_left(list(EXPECTED_INPUTS), MODEL_DIR, row, n_samples=10)
     assert set(preds) == set(EXPECTED_INPUTS)
     for p_left in preds.values():
         assert 0.0 <= p_left <= 1.0
 
 
-@pytest.mark.parametrize(
-    "model_name", ["motif_stack", "finite_experience_occurrence"]
-)
-def test_paper_models_fail_loudly_on_cross_length_data(model_name):
-    row = featurize_stimulus("HT", "HTHT")
-    row["chose_left"] = 0
-
+def test_in_graph_assert_rejects_cross_length_data():
+    """finite_experience_occurrence still guards same-length pairs in the graph."""
+    row = _stimulus_row("HT", "HTHT")
     with pytest.raises(AssertionError, match="same-length"):
-        prior_predict_p_left([model_name], MODEL_DIR, row, n_samples=1)
+        prior_predict_p_left(
+            ["finite_experience_occurrence"], MODEL_DIR, row, n_samples=1
+        )
+
+
+def test_motif_stack_rejects_cross_length_data_at_data_preparation_time():
+    """motif_stack's guard moved out of the logp graph into `prepare_observed`,
+    so it raises a ValueError naming the offending row instead of an opaque
+    AssertionError re-checked on every logp evaluation."""
+    row = _stimulus_row("HT", "HTHT")
+    with pytest.raises(ValueError, match="same-length"):
+        prior_predict_p_left(["motif_stack"], MODEL_DIR, row, n_samples=1)
