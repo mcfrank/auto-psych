@@ -600,6 +600,11 @@ _FIT_DEFAULTS = {
     "cores": 1,
     "random_seed": 42,
     "target_accept": PRODUCTION_TARGET_ACCEPT,
+    # NUTS trajectory-length cap. 10 is PyMC's default (effectively uncapped). A
+    # caller can lower it to bound per-iteration work so a pathologically stiff
+    # model (weak identifiability -> the sampler wants ever-deeper trees) can't
+    # hang a fit; the model still fits and competes, just with bounded cost.
+    "max_treedepth": 10,
 }
 
 
@@ -791,6 +796,7 @@ def fit_model(
     cores: int = _FIT_DEFAULTS["cores"],
     random_seed: int = _FIT_DEFAULTS["random_seed"],
     target_accept: float = _FIT_DEFAULTS["target_accept"],
+    max_treedepth: int = _FIT_DEFAULTS["max_treedepth"],
 ) -> FittedModel:
     """Load the named PyMC model, fit it on `responses_path`, return a FittedModel.
 
@@ -823,6 +829,7 @@ def fit_model(
                     "cores": cores,
                     "random_seed": random_seed,
                     "target_accept": target_accept,
+                    "max_treedepth": max_treedepth,
                 }
             )
         ).encode("utf-8")
@@ -848,6 +855,7 @@ def fit_model(
             chains=chains,
             cores=cores,
             target_accept=target_accept,
+            max_treedepth=max_treedepth,
             progressbar=False,
             random_seed=random_seed,
             idata_kwargs={"log_likelihood": True},

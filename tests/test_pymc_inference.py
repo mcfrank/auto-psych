@@ -184,6 +184,35 @@ def test_sampler_signature_distinguishes_target_accept():
     )
 
 
+def test_fit_model_threads_max_treedepth_into_pm_sample(tmp_path, monkeypatch):
+    """max_treedepth caps the NUTS trajectory length so a pathologically stiff
+    model can't hang a fit; it must reach pm.sample and be folded into the cache
+    signature (a capped fit must not be reused for an uncapped request). Defaults
+    to PyMC's 10 (uncapped) unless a caller sets it."""
+    import pymc as pm
+
+    captured = {}
+
+    def fake_sample(*args, **kwargs):
+        captured.update(kwargs)
+        raise _StopSampling
+
+    monkeypatch.setattr(pm, "sample", fake_sample)
+    csv_path = tmp_path / "responses.csv"
+    _write_fair_coin_responses(csv_path)
+
+    with pytest.raises(_StopSampling):
+        pi.fit_model(
+            "bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR, csv_path, max_treedepth=6
+        )
+
+    assert captured["max_treedepth"] == 6
+    assert pi._FIT_DEFAULTS["max_treedepth"] == 10  # uncapped by default
+    assert pi._sampler_signature({"max_treedepth": 6}) != pi._sampler_signature(
+        {"max_treedepth": 10}
+    )
+
+
 def test_thin_posterior_subsamples_to_at_most_max_draws():
     import arviz as az
 

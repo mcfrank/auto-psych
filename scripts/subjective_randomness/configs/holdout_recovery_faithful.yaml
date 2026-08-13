@@ -41,11 +41,15 @@ fit:
   draws: 2000
   tune: 1000
   chains: 4
-  # Reverted to the original 2000/1000: benchmarking showed the 4000/3000 bump
-  # only ~doubled fit time (motif_stack is inherently ~2h/fit at 2000/1000 — an
-  # expensive Viterbi likelihood, tree_depth ~6) with no reliability benefit;
-  # Phase-2 graceful exclusion is what fixes reliability. target_accept stays at
-  # 0.9: motif_stack fits finitely at <=0.9 (tree_depth ~6) but explodes toward
-  # the depth cap at >=0.95. Flows through config["fit"] -> fit_kwargs ->
-  # fit_model -> pm.sample; folded into the fit-cache signature.
-  target_accept: 0.9
+  # Original 2000/1000 draws (the 4000/3000 bump only doubled fit time with no
+  # reliability benefit — Phase-2 exclusion is what fixes reliability), at the
+  # known-good target_accept=0.8.
+  target_accept: 0.8
+  # NUTS tree-depth cap. motif_stack is weakly identified on adversarial data
+  # (its stick-broken mirror/complement shares), so uncapped NUTS runs the
+  # trajectory to the depth cap and the fit hangs for hours. Capping at 6 bounds
+  # hard fits to ~2h with 0 divergences (benchmarked on the hard data directly)
+  # and barely touches easy fits (natural depth ~5.7) — so the model still fits
+  # and competes, it just can't hang a task. Flows config["fit"] -> fit_kwargs
+  # -> fit_model -> pm.sample; folded into the fit-cache signature.
+  max_treedepth: 6
