@@ -154,6 +154,36 @@ def test_validate_model_loop_accepts_best_in_model_set(tmp_path):
     assert ok, msg
 
 
+def test_validate_model_loop_uses_recorded_reliable_best_not_argmax(tmp_path):
+    """When the posterior argmax is excluded as PSIS-LOO-unreliable, the inner
+    loop exports the best *reliable* model and records it as `best_model`. The
+    validator must accept that recorded selection — not demand the (deliberately
+    unexported) argmax, which would fail every run that exercises the exclusion."""
+    exp_dir, _ = _setup(
+        tmp_path,
+        cognitive_names=["reliable_seed"],
+        zoo_entries=[{"name": "reliable_seed", "rationale": "mechanism reliable"}],
+    )
+    loop_dir = exp_dir / "model_loop"
+    loop_dir.mkdir(parents=True, exist_ok=True)
+    (loop_dir / "model_posterior.json").write_text(
+        json.dumps(
+            {
+                "posteriors": {"unreliable_argmax": 0.9, "reliable_seed": 0.1},
+                "comparison": {
+                    "unreliable_argmax": {"weight": 0.8, "loo_unreliable": True},
+                    "reliable_seed": {"weight": 0.2, "loo_unreliable": False},
+                },
+                "best_model": "reliable_seed",
+            }
+        ),
+        encoding="utf-8",
+    )
+    (loop_dir / "report.md").write_text("# report\n", encoding="utf-8")
+    ok, msg = _validate_model_loop(exp_dir)
+    assert ok, msg
+
+
 def test_validate_model_loop_rejects_missing_best(tmp_path):
     exp_dir, _ = _setup(
         tmp_path,

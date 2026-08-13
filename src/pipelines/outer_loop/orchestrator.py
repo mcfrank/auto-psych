@@ -1189,7 +1189,12 @@ def _validate_model_loop(exp_dir: Path) -> tuple[bool, str]:
     # The best model must be in this experiment's model set — either it was
     # already there (a seed that won again) or the export copied it in. A
     # fallback auto-named winner exports under the legacy `inner_loop_model`.
-    best = max(data["posteriors"], key=lambda m: data["posteriors"][m])
+    # Use the exported selection recorded by _export (the best *reliable* model,
+    # which can differ from the raw posterior argmax when the argmax was excluded
+    # as PSIS-LOO-unreliable); fall back to the argmax for older exports.
+    best = data.get("best_model") or max(
+        data["posteriors"], key=lambda m: data["posteriors"][m]
+    )
     required = "inner_loop_model" if _ZOO_NAME_RE.fullmatch(best) else best
     models_dir = exp_dir / "cognitive_models"
     try:
