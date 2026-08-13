@@ -61,6 +61,22 @@ LOCAL_REP_PARAMS = {
 # ── feature_rows (public: consumed by holdout_recovery) ─────────────
 
 
+def test_family_default_params_reads_gt_family_dir_without_importing(tmp_path):
+    """For a held-out GT, DEFAULT_PARAMS are read from a pristine file by parsing
+    (not importing) so the generative source can stay off the agent's cwd — and
+    unresolved relative imports in that file must not matter."""
+    from src.subjective_randomness.model_recovery import _family_default_params
+
+    fam = tmp_path / "held_out_gt.py"
+    fam.write_text(
+        "from .common import does_not_exist  # would explode if imported\n"
+        "DEFAULT_PARAMS = {'delta': 0.1234, 'beta': 1.0}\n",
+        encoding="utf-8",
+    )
+    got = _family_default_params("held_out_gt", gt_family_dir=tmp_path)
+    assert got == {"delta": 0.1234, "beta": 1.0}
+
+
 def test_feature_rows_carries_sequences_features_and_dummy_response():
     rows = feature_rows(STIMULI)
     assert len(rows) == len(STIMULI)

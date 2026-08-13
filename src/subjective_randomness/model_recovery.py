@@ -20,6 +20,7 @@ This module has two halves:
 
 from __future__ import annotations
 
+import ast
 import csv
 import importlib
 from pathlib import Path
@@ -44,28 +45,67 @@ def seed_model_names(seed_models_dir: Path) -> List[str]:
     return read_manifest_names(seed_models_dir)
 
 
-def _family_default_params(name: str) -> Dict[str, float]:
-    """``DEFAULT_PARAMS`` of the pure-Python model family named ``name``."""
+def _default_params_from_file(path: Path) -> Dict[str, float]:
+    """Parse a family's ``DEFAULT_PARAMS`` from source WITHOUT importing it.
+
+    Reading the literal by AST avoids executing the module — so the file can be
+    a held-out ground truth kept in a pristine dir off the agent's cwd (its
+    relative imports never have to resolve), and no generative code runs.
+    """
+    tree = ast.parse(Path(path).read_text(encoding="utf-8"))
+    for node in ast.walk(tree):
+        target = None
+        if isinstance(node, ast.AnnAssign):
+            target = getattr(node.target, "id", None)
+        elif isinstance(node, ast.Assign):
+            target = next(
+                (t.id for t in node.targets if isinstance(t, ast.Name)), None
+            )
+        if target == "DEFAULT_PARAMS":
+            return dict(ast.literal_eval(node.value))
+    raise ValueError(f"No DEFAULT_PARAMS literal found in {path}")
+
+
+def _family_default_params(
+    name: str, gt_family_dir: Optional[Path] = None
+) -> Dict[str, float]:
+    """``DEFAULT_PARAMS`` of the pure-Python model family named ``name``.
+
+    When ``gt_family_dir`` is given and it holds ``<name>.py`` (only the held-out
+    ground truth is staged there), read the params from that pristine file by
+    parsing — so the generative source never sits on the agent's import path.
+    Every other family falls through to the normal package import.
+    """
+    if gt_family_dir is not None:
+        pristine = Path(gt_family_dir) / f"{name}.py"
+        if pristine.exists():
+            return _default_params_from_file(pristine)
     module = importlib.import_module(f"src.subjective_randomness.model_families.{name}")
     return dict(module.DEFAULT_PARAMS)
 
 
 def default_generating_params(
     seed_models_dir: Path,
+    gt_family_dir: Optional[Path] = None,
 ) -> Dict[str, Dict[str, float]]:
     """Default fixed parameters for each seed model.
 
     Pulled from the matching pure-Python model family's ``DEFAULT_PARAMS``
     (``src.subjective_randomness.model_families.<name>``); its parameter names
     match the PyMC seed model's free parameters, so the values can drive the
-    fixed-parameter generator directly.
+    fixed-parameter generator directly. ``gt_family_dir`` reroutes the held-out
+    ground truth to a pristine off-cwd source (see ``_family_default_params``).
     """
-    return {name: _family_default_params(name) for name in seed_model_names(seed_models_dir)}
+    return {
+        name: _family_default_params(name, gt_family_dir)
+        for name in seed_model_names(seed_models_dir)
+    }
 
 
 def resolve_generating_params(
     spec: Any,
     seed_models_dir: Path,
+    gt_family_dir: Optional[Path] = None,
 ) -> Dict[str, Dict[str, float]]:
     """Turn a config's ``generating_models`` spec into per-model fixed params.
 
@@ -74,14 +114,19 @@ def resolve_generating_params(
       * a list of names — those models, each with family defaults.
       * a dict ``name -> params`` — explicit params; a ``None``/empty value for
         a model falls back to that family's defaults.
+
+    ``gt_family_dir`` reroutes the held-out ground truth's family defaults to a
+    pristine off-cwd source.
     """
     if spec is None:
-        return default_generating_params(seed_models_dir)
+        return default_generating_params(seed_models_dir, gt_family_dir)
     if isinstance(spec, (list, tuple)):
-        return {name: _family_default_params(name) for name in spec}
+        return {name: _family_default_params(name, gt_family_dir) for name in spec}
     if isinstance(spec, Mapping):
         return {
-            name: (dict(params) if params else _family_default_params(name))
+            name: (
+                dict(params) if params else _family_default_params(name, gt_family_dir)
+            )
             for name, params in spec.items()
         }
     raise TypeError(

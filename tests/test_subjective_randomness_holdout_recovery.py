@@ -1228,6 +1228,30 @@ def test_leakage_check_clean_run_unflagged(tmp_path):
     assert result["any_gt_named"] is False
 
 
+def test_leakage_check_flags_hardcoded_gt_param_value(tmp_path):
+    """A candidate that pastes a distinctive generating VALUE (not just a name)
+    is flagged — the exact vector that leaked run1's delta/alpha. Also exercises
+    gt_family_dir: the GT params come from a pristine file by parsing (the name
+    isn't an importable module)."""
+    gt_dir = tmp_path / "gt_models"
+    gt_dir.mkdir()
+    (gt_dir / "secret_gt.py").write_text("# pymc adapter\n", encoding="utf-8")
+    fam_dir = tmp_path / "gt_family"
+    fam_dir.mkdir()
+    (fam_dir / "secret_gt.py").write_text(
+        "DEFAULT_PARAMS = {'delta': 0.5493, 'beta': 1.0}\n", encoding="utf-8"
+    )
+    run_root = tmp_path / "run"
+    _make_model_dirs(run_root, 1, {"candidate.py": "p = _viterbi(seq, 0.5493)\n"})
+
+    result = leakage_check(
+        run_root, "secret_gt", seed_models_dir=SEED_MODELS_DIR, n_experiments=1,
+        gt_models_dir=gt_dir, gt_family_dir=fam_dir,
+    )
+    assert result["any_value_mention"] is True
+    assert result["any_identical"] is False
+
+
 # ── config-bridge guards ────────────────────────────────────────────
 
 
