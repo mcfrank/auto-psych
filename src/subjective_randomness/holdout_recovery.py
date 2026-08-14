@@ -126,6 +126,8 @@ def run_holdout_experiments(
     agent_model: Optional[str] = None,
     resume: bool = False,
     gt_models_dir: Optional[Path] = None,
+    design_n_eig: int = 32,
+    design_n_random: int = 0,
 ) -> List[Path]:
     """Run the full agentic pipeline for ``n_experiments`` with a held-out GT.
 
@@ -206,7 +208,8 @@ def run_holdout_experiments(
         # experiment's posterior (models fit on its responses, registry weights).
         if not (resume and _stage_done("2_design", exp_dir)):
             run_design_programmatic(
-                exp_dir, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir
+                exp_dir, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir,
+                k=design_n_eig, n_random=design_n_random,
             )
             _require_valid("2_design", exp_dir)
 
@@ -941,6 +944,7 @@ def run_holdout_recovery_from_config(
     n_participants_override: Optional[int] = None,
     inner_loop_overrides: Optional[Mapping[str, int]] = None,
     fit_overrides: Optional[Mapping[str, Any]] = None,
+    design_overrides: Optional[Mapping[str, int]] = None,
     seed_override: Optional[int] = None,
     cache_dir: Optional[Path] = None,
     backend_override: Optional[str] = None,
@@ -1028,6 +1032,12 @@ def run_holdout_recovery_from_config(
     inner_cfg = {**dict(config.get("inner_loop", {})), **dict(inner_loop_overrides or {})}
     inner_loop_iterations = int(inner_cfg.get("max_iterations", 2))
     candidate_count = int(inner_cfg.get("candidate_count", 3))
+    # Design split: n_eig stimuli chosen by EIG + n_random for coverage. The
+    # random half is a single fixed sample per experiment (shown to every
+    # participant); ablations set n_eig=0 (all random) or n_random=0 (all EIG).
+    design_cfg = {**dict(config.get("design", {})), **dict(design_overrides or {})}
+    design_n_eig = int(design_cfg.get("n_eig", 32))
+    design_n_random = int(design_cfg.get("n_random", 0))
 
     agent_cfg = dict(config.get("agent", {}))
     agent_timeout_sec = agent_timeout_override or int(agent_cfg.get("timeout_sec", 900))
@@ -1081,6 +1091,8 @@ def run_holdout_recovery_from_config(
             agent_model=agent_model,
             cache_dir=cache_dir,
             resume=resume,
+            design_n_eig=design_n_eig,
+            design_n_random=design_n_random,
         )
     finally:
         write_usage_report(results_root, usage_marker, heading="holdout recovery")
@@ -1107,6 +1119,8 @@ def _run_holdout_recovery_resolved(
     agent_model: Optional[str],
     cache_dir: Optional[Path],
     resume: bool,
+    design_n_eig: int = 32,
+    design_n_random: int = 0,
 ) -> Dict[str, Any]:
     """The recovery loop proper, after all config resolution and validation."""
     # Every project seed model — the fitted-seed baseline for each ground truth
@@ -1158,6 +1172,8 @@ def _run_holdout_recovery_resolved(
             agent_model=agent_model,
             resume=resume,
             gt_models_dir=gt_models_dir,
+            design_n_eig=design_n_eig,
+            design_n_random=design_n_random,
         )
 
         eval_info = build_eval_stimuli(

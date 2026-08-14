@@ -25,6 +25,17 @@ inner_loop:
   max_iterations: 2
   candidate_count: 3
 
+# Per-experiment design: n_eig stimuli chosen by max joint-EIG (discrimination,
+# concentrated on structured extremes) + n_random sampled uniformly from the same
+# pair pool (coverage of the flat middle, so the selected model must fit the whole
+# space, not just the discriminating region). The random half is ONE fixed sample
+# per experiment, shown to every participant (needed for cross-participant
+# analysis). Ablations: {n_eig: 64, n_random: 0} = pure EIG; {n_eig: 0,
+# n_random: 64} = pure random. Override at the CLI with --design-n-eig/--design-n-random.
+design:
+  n_eig: 32
+  n_random: 32
+
 agent:
   timeout_sec: 900
   backend: opencode # null -> CODING_AGENT env var, then "claude"

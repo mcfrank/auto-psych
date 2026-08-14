@@ -213,6 +213,8 @@ EXTRA_FLAGS=""
   --results-root "$RUN_REPO/_runs" \
   --summary-root "$WORK_ROOT/run${REPEAT}" \
   --cache-dir    "$RUN_DIR/mcmc_cache" \
+  ${DESIGN_N_EIG:+--design-n-eig $DESIGN_N_EIG} \
+  ${DESIGN_N_RANDOM:+--design-n-random $DESIGN_N_RANDOM} \
   --resume $EXTRA_FLAGS
 
 echo "[task $TASK] done -> $RUN_DIR/holdout.json"

@@ -262,6 +262,47 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     assert json.loads(out2.read_text(encoding="utf-8")) == stimuli
 
 
+def test_exhaustive_design_pure_random_no_eig(tmp_path):
+    """n_select=0 -> a pure random-coverage set: N distinct pairs sampled from the
+    pool with NO EIG computation (no model scoring), each marked source='random'
+    with eig=None. This is the 64-random ablation."""
+    models_dir = _seed(tmp_path)
+    stimuli = eig_mod.design_exhaustive(
+        models_dir, featurize_path=FEATURIZE, lengths=(3, 4), n_select=0, n_random=6, seed=1
+    )
+    assert len(stimuli) == 6
+    assert all(s["source"] == "random" for s in stimuli)
+    assert all(s["eig"] is None for s in stimuli)
+    keys = {(s["sequence_a"], s["sequence_b"]) for s in stimuli}
+    assert len(keys) == 6  # distinct
+    for s in stimuli:
+        assert len(s["sequence_a"]) == len(s["sequence_b"]) and len(s["sequence_a"]) in (3, 4)
+    # deterministic given the seed
+    again = eig_mod.design_exhaustive(
+        models_dir, featurize_path=FEATURIZE, lengths=(3, 4), n_select=0, n_random=6, seed=1
+    )
+    assert {(s["sequence_a"], s["sequence_b"]) for s in again} == keys
+
+
+def test_exhaustive_design_eig_plus_random_split(tmp_path):
+    """n_select>0 and n_random>0 -> EIG-selected half + random-coverage half,
+    disjoint, EIG picks first with real eig, random picks tagged. This is the
+    32-EIG + 32-random default."""
+    models_dir = _seed(tmp_path)
+    stimuli = eig_mod.design_exhaustive(
+        models_dir, featurize_path=FEATURIZE, lengths=(3, 4),
+        n_select=3, n_random=4, n_samples=25, n_scenarios=300, seed=1,
+    )
+    assert len(stimuli) == 7
+    eig_picks = [s for s in stimuli if s["source"] == "eig"]
+    rand_picks = [s for s in stimuli if s["source"] == "random"]
+    assert len(eig_picks) == 3 and len(rand_picks) == 4
+    assert all(isinstance(s["eig"], float) and s["eig"] >= 0.0 for s in eig_picks)
+    assert all(s["eig"] is None for s in rand_picks)
+    keys = [(s["sequence_a"], s["sequence_b"]) for s in stimuli]
+    assert len(set(keys)) == 7  # EIG and random halves are disjoint
+
+
 def test_exhaustive_design_never_scores_cross_length_pairs(tmp_path, monkeypatch):
     import numpy as np
 

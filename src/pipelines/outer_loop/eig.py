@@ -185,9 +185,11 @@ def design_exhaustive(
     featurize_path: Optional[Path] = None,
     lengths: tuple = (4, 5, 6, 7, 8),
     n_select: int = 32,
+    n_random: int = 0,
     n_samples: int = 200,
     n_scenarios: int = 1000,
     seed: int = 42,
+    random_seed: Optional[int] = None,
     responses_csv: Optional[Path] = None,
     fit_cache_dir: Optional[Path] = None,
     fit_draws: Optional[int] = None,
@@ -223,74 +225,116 @@ def design_exhaustive(
         enumerate_all_pairs,
     )
 
+    import random as _random
+
     models_dir = Path(models_dir)
     if responses_csv is not None and not Path(responses_csv).exists():
         raise FileNotFoundError(
             f"Posterior exhaustive design needs responses at {responses_csv}, "
             "but the file is missing."
         )
-    model_names = _load_model_names(models_dir)
-    model_weights = _load_model_weights(registry_path)
-    featurize = _load_featurizer(featurize_path)
+    if n_select < 0 or n_random < 0:
+        raise ValueError(f"n_select/n_random must be >= 0; got {n_select}, {n_random}.")
+    if n_select == 0 and n_random == 0:
+        raise ValueError("design_exhaustive needs n_select > 0 or n_random > 0.")
 
+    featurize = _load_featurizer(featurize_path)
     # The paper-anchored Hahn--Warren and Griffiths models are defined only
     # within a common sequence length. Do not ask them to compare scores with
     # different length-specific normalizers.
     pool = enumerate_all_pairs(list(lengths), same_length_only=True)
     rows = [_feature_row(item, featurize) for item in pool]
-    model_names = _screen_usable_models(model_names, models_dir, rows[0])
-    if model_weights and not any(model_weights.get(n, 0.0) > 0 for n in model_names):
+
+    results: List[Dict[str, Any]] = []
+    chosen: set = set()
+
+    # EIG-selected half: greedily pick the most jointly-informative pairs. Skipped
+    # entirely when n_select == 0 (no model scoring needed for a pure-random set).
+    if n_select > 0:
+        model_names = _load_model_names(models_dir)
+        model_weights = _load_model_weights(registry_path)
+        model_names = _screen_usable_models(model_names, models_dir, rows[0])
+        if model_weights and not any(model_weights.get(n, 0.0) > 0 for n in model_names):
+            print(
+                f"  [design] registry weights over {sorted(model_weights)} do not "
+                f"overlap this model set {model_names}; using a uniform model prior.",
+                flush=True,
+            )
+        basis = "prior predictive" if responses_csv is None else "posterior predictive"
         print(
-            f"  [design] registry weights over {sorted(model_weights)} do not "
-            f"overlap this model set {model_names}; using a uniform model prior.",
+            f"Exhaustive design: {len(pool):,d} pairs over lengths {list(lengths)}, "
+            f"{len(model_names)} models ({basis}), selecting {n_select} by EIG "
+            f"+ {n_random} random.",
             flush=True,
         )
-    basis = "prior predictive" if responses_csv is None else "posterior predictive"
-    print(
-        f"Exhaustive design: {len(pool):,d} pairs over lengths {list(lengths)}, "
-        f"{len(model_names)} models ({basis}), selecting {n_select}.",
-        flush=True,
-    )
-
-    if responses_csv is None:
-        draws = prior_predict_p_left_draws(
-            model_names, models_dir, rows, n_samples=n_samples, seed=seed
-        )
-    else:
-        draws = _posterior_p_left_draws(
-            model_names,
-            models_dir,
-            rows,
-            responses_csv=Path(responses_csv),
-            fit_cache_dir=fit_cache_dir,
-            max_draws=n_samples,
+        if responses_csv is None:
+            draws = prior_predict_p_left_draws(
+                model_names, models_dir, rows, n_samples=n_samples, seed=seed
+            )
+        else:
+            draws = _posterior_p_left_draws(
+                model_names,
+                models_dir,
+                rows,
+                responses_csv=Path(responses_csv),
+                fit_cache_dir=fit_cache_dir,
+                max_draws=n_samples,
+                seed=seed,
+                fit_draws=fit_draws,
+                fit_tune=fit_tune,
+                fit_chains=fit_chains,
+            )
+        selection = select_n_joint_eig(
+            draws,
+            n_select,
+            model_weights=model_weights or None,
+            n_scenarios=n_scenarios,
             seed=seed,
-            fit_draws=fit_draws,
-            fit_tune=fit_tune,
-            fit_chains=fit_chains,
         )
-    selection = select_n_joint_eig(
-        draws,
-        n_select,
-        model_weights=model_weights or None,
-        n_scenarios=n_scenarios,
-        seed=seed,
-    )
+        means = {m: arr.mean(axis=0) for m, arr in draws.items()}
+        for rank, (idx, joint_bits) in enumerate(
+            zip(selection.indices, selection.joint_eig_bits), start=1
+        ):
+            preds = {m: float(means[m][idx]) for m in means}
+            results.append(
+                {
+                    **pool[idx],
+                    "eig": round(eig_from_prior_means(preds, model_weights or None), 6),
+                    "selection_rank": rank,
+                    "joint_eig_bits": round(joint_bits, 6),
+                    "source": "eig",
+                }
+            )
+            chosen.add(int(idx))
+    else:
+        print(
+            f"Exhaustive design: {len(pool):,d} pairs over lengths {list(lengths)}, "
+            f"{n_random} random (no EIG selection).",
+            flush=True,
+        )
 
-    means = {m: arr.mean(axis=0) for m, arr in draws.items()}
-    results = []
-    for rank, (idx, joint_bits) in enumerate(
-        zip(selection.indices, selection.joint_eig_bits), start=1
-    ):
-        preds = {m: float(means[m][idx]) for m in means}
-        results.append(
-            {
-                **pool[idx],
-                "eig": round(eig_from_prior_means(preds, model_weights or None), 6),
-                "selection_rank": rank,
-                "joint_eig_bits": round(joint_bits, 6),
-            }
-        )
+    # Random-coverage half: uniform over the pool (minus the EIG picks), sampling
+    # the flat middle of the space the EIG selection deliberately avoids — so the
+    # selected model must fit broadly, not only the discriminating extremes.
+    if n_random > 0:
+        remaining = [i for i in range(len(pool)) if i not in chosen]
+        if n_random > len(remaining):
+            raise ValueError(
+                f"n_random={n_random} exceeds the {len(remaining)} pairs left after "
+                f"EIG selection over lengths {list(lengths)}."
+            )
+        rng = _random.Random(random_seed if random_seed is not None else seed)
+        for offset, idx in enumerate(sorted(rng.sample(remaining, n_random)), start=1):
+            results.append(
+                {
+                    **pool[idx],
+                    "eig": None,
+                    "selection_rank": len(chosen) + offset,
+                    "joint_eig_bits": None,
+                    "source": "random",
+                }
+            )
+
     return results
 
 

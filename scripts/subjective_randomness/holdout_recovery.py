@@ -88,6 +88,12 @@ class Args:
     """Override the config's inner-loop candidate rounds (0 = seed set only)."""
     inner_loop_candidates: Optional[int] = None
     """Override the config's candidate models per inner-loop round."""
+    design_n_eig: Optional[int] = None
+    """Override the config's design.n_eig (stimuli chosen by max joint-EIG)."""
+    design_n_random: Optional[int] = None
+    """Override the config's design.n_random (uniform-coverage stimuli). For
+    ablations: --design-n-eig 64 --design-n-random 0 (pure EIG), or
+    --design-n-eig 0 --design-n-random 64 (pure random)."""
     draws: Optional[int] = None
     """Override MCMC posterior draws per chain."""
     tune: Optional[int] = None
@@ -149,6 +155,14 @@ def main(args: Args) -> None:
         )
         if value is not None
     }
+    design_overrides = {
+        key: value
+        for key, value in (
+            ("n_eig", args.design_n_eig),
+            ("n_random", args.design_n_random),
+        )
+        if value is not None
+    }
 
     result = run_holdout_recovery_from_config(
         load_config(config_path),
@@ -162,6 +176,7 @@ def main(args: Args) -> None:
         n_participants_override=args.n_participants,
         inner_loop_overrides=inner_loop_overrides or None,
         fit_overrides=fit_overrides or None,
+        design_overrides=design_overrides or None,
         seed_override=args.seed,
         cache_dir=cache_dir,
         backend_override=args.backend,
