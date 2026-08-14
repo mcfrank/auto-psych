@@ -405,6 +405,7 @@ def run_design_programmatic(
     exp_num: int = 1,
     prev_exp_dir: Optional[Path] = None,
     k: int = 32,
+    n_random: int = 0,
     lengths: Sequence[int] = (2, 3, 4, 5, 6, 7, 8),
 ) -> None:
     """Select the design's stimuli by exhaustive enumeration (no design agent).
@@ -435,6 +436,8 @@ def run_design_programmatic(
             featurize_path=featurize,
             lengths=tuple(lengths),
             n_select=k,
+            n_random=n_random,
+            random_seed=exp_num,
         )
         basis = "prior predictive + uniform model weights"
     else:
@@ -444,6 +447,8 @@ def run_design_programmatic(
             featurize_path=featurize,
             lengths=tuple(lengths),
             n_select=k,
+            n_random=n_random,
+            random_seed=exp_num,
             responses_csv=prev_exp_dir / "data" / "responses.csv",
             fit_cache_dir=exp_dir / "design" / "_fit_cache",
         )

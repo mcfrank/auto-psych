@@ -63,6 +63,8 @@ def _stub_design(calls, stimuli=DESIGN_STIMULI):
                 Path(exp_dir).name,
                 exp_num,
                 Path(prev_exp_dir).name if prev_exp_dir is not None else None,
+                kwargs.get("k"),
+                kwargs.get("n_random"),
             )
         )
         design_dir = Path(exp_dir) / "design"
@@ -221,6 +223,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         tmp_path / "runs",
         cache_dir=tmp_path / "cache",
         summary_root=tmp_path / "summaries",
+        design_overrides={"n_eig": 3, "n_random": 5},
     )
 
     # The GT-params-bearing trajectory.json is written to summary_root (kept
@@ -249,10 +252,12 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # the prior (no previous experiment) and experiment 2 from experiment 1's
     # posterior. The config's agent.model reaches the inner loop, the only
     # place agents are spawned.
-    assert design_calls == [
+    assert [c[:3] for c in design_calls] == [
         ("experiment1", 1, None),
         ("experiment2", 2, "experiment1"),
     ]
+    # The design split (n_eig/n_random) threads config->CLI-override->design stage.
+    assert all((c[3], c[4]) == (3, 5) for c in design_calls)
     assert [k["agent_model"] for k in inner_loop_kwargs] == [
         "fireworks-ai/test-model",
         "fireworks-ai/test-model",
@@ -501,7 +506,7 @@ def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
         resume=True,
     )
 
-    assert design_calls == [("experiment2", 2, "experiment1")]
+    assert [c[:3] for c in design_calls] == [("experiment2", 2, "experiment1")]
     assert [c["seed"] for c in collect_calls] == [7]  # seed + exp_num, exp2 only
     assert loop_calls == ["experiment2"]
 
