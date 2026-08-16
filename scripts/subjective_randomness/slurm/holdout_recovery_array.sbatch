@@ -96,9 +96,16 @@ echo "[task $TASK] repeat=$REPEAT gt=$GT seed=$SEED -> $RUN_DIR"
 # reads: the recovery-harness sources, the literature-model test files (they
 # encode each faithful model's behavior), and gt.txt (the extracted source
 # paper the faithful models implement).
+# node_modules: the Firebase Cloud Functions JS deps (functions/node_modules) are
+# ~88% of the repo's file count (~5.5k tiny files) and are never used by the
+# Python holdout pipeline. Copying them into every per-task repo exhausts the
+# $SCRATCH inode quota (20M) across a multi-run sweep -> mid-run "Disk quota
+# exceeded" (Errno 122) deaths. Excluding any dir named node_modules cuts each
+# copy from ~6.3k files to ~0.75k.
 rsync -a \
   --exclude '.git' --exclude '.venv' --exclude 'data' \
   --exclude '__pycache__' --exclude '*.nc' \
+  --exclude 'node_modules' \
   --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
   --exclude 'ground_truth_models.py' --exclude 'evaluate_recovery.py' \
   --exclude 'test_literature_faithful_pymc.py' \
@@ -218,3 +225,25 @@ EXTRA_FLAGS=""
   --resume $EXTRA_FLAGS
 
 echo "[task $TASK] done -> $RUN_DIR/holdout.json"
+
+# --- reclaim inodes: archive + remove this task's repo copy on success -------
+# Reached only when the run above exits 0 (set -e), i.e. this GT is complete:
+# holdout.{json,csv,png} are in $RUN_DIR and trajectory.json in the summary root,
+# both OUTSIDE the copy. The repo copy (sanitized source + the agent's _runs
+# tree) is thousands of small files and the biggest inode consumer per task; it
+# is not read by the analysis job (it globs run<r>/<gt>/holdout.csv under
+# $RUN_DIR, never the copy) nor by --resume (which skips finished GTs via
+# trajectory.json). Collapse the agent artifacts to one tarball for later
+# inspection, then delete the tree so a long sweep can't fill the inode quota.
+# A FAILED task exits before here (set -e), leaving its copy intact for
+# debugging and resume. Set KEEP_REPO_COPY=1 to opt out.
+if [[ -z "${KEEP_REPO_COPY:-}" ]]; then
+  if [[ -d "$RUN_REPO/_runs" ]]; then
+    tar czf "$RUN_DIR/agent_runs.tar.gz" -C "$RUN_REPO" _runs \
+      && echo "[task $TASK] archived agent _runs -> $RUN_DIR/agent_runs.tar.gz"
+  fi
+  rm -rf "$RUN_REPO"
+  echo "[task $TASK] removed repo copy to reclaim inodes: $RUN_REPO"
+else
+  echo "[task $TASK] KEEP_REPO_COPY set — leaving repo copy in place: $RUN_REPO"
+fi

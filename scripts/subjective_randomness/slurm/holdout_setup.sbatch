@@ -36,6 +36,40 @@ uv pip install --python "$UV_PROJECT_ENVIRONMENT" --only-binary :all: \
   "pymc==5.28.5" "pytensor==2.38.3" "arviz<1" \
   numpy scipy pyyaml tyro pyprojroot matplotlib
 
+# Preflight: abort the whole chain (afterok) if $SCRATCH is near its inode
+# quota. Each array task rsyncs a repo copy and writes an agent tree (thousands
+# of small files); launching a full sweep against an almost-full inode quota
+# just yields mid-run "Disk quota exceeded" (Errno 122) deaths, as happened on
+# the 64eig run. Fail loud here so no array task starts. Override the ceiling
+# with INODE_CEIL_PCT (default 90). Reads sh_quota -j; a read failure warns and
+# proceeds rather than blocking on a tool-format change.
+export INODE_CEIL_PCT="${INODE_CEIL_PCT:-90}"
+"$VENV_PY" - <<'PY'
+import json, os, subprocess, sys
+
+try:
+    out = subprocess.run(
+        ["sh_quota", "-j"],
+        stdout=subprocess.PIPE, stderr=subprocess.DEVNULL, text=True, timeout=60,
+    ).stdout
+    inodes = json.loads(out)["SCRATCH"]["quotas"]["inodes"]
+    usage, limit = int(inodes["usage"]), int(inodes["limit"])
+except Exception as exc:  # noqa: BLE001 — degrade gracefully, don't block on a tool change
+    print(f"[setup] WARNING: inode preflight could not read sh_quota ({exc!r}); "
+          "skipping the check", file=sys.stderr)
+    raise SystemExit(0)
+
+pct = 100.0 * usage / limit
+ceil = float(os.environ["INODE_CEIL_PCT"])
+print(f"[setup] $SCRATCH inodes: {usage:,} / {limit:,} ({pct:.1f}%); ceiling {ceil:.0f}%")
+if pct >= ceil:
+    raise SystemExit(
+        f"ABORT: $SCRATCH inode usage {pct:.1f}% >= {ceil:.0f}% ceiling — a full array "
+        f"would exhaust the {limit:,}-inode quota mid-run (Errno 122). Free inodes "
+        f"(delete old run trees) or raise INODE_CEIL_PCT, then resubmit."
+    )
+PY
+
 # Preflight: a coding-agent credential must be available or every run will fail
 # the moment it spawns an agent.
 if [[ -z "${GOOGLE_API_KEY:-}${GEMINI_API_KEY:-}" ]]; then
