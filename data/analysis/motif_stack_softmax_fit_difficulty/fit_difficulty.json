@@ -1,0 +1,83 @@
+{
+  "n_rows": 450,
+  "n_pairs": 30,
+  "settings": {
+    "n_participants": 15,
+    "target_accepts": [
+      0.9,
+      0.99
+    ],
+    "draws": 400,
+    "tune": 800,
+    "chains": 4,
+    "gen_seed": 0,
+    "fit_seed": 42,
+    "out_dir": "data/analysis/motif_stack_softmax_fit_difficulty"
+  },
+  "results": [
+    {
+      "model": "motif_stack",
+      "target_accept": 0.9,
+      "mean_leapfrog_steps": 38.86625,
+      "median_leapfrog_steps": 31.0,
+      "max_leapfrog_steps": 127.0,
+      "mean_tree_depth": 5.194375,
+      "max_tree_depth": 7.0,
+      "divergences": 0.0,
+      "mean_step_size": 0.1064404317750886,
+      "min_ess": 208.9912476052719,
+      "ess_per_1000_leapfrogs": 3.3607443412548146,
+      "max_rhat": 1.0218979667661916,
+      "total_leapfrog_steps": 62186.0,
+      "wall_clock_s": 86.76141696498962
+    },
+    {
+      "model": "motif_stack_softmax",
+      "target_accept": 0.9,
+      "mean_leapfrog_steps": 22.4975,
+      "median_leapfrog_steps": 23.0,
+      "max_leapfrog_steps": 63.0,
+      "mean_tree_depth": 4.450625,
+      "max_tree_depth": 6.0,
+      "divergences": 0.0,
+      "mean_step_size": 0.13006691497457254,
+      "min_ess": 378.80220269755546,
+      "ess_per_1000_leapfrogs": 10.523452680785518,
+      "max_rhat": 1.0084445936421198,
+      "total_leapfrog_steps": 35996.0,
+      "wall_clock_s": 52.42383961996529
+    },
+    {
+      "model": "motif_stack",
+      "target_accept": 0.99,
+      "mean_leapfrog_steps": 142.0925,
+      "median_leapfrog_steps": 127.0,
+      "max_leapfrog_steps": 383.0,
+      "mean_tree_depth": 7.02875,
+      "max_tree_depth": 9.0,
+      "divergences": 0.0,
+      "mean_step_size": 0.02255780269184257,
+      "min_ess": 235.75878972180953,
+      "ess_per_1000_leapfrogs": 1.0369952219584493,
+      "max_rhat": 1.0209851852108582,
+      "total_leapfrog_steps": 227348.0,
+      "wall_clock_s": 251.58176220901078
+    },
+    {
+      "model": "motif_stack_softmax",
+      "target_accept": 0.99,
+      "mean_leapfrog_steps": 53.4725,
+      "median_leapfrog_steps": 63.0,
+      "max_leapfrog_steps": 127.0,
+      "mean_tree_depth": 5.686875,
+      "max_tree_depth": 7.0,
+      "divergences": 0.0,
+      "mean_step_size": 0.07059653248724483,
+      "min_ess": 484.92863882586124,
+      "ess_per_1000_leapfrogs": 5.667967633197686,
+      "max_rhat": 1.0087406540855193,
+      "total_leapfrog_steps": 85556.0,
+      "wall_clock_s": 109.14340170199284
+    }
+  ]
+}

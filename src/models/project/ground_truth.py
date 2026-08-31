@@ -1,8 +1,7 @@
 """Load project-specific ground-truth models."""
 
 import importlib.util
-from pathlib import Path
-from typing import Any, Callable, Dict, List
+from typing import Callable, Dict, List
 
 from src.runtime.config import project_assets_dir
 

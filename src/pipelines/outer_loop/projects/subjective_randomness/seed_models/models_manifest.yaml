@@ -2,8 +2,10 @@
 # cognitive_models/. This file MIRRORS the registry manifest at
 # src/subjective_randomness/pymc_model_families/models_manifest.yaml, which is
 # the single source of truth for the active seed set — to change the seed set,
-# edit the registry manifest and copy it (plus the model files) here.
-# test_subjective_randomness_seed_recovery.py asserts the two agree; the
+# edit the registry manifest, then run
+# scripts/subjective_randomness/sync_seed_models.py to copy the model files here.
+# test_model_manifest.py asserts the model bodies are byte-identical and
+# test_subjective_randomness_seed_recovery.py asserts the manifests agree; the
 # 2026-07 hero-run pool that used to live here (and diverged from the registry
 # for a month) is preserved under archive_hero_run_2026_07/.
 #

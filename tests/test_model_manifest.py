@@ -72,6 +72,26 @@ def test_every_manifest_model_has_its_pymc_file(models_dir):
         assert (models_dir / f"{name}.py").exists()
 
 
+def test_live_seed_pool_is_byte_identical_to_the_registry():
+    """The live seed pool must be a verbatim mirror of the registry.
+
+    The registry manifest is the single source of truth; the seed pool is a copy
+    the outer loop hands to experiment 1 (and shows to coding agents as worked
+    examples). Only names were guarded before — the model *bodies* could drift
+    silently, exactly the failure that broke every recovery helper in 2026-07.
+    Regenerate the pool with ``scripts/subjective_randomness/sync_seed_models.py``.
+    """
+    registry_names = read_manifest_names(REGISTRY_DIR)
+    assert read_manifest_names(LIVE_SEED_DIR) == registry_names
+    for name in registry_names:
+        registry_src = (REGISTRY_DIR / f"{name}.py").read_bytes()
+        seed_src = (LIVE_SEED_DIR / f"{name}.py").read_bytes()
+        assert seed_src == registry_src, (
+            f"seed pool {name}.py has drifted from the registry; "
+            f"run scripts/subjective_randomness/sync_seed_models.py to resync"
+        )
+
+
 # ── the reader ──────────────────────────────────────────────────────
 
 

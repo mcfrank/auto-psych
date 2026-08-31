@@ -21,7 +21,7 @@ import hashlib
 import json
 import re
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Mapping, Optional, Sequence
+from typing import Any, Callable, Dict, List, Mapping, Optional
 
 # A judge backend: takes (system_prompt, user_prompt), returns the raw reply.
 JudgeFn = Callable[[str, str], str]
