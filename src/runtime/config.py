@@ -68,13 +68,6 @@ def agent_dir(project_id: str, run_id: int, agent_key: str) -> Path:
     return run_dir(project_id, run_id) / agent_key
 
 
-def agent_dir_for_state(
-    project_id: str, run_id: int, agent_key: str, state: Optional[Dict[str, Any]] = None
-) -> Path:
-    """Return agent directory; when state has 'batch_dir', runs live under that batch."""
-    return run_dir_for_state(project_id, run_id, state) / agent_key
-
-
 def prompts_used_dir(project_id: str, run_id: int) -> Path:
     """Return path to prompts_used archive for a run."""
     return run_dir(project_id, run_id) / "prompts_used"

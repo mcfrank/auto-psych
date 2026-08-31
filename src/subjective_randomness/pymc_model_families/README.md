@@ -13,7 +13,9 @@ fixed-parameter baselines need the pure-Python family twins. The outer loop's
 live seed pool
 (`src/pipelines/outer_loop/projects/subjective_randomness/seed_models/`) is a
 **mirror** of this manifest, not an independent set: to change the seed set,
-edit the manifest here and copy it plus the model files across.
+edit the manifest here and run
+`scripts/subjective_randomness/sync_seed_models.py` to copy the model files
+across (the pool manifest keeps its own header but must list the same models).
 `tests/test_model_manifest.py` and
 `tests/test_subjective_randomness_seed_recovery.py` fail if the two diverge, or
 if a manifest name has no pure-Python twin. (They diverged once, between the

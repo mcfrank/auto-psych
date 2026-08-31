@@ -61,6 +61,10 @@ remote_jobs/.env.local
 *_cache/
 scratch/
 
+# Slurm job logs (stdout/stderr dumps) — regenerable, never commit
+*.out
+slurm-*.err
+
 # Large generated text dumps (~21 MB of PDF-extraction output). Untracked in
 # 2026-08; the file itself is kept on disk.
 gt.txt

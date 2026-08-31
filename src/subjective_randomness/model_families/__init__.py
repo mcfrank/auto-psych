@@ -23,6 +23,8 @@ from . import finite_experience_occurrence
 from . import local_representativeness
 from . import motif_hmm
 from . import motif_stack
+from . import motif_stack_softmax
+from . import motif_stack_tempered
 from . import prototype_similarity
 from . import window_typicality
 
@@ -34,6 +36,8 @@ __all__ = [
     "local_representativeness",
     "motif_hmm",
     "motif_stack",
+    "motif_stack_softmax",
+    "motif_stack_tempered",
     "prototype_similarity",
     "window_typicality",
 ]
