@@ -331,3 +331,44 @@ def test_default_prepares_the_sweep_but_submits_nothing(campaign):
     assert jobs["launch_command"] == result.launch_command and jobs["sweep_jobs"] is None
     journal = (campaign.root / "journal.md").read_text(encoding="utf-8")
     assert "NOT launched" in journal and "launch_next.sh demo 1" in journal
+
+
+def test_session_limit_pauses_the_iteration_without_a_repair_round(campaign):
+    from src.recovery_improvement.session_limit import SessionLimitHit
+
+    calls: list[str] = []
+
+    def limited_agent(prompt: str, *, cwd: Path, log_path: Path):
+        calls.append(prompt)
+        (cwd / "src" / "loop.py").write_text("THRESHOLD = 0.03\n", encoding="utf-8")  # partial work
+        log_path.write_text("{}", encoding="utf-8")
+        return True, "You've hit your session limit · resets 12am (America/Los_Angeles)"
+
+    with pytest.raises(SessionLimitHit) as exc:
+        run_iteration(campaign, 1, run_agent=limited_agent, prompt_template=PROMPT_TEMPLATE)
+    assert exc.value.limit.reset_at is not None
+    assert len(calls) == 1  # no repair round
+    assert not (campaign.root / "iter1" / "jobs.json").exists()
+    assert "session limit hit" in (campaign.root / "journal.md").read_text(encoding="utf-8")
+
+
+def test_resumed_iteration_keeps_partial_work_and_tells_the_agent(campaign):
+    from src.recovery_improvement.session_limit import SessionLimitHit
+
+    def limited_agent(prompt: str, *, cwd: Path, log_path: Path):
+        (cwd / "src" / "loop.py").write_text("THRESHOLD = 0.03\n", encoding="utf-8")
+        (cwd.parent / "next_run.env").write_text("NOTE=partial\n", encoding="utf-8")
+        log_path.write_text("{}", encoding="utf-8")
+        return True, "You've hit your session limit · resets 12am (America/Los_Angeles)"
+
+    with pytest.raises(SessionLimitHit):
+        run_iteration(campaign, 1, run_agent=limited_agent, prompt_template=PROMPT_TEMPLATE)
+
+    prompts: list[str] = []
+    result = run_iteration(campaign, 1, run_agent=_good_agent(prompts), prompt_template=PROMPT_TEMPLATE)
+    assert result.decision == "sweep"
+    iter_dir = campaign.root / "iter1"
+    assert (iter_dir / "claude_stream.attempt1.jsonl").exists()  # first transcript preserved
+    assert "RESUMING AN INTERRUPTED SESSION" in prompts[0]
+    assert "next_run.env" in prompts[0] and "src/loop.py" in prompts[0]  # what it left behind
+    assert "(resumed)" in (campaign.root / "journal.md").read_text(encoding="utf-8")
