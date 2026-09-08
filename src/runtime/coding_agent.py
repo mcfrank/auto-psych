@@ -10,7 +10,8 @@ Backend selection: an explicit argument wins, else the ``CODING_AGENT``
 environment variable, else ``"opencode"`` (the default). Model names are
 per-backend: each backend has its own default and any ``model`` argument is
 passed through verbatim (opencode uses ``provider/model`` — defaults to Gemini;
-Claude uses ``claude-sonnet-4-6``).
+Claude uses ``claude-sonnet-4-6``; Codex (``codex exec --json``) uses
+``gpt-5.6-sol``).
 
 Both backends stream JSON events (Claude via ``--output-format stream-json``,
 opencode via ``--format json``), and both report token usage in that stream —
@@ -37,6 +38,7 @@ DEFAULT_BACKEND = "opencode"
 _DEFAULT_MODEL = {
     "claude": "claude-sonnet-4-6",
     "opencode": "google/gemini-3.1-pro-preview",
+    "codex": "gpt-5.6-sol",
 }
 
 # opencode >= 1.17 keeps its sessions in one shared sqlite database. When
@@ -44,6 +46,12 @@ _DEFAULT_MODEL = {
 # late arrivals can die instantly with "database is locked" during session
 # creation. That is transient — retry with backoff instead of losing the
 # agent's whole task. Other failures are NOT retried.
+# Linux caps one argv string at 128 KiB (MAX_ARG_STRLEN). Prompts above this
+# are delivered on stdin instead; codex always reads its prompt from stdin
+# (its `-` argument), claude only when the prompt is long. opencode has no
+# stdin prompt, so a long prompt there is an error, not a silent truncation.
+STDIN_PROMPT_THRESHOLD = 100_000
+
 OPENCODE_LOCK_RETRIES = 3
 OPENCODE_LOCK_BACKOFF_SECS = 2.0
 _OPENCODE_LOCK_SIGNATURE = "database is locked"
@@ -60,6 +68,21 @@ def select_backend(explicit: Optional[str]) -> str:
     return backend
 
 
+def prompt_via_stdin(backend: str, prompt: str) -> bool:
+    """Whether ``prompt`` is delivered on stdin rather than as an argument."""
+    if backend == "codex":
+        return True
+    if backend == "claude":
+        return len(prompt.encode("utf-8")) > STDIN_PROMPT_THRESHOLD
+    if len(prompt.encode("utf-8")) > STDIN_PROMPT_THRESHOLD:
+        raise ValueError(
+            f"{backend} takes its prompt as an argument, and this one is "
+            f"{len(prompt.encode('utf-8'))} bytes — over the {STDIN_PROMPT_THRESHOLD}-byte "
+            "argv limit; shorten it"
+        )
+    return False
+
+
 def build_command(
     backend: str,
     *,
@@ -70,12 +93,14 @@ def build_command(
 ) -> list[str]:
     """Build the CLI argv for the given backend.
 
-    The prompt is always the final element so callers can locate it. opencode
-    has no ``--add-dir`` equivalent (it operates on the working directory), so
-    ``allowed_dirs`` is honoured only for Claude Code. ``extra_args`` are
-    backend CLI flags appended verbatim before the prompt (e.g. Claude's
-    ``--max-turns`` / ``--max-budget-usd`` / ``--disallowedTools`` for a
-    long-running supervisor session).
+    The prompt is the final element so callers can locate it — or, when
+    :func:`prompt_via_stdin` says so, the final element is codex's ``-``
+    marker / absent for claude, and the caller writes the prompt to stdin.
+    opencode has no ``--add-dir`` equivalent (it operates on the working
+    directory), so ``allowed_dirs`` is honoured only for Claude Code.
+    ``extra_args`` are backend CLI flags appended verbatim before the prompt
+    (e.g. Claude's ``--max-turns`` / ``--max-budget-usd`` / ``--disallowedTools``
+    for a long-running supervisor session).
     """
     if backend not in _DEFAULT_MODEL:
         raise ValueError(f"unknown coding-agent backend: {backend!r}")
@@ -90,10 +115,22 @@ def build_command(
         ]
         for d in allowed_dirs:
             cmd += ["--add-dir", str(d)]
-        cmd += ["--model", model, *extra_args, "-p", prompt]
+        cmd += ["--model", model, *extra_args, "-p"]
+        if not prompt_via_stdin(backend, prompt):
+            cmd.append(prompt)
         return cmd
     if backend == "opencode":
+        prompt_via_stdin(backend, prompt)  # raises if too long for argv
         return ["opencode", "run", "--format", "json", "-m", model, *extra_args, prompt]
+    if backend == "codex":
+        # `codex exec` never prompts; the sandbox flag is its only permission
+        # knob. --skip-git-repo-check lets it run outside a repository. The
+        # prompt goes on stdin (`-`): briefs with an inlined evidence pack are
+        # far over the argv limit.
+        return [
+            "codex", "exec", "--model", model, "--sandbox", "danger-full-access",
+            "--skip-git-repo-check", "--json", *extra_args, "-",
+        ]
     # Reachable only if _DEFAULT_MODEL gains a backend without a branch here.
     # Fail loudly rather than returning None into subprocess.Popen.
     raise ValueError(f"no command builder for coding-agent backend: {backend!r}")
@@ -128,6 +165,28 @@ def _summarise_claude_event(event: dict) -> Optional[str]:
         turns = event.get("num_turns", "?")
         result_text = str(event.get("result", ""))[:200]
         return f"  [result] {subtype}{cost_str}  turns={turns}\n  {result_text}"
+    return None
+
+
+def _summarise_codex_event(event: dict) -> Optional[str]:
+    """One-line human summary of a ``codex exec --json`` event, or None."""
+    t = event.get("type")
+    if t == "item.completed":
+        item = event.get("item", {})
+        kind = item.get("type")
+        if kind == "command_execution":
+            return f"  → {str(item.get('command', ''))[:120]}"
+        if kind == "agent_message":
+            text = str(item.get("text", "")).strip()
+            return f"  … {text.splitlines()[0][:120]}" if text else None
+        if kind in ("file_change", "mcp_tool_call", "web_search"):
+            return f"  → {kind}"
+        return None
+    if t == "turn.completed":
+        usage = event.get("usage", {})
+        return f"  [turn] tokens in={usage.get('input_tokens', '?')} out={usage.get('output_tokens', '?')}"
+    if t == "error":
+        return f"  [error] {str(event.get('message', ''))[:200]}"
     return None
 
 
@@ -199,6 +258,57 @@ class _ClaudeStream:
             ),
             "cost_usd": self._result_cost,
         }
+
+
+class _CodexStream:
+    """Interprets ``codex exec --json`` events: final message and usage.
+
+    The result text is the last ``agent_message`` item; usage is summed over
+    ``turn.completed`` events (Codex reports cached input inside
+    ``input_tokens``, so it is split back out to keep the components disjoint).
+    """
+
+    def __init__(self) -> None:
+        self._messages: list[str] = []
+        self._token_sums = {
+            "input_tokens": 0,
+            "output_tokens": 0,
+            "reasoning_tokens": 0,
+            "cache_read_tokens": 0,
+            "cache_write_tokens": 0,
+        }
+        self._saw_usage = False
+        self.error: Optional[str] = None
+
+    def feed(self, event: dict) -> None:
+        t = event.get("type")
+        if t == "item.completed":
+            item = event.get("item", {})
+            if item.get("type") == "agent_message":
+                text = str(item.get("text", ""))
+                if text.strip():
+                    self._messages.append(text)
+        elif t == "turn.completed":
+            usage = event.get("usage")
+            if isinstance(usage, dict):
+                self._saw_usage = True
+                cached = int(usage.get("cached_input_tokens", 0))
+                self._token_sums["input_tokens"] += int(usage.get("input_tokens", 0)) - cached
+                self._token_sums["cache_read_tokens"] += cached
+                self._token_sums["output_tokens"] += int(usage.get("output_tokens", 0))
+                self._token_sums["reasoning_tokens"] += int(
+                    usage.get("reasoning_output_tokens", 0)
+                )
+        elif t == "error":
+            self.error = str(event.get("message", ""))
+
+    def result_text(self) -> str:
+        return self._messages[-1].strip() if self._messages else ""
+
+    def usage_fields(self) -> Dict[str, Any]:
+        if not self._saw_usage:
+            return {"usage_missing": True}
+        return {**self._token_sums, "cost_usd": None}
 
 
 class _OpencodeStream:
@@ -295,6 +405,7 @@ def run_coding_agent(
     )
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
+    stdin_text = prompt if prompt_via_stdin(backend, prompt) else None
     for attempt in range(1 + OPENCODE_LOCK_RETRIES):
         outcome = _run_agent_once(
             cmd,
@@ -305,6 +416,7 @@ def run_coding_agent(
             env=env,
             on_summary=on_summary,
             log_mode="w" if attempt == 0 else "a",
+            stdin_text=stdin_text,
         )
         stream, captured, timed_out, returncode = outcome
         raw_output = "".join(captured)
@@ -341,6 +453,12 @@ def run_coding_agent(
 
     if backend == "claude":
         return stream.success, stream.final_result
+    if backend == "codex":
+        # A non-zero exit or an error event is a failure; the error text is
+        # the result so callers (and the session-limit detector) can read it.
+        if stream.error and returncode != 0:
+            return False, stream.error
+        return returncode == 0, stream.result_text() or raw_output.strip()
     success = returncode == 0
     final_result = stream.result_text() or raw_output.strip()
     return success, final_result
@@ -356,17 +474,24 @@ def _run_agent_once(
     env: Optional[dict],
     on_summary: Optional[Callable[[str], None]],
     log_mode: str,
+    stdin_text: Optional[str] = None,
 ) -> tuple[Any, list[str], bool, Optional[int]]:
     """One subprocess pass: spawn, stream, kill on timeout.
 
     Returns ``(stream, captured_lines, timed_out, returncode)``. Retry attempts
     append to the log file (``log_mode="a"``) so the evidence of earlier
-    failures survives.
+    failures survives. ``stdin_text`` (a prompt too long for argv) is written
+    from a helper thread so a child that emits output before draining stdin
+    cannot deadlock against us.
     """
-    stream = _ClaudeStream() if backend == "claude" else _OpencodeStream()
-    summarise = (
-        _summarise_claude_event if backend == "claude" else _summarise_opencode_event
-    )
+    streams = {"claude": _ClaudeStream, "codex": _CodexStream, "opencode": _OpencodeStream}
+    summarisers = {
+        "claude": _summarise_claude_event,
+        "codex": _summarise_codex_event,
+        "opencode": _summarise_opencode_event,
+    }
+    stream = streams[backend]()
+    summarise = summarisers[backend]
     captured: list[str] = []
 
     with open(log_path, log_mode, encoding="utf-8") as log_file:
@@ -376,6 +501,9 @@ def _run_agent_once(
             cmd,
             cwd=str(cwd),
             env=env,
+            # Closed unless we deliver the prompt on it: codex exec reads stdin
+            # whenever it is not a tty.
+            stdin=subprocess.PIPE if stdin_text is not None else subprocess.DEVNULL,
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
@@ -386,6 +514,14 @@ def _run_agent_once(
             # stdout pipe open — let the read loop / proc.wait() below hang forever.
             start_new_session=True,
         )
+        if stdin_text is not None:
+            def _feed_stdin(text: str = stdin_text) -> None:
+                try:
+                    proc.stdin.write(text)
+                finally:
+                    proc.stdin.close()
+
+            threading.Thread(target=_feed_stdin, daemon=True).start()
         timed_out = threading.Event()
 
         def _kill_after():
@@ -409,7 +545,7 @@ def _run_agent_once(
                     event = json.loads(line)
                 except json.JSONDecodeError:
                     if on_summary:
-                        prefix = "cc" if backend == "claude" else "oc"
+                        prefix = {"claude": "cc", "codex": "cx"}.get(backend, "oc")
                         on_summary(f"  [{prefix}] {line}")
                     continue
                 if not isinstance(event, dict):

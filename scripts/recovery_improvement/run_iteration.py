@@ -79,6 +79,9 @@ class Args:
     """Launch the declared sweep and chain the next review job automatically.
     Off by default: the review only prepares the sweep, and the user launches
     it with launch_next.sh after reading the prescription."""
+    plan: Path | None = None
+    """A review panel's plan.md to hand over: the agent is asked to implement
+    its first auto-psych item unless the evidence says otherwise."""
 
 
 def requeue_after_session_limit(campaign: Campaign, iteration: int, hit: SessionLimitHit) -> None:
@@ -117,6 +120,7 @@ def main(args: Args) -> None:
         return
 
     template = args.prompt_template.read_text(encoding="utf-8")
+    plan_text = args.plan.read_text(encoding="utf-8") if args.plan else ""
     if args.dry_run:
         out_dir = campaign.root / f"dryrun_iter{args.iteration}"
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -126,7 +130,7 @@ def main(args: Args) -> None:
         prompt = compose_prompt(
             template, campaign=campaign, iteration=args.iteration,
             repo=campaign.iteration_dir(args.iteration) / REPO_DIRNAME,
-            digest=digest, venv_py=venv_py,
+            digest=digest, venv_py=venv_py, plan=plan_text,
         )
         (out_dir / PROMPT_NAME).write_text(prompt, encoding="utf-8")
         print(f"dry run: wrote {out_dir / DIGEST_NAME} and {out_dir / PROMPT_NAME}")
@@ -142,6 +146,7 @@ def main(args: Args) -> None:
             submit_sweep=submit_sweep if args.auto_launch else None,
             submit_review=functools.partial(submit_review, campaign) if args.auto_launch else None,
             venv_py=venv_py,
+            plan_text=plan_text,
         )
     except SessionLimitHit as hit:
         requeue_after_session_limit(campaign, args.iteration, hit)
