@@ -46,9 +46,15 @@ from src.runtime import token_usage  # noqa: E402
 from src.runtime.coding_agent import run_coding_agent  # noqa: E402
 
 PROMPT_DIR = here() / "scripts" / "recovery_improvement"
-MAX_INPUT_WAITS = 36     # x 20 min = 12 h of waiting for an earlier stage
+# Waiting for an earlier stage: 20-minute checks for the first two hours, then
+# hourly, for up to a week — a weekly usage limit on one member must not make
+# the stage behind it give up.
+MAX_INPUT_WAITS = 6 + 24 * 7
 MAX_LIMIT_WAITS = 12
-INPUT_WAIT = "now+20minutes"
+
+
+def input_wait(waits_so_far: int) -> str:
+    return "now+20minutes" if waits_so_far < 6 else "now+60minutes"
 
 
 @dataclass
@@ -96,12 +102,15 @@ def agent_factory(panel: Panel):
     return agent_for
 
 
-def requeue(panel: Panel, stage: str, *, begin: str, counter_name: str, cap: int, why: str) -> None:
+def requeue(panel: Panel, stage: str, *, begin, counter_name: str, cap: int, why: str) -> None:
+    """``begin`` is an sbatch --begin value, or a callable of the wait count."""
     counter = panel.root / f"{counter_name}_{stage}"
     waits = int(counter.read_text()) + 1 if counter.is_file() else 1
     if waits > cap:
         raise SystemExit(f"stage {stage}: {why}; requeued {waits - 1} times already, giving up")
     counter.write_text(str(waits))
+    if callable(begin):
+        begin = begin(waits - 1)
     slurm = panel.slurm
     cmd = [
         "sbatch", "--parsable", f"--begin={begin}",
@@ -152,7 +161,7 @@ def main(args: Args) -> None:
         return
     missing = missing_inputs(panel, stage)
     if missing:
-        requeue(panel, stage, begin=INPUT_WAIT, counter_name="input_waits", cap=MAX_INPUT_WAITS,
+        requeue(panel, stage, begin=input_wait, counter_name="input_waits", cap=MAX_INPUT_WAITS,
                 why=f"waiting for {len(missing)} earlier note(s) (first: {missing[0]})")
         return
 

@@ -187,3 +187,21 @@ def test_prompt_only_member_gets_the_evidence_pack_and_delivers_by_message(panel
     run_synthesis(panel, agent_for=agent_for, synthesis_template=SYNTH_TEMPLATE + "\n$capabilities")
     assert panel.plan_path.read_text(encoding="utf-8").startswith("# plan")
     assert (panel.synthesis_dir / "next_run.env").read_text(encoding="utf-8") == "NOTE=test item 1\nDRAWS=1000\n"
+
+
+def test_partial_note_is_set_aside_on_a_limit_and_offered_to_the_resumed_session(panel):
+    briefs = []
+
+    def cut_off(member, label):
+        def run(prompt, *, cwd, log_path):
+            briefs.append((member.name, prompt))
+            panel.note_path(1, member).write_text("half a note " * 30, encoding="utf-8")
+            return True, "You've hit your session limit · resets 12am (America/Los_Angeles)"
+        return run
+    with pytest.raises(SessionLimitHit):
+        run_round(panel, 1, agent_for=cut_off, member_template=MEMBER_TEMPLATE)
+    partial = panel.round_dir(1) / "m1.partial.md"
+    assert partial.is_file() and not panel.note_path(1, panel.members[0]).exists()
+    run_round(panel, 1, agent_for=_note_writing_agent(panel, briefs), member_template=MEMBER_TEMPLATE)
+    assert briefs[-2][0] == "m1" and "RESUMING AFTER A SESSION LIMIT" in briefs[-2][2] and str(partial) in briefs[-2][2]
+    assert "RESUMING AFTER" not in briefs[-1][2]  # m2 was never cut off
