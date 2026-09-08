@@ -190,7 +190,7 @@ def test_iteration_reviews_then_launches_sweep_and_chains_next_review(campaign, 
     prompts: list[str] = []
 
     result = run_iteration(
-        campaign, 1, run_agent=_good_agent(prompts), submit_sweep=slurm.submit_sweep,
+        campaign, 1, run_agent=_good_agent(prompts), auto_launch=True, submit_sweep=slurm.submit_sweep,
         submit_review=slurm.submit_review, prompt_template=PROMPT_TEMPLATE,
     )
 
@@ -231,11 +231,11 @@ def test_iteration_reviews_then_launches_sweep_and_chains_next_review(campaign, 
 def test_final_iteration_chains_a_finalize_job_instead_of_another_review(campaign):
     slurm = FakeSlurm()
     run_iteration(
-        campaign, 1, run_agent=_good_agent([]), submit_sweep=slurm.submit_sweep,
+        campaign, 1, run_agent=_good_agent([]), auto_launch=True, submit_sweep=slurm.submit_sweep,
         submit_review=slurm.submit_review, prompt_template=PROMPT_TEMPLATE,
     )
     run_iteration(
-        campaign, 2, run_agent=_good_agent([]), submit_sweep=slurm.submit_sweep,
+        campaign, 2, run_agent=_good_agent([]), auto_launch=True, submit_sweep=slurm.submit_sweep,
         submit_review=slurm.submit_review, prompt_template=PROMPT_TEMPLATE,
     )
     assert slurm.reviews[-1] == (3, "13", "finalize")
@@ -255,7 +255,7 @@ def test_stop_decision_launches_nothing(campaign):
         return True, "stopping"
 
     result = run_iteration(
-        campaign, 1, run_agent=stopping_agent, submit_sweep=slurm.submit_sweep,
+        campaign, 1, run_agent=stopping_agent, auto_launch=True, submit_sweep=slurm.submit_sweep,
         submit_review=slurm.submit_review, prompt_template=PROMPT_TEMPLATE,
     )
     assert result.decision == "stop"
@@ -276,7 +276,7 @@ def test_missing_deliverables_are_repaired_once_with_the_problems_injected(campa
         return good(prompt, cwd=cwd, log_path=log_path)
 
     result = run_iteration(
-        campaign, 1, run_agent=forgetful_then_good, submit_sweep=slurm.submit_sweep,
+        campaign, 1, run_agent=forgetful_then_good, auto_launch=True, submit_sweep=slurm.submit_sweep,
         submit_review=slurm.submit_review, prompt_template=PROMPT_TEMPLATE,
     )
     assert result.repairs_used == 1
@@ -293,7 +293,7 @@ def test_persistently_missing_deliverables_fail_loudly_without_launching(campaig
 
     with pytest.raises(RuntimeError, match="next_run.env"):
         run_iteration(
-            campaign, 1, run_agent=lazy_agent, submit_sweep=slurm.submit_sweep,
+            campaign, 1, run_agent=lazy_agent, auto_launch=True, submit_sweep=slurm.submit_sweep,
             submit_review=slurm.submit_review, prompt_template=PROMPT_TEMPLATE,
         )
     assert slurm.sweeps == [] and slurm.reviews == []
@@ -310,6 +310,24 @@ def test_uncommitted_changes_are_a_deliverable_problem(campaign):
 
     with pytest.raises(RuntimeError, match="uncommitted"):
         run_iteration(
-            campaign, 1, run_agent=sloppy_agent, submit_sweep=slurm.submit_sweep,
+            campaign, 1, run_agent=sloppy_agent, auto_launch=True, submit_sweep=slurm.submit_sweep,
             submit_review=slurm.submit_review, prompt_template=PROMPT_TEMPLATE,
         )
+
+
+def test_default_prepares_the_sweep_but_submits_nothing(campaign):
+    """The default flow: review, validate, record the sweep — and leave the
+    launch to the user (launch_next.sh)."""
+    slurm = FakeSlurm()
+    result = run_iteration(
+        campaign, 1, run_agent=_good_agent([]), prompt_template=PROMPT_TEMPLATE,
+    )
+    assert result.decision == "sweep"
+    assert slurm.sweeps == [] and slurm.reviews == []
+    assert result.sweep_jobs is None and result.next_review_job is None
+    assert result.sweep_env["N_REPEATS"] == "2" and result.sweep_env["BASE_SEED"] == "100"
+    assert result.launch_command.endswith("launch_next.sh demo 1")
+    jobs = json.loads((campaign.root / "iter1" / "jobs.json").read_text(encoding="utf-8"))
+    assert jobs["launch_command"] == result.launch_command and jobs["sweep_jobs"] is None
+    journal = (campaign.root / "journal.md").read_text(encoding="utf-8")
+    assert "NOT launched" in journal and "launch_next.sh demo 1" in journal

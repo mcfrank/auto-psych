@@ -1,6 +1,6 @@
 """Campaign configuration: the pinned settings of one improvement campaign.
 
-``start_campaign.sh`` writes ``<campaign root>/campaign.env`` once; every
+``review.sh`` writes ``<campaign root>/campaign.env`` once; every
 review job reads it back through :meth:`Campaign.load`, so an iteration never
 depends on the environment of the shell that started the campaign. The file is
 plain ``KEY=value`` (bash-sourceable) so it is readable by both the sbatch
