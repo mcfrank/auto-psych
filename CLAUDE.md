@@ -99,6 +99,10 @@ seeds are `protected_names` (never pruned). Each round: optional CriticAL critiq
 - **Export**: the exported winner (`_best_exportable_model`) is the highest-
   posterior model whose PSIS-LOO is *reliable* — which can differ from the raw
   argmax. The outer loop copies a genuinely-new winner into `cognitive_models/`.
+  "Reliable" is `src/models/loo_reliability.py`'s verdict (a tolerated
+  proportion of high-Pareto-k trials, with constant-log-likelihood trials
+  exempt as exact), **not** arviz's blanket any-k>0.7 flag — that flag fired on
+  clipped `p_left` trials and was silently discarding genuine winners.
 
 ### How weights flow between experiments (the registry)
 
