@@ -89,6 +89,10 @@ class SweepSummary:
     rows: list[RunRow] = field(default_factory=list)
     tasks: list[TaskOutcome] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    trees: dict[str, int] = field(default_factory=dict)
+    """How many cells keep their experiment tree ``raw`` (``repo/_runs/<gt>/``),
+    ``tarred`` (``agent_runs.tar.gz``) or ``missing`` — where the critiques,
+    candidate models and agent transcripts live."""
 
     def count(self, status: str) -> int:
         return sum(1 for t in self.tasks if t.status == status)
@@ -139,6 +143,16 @@ def _run_row(csv_path: Path) -> RunRow:
         n_steps=len(rows),
         leakage=_leakage_label(csv_path.parent / PER_RUN_JSON),
     )
+
+
+def experiment_tree_kind(cell_dir: Path) -> str:
+    """``raw`` / ``tarred`` / ``missing``: where a cell's experiment tree is."""
+    raw = cell_dir / "repo" / "_runs" / cell_dir.name
+    if raw.is_dir():
+        return "raw"
+    if (cell_dir / "agent_runs.tar.gz").is_file():
+        return "tarred"
+    return "missing"
 
 
 def _settings_from(holdout_json: Path) -> dict:
@@ -196,6 +210,9 @@ def summarize_sweep(root: Path, label: Optional[str] = None) -> SweepSummary:
         key=lambda p: (p.parent.name, _run_number(p.parent.parent.name)),
     )
     summary.rows = [_run_row(p) for p in csv_paths]
+    for csv_path in csv_paths:
+        kind = experiment_tree_kind(csv_path.parent)
+        summary.trees[kind] = summary.trees.get(kind, 0) + 1
     if not csv_paths:
         summary.notes.append(f"no run*/<gt>/{PER_RUN_CSV} files: no task has finished")
     json_paths = [p.parent / PER_RUN_JSON for p in csv_paths if (p.parent / PER_RUN_JSON).is_file()]
@@ -269,6 +286,16 @@ def render_sweep(summary: SweepSummary) -> str:
                 f"{format_number(row.r_final)} | {format_number(row.delta)} | "
                 f"{format_number(row.rmse_final)} | {row.best_final} | {row.n_steps} | {row.leakage} |"
             )
+        lines.append("")
+        where = {
+            "raw": "raw under `run<r>/<gt>/repo/_runs/<gt>/experiment<k>/`",
+            "tarred": "in `run<r>/<gt>/agent_runs.tar.gz`",
+            "missing": "missing",
+        }
+        lines.append(
+            "Experiment trees (critiques, candidate models, agent transcripts): "
+            + "; ".join(f"{n} cell(s) {where[k]}" for k, n in sorted(summary.trees.items()))
+        )
         lines.append("")
 
     if summary.tasks:

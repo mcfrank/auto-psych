@@ -26,9 +26,13 @@ running=$(squeue --me -h -o "%i %j %t" | awk -v n="recovery_review_$CAMPAIGN_NAM
 [[ -n "$running" ]] && echo "NOTE: review job(s) still running (not cancelled; they exit without launching once done): $running"
 
 sweep_ids=""
-for jobs in "$CAMPAIGN_ROOT"/iter*/jobs.json; do
-  [[ -f "$jobs" ]] || continue
-  ids=$(jq -r '.sweep_jobs // {} | [.setup_id, .array_id, .analysis_id] | map(select(. != null)) | join(" ")' "$jobs")
+for iter_dir in "$CAMPAIGN_ROOT"/iter*/; do
+  jobs="$iter_dir/jobs.json"
+  [[ -f "$jobs" || -f "$iter_dir/sweep_submit.out" ]] || continue
+  ids=""
+  [[ -f "$jobs" ]] && ids=$(jq -r '.sweep_jobs // {} | [.setup_id, .array_id, .analysis_id] | map(select(. != null)) | join(" ")' "$jobs")
+  submit_out="$(dirname "$jobs")/sweep_submit.out"
+  [[ -f "$submit_out" ]] && ids="$ids $(grep -o 'job: *[0-9]*' "$submit_out" | grep -o '[0-9]*' | tr '\n' ' ')"
   sweep_ids="$sweep_ids $ids"
 done
 active=""

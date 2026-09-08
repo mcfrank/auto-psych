@@ -11,9 +11,11 @@ An iteration is a directory ``<campaign root>/iter<N>/`` and goes:
    ``next_run.env`` / ``STOP``;
 4. validate the deliverables — repair up to ``max_review_repairs`` times with
    the problems injected into the prompt, then fail loudly;
-5. launch the declared sweep from the iteration's repo and chain the next
-   review job on the sweep's analysis job (the last iteration chains a
-   ``finalize`` job instead of another review).
+5. record the declared sweep. By default (``auto_launch=False``) nothing is
+   submitted: the user reads the prescription and launches the sweep with
+   ``launch_next.sh`` when they decide to. With ``auto_launch=True`` the sweep
+   is launched from the iteration's repo and the next review job is chained
+   on its analysis job (the last iteration chains a ``finalize`` job).
 
 The agent launcher and the two Slurm submissions are injected callables so
 the whole flow is testable without Slurm or an LLM; ``slurm.py`` holds the
@@ -25,7 +27,7 @@ from __future__ import annotations
 import json
 import string
 import subprocess
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable, Optional, Union
@@ -73,6 +75,10 @@ class IterationResult:
     sweep_jobs: Optional[SweepJobs] = None
     next_review_job: Optional[str] = None
     stop_reason: str = ""
+    sweep_env: dict[str, str] = field(default_factory=dict)
+    """The launcher env the declared sweep resolves to (defaults + overrides)."""
+    launch_command: str = ""
+    """How the user launches the declared sweep when auto_launch is off."""
 
 
 RunAgent = Callable[..., tuple[bool, str]]
@@ -257,16 +263,24 @@ def _repair_feedback(problems: list[str], attempt: int) -> str:
     )
 
 
+def launch_command(campaign: Campaign, iteration: int) -> str:
+    script = campaign.source_repo / "scripts" / "recovery_improvement" / "launch_next.sh"
+    return f"bash {script} {campaign.name} {iteration}"
+
+
 def run_iteration(
     campaign: Campaign,
     iteration: int,
     *,
     run_agent: RunAgent,
-    submit_sweep: SubmitSweep,
-    submit_review: SubmitReview,
     prompt_template: str,
+    auto_launch: bool = False,
+    submit_sweep: Optional[SubmitSweep] = None,
+    submit_review: Optional[SubmitReview] = None,
     venv_py: str = "python",
 ) -> IterationResult:
+    if auto_launch and (submit_sweep is None or submit_review is None):
+        raise ValueError("auto_launch=True needs both submit_sweep and submit_review")
     if campaign.stop_path.exists():
         raise RuntimeError(f"campaign STOP file present at {campaign.stop_path}; not running")
     if not 1 <= iteration <= campaign.max_iterations:
@@ -336,21 +350,36 @@ def run_iteration(
         next_run = payload
         assert isinstance(next_run, NextRun)
         env = sweep_env(next_run, campaign, repo=repo, work_root=iter_dir / SWEEP_DIRNAME)
-        result.sweep_jobs = submit_sweep(repo, env)
-        next_iteration = iteration + 1
-        mode = MODE_REVIEW if next_iteration <= campaign.max_iterations else MODE_FINALIZE
-        result.next_review_job = submit_review(next_iteration, result.sweep_jobs.analysis_id, mode)
+        result.sweep_env = env
         overrides = ", ".join(f"{k}={v}" for k, v in next_run.values.items()) or "campaign defaults"
-        append_journal(
-            campaign,
+        entry = (
             f"- review agent: {'ok' if success else 'ended abnormally'} ({repairs} repair(s))\n"
             f"- decision: sweep — {next_run.note or '(no note)'}\n"
             f"- sweep overrides: {overrides}\n"
-            f"- sweep jobs: setup {result.sweep_jobs.setup_id}, array {result.sweep_jobs.array_id}, "
-            f"analysis {result.sweep_jobs.analysis_id}; output `{iter_dir / SWEEP_DIRNAME}`\n"
-            f"- next: {mode} job {result.next_review_job} (iteration {next_iteration}), "
-            f"after analysis {result.sweep_jobs.analysis_id}",
         )
+        if auto_launch:
+            assert submit_sweep is not None and submit_review is not None
+            result.sweep_jobs = submit_sweep(repo, env)
+            next_iteration = iteration + 1
+            mode = MODE_REVIEW if next_iteration <= campaign.max_iterations else MODE_FINALIZE
+            result.next_review_job = submit_review(
+                next_iteration, result.sweep_jobs.analysis_id, mode
+            )
+            entry += (
+                f"- sweep jobs: setup {result.sweep_jobs.setup_id}, array "
+                f"{result.sweep_jobs.array_id}, analysis {result.sweep_jobs.analysis_id}; "
+                f"output `{iter_dir / SWEEP_DIRNAME}`\n"
+                f"- next: {mode} job {result.next_review_job} (iteration {next_iteration}), "
+                f"after analysis {result.sweep_jobs.analysis_id}"
+            )
+        else:
+            result.launch_command = launch_command(campaign, iteration)
+            entry += (
+                f"- NOT launched (auto-launch is off). Read `{iter_dir / PRESCRIPTION_NAME}`, "
+                f"then to run this sweep: `{result.launch_command}` "
+                f"(output would land in `{iter_dir / SWEEP_DIRNAME}`)"
+            )
+        append_journal(campaign, entry)
     (iter_dir / JOBS_NAME).write_text(json.dumps(asdict(result), indent=2), encoding="utf-8")
     return result
 

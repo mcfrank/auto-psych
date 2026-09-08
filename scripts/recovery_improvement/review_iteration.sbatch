@@ -8,18 +8,19 @@
 #SBATCH --error=%x_%j.out
 #
 # One review iteration of a recovery-improvement campaign (or its finalize
-# step). Submitted by start_campaign.sh for iteration 1, then by each review
-# job for the next one (chained `afterany` on the sweep's analysis job, so it
-# runs as soon as the sweep the agent asked for has finished — or failed).
+# step). Submitted by review.sh. With AUTO_LAUNCH=1 each review job also
+# launches the declared sweep and submits the next review `afterany` its
+# analysis job; by default it stops after writing its prescription and the
+# user launches the sweep with launch_next.sh.
 #
 # Env (set via --export): CAMPAIGN_ROOT, ITERATION, MODE (review|finalize).
 # Everything else comes from $CAMPAIGN_ROOT/campaign.env.
 #
 # What runs here: a Claude Code session (headless, `-p`) that reads the sweep
 # digest, edits the pipeline in its own git clone, writes a prescription and a
-# next_run.env; then run_iteration.py validates that, launches the sweep
-# through the iteration repo's own submit_holdout_test_retest.sh, and submits
-# the next review job. Claude's stream is summarised into this log.
+# next_run.env; then run_iteration.py validates that and records the sweep
+# (launching it only with AUTO_LAUNCH=1). Claude's stream is summarised into
+# this log.
 
 set -euo pipefail
 : "${CAMPAIGN_ROOT:?CAMPAIGN_ROOT must be set}"
@@ -46,7 +47,7 @@ ml load system uv 2>/dev/null || ml load uv
 ml load system git 2>/dev/null || true
 
 # --- Claude Code -------------------------------------------------------------
-# start_campaign.sh pins the claude binary it found on the user's PATH; fall
+# review.sh pins the claude binary it found on the user's PATH; fall
 # back to the cluster module. Auth is ~/.claude/.credentials.json over NFS —
 # i.e. the user's Claude subscription. An API key in the environment would
 # silently switch billing to pay-per-token API usage, so drop any that
@@ -88,5 +89,9 @@ else
     numpy scipy pyyaml tyro pyprojroot matplotlib pandas pytest h5netcdf h5py
 fi
 
+# AUTO_LAUNCH=1 in campaign.env opts into launching the declared sweep and
+# chaining the next review; the default leaves that to the user (launch_next.sh).
+AUTO_FLAG=""
+if [[ "${AUTO_LAUNCH:-0}" == "1" ]]; then AUTO_FLAG="--auto-launch"; fi
 exec "$VENV_PY" scripts/recovery_improvement/run_iteration.py \
-  --campaign-root "$CAMPAIGN_ROOT" --iteration "$ITERATION" --mode "$MODE"
+  --campaign-root "$CAMPAIGN_ROOT" --iteration "$ITERATION" --mode "$MODE" $AUTO_FLAG

@@ -2,9 +2,10 @@
 
 Called by ``review_iteration.sbatch`` on a compute node. In ``review`` mode it
 digests the sweeps to review, runs the Claude review agent, validates its
-deliverables, launches the declared sweep and chains the next review job. In
-``finalize`` mode (after the last iteration's sweep) it only writes the final
-digest and closes the journal.
+deliverables and records the sweep it declared. By default nothing is
+submitted — the user launches that sweep with ``launch_next.sh`` — unless
+``--auto-launch`` is given, in which case the sweep is launched and the next
+review job chained on it. ``finalize`` mode only writes the final digest.
 
 Usage (inside the sbatch job):
     $VENV_PY scripts/recovery_improvement/run_iteration.py \\
@@ -57,16 +58,20 @@ class Args:
     """Run one review (or the finalize step) of a recovery-improvement campaign."""
 
     campaign_root: Path
-    """Campaign directory holding campaign.env (written by start_campaign.sh)."""
+    """Campaign directory holding campaign.env (written by review.sh)."""
     iteration: int
     """Which iteration this is (1-based)."""
     mode: Literal["review", "finalize"] = MODE_REVIEW
-    """review: agent + sweep + chain; finalize: final digest only."""
+    """review: agent + deliverables (+ sweep and chain if --auto-launch); finalize: final digest only."""
     prompt_template: Path = DEFAULT_PROMPT_TEMPLATE
     """The review agent's brief ($placeholder template)."""
     dry_run: bool = False
     """Write the digest and prompt to <campaign>/dryrun_iter<N>/ and exit —
     no repo clone, no agent, no Slurm submission."""
+    auto_launch: bool = False
+    """Launch the declared sweep and chain the next review job automatically.
+    Off by default: the review only prepares the sweep, and the user launches
+    it with launch_next.sh after reading the prescription."""
 
 
 def main(args: Args) -> None:
@@ -98,9 +103,10 @@ def main(args: Args) -> None:
         campaign,
         args.iteration,
         run_agent=make_run_agent(campaign, args.iteration),
-        submit_sweep=submit_sweep,
-        submit_review=functools.partial(submit_review, campaign),
         prompt_template=template,
+        auto_launch=args.auto_launch,
+        submit_sweep=submit_sweep if args.auto_launch else None,
+        submit_review=functools.partial(submit_review, campaign) if args.auto_launch else None,
         venv_py=venv_py,
     )
     print(f"\nIteration {result.iteration} of campaign {campaign.name}: decision={result.decision}")
@@ -110,6 +116,8 @@ def main(args: Args) -> None:
             f"analysis {result.sweep_jobs.analysis_id}"
         )
         print(f"  next job: {result.next_review_job}")
+    elif result.launch_command:
+        print(f"  sweep prepared, NOT launched. To run it: {result.launch_command}")
     else:
         print(f"  stopped: {result.stop_reason}")
 

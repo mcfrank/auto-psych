@@ -29,7 +29,8 @@ for iter_dir in $(ls -d "$CAMPAIGN_ROOT"/iter* 2>/dev/null | sort -V); do
   [[ -f "$iter_dir/prescription.md" ]] && echo "  prescription: $iter_dir/prescription.md" || echo "  prescription: (none yet)"
   if [[ -f "$iter_dir/STOP" ]]; then echo "  decision: STOP — $(head -c 200 "$iter_dir/STOP")"; fi
   if [[ -f "$iter_dir/next_run.env" ]]; then
-    echo "  decision: sweep  ($(grep -v '^#' "$iter_dir/next_run.env" | grep . | tr '\n' ' ' || true))"
+    if [[ -f "$iter_dir/sweep_submit.out" || -d "$iter_dir/sweep" ]]; then launched="launched"; else launched="NOT launched — bash $(dirname "$0")/launch_next.sh $CAMPAIGN_NAME $n"; fi
+    echo "  decision: sweep  ($(grep -v '^#' "$iter_dir/next_run.env" | grep . | tr '\n' ' ' || true)) — $launched"
   fi
   if [[ -f "$iter_dir/jobs.json" ]]; then
     ids=$(jq -r '[(.sweep_jobs // {} | .setup_id, .array_id, .analysis_id), .next_review_job] | map(select(. != null)) | join(",")' "$iter_dir/jobs.json")
