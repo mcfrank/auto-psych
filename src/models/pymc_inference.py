@@ -19,7 +19,7 @@ import hashlib
 import importlib.util
 import math
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -31,6 +31,11 @@ from src.models.mcmc_defaults import (
     PRODUCTION_DRAWS,
     PRODUCTION_TARGET_ACCEPT,
     PRODUCTION_TUNE,
+)
+from src.models.loo_reliability import (
+    LooDiagnostics,
+    describe_unreliable,
+    loo_diagnostics,
 )
 from src.models.probability import validate_probability, validate_probability_array
 from src.registry.io import validate_theory_weights
@@ -866,6 +871,11 @@ class FittedModel:
     model: Any  # pm.Model
     idata: Any  # az.InferenceData
     fingerprint: str
+    # PSIS-LOO is computed once per fit (it is a full importance-sampling pass
+    # over draws × trials) and shared by elpd_loo() and compare_table().
+    _loo_diagnostics: Optional[LooDiagnostics] = field(
+        default=None, init=False, repr=False, compare=False
+    )
 
     def predict_p_left_draws(
         self,
@@ -934,26 +944,34 @@ class FittedModel:
             stim_data, var_name=var_name, seed=seed, max_draws=max_draws
         ).mean(axis=0)
 
+    def loo_diagnostics(self) -> LooDiagnostics:
+        """PSIS-LOO of this fit with its reliability verdict, computed once.
+
+        See ``src.models.loo_reliability``: trials whose log-likelihood is
+        constant across draws are exact (not "unreliable", whatever arviz's
+        blanket flag says), and the verdict rests on the proportion of the
+        remaining trials with a high Pareto k.
+        """
+        if self._loo_diagnostics is None:
+            self._loo_diagnostics = loo_diagnostics(self.idata)
+        return self._loo_diagnostics
+
     def elpd_loo(self) -> float:
         """Expected log pointwise predictive density (PSIS-LOO).
 
-        PSIS-LOO is only trustworthy when the importance-sampling Pareto-k tail
-        index stays low; ArviZ sets ``loo.warning`` when too many points exceed
-        the safe threshold. We do not silently return a number ArviZ flagged as
-        unreliable — surface an attributed warning so a dubious score is visible
-        in the run log (the value is still returned; the human/comparison can act
-        on the warning).
+        We do not silently return a number the diagnostic judged unreliable —
+        an attributed, number-bearing warning goes to the run log (the value is
+        still returned; the comparison acts on the same verdict through
+        ``compare_table``'s ``loo_unreliable``).
         """
-        az = _import_arviz()
-        loo = az.loo(self.idata)
-        if getattr(loo, "warning", False):
+        diag = self.loo_diagnostics()
+        if diag.unreliable:
             print(
-                f"  [warn] {self.name}: PSIS-LOO is unreliable (many high Pareto-k "
-                "points); its ELPD-LOO may be inaccurate.",
+                f"  [warn] {describe_unreliable(self.name, diag)}",
                 file=sys.stderr,
                 flush=True,
             )
-        return float(loo.elpd_loo)
+        return diag.elpd_loo
 
     def sample_synthetic_responses(
         self, stim_data: Dict[str, np.ndarray], *, n_datasets: int, seed: int = 42
