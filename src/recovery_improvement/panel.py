@@ -549,12 +549,33 @@ AgentFactory = Callable[[Member, str], RunAgent]
 """``agent_for(member, label) -> run_agent`` (label names the stage for logs)."""
 
 
-def _raise_if_limit(panel: Panel, member: Member, result_text: str) -> None:
+def partial_note_path(note_path: Path) -> Path:
+    return note_path.with_name(note_path.stem + ".partial.md")
+
+
+def _raise_if_limit(panel: Panel, member: Member, result_text: str, note_path: Path) -> None:
+    """On a session limit, set aside whatever the member had written of its
+    note (so the resumed session finishes it rather than being skipped as
+    done) and pause the stage."""
     limit = detect_session_limit(result_text)
     if limit is None:
         return
+    if note_path.is_file():
+        note_path.rename(partial_note_path(note_path))
     append_journal(panel, f"- {member.name}: session limit hit ({limit.message}); stage paused")
     raise SessionLimitHit(limit)
+
+
+def _resume_feedback(note_path: Path) -> str:
+    partial = partial_note_path(note_path)
+    if not partial.is_file():
+        return ""
+    return (
+        "## RESUMING AFTER A SESSION LIMIT\n\n"
+        f"A previous session of you was cut off by the subscription's session limit. What it had "
+        f"written of its note is at `{partial}` — read it, finish it, and write the complete note "
+        f"to `{note_path}`.\n"
+    )
 
 
 _NEXT_RUN_BLOCK = re.compile(r"```next_run\.env\s*\n(.*?)```", re.DOTALL)
@@ -590,7 +611,7 @@ def _run_with_repair(
     brief = compose("")
     (log_dir / f"brief_{label}.md").write_text(brief, encoding="utf-8")
     _, text = run_agent(brief, cwd=cwd, log_path=log_dir / f"stream_{label}.jsonl")
-    _raise_if_limit(panel, member, text)
+    _raise_if_limit(panel, member, text, note_path)
     if panel.is_prompt_only(member):
         _deliver_from_message(panel, member, text, note_path)
     problems = deliverable_problems()
@@ -603,7 +624,7 @@ def _run_with_repair(
         brief = compose(feedback)
         (log_dir / f"brief_{label}.repair.md").write_text(brief, encoding="utf-8")
         _, text = run_agent(brief, cwd=cwd, log_path=log_dir / f"stream_{label}.repair.jsonl")
-        _raise_if_limit(panel, member, text)
+        _raise_if_limit(panel, member, text, note_path)
         if panel.is_prompt_only(member):
             _deliver_from_message(panel, member, text, note_path)
         problems = deliverable_problems()
@@ -647,10 +668,12 @@ def run_round(
             continue
         panel.scratch_dir(member).mkdir(parents=True, exist_ok=True)
         label = f"{member.name}_round{k}"
+        resume_note = _resume_feedback(note)
         _run_with_repair(
             panel, member, label,
-            compose=lambda fb, m=member: compose_member_brief(
-                member_template, panel, m, k, digests=digests, venv_py=venv_py, repair_feedback=fb,
+            compose=lambda fb, m=member, rn=resume_note: compose_member_brief(
+                member_template, panel, m, k, digests=digests, venv_py=venv_py,
+                repair_feedback=(rn + "\n" + fb).strip(),
             ),
             deliverable_problems=lambda n=note: _note_problems(n),
             run_agent=agent_for(member, label),
@@ -687,10 +710,11 @@ def run_synthesis(
     panel.synthesis_dir.mkdir(parents=True, exist_ok=True)
     write_thread(panel, panel.total_rounds)
     append_journal(panel, f"## Synthesis — {_timestamp()} (moderator {panel.moderator.name})")
+    resume_note = _resume_feedback(panel.plan_path)
     _run_with_repair(
         panel, panel.moderator, "synthesis",
         compose=lambda fb: compose_synthesis_brief(
-            synthesis_template, panel, venv_py=venv_py, repair_feedback=fb
+            synthesis_template, panel, venv_py=venv_py, repair_feedback=(resume_note + "\n" + fb).strip()
         ),
         deliverable_problems=lambda: _plan_problems(panel),
         run_agent=agent_for(panel.moderator, "synthesis"),

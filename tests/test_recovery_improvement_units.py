@@ -271,3 +271,16 @@ def test_session_limit_without_a_time_falls_back_to_an_hour():
 
 def test_ordinary_result_text_is_not_a_limit():
     assert detect_session_limit("Done. Wrote prescription.md and next_run.env.") is None
+
+
+def test_other_limit_phrasings_and_relative_reset_times_are_parsed():
+    now = datetime(2026, 9, 8, 16, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
+    limit = detect_session_limit("Usage limit exceeded. Try again in 4h 30m.", now=now)
+    assert limit is not None
+    assert limit.reset_at == datetime(2026, 9, 8, 20, 30, tzinfo=ZoneInfo("America/Los_Angeles"))
+    limit = detect_session_limit("You have reached your weekly limit; available again in 1 hour and 5 minutes", now=now)
+    assert limit.reset_at == datetime(2026, 9, 8, 17, 5, tzinfo=ZoneInfo("America/Los_Angeles"))
+    limit = detect_session_limit("Rate limit reached, try again at 9 pm", now=now)
+    assert limit.reset_at == datetime(2026, 9, 8, 21, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
+    # A note that merely discusses limits, past the first 200 characters, is not a hit.
+    assert detect_session_limit("x" * 250 + " we hit your usage limit of candidates per round") is None

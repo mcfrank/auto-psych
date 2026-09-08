@@ -22,17 +22,26 @@ from zoneinfo import ZoneInfo
 # start of the result text so a note that merely *discusses* limits does not
 # trip it.
 _LIMIT_RE = re.compile(
-    r"(hit|reached|exceeded) (your |the )?(session |usage |weekly |rate |plan )?limit",
+    r"(?:(?:hit|reached|exceeded) (?:your |the )?(?:session |usage |weekly |rate |plan )?limit"
+    r"|(?:usage|rate|session|weekly|plan) limit (?:reached|exceeded|hit)"
+    r"|usage_limit)",
     re.IGNORECASE,
 )
 _LIMIT_WINDOW = 200
-# "resets 12am (America/Los_Angeles)", "resets 3:30pm", "resets at 9 pm"
+# "resets 12am (America/Los_Angeles)", "resets 3:30pm", "resets at 9 pm",
+# "try again at 3:00 PM"
 _CLOCK_RE = re.compile(
-    r"resets?\s+(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b(?:\s*\(([^)]+)\))?",
+    r"(?:resets?|try again|available again|retry)\s+(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b"
+    r"(?:\s*\(([^)]+)\))?",
     re.IGNORECASE,
 )
-# "resets in 2 hours", "resets in 45 minutes"
-_RELATIVE_RE = re.compile(r"resets?\s+in\s+(\d+)\s*(hour|hr|minute|min)s?", re.IGNORECASE)
+# "resets in 2 hours", "try again in 4h 30m", "resets in 45 minutes",
+# "available again in 1 hour and 5 minutes"
+_RELATIVE_RE = re.compile(
+    r"(?:resets?|try again|available again|retry)\s+(?:in|after)\s+"
+    r"(?:(\d+)\s*(?:h\b|hr|hour)s?)?\s*(?:and\s*)?(?:(\d+)\s*(?:m\b|min|minute)s?)?",
+    re.IGNORECASE,
+)
 
 RETRY_MARGIN = timedelta(minutes=5)
 """Start this long after the stated reset, so the window has really turned."""
@@ -68,10 +77,10 @@ def parse_reset_time(text: str, now: datetime) -> Optional[datetime]:
             reset += timedelta(days=1)
         return reset
     match = _RELATIVE_RE.search(text)
-    if match:
-        amount, unit = int(match.group(1)), match.group(2).lower()
-        delta = timedelta(hours=amount) if unit.startswith("h") else timedelta(minutes=amount)
-        return now + delta
+    if match and (match.group(1) or match.group(2)):
+        hours = int(match.group(1) or 0)
+        minutes = int(match.group(2) or 0)
+        return now + timedelta(hours=hours, minutes=minutes)
     return None
 
 
