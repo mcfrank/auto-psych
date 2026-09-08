@@ -29,7 +29,7 @@ import subprocess
 import threading
 import time
 from pathlib import Path
-from typing import Any, Callable, Dict, Optional
+from typing import Any, Callable, Dict, Optional, Sequence
 
 from src.runtime import token_usage
 
@@ -66,12 +66,16 @@ def build_command(
     prompt: str,
     allowed_dirs: list[Path],
     model: Optional[str],
+    extra_args: Sequence[str] = (),
 ) -> list[str]:
     """Build the CLI argv for the given backend.
 
     The prompt is always the final element so callers can locate it. opencode
     has no ``--add-dir`` equivalent (it operates on the working directory), so
-    ``allowed_dirs`` is honoured only for Claude Code.
+    ``allowed_dirs`` is honoured only for Claude Code. ``extra_args`` are
+    backend CLI flags appended verbatim before the prompt (e.g. Claude's
+    ``--max-turns`` / ``--max-budget-usd`` / ``--disallowedTools`` for a
+    long-running supervisor session).
     """
     if backend not in _DEFAULT_MODEL:
         raise ValueError(f"unknown coding-agent backend: {backend!r}")
@@ -86,10 +90,10 @@ def build_command(
         ]
         for d in allowed_dirs:
             cmd += ["--add-dir", str(d)]
-        cmd += ["--model", model, "-p", prompt]
+        cmd += ["--model", model, *extra_args, "-p", prompt]
         return cmd
     if backend == "opencode":
-        return ["opencode", "run", "--format", "json", "-m", model, prompt]
+        return ["opencode", "run", "--format", "json", "-m", model, *extra_args, prompt]
     # Reachable only if _DEFAULT_MODEL gains a backend without a branch here.
     # Fail loudly rather than returning None into subprocess.Popen.
     raise ValueError(f"no command builder for coding-agent backend: {backend!r}")
@@ -261,6 +265,7 @@ def run_coding_agent(
     env: Optional[dict] = None,
     on_summary: Optional[Callable[[str], None]] = print,
     usage_label: str = "coding_agent",
+    extra_args: Sequence[str] = (),
 ) -> tuple[bool, str]:
     """Spawn the selected coding agent, stream output to ``log_path``.
 
@@ -282,7 +287,11 @@ def run_coding_agent(
     backend = select_backend(backend)
     model = model or _DEFAULT_MODEL[backend]
     cmd = build_command(
-        backend, prompt=prompt, allowed_dirs=list(allowed_dirs or []), model=model
+        backend,
+        prompt=prompt,
+        allowed_dirs=list(allowed_dirs or []),
+        model=model,
+        extra_args=extra_args,
     )
     log_path.parent.mkdir(parents=True, exist_ok=True)
 
