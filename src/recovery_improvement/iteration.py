@@ -180,8 +180,10 @@ def compose_prompt(
     digest: str,
     repair_feedback: str = "",
     venv_py: str = "python",
+    plan: str = "",
 ) -> str:
-    """Fill the prompt template (``$placeholder`` syntax; unknown ones raise)."""
+    """Fill the prompt template (``$placeholder`` syntax; unknown ones raise).
+    ``plan`` is a review panel's consensus plan, when one is handed over."""
     journal = (
         campaign.journal_path.read_text(encoding="utf-8").strip()
         if campaign.journal_path.is_file()
@@ -205,6 +207,7 @@ def compose_prompt(
         "previous_prescriptions": previous_prescriptions(campaign, iteration),
         "journal": journal or "(empty)",
         "repair_feedback": repair_feedback,
+        "plan": plan.strip() or "(none — no panel plan was handed over; work from the evidence)",
     }
     try:
         return string.Template(template).substitute(mapping)
@@ -333,6 +336,7 @@ def run_iteration(
     submit_sweep: Optional[SubmitSweep] = None,
     submit_review: Optional[SubmitReview] = None,
     venv_py: str = "python",
+    plan_text: str = "",
 ) -> IterationResult:
     if auto_launch and (submit_sweep is None or submit_review is None):
         raise ValueError("auto_launch=True needs both submit_sweep and submit_review")
@@ -365,7 +369,7 @@ def run_iteration(
 
     prompt = compose_prompt(
         prompt_template, campaign=campaign, iteration=iteration, repo=repo,
-        digest=digest, repair_feedback=resume_note, venv_py=venv_py,
+        digest=digest, repair_feedback=resume_note, venv_py=venv_py, plan=plan_text,
     )
     (iter_dir / PROMPT_NAME).write_text(prompt, encoding="utf-8")
     success, result_text = run_agent(prompt, cwd=repo, log_path=iter_dir / AGENT_LOG_NAME)
@@ -378,7 +382,7 @@ def run_iteration(
         prompt = compose_prompt(
             prompt_template, campaign=campaign, iteration=iteration, repo=repo,
             digest=digest, repair_feedback=_repair_feedback(problems, repairs),
-            venv_py=venv_py,
+            venv_py=venv_py, plan=plan_text,
         )
         (iter_dir / f"prompt.repair{repairs}.md").write_text(prompt, encoding="utf-8")
         success, result_text = run_agent(

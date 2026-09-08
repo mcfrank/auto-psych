@@ -37,13 +37,15 @@
 #   SWEEP_CONFIG=scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml
 #   AFTER_JOB=<jobid>           don't start until this job has finished
 #   BEGIN=<time>                sbatch --begin, e.g. 00:05 or 2026-09-08T00:05:00
+#   PLAN=<path/to/plan.md>      hand a review panel's plan to this review (it
+#                               implements the plan's first auto-psych item)
 #   DRY_RUN=1                   do every check, write campaign.env, print the
 #                               sbatch command instead of submitting
 #   ALLOW_DIRTY=1               start even with uncommitted tracked changes
 #                               (they will NOT reach the agent — it clones HEAD)
 set -euo pipefail
 
-usage() { sed -n '2,45p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
+usage() { sed -n '2,47p' "$0" | sed 's/^# \{0,1\}//'; exit 1; }
 [[ $# -ge 1 ]] || usage
 NAME="$1"; shift
 [[ "$NAME" =~ ^[A-Za-z0-9_-]+$ ]] || { echo "ERROR: bad campaign name '$NAME'" >&2; exit 1; }
@@ -180,7 +182,7 @@ SBATCH_ARGS=(
   --cpus-per-task="$REVIEW_CPUS" --mem="$REVIEW_MEM"
   --output="$CAMPAIGN_ROOT/slurm_logs/review_iter${ITERATION}_%j.out"
   --error="$CAMPAIGN_ROOT/slurm_logs/review_iter${ITERATION}_%j.out"
-  --export=ALL,CAMPAIGN_ROOT="$CAMPAIGN_ROOT",ITERATION="$ITERATION",MODE=review
+  --export=ALL,CAMPAIGN_ROOT="$CAMPAIGN_ROOT",ITERATION="$ITERATION",MODE=review${PLAN:+,PLAN_PATH=$PLAN}
   "$DRIVER_SBATCH"
 )
 if [[ -n "${DRY_RUN:-}" ]]; then
@@ -188,6 +190,7 @@ if [[ -n "${DRY_RUN:-}" ]]; then
   echo "  sbatch --parsable ${SBATCH_ARGS[*]}"
   exit 0
 fi
+[[ -n "${PLAN:-}" && ! -f "$PLAN" ]] && { echo "ERROR: PLAN file not found: $PLAN" >&2; exit 1; }
 job_id=$(sbatch --parsable "${SBATCH_ARGS[@]}")
 echo "$job_id" >> "$CAMPAIGN_ROOT/review_jobs.txt"
 

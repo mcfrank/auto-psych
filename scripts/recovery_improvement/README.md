@@ -125,3 +125,54 @@ srun -p dev -c 1 --mem 4G -t 00:10:00 bash -c '
   review flow), `slurm.py` (the Claude / sbatch adapters).
 - `scripts/recovery_improvement/run_iteration.py` — the CLI the sbatch calls.
 - Tests: `tests/test_recovery_improvement.py`, `tests/test_recovery_improvement_units.py`.
+
+## Review panel (several agents, written discussion)
+
+`panel.sh` runs a panel of coding agents (Claude and Codex, any mix) that
+review **both** loops — auto-psych's holdout-recovery sweeps and the
+llm-verbal-protocol loop's recovery studies — and discuss in written rounds:
+
+```
+round 1   each member writes an independent review (its lens: methods / search / crossloop / systems)
+round 2..N each member reads the whole thread and responds to the others by name
+synthesis the moderator writes synthesis/plan.md: ranked consensus plan per loop, dissent recorded,
+          plus an optional next_run.env (the sweep that would test the auto-psych plan's item 1)
+```
+
+```bash
+bash scripts/recovery_improvement/panel.sh sept_panel            # default: methods (Codex, prompt-only), search (Claude), crossloop (Claude)
+MEMBERS="a:claude:claude-fable-5-1:methods b:codex:gpt-5.6-sol:search c:claude:claude-fable-5-1:crossloop d:codex:gpt-5.6-sol:systems" \
+  N_DISCUSSION_ROUNDS=3 bash scripts/recovery_improvement/panel.sh big_panel
+
+cat $SCRATCH/auto-psych/review_panel/sept_panel/thread.md            # the discussion
+cat $SCRATCH/auto-psych/review_panel/sept_panel/synthesis/plan.md    # the plan
+PLAN=$SCRATCH/auto-psych/review_panel/sept_panel/synthesis/plan.md \
+  bash scripts/recovery_improvement/review.sh recovery_2026_09_07    # hand it to the review job to implement item 1
+```
+
+**Codex on Sherlock is prompt-only.** Its bubblewrap sandbox needs network and
+UTS namespaces, which the compute nodes cap at 0 (`/proc/sys/user/max_net_namespaces`),
+and the ChatGPT workspace policy forbids running without the sandbox, so every
+command a Codex session tries fails. A Codex member therefore gets an inlined
+evidence pack (`EVIDENCE_FILES`, ~200 KB by default: both loops' orchestrators,
+prompts, comparison code, spec and prior analyses) plus the digests and the
+thread, reasons from those, says what it could not verify, and returns its note
+as its final message, which the wrapper writes to the round directory. Give the
+lenses that must read logs and transcripts (`search`, `crossloop`) to Claude
+members; the default panel does.
+
+Each stage is one Slurm job, chained `afterany`. Members run one after another
+inside it and are skipped if their note already exists, so a session-limit hit
+requeues the stage for after the reset and it resumes with the members that
+are left; a stage whose inputs are not all present requeues itself 20 minutes
+later (up to 12 h). Members and the moderator never modify either repo, never
+launch or cancel jobs; Claude members get the same tool denylist as the review
+job. Codex runs `codex exec --json` on your ChatGPT login (`codex login
+--device-auth` once, after `ml load devel codex/0.151.0`); the sbatch strips
+`OPENAI_API_KEY` / `ANTHROPIC_API_KEY` so neither can fall back to API billing.
+
+Panel layout under `$SCRATCH/auto-psych/review_panel/<name>/`: `panel.env`,
+`digest_autopsych.md`, `digest_verbal.md`, `round<k>/<member>.md` (+ each
+member's brief and stream), `thread.md`, `synthesis/plan.md`,
+`synthesis/next_run.env`, `scratch/<member>/`, `journal.md`, `slurm_logs/`.
+`--dry-run` on `panel_round.py` writes the briefs without running anyone.

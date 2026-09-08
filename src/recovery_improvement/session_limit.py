@@ -17,7 +17,15 @@ from datetime import datetime, timedelta
 from typing import Optional
 from zoneinfo import ZoneInfo
 
-_LIMIT_RE = re.compile(r"(hit|reached) your (session |usage )?limit", re.IGNORECASE)
+# Claude: "You've hit your session limit · resets 12am (America/Los_Angeles)";
+# other CLIs phrase it as a usage/rate/weekly limit. Matched only near the
+# start of the result text so a note that merely *discusses* limits does not
+# trip it.
+_LIMIT_RE = re.compile(
+    r"(hit|reached|exceeded) (your |the )?(session |usage |weekly |rate |plan )?limit",
+    re.IGNORECASE,
+)
+_LIMIT_WINDOW = 200
 # "resets 12am (America/Los_Angeles)", "resets 3:30pm", "resets at 9 pm"
 _CLOCK_RE = re.compile(
     r"resets?\s+(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b(?:\s*\(([^)]+)\))?",
@@ -69,7 +77,7 @@ def parse_reset_time(text: str, now: datetime) -> Optional[datetime]:
 
 def detect_session_limit(result_text: str, now: Optional[datetime] = None) -> Optional[SessionLimit]:
     """A :class:`SessionLimit` if ``result_text`` is a limit message, else None."""
-    if not _LIMIT_RE.search(result_text or ""):
+    if not _LIMIT_RE.search((result_text or "")[:_LIMIT_WINDOW]):
         return None
     now = now or datetime.now().astimezone()
     return SessionLimit(message=result_text.strip(), reset_at=parse_reset_time(result_text, now))

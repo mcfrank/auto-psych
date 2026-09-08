@@ -94,4 +94,5 @@ fi
 AUTO_FLAG=""
 if [[ "${AUTO_LAUNCH:-0}" == "1" ]]; then AUTO_FLAG="--auto-launch"; fi
 exec "$VENV_PY" scripts/recovery_improvement/run_iteration.py \
-  --campaign-root "$CAMPAIGN_ROOT" --iteration "$ITERATION" --mode "$MODE" $AUTO_FLAG
+  --campaign-root "$CAMPAIGN_ROOT" --iteration "$ITERATION" --mode "$MODE" $AUTO_FLAG \
+  ${PLAN_PATH:+--plan "$PLAN_PATH"}
