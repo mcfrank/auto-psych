@@ -17,16 +17,19 @@
 #   * the copy EXCLUDES ground_truth_models.py / evaluate_recovery.py, the
 #     literature-model test files, and gt.txt (the source paper the faithful
 #     models implement), and has THIS task's held-out model deleted from BOTH
-#     PyMC locations (the registry $SEED_MODELS_REL and the live seed pool), so
-#     the GT recipe is not on the agent's disk;
+#     PyMC locations (the registry $SEED_MODELS_REL and the live seed pool) —
+#     its .py AND its manifest entry (name + mechanism rationale) — so neither
+#     the GT recipe nor its identity is on the agent's disk. The synthetic
+#     responses the parent writes carry no generating_model column either
+#     (holdout_recovery.strip_generating_model);
 #   * the ONE remaining on-disk copy of the GT recipe is the pure-Python family
 #     twin (src/subjective_randomness/model_families/<gt>.py) — the parent
 #     imports it for DEFAULT_PARAMS so it cannot be deleted; opencode read/
 #     glob/grep denies cover it (and both model-family dirs wholesale);
 #   * the parent reads the GT generator via --gt-models-dir from the pristine
 #     snapshot staged by the setup job ($WORK_ROOT/gt_models_src), which sits
-#     outside every agent's cwd. Seeding still excludes the GT (exclusion keys
-#     off the seed manifest, which the copy retains), so removing the file is safe;
+#     outside every agent's cwd. Seeding reads the (scrubbed) pool manifest, so
+#     the GT is simply never listed and never seeded — removing the file is safe;
 #   * opencode read/glob/grep are additionally denied on the off-limits paths.
 # The experiment tree (results-root) lives INSIDE the agent's cwd (the repo copy)
 # so opencode needs no external-directory grant for it — exactly like the normal
@@ -189,6 +192,24 @@ print(f"[task] hardened opencode permissions: {p}")
 PY
 
 cd "$RUN_REPO"
+
+# Remove the held-out model's ENTRY from both manifests the agents can open.
+# Deleting the .py above leaves its manifest line behind, and that line is the
+# model's name plus a one-sentence rationale stating its mechanism — i.e. the
+# answer. Rewriting the manifest also drops the header comment that lists every
+# active model. Seeding keys off the pool manifest by name, so a name that is
+# simply absent is seeded around exactly like a superseded GT (--missing-ok
+# covers that case: a superseded GT was never listed). Run from $RUN_REPO so
+# pyprojroot resolves the copy; the --models-dir paths are absolute regardless.
+for models_rel in "$SEED_MODELS_REL" "$POOL_MODELS_REL"; do
+  [[ -f "$RUN_REPO/$models_rel/models_manifest.yaml" ]] || { echo "ERROR: no manifest at $RUN_REPO/$models_rel" >&2; exit 1; }
+  "$VENV_PY" "$RUN_REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
+    --models-dir "$RUN_REPO/$models_rel" --name "$GT" --missing-ok
+  if grep -q "$GT" "$RUN_REPO/$models_rel/models_manifest.yaml"; then
+    echo "ERROR: $models_rel/models_manifest.yaml still mentions $GT" >&2; exit 1
+  fi
+done
+echo "[task $TASK] scrubbed held-out GT entry from both manifests"
 
 # Optional cheap-run overrides (set by SMOKE mode or by hand). Values are
 # numeric, so unquoted word-splitting below is safe.

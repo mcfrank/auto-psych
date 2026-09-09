@@ -10,6 +10,7 @@ step against the ground truth on a held-out stimulus set.
 
 from __future__ import annotations
 
+import csv
 import json
 import shutil
 from pathlib import Path
@@ -32,6 +33,7 @@ from src.subjective_randomness.holdout_recovery import (
     run_holdout_experiments,
     run_holdout_recovery_from_config,
     seed_baseline_correlation,
+    strip_generating_model,
     trajectory_tidy_rows,
 )
 from src.subjective_randomness.recover import pearson_r
@@ -334,6 +336,109 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert usage_summary["total_tokens"] == 220
     assert usage_summary["by_source"]["inner:candidate"]["n_calls"] == 2
     assert "local_representativeness" in gt_run["experiments"][1]["manifest_models"]
+
+
+# ── what the agents may read ────────────────────────────────────────
+
+
+def test_run_holdout_experiments_strips_generating_model_from_agent_facing_csv(
+    tmp_path, monkeypatch
+):
+    """The agents read ``data/responses.csv`` (and the pooled ``model_loop``
+    copy derived from it). The generator's own name must not travel with the
+    data: it is the held-out model's identity, and a candidate agent that opens
+    the CSV would otherwise be told which model it is supposed to rediscover.
+    Every other column (features, sequences, choices, ids) is kept."""
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
+    monkeypatch.setattr(
+        holdout_recovery, "generate_responses", _stub_generate_responses([])
+    )
+    monkeypatch.setattr(
+        holdout_recovery,
+        "run_inner_model_loop_programmatic",
+        _stub_inner_loop("local_representativeness"),
+    )
+
+    run_holdout_experiments(
+        "prototype_similarity",
+        {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
+        tmp_path / "run",
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        n_participants=2,
+        inner_loop_iterations=0,
+        candidate_count=0,
+        fit_kwargs={},
+        seed=0,
+    )
+
+    responses = tmp_path / "run" / "experiment1" / "data" / "responses.csv"
+    with responses.open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+    assert "generating_model" not in reader.fieldnames
+    assert {"participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"} \
+        <= set(reader.fieldnames)
+    assert len(rows) == 2 * len(DESIGN_STIMULI)
+    assert "prototype_similarity" not in responses.read_text(encoding="utf-8")
+
+
+def test_resumed_run_refuses_responses_csv_that_names_its_generator(
+    tmp_path, monkeypatch
+):
+    """A resumed run keeps a data/responses.csv that already validates. If that
+    file (from an older harness) still carries the generator's name, the run
+    must stop loudly rather than feed the held-out identity to the inner loop."""
+    run_root = tmp_path / "run"
+    exp_dir = run_root / "experiment1"
+    _complete_experiment_on_disk(run_root, 1, with_model_loop=False)
+    (exp_dir / "data" / "responses.csv").write_text(
+        "participant_id,trial_index,sequence_a,sequence_b,chose_left,generating_model\n"
+        "0,0,HTHTHT,HHHHHH,1,prototype_similarity\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
+    inner_loop_calls = []
+    monkeypatch.setattr(
+        holdout_recovery,
+        "run_inner_model_loop_programmatic",
+        lambda exp_dir, **kwargs: inner_loop_calls.append(exp_dir),
+    )
+
+    with pytest.raises(RuntimeError, match="generating_model"):
+        run_holdout_experiments(
+            "prototype_similarity",
+            {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
+            run_root,
+            seed_models_dir=SEED_MODELS_DIR,
+            n_experiments=1,
+            n_participants=2,
+            inner_loop_iterations=0,
+            candidate_count=0,
+            fit_kwargs={},
+            seed=0,
+            resume=True,
+        )
+    assert inner_loop_calls == []
+
+
+def test_strip_generating_model_drops_only_that_column():
+    rows = [
+        {"sequence_a": "HTH", "chose_left": 1, "generating_model": "held_out"},
+        {"sequence_a": "HHH", "chose_left": 0, "generating_model": "held_out"},
+    ]
+    stripped = strip_generating_model(rows)
+    assert stripped == [
+        {"sequence_a": "HTH", "chose_left": 1},
+        {"sequence_a": "HHH", "chose_left": 0},
+    ]
+    # The caller's rows are left alone (the recovery bookkeeping still reads them).
+    assert all("generating_model" in row for row in rows)
+
+
+def test_strip_generating_model_is_a_no_op_without_the_column():
+    rows = [{"sequence_a": "HTH", "chose_left": 1}]
+    assert strip_generating_model(rows) == rows
 
 
 # ── harness error path ──────────────────────────────────────────────

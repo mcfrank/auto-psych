@@ -102,6 +102,44 @@ def _stage_done(agent_key: str, exp_dir: Path) -> bool:
 
 
 # ─────────────────────────────────────────────
+# What the agents may read
+# ─────────────────────────────────────────────
+
+# ``generate_responses`` tags every row with the name of the model that produced
+# it. That tag is the held-out model's identity: it must never reach the agents'
+# tree (data/responses.csv and the pooled model_loop/responses.csv derived from
+# it are listed column-by-column in every candidate's and critic's context).
+GENERATING_MODEL_COLUMN = "generating_model"
+
+
+def strip_generating_model(
+    rows: Sequence[Mapping[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Copy ``rows`` without the ``generating_model`` column.
+
+    The input rows are not modified — the non-holdout recovery harness keeps
+    reading the tag from its own rows. Rows that never carried the column pass
+    through unchanged.
+    """
+    return [
+        {key: value for key, value in row.items() if key != GENERATING_MODEL_COLUMN}
+        for row in rows
+    ]
+
+
+def _require_no_generating_model_column(responses_path: Path) -> None:
+    """Fail loudly if an agent-facing responses CSV names its generator."""
+    with Path(responses_path).open(encoding="utf-8", newline="") as f:
+        header = [column.strip() for column in f.readline().strip().split(",")]
+    if GENERATING_MODEL_COLUMN in header:
+        raise RuntimeError(
+            f"{responses_path} carries a {GENERATING_MODEL_COLUMN!r} column, which "
+            f"names the held-out model to every agent that opens the file. The "
+            f"holdout harness must write agent-facing responses without it."
+        )
+
+
+# ─────────────────────────────────────────────
 # Agentic experiment sequence (one held-out model)
 # ─────────────────────────────────────────────
 
@@ -140,6 +178,11 @@ def run_holdout_experiments(
     ``history.json`` this analysis consumes). Every stage's output is validated
     and any failure raises — a half-run experiment is never silently carried
     forward.
+
+    The responses are written without the generator's name
+    (``strip_generating_model``): ``data/responses.csv`` and everything derived
+    from it are read by the candidate and critique agents, and the held-out
+    model's identity must not reach them.
 
     With ``resume=True`` a stopped run continues: stages whose output already
     validates are skipped, and everything from the first invalid stage on is
@@ -225,8 +268,15 @@ def run_holdout_experiments(
                 seed=seed + exp_num,
                 generator="pymc",
             )
-            write_responses_csv(rows, exp_dir / "data" / "responses.csv")
+            # The generator's name is the held-out model's identity; the agents
+            # must not read it (see strip_generating_model).
+            write_responses_csv(
+                strip_generating_model(rows), exp_dir / "data" / "responses.csv"
+            )
             _require_valid("4_collect", exp_dir)
+        # Checked on every path (fresh or resumed): a responses file that names
+        # its generator must never feed the inner loop.
+        _require_no_generating_model_column(exp_dir / "data" / "responses.csv")
 
         # Inner loop: fits + agent-conjectured candidates over pooled responses.
         history_path = exp_dir / "model_loop" / "history.json"
