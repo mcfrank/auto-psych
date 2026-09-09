@@ -114,3 +114,69 @@ def test_inner_loop_history_seed_only_has_single_step(tmp_path, monkeypatch):
     assert history[0]["step"] == 0
     assert history[0]["iteration"] is None
     assert history[0]["best_model"] == "model_b"
+
+
+def _row(rank, elpd_loo, unreliable=False):
+    return {
+        "rank": rank,
+        "elpd_loo": elpd_loo,
+        "elpd_diff": 0.0,
+        "dse": 0.0,
+        "weight": 0.5,
+        "loo_unreliable": unreliable,
+    }
+
+
+def test_history_best_model_follows_the_export_rule(tmp_path, monkeypatch):
+    """history.json's per-step ``best_model`` is what the trajectory evaluation
+    scores, and the export is what the next experiment carries; they must be
+    the same model. Both follow ELPD rank among reliable models — never the
+    rounded posterior argmax, which here is an unreliable fit."""
+    posteriors = [
+        canned_posterior("model_a", ["model_b"]),
+        canned_posterior("iter0_candidate0", ["model_a", "model_b"]),
+    ]
+    _patch_scoring(monkeypatch, posteriors)
+    _patch_candidates(monkeypatch)
+
+    def fake_compare(responses_path, models_dir, **kwargs):
+        # The posterior argmax at every step is unreliable; model_b is the
+        # ELPD-best reliable model although its posterior is never the largest.
+        names = pymc_orchestrator._manifest_names(models_dir)
+        rows = {}
+        for name in names:
+            if name == "model_b":
+                rows[name] = _row(1, -11.0)
+            elif name == "model_a":
+                candidate_admitted = "iter0_candidate0" in names
+                rows[name] = _row(
+                    2 if candidate_admitted else 0, -12.0,
+                    unreliable=not candidate_admitted,
+                )
+            else:
+                rows[name] = _row(0, -10.0, unreliable=True)
+        return rows
+
+    monkeypatch.setattr(pymc_orchestrator, "compare_table", fake_compare)
+    # Pruning would call compare_table too; keep the round to selection only.
+    monkeypatch.setattr(pymc_orchestrator, "_prune_losers", lambda *a, **k: [])
+
+    result = run_pymc_inner_loop(
+        write_responses(tmp_path),
+        tmp_path / "results",
+        seed_models_dir=write_seed_models(tmp_path),
+        max_iterations=1,
+        candidate_count=1,
+    )
+
+    history = json.loads(
+        (tmp_path / "results" / "history.json").read_text(encoding="utf-8")
+    )
+    assert [entry["best_model"] for entry in history] == ["model_b", "model_b"]
+    assert [entry["argmax_model"] for entry in history] == [
+        "model_a",
+        "iter0_candidate0",
+    ]
+    assert history[0]["excluded_unreliable"] == ["model_a"]
+    assert history[1]["excluded_unreliable"] == ["iter0_candidate0"]
+    assert result["best_model"] == history[-1]["best_model"]

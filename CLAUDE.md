@@ -96,9 +96,16 @@ seeds are `protected_names` (never pruned). Each round: optional CriticAL critiq
 - **Pruning** (`_prune_losers`): non-protected models both statistically
   distinguishable from best (`elpd_diff > dse_multiplier·dse`) and below
   `prune_weight_floor` move to `models/pruned/`.
-- **Export**: the exported winner (`_best_exportable_model`) is the highest-
-  posterior model whose PSIS-LOO is *reliable* — which can differ from the raw
-  argmax. The outer loop copies a genuinely-new winner into `cognitive_models/`.
+- **Export**: the exported winner (`_best_exportable_model`) is the best model
+  by **ELPD-LOO rank** (`az.compare`'s `rank`) among those whose PSIS-LOO is
+  *reliable* — never the softmax posterior argmax: the posterior is rounded to
+  six decimals, so every model more than ~14 nats behind reads 0.0 and a
+  `max` over it picked by manifest order (62 of 230 baseline experiments
+  exported a far-behind seed that way). The same rule selects the per-step
+  `best_model` in `history.json` (which also records `argmax_model` and
+  `excluded_unreliable`) and the critique incumbent, so what the recovery
+  harness scores, what the critic critiques and what is carried agree. The
+  outer loop copies a genuinely-new winner into `cognitive_models/`.
   "Reliable" is `src/models/loo_reliability.py`'s verdict (a tolerated
   proportion of high-Pareto-k trials, with constant-log-likelihood trials
   exempt as exact), **not** arviz's blanket any-k>0.7 flag — that flag fired on
