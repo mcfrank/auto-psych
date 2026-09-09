@@ -227,11 +227,19 @@ Details worth knowing:
 - **The cache ignores fit kwargs.** Cached fits are keyed by model file + data
   only, so changing `--draws`/`--tune`/`--chains` for a fresh run requires
   clearing the cache directory first.
-- **Leakage is audited, not prevented.** Agents can read the project assets
-  dir, which contains the held-out model's source. `trajectory.json` flags
-  byte-identical copies, mentions of the ground truth's distinctive parameter
-  names, and files named after the ground truth — heuristics for auditing a
-  run, not proof it was clean.
+- **The held-out model's identity never enters the agents' tree.** The
+  synthetic `data/responses.csv` (and the pooled `model_loop/responses.csv`
+  derived from it) is written without the generator's `generating_model`
+  column — that column is listed in every candidate's and critic's context, so
+  it used to tell the agents which model to rediscover (`strip_generating_model`;
+  the harness refuses a responses file that still carries it). The Slurm array
+  task additionally deletes the held-out model's `.py` from both model
+  directories the agents can open and removes its manifest entry (name plus
+  mechanism rationale) with `remove_manifest_entry.py`.
+- **Residual leakage is audited, not prevented.** `trajectory.json` flags
+  byte-identical copies of the ground truth's source, mentions of its
+  distinctive parameter names, and files named after it — heuristics for
+  auditing a run, not proof it was clean.
 - **Design = exhaustive joint EIG.** Each experiment's design is the same
   programmatic exhaustive selection as the live pipeline: every H/T pair over
   the design lengths is scored under the experiment's actual PyMC model set
