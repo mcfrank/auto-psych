@@ -220,7 +220,10 @@ Details worth knowing:
   are always evaluated on comparable pools; set `eval_pool.exhaustive: false`
   plus `n_pairs` for a sampled pool.
 - **Per-step history.** The inner loop now writes `model_loop/history.json`
-  (best model + posterior after the seed fit and after every candidate round);
+  (best model + posterior after the seed fit and after every candidate round;
+  `best_model` is selected exactly as the export is — ELPD-LOO rank among
+  PSIS-LOO-reliable models — with the raw `argmax_model` and the
+  `excluded_unreliable` list recorded beside it);
   the trajectory evaluation refits each step's best model through the shared
   MCMC cache (`--cache-dir`, default `<out dir>/mcmc_cache`), so evaluation
   costs no new sampling.
