@@ -213,6 +213,8 @@ def test_review_sbatch_command_chains_on_the_analysis_job(tmp_path):
     cmd = review_sbatch_command(campaign, 2, "555", "review")
     assert cmd[0] == "sbatch" and "--parsable" in cmd
     assert "--dependency=afterany:555" in cmd
+    # The chain is unwatched, so a dying review job must announce itself.
+    assert "--mail-type=FAIL,TIMEOUT" in cmd
     assert "--partition=hns" in cmd and "--time=04:00:00" in cmd
     export = next(a for a in cmd if a.startswith("--export="))
     assert f"CAMPAIGN_ROOT={tmp_path}" in export and "ITERATION=2" in export and "MODE=review" in export

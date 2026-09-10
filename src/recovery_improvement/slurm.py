@@ -117,6 +117,12 @@ def review_sbatch_command(
         f"--mem={slurm['REVIEW_MEM']}",
         f"--output={log_dir}/{mode}_iter{iteration}_%j.out",
         f"--error={log_dir}/{mode}_iter{iteration}_%j.out",
+        # The chain has no watcher: if a review job dies for a reason the
+        # session-limit requeue does not cover (walltime, node failure, a bad
+        # sbatch), nothing downstream runs and nothing says so. Slurm mails the
+        # job owner, which survives this process exiting. No MailUser: Slurm
+        # defaults to the submitting account.
+        "--mail-type=FAIL,TIMEOUT",
         f"--export=ALL,CAMPAIGN_ROOT={campaign.root},ITERATION={iteration},MODE={mode}",
     ]
     if after_job_id:
