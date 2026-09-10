@@ -3,11 +3,13 @@
 Without pruning the model set only grows: every scoring pass re-ranks every
 model ever admitted, every InferenceData stays resident in the fit cache, and
 existing_hypotheses.md drags dead hypotheses into every candidate prompt. A
-model is pruned only when BOTH hold on the current data: it is statistically
-distinguishable from the best (``elpd_diff > multiplier·dse``) AND its stacking
-weight is negligible (< floor). The seeded set is never pruned — those are the
-baselines the run reports against. Pruned files move to ``models/pruned/`` (an
-audit trail, not a deletion).
+model is pruned when it is statistically distinguishable from the best on the
+current data (``elpd_diff > multiplier·dse`` among PSIS-LOO-reliable rows);
+stacking weight is not a criterion (it is an ensemble coefficient, not
+plausibility). The protected set — the project's seeds — is never pruned: those
+are the baselines the run reports against. Pruned files move to
+``models/pruned/`` (an audit trail, not a deletion) and the ledger records the
+margin.
 """
 
 from __future__ import annotations
@@ -110,16 +112,18 @@ def test_protected_models_are_never_pruned(tmp_path, monkeypatch):
     assert (models_dir / "seed_b.py").exists()
 
 
-def test_indistinguishable_or_weighted_models_stay(tmp_path, monkeypatch):
-    models_dir = _models_dir(tmp_path, ["seed_a", "near_tie", "still_weighted"])
+def test_indistinguishable_models_stay_even_with_zero_stacking_weight(
+    tmp_path, monkeypatch
+):
+    models_dir = _models_dir(tmp_path, ["seed_a", "near_tie"])
     _stub_comparison(
         monkeypatch,
         {
             "seed_a": _row(0, 0.0, 0.0, 0.5),
-            # Within 2*dse of the best: statistically indistinguishable.
-            "near_tie": _row(1, 1.5, 1.0, 0.005),
-            # Distinguishable but still carries stacking weight above the floor.
-            "still_weighted": _row(2, 10.0, 2.0, 0.05),
+            # Within 2*dse of the best: statistically indistinguishable. Its
+            # stacking weight is ~0 because its predictions are redundant with
+            # the best's — that is not evidence against it.
+            "near_tie": _row(1, 1.5, 1.0, 0.0),
         },
     )
     pruned = _prune_losers(
@@ -130,6 +134,57 @@ def test_indistinguishable_or_weighted_models_stay(tmp_path, monkeypatch):
         fit_kwargs=None,
     )
     assert pruned == []
+
+
+def test_distinguishable_model_is_pruned_regardless_of_stacking_weight(
+    tmp_path, monkeypatch
+):
+    """Stacking weight is an ensemble coefficient, not plausibility: a model
+    95 nats behind can carry weight 0.33 because its predictions differ from
+    the best's. Losing by more than the margin is the only criterion."""
+    models_dir = _models_dir(tmp_path, ["seed_a", "still_weighted"])
+    _stub_comparison(
+        monkeypatch,
+        {
+            "seed_a": _row(0, 0.0, 0.0, 0.67),
+            "still_weighted": _row(1, 10.0, 2.0, 0.33),
+        },
+    )
+    pruned = _prune_losers(
+        models_dir,
+        tmp_path / "responses.csv",
+        protected={"seed_a"},
+        cache_dir=None,
+        fit_kwargs=None,
+    )
+    assert pruned == ["still_weighted"]
+    assert (models_dir / "pruned" / "still_weighted.py").exists()
+
+
+def test_pruning_records_the_margin_in_the_ledger(tmp_path, monkeypatch):
+    from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
+
+    models_dir = _models_dir(tmp_path, ["seed_a", "dead_end"])
+    _stub_comparison(
+        monkeypatch,
+        {"seed_a": _row(0, 0.0, 0.0, 1.0), "dead_end": _row(1, 12.0, 2.0, 0.0)},
+    )
+    ledger = HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
+    _prune_losers(
+        models_dir,
+        tmp_path / "responses.csv",
+        protected={"seed_a"},
+        cache_dir=None,
+        fit_kwargs=None,
+        ledger=ledger,
+        ledger_context="experiment1 round 0",
+    )
+    (entry,) = ledger.entries()
+    assert entry.name == "dead_end"
+    assert entry.outcome == "pruned"
+    assert entry.detail == "12.0 nats behind seed_a (6.0× dse)"
+    assert entry.hypothesis == "mechanism dead_end"
+    assert entry.context == "experiment1 round 0"
 
 
 def test_unreliable_loser_is_not_pruned(tmp_path, monkeypatch, capsys):

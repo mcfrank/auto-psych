@@ -10,6 +10,8 @@ the inner loop's candidate and critique agents.
 from __future__ import annotations
 
 import src.runtime.coding_agent as coding_agent
+import yaml
+
 from src.pipelines.inner_loop import pymc_orchestrator
 from src.pipelines.outer_loop import orchestrator as orch
 
@@ -91,6 +93,11 @@ def test_critique_agent_threads_model(tmp_path, monkeypatch):
 def test_programmatic_wrapper_threads_agent_model(tmp_path, monkeypatch):
     exp_dir = tmp_path / "data" / "outer_loop" / "subjective_randomness" / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
+    # A real project seed, so the wrapper can tell which models are protected.
+    (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
+        yaml.safe_dump({"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}),
+        encoding="utf-8",
+    )
     captured = {}
 
     def fake_inner_loop(responses_path, results_dir, **inner_kwargs):
@@ -100,7 +107,7 @@ def test_programmatic_wrapper_threads_agent_model(tmp_path, monkeypatch):
     monkeypatch.setattr(orch, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])
     monkeypatch.setattr(orch, "_load_project_featurizer", lambda project_dir: None)
     monkeypatch.setattr(orch, "_write_feature_csv", lambda rows, fz, out: out)
-    monkeypatch.setattr(orch, "_export_inner_loop_model", lambda e, l, *, best_model: e)
+    monkeypatch.setattr(orch, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e)
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
         fake_inner_loop,

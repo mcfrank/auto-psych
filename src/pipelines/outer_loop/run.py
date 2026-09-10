@@ -118,7 +118,6 @@ def _run_agent(
     candidate_hints: Optional[list] = None,
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
-    prune_weight_floor: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output stays invalid.
@@ -157,7 +156,6 @@ def _run_agent(
             candidate_hints=candidate_hints,
             novelty_rmse_threshold=novelty_rmse_threshold,
             prune_dse_multiplier=prune_dse_multiplier,
-            prune_weight_floor=prune_weight_floor,
             candidate_parallelism=candidate_parallelism,
         )
         _validate_or_exit(agent_key, exp_dir, validate)
@@ -256,7 +254,6 @@ def _run_experiment(
     candidate_hints: Optional[list] = None,
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
-    prune_weight_floor: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
@@ -306,7 +303,6 @@ def _run_experiment(
             candidate_hints=candidate_hints,
             novelty_rmse_threshold=novelty_rmse_threshold,
             prune_dse_multiplier=prune_dse_multiplier,
-            prune_weight_floor=prune_weight_floor,
             candidate_parallelism=candidate_parallelism,
         )
     finally:
@@ -346,7 +342,6 @@ def _run_experiment_stages(
     candidate_hints: Optional[list],
     novelty_rmse_threshold: Optional[float],
     prune_dse_multiplier: Optional[float],
-    prune_weight_floor: Optional[float],
     candidate_parallelism: Optional[int],
 ) -> None:
     """The body of one experiment, from smoke prep through the agent stages."""
@@ -478,7 +473,6 @@ def _run_experiment_stages(
             candidate_hints=candidate_hints,
             novelty_rmse_threshold=novelty_rmse_threshold,
             prune_dse_multiplier=prune_dse_multiplier,
-            prune_weight_floor=prune_weight_floor,
             candidate_parallelism=candidate_parallelism,
         )
         if agent_key == "3_implement" and deploy_target != "none":
@@ -606,11 +600,8 @@ class Args:
     """Reject a candidate whose p_left is within this RMSE of an admitted
     model's (None ⇒ inner-loop default 0.02; 0 disables the gate)."""
     prune_dse_multiplier: Optional[float] = None
-    """Prune agent models with elpd_diff > multiplier*dse AND negligible
-    stacking weight after each scoring pass (None ⇒ inner-loop default 2.0;
-    0 disables pruning)."""
-    prune_weight_floor: Optional[float] = None
-    """Stacking-weight floor for pruning (None ⇒ inner-loop default 0.01)."""
+    """Prune non-seed models with elpd_diff > multiplier*dse after each
+    scoring pass (None ⇒ inner-loop default 2.0; 0 disables pruning)."""
     candidate_parallelism: Optional[int] = None
     """Concurrent candidate agents per inner-loop round (None ⇒ all of a
     round's candidates at once; 1 = sequential)."""
@@ -737,7 +728,6 @@ def main(args: Args) -> None:
             candidate_hints=candidate_hints,
             novelty_rmse_threshold=args.novelty_rmse_threshold,
             prune_dse_multiplier=args.prune_dse_multiplier,
-            prune_weight_floor=args.prune_weight_floor,
             candidate_parallelism=args.candidate_parallelism,
         )
 

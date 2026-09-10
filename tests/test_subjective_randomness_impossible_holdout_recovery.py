@@ -128,7 +128,7 @@ def _stub_inner_loop(history_best):
         (loop_dir / "report.md").write_text("# stub report\n", encoding="utf-8")
         (loop_dir / "responses.csv").write_text("chose_left\n1\n", encoding="utf-8")
 
-        # Mirror _export_inner_loop_model's new semantics: ``history_best`` is
+        # Mirror _export_inner_loop_models' semantics: ``history_best`` is
         # already in cognitive_models (a pool model that won), so nothing is
         # copied and the manifest is unchanged.
         return loop_dir

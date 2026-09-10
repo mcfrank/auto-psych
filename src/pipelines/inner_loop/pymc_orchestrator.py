@@ -17,10 +17,12 @@ Layout under ``results_dir``::
         models/                 # the surviving model set (the "zoo")
             <name>.py           # one PyMC model per surviving candidate
             models_manifest.yaml
+            pruned/             # models that lost (audit trail, still readable)
+        attempted_hypotheses.jsonl  # ledger: every candidate/prune event
         iter_0/candidate_0/     # per-candidate agent working dirs
         model_posterior.json    # ELPD-LOO posterior over models/
         history.json            # best model + posterior after every scoring step
-        best_model.py           # copy of the argmax-posterior model
+        best_model.py           # copy of the exported (best reliable) model
         report.md
 """
 
@@ -34,7 +36,7 @@ import shutil
 import sys
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, Iterable, List, Optional, Tuple
 
 import numpy as np
 import yaml
@@ -49,6 +51,12 @@ from src.models.pymc_inference import (
 )
 from src.model_comparison.likelihood import log_likelihood
 from src.model_comparison.posterior import compare_table, model_posterior
+from src.pipelines.inner_loop.hypothesis_ledger import (
+    LEDGER_FILENAME,
+    HypothesisLedger,
+    LedgerEntry,
+    one_line,
+)
 from src.runtime.config import REPO_ROOT
 
 _PKG_DIR = Path(__file__).resolve().parent
@@ -77,12 +85,16 @@ CRITIQUE_PPC_REPLICATES = 200
 # model (e.g. a full Bayesian model), so keep the magnitude small.
 DEFAULT_COMPLEXITY_PRIOR_CONST = -0.05
 
-# Pruning: after each scoring pass, an agent-conjectured model is dropped when
-# it is BOTH statistically distinguishable from the best (elpd_diff >
-# multiplier·dse) AND carries negligible stacking weight (< floor). The seeded
-# set is never pruned. Multiplier 0 disables pruning.
+# Pruning: after each scoring pass, a non-protected model is dropped when it is
+# statistically distinguishable from the best (elpd_diff > multiplier·dse among
+# PSIS-LOO-reliable rows). The surviving set is then the uncertainty set by
+# construction — every non-protected survivor is within the margin of the best
+# — which is what the outer loop carries into the next experiment. Stacking
+# weight is deliberately NOT a criterion: az.compare's weights are ensemble
+# coefficients, not plausibility (a model 1.6 nats behind the best reads 0.000
+# because its predictions are redundant with the best's; one 95 nats behind can
+# read 0.33 because they differ). Multiplier 0 disables pruning.
 DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
-DEFAULT_PRUNE_WEIGHT_FLOOR = 0.01
 
 # Novelty gate: a candidate whose posterior-mean p_left is within this RMSE of
 # an admitted model's (on the observed stimuli) is a re-skinned duplicate, not
@@ -228,14 +240,45 @@ def _seed_model_set(seed_models_dir: Path, models_dir: Path) -> List[Dict[str, s
     return entries
 
 
-def _drop_unfittable_models(models_dir: Path, responses_path: Path) -> None:
+def _record(
+    ledger: Optional[HypothesisLedger],
+    *,
+    name: str,
+    outcome: str,
+    detail: str,
+    hypothesis: str,
+    context: str,
+) -> None:
+    """Append one event to the hypothesis ledger (a no-op without a ledger)."""
+    if ledger is None:
+        return
+    ledger.append(
+        LedgerEntry(
+            name=name,
+            outcome=outcome,
+            detail=one_line(detail),
+            hypothesis=one_line(hypothesis),
+            context=context,
+        )
+    )
+
+
+def _drop_unfittable_models(
+    models_dir: Path,
+    responses_path: Path,
+    *,
+    ledger: Optional[HypothesisLedger] = None,
+    ledger_context: str = "",
+) -> None:
     """Remove from the manifest any seed model that cannot be MCMC-fit.
 
     A seed/theory model whose logp is non-finite on the data (e.g. a
     numerically unsafe construct that NaNs in PyTensor) would otherwise crash
     ``pm.sample`` at its start-value check and abort the whole run. We drop such
     models from the manifest with a loud warning rather than let one bad model
-    kill a long agentic run. Fails loudly only if **no** model survives.
+    kill a long agentic run. Fails loudly only if **no** model survives. Each
+    drop is recorded in the ledger so a carried model that vanishes here is
+    still accounted for.
     """
     keep: List[Dict[str, str]] = []
     for entry in _manifest_entries(models_dir):
@@ -245,6 +288,14 @@ def _drop_unfittable_models(models_dir: Path, responses_path: Path) -> None:
             keep.append(entry)
         else:
             print(f"  [drop] seed model {name!r} cannot be fit — {reason}", flush=True)
+            _record(
+                ledger,
+                name=name,
+                outcome="dropped",
+                detail=f"cannot be fit on this experiment's data — {reason}",
+                hypothesis=entry.get("rationale") or "",
+                context=ledger_context,
+            )
     if not keep:
         raise ValueError(
             f"No fittable seed models remain in {models_dir} — every seed model's "
@@ -259,6 +310,8 @@ def _drop_nonfinite_elpd_models(
     *,
     cache_dir: Optional[Path] = None,
     fit_kwargs: Optional[Dict[str, Any]] = None,
+    ledger: Optional[HypothesisLedger] = None,
+    ledger_context: str = "",
 ) -> None:
     """Remove from the manifest any model whose ELPD-LOO is non-finite on the data.
 
@@ -287,6 +340,14 @@ def _drop_nonfinite_elpd_models(
                 f"({type(e).__name__}: {e}) — cannot score it; dropping.",
                 flush=True,
             )
+            _record(
+                ledger,
+                name=name,
+                outcome="dropped",
+                detail=f"ELPD-LOO computation failed ({type(e).__name__}: {e})",
+                hypothesis=entry.get("rationale") or "",
+                context=ledger_context,
+            )
             continue
         if math.isfinite(elpd):
             keep.append(entry)
@@ -295,6 +356,14 @@ def _drop_nonfinite_elpd_models(
                 f"  [drop] model {name!r}: non-finite ELPD-LOO ({elpd}) on the data "
                 "— would corrupt the posterior; dropping.",
                 flush=True,
+            )
+            _record(
+                ledger,
+                name=name,
+                outcome="dropped",
+                detail=f"non-finite ELPD-LOO ({elpd}) on this experiment's data",
+                hypothesis=entry.get("rationale") or "",
+                context=ledger_context,
             )
     if not keep:
         raise ValueError(
@@ -350,16 +419,19 @@ def _prune_losers(
     cache_dir: Optional[Path],
     fit_kwargs: Optional[Dict[str, Any]],
     dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER,
-    weight_floor: float = DEFAULT_PRUNE_WEIGHT_FLOOR,
+    ledger: Optional[HypothesisLedger] = None,
+    ledger_context: str = "",
 ) -> List[str]:
-    """Drop agent-conjectured models that obviously lose; return their names.
+    """Drop non-protected models that have lost; return their names.
 
-    "Obviously lose" means BOTH: statistically distinguishable from the best
-    (``elpd_diff > dse_multiplier·dse``) AND negligible stacking weight
-    (< ``weight_floor``) — a model failing only one test may still be a live
-    rival. ``protected`` names (the seeded set) are never pruned: they are the
-    baselines the run reports against. Pruned files move to ``models/pruned/``
-    (an audit trail, not a deletion) and their cached fits are evicted so the
+    "Lost" means statistically distinguishable from the best on the current
+    data: ``elpd_diff > dse_multiplier·dse`` among PSIS-LOO-reliable rows. The
+    survivors are therefore the uncertainty set — every non-protected model
+    still within the margin of the best — which is what the outer loop carries
+    into the next experiment. ``protected`` names (the project's seed models)
+    are never pruned: they are the baselines the run reports against. Pruned
+    files move to ``models/pruned/`` (an audit trail, not a deletion), the
+    ledger records the margin, and the cached fits are evicted so the
     in-process memory footprint stops growing with dead models.
 
     Honest framing: within a run, re-scoring a loser is a cache hit, so the
@@ -410,11 +482,13 @@ def _prune_losers(
         and not comparison[name].get("loo_unreliable")
         and comparison[name]["dse"] > 0
         and comparison[name]["elpd_diff"] > dse_multiplier * comparison[name]["dse"]
-        and comparison[name]["weight"] < weight_floor
     ]
     if not to_prune:
         return []
 
+    hypotheses = {
+        e["name"]: (e.get("rationale") or "") for e in _manifest_entries(models_dir)
+    }
     pruned_dir = models_dir / "pruned"
     pruned_dir.mkdir(exist_ok=True)
     for name in to_prune:
@@ -424,11 +498,23 @@ def _prune_losers(
             if src.exists():
                 shutil.move(str(src), str(pruned_dir / f"{name}{suffix}"))
         evict_fit_cache(name)
+        margin = (
+            f"{row['elpd_diff']:.1f} nats behind {baseline} "
+            f"({row['elpd_diff'] / row['dse']:.1f}× dse)"
+        )
         print(
             f"  [prune] {name}: elpd_diff {row['elpd_diff']:.1f} > "
-            f"{dse_multiplier}·dse ({row['dse']:.1f}) and stacking weight "
-            f"{row['weight']:.4f} < {weight_floor} — moved to models/pruned/.",
+            f"{dse_multiplier}·dse ({row['dse']:.1f}) — {margin}; moved to "
+            "models/pruned/.",
             flush=True,
+        )
+        _record(
+            ledger,
+            name=name,
+            outcome="pruned",
+            detail=margin,
+            hypothesis=hypotheses.get(name, ""),
+            context=ledger_context,
         )
     remaining = set(names) - set(to_prune)
     _write_manifest(
@@ -447,8 +533,14 @@ def _admit_candidate(
     cache_dir: Optional[Path] = None,
     fit_kwargs: Optional[Dict[str, Any]] = None,
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
+    ledger: Optional[HypothesisLedger] = None,
+    ledger_context: str = "",
 ) -> bool:
     """Validate a candidate and, if valid, admit it to the model set.
+
+    Every outcome — admitted, or rejected for any of the reasons below — is
+    recorded in ``ledger`` (when given) with the candidate's hypothesis, so the
+    next round's briefs can list what was already tried.
 
     A candidate is admitted only when it ships **both**:
 
@@ -471,22 +563,32 @@ def _admit_candidate(
     scoring, adding no extra MCMC), containing any sampling failure to this one
     candidate.
     """
-    if not candidate_file.exists():
-        print(f"  [reject] {model_name}: no candidate.py written", flush=True)
-        return False
     hypothesis_file = candidate_file.parent / "hypothesis.md"
     hypothesis = (
         hypothesis_file.read_text(encoding="utf-8").strip()
         if hypothesis_file.exists()
         else ""
     )
-    if not hypothesis:
-        print(
-            f"  [reject] {model_name}: no hypothesis.md — every model must state "
-            "one cognitive hypothesis before it can be admitted",
-            flush=True,
+
+    def reject(reason: str) -> bool:
+        print(f"  [reject] {model_name}: {reason}", flush=True)
+        _record(
+            ledger,
+            name=model_name,
+            outcome="rejected",
+            detail=reason,
+            hypothesis=hypothesis,
+            context=ledger_context,
         )
         return False
+
+    if not candidate_file.exists():
+        return reject("no candidate.py written")
+    if not hypothesis:
+        return reject(
+            "no hypothesis.md — every model must state one cognitive hypothesis "
+            "before it can be admitted"
+        )
 
     staged = models_dir / f"{model_name}.py"
     shutil.copyfile(candidate_file, staged)
@@ -494,20 +596,12 @@ def _admit_candidate(
         load_pymc_model(model_name, models_dir)
     except Exception as e:
         staged.unlink(missing_ok=True)
-        print(
-            f"  [reject] {model_name}: candidate.py is not a loadable PyMC model: {e}",
-            flush=True,
-        )
-        return False
+        return reject(f"candidate.py is not a loadable PyMC model: {e}")
 
     fittable, reason = model_logp_is_finite(model_name, models_dir, responses_path)
     if not fittable:
         staged.unlink(missing_ok=True)
-        print(
-            f"  [reject] {model_name}: model cannot be fit — {reason}",
-            flush=True,
-        )
-        return False
+        return reject(f"model cannot be fit — {reason}")
 
     # Real-fit gate: the logp check above only covers the initial point, so a
     # candidate can pass it yet diverge/NaN once NUTS jitters off it. Fit it now
@@ -523,12 +617,10 @@ def _admit_candidate(
         )
     except Exception as e:
         staged.unlink(missing_ok=True)
-        print(
-            f"  [reject] {model_name}: MCMC sampling failed "
-            f"({type(e).__name__}: {e}); dropping it so it cannot abort scoring.",
-            flush=True,
+        return reject(
+            f"MCMC sampling failed ({type(e).__name__}: {e}); dropping it so it "
+            "cannot abort scoring."
         )
-        return False
 
     # ELPD-LOO gate: a model can sample cleanly yet still assign ~0 probability to
     # an observed outcome at some posterior draws, giving a non-finite PSIS-LOO.
@@ -545,21 +637,16 @@ def _admit_candidate(
         )
     except Exception as e:
         staged.unlink(missing_ok=True)
-        print(
-            f"  [reject] {model_name}: ELPD-LOO computation failed "
-            f"({type(e).__name__}: {e}); dropping it so it cannot abort scoring.",
-            flush=True,
+        return reject(
+            f"ELPD-LOO computation failed ({type(e).__name__}: {e}); dropping it "
+            "so it cannot abort scoring."
         )
-        return False
     if not math.isfinite(elpd):
         staged.unlink(missing_ok=True)
-        print(
-            f"  [reject] {model_name}: non-finite ELPD-LOO ({elpd}); a model that "
-            "assigns ~0 probability to an observed outcome would corrupt the "
-            "posterior — dropping it.",
-            flush=True,
+        return reject(
+            f"non-finite ELPD-LOO ({elpd}); a model that assigns ~0 probability "
+            "to an observed outcome would corrupt the posterior — dropping it."
         )
-        return False
 
     # Novelty gate: a candidate that predicts like an existing model is a
     # re-skinned duplicate under a new name — it would split posterior mass
@@ -575,16 +662,21 @@ def _admit_candidate(
         )
         if nearest is not None and rmse < novelty_rmse_threshold:
             staged.unlink(missing_ok=True)
-            print(
-                f"  [reject] {model_name}: predicts like existing model "
-                f"{nearest!r} (p_left RMSE {rmse:.4f} < "
-                f"{novelty_rmse_threshold}) — a near-duplicate, not a new "
-                f"hypothesis.",
-                flush=True,
+            return reject(
+                f"predicts like existing model {nearest!r} (p_left RMSE "
+                f"{rmse:.4f} < {novelty_rmse_threshold}) — a near-duplicate of "
+                f"{nearest}, not a new hypothesis."
             )
-            return False
 
     shutil.copyfile(hypothesis_file, models_dir / f"{model_name}.hypothesis.md")
+    _record(
+        ledger,
+        name=model_name,
+        outcome="admitted",
+        detail="",
+        hypothesis=hypothesis,
+        context=ledger_context,
+    )
 
     # Rebuild the manifest, preserving every existing entry's rationale (its
     # hypothesis) and recording this candidate's hypothesis as its rationale.
@@ -657,16 +749,20 @@ def _write_candidate_context(
     current_posterior: Optional[Dict[str, Any]],
     critique_path: Optional[Path] = None,
     hints: Optional[List[str]] = None,
+    ledger: Optional[HypothesisLedger] = None,
 ) -> Dict[str, Optional[str]]:
     """Write the candidate's context documents and return their text.
 
     The files (CONTEXT.md, CANDIDATE_BRIEF.md, existing_hypotheses.md,
-    critiques.md) stay on disk for audit/reproducibility, but the returned
-    strings are what actually reach the agent — they are injected verbatim
-    into its prompt (see ``_build_candidate_prompt``), so steering content is
-    never optional reading. ``hints`` overrides the default exploration
-    lenses; hint ``candidate_idx % len(hints)`` goes into this candidate's
-    brief.
+    attempted_hypotheses.md, critiques.md) stay on disk for audit/
+    reproducibility, but the returned strings are what actually reach the
+    agent — they are injected verbatim into its prompt (see
+    ``_build_candidate_prompt``), so steering content is never optional
+    reading. ``hints`` overrides the default exploration lenses; hint
+    ``candidate_idx % len(hints)`` goes into this candidate's brief. With a
+    ``ledger``, ``attempted_hypotheses.md`` lists every hypothesis tried
+    earlier (this experiment or a previous one) that is no longer in the model
+    set, with what happened to it.
     """
     candidate_dir.mkdir(parents=True, exist_ok=True)
     with responses_path.open(encoding="utf-8") as f:
@@ -709,6 +805,15 @@ def _write_candidate_context(
         "how well each fits. Read it so you propose a *distinct* or *refined*",
         "hypothesis — never a blend of several — under a name not already taken.",
     ]
+    if ledger is not None:
+        lines += [
+            "",
+            "`attempted_hypotheses.md` lists the hypotheses tried earlier — in this",
+            "experiment or a previous one — that are no longer in the model set,",
+            "with what happened to each (pruned after losing by a stated margin, or",
+            "rejected at admission, most often as a near-duplicate of a model still",
+            "in the set). Do not re-propose any of them under a new name.",
+        ]
     if critique_path is not None:
         lines += [
             "",
@@ -726,6 +831,12 @@ def _write_candidate_context(
     hypotheses_text = _write_existing_hypotheses(
         candidate_dir, models_dir, current_posterior
     )
+    attempted_text: Optional[str] = None
+    if ledger is not None:
+        attempted_text = ledger.render_markdown(live_names=_manifest_names(models_dir))
+        (candidate_dir / "attempted_hypotheses.md").write_text(
+            attempted_text, encoding="utf-8"
+        )
     critiques_text: Optional[str] = None
     if critique_path is not None and critique_path.exists():
         critiques_text = critique_path.read_text(encoding="utf-8")
@@ -752,6 +863,7 @@ def _write_candidate_context(
         "context": context_text,
         "brief": brief,
         "existing_hypotheses": hypotheses_text,
+        "attempted": attempted_text,
         "critiques": critiques_text,
     }
 
@@ -785,6 +897,8 @@ def _build_candidate_prompt(
         f"## CANDIDATE_BRIEF.md\n\n{docs['brief']}",
         f"## existing_hypotheses.md\n\n{docs['existing_hypotheses']}",
     ]
+    if docs.get("attempted"):
+        sections.append(f"## attempted_hypotheses.md\n\n{docs['attempted']}")
     if docs.get("critiques"):
         sections.append(f"## critiques.md\n\n{docs['critiques']}")
     return "\n\n".join(sections) + "\n"
@@ -1252,8 +1366,9 @@ def run_pymc_inner_loop(
     candidate_hints: Optional[List[str]] = None,
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER,
-    prune_weight_floor: float = DEFAULT_PRUNE_WEIGHT_FLOOR,
     candidate_parallelism: Optional[int] = None,
+    protected_names: Optional[Iterable[str]] = None,
+    ledger_context: str = "",
 ) -> Dict[str, Any]:
     """Run the PyMC inner model loop and export the best model.
 
@@ -1266,7 +1381,19 @@ def run_pymc_inner_loop(
         Output directory (created if absent).
     seed_models_dir
         Directory with the starting model set (`<name>.py` + manifest), e.g. the
-        previous experiment's `cognitive_models/`.
+        previous experiment's `cognitive_models/`. An ``attempted_hypotheses.jsonl``
+        beside the manifest (the ledger a previous experiment carried) seeds
+        this run's ledger.
+    protected_names
+        Models that are never pruned — the project's seed models, the
+        baselines a run reports against. ``None`` protects every model in
+        ``seed_models_dir`` (the right default when that directory *is* the
+        seed set). The outer loop passes the project seeds explicitly so that a
+        model carried from a previous experiment can lose and leave the set.
+        Names not in the seed set are ignored (a seed held out of this run);
+        a non-empty set with no member in the seed set raises.
+    ledger_context
+        Prefix for the ledger's ``context`` field (e.g. ``"experiment2"``).
     max_iterations
         Number of candidate-generation rounds. ``0`` only fits/compares the seed
         set (no agent is spawned).
@@ -1291,18 +1418,18 @@ def run_pymc_inner_loop(
     novelty_rmse_threshold
         Reject a candidate whose posterior-mean ``p_left`` is within this RMSE
         of an admitted model's on the observed stimuli (``0`` disables).
-    prune_dse_multiplier, prune_weight_floor
-        After each scoring pass, drop agent models that are BOTH statistically
-        distinguishable from the best (``elpd_diff > multiplier·dse``) AND
-        carry stacking weight below the floor. The seeded set is never pruned;
-        multiplier ``0`` disables pruning.
+    prune_dse_multiplier
+        After each scoring pass, drop non-protected models that are
+        statistically distinguishable from the best
+        (``elpd_diff > multiplier·dse``); ``0`` disables pruning.
     candidate_parallelism
         Concurrent candidate agents per round (``None`` ⇒ all of the round's
         candidates at once; ``1`` ⇒ sequential). Agents are CLI subprocesses,
         so this is a pure wall-clock lever; admission is always sequential in
         candidate order, keeping runs deterministic.
 
-    Returns a dict with ``best_model``, ``posteriors``, ``elpd_loo`` and paths.
+    Returns a dict with ``best_model``, ``posteriors``, ``elpd_loo``,
+    ``live_models`` (the surviving zoo, in manifest order) and paths.
     """
     responses_path = Path(responses_path)
     results_dir = Path(results_dir)
@@ -1310,17 +1437,30 @@ def run_pymc_inner_loop(
     models_dir = results_dir / "models"
 
     seeded_entries = _seed_model_set(Path(seed_models_dir), models_dir)
-    # The seeded set is pruning-protected: these are the baselines the run
-    # reports against, so they stay in the comparison even when they lose.
-    protected_names = {e.get("name") for e in seeded_entries if e.get("name")}
-    _drop_unfittable_models(models_dir, responses_path)
+    seeded_names = {e.get("name") for e in seeded_entries if e.get("name")}
+    protected = _resolve_protected_names(protected_names, seeded_names)
+    # The loop's memory: every hypothesis tried, continuing the ledger the
+    # previous experiment carried beside its model set.
+    ledger = HypothesisLedger.create(
+        results_dir / LEDGER_FILENAME,
+        inherit_from=Path(seed_models_dir) / LEDGER_FILENAME,
+    )
+    _drop_unfittable_models(
+        models_dir, responses_path, ledger=ledger, ledger_context=ledger_context
+    )
     fit_kwargs = fit_kwargs or {}
     # A carried-forward model can score a finite ELPD on a prior experiment's data
     # yet NaN on this one's; drop those before scoring so a single one can't crash
     # model_posterior and abort the whole run.
     _drop_nonfinite_elpd_models(
-        models_dir, responses_path, cache_dir=cache_dir, fit_kwargs=fit_kwargs
+        models_dir,
+        responses_path,
+        cache_dir=cache_dir,
+        fit_kwargs=fit_kwargs,
+        ledger=ledger,
+        ledger_context=ledger_context,
     )
+    n_lenses = len(candidate_hints) if candidate_hints else len(DEFAULT_CANDIDATE_HINTS)
 
     posterior = _score(
         responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
@@ -1366,6 +1506,7 @@ def run_pymc_inner_loop(
                 posterior,
                 critique_path=critique_path,
                 hints=candidate_hints,
+                ledger=ledger,
             )
             candidate_dirs.append((idx, candidate_dir, docs))
 
@@ -1391,6 +1532,7 @@ def run_pymc_inner_loop(
         # Stage 2 — admit sequentially in candidate order: admission mutates
         # the manifest, uniquifies names, and runs MCMC + the novelty gate, so
         # a fixed order keeps runs deterministic (earlier candidates win ties).
+        round_context = f"{ledger_context} round {iteration}".strip()
         for (idx, candidate_dir, _), ok in zip(candidate_dirs, spawn_ok):
             if not ok:
                 continue
@@ -1406,6 +1548,8 @@ def run_pymc_inner_loop(
                 cache_dir=cache_dir,
                 fit_kwargs=fit_kwargs,
                 novelty_rmse_threshold=novelty_rmse_threshold,
+                ledger=ledger,
+                ledger_context=f"{round_context} candidate {idx} lens {idx % n_lenses}",
             )
         posterior = _score(
             responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
@@ -1413,11 +1557,12 @@ def run_pymc_inner_loop(
         pruned = _prune_losers(
             models_dir,
             responses_path,
-            protected=protected_names,
+            protected=protected,
             cache_dir=cache_dir,
             fit_kwargs=fit_kwargs,
             dse_multiplier=prune_dse_multiplier,
-            weight_floor=prune_weight_floor,
+            ledger=ledger,
+            ledger_context=round_context,
         )
         if pruned:
             # Re-normalize over the surviving set (cached fits — no new MCMC).
@@ -1432,7 +1577,31 @@ def run_pymc_inner_loop(
     result = _export(results_dir, models_dir, posterior, comparison)
     result["history"] = history
     result["history_path"] = str(results_dir / "history.json")
+    result["live_models"] = _manifest_names(models_dir)
+    result["ledger_path"] = str(ledger.path)
     return result
+
+
+def _resolve_protected_names(
+    protected_names: Optional[Iterable[str]], seeded_names: set
+) -> set:
+    """The subset of the seeded set that pruning must never touch.
+
+    ``None`` protects the whole seeded set. An explicit set is intersected
+    with the seeded names (a project seed held out of this run is simply
+    absent); an explicit non-empty set that matches nothing is a caller bug
+    and raises rather than silently leaving every model prunable.
+    """
+    if protected_names is None:
+        return set(seeded_names)
+    requested = set(protected_names)
+    protected = requested & set(seeded_names)
+    if requested and not protected:
+        raise ValueError(
+            f"None of the protected model names {sorted(requested)} is in the "
+            f"seeded model set {sorted(seeded_names)}."
+        )
+    return protected
 
 
 def _best_model(posterior: Dict[str, Any]) -> str:

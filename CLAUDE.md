@@ -54,8 +54,9 @@ Two nested loops. **The single most important fact: stages are decoupled
 processes that pass state through on-disk artifacts (CSV / JSON / YAML / `.py`
 files), not in-memory objects.** Every cognitive model is a self-contained `.py`
 file discovered via a `models_manifest.yaml`; MCMC fits are content-addressed and
-cached; the only state crossing an experiment boundary is (a) carried model files
-and (b) the registry's stacking weights.
+cached; the only state crossing an experiment boundary is (a) the carried model
+files (the live set), (b) the ledger of attempted hypotheses beside them and
+(c) the registry (a uniform prior over the carried set).
 
 ### Outer loop — `src/pipelines/outer_loop/` (`run.py` → `orchestrator.py`)
 
@@ -85,17 +86,29 @@ Validators (`_validate_*` in `orchestrator.py`) enforce the artifact contracts
 ### Inner loop — `src/pipelines/inner_loop/pymc_orchestrator.py`
 
 The only place new hypotheses enter. The model zoo lives at `model_loop/models/`;
-seeds are `protected_names` (never pruned). Each round: optional CriticAL critique
-→ spawn candidate agents in parallel (each steered by a rotating exploration
-"lens") → admit sequentially.
+the project's seeds are `protected_names` (never pruned — the outer loop passes
+them explicitly, so a model carried from an earlier experiment *can* lose and
+leave). Each round: optional CriticAL critique → spawn candidate agents in
+parallel (each steered by a rotating exploration "lens") → admit sequentially.
 
 - **Novelty gate** (`_admit_candidate`): a candidate is admitted only with a
   loadable `candidate.py` (module-level `model: pm.Model`) + `hypothesis.md` +
   `model_name.txt`, passing logp/real-fit/finite-ELPD gates, AND with posterior-
   mean `p_left` ≥ `novelty_rmse_threshold` (0.02) RMSE from every admitted model.
-- **Pruning** (`_prune_losers`): non-protected models both statistically
-  distinguishable from best (`elpd_diff > dse_multiplier·dse`) and below
-  `prune_weight_floor` move to `models/pruned/`.
+- **Pruning** (`_prune_losers`): non-protected, PSIS-LOO-reliable models
+  statistically distinguishable from the best (`elpd_diff > dse_multiplier·dse`)
+  move to `models/pruned/`. Stacking weight is deliberately not a criterion
+  (it is an ensemble coefficient, not plausibility). The survivors are the
+  uncertainty set — everything still within the margin of the best.
+- **Ledger** (`src/pipelines/inner_loop/hypothesis_ledger.py`):
+  `model_loop/attempted_hypotheses.jsonl` records every candidate slot
+  (admitted / rejected, with the reason) and every prune (with the margin),
+  continues the ledger the previous experiment carried, and is rendered into
+  every candidate brief as `attempted_hypotheses.md` ("already tried — do not
+  re-propose": the retired hypotheses, i.e. those no longer in the set).
+  Without it, pruned hypotheses vanished from `existing_hypotheses.md` and were
+  re-proposed (in the weakest recovery cell 11 of 13 re-proposals had already
+  been pruned there).
 - **Export**: the exported winner (`_best_exportable_model`) is the best model
   by **ELPD-LOO rank** (`az.compare`'s `rank`) among those whose PSIS-LOO is
   *reliable* — never the softmax posterior argmax: the posterior is rounded to
@@ -105,7 +118,12 @@ seeds are `protected_names` (never pruned). Each round: optional CriticAL critiq
   `best_model` in `history.json` (which also records `argmax_model` and
   `excluded_unreliable`) and the critique incumbent, so what the recovery
   harness scores, what the critic critiques and what is carried agree. The
-  outer loop copies a genuinely-new winner into `cognitive_models/`.
+  outer loop (`_export_inner_loop_models`) then makes `cognitive_models/` the
+  **live set**: the protected seeds plus every zoo survivor (not only the
+  winner — a rival within 2·dse is carried and left to the next design), with
+  a carried model the loop pruned removed, and the ledger copied beside the
+  manifest. Before this, only the winner crossed the boundary: 19 unresolved
+  rivals were dropped at 40 boundaries in the iteration-2 recovery sweep.
   "Reliable" is `src/models/loo_reliability.py`'s verdict (a tolerated
   proportion of high-Pareto-k trials, with constant-log-likelihood trials
   exempt as exact), **not** arviz's blanket any-k>0.7 flag — that flag fired on
@@ -114,11 +132,15 @@ seeds are `protected_names` (never pruned). Each round: optional CriticAL critiq
 ### How weights flow between experiments (the registry)
 
 `src/registry/io.py` schema: `{theories: {name: prob}, reserved_for_new}`. After
-experiment N, `update_registry_from_interpretation` reads
-`model_loop/model_posterior.json`, takes the **`az.compare` stacking weights**
-(deliberately not the overconfident softmax posteriors), and writes
-`model_registry.yaml`. Experiment N+1's design reads those weights as the model
-prior for EIG selection. Model *files* flow separately via carry-forward.
+experiment N, `update_registry_from_interpretation` writes a **uniform prior
+over the carried set** (the `cognitive_models/` manifest the export just
+wrote) to `model_registry.yaml`; experiment N+1's design reads it as the model
+prior for EIG selection. It used to copy `az.compare`'s stacking weights, which
+are ensemble coefficients rather than plausibility and were written over the
+whole zoo: in 15 of 40 next-experiment designs of the iteration-2 recovery
+sweep every model actually present had weight ~0 (or one had 1.0), so all 32
+EIG-selected stimuli had zero EIG. The stacking weights remain a report field
+in `model_posterior.json`. Model *files* flow separately via carry-forward.
 
 ### Supporting modules
 

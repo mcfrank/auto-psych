@@ -107,7 +107,7 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
     )
     monkeypatch.setattr(orch, "_write_feature_csv", lambda rows, fz, out: out)
     monkeypatch.setattr(
-        orch, "_export_inner_loop_model", lambda e, l, *, best_model: e
+        orch, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e
     )
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
@@ -122,6 +122,11 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
 def test_inner_loop_programmatic_threads_cache_dir_and_timeout(tmp_path, monkeypatch):
     exp_dir = tmp_path / "data" / "outer_loop" / PROJECT / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
+    # A real project seed, so the wrapper can tell which models are protected.
+    (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
+        yaml.safe_dump({"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}),
+        encoding="utf-8",
+    )
     cache_dir = tmp_path / "cache"
 
     captured = _run_programmatic_loop(
@@ -139,6 +144,11 @@ def test_inner_loop_programmatic_explicit_project_id_overrides_parent_name(
     # NOT the project id and the featurizer must resolve via the explicit one.
     exp_dir = tmp_path / "holdout_runs" / "prototype_similarity" / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
+    # A real project seed, so the wrapper can tell which models are protected.
+    (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
+        yaml.safe_dump({"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}),
+        encoding="utf-8",
+    )
 
     captured = _run_programmatic_loop(
         tmp_path, monkeypatch, exp_dir, project_id=PROJECT

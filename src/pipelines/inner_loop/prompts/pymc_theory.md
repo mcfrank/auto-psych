@@ -13,6 +13,12 @@ Read these files in the current working directory before deciding what to write:
 3. `existing_hypotheses.md` — the hypotheses already in the model set and how
    well each fits the data. Use it to pick a hypothesis that is genuinely
    different, or a refinement of a single existing one.
+4. `attempted_hypotheses.md` — hypotheses tried earlier that are no longer in
+   the model set, with what happened to each: pruned after losing to the best
+   model by a stated margin, or rejected at admission (most often as a
+   near-duplicate of a model still in the set). Do not propose any of them
+   again under a new name; a mechanism that lost by a wide margin is ruled out,
+   and one already covered by a live model needs no second copy.
 
 ## Goal
 

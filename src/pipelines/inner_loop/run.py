@@ -53,7 +53,6 @@ from src.pipelines.inner_loop.pymc_orchestrator import (
     DEFAULT_COMPLEXITY_PRIOR_CONST,
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     DEFAULT_PRUNE_DSE_MULTIPLIER,
-    DEFAULT_PRUNE_WEIGHT_FLOOR,
     run_pymc_inner_loop,
 )
 from src.runtime.coding_agent import select_backend
@@ -111,10 +110,8 @@ class Args:
     """Reject a candidate whose p_left is within this RMSE of an admitted
     model's on the observed stimuli (0 disables the novelty gate)."""
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER
-    """Prune agent models with elpd_diff > multiplier*dse AND stacking weight
-    below the floor after each scoring pass (0 disables pruning)."""
-    prune_weight_floor: float = DEFAULT_PRUNE_WEIGHT_FLOOR
-    """Stacking-weight floor for pruning (see --prune-dse-multiplier)."""
+    """Prune non-seed models with elpd_diff > multiplier*dse after each
+    scoring pass (0 disables pruning)."""
     candidate_parallelism: Optional[int] = None
     """Concurrent candidate agents per round (default: all of the round's
     candidates at once; 1 = sequential)."""
@@ -155,7 +152,6 @@ def main(args: Args) -> None:
             candidate_hints=hints,
             novelty_rmse_threshold=args.novelty_rmse_threshold,
             prune_dse_multiplier=args.prune_dse_multiplier,
-            prune_weight_floor=args.prune_weight_floor,
             candidate_parallelism=args.candidate_parallelism,
         )
     finally:
