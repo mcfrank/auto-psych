@@ -40,7 +40,11 @@ from src.recovery_improvement.next_run import (
     parse_next_run,
     sweep_env,
 )
-from src.recovery_improvement.session_limit import SessionLimitHit, detect_session_limit
+from src.recovery_improvement.session_limit import (
+    SessionLimitHit,
+    detect_session_limit,
+    detect_unusable_model,
+)
 
 REPO_DIRNAME = "repo"
 SWEEP_DIRNAME = "sweep"
@@ -298,6 +302,23 @@ def archive_previous_attempt(iter_dir: Path, repo: Path) -> str:
     )
 
 
+def _raise_if_unusable_model(campaign: Campaign, result_text: str) -> None:
+    """Stop at once if the configured review model is unavailable.
+
+    No repair round can fix a model the login cannot use, and burning one
+    costs a session and buries the real message under a deliverables error.
+    """
+    model = detect_unusable_model(result_text)
+    if model is None:
+        return
+    raise RuntimeError(
+        f"the review model {model!r} is not available to this login "
+        f"(claude reported: {result_text.strip()[:200]}). Set REVIEW_MODEL in "
+        f"{campaign.root / 'campaign.env'} to a model the login can use, then "
+        "resubmit this iteration; its partial work is kept and resumed."
+    )
+
+
 def _raise_if_session_limit(campaign: Campaign, result_text: str) -> None:
     """The subscription's session limit ends the session with a message in the
     result text (Claude still reports subtype "success"). Stop here — no repair
@@ -373,6 +394,7 @@ def run_iteration(
     )
     (iter_dir / PROMPT_NAME).write_text(prompt, encoding="utf-8")
     success, result_text = run_agent(prompt, cwd=repo, log_path=iter_dir / AGENT_LOG_NAME)
+    _raise_if_unusable_model(campaign, result_text)
     _raise_if_session_limit(campaign, result_text)
 
     problems = check_deliverables(iter_dir, repo, campaign)
