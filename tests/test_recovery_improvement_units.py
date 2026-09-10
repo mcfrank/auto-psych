@@ -286,3 +286,25 @@ def test_other_limit_phrasings_and_relative_reset_times_are_parsed():
     assert limit.reset_at == datetime(2026, 9, 8, 21, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
     # A note that merely discusses limits, past the first 200 characters, is not a hit.
     assert detect_session_limit("x" * 250 + " we hit your usage limit of candidates per round") is None
+
+
+def test_an_unusable_model_is_detected_and_is_not_a_session_limit():
+    """Claude Code exits 0 with this as its result text when the configured
+    model is not available to the login (which happened when a re-login
+    dropped access to claude-fable-5-1 mid-campaign). No repair round can fix
+    it, so it must be told apart from a session limit and from a genuine
+    missing deliverable."""
+    from src.recovery_improvement.session_limit import (
+        detect_session_limit,
+        detect_unusable_model,
+    )
+
+    msg = (
+        "There's an issue with the selected model (claude-fable-5-1). It may not "
+        "exist or you may not have access to it. Run --model to pick a different model."
+    )
+    assert detect_unusable_model(msg) == "claude-fable-5-1"
+    assert detect_session_limit(msg) is None
+    assert detect_unusable_model("Done. Wrote prescription.md.") is None
+    # A note that merely discusses model access is not a configuration failure.
+    assert detect_unusable_model("x" * 250 + " issue with the selected model (foo)") is None

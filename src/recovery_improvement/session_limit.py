@@ -43,6 +43,24 @@ _RELATIVE_RE = re.compile(
     re.IGNORECASE,
 )
 
+# Claude Code exits 0 with this as its result text when the configured model is
+# not available to the login. Matched near the start of the text, like the limit
+# messages, so prose about model access does not trip it.
+_UNUSABLE_MODEL_RE = re.compile(
+    r"issue with the selected model \(([^)]+)\)", re.IGNORECASE
+)
+
+
+def detect_unusable_model(result_text: str) -> Optional[str]:
+    """The model name Claude Code refused, or None.
+
+    Distinct from a session limit: waiting will not help, and neither will a
+    repair round, so callers must fail immediately and say what to change.
+    """
+    match = _UNUSABLE_MODEL_RE.search((result_text or "")[:_LIMIT_WINDOW])
+    return match.group(1) if match else None
+
+
 RETRY_MARGIN = timedelta(minutes=5)
 """Start this long after the stated reset, so the window has really turned."""
 FALLBACK_WAIT = timedelta(hours=1)
