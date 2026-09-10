@@ -122,6 +122,15 @@ prior for EIG selection. Model *files* flow separately via carry-forward.
 
 ### Supporting modules
 
+- **Two seed sets, one per feature regime.** `pymc_model_families/` (and the
+  live pool `seed_models/`) bind the columns the project featurizer supplies;
+  `pymc_model_families_raw/` (pool `seed_models_raw/`) compute those columns
+  themselves and are used only by a `raw_features: true` config, which writes an
+  agents' CSV of H/T sequences alone and designs without a featurizer. The sets
+  must never be merged: a model computing a column the CSV already carries is
+  unfittable, and the inner loop `[drop]`s it rather than failing. Why the arm
+  exists (the featurizer reproduces each ground truth's own decision variable at
+  R² 0.90-1.00) and how to read its results: `docs/raw_features_arm.md`.
 - `src/models/mcmc_defaults.py` — the **single source of MCMC sampler defaults**
   (`PRODUCTION_*`, `DESIGN_TWIN_*`). Every entry point imports from here; change
   defaults only here.

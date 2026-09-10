@@ -114,6 +114,19 @@ def _stage_done(agent_key: str, exp_dir: Path) -> bool:
 # it are listed column-by-column in every candidate's and critic's context).
 GENERATING_MODEL_COLUMN = "generating_model"
 
+# The only columns an agent-facing responses CSV carries in a `raw_features`
+# run: the two H/T sequences plus the response bookkeeping. Every feature is
+# then the model's own to compute (`compute_features` / `prepare_observed`),
+# which is what makes recovery a test of finding the representation rather than
+# of weighting features the harness supplied. See docs/raw_features_arm.md.
+RAW_RESPONSE_COLUMNS = (
+    "sequence_a",
+    "sequence_b",
+    "participant_id",
+    "trial_index",
+    "chose_left",
+)
+
 
 def strip_generating_model(
     rows: Sequence[Mapping[str, Any]],
@@ -128,6 +141,26 @@ def strip_generating_model(
         {key: value for key, value in row.items() if key != GENERATING_MODEL_COLUMN}
         for row in rows
     ]
+
+
+def strip_to_raw_columns(
+    rows: Sequence[Mapping[str, Any]],
+) -> List[Dict[str, Any]]:
+    """Copy ``rows`` keeping only :data:`RAW_RESPONSE_COLUMNS`.
+
+    Fails loudly if a row lacks one of them: a raw CSV missing a sequence
+    column would leave every model unable to compute anything, and the useful
+    place to find that out is here.
+    """
+    rows = list(rows)
+    if rows:
+        missing = [c for c in RAW_RESPONSE_COLUMNS if c not in rows[0]]
+        if missing:
+            raise ValueError(
+                f"raw_features run: generated rows lack {missing}; "
+                f"got {sorted(rows[0])}"
+            )
+    return [{c: row[c] for c in RAW_RESPONSE_COLUMNS} for row in rows]
 
 
 def _require_no_generating_model_column(responses_path: Path) -> None:
@@ -168,6 +201,7 @@ def run_holdout_experiments(
     gt_models_dir: Optional[Path] = None,
     design_n_eig: int = 32,
     design_n_random: int = 0,
+    raw_features: bool = False,
 ) -> List[Path]:
     """Run the full agentic pipeline for ``n_experiments`` with a held-out GT.
 
@@ -255,6 +289,7 @@ def run_holdout_experiments(
             run_design_programmatic(
                 exp_dir, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir,
                 k=design_n_eig, n_random=design_n_random,
+                raw_features=raw_features,
             )
             _require_valid("2_design", exp_dir)
 
@@ -272,10 +307,12 @@ def run_holdout_experiments(
                 generator="pymc",
             )
             # The generator's name is the held-out model's identity; the agents
-            # must not read it (see strip_generating_model).
-            write_responses_csv(
-                strip_generating_model(rows), exp_dir / "data" / "responses.csv"
-            )
+            # must not read it (see strip_generating_model). In a raw_features
+            # run the harness's feature columns go too.
+            agent_rows = strip_generating_model(rows)
+            if raw_features:
+                agent_rows = strip_to_raw_columns(agent_rows)
+            write_responses_csv(agent_rows, exp_dir / "data" / "responses.csv")
             _require_valid("4_collect", exp_dir)
         # Checked on every path (fresh or resumed): a responses file that names
         # its generator must never feed the inner loop.
@@ -1188,6 +1225,10 @@ def run_holdout_recovery_from_config(
     # random half is a single fixed sample per experiment (shown to every
     # participant); ablations set n_eig=0 (all random) or n_random=0 (all EIG).
     design_cfg = {**dict(config.get("design", {})), **dict(design_overrides or {})}
+    # raw_features: the agents get sequences only, and every model computes its
+    # own features. All-or-nothing (see docs/raw_features_arm.md): the seeds must
+    # be self-contained, so this is a property of the config, not a per-run flag.
+    raw_features = bool(config.get("raw_features", False))
     design_n_eig = int(design_cfg.get("n_eig", 32))
     design_n_random = int(design_cfg.get("n_random", 0))
 
@@ -1245,6 +1286,7 @@ def run_holdout_recovery_from_config(
             resume=resume,
             design_n_eig=design_n_eig,
             design_n_random=design_n_random,
+            raw_features=raw_features,
         )
     finally:
         write_usage_report(results_root, usage_marker, heading="holdout recovery")
@@ -1273,6 +1315,7 @@ def _run_holdout_recovery_resolved(
     resume: bool,
     design_n_eig: int = 32,
     design_n_random: int = 0,
+    raw_features: bool = False,
 ) -> Dict[str, Any]:
     """The recovery loop proper, after all config resolution and validation."""
     # Every project seed model — the fitted-seed baseline for each ground truth
@@ -1326,6 +1369,7 @@ def _run_holdout_recovery_resolved(
             gt_models_dir=gt_models_dir,
             design_n_eig=design_n_eig,
             design_n_random=design_n_random,
+            raw_features=raw_features,
         )
 
         eval_info = build_eval_stimuli(
