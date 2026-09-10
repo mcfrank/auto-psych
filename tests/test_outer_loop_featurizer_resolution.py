@@ -18,6 +18,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import pytest
+import yaml
 
 from src.pipelines.outer_loop import orchestrator as orch
 from src.pipelines.outer_loop.featurizer import load_featurizer
@@ -29,6 +30,11 @@ def test_inner_loop_resolves_featurizer_from_assets_dir(tmp_path, monkeypatch):
     # is NOT where preprocess.py lives.
     exp_dir = tmp_path / "data" / "outer_loop" / project / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
+    # A real project seed, so the wrapper can tell which models are protected.
+    (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
+        yaml.safe_dump({"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}),
+        encoding="utf-8",
+    )
 
     captured: dict[str, Path] = {}
 
@@ -44,7 +50,7 @@ def test_inner_loop_resolves_featurizer_from_assets_dir(tmp_path, monkeypatch):
     monkeypatch.setattr(orch, "_load_project_featurizer", fake_loader)
     monkeypatch.setattr(orch, "_write_feature_csv", lambda rows, fz, out: out)
     monkeypatch.setattr(
-        orch, "_export_inner_loop_model", lambda e, l, *, best_model: e
+        orch, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e
     )
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",

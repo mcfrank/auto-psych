@@ -171,7 +171,11 @@ The real pipeline does the work: the programmatic exhaustive design chooses
 each experiment's stimuli by joint EIG, the model set is carried forward
 between experiments (there is no theory agent — new hypotheses enter only via
 the inner loop), and the inner loop's candidate agents conjecture new PyMC
-models that are fit by MCMC and compared by ELPD-LOO.
+models that are fit by MCMC and compared by ELPD-LOO. What crosses an
+experiment boundary is the loop's **live set** — the seeds plus every model
+still within the pruning margin of the best, not only the winner — together
+with the ledger of every hypothesis tried (`attempted_hypotheses.jsonl`), and
+the next design's model prior is uniform over that carried set.
 
 After **every inner-loop scoring step** (the initial seed-set fit and each
 candidate round, in every experiment) the then-best model's posterior-predictive

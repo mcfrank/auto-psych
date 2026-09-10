@@ -52,6 +52,5 @@ modeling:
   # built-in lens battery with a custom YAML list.
   # hints_file: scripts/outer_loop_live/hero_hints.yaml
   novelty_rmse_threshold: 0.02     # reject near-duplicate candidates (p_left RMSE)
-  prune_dse_multiplier: 2.0        # prune agent models beyond 2*dse of the best...
-  prune_weight_floor: 0.01         # ...whose stacking weight is also below 1%
+  prune_dse_multiplier: 2.0        # prune non-seed models beyond 2*dse of the best
   candidate_parallelism: 7         # spawn a round's candidate agents concurrently

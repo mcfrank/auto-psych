@@ -1,13 +1,14 @@
-"""Exporting the inner loop's best model into cognitive_models/.
+"""Exporting the inner loop's live set into cognitive_models/.
 
-New semantics for the hero run: the export keeps the model's own descriptive
-name and its hypothesis as the manifest rationale, and it only copies when the
-best model is genuinely new — a seed (or previously exported model) that wins
-again is already in the set, so re-exporting it under a second name would split
-posterior mass between two identical models in every later experiment. A
-fallback-auto-named winner (``iterN_candidateM``) exports under the legacy
-stable name ``inner_loop_model`` so the carried manifest never contains zoo
-names (which the model-set validator rejects).
+The export keeps each model's own descriptive name and its hypothesis as the
+manifest rationale, and never duplicates a model already in the set — a seed
+(or previously exported model) that wins again is already there, so
+re-exporting it under a second name would split posterior mass between two
+identical models in every later experiment. A fallback-auto-named winner
+(``iterN_candidateM``) exports under the legacy stable name
+``inner_loop_model`` so the carried manifest never contains zoo names (which
+the model-set validator rejects). ``tests/test_carry_live_set.py`` covers the
+live-set semantics (survivors carried, pruned carried models removed).
 """
 
 from __future__ import annotations
@@ -18,7 +19,7 @@ import pytest
 import yaml
 
 from src.pipelines.outer_loop.orchestrator import (
-    _export_inner_loop_model,
+    _export_inner_loop_models,
     _validate_model_loop,
 )
 
@@ -69,7 +70,9 @@ def test_new_descriptive_winner_is_exported_with_its_hypothesis(tmp_path):
             {"name": "recency_weighted_runs", "rationale": "People weight recent runs."},
         ],
     )
-    path = _export_inner_loop_model(exp_dir, loop_dir, best_model="recency_weighted_runs")
+    path = _export_inner_loop_models(
+        exp_dir, loop_dir, best_model="recency_weighted_runs", protected_names={"seed_a"}
+    )
     assert path == exp_dir / "cognitive_models" / "recency_weighted_runs.py"
     assert path.exists()
     manifest = yaml.safe_load(
@@ -92,7 +95,9 @@ def test_winning_seed_is_not_duplicated(tmp_path):
             {"name": "seed_b", "rationale": "mechanism seed_b"},
         ],
     )
-    _export_inner_loop_model(exp_dir, loop_dir, best_model="seed_a")
+    _export_inner_loop_models(
+        exp_dir, loop_dir, best_model="seed_a", protected_names={"seed_a", "seed_b"}
+    )
     # No inner_loop_model copy, no duplicate manifest entry.
     assert _manifest_names(exp_dir) == ["seed_a", "seed_b"]
     assert not (exp_dir / "cognitive_models" / "inner_loop_model.py").exists()
@@ -107,7 +112,9 @@ def test_fallback_named_winner_exports_as_inner_loop_model(tmp_path):
             {"name": "iter0_candidate2", "rationale": "An unnamed hypothesis."},
         ],
     )
-    path = _export_inner_loop_model(exp_dir, loop_dir, best_model="iter0_candidate2")
+    path = _export_inner_loop_models(
+        exp_dir, loop_dir, best_model="iter0_candidate2", protected_names={"seed_a"}
+    )
     # Zoo names must never enter the carried manifest (the validator rejects
     # them), so the fallback maps to the legacy stable export name.
     assert path == exp_dir / "cognitive_models" / "inner_loop_model.py"
@@ -122,7 +129,9 @@ def test_export_missing_zoo_rationale_raises(tmp_path):
         zoo_entries=[{"name": "seed_a", "rationale": "mechanism seed_a"}],
     )
     with pytest.raises(ValueError, match="no_such_model"):
-        _export_inner_loop_model(exp_dir, loop_dir, best_model="no_such_model")
+        _export_inner_loop_models(
+            exp_dir, loop_dir, best_model="no_such_model", protected_names={"seed_a"}
+        )
 
 
 def _write_loop_outputs(exp_dir, best):

@@ -70,19 +70,20 @@ def _validate_model_set(exp_dir: Path) -> tuple[bool, str]:
     # hypothesis is rejected: every model must be a specific, testable claim.
     names = [entry["name"] for entry in entries]
 
-    # Only the previous experiment's cognitive_models/ carries forward (its theory
-    # models + the single exported best `inner_loop_model`). The inner loop's
-    # intermediate candidates (`iterN_candidateM`) live only in model_loop/models/
-    # and must never be copied into a theory set — reject them so the repair loop
-    # makes the agent drop them rather than silently bloating every later experiment.
+    # Only the previous experiment's cognitive_models/ carries forward (its
+    # protected seeds + the zoo survivors the export renamed where needed). The
+    # inner loop's fallback-named candidates (`iterN_candidateM`) export under
+    # `inner_loop_model[_k]` and must never appear under their zoo name — reject
+    # them so the repair loop makes the agent drop them rather than silently
+    # bloating every later experiment.
     zoo = [n for n in names if _ZOO_NAME_RE.fullmatch(n)]
     if zoo:
         return (
             False,
             f"models_manifest.yaml carries inner-loop zoo candidate(s) {zoo} from the "
             "previous experiment's model_loop/. Carry forward ONLY the previous "
-            "experiment's cognitive_models/ (its theory models plus the single best "
-            "`inner_loop_model`); never copy candidates from model_loop/models/.",
+            "experiment's cognitive_models/ (its seeds plus the exported survivors); "
+            "never copy candidates from model_loop/models/ under their zoo names.",
         )
 
     for entry in entries:
