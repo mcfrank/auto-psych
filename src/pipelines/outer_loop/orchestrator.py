@@ -446,6 +446,7 @@ def run_design_programmatic(
         stimuli = eig_mod.design_exhaustive(
             models_dir,
             featurize_path=featurize,
+            screened_out_path=exp_dir / "design" / "screened_out.json",
             lengths=tuple(lengths),
             n_select=k,
             n_random=n_random,
@@ -457,6 +458,7 @@ def run_design_programmatic(
             models_dir,
             prev_exp_dir / "model_registry.yaml",
             featurize_path=featurize,
+            screened_out_path=exp_dir / "design" / "screened_out.json",
             lengths=tuple(lengths),
             n_select=k,
             n_random=n_random,

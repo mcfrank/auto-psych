@@ -111,6 +111,17 @@ prior for EIG selection. Model *files* flow separately via carry-forward.
 
 ### Supporting modules
 
+- **Screening a model out of a design is narrow and recorded.**
+  `eig._screen_usable_models` may omit a model only when the columns it cannot
+  bind are response-row bookkeeping (`NON_STIMULUS_COLUMNS`: `participant_id`,
+  `trial_index`) — a participant-level random effect, say. Missing *feature*
+  columns raise instead: that means the design rows were built without the
+  featurizer the models read, and dropping the model would renormalize EIG over
+  whichever ones happen to bind. `make_stim_data` signals this with
+  `MissingStimulusColumns`, which carries `.missing` as data so callers classify
+  structurally rather than by re-parsing a message. Every drop is written to
+  `design/screened_out.json` (empty list = the screen ran and dropped nothing),
+  so a silent shrink of the hypothesis set is visible in the run tree.
 - `src/models/mcmc_defaults.py` — the **single source of MCMC sampler defaults**
   (`PRODUCTION_*`, `DESIGN_TWIN_*`). Every entry point imports from here; change
   defaults only here.

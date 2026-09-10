@@ -21,7 +21,7 @@ import math
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 import numpy as np
 
@@ -361,6 +361,37 @@ def _observed_via_hook(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarra
     return out
 
 
+# Columns a *response* row carries but a bare stimulus row never does. A model
+# that binds only these beyond the features is legitimately unevaluable on a
+# stimulus (a participant-level random effect, say) and may be screened out of
+# a design; anything else missing means the rows were built wrong.
+NON_STIMULUS_COLUMNS = frozenset({"participant_id", "trial_index"})
+
+
+class MissingStimulusColumns(ValueError):
+    """A model needs columns the given rows do not carry.
+
+    Subclasses ``ValueError`` so existing handlers still catch it, but exposes
+    ``missing`` and ``available`` as data. Callers that must decide *why* a
+    model would not bind — the EIG screen distinguishes a legitimate
+    participant-level mismatch from rows built without a featurizer — need that
+    structurally, not by re-parsing a formatted message.
+    """
+
+    def __init__(self, missing: Sequence[str], available: Sequence[str]):
+        self.missing = tuple(missing)
+        self.available = tuple(available)
+        super().__init__(
+            f"Rows missing columns {list(self.missing)} required by the model. "
+            f"Available: {list(self.available)}"
+        )
+
+    @property
+    def only_non_stimulus(self) -> bool:
+        """True when every missing column is response-row bookkeeping."""
+        return bool(self.missing) and set(self.missing) <= NON_STIMULUS_COLUMNS
+
+
 def make_stim_data(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
     """Build a `pm.set_data` dict from a list of row dicts for a given model.
 
@@ -379,10 +410,7 @@ def make_stim_data(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
     inputs = pm_data_inputs(model)
     missing = [c for c in inputs if rows and c not in rows[0]]
     if missing:
-        raise ValueError(
-            f"Rows missing columns {missing} required by the model. "
-            f"Available: {list(rows[0].keys()) if rows else []}"
-        )
+        raise MissingStimulusColumns(missing, list(rows[0].keys()) if rows else [])
     out: Dict[str, np.ndarray] = {}
     for col in inputs:
         placeholder = model.named_vars[col].get_value()
