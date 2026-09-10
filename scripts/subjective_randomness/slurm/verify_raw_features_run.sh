@@ -68,7 +68,8 @@ fi
 bad_csv=0; n_csv=0
 while IFS= read -r CSV; do
   n_csv=$((n_csv + 1))
-  [[ "$(head -1 "$CSV")" == "$RAW_HEADER" ]] || { bad_csv=$((bad_csv + 1)); say "      not raw: $CSV"; }
+  [[ "$(head -1 "$CSV" | tr -d '\r')" == "$RAW_HEADER" ]] \
+    || { bad_csv=$((bad_csv + 1)); say "      not raw: $CSV"; }
 done < <(ls "$W"/run*/*/repo/_runs/*/experiment*/data/responses.csv 2>/dev/null)
 # A task that SUCCEEDS deletes its repo copy and tars the run tree, so on a
 # clean run the loop above finds nothing. Read the archive in that case,
@@ -78,7 +79,7 @@ if [[ "$n_csv" == "0" ]]; then
     [[ -f "$TAR" ]] || continue
     while IFS= read -r MEMBER; do
       n_csv=$((n_csv + 1))
-      [[ "$(tar xzOf "$TAR" "$MEMBER" 2>/dev/null | head -1)" == "$RAW_HEADER" ]] \
+      [[ "$(tar xzOf "$TAR" "$MEMBER" 2>/dev/null | head -1 | tr -d '\r')" == "$RAW_HEADER" ]] \
         || { bad_csv=$((bad_csv + 1)); say "      not raw: $TAR :: $MEMBER"; }
     done < <(tar tzf "$TAR" 2>/dev/null | grep -E "experiment[0-9]+/data/responses\.csv$")
   done
@@ -89,12 +90,13 @@ else say "- [FAIL] $bad_csv of $n_csv agent CSV(s) carry extra columns"; fails=$
 
 # 5. Did any candidate import the featurizer this arm removed from the data?
 #    Isolation here is by data, not by import (docs/raw_features_arm.md).
-n_imp=$(grep -rl "featurize_stimulus\|subjective_randomness.features" \
+IMPORT_RE='^[[:space:]]*(from|import)[[:space:]].*(subjective_randomness\.features|featurize_stimulus)'
+n_imp=$(grep -rlE "$IMPORT_RE" \
         "$W"/run*/*/repo/_runs/*/experiment*/model_loop/models/*.py 2>/dev/null | wc -l)
 for TAR in "$W"/run*/*/agent_runs.tar.gz; do
   [[ -f "$TAR" ]] || continue
   n_imp=$((n_imp + $(tar xzOf "$TAR" --wildcards "*/model_loop/models/*.py" 2>/dev/null \
-            | grep -cE "featurize_stimulus|subjective_randomness\.features" || true)))
+            | grep -cE "$IMPORT_RE" || true)))
 done
 if [[ "$n_imp" == "0" ]]; then say "- [ok]   no candidate imported the project featurizer"
 else say "- [FAIL] $n_imp candidate(s) imported the featurizer — the arm's numbers are not a raw-features result"; fails=$((fails + 1)); fi
@@ -112,3 +114,10 @@ say '```'
 say ""
 if [[ "$fails" == "0" ]]; then say "**VERDICT: all checks passed.**"; else say "**VERDICT: $fails check(s) FAILED — see above.**"; fi
 exit "$fails"
+
+# Regression controls for this script itself (it has produced false failures
+# twice, and each one cancelled the gated arm):
+#   good run, must exit 0:
+#     WORK_ROOT=$SCRATCH/auto-psych/holdout_raw_features_smoke4 bash "$0"
+#   run whose seeds were dropped, must exit non-zero:
+#     WORK_ROOT=$SCRATCH/auto-psych/holdout_raw_features_smoke2 bash "$0"
