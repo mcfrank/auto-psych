@@ -87,7 +87,11 @@ def ensure_experiment_dirs(exp_dir: Path) -> None:
 
 
 def seed_experiment_models_from_project(
-    exp_dir: Path, project_id: str, *, exclude: Sequence[str] = ()
+    exp_dir: Path,
+    project_id: str,
+    *,
+    exclude: Sequence[str] = (),
+    seed_dir: Optional[Path] = None,
 ) -> bool:
     """Copy project-level seed models into an empty experiment model directory.
 
@@ -99,8 +103,17 @@ def seed_experiment_models_from_project(
     ``exclude`` withholds the named seed models (e.g. one held out as a
     ground-truth generator). Unknown names or an exclusion that empties the
     seed set raise rather than silently seeding the wrong model set.
+
+    ``seed_dir`` overrides the project's default ``seed_models/``. A
+    raw-features run needs this: its pool must be the self-contained models in
+    ``seed_models_raw/``. Seeding the featurized ones instead leaves them unable
+    to bind to raw rows, and the design merely ``[drop]``s them and runs on
+    whatever is left, which is how the first raw-features smoke produced a
+    plausible number from a one-model design.
     """
-    seed_dir = project_seed_models_dir(project_id)
+    seed_dir = (
+        Path(seed_dir) if seed_dir is not None else project_seed_models_dir(project_id)
+    )
     seed_manifest = manifest_path(seed_dir)
     if not seed_manifest.exists():
         return False

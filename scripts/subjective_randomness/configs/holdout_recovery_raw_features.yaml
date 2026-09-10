@@ -18,6 +18,10 @@
 # with scripts/subjective_randomness/slurm/run_raw_features_arm.sh, which also
 # points the live seed pool at seed_models_raw.
 raw_features: true
+# The live pool experiment 1 seeds from MUST be the raw set too: the default
+# seed_models/ holds the featurized models, which cannot bind to raw rows and
+# would simply be dropped from the design.
+pool_models_dir: src/pipelines/outer_loop/projects/subjective_randomness/seed_models_raw
 
 # Holdout recovery with the literature-faithful registry models as ground
 # truths. Each GT (falk_konold_dp, motif_stack, finite_experience_occurrence,

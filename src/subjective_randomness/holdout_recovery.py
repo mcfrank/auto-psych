@@ -202,6 +202,7 @@ def run_holdout_experiments(
     design_n_eig: int = 32,
     design_n_random: int = 0,
     raw_features: bool = False,
+    pool_models_dir: Optional[Path] = None,
 ) -> List[Path]:
     """Run the full agentic pipeline for ``n_experiments`` with a held-out GT.
 
@@ -265,12 +266,13 @@ def run_holdout_experiments(
         if not (resume and _stage_done("models", exp_dir)):
             if exp_num == 1:
                 seeded = seed_experiment_models_from_project(
-                    exp_dir, project_id, exclude=seed_exclude
+                    exp_dir, project_id, exclude=seed_exclude,
+                    seed_dir=pool_models_dir,
                 )
                 if not seeded:
                     raise RuntimeError(
                         f"Could not seed experiment 1 from "
-                        f"{project_seed_models_dir(project_id)}"
+                        f"{pool_models_dir or project_seed_models_dir(project_id)}"
                         + (
                             f" — {exp_dir / 'cognitive_models'} already exists but "
                             f"fails validation; delete it to re-seed."
@@ -1229,6 +1231,12 @@ def run_holdout_recovery_from_config(
     # own features. All-or-nothing (see docs/raw_features_arm.md): the seeds must
     # be self-contained, so this is a property of the config, not a per-run flag.
     raw_features = bool(config.get("raw_features", False))
+    # The live pool experiment 1 seeds from. Defaults to the project's
+    # seed_models/; a raw-features run must point it at seed_models_raw/,
+    # whose models compute their own columns.
+    pool_models_dir = (
+        resolve_path(config["pool_models_dir"]) if config.get("pool_models_dir") else None
+    )
     design_n_eig = int(design_cfg.get("n_eig", 32))
     design_n_random = int(design_cfg.get("n_random", 0))
 
@@ -1287,6 +1295,7 @@ def run_holdout_recovery_from_config(
             design_n_eig=design_n_eig,
             design_n_random=design_n_random,
             raw_features=raw_features,
+            pool_models_dir=pool_models_dir,
         )
     finally:
         write_usage_report(results_root, usage_marker, heading="holdout recovery")
@@ -1316,6 +1325,7 @@ def _run_holdout_recovery_resolved(
     design_n_eig: int = 32,
     design_n_random: int = 0,
     raw_features: bool = False,
+    pool_models_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """The recovery loop proper, after all config resolution and validation."""
     # Every project seed model — the fitted-seed baseline for each ground truth
@@ -1370,6 +1380,7 @@ def _run_holdout_recovery_resolved(
             design_n_eig=design_n_eig,
             design_n_random=design_n_random,
             raw_features=raw_features,
+            pool_models_dir=pool_models_dir,
         )
 
         eval_info = build_eval_stimuli(
