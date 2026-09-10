@@ -229,3 +229,28 @@ def test_seeding_can_be_pointed_at_the_raw_pool(tmp_path):
     )
     seeded = (exp_dir / "cognitive_models" / "motif_stack.py").read_text(encoding="utf-8")
     assert seeded == "# the RAW copy\n", "seeded from the default pool, not seed_dir"
+
+
+def test_seed_exclusion_reads_the_same_pool_that_seeding_uses(tmp_path):
+    """The array scrubs the held-out model out of the pool manifest it was told
+    about. A membership test against a DIFFERENT pool still says "exclude it",
+    while seeding reads a manifest that no longer lists it, and the exclusion
+    raises `exclude names models not in the seed manifest` — which is exactly
+    how the third raw-features smoke died."""
+    from src.subjective_randomness.holdout_recovery import seed_exclusion
+
+    scrubbed = tmp_path / "seed_models_raw"
+    scrubbed.mkdir()
+    (scrubbed / "models_manifest.yaml").write_text(
+        "models:\n  - name: motif_stack\n    rationale: r\n", encoding="utf-8"
+    )
+    intact = tmp_path / "seed_models"
+    intact.mkdir()
+    (intact / "models_manifest.yaml").write_text(
+        "models:\n  - name: motif_stack\n    rationale: r\n"
+        "  - name: falk_konold_dp\n    rationale: r\n", encoding="utf-8"
+    )
+
+    assert seed_exclusion("falk_konold_dp", scrubbed) == ()
+    assert seed_exclusion("falk_konold_dp", intact) == ("falk_konold_dp",)
+    assert seed_exclusion("motif_stack", scrubbed) == ("motif_stack",)

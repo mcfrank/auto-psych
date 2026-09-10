@@ -81,6 +81,20 @@ TRAJECTORY_COLUMNS = [
 ]
 
 
+def seed_exclusion(gt_model: str, pool_dir: Path) -> Tuple[str, ...]:
+    """Which seed models to withhold from experiment 1, by manifest name.
+
+    ``pool_dir`` must be the SAME directory seeding reads. The array scrubs the
+    held-out model out of the pool manifest it was told about, so a membership
+    test against a different pool would still say "exclude it" while seeding
+    reads a manifest that no longer lists it — and the exclusion raises
+    ``exclude names models not in the seed manifest``. A ground truth absent
+    from the pool (already scrubbed, superseded by a consolidation, or an
+    impossible theory) needs nothing withheld.
+    """
+    return (gt_model,) if gt_model in seed_model_names(pool_dir) else ()
+
+
 def _require_valid(agent_key: str, exp_dir: Path) -> None:
     """Fail loudly if a pipeline stage's output does not validate."""
     ok, msg = validate_cc_output(agent_key, exp_dir)
@@ -243,9 +257,13 @@ def run_holdout_experiments(
     # 2026-08 consolidation superseded) is simply absent from the pool and
     # nothing is excluded, the same semantics as an impossible GT. Membership is
     # checked by manifest *name* only.
-    pool_names = seed_model_names(project_seed_models_dir(project_id))
-    gt_is_seed_model = gt_model in pool_names
-    seed_exclude = (gt_model,) if gt_is_seed_model else ()
+    # The SAME directory seeding reads below, or the membership test and the
+    # seeding disagree: the array scrubs the held-out entry from the pool it was
+    # told about, so reading the default pool here would say "exclude it" while
+    # seeding reads a manifest that no longer lists it, and the exclusion raises.
+    seed_exclude = seed_exclusion(
+        gt_model, pool_models_dir or project_seed_models_dir(project_id)
+    )
     exp_dirs: List[Path] = []
 
     for exp_num in range(1, n_experiments + 1):
