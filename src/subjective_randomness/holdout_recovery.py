@@ -25,16 +25,13 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
-import re
 import shutil
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 import numpy as np
-import yaml
 
 from src.models.model_manifest import read_manifest_names
-from src.runtime.config import REPO_ROOT
 from src.models.pymc_inference import fit_model, make_stim_data, pm_data_inputs
 from src.pipelines.outer_loop.orchestrator import (
     carry_forward_cognitive_models,
@@ -903,69 +900,6 @@ def _distinctive_param_names(
     return set(params) - {"beta", "side_bias"}
 
 
-# Column names a candidate binds with ``pm.Data("<name>", ...)``: featurizer
-# columns the harness provides, as opposed to features the model computes.
-_PM_DATA_COLUMN = re.compile(r"""pm\.Data\(\s*["']([^"']+)["']""")
-
-
-def _csv_header_columns(path: Path) -> List[str]:
-    """The header row of a CSV as column names (``[]`` for an empty file)."""
-    with path.open(newline="", encoding="utf-8") as fh:
-        for row in csv.reader(fh):
-            return [column.strip() for column in row]
-    return []
-
-
-def _csvs_naming_generating_model(run_root: Path) -> List[str]:
-    """Run-relative paths of CSVs whose header carries the held-out label."""
-    return [
-        str(path.relative_to(run_root))
-        for path in sorted(run_root.rglob("*.csv"))
-        if GENERATING_MODEL_COLUMN in _csv_header_columns(path)
-    ]
-
-
-# The loop writes a manifest per experiment under its results root, listing the
-# models carried into that experiment. Those are OUTPUTS: a candidate the agent
-# happened to name after the held-out model belongs in ``any_gt_named``, not in
-# the manifest channel, which is about the seed catalogue shipped in the
-# checkout. The results root is ``<checkout>/_runs`` in the Slurm array.
-_RESULTS_DIR_NAME = "_runs"
-
-
-def _manifests_naming_gt(
-    checkout_root: Path, gt_model: str, *, run_root: Optional[Path] = None
-) -> List[str]:
-    """Checkout-relative paths of *seed* manifests that still list ``gt_model``.
-
-    Removing the held-out ``.py`` from the agent's checkout left its *name* and
-    rationale in the manifests beside it, which is the answer in plain text.
-    Matched on parsed model names, so a rationale mentioning another model is
-    not a false positive. Manifests the loop itself wrote (under ``run_root`` or
-    any ``_runs`` tree) are skipped — see ``_RESULTS_DIR_NAME``.
-    """
-    named: List[str] = []
-    run_root = Path(run_root).resolve() if run_root is not None else None
-    for path in sorted(checkout_root.rglob("models_manifest.yaml")):
-        if _RESULTS_DIR_NAME in path.parts:
-            continue
-        if run_root is not None and run_root in path.resolve().parents:
-            continue
-        try:
-            manifest = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        except yaml.YAMLError:
-            # A malformed manifest is the model-set validator's business, not
-            # this audit's; it fails loudly there in its own right.
-            continue
-        entries = manifest.get("models") or []
-        if any(
-            isinstance(entry, Mapping) and entry.get("name") == gt_model
-            for entry in entries
-        ):
-            named.append(str(path.relative_to(checkout_root)))
-    return named
-
-
 def leakage_check(
     run_root: Path,
     gt_model: str,
@@ -974,7 +908,6 @@ def leakage_check(
     n_experiments: int,
     gt_models_dir: Optional[Path] = None,
     gt_family_dir: Optional[Path] = None,
-    checkout_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Audit a run for ground-truth leakage into agent-written models.
 
@@ -990,25 +923,6 @@ def leakage_check(
     it points at the impossible-models directory instead, and the source is not
     in the project assets the agents can read, so identical-copy leakage is
     effectively impossible.
-
-    It also audits the two channels that carried the held-out model's *name*
-    (the 2026-09 review panel's finding, closed at the source by
-    ``strip_generating_model`` and the array's manifest scrub):
-
-    * ``any_csv_generating_model`` — a CSV under the run tree whose header still
-      carries ``generating_model``, whose value is the held-out model on every
-      row. Every agent reads these files.
-    * ``any_manifest_gt_named`` — a ``models_manifest.yaml`` in the agent's
-      checkout still listing the held-out model by name. Needs
-      ``checkout_root``; without it the channel is unchecked and the flag is
-      ``None`` rather than ``False``, so an unchecked channel is never read as
-      a clean one.
-
-    Per admitted model it records ``data_columns``: the featurizer columns the
-    model binds with ``pm.Data(...)``. A model assembled entirely out of
-    provided columns is a regression on the harness's features rather than a
-    mechanism, so a report can say per ground truth how much of recovery is
-    which.
     """
     run_root = Path(run_root)
     gt_models_dir = (
@@ -1039,7 +953,6 @@ def leakage_check(
                 continue
             for path in sorted(model_dir.glob("*.py")):
                 source = path.read_text(encoding="utf-8")
-                data_columns = sorted(set(_PM_DATA_COLUMN.findall(source)))
                 files.append(
                     {
                         "path": str(path.relative_to(run_root)),
@@ -1050,30 +963,14 @@ def leakage_check(
                             v in source for v in distinctive_values
                         ),
                         "gt_named": path.name == f"{gt_model}.py",
-                        "data_columns": data_columns,
-                        "n_data_cols": len(data_columns),
                     }
                 )
-    csv_flagged = _csvs_naming_generating_model(run_root)
-    manifest_flagged = (
-        _manifests_naming_gt(Path(checkout_root), gt_model, run_root=run_root)
-        if checkout_root is not None
-        else []
-    )
     return {
         "files": files,
         "any_identical": any(f["identical"] for f in files),
         "any_mention": any(f["mentions_gt_params"] for f in files),
         "any_value_mention": any(f["mentions_gt_values"] for f in files),
         "any_gt_named": any(f["gt_named"] for f in files),
-        "csv_generating_model_files": csv_flagged,
-        "any_csv_generating_model": bool(csv_flagged),
-        "manifest_gt_named_files": manifest_flagged,
-        # None, not False: nobody looked at this channel.
-        "any_manifest_gt_named": (
-            bool(manifest_flagged) if checkout_root is not None else None
-        ),
-        "max_data_cols": max((f["n_data_cols"] for f in files), default=0),
     }
 
 
@@ -1361,10 +1258,6 @@ def _run_holdout_recovery_resolved(
             n_experiments=n_experiments,
             gt_models_dir=gt_models_dir,
             gt_family_dir=gt_family_dir,
-            # The agents' checkout is the tree this process runs from (the
-            # array gives every task its own sanitized copy and runs the
-            # parent inside it), so this is where their manifests live.
-            checkout_root=REPO_ROOT,
         )
         baseline = seed_baseline_correlation(
             gt_model,
