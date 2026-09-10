@@ -207,6 +207,19 @@ per-experiment model sets, and a leakage audit). The combined JSON, tidy CSV
 global_step, best_model, pearson_r, rmse`), and correlation-vs-step figure land
 at the paths you pass.
 
+### Raw-features runs (arm C)
+
+`configs/holdout_recovery_raw_features.yaml` (`raw_features: true`) removes every
+harness-supplied feature column from what the agents see, so a candidate must
+compute the features it uses. It exists because the provided columns reproduce
+each ground truth's own decision variable at R² 0.90 to 1.00 — exactly 1.000 for
+`falk_konold_dp` — so recovery under the full featurizer cannot separate finding
+a mechanism from regressing on the column that is the mechanism. It uses the
+separate `*_raw` seed sets (which compute their own columns) and must not be
+pointed at the featurized ones. Launch with
+`slurm/run_raw_features_arm.sh`; read `docs/raw_features_arm.md` first, including
+the limitation that `features.py` remains importable.
+
 Details worth knowing:
 
 - **Held-out eval set.** The EIG design picks training stimuli from anywhere

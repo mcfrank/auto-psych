@@ -419,6 +419,7 @@ def run_design_programmatic(
     k: int = 32,
     n_random: int = 0,
     lengths: Sequence[int] = (2, 3, 4, 5, 6, 7, 8),
+    raw_features: bool = False,
 ) -> None:
     """Select the design's stimuli by exhaustive enumeration (no design agent).
 
@@ -441,7 +442,12 @@ def run_design_programmatic(
     from src.pipelines.outer_loop import eig as eig_mod
 
     models_dir = exp_dir / "cognitive_models"
-    featurize = outer_project_dir(project_id) / "preprocess.py"
+    # raw_features: score the design on RAW stimulus rows (sequences only), so a
+    # model that computes its own features via `compute_features` binds here
+    # exactly as it does when fitting. Passing the project featurizer as well
+    # would put those column names on the row twice and the hook raises on a
+    # collision — see docs/raw_features_arm.md.
+    featurize = None if raw_features else outer_project_dir(project_id) / "preprocess.py"
     if exp_num <= 1 or prev_exp_dir is None:
         stimuli = eig_mod.design_exhaustive(
             models_dir,

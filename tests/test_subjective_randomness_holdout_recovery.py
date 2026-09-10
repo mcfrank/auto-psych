@@ -1875,3 +1875,98 @@ def test_leakage_check_manifest_scan_ignores_the_loops_own_output_manifests(tmp_
     )
     assert result["any_manifest_gt_named"] is False
     assert result["manifest_gt_named_files"] == []
+
+
+# ── raw-features (arm C) runs ────────────────────────────────────────
+
+
+def test_raw_features_run_writes_an_agent_csv_of_sequences_only(tmp_path, monkeypatch):
+    """With `raw_features`, the agents get the H/T sequences and nothing else,
+    so a candidate must compute every feature it uses (docs/raw_features_arm.md).
+    The seeds already do: three via `compute_features`, motif_stack via
+    `prepare_observed`."""
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
+    monkeypatch.setattr(
+        holdout_recovery, "generate_responses", _stub_generate_responses([])
+    )
+    monkeypatch.setattr(
+        holdout_recovery,
+        "run_inner_model_loop_programmatic",
+        _stub_inner_loop("local_representativeness"),
+    )
+
+    run_holdout_experiments(
+        "prototype_similarity",
+        {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
+        tmp_path / "run",
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        n_participants=2,
+        inner_loop_iterations=0,
+        candidate_count=0,
+        fit_kwargs={},
+        seed=0,
+        raw_features=True,
+    )
+
+    responses = tmp_path / "run" / "experiment1" / "data" / "responses.csv"
+    with responses.open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+    assert tuple(reader.fieldnames) == holdout_recovery.RAW_RESPONSE_COLUMNS
+    assert len(rows) == 2 * len(DESIGN_STIMULI)
+
+
+def test_raw_features_run_designs_without_the_project_featurizer(tmp_path, monkeypatch):
+    """The design must score models on raw rows too. Featurizing there as well
+    would offer `compute_features` a column name it already has, and the hook
+    raises on a collision."""
+    seen = {}
+
+    def _capture_design(exp_dir, project_id, **kwargs):
+        seen.update(kwargs)
+        return _stub_design([])(exp_dir, project_id, **kwargs)
+
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _capture_design)
+    monkeypatch.setattr(
+        holdout_recovery, "generate_responses", _stub_generate_responses([])
+    )
+    monkeypatch.setattr(
+        holdout_recovery,
+        "run_inner_model_loop_programmatic",
+        _stub_inner_loop("local_representativeness"),
+    )
+
+    for raw in (True, False):
+        seen.clear()
+        run_holdout_experiments(
+            "prototype_similarity",
+            {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
+            tmp_path / f"run_{raw}",
+            seed_models_dir=SEED_MODELS_DIR,
+            n_experiments=1,
+            n_participants=2,
+            inner_loop_iterations=0,
+            candidate_count=0,
+            fit_kwargs={},
+            seed=0,
+            raw_features=raw,
+        )
+        assert seen["raw_features"] is raw
+
+
+def test_strip_to_raw_columns_keeps_only_the_raw_five():
+    rows = [
+        {
+            "sequence_a": "HTHT", "sequence_b": "HHTT", "participant_id": 0,
+            "trial_index": 3, "chose_left": 1, "p_alts_a": 1.0, "occ_n20_b": 0.5,
+        }
+    ]
+    (stripped,) = holdout_recovery.strip_to_raw_columns(rows)
+    assert tuple(stripped) == holdout_recovery.RAW_RESPONSE_COLUMNS
+    assert rows[0]["p_alts_a"] == 1.0  # input untouched
+
+
+def test_strip_to_raw_columns_fails_loudly_without_the_sequences():
+    with pytest.raises(ValueError, match="sequence_a"):
+        holdout_recovery.strip_to_raw_columns([{"participant_id": 0, "chose_left": 1}])
