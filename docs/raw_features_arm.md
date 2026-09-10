@@ -108,6 +108,26 @@ generation died on `rep_motifs_a` collides. The parity test is what makes the
 relaxation safe — the raw seeds' values are equal to the featurizer's by
 construction, over every pair up to length 5.
 
+## Both pools must be the raw ones
+
+`seed_models_dir` in the config is the GT/baseline registry. The pool experiment
+1 actually seeds from is a *different* directory, resolved by
+`project_seed_models_dir(project_id)` as the project's `seed_models/`, and the
+array's `POOL_MODELS_REL` only says where to scrub the held-out model. So a
+raw-features config must also set:
+
+```yaml
+pool_models_dir: src/pipelines/outer_loop/projects/subjective_randomness/seed_models_raw
+```
+
+which `seed_experiment_models_from_project(..., seed_dir=...)` honours. Without
+it the run seeds the *featurized* models, which cannot bind to raw rows; the
+design then prints `[drop] EIG: model ... cannot be evaluated` for each and
+proceeds on whatever is left. The first raw-features smoke did exactly that and
+reported a healthy-looking r = 0.965 from a design with one model in it. The
+verifier's dropped-model check is what caught it, and is the reason the real
+arm is gated on that check passing.
+
 ## Known limitation: isolation is by data, not by import
 
 `features.py` is still importable inside a raw-features run, because the parent

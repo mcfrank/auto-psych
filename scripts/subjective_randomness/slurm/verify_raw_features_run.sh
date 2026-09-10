@@ -56,8 +56,8 @@ else
 fi
 
 # 3. No traceback, and specifically no feature-column collision.
-n_err=$(grep -hcE "Traceback|collides with" "$W"/slurm_logs/holdout_recovery_*.out 2>/dev/null | paste -sd+ | bc 2>/dev/null || echo 0)
-if [[ "${n_err:-0}" == "0" ]]; then say "- [ok]   no traceback or column collision"
+n_err=$(grep -hE "Traceback|collides with" "$W"/slurm_logs/holdout_recovery_*.out 2>/dev/null | wc -l | tr -d ' ')
+if [[ "${n_err:-0}" -eq 0 ]]; then say "- [ok]   no traceback or column collision"
 else
   say "- [FAIL] ${n_err} error line(s):"
   grep -hE "Traceback|collides with" "$W"/slurm_logs/holdout_recovery_*.out 2>/dev/null | head -3 | sed 's/^/      /' | tee -a "$V"
@@ -70,6 +70,19 @@ while IFS= read -r CSV; do
   n_csv=$((n_csv + 1))
   [[ "$(head -1 "$CSV")" == "$RAW_HEADER" ]] || { bad_csv=$((bad_csv + 1)); say "      not raw: $CSV"; }
 done < <(ls "$W"/run*/*/repo/_runs/*/experiment*/data/responses.csv 2>/dev/null)
+# A task that SUCCEEDS deletes its repo copy and tars the run tree, so on a
+# clean run the loop above finds nothing. Read the archive in that case,
+# otherwise this check silently verifies nothing (as it did on smoke 2).
+if [[ "$n_csv" == "0" ]]; then
+  for TAR in "$W"/run*/*/agent_runs.tar.gz; do
+    [[ -f "$TAR" ]] || continue
+    while IFS= read -r MEMBER; do
+      n_csv=$((n_csv + 1))
+      [[ "$(tar xzOf "$TAR" "$MEMBER" 2>/dev/null | head -1)" == "$RAW_HEADER" ]] \
+        || { bad_csv=$((bad_csv + 1)); say "      not raw: $TAR :: $MEMBER"; }
+    done < <(tar tzf "$TAR" 2>/dev/null | grep -E "experiment[0-9]+/data/responses\.csv$")
+  done
+fi
 if [[ "$n_csv" == "0" ]]; then say "- [warn] no agent-facing responses.csv found (repo copies removed on success?)"
 elif [[ "$bad_csv" == "0" ]]; then say "- [ok]   all $n_csv agent CSV(s) carry only the raw five columns"
 else say "- [FAIL] $bad_csv of $n_csv agent CSV(s) carry extra columns"; fails=$((fails + 1)); fi
@@ -78,6 +91,11 @@ else say "- [FAIL] $bad_csv of $n_csv agent CSV(s) carry extra columns"; fails=$
 #    Isolation here is by data, not by import (docs/raw_features_arm.md).
 n_imp=$(grep -rl "featurize_stimulus\|subjective_randomness.features" \
         "$W"/run*/*/repo/_runs/*/experiment*/model_loop/models/*.py 2>/dev/null | wc -l)
+for TAR in "$W"/run*/*/agent_runs.tar.gz; do
+  [[ -f "$TAR" ]] || continue
+  n_imp=$((n_imp + $(tar xzOf "$TAR" --wildcards "*/model_loop/models/*.py" 2>/dev/null \
+            | grep -cE "featurize_stimulus|subjective_randomness\.features" || true)))
+done
 if [[ "$n_imp" == "0" ]]; then say "- [ok]   no candidate imported the project featurizer"
 else say "- [FAIL] $n_imp candidate(s) imported the featurizer — the arm's numbers are not a raw-features result"; fails=$((fails + 1)); fi
 

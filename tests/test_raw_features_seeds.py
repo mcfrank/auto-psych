@@ -205,3 +205,27 @@ def test_motif_stack_needs_no_hook_in_either_set():
     raw = (REGISTRY / "motif_stack.py").read_text(encoding="utf-8")
     assert "def prepare_observed" in raw and "def compute_features" not in raw
     assert raw == (FEATURIZED_REGISTRY / "motif_stack.py").read_text(encoding="utf-8")
+
+
+def test_seeding_can_be_pointed_at_the_raw_pool(tmp_path):
+    """Experiment 1 seeds from the project's `seed_models/` by default. A
+    raw-features run must be able to seed from `seed_models_raw/` instead:
+    seeding the featurized models there leaves them unable to bind raw rows,
+    and the design silently drops them rather than failing."""
+    from src.pipelines.outer_loop.orchestrator import seed_experiment_models_from_project
+
+    pool = tmp_path / "seed_models_raw"
+    pool.mkdir()
+    (pool / "models_manifest.yaml").write_text(
+        "models:\n  - name: motif_stack\n    rationale: raw pool marker\n",
+        encoding="utf-8",
+    )
+    (pool / "motif_stack.py").write_text("# the RAW copy\n", encoding="utf-8")
+
+    exp_dir = tmp_path / "experiment1"
+    (exp_dir / "cognitive_models").mkdir(parents=True)
+    assert seed_experiment_models_from_project(
+        exp_dir, "subjective_randomness", seed_dir=pool
+    )
+    seeded = (exp_dir / "cognitive_models" / "motif_stack.py").read_text(encoding="utf-8")
+    assert seeded == "# the RAW copy\n", "seeded from the default pool, not seed_dir"
