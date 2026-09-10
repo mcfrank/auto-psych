@@ -128,6 +128,14 @@ reported a healthy-looking r = 0.965 from a design with one model in it. The
 verifier's dropped-model check is what caught it, and is the reason the real
 arm is gated on that check passing.
 
+Setting `pool_models_dir` is necessary but not sufficient: the test for
+*whether* to withhold the held-out model must read the same directory.
+`seed_exclusion(gt_model, pool_dir)` is that rule. The array scrubs the
+held-out entry from the pool manifest it was told about, so checking membership
+against the default pool says "exclude it" while seeding reads a manifest that
+no longer lists it, and the exclusion raises `exclude names models not in the
+seed manifest`. That killed the third smoke in 22 seconds.
+
 ## Known limitation: isolation is by data, not by import
 
 `features.py` is still importable inside a raw-features run, because the parent
