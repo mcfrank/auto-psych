@@ -89,6 +89,25 @@ The helpers are copied into each file rather than imported, so a raw seed pulls
 in no featurizer and leaves nothing for a candidate agent to import either. They
 were extracted with `ast.get_source_segment`, not retyped.
 
+## Why a self-contained model may recompute a harness column
+
+The agents' CSV is raw, but two paths still build *featurized* rows and hand
+them to a model: ground-truth generation (`p_left_fixed_params`) and the
+held-out trajectory evaluation, both via `model_recovery.feature_rows`. A raw
+seed asked to predict there would find its own columns already present.
+
+`_augment_rows_with_features` therefore allows a model to recompute a column the
+harness also supplies **when the value agrees** (`rel_tol=1e-9`), and still
+fails loudly when it disagrees, which is a model quietly redefining what a
+column name means. The response and bookkeeping columns
+(`PROTECTED_ROW_COLUMNS`: `chose_left`, `participant_id`, `trial_index`,
+`sequence_a`, `sequence_b`) may never be returned at all, whatever the value.
+
+The smoke run found this: the design already ran featurizer-free, and
+generation died on `rep_motifs_a` collides. The parity test is what makes the
+relaxation safe — the raw seeds' values are equal to the featurizer's by
+construction, over every pair up to length 5.
+
 ## Known limitation: isolation is by data, not by import
 
 `features.py` is still importable inside a raw-features run, because the parent
