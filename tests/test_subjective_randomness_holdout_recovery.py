@@ -1848,3 +1848,30 @@ def test_leakage_check_records_the_featurizer_columns_each_model_reads(tmp_path)
     assert by_name["regressor.py"]["n_data_cols"] == 2
     assert by_name["from_scratch.py"]["data_columns"] == []
     assert result["max_data_cols"] == 2
+
+
+def test_leakage_check_manifest_scan_ignores_the_loops_own_output_manifests(tmp_path):
+    """The run tree lives inside the agent's checkout and writes a manifest per
+    experiment listing the carried models. An agent model that happens to be
+    named after the held-out model belongs in `any_gt_named`, not in the
+    manifest channel, which is about the seed catalogue the agents can read."""
+    run_root = tmp_path / "checkout" / "_runs" / "gt"
+    _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
+    checkout = tmp_path / "checkout"
+    (run_root / "experiment1" / "cognitive_models" / "models_manifest.yaml").write_text(
+        "models:\n  - name: prototype_similarity\n    rationale: an agent's own model\n",
+        encoding="utf-8",
+    )
+    seeds = checkout / "seed_models"
+    seeds.mkdir(parents=True)
+    (seeds / "models_manifest.yaml").write_text(
+        "models:\n  - name: window_typicality\n    rationale: finite window\n",
+        encoding="utf-8",
+    )
+
+    result = leakage_check(
+        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1, checkout_root=checkout,
+    )
+    assert result["any_manifest_gt_named"] is False
+    assert result["manifest_gt_named_files"] == []

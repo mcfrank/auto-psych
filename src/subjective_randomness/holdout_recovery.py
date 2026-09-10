@@ -925,16 +925,32 @@ def _csvs_naming_generating_model(run_root: Path) -> List[str]:
     ]
 
 
-def _manifests_naming_gt(checkout_root: Path, gt_model: str) -> List[str]:
-    """Checkout-relative paths of model manifests that still list ``gt_model``.
+# The loop writes a manifest per experiment under its results root, listing the
+# models carried into that experiment. Those are OUTPUTS: a candidate the agent
+# happened to name after the held-out model belongs in ``any_gt_named``, not in
+# the manifest channel, which is about the seed catalogue shipped in the
+# checkout. The results root is ``<checkout>/_runs`` in the Slurm array.
+_RESULTS_DIR_NAME = "_runs"
+
+
+def _manifests_naming_gt(
+    checkout_root: Path, gt_model: str, *, run_root: Optional[Path] = None
+) -> List[str]:
+    """Checkout-relative paths of *seed* manifests that still list ``gt_model``.
 
     Removing the held-out ``.py`` from the agent's checkout left its *name* and
     rationale in the manifests beside it, which is the answer in plain text.
     Matched on parsed model names, so a rationale mentioning another model is
-    not a false positive.
+    not a false positive. Manifests the loop itself wrote (under ``run_root`` or
+    any ``_runs`` tree) are skipped — see ``_RESULTS_DIR_NAME``.
     """
     named: List[str] = []
+    run_root = Path(run_root).resolve() if run_root is not None else None
     for path in sorted(checkout_root.rglob("models_manifest.yaml")):
+        if _RESULTS_DIR_NAME in path.parts:
+            continue
+        if run_root is not None and run_root in path.resolve().parents:
+            continue
         try:
             manifest = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
         except yaml.YAMLError:
@@ -1040,7 +1056,7 @@ def leakage_check(
                 )
     csv_flagged = _csvs_naming_generating_model(run_root)
     manifest_flagged = (
-        _manifests_naming_gt(Path(checkout_root), gt_model)
+        _manifests_naming_gt(Path(checkout_root), gt_model, run_root=run_root)
         if checkout_root is not None
         else []
     )
