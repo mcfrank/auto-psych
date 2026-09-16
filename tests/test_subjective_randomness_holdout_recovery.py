@@ -1885,6 +1885,55 @@ def test_leakage_check_manifest_scan_ignores_the_loops_own_output_manifests(tmp_
     assert result["manifest_gt_named_files"] == []
 
 
+def test_leakage_check_flags_gt_in_opposite_feature_regime_manifest(tmp_path):
+    """Both feature regimes' manifests live in the checkout. When only the
+    active regime is scrubbed, the GT name leaks through the other regime's
+    manifest — the audit must catch it. The array sbatch's catch-all scrub
+    (added in the 2026-09 consolidation) closes this channel."""
+    run_root = tmp_path / "checkout" / "_runs" / "gt"
+    _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
+    checkout = tmp_path / "checkout"
+
+    # Active regime (raw) — scrubbed, GT not listed
+    raw_seeds = checkout / "seed_models_raw"
+    raw_seeds.mkdir(parents=True)
+    (raw_seeds / "models_manifest.yaml").write_text(
+        "models:\n  - name: window_typicality\n    rationale: finite window\n",
+        encoding="utf-8",
+    )
+    raw_families = checkout / "pymc_model_families_raw"
+    raw_families.mkdir(parents=True)
+    (raw_families / "models_manifest.yaml").write_text(
+        "models:\n  - name: window_typicality\n    rationale: finite window\n",
+        encoding="utf-8",
+    )
+
+    # Other regime (featurized) — NOT scrubbed, GT still listed
+    feat_seeds = checkout / "seed_models"
+    feat_seeds.mkdir(parents=True)
+    (feat_seeds / "models_manifest.yaml").write_text(
+        "models:\n  - name: prototype_similarity\n    rationale: similarity to a prototype\n"
+        "  - name: window_typicality\n    rationale: finite window\n",
+        encoding="utf-8",
+    )
+    feat_families = checkout / "pymc_model_families"
+    feat_families.mkdir(parents=True)
+    (feat_families / "models_manifest.yaml").write_text(
+        "models:\n  - name: prototype_similarity\n    rationale: similarity to a prototype\n"
+        "  - name: window_typicality\n    rationale: finite window\n",
+        encoding="utf-8",
+    )
+
+    result = leakage_check(
+        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1, checkout_root=checkout,
+    )
+    assert result["any_manifest_gt_named"] is True
+    assert len(result["manifest_gt_named_files"]) == 2
+    assert "seed_models/models_manifest.yaml" in result["manifest_gt_named_files"]
+    assert "pymc_model_families/models_manifest.yaml" in result["manifest_gt_named_files"]
+
+
 # ── raw-features (arm C) runs ────────────────────────────────────────
 
 

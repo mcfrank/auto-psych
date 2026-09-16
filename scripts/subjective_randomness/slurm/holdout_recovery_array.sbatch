@@ -211,6 +211,21 @@ for models_rel in "$SEED_MODELS_REL" "$POOL_MODELS_REL"; do
 done
 echo "[task $TASK] scrubbed held-out GT entry from both manifests"
 
+# Catch-all: scrub the GT name from ANY remaining models_manifest.yaml in the
+# checkout. The loop above handles the active feature regime's pair, but the
+# other regime's manifests also exist and the leakage audit scans all of them.
+while IFS= read -r -d '' mf; do
+  if grep -q "$GT" "$mf"; then
+    "$VENV_PY" "$RUN_REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
+      --models-dir "$(dirname "$mf")" --name "$GT" --missing-ok
+    if grep -q "$GT" "$mf"; then
+      echo "ERROR: $mf still mentions $GT after scrub" >&2; exit 1
+    fi
+    mf_rel="${mf#$RUN_REPO/}"
+    echo "[task $TASK] scrubbed $GT from additional manifest: $mf_rel"
+  fi
+done < <(find "$RUN_REPO" -name "models_manifest.yaml" -not -path "*/_runs/*" -print0)
+
 # Optional cheap-run overrides (set by SMOKE mode or by hand). Values are
 # numeric, so unquoted word-splitting below is safe.
 EXTRA_FLAGS=""
