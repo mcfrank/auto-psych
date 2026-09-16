@@ -128,18 +128,8 @@ def _stage_done(agent_key: str, exp_dir: Path) -> bool:
 # it are listed column-by-column in every candidate's and critic's context).
 GENERATING_MODEL_COLUMN = "generating_model"
 
-# The only columns an agent-facing responses CSV carries in a `raw_features`
-# run: the two H/T sequences plus the response bookkeeping. Every feature is
-# then the model's own to compute (`compute_features` / `prepare_observed`),
-# which is what makes recovery a test of finding the representation rather than
-# of weighting features the harness supplied. See docs/raw_features_arm.md.
-RAW_RESPONSE_COLUMNS = (
-    "sequence_a",
-    "sequence_b",
-    "participant_id",
-    "trial_index",
-    "chose_left",
-)
+# Re-exported from featurizer so existing callers keep working.
+from src.pipelines.outer_loop.featurizer import RAW_RESPONSE_COLUMNS  # noqa: F401
 
 
 def strip_generating_model(
@@ -175,6 +165,42 @@ def strip_to_raw_columns(
                 f"got {sorted(rows[0])}"
             )
     return [{c: row[c] for c in RAW_RESPONSE_COLUMNS} for row in rows]
+
+
+def validate_raw_pool_models(pool_dir: Path) -> None:
+    """Raise if any model in ``pool_dir`` cannot bind a raw stimulus row.
+
+    In a raw-features run every model must compute its own features via
+    ``compute_features`` or ``prepare_observed``. A model that expects columns
+    the raw CSV does not carry (e.g. featurized columns) would fail at fit time
+    deep inside a sweep; catching it here fails at config resolution with the
+    model's name and the missing columns.
+    """
+    from src.models.pymc_inference import (
+        MissingStimulusColumns,
+        load_pymc_model,
+        make_stim_data,
+    )
+
+    raw_row = {c: "0" for c in RAW_RESPONSE_COLUMNS}
+    raw_row["sequence_a"] = "HHT"
+    raw_row["sequence_b"] = "THT"
+    for name in read_manifest_names(pool_dir):
+        try:
+            model = load_pymc_model(name, pool_dir)
+        except Exception as exc:
+            raise ValueError(
+                f"raw pool model {name!r} in {pool_dir} failed to load: {exc}"
+            ) from exc
+        try:
+            make_stim_data(model, [raw_row])
+        except MissingStimulusColumns as exc:
+            raise ValueError(
+                f"raw pool model {name!r} cannot bind a raw row — missing "
+                f"columns: {list(exc.missing)}. In a raw_features run every "
+                f"model must compute its own features via compute_features or "
+                f"prepare_observed."
+            ) from exc
 
 
 def _require_no_generating_model_column(responses_path: Path) -> None:
@@ -355,6 +381,7 @@ def run_holdout_experiments(
                 cache_dir=cache_dir,
                 project_id=project_id,
                 agent_timeout_sec=agent_timeout_sec,
+                raw_features=raw_features,
             )
             update_registry_from_interpretation(exp_dir)
             _require_valid("5_model_loop", exp_dir)
@@ -1255,6 +1282,15 @@ def run_holdout_recovery_from_config(
     pool_models_dir = (
         resolve_path(config["pool_models_dir"]) if config.get("pool_models_dir") else None
     )
+    if raw_features:
+        if pool_models_dir is None:
+            raise ValueError(
+                "raw_features is true but pool_models_dir is not set — "
+                "a raw run must explicitly point at a pool whose models "
+                "compute their own features (e.g. seed_models_raw/)."
+            )
+        validate_raw_pool_models(pool_models_dir)
+        validate_raw_pool_models(seed_models_dir)
     design_n_eig = int(design_cfg.get("n_eig", 32))
     design_n_random = int(design_cfg.get("n_random", 0))
 

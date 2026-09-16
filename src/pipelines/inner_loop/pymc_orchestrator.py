@@ -57,6 +57,7 @@ from src.pipelines.inner_loop.hypothesis_ledger import (
     LedgerEntry,
     one_line,
 )
+from src.pipelines.outer_loop.featurizer import RAW_RESPONSE_COLUMNS
 from src.runtime.config import REPO_ROOT
 
 _PKG_DIR = Path(__file__).resolve().parent
@@ -768,6 +769,8 @@ def _write_candidate_context(
     with responses_path.open(encoding="utf-8") as f:
         header = f.readline().strip()
     columns = [c for c in header.split(",") if c]
+    raw_set = set(RAW_RESPONSE_COLUMNS)
+    feature_cols = [c for c in columns if c not in raw_set]
     raw_sequence_cols = [c for c in ("sequence_a", "sequence_b") if c in columns]
     lines = [
         f"# Inner Loop — round {iteration}, candidate {candidate_idx} of {candidate_count}",
@@ -775,22 +778,43 @@ def _write_candidate_context(
         f"Responses CSV: `{responses_path}`",
         f"Columns in the responses CSV: `{header}`",
         "",
-        "Read the columns you need as `pm.Data` containers, matching each "
-        "container name to a column. **Only numeric columns can back a `pm.Data`** "
-        "— the precomputed integer/float feature columns and `chose_left`.",
     ]
-    if raw_sequence_cols:
+    if feature_cols:
         lines += [
+            "Read the columns you need as `pm.Data` containers, matching each "
+            "container name to a column. **Only numeric columns can back a `pm.Data`** "
+            "— the feature columns and `chose_left`.",
+        ]
+        if raw_sequence_cols:
+            lines += [
+                "",
+                f"The raw H/T sequence strings `{'` and `'.join(raw_sequence_cols)}` are "
+                "**not numeric** and cannot be a `pm.Data` directly. To make your "
+                "hypothesis depend on an aspect of the sequence the existing feature "
+                "columns discard — order, position, recency, or specific sub-sequences "
+                "— define a module-level `compute_features(sequence_a, sequence_b) -> "
+                "dict[str, float]` in `candidate.py`. The pipeline runs it on the raw "
+                "sequences for every trial and exposes each returned key as a column "
+                "you read with a matching `pm.Data`. This extends the feature space "
+                "beyond the columns above.",
+            ]
+    else:
+        lines += [
+            "There are **no feature columns** in this CSV — only the raw H/T "
+            "sequence strings and the response (`chose_left`). The only numeric "
+            "column you can read directly as a `pm.Data` is `chose_left`.",
             "",
-            f"The raw H/T sequence strings `{'` and `'.join(raw_sequence_cols)}` are "
-            "**not numeric** and cannot be a `pm.Data` directly. To make your "
-            "hypothesis depend on an aspect of the sequence the precomputed features "
-            "discard — order, position, recency, or specific sub-sequences — define a "
-            "module-level `compute_features(sequence_a, sequence_b) -> dict[str, "
-            "float]` in `candidate.py`. The pipeline runs it on the raw sequences for "
-            "every trial and exposes each returned key as a column you read with a "
-            "matching `pm.Data`. This extends the feature space beyond the "
-            "precomputed columns above.",
+            "Your model **must** compute its own features from the raw sequences. "
+            "Define a module-level hook in `candidate.py` — either:",
+            "",
+            "- `compute_features(sequence_a: str, sequence_b: str) -> dict[str, "
+            "float]`: returns named numeric features for one stimulus pair; the "
+            "pipeline calls it per trial and exposes each key as a `pm.Data` column.",
+            "- `prepare_observed(rows: list[dict]) -> dict[str, np.ndarray]`: "
+            "builds all observed arrays at once from the full row list.",
+            "",
+            "One of these hooks is **required** — without it the model cannot bind "
+            "any stimulus input.",
         ]
     lines += [
         "",
