@@ -943,6 +943,20 @@ def _export_inner_loop_models(
     return out_dir / f"{best_export}.py"
 
 
+_EXPERIMENT_DIR_RE = re.compile(r"experiment(\d+)$")
+
+
+def _experiment_number(exp_dir: Path) -> int:
+    """The experiment number encoded in ``exp_dir``'s name (``experiment<k>``)."""
+    match = _EXPERIMENT_DIR_RE.fullmatch(Path(exp_dir).name)
+    if match is None:
+        raise ValueError(
+            f"Experiment directory {exp_dir} must be named experiment<k>; "
+            f"got {Path(exp_dir).name!r}."
+        )
+    return int(match.group(1))
+
+
 def run_inner_model_loop_programmatic(
     exp_dir: Path,
     *,
@@ -986,8 +1000,12 @@ def run_inner_model_loop_programmatic(
     statistics the critique agent proposes; `critique_alpha` (None ⇒ inner-loop
     default) is the raw p threshold for flagging a discrepancy.
     """
-    from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
+    from src.pipelines.inner_loop.pymc_orchestrator import (
+        _lens_offset,
+        run_pymc_inner_loop,
+    )
 
+    exp_num = _experiment_number(exp_dir)
     rows = _pooled_response_rows(exp_dir)
     if not rows:
         raise ValueError(
@@ -1058,6 +1076,11 @@ def run_inner_model_loop_programmatic(
         enable_critique=enable_critique,
         protected_names=protected,
         ledger_context=exp_dir.name,
+        lens_offset=_lens_offset(
+            exp_num,
+            max_iterations=max_iterations,
+            candidate_count=candidate_count,
+        ),
         **extra,
     )
     _export_inner_loop_models(

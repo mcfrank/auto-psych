@@ -136,6 +136,26 @@ DEFAULT_CANDIDATE_HINTS = [
 ]
 
 
+def _lens_offset(exp_num: int, *, max_iterations: int, candidate_count: int) -> int:
+    """The lens-schedule position at which experiment ``exp_num`` starts.
+
+    Experiment k spends ``max_iterations * candidate_count`` candidate slots, so
+    experiment k+1 continues the walk through the lens battery where k stopped.
+    """
+    if exp_num < 1:
+        raise ValueError(f"Experiment numbers start at 1; got {exp_num}.")
+    return (exp_num - 1) * max_iterations * candidate_count
+
+
+def _lens_index(
+    lens_offset: int, iteration: int, candidate_count: int, candidate_idx: int, n_lenses: int
+) -> int:
+    """Which lens candidate ``candidate_idx`` of round ``iteration`` works."""
+    if n_lenses < 1:
+        raise ValueError("The lens battery is empty.")
+    return (lens_offset + iteration * candidate_count + candidate_idx) % n_lenses
+
+
 # ─────────────────────────────────────────────
 # Model-set ("zoo") helpers
 # ─────────────────────────────────────────────
@@ -801,6 +821,7 @@ def _write_candidate_context(
     hints: Optional[List[str]] = None,
     ledger: Optional[HypothesisLedger] = None,
     comparison: Optional[Dict[str, Dict[str, Any]]] = None,
+    lens_index: Optional[int] = None,
 ) -> Dict[str, Optional[str]]:
     """Write the candidate's context documents and return their text.
 
@@ -809,11 +830,12 @@ def _write_candidate_context(
     reproducibility, but the returned strings are what actually reach the
     agent — they are injected verbatim into its prompt (see
     ``_build_candidate_prompt``), so steering content is never optional
-    reading. ``hints`` overrides the default exploration lenses; hint
-    ``candidate_idx % len(hints)`` goes into this candidate's brief. With a
-    ``ledger``, ``attempted_hypotheses.md`` lists every hypothesis tried
-    earlier (this experiment or a previous one) that is no longer in the model
-    set, with what happened to it.
+    reading. ``lens_index`` selects the exploration lens for this candidate's
+    brief (see ``_lens_index``); when ``None`` falls back to
+    ``candidate_idx % len(hints)``. With a ``ledger``,
+    ``attempted_hypotheses.md`` lists every hypothesis tried earlier (this
+    experiment or a previous one) that is no longer in the model set, with
+    what happened to it.
     """
     candidate_dir.mkdir(parents=True, exist_ok=True)
     with responses_path.open(encoding="utf-8") as f:
@@ -916,7 +938,9 @@ def _write_candidate_context(
         critiques_text = critique_path.read_text(encoding="utf-8")
         (candidate_dir / "critiques.md").write_text(critiques_text, encoding="utf-8")
 
-    hints = list(hints) if hints else list(DEFAULT_CANDIDATE_HINTS)
+    hints = list(hints) if hints is not None else list(DEFAULT_CANDIDATE_HINTS)
+    if lens_index is None:
+        lens_index = candidate_idx % len(hints)
     critique_note = (
         "\nIf `critiques.md` is present, prioritise a hypothesis that addresses one of "
         "the significant discrepancies it reports.\n"
@@ -925,7 +949,7 @@ def _write_candidate_context(
     )
     brief = (
         "# Candidate Brief\n\n"
-        f"{hints[candidate_idx % len(hints)]}\n\n"
+        f"{hints[lens_index]}\n\n"
         "Your candidate must express **exactly one** cognitive hypothesis. Do not "
         "average, weight, or mix cues or mechanisms from several hypotheses into a "
         "single model — a blended mega-model is not a hypothesis.\n"
@@ -1443,6 +1467,7 @@ def run_pymc_inner_loop(
     candidate_parallelism: Optional[int] = None,
     protected_names: Optional[Iterable[str]] = None,
     ledger_context: str = "",
+    lens_offset: int = 0,
 ) -> Dict[str, Any]:
     """Run the PyMC inner model loop and export the best model.
 
@@ -1501,6 +1526,10 @@ def run_pymc_inner_loop(
         candidates at once; ``1`` ⇒ sequential). Agents are CLI subprocesses,
         so this is a pure wall-clock lever; admission is always sequential in
         candidate order, keeping runs deterministic.
+    lens_offset
+        Starting position in the lens battery. The outer loop
+        passes ``_lens_offset(exp_num, ...)`` so experiment k+1 continues the
+        walk where experiment k stopped.
 
     Returns a dict with ``best_model``, ``posteriors``, ``elpd_loo``,
     ``live_models`` (the surviving zoo, in manifest order) and paths.
@@ -1534,7 +1563,12 @@ def run_pymc_inner_loop(
         ledger=ledger,
         ledger_context=ledger_context,
     )
-    n_lenses = len(candidate_hints) if candidate_hints else len(DEFAULT_CANDIDATE_HINTS)
+    n_lenses = len(candidate_hints) if candidate_hints is not None else len(DEFAULT_CANDIDATE_HINTS)
+    if max_iterations > 0 and n_lenses < 1:
+        raise ValueError(
+            "The lens battery is empty — pass at least one exploration lens "
+            "via candidate_hints, or use the defaults."
+        )
 
     posterior = _score(
         responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
@@ -1570,6 +1604,9 @@ def run_pymc_inner_loop(
         candidate_dirs = []
         for idx in range(candidate_count):
             candidate_dir = round_dir / f"candidate_{idx}"
+            lens = _lens_index(
+                lens_offset, iteration, candidate_count, idx, n_lenses
+            )
             docs = _write_candidate_context(
                 candidate_dir,
                 responses_path,
@@ -1582,11 +1619,12 @@ def run_pymc_inner_loop(
                 hints=candidate_hints,
                 ledger=ledger,
                 comparison=comparison,
+                lens_index=lens,
             )
-            candidate_dirs.append((idx, candidate_dir, docs))
+            candidate_dirs.append((idx, candidate_dir, docs, lens))
 
         def spawn(item) -> bool:
-            _, candidate_dir, docs = item
+            _, candidate_dir, docs, _lens = item
             return _spawn_candidate_agent(
                 candidate_dir,
                 docs,
@@ -1608,7 +1646,7 @@ def run_pymc_inner_loop(
         # the manifest, uniquifies names, and runs MCMC + the novelty gate, so
         # a fixed order keeps runs deterministic (earlier candidates win ties).
         round_context = f"{ledger_context} round {iteration}".strip()
-        for (idx, candidate_dir, _), ok in zip(candidate_dirs, spawn_ok):
+        for (idx, candidate_dir, _, lens), ok in zip(candidate_dirs, spawn_ok):
             if not ok:
                 continue
             _admit_candidate(
@@ -1624,7 +1662,7 @@ def run_pymc_inner_loop(
                 fit_kwargs=fit_kwargs,
                 novelty_rmse_threshold=novelty_rmse_threshold,
                 ledger=ledger,
-                ledger_context=f"{round_context} candidate {idx} lens {idx % n_lenses}",
+                ledger_context=f"{round_context} candidate {idx} lens {lens}",
             )
         posterior = _score(
             responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
