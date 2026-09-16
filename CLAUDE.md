@@ -97,9 +97,10 @@ parallel (each steered by a rotating exploration "lens") → admit sequentially.
   mean `p_left` ≥ `novelty_rmse_threshold` (0.02) RMSE from every admitted model.
 - **Pruning** (`_prune_losers`): non-protected, PSIS-LOO-reliable models
   statistically distinguishable from the best (`elpd_diff > dse_multiplier·dse`)
-  move to `models/pruned/`. Stacking weight is deliberately not a criterion
-  (it is an ensemble coefficient, not plausibility). The survivors are the
-  uncertainty set — everything still within the margin of the best.
+  move to `models/pruned/`. There is no stacking-weight floor — pruning is on
+  `elpd_diff` vs `dse` alone (iteration 3 removed the weight floor because
+  stacking weights are ensemble coefficients, not plausibility). The survivors
+  are the uncertainty set — everything still within the margin of the best.
 - **Ledger** (`src/pipelines/inner_loop/hypothesis_ledger.py`):
   `model_loop/attempted_hypotheses.jsonl` records every candidate slot
   (admitted / rejected, with the reason) and every prune (with the margin),
@@ -164,6 +165,17 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   unfittable, and the inner loop `[drop]`s it rather than failing. Why the arm
   exists (the featurizer reproduces each ground truth's own decision variable at
   R² 0.90-1.00) and how to read its results: `docs/raw_features_arm.md`.
+- **Raw mode end to end.** When `raw_features: true`,
+  `run_inner_model_loop_programmatic` skips the featurizer entirely:
+  `model_loop/responses.csv` contains only the five `RAW_RESPONSE_COLUMNS`
+  (`sequence_a`, `sequence_b`, `participant_id`, `trial_index`, `chose_left`,
+  defined in `src/pipelines/outer_loop/featurizer.py`), and the candidate context
+  tells agents there are no precomputed feature columns and that a
+  `compute_features`/`prepare_observed` hook is required. Config validation
+  checks that every model in the pool and seed manifests can bind a raw stimulus
+  row. The verifier (`scripts/subjective_randomness/slurm/verify_raw_features_run.sh`)
+  checks that every agent-facing CSV in a finished run is truly raw and that no
+  candidate imports the project featurizer.
 - `src/models/mcmc_defaults.py` — the **single source of MCMC sampler defaults**
   (`PRODUCTION_*`, `DESIGN_TWIN_*`). Every entry point imports from here; change
   defaults only here.
