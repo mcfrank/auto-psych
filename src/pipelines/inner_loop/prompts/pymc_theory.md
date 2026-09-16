@@ -11,8 +11,9 @@ Read these files in the current working directory before deciding what to write:
    model may read), and the inner-loop round number.
 2. `CANDIDATE_BRIEF.md` — what kind of hypothesis to attempt this round.
 3. `existing_hypotheses.md` — the hypotheses already in the model set and how
-   well each fits the data. Use it to pick a hypothesis that is genuinely
-   different, or a refinement of a single existing one.
+   each stands on the current data by ELPD-LOO rank (`elpd_diff ± dse` against
+   the best model). Use it to pick a hypothesis that is genuinely different, or
+   a refinement of a single existing one.
 4. `attempted_hypotheses.md` — hypotheses tried earlier that are no longer in
    the model set, with what happened to each: pruned after losing to the best
    model by a stated margin, or rejected at admission (most often as a

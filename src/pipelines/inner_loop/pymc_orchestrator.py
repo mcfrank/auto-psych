@@ -704,37 +704,86 @@ def _admit_candidate(
 # ─────────────────────────────────────────────
 
 
+def _describe_standing(row: Dict[str, Any]) -> str:
+    """One clause on a model's standing from its ``az.compare`` row."""
+    rank = int(row["rank"])
+    elpd = float(row["elpd_loo"])
+    diff = float(row["elpd_diff"])
+    dse = float(row["dse"])
+    if rank == 0:
+        text = f"rank 0, the best model on this data, ELPD-LOO {elpd:.1f}"
+    else:
+        if dse > 0:
+            verdict = (
+                "statistically tied with the best"
+                if diff <= DEFAULT_PRUNE_DSE_MULTIPLIER * dse
+                else "distinguishable from the best — it has lost on this data"
+            )
+            margin = f"{diff / dse:.1f}× dse: {verdict}"
+        else:
+            margin = "dse 0"
+        text = (
+            f"rank {rank}, {diff:.1f} ± {dse:.1f} nats behind the best "
+            f"({margin}), ELPD-LOO {elpd:.1f}"
+        )
+    if row.get("loo_unreliable"):
+        frac = row.get("frac_bad_k")
+        detail = (
+            f" ({100 * float(frac):.0f}% of trials with a high Pareto k)"
+            if frac is not None
+            else ""
+        )
+        text += f"; PSIS-LOO unreliable{detail} — its ELPD is untrustworthy"
+    return text
+
+
 def _write_existing_hypotheses(
     candidate_dir: Path,
     models_dir: Path,
     current_posterior: Optional[Dict[str, Any]],
+    comparison: Optional[Dict[str, Dict[str, Any]]] = None,
 ) -> str:
-    """Write the hypotheses already in the model set + how well each fits.
+    """Write the hypotheses already in the model set + how each stands.
 
-    Each model's hypothesis is its manifest rationale; its fit is its current
-    ELPD-LOO posterior mass. The candidate agent reads this to pick a *distinct*
-    or *refined* hypothesis — never to merge the top models into a blend.
+    Each model's hypothesis is its manifest rationale; its standing is its
+    ``az.compare`` row (``rank``, ``elpd_diff ± dse`` against the best,
+    PSIS-LOO reliability), best first.  Without a comparison table (no scoring
+    yet) only the ELPD-LOO, if any, is shown, in manifest order.  The
+    candidate agent reads this to pick a *distinct* or *refined* hypothesis —
+    never to merge the top models into a blend.
     Returns the written text (it is also injected into the agent's prompt).
     """
-    posteriors = (current_posterior or {}).get("posteriors", {})
     elpd = (current_posterior or {}).get("elpd_loo", {})
+    entries = _manifest_entries(models_dir)
+    if comparison:
+        ranked = [e for e in entries if e["name"] in comparison]
+        unranked = [e for e in entries if e["name"] not in comparison]
+        ranked.sort(key=lambda e: int(comparison[e["name"]]["rank"]))
+        entries = ranked + unranked
     blocks: List[str] = []
-    for entry in _manifest_entries(models_dir):
+    for entry in entries:
         name = entry["name"]
         hypothesis = (entry.get("rationale") or "").strip() or "(no stated hypothesis)"
         header = f"## {name}"
-        if name in posteriors:
-            header += f"  — posterior {posteriors[name]:.3f}"
-        if name in elpd:
-            header += f", ELPD-LOO {elpd[name]:.2f}"
+        if comparison and name in comparison:
+            header += f"  — {_describe_standing(comparison[name])}"
+        elif comparison and name not in comparison:
+            header += "  — no comparison row"
+        elif name in elpd:
+            header += f"  — ELPD-LOO {elpd[name]:.2f}"
         blocks.append(f"{header}\n\n{hypothesis}\n")
     body = "\n".join(blocks) if blocks else "(no models yet)\n"
     text = (
         "# Existing hypotheses\n\n"
-        "Each model below is ONE cognitive hypothesis, with how well it currently "
-        "explains the data. Propose a hypothesis that is genuinely different from "
-        "these, or a refinement of a single one of them — never a combination of "
-        "several.\n\n" + body
+        "Each model below is ONE cognitive hypothesis, with how it stands on the "
+        "current data by ELPD-LOO (best first). `elpd_diff ± dse` is a model's "
+        "deficit against the best and the standard error of that difference: "
+        f"within about {DEFAULT_PRUNE_DSE_MULTIPLIER:g}·dse the two are "
+        "statistically tied on this data; beyond it the model has lost. "
+        "\"PSIS-LOO unreliable\" means the estimate itself is untrustworthy (too "
+        "many high-Pareto-k trials), not that the model is bad. Propose a "
+        "hypothesis that is genuinely different from these, or a refinement of a "
+        "single one of them — never a combination of several.\n\n" + body
     )
     (candidate_dir / "existing_hypotheses.md").write_text(text, encoding="utf-8")
     return text
@@ -751,6 +800,7 @@ def _write_candidate_context(
     critique_path: Optional[Path] = None,
     hints: Optional[List[str]] = None,
     ledger: Optional[HypothesisLedger] = None,
+    comparison: Optional[Dict[str, Dict[str, Any]]] = None,
 ) -> Dict[str, Optional[str]]:
     """Write the candidate's context documents and return their text.
 
@@ -853,7 +903,7 @@ def _write_candidate_context(
     (candidate_dir / "CONTEXT.md").write_text(context_text, encoding="utf-8")
 
     hypotheses_text = _write_existing_hypotheses(
-        candidate_dir, models_dir, current_posterior
+        candidate_dir, models_dir, current_posterior, comparison=comparison
     )
     attempted_text: Optional[str] = None
     if ledger is not None:
@@ -1531,6 +1581,7 @@ def run_pymc_inner_loop(
                 critique_path=critique_path,
                 hints=candidate_hints,
                 ledger=ledger,
+                comparison=comparison,
             )
             candidate_dirs.append((idx, candidate_dir, docs))
 
