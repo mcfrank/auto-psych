@@ -59,6 +59,12 @@ from src.subjective_randomness.model_recovery import (
     write_responses_csv,
 )
 from src.subjective_randomness.recover import pearson_r
+from src.subjective_randomness.recovery_metrics import (
+    bias as _bias,
+    calibration as _calibration,
+    kl_regret as _kl_regret,
+    rmse as _rmse,
+)
 from src.subjective_randomness.simulate import load_stimuli
 from src.subjective_randomness.stimulus_design import (
     enumerate_all_pairs,
@@ -76,8 +82,16 @@ TRAJECTORY_COLUMNS = [
     "best_model",
     "pearson_r",
     "rmse",
+    "kl_regret",
+    "bias",
+    "calib_slope",
+    "calib_intercept",
     "pearson_r_bma",
     "rmse_bma",
+    "kl_regret_bma",
+    "bias_bma",
+    "calib_slope_bma",
+    "calib_intercept_bma",
 ]
 
 
@@ -428,6 +442,7 @@ def build_eval_stimuli(
     seed: int,
     min_remaining: int = 1,
     exhaustive: bool = False,
+    extra_excluded_pairs: Optional[Set[Tuple[str, str]]] = None,
 ) -> Dict[str, Any]:
     """Generate the held-out eval pool, excluding every pair used in training.
 
@@ -440,6 +455,10 @@ def build_eval_stimuli(
     pair at the given ``lengths`` rather than an ``n_pairs`` sample, so the correlation is
     measured over the whole stimulus space at those lengths (``n_pairs``/``seed``
     are then unused).
+
+    ``extra_excluded_pairs``, when given, is an additional set of unordered
+    pairs to drop (e.g. the training pairs of a second cell in a matched-cell
+    comparison).
     """
     pool = (
         enumerate_all_pairs(lengths, same_length_only=True)
@@ -447,6 +466,8 @@ def build_eval_stimuli(
         else generate_candidate_pool(n_pairs, lengths=tuple(lengths), seed=seed)
     )
     trained = collect_trained_pairs(run_root, n_experiments)
+    if extra_excluded_pairs:
+        trained = trained | extra_excluded_pairs
     kept = [
         stim
         for stim in pool
@@ -691,6 +712,12 @@ def evaluate_trajectory(
             # this step) the BMA has nothing to average — fall back to the best
             # single model's prediction rather than failing the whole run.
             bma_pred = _bma_prediction(weights, predictions) if weights else best_pred
+
+            gt_list = gt_p.tolist()
+            best_list = best_pred.tolist()
+            bma_list = bma_pred.tolist()
+            best_slope, best_intercept = _calibration(gt_list, best_list)
+            bma_slope, bma_intercept = _calibration(gt_list, bma_list)
             rows.append(
                 {
                     "experiment": exp_num,
@@ -698,10 +725,18 @@ def evaluate_trajectory(
                     "iteration": entry["iteration"],
                     "global_step": global_step,
                     "best_model": best,
-                    "pearson_r": pearson_r(gt_p.tolist(), best_pred.tolist()),
+                    "pearson_r": pearson_r(gt_list, best_list),
                     "rmse": float(np.sqrt(np.mean((gt_p - best_pred) ** 2))),
-                    "pearson_r_bma": pearson_r(gt_p.tolist(), bma_pred.tolist()),
+                    "kl_regret": _kl_regret(gt_list, best_list),
+                    "bias": _bias(gt_list, best_list),
+                    "calib_slope": best_slope,
+                    "calib_intercept": best_intercept,
+                    "pearson_r_bma": pearson_r(gt_list, bma_list),
                     "rmse_bma": float(np.sqrt(np.mean((gt_p - bma_pred) ** 2))),
+                    "kl_regret_bma": _kl_regret(gt_list, bma_list),
+                    "bias_bma": _bias(gt_list, bma_list),
+                    "calib_slope_bma": bma_slope,
+                    "calib_intercept_bma": bma_intercept,
                 }
             )
             global_step += 1
@@ -854,6 +889,7 @@ def reevaluate_trajectories(
     cache_dir: Optional[Path],
     gt_models_dir: Optional[Path] = None,
     eval_pool_override: Optional[Mapping[str, Any]] = None,
+    extra_excluded_pairs: Optional[Set[Tuple[str, str]]] = None,
 ) -> Dict[str, Any]:
     """Recompute every ground truth's trajectory from its finished run tree.
 
@@ -907,6 +943,7 @@ def reevaluate_trajectories(
                 seed=int(eval_pool.get("seed", 0)),
                 min_remaining=int(eval_pool.get("min_remaining", 1)),
                 exhaustive=bool(eval_pool.get("exhaustive", False)),
+                extra_excluded_pairs=extra_excluded_pairs,
             )
             eval_stimuli = rebuilt["stimuli"]
         else:
@@ -1531,6 +1568,7 @@ def _run_holdout_recovery_resolved(
         "fit_kwargs": fit_kwargs,
         "seed": seed,
         "eval_pool": eval_pool,
+        "metrics_version": 2,
         "gt_runs": gt_runs,
     }
 
