@@ -24,6 +24,14 @@ from typing import Any, Callable, Dict
 # featurize_stimulus(sequence_a, sequence_b) -> {feature column: value}
 Featurizer = Callable[[str, str], Dict[str, Any]]
 
+RAW_RESPONSE_COLUMNS = (
+    "sequence_a",
+    "sequence_b",
+    "participant_id",
+    "trial_index",
+    "chose_left",
+)
+
 
 def load_featurizer(featurize_path: Path) -> Featurizer:
     """Return ``featurize_stimulus`` from the module file at ``featurize_path``."""

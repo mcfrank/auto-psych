@@ -94,7 +94,7 @@ def _stub_inner_loop(history_best):
     # separate directory).
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
             backend=None, agent_model=None, cache_dir=None, project_id=None,
-            agent_timeout_sec=900):
+            agent_timeout_sec=900, raw_features=False, **kwargs):
         loop_dir = exp_dir / "model_loop"
         models_dir = loop_dir / "models"
         models_dir.mkdir(parents=True, exist_ok=True)

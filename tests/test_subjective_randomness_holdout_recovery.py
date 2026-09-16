@@ -108,7 +108,7 @@ def _stub_inner_loop(history_best):
     # _complete_experiment_on_disk).
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
             backend=None, agent_model=None, cache_dir=None, project_id=None,
-            agent_timeout_sec=900):
+            agent_timeout_sec=900, raw_features=False, **kwargs):
         # Mirror the real inner loop: every candidate-agent run records its
         # token usage (here one stub record per experiment's loop).
         token_usage.record_usage(

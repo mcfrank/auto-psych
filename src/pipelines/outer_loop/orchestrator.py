@@ -29,7 +29,11 @@ from src.models.model_manifest import (
     read_manifest_names,
 )
 from src.models.project.ground_truth import get_ground_truth_models
-from src.pipelines.outer_loop.featurizer import Featurizer, load_featurizer
+from src.pipelines.outer_loop.featurizer import (
+    RAW_RESPONSE_COLUMNS,
+    Featurizer,
+    load_featurizer,
+)
 
 # Stage output validators live in orchestrator_validators.py; re-exported here
 # so `from ...orchestrator import validate_cc_output / _validate_*` keeps working.
@@ -863,6 +867,33 @@ def _export_inner_loop_models(
                 f"{zoo_dir / f'{name}.py'}; the zoo is incomplete."
             )
 
+    responses_csv = loop_dir / "responses.csv"
+    is_raw = False
+    if responses_csv.exists():
+        with responses_csv.open(encoding="utf-8") as f:
+            csv_header = [c.strip() for c in f.readline().strip().split(",")]
+        is_raw = csv_header == list(RAW_RESPONSE_COLUMNS)
+    if is_raw:
+        from src.models.pymc_inference import (
+            MissingStimulusColumns,
+            load_pymc_model,
+            make_stim_data,
+        )
+
+        raw_row = {c: "0" for c in RAW_RESPONSE_COLUMNS}
+        raw_row["sequence_a"] = "HHT"
+        raw_row["sequence_b"] = "THT"
+        for name in rationales:
+            try:
+                m = load_pymc_model(name, zoo_dir)
+                make_stim_data(m, [raw_row])
+            except MissingStimulusColumns as exc:
+                raise ValueError(
+                    f"raw mode: exported model {name!r} cannot bind a raw "
+                    f"row — missing columns: {list(exc.missing)}. In a raw "
+                    f"run every model must compute its own features."
+                ) from exc
+
     out_dir = exp_dir / "cognitive_models"
     out_dir.mkdir(parents=True, exist_ok=True)
     protected = set(protected_names)
@@ -931,6 +962,7 @@ def run_inner_model_loop_programmatic(
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
+    raw_features: bool = False,
 ) -> Path:
     """Run the PyMC inner model loop over pooled outer-loop data.
 
@@ -964,12 +996,31 @@ def run_inner_model_loop_programmatic(
 
     loop_dir = exp_dir / "model_loop"
     loop_dir.mkdir(parents=True, exist_ok=True)
-    # The featurizer is a project *asset* (src assets dir), not under the data
-    # tree where exp_dir now lives.
-    featurize = _load_project_featurizer(
-        outer_project_dir(project_id or exp_dir.parent.name)
-    )
+    if raw_features:
+        raw_set = set(RAW_RESPONSE_COLUMNS)
+        extra = sorted(set(rows[0].keys()) - raw_set)
+        if extra:
+            raise ValueError(
+                f"raw_features run: pooled rows carry engineered columns "
+                f"{extra}; a raw run must start from data that has only "
+                f"{sorted(raw_set)}"
+            )
+        featurize = None
+    else:
+        # The featurizer is a project *asset* (src assets dir), not under the
+        # data tree where exp_dir now lives.
+        featurize = _load_project_featurizer(
+            outer_project_dir(project_id or exp_dir.parent.name)
+        )
     responses_path = _write_feature_csv(rows, featurize, loop_dir / "responses.csv")
+    if raw_features:
+        with responses_path.open(encoding="utf-8") as f:
+            written_header = [c.strip() for c in f.readline().strip().split(",")]
+        if written_header != list(RAW_RESPONSE_COLUMNS):
+            raise ValueError(
+                f"raw_features run: model_loop/responses.csv header is "
+                f"{written_header}, expected {list(RAW_RESPONSE_COLUMNS)}"
+            )
 
     seed_models_dir = exp_dir / "cognitive_models"
     protected = _protected_seed_names(project_id or exp_dir.parent.name, seed_models_dir)
