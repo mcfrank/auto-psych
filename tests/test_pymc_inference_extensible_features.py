@@ -165,13 +165,15 @@ def test_augment_rejects_non_numeric_feature(tmp_path):
         )
 
 
-def test_augment_rejects_collision_with_existing_column(tmp_path):
+def test_augment_rejects_shadowing_the_response_column(tmp_path):
+    """`chose_left` is the observation, not a feature: a model may recompute a
+    feature column the harness also supplies (same value), but never this."""
     model = _model_from_featurizer(
         tmp_path,
         'def compute_features(a, b):\n    return {"chose_left": 1.0}',
         "collision",
     )
-    with pytest.raises(ValueError, match="collides"):
+    with pytest.raises(ValueError, match="response/bookkeeping"):
         pi._augment_rows_with_features(
             model, [{"sequence_a": "H", "sequence_b": "T", "chose_left": "1"}]
         )
@@ -233,3 +235,34 @@ def test_custom_feature_model_fits_and_predicts_end_to_end(tmp_path):
     assert synthetic.shape == (20, 1)
     assert set(np.unique(synthetic)).issubset({0, 1})
     assert math.isfinite(fitted.elpd_loo())
+
+
+def test_recomputing_a_column_to_the_same_value_is_allowed(tmp_path):
+    """A self-contained model (one that computes the columns it binds, for a
+    raw-features run) is still handed featurized rows by the generation and
+    held-out evaluation paths. Recomputing a column identically there must not
+    fail the run."""
+    from src.models.pymc_inference import _augment_rows_with_features
+
+    class _Model:
+        pass
+
+    model = _Model()
+    setattr(model, "_auto_psych_extra_featurizer",
+            lambda a, b: {"n_a": float(len(a)), "n_b": float(len(b))})
+    rows = [{"sequence_a": "HTH", "sequence_b": "HHTT", "n_a": 3, "n_b": 4}]
+    (out,) = _augment_rows_with_features(model, rows)
+    assert out["n_a"] == 3 and out["n_b"] == 4
+
+
+def test_recomputing_a_column_to_a_different_value_still_fails_loudly(tmp_path):
+    from src.models.pymc_inference import _augment_rows_with_features
+
+    class _Model:
+        pass
+
+    model = _Model()
+    setattr(model, "_auto_psych_extra_featurizer", lambda a, b: {"n_a": 99.0})
+    rows = [{"sequence_a": "HTH", "sequence_b": "HHTT", "n_a": 3}]
+    with pytest.raises(ValueError, match="DIFFERENT value"):
+        _augment_rows_with_features(model, rows)

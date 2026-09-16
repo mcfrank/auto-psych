@@ -218,6 +218,31 @@ def _model_extra_featurizer(model):
     return getattr(model, _EXTRA_FEATURIZER_ATTR, None)
 
 
+# Columns a model's own featurizer may never return: the observed response and
+# the row bookkeeping. These are not features, and a model that redefines one is
+# wrong whatever value it happens to produce.
+PROTECTED_ROW_COLUMNS = frozenset(
+    {"chose_left", "participant_id", "trial_index", "sequence_a", "sequence_b"}
+)
+
+
+def _same_feature_value(existing: Any, computed: Any) -> bool:
+    """Whether a model's own feature value agrees with the column already present.
+
+    A self-contained model (one that computes the columns it binds, so it can be
+    fitted on a raw sequences-only CSV) is still handed featurized rows by the
+    paths that build stimuli for prediction — ground-truth generation and the
+    held-out trajectory evaluation both go through `feature_rows`. Recomputing a
+    column to the same value there is harmless and must not fail the run;
+    computing a DIFFERENT value under the same name is a model quietly
+    redefining a harness column, which must still fail loudly.
+    """
+    try:
+        return math.isclose(float(existing), float(computed), rel_tol=1e-9, abs_tol=1e-12)
+    except (TypeError, ValueError):
+        return False
+
+
 def _augment_rows_with_features(
     model, rows: List[Dict[str, Any]]
 ) -> List[Dict[str, Any]]:
@@ -264,10 +289,19 @@ def _augment_rows_with_features(
                 "the same feature names for every stimulus."
             )
         for name, value in extra.items():
-            if name in r:
+            if name in PROTECTED_ROW_COLUMNS:
+                raise ValueError(
+                    f"compute_features returned {name!r}, which collides with the "
+                    "response/bookkeeping columns a row must keep "
+                    f"({sorted(PROTECTED_ROW_COLUMNS)}); extra features must use "
+                    "new names."
+                )
+            if name in r and not _same_feature_value(r[name], value):
                 raise ValueError(
                     f"compute_features feature {name!r} collides with an existing "
-                    "column; extra features must use new names."
+                    f"column that holds a DIFFERENT value ({r[name]!r} vs "
+                    f"{value!r}); a model may recompute a column the harness also "
+                    "supplies, but it may not redefine what the name means."
                 )
             if isinstance(value, bool) or not isinstance(value, (int, float)):
                 raise ValueError(
