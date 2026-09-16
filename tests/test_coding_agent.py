@@ -90,3 +90,40 @@ def test_build_command_opencode_extra_args_precede_the_prompt():
         "opencode", prompt="p", allowed_dirs=[], model=None, extra_args=["--dir", "/x"],
     )
     assert cmd[-1] == "p" and "--dir" in cmd and cmd.index("--dir") < len(cmd) - 1
+
+
+def test_build_command_codex_exec_json_reads_the_prompt_from_stdin():
+    from src.runtime.coding_agent import prompt_via_stdin
+
+    cmd = build_command("codex", prompt="review this", allowed_dirs=[], model=None)
+    assert cmd[:2] == ["codex", "exec"]
+    assert "--json" in cmd and "--skip-git-repo-check" in cmd
+    assert cmd[cmd.index("--sandbox") + 1] == "danger-full-access"
+    assert cmd[cmd.index("--model") + 1] == "gpt-5.6-sol"
+    assert cmd[-1] == "-" and prompt_via_stdin("codex", "review this")
+
+
+def test_long_claude_prompt_goes_to_stdin_and_opencode_refuses_it():
+    from src.runtime.coding_agent import STDIN_PROMPT_THRESHOLD, prompt_via_stdin
+
+    short, long = "p", "x" * (STDIN_PROMPT_THRESHOLD + 1)
+    assert build_command("claude", prompt=short, allowed_dirs=[], model=None)[-2:] == ["-p", short]
+    assert build_command("claude", prompt=long, allowed_dirs=[], model=None)[-1] == "-p"
+    assert prompt_via_stdin("claude", long) and not prompt_via_stdin("claude", short)
+    with pytest.raises(ValueError, match="argv limit"):
+        build_command("opencode", prompt=long, allowed_dirs=[], model=None)
+
+
+def test_codex_stream_reads_last_message_and_sums_usage():
+    from src.runtime.coding_agent import _CodexStream
+
+    stream = _CodexStream()
+    stream.feed({"type": "item.completed", "item": {"type": "agent_message", "text": "first"}})
+    stream.feed({"type": "item.completed", "item": {"type": "command_execution", "command": "ls"}})
+    stream.feed({"type": "turn.completed", "usage": {"input_tokens": 1000, "cached_input_tokens": 600, "output_tokens": 50, "reasoning_output_tokens": 20}})
+    stream.feed({"type": "item.completed", "item": {"type": "agent_message", "text": "final answer"}})
+    stream.feed({"type": "turn.completed", "usage": {"input_tokens": 500, "cached_input_tokens": 0, "output_tokens": 10}})
+    assert stream.result_text() == "final answer"
+    usage = stream.usage_fields()
+    assert usage["input_tokens"] == 900 and usage["cache_read_tokens"] == 600
+    assert usage["output_tokens"] == 60 and usage["reasoning_tokens"] == 20

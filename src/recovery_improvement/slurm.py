@@ -95,9 +95,16 @@ def submit_sweep(repo: Path, env: dict[str, str], *, runner: Runner = subprocess
 
 
 def review_sbatch_command(
-    campaign: Campaign, iteration: int, after_job_id: Optional[str], mode: str
+    campaign: Campaign,
+    iteration: int,
+    after_job_id: Optional[str],
+    mode: str,
+    *,
+    begin: Optional[str] = None,
 ) -> list[str]:
-    """argv that submits the review (or finalize) job for ``iteration``."""
+    """argv that submits the review (or finalize) job for ``iteration``.
+    ``begin`` (``sbatch --begin``) delays the start, e.g. until a session
+    limit resets."""
     slurm = campaign.review_slurm
     log_dir = campaign.root / "slurm_logs"
     cmd = [
@@ -110,12 +117,20 @@ def review_sbatch_command(
         f"--mem={slurm['REVIEW_MEM']}",
         f"--output={log_dir}/{mode}_iter{iteration}_%j.out",
         f"--error={log_dir}/{mode}_iter{iteration}_%j.out",
+        # The chain has no watcher: if a review job dies for a reason the
+        # session-limit requeue does not cover (walltime, node failure, a bad
+        # sbatch), nothing downstream runs and nothing says so. Slurm mails the
+        # job owner, which survives this process exiting. No MailUser: Slurm
+        # defaults to the submitting account.
+        "--mail-type=FAIL,TIMEOUT",
         f"--export=ALL,CAMPAIGN_ROOT={campaign.root},ITERATION={iteration},MODE={mode}",
     ]
     if after_job_id:
         # afterany: the review must run even when the sweep failed — diagnosing
         # a broken sweep is exactly the agent's job.
         cmd.append(f"--dependency=afterany:{after_job_id}")
+    if begin:
+        cmd.append(f"--begin={begin}")
     cmd.append(str(campaign.driver_sbatch))
     return cmd
 
@@ -126,12 +141,13 @@ def submit_review(
     after_job_id: Optional[str],
     mode: str,
     *,
+    begin: Optional[str] = None,
     runner: Runner = subprocess.run,
 ) -> str:
     if not campaign.driver_sbatch.is_file():
         raise FileNotFoundError(f"review sbatch script not found: {campaign.driver_sbatch}")
     (campaign.root / "slurm_logs").mkdir(parents=True, exist_ok=True)
-    cmd = review_sbatch_command(campaign, iteration, after_job_id, mode)
+    cmd = review_sbatch_command(campaign, iteration, after_job_id, mode, begin=begin)
     proc = runner(
         cmd, env=scrubbed_environment(os.environ), text=True,
         stdout=subprocess.PIPE, stderr=subprocess.STDOUT,

@@ -189,10 +189,11 @@ def test_screen_still_drops_an_unbindable_model_loudly(tmp_path, monkeypatch, ca
             raise KeyError("participant_id")
 
     monkeypatch.setattr("src.models.pymc_inference.make_stim_data", fake_bind)
-    usable = eig_mod._screen_usable_models(
+    usable, dropped = eig_mod._screen_usable_models(
         ["needs_participant", "fine"], tmp_path, {"sequence_a": "HT"}
     )
     assert usable == ["fine"]
+    assert [d["model"] for d in dropped] == ["needs_participant"]
     assert "needs_participant" in capsys.readouterr().out
 
 
@@ -390,3 +391,72 @@ def test_missing_manifest_raises(tmp_path):
         eig_mod.design_exhaustive(
             tmp_path / "cognitive_models", lengths=(3,), n_select=2
         )
+
+
+# ── screening: which drops are legitimate ───────────────────────────
+
+
+def _probe_row(seq_a="HTH", seq_b="HHT"):
+    """A featurized stimulus row, as the design builds them."""
+    from src.subjective_randomness.features import featurize_stimulus
+
+    return {**featurize_stimulus(seq_a, seq_b), "chose_left": 0}
+
+
+def test_screen_drops_a_participant_level_model_and_reports_which(tmp_path, capsys):
+    """The one legitimate drop: a model whose only unbindable columns are
+    participant-level bookkeeping a stimulus row never carries. It is dropped,
+    said out loud, AND returned so the caller can record it in the run
+    artifacts."""
+    models_dir = _seed_with_participant_model(tmp_path)
+
+    usable, dropped = eig_mod._screen_usable_models(
+        eig_mod._load_model_names(models_dir), models_dir, _probe_row()
+    )
+
+    assert "participant_re" not in usable
+    assert "bayesian_fair_coin" in usable
+    assert [d["model"] for d in dropped] == ["participant_re"]
+    assert dropped[0]["missing"] == ["participant_id"]
+    assert "participant_re" in capsys.readouterr().out
+
+
+def test_screen_raises_when_the_probe_row_lacks_feature_columns(tmp_path):
+    """A model missing FEATURE columns is a configuration error, not a
+    participant-level mismatch: the design rows were built without the
+    featurizer these models read. Dropping it renormalizes EIG over whatever
+    happens to bind — which is how a raw-features run designed on one model of
+    three and still reported a plausible r = 0.965."""
+    models_dir = _seed(tmp_path)
+    raw_row = {"sequence_a": "HTH", "sequence_b": "HHT", "chose_left": 0}
+
+    with pytest.raises(RuntimeError, match="feature column"):
+        eig_mod._screen_usable_models(
+            eig_mod._load_model_names(models_dir), models_dir, raw_row
+        )
+
+
+def test_design_records_the_screened_out_models_as_an_artifact(tmp_path, monkeypatch):
+    """A drop must survive in the run tree, not only in a log line nobody reads."""
+    import numpy as np
+
+    models_dir = _seed_with_participant_model(tmp_path)
+    monkeypatch.setattr(
+        "src.models.pymc_inference.prior_predict_p_left_draws",
+        lambda names, d, rows, *, n_samples=200, seed=42: {
+            m: np.full((n_samples, len(rows)), p)
+            for m, p in zip(names, (0.8, 0.2, 0.5))
+        },
+    )
+    out_path = tmp_path / "screened_out.json"
+
+    eig_mod.design_exhaustive(
+        models_dir, featurize_path=FEATURIZE, lengths=(3,), n_select=1,
+        n_samples=5, n_scenarios=20, screened_out_path=out_path,
+    )
+
+    import json
+
+    recorded = json.loads(out_path.read_text(encoding="utf-8"))
+    assert [d["model"] for d in recorded] == ["participant_re"]
+    assert recorded[0]["missing"] == ["participant_id"]

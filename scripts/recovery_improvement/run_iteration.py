@@ -44,11 +44,18 @@ from src.recovery_improvement.iteration import (  # noqa: E402
     roots_to_review,
     run_iteration,
 )
+from src.recovery_improvement.session_limit import (  # noqa: E402
+    SessionLimitHit,
+    retry_begin_time,
+)
 from src.recovery_improvement.slurm import (  # noqa: E402
     make_run_agent,
     submit_review,
     submit_sweep,
 )
+
+MAX_LIMIT_WAITS = 12
+"""Give up requeueing after this many session-limit pauses of one iteration."""
 
 DEFAULT_PROMPT_TEMPLATE = here() / "scripts" / "recovery_improvement" / "review_prompt.md"
 
@@ -72,6 +79,35 @@ class Args:
     """Launch the declared sweep and chain the next review job automatically.
     Off by default: the review only prepares the sweep, and the user launches
     it with launch_next.sh after reading the prescription."""
+    plan: Path | None = None
+    """A review panel's plan.md to hand over: the agent is asked to implement
+    its first auto-psych item unless the evidence says otherwise."""
+
+
+def requeue_after_session_limit(campaign: Campaign, iteration: int, hit: SessionLimitHit) -> None:
+    """Resubmit this iteration to start just after the subscription window
+    resets. The partial work stays in place; the resumed session is told about
+    it. Bounded by MAX_LIMIT_WAITS so a misread message cannot loop forever."""
+    counter = campaign.iteration_dir(iteration) / "limit_waits"
+    waits = int(counter.read_text()) + 1 if counter.is_file() else 1
+    if waits > MAX_LIMIT_WAITS:
+        raise SystemExit(
+            f"iteration {iteration} hit the session limit {waits} times; not requeueing again. "
+            f"Last message: {hit.limit.message}"
+        )
+    counter.write_text(str(waits))
+    begin = retry_begin_time(hit.limit)
+    job_id = submit_review(campaign, iteration, None, MODE_REVIEW, begin=begin)
+    from src.recovery_improvement.iteration import append_journal  # local: keeps the import list short
+
+    append_journal(
+        campaign,
+        f"- requeued as job {job_id} to begin at {begin} (session-limit wait {waits}/{MAX_LIMIT_WAITS})",
+    )
+    print(
+        f"\nSession limit hit ({hit.limit.message}). Iteration {iteration} requeued as job {job_id} "
+        f"to begin at {begin}; it will resume the partial work."
+    )
 
 
 def main(args: Args) -> None:
@@ -84,6 +120,7 @@ def main(args: Args) -> None:
         return
 
     template = args.prompt_template.read_text(encoding="utf-8")
+    plan_text = args.plan.read_text(encoding="utf-8") if args.plan else ""
     if args.dry_run:
         out_dir = campaign.root / f"dryrun_iter{args.iteration}"
         out_dir.mkdir(parents=True, exist_ok=True)
@@ -93,22 +130,27 @@ def main(args: Args) -> None:
         prompt = compose_prompt(
             template, campaign=campaign, iteration=args.iteration,
             repo=campaign.iteration_dir(args.iteration) / REPO_DIRNAME,
-            digest=digest, venv_py=venv_py,
+            digest=digest, venv_py=venv_py, plan=plan_text,
         )
         (out_dir / PROMPT_NAME).write_text(prompt, encoding="utf-8")
         print(f"dry run: wrote {out_dir / DIGEST_NAME} and {out_dir / PROMPT_NAME}")
         return
 
-    result = run_iteration(
-        campaign,
-        args.iteration,
-        run_agent=make_run_agent(campaign, args.iteration),
-        prompt_template=template,
-        auto_launch=args.auto_launch,
-        submit_sweep=submit_sweep if args.auto_launch else None,
-        submit_review=functools.partial(submit_review, campaign) if args.auto_launch else None,
-        venv_py=venv_py,
-    )
+    try:
+        result = run_iteration(
+            campaign,
+            args.iteration,
+            run_agent=make_run_agent(campaign, args.iteration),
+            prompt_template=template,
+            auto_launch=args.auto_launch,
+            submit_sweep=submit_sweep if args.auto_launch else None,
+            submit_review=functools.partial(submit_review, campaign) if args.auto_launch else None,
+            venv_py=venv_py,
+            plan_text=plan_text,
+        )
+    except SessionLimitHit as hit:
+        requeue_after_session_limit(campaign, args.iteration, hit)
+        return
     print(f"\nIteration {result.iteration} of campaign {campaign.name}: decision={result.decision}")
     if result.sweep_jobs:
         print(
