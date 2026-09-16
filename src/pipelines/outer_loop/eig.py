@@ -30,7 +30,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import tyro
 from pyprojroot import here
@@ -74,7 +74,7 @@ def _load_model_weights(registry_path: Optional[Path]) -> Dict[str, float]:
 
 def _screen_usable_models(
     model_names: List[str], models_dir: Path, probe_row: Dict[str, Any]
-) -> List[str]:
+) -> Tuple[List[str], List[Dict[str, Any]]]:
     """Drop models that cannot be evaluated on a bare stimulus row.
 
     E.g. a carried-forward model with a participant-level pm.Data
@@ -90,11 +90,14 @@ def _screen_usable_models(
     """
     from src.models.pymc_inference import (  # type: ignore
         BROKEN_MODEL_CODE_ERRORS,
+        MissingStimulusColumns,
+        NON_STIMULUS_COLUMNS,
         load_pymc_model_cached,
         make_stim_data,
     )
 
     usable: List[str] = []
+    dropped: List[Dict[str, Any]] = []
     for name in model_names:
         try:
             make_stim_data(load_pymc_model_cached(name, models_dir), [probe_row])
@@ -105,12 +108,27 @@ def _screen_usable_models(
                 "stimulus-binding mismatch — fix the model rather than letting "
                 "EIG silently renormalize over the models that happen to load."
             ) from e
-        except Exception as e:  # noqa: BLE001 — unbindable model can't be scored
-            print(
-                f"  [drop] EIG: model {name!r} cannot be evaluated on a "
-                f"stimulus ({type(e).__name__}: {e}); excluding it from EIG.",
-                flush=True,
+        except MissingStimulusColumns as e:
+            if not e.only_non_stimulus:
+                raise RuntimeError(
+                    f"model {name!r} in {models_dir} needs feature column(s) "
+                    f"{[c for c in e.missing if c not in NON_STIMULUS_COLUMNS]} "
+                    f"that the design rows do not carry (available: "
+                    f"{list(e.available)}). That is a configuration error — the "
+                    "rows were built without the featurizer these models read — "
+                    "not a participant-level mismatch. Dropping it would "
+                    "renormalize EIG over whichever models happen to bind."
+                ) from e
+            reason = f"needs response-row column(s) {list(e.missing)}"
+            dropped.append(
+                {"model": name, "missing": list(e.missing), "reason": reason}
             )
+            print(f"  [drop] EIG: model {name!r} {reason}; excluding it from EIG.", flush=True)
+            continue
+        except Exception as e:  # noqa: BLE001 — unbindable model can't be scored
+            reason = f"cannot be evaluated on a stimulus ({type(e).__name__}: {e})"
+            dropped.append({"model": name, "missing": [], "reason": reason})
+            print(f"  [drop] EIG: model {name!r} {reason}; excluding it from EIG.", flush=True)
             continue
         usable.append(name)
     if not usable:
@@ -119,7 +137,7 @@ def _screen_usable_models(
             "(every model requires columns absent from stimuli, e.g. "
             "participant_id); cannot compute EIG."
         )
-    return usable
+    return usable, dropped
 
 
 def _feature_row(
@@ -190,6 +208,7 @@ def design_exhaustive(
     n_scenarios: int = 1000,
     seed: int = 42,
     random_seed: Optional[int] = None,
+    screened_out_path: Optional[Path] = None,
     responses_csv: Optional[Path] = None,
     fit_cache_dir: Optional[Path] = None,
     fit_draws: Optional[int] = None,
@@ -253,7 +272,16 @@ def design_exhaustive(
     if n_select > 0:
         model_names = _load_model_names(models_dir)
         model_weights = _load_model_weights(registry_path)
-        model_names = _screen_usable_models(model_names, models_dir, rows[0])
+        model_names, screened_out = _screen_usable_models(
+            model_names, models_dir, rows[0]
+        )
+        if screened_out_path is not None:
+            # Written even when empty: "the screen ran and dropped nothing" and
+            # "nobody looked" must not be the same absent file.
+            Path(screened_out_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(screened_out_path).write_text(
+                json.dumps(screened_out, indent=2), encoding="utf-8"
+            )
         if model_weights and not any(model_weights.get(n, 0.0) > 0 for n in model_names):
             print(
                 f"  [design] registry weights over {sorted(model_weights)} do not "

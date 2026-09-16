@@ -60,6 +60,12 @@ $sweep_defaults
 
 $repair_feedback
 
+## Review-panel plan
+
+If a plan is given here, it is the consensus of a multi-agent review panel that read the same evidence. Implement its **first auto-psych item** this iteration unless you find, and document in the prescription, evidence that it is wrong; the rest of its ranking is your prescription's starting point.
+
+$plan
+
 ## Earlier prescriptions
 
 $previous_prescriptions

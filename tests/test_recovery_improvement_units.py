@@ -213,6 +213,8 @@ def test_review_sbatch_command_chains_on_the_analysis_job(tmp_path):
     cmd = review_sbatch_command(campaign, 2, "555", "review")
     assert cmd[0] == "sbatch" and "--parsable" in cmd
     assert "--dependency=afterany:555" in cmd
+    # The chain is unwatched, so a dying review job must announce itself.
+    assert "--mail-type=FAIL,TIMEOUT" in cmd
     assert "--partition=hns" in cmd and "--time=04:00:00" in cmd
     export = next(a for a in cmd if a.startswith("--export="))
     assert f"CAMPAIGN_ROOT={tmp_path}" in export and "ITERATION=2" in export and "MODE=review" in export
@@ -233,3 +235,76 @@ def test_sweep_env_merges_defaults_overrides_and_locations(tmp_path, repo):
     nr = parse_next_run(path, repo=repo, defaults=campaign.sweep_defaults)
     env = sweep_env(nr, campaign, repo=repo, work_root=tmp_path / "sweep")
     assert env == {"N_REPEATS": "2", "BASE_SEED": "100", "REPO": str(repo), "WORK_ROOT": str(tmp_path / "sweep")}
+
+
+# --- session limit -----------------------------------------------------------------
+
+from datetime import datetime  # noqa: E402
+from zoneinfo import ZoneInfo  # noqa: E402
+
+from src.recovery_improvement.session_limit import (  # noqa: E402
+    detect_session_limit,
+    retry_begin_time,
+)
+
+LIMIT_MSG = "You've hit your session limit · resets 12am (America/Los_Angeles)"
+
+
+def test_session_limit_message_is_detected_with_its_reset_time():
+    now = datetime(2026, 9, 7, 20, 2, tzinfo=ZoneInfo("America/Los_Angeles"))
+    limit = detect_session_limit(LIMIT_MSG, now=now)
+    assert limit is not None
+    assert limit.reset_at == datetime(2026, 9, 8, 0, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
+    assert retry_begin_time(limit, now=now) == "2026-09-08T00:05:00"
+
+
+def test_session_limit_pm_time_already_past_rolls_to_tomorrow():
+    now = datetime(2026, 9, 8, 16, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
+    limit = detect_session_limit("You've hit your usage limit · resets 3pm", now=now)
+    assert limit.reset_at == datetime(2026, 9, 9, 15, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
+
+
+def test_session_limit_without_a_time_falls_back_to_an_hour():
+    now = datetime(2026, 9, 8, 16, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
+    limit = detect_session_limit("You've reached your limit for now.", now=now)
+    assert limit is not None and limit.reset_at is None
+    assert retry_begin_time(limit, now=now) == "2026-09-08T17:00:00"
+
+
+def test_ordinary_result_text_is_not_a_limit():
+    assert detect_session_limit("Done. Wrote prescription.md and next_run.env.") is None
+
+
+def test_other_limit_phrasings_and_relative_reset_times_are_parsed():
+    now = datetime(2026, 9, 8, 16, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
+    limit = detect_session_limit("Usage limit exceeded. Try again in 4h 30m.", now=now)
+    assert limit is not None
+    assert limit.reset_at == datetime(2026, 9, 8, 20, 30, tzinfo=ZoneInfo("America/Los_Angeles"))
+    limit = detect_session_limit("You have reached your weekly limit; available again in 1 hour and 5 minutes", now=now)
+    assert limit.reset_at == datetime(2026, 9, 8, 17, 5, tzinfo=ZoneInfo("America/Los_Angeles"))
+    limit = detect_session_limit("Rate limit reached, try again at 9 pm", now=now)
+    assert limit.reset_at == datetime(2026, 9, 8, 21, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
+    # A note that merely discusses limits, past the first 200 characters, is not a hit.
+    assert detect_session_limit("x" * 250 + " we hit your usage limit of candidates per round") is None
+
+
+def test_an_unusable_model_is_detected_and_is_not_a_session_limit():
+    """Claude Code exits 0 with this as its result text when the configured
+    model is not available to the login (which happened when a re-login
+    dropped access to claude-fable-5-1 mid-campaign). No repair round can fix
+    it, so it must be told apart from a session limit and from a genuine
+    missing deliverable."""
+    from src.recovery_improvement.session_limit import (
+        detect_session_limit,
+        detect_unusable_model,
+    )
+
+    msg = (
+        "There's an issue with the selected model (claude-fable-5-1). It may not "
+        "exist or you may not have access to it. Run --model to pick a different model."
+    )
+    assert detect_unusable_model(msg) == "claude-fable-5-1"
+    assert detect_session_limit(msg) is None
+    assert detect_unusable_model("Done. Wrote prescription.md.") is None
+    # A note that merely discusses model access is not a configuration failure.
+    assert detect_unusable_model("x" * 250 + " issue with the selected model (foo)") is None

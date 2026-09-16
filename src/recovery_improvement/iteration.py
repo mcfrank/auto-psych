@@ -40,6 +40,11 @@ from src.recovery_improvement.next_run import (
     parse_next_run,
     sweep_env,
 )
+from src.recovery_improvement.session_limit import (
+    SessionLimitHit,
+    detect_session_limit,
+    detect_unusable_model,
+)
 
 REPO_DIRNAME = "repo"
 SWEEP_DIRNAME = "sweep"
@@ -179,8 +184,10 @@ def compose_prompt(
     digest: str,
     repair_feedback: str = "",
     venv_py: str = "python",
+    plan: str = "",
 ) -> str:
-    """Fill the prompt template (``$placeholder`` syntax; unknown ones raise)."""
+    """Fill the prompt template (``$placeholder`` syntax; unknown ones raise).
+    ``plan`` is a review panel's consensus plan, when one is handed over."""
     journal = (
         campaign.journal_path.read_text(encoding="utf-8").strip()
         if campaign.journal_path.is_file()
@@ -204,6 +211,7 @@ def compose_prompt(
         "previous_prescriptions": previous_prescriptions(campaign, iteration),
         "journal": journal or "(empty)",
         "repair_feedback": repair_feedback,
+        "plan": plan.strip() or "(none — no panel plan was handed over; work from the evidence)",
     }
     try:
         return string.Template(template).substitute(mapping)
@@ -253,6 +261,77 @@ def read_decision(iter_dir: Path, repo: Path, campaign: Campaign) -> tuple[str, 
     )
 
 
+# Artefacts of an attempt that get renamed ``<stem>.attempt<k><suffix>`` when
+# the iteration is resumed, so no transcript or brief is overwritten.
+_ATTEMPT_ARTEFACTS = (AGENT_LOG_NAME, PROMPT_NAME, "claude_stream.repair1.jsonl", "prompt.repair1.md")
+
+
+def archive_previous_attempt(iter_dir: Path, repo: Path) -> str:
+    """If the iteration was interrupted (a session ran but never completed),
+    keep the previous attempt's transcript/brief under ``*.attempt<k>.*`` and
+    return a note for the new session describing what it left behind.
+    Returns "" for a fresh iteration."""
+    if not (iter_dir / AGENT_LOG_NAME).exists():
+        return ""
+    attempt = 1 + len(list(iter_dir.glob("claude_stream.attempt*.jsonl")))
+    for name in _ATTEMPT_ARTEFACTS:
+        path = iter_dir / name
+        if path.exists():
+            stem, suffix = name.split(".", 1)
+            path.rename(iter_dir / f"{stem}.attempt{attempt}.{suffix}")
+    present = [
+        name for name in (PRESCRIPTION_NAME, NEXT_RUN_NAME, STOP_NAME)
+        if (iter_dir / name).exists()
+    ]
+    scratch = iter_dir / "scratch"
+    scratch_files = sorted(p.name for p in scratch.iterdir()) if scratch.is_dir() else []
+    dirty = git(repo, "status", "--porcelain")
+    commits = git(repo, "log", "--oneline", "-10")
+    return (
+        f"## RESUMING AN INTERRUPTED SESSION (attempt {attempt + 1})\n\n"
+        "A previous session of you worked on this iteration but was cut off before the "
+        "deliverables were complete (e.g. by the subscription's session limit). Its work is "
+        "still here — do not start over. Read what exists, then finish the contract "
+        "(prescription.md, committed clean tree, next_run.env or STOP, journal entry).\n\n"
+        f"- previous transcript: `{iter_dir / f'claude_stream.attempt{attempt}.jsonl'}` "
+        "(stream-json; grep the `text` fields for its reasoning)\n"
+        f"- deliverable files already present: {', '.join(present) if present else 'none'}\n"
+        f"- scratch files: {', '.join(scratch_files) if scratch_files else 'none'}\n"
+        f"- `git status --porcelain` in the repo:\n```\n{dirty or '(clean)'}\n```\n"
+        f"- recent commits on the branch:\n```\n{commits}\n```\n"
+    )
+
+
+def _raise_if_unusable_model(campaign: Campaign, result_text: str) -> None:
+    """Stop at once if the configured review model is unavailable.
+
+    No repair round can fix a model the login cannot use, and burning one
+    costs a session and buries the real message under a deliverables error.
+    """
+    model = detect_unusable_model(result_text)
+    if model is None:
+        return
+    raise RuntimeError(
+        f"the review model {model!r} is not available to this login "
+        f"(claude reported: {result_text.strip()[:200]}). Set REVIEW_MODEL in "
+        f"{campaign.root / 'campaign.env'} to a model the login can use, then "
+        "resubmit this iteration; its partial work is kept and resumed."
+    )
+
+
+def _raise_if_session_limit(campaign: Campaign, result_text: str) -> None:
+    """The subscription's session limit ends the session with a message in the
+    result text (Claude still reports subtype "success"). Stop here — no repair
+    round, nothing launched — so the CLI can requeue the iteration for after
+    the reset; the resume path picks the partial work up."""
+    limit = detect_session_limit(result_text)
+    if limit is None:
+        return
+    when = limit.reset_at.isoformat() if limit.reset_at else "unknown"
+    append_journal(campaign, f"- session limit hit: {limit.message} (reset at {when}); iteration paused")
+    raise SessionLimitHit(limit)
+
+
 def _repair_feedback(problems: list[str], attempt: int) -> str:
     bullets = "\n".join(f"- {p}" for p in problems)
     return (
@@ -278,6 +357,7 @@ def run_iteration(
     submit_sweep: Optional[SubmitSweep] = None,
     submit_review: Optional[SubmitReview] = None,
     venv_py: str = "python",
+    plan_text: str = "",
 ) -> IterationResult:
     if auto_launch and (submit_sweep is None or submit_review is None):
         raise ValueError("auto_launch=True needs both submit_sweep and submit_review")
@@ -288,32 +368,34 @@ def run_iteration(
             f"iteration {iteration} is outside 1..{campaign.max_iterations} (MAX_ITERATIONS)"
         )
     iter_dir = campaign.iteration_dir(iteration)
-    for name in (NEXT_RUN_NAME, STOP_NAME):
-        if (iter_dir / name).exists():
-            raise RuntimeError(
-                f"{iter_dir / name} already exists: iteration {iteration} already ran. "
-                "Remove its deliverables to re-run it, or start a new campaign."
-            )
+    if (iter_dir / JOBS_NAME).exists():
+        raise RuntimeError(
+            f"{iter_dir / JOBS_NAME} exists: iteration {iteration} already completed. "
+            "Start the next iteration instead, or a new campaign."
+        )
     iter_dir.mkdir(parents=True, exist_ok=True)
 
     repo = prepare_repo(campaign, iteration)
+    resume_note = archive_previous_attempt(iter_dir, repo)
     roots = roots_to_review(campaign, iteration)
     digest = build_digest(roots, primary_label=primary_label(campaign, iteration))
     (iter_dir / DIGEST_NAME).write_text(digest, encoding="utf-8")
 
     append_journal(
         campaign,
-        f"## Iteration {iteration} — {_timestamp()}\n\n"
+        f"## Iteration {iteration}{' (resumed)' if resume_note else ''} — {_timestamp()}\n\n"
         + "\n".join(f"- reviewed `{label}`: `{root}`" for label, root in roots)
         + f"\n- repo: `{repo}` (branch `{campaign.branch_name(iteration)}`)",
     )
 
     prompt = compose_prompt(
         prompt_template, campaign=campaign, iteration=iteration, repo=repo,
-        digest=digest, venv_py=venv_py,
+        digest=digest, repair_feedback=resume_note, venv_py=venv_py, plan=plan_text,
     )
     (iter_dir / PROMPT_NAME).write_text(prompt, encoding="utf-8")
-    success, _ = run_agent(prompt, cwd=repo, log_path=iter_dir / AGENT_LOG_NAME)
+    success, result_text = run_agent(prompt, cwd=repo, log_path=iter_dir / AGENT_LOG_NAME)
+    _raise_if_unusable_model(campaign, result_text)
+    _raise_if_session_limit(campaign, result_text)
 
     problems = check_deliverables(iter_dir, repo, campaign)
     repairs = 0
@@ -322,12 +404,13 @@ def run_iteration(
         prompt = compose_prompt(
             prompt_template, campaign=campaign, iteration=iteration, repo=repo,
             digest=digest, repair_feedback=_repair_feedback(problems, repairs),
-            venv_py=venv_py,
+            venv_py=venv_py, plan=plan_text,
         )
         (iter_dir / f"prompt.repair{repairs}.md").write_text(prompt, encoding="utf-8")
-        success, _ = run_agent(
+        success, result_text = run_agent(
             prompt, cwd=repo, log_path=iter_dir / f"claude_stream.repair{repairs}.jsonl"
         )
+        _raise_if_session_limit(campaign, result_text)
         problems = check_deliverables(iter_dir, repo, campaign)
     if problems:
         raise RuntimeError(
