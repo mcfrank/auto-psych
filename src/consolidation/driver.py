@@ -1,14 +1,16 @@
 """Pure parts of the consolidation driver.
 
 The consolidation plan (``docs/consolidation_plan_2026_09.md``) is executed as
-nine phases, P0..P8, one Claude Code session each. State lives on disk under
-``<work_root>/progress/`` as marker files the agent writes and the driver
-validates:
+twelve phases, P0..P11, one Claude Code session each. State lives on disk
+under ``<work_root>/progress/`` as marker files the agent writes and the
+driver validates:
 
 * ``P<k>.done`` — first line ``commit: <sha>`` (must equal HEAD), then a summary;
 * ``P<k>.blocked`` — the agent hit a stop condition; the job stops;
-* ``smoke_jobs.json`` (P7) — the Slurm ids the driver must wait on before P8;
-* ``P7.retry*`` — P8 asked for another smoke round (bounded).
+* ``<phase.jobs_file>`` — for a phase that submits Slurm jobs (P7 smoke, P9
+  sweep, P10 evaluation): the ids the driver must wait on, per label;
+* ``P<k>.retry*`` — a later phase asked for another round of ``P<k>``
+  (bounded by ``Phase.max_rounds``).
 
 Everything here is deterministic and unit-tested; the process that spawns
 Claude, git and Slurm is ``scripts/consolidation/run_consolidation.py``.
@@ -26,15 +28,11 @@ from typing import Mapping, Optional, Sequence
 PLAN_REL = Path("docs/consolidation_plan_2026_09.md")
 BRANCH = "consolidate/2026-09"
 PROGRESS_DIRNAME = "progress"
-SMOKE_JOBS_NAME = "smoke_jobs.json"
 BASELINE_FAILING_NAME = "baseline_failing_tests.txt"
 BASELINE_COLLECTION_NAME = "baseline_collection_errors.txt"
-VERDICT_NAME = "VERDICT.md"
-HANDOFF_NAME = "HANDOFF.md"
-MAX_SMOKE_ROUNDS = 2
 
 # Tools the agent must never use, enforced by Claude Code on top of the plan's
-# rules. ``sbatch`` is added for every phase but the smoke submission (P7).
+# rules. ``sbatch`` is added for every phase that does not submit jobs.
 BASE_DISALLOWED_TOOLS = (
     "Bash(scancel:*)",
     "Bash(scontrol update:*)",
@@ -51,7 +49,18 @@ class Phase:
     id: str
     title: str
     allows_sbatch: bool = False
-    waits_for_smoke: bool = False
+    jobs_file: Optional[str] = None
+    """File under progress/ this phase must write; the driver requeues
+    itself ``afterany`` every job id in it."""
+    required_labels: tuple[str, ...] = ()
+    """Labels (arms) that must be present in ``jobs_file``."""
+    waits_for: Optional[str] = None
+    """A jobs file an earlier phase wrote; every id in it must have left the
+    queue before this phase may start."""
+    requires_files: tuple[str, ...] = ()
+    """Files under the work root that must exist when the phase is done."""
+    max_rounds: Optional[int] = None
+    """How many times the phase may run (``P<k>.retry*`` markers re-open it)."""
 
 
 PHASES: tuple[Phase, ...] = (
@@ -62,8 +71,28 @@ PHASES: tuple[Phase, ...] = (
     Phase("P4", "Reimplement the race presentation"),
     Phase("P5", "Reimplement lens rotation"),
     Phase("P6", "Documentation, decision record, full checks"),
-    Phase("P7", "Submit the two smoke chains", allows_sbatch=True),
-    Phase("P8", "Smoke verdict and handoff", waits_for_smoke=True),
+    Phase(
+        "P7", "Submit the two smoke chains",
+        allows_sbatch=True, jobs_file="smoke_jobs.json",
+        required_labels=("featurized", "raw"), max_rounds=2,
+    ),
+    Phase(
+        "P8", "Smoke verdict and handoff",
+        waits_for="smoke_jobs.json", requires_files=("VERDICT.md", "HANDOFF.md"),
+    ),
+    Phase(
+        "P9", "Launch the 5-repeat recovery sweep",
+        allows_sbatch=True, jobs_file="sweep_jobs.json", required_labels=("raw",),
+    ),
+    Phase(
+        "P10", "Submit the RMSE evaluation job",
+        waits_for="sweep_jobs.json", allows_sbatch=True,
+        jobs_file="analysis_jobs.json", required_labels=("analysis",), max_rounds=2,
+    ),
+    Phase(
+        "P11", "Results: the RMSE evaluation report",
+        waits_for="analysis_jobs.json", requires_files=("RESULTS.md",),
+    ),
 )
 
 
@@ -76,6 +105,15 @@ def phase_by_id(phase_id: str) -> Phase:
         if phase.id == phase_id:
             return phase
     raise KeyError(f"no consolidation phase {phase_id!r}; known: {[p.id for p in PHASES]}")
+
+
+def jobs_file_owner(jobs_file: str) -> Phase:
+    """The phase that writes ``jobs_file`` (so a waiting phase knows which
+    labels the file must carry)."""
+    for phase in PHASES:
+        if phase.jobs_file == jobs_file:
+            return phase
+    raise KeyError(f"no phase writes the jobs file {jobs_file!r}")
 
 
 def disallowed_tools(phase: Phase) -> tuple[str, ...]:
@@ -110,6 +148,12 @@ def next_phase(progress_dir: Path) -> Optional[Phase]:
     return None
 
 
+def phase_round(progress_dir: Path, phase_id: str) -> int:
+    """1 for the first run of a phase; +1 per ``P<k>.retry*`` marker a later
+    phase wrote to re-open it."""
+    return 1 + len(list(progress_dir.glob(f"{phase_id}.retry*")))
+
+
 _COMMIT_LINE = re.compile(r"^commit:\s*([0-9a-f]{7,40})\s*$")
 
 
@@ -122,6 +166,7 @@ def validate_done_marker(
     work_root: Path,
 ) -> list[str]:
     """Every way the phase's deliverables fall short; empty means accepted."""
+    phase = phase_by_id(phase_id)
     problems: list[str] = []
     marker = progress_dir / f"{phase_id}.done"
     if not marker.is_file():
@@ -147,48 +192,48 @@ def validate_done_marker(
         for name in (BASELINE_FAILING_NAME, BASELINE_COLLECTION_NAME):
             if not (progress_dir / name).is_file():
                 problems.append(f"P0 must write {progress_dir / name}")
-    if phase_id == "P7":
+    if phase.jobs_file:
         try:
-            parse_smoke_jobs(progress_dir / SMOKE_JOBS_NAME)
+            parse_jobs_file(progress_dir / phase.jobs_file, phase.required_labels)
         except ValueError as exc:
             problems.append(str(exc))
-    if phase_id == "P8":
-        for name in (VERDICT_NAME, HANDOFF_NAME):
-            if not (work_root / name).is_file():
-                problems.append(f"P8 must write {work_root / name}")
+    for name in phase.requires_files:
+        if not (work_root / name).is_file():
+            problems.append(f"{phase_id} must write {work_root / name}")
     return problems
 
 
-# --- smoke jobs -------------------------------------------------------------------
+# --- jobs files ---------------------------------------------------------------------
 
 
-def parse_smoke_jobs(path: Path) -> list[str]:
-    """Every Slurm job id the P8 phase must wait for, in file order.
-    Raises ``ValueError`` on a missing file, a missing arm, or a non-numeric id."""
+def parse_jobs_file(path: Path, required_labels: Sequence[str]) -> list[str]:
+    """Every Slurm job id in a jobs file, in file order. The file maps a label
+    (an arm, or ``analysis``) to ``{"work_root": ..., "job_ids": [...]}``.
+    Raises ``ValueError`` on a missing file, bad JSON, a missing required
+    label, an empty id list, or a non-numeric id."""
     if not path.is_file():
         raise ValueError(f"{path.name} is missing from {path.parent}")
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
     except json.JSONDecodeError as exc:
         raise ValueError(f"{path} is not valid JSON: {exc}") from exc
+    if not isinstance(data, dict):
+        raise ValueError(f"{path}: expected an object keyed by label")
+    for label in required_labels:
+        if label not in data:
+            raise ValueError(f"{path}: required label {label!r} is absent")
     ids: list[str] = []
-    for arm in ("featurized", "raw"):
-        entry = data.get(arm)
+    for label, entry in data.items():
         if not isinstance(entry, dict) or not entry.get("work_root"):
-            raise ValueError(f"{path}: arm {arm!r} must be an object with work_root and job_ids")
+            raise ValueError(f"{path}: label {label!r} must be an object with work_root and job_ids")
         job_ids = entry.get("job_ids")
         if not isinstance(job_ids, list) or not job_ids:
-            raise ValueError(f"{path}: arm {arm!r} has no job_ids")
+            raise ValueError(f"{path}: label {label!r} has no job_ids")
         for job_id in job_ids:
             if not str(job_id).isdigit():
-                raise ValueError(f"{path}: arm {arm!r} has a non-numeric job id {job_id!r}")
+                raise ValueError(f"{path}: label {label!r} has a non-numeric job id {job_id!r}")
             ids.append(str(job_id))
     return ids
-
-
-def smoke_round(progress_dir: Path) -> int:
-    """1 for the first smoke submission; +1 per ``P7.retry*`` marker P8 wrote."""
-    return 1 + len(list(progress_dir.glob("P7.retry*")))
 
 
 _ARRAY_ID = re.compile(r"^(\d+)")
@@ -208,7 +253,7 @@ def jobs_still_queued(squeue_output: str) -> set[str]:
     return ids
 
 
-# --- prompt, env, requeue -------------------------------------------------------------
+# --- prompt, env, requeue ------------------------------------------------------------
 
 
 def compose_prompt(template: str, mapping: Mapping[str, str]) -> str:

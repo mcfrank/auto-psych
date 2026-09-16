@@ -27,8 +27,12 @@ decision, after review:
    seed sets, collision rule, pool selection, manifest-entry scrub, verifier)
    is wanted.
 5. **Make raw mode genuinely raw end to end**, then verify it with a smoke run.
-   The raw-vs-featurized *default* decision is made later, from a same-commit
-   24-cell comparison the user launches (§9). Not in this job.
+   After the smoke verdict the job itself launches a **5-repeat recovery
+   sweep** of the arm(s) named in `SWEEP_ARMS` (the user chose `raw`: 5
+   repeats × 4 ground truths = 20 cells), submits the RMSE evaluation and
+   writes `RESULTS.md` (P9–P11). The raw-vs-featurized *default* decision
+   needs a featurized arm from the same commit; §9 keeps that gate for when
+   one is run.
 6. **Honest metrics**: probability RMSE primary, expected Bernoulli KL regret
    secondary, Pearson r descriptive; per-repeat paired differences, no
    stimulus bootstrap. Add an offline all-admitted-models oracle diagnostic
@@ -99,6 +103,10 @@ before the agent starts.
 | `main` at submit time | `refs/consolidation/main` | `$MAIN_SHA` (from `consolidation.env`) |
 | leakage-audit patch (fallback only) | `$LEAKAGE_PATCH` | sha256 `cf3be3eed6373dda6192e3729971c47fd2884afc44651e511cc686b7b0b2764c` |
 | arm C archived run (read-only evidence) | `$ARMC_RUN_ROOT` | — |
+| iteration 3 sweep (3 repeats, seeds 101–103; comparison) | `$ITER3_SWEEP` | — |
+| iteration 2 sweep (5 repeats, seeds 101–105; comparison) | `$ITER2_SWEEP` | — |
+| pre-campaign baseline sweep (5 repeats, seeds 101–105; comparison) | `$BASELINE_SWEEP` | — |
+| sweep knobs for P9 | `$SWEEP_ARMS`, `$SWEEP_N_REPEATS`, `$SWEEP_BASE_SEED`, `$SWEEP_MAX_PARALLEL` | from `consolidation.env` |
 
 Ancestry (verified): iterations 4 and 5 descend from iteration 3; arm C
 descends from iteration 2 (`bd7f032`), so it does **not** contain iteration 3.
@@ -123,9 +131,10 @@ descends from iteration 2 (`bd7f032`), so it does **not** contain iteration 3.
   node ID, never by count.
 - **Static checks:** `git diff --check`; `$VENV_PY -m compileall -q src scripts`;
   `$VENV_PY -m pytest -q tests/test_python_sources_compile.py`.
-- **Slurm:** you may `sbatch` only in P7 (two smoke chains) — nothing else.
-  Never `scancel`, never `scontrol`, never poll or sleep-wait on a job. The
-  driver handles waiting by requeueing itself after the smoke jobs.
+- **Slurm:** you may `sbatch` only in P7 (two smoke chains), P9 (the
+  recovery sweep) and P10 (the evaluation job) — nothing else. Never
+  `scancel`, never `scontrol`, never poll or sleep-wait on a job. The driver
+  handles waiting by requeueing itself after the jobs a phase submitted.
 - **TDD, as the repo requires:** every behaviour change starts from a failing
   test. Run the relevant tests after each green step; run the fast suite before
   each phase's commit.
@@ -145,8 +154,8 @@ descends from iteration 2 (`bd7f032`), so it does **not** contain iteration 3.
 
 ## 3. Phase contract (enforced by the driver)
 
-Phases run in order: **P0, P1, P2, P3, P4, P5, P6, P7, P8**. Each session is
-told its phase. When the phase's acceptance checks pass:
+Phases run in order: **P0 … P11**. Each session is told its phase. When the
+phase's acceptance checks pass:
 
 1. commit everything on `consolidate/2026-09` (tree clean:
    `git status --porcelain` prints nothing);
@@ -375,6 +384,21 @@ Existing `pearson_r`/`rmse` values must not change.
    the cell.
 5. These CLIs are user-side evaluation tools. Do not reference them from any
    agent-facing prompt or context.
+6. New CLI `scripts/subjective_randomness/recovery_report.py` (tyro):
+   `--sweep <root> --label <name> [--compare <label>=<paired dir>]...
+   [--oracle-glob <glob>] --out <markdown path>`. Reads every cell's
+   `holdout.csv` final step (`rmse`, `kl_regret`, `pearson_r`, `best_model`;
+   legacy files without the new columns show `n/a`, never a fabricated
+   value) and writes, as markdown plus a CSV beside it: per ground truth the
+   final-step RMSE mean ± sd, median, min, max and n over repeats, the same
+   for KL regret, Pearson r as descriptive, and the best model per cell. For
+   each `--compare` dir it reads that dir's `paired.csv` and adds per-cell
+   rows and per-ground-truth mean/median/min/max deltas. For the oracle
+   files it adds, per ground truth, the number of cells whose oracle−incumbent
+   RMSE gap exceeds 0.02 and the number of lost-incumbent events. A missing
+   compare dir or sweep root is an error. Test on a synthetic sweep (2 ground
+   truths × 3 repeats) with exact expected means, a legacy-CSV cell, and a
+   missing compare dir.
 
 **Accept:** new tests pass; the regression test proves old values unchanged;
 `tests/test_subjective_randomness_holdout_recovery.py` and the reporting tests
@@ -523,10 +547,127 @@ queue.
    path.
 5. Write `$WORK_ROOT/HANDOFF.md` for the user: the final commit SHA; how to
    fetch the branch into `main` (`git fetch $REPO consolidate/2026-09`); the
-   verdict summary; and the **exact commands** for the 24-cell same-commit
-   comparison (§9), which the user launches — you do not.
+   verdict summary; what P9 is about to launch (arms, repeats, cost); and
+   the commands for a featurized arm from the same commit (§9) for the user
+   to run later if they want the raw-vs-featurized gate.
+6. State clearly in `VERDICT.md` whether the **raw smoke passed every
+   criterion**: P9 launches the raw sweep only on a pass.
 
 **Accept:** `VERDICT.md` and `HANDOFF.md` exist; tree clean; `P8.done`.
+
+### P9 — Launch the 5-repeat recovery sweep (may `sbatch`)
+
+**Preconditions:** `VERDICT.md` (P8) says the raw smoke passed every
+criterion. If it did not and P7's retry limit is exhausted, write
+`P9.blocked` — a 20-cell sweep on an unverified raw mode is the user's call.
+
+**Do**, from `$REPO` (`REPO` exported = the clone; `.secrets` present). The
+arms come from `SWEEP_ARMS` (`raw`, `featurized` or `both`); the knobs from
+`SWEEP_N_REPEATS`, `SWEEP_BASE_SEED`, `SWEEP_MAX_PARALLEL` in the inputs:
+
+```bash
+cd "$REPO"; export REPO="$REPO"
+# raw arm (SWEEP_ARMS = raw or both):
+N_REPEATS=$SWEEP_N_REPEATS BASE_SEED=$SWEEP_BASE_SEED MAX_PARALLEL=$SWEEP_MAX_PARALLEL \
+  WORK_ROOT="$WORK_ROOT/sweep_raw" \
+  bash scripts/subjective_randomness/slurm/run_raw_features_arm.sh
+sbatch --dependency=afterany:<raw analysis id> --job-name=verify_raw_sweep \
+  --partition=normal --time=00:30:00 --cpus-per-task=1 --mem=4GB \
+  --output="$WORK_ROOT/sweep_raw/slurm_logs/verify_%j.out" \
+  --export=ALL,WORK_ROOT="$WORK_ROOT/sweep_raw",ALL_JOB_IDS="<setup>,<array>,<analysis>" \
+  scripts/subjective_randomness/slurm/verify_raw_features_run.sh
+# featurized arm (SWEEP_ARMS = featurized or both):
+N_REPEATS=$SWEEP_N_REPEATS BASE_SEED=$SWEEP_BASE_SEED MAX_PARALLEL=$SWEEP_MAX_PARALLEL \
+  WORK_ROOT="$WORK_ROOT/sweep_featurized" \
+  bash scripts/subjective_randomness/slurm/submit_holdout_test_retest.sh
+```
+
+Read the submit scripts first; adjust only a changed knob name. The array's
+default walltime is one day per task and each task needs its own cores; do
+not raise `MAX_PARALLEL`. Write `$WORK_ROOT/progress/sweep_jobs.json` with
+one entry per arm launched, e.g.
+`{"raw": {"work_root": ".../sweep_raw", "job_ids": ["<setup>", "<array>", "<analysis>", "<verify>"]}}`.
+Record the expected cost (about one earlier sweep's Gemini spend per arm)
+and wall time (about a day) in the done file. Do not wait for the jobs.
+
+**Accept:** `sweep_jobs.json` exists with numeric ids for every arm in
+`SWEEP_ARMS`; tree clean; `P9.done`.
+
+### P10 — Submit the RMSE evaluation job (may `sbatch`)
+
+**Preconditions (driver-checked):** every id in `sweep_jobs.json` has left
+the queue.
+
+**Do:**
+1. If `scripts/subjective_randomness/recovery_report.py` does not exist in
+   the clone (P3 ran on an earlier revision of this plan), add it now to the
+   P3 item 6 specification, tests first, and commit.
+2. Add `scripts/subjective_randomness/slurm/evaluate_recovery_sweep.sbatch`
+   (commit it): a Slurm job (`--partition=normal --time=1-00:00:00
+   --cpus-per-task=8 --mem=32GB`, caches off `$HOME`, cwd `$REPO`, Python
+   `$VENV_PY`) that runs, each step failing loudly, for every arm in
+   `sweep_jobs.json`:
+   a. `bash scripts/subjective_randomness/slurm/verify_raw_features_run.sh`
+      with `WORK_ROOT=<sweep_raw>` (raw arm only; its `VERDICT.md` is part
+      of the engineering gate);
+   b. `compare_matched_cells.py --sweep-a $ITER2_SWEEP --sweep-b <sweep> --out $WORK_ROOT/analysis/<arm>_vs_iter2`,
+      the same against `$ITER3_SWEEP` (`_vs_iter3`) and `$BASELINE_SWEEP`
+      (`_vs_baseline`), and, if both arms ran,
+      `--sweep-a <sweep_featurized> --sweep-b <sweep_raw> --out $WORK_ROOT/analysis/raw_vs_featurized`;
+   c. `oracle_admitted_models.py --result <cell>/holdout.json --steps final`
+      for every `run<r>/<gt>` cell of the sweep;
+   d. `recovery_report.py --sweep <sweep> --label consolidated_<arm>
+      --compare vs_iter2=… --compare vs_iter3=… --compare vs_baseline=…
+      [--compare raw_vs_featurized=…] --oracle-glob '<sweep>/run*/*/oracle.json'
+      --out $WORK_ROOT/analysis/<arm>_RESULTS_auto.md`.
+   Comparison cells whose archives cannot be re-scored must be listed in the
+   outputs, not skipped silently.
+3. Submit it with `--output=$WORK_ROOT/analysis/evaluate_%j.out` and
+   `--export=ALL,WORK_ROOT=…,REPO=…,VENV_PY=…` plus the sweep roots it needs;
+   write `$WORK_ROOT/progress/analysis_jobs.json` as
+   `{"analysis": {"work_root": "$WORK_ROOT/analysis", "job_ids": ["<id>"]}}`.
+   Do not wait.
+
+**Accept:** the sbatch is committed; `analysis_jobs.json` exists; tree clean;
+`P10.done`.
+
+### P11 — Results: the RMSE evaluation report
+
+**Preconditions (driver-checked):** the evaluation job has left the queue.
+
+**Do:**
+1. Read `$WORK_ROOT/analysis/evaluate_<id>.out` and every output under
+   `$WORK_ROOT/analysis/`, the sweep's `test_retest.{json,csv}`, the raw
+   verifier's `VERDICT.md`, and the per-cell `holdout.json` leakage fields.
+2. If the evaluation job failed on a defect you can fix with confidence (a
+   path, a column name, a missing archive handler), fix it with a test,
+   commit, delete `progress/P10.done` and write `progress/P10.retry` with one
+   line on why; the driver re-runs P10 (at most twice in total) and comes
+   back here. Otherwise record the failure and report what did complete.
+3. Write `$WORK_ROOT/RESULTS.md` — the RMSE evaluation the user asked for:
+   - **Engineering gate:** cells completed (of 20 per arm), verifier verdict,
+     `[drop]` count, `screened_out.json` non-empty count, leakage-audit
+     fields (`any_csv_generating_model`, `any_manifest_gt_named`, `any_identical`),
+     per-task spend from the logs.
+   - **Recovery table (primary):** per ground truth, final-step RMSE mean ±
+     sd, median, min, max over the 5 repeats; KL regret alongside; Pearson r
+     descriptive; the best model per cell.
+   - **Matched-seed deltas:** per cell and per ground truth (mean, median,
+     min, max) against iteration 2 (5 repeats), iteration 3 (3), and the
+     pre-campaign baseline (5), each labelled as **confounded** (featurized
+     → raw plus every loop change, and the manifest scrub) — they are
+     reference points, not an ablation. If a featurized arm ran, the
+     raw-vs-featurized paired table and the §9 gate result.
+   - **Three-bucket diagnostic:** per ground truth, cells with an
+     oracle−incumbent gap above 0.02 (selection), cells whose oracle-best is
+     itself poor (discovery), lost-incumbent events (retention); name the
+     cells.
+   - **Interpretation:** what improved and what did not against the 0.02
+     practical margin, at n = 5, with no significance claims; which ground
+     truth drives the mean; what to run next.
+   Update `HANDOFF.md` with a pointer to `RESULTS.md` and the final commit.
+
+**Accept:** `RESULTS.md` exists; tree clean; `P11.done`.
 
 ---
 
@@ -552,6 +693,8 @@ amend a merge. Never rewrite history.
 - the fast suite gains a failing node ID you cannot attribute and fix;
 - the arm C merge cannot be reconciled with iteration 3 within the P1 budget;
 - a submit script needs more than a knob-name change to run;
+- P9 would launch the raw sweep although the raw smoke did not pass every
+  criterion in `VERDICT.md`;
 - anything that would require touching `$SOURCE_REPO`, pushing, or cancelling
   a job.
 
@@ -570,10 +713,13 @@ mean/median/min/max per ground truth. No stimulus bootstrap. Predeclared
 practical margin: **0.02 RMSE**. Changing it after seeing results needs a
 written amendment.
 
-## 9. After this job: the same-commit comparison (user-launched)
+## 9. The raw-vs-featurized gate (for when a featurized arm is run)
 
-From the final commit, as a balanced block (shared concurrency, same backend
-and model, same `BASE_SEED=100`, 3 repeats × 4 ground truths per arm):
+P9 launches the arm(s) in `SWEEP_ARMS` (currently `raw` only, 5 repeats), and
+P10/P11 evaluate them. The default switch to raw needs a featurized arm from
+the **same commit**; run it later as a balanced block (shared concurrency,
+same backend and model, same `BASE_SEED=100`, the same repeats), then apply
+the gate below with `compare_matched_cells.py`:
 
 ```bash
 cd "$REPO"; export REPO="$REPO"

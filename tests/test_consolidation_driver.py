@@ -1,6 +1,7 @@
 """Unit coverage for the consolidation driver's pure parts: the phase table,
-progress markers, done-marker validation, the smoke-jobs file, prompt
-composition, the requeue argv, walltime parsing and the squeue parser.
+progress markers, done-marker validation, the jobs files a phase hands to the
+driver, prompt composition, the requeue argv, walltime parsing and the squeue
+parser.
 
 Everything that spawns Claude or talks to Slurm lives in
 ``scripts/consolidation/run_consolidation.py`` and is not exercised here."""
@@ -18,16 +19,17 @@ from src.consolidation.driver import (
     Blocked,
     compose_prompt,
     disallowed_tools,
+    jobs_file_owner,
     jobs_still_queued,
     load_env,
     needs_walltime_requeue,
     next_phase,
-    parse_smoke_jobs,
+    parse_jobs_file,
     phase_by_id,
+    phase_round,
     phase_state,
     requeue_command,
     seconds_left,
-    smoke_round,
     validate_done_marker,
 )
 
@@ -37,19 +39,41 @@ SHA = "0123456789abcdef0123456789abcdef01234567"
 # --- phase table --------------------------------------------------------------
 
 
-def test_phases_run_p0_to_p8_in_order_and_only_p7_may_sbatch():
-    assert [p.id for p in PHASES] == [f"P{k}" for k in range(9)]
-    assert [p.id for p in PHASES if p.allows_sbatch] == ["P7"]
+def test_phases_run_p0_to_p11_in_order_and_only_submitting_phases_may_sbatch():
+    assert [p.id for p in PHASES] == [f"P{k}" for k in range(12)]
+    assert [p.id for p in PHASES if p.allows_sbatch] == ["P7", "P9", "P10"]
     assert phase_by_id("P3").title
     with pytest.raises(KeyError):
-        phase_by_id("P9")
+        phase_by_id("P12")
 
 
-def test_disallowed_tools_add_sbatch_except_in_the_smoke_phase():
+def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
+    seen: set[str] = set()
+    for phase in PHASES:
+        if phase.waits_for:
+            owner = jobs_file_owner(phase.waits_for)
+            assert owner.jobs_file == phase.waits_for
+            assert PHASES.index(owner) < PHASES.index(phase)
+        if phase.jobs_file:
+            assert phase.jobs_file not in seen, "two phases write the same jobs file"
+            seen.add(phase.jobs_file)
+            assert phase.allows_sbatch and phase.required_labels
+    assert phase_by_id("P7").jobs_file == "smoke_jobs.json"
+    assert phase_by_id("P8").waits_for == "smoke_jobs.json"
+    assert phase_by_id("P9").required_labels == ("raw",)
+    assert phase_by_id("P10").waits_for == "sweep_jobs.json"
+    assert phase_by_id("P11").waits_for == "analysis_jobs.json"
+    with pytest.raises(KeyError):
+        jobs_file_owner("nobody_writes_this.json")
+
+
+def test_disallowed_tools_add_sbatch_except_in_submitting_phases():
     assert "Bash(sbatch:*)" in disallowed_tools(phase_by_id("P2"))
-    assert "Bash(sbatch:*)" not in disallowed_tools(phase_by_id("P7"))
-    for tool in BASE_DISALLOWED_TOOLS:
-        assert tool in disallowed_tools(phase_by_id("P7"))
+    assert "Bash(sbatch:*)" in disallowed_tools(phase_by_id("P8"))
+    for phase_id in ("P7", "P9", "P10"):
+        assert "Bash(sbatch:*)" not in disallowed_tools(phase_by_id(phase_id))
+        for tool in BASE_DISALLOWED_TOOLS:
+            assert tool in disallowed_tools(phase_by_id(phase_id))
 
 
 # --- progress markers ---------------------------------------------------------
@@ -89,11 +113,30 @@ def test_next_phase_is_none_when_everything_is_done(tmp_path):
     assert next_phase(progress) is None
 
 
+def test_phase_round_counts_retry_markers(tmp_path):
+    progress = tmp_path / "progress"
+    progress.mkdir()
+    assert phase_round(progress, "P7") == 1
+    (progress / "P7.retry").write_text("verifier path bug\n")
+    assert phase_round(progress, "P7") == 2
+    (progress / "P7.retry1").write_text("second\n")
+    assert phase_round(progress, "P7") == 3
+    assert phase_round(progress, "P9") == 1
+    assert phase_by_id("P7").max_rounds == 2
+    assert phase_by_id("P9").max_rounds is None
+
+
 # --- done-marker validation ---------------------------------------------------
 
 
 def _write_done(progress: Path, phase_id: str, sha: str = SHA) -> None:
     (progress / f"{phase_id}.done").write_text(f"commit: {sha}\nsummary line\n")
+
+
+def _jobs(labels: dict[str, list[str]]) -> str:
+    return json.dumps({
+        label: {"work_root": f"/w/{label}", "job_ids": ids} for label, ids in labels.items()
+    })
 
 
 def test_done_marker_must_exist_name_head_and_have_a_clean_tree(tmp_path):
@@ -134,20 +177,29 @@ def test_p0_requires_the_baseline_files(tmp_path):
     assert validate_done_marker(progress, "P0", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
 
-def test_p7_requires_a_valid_smoke_jobs_file(tmp_path):
+def test_a_submitting_phase_requires_its_jobs_file_with_every_label(tmp_path):
     progress = tmp_path / "progress"
     progress.mkdir()
     _write_done(progress, "P7")
     problems = validate_done_marker(progress, "P7", head_sha=SHA, porcelain="", work_root=tmp_path)
     assert any("smoke_jobs.json" in p for p in problems)
-    (progress / "smoke_jobs.json").write_text(json.dumps({
-        "featurized": {"work_root": "/w/f", "job_ids": ["1", "2", "3"]},
-        "raw": {"work_root": "/w/r", "job_ids": ["4", "5", "6", "7"]},
-    }))
+    (progress / "smoke_jobs.json").write_text(_jobs({"featurized": ["1", "2", "3"]}))
+    problems = validate_done_marker(progress, "P7", head_sha=SHA, porcelain="", work_root=tmp_path)
+    assert any("raw" in p for p in problems)
+    (progress / "smoke_jobs.json").write_text(
+        _jobs({"featurized": ["1", "2", "3"], "raw": ["4", "5", "6", "7"]})
+    )
     assert validate_done_marker(progress, "P7", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
+    _write_done(progress, "P9")
+    (progress / "sweep_jobs.json").write_text(_jobs({"raw": ["8", "9", "10", "11"]}))
+    assert validate_done_marker(progress, "P9", head_sha=SHA, porcelain="", work_root=tmp_path) == []
+    _write_done(progress, "P10")
+    (progress / "analysis_jobs.json").write_text(_jobs({"analysis": ["12"]}))
+    assert validate_done_marker(progress, "P10", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
-def test_p8_requires_verdict_and_handoff(tmp_path):
+
+def test_p8_and_p11_require_their_report_files(tmp_path):
     progress = tmp_path / "progress"
     progress.mkdir()
     _write_done(progress, "P8")
@@ -157,33 +209,31 @@ def test_p8_requires_verdict_and_handoff(tmp_path):
     (tmp_path / "HANDOFF.md").write_text("fetch it\n")
     assert validate_done_marker(progress, "P8", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
+    _write_done(progress, "P11")
+    problems = validate_done_marker(progress, "P11", head_sha=SHA, porcelain="", work_root=tmp_path)
+    assert any("RESULTS.md" in p for p in problems)
+    (tmp_path / "RESULTS.md").write_text("rmse table\n")
+    assert validate_done_marker(progress, "P11", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
-# --- smoke jobs -----------------------------------------------------------------
+
+# --- jobs files -------------------------------------------------------------------
 
 
-def test_parse_smoke_jobs_returns_every_id_and_rejects_non_numeric(tmp_path):
+def test_parse_jobs_file_returns_every_id_and_rejects_bad_input(tmp_path):
     path = tmp_path / "smoke_jobs.json"
-    path.write_text(json.dumps({
-        "featurized": {"work_root": "/w/f", "job_ids": ["11", "12", "13"]},
-        "raw": {"work_root": "/w/r", "job_ids": ["21", "22", "23", "24"]},
-    }))
-    assert parse_smoke_jobs(path) == ["11", "12", "13", "21", "22", "23", "24"]
-    path.write_text(json.dumps({"featurized": {"work_root": "/w/f", "job_ids": ["abc"]}}))
-    with pytest.raises(ValueError):
-        parse_smoke_jobs(path)
-    path.write_text(json.dumps({"featurized": {"work_root": "/w/f", "job_ids": ["1"]}}))
+    path.write_text(_jobs({"featurized": ["11", "12", "13"], "raw": ["21", "22", "23", "24"]}))
+    assert parse_jobs_file(path, ("featurized", "raw")) == ["11", "12", "13", "21", "22", "23", "24"]
+    path.write_text(_jobs({"featurized": ["abc"], "raw": ["1"]}))
+    with pytest.raises(ValueError, match="non-numeric"):
+        parse_jobs_file(path, ("featurized", "raw"))
+    path.write_text(_jobs({"featurized": ["1"]}))
     with pytest.raises(ValueError, match="raw"):
-        parse_smoke_jobs(path)
-
-
-def test_smoke_round_counts_retry_markers(tmp_path):
-    progress = tmp_path / "progress"
-    progress.mkdir()
-    assert smoke_round(progress) == 1
-    (progress / "P7.retry").write_text("verifier path bug\n")
-    assert smoke_round(progress) == 2
-    (progress / "P7.retry1").write_text("second\n")
-    assert smoke_round(progress) == 3
+        parse_jobs_file(path, ("featurized", "raw"))
+    with pytest.raises(ValueError, match="missing"):
+        parse_jobs_file(tmp_path / "absent.json", ("raw",))
+    path.write_text("{not json")
+    with pytest.raises(ValueError, match="JSON"):
+        parse_jobs_file(path, ("raw",))
 
 
 def test_jobs_still_queued_collapses_array_task_ids():

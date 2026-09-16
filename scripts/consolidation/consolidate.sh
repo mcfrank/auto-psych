@@ -2,8 +2,9 @@
 # Submit the consolidation job: a Claude Code agent (Opus 4.6 by default) executes
 # docs/consolidation_plan_2026_09.md phase by phase in its own clone on a
 # compute node, one session per phase, requeueing itself when it must wait.
-# It launches nothing but the plan's two SMOKE cells (P7); the 24-cell
-# comparison sweep is written into HANDOFF.md for you to launch.
+# After the two SMOKE cells (P7/P8) it launches the 5-repeat recovery sweep
+# of the arm(s) in SWEEP_ARMS (P9), submits the RMSE evaluation (P10) and
+# writes RESULTS.md (P11).
 #
 # Usage (login node; bash only, no Python):
 #   bash scripts/consolidation/consolidate.sh
@@ -16,6 +17,8 @@
 #                                  under a subscription login, not billing)
 #   TIMEOUT_SEC=21600              kill a session after this (6 h)
 #   PARTITION=normal TIME=2-00:00:00 CPUS=4 MEM=16GB
+#   SWEEP_ARMS=raw                 raw | featurized | both — the 5-repeat sweep P9 launches
+#   SWEEP_N_REPEATS=5 SWEEP_BASE_SEED=100 SWEEP_MAX_PARALLEL=5
 #   RESUME=1                       resubmit an existing work root (its clone,
 #                                  progress markers and venv are kept)
 #   DRY_RUN=1                      run every check, write consolidation.env,
@@ -45,6 +48,8 @@ LEAKAGE_PATCH="$CAMPAIGN_ROOT/leakage_check_extension.patch"
 LEAKAGE_PATCH_SHA256=cf3be3eed6373dda6192e3729971c47fd2884afc44651e511cc686b7b0b2764c
 ARMC_RUN_ROOT="$SCRATCH_BASE/holdout_raw_features"
 ITER3_SWEEP="$CAMPAIGN_ROOT/iter3/sweep"
+ITER2_SWEEP="$CAMPAIGN_ROOT/iter2/sweep"                    # 5 repeats, seeds 101-105
+BASELINE_SWEEP="$SCRATCH_BASE/holdout_faithful_32eig_32random"  # pre-campaign, 5 repeats
 
 fail() { echo "ERROR: $*" >&2; exit 1; }
 
@@ -77,6 +82,8 @@ else
   echo "$LEAKAGE_PATCH_SHA256  $LEAKAGE_PATCH" | sha256sum --check --quiet || fail "leakage patch checksum mismatch"
   [[ -d "$ARMC_RUN_ROOT" ]] || fail "arm C run root missing: $ARMC_RUN_ROOT"
   [[ -d "$ITER3_SWEEP" ]] || fail "iteration 3 sweep missing: $ITER3_SWEEP"
+  [[ -d "$ITER2_SWEEP" ]] || fail "iteration 2 sweep missing: $ITER2_SWEEP"
+  [[ -d "$BASELINE_SWEEP" ]] || fail "baseline sweep missing: $BASELINE_SWEEP"
   [[ -f "$HOME/.claude/.credentials.json" ]] || fail "~/.claude/.credentials.json not found — claude is not logged in"
   CLAUDE_BIN_DIR=""
   if command -v claude >/dev/null 2>&1; then CLAUDE_BIN_DIR="$(dirname "$(command -v claude)")"; fi
@@ -103,6 +110,12 @@ LEAKAGE_PATCH=$LEAKAGE_PATCH
 LEAKAGE_PATCH_SHA256=$LEAKAGE_PATCH_SHA256
 ARMC_RUN_ROOT=$ARMC_RUN_ROOT
 ITER3_SWEEP=$ITER3_SWEEP
+ITER2_SWEEP=$ITER2_SWEEP
+BASELINE_SWEEP=$BASELINE_SWEEP
+SWEEP_ARMS=${SWEEP_ARMS:-raw}
+SWEEP_N_REPEATS=${SWEEP_N_REPEATS:-5}
+SWEEP_BASE_SEED=${SWEEP_BASE_SEED:-100}
+SWEEP_MAX_PARALLEL=${SWEEP_MAX_PARALLEL:-5}
 MODEL=${MODEL:-claude-opus-4-6}
 MAX_TURNS=${MAX_TURNS:-600}
 MAX_BUDGET_USD=${MAX_BUDGET_USD:-150}
@@ -141,12 +154,14 @@ job_id=$(sbatch --parsable "${SBATCH_ARGS[@]}")
 echo "$job_id" >> "$WORK_ROOT/jobs.txt"
 cat <<MSG
 submitted consolidation job $job_id
-  model $MODEL, up to $MAX_TURNS turns / ${TIMEOUT_SEC}s per phase session; phases P0..P8
-  (requeues itself for session limits, walltime, and the P7 smoke jobs)
+  model $MODEL, up to $MAX_TURNS turns / ${TIMEOUT_SEC}s per phase session; phases P0..P11
+  (requeues itself for session limits, walltime, the P7 smoke jobs, the P9 sweep, the P10 evaluation)
+  sweep: arms=$SWEEP_ARMS, $SWEEP_N_REPEATS repeats, BASE_SEED=$SWEEP_BASE_SEED, $SWEEP_MAX_PARALLEL concurrent
 
 follow:   tail -f $WORK_ROOT/slurm_logs/${JOB_NAME}_${job_id}.out
 status:   cat $WORK_ROOT/STATUS.md; ls $WORK_ROOT/progress/
-result:   cat $WORK_ROOT/VERDICT.md $WORK_ROOT/HANDOFF.md      # when P8 is done
+smoke:    cat $WORK_ROOT/VERDICT.md $WORK_ROOT/HANDOFF.md      # when P8 is done
+result:   cat $WORK_ROOT/RESULTS.md                            # when P11 is done
 branch:   git fetch $WORK_ROOT/repo consolidate/2026-09
 stop:     scancel $job_id   (the P7 smoke chains, if submitted, are separate jobs)
 MSG
