@@ -1440,10 +1440,18 @@ def test_trajectory_tidy_rows_one_row_per_step():
                 "trajectory": [
                     {"experiment": 1, "step": 0, "iteration": None,
                      "global_step": 0, "best_model": "a", "pearson_r": 0.5,
-                     "rmse": 0.1, "pearson_r_bma": 0.6, "rmse_bma": 0.08},
+                     "rmse": 0.1, "kl_regret": 0.01, "bias": 0.02,
+                     "calib_slope": 1.0, "calib_intercept": 0.0,
+                     "pearson_r_bma": 0.6, "rmse_bma": 0.08,
+                     "kl_regret_bma": 0.005, "bias_bma": 0.01,
+                     "calib_slope_bma": 0.99, "calib_intercept_bma": 0.01},
                     {"experiment": 1, "step": 1, "iteration": 0,
                      "global_step": 1, "best_model": "b", "pearson_r": None,
-                     "rmse": 0.2, "pearson_r_bma": None, "rmse_bma": 0.2},
+                     "rmse": 0.2, "kl_regret": 0.05, "bias": -0.01,
+                     "calib_slope": 0.8, "calib_intercept": 0.1,
+                     "pearson_r_bma": None, "rmse_bma": 0.2,
+                     "kl_regret_bma": 0.04, "bias_bma": -0.005,
+                     "calib_slope_bma": 0.85, "calib_intercept_bma": 0.08},
                 ],
             }
         ]
@@ -1970,3 +1978,98 @@ def test_strip_to_raw_columns_keeps_only_the_raw_five():
 def test_strip_to_raw_columns_fails_loudly_without_the_sequences():
     with pytest.raises(ValueError, match="sequence_a"):
         holdout_recovery.strip_to_raw_columns([{"participant_id": 0, "chose_left": 1}])
+
+
+# ── Regression: existing metric values must not change ──────────────
+
+
+def test_trajectory_tidy_rows_accepts_legacy_rows_without_new_metrics():
+    """Legacy trajectory dicts (pre-metrics_version 2) lack kl_regret etc.
+
+    trajectory_tidy_rows must pass them through without crashing or fabricating
+    values; the missing keys simply won't be in the resulting row dicts.
+    """
+    legacy_entry = {
+        "experiment": 1, "step": 0, "iteration": None, "global_step": 0,
+        "best_model": "a", "pearson_r": 0.5, "rmse": 0.1,
+        "pearson_r_bma": 0.6, "rmse_bma": 0.08,
+    }
+    result = {"gt_runs": [{"gt_model": "gt", "trajectory": [legacy_entry]}]}
+    rows = trajectory_tidy_rows(result)
+    assert len(rows) == 1
+    assert rows[0]["pearson_r"] == 0.5
+    assert "kl_regret" not in rows[0]
+    assert "bias" not in rows[0]
+
+
+def test_evaluate_trajectory_regression_pearson_r_and_rmse_unchanged(
+    tmp_path, monkeypatch
+):
+    """Pin the exact pearson_r and rmse values produced by evaluate_trajectory.
+
+    If adding new columns changes these numbers, something is wrong.
+    """
+    run_root = tmp_path / "run"
+    history = [
+        {
+            "step": 0,
+            "iteration": None,
+            "best_model": "model_a",
+            "posteriors": {"model_a": 0.75, "model_b": 0.25},
+            "elpd_loo": {"model_a": -1.0, "model_b": -2.0},
+        }
+    ]
+    _write_loop_artifacts(run_root, 1, history)
+
+    gt_p = np.array([0.2, 0.5, 0.9])
+    predictions = {
+        "model_a": np.array([0.3, 0.6, 0.8]),
+        "model_b": np.array([0.9, 0.1, 0.5]),
+    }
+
+    monkeypatch.setattr(
+        holdout_recovery,
+        "p_left_fixed_params",
+        lambda model_name, models_dir, stimuli, params, **kw: gt_p,
+    )
+    monkeypatch.setattr(
+        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+    )
+    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+
+    class Fitted:
+        model = None
+
+        def __init__(self, name):
+            self.name = name
+
+        def predict_p_left(self, stim_data):
+            return predictions[self.name]
+
+    monkeypatch.setattr(
+        holdout_recovery,
+        "fit_model",
+        lambda name, models_dir, responses_path, **kw: Fitted(name),
+    )
+
+    rows = evaluate_trajectory(
+        run_root,
+        "gt",
+        {"a": 1.0},
+        EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        cache_dir=None,
+        fit_kwargs={},
+    )
+
+    row = rows[0]
+    assert row["pearson_r"] == pytest.approx(0.9806085723261284, rel=1e-10)
+    assert row["rmse"] == pytest.approx(0.1, rel=1e-10)
+    bma = 0.75 * predictions["model_a"] + 0.25 * predictions["model_b"]
+    assert row["pearson_r_bma"] == pytest.approx(
+        pearson_r(gt_p.tolist(), bma.tolist()), rel=1e-10
+    )
+    assert row["rmse_bma"] == pytest.approx(
+        float(np.sqrt(np.mean((gt_p - bma) ** 2))), rel=1e-10
+    )
