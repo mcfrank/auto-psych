@@ -138,11 +138,11 @@ def load_pymc_model(name: str, models_dir: Path):
             f"{py_path}: `prepare_observed` must be a callable "
             f"(rows) -> dict[str, np.ndarray], got {type(prepare_observed).__name__}"
         )
-    if prepare_observed is not None and featurizer is not None:
+    if prepare_observed is not None and compute_features_fn is not None:
         raise ValueError(
             f"{py_path} declares BOTH `prepare_observed` and `compute_features`. "
             "They are alternative data-binding conventions — `prepare_observed` "
-            "owns every container, so an extra featurizer would be silently "
+            "owns every container, so `compute_features` would be silently "
             "ignored. Declare exactly one."
         )
     setattr(model, _PREPARE_OBSERVED_ATTR, prepare_observed)
@@ -214,24 +214,22 @@ def _model_compute_features(model):
     return getattr(model, _COMPUTE_FEATURES_ATTR, None)
 
 
-# Columns a model's own featurizer may never return: the observed response and
-# the row bookkeeping. These are not features, and a model that redefines one is
-# wrong whatever value it happens to produce.
+# Columns a model's compute_features may never return: the observed response
+# and the row bookkeeping. A model that redefines one of these is wrong
+# regardless of the value it produces.
 PROTECTED_ROW_COLUMNS = frozenset(
     {"chose_left", "participant_id", "trial_index", "sequence_a", "sequence_b"}
 )
 
 
 def _same_feature_value(existing: Any, computed: Any) -> bool:
-    """Whether a model's own feature value agrees with the column already present.
+    """Whether a model's computed feature value agrees with a column already present.
 
-    A self-contained model (one that computes the columns it binds, so it can be
-    fitted on a raw sequences-only CSV) is still handed featurized rows by the
-    paths that build stimuli for prediction — ground-truth generation and the
-    held-out trajectory evaluation both go through `feature_rows`. Recomputing a
-    column to the same value there is harmless and must not fail the run;
-    computing a DIFFERENT value under the same name is a model quietly
-    redefining a harness column, which must still fail loudly.
+    When the evaluation harness pre-populates feature columns (via
+    ``feature_rows``), a model's ``compute_features`` hook may recompute an
+    already-present column. Producing the same value is harmless; producing a
+    DIFFERENT value under the same name means the model silently redefines
+    a harness column, which must fail loudly.
     """
     try:
         return math.isclose(float(existing), float(computed), rel_tol=1e-9, abs_tol=1e-12)
@@ -242,20 +240,17 @@ def _same_feature_value(existing: Any, computed: Any) -> bool:
 def _augment_rows_with_features(
     model, rows: List[Dict[str, Any]]
 ) -> List[Dict[str, Any]]:
-    """Add a model's theorist-declared extra features to each row.
+    """Add a model's ``compute_features`` columns to each row.
 
-    If the model carries a ``compute_features(sequence_a, sequence_b)``
-    featurizer, run it over every row's raw H/T sequences and merge the numeric
-    columns it returns. A no-op (returns ``rows`` unchanged) for models that do
-    not declare one. Fails loudly — never silently drops or coerces — if:
-
-    - the featurizer is declared but the rows lack ``sequence_a``/``sequence_b``;
-    - it returns something other than a dict, or a non-finite/non-numeric value;
-    - it returns different feature names for different rows;
-    - a returned feature name collides with an existing column.
+    Runs the model's ``compute_features(sequence_a, sequence_b)`` hook over
+    every row's raw H/T sequences and merges the returned columns. A no-op
+    (returns ``rows`` unchanged) for models that do not declare the hook.
+    Fails loudly if the hook is declared but rows lack the raw sequences,
+    returns non-dict/non-numeric values, varies its keys across rows, or
+    collides with a protected column.
     """
-    featurizer = _model_compute_features(model)
-    if featurizer is None or not rows:
+    compute_fn = _model_compute_features(model)
+    if compute_fn is None or not rows:
         return rows
 
     missing = {"sequence_a", "sequence_b"} - set(rows[0].keys())
@@ -269,7 +264,7 @@ def _augment_rows_with_features(
     augmented: List[Dict[str, Any]] = []
     expected_keys: Optional[tuple] = None
     for i, r in enumerate(rows):
-        extra = featurizer(r["sequence_a"], r["sequence_b"])
+        extra = compute_fn(r["sequence_a"], r["sequence_b"])
         if not isinstance(extra, dict):
             raise TypeError(
                 f"compute_features must return a dict of feature_name -> number, "
