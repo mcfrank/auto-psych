@@ -1,7 +1,7 @@
 """Pure parts of the consolidation driver.
 
 The consolidation plan (``docs/consolidation_plan_2026_09.md``) is executed as
-twelve phases, P0..P11, one Claude Code session each. State lives on disk
+sixteen phases, P0..P15, one Claude Code session each. State lives on disk
 under ``<work_root>/progress/`` as marker files the agent writes and the
 driver validates:
 
@@ -80,17 +80,30 @@ PHASES: tuple[Phase, ...] = (
         "P8", "Smoke verdict and handoff",
         waits_for="smoke_jobs.json", requires_files=("VERDICT.md", "HANDOFF.md"),
     ),
+    # Amendment of 2026-09-16: raw is the only mode and the feature code must
+    # be unreadable by agents (see the plan's amendment before P9).
+    Phase("P9", "Raw is the only mode"),
+    Phase("P10", "The agents' tree contains no feature code; imports are gated"),
     Phase(
-        "P9", "Launch the 5-repeat recovery sweep",
+        "P11", "Submit the smoke cell",
+        allows_sbatch=True, jobs_file="isolation_smoke_jobs.json",
+        required_labels=("raw",), max_rounds=3,
+    ),
+    Phase(
+        "P12", "Smoke verdict",
+        waits_for="isolation_smoke_jobs.json", requires_files=("VERDICT.md", "HANDOFF.md"),
+    ),
+    Phase(
+        "P13", "Launch the 5-repeat recovery sweep",
         allows_sbatch=True, jobs_file="sweep_jobs.json", required_labels=("raw",),
     ),
     Phase(
-        "P10", "Submit the RMSE evaluation job",
+        "P14", "Submit the RMSE evaluation job",
         waits_for="sweep_jobs.json", allows_sbatch=True,
         jobs_file="analysis_jobs.json", required_labels=("analysis",), max_rounds=2,
     ),
     Phase(
-        "P11", "Results: the RMSE evaluation report",
+        "P15", "Results: the RMSE evaluation report",
         waits_for="analysis_jobs.json", requires_files=("RESULTS.md",),
     ),
 )
@@ -152,6 +165,33 @@ def phase_round(progress_dir: Path, phase_id: str) -> int:
     """1 for the first run of a phase; +1 per ``P<k>.retry*`` marker a later
     phase wrote to re-open it."""
     return 1 + len(list(progress_dir.glob(f"{phase_id}.retry*")))
+
+
+def retry_markers(progress_dir: Path) -> set[str]:
+    """Names of every ``P<k>.retry*`` marker currently in the progress dir."""
+    return {p.name for p in progress_dir.glob("P*.retry*")}
+
+
+_RETRY_PHASE = re.compile(r"^(P\d+)\.retry")
+
+
+def newly_reopened(current_id: str, before: set[str], after: set[str]) -> Optional[str]:
+    """The earliest phase that a session of ``current_id`` re-opened by
+    writing a new retry marker for a phase that runs *before* it; None if
+    the session re-opened nothing. A verdict phase that sends an earlier
+    phase back is then finished without its own done marker."""
+    current_index = PHASES.index(phase_by_id(current_id))
+    reopened: list[int] = []
+    for name in after - before:
+        match = _RETRY_PHASE.match(name)
+        if not match:
+            continue
+        index = PHASES.index(phase_by_id(match.group(1)))
+        if index < current_index:
+            reopened.append(index)
+    if not reopened:
+        return None
+    return PHASES[min(reopened)].id
 
 
 _COMMIT_LINE = re.compile(r"^commit:\s*([0-9a-f]{7,40})\s*$")
