@@ -30,10 +30,12 @@ decision, after review:
    (P2, P7, P8). After the first smoke round the user decided (2026-09-16,
    see the amendment before P9) that **raw is the only mode** and that the
    feature code must be **unreadable** by agents: P9 removes the featurized
-   pipeline, P10 isolates the agents' tree and gates candidate imports, P11–
-   P12 smoke it again, then the job launches a **5-repeat recovery sweep**
-   (5 repeats × 4 ground truths = 20 cells), submits the RMSE evaluation and
-   writes `RESULTS.md` (P13–P15).
+   pipeline and P10 isolates the agents' tree and gates candidate imports.
+   P11 then simplifies the whole codebase for human reading (the user's
+   request; it runs before the smoke so the sweep validates the simplified
+   code), P12–P13 smoke it, and P14–P16 launch a **5-repeat recovery sweep**
+   (5 repeats × 4 ground truths = 20 cells), submit the RMSE evaluation and
+   write `RESULTS.md`.
 6. **Honest metrics**: probability RMSE primary, expected Bernoulli KL regret
    secondary, Pearson r descriptive; per-repeat paired differences, no
    stimulus bootstrap. Add an offline all-admitted-models oracle diagnostic
@@ -107,7 +109,7 @@ before the agent starts.
 | iteration 3 sweep (3 repeats, seeds 101–103; comparison) | `$ITER3_SWEEP` | — |
 | iteration 2 sweep (5 repeats, seeds 101–105; comparison) | `$ITER2_SWEEP` | — |
 | pre-campaign baseline sweep (5 repeats, seeds 101–105; comparison) | `$BASELINE_SWEEP` | — |
-| sweep knobs for P13 | `$SWEEP_N_REPEATS`, `$SWEEP_BASE_SEED`, `$SWEEP_MAX_PARALLEL` (`$SWEEP_ARMS` is obsolete: one pipeline) | from `consolidation.env` |
+| sweep knobs for P14 | `$SWEEP_N_REPEATS`, `$SWEEP_BASE_SEED`, `$SWEEP_MAX_PARALLEL` (`$SWEEP_ARMS` is obsolete: one pipeline) | from `consolidation.env` |
 
 Ancestry (verified): iterations 4 and 5 descend from iteration 3; arm C
 descends from iteration 2 (`bd7f032`), so it does **not** contain iteration 3.
@@ -132,8 +134,8 @@ descends from iteration 2 (`bd7f032`), so it does **not** contain iteration 3.
   node ID, never by count.
 - **Static checks:** `git diff --check`; `$VENV_PY -m compileall -q src scripts`;
   `$VENV_PY -m pytest -q tests/test_python_sources_compile.py`.
-- **Slurm:** you may `sbatch` only in P7 and P11 (smoke cells), P13 (the
-  recovery sweep) and P14 (the evaluation job) — nothing else. Never
+- **Slurm:** you may `sbatch` only in P7 and P12 (smoke cells), P14 (the
+  recovery sweep) and P15 (the evaluation job) — nothing else. Never
   `scancel`, never `scontrol`, never poll or sleep-wait on a job. The driver
   handles waiting by requeueing itself after the jobs a phase submitted.
 - **TDD, as the repo requires:** every behaviour change starts from a failing
@@ -155,7 +157,7 @@ descends from iteration 2 (`bd7f032`), so it does **not** contain iteration 3.
 
 ## 3. Phase contract (enforced by the driver)
 
-Phases run in order: **P0 … P15**. Each session is told its phase. When the
+Phases run in order: **P0 … P16**. Each session is told its phase. When the
 phase's acceptance checks pass:
 
 1. commit everything on `consolidate/2026-09` (tree clean:
@@ -578,9 +580,10 @@ first attempt, and `docs/consolidation_decision_record.md`):
 
 The user's decision: **raw is the only mode, and the feature code must be
 unreadable by agents, not merely un-imported.** The featurized pipeline is
-removed. Phases P9–P15 below replace the earlier P9–P11 (sweep, evaluation,
-results), which move to P13–P15. `SWEEP_ARMS` in the inputs is obsolete: there
-is one pipeline now.
+removed. Phases P9–P16 below replace the earlier P9–P11 (sweep, evaluation,
+results), which move to P14–P16. `SWEEP_ARMS` in the inputs is obsolete: there
+is one pipeline now. A later amendment (same day, at the user's request) adds
+**P11**, a simplification pass for human readability, before the smoke.
 
 ### P9 — Raw is the only mode
 
@@ -719,7 +722,107 @@ tests); `git grep` of `here()` and `REPO_ROOT` in `src/pipelines/inner_loop/`
 and `src/runtime/coding_agent.py` shows no remaining use that decides agent
 visibility.
 
-### P11 — Submit the smoke cell (may `sbatch`)
+### P11 — Simplify: make the code readable end to end
+
+**Why here:** this runs *before* the smoke (P12) and the sweep (P14), so the
+smoke validates the simplified code and the code the user reads is the code
+that produced the results. It is also the last phase that may change the
+source: P12 onwards only submit jobs and report.
+
+**The one rule: behaviour must not change.** This is a refactor-only phase.
+Every acceptance check below is "the same tests pass"; there is no new
+behaviour to test. If a simplification would change what the loop does, do
+not make it — write it in the done file as a suggestion for the user instead.
+Work in small commits so any one of them can be reverted alone.
+
+**Do, in this order:**
+
+1. **Inventory first, edit second.** Write `$WORK_ROOT/progress/P11_inventory.md`:
+   every module under `src/` and `scripts/` that runs in the live loops or the
+   holdout harness, with its line count, and a one-line statement of what it
+   is for. Mark each as *core* (the two loops, the harness, the models, the
+   metrics), *support* (viewer, monitor, campaign/panel/consolidation tooling)
+   or *suspect* (nothing imports it). Use it to plan the passes below and to
+   avoid touching what you have not read.
+
+2. **Delete what nothing reaches.** For every *suspect* module, confirm with
+   `git grep` that no live-loop module, script, config, sbatch or test imports
+   or invokes it, then delete it. Explicit candidates to assess (the README
+   calls the first two "legacy, not part of the live loops"):
+   `src/experiments/`, `src/validation/`, and anything left stranded by P9's
+   removal of the featurized pipeline — superseded configs, launchers,
+   one-off analysis scripts, compatibility re-exports and aliases kept "for
+   old callers" that now have no callers. A deletion that turns out to be
+   wrong is one `git revert` away; a dead module read as live costs the user
+   an afternoon.
+
+3. **One way to do each thing.** Where P1–P10 left two paths to the same
+   result, keep one: duplicated helpers across `src/pipelines/` and
+   `src/subjective_randomness/`, parameters that now take only one value
+   (a `raw_features`-style flag with a single possible setting), branches
+   whose other side is unreachable after P9, wrapper functions that only
+   forward, and `Optional[...]` parameters that are never None in practice.
+   Fail-loud checks are **not** duplication: keep every one.
+
+4. **Shorten the long modules.** For each core module over ~600 lines, split
+   it along its natural seams (a pure-computation part and an orchestration
+   part are the usual seam here) or extract the helpers that one function
+   uses into a named module. Do not split merely to hit a number: a 900-line
+   module with one clear subject is better than three files that must be read
+   together. `src/pipelines/inner_loop/pymc_orchestrator.py` and
+   `src/subjective_randomness/holdout_recovery.py` are the two to look at
+   first; say in the done file why you split or did not split each.
+
+5. **Comments and docstrings: keep the why, move the history.** This codebase
+   has accumulated long inline commentaries recording what a previous run did
+   and why a value changed. Keep the sentence that tells a reader why the code
+   is the way it is; move the dated narrative (sweep numbers, superseded
+   approaches, "this lived here from 2026-08-09..13") into
+   `docs/consolidation_decision_record.md` under a "History of specific
+   choices" heading, with the file and symbol it refers to. Every public
+   function keeps a docstring saying what it does, what it raises, and what
+   its arguments mean. Delete commented-out code.
+
+6. **Names.** Rename anything whose name no longer matches what it does after
+   P9 and P10 (a module called `featurizer.py` that only holds the raw column
+   list; `verify_raw_features_run.sh` when raw is the only mode; variables
+   named for the featurized era). Rename across the whole tree in one commit
+   per name so the change is easy to read.
+
+7. **Write the reading guide.** `docs/code_tour.md`, for a reader who knows
+   the science and has not seen the code: the two loops in one paragraph each;
+   the on-disk artefacts that carry state between stages, since that is the
+   thing a reader cannot guess; a numbered walk through one holdout cell from
+   `submit_holdout_test_retest.sh` to `holdout.csv`, naming the modules in the
+   order they run; the same for one inner-loop round from the candidate brief
+   to admission, pruning and export; where the fail-loud checks are and what
+   each protects; and a table of every module with its one-line purpose. Link
+   to `CLAUDE.md` for the architecture rules rather than restating them, and
+   keep it under about 400 lines.
+
+8. **Check `CLAUDE.md` still describes the code.** Fix anything P9–P11 made
+   stale. It is the file every future agent reads first.
+
+**Verify after every commit:** the relevant targeted tests, then before the
+phase ends the full fast suite. The failing node-ID set must equal the P0
+baseline minus the tests deleted in P9 and in this phase (list both in the
+done file). Also run `git diff --check`, `compileall`, and
+`tests/test_python_sources_compile.py`.
+
+**Scope control:** if the passes do not all fit in one session, do them in the
+order above and let the session end — the driver resumes this phase with your
+transcript and the clone intact. Do not start a pass you cannot finish and
+commit. Do not touch the ground-truth registry, the family twins, the held-out
+parameters, or the evaluation formulas: renaming or "tidying" those changes
+what the numbers mean.
+
+**Accept:** `$WORK_ROOT/progress/P11_inventory.md` and `docs/code_tour.md`
+exist; the fast-suite failing set is the baseline minus deleted tests; tree
+clean; `P11.done` records, as a table, the line count of every file you
+changed before and after, every file deleted with the evidence that nothing
+reached it, and every simplification you decided against and why.
+
+### P12 — Submit the smoke cell (may `sbatch`)
 
 One cheap raw cell from the consolidated commit, two experiments, one
 candidate round, exactly as the earlier P7 raw smoke but through the
@@ -733,15 +836,15 @@ SMOKE=1 N_EXPERIMENTS=2 INNER_LOOP_ITERATIONS=1 BASE_SEED=100 \
 # verifier afterany the analysis job, as in P7
 ```
 
-`<k>` is this phase's round (`progress/P11.retry*` markers count the
+`<k>` is this phase's round (`progress/P12.retry*` markers count the
 re-opens; the first round is `smoke_round1`). Write
 `progress/isolation_smoke_jobs.json` as
 `{"raw": {"work_root": "...", "job_ids": ["<setup>", "<array>", "<analysis>", "<verify>"]}}`.
 Do not wait.
 
-**Accept:** the jobs file exists with numeric ids; tree clean; `P11.done`.
+**Accept:** the jobs file exists with numeric ids; tree clean; `P12.done`.
 
-### P12 — Smoke verdict
+### P13 — Smoke verdict
 
 **Preconditions (driver-checked):** the smoke jobs have left the queue.
 
@@ -754,19 +857,19 @@ fields present and false; the new metric columns present; lenses 0–5 across
 the six briefs; final evaluation reached with no traceback.
 
 If a criterion fails because of a defect you can fix with confidence: fix it
-with a test, commit, write `progress/P11.retry<k>` with one line on why,
-delete `progress/P11.done`, and **do not write `P12.done`** — end the session.
-The driver re-runs P11 and then this phase again (at most three smoke rounds).
+with a test, commit, write `progress/P12.retry<k>` with one line on why,
+delete `progress/P12.done`, and **do not write `P13.done`** — end the session.
+The driver re-runs P12 and then this phase again (at most three smoke rounds).
 Otherwise write `$WORK_ROOT/VERDICT.md` (one line per criterion, pass/fail,
 evidence path) and `$WORK_ROOT/HANDOFF.md` (final commit, how to fetch the
-branch, what P13 is about to launch and its cost), then `P12.done`.
+branch, what P14 is about to launch and its cost), then `P13.done`.
 
-**Accept:** `VERDICT.md` and `HANDOFF.md` exist; tree clean; `P12.done`.
+**Accept:** `VERDICT.md` and `HANDOFF.md` exist; tree clean; `P13.done`.
 
-### P13 — Launch the 5-repeat recovery sweep (may `sbatch`)
+### P14 — Launch the 5-repeat recovery sweep (may `sbatch`)
 
 **Preconditions:** `VERDICT.md` says the smoke passed every criterion;
-otherwise write `P13.blocked` — a 20-cell sweep on an unverified pipeline
+otherwise write `P14.blocked` — a 20-cell sweep on an unverified pipeline
 is the user's call.
 
 ```bash
@@ -782,9 +885,9 @@ Do not raise `MAX_PARALLEL`. Write `progress/sweep_jobs.json` as
 Record the expected cost (about one earlier sweep's Gemini spend) and wall
 time (about a day) in the done file. Do not wait.
 
-**Accept:** `sweep_jobs.json` exists with numeric ids; tree clean; `P13.done`.
+**Accept:** `sweep_jobs.json` exists with numeric ids; tree clean; `P14.done`.
 
-### P14 — Submit the RMSE evaluation job (may `sbatch`)
+### P15 — Submit the RMSE evaluation job (may `sbatch`)
 
 **Preconditions (driver-checked):** every sweep job has left the queue.
 
@@ -815,9 +918,9 @@ time (about a day) in the done file. Do not wait.
    Do not wait.
 
 **Accept:** the sbatch is committed; `analysis_jobs.json` exists; tree clean;
-`P14.done`.
+`P15.done`.
 
-### P15 — Results: the RMSE evaluation report
+### P16 — Results: the RMSE evaluation report
 
 **Preconditions (driver-checked):** the evaluation job has left the queue.
 
@@ -825,9 +928,9 @@ time (about a day) in the done file. Do not wait.
    `$WORK_ROOT/analysis/`, the sweep's `test_retest.{json,csv}`, the
    verifier's `VERDICT.md`, and the per-cell `holdout.json` leakage fields.
 2. If the evaluation job failed on a defect you can fix with confidence, fix
-   it with a test, commit, write `progress/P14.retry` with one line on why,
-   delete `progress/P14.done`, and do not write `P15.done`; the driver
-   re-runs P14 (at most twice in total) and comes back here. Otherwise
+   it with a test, commit, write `progress/P15.retry` with one line on why,
+   delete `progress/P15.done`, and do not write `P16.done`; the driver
+   re-runs P15 (at most twice in total) and comes back here. Otherwise
    record the failure and report what did complete.
 3. Write `$WORK_ROOT/RESULTS.md` — the RMSE evaluation the user asked for:
    - **Engineering gate:** cells completed (of 20), verifier verdict
@@ -849,7 +952,7 @@ time (about a day) in the done file. Do not wait.
      drives the mean; what to run next.
    Update `HANDOFF.md` with a pointer to `RESULTS.md` and the final commit.
 
-**Accept:** `RESULTS.md` exists; tree clean; `P15.done`.
+**Accept:** `RESULTS.md` exists; tree clean; `P16.done`.
 
 ## 5. Test-baseline discipline
 
@@ -873,7 +976,7 @@ amend a merge. Never rewrite history.
 - the fast suite gains a failing node ID you cannot attribute and fix;
 - the arm C merge cannot be reconciled with iteration 3 within the P1 budget;
 - a submit script needs more than a knob-name change to run;
-- P13 would launch the sweep although the smoke did not pass every
+- P14 would launch the sweep although the smoke did not pass every
   criterion in `VERDICT.md`;
 - after P10, any file that computes stimulus features (other than the
   visible seeds' own hooks) is present in an agent-visible tree, or a

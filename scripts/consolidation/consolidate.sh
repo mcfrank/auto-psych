@@ -3,9 +3,9 @@
 # docs/consolidation_plan_2026_09.md phase by phase in its own clone on a
 # compute node, one session per phase, requeueing itself when it must wait.
 # After the consolidation (P0-P8), the raw-only refactor and agent-tree
-# isolation (P9-P10) and their smoke (P11-P12), it launches the 5-repeat
-# recovery sweep (P13), submits the RMSE evaluation (P14) and writes
-# RESULTS.md (P15).
+# isolation (P9-P10), the readability simplification (P11) and their smoke
+# (P12-P13), it launches the 5-repeat recovery sweep (P14), submits the RMSE
+# evaluation (P15) and writes RESULTS.md (P16).
 #
 # Usage (login node; bash only, no Python):
 #   bash scripts/consolidation/consolidate.sh
@@ -18,7 +18,7 @@
 #                                  under a subscription login, not billing)
 #   TIMEOUT_SEC=21600              kill a session after this (6 h)
 #   PARTITION=normal TIME=2-00:00:00 CPUS=4 MEM=16GB
-#   SWEEP_N_REPEATS=5 SWEEP_BASE_SEED=100 SWEEP_MAX_PARALLEL=5   (the P13 sweep)
+#   SWEEP_N_REPEATS=5 SWEEP_BASE_SEED=100 SWEEP_MAX_PARALLEL=5   (the P14 sweep)
 #   SWEEP_ARMS=raw                 obsolete since the raw-only refactor (P9); kept for old env files
 #   RESUME=1                       resubmit an existing work root (its clone,
 #                                  progress markers and venv are kept)
@@ -155,14 +155,14 @@ job_id=$(sbatch --parsable "${SBATCH_ARGS[@]}")
 echo "$job_id" >> "$WORK_ROOT/jobs.txt"
 cat <<MSG
 submitted consolidation job $job_id
-  model $MODEL, up to $MAX_TURNS turns / ${TIMEOUT_SEC}s per phase session; phases P0..P15
-  (requeues itself for session limits, walltime, the smoke jobs, the P13 sweep, the P14 evaluation)
+  model $MODEL, up to $MAX_TURNS turns / ${TIMEOUT_SEC}s per phase session; phases P0..P16
+  (requeues itself for session limits, walltime, the smoke jobs, the P14 sweep, the P15 evaluation)
   sweep: $SWEEP_N_REPEATS repeats, BASE_SEED=$SWEEP_BASE_SEED, $SWEEP_MAX_PARALLEL concurrent
 
 follow:   tail -f $WORK_ROOT/slurm_logs/${JOB_NAME}_${job_id}.out
 status:   cat $WORK_ROOT/STATUS.md; ls $WORK_ROOT/progress/
-smoke:    cat $WORK_ROOT/VERDICT.md $WORK_ROOT/HANDOFF.md      # when P12 is done
-result:   cat $WORK_ROOT/RESULTS.md                            # when P15 is done
+smoke:    cat $WORK_ROOT/VERDICT.md $WORK_ROOT/HANDOFF.md      # when P13 is done
+result:   cat $WORK_ROOT/RESULTS.md                            # when P16 is done
 branch:   git fetch $WORK_ROOT/repo consolidate/2026-09
 stop:     scancel $job_id   (the P7 smoke chains, if submitted, are separate jobs)
 MSG

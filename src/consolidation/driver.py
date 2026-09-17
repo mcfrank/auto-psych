@@ -1,14 +1,14 @@
 """Pure parts of the consolidation driver.
 
 The consolidation plan (``docs/consolidation_plan_2026_09.md``) is executed as
-sixteen phases, P0..P15, one Claude Code session each. State lives on disk
+seventeen phases, P0..P16, one Claude Code session each. State lives on disk
 under ``<work_root>/progress/`` as marker files the agent writes and the
 driver validates:
 
 * ``P<k>.done`` — first line ``commit: <sha>`` (must equal HEAD), then a summary;
 * ``P<k>.blocked`` — the agent hit a stop condition; the job stops;
-* ``<phase.jobs_file>`` — for a phase that submits Slurm jobs (P7 smoke, P9
-  sweep, P10 evaluation): the ids the driver must wait on, per label;
+* ``<phase.jobs_file>`` — for a phase that submits Slurm jobs (P7 and P12
+  smoke, P14 sweep, P15 evaluation): the ids the driver must wait on, per label;
 * ``P<k>.retry*`` — a later phase asked for another round of ``P<k>``
   (bounded by ``Phase.max_rounds``).
 
@@ -84,26 +84,29 @@ PHASES: tuple[Phase, ...] = (
     # be unreadable by agents (see the plan's amendment before P9).
     Phase("P9", "Raw is the only mode"),
     Phase("P10", "The agents' tree contains no feature code; imports are gated"),
+    # Inserted at the user's request (2026-09-16): simplify for human reading
+    # before the smoke validates it and the sweep runs on it.
+    Phase("P11", "Simplify: make the code readable end to end"),
     Phase(
-        "P11", "Submit the smoke cell",
+        "P12", "Submit the smoke cell",
         allows_sbatch=True, jobs_file="isolation_smoke_jobs.json",
         required_labels=("raw",), max_rounds=3,
     ),
     Phase(
-        "P12", "Smoke verdict",
+        "P13", "Smoke verdict",
         waits_for="isolation_smoke_jobs.json", requires_files=("VERDICT.md", "HANDOFF.md"),
     ),
     Phase(
-        "P13", "Launch the 5-repeat recovery sweep",
+        "P14", "Launch the 5-repeat recovery sweep",
         allows_sbatch=True, jobs_file="sweep_jobs.json", required_labels=("raw",),
     ),
     Phase(
-        "P14", "Submit the RMSE evaluation job",
+        "P15", "Submit the RMSE evaluation job",
         waits_for="sweep_jobs.json", allows_sbatch=True,
         jobs_file="analysis_jobs.json", required_labels=("analysis",), max_rounds=2,
     ),
     Phase(
-        "P15", "Results: the RMSE evaluation report",
+        "P16", "Results: the RMSE evaluation report",
         waits_for="analysis_jobs.json", requires_files=("RESULTS.md",),
     ),
 )

@@ -41,12 +41,13 @@ SHA = "0123456789abcdef0123456789abcdef01234567"
 # --- phase table --------------------------------------------------------------
 
 
-def test_phases_run_p0_to_p15_in_order_and_only_submitting_phases_may_sbatch():
-    assert [p.id for p in PHASES] == [f"P{k}" for k in range(16)]
-    assert [p.id for p in PHASES if p.allows_sbatch] == ["P7", "P11", "P13", "P14"]
+def test_phases_run_p0_to_p16_in_order_and_only_submitting_phases_may_sbatch():
+    assert [p.id for p in PHASES] == [f"P{k}" for k in range(17)]
+    assert [p.id for p in PHASES if p.allows_sbatch] == ["P7", "P12", "P14", "P15"]
     assert phase_by_id("P3").title
+    assert phase_by_id("P11").title.startswith("Simplify")
     with pytest.raises(KeyError):
-        phase_by_id("P16")
+        phase_by_id("P17")
 
 
 def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
@@ -62,11 +63,11 @@ def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
             assert phase.allows_sbatch and phase.required_labels
     assert phase_by_id("P7").jobs_file == "smoke_jobs.json"
     assert phase_by_id("P8").waits_for == "smoke_jobs.json"
-    assert phase_by_id("P11").jobs_file == "isolation_smoke_jobs.json"
-    assert phase_by_id("P12").waits_for == "isolation_smoke_jobs.json"
-    assert phase_by_id("P13").required_labels == ("raw",)
-    assert phase_by_id("P14").waits_for == "sweep_jobs.json"
-    assert phase_by_id("P15").waits_for == "analysis_jobs.json"
+    assert phase_by_id("P12").jobs_file == "isolation_smoke_jobs.json"
+    assert phase_by_id("P13").waits_for == "isolation_smoke_jobs.json"
+    assert phase_by_id("P14").required_labels == ("raw",)
+    assert phase_by_id("P15").waits_for == "sweep_jobs.json"
+    assert phase_by_id("P16").waits_for == "analysis_jobs.json"
     with pytest.raises(KeyError):
         jobs_file_owner("nobody_writes_this.json")
 
@@ -74,7 +75,7 @@ def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
 def test_disallowed_tools_add_sbatch_except_in_submitting_phases():
     assert "Bash(sbatch:*)" in disallowed_tools(phase_by_id("P2"))
     assert "Bash(sbatch:*)" in disallowed_tools(phase_by_id("P8"))
-    for phase_id in ("P7", "P11", "P13", "P14"):
+    for phase_id in ("P7", "P12", "P14", "P15"):
         assert "Bash(sbatch:*)" not in disallowed_tools(phase_by_id(phase_id))
         for tool in BASE_DISALLOWED_TOOLS:
             assert tool in disallowed_tools(phase_by_id(phase_id))
@@ -127,7 +128,7 @@ def test_phase_round_counts_retry_markers(tmp_path):
     assert phase_round(progress, "P7") == 3
     assert phase_round(progress, "P9") == 1
     assert phase_by_id("P7").max_rounds == 2
-    assert phase_by_id("P11").max_rounds == 3
+    assert phase_by_id("P12").max_rounds == 3
     assert phase_by_id("P9").max_rounds is None
 
 
@@ -148,7 +149,7 @@ def test_a_verdict_phase_can_reopen_an_earlier_phase(tmp_path):
     assert newly_reopened("P8", after, retry_markers(progress)) is None
     # the earliest re-opened phase wins when several appear
     (progress / "P2.retry").write_text("y\n")
-    assert newly_reopened("P12", set(), retry_markers(progress)) == "P2"
+    assert newly_reopened("P13", set(), retry_markers(progress)) == "P2"
 
 
 # --- done-marker validation ---------------------------------------------------
@@ -216,15 +217,15 @@ def test_a_submitting_phase_requires_its_jobs_file_with_every_label(tmp_path):
     )
     assert validate_done_marker(progress, "P7", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
-    _write_done(progress, "P11")
+    _write_done(progress, "P12")
     (progress / "isolation_smoke_jobs.json").write_text(_jobs({"raw": ["8", "9", "10", "11"]}))
-    assert validate_done_marker(progress, "P11", head_sha=SHA, porcelain="", work_root=tmp_path) == []
-    _write_done(progress, "P13")
-    (progress / "sweep_jobs.json").write_text(_jobs({"raw": ["8", "9", "10", "11"]}))
-    assert validate_done_marker(progress, "P13", head_sha=SHA, porcelain="", work_root=tmp_path) == []
+    assert validate_done_marker(progress, "P12", head_sha=SHA, porcelain="", work_root=tmp_path) == []
     _write_done(progress, "P14")
-    (progress / "analysis_jobs.json").write_text(_jobs({"analysis": ["12"]}))
+    (progress / "sweep_jobs.json").write_text(_jobs({"raw": ["8", "9", "10", "11"]}))
     assert validate_done_marker(progress, "P14", head_sha=SHA, porcelain="", work_root=tmp_path) == []
+    _write_done(progress, "P15")
+    (progress / "analysis_jobs.json").write_text(_jobs({"analysis": ["12"]}))
+    assert validate_done_marker(progress, "P15", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
 
 def test_verdict_and_results_phases_require_their_report_files(tmp_path):
@@ -237,14 +238,14 @@ def test_verdict_and_results_phases_require_their_report_files(tmp_path):
     (tmp_path / "HANDOFF.md").write_text("fetch it\n")
     assert validate_done_marker(progress, "P8", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
-    _write_done(progress, "P12")
-    assert validate_done_marker(progress, "P12", head_sha=SHA, porcelain="", work_root=tmp_path) == []
+    _write_done(progress, "P13")
+    assert validate_done_marker(progress, "P13", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
-    _write_done(progress, "P15")
-    problems = validate_done_marker(progress, "P15", head_sha=SHA, porcelain="", work_root=tmp_path)
+    _write_done(progress, "P16")
+    problems = validate_done_marker(progress, "P16", head_sha=SHA, porcelain="", work_root=tmp_path)
     assert any("RESULTS.md" in p for p in problems)
     (tmp_path / "RESULTS.md").write_text("rmse table\n")
-    assert validate_done_marker(progress, "P15", head_sha=SHA, porcelain="", work_root=tmp_path) == []
+    assert validate_done_marker(progress, "P16", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
 
 # --- jobs files -------------------------------------------------------------------

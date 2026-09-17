@@ -8,7 +8,7 @@ requeues itself — never sleeps — when
 
 * the subscription's session limit is hit (``--begin`` at the reset),
 * the remaining walltime cannot fit another session, or
-* a phase submitted Slurm jobs (P7 smoke, P9 sweep, P10 evaluation) and the
+* a phase submitted Slurm jobs (P7/P12 smoke, P14 sweep, P15 evaluation) and the
   next phase must wait for them (``--dependency=afterany:<ids>``).
 
 Usage (inside the sbatch job)::
