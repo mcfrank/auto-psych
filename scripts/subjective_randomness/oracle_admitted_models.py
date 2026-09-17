@@ -37,9 +37,9 @@ from src.pipelines.inner_loop.hypothesis_ledger import (  # noqa: E402
 from src.subjective_randomness.holdout_recovery import (  # noqa: E402
     _unordered_pair,
     _resolve_model_dir,
+    _raw_eval_rows,
     collect_trained_pairs,
     evaluate_trajectory,
-    feature_rows,
     p_left_fixed_params,
 )
 from src.subjective_randomness.recover import pearson_r  # noqa: E402
@@ -208,7 +208,7 @@ def main(args: Args) -> None:
         if not eval_stimuli_path.exists():
             raise FileNotFoundError(f"No eval_stimuli.json at {eval_stimuli_path}")
         eval_stimuli = json.loads(eval_stimuli_path.read_text(encoding="utf-8"))
-        eval_rows = feature_rows(eval_stimuli)
+        eval_rows = _raw_eval_rows(eval_stimuli)
 
         seed_models_dir = Path(result["seed_models_dir"])
         gt_p = p_left_fixed_params(gt_model, seed_models_dir, eval_stimuli, gt_params)
