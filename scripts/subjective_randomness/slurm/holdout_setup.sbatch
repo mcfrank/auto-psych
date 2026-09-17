@@ -103,6 +103,18 @@ echo "[setup] staging pristine seed/GT models -> $GT_MODELS_SRC"
 mkdir -p "$GT_MODELS_SRC"
 rsync -a "$REPO/$SEED_MODELS_REL"/ "$GT_MODELS_SRC"/
 
+# Stage a full harness repo for the harness process. Each array task creates a
+# scrubbed agent tree (via agent_tree.exclude) for the coding agents; the harness
+# runs from this full copy so it can import stimulus_design, model_families, etc.
+# that the agent tree deliberately excludes. The .here sentinel is for pyprojroot.
+HARNESS_REPO="${HARNESS_REPO:-$WORK_ROOT/harness_repo}"
+echo "[setup] staging harness repo -> $HARNESS_REPO"
+rsync -a --exclude '.git' --exclude '.venv' --exclude '__pycache__' \
+  --exclude '*.nc' --exclude 'node_modules' \
+  --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
+  "$REPO"/ "$HARNESS_REPO"/
+touch "$HARNESS_REPO/.here"
+
 # Also stage the pure-Python model_families (DEFAULT_PARAMS + generative form)
 # to a pristine snapshot. The parent reads the held-out GT's family from here by
 # PARSING (never importing), so the generative source can be scrubbed from the

@@ -929,6 +929,7 @@ def run_inner_model_loop_programmatic(
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
+    agent_root: Optional[Path] = None,
 ) -> Path:
     """Run the PyMC inner model loop over pooled outer-loop data.
 
@@ -990,6 +991,8 @@ def run_inner_model_loop_programmatic(
         extra["prune_dse_multiplier"] = prune_dse_multiplier
     if candidate_parallelism is not None:
         extra["candidate_parallelism"] = candidate_parallelism
+    if agent_root is not None:
+        extra["agent_root"] = agent_root
     result = run_pymc_inner_loop(
         responses_path,
         loop_dir,

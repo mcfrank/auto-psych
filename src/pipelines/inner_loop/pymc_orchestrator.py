@@ -57,6 +57,10 @@ from src.pipelines.inner_loop.hypothesis_ledger import (
     LedgerEntry,
     one_line,
 )
+from src.pipelines.inner_loop.import_gate import (
+    CANDIDATE_IMPORT_ALLOWLIST,
+    check_forbidden_imports,
+)
 from src.pipelines.outer_loop.featurizer import RAW_RESPONSE_COLUMNS
 from src.runtime.config import REPO_ROOT
 
@@ -611,6 +615,14 @@ def _admit_candidate(
             "before it can be admitted"
         )
 
+    source = candidate_file.read_text(encoding="utf-8")
+    forbidden = check_forbidden_imports(source)
+    if forbidden:
+        return reject(
+            f"forbidden import: {', '.join(forbidden)} — candidates may only "
+            f"import from {sorted(CANDIDATE_IMPORT_ALLOWLIST)}"
+        )
+
     staged = models_dir / f"{model_name}.py"
     shutil.copyfile(candidate_file, staged)
     try:
@@ -888,7 +900,14 @@ def _write_candidate_context(
             "One of these hooks is **required** — without it the model cannot bind "
             "any stimulus input.",
         ]
+    allowlist_str = ", ".join(f"`{m}`" for m in sorted(CANDIDATE_IMPORT_ALLOWLIST))
     lines += [
+        "",
+        "**Allowed imports:** your `candidate.py` may only import from this "
+        f"allowlist: {allowlist_str}. Any other import (including the project's "
+        "feature library, pandas, or any `src.*` module) causes immediate "
+        "rejection at admission. Every helper your model needs must be written "
+        "in the file itself — self-contained code only.",
         "",
         "Work in three steps:",
         "1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.",
@@ -1011,24 +1030,22 @@ def _spawn_candidate_agent(
     agent_timeout_sec: int,
     backend: Optional[str],
     agent_model: Optional[str] = None,
+    agent_root: Optional[Path] = None,
 ) -> bool:
     from src.runtime.coding_agent import run_coding_agent
 
-    # Run from REPO_ROOT, NOT candidate_dir. opencode discovers its
-    # external_directory grants by walking up from cwd to the worktree's
-    # opencode.json; candidate_dir lives on $SCRATCH outside the worktree, so a
-    # cwd there loads no grants and opencode auto-rejects every external path the
-    # CONTEXT.md points at (critiques.md, responses CSV, model set) — no
-    # candidate.py ever gets written. The critique agent runs from REPO_ROOT for
-    # the same reason. The candidate_dir is named explicitly below since it is no
-    # longer the cwd.
+    # Run from agent_root (the scrubbed agent tree), not from the harness
+    # checkout. opencode discovers its external_directory grants by walking up
+    # from cwd to the worktree's opencode.json, so cwd must be a tree that has
+    # .here and opencode.json. The agent tree is scrubbed of feature code,
+    # research library modules and GT-recipe files, so the agent cannot read
+    # them. The candidate_dir is named explicitly since it is not the cwd.
+    cwd = agent_root if agent_root is not None else REPO_ROOT
     prompt = _build_candidate_prompt(candidate_dir, docs)
     log_path = candidate_dir / "agent.jsonl"
-    # For the Claude backend (which honours allowed_dirs via --add-dir) grant the
-    # candidate's workspace plus the responses CSV and model set it references.
     success, _ = run_coding_agent(
         prompt,
-        cwd=REPO_ROOT,
+        cwd=cwd,
         log_path=log_path,
         allowed_dirs=[candidate_dir, models_dir, responses_path.parent],
         timeout_secs=agent_timeout_sec,
@@ -1157,6 +1174,7 @@ def _spawn_critique_agent(
     agent_timeout_sec: int,
     backend: Optional[str],
     agent_model: Optional[str] = None,
+    agent_root: Optional[Path] = None,
 ) -> bool:
     """Critique the incumbent: seed its fit, write context, spawn the critique agent.
 
@@ -1184,11 +1202,12 @@ def _spawn_critique_agent(
         n_replicates=n_replicates,
     )
 
-    # Name critique_dir explicitly: the agent runs from REPO_ROOT (so opencode
+    # Name critique_dir explicitly: the agent runs from agent_root (so opencode
     # loads the worktree's external_directory grants), NOT from critique_dir, so a
     # bare "in this directory" leaves it guessing where CRITIQUE_CONTEXT.md is —
     # which it sometimes gets wrong, then writes no statistics. Same fix as the
     # candidate agent.
+    cwd = agent_root if agent_root is not None else REPO_ROOT
     prompt = (
         f"{_CRITIQUE_PROMPT.read_text(encoding='utf-8')}\n\n"
         f"---\n\nYour working directory for this critique is `{critique_dir}`.\n"
@@ -1198,11 +1217,9 @@ def _spawn_critique_agent(
         f"posterior-predictive check over your statistics and records the results.\n"
     )
     log_path = critique_dir / "agent.jsonl"
-    # The agent only needs to write into test_stats/; give it the model set and
-    # responses for reference.
     success, _ = run_coding_agent(
         prompt,
-        cwd=REPO_ROOT,
+        cwd=cwd,
         log_path=log_path,
         allowed_dirs=[critique_dir, models_dir, responses_path.parent],
         timeout_secs=agent_timeout_sec,
@@ -1358,6 +1375,16 @@ def _persist_critique_results(
         )
         print(f"  [critique] wrote {n_default} default test statistics", flush=True)
 
+    for stat_file in sorted(test_stats_dir.glob("*.py")):
+        forbidden = check_forbidden_imports(stat_file.read_text(encoding="utf-8"))
+        if forbidden:
+            print(
+                f"  [critique] removing {stat_file.name}: forbidden import "
+                f"{', '.join(forbidden)}",
+                flush=True,
+            )
+            stat_file.unlink()
+
     result = run_ppc_for_model(
         incumbent,
         models_dir,
@@ -1396,6 +1423,7 @@ def _run_critique_round(
     agent_timeout_sec: int,
     backend: Optional[str],
     agent_model: Optional[str] = None,
+    agent_root: Optional[Path] = None,
 ) -> Optional[Path]:
     """Critique the current incumbent before a candidate round; return critiques.md.
 
@@ -1424,6 +1452,7 @@ def _run_critique_round(
             agent_timeout_sec=agent_timeout_sec,
             backend=backend,
             agent_model=agent_model,
+            agent_root=agent_root,
         )
     except Exception as e:  # a critique failure must not kill a long inner-loop run
         print(f"  [critique] skipped — {type(e).__name__}: {e}", flush=True)
@@ -1468,6 +1497,7 @@ def run_pymc_inner_loop(
     protected_names: Optional[Iterable[str]] = None,
     ledger_context: str = "",
     lens_offset: int = 0,
+    agent_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Run the PyMC inner model loop and export the best model.
 
@@ -1597,6 +1627,7 @@ def run_pymc_inner_loop(
                 agent_timeout_sec=agent_timeout_sec,
                 backend=backend,
                 agent_model=agent_model,
+                agent_root=agent_root,
             )
         # Stage 1 — write every candidate's context, then spawn the agents
         # concurrently: each is a CLI subprocess whose latency dominates the
@@ -1633,6 +1664,7 @@ def run_pymc_inner_loop(
                 agent_timeout_sec=agent_timeout_sec,
                 backend=backend,
                 agent_model=agent_model,
+                agent_root=agent_root,
             )
 
         workers = min(candidate_parallelism or candidate_count, candidate_count)

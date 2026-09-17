@@ -110,6 +110,12 @@ class Args:
     """Override the coding-agent model id (default: the config's agent.model,
     then the backend's default). Per-backend format — opencode wants
     `provider/model`, e.g. fireworks-ai/accounts/fireworks/models/deepseek-v4-flash-0731."""
+    agent_root: Optional[Path] = None
+    """Scrubbed agent tree that coding agents use as their working directory.
+    When set, the harness runs from its own checkout (the cwd) and agents run
+    from this root instead. The agent tree is built by rsync with
+    agent_tree.exclude so it contains no feature code, research library modules,
+    or GT-recipe files."""
     resume: bool = False
     """Continue a stopped run: skip ground truths with a trajectory.json and,
     within incomplete runs, skip stages whose output already validates."""
@@ -164,6 +170,10 @@ def main(args: Args) -> None:
         if value is not None
     }
 
+    agent_root = (
+        resolve_path(args.agent_root) if args.agent_root is not None else None
+    )
+
     result = run_holdout_recovery_from_config(
         load_config(config_path),
         config_path,
@@ -183,6 +193,7 @@ def main(args: Args) -> None:
         agent_model_override=args.agent_model,
         agent_timeout_override=args.agent_timeout_sec,
         resume=args.resume,
+        agent_root=agent_root,
     )
 
     out_path.parent.mkdir(parents=True, exist_ok=True)

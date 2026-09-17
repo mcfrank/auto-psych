@@ -149,7 +149,113 @@ done
 if [[ "$n_screen" -gt 0 && "$bad_screen" == "0" ]]; then say "- [ok]   all $n_screen screened_out.json(s) are empty"
 elif [[ "$bad_screen" -gt 0 ]]; then say "- [FAIL] $bad_screen of $n_screen screened_out.json(s) are non-empty"; fails=$((fails + 1)); fi
 
-# 8. Recovery, if any cell finished.
+# 8. Agent-tree isolation: forbidden paths from agent_tree.exclude must not
+#    appear in the agent's repo copy (whether live or archived).
+_TREE_FORBIDDEN_ANCHORED=(
+  "src/subjective_randomness/features.py"
+  "src/subjective_randomness/sequence_stats.py"
+  "src/subjective_randomness/stimulus_design.py"
+  "src/subjective_randomness/model_recovery.py"
+  "src/subjective_randomness/pymc_recover.py"
+)
+_TREE_FORBIDDEN_UNANCHORED=(ground_truth_models.py evaluate_recovery.py preprocess.py)
+_TREE_FORBIDDEN_DIRS=("src/subjective_randomness/model_families")
+bad_tree=0; n_tree=0
+for TREPO in "$W"/run*/*/repo; do
+  [[ -d "$TREPO" ]] || continue
+  n_tree=$((n_tree + 1))
+  for fp in "${_TREE_FORBIDDEN_ANCHORED[@]}"; do
+    [[ -f "$TREPO/$fp" ]] && { bad_tree=$((bad_tree + 1)); say "      leaked: $TREPO/$fp"; }
+  done
+  for fd in "${_TREE_FORBIDDEN_DIRS[@]}"; do
+    [[ -d "$TREPO/$fd" ]] && { bad_tree=$((bad_tree + 1)); say "      leaked dir: $TREPO/$fd"; }
+  done
+  for fn in "${_TREE_FORBIDDEN_UNANCHORED[@]}"; do
+    while IFS= read -r found; do
+      bad_tree=$((bad_tree + 1)); say "      leaked: $found"
+    done < <(find "$TREPO" -name "$fn" -not -path "*/_runs/*" 2>/dev/null)
+  done
+done
+for TAR in "$W"/run*/*/agent_runs.tar.gz; do
+  [[ -f "$TAR" ]] || continue
+  n_tree=$((n_tree + 1))
+  listing=$(tar tzf "$TAR" 2>/dev/null || true)
+  for fp in "${_TREE_FORBIDDEN_ANCHORED[@]}"; do
+    echo "$listing" | grep -qF "$fp" \
+      && { bad_tree=$((bad_tree + 1)); say "      leaked in archive: $TAR :: $fp"; }
+  done
+  for fn in "${_TREE_FORBIDDEN_UNANCHORED[@]}"; do
+    echo "$listing" | grep -q "/${fn}$" \
+      && { bad_tree=$((bad_tree + 1)); say "      leaked in archive: $TAR :: $fn"; }
+  done
+done
+if [[ "$n_tree" == "0" ]]; then say "- [info] no agent tree or archive found (check manually)"
+elif [[ "$bad_tree" == "0" ]]; then say "- [ok]   agent-tree isolation: no forbidden paths in $n_tree tree(s)/archive(s)"
+else say "- [FAIL] $bad_tree forbidden path(s) in agent trees"; fails=$((fails + 1)); fi
+
+# 9. Import allowlist: every .py in model_loop/models/ (including pruned/) must
+#    import only from the candidate allowlist. Uses system python3 (stdlib only).
+_PY3=$(command -v python3 2>/dev/null || echo "")
+if [[ -z "$_PY3" ]]; then
+  say "- [skip] import allowlist check (python3 not found on this node)"
+else
+  _IMPORT_CHECKER=$(mktemp /tmp/check_imports_XXXXXX.py)
+  cat > "$_IMPORT_CHECKER" <<'PYEOF'
+import ast, sys
+ALLOWLIST = frozenset({
+    "numpy", "pymc", "pytensor", "arviz", "scipy", "math",
+    "itertools", "functools", "collections", "re", "typing",
+    "dataclasses", "statistics", "operator",
+})
+path = sys.argv[1] if len(sys.argv) > 1 and sys.argv[1] != "-" else "/dev/stdin"
+try:
+    source = open(path).read()
+    tree = ast.parse(source)
+except Exception:
+    sys.exit(0)
+forbidden = []
+for node in ast.walk(tree):
+    if isinstance(node, ast.Import):
+        for alias in node.names:
+            top = alias.name.split(".")[0]
+            if top not in ALLOWLIST:
+                forbidden.append(alias.name)
+    elif isinstance(node, ast.ImportFrom):
+        if node.level:
+            forbidden.append(f"relative(level={node.level})")
+        elif node.module:
+            top = node.module.split(".")[0]
+            if top not in ALLOWLIST:
+                forbidden.append(node.module)
+if forbidden:
+    print(" ".join(sorted(set(forbidden))))
+    sys.exit(1)
+PYEOF
+  bad_imp=0; n_imp_files=0
+  for MODELS_DIR in "$W"/run*/*/repo/_runs/*/experiment*/model_loop/models; do
+    [[ -d "$MODELS_DIR" ]] || continue
+    while IFS= read -r PY; do
+      n_imp_files=$((n_imp_files + 1))
+      result=$("$_PY3" "$_IMPORT_CHECKER" "$PY" 2>/dev/null) \
+        || { bad_imp=$((bad_imp + 1)); say "      forbidden import: $PY — $result"; }
+    done < <(find "$MODELS_DIR" -name "*.py" -not -name "__init__.py" 2>/dev/null)
+  done
+  for TAR in "$W"/run*/*/agent_runs.tar.gz; do
+    [[ -f "$TAR" ]] || continue
+    while IFS= read -r MEMBER; do
+      n_imp_files=$((n_imp_files + 1))
+      result=$(tar xzOf "$TAR" "$MEMBER" 2>/dev/null \
+        | "$_PY3" "$_IMPORT_CHECKER" - 2>/dev/null) \
+        || { bad_imp=$((bad_imp + 1)); say "      forbidden import: $TAR :: $MEMBER — $result"; }
+    done < <(tar tzf "$TAR" 2>/dev/null | grep -E "model_loop/models/.*\.py$" | grep -v "__init__\.py")
+  done
+  rm -f "$_IMPORT_CHECKER"
+  if [[ "$n_imp_files" == "0" ]]; then say "- [info] no model .py files found for import check"
+  elif [[ "$bad_imp" == "0" ]]; then say "- [ok]   all $n_imp_files model .py file(s) pass the import allowlist"
+  else say "- [FAIL] $bad_imp of $n_imp_files model .py file(s) import outside the allowlist"; fails=$((fails + 1)); fi
+fi
+
+# 10. Recovery, if any cell finished.
 say ""
 say "## Recovery (final-step pearson r per cell)"
 say '```'
@@ -161,7 +267,7 @@ done
 say '```'
 say ""
 
-# 9. Print config, code SHA and feature mode.
+# 11. Print config, code SHA, feature mode, and harness/agent paths.
 say "## Run info"
 for CFG in "$W"/run*/*/config.yaml; do
   [[ -f "$CFG" ]] || continue
@@ -170,6 +276,11 @@ for CFG in "$W"/run*/*/config.yaml; do
 done
 CODE_SHA=$(cd "$W"/run*/*/repo 2>/dev/null && git rev-parse HEAD 2>/dev/null || echo "unknown")
 say "- code SHA: $CODE_SHA"
+HARNESS_ROOT="$W/harness_repo"
+if [[ -d "$HARNESS_ROOT" ]]; then say "- harness-root: \`$HARNESS_ROOT\`"
+else say "- harness-root: not found (pre-P10 run or cleaned up)"; fi
+n_agent_trees=$(ls -d "$W"/run*/*/repo 2>/dev/null | wc -l)
+say "- agent-root trees: $n_agent_trees live (archived copies not counted)"
 say ""
 
 if [[ "$fails" == "0" ]]; then say "**VERDICT: all checks passed.**"; else say "**VERDICT: $fails check(s) FAILED — see above.**"; fi
