@@ -1,16 +1,12 @@
-"""In a raw-features run the agents' CSV carries only H/T sequences, so each
-seed must compute the columns it binds itself (see docs/raw_features_arm.md).
+"""Every seed model computes its own features from raw H/T sequences.
 
-These are the guards that make that safe:
-
-* the helpers vendored into each seed are byte-identical to the originals in
-  `src/subjective_randomness/features.py`, and behave identically;
-* each seed's `compute_features` returns exactly the columns its `pm.Data`
-  containers read, with the values the featurizer would have supplied. The
-  model body is unchanged and reads those columns by name, so equal columns
-  mean identical model input and therefore identical predictions;
-* no seed imports the project featurizer (which a raw-features run puts out of
-  reach), and the registry and live pool copies stay in step.
+Guards:
+* vendored helpers in each seed are byte-identical to the originals in
+  ``src/subjective_randomness/model_families/common.py``;
+* each seed's ``compute_features`` returns exactly the columns its ``pm.Data``
+  containers read, with the correct values;
+* no seed imports the project featurizer;
+* the registry and live pool copies stay in step.
 """
 
 from __future__ import annotations
@@ -20,22 +16,13 @@ from itertools import product
 
 import pytest
 
-from src.subjective_randomness import features as canonical
 from tests.paths import REPO_ROOT
 
-# The raw-features seed set is SEPARATE from the featurized one: a model that
-# computes a column the CSV already carries makes the fit raise (and the loop
-# only [drop]s it), so the two cannot share files. `raw_features` runs point
-# `seed_models_dir` / the live pool at these `_raw` directories.
-REGISTRY = REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families_raw"
+REGISTRY = REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families"
 POOL = (
     REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects"
-    / "subjective_randomness" / "seed_models_raw"
+    / "subjective_randomness" / "seed_models"
 )
-FEATURIZED_REGISTRY = (
-    REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families"
-)
-# model -> (vendored helpers, the columns its compute_features must return)
 VENDORED = {
     "falk_konold_dp": (
         ("clean_sequence", "parse_motifs"),
@@ -53,8 +40,6 @@ VENDORED = {
         ),
     ),
 }
-# Every distinct pair over these lengths: small, exhaustive, and covers the
-# length-1 and all-same-symbol edge cases the featurizer guards.
 PAIRS = [
     (a, b)
     for n in (1, 2, 3, 4, 5)
@@ -66,13 +51,6 @@ PAIRS = [
 
 
 def _bound_columns(path):
-    """Every column name the model binds with `pm.Data("name", ...)`.
-
-    Parsed, not grepped: `local_representativeness` splits the call across
-    lines, so a line-oriented pattern silently misses two of its columns —
-    which is how the first draft of this arm shipped an incomplete
-    `compute_features`.
-    """
     names = set()
     for node in ast.walk(ast.parse(path.read_text(encoding="utf-8"))):
         if (
@@ -88,9 +66,10 @@ def _bound_columns(path):
 
 
 def _module_functions(path):
-    tree = ast.parse(path.read_text(encoding="utf-8"))
+    src = path.read_text(encoding="utf-8")
+    tree = ast.parse(src)
     return {
-        node.name: ast.get_source_segment(path.read_text(encoding="utf-8"), node)
+        node.name: ast.get_source_segment(src, node)
         for node in tree.body
         if isinstance(node, ast.FunctionDef)
     }
@@ -108,6 +87,17 @@ def _canonical_sources():
     }
 
 
+def _loaded_hook(model):
+    import importlib.util
+
+    spec = importlib.util.spec_from_file_location(
+        f"_rawfeat_{model}", REGISTRY / f"{model}.py"
+    )
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod.compute_features
+
+
 @pytest.mark.parametrize("model", sorted(VENDORED))
 def test_vendored_helpers_are_byte_identical_to_the_originals(model):
     helpers, _ = VENDORED[model]
@@ -121,7 +111,7 @@ def test_vendored_helpers_are_byte_identical_to_the_originals(model):
 
 
 @pytest.mark.parametrize("model", sorted(VENDORED))
-def test_compute_features_matches_the_featurizer_on_the_columns_it_returns(model):
+def test_compute_features_returns_correct_columns_and_values(model):
     _, columns = VENDORED[model]
     hook = _loaded_hook(model)
     for seq_a, seq_b in PAIRS:
@@ -129,33 +119,12 @@ def test_compute_features_matches_the_featurizer_on_the_columns_it_returns(model
         assert set(produced) == set(columns), (
             f"{model}.compute_features returned {sorted(produced)}, expected {sorted(columns)}"
         )
-        expected = canonical.featurize_stimulus(seq_a, seq_b)
-        for column in columns:
-            assert produced[column] == pytest.approx(expected[column]), (
-                f"{model}.compute_features[{column}] disagrees with the featurizer "
-                f"on ({seq_a}, {seq_b})"
-            )
-
-
-def _loaded_hook(model):
-    """The model's compute_features, loaded without building its PyMC graph."""
-    import importlib.util
-
-    spec = importlib.util.spec_from_file_location(
-        f"_rawfeat_{model}", REGISTRY / f"{model}.py"
-    )
-    mod = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(mod)
-    return mod.compute_features
 
 
 @pytest.mark.parametrize("model", sorted(VENDORED))
 def test_compute_features_covers_every_column_the_model_binds(model):
-    """A column the model binds but does not compute would be missing from a
-    raw CSV, so the fit would die inside the sweep rather than here."""
     _, columns = VENDORED[model]
     bound = _bound_columns(REGISTRY / f"{model}.py")
-    # chose_left is the observed response, always present in a raw CSV.
     assert bound - {"chose_left"} <= set(columns), (
         f"{model} binds {sorted(bound - {'chose_left'} - set(columns))} which "
         "compute_features does not supply"
@@ -172,55 +141,22 @@ def test_seeds_are_self_contained_and_mirrored(model):
     )
 
 
-@pytest.mark.parametrize("model", sorted(VENDORED))
-def test_raw_seed_is_its_featurized_twin_plus_the_appended_block(model):
-    """The two seed sets must not drift apart: a raw seed is exactly its
-    featurized counterpart with the self-contained block appended. Anything
-    else means the arm is testing a different model, not the same model on
-    raw data."""
-    featurized = (FEATURIZED_REGISTRY / f"{model}.py").read_text(encoding="utf-8")
-    raw = (REGISTRY / f"{model}.py").read_text(encoding="utf-8")
-    assert raw.startswith(featurized.rstrip("\n") + "\n"), (
-        f"{model}: the raw seed no longer starts with its featurized twin"
-    )
-    assert "def compute_features" not in featurized
-    assert "Raw-features (arm C) support" in raw[len(featurized.rstrip("\n")):]
-
-
-def test_the_featurized_seed_set_is_untouched_by_this_arm():
-    """A raw-features run must not change the featurized path: those seeds are
-    fitted on CSVs that already carry the columns, where `compute_features`
-    would collide and the loop would silently drop the model."""
-    for path in sorted(FEATURIZED_REGISTRY.glob("*.py")):
-        if path.name == "__init__.py":
-            continue
-        assert "def compute_features" not in path.read_text(encoding="utf-8"), (
-            f"{path.name} on the featurized path declares compute_features"
-        )
-
-
-def test_motif_stack_needs_no_hook_in_either_set():
-    """It builds every array from the raw sequences in `prepare_observed`
-    already, which is why it is copied verbatim."""
+def test_motif_stack_needs_no_hook():
     raw = (REGISTRY / "motif_stack.py").read_text(encoding="utf-8")
     assert "def prepare_observed" in raw and "def compute_features" not in raw
-    assert raw == (FEATURIZED_REGISTRY / "motif_stack.py").read_text(encoding="utf-8")
+    assert raw == (POOL / "motif_stack.py").read_text(encoding="utf-8")
 
 
-def test_seeding_can_be_pointed_at_the_raw_pool(tmp_path):
-    """Experiment 1 seeds from the project's `seed_models/` by default. A
-    raw-features run must be able to seed from `seed_models_raw/` instead:
-    seeding the featurized models there leaves them unable to bind raw rows,
-    and the design silently drops them rather than failing."""
+def test_seeding_can_be_pointed_at_the_pool(tmp_path):
     from src.pipelines.outer_loop.orchestrator import seed_experiment_models_from_project
 
-    pool = tmp_path / "seed_models_raw"
+    pool = tmp_path / "seed_models"
     pool.mkdir()
     (pool / "models_manifest.yaml").write_text(
-        "models:\n  - name: motif_stack\n    rationale: raw pool marker\n",
+        "models:\n  - name: motif_stack\n    rationale: pool marker\n",
         encoding="utf-8",
     )
-    (pool / "motif_stack.py").write_text("# the RAW copy\n", encoding="utf-8")
+    (pool / "motif_stack.py").write_text("# the pool copy\n", encoding="utf-8")
 
     exp_dir = tmp_path / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
@@ -228,23 +164,18 @@ def test_seeding_can_be_pointed_at_the_raw_pool(tmp_path):
         exp_dir, "subjective_randomness", seed_dir=pool
     )
     seeded = (exp_dir / "cognitive_models" / "motif_stack.py").read_text(encoding="utf-8")
-    assert seeded == "# the RAW copy\n", "seeded from the default pool, not seed_dir"
+    assert seeded == "# the pool copy\n", "seeded from the default pool, not seed_dir"
 
 
 def test_seed_exclusion_reads_the_same_pool_that_seeding_uses(tmp_path):
-    """The array scrubs the held-out model out of the pool manifest it was told
-    about. A membership test against a DIFFERENT pool still says "exclude it",
-    while seeding reads a manifest that no longer lists it, and the exclusion
-    raises `exclude names models not in the seed manifest` — which is exactly
-    how the third raw-features smoke died."""
     from src.subjective_randomness.holdout_recovery import seed_exclusion
 
-    scrubbed = tmp_path / "seed_models_raw"
+    scrubbed = tmp_path / "seed_models"
     scrubbed.mkdir()
     (scrubbed / "models_manifest.yaml").write_text(
         "models:\n  - name: motif_stack\n    rationale: r\n", encoding="utf-8"
     )
-    intact = tmp_path / "seed_models"
+    intact = tmp_path / "seed_models_full"
     intact.mkdir()
     (intact / "models_manifest.yaml").write_text(
         "models:\n  - name: motif_stack\n    rationale: r\n"

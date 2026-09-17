@@ -100,12 +100,13 @@ def test_load_attaches_declared_featurizer(tmp_path):
     assert featurizer("HTH", "TTT") == {"ends_h_a": 1.0, "ends_h_b": 0.0}
 
 
-def test_load_leaves_featurizer_none_when_absent():
-    # The shipped seed/fixture model declares no compute_features.
+def test_load_finds_compute_features_when_present():
     model = pi.load_pymc_model(
         "bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR
     )
-    assert pi._model_extra_featurizer(model) is None
+    featurizer = pi._model_extra_featurizer(model)
+    assert featurizer is not None
+    assert featurizer("HTH", "TTT") == {"n_a": 3, "h_a": 2, "n_b": 3, "h_b": 0}
 
 
 def test_load_rejects_non_callable_compute_features(tmp_path):
@@ -238,10 +239,9 @@ def test_custom_feature_model_fits_and_predicts_end_to_end(tmp_path):
 
 
 def test_recomputing_a_column_to_the_same_value_is_allowed(tmp_path):
-    """A self-contained model (one that computes the columns it binds, for a
-    raw-features run) is still handed featurized rows by the generation and
-    held-out evaluation paths. Recomputing a column identically there must not
-    fail the run."""
+    """A self-contained model recomputing a column that the row already carries
+    (same value) must not fail — this happens on the generation and held-out
+    evaluation paths."""
     from src.models.pymc_inference import _augment_rows_with_features
 
     class _Model:

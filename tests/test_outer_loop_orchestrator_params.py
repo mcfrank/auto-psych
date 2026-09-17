@@ -101,11 +101,7 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
     monkeypatch.setattr(
         orch, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
     )
-    monkeypatch.setattr(
-        orch, "_load_project_featurizer",
-        lambda project_dir: captured.setdefault("featurizer_dir", project_dir) and None,
-    )
-    monkeypatch.setattr(orch, "_write_feature_csv", lambda rows, fz, out: out)
+    monkeypatch.setattr(orch, "_write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(
         orch, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e
     )
@@ -141,7 +137,7 @@ def test_inner_loop_programmatic_explicit_project_id_overrides_parent_name(
     tmp_path, monkeypatch
 ):
     # Holdout layout: experiments live under <gt_model>/, so the parent dir is
-    # NOT the project id and the featurizer must resolve via the explicit one.
+    # NOT the project id and the protected seeds must resolve via the explicit one.
     exp_dir = tmp_path / "holdout_runs" / "prototype_similarity" / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
     # A real project seed, so the wrapper can tell which models are protected.
@@ -154,4 +150,4 @@ def test_inner_loop_programmatic_explicit_project_id_overrides_parent_name(
         tmp_path, monkeypatch, exp_dir, project_id=PROJECT
     )
 
-    assert captured["featurizer_dir"] == orch.outer_project_dir(PROJECT)
+    assert "falk_konold_dp" in captured["inner_kwargs"]["protected_names"]

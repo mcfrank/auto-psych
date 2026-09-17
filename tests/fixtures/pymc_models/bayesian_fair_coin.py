@@ -7,6 +7,16 @@ import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
+
+def compute_features(sequence_a, sequence_b):
+    return {
+        "n_a": len(sequence_a),
+        "h_a": sum(1 for c in sequence_a if c == "H"),
+        "n_b": len(sequence_b),
+        "h_b": sum(1 for c in sequence_b if c == "H"),
+    }
+
+
 with pm.Model() as model:
     n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
     h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))

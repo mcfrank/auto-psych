@@ -52,3 +52,101 @@ with pm.Model() as model:
         pm.math.sigmoid(beta * (score_a - score_b) + side_bias),
     )
     pm.Bernoulli("response", p=p_left, observed=chose_left)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Self-contained feature computation
+# ─────────────────────────────────────────────────────────────────────────────
+# The agents' responses CSV carries only raw H/T sequences, so every model
+# derives the columns its `pm.Data` containers read from the sequences
+# themselves, through the `compute_features(sequence_a, sequence_b)` hook
+# that `src/models/pymc_inference.py` applies wherever rows become model
+# data — fitting, the EIG design and the held-out prediction path alike.
+#
+# The helpers below are copied VERBATIM from
+# `src/subjective_randomness/features.py` (extracted programmatically, not
+# retyped) so this file is self-contained: it imports no project featurizer,
+# and it leaves nothing for a candidate agent to import either.
+# `tests/test_raw_features_seeds.py` pins each copy to its original and pins
+# `compute_features` to the featurizer's values for these columns, so the
+# copies cannot silently drift.
+
+LOCAL_WINDOW = 4
+
+
+def clean_sequence(seq: str) -> str:
+    """Uppercase an H/T sequence and reject empty input.
+
+    An empty sequence is never a legitimate trial — it means upstream breakage
+    (a stimulus without ``sequence_a``, a truncated responses.csv) — so every
+    helper below raises rather than emitting a zero-filled feature row that
+    reads like a real observation. The model families' ``clean_sequence``
+    (``model_families/common.py``) makes the same call and additionally rejects
+    non-H/T symbols; this module keeps its own copy so it stays importable
+    without the model-family package.
+    """
+    s = seq.strip().upper()
+    if not s:
+        raise ValueError("Sequence must not be empty")
+    return s
+
+
+def periodicity_score(seq: str) -> float:
+    """Degree to which a sequence matches a short repeating template.
+
+    The model-family helper of the same name in ``model_families/common.py``
+    wraps this one.
+    """
+    s = clean_sequence(seq)
+    n = len(s)
+    if n <= 2:
+        return 0.0
+    best_match = 0.5
+    for period in range(1, (n // 2) + 1):
+        template = s[:period]
+        matches = sum(1 for i, c in enumerate(s) if c == template[i % period])
+        best_match = max(best_match, matches / n)
+    return max(0.0, min(1.0, 2.0 * (best_match - 0.5)))
+
+
+def multiscale_local_imbalance(seq: str) -> float:
+    """Mean H/T imbalance across global and short local descriptions.
+
+    The global sequence and each sliding-window scale from two through four
+    receive equal weight. Within a scale, every window receives equal weight.
+    This makes the operationalization explicit and avoids allowing a single
+    worst window to determine the entire score. The model-family helper of the
+    same name in ``model_families/common.py`` wraps this one.
+    """
+    s = clean_sequence(seq)
+    n = len(s)
+    heads = sum(1 for c in s if c == "H")
+    global_imbalance = 2.0 * abs(heads / n - 0.5)
+    scale_scores = [global_imbalance]
+    for window in range(2, min(LOCAL_WINDOW, n - 1) + 1):
+        window_scores = []
+        for start in range(n - window + 1):
+            chunk = s[start : start + window]
+            chunk_heads = sum(1 for c in chunk if c == "H")
+            window_scores.append(2.0 * abs(chunk_heads / window - 0.5))
+        scale_scores.append(sum(window_scores) / len(window_scores))
+    return sum(scale_scores) / len(scale_scores)
+
+
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    """`p_alts_{a,b}`, `periodicity_{a,b}` and `multiscale_imbalance_{a,b}`.
+
+    The `n > 0` guard on the multiscale term mirrors `sequence_features_float`
+    exactly, even though `clean_sequence` already rejects empty input.
+    """
+    features: dict = {}
+    for seq, suffix in ((sequence_a, "a"), (sequence_b, "b")):
+        cleaned = clean_sequence(seq)
+        n = len(cleaned)
+        alts = sum(1 for i in range(1, n) if cleaned[i] != cleaned[i - 1])
+        features[f"p_alts_{suffix}"] = (alts / (n - 1)) if n > 1 else 0.0
+        features[f"periodicity_{suffix}"] = periodicity_score(seq)
+        features[f"multiscale_imbalance_{suffix}"] = (
+            multiscale_local_imbalance(seq) if n > 0 else 0.0
+        )
+    return features

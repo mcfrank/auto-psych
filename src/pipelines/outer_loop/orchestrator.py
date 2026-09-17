@@ -17,7 +17,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 import yaml
 
@@ -29,11 +29,7 @@ from src.models.model_manifest import (
     read_manifest_names,
 )
 from src.models.project.ground_truth import get_ground_truth_models
-from src.pipelines.outer_loop.featurizer import (
-    RAW_RESPONSE_COLUMNS,
-    Featurizer,
-    load_featurizer,
-)
+from src.pipelines.outer_loop.featurizer import RAW_RESPONSE_COLUMNS
 
 # Stage output validators live in orchestrator_validators.py; re-exported here
 # so `from ...orchestrator import validate_cc_output / _validate_*` keeps working.
@@ -57,7 +53,7 @@ PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 
 def outer_projects_dir() -> Path:
-    """Project *assets* (problem_definition.md, ground_truth_models.py, preprocess.py)."""
+    """Project *assets* (problem_definition.md, ground_truth_models.py, seed_models/)."""
     return PROJECT_ASSETS_DIR
 
 
@@ -108,12 +104,7 @@ def seed_experiment_models_from_project(
     ground-truth generator). Unknown names or an exclusion that empties the
     seed set raise rather than silently seeding the wrong model set.
 
-    ``seed_dir`` overrides the project's default ``seed_models/``. A
-    raw-features run needs this: its pool must be the self-contained models in
-    ``seed_models_raw/``. Seeding the featurized ones instead leaves them unable
-    to bind to raw rows, and the design merely ``[drop]``s them and runs on
-    whatever is left, which is how the first raw-features smoke produced a
-    plausible number from a one-model design.
+    ``seed_dir`` overrides the project's default ``seed_models/``.
     """
     seed_dir = (
         Path(seed_dir) if seed_dir is not None else project_seed_models_dir(project_id)
@@ -441,20 +432,21 @@ def run_design_programmatic(
     k: int = 32,
     n_random: int = 0,
     lengths: Sequence[int] = (2, 3, 4, 5, 6, 7, 8),
-    raw_features: bool = False,
 ) -> None:
     """Select the design's stimuli by exhaustive enumeration (no design agent).
 
     Enumerates every H/T pair over the given lengths, scores it under the
     experiment's ACTUAL PyMC model set (batched per-draw p_left), and greedily
     picks the ``k`` stimuli with maximal joint EIG about model identity,
-    writing ``design/stimuli.json``. Experiment 1 scores from the models'
-    prior predictive with uniform model weights; experiments >= 2 fit each
-    model on the previous experiment's responses and score from its posterior
-    predictive, with model weights from the previous registry (weights over
-    models absent here fall back to uniform, loudly). Works for any PyMC model
-    in the set — no pure-Python family twin needed. Only implemented for
-    subjective_randomness (H/T pair enumeration).
+    writing ``design/stimuli.json``. Each model computes its own features from
+    raw stimulus rows via its ``compute_features`` or ``prepare_observed`` hook.
+    Experiment 1 scores from the models' prior predictive with uniform model
+    weights; experiments >= 2 fit each model on the previous experiment's
+    responses and score from its posterior predictive, with model weights from
+    the previous registry (weights over models absent here fall back to
+    uniform, loudly). Works for any PyMC model in the set — no pure-Python
+    family twin needed. Only implemented for subjective_randomness (H/T pair
+    enumeration).
     """
     if project_id != "subjective_randomness":
         raise ValueError(
@@ -464,16 +456,9 @@ def run_design_programmatic(
     from src.pipelines.outer_loop import eig as eig_mod
 
     models_dir = exp_dir / "cognitive_models"
-    # raw_features: score the design on RAW stimulus rows (sequences only), so a
-    # model that computes its own features via `compute_features` binds here
-    # exactly as it does when fitting. Passing the project featurizer as well
-    # would put those column names on the row twice and the hook raises on a
-    # collision — see docs/raw_features_arm.md.
-    featurize = None if raw_features else outer_project_dir(project_id) / "preprocess.py"
     if exp_num <= 1 or prev_exp_dir is None:
         stimuli = eig_mod.design_exhaustive(
             models_dir,
-            featurize_path=featurize,
             screened_out_path=exp_dir / "design" / "screened_out.json",
             lengths=tuple(lengths),
             n_select=k,
@@ -485,7 +470,6 @@ def run_design_programmatic(
         stimuli = eig_mod.design_exhaustive(
             models_dir,
             prev_exp_dir / "model_registry.yaml",
-            featurize_path=featurize,
             screened_out_path=exp_dir / "design" / "screened_out.json",
             lengths=tuple(lengths),
             n_select=k,
@@ -651,16 +635,11 @@ def run_collect_programmatic(
             )
             rows = []
         else:
-            # The featurizer is a project *asset* (src assets dir), not under the
-            # data tree where exp_dir now lives.
-            assets_dir = outer_project_dir(project_id or exp_dir.parent.name)
-            featurize_path = assets_dir / "preprocess.py"
             rows = _generate_from_pymc_models(
                 stimuli,
                 model_names,
                 n_participants,
                 models_dir=theorist_dir,
-                featurize_path=featurize_path if featurize_path.exists() else None,
             )
 
     # Fail loudly on degenerate collected data: if real participants produced no
@@ -758,45 +737,19 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict]:
     return rows
 
 
-def _load_project_featurizer(project_dir: Path) -> Optional[Featurizer]:
-    """Return `featurize_stimulus` from `<project_dir>/preprocess.py` if present.
-
-    A project supplies this to turn raw stimulus fields (e.g. H/T sequences)
-    into the numeric feature columns its PyMC models read via `pm.Data`. Returns
-    None only if the project has no preprocess module — then responses are
-    assumed to already carry the feature columns. A preprocess module that
-    exists but cannot be loaded raises (see `featurizer.load_featurizer`).
-    """
-    path = project_dir / "preprocess.py"
-    if not path.exists():
-        return None
-    return load_featurizer(path)
-
-
-def _write_feature_csv(
+def _write_responses_csv(
     rows: List[Dict[str, Any]],
-    featurize: Optional[Callable[[str, str], Dict[str, Any]]],
     out_path: Path,
 ) -> Path:
-    """Write pooled responses to `out_path`, merging in derived feature columns.
-
-    If `featurize` is given and a row has `sequence_a`/`sequence_b`, its numeric
-    features are added; otherwise the row is written as-is (already featurized).
-    """
-    out_rows: List[Dict[str, Any]] = []
-    for r in rows:
-        row = dict(r)
-        if featurize is not None and "sequence_a" in r and "sequence_b" in r:
-            row.update(featurize(r["sequence_a"], r["sequence_b"]))
-        out_rows.append(row)
-    if not out_rows:
-        raise ValueError("No rows to write to feature CSV")
+    """Write pooled raw response rows to ``out_path``."""
+    if not rows:
+        raise ValueError("No rows to write to responses CSV")
     out_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(out_rows[0].keys())
+    fieldnames = list(rows[0].keys())
     with out_path.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
-        writer.writerows(out_rows)
+        writer.writerows(rows)
     return out_path
 
 
@@ -976,17 +929,16 @@ def run_inner_model_loop_programmatic(
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
-    raw_features: bool = False,
 ) -> Path:
     """Run the PyMC inner model loop over pooled outer-loop data.
 
-    Pools responses across experiments, featurizes them (via the project's
-    `preprocess.py` if present), seeds the model set from this experiment's
-    `cognitive_models/` (the carried set plus its ledger), fits and compares
-    them by ELPD-LOO, and exports the surviving live set back into
-    `cognitive_models/` (``_export_inner_loop_models``). Only the project's
-    seed models are pruning-protected: a model carried from an earlier
-    experiment can lose here and leave the set.
+    Pools raw responses across experiments, seeds the model set from this
+    experiment's `cognitive_models/` (the carried set plus its ledger), fits and
+    compares them by ELPD-LOO, and exports the surviving live set back into
+    `cognitive_models/` (``_export_inner_loop_models``). Each model computes its
+    own features from raw stimulus rows via its hooks. Only the project's seed
+    models are pruning-protected: a model carried from an earlier experiment can
+    lose here and leave the set.
 
     `project_id` locates the project assets; it defaults to `exp_dir.parent.name`
     (the standard `data/outer_loop/<project>/experimentN` layout) and must be
@@ -1014,31 +966,7 @@ def run_inner_model_loop_programmatic(
 
     loop_dir = exp_dir / "model_loop"
     loop_dir.mkdir(parents=True, exist_ok=True)
-    if raw_features:
-        raw_set = set(RAW_RESPONSE_COLUMNS)
-        extra = sorted(set(rows[0].keys()) - raw_set)
-        if extra:
-            raise ValueError(
-                f"raw_features run: pooled rows carry engineered columns "
-                f"{extra}; a raw run must start from data that has only "
-                f"{sorted(raw_set)}"
-            )
-        featurize = None
-    else:
-        # The featurizer is a project *asset* (src assets dir), not under the
-        # data tree where exp_dir now lives.
-        featurize = _load_project_featurizer(
-            outer_project_dir(project_id or exp_dir.parent.name)
-        )
-    responses_path = _write_feature_csv(rows, featurize, loop_dir / "responses.csv")
-    if raw_features:
-        with responses_path.open(encoding="utf-8") as f:
-            written_header = [c.strip() for c in f.readline().strip().split(",")]
-        if written_header != list(RAW_RESPONSE_COLUMNS):
-            raise ValueError(
-                f"raw_features run: model_loop/responses.csv header is "
-                f"{written_header}, expected {list(RAW_RESPONSE_COLUMNS)}"
-            )
+    responses_path = _write_responses_csv(rows, loop_dir / "responses.csv")
 
     seed_models_dir = exp_dir / "cognitive_models"
     protected = _protected_seed_names(project_id or exp_dir.parent.name, seed_models_dir)
