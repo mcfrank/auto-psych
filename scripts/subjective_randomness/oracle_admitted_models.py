@@ -198,11 +198,28 @@ def main(args: Args) -> None:
 
     all_steps: list[dict] = []
     all_lost: list[dict] = []
+    temp_dirs: list[tempfile.TemporaryDirectory] = []
+
+    cell_dir = result_path.parent
 
     for gt_run in result["gt_runs"]:
         gt_model = gt_run["gt_model"]
         gt_params = gt_run["params"]
         run_root = Path(gt_run["run_root"])
+
+        if not run_root.exists():
+            td = _extract_archive(cell_dir)
+            if td is None:
+                raise FileNotFoundError(
+                    f"Run root {run_root} does not exist and no "
+                    f"agent_runs.tar.gz found at {cell_dir}"
+                )
+            temp_dirs.append(td)
+            run_root = Path(td.name) / "_runs" / gt_model
+            if not run_root.exists():
+                raise FileNotFoundError(
+                    f"Extracted archive but {run_root} not found"
+                )
 
         eval_stimuli_path = run_root / "eval_stimuli.json"
         if not eval_stimuli_path.exists():
@@ -307,6 +324,9 @@ def main(args: Args) -> None:
         print(f"  {len(all_lost)} lost incumbent(s):")
         for lost in all_lost:
             print(f"    {lost['model']}: {lost['outcome']} ({lost['detail']})")
+
+    for td in temp_dirs:
+        td.cleanup()
 
 
 if __name__ == "__main__":
