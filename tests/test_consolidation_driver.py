@@ -41,13 +41,13 @@ SHA = "0123456789abcdef0123456789abcdef01234567"
 # --- phase table --------------------------------------------------------------
 
 
-def test_phases_run_p0_to_p16_in_order_and_only_submitting_phases_may_sbatch():
-    assert [p.id for p in PHASES] == [f"P{k}" for k in range(17)]
-    assert [p.id for p in PHASES if p.allows_sbatch] == ["P7", "P12", "P14", "P15"]
+def test_phases_run_p0_to_p21_in_order_and_only_submitting_phases_may_sbatch():
+    assert [p.id for p in PHASES] == [f"P{k}" for k in range(22)]
+    assert [p.id for p in PHASES if p.allows_sbatch] == ["P7", "P12", "P14", "P15", "P20"]
     assert phase_by_id("P3").title
     assert phase_by_id("P11").title.startswith("Simplify")
     with pytest.raises(KeyError):
-        phase_by_id("P17")
+        phase_by_id("P22")
 
 
 def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
@@ -68,6 +68,9 @@ def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
     assert phase_by_id("P14").required_labels == ("raw",)
     assert phase_by_id("P15").waits_for == "sweep_jobs.json"
     assert phase_by_id("P16").waits_for == "analysis_jobs.json"
+    assert phase_by_id("P20").jobs_file == "cleanup_smoke_jobs.json"
+    assert phase_by_id("P21").waits_for == "cleanup_smoke_jobs.json"
+    assert phase_by_id("P21").requires_files == ("CLEANUP_REPORT.md",)
     with pytest.raises(KeyError):
         jobs_file_owner("nobody_writes_this.json")
 
@@ -75,7 +78,7 @@ def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
 def test_disallowed_tools_add_sbatch_except_in_submitting_phases():
     assert "Bash(sbatch:*)" in disallowed_tools(phase_by_id("P2"))
     assert "Bash(sbatch:*)" in disallowed_tools(phase_by_id("P8"))
-    for phase_id in ("P7", "P12", "P14", "P15"):
+    for phase_id in ("P7", "P12", "P14", "P15", "P20"):
         assert "Bash(sbatch:*)" not in disallowed_tools(phase_by_id(phase_id))
         for tool in BASE_DISALLOWED_TOOLS:
             assert tool in disallowed_tools(phase_by_id(phase_id))
