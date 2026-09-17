@@ -2,13 +2,16 @@
 
 Runs `docs/consolidation_plan_2026_09.md` unattended: a Claude Code agent
 (Opus 4.6 by default, `MODEL=` overrides) executes the plan **one phase per session** in its own clone
-on a compute node. Seventeen phases: baseline, integrate (merge `main`, restore the
+on a compute node. Twenty-two phases: baseline, integrate (merge `main`, restore the
 leakage audit, merge arm C), true-raw inner loop + verifier, honest metrics +
 offline diagnostics, race presentation, lens rotation, docs + full checks,
 two SMOKE cells, verdict + handoff; then (amendment of 2026-09-16) raw as
 the only mode, an agent tree with no feature code plus an import gate at
 admission, a simplification pass for human readability, a second smoke + verdict, the
-5-repeat recovery sweep, the RMSE evaluation job, and `RESULTS.md`.
+5-repeat recovery sweep, the RMSE evaluation job, `RESULTS.md`, and
+(amendment of 2026-09-17) an aggressive cleanup — characterize + split the
+oversized modules, reduce the surface, readability, an equivalence smoke and
+`CLEANUP_REPORT.md`.
 
 ```bash
 bash scripts/consolidation/consolidate.sh              # submit (commit first)
@@ -16,6 +19,7 @@ cat  $SCRATCH/auto-psych/consolidation_2026_09/STATUS.md
 ls   $SCRATCH/auto-psych/consolidation_2026_09/progress/   # P<k>.done / P<k>.blocked
 cat  $SCRATCH/auto-psych/consolidation_2026_09/HANDOFF.md  # when P13 is done (smoke verdict)
 cat  $SCRATCH/auto-psych/consolidation_2026_09/RESULTS.md  # when P16 is done (RMSE evaluation)
+cat  $SCRATCH/auto-psych/consolidation_2026_09/CLEANUP_REPORT.md  # when P21 is done (cleanup)
 ```
 
 Layout of the work root:
@@ -45,7 +49,7 @@ A stopped job is resumed with `RESUME=1 bash scripts/consolidation/consolidate.s
 after you remove or resolve the `.blocked` marker.
 
 Claude Code denies `scancel`, `scontrol …`, `git push` in every phase and
-`sbatch` in every phase but P7, P12, P14 and P15. A verdict phase re-opens an
+`sbatch` in every phase but P7, P12, P14, P15 and P20. A verdict phase re-opens an
 earlier phase by writing `P<j>.retry*` and deleting `P<j>.done` without
 writing its own marker; the driver runs `P<j>` again and then the verdict
 phase again.

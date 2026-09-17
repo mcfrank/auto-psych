@@ -1021,3 +1021,164 @@ reported cell by cell and never deciding alone.
 **Diagnostics:** if the incumbent regresses but the oracle-best does not,
 investigate selection; if both regress, discovery; if a lost-incumbent entry
 explains it, retention.
+
+---
+
+## 10. Aggressive cleanup (amendment of 2026-09-17, at the user's request)
+
+P11 was too conservative: it renamed, de-duplicated and documented, but the net
+source reduction was 93 lines and it declined to split the two modules a reader
+most needs — `pymc_orchestrator.py` (2031 lines) and `holdout_recovery.py`
+(1773). Its two stated reasons are **overruled here**, because both are fixable
+rather than fundamental:
+
+- *"internal functions are tightly coupled through shared state"* — then make
+  that state an explicit argument or a small object. Coupling through module
+  globals is the thing that makes a 2000-line file unreadable.
+- *"tests monkeypatch expensive seams at module level"* — the tests are ours.
+  Restructure them. A test suite that pins the current file layout is a
+  constraint to remove, not to obey.
+
+P17–P21 run **after** the results (P16), so the sweep and its evaluation are
+never affected by the refactor: the array tasks rsync their agent tree from the
+clone's working tree at task start, so the tree must stay frozen while any task
+is pending.
+
+**The rule is unchanged and absolute: behaviour must not change.** What makes
+aggressive refactoring safe here is P17's characterization harness — golden
+artifacts captured *before* any edit, re-checked after every commit. If a
+golden artifact changes, revert that commit; never fix forward.
+
+### P17 — Characterize, then split the oversized modules
+
+**Step 0, before any edit — the golden-artifact harness.** Add
+`tests/test_golden_artifacts.py` plus committed fixtures under
+`tests/golden/`, generated from the current commit:
+
+1. `design/stimuli.json` for experiment 1 from a fixed seed and a fixed model
+   set (the exhaustive EIG selection is deterministic);
+2. the generated response rows for one ground truth at a fixed seed
+   (`generate_responses`, fixed params) — hash the CSV bytes;
+3. the held-out evaluation pool for fixed lengths (`build_eval_stimuli`) —
+   hash the stimulus list and record its length;
+4. `rmse`, `kl_regret`, `bias`, `calibration` on a fixed probability vector;
+5. `leakage_check` on a small fixture run tree — the whole returned dict;
+6. the lens schedule over 3 experiments × 2 rounds × 3 candidates;
+7. the import gate's verdict on one allowed and one forbidden candidate;
+8. `az.compare`-driven pruning and export selection on a fixed comparison
+   table (no MCMC — build the table as data).
+
+Each is an assertion against the committed fixture, not a snapshot the test
+rewrites. Run them after **every** commit in P17–P19.
+
+**Then split.** Every module in the live path over ~500 lines must be split
+along a stated seam or justified in writing against this rule: *a reader who
+wants to answer one question should not have to read two concerns to do it.*
+The targets, with the seams to consider:
+
+- `src/pipelines/inner_loop/pymc_orchestrator.py` (2031) — candidate briefing
+  and prompt assembly; admission gates (loadability, fit, novelty); pruning and
+  export selection; the round loop itself. Make the zoo, ledger and
+  protected-name state explicit parameters or one small dataclass rather than
+  ambient module state.
+- `src/subjective_randomness/holdout_recovery.py` (1773) — running experiments;
+  trajectory evaluation and metrics; the leakage audit; config resolution and
+  the CLI. Restructure the tests to match; monkeypatching is not a reason to
+  keep it whole.
+- `src/models/pymc_inference.py` (1304), `src/pipelines/outer_loop/collect.py`
+  (1094), `src/pipelines/outer_loop/orchestrator.py` (1078),
+  `src/subjective_randomness/reporting.py` (1118) — same rule.
+
+Keep every fail-loud check exactly as it is; move it with its code. One commit
+per split, each with the golden artifacts and the relevant tests green.
+
+**Accept:** `tests/golden/` and `tests/test_golden_artifacts.py` exist and pass;
+no live-path module over 500 lines without a written justification in the done
+file; fast-suite failing set ⊆ the P0 baseline minus tests deleted in P9/P11 and
+any test file this phase *renames* (list all of them); tree clean.
+
+### P18 — Reduce the surface
+
+1. **Delete what nothing reaches**, with `git grep` evidence per deletion, as in
+   P11 step 2 but applied to everything P11 left: anything stranded by P9–P11,
+   back-compat re-exports (`model_recovery.write_responses_csv` and its like)
+   whose only callers are tests — update the tests instead, unused CLI flags,
+   parameters no call site passes, `Optional[...]` that is never None.
+2. **One implementation per concept** across `src/pipelines/` and
+   `src/subjective_randomness/`: sequence/stimulus helpers, CSV readers and
+   writers, path resolution, manifest reading, fit-cache key construction.
+   Where both trees have a version, keep the one in the tree that owns the
+   concept and import it.
+3. **Shorten long signatures.** A function taking more than about eight
+   parameters that are always passed together gets a small frozen dataclass.
+   `run_pymc_inner_loop` and `run_holdout_experiments` are the two to look at.
+   This changes call sites, not behaviour.
+4. **Support code you must not delete**: `src/viewer/`, `src/monitor/`,
+   `src/recovery_improvement/`, `src/consolidation/` and the live-run scripts
+   are the user's tooling. You may simplify them, but list anything you think
+   should go in the done file as a *proposal* — do not delete it.
+
+**Accept:** golden artifacts unchanged; fast-suite failing set as in P17; the
+done file lists every deletion with its evidence and every proposal you did not
+act on.
+
+### P19 — Readability
+
+1. Names that say what the thing is; no abbreviations that a newcomer must
+   decode; no name that describes a superseded design.
+2. Every public function: a docstring saying what it does, what it returns,
+   what it raises, and the meaning of each non-obvious argument. Delete
+   docstrings that merely restate the signature.
+3. Type hints on every public function in the live path.
+4. Comment density: keep the *why*, delete the *what* where the code says it.
+   Any remaining dated narrative moves to the decision record, as in P11 step 5.
+5. Each module gets a header docstring: what it is for, what calls it, what it
+   calls.
+6. Rewrite `docs/code_tour.md` for the new structure (still under ~400 lines),
+   and re-check `CLAUDE.md` against the code.
+
+**Accept:** golden artifacts unchanged; fast suite as above; `docs/code_tour.md`
+and `CLAUDE.md` describe the code as it now is.
+
+### P20 — Prove it: submit an equivalence smoke (may `sbatch`)
+
+One SMOKE cell from the cleaned commit, **same settings and seed as the P12
+smoke** (`SMOKE=1 N_EXPERIMENTS=2 INNER_LOOP_ITERATIONS=1 BASE_SEED=100`), into
+`$WORK_ROOT/cleanup_smoke_round<k>`, with the verifier chained on it exactly as
+P12 did. Write `progress/cleanup_smoke_jobs.json`
+(`{"raw": {"work_root": ..., "job_ids": [...]}}`). Do not wait.
+
+**Accept:** the jobs file exists with numeric ids; tree clean; `P20.done`.
+
+### P21 — Cleanup verdict and report
+
+**Preconditions (driver-checked):** the cleanup smoke jobs have left the queue.
+
+1. Judge the cell against P13's criterion list (raw CSVs, raw contexts, no
+   drops, empty `screened_out.json`, verifier including isolation and the
+   import allowlist, leakage fields, metric columns, lens rotation, final
+   evaluation without traceback).
+2. **Equivalence:** the deterministic parts must match the P12 smoke exactly —
+   `experiment1/design/stimuli.json` and the generated `data/responses.csv`
+   are byte-identical for the same seed. The agent-written candidates and the
+   final model will differ (the agents are stochastic); that is expected and is
+   not a regression. Say so explicitly in the report rather than treating the
+   final RMSE as a comparison.
+3. If a criterion fails on a defect you can fix with confidence: fix it with a
+   test, commit, write `progress/P20.retry<k>`, delete `progress/P20.done`, and
+   do not write `P21.done` — end the session.
+4. Write `$WORK_ROOT/CLEANUP_REPORT.md`: the criterion table; the equivalence
+   result; a before/after table of every module's line count with the totals
+   for `src/` and `scripts/`; every file deleted, split or renamed; every
+   simplification declined with its reason; and the proposals from P18 step 4
+   for the user to decide on. Point `HANDOFF.md` at it.
+
+**Accept:** `CLEANUP_REPORT.md` exists; tree clean; `P21.done`.
+
+### Stop conditions for P17–P21 (in addition to §7)
+
+- a golden artifact changes and you cannot restore it by reverting the commit
+  that changed it;
+- a split would require changing what a fail-loud check does;
+- the equivalence check in P21 shows the design or the generated responses
+  differ for the same seed.
