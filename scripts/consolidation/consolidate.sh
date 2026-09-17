@@ -5,8 +5,9 @@
 # After the consolidation (P0-P8), the raw-only refactor and agent-tree
 # isolation (P9-P10), the readability simplification (P11) and their smoke
 # (P12-P13), it launches the 5-repeat recovery sweep (P14), submits the RMSE
-# evaluation (P15) and writes RESULTS.md (P16). P17-P21 then run the
-# aggressive cleanup and an equivalence smoke, ending in CLEANUP_REPORT.md.
+# evaluation (P15) and writes RESULTS.md (P16). P17-P22 fix the candidate-write
+# failure found in sweep 1 and re-run the sweep; P23-P27 then run the aggressive
+# cleanup and an equivalence smoke, ending in CLEANUP_REPORT.md.
 #
 # Usage (login node; bash only, no Python):
 #   bash scripts/consolidation/consolidate.sh
@@ -156,7 +157,7 @@ job_id=$(sbatch --parsable "${SBATCH_ARGS[@]}")
 echo "$job_id" >> "$WORK_ROOT/jobs.txt"
 cat <<MSG
 submitted consolidation job $job_id
-  model $MODEL, up to $MAX_TURNS turns / ${TIMEOUT_SEC}s per phase session; phases P0..P21
+  model $MODEL, up to $MAX_TURNS turns / ${TIMEOUT_SEC}s per phase session; phases P0..P27
   (requeues itself for session limits, walltime, the smoke jobs, the P14 sweep, the P15 evaluation)
   sweep: $SWEEP_N_REPEATS repeats, BASE_SEED=$SWEEP_BASE_SEED, $SWEEP_MAX_PARALLEL concurrent
 
