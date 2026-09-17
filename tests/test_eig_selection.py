@@ -156,15 +156,20 @@ def test_selection_benchmark_end_to_end(tmp_path):
 
 
 @pytest.mark.slow
+def _random_sequence(rng, length):
+    """Generate a random H/T sequence of the given length."""
+    return "".join(rng.choice(["H", "T"], size=length))
+
+
 def test_select_n_joint_eig_end_to_end_on_pymc_models():
     """Full path: batched per-draw prior predictive -> greedy joint selection."""
     rng = np.random.default_rng(3)
     rows = []
     for _ in range(12):
-        n_a, n_b = rng.integers(4, 9, size=2)
-        h_a, h_b = rng.integers(0, n_a + 1), rng.integers(0, n_b + 1)
+        n_a, n_b = int(rng.integers(4, 9)), int(rng.integers(4, 9))
         rows.append(
-            {"n_a": int(n_a), "h_a": int(h_a), "n_b": int(n_b), "h_b": int(h_b),
+            {"sequence_a": _random_sequence(rng, n_a),
+             "sequence_b": _random_sequence(rng, n_b),
              "chose_left": 0}
         )
     names = ["bayesian_fair_coin", "representativeness"]

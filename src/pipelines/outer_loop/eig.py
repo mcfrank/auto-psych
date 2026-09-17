@@ -62,9 +62,9 @@ def _screen_usable_models(
     """Drop models that cannot be evaluated on a bare stimulus row.
 
     E.g. a carried-forward model with a participant-level pm.Data
-    (participant_id) that stimulus feature rows never carry. One such model
-    would otherwise raise inside the prior-predictive pass and abort the entire
-    annotation. Probe each model against a representative featurized stimulus,
+    (participant_id) that stimulus rows never carry. One such model would
+    otherwise raise inside the prior-predictive pass and abort the entire
+    annotation. Probe each model against a representative stimulus row,
     drop the unbindable ones loudly, and keep the rest; fail only if none can
     be evaluated.
 
@@ -98,8 +98,8 @@ def _screen_usable_models(
                     f"model {name!r} in {models_dir} needs feature column(s) "
                     f"{[c for c in e.missing if c not in NON_STIMULUS_COLUMNS]} "
                     f"that the design rows do not carry (available: "
-                    f"{list(e.available)}). That is a configuration error — the "
-                    "rows were built without the featurizer these models read — "
+                    f"{list(e.available)}). That is a configuration error — "
+                    "the rows lack columns this model needs — "
                     "not a participant-level mismatch. Dropping it would "
                     "renormalize EIG over whichever models happen to bind."
                 ) from e
