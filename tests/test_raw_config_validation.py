@@ -13,7 +13,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from src.pipelines.outer_loop.featurizer import RAW_RESPONSE_COLUMNS
+from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
 
 
 # ─── helpers ───

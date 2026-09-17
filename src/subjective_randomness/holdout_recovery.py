@@ -138,7 +138,7 @@ def _stage_done(agent_key: str, exp_dir: Path) -> bool:
 # it are listed column-by-column in every candidate's and critic's context).
 GENERATING_MODEL_COLUMN = "generating_model"
 
-from src.pipelines.outer_loop.featurizer import RAW_RESPONSE_COLUMNS  # noqa: F401
+from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS  # noqa: F401
 
 
 # ─────────────────────────────────────────────

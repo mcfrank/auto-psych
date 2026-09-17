@@ -158,7 +158,7 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   so a silent shrink of the hypothesis set is visible in the run tree.
 - **Raw-only pipeline.** There is no featurizer: `responses.csv` carries only
   the five `RAW_RESPONSE_COLUMNS` (`sequence_a`, `sequence_b`, `participant_id`,
-  `trial_index`, `chose_left`, defined in `src/pipelines/outer_loop/featurizer.py`).
+  `trial_index`, `chose_left`, defined in `src/pipelines/outer_loop/columns.py`).
   Every model computes its own features via a `compute_features(sequence_a,
   sequence_b)` or `prepare_observed(rows)` hook. `pymc_model_families/` (and
   the live pool `seed_models/`) all carry `compute_features` hooks. The verifier
