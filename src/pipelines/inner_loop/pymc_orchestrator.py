@@ -1050,6 +1050,14 @@ def _build_candidate_prompt(
         f"  {candidate_dir}/hypothesis.md\n"
         f"  {candidate_dir}/model_name.txt\n"
         f"  {candidate_dir}/candidate.py\n\n"
+        f"Use the **bash** tool with a heredoc to create each file. Example:\n"
+        f"```bash\n"
+        f"cat << 'EOF' > {candidate_dir}/hypothesis.md\n"
+        f"Your hypothesis text here.\n"
+        f"EOF\n"
+        f"```\n"
+        f"Do NOT use the `write` or `edit` tool for creating new files — use "
+        f"`bash` with `cat << 'EOF' > path` as shown above.\n\n"
         f"The context documents below are also on disk there for reference.",
         f"## CONTEXT.md\n\n{docs['context']}",
         f"## CANDIDATE_BRIEF.md\n\n{docs['brief']}",
@@ -1255,7 +1263,15 @@ def _spawn_critique_agent(
         f"Read `CRITIQUE_CONTEXT.md` there, then write your test statistics into "
         f"`{critique_dir}/test_stats/` (one `test_statistic(df)` per file). You do "
         f"NOT need to run the harness or write `critiques.md` — the pipeline runs the "
-        f"posterior-predictive check over your statistics and records the results.\n"
+        f"posterior-predictive check over your statistics and records the results.\n\n"
+        f"Use the **bash** tool with a heredoc to create each file. Example:\n"
+        f"```bash\n"
+        f"mkdir -p {critique_dir}/test_stats\n"
+        f"cat << 'EOF' > {critique_dir}/test_stats/my_statistic.py\n"
+        f"def test_statistic(df): ...\n"
+        f"EOF\n"
+        f"```\n"
+        f"Do NOT use the `write` tool — use `bash` with `cat << 'EOF' > path`.\n"
     )
     log_path = critique_dir / "agent.jsonl"
     success, _ = run_coding_agent(
