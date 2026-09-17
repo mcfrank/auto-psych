@@ -162,7 +162,7 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   Every model computes its own features via a `compute_features(sequence_a,
   sequence_b)` or `prepare_observed(rows)` hook. `pymc_model_families/` (and
   the live pool `seed_models/`) all carry `compute_features` hooks. The verifier
-  (`scripts/subjective_randomness/slurm/verify_raw_features_run.sh`) checks that
+  (`scripts/subjective_randomness/slurm/verify_holdout_run.sh`) checks that
   every agent-facing CSV in a finished run carries only raw columns.
 - `src/models/mcmc_defaults.py` — the **single source of MCMC sampler defaults**
   (`PRODUCTION_*`, `DESIGN_TWIN_*`). Every entry point imports from here; change
