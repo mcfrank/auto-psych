@@ -23,12 +23,14 @@ from src.consolidation.driver import (
     jobs_still_queued,
     load_env,
     needs_walltime_requeue,
+    newly_reopened,
     next_phase,
     parse_jobs_file,
     phase_by_id,
     phase_round,
     phase_state,
     requeue_command,
+    retry_markers,
     seconds_left,
     validate_done_marker,
 )
@@ -39,12 +41,12 @@ SHA = "0123456789abcdef0123456789abcdef01234567"
 # --- phase table --------------------------------------------------------------
 
 
-def test_phases_run_p0_to_p11_in_order_and_only_submitting_phases_may_sbatch():
-    assert [p.id for p in PHASES] == [f"P{k}" for k in range(12)]
-    assert [p.id for p in PHASES if p.allows_sbatch] == ["P7", "P9", "P10"]
+def test_phases_run_p0_to_p15_in_order_and_only_submitting_phases_may_sbatch():
+    assert [p.id for p in PHASES] == [f"P{k}" for k in range(16)]
+    assert [p.id for p in PHASES if p.allows_sbatch] == ["P7", "P11", "P13", "P14"]
     assert phase_by_id("P3").title
     with pytest.raises(KeyError):
-        phase_by_id("P12")
+        phase_by_id("P16")
 
 
 def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
@@ -60,9 +62,11 @@ def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
             assert phase.allows_sbatch and phase.required_labels
     assert phase_by_id("P7").jobs_file == "smoke_jobs.json"
     assert phase_by_id("P8").waits_for == "smoke_jobs.json"
-    assert phase_by_id("P9").required_labels == ("raw",)
-    assert phase_by_id("P10").waits_for == "sweep_jobs.json"
-    assert phase_by_id("P11").waits_for == "analysis_jobs.json"
+    assert phase_by_id("P11").jobs_file == "isolation_smoke_jobs.json"
+    assert phase_by_id("P12").waits_for == "isolation_smoke_jobs.json"
+    assert phase_by_id("P13").required_labels == ("raw",)
+    assert phase_by_id("P14").waits_for == "sweep_jobs.json"
+    assert phase_by_id("P15").waits_for == "analysis_jobs.json"
     with pytest.raises(KeyError):
         jobs_file_owner("nobody_writes_this.json")
 
@@ -70,7 +74,7 @@ def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
 def test_disallowed_tools_add_sbatch_except_in_submitting_phases():
     assert "Bash(sbatch:*)" in disallowed_tools(phase_by_id("P2"))
     assert "Bash(sbatch:*)" in disallowed_tools(phase_by_id("P8"))
-    for phase_id in ("P7", "P9", "P10"):
+    for phase_id in ("P7", "P11", "P13", "P14"):
         assert "Bash(sbatch:*)" not in disallowed_tools(phase_by_id(phase_id))
         for tool in BASE_DISALLOWED_TOOLS:
             assert tool in disallowed_tools(phase_by_id(phase_id))
@@ -123,7 +127,28 @@ def test_phase_round_counts_retry_markers(tmp_path):
     assert phase_round(progress, "P7") == 3
     assert phase_round(progress, "P9") == 1
     assert phase_by_id("P7").max_rounds == 2
+    assert phase_by_id("P11").max_rounds == 3
     assert phase_by_id("P9").max_rounds is None
+
+
+def test_a_verdict_phase_can_reopen_an_earlier_phase(tmp_path):
+    """P8 writes P7.retry and deletes P7.done: the driver must treat P8's
+    session as finished WITHOUT demanding P8.done, and run P7 again."""
+    progress = tmp_path / "progress"
+    progress.mkdir()
+    before = retry_markers(progress)
+    assert before == set()
+    (progress / "P7.retry").write_text("manifest scrub bug\n")
+    after = retry_markers(progress)
+    assert after == {"P7.retry"}
+    assert newly_reopened("P8", before, after) == "P7"
+    # a marker for a LATER phase, or no new marker, re-opens nothing
+    assert newly_reopened("P8", after, after) is None
+    (progress / "P11.retry").write_text("x\n")
+    assert newly_reopened("P8", after, retry_markers(progress)) is None
+    # the earliest re-opened phase wins when several appear
+    (progress / "P2.retry").write_text("y\n")
+    assert newly_reopened("P12", set(), retry_markers(progress)) == "P2"
 
 
 # --- done-marker validation ---------------------------------------------------
@@ -191,15 +216,18 @@ def test_a_submitting_phase_requires_its_jobs_file_with_every_label(tmp_path):
     )
     assert validate_done_marker(progress, "P7", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
-    _write_done(progress, "P9")
+    _write_done(progress, "P11")
+    (progress / "isolation_smoke_jobs.json").write_text(_jobs({"raw": ["8", "9", "10", "11"]}))
+    assert validate_done_marker(progress, "P11", head_sha=SHA, porcelain="", work_root=tmp_path) == []
+    _write_done(progress, "P13")
     (progress / "sweep_jobs.json").write_text(_jobs({"raw": ["8", "9", "10", "11"]}))
-    assert validate_done_marker(progress, "P9", head_sha=SHA, porcelain="", work_root=tmp_path) == []
-    _write_done(progress, "P10")
+    assert validate_done_marker(progress, "P13", head_sha=SHA, porcelain="", work_root=tmp_path) == []
+    _write_done(progress, "P14")
     (progress / "analysis_jobs.json").write_text(_jobs({"analysis": ["12"]}))
-    assert validate_done_marker(progress, "P10", head_sha=SHA, porcelain="", work_root=tmp_path) == []
+    assert validate_done_marker(progress, "P14", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
 
-def test_p8_and_p11_require_their_report_files(tmp_path):
+def test_verdict_and_results_phases_require_their_report_files(tmp_path):
     progress = tmp_path / "progress"
     progress.mkdir()
     _write_done(progress, "P8")
@@ -209,11 +237,14 @@ def test_p8_and_p11_require_their_report_files(tmp_path):
     (tmp_path / "HANDOFF.md").write_text("fetch it\n")
     assert validate_done_marker(progress, "P8", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
-    _write_done(progress, "P11")
-    problems = validate_done_marker(progress, "P11", head_sha=SHA, porcelain="", work_root=tmp_path)
+    _write_done(progress, "P12")
+    assert validate_done_marker(progress, "P12", head_sha=SHA, porcelain="", work_root=tmp_path) == []
+
+    _write_done(progress, "P15")
+    problems = validate_done_marker(progress, "P15", head_sha=SHA, porcelain="", work_root=tmp_path)
     assert any("RESULTS.md" in p for p in problems)
     (tmp_path / "RESULTS.md").write_text("rmse table\n")
-    assert validate_done_marker(progress, "P11", head_sha=SHA, porcelain="", work_root=tmp_path) == []
+    assert validate_done_marker(progress, "P15", head_sha=SHA, porcelain="", work_root=tmp_path) == []
 
 
 # --- jobs files -------------------------------------------------------------------

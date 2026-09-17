@@ -46,11 +46,13 @@ from src.consolidation.driver import (  # noqa: E402
     jobs_still_queued,
     load_env,
     needs_walltime_requeue,
+    newly_reopened,
     next_phase,
     parse_jobs_file,
     phase_round,
     render_inputs,
     requeue_command,
+    retry_markers,
     seconds_left,
     validate_done_marker,
 )
@@ -299,14 +301,33 @@ class Driver:
             work_root=self.work_root,
         )
 
+    def _reopened_earlier(self, phase: Phase, markers_before: set[str]) -> Optional[str]:
+        """If the session re-opened an earlier phase (wrote its retry marker),
+        drop any done marker this phase may have written and say which."""
+        reopened = newly_reopened(phase.id, markers_before, retry_markers(self.progress))
+        if reopened is None:
+            return None
+        stale = self.progress / f"{phase.id}.done"
+        if stale.exists():
+            stale.unlink()
+        append_status(
+            self.work_root,
+            f"{phase.id} re-opened {reopened} (round {phase_round(self.progress, reopened)}); "
+            f"{phase.id} will run again after it",
+        )
+        return reopened
+
     def run_phase(self, phase: Phase) -> str:
-        """``"done"``, ``"requeued"`` or ``"blocked"``."""
+        """``"done"``, ``"requeued"``, ``"reopened"`` or ``"blocked"``."""
+        markers_before = retry_markers(self.progress)
         prompt = self.brief(phase, resume_note=self._resume_note(phase))
         _, result = self._run_session(phase, prompt, "main")
         if self._handle_limits(result):
             return "requeued"
         if (self.progress / f"{phase.id}.blocked").exists():
             return "blocked"
+        if self._reopened_earlier(phase, markers_before):
+            return "reopened"
         problems = self._problems(phase)
         if problems:
             feedback = (
@@ -320,6 +341,8 @@ class Driver:
                 return "requeued"
             if (self.progress / f"{phase.id}.blocked").exists():
                 return "blocked"
+            if self._reopened_earlier(phase, markers_before):
+                return "reopened"
             problems = self._problems(phase)
         if problems:
             (self.progress / f"{phase.id}.blocked").write_text(
@@ -367,8 +390,8 @@ class Driver:
             outcome = self.run_phase(phase)
             if outcome == "requeued":
                 return 0
-            if outcome == "blocked":
-                continue  # next_phase raises Blocked with the reason
+            if outcome in ("blocked", "reopened"):
+                continue  # blocked: next_phase raises with the reason; reopened: it returns the earlier phase
             if phase.jobs_file:
                 job_ids = parse_jobs_file(self.progress / phase.jobs_file, phase.required_labels)
                 self.requeue(

@@ -26,13 +26,14 @@ decision, after review:
    run** (§0.1), so its recovery numbers decide nothing; its machinery (raw
    seed sets, collision rule, pool selection, manifest-entry scrub, verifier)
    is wanted.
-5. **Make raw mode genuinely raw end to end**, then verify it with a smoke run.
-   After the smoke verdict the job itself launches a **5-repeat recovery
-   sweep** of the arm(s) named in `SWEEP_ARMS` (the user chose `raw`: 5
-   repeats × 4 ground truths = 20 cells), submits the RMSE evaluation and
-   writes `RESULTS.md` (P9–P11). The raw-vs-featurized *default* decision
-   needs a featurized arm from the same commit; §9 keeps that gate for when
-   one is run.
+5. **Make raw mode genuinely raw end to end**, then verify it with a smoke run
+   (P2, P7, P8). After the first smoke round the user decided (2026-09-16,
+   see the amendment before P9) that **raw is the only mode** and that the
+   feature code must be **unreadable** by agents: P9 removes the featurized
+   pipeline, P10 isolates the agents' tree and gates candidate imports, P11–
+   P12 smoke it again, then the job launches a **5-repeat recovery sweep**
+   (5 repeats × 4 ground truths = 20 cells), submits the RMSE evaluation and
+   writes `RESULTS.md` (P13–P15).
 6. **Honest metrics**: probability RMSE primary, expected Bernoulli KL regret
    secondary, Pearson r descriptive; per-repeat paired differences, no
    stimulus bootstrap. Add an offline all-admitted-models oracle diagnostic
@@ -106,7 +107,7 @@ before the agent starts.
 | iteration 3 sweep (3 repeats, seeds 101–103; comparison) | `$ITER3_SWEEP` | — |
 | iteration 2 sweep (5 repeats, seeds 101–105; comparison) | `$ITER2_SWEEP` | — |
 | pre-campaign baseline sweep (5 repeats, seeds 101–105; comparison) | `$BASELINE_SWEEP` | — |
-| sweep knobs for P9 | `$SWEEP_ARMS`, `$SWEEP_N_REPEATS`, `$SWEEP_BASE_SEED`, `$SWEEP_MAX_PARALLEL` | from `consolidation.env` |
+| sweep knobs for P13 | `$SWEEP_N_REPEATS`, `$SWEEP_BASE_SEED`, `$SWEEP_MAX_PARALLEL` (`$SWEEP_ARMS` is obsolete: one pipeline) | from `consolidation.env` |
 
 Ancestry (verified): iterations 4 and 5 descend from iteration 3; arm C
 descends from iteration 2 (`bd7f032`), so it does **not** contain iteration 3.
@@ -131,8 +132,8 @@ descends from iteration 2 (`bd7f032`), so it does **not** contain iteration 3.
   node ID, never by count.
 - **Static checks:** `git diff --check`; `$VENV_PY -m compileall -q src scripts`;
   `$VENV_PY -m pytest -q tests/test_python_sources_compile.py`.
-- **Slurm:** you may `sbatch` only in P7 (two smoke chains), P9 (the
-  recovery sweep) and P10 (the evaluation job) — nothing else. Never
+- **Slurm:** you may `sbatch` only in P7 and P11 (smoke cells), P13 (the
+  recovery sweep) and P14 (the evaluation job) — nothing else. Never
   `scancel`, never `scontrol`, never poll or sleep-wait on a job. The driver
   handles waiting by requeueing itself after the jobs a phase submitted.
 - **TDD, as the repo requires:** every behaviour change starts from a failing
@@ -154,7 +155,7 @@ descends from iteration 2 (`bd7f032`), so it does **not** contain iteration 3.
 
 ## 3. Phase contract (enforced by the driver)
 
-Phases run in order: **P0 … P11**. Each session is told its phase. When the
+Phases run in order: **P0 … P15**. Each session is told its phase. When the
 phase's acceptance checks pass:
 
 1. commit everything on `consolidate/2026-09` (tree clean:
@@ -171,6 +172,12 @@ stop condition.
 The driver validates the marker (HEAD matches, tree clean, phase-specific
 files exist). An invalid marker gets one repair session with the problems
 injected; a second failure blocks the job.
+
+**Re-opening an earlier phase.** A verdict phase may send an earlier phase
+back for another round by writing `$WORK_ROOT/progress/P<j>.retry<k>` (one
+line on why) and deleting `P<j>.done`. In that case do **not** write your
+own `.done` marker: end the session. The driver sees the new retry marker,
+re-runs `P<j>`, and then runs your phase again from scratch.
 
 ---
 
@@ -541,7 +548,7 @@ queue.
 3. If a criterion fails because of a defect you can fix with confidence
    (a wrong path in the verifier, a missing field), fix it with a test, commit,
    delete `progress/P7.done` and write `progress/P7.retry` with one line on
-   why; the driver will re-run P7 (at most twice in total) and come back here.
+   why, and **do not write `P8.done`** (end the session); the driver will re-run P7 (at most twice in total) and then this phase again.
    Otherwise record the failure.
 4. Write `$WORK_ROOT/VERDICT.md`: one line per criterion, pass/fail, evidence
    path.
@@ -555,121 +562,294 @@ queue.
 
 **Accept:** `VERDICT.md` and `HANDOFF.md` exist; tree clean; `P8.done`.
 
-### P9 — Launch the 5-repeat recovery sweep (may `sbatch`)
+### Amendment of 2026-09-16 (after the first smoke round)
 
-**Preconditions:** `VERDICT.md` (P8) says the raw smoke passed every
-criterion. If it did not and P7's retry limit is exhausted, write
-`P9.blocked` — a 20-cell sweep on an unverified raw mode is the user's call.
+The smoke verdict showed two things (see `VERDICT.md`, `P9.blocked` of the
+first attempt, and `docs/consolidation_decision_record.md`):
 
-**Do**, from `$REPO` (`REPO` exported = the clone; `.secrets` present). The
-arms come from `SWEEP_ARMS` (`raw`, `featurized` or `both`); the knobs from
-`SWEEP_N_REPEATS`, `SWEEP_BASE_SEED`, `SWEEP_MAX_PARALLEL` in the inputs:
+1. The restored audit caught the held-out model's name in the *other* feature
+   regime's manifests; fixed in `74df77c`.
+2. An agent-written candidate (`encoding_difficulty`) imported `parse_motifs`
+   from `src/subjective_randomness/features.py` inside its `compute_features`
+   hook. That function *is* the held-out `falk_konold_dp` decision variable.
+   The raw arm was therefore not measuring discovery. Nothing enforced the
+   brief's "numpy, pymc, pytensor only" rule, and the feature library was
+   readable in the agents' tree.
+
+The user's decision: **raw is the only mode, and the feature code must be
+unreadable by agents, not merely un-imported.** The featurized pipeline is
+removed. Phases P9–P15 below replace the earlier P9–P11 (sweep, evaluation,
+results), which move to P13–P15. `SWEEP_ARMS` in the inputs is obsolete: there
+is one pipeline now.
+
+### P9 — Raw is the only mode
+
+**Goal:** one data path. Agents receive `sequence_a, sequence_b,
+participant_id, trial_index, chose_left` and nothing else, everywhere: the
+holdout harness, the live outer loop, the design stage. No featurizer exists
+in `src/pipelines/`. The raw seed sets are *the* seed sets.
+
+**Tests first:**
+- a test that `run_inner_model_loop_programmatic`, `run_design_programmatic`
+  and the collect stage no longer accept a featurizer / `raw_features`
+  argument and always write raw rows (adapt `tests/test_raw_inner_loop.py`);
+- a test that `src/pipelines/`, `src/models/`, `src/critique/`,
+  `src/subjective_randomness/holdout_recovery.py`, the seed sets and
+  `src/subjective_randomness/model_families/` import nothing from
+  `src.subjective_randomness.features` — check by AST over those trees
+  **and** by importing each entry module in a subprocess with
+  `sys.modules["src.subjective_randomness.features"] = None`;
+- the seed-parity test pinned to a frozen fixture: a small CSV of stimuli
+  with the expected `compute_features` outputs of each raw seed (generate it
+  once from the current seeds in the red step, commit it), so the seeds are
+  regression-tested without the feature library;
+- the existing raw tests (`test_raw_config_validation`,
+  `test_verify_raw_features_run`, `test_raw_features_seeds`) adapted so "raw"
+  is the default and only behaviour.
+
+**Do:**
+1. Delete the featurized seed sets and promote the raw ones:
+   `src/pipelines/outer_loop/projects/subjective_randomness/seed_models/` ←
+   the contents of `seed_models_raw/`; `src/subjective_randomness/pymc_model_families/`
+   ← the contents of `pymc_model_families_raw/`; remove the `_raw` dirs; fix
+   every reference (configs, launchers, `holdout_recovery_array.sbatch`,
+   `POOL_MODELS_REL`, docs, tests). The manifest mirror test keeps asserting
+   the two manifests agree.
+2. Delete `src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py`,
+   `scripts/subjective_randomness/preprocess.py`, and the featurizer concept
+   from the pipeline: `Featurizer`/`load_featurizer` and every
+   `featurize_path` / `featurize` parameter in `featurizer.py`, `collect.py`,
+   `eig.py`, `orchestrator.py`, `inner_loop/run.py`, `runtime/config.py`.
+   `featurizer.py` keeps only `RAW_RESPONSE_COLUMNS` (rename the module if
+   its name no longer fits). Remove the `raw_features` flag everywhere: the
+   raw behaviour is unconditional. Remove `pool_models_dir` only if the
+   project pool is now unambiguous; otherwise keep it.
+3. Holdout harness: evaluation rows and ground-truth generation are raw rows
+   (`feature_rows` → raw rows; every model computes its own features through
+   its hook, as `_augment_rows_with_features` already does at predict time).
+   The same-value collision rule can go; keep the "a model redefines a
+   harness column" error for the five raw columns. Delete
+   `holdout_recovery_raw_features.yaml`, `run_raw_features_arm.sh`,
+   `compare_raw_features_arm.py`; `holdout_recovery_faithful.yaml` is the
+   raw config now (say so in its header).
+4. Family twins: `model_families/common.py` must not import
+   `src.subjective_randomness.features`; inline the helpers it needs. The
+   research-library modules that only user-side analysis uses
+   (`features.py`, `sequence_stats.py`, `model_recovery.py`,
+   `pymc_recover.py`, the analysis scripts) stay, but nothing that runs in a
+   holdout task or the live pipeline may import them.
+5. Delete the featurized-mode tests (`test_featurizer_parity.py`,
+   `test_outer_loop_featurizer_resolution.py`, `test_subjective_randomness_preprocess.py`,
+   featurized cases elsewhere) rather than keeping dead branches alive.
+6. Docs: `CLAUDE.md` (one data path; the two-seed-sets paragraph goes),
+   `README.md`, `scripts/subjective_randomness/README.md`, `docs/raw_features_arm.md`
+   (mark superseded: raw is the only mode).
+
+**Accept:** the new tests pass; the fast suite's failing set ⊆ baseline
+**minus** the deleted tests (list the deleted node IDs in the done file);
+`git grep -n "raw_features\|featurize_stimulus\|load_featurizer\|preprocess.py"`
+over `src/pipelines src/models src/critique src/subjective_randomness/holdout_recovery.py scripts/subjective_randomness/slurm`
+returns nothing but comments that explain the history.
+
+### P10 — The agents' tree contains no feature code; imports are gated
+
+**Goal:** in every array task, the tree the agents can read holds no code
+that computes stimulus features except the *visible* seeds' own hooks, and
+a candidate that imports anything outside an allowlist is rejected at
+admission with the reason in the ledger.
+
+**Tests first:**
+- `tests/test_agent_tree_isolation.py`: build the agent tree exactly as the
+  array task does (factor the rsync exclude list into a file both the sbatch
+  and the test read, e.g. `scripts/subjective_randomness/slurm/agent_tree.exclude`)
+  into a temp dir from the repo, and assert: none of
+  `src/subjective_randomness/features.py`, `sequence_stats.py`,
+  `stimulus_design.py`, `model_recovery.py`, `pymc_recover.py`,
+  `model_families/`, any `preprocess.py`, `ground_truth_models.py`,
+  `evaluate_recovery.py`, `gt.txt`, the holdout configs, or the literature
+  test files exist in it; and a source grep for
+  `def parse_motifs|def featurize_stimulus|def multiscale_local_imbalance|def occurrence_probability|def periodicity_score`
+  matches only files under the visible seed directories.
+- `tests/test_candidate_import_gate.py`: `_admit_candidate` rejects a
+  `candidate.py` whose AST contains an `import`/`from` (at any depth, inside
+  functions included) of a module not in the allowlist — with a ledger
+  entry `rejected: forbidden import <module>` — and admits one that uses
+  only the allowlist. Allowlist: `numpy`, `pymc`, `pytensor`, `arviz`,
+  `scipy`, `math`, `itertools`, `functools`, `collections`, `re`, `typing`,
+  `dataclasses`, `statistics`, `operator`. Same gate for the critique
+  agent's `test_statistic` code.
+- a test that the candidate brief and the critique brief state the
+  allowlist and say every helper must be written in the file itself.
+
+**Do:**
+1. **Separate the harness from the agents' tree.** The array task keeps a
+   full checkout for the *harness process* (e.g. `$WORK_ROOT/harness_repo`,
+   staged once by the setup job, read-only) and a scrubbed **agent tree**
+   (`$RUN_REPO`, rsync with the exclude file, the held-out seed removed, the
+   manifests scrubbed) that holds `_runs/` and only what agents need. The
+   harness runs from the full checkout with the run root pointing into the
+   agent tree; every place the inner loop uses `here()` / `REPO_ROOT` to
+   decide what the candidate or critique agents may see (`--add-dir`,
+   opencode `external_directory`, the agents' cwd and `PYTHONPATH`) must take
+   an explicit **agent root** instead. If the candidate brief's self-check
+   snippet needs `src/models/pymc_inference.py` importable from the agent
+   tree, include the minimum modules it needs in the tree (they must pass
+   the isolation test) or replace the snippet with a check the harness
+   runs. If this separation proves more invasive than a session allows,
+   the fallback is: build the exhaustive evaluation pool in the setup job
+   (pristine) and load it from `eval_stimuli.json`, read `DEFAULT_PARAMS`
+   from the pristine family snapshot by parsing only, generate ground-truth
+   responses from the raw PyMC registry, and make the harness import none of
+   the excluded modules inside the copy — with the same isolation test as
+   the acceptance criterion. Record which route you took in the done file.
+2. The rsync exclude file, used by the array sbatch and the test.
+   The opencode deny globs get the same paths.
+3. The admission gate for candidates and the critique's test statistic:
+   static AST check before any import of the file; ledger entry; the briefs
+   updated (`pymc_theory.md` and the candidate/critique context writers).
+4. The verifier (`verify_raw_features_run.sh`, rename to
+   `verify_holdout_run.sh` if you like): assert the forbidden paths are
+   absent from every task's agent tree, assert no admitted model or
+   candidate imports outside the allowlist, keep the raw-CSV, CONTEXT, drop,
+   `screened_out.json` and completion checks, and print the agent-root and
+   harness-root paths it checked.
+
+**Accept:** new tests pass; fast suite failing set ⊆ (baseline minus deleted
+tests); `git grep` of `here()` and `REPO_ROOT` in `src/pipelines/inner_loop/`
+and `src/runtime/coding_agent.py` shows no remaining use that decides agent
+visibility.
+
+### P11 — Submit the smoke cell (may `sbatch`)
+
+One cheap raw cell from the consolidated commit, two experiments, one
+candidate round, exactly as the earlier P7 raw smoke but through the
+standard launcher (there is no arm any more):
 
 ```bash
 cd "$REPO"; export REPO="$REPO"
-# raw arm (SWEEP_ARMS = raw or both):
-N_REPEATS=$SWEEP_N_REPEATS BASE_SEED=$SWEEP_BASE_SEED MAX_PARALLEL=$SWEEP_MAX_PARALLEL \
-  WORK_ROOT="$WORK_ROOT/sweep_raw" \
-  bash scripts/subjective_randomness/slurm/run_raw_features_arm.sh
-sbatch --dependency=afterany:<raw analysis id> --job-name=verify_raw_sweep \
-  --partition=normal --time=00:30:00 --cpus-per-task=1 --mem=4GB \
-  --output="$WORK_ROOT/sweep_raw/slurm_logs/verify_%j.out" \
-  --export=ALL,WORK_ROOT="$WORK_ROOT/sweep_raw",ALL_JOB_IDS="<setup>,<array>,<analysis>" \
-  scripts/subjective_randomness/slurm/verify_raw_features_run.sh
-# featurized arm (SWEEP_ARMS = featurized or both):
-N_REPEATS=$SWEEP_N_REPEATS BASE_SEED=$SWEEP_BASE_SEED MAX_PARALLEL=$SWEEP_MAX_PARALLEL \
-  WORK_ROOT="$WORK_ROOT/sweep_featurized" \
+SMOKE=1 N_EXPERIMENTS=2 INNER_LOOP_ITERATIONS=1 BASE_SEED=100 \
+  WORK_ROOT="$WORK_ROOT/smoke_round<k>" \
   bash scripts/subjective_randomness/slurm/submit_holdout_test_retest.sh
+# verifier afterany the analysis job, as in P7
 ```
 
-Read the submit scripts first; adjust only a changed knob name. The array's
-default walltime is one day per task and each task needs its own cores; do
-not raise `MAX_PARALLEL`. Write `$WORK_ROOT/progress/sweep_jobs.json` with
-one entry per arm launched, e.g.
-`{"raw": {"work_root": ".../sweep_raw", "job_ids": ["<setup>", "<array>", "<analysis>", "<verify>"]}}`.
-Record the expected cost (about one earlier sweep's Gemini spend per arm)
-and wall time (about a day) in the done file. Do not wait for the jobs.
+`<k>` is this phase's round (`progress/P11.retry*` markers count the
+re-opens; the first round is `smoke_round1`). Write
+`progress/isolation_smoke_jobs.json` as
+`{"raw": {"work_root": "...", "job_ids": ["<setup>", "<array>", "<analysis>", "<verify>"]}}`.
+Do not wait.
 
-**Accept:** `sweep_jobs.json` exists with numeric ids for every arm in
-`SWEEP_ARMS`; tree clean; `P9.done`.
+**Accept:** the jobs file exists with numeric ids; tree clean; `P11.done`.
 
-### P10 — Submit the RMSE evaluation job (may `sbatch`)
+### P12 — Smoke verdict
 
-**Preconditions (driver-checked):** every id in `sweep_jobs.json` has left
-the queue.
+**Preconditions (driver-checked):** the smoke jobs have left the queue.
 
-**Do:**
+Judge the cell against all of: both CSV layers and every candidate
+`CONTEXT.md` raw-only; no `[drop]`, every `screened_out.json` empty; the
+verifier passes, including the **agent-tree isolation check**; no admitted
+model or candidate imports outside the allowlist, and any candidate that
+tried is in the ledger as `rejected: forbidden import`; the leakage-audit
+fields present and false; the new metric columns present; lenses 0–5 across
+the six briefs; final evaluation reached with no traceback.
+
+If a criterion fails because of a defect you can fix with confidence: fix it
+with a test, commit, write `progress/P11.retry<k>` with one line on why,
+delete `progress/P11.done`, and **do not write `P12.done`** — end the session.
+The driver re-runs P11 and then this phase again (at most three smoke rounds).
+Otherwise write `$WORK_ROOT/VERDICT.md` (one line per criterion, pass/fail,
+evidence path) and `$WORK_ROOT/HANDOFF.md` (final commit, how to fetch the
+branch, what P13 is about to launch and its cost), then `P12.done`.
+
+**Accept:** `VERDICT.md` and `HANDOFF.md` exist; tree clean; `P12.done`.
+
+### P13 — Launch the 5-repeat recovery sweep (may `sbatch`)
+
+**Preconditions:** `VERDICT.md` says the smoke passed every criterion;
+otherwise write `P13.blocked` — a 20-cell sweep on an unverified pipeline
+is the user's call.
+
+```bash
+cd "$REPO"; export REPO="$REPO"
+N_REPEATS=$SWEEP_N_REPEATS BASE_SEED=$SWEEP_BASE_SEED MAX_PARALLEL=$SWEEP_MAX_PARALLEL \
+  WORK_ROOT="$WORK_ROOT/sweep" \
+  bash scripts/subjective_randomness/slurm/submit_holdout_test_retest.sh
+# verifier afterany the analysis job
+```
+
+Do not raise `MAX_PARALLEL`. Write `progress/sweep_jobs.json` as
+`{"raw": {"work_root": ".../sweep", "job_ids": ["<setup>", "<array>", "<analysis>", "<verify>"]}}`.
+Record the expected cost (about one earlier sweep's Gemini spend) and wall
+time (about a day) in the done file. Do not wait.
+
+**Accept:** `sweep_jobs.json` exists with numeric ids; tree clean; `P13.done`.
+
+### P14 — Submit the RMSE evaluation job (may `sbatch`)
+
+**Preconditions (driver-checked):** every sweep job has left the queue.
+
 1. If `scripts/subjective_randomness/recovery_report.py` does not exist in
-   the clone (P3 ran on an earlier revision of this plan), add it now to the
-   P3 item 6 specification, tests first, and commit.
+   the clone, add it to the P3 item 6 specification, tests first, and commit.
 2. Add `scripts/subjective_randomness/slurm/evaluate_recovery_sweep.sbatch`
-   (commit it): a Slurm job (`--partition=normal --time=1-00:00:00
-   --cpus-per-task=8 --mem=32GB`, caches off `$HOME`, cwd `$REPO`, Python
-   `$VENV_PY`) that runs, each step failing loudly, for every arm in
-   `sweep_jobs.json`:
-   a. `bash scripts/subjective_randomness/slurm/verify_raw_features_run.sh`
-      with `WORK_ROOT=<sweep_raw>` (raw arm only; its `VERDICT.md` is part
-      of the engineering gate);
-   b. `compare_matched_cells.py --sweep-a $ITER2_SWEEP --sweep-b <sweep> --out $WORK_ROOT/analysis/<arm>_vs_iter2`,
-      the same against `$ITER3_SWEEP` (`_vs_iter3`) and `$BASELINE_SWEEP`
-      (`_vs_baseline`), and, if both arms ran,
-      `--sweep-a <sweep_featurized> --sweep-b <sweep_raw> --out $WORK_ROOT/analysis/raw_vs_featurized`;
+   (commit it): `--partition=normal --time=1-00:00:00 --cpus-per-task=8
+   --mem=32GB`, caches off `$HOME`, cwd `$REPO`, Python `$VENV_PY`; each step
+   fails loudly:
+   a. the verifier on `$WORK_ROOT/sweep`;
+   b. `compare_matched_cells.py --sweep-a $ITER2_SWEEP --sweep-b $WORK_ROOT/sweep --out $WORK_ROOT/analysis/vs_iter2`,
+      the same against `$ITER3_SWEEP` (`vs_iter3`) and `$BASELINE_SWEEP`
+      (`vs_baseline`). Those sweeps were featurized runs; their cells are
+      re-scored on the common pool with their own archived models, so the
+      comparison is valid as a reference, and confounded as an ablation;
    c. `oracle_admitted_models.py --result <cell>/holdout.json --steps final`
-      for every `run<r>/<gt>` cell of the sweep;
-   d. `recovery_report.py --sweep <sweep> --label consolidated_<arm>
+      for every `run<r>/<gt>` cell;
+   d. `recovery_report.py --sweep $WORK_ROOT/sweep --label consolidated_raw
       --compare vs_iter2=… --compare vs_iter3=… --compare vs_baseline=…
-      [--compare raw_vs_featurized=…] --oracle-glob '<sweep>/run*/*/oracle.json'
-      --out $WORK_ROOT/analysis/<arm>_RESULTS_auto.md`.
-   Comparison cells whose archives cannot be re-scored must be listed in the
-   outputs, not skipped silently.
-3. Submit it with `--output=$WORK_ROOT/analysis/evaluate_%j.out` and
-   `--export=ALL,WORK_ROOT=…,REPO=…,VENV_PY=…` plus the sweep roots it needs;
-   write `$WORK_ROOT/progress/analysis_jobs.json` as
+      --oracle-glob '$WORK_ROOT/sweep/run*/*/oracle.json'
+      --out $WORK_ROOT/analysis/RESULTS_auto.md`.
+   Comparison cells whose archives cannot be re-scored are listed, never
+   skipped silently.
+3. Submit it (`--output=$WORK_ROOT/analysis/evaluate_%j.out`,
+   `--export=ALL,WORK_ROOT=…,REPO=…,VENV_PY=…` plus the sweep roots); write
+   `progress/analysis_jobs.json` as
    `{"analysis": {"work_root": "$WORK_ROOT/analysis", "job_ids": ["<id>"]}}`.
    Do not wait.
 
 **Accept:** the sbatch is committed; `analysis_jobs.json` exists; tree clean;
-`P10.done`.
+`P14.done`.
 
-### P11 — Results: the RMSE evaluation report
+### P15 — Results: the RMSE evaluation report
 
 **Preconditions (driver-checked):** the evaluation job has left the queue.
 
-**Do:**
 1. Read `$WORK_ROOT/analysis/evaluate_<id>.out` and every output under
-   `$WORK_ROOT/analysis/`, the sweep's `test_retest.{json,csv}`, the raw
+   `$WORK_ROOT/analysis/`, the sweep's `test_retest.{json,csv}`, the
    verifier's `VERDICT.md`, and the per-cell `holdout.json` leakage fields.
-2. If the evaluation job failed on a defect you can fix with confidence (a
-   path, a column name, a missing archive handler), fix it with a test,
-   commit, delete `progress/P10.done` and write `progress/P10.retry` with one
-   line on why; the driver re-runs P10 (at most twice in total) and comes
-   back here. Otherwise record the failure and report what did complete.
+2. If the evaluation job failed on a defect you can fix with confidence, fix
+   it with a test, commit, write `progress/P14.retry` with one line on why,
+   delete `progress/P14.done`, and do not write `P15.done`; the driver
+   re-runs P14 (at most twice in total) and comes back here. Otherwise
+   record the failure and report what did complete.
 3. Write `$WORK_ROOT/RESULTS.md` — the RMSE evaluation the user asked for:
-   - **Engineering gate:** cells completed (of 20 per arm), verifier verdict,
-     `[drop]` count, `screened_out.json` non-empty count, leakage-audit
-     fields (`any_csv_generating_model`, `any_manifest_gt_named`, `any_identical`),
-     per-task spend from the logs.
+   - **Engineering gate:** cells completed (of 20), verifier verdict
+     including isolation, `[drop]` count, non-empty `screened_out.json`
+     count, forbidden-import rejections from the ledgers, leakage-audit
+     fields, per-task spend from the logs.
    - **Recovery table (primary):** per ground truth, final-step RMSE mean ±
      sd, median, min, max over the 5 repeats; KL regret alongside; Pearson r
      descriptive; the best model per cell.
-   - **Matched-seed deltas:** per cell and per ground truth (mean, median,
-     min, max) against iteration 2 (5 repeats), iteration 3 (3), and the
-     pre-campaign baseline (5), each labelled as **confounded** (featurized
-     → raw plus every loop change, and the manifest scrub) — they are
-     reference points, not an ablation. If a featurized arm ran, the
-     raw-vs-featurized paired table and the §9 gate result.
+   - **Matched-seed deltas** against iteration 2 (5 repeats), iteration 3
+     (3) and the pre-campaign baseline (5), per cell and per ground truth,
+     each labelled as **confounded** (those runs supplied features; this one
+     does not, plus every loop change and the manifest scrub).
    - **Three-bucket diagnostic:** per ground truth, cells with an
      oracle−incumbent gap above 0.02 (selection), cells whose oracle-best is
-     itself poor (discovery), lost-incumbent events (retention); name the
-     cells.
+     itself poor (discovery), lost-incumbent events (retention); name them.
    - **Interpretation:** what improved and what did not against the 0.02
-     practical margin, at n = 5, with no significance claims; which ground
-     truth drives the mean; what to run next.
+     practical margin at n = 5, no significance claims; which ground truth
+     drives the mean; what to run next.
    Update `HANDOFF.md` with a pointer to `RESULTS.md` and the final commit.
 
-**Accept:** `RESULTS.md` exists; tree clean; `P11.done`.
-
----
+**Accept:** `RESULTS.md` exists; tree clean; `P15.done`.
 
 ## 5. Test-baseline discipline
 
@@ -693,8 +873,12 @@ amend a merge. Never rewrite history.
 - the fast suite gains a failing node ID you cannot attribute and fix;
 - the arm C merge cannot be reconciled with iteration 3 within the P1 budget;
 - a submit script needs more than a knob-name change to run;
-- P9 would launch the raw sweep although the raw smoke did not pass every
+- P13 would launch the sweep although the smoke did not pass every
   criterion in `VERDICT.md`;
+- after P10, any file that computes stimulus features (other than the
+  visible seeds' own hooks) is present in an agent-visible tree, or a
+  candidate's forbidden import reaches the fitting stage instead of the
+  admission gate;
 - anything that would require touching `$SOURCE_REPO`, pushing, or cancelling
   a job.
 
@@ -713,37 +897,23 @@ mean/median/min/max per ground truth. No stimulus bootstrap. Predeclared
 practical margin: **0.02 RMSE**. Changing it after seeing results needs a
 written amendment.
 
-## 9. The raw-vs-featurized gate (for when a featurized arm is run)
+## 9. Comparisons against the earlier, featurized sweeps
 
-P9 launches the arm(s) in `SWEEP_ARMS` (currently `raw` only, 5 repeats), and
-P10/P11 evaluate them. The default switch to raw needs a featurized arm from
-the **same commit**; run it later as a balanced block (shared concurrency,
-same backend and model, same `BASE_SEED=100`, the same repeats), then apply
-the gate below with `compare_matched_cells.py`:
+There is no featurized arm any more (P9). The earlier sweeps (iteration 2,
+iteration 3, the pre-campaign baseline) supplied engineered feature columns
+to their agents, so a matched-seed comparison against them measures
+*everything* that changed at once: the representation now has to be
+discovered, the loop changes of iterations 1–5 as consolidated, and the
+manifest scrub. Report those deltas as reference points with that label,
+never as an ablation of any single change. The practical margin (0.02 RMSE)
+still applies to reading them.
 
-```bash
-cd "$REPO"; export REPO="$REPO"
-N_REPEATS=3 BASE_SEED=100 MAX_PARALLEL=6 WORK_ROOT=$SCRATCH/auto-psych/consolidation_2026_09/sweep_featurized \
-  bash scripts/subjective_randomness/slurm/submit_holdout_test_retest.sh
-N_REPEATS=3 BASE_SEED=100 MAX_PARALLEL=6 WORK_ROOT=$SCRATCH/auto-psych/consolidation_2026_09/sweep_raw \
-  bash scripts/subjective_randomness/slurm/run_raw_features_arm.sh
-# then: verify_raw_features_run.sh on sweep_raw; compare_matched_cells.py
-# --sweep-a sweep_featurized --sweep-b sweep_raw; and against iteration 3's
-# sweep ($ITER3_SWEEP) for the consolidation-vs-base check;
-# oracle_admitted_models.py per cell for the three-bucket diagnostic.
-```
-
-**Engineering gate (mandatory):** all 24 cells complete; both verifiers pass;
-raw candidate-facing data truly raw; zero drops; no featurizer imports; no
-leakage-audit failure.
-
-**Practical recovery gate for switching the default to raw:** on the stable
-ground truths (`falk_konold_dp`, `finite_experience_occurrence`,
-`motif_stack`) the mean raw−featurized RMSE is not worse than +0.02, and no
-stable ground truth is worse in all three paired repeats;
-`local_representativeness` is reported cell by cell and does not decide alone.
-If the gate passes, the default switch is its own commit with both configs
-retained. If it fails, raw stays a maintained opt-in arm.
+If a single-change ablation is ever wanted, run it as two arms from one
+commit with matched seeds and compare with `compare_matched_cells.py`; the
+gate would be: no stable ground truth (`falk_konold_dp`,
+`finite_experience_occurrence`, `motif_stack`) worse than +0.02 mean RMSE
+and none worse in every paired repeat, with `local_representativeness`
+reported cell by cell and never deciding alone.
 
 **Diagnostics:** if the incumbent regresses but the oracle-best does not,
 investigate selection; if both regress, discovery; if a lost-incumbent entry
