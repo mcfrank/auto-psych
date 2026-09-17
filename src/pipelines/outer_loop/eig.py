@@ -4,23 +4,18 @@ Exhaustive stimulus design by Expected Information Gain (EIG) over PyMC models.
 Enumerate EVERY sequence pair over the given lengths, score all of them in one
 batched per-draw pass per PyMC model (module-level `model: pm.Model`), and
 greedily select the set with maximal *joint* EIG about model identity
-(src.models.eig_selection). Raw stimuli are featurized (via the project's
-`featurize_stimulus`) into the numeric columns the models read through
-`pm.Data`. Without a responses CSV the per-draw p_left comes from each model's
-prior predictive (no MCMC fit needed); with one, each model is first fitted on
-those responses and the design is scored from its posterior predictive.
+(src.models.eig_selection). Each model computes its own features from raw
+stimulus rows via its ``compute_features`` or ``prepare_observed`` hook.
 
 Usage (CLI):
     python3 -m src.pipelines.outer_loop.eig \\
         --select 32 --lengths 4 5 6 7 8 \\
         --models-dir PATH/cognitive_models \\
-        --featurize  PATH/projects/<project>/preprocess.py \\
         --registry   PATH/model_registry.yaml \\
         --out        PATH/design/stimuli.json
 
     # --out defaults to stdout if omitted
     # --registry is optional (uniform prior over models if omitted)
-    # --featurize is optional (omit if the models read raw sequence columns)
     # --responses PREV/data/responses.csv scores from the posterior predictive
 """
 
@@ -30,7 +25,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import tyro
 from pyprojroot import here
@@ -39,17 +34,6 @@ from pyprojroot import here
 # Must precede the (function-level) src imports below, hence here() rather than
 # the canonical src.runtime.config.REPO_ROOT (same resolution).
 sys.path.insert(0, str(here()))
-
-
-def _load_featurizer(
-    featurize_path: Optional[Path],
-) -> Optional[Callable[[str, str], Dict[str, Any]]]:
-    """Return the project's featurize_stimulus, or None if --featurize was omitted."""
-    if featurize_path is None:
-        return None
-    from src.pipelines.outer_loop.featurizer import load_featurizer  # type: ignore
-
-    return load_featurizer(featurize_path)
 
 
 def _load_model_names(models_dir: Path) -> List[str]:
@@ -140,14 +124,9 @@ def _screen_usable_models(
     return usable, dropped
 
 
-def _feature_row(
-    item: Dict[str, Any], featurize: Optional[Callable[[str, str], Dict[str, Any]]]
-) -> Dict[str, Any]:
+def _raw_row(item: Dict[str, Any]) -> Dict[str, Any]:
+    """Build a raw stimulus row: sequence_a, sequence_b, chose_left (dummy)."""
     row: Dict[str, Any] = dict(item)
-    if featurize is not None:
-        row.update(featurize(item["sequence_a"], item["sequence_b"]))
-    # The observed-response container is required as a pm.Data input but its
-    # value is ignored for prior-predictive p_left — pass a dummy.
     row.setdefault("chose_left", 0)
     return row
 
@@ -200,7 +179,6 @@ def design_exhaustive(
     models_dir: Path,
     registry_path: Optional[Path] = None,
     *,
-    featurize_path: Optional[Path] = None,
     lengths: tuple = (4, 5, 6, 7, 8),
     n_select: int = 32,
     n_random: int = 0,
@@ -257,12 +235,8 @@ def design_exhaustive(
     if n_select == 0 and n_random == 0:
         raise ValueError("design_exhaustive needs n_select > 0 or n_random > 0.")
 
-    featurize = _load_featurizer(featurize_path)
-    # The paper-anchored Hahn--Warren and Griffiths models are defined only
-    # within a common sequence length. Do not ask them to compare scores with
-    # different length-specific normalizers.
     pool = enumerate_all_pairs(list(lengths), same_length_only=True)
-    rows = [_feature_row(item, featurize) for item in pool]
+    rows = [_raw_row(item) for item in pool]
 
     results: List[Dict[str, Any]] = []
     chosen: set = set()
@@ -372,8 +346,6 @@ class Args:
 
     models_dir: Path
     """Path to the cognitive_models/ directory."""
-    featurize: Optional[Path] = None
-    """Path to a module exposing featurize_stimulus() (e.g. projects/<project>/preprocess.py)."""
     registry: Optional[Path] = None
     """Path to model_registry.yaml (optional; uniform prior if omitted)."""
     out: Optional[Path] = None
@@ -413,7 +385,6 @@ def main(args: Args) -> None:
     selected = design_exhaustive(
         models_dir=args.models_dir,
         registry_path=args.registry,
-        featurize_path=args.featurize,
         lengths=tuple(args.lengths),
         n_select=args.select,
         n_samples=args.n_samples,

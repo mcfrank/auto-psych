@@ -1,8 +1,11 @@
 # The raw-features arm: making the loop discover the representation
 
+> **Historical note (P9, 2026-09-16):** The raw-only pipeline is now the sole
+> mode — there is no featurizer and no `raw_features` config switch. This
+> document describes the original arm C experiment that motivated the change.
+
 *Added 2026-09-09 on branch `arm-c/raw-features`, off the improvement
-campaign's iteration-2 branch. **If you are a review agent in a later
-iteration, read this: it changes what a recovery number means.***
+campaign's iteration-2 branch.*
 
 ## The problem it addresses
 

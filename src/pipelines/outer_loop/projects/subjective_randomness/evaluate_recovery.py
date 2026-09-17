@@ -28,17 +28,15 @@ from pyprojroot import here
 sys.path.insert(0, str(here()))
 
 from src.models.pymc_inference import fit_model, load_pymc_model, make_stim_data
-from src.pipelines.outer_loop.featurizer import load_featurizer
 from src.pipelines.outer_loop.orchestrator import (
     experiment_dir,
     get_ground_truth_models,
     outer_project_dir,
 )
+from src.subjective_randomness.features import featurize_stimulus
 
 RESPONSE_OPTIONS = ["left", "right"]
 Stimulus = Tuple[str, str]
-
-featurize_stimulus = load_featurizer(Path(__file__).resolve().parent / "preprocess.py")
 
 
 def parse_experiments(value: str) -> List[int]:

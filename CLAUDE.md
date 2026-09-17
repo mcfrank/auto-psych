@@ -156,26 +156,14 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   structurally rather than by re-parsing a message. Every drop is written to
   `design/screened_out.json` (empty list = the screen ran and dropped nothing),
   so a silent shrink of the hypothesis set is visible in the run tree.
-- **Two seed sets, one per feature regime.** `pymc_model_families/` (and the
-  live pool `seed_models/`) bind the columns the project featurizer supplies;
-  `pymc_model_families_raw/` (pool `seed_models_raw/`) compute those columns
-  themselves and are used only by a `raw_features: true` config, which writes an
-  agents' CSV of H/T sequences alone and designs without a featurizer. The sets
-  must never be merged: a model computing a column the CSV already carries is
-  unfittable, and the inner loop `[drop]`s it rather than failing. Why the arm
-  exists (the featurizer reproduces each ground truth's own decision variable at
-  R² 0.90-1.00) and how to read its results: `docs/raw_features_arm.md`.
-- **Raw mode end to end.** When `raw_features: true`,
-  `run_inner_model_loop_programmatic` skips the featurizer entirely:
-  `model_loop/responses.csv` contains only the five `RAW_RESPONSE_COLUMNS`
-  (`sequence_a`, `sequence_b`, `participant_id`, `trial_index`, `chose_left`,
-  defined in `src/pipelines/outer_loop/featurizer.py`), and the candidate context
-  tells agents there are no precomputed feature columns and that a
-  `compute_features`/`prepare_observed` hook is required. Config validation
-  checks that every model in the pool and seed manifests can bind a raw stimulus
-  row. The verifier (`scripts/subjective_randomness/slurm/verify_raw_features_run.sh`)
-  checks that every agent-facing CSV in a finished run is truly raw and that no
-  candidate imports the project featurizer.
+- **Raw-only pipeline.** There is no featurizer: `responses.csv` carries only
+  the five `RAW_RESPONSE_COLUMNS` (`sequence_a`, `sequence_b`, `participant_id`,
+  `trial_index`, `chose_left`, defined in `src/pipelines/outer_loop/featurizer.py`).
+  Every model computes its own features via a `compute_features(sequence_a,
+  sequence_b)` or `prepare_observed(rows)` hook. `pymc_model_families/` (and
+  the live pool `seed_models/`) all carry `compute_features` hooks. The verifier
+  (`scripts/subjective_randomness/slurm/verify_raw_features_run.sh`) checks that
+  every agent-facing CSV in a finished run carries only raw columns.
 - `src/models/mcmc_defaults.py` — the **single source of MCMC sampler defaults**
   (`PRODUCTION_*`, `DESIGN_TWIN_*`). Every entry point imports from here; change
   defaults only here.

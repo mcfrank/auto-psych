@@ -1,9 +1,9 @@
-"""A raw config whose seed or pool models cannot bind a raw row must fail at
-config resolution, naming the model and the missing columns.
+"""Pool models that cannot bind a raw stimulus row must fail at config
+resolution, naming the model and the missing columns.
 
-The raw seed dirs (``seed_models_raw/``) pass because their models all define
-``compute_features`` or ``prepare_observed`` hooks. A featurized model that
-expects precomputed columns from the CSV fails loudly before the run starts.
+Every seed model defines ``compute_features`` or ``prepare_observed`` hooks.
+A model that expects precomputed columns from the CSV fails loudly before the
+run starts.
 """
 
 from __future__ import annotations
@@ -112,33 +112,32 @@ def test_raw_model_with_prepare_observed_passes(tmp_path):
     validate_raw_pool_models(pool)
 
 
-def test_actual_raw_seed_dirs_pass():
-    """The shipped raw seed directories must pass the raw pool validation."""
+def test_actual_seed_dirs_pass():
+    """The shipped seed directories must pass the pool validation."""
     from src.subjective_randomness.holdout_recovery import (
         validate_raw_pool_models,
     )
     from tests.paths import REPO_ROOT
 
-    raw_registry = (
-        REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families_raw"
+    registry = (
+        REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families"
     )
-    raw_pool = (
+    pool = (
         REPO_ROOT
         / "src"
         / "pipelines"
         / "outer_loop"
         / "projects"
         / "subjective_randomness"
-        / "seed_models_raw"
+        / "seed_models"
     )
 
-    validate_raw_pool_models(raw_registry)
-    validate_raw_pool_models(raw_pool)
+    validate_raw_pool_models(registry)
+    validate_raw_pool_models(pool)
 
 
-def test_run_holdout_recovery_from_config_validates_raw_pool(tmp_path):
-    """When raw_features=True and pool_models_dir is set, the config validator
-    checks every model in the pool against a raw row."""
+def test_pool_validation_catches_featurized_model(tmp_path):
+    """A pool model that expects precomputed columns is caught by validation."""
     from src.subjective_randomness.holdout_recovery import (
         validate_raw_pool_models,
     )

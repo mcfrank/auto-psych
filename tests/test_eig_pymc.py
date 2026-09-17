@@ -3,11 +3,10 @@
 `design_exhaustive` enumerates the full H/T pair universe over the given
 lengths, scores every pair from each PyMC model's per-draw p_left (prior
 predictive, or posterior predictive when a responses CSV is given), and
-greedily selects the max-joint-EIG stimulus set. It featurizes each raw
-stimulus via the project's `featurize_stimulus` before handing it to the
-models. This is the pipeline's only design mode — there is no candidate-pool
-path. Uses prior-predictive sampling (fast-ish, no NUTS) — heavier cases are
-marked slow to be safe.
+greedily selects the max-joint-EIG stimulus set. Each model computes its own
+features from raw stimulus rows. This is the pipeline's only design mode —
+there is no candidate-pool path. Uses prior-predictive sampling (fast-ish, no
+NUTS) — heavier cases are marked slow to be safe.
 """
 
 from __future__ import annotations
@@ -18,11 +17,7 @@ import pytest
 import yaml
 
 from src.pipelines.outer_loop import eig as eig_mod
-from tests.paths import PYMC_MODEL_FIXTURES_DIR, REPO_ROOT
-
-FEATURIZE = (
-    REPO_ROOT / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
-)
+from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 # A model with a participant-level random effect: it needs a `participant_id`
 # pm.Data column that stimulus feature rows (n_a/h_a/...) never carry. It fits
@@ -33,6 +28,10 @@ FEATURIZE = (
 _PARTICIPANT_MODEL = """import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
+
+def compute_features(sequence_a, sequence_b):
+    return {"h_a": sum(1 for c in sequence_a if c == "H"),
+            "h_b": sum(1 for c in sequence_b if c == "H")}
 
 with pm.Model() as model:
     h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
@@ -138,7 +137,6 @@ def test_design_drops_model_that_cannot_bind_to_stimulus(
 
     out = eig_mod.design_exhaustive(
         models_dir,
-        featurize_path=FEATURIZE,
         lengths=(3,),
         n_select=2,
         n_samples=25,
@@ -215,7 +213,7 @@ def test_design_raises_when_no_model_can_bind(tmp_path):
 
     with pytest.raises(ValueError, match="no models|cannot be evaluated|stimulus"):
         eig_mod.design_exhaustive(
-            models_dir, featurize_path=FEATURIZE, lengths=(3,), n_select=2
+            models_dir, lengths=(3,), n_select=2
         )
 
 
@@ -228,7 +226,6 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     out = tmp_path / "stimuli.json"
     args = eig_mod.Args(
         models_dir=models_dir,
-        featurize=FEATURIZE,
         out=out,
         lengths=(3, 4),
         select=5,
@@ -256,7 +253,7 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     out2 = tmp_path / "stimuli2.json"
     eig_mod.main(
         eig_mod.Args(
-            models_dir=models_dir, featurize=FEATURIZE, out=out2,
+            models_dir=models_dir, out=out2,
             lengths=(3, 4), select=5, n_samples=25, n_scenarios=300,
         )
     )
@@ -269,7 +266,7 @@ def test_exhaustive_design_pure_random_no_eig(tmp_path):
     with eig=None. This is the 64-random ablation."""
     models_dir = _seed(tmp_path)
     stimuli = eig_mod.design_exhaustive(
-        models_dir, featurize_path=FEATURIZE, lengths=(3, 4), n_select=0, n_random=6, seed=1
+        models_dir, lengths=(3, 4), n_select=0, n_random=6, seed=1
     )
     assert len(stimuli) == 6
     assert all(s["source"] == "random" for s in stimuli)
@@ -280,7 +277,7 @@ def test_exhaustive_design_pure_random_no_eig(tmp_path):
         assert len(s["sequence_a"]) == len(s["sequence_b"]) and len(s["sequence_a"]) in (3, 4)
     # deterministic given the seed
     again = eig_mod.design_exhaustive(
-        models_dir, featurize_path=FEATURIZE, lengths=(3, 4), n_select=0, n_random=6, seed=1
+        models_dir, lengths=(3, 4), n_select=0, n_random=6, seed=1
     )
     assert {(s["sequence_a"], s["sequence_b"]) for s in again} == keys
 
@@ -291,7 +288,7 @@ def test_exhaustive_design_eig_plus_random_split(tmp_path):
     32-EIG + 32-random default."""
     models_dir = _seed(tmp_path)
     stimuli = eig_mod.design_exhaustive(
-        models_dir, featurize_path=FEATURIZE, lengths=(3, 4),
+        models_dir, lengths=(3, 4),
         n_select=3, n_random=4, n_samples=25, n_scenarios=300, seed=1,
     )
     assert len(stimuli) == 7
@@ -323,7 +320,6 @@ def test_exhaustive_design_never_scores_cross_length_pairs(tmp_path, monkeypatch
 
     eig_mod.design_exhaustive(
         models_dir,
-        featurize_path=FEATURIZE,
         lengths=(3, 4),
         n_select=2,
         n_samples=5,
@@ -331,7 +327,9 @@ def test_exhaustive_design_never_scores_cross_length_pairs(tmp_path, monkeypatch
     )
 
     assert captured_rows
-    assert all(row["n_a"] == row["n_b"] for row in captured_rows)
+    assert all(
+        len(row["sequence_a"]) == len(row["sequence_b"]) for row in captured_rows
+    )
 
 
 @pytest.mark.slow
@@ -351,7 +349,6 @@ def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
 
     stimuli = eig_mod.design_exhaustive(
         models_dir,
-        featurize_path=FEATURIZE,
         lengths=(3, 4),
         n_select=4,
         n_samples=50,
@@ -378,7 +375,6 @@ def test_exhaustive_design_posterior_mode_missing_responses_fails_loudly(tmp_pat
     with pytest.raises(FileNotFoundError, match="responses"):
         eig_mod.design_exhaustive(
             models_dir,
-            featurize_path=FEATURIZE,
             lengths=(3, 4),
             n_select=4,
             responses_csv=tmp_path / "nope.csv",
@@ -397,10 +393,8 @@ def test_missing_manifest_raises(tmp_path):
 
 
 def _probe_row(seq_a="HTH", seq_b="HHT"):
-    """A featurized stimulus row, as the design builds them."""
-    from src.subjective_randomness.features import featurize_stimulus
-
-    return {**featurize_stimulus(seq_a, seq_b), "chose_left": 0}
+    """A raw stimulus row, as the design builds them."""
+    return {"sequence_a": seq_a, "sequence_b": seq_b, "chose_left": 0}
 
 
 def test_screen_drops_a_participant_level_model_and_reports_which(tmp_path, capsys):
@@ -421,13 +415,27 @@ def test_screen_drops_a_participant_level_model_and_reports_which(tmp_path, caps
     assert "participant_re" in capsys.readouterr().out
 
 
-def test_screen_raises_when_the_probe_row_lacks_feature_columns(tmp_path):
-    """A model missing FEATURE columns is a configuration error, not a
-    participant-level mismatch: the design rows were built without the
-    featurizer these models read. Dropping it renormalizes EIG over whatever
-    happens to bind — which is how a raw-features run designed on one model of
-    three and still reported a plausible r = 0.965."""
-    models_dir = _seed(tmp_path)
+def test_screen_raises_when_model_needs_feature_columns_it_cannot_compute(tmp_path):
+    """A model that expects precomputed feature columns (no compute_features
+    hook) cannot bind a raw stimulus row. The screen must raise rather than
+    silently dropping it, because dropping renormalizes EIG over whichever
+    models happen to bind."""
+    models_dir = tmp_path / "cognitive_models"
+    models_dir.mkdir(parents=True)
+    (models_dir / "no_hook.py").write_text(
+        "import numpy as np, pymc as pm, pytensor.tensor as pt\n"
+        "with pm.Model() as model:\n"
+        "    n_a = pm.Data('n_a', np.zeros(1, dtype='int64'))\n"
+        "    tau = pm.HalfNormal('tau', sigma=2.0)\n"
+        "    p_left = pm.Deterministic('p_left', pm.math.sigmoid(tau * pt.cast(n_a, 'float64')))\n"
+        "    chose_left = pm.Data('chose_left', np.zeros(1, dtype='int64'))\n"
+        "    pm.Bernoulli('response', p=p_left, observed=chose_left)\n",
+        encoding="utf-8",
+    )
+    (models_dir / "models_manifest.yaml").write_text(
+        "models:\n  - name: no_hook\n    rationale: test model without compute_features\n",
+        encoding="utf-8",
+    )
     raw_row = {"sequence_a": "HTH", "sequence_b": "HHT", "chose_left": 0}
 
     with pytest.raises(RuntimeError, match="feature column"):
@@ -451,7 +459,7 @@ def test_design_records_the_screened_out_models_as_an_artifact(tmp_path, monkeyp
     out_path = tmp_path / "screened_out.json"
 
     eig_mod.design_exhaustive(
-        models_dir, featurize_path=FEATURIZE, lengths=(3,), n_select=1,
+        models_dir, lengths=(3,), n_select=1,
         n_samples=5, n_scenarios=20, screened_out_path=out_path,
     )
 

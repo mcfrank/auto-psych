@@ -1,13 +1,7 @@
-"""In a raw_features run the inner loop must never see engineered columns.
+"""The inner loop writes only raw columns to model_loop/responses.csv.
 
-The bug this guards against: arm C's ``run_inner_model_loop_programmatic``
-always loaded the project featurizer and wrote 59-column
-``model_loop/responses.csv`` even when ``data/responses.csv`` was raw (5
-columns). Candidates read the 59-column file, so the run was not raw at all.
-
-After P2 ``run_inner_model_loop_programmatic(raw_features=True)`` skips the
-featurizer, writes only the five raw columns, and raises if the pooled rows
-carry anything extra.
+Every model computes its own features from raw stimulus rows. The pipeline
+never runs a featurizer.
 """
 
 from __future__ import annotations
@@ -22,10 +16,9 @@ from src.pipelines.outer_loop import orchestrator as orch
 from src.pipelines.outer_loop.featurizer import RAW_RESPONSE_COLUMNS
 
 
-# ─── helpers ───
+# --- helpers ---
 
 RAW_HEADER = list(RAW_RESPONSE_COLUMNS)
-FEATURIZED_EXTRA = ["n_a", "n_b", "h_a", "h_b", "rep_motifs_a", "rep_motifs_b"]
 
 
 def _raw_row(**overrides):
@@ -38,14 +31,6 @@ def _raw_row(**overrides):
     }
     base.update(overrides)
     return base
-
-
-def _featurized_row(**overrides):
-    row = _raw_row()
-    for col in FEATURIZED_EXTRA:
-        row[col] = "0.5"
-    row.update(overrides)
-    return row
 
 
 def _write_csv(path: Path, rows):
@@ -71,7 +56,6 @@ def _setup_exp_dir(tmp_path, rows, project_id="subjective_randomness"):
 
 
 def _patch_inner_loop(monkeypatch):
-    """Monkeypatch everything except _write_feature_csv so we can inspect the CSV."""
     captured = {}
 
     def fake_inner_loop(responses_path, results_dir, **kw):
@@ -91,12 +75,11 @@ def _patch_inner_loop(monkeypatch):
     return captured
 
 
-# ─── tests ───
+# --- tests ---
 
 
-def test_raw_features_true_writes_only_raw_columns(tmp_path, monkeypatch):
-    """raw_features=True: model_loop/responses.csv has exactly the five raw
-    columns, even though the project has a featurizer."""
+def test_inner_loop_writes_only_raw_columns(tmp_path, monkeypatch):
+    """model_loop/responses.csv has exactly the five raw columns."""
     exp_dir = _setup_exp_dir(tmp_path, [_raw_row()])
     monkeypatch.setattr(
         orch, "_pooled_response_rows", lambda e: [_raw_row()]
@@ -108,7 +91,6 @@ def test_raw_features_true_writes_only_raw_columns(tmp_path, monkeypatch):
         max_iterations=0,
         candidate_count=0,
         project_id="subjective_randomness",
-        raw_features=True,
     )
 
     responses_csv = exp_dir / "model_loop" / "responses.csv"
@@ -117,53 +99,7 @@ def test_raw_features_true_writes_only_raw_columns(tmp_path, monkeypatch):
     assert header == RAW_HEADER
 
 
-def test_raw_features_false_preserves_featurized_columns(tmp_path, monkeypatch):
-    """raw_features=False (default): the featurizer runs, so the CSV has the
-    extra columns the project supplies."""
-    exp_dir = _setup_exp_dir(tmp_path, [_featurized_row()])
-    monkeypatch.setattr(
-        orch, "_pooled_response_rows", lambda e: [_raw_row()]
-    )
-    _patch_inner_loop(monkeypatch)
-
-    orch.run_inner_model_loop_programmatic(
-        exp_dir,
-        max_iterations=0,
-        candidate_count=0,
-        project_id="subjective_randomness",
-    )
-
-    responses_csv = exp_dir / "model_loop" / "responses.csv"
-    with responses_csv.open(encoding="utf-8") as f:
-        header = f.readline().strip().split(",")
-    # The project featurizer adds columns beyond the raw set.
-    assert len(header) > len(RAW_HEADER)
-    for col in RAW_HEADER:
-        assert col in header
-
-
-def test_raw_features_true_raises_on_engineered_columns_in_pool(
-    tmp_path, monkeypatch
-):
-    """If the pooled rows already carry engineered columns, a raw run must
-    raise — that means the upstream data is not truly raw."""
-    exp_dir = _setup_exp_dir(tmp_path, [_featurized_row()])
-    monkeypatch.setattr(
-        orch, "_pooled_response_rows", lambda e: [_featurized_row()]
-    )
-    _patch_inner_loop(monkeypatch)
-
-    with pytest.raises(ValueError, match="raw_features"):
-        orch.run_inner_model_loop_programmatic(
-            exp_dir,
-            max_iterations=0,
-            candidate_count=0,
-            project_id="subjective_randomness",
-            raw_features=True,
-        )
-
-
-def test_candidate_context_in_raw_mode_has_no_precomputed_feature_references(
+def test_candidate_context_has_no_precomputed_feature_references(
     tmp_path,
 ):
     """When the CSV has only raw columns, CONTEXT.md must say there are no
@@ -193,12 +129,8 @@ def test_candidate_context_in_raw_mode_has_no_precomputed_feature_references(
     )
 
     context = (candidate_dir / "CONTEXT.md").read_text(encoding="utf-8")
-    # Must not claim precomputed feature columns exist.
     assert "precomputed" not in context.lower()
-    # Must say compute_features or prepare_observed is required.
     assert "compute_features" in context or "prepare_observed" in context
-    # Must not mention specific featurized column names.
     for col in ("rep_motifs", "occ_n20", "multiscale_imbalance"):
         assert col not in context
-    # Must say chose_left is the only numeric column.
     assert "chose_left" in context

@@ -19,7 +19,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-from src.pipelines.outer_loop.featurizer import Featurizer, load_featurizer
 from src.pipelines.outer_loop.llm import get_llm, invoke_llm, load_prompt_for_run
 from src.runtime.console import log_status
 from src.models.theorist.predictions import get_model_predictions
@@ -956,15 +955,6 @@ def generate_llm_participant_rows(
     return rows, stats
 
 
-def _load_featurizer(featurize_path: Path | None) -> Featurizer | None:
-    """Return featurize_stimulus(seq_a, seq_b) from a module path.
-
-    None only when no featurizer was configured at all; a configured-but-broken
-    one raises (see ``featurizer.load_featurizer``).
-    """
-    if featurize_path is None:
-        return None
-    return load_featurizer(featurize_path)
 
 
 def _present_sides(seq_a: str, seq_b: str, swap: bool) -> tuple[str, str]:
@@ -986,7 +976,6 @@ def _generate_from_pymc_models(
     n_participants: int,
     *,
     models_dir: Path,
-    featurize_path: Path | None = None,
     n_samples: int = 200,
     seed: int = 0,
 ) -> list[dict[str, Any]]:
@@ -996,32 +985,24 @@ def _generate_from_pymc_models(
     model's prior-predictive mean p_left is the choice probability for a binary
     draw. The side each sequence is shown on is randomized per trial (see
     :func:`_present_sides`), and the model is evaluated on the *presented* order so
-    a generative ``side_bias`` biases toward the physical left. Raw stimuli are
-    featurized so the PyMC `pm.Data` columns are present. No MCMC fit — the prior
-    is the generative process for synthetic participants.
+    a generative ``side_bias`` biases toward the physical left. Each model
+    computes its own features via its hooks. No MCMC fit — the prior is the
+    generative process for synthetic participants.
     """
     from src.models.pymc_inference import prior_predict_p_left
 
-    featurize = _load_featurizer(featurize_path)
     rng = random.Random(seed)
 
-    # Cache prior-predictive p_left per (model, stimulus, side) — deterministic
-    # given the engine seed. Each stimulus recurs across participants in both its
-    # canonical and side-swapped presentation, so both orders are worth caching.
     p_left_cache: dict[tuple[str, int, bool], float] = {}
 
-    def _feature_row(left: str, right: str) -> dict[str, Any]:
-        row: dict[str, Any] = {"sequence_a": left, "sequence_b": right}
-        if featurize is not None:
-            row.update(featurize(left, right))
-        row.setdefault("chose_left", 0)  # dummy observed value; unused for p_left
-        return row
+    def _raw_row(left: str, right: str) -> dict[str, Any]:
+        return {"sequence_a": left, "sequence_b": right, "chose_left": 0}
 
     def _p_left(model_name: str, stim_idx: int, left: str, right: str, swap: bool) -> float:
         key = (model_name, stim_idx, swap)
         if key not in p_left_cache:
             preds = prior_predict_p_left(
-                [model_name], models_dir, _feature_row(left, right),
+                [model_name], models_dir, _raw_row(left, right),
                 n_samples=n_samples, seed=seed,
             )
             p_left_cache[key] = preds[model_name]

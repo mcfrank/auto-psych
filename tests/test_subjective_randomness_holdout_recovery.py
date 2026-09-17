@@ -108,7 +108,7 @@ def _stub_inner_loop(history_best):
     # _complete_experiment_on_disk).
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
             backend=None, agent_model=None, cache_dir=None, project_id=None,
-            agent_timeout_sec=900, raw_features=False, **kwargs):
+            agent_timeout_sec=900, **kwargs):
         # Mirror the real inner loop: every candidate-agent run records its
         # token usage (here one stub record per experiment's loop).
         token_usage.record_usage(
@@ -1887,38 +1887,24 @@ def test_leakage_check_manifest_scan_ignores_the_loops_own_output_manifests(tmp_
 
 def test_leakage_check_flags_gt_in_opposite_feature_regime_manifest(tmp_path):
     """Both feature regimes' manifests live in the checkout. When only the
-    active regime is scrubbed, the GT name leaks through the other regime's
-    manifest — the audit must catch it. The array sbatch's catch-all scrub
-    (added in the 2026-09 consolidation) closes this channel."""
+    the seed manifest still lists the GT, the audit must catch it. The array
+    sbatch's catch-all scrub (added in the 2026-09 consolidation) closes this
+    channel."""
     run_root = tmp_path / "checkout" / "_runs" / "gt"
     _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
     checkout = tmp_path / "checkout"
 
-    # Active regime (raw) — scrubbed, GT not listed
-    raw_seeds = checkout / "seed_models_raw"
-    raw_seeds.mkdir(parents=True)
-    (raw_seeds / "models_manifest.yaml").write_text(
-        "models:\n  - name: window_typicality\n    rationale: finite window\n",
-        encoding="utf-8",
-    )
-    raw_families = checkout / "pymc_model_families_raw"
-    raw_families.mkdir(parents=True)
-    (raw_families / "models_manifest.yaml").write_text(
-        "models:\n  - name: window_typicality\n    rationale: finite window\n",
-        encoding="utf-8",
-    )
-
-    # Other regime (featurized) — NOT scrubbed, GT still listed
-    feat_seeds = checkout / "seed_models"
-    feat_seeds.mkdir(parents=True)
-    (feat_seeds / "models_manifest.yaml").write_text(
+    # Both manifests still list the GT — NOT scrubbed
+    seeds = checkout / "seed_models"
+    seeds.mkdir(parents=True)
+    (seeds / "models_manifest.yaml").write_text(
         "models:\n  - name: prototype_similarity\n    rationale: similarity to a prototype\n"
         "  - name: window_typicality\n    rationale: finite window\n",
         encoding="utf-8",
     )
-    feat_families = checkout / "pymc_model_families"
-    feat_families.mkdir(parents=True)
-    (feat_families / "models_manifest.yaml").write_text(
+    families = checkout / "pymc_model_families"
+    families.mkdir(parents=True)
+    (families / "models_manifest.yaml").write_text(
         "models:\n  - name: prototype_similarity\n    rationale: similarity to a prototype\n"
         "  - name: window_typicality\n    rationale: finite window\n",
         encoding="utf-8",
@@ -1934,14 +1920,12 @@ def test_leakage_check_flags_gt_in_opposite_feature_regime_manifest(tmp_path):
     assert "pymc_model_families/models_manifest.yaml" in result["manifest_gt_named_files"]
 
 
-# ── raw-features (arm C) runs ────────────────────────────────────────
+# ── raw-only responses ────────────────────────────────────────
 
 
-def test_raw_features_run_writes_an_agent_csv_of_sequences_only(tmp_path, monkeypatch):
-    """With `raw_features`, the agents get the H/T sequences and nothing else,
-    so a candidate must compute every feature it uses (docs/raw_features_arm.md).
-    The seeds already do: three via `compute_features`, motif_stack via
-    `prepare_observed`."""
+def test_agent_csv_has_only_raw_columns(tmp_path, monkeypatch):
+    """The agents get only raw H/T sequences and response bookkeeping.
+    Every model computes its own features."""
     monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
     monkeypatch.setattr(
         holdout_recovery, "generate_responses", _stub_generate_responses([])
@@ -1963,53 +1947,14 @@ def test_raw_features_run_writes_an_agent_csv_of_sequences_only(tmp_path, monkey
         candidate_count=0,
         fit_kwargs={},
         seed=0,
-        raw_features=True,
     )
 
     responses = tmp_path / "run" / "experiment1" / "data" / "responses.csv"
     with responses.open(encoding="utf-8", newline="") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
-    assert tuple(reader.fieldnames) == holdout_recovery.RAW_RESPONSE_COLUMNS
+    assert set(reader.fieldnames) == set(holdout_recovery.RAW_RESPONSE_COLUMNS)
     assert len(rows) == 2 * len(DESIGN_STIMULI)
-
-
-def test_raw_features_run_designs_without_the_project_featurizer(tmp_path, monkeypatch):
-    """The design must score models on raw rows too. Featurizing there as well
-    would offer `compute_features` a column name it already has, and the hook
-    raises on a collision."""
-    seen = {}
-
-    def _capture_design(exp_dir, project_id, **kwargs):
-        seen.update(kwargs)
-        return _stub_design([])(exp_dir, project_id, **kwargs)
-
-    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _capture_design)
-    monkeypatch.setattr(
-        holdout_recovery, "generate_responses", _stub_generate_responses([])
-    )
-    monkeypatch.setattr(
-        holdout_recovery,
-        "run_inner_model_loop_programmatic",
-        _stub_inner_loop("local_representativeness"),
-    )
-
-    for raw in (True, False):
-        seen.clear()
-        run_holdout_experiments(
-            "prototype_similarity",
-            {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
-            tmp_path / f"run_{raw}",
-            seed_models_dir=SEED_MODELS_DIR,
-            n_experiments=1,
-            n_participants=2,
-            inner_loop_iterations=0,
-            candidate_count=0,
-            fit_kwargs={},
-            seed=0,
-            raw_features=raw,
-        )
-        assert seen["raw_features"] is raw
 
 
 def test_strip_to_raw_columns_keeps_only_the_raw_five():

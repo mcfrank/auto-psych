@@ -305,11 +305,10 @@ def test_motif_stack_is_not_dropped_by_the_eig_screener():
     hypothesis set. A `prepare_observed` hook that could not bind a design-pool
     row would get motif_stack excluded from EIG with only a printed `[drop]`
     line — quietly renormalizing the design over the remaining models."""
-    from src.pipelines.outer_loop.eig import _feature_row, _screen_usable_models
-    from src.subjective_randomness.features import featurize_stimulus
+    from src.pipelines.outer_loop.eig import _raw_row, _screen_usable_models
 
-    probe_row = _feature_row(
-        {"sequence_a": "HHTHTTHT", "sequence_b": "HTHTHTHT"}, featurize_stimulus
+    probe_row = _raw_row(
+        {"sequence_a": "HHTHTTHT", "sequence_b": "HTHTHTHT"}
     )
     usable, dropped = _screen_usable_models(["motif_stack"], MODEL_DIR, probe_row)
     assert usable == ["motif_stack"]

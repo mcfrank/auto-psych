@@ -9,7 +9,7 @@ so the models can read their `pm.Data` columns.
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
+
 
 import pytest
 
@@ -19,10 +19,6 @@ from src.pipelines.outer_loop.collect import (
 )
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
-FEATURIZE = (
-    Path(__file__).resolve().parent.parent
-    / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
-)
 
 
 def _seed(tmp_path):
@@ -48,7 +44,6 @@ def test_generate_from_pymc_models_shapes_and_columns(tmp_path):
         ["bayesian_fair_coin", "representativeness"],
         n_participants=3,
         models_dir=models_dir,
-        featurize_path=FEATURIZE,
         n_samples=100,
         seed=0,
     )
@@ -102,7 +97,7 @@ def test_ground_truth_generation_rejects_invalid_probabilities(prediction):
 def test_generate_is_deterministic_under_fixed_seed(tmp_path):
     models_dir = _seed(tmp_path)
     stimuli = [{"sequence_a": "HHHT", "sequence_b": "HTHT"}]
-    kw = dict(models_dir=models_dir, featurize_path=FEATURIZE, n_samples=100, seed=7)
+    kw = dict(models_dir=models_dir, n_samples=100, seed=7)
     rows_a = _generate_from_pymc_models(stimuli, ["bayesian_fair_coin"], 2, **kw)
     rows_b = _generate_from_pymc_models(stimuli, ["bayesian_fair_coin"], 2, **kw)
     assert [r["chose_left"] for r in rows_a] == [r["chose_left"] for r in rows_b]
@@ -122,7 +117,6 @@ def test_synthetic_generation_counterbalances_sides(tmp_path):
         ["bayesian_fair_coin"],
         40,
         models_dir=models_dir,
-        featurize_path=FEATURIZE,
         n_samples=50,
         seed=0,
     )
