@@ -180,6 +180,87 @@ def test_oracle_admitted_models_reports_oracle_gap(tmp_path, monkeypatch):
     assert "oracle_best_model" in rows[0]
 
 
+def test_oracle_extracts_from_archive(tmp_path, monkeypatch):
+    """When run_root doesn't exist on disk, oracle extracts from agent_runs.tar.gz."""
+    import tarfile
+
+    from scripts.subjective_randomness.oracle_admitted_models import Args, main
+
+    cell_dir = tmp_path / "cell"
+    cell_dir.mkdir()
+
+    # Build a run tree under a temp location, then archive and remove it.
+    staging = tmp_path / "staging"
+    run_root_rel = Path("_runs") / "gt_a"
+    run_root_abs = staging / run_root_rel
+    run_root_abs.mkdir(parents=True)
+
+    history = {
+        1: [
+            {
+                "step": 0, "iteration": None,
+                "best_model": "seed_a",
+                "posteriors": {"seed_a": 0.5, "seed_b": 0.5},
+                "elpd_loo": {"seed_a": -1.0, "seed_b": -2.0},
+            },
+        ]
+    }
+    models = {1: ["seed_a", "seed_b"]}
+    _build_synthetic_run(run_root_abs, 1, history, models)
+
+    eval_stimuli = [
+        {"sequence_a": "HHT", "sequence_b": "TTH"},
+        {"sequence_a": "HTH", "sequence_b": "THT"},
+        {"sequence_a": "HHH", "sequence_b": "TTT"},
+    ]
+    (run_root_abs / "eval_stimuli.json").write_text(
+        json.dumps(eval_stimuli), encoding="utf-8"
+    )
+
+    # Archive into cell_dir/agent_runs.tar.gz
+    tar_path = cell_dir / "agent_runs.tar.gz"
+    with tarfile.open(tar_path, "w:gz") as tf:
+        tf.add(str(staging / "_runs"), arcname="_runs")
+
+    # The holdout.json run_root points to a non-existent path
+    fake_run_root = cell_dir / "repo" / "_runs" / "gt_a"
+
+    gt_p = np.array([0.3, 0.5, 0.7])
+    predictions = {
+        "seed_a": np.array([0.35, 0.55, 0.65]),
+        "seed_b": np.array([0.4, 0.6, 0.5]),
+    }
+    _patch_oracle_seams(monkeypatch, gt_p, predictions)
+
+    holdout_result = {
+        "n_experiments": 1,
+        "seed_models_dir": str(tmp_path),
+        "fit_kwargs": {},
+        "eval_pool": {
+            "n_pairs": 0, "lengths": [3], "seed": 0,
+            "min_remaining": 1, "exhaustive": True, "predict_max_draws": None,
+        },
+        "gt_runs": [{
+            "gt_model": "gt_a",
+            "params": {"theta_alt": 0.65},
+            "run_root": str(fake_run_root),
+            "trajectory": history[1],
+        }],
+    }
+    holdout_json = cell_dir / "holdout.json"
+    holdout_json.write_text(json.dumps(holdout_result, indent=2), encoding="utf-8")
+
+    main(Args(result=holdout_json))
+
+    oracle_json = cell_dir / "oracle.json"
+    assert oracle_json.exists()
+
+    oracle = json.loads(oracle_json.read_text(encoding="utf-8"))
+    assert len(oracle["steps"]) >= 1
+    step = oracle["steps"][0]
+    assert step["oracle_rmse"] <= step["incumbent_rmse"]
+
+
 def test_oracle_reports_lost_incumbents(tmp_path, monkeypatch):
     """A model that was best_model at an earlier step but was later pruned."""
     from scripts.subjective_randomness.oracle_admitted_models import Args, main
