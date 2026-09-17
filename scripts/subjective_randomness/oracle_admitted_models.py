@@ -183,7 +183,7 @@ def _extract_archive(cell_dir: Path) -> Optional[tempfile.TemporaryDirectory]:
         return None
     td = tempfile.TemporaryDirectory(dir=cell_dir, prefix="oracle_extract_")
     with tarfile.open(tar_path) as tf:
-        tf.extractall(td.name)
+        tf.extractall(td.name, filter="data")
     return td
 
 
@@ -230,8 +230,16 @@ def main(args: Args) -> None:
         seed_models_dir = Path(result["seed_models_dir"])
         gt_p = p_left_fixed_params(gt_model, seed_models_dir, eval_stimuli, gt_params)
 
-        cache_dir = run_root.parent / "mcmc_cache"
+        cache_dir = cell_dir / "mcmc_cache"
         if not cache_dir.is_dir():
+            cache_dir = run_root.parent / "mcmc_cache"
+        if not cache_dir.is_dir():
+            print(
+                f"WARNING: no mcmc_cache at {cell_dir / 'mcmc_cache'} or "
+                f"{run_root.parent / 'mcmc_cache'} — fits will run uncached "
+                f"(very slow).",
+                file=sys.stderr,
+            )
             cache_dir = None
 
         all_history: list[dict] = []
