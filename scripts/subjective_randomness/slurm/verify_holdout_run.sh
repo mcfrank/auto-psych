@@ -6,7 +6,7 @@
 #
 # Run it directly, or gate it on the run's last job so it needs no polling:
 #   sbatch --dependency=afterany:<analysis_id> --mail-type=END,FAIL \
-#          --export=ALL,WORK_ROOT=<root> ... verify_raw_features_run.sh
+#          --export=ALL,WORK_ROOT=<root> ... verify_holdout_run.sh
 set -uo pipefail
 W="${WORK_ROOT:?WORK_ROOT must be set}"
 RAW_HEADER="sequence_a,sequence_b,participant_id,trial_index,chose_left"

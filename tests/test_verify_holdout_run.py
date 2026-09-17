@@ -16,7 +16,7 @@ import pytest
 
 from tests.paths import REPO_ROOT
 
-VERIFIER = REPO_ROOT / "scripts" / "subjective_randomness" / "slurm" / "verify_raw_features_run.sh"
+VERIFIER = REPO_ROOT / "scripts" / "subjective_randomness" / "slurm" / "verify_holdout_run.sh"
 
 RAW_HEADER = "sequence_a,sequence_b,participant_id,trial_index,chose_left"
 FEATURIZED_HEADER = RAW_HEADER + ",n_a,n_b,rep_motifs_a,rep_motifs_b"
