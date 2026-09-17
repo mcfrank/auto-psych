@@ -148,14 +148,14 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 - **Screening a model out of a design is narrow and recorded.**
   `eig._screen_usable_models` may omit a model only when the columns it cannot
   bind are response-row bookkeeping (`NON_STIMULUS_COLUMNS`: `participant_id`,
-  `trial_index`) — a participant-level random effect, say. Missing *feature*
-  columns raise instead: that means the design rows were built without the
-  featurizer the models read, and dropping the model would renormalize EIG over
-  whichever ones happen to bind. `make_stim_data` signals this with
-  `MissingStimulusColumns`, which carries `.missing` as data so callers classify
-  structurally rather than by re-parsing a message. Every drop is written to
-  `design/screened_out.json` (empty list = the screen ran and dropped nothing),
-  so a silent shrink of the hypothesis set is visible in the run tree.
+  `trial_index`) — a participant-level random effect, say. Missing stimulus
+  columns raise instead: that means the design rows lack columns the model
+  needs, and dropping the model would renormalize EIG over whichever ones
+  happen to bind. `make_stim_data` signals this with `MissingStimulusColumns`,
+  which carries `.missing` as data so callers classify structurally rather than
+  by re-parsing a message. Every drop is written to `design/screened_out.json`
+  (empty list = the screen ran and dropped nothing), so a silent shrink of the
+  hypothesis set is visible in the run tree.
 - **Raw-only pipeline.** There is no featurizer: `responses.csv` carries only
   the five `RAW_RESPONSE_COLUMNS` (`sequence_a`, `sequence_b`, `participant_id`,
   `trial_index`, `chose_left`, defined in `src/pipelines/outer_loop/columns.py`).
@@ -186,10 +186,9 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 ### Projects vs. the research library — two different things
 
 - `src/pipelines/outer_loop/projects/<id>/` = **assets the generic pipeline
-  consumes** (`problem_definition.md`, `preprocess.py` featurizer,
-  `ground_truth_models.py`, `seed_models/`, `prolific_config.yaml`). Adding a
-  project = adding an asset directory. This lives under `src/`, not the
-  run-output `projects/` tree.
+  consumes** (`problem_definition.md`, `ground_truth_models.py`, `seed_models/`,
+  `evaluate_recovery.py`, `prolific_config.yaml`). Adding a project = adding an
+  asset directory. This lives under `src/`, not the run-output `projects/` tree.
 - `src/subjective_randomness/` = a **standalone research library** for the
   subjective-randomness domain (model families, `stimulus_design.py`,
   `sequence_stats.py`, recovery harnesses). Coupling to the pipeline is

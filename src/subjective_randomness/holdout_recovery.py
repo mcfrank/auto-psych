@@ -142,8 +142,7 @@ from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS  # noqa: F401
 
 
 # ─────────────────────────────────────────────
-# Functions formerly in model_recovery.py — inlined here so the holdout harness
-# has no transitive dependency on src.subjective_randomness.features.
+# Seed-model helpers (local to avoid a dependency on the research library)
 # ─────────────────────────────────────────────
 
 
@@ -494,16 +493,11 @@ def run_holdout_experiments(
         Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
     )
     # Hold the GT out of experiment 1's seed pool whenever it IS in the pool's
-    # own manifest — the *live project* seed manifest that seeding below reads.
-    # The pool mirrors the registry manifest, so an active seed used as GT is
-    # excluded; a GT the registry keeps only for archival refits (a model the
-    # 2026-08 consolidation superseded) is simply absent from the pool and
-    # nothing is excluded, the same semantics as an impossible GT. Membership is
-    # checked by manifest *name* only.
-    # The SAME directory seeding reads below, or the membership test and the
-    # seeding disagree: the array scrubs the held-out entry from the pool it was
-    # told about, so reading the default pool here would say "exclude it" while
-    # seeding reads a manifest that no longer lists it, and the exclusion raises.
+    # own manifest. An active seed used as GT is excluded; a GT absent from the
+    # pool (e.g. an impossible model) needs no exclusion. Membership by name.
+    # Must read the SAME directory that seeding below reads, or the membership
+    # test and the seeding disagree (the array scrubs the held-out entry from
+    # the pool, so reading the default pool would mis-detect).
     seed_exclude = seed_exclusion(
         gt_model, pool_models_dir or project_seed_models_dir(project_id)
     )
@@ -1527,12 +1521,9 @@ def run_holdout_recovery_from_config(
         "lengths": [int(x) for x in pool_cfg.get("lengths", (6, 8))],
         "seed": int(pool_cfg.get("seed", 11)),
         "min_remaining": int(pool_cfg.get("min_remaining", 100)),
-        # Exhaustive: use every distinct same-length pair for the lengths, not an
-        # n_pairs sample. Defaults to TRUE so seed-holdout and impossible-holdout
-        # results are never reported on mismatched pools (the 500-pair sample
-        # once needed a manual reanalysis pass to reconcile); pass
-        # `exhaustive: false` explicitly to sample. predict_max_draws thins the
-        # posterior so the (draws x n_stim) array stays bounded on a big pool.
+        # Exhaustive: use every distinct same-length pair, not an n_pairs sample.
+        # Defaults to TRUE so seed- and impossible-holdout results use the same
+        # pool. predict_max_draws thins the posterior to bound the array size.
         "exhaustive": bool(pool_cfg.get("exhaustive", True)),
         "predict_max_draws": (
             int(predict_max_draws_cfg) if predict_max_draws_cfg is not None else None

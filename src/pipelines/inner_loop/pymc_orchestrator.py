@@ -124,10 +124,9 @@ DEFAULT_CANDIDATE_HINTS = [
     "Propose a single mechanism whose predictions would disagree most sharply "
     "with the current best model somewhere in the stimulus space — and say in "
     "your hypothesis where that disagreement lives.",
-    "Build a mechanism around information the current models ignore. If the "
-    "precomputed columns cannot express it, derive the exact statistic your "
-    "hypothesis needs from the raw sequences with `compute_features` (order, "
-    "position, recency, specific sub-sequences).",
+    "Build a mechanism around information the current models ignore. Derive "
+    "the exact statistic your hypothesis needs from the raw sequences with "
+    "`compute_features` (order, position, recency, specific sub-sequences).",
     "Propose a process-level account — a memory limit, attention window, "
     "encoding cost, or sequential-updating process — rather than another "
     "statistical summary of the stimulus.",
