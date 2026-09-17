@@ -1,14 +1,14 @@
 """Pure parts of the consolidation driver.
 
 The consolidation plan (``docs/consolidation_plan_2026_09.md``) is executed as
-twenty-two phases, P0..P21, one Claude Code session each. State lives on disk
+twenty-eight phases, P0..P27, one Claude Code session each. State lives on disk
 under ``<work_root>/progress/`` as marker files the agent writes and the
 driver validates:
 
 * ``P<k>.done`` — first line ``commit: <sha>`` (must equal HEAD), then a summary;
 * ``P<k>.blocked`` — the agent hit a stop condition; the job stops;
-* ``<phase.jobs_file>`` — for a phase that submits Slurm jobs (P7, P12 and P20
-  smoke, P14 sweep, P15 evaluation): the ids the driver must wait on, per label;
+* ``<phase.jobs_file>`` — for a phase that submits Slurm jobs (the smokes, the
+  sweeps, the evaluations): the ids the driver must wait on, per label;
 * ``P<k>.retry*`` — a later phase asked for another round of ``P<k>``
   (bounded by ``Phase.max_rounds``).
 
@@ -109,19 +109,46 @@ PHASES: tuple[Phase, ...] = (
         "P16", "Results: the RMSE evaluation report",
         waits_for="analysis_jobs.json", requires_files=("RESULTS.md",),
     ),
+    # Amendment of 2026-09-18: sweep 1 ran with a candidate-write failure (292
+    # of 297 rejections were "no candidate.py written"), and the analysis job
+    # was blocked on an untested oracle CLI. P17-P22 fix both and re-run the
+    # sweep; P15/P16 were superseded by hand.
+    Phase("P17", "Fix the discovery failure and the analysis tooling"),
+    Phase(
+        "P18", "Submit the validation smoke and the sweep-1 evaluation",
+        allows_sbatch=True, jobs_file="fix_jobs.json",
+        required_labels=("smoke", "analysis"), max_rounds=3,
+    ),
+    Phase(
+        "P19", "Fix verdict and sweep-1 results",
+        waits_for="fix_jobs.json", requires_files=("FIX_VERDICT.md", "RESULTS.md"),
+    ),
+    Phase(
+        "P20", "Launch the re-run recovery sweep",
+        allows_sbatch=True, jobs_file="sweep2_jobs.json", required_labels=("raw",),
+    ),
+    Phase(
+        "P21", "Submit the re-run evaluation",
+        waits_for="sweep2_jobs.json", allows_sbatch=True,
+        jobs_file="analysis2_jobs.json", required_labels=("analysis",), max_rounds=2,
+    ),
+    Phase(
+        "P22", "Re-run results",
+        waits_for="analysis2_jobs.json", requires_files=("RESULTS_RERUN.md",),
+    ),
     # Appended at the user's request (2026-09-17): P11's simplification was too
     # conservative, so this runs an aggressive cleanup AFTER the results, when
     # the clone is no longer being copied by pending sweep tasks.
-    Phase("P17", "Characterize, then split the oversized modules"),
-    Phase("P18", "Reduce the surface"),
-    Phase("P19", "Readability"),
+    Phase("P23", "Characterize, then split the oversized modules"),
+    Phase("P24", "Reduce the surface"),
+    Phase("P25", "Readability"),
     Phase(
-        "P20", "Prove it: submit an equivalence smoke",
+        "P26", "Prove it: submit an equivalence smoke",
         allows_sbatch=True, jobs_file="cleanup_smoke_jobs.json",
         required_labels=("raw",), max_rounds=3,
     ),
     Phase(
-        "P21", "Cleanup verdict and report",
+        "P27", "Cleanup verdict and report",
         waits_for="cleanup_smoke_jobs.json", requires_files=("CLEANUP_REPORT.md",),
     ),
 )

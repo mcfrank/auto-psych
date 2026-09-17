@@ -1024,7 +1024,186 @@ explains it, retention.
 
 ---
 
-## 10. Aggressive cleanup (amendment of 2026-09-17, at the user's request)
+---
+
+## 10. Discovery bug, re-run, and the blocked analysis (amendment of 2026-09-18)
+
+The first 5-repeat sweep completed all 20 cells and passed every isolation and
+leakage check, but it did **not** measure the loop's discovery ability. The
+ledgers show **292 of 297 candidate rejections are `no candidate.py written`**:
+only about 3 of 18 candidate slots per cell produced a model at all. One
+transcript shows the cause directly — the candidate agent called opencode's
+`write` tool once and received *"The user rejected permission to use this
+specific tool call."* The candidates that did succeed wrote their file with
+`bash` heredocs instead.
+
+**The cause is not yet established, and the obvious explanation is wrong:** the
+`opencode.json` permission block the array task writes is byte-identical to
+`main`'s (`perm["read"|"glob"|"grep"]` plus an `external_directory` grant of
+`$RUN_REPO/**`), and the candidate directories are under `$RUN_REPO/_runs/...`,
+so they are inside the granted path. Something else changed between the earlier
+campaign sweeps (which admitted candidates at a high rate) and this one — a
+plausible suspect is P10's harness/agent split, which moved the harness's cwd to
+`$HARNESS_REPO` while agents run under `$RUN_REPO`, but that is a hypothesis to
+test, not a finding.
+
+Consequence: the sweep's hard-ground-truth numbers describe a loop that could
+barely propose models. They are a floor, not a measurement.
+
+Separately, the **evaluation job has failed twice** on
+`scripts/subjective_randomness/oracle_admitted_models.py` (a stale
+`feature_rows` import, then a missing archive-extraction call, now a missing
+`eval_stimuli.json` path), so P15 hit its retry limit and the chain stopped.
+That script was written in P3 and has never been run against a real archived
+cell. P15 and P16 are marked superseded by hand; P17–P19 below replace them.
+
+The cleanup phases move from P17–P21 to P23–P27.
+
+### P17 — Fix the discovery failure and the analysis tooling
+
+No `sbatch` in this phase. Three independent repairs, each with a test.
+
+**1. The candidate-write failure — diagnose before fixing.** Reproduce it
+minimally: build an agent tree the way the array task does, write the same
+`opencode.json`, and run one `opencode run` in a candidate-shaped directory
+under it that tries to write a file with the `write` tool. Vary one thing at a
+time — cwd inside vs outside `$RUN_REPO`, harness cwd `$HARNESS_REPO` vs
+`$RUN_REPO`, the `permission` block present vs absent, `external_directory`
+present vs absent, the opencode version — until the denial flips. Write what you
+found in the done file, then fix that cause. Evidence to start from:
+`$WORK_ROOT/sweep/run4/local_representativeness/agent_runs.tar.gz`, member
+`_runs/local_representativeness/experiment3/model_loop/iter_0/candidate_0/agent.jsonl`
+(a denied `write`), and the same cell's `iter_1/candidate_0/agent.jsonl` (a
+successful `bash` write). Compare against a campaign-era sweep that admitted
+candidates freely: `$ITER3_SWEEP/run1/falk_konold_dp/agent_runs.tar.gz`.
+
+Add a test that fails on the broken configuration: given the array task's agent
+tree and config, a candidate agent must be *able* to write into its candidate
+directory. If the fix is a config change, assert the resulting `opencode.json`
+grants it; if it is a path change, assert the paths line up. Do not assert on
+opencode's internals.
+
+**2. A loud failure when candidates cannot write.** A run where nearly every
+slot yields no file must not look like a normal run. In the inner loop, when a
+round produces **zero** admitted candidates and every rejection is
+`no candidate.py written`, raise — do not continue to the next round. Record
+per-round admitted/rejected counts in the ledger summary. Add a test.
+
+**3. `oracle_admitted_models.py` — repair it against a real cell.** It has
+failed three different ways. Read it end to end, fix the archive extraction and
+the `eval_stimuli.json` lookup (an archived cell keeps the run tree inside
+`agent_runs.tar.gz`; `eval_stimuli.json` lives at the run root inside it), and
+add an integration test that runs the CLI against one real archived cell from
+`$WORK_ROOT/sweep` (read-only, cached fits, `--steps final`) and asserts it
+writes `oracle.json` with the four fields the plan's §0.2 diagnostic needs. Mark
+it `slow` if it takes more than a few seconds. A tool that runs only inside a
+Slurm job is a tool that will fail inside a Slurm job.
+
+**4. Smoke criteria.** Add to the smoke's pass list, in the verifier and in the
+plan's criterion table: **at least one candidate admitted per experiment**, and
+**no round whose rejections are all `no candidate.py written`**. The P13 smoke
+passed with zero admissions because nothing asserted this.
+
+**Accept:** the three fixes are committed with their tests; the fast-suite
+failing set ⊆ the P0 baseline minus tests deleted in P9/P11; tree clean.
+
+### P18 — Submit the validation smoke and the sweep-1 evaluation (may `sbatch`)
+
+Two independent submissions:
+
+1. a SMOKE cell from the fixed commit, same settings and seed as P12
+   (`SMOKE=1 N_EXPERIMENTS=2 INNER_LOOP_ITERATIONS=1 BASE_SEED=100`) into
+   `$WORK_ROOT/fix_smoke_round<k>`, with the verifier chained on it — but with
+   `INNER_LOOP_ITERATIONS=1` the run must actually admit candidates, which is
+   the point of this smoke;
+2. the sweep-1 evaluation job again (`evaluate_recovery_sweep.sbatch` over
+   `$WORK_ROOT/sweep`), now that the oracle CLI is tested.
+
+Write `progress/fix_jobs.json` with both labels:
+`{"smoke": {...}, "analysis": {...}}`. Do not wait.
+
+**Accept:** `fix_jobs.json` has numeric ids under both labels; tree clean.
+
+### P19 — Fix verdict and sweep-1 results
+
+**Preconditions (driver-checked):** both jobs have left the queue.
+
+1. Judge the smoke against P13's criteria **plus** the two new ones. The
+   decisive question: were candidates admitted? Report admitted and rejected
+   counts per round and the rejection reasons.
+2. Write `$WORK_ROOT/FIX_VERDICT.md` with that criterion table and the
+   diagnosis from P17 step 1 in two sentences.
+3. Write `$WORK_ROOT/RESULTS.md` for **sweep 1** from the evaluation outputs, in
+   the form §4's P16 specified, with one addition stated plainly at the top:
+   this sweep ran with the candidate-write bug, so its discovery numbers are a
+   floor and its hard-ground-truth results are not evidence about the loop's
+   ceiling. Include the ledger evidence (292/297).
+4. If the smoke shows candidates still cannot write, fix it, write
+   `progress/P18.retry<k>`, delete `progress/P18.done`, and do **not** write
+   `P19.done` — end the session.
+
+**Accept:** `FIX_VERDICT.md` and `RESULTS.md` exist; tree clean.
+
+### P20 — Launch the re-run recovery sweep (may `sbatch`)
+
+**Preconditions:** `FIX_VERDICT.md` says candidates are admitted; otherwise
+write `P20.blocked`.
+
+Same configuration as sweep 1 — same coding agent (**opencode +
+`google/gemini-3.1-pro-preview`**, unchanged, so the difference from sweep 1 is
+the fix and nothing else), `SWEEP_N_REPEATS` repeats, `BASE_SEED` and
+`MAX_PARALLEL` from the inputs — into `$WORK_ROOT/sweep_rerun`, with the
+verifier chained on it:
+
+```bash
+cd "$REPO"; export REPO="$REPO"
+N_REPEATS=$SWEEP_N_REPEATS BASE_SEED=$SWEEP_BASE_SEED MAX_PARALLEL=$SWEEP_MAX_PARALLEL \
+  WORK_ROOT="$WORK_ROOT/sweep_rerun" \
+  bash scripts/subjective_randomness/slurm/submit_holdout_test_retest.sh
+```
+
+Write `progress/sweep2_jobs.json` (`{"raw": {...}}`). Record the expected cost
+and wall time in the done file. Do not wait.
+
+**Accept:** `sweep2_jobs.json` has numeric ids; tree clean.
+
+### P21 — Submit the re-run evaluation (may `sbatch`)
+
+**Preconditions (driver-checked):** the re-run sweep jobs have left the queue.
+
+Submit `evaluate_recovery_sweep.sbatch` over `$WORK_ROOT/sweep_rerun`, with the
+same steps as P15's job and one addition: a `compare_matched_cells.py` run of
+**`sweep_rerun` against `sweep`** into `$WORK_ROOT/analysis_rerun/vs_sweep1`.
+That pair is matched-seed and differs only by the fix, so it is the one
+comparison in this whole campaign that isolates a single change. Write
+`progress/analysis2_jobs.json`. Do not wait.
+
+**Accept:** `analysis2_jobs.json` has a numeric id; tree clean.
+
+### P22 — Re-run results
+
+**Preconditions (driver-checked):** the evaluation job has left the queue.
+
+Write `$WORK_ROOT/RESULTS_RERUN.md` in the form §4's P16 specified, plus:
+
+- **Discovery health:** admitted / rejected / pruned per cell, rejection
+  reasons, and the final zoo size — against sweep 1's 292/297 and its zoos of
+  3–4. This is the headline of this round.
+- **The isolating comparison:** `sweep_rerun` versus `sweep`, per cell and per
+  ground truth, labelled as differing only by the candidate-write fix.
+- **Against the featurized sweeps** (iteration 2, iteration 3, the
+  pre-campaign baseline), still labelled confounded, as §9 requires.
+- **Three-bucket diagnostic** from the oracle outputs: discovery, selection,
+  retention, naming the cells.
+- **What to change next**, given the evidence: in particular whether selection
+  (trial-level ELPD-LOO, which does not measure stimulus generalization) is
+  now the binding constraint, and whether the degenerate softmax posterior
+  (BMA gain was exactly 0.000 in all 20 sweep-1 cells) should be replaced by
+  stacking weights or a tempered softmax. Propose; do not implement.
+
+**Accept:** `RESULTS_RERUN.md` exists; tree clean.
+
+## 11. Aggressive cleanup (amendment of 2026-09-17, at the user's request)
 
 P11 was too conservative: it renamed, de-duplicated and documented, but the net
 source reduction was 93 lines and it declined to split the two modules a reader
@@ -1039,17 +1218,17 @@ rather than fundamental:
   Restructure them. A test suite that pins the current file layout is a
   constraint to remove, not to obey.
 
-P17–P21 run **after** the results (P16), so the sweep and its evaluation are
+P23–P27 run **after** the results (P16), so the sweep and its evaluation are
 never affected by the refactor: the array tasks rsync their agent tree from the
 clone's working tree at task start, so the tree must stay frozen while any task
 is pending.
 
 **The rule is unchanged and absolute: behaviour must not change.** What makes
-aggressive refactoring safe here is P17's characterization harness — golden
+aggressive refactoring safe here is P23's characterization harness — golden
 artifacts captured *before* any edit, re-checked after every commit. If a
 golden artifact changes, revert that commit; never fix forward.
 
-### P17 — Characterize, then split the oversized modules
+### P23 — Characterize, then split the oversized modules
 
 **Step 0, before any edit — the golden-artifact harness.** Add
 `tests/test_golden_artifacts.py` plus committed fixtures under
@@ -1069,7 +1248,7 @@ golden artifact changes, revert that commit; never fix forward.
    table (no MCMC — build the table as data).
 
 Each is an assertion against the committed fixture, not a snapshot the test
-rewrites. Run them after **every** commit in P17–P19.
+rewrites. Run them after **every** commit in P23–P25.
 
 **Then split.** Every module in the live path over ~500 lines must be split
 along a stated seam or justified in writing against this rule: *a reader who
@@ -1097,7 +1276,7 @@ no live-path module over 500 lines without a written justification in the done
 file; fast-suite failing set ⊆ the P0 baseline minus tests deleted in P9/P11 and
 any test file this phase *renames* (list all of them); tree clean.
 
-### P18 — Reduce the surface
+### P24 — Reduce the surface
 
 1. **Delete what nothing reaches**, with `git grep` evidence per deletion, as in
    P11 step 2 but applied to everything P11 left: anything stranded by P9–P11,
@@ -1118,11 +1297,11 @@ any test file this phase *renames* (list all of them); tree clean.
    are the user's tooling. You may simplify them, but list anything you think
    should go in the done file as a *proposal* — do not delete it.
 
-**Accept:** golden artifacts unchanged; fast-suite failing set as in P17; the
+**Accept:** golden artifacts unchanged; fast-suite failing set as in P23; the
 done file lists every deletion with its evidence and every proposal you did not
 act on.
 
-### P19 — Readability
+### P25 — Readability
 
 1. Names that say what the thing is; no abbreviations that a newcomer must
    decode; no name that describes a superseded design.
@@ -1140,7 +1319,7 @@ act on.
 **Accept:** golden artifacts unchanged; fast suite as above; `docs/code_tour.md`
 and `CLAUDE.md` describe the code as it now is.
 
-### P20 — Prove it: submit an equivalence smoke (may `sbatch`)
+### P26 — Prove it: submit an equivalence smoke (may `sbatch`)
 
 One SMOKE cell from the cleaned commit, **same settings and seed as the P12
 smoke** (`SMOKE=1 N_EXPERIMENTS=2 INNER_LOOP_ITERATIONS=1 BASE_SEED=100`), into
@@ -1148,9 +1327,9 @@ smoke** (`SMOKE=1 N_EXPERIMENTS=2 INNER_LOOP_ITERATIONS=1 BASE_SEED=100`), into
 P12 did. Write `progress/cleanup_smoke_jobs.json`
 (`{"raw": {"work_root": ..., "job_ids": [...]}}`). Do not wait.
 
-**Accept:** the jobs file exists with numeric ids; tree clean; `P20.done`.
+**Accept:** the jobs file exists with numeric ids; tree clean; `P26.done`.
 
-### P21 — Cleanup verdict and report
+### P27 — Cleanup verdict and report
 
 **Preconditions (driver-checked):** the cleanup smoke jobs have left the queue.
 
@@ -1165,20 +1344,20 @@ P12 did. Write `progress/cleanup_smoke_jobs.json`
    not a regression. Say so explicitly in the report rather than treating the
    final RMSE as a comparison.
 3. If a criterion fails on a defect you can fix with confidence: fix it with a
-   test, commit, write `progress/P20.retry<k>`, delete `progress/P20.done`, and
-   do not write `P21.done` — end the session.
+   test, commit, write `progress/P26.retry<k>`, delete `progress/P26.done`, and
+   do not write `P27.done` — end the session.
 4. Write `$WORK_ROOT/CLEANUP_REPORT.md`: the criterion table; the equivalence
    result; a before/after table of every module's line count with the totals
    for `src/` and `scripts/`; every file deleted, split or renamed; every
-   simplification declined with its reason; and the proposals from P18 step 4
+   simplification declined with its reason; and the proposals from P24 step 4
    for the user to decide on. Point `HANDOFF.md` at it.
 
-**Accept:** `CLEANUP_REPORT.md` exists; tree clean; `P21.done`.
+**Accept:** `CLEANUP_REPORT.md` exists; tree clean; `P27.done`.
 
-### Stop conditions for P17–P21 (in addition to §7)
+### Stop conditions for P23–P27 (in addition to §7)
 
 - a golden artifact changes and you cannot restore it by reverting the commit
   that changed it;
 - a split would require changing what a fail-loud check does;
-- the equivalence check in P21 shows the design or the generated responses
+- the equivalence check in P27 shows the design or the generated responses
   differ for the same seed.
