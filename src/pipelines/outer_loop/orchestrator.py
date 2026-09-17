@@ -29,7 +29,7 @@ from src.models.model_manifest import (
     read_manifest_names,
 )
 from src.models.project.ground_truth import get_ground_truth_models
-from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
+from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS, write_responses_csv
 
 # Stage output validators live in orchestrator_validators.py; re-exported here
 # so `from ...orchestrator import validate_cc_output / _validate_*` keeps working.
@@ -737,22 +737,6 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict]:
     return rows
 
 
-def _write_responses_csv(
-    rows: List[Dict[str, Any]],
-    out_path: Path,
-) -> Path:
-    """Write pooled raw response rows to ``out_path``."""
-    if not rows:
-        raise ValueError("No rows to write to responses CSV")
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(rows[0].keys())
-    with out_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
-    return out_path
-
-
 def _protected_seed_names(project_id: str, models_dir: Path) -> set:
     """The project's seed models present in ``models_dir``.
 
@@ -967,7 +951,7 @@ def run_inner_model_loop_programmatic(
 
     loop_dir = exp_dir / "model_loop"
     loop_dir.mkdir(parents=True, exist_ok=True)
-    responses_path = _write_responses_csv(rows, loop_dir / "responses.csv")
+    responses_path = write_responses_csv(rows, loop_dir / "responses.csv")
 
     seed_models_dir = exp_dir / "cognitive_models"
     protected = _protected_seed_names(project_id or exp_dir.parent.name, seed_models_dir)

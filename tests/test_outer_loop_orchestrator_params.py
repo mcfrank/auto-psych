@@ -101,7 +101,7 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
     monkeypatch.setattr(
         orch, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
     )
-    monkeypatch.setattr(orch, "_write_responses_csv", lambda rows, out: out)
+    monkeypatch.setattr(orch, "write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(
         orch, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e
     )

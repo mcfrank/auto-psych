@@ -213,7 +213,7 @@ def test_wrapper_protects_only_the_project_seeds_and_labels_the_ledger(
         return {"best_model": "carried_from_exp1"}
 
     monkeypatch.setattr(orch, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])
-    monkeypatch.setattr(orch, "_write_responses_csv", lambda rows, out: out)
+    monkeypatch.setattr(orch, "write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
         fake_inner_loop,

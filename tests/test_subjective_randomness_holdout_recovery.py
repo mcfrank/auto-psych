@@ -79,8 +79,7 @@ def _stub_design(calls, stimuli=DESIGN_STIMULI):
 
 
 def _stub_generate_responses(calls):
-    def generate(model_name, models_dir, stimuli, params, n_participants, *, seed=0,
-                 generator="pymc"):
+    def generate(model_name, models_dir, stimuli, params, n_participants, *, seed=0):
         calls.append({"model_name": model_name, "seed": seed, "params": dict(params)})
         rows = []
         for participant in range(n_participants):

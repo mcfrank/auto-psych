@@ -176,7 +176,7 @@ def _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir):
     monkeypatch.setattr(
         orch, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
     )
-    monkeypatch.setattr(orch, "_write_responses_csv", lambda rows, out: out)
+    monkeypatch.setattr(orch, "write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(
         orch,
         "_export_inner_loop_models",

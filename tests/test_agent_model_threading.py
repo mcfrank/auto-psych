@@ -105,7 +105,7 @@ def test_programmatic_wrapper_threads_agent_model(tmp_path, monkeypatch):
         return {"best_model": "stub_best"}
 
     monkeypatch.setattr(orch, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])
-    monkeypatch.setattr(orch, "_write_responses_csv", lambda rows, out: out)
+    monkeypatch.setattr(orch, "write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(orch, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e)
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
