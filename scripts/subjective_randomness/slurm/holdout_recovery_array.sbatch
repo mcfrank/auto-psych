@@ -94,27 +94,16 @@ export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"
 echo "[task $TASK] repeat=$REPEAT gt=$GT seed=$SEED -> $RUN_DIR"
 [[ -f "$GT_MODELS_SRC/${GT}.py" ]] || { echo "ERROR: GT snapshot missing $GT_MODELS_SRC/${GT}.py (setup job didn't run?)" >&2; exit 1; }
 
-# --- isolated, sanitized repo copy on scratch ------------------------------
-# Besides caches/VCS, exclude every GT-recipe side channel the parent never
-# reads: the recovery-harness sources, the literature-model test files (they
-# encode each faithful model's behavior), and gt.txt (the extracted source
-# paper the faithful models implement).
-# node_modules: the Firebase Cloud Functions JS deps (functions/node_modules) are
-# ~88% of the repo's file count (~5.5k tiny files) and are never used by the
-# Python holdout pipeline. Copying them into every per-task repo exhausts the
-# $SCRATCH inode quota (20M) across a multi-run sweep -> mid-run "Disk quota
-# exceeded" (Errno 122) deaths. Excluding any dir named node_modules cuts each
-# copy from ~6.3k files to ~0.75k.
-rsync -a \
-  --exclude '.git' --exclude '.venv' --exclude 'data' \
-  --exclude '__pycache__' --exclude '*.nc' \
-  --exclude 'node_modules' \
-  --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
-  --exclude 'ground_truth_models.py' --exclude 'evaluate_recovery.py' \
-  --exclude 'test_literature_faithful_pymc.py' \
-  --exclude 'test_literature_model_families.py' \
-  --exclude 'gt.txt' --exclude 'REFACTOR_NOTES.md' \
-  "$REPO"/ "$RUN_REPO"/
+# --- isolated, sanitized agent tree on scratch --------------------------------
+# The agent tree is the scrubbed repo copy the coding agents run from. It is
+# built with the shared exclude file (agent_tree.exclude) which removes feature
+# code, research library modules, GT-recipe files, holdout configs, and build
+# artefacts. The HARNESS runs from a full copy (harness_repo, staged by the
+# setup job) so it can import everything it needs; the agents see only the
+# scrubbed tree. node_modules exclusion alone saves ~5.5k inodes per copy.
+AGENT_EXCLUDE="$SLURM_DIR/agent_tree.exclude"
+[[ -f "$AGENT_EXCLUDE" ]] || { echo "ERROR: $AGENT_EXCLUDE not found" >&2; exit 1; }
+rsync -a --exclude-from="$AGENT_EXCLUDE" "$REPO"/ "$RUN_REPO"/
 
 # pyprojroot.here() sentinel (we excluded .git from the copy).
 touch "$RUN_REPO/.here"
@@ -237,11 +226,14 @@ EXTRA_FLAGS=""
 [[ -n "${TUNE:-}"                 ]] && EXTRA_FLAGS+=" --tune $TUNE"
 [[ -n "${AGENT_TIMEOUT_SEC:-}"    ]] && EXTRA_FLAGS+=" --agent-timeout-sec $AGENT_TIMEOUT_SEC"
 
-# Run the shared venv's interpreter directly (built by the setup job).
-# --gt-model restricts this task to the single held-out model.
-# --gt-models-dir reads the GT generator from the pristine scratch snapshot,
-#   so the deleted copy file can't leak; seeding still excludes it.
-# --chains maps onto the requested cores. --resume skips finished stages.
+# The harness runs from the FULL repo copy (harness_repo, staged once by the
+# setup job), not from the scrubbed agent tree. It can therefore import
+# stimulus_design, model_families, etc. that the agents must not see.
+# --agent-root points agent subprocesses at the scrubbed $RUN_REPO.
+HARNESS_REPO="${HARNESS_REPO:-$WORK_ROOT/harness_repo}"
+[[ -d "$HARNESS_REPO" ]] || { echo "ERROR: $HARNESS_REPO not found (setup job didn't run?)" >&2; exit 1; }
+cd "$HARNESS_REPO"
+
 "$VENV_PY" scripts/subjective_randomness/holdout_recovery.py \
   --config "$CONFIG" \
   --gt-model "$GT" \
@@ -256,6 +248,7 @@ EXTRA_FLAGS=""
   --results-root "$RUN_REPO/_runs" \
   --summary-root "$WORK_ROOT/run${REPEAT}" \
   --cache-dir    "$RUN_DIR/mcmc_cache" \
+  --agent-root   "$RUN_REPO" \
   ${DESIGN_N_EIG:+--design-n-eig $DESIGN_N_EIG} \
   ${DESIGN_N_RANDOM:+--design-n-random $DESIGN_N_RANDOM} \
   --resume $EXTRA_FLAGS

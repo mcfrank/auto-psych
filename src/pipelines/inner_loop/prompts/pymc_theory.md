@@ -82,7 +82,13 @@ Inside the `with pm.Model() as model:` block:
   before passing it to `observed=` — the pipeline introspects the graph to
   identify the response container, and it must be the same node.
 
-Allowed top-level imports: `numpy as np`, `pymc as pm`, `pytensor.tensor as pt`.
+**Allowed imports (enforced — candidates that import anything else are rejected
+at admission):** `arviz`, `collections`, `dataclasses`, `functools`,
+`itertools`, `math`, `numpy`, `operator`, `pymc`, `pytensor`, `re`, `scipy`,
+`statistics`, `typing`. No other imports — no `pandas`, no `src.*`, no project
+library modules. Every helper your model needs must be written in the file
+itself (self-contained code only).
+
 Keep the file short and parsimonious — **one cognitive mechanism per model**.
 The number of free parameters and feature columns a model reads should match the
 single hypothesis; a model that needs many weighted cues to fit is a blend, not

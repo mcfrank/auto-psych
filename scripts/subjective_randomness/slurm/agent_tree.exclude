@@ -1,0 +1,36 @@
+# Paths excluded from the agent's copy of the repository.
+# Used by holdout_recovery_array.sbatch and tests/test_agent_tree_isolation.py.
+#
+# VCS, build artefacts, caches
+.git
+.venv
+data
+__pycache__
+*.nc
+node_modules
+.uv_cache
+.pip_cache
+.cache
+.hf
+
+# GT-recipe and evaluation code (holdout leak channels, already excluded pre-P10)
+ground_truth_models.py
+evaluate_recovery.py
+test_literature_faithful_pymc.py
+test_literature_model_families.py
+gt.txt
+REFACTOR_NOTES.md
+
+# Research library: agents must not read feature-computation or stimulus-design code
+/src/subjective_randomness/features.py
+/src/subjective_randomness/sequence_stats.py
+/src/subjective_randomness/stimulus_design.py
+/src/subjective_randomness/model_recovery.py
+/src/subjective_randomness/pymc_recover.py
+/src/subjective_randomness/model_families/
+
+# Holdout configs name the GT models
+/scripts/subjective_randomness/configs/holdout_recovery*.yaml
+
+# Preprocess (superseded by P9, but exclude by name in case any remain)
+preprocess.py

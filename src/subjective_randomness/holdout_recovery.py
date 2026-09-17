@@ -459,6 +459,7 @@ def run_holdout_experiments(
     design_n_eig: int = 32,
     design_n_random: int = 0,
     pool_models_dir: Optional[Path] = None,
+    agent_root: Optional[Path] = None,
 ) -> List[Path]:
     """Run the full agentic pipeline for ``n_experiments`` with a held-out GT.
 
@@ -591,6 +592,7 @@ def run_holdout_experiments(
                 cache_dir=cache_dir,
                 project_id=project_id,
                 agent_timeout_sec=agent_timeout_sec,
+                agent_root=agent_root,
             )
             update_registry_from_interpretation(exp_dir)
             _require_valid("5_model_loop", exp_dir)
@@ -1423,6 +1425,7 @@ def run_holdout_recovery_from_config(
     gt_family_dir: Optional[Path] = None,
     summary_root: Optional[Path] = None,
     gt_params_by_model_override: Optional[Mapping[str, Mapping[str, float]]] = None,
+    agent_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Run holdout recovery for every configured ground-truth model.
 
@@ -1565,6 +1568,7 @@ def run_holdout_recovery_from_config(
             design_n_eig=design_n_eig,
             design_n_random=design_n_random,
             pool_models_dir=pool_models_dir,
+            agent_root=agent_root,
         )
     finally:
         write_usage_report(results_root, usage_marker, heading="holdout recovery")
@@ -1594,6 +1598,7 @@ def _run_holdout_recovery_resolved(
     design_n_eig: int = 32,
     design_n_random: int = 0,
     pool_models_dir: Optional[Path] = None,
+    agent_root: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """The recovery loop proper, after all config resolution and validation."""
     # Every project seed model — the fitted-seed baseline for each ground truth
@@ -1648,6 +1653,7 @@ def _run_holdout_recovery_resolved(
             design_n_eig=design_n_eig,
             design_n_random=design_n_random,
             pool_models_dir=pool_models_dir,
+            agent_root=agent_root,
         )
 
         eval_info = build_eval_stimuli(
@@ -1683,10 +1689,10 @@ def _run_holdout_recovery_resolved(
             n_experiments=n_experiments,
             gt_models_dir=gt_models_dir,
             gt_family_dir=gt_family_dir,
-            # The agents' checkout is the tree this process runs from (the
-            # array gives every task its own sanitized copy and runs the
-            # parent inside it), so this is where their manifests live.
-            checkout_root=REPO_ROOT,
+            # The agents' checkout is the scrubbed agent tree (when agent_root
+            # is set), or the tree this process runs from (when harness and
+            # agents share a copy). This is where the scrubbed manifests live.
+            checkout_root=agent_root if agent_root is not None else REPO_ROOT,
         )
         baseline = seed_baseline_correlation(
             gt_model,
