@@ -42,10 +42,17 @@ echo "BASELINE_SWEEP=$BASELINE_SWEEP"
 echo ""
 
 # --- Step a: verifier --------------------------------------------------------
+# The verifier may exit non-zero on known issues (e.g. candidate-write failures
+# in sweep 1).  Record the result but continue to the comparison and oracle
+# steps so partial results are available.
 echo "=== Step a: Running verifier on sweep ==="
 export ALL_JOB_IDS="${ALL_JOB_IDS:-0}"
-WORK_ROOT="$WORK_ROOT" bash scripts/subjective_randomness/slurm/verify_holdout_run.sh
-echo "Verifier completed."
+VERIFIER_RC=0
+WORK_ROOT="$WORK_ROOT" bash scripts/subjective_randomness/slurm/verify_holdout_run.sh || VERIFIER_RC=$?
+echo "Verifier exit code: $VERIFIER_RC"
+if [[ $VERIFIER_RC -ne 0 ]]; then
+    echo "WARNING: verifier reported failures (exit $VERIFIER_RC); continuing with evaluation."
+fi
 echo ""
 
 # --- Step b: compare_matched_cells -------------------------------------------
@@ -97,4 +104,8 @@ $VENV_PY scripts/subjective_randomness/recovery_report.py \
 
 echo ""
 echo "=== Evaluation completed at $(date) ==="
+echo "Verifier exit code: $VERIFIER_RC"
 echo "Results: $ANALYSIS_DIR/RESULTS_auto.md"
+if [[ $VERIFIER_RC -ne 0 ]]; then
+    echo "NOTE: verifier reported failures — see VERDICT.md for details."
+fi
