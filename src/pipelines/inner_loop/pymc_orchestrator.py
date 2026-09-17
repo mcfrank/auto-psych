@@ -61,7 +61,7 @@ from src.pipelines.inner_loop.import_gate import (
     CANDIDATE_IMPORT_ALLOWLIST,
     check_forbidden_imports,
 )
-from src.pipelines.outer_loop.featurizer import RAW_RESPONSE_COLUMNS
+from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
 from src.runtime.config import REPO_ROOT
 
 _PKG_DIR = Path(__file__).resolve().parent

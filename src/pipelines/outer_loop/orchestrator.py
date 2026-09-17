@@ -29,7 +29,7 @@ from src.models.model_manifest import (
     read_manifest_names,
 )
 from src.models.project.ground_truth import get_ground_truth_models
-from src.pipelines.outer_loop.featurizer import RAW_RESPONSE_COLUMNS
+from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
 
 # Stage output validators live in orchestrator_validators.py; re-exported here
 # so `from ...orchestrator import validate_cc_output / _validate_*` keeps working.
