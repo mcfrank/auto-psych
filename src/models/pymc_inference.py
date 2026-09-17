@@ -44,9 +44,8 @@ from src.registry.io import validate_theory_weights
 # loading this module is cheap when only e.g. cache utilities are used.
 
 
-# Attribute under which a loaded model carries its optional theorist-supplied
-# featurizer (a ``compute_features(sequence_a, sequence_b) -> dict`` callable).
-_EXTRA_FEATURIZER_ATTR = "_auto_psych_extra_featurizer"
+# Attribute under which a loaded model carries its ``compute_features`` hook.
+_COMPUTE_FEATURES_ATTR = "_auto_psych_compute_features"
 
 # Attribute under which a loaded model carries its optional data-preparation
 # hook (a ``prepare_observed(rows) -> dict[str, np.ndarray]`` callable).
@@ -116,19 +115,16 @@ def load_pymc_model(name: str, models_dir: Path):
             f"(got {type(model).__name__ if model is not None else 'missing'})"
         )
 
-    # Optional theorist-extensible featurizer: a model may declare
-    # ``compute_features(sequence_a, sequence_b) -> dict[str, float]`` to add
-    # numeric feature columns the base featurizer never produced (e.g.
-    # order/position-sensitive statistics). We attach it to the model so every
-    # data-binding path (extract_observed / make_stim_data) computes those
-    # columns from the raw H/T sequences before binding pm.Data containers.
-    featurizer = getattr(mod, "compute_features", None)
-    if featurizer is not None and not callable(featurizer):
+    # A model declares ``compute_features(sequence_a, sequence_b) -> dict``
+    # to derive numeric columns from raw H/T sequences. Attached to the model
+    # so every data-binding path computes them before binding pm.Data.
+    compute_features_fn = getattr(mod, "compute_features", None)
+    if compute_features_fn is not None and not callable(compute_features_fn):
         raise TypeError(
             f"{py_path}: `compute_features` must be a callable "
-            f"(sequence_a, sequence_b) -> dict, got {type(featurizer).__name__}"
+            f"(sequence_a, sequence_b) -> dict, got {type(compute_features_fn).__name__}"
         )
-    setattr(model, _EXTRA_FEATURIZER_ATTR, featurizer)
+    setattr(model, _COMPUTE_FEATURES_ATTR, compute_features_fn)
 
     # Optional model-owned data-preparation hook: a model may declare
     # ``prepare_observed(rows) -> dict[str, np.ndarray]`` to build its ``pm.Data``
@@ -213,9 +209,9 @@ def _read_csv_rows(csv_path: Path) -> List[Dict[str, str]]:
         return list(csv.DictReader(f))
 
 
-def _model_extra_featurizer(model):
+def _model_compute_features(model):
     """The model's optional ``compute_features`` callable, or ``None``."""
-    return getattr(model, _EXTRA_FEATURIZER_ATTR, None)
+    return getattr(model, _COMPUTE_FEATURES_ATTR, None)
 
 
 # Columns a model's own featurizer may never return: the observed response and
@@ -258,7 +254,7 @@ def _augment_rows_with_features(
     - it returns different feature names for different rows;
     - a returned feature name collides with an existing column.
     """
-    featurizer = _model_extra_featurizer(model)
+    featurizer = _model_compute_features(model)
     if featurizer is None or not rows:
         return rows
 

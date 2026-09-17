@@ -95,7 +95,7 @@ def test_model_with_declared_feature_has_finite_logp(tmp_path):
 def test_load_attaches_declared_featurizer(tmp_path):
     name = _write_model(tmp_path, ENDS_IN_H_MODEL)
     model = pi.load_pymc_model(name, tmp_path)
-    featurizer = pi._model_extra_featurizer(model)
+    featurizer = pi._model_compute_features(model)
     assert callable(featurizer)
     assert featurizer("HTH", "TTT") == {"ends_h_a": 1.0, "ends_h_b": 0.0}
 
@@ -104,7 +104,7 @@ def test_load_finds_compute_features_when_present():
     model = pi.load_pymc_model(
         "bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR
     )
-    featurizer = pi._model_extra_featurizer(model)
+    featurizer = pi._model_compute_features(model)
     assert featurizer is not None
     assert featurizer("HTH", "TTT") == {"n_a": 3, "h_a": 2, "n_b": 3, "h_b": 0}
 
@@ -248,7 +248,7 @@ def test_recomputing_a_column_to_the_same_value_is_allowed(tmp_path):
         pass
 
     model = _Model()
-    setattr(model, "_auto_psych_extra_featurizer",
+    setattr(model, "_auto_psych_compute_features",
             lambda a, b: {"n_a": float(len(a)), "n_b": float(len(b))})
     rows = [{"sequence_a": "HTH", "sequence_b": "HHTT", "n_a": 3, "n_b": 4}]
     (out,) = _augment_rows_with_features(model, rows)
@@ -262,7 +262,7 @@ def test_recomputing_a_column_to_a_different_value_still_fails_loudly(tmp_path):
         pass
 
     model = _Model()
-    setattr(model, "_auto_psych_extra_featurizer", lambda a, b: {"n_a": 99.0})
+    setattr(model, "_auto_psych_compute_features", lambda a, b: {"n_a": 99.0})
     rows = [{"sequence_a": "HTH", "sequence_b": "HHTT", "n_a": 3}]
     with pytest.raises(ValueError, match="DIFFERENT value"):
         _augment_rows_with_features(model, rows)
