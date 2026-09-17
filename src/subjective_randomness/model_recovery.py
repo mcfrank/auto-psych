@@ -21,7 +21,6 @@ This module has two halves:
 from __future__ import annotations
 
 import ast
-import csv
 import importlib
 from pathlib import Path
 from typing import Any, Dict, List, Mapping, Optional, Sequence
@@ -31,6 +30,7 @@ import numpy as np
 from src.models.model_manifest import read_manifest_names
 from src.models.pymc_inference import load_pymc_model, make_stim_data
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
+from src.pipelines.outer_loop.columns import write_responses_csv  # noqa: F401
 from src.subjective_randomness.config import resolve_path
 from src.subjective_randomness.features import featurize_stimulus
 from src.subjective_randomness.simulate import load_stimuli
@@ -282,23 +282,6 @@ def generate_responses(
             row["generating_model"] = model_name
             rows.append(row)
     return rows
-
-
-def write_responses_csv(rows: Sequence[Mapping[str, Any]], out_path: Path) -> None:
-    """Write generated response rows to a featurized responses CSV.
-
-    The column set is taken from the first row (every row shares it). The inner
-    loop reads only the columns each model needs via its ``pm.Data`` inputs.
-    """
-    if not rows:
-        raise ValueError("No response rows to write.")
-    out_path = Path(out_path)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(rows[0].keys())
-    with out_path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
 
 
 def run_closed_ended_recovery(

@@ -138,7 +138,7 @@ def _stage_done(agent_key: str, exp_dir: Path) -> bool:
 # it are listed column-by-column in every candidate's and critic's context).
 GENERATING_MODEL_COLUMN = "generating_model"
 
-from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS  # noqa: F401
+from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS, write_responses_csv
 
 
 # ─────────────────────────────────────────────
@@ -280,7 +280,6 @@ def generate_responses(
     n_participants: int,
     *,
     seed: int = 0,
-    generator: str = "pymc",
 ) -> List[Dict[str, Any]]:
     """Generate synthetic responses from a seed model with fixed parameters.
 
@@ -290,30 +289,7 @@ def generate_responses(
     if n_participants < 1:
         raise ValueError(f"n_participants must be >= 1, got {n_participants}.")
 
-    if generator == "pymc":
-        p_left = p_left_fixed_params(model_name, models_dir, stimuli, params, seed=seed)
-    elif generator == "model_family":
-        import importlib
-
-        module = importlib.import_module(
-            f"src.subjective_randomness.model_families.{model_name}"
-        )
-        expected = set(module.DEFAULT_PARAMS)
-        if set(params) != expected:
-            missing = sorted(expected - set(params))
-            extra = sorted(set(params) - expected)
-            raise ValueError(
-                f"Generating params must name exactly {model_name}'s parameters "
-                f"{sorted(expected)}. Missing: {missing}. Unexpected: {extra}."
-            )
-        p_left = np.array(
-            [module.predict_left(stim, dict(params)) for stim in stimuli],
-            dtype="float64",
-        )
-    else:
-        raise ValueError(
-            f"Unknown generator {generator!r}; expected 'pymc' or 'model_family'."
-        )
+    p_left = p_left_fixed_params(model_name, models_dir, stimuli, params, seed=seed)
     rng = np.random.default_rng(seed)
 
     rows: List[Dict[str, Any]] = []
@@ -333,21 +309,6 @@ def generate_responses(
                 }
             )
     return rows
-
-
-def write_responses_csv(
-    rows: Sequence[Mapping[str, Any]], out_path: Path
-) -> None:
-    """Write generated response rows to a CSV."""
-    if not rows:
-        raise ValueError("No response rows to write.")
-    out_path = Path(out_path)
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(rows[0].keys())
-    with out_path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(rows)
 
 
 def strip_generating_model(
@@ -560,7 +521,6 @@ def run_holdout_experiments(
                 gt_params,
                 n_participants=n_participants,
                 seed=seed + exp_num,
-                generator="pymc",
             )
             agent_rows = strip_generating_model(rows)
             write_responses_csv(agent_rows, exp_dir / "data" / "responses.csv")
