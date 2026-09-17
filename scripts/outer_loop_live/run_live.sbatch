@@ -90,7 +90,7 @@ import json, sys, pathlib
 cfg_path, out = pathlib.Path(sys.argv[1]), sys.argv[2]
 cfg = json.loads(cfg_path.read_text()) if cfg_path.exists() else {"$schema": "https://opencode.ai/config.json"}
 perm = cfg.setdefault("permission", {})
-for k in ("edit", "bash", "webfetch"):
+for k in ("edit", "write", "bash", "webfetch"):
     perm.setdefault(k, "allow")
 ext = perm.setdefault("external_directory", {})
 ext[f"{out}/**"] = "allow"; ext[out] = "allow"

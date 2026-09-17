@@ -255,7 +255,94 @@ PYEOF
   else say "- [FAIL] $bad_imp of $n_imp_files model .py file(s) import outside the allowlist"; fails=$((fails + 1)); fi
 fi
 
-# 10. Recovery, if any cell finished.
+# 10. Candidate admission: at least one admitted per experiment, no round
+#     whose rejections are all "no candidate.py written".
+_LEDGER_CHECKER=$(mktemp /tmp/check_ledger_XXXXXX.py)
+cat > "$_LEDGER_CHECKER" <<'PYEOF'
+"""Check candidate admission health from ledger files.
+
+Reads attempted_hypotheses.jsonl, checks that each experiment admitted at
+least one candidate, and that no round's rejections are all 'no candidate.py
+written'. Prints a summary and exits non-zero on failure.
+"""
+import json, sys, re
+from collections import defaultdict
+
+fails = 0
+ledger_path = sys.argv[1]
+lines = open(ledger_path).read().strip().splitlines()
+if not lines:
+    sys.exit(0)
+
+entries = [json.loads(line) for line in lines if line.strip()]
+
+# Group by experiment (from context field like "experiment2 round 0 candidate 1 lens 0")
+exp_admitted = defaultdict(int)
+rounds = defaultdict(list)
+for e in entries:
+    ctx = e.get("context", "")
+    m = re.search(r"experiment(\d+)", ctx)
+    exp = int(m.group(1)) if m else 0
+    if e["outcome"] == "admitted":
+        exp_admitted[exp] += 1
+    rm = re.search(r"round (\d+)", ctx)
+    if rm:
+        round_key = (exp, int(rm.group(1)))
+        rounds[round_key].append(e)
+
+# Check: at least one admitted per experiment
+for exp_num in sorted(exp_admitted.keys()):
+    if exp_admitted[exp_num] == 0:
+        print(f"FAIL: experiment{exp_num} admitted 0 candidates")
+        fails += 1
+
+# Check: no round where ALL rejections are "no candidate.py written"
+for (exp, rnd), entries_list in sorted(rounds.items()):
+    admitted = [e for e in entries_list if e["outcome"] == "admitted"]
+    rejected = [e for e in entries_list if e["outcome"] == "rejected"]
+    if not admitted and rejected:
+        all_no_file = all("no candidate.py written" in e.get("detail", "") for e in rejected)
+        if all_no_file:
+            print(f"FAIL: experiment{exp} round {rnd}: all {len(rejected)} rejections are 'no candidate.py written'")
+            fails += 1
+
+# Summary
+total_admitted = sum(exp_admitted.values())
+total_rejected = sum(1 for e in entries if e.get("outcome") == "rejected")
+print(f"admitted={total_admitted} rejected={total_rejected} experiments={len(exp_admitted)}")
+sys.exit(fails)
+PYEOF
+
+if [[ -n "$_PY3" ]]; then
+  bad_ledger=0; n_ledger=0
+  # Live copies
+  for LEDGER in "$W"/run*/*/repo/_runs/*/experiment*/model_loop/attempted_hypotheses.jsonl; do
+    [[ -f "$LEDGER" ]] || continue
+    n_ledger=$((n_ledger + 1))
+    result=$("$_PY3" "$_LEDGER_CHECKER" "$LEDGER" 2>/dev/null) \
+      || { bad_ledger=$((bad_ledger + 1)); say "      $LEDGER: $result"; }
+  done
+  # Archived runs: extract each ledger and check
+  for TAR in "$W"/run*/*/agent_runs.tar.gz; do
+    [[ -f "$TAR" ]] || continue
+    while IFS= read -r MEMBER; do
+      n_ledger=$((n_ledger + 1))
+      TMPLEDGER=$(mktemp /tmp/ledger_XXXXXX.jsonl)
+      tar xzOf "$TAR" "$MEMBER" > "$TMPLEDGER" 2>/dev/null || true
+      result=$("$_PY3" "$_LEDGER_CHECKER" "$TMPLEDGER" 2>/dev/null) \
+        || { bad_ledger=$((bad_ledger + 1)); say "      $TAR :: $MEMBER: $result"; }
+      rm -f "$TMPLEDGER"
+    done < <(tar tzf "$TAR" 2>/dev/null | grep -E "model_loop/attempted_hypotheses\.jsonl$" | grep -v "cognitive_models")
+  done
+  rm -f "$_LEDGER_CHECKER"
+  if [[ "$n_ledger" == "0" ]]; then say "- [info] no ledger files found for admission check"
+  elif [[ "$bad_ledger" == "0" ]]; then say "- [ok]   candidate admission: all $n_ledger ledger(s) show healthy admission"
+  else say "- [FAIL] $bad_ledger of $n_ledger ledger(s) show candidate write failures"; fails=$((fails + 1)); fi
+else
+  say "- [skip] candidate admission check (python3 not found)"
+fi
+
+# 11. Recovery, if any cell finished.
 say ""
 say "## Recovery (final-step pearson r per cell)"
 say '```'

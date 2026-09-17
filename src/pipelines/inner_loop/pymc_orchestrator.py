@@ -139,6 +139,48 @@ DEFAULT_CANDIDATE_HINTS = [
 ]
 
 
+class AllCandidatesNoFileError(RuntimeError):
+    """Every candidate slot in a round produced no ``candidate.py``.
+
+    This is the signature of a configuration bug (a missing opencode ``write``
+    permission, a cwd outside the worktree, etc.), not a run of bad luck.
+    Continuing would silently produce a sweep whose model set never grew.
+    """
+
+
+_NO_FILE_DETAIL = "no candidate.py written"
+
+
+def _check_round_admissions(
+    round_results: list[dict],
+    *,
+    round_context: str,
+) -> None:
+    """Raise if a round produced zero candidates and every slot is no-file.
+
+    ``round_results`` is a list of dicts with ``outcome`` and ``detail`` keys,
+    one per candidate slot (including spawn failures recorded as
+    ``outcome='spawn_failed'``).
+    """
+    if not round_results:
+        return
+    n_admitted = sum(1 for r in round_results if r["outcome"] == "admitted")
+    if n_admitted > 0:
+        return
+    no_file_reasons = {_NO_FILE_DETAIL, "agent process failed"}
+    all_no_file = all(
+        r["detail"] in no_file_reasons or r["outcome"] == "spawn_failed"
+        for r in round_results
+    )
+    if all_no_file:
+        raise AllCandidatesNoFileError(
+            f"Round {round_context!r}: every candidate slot produced "
+            f"no candidate.py written — 0 of {len(round_results)} admitted. "
+            f"This is the signature of a configuration bug (missing opencode "
+            f"write permission, cwd outside the worktree, etc.)."
+        )
+
+
 def _lens_offset(exp_num: int, *, max_iterations: int, candidate_count: int) -> int:
     """The lens-schedule position at which experiment ``exp_num`` starts.
 
@@ -1677,10 +1719,14 @@ def run_pymc_inner_loop(
         # the manifest, uniquifies names, and runs MCMC + the novelty gate, so
         # a fixed order keeps runs deterministic (earlier candidates win ties).
         round_context = f"{ledger_context} round {iteration}".strip()
+        round_results: List[Dict[str, str]] = []
         for (idx, candidate_dir, _, lens), ok in zip(candidate_dirs, spawn_ok):
             if not ok:
+                round_results.append(
+                    {"outcome": "spawn_failed", "detail": "agent process failed"}
+                )
                 continue
-            _admit_candidate(
+            admitted = _admit_candidate(
                 candidate_dir / "candidate.py",
                 models_dir,
                 model_name=_resolve_candidate_name(
@@ -1695,6 +1741,14 @@ def run_pymc_inner_loop(
                 ledger=ledger,
                 ledger_context=f"{round_context} candidate {idx} lens {lens}",
             )
+            if admitted:
+                round_results.append({"outcome": "admitted", "detail": ""})
+            else:
+                detail = _NO_FILE_DETAIL
+                if (candidate_dir / "candidate.py").exists():
+                    detail = "rejected after file written"
+                round_results.append({"outcome": "rejected", "detail": detail})
+        _check_round_admissions(round_results, round_context=round_context)
         posterior = _score(
             responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
         )

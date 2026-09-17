@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import csv
 import json
+import os
 from pathlib import Path
 
 import numpy as np
@@ -333,3 +334,93 @@ def test_oracle_reports_lost_incumbents(tmp_path, monkeypatch):
     oracle = json.loads((tmp_path / "oracle.json").read_text(encoding="utf-8"))
     lost = oracle.get("lost_incumbents", [])
     assert any(l["model"] == "former_champ" for l in lost)
+
+
+# ---------------------------------------------------------------------------
+# Integration test against a real archived cell from the sweep
+# ---------------------------------------------------------------------------
+
+_SWEEP_ROOT = Path(
+    os.environ.get(
+        "SWEEP_ROOT",
+        "/scratch/users/benpry/auto-psych/consolidation_2026_09/sweep",
+    )
+)
+_REAL_CELL = "run1/falk_konold_dp"
+
+
+def _real_cell_exists() -> bool:
+    cell_dir = _SWEEP_ROOT / _REAL_CELL
+    return (cell_dir / "holdout.json").exists() and (
+        (cell_dir / "agent_runs.tar.gz").exists()
+    )
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not _real_cell_exists(), reason="sweep cell not available")
+def test_oracle_against_real_archived_cell(tmp_path):
+    """Run oracle on an actual archived cell (cached fits, ``--steps final``).
+
+    This exercises the archive extraction and cache-dir resolution against
+    a real cell, catching the regressions that sank P15 twice.
+    """
+    import shutil
+    import subprocess
+
+    from pyprojroot import here
+
+    cell_dir = _SWEEP_ROOT / _REAL_CELL
+
+    # Copy holdout.json into tmp_path so oracle.json lands there.
+    tmp_holdout = tmp_path / "holdout.json"
+    shutil.copy2(cell_dir / "holdout.json", tmp_holdout)
+
+    # Symlink the archive and mcmc_cache.
+    (tmp_path / "agent_runs.tar.gz").symlink_to(cell_dir / "agent_runs.tar.gz")
+    cache_src = cell_dir / "mcmc_cache"
+    if cache_src.is_dir():
+        (tmp_path / "mcmc_cache").symlink_to(cache_src)
+
+    venv_py = os.environ.get(
+        "VENV_PY",
+        "/scratch/users/benpry/auto-psych/consolidation_2026_09/venv/bin/python",
+    )
+    result = subprocess.run(
+        [
+            venv_py,
+            "scripts/subjective_randomness/oracle_admitted_models.py",
+            "--result", str(tmp_holdout),
+            "--steps", "final",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=300,
+        cwd=str(here()),
+    )
+    assert result.returncode == 0, (
+        f"oracle_admitted_models.py failed:\n"
+        f"stdout: {result.stdout[-1000:]}\nstderr: {result.stderr[-1000:]}"
+    )
+
+    oracle_json = tmp_path / "oracle.json"
+    assert oracle_json.exists(), "oracle.json not written"
+    oracle = json.loads(oracle_json.read_text(encoding="utf-8"))
+
+    assert "steps" in oracle
+    assert "lost_incumbents" in oracle
+    assert len(oracle["steps"]) > 0
+
+    step = oracle["steps"][0]
+    required = {
+        "gt_model", "experiment", "step", "n_models_scored",
+        "oracle_best_model", "oracle_rmse",
+        "incumbent_model", "incumbent_rmse",
+        "oracle_incumbent_gap", "final_model", "final_rmse",
+    }
+    assert required <= set(step), f"Missing fields: {required - set(step)}"
+    assert isinstance(step["oracle_rmse"], (int, float))
+    assert step["oracle_rmse"] >= 0
+    assert step["n_models_scored"] >= 1
+
+    oracle_csv = tmp_path / "oracle.csv"
+    assert oracle_csv.exists(), "oracle.csv not written"
