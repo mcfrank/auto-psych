@@ -199,7 +199,7 @@ def test_wrapper_protects_only_the_project_seeds_and_labels_the_ledger(
     """The outer loop tells the inner loop which models are the project's
     seeds (never pruned, always carried); a model carried from an earlier
     experiment is not protected, and the ledger is labelled by experiment."""
-    from src.pipelines.outer_loop import orchestrator as orch
+    from src.pipelines.outer_loop import model_loop_runner as mlr
 
     exp_dir = tmp_path / "holdout" / "some_gt" / "experiment2"
     cog_dir = exp_dir / "cognitive_models"
@@ -212,8 +212,8 @@ def test_wrapper_protects_only_the_project_seeds_and_labels_the_ledger(
         captured.update(inner_kwargs)
         return {"best_model": "carried_from_exp1"}
 
-    monkeypatch.setattr(orch, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])
-    monkeypatch.setattr(orch, "write_responses_csv", lambda rows, out: out)
+    monkeypatch.setattr(mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])
+    monkeypatch.setattr(mlr, "write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
         fake_inner_loop,
@@ -223,9 +223,9 @@ def test_wrapper_protects_only_the_project_seeds_and_labels_the_ledger(
         captured["export_protected"] = set(protected_names)
         return e
 
-    monkeypatch.setattr(orch, "_export_inner_loop_models", fake_export)
+    monkeypatch.setattr(mlr, "_export_inner_loop_models", fake_export)
 
-    orch.run_inner_model_loop_programmatic(
+    mlr.run_inner_model_loop_programmatic(
         exp_dir, max_iterations=0, candidate_count=0, project_id="subjective_randomness"
     )
 

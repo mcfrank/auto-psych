@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from src.pipelines.outer_loop import model_loop_runner as mlr
 from src.pipelines.outer_loop import orchestrator as orch
 
 PROJECT = "subjective_randomness"
@@ -99,17 +100,17 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
         return {"best_model": "stub_best"}
 
     monkeypatch.setattr(
-        orch, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
+        mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
     )
-    monkeypatch.setattr(orch, "write_responses_csv", lambda rows, out: out)
+    monkeypatch.setattr(mlr, "write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(
-        orch, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e
+        mlr, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e
     )
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
         fake_inner_loop,
     )
-    orch.run_inner_model_loop_programmatic(
+    mlr.run_inner_model_loop_programmatic(
         exp_dir, max_iterations=0, candidate_count=0, **kwargs
     )
     return captured

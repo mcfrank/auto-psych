@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 import yaml
 
-from src.pipelines.outer_loop import orchestrator as orch
+from src.pipelines.outer_loop import model_loop_runner as mlr
 from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
 
 
@@ -68,7 +68,7 @@ def _patch_inner_loop(monkeypatch):
         fake_inner_loop,
     )
     monkeypatch.setattr(
-        orch,
+        mlr,
         "_export_inner_loop_models",
         lambda e, l, *, best_model, protected_names: e,
     )
@@ -82,11 +82,11 @@ def test_inner_loop_writes_only_raw_columns(tmp_path, monkeypatch):
     """model_loop/responses.csv has exactly the five raw columns."""
     exp_dir = _setup_exp_dir(tmp_path, [_raw_row()])
     monkeypatch.setattr(
-        orch, "_pooled_response_rows", lambda e: [_raw_row()]
+        mlr, "_pooled_response_rows", lambda e: [_raw_row()]
     )
     _patch_inner_loop(monkeypatch)
 
-    orch.run_inner_model_loop_programmatic(
+    mlr.run_inner_model_loop_programmatic(
         exp_dir,
         max_iterations=0,
         candidate_count=0,
