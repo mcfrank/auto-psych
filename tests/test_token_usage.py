@@ -547,23 +547,23 @@ def test_candidate_agent_labels_usage(tmp_path, monkeypatch):
 
 def test_critique_agent_labels_usage(tmp_path, monkeypatch):
     import src.runtime.coding_agent as coding_agent
-    from src.pipelines.inner_loop import pymc_orchestrator
+    from src.pipelines.inner_loop import critique_round
 
     captured = _capture_run_coding_agent(monkeypatch, coding_agent)
     # The critique spawn seeds a PyMC fit cache and runs the PPC harness around
     # the agent call; both are irrelevant to the label under test.
     monkeypatch.setattr(
-        pymc_orchestrator, "_seed_critique_fit_cache", lambda *a, **k: None
+        critique_round, "_seed_critique_fit_cache", lambda *a, **k: None
     )
     monkeypatch.setattr(
-        pymc_orchestrator, "_write_critique_context", lambda *a, **k: None
+        critique_round, "_write_critique_context", lambda *a, **k: None
     )
     monkeypatch.setattr(
-        pymc_orchestrator, "_persist_critique_results", lambda *a, **k: None
+        critique_round, "_persist_critique_results", lambda *a, **k: None
     )
     responses = tmp_path / "responses.csv"
     responses.write_text("a\n1\n", encoding="utf-8")
-    pymc_orchestrator._spawn_critique_agent(
+    critique_round._spawn_critique_agent(
         tmp_path / "critique",
         "incumbent_model",
         models_dir=tmp_path,

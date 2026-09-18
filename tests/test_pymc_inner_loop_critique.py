@@ -14,6 +14,7 @@ both agent spawns are stubbed — these tests cover only the orchestration:
 from __future__ import annotations
 
 
+import src.pipelines.inner_loop.critique_round as critique_round
 import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
@@ -76,7 +77,7 @@ def _patch_critique_agent(monkeypatch, spawn_log):
         return True
 
     monkeypatch.setattr(
-        pymc_orchestrator, "_spawn_critique_agent", fake_spawn_critique
+        critique_round, "_spawn_critique_agent", fake_spawn_critique
     )
 
 
@@ -101,7 +102,7 @@ def test_critique_module_defines_repo_root():
     # Regression: `_spawn_critique_agent` runs the critique agent with
     # `cwd=REPO_ROOT`. A missing module-level import made every critique skip with
     # "NameError: name 'REPO_ROOT' is not defined". Guard the symbol's presence.
-    assert hasattr(pymc_orchestrator, "REPO_ROOT")
+    assert hasattr(critique_round, "REPO_ROOT")
 
 
 def test_critique_runs_before_each_candidate_round_and_feeds_candidates(
