@@ -1511,3 +1511,99 @@ Write `$WORK_ROOT/ANALYSIS_FINAL.md`:
    measures, and that is the user's decision.
 
 **Accept:** `ANALYSIS_FINAL.md` exists; tree clean.
+
+---
+
+## 13. Is Claude Fable 5.1 worth it? (amendment of 2026-09-18, third)
+
+The sweeps run `opencode` + `google/gemini-3.1-pro-preview`. From sweep 2's
+measured usage (15 archived cells: 6.4M input, 0.37M output, 16.2M cache-read
+tokens, $46.01), Fable 5.1 at $10/$50/$0.25 per MTok (input/output/cache-read)
+would cost roughly **$115–$145 per 20-cell sweep against Gemini's $54** — 2–2.5×
+— *if* caching engages as well as it does now. If it does not, the same tokens
+cost about $326. Two unknowns drive that spread and one cheap cell resolves both,
+so measure before committing to a sweep.
+
+**Credentials — read this before choosing a backend.** The repo's `.secrets`
+holds `GOOGLE_API_KEY`, `PROLIFIC_API_TOKEN` and `FIREBASE_TOKEN`; there is **no
+`ANTHROPIC_API_KEY`**, and there is no `opencode` auth file. So:
+
+- **If `ANTHROPIC_API_KEY` is present** in `$REPO/.secrets` when this phase
+  runs, use `opencode` with the Anthropic model. This measures the real API
+  path, including whether opencode sets cache breakpoints for Anthropic models
+  — the question that decides the 2× vs 5× outcome.
+- **Otherwise** use the `claude` backend, which authenticates with the user's
+  subscription over NFS (`~/.claude/.credentials.json`) and costs nothing
+  per token. It still answers the two questions that matter most — write
+  reliability and tokens per candidate — but its caching is Claude Code's, not
+  opencode's, so the cache figure does **not** transfer to an API-billed sweep.
+  Say which path ran, prominently, in the report.
+
+Note what this changes and does not change. Agent-tree isolation is structural
+(P10 removes the files), so it holds under either backend. The `opencode`
+permission denies are an extra layer that the `claude` backend does not use;
+the import gate at admission (P10) still applies. The candidate-write failure
+fixed in P17 was opencode-specific, so a `claude`-backend run cannot measure
+whether Fable 5.1 fixes it — it can only measure Fable's own reliability.
+
+### P32 — Submit one Fable 5.1 smoke cell (may `sbatch`)
+
+**Do:**
+
+1. **Choose the backend** by the rule above and record the choice and the
+   reason in the done file. Before submitting, probe that the model answers on
+   the chosen path (one trivial call); if it does not, write `P32.blocked` with
+   the error rather than burning a Slurm job.
+2. **Find or add the override knob.** The sweep's agent backend and model come
+   from the config's `agent:` block. If no CLI flag or env var already
+   overrides them, add `--agent-backend` / `--agent-model` to the holdout
+   recovery CLI and thread them through the array sbatch as `AGENT_BACKEND` /
+   `AGENT_MODEL`, tests first. Keep the default exactly as it is — Gemini stays
+   the default; this is an override, not a change of default.
+3. **Submit one SMOKE cell** with the same settings and seed as the P12 and P18
+   smokes, so the three are comparable:
+   `SMOKE=1 N_EXPERIMENTS=2 INNER_LOOP_ITERATIONS=1 BASE_SEED=100`, into
+   `$WORK_ROOT/fable_smoke`, with the verifier chained on it.
+4. **Make sure the usage log captures what the estimate needs**: per call, input
+   tokens, output tokens, cache-read tokens and cache-creation tokens. If the
+   recorder drops the cache fields for this backend, fix that first (it is the
+   measurement, not a detail) with a test.
+
+Write `progress/fable_smoke_jobs.json` (`{"fable": {...}}`). Do not wait.
+
+**Accept:** the jobs file has numeric ids; the done file names the backend, the
+model string and the credential source; tree clean.
+
+### P33 — Fable 5.1 cost and reliability report
+
+**Preconditions (driver-checked):** the smoke jobs have left the queue.
+
+Write `$WORK_ROOT/FABLE_SMOKE_REPORT.md`:
+
+1. **Which path ran** — backend, model, credential source — and therefore which
+   of the numbers below transfer to an API-billed sweep and which do not.
+2. **Write reliability**: candidate slots that produced a `candidate.py`, versus
+   the ~70% that Gemini manages via bash heredocs (sweep 2: 164 of 264 slots).
+   With only 6 slots in a smoke this is a weak estimate — give the count, not a
+   rate with false precision.
+3. **Tokens per candidate**: input, output, cache-read, cache-creation, beside
+   Gemini's sweep-2 figures (≈1,000 output tokens per candidate). Fable thinks
+   on every call, so expect output to rise; that is the main risk to the
+   estimate.
+4. **Did caching engage** — cache-read tokens as a share of input. If they are
+   near zero on the opencode path, the API-billed sweep lands near $326, not
+   $142, and that is the finding.
+5. **A revised 20-cell sweep estimate** built from *this cell's* measured
+   per-candidate tokens, priced at $10 / $50 / $0.25 per MTok with cache writes
+   at 1.25× input, shown as a small table with the assumptions stated. Compare
+   against Gemini's $54 and against the $115–$145 estimate above; say plainly
+   whether that estimate held.
+6. **Model quality signals, clearly labelled as anecdotal at n=1**: what the
+   candidates proposed, whether any was admitted, the final RMSE against the
+   P12/P18 smokes' 0.059 on the same seed and ground truth. One cell cannot
+   establish that Fable recovers better; do not imply it does.
+7. **A recommendation** — run a full Fable sweep, run a cheaper partial (say 2
+   ground truths × 3 repeats), or stay on Gemini — with the cost and what it
+   would buy. The decision is the user's.
+
+**Accept:** `FABLE_SMOKE_REPORT.md` exists; tree clean.

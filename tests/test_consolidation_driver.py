@@ -41,15 +41,15 @@ SHA = "0123456789abcdef0123456789abcdef01234567"
 # --- phase table --------------------------------------------------------------
 
 
-def test_phases_run_p0_to_p31_in_order_and_only_submitting_phases_may_sbatch():
-    assert [p.id for p in PHASES] == [f"P{k}" for k in range(32)]
+def test_phases_run_p0_to_p33_in_order_and_only_submitting_phases_may_sbatch():
+    assert [p.id for p in PHASES] == [f"P{k}" for k in range(34)]
     assert [p.id for p in PHASES if p.allows_sbatch] == [
-        "P7", "P12", "P14", "P15", "P18", "P20", "P21", "P26", "P30",
+        "P7", "P12", "P14", "P15", "P18", "P20", "P21", "P26", "P30", "P32",
     ]
     assert phase_by_id("P3").title
     assert phase_by_id("P11").title.startswith("Simplify")
     with pytest.raises(KeyError):
-        phase_by_id("P32")
+        phase_by_id("P34")
 
 
 def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
@@ -79,6 +79,9 @@ def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
     assert phase_by_id("P30").jobs_file == "reanalysis_jobs.json"
     assert phase_by_id("P31").waits_for == "reanalysis_jobs.json"
     assert phase_by_id("P31").requires_files == ("ANALYSIS_FINAL.md",)
+    assert phase_by_id("P32").jobs_file == "fable_smoke_jobs.json"
+    assert phase_by_id("P33").waits_for == "fable_smoke_jobs.json"
+    assert phase_by_id("P33").requires_files == ("FABLE_SMOKE_REPORT.md",)
     with pytest.raises(KeyError):
         jobs_file_owner("nobody_writes_this.json")
 
@@ -86,7 +89,7 @@ def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
 def test_disallowed_tools_add_sbatch_except_in_submitting_phases():
     assert "Bash(sbatch:*)" in disallowed_tools(phase_by_id("P2"))
     assert "Bash(sbatch:*)" in disallowed_tools(phase_by_id("P8"))
-    for phase_id in ("P7", "P12", "P14", "P15", "P18", "P20", "P21", "P26", "P30"):
+    for phase_id in ("P7", "P12", "P14", "P15", "P18", "P20", "P21", "P26", "P30", "P32"):
         assert "Bash(sbatch:*)" not in disallowed_tools(phase_by_id(phase_id))
         for tool in BASE_DISALLOWED_TOOLS:
             assert tool in disallowed_tools(phase_by_id(phase_id))
