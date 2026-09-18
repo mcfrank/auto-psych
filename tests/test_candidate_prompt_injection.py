@@ -9,7 +9,7 @@ delimited sections (the files are still written for audit/reproducibility).
 
 from __future__ import annotations
 
-from src.pipelines.inner_loop.pymc_orchestrator import (
+from src.pipelines.inner_loop.candidate_agent import (
     _build_candidate_prompt,
     _write_candidate_context,
 )

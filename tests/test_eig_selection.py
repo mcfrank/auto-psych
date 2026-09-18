@@ -18,6 +18,7 @@ import pytest
 
 from src.models import pymc_inference as pi
 from src.models.eig_selection import estimate_joint_eig, select_n_joint_eig
+from src.models.model_loading import clear_model_cache
 from tests.paths import ANALYSIS_SCRIPTS_DIR, PYMC_MODEL_FIXTURES_DIR, load_script_module
 
 
@@ -173,7 +174,7 @@ def test_select_n_joint_eig_end_to_end_on_pymc_models():
              "chose_left": 0}
         )
     names = ["bayesian_fair_coin", "representativeness"]
-    pi.clear_model_cache()
+    clear_model_cache()
     draws = pi.prior_predict_p_left_draws(
         names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=50, seed=5
     )

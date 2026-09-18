@@ -168,7 +168,7 @@ def test_seeding_can_be_pointed_at_the_pool(tmp_path):
 
 
 def test_seed_exclusion_reads_the_same_pool_that_seeding_uses(tmp_path):
-    from src.subjective_randomness.holdout_recovery import seed_exclusion
+    from src.subjective_randomness.holdout_data import seed_exclusion
 
     scrubbed = tmp_path / "seed_models"
     scrubbed.mkdir()

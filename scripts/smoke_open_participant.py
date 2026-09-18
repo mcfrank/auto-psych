@@ -35,7 +35,7 @@ from pyprojroot import here
 
 sys.path.insert(0, str(here()))
 
-from src.pipelines.outer_loop.collect import generate_llm_participant_rows
+from src.pipelines.outer_loop.synthetic_data import generate_llm_participant_rows
 from src.pipelines.outer_loop.llm import load_prompt_for_run
 from src.pipelines.outer_loop.participants import get_participant_model
 

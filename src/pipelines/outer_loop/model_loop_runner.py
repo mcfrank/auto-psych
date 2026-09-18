@@ -124,11 +124,8 @@ def _export_inner_loop_models(
             csv_header = [c.strip() for c in f.readline().strip().split(",")]
         is_raw = csv_header == list(RAW_RESPONSE_COLUMNS)
     if is_raw:
-        from src.models.pymc_inference import (
-            MissingStimulusColumns,
-            load_pymc_model,
-            make_stim_data,
-        )
+        from src.models.data_binding import MissingStimulusColumns, make_stim_data
+        from src.models.model_loading import load_pymc_model
 
         raw_row = {c: "0" for c in RAW_RESPONSE_COLUMNS}
         raw_row["sequence_a"] = "HHT"
@@ -250,10 +247,8 @@ def run_inner_model_loop_programmatic(
     statistics the critique agent proposes; `critique_alpha` (None ⇒ inner-loop
     default) is the raw p threshold for flagging a discrepancy.
     """
-    from src.pipelines.inner_loop.pymc_orchestrator import (
-        _lens_offset,
-        run_pymc_inner_loop,
-    )
+    from src.pipelines.inner_loop.model_zoo import _lens_offset
+    from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 
     exp_num = _experiment_number(exp_dir)
     rows = _pooled_response_rows(exp_dir)

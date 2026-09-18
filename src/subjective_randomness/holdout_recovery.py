@@ -25,8 +25,7 @@ Implementation is split across submodules:
 * ``holdout_eval`` — eval-pool construction and trajectory evaluation
 * ``leakage_audit`` — ground-truth leakage audit
 
-This module contains experiment orchestration and config-driven entry points,
-and re-exports every public name for backward compatibility.
+This module contains experiment orchestration and config-driven entry points.
 """
 
 from __future__ import annotations
@@ -38,88 +37,40 @@ from typing import Any, Dict, List, Mapping, Optional
 
 from src.models.model_manifest import read_manifest_names
 from src.pipelines.outer_loop.columns import write_responses_csv
+from src.pipelines.outer_loop.model_loop_runner import (
+    init_registry,
+    run_inner_model_loop_programmatic,
+    update_registry_from_interpretation,
+)
 from src.pipelines.outer_loop.orchestrator import (
     carry_forward_cognitive_models,
     ensure_experiment_dirs,
-    init_registry,
     project_seed_models_dir,
     run_design_programmatic,
-    run_inner_model_loop_programmatic,
     seed_experiment_models_from_project,
-    update_registry_from_interpretation,
-    validate_cc_output,
 )
+from src.pipelines.outer_loop.orchestrator_validators import validate_cc_output
 from src.runtime.config import REPO_ROOT
 from src.runtime.token_usage import start_usage_log, write_usage_report
 from src.subjective_randomness.config import resolve_path
 from src.subjective_randomness.simulate import load_stimuli
 
-# ─────────────────────────────────────────────
-# Re-exports from holdout_data (Seam A)
-# ─────────────────────────────────────────────
-from src.subjective_randomness.holdout_data import (  # noqa: F401
-    GENERATING_MODEL_COLUMN,
+from src.subjective_randomness.holdout_data import (
     PROJECT_ID,
-    RAW_RESPONSE_COLUMNS,
-    _default_params_from_file,
-    _family_default_params,
-    _raw_eval_rows,
-    _require_exact_params,
-    _require_no_generating_model_column,
     generate_responses,
-    p_left_fixed_params,
     resolve_generating_params,
     seed_exclusion,
     seed_model_names,
     strip_generating_model,
-    strip_to_raw_columns,
-    validate_raw_pool_models,
+    _require_no_generating_model_column,
 )
-
-# ─────────────────────────────────────────────
-# Re-exports from holdout_eval (Seams C + D)
-# ─────────────────────────────────────────────
-from src.subjective_randomness.holdout_eval import (  # noqa: F401
-    TRAJECTORY_COLUMNS,
-    _bma_prediction,
-    _eval_prediction,
-    _fitted_seed_baseline,
-    _participant_ids_in,
-    _pool_experiment_responses,
-    _resolve_model_dir,
-    _unordered_pair,
+from src.subjective_randomness.holdout_eval import (
     build_eval_stimuli,
-    collect_trained_pairs,
     evaluate_trajectory,
     fitted_seed_baseline_correlation,
-    reevaluate_trajectories,
     seed_baseline_correlation,
 )
-
-# ─────────────────────────────────────────────
-# Re-exports from leakage_audit (Seam E)
-# ─────────────────────────────────────────────
-from src.subjective_randomness.leakage_audit import (  # noqa: F401
-    _PM_DATA_COLUMN,
-    _RESULTS_DIR_NAME,
-    _csv_header_columns,
-    _csvs_naming_generating_model,
-    _distinctive_param_names,
-    _manifests_naming_gt,
-    leakage_check,
-)
-
-# ─────────────────────────────────────────────
-# Patchable seams — imported at module level so tests can monkeypatch them
-# on this module. Functions that stay in this file (run_holdout_experiments,
-# _run_holdout_recovery_resolved) look them up from this module's globals.
-# ─────────────────────────────────────────────
-from src.models.pymc_inference import (  # noqa: F401
-    fit_model,
-    load_pymc_model,
-    make_stim_data,
-    pm_data_inputs,
-)
+from src.subjective_randomness.leakage_audit import leakage_check
 
 
 # ─────────────────────────────────────────────

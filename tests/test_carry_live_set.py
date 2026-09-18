@@ -23,11 +23,11 @@ import pytest
 import yaml
 
 from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME
-from src.pipelines.outer_loop.orchestrator import (
+from src.pipelines.outer_loop.model_loop_runner import (
     _export_inner_loop_models,
-    carry_forward_cognitive_models,
     update_registry_from_interpretation,
 )
+from src.pipelines.outer_loop.orchestrator import carry_forward_cognitive_models
 
 MODEL_SRC = "import pymc as pm\nwith pm.Model() as model:\n    pass\n"
 LEDGER_TEXT = (

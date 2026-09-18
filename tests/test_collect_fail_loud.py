@@ -21,7 +21,7 @@ import urllib.error
 
 import pytest
 
-from src.pipelines.outer_loop import browser_steering, collect
+from src.pipelines.outer_loop import browser_steering, collect, synthetic_data
 
 
 # ── Playwright doubles ──────────────────────────────────────────────────────
@@ -112,12 +112,12 @@ def test_click_random_choice_raises_when_neither_modality_works():
         key_error=_playwright_error("target page closed"),
     )
     with pytest.raises(RuntimeError, match="could not advance"):
-        collect._click_random_choice(page)
+        browser_steering._click_random_choice(page)
 
 
 def test_click_random_choice_logs_the_keyboard_fallback(capsys):
     page = _FakePage(n_buttons=2, click_error=_playwright_error("intercepted"))
-    collect._click_random_choice(page)
+    browser_steering._click_random_choice(page)
     assert page.keyboard.pressed  # the fallback actually happened
     err = capsys.readouterr().err
     assert "click" in err.lower() and "key" in err.lower()
@@ -125,7 +125,7 @@ def test_click_random_choice_logs_the_keyboard_fallback(capsys):
 
 def test_click_random_choice_on_a_keyboard_trial_stays_quiet(capsys):
     page = _FakePage(n_buttons=0)
-    collect._click_random_choice(page)
+    browser_steering._click_random_choice(page)
     assert page.keyboard.pressed
     assert capsys.readouterr().err == ""  # no buttons is normal, not a fallback
 
@@ -137,7 +137,7 @@ def test_click_random_choice_does_not_let_a_working_keypress_hide_a_bug():
     # this module and must not be papered over by the fallback.
     page = _FakePage(n_buttons=2, click_error=AttributeError("no attribute 'nth'"))
     with pytest.raises(AttributeError):
-        collect._click_random_choice(page)
+        browser_steering._click_random_choice(page)
     assert not page.keyboard.pressed
 
 
@@ -148,12 +148,12 @@ def test_act_key_raises_when_neither_modality_works():
         key_error=_playwright_error("target page closed"),
     )
     with pytest.raises(RuntimeError, match="could not apply"):
-        collect._act_key(page, "f")
+        browser_steering._act_key(page, "f")
 
 
 def test_act_key_still_translates_left_to_the_first_button():
     page = _FakePage(n_buttons=3)
-    collect._act_key(page, "f")
+    browser_steering._act_key(page, "f")
     assert page.locator_obj.clicked == [0]
 
 
@@ -162,14 +162,14 @@ def test_act_key_still_translates_left_to_the_first_button():
 
 def test_get_screen_content_tolerates_a_page_level_error(capsys):
     page = _FakePage(evaluate_error=_playwright_error("Execution context destroyed"))
-    assert collect._get_screen_content(page) == ""
+    assert browser_steering._get_screen_content(page) == ""
     assert "screen" in capsys.readouterr().err.lower()
 
 
 def test_get_screen_content_propagates_programming_errors():
     page = _FakePage(evaluate_error=TypeError("evaluate() got an unexpected kwarg"))
     with pytest.raises(TypeError):
-        collect._get_screen_content(page)
+        browser_steering._get_screen_content(page)
 
 
 # ── LLM steering: a missing key/dep is a config error, not "blind mode" ─────
@@ -272,7 +272,7 @@ def test_llm_participant_rows_reject_a_stimulus_without_sequences():
             return "ANSWER: left"
 
     with pytest.raises(ValueError, match="sequence_a"):
-        collect.generate_llm_participant_rows(
+        synthetic_data.generate_llm_participant_rows(
             [{"sequence_a": "HT"}],
             1,
             participant_model=_Model(),

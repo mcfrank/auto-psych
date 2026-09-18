@@ -11,7 +11,7 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from src.pipelines.outer_loop.orchestrator import _validate_model_set
+from src.pipelines.outer_loop.orchestrator_validators import _validate_model_set
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 

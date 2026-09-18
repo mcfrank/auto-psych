@@ -39,14 +39,10 @@ from src.pipelines.inner_loop.hypothesis_ledger import (
 )
 from src.pipelines.inner_loop.candidate_agent import (
     DEFAULT_CANDIDATE_HINTS,
-    _build_candidate_prompt,
-    _describe_standing,
     _spawn_candidate_agent,
     _write_candidate_context,
-    _write_existing_hypotheses,
 )
 from src.pipelines.inner_loop.model_zoo import (
-    AllCandidatesNoFileError,
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     DEFAULT_PRUNE_DSE_MULTIPLIER,
     _NO_FILE_DETAIL,
@@ -55,8 +51,6 @@ from src.pipelines.inner_loop.model_zoo import (
     _drop_nonfinite_elpd_models,
     _drop_unfittable_models,
     _lens_index,
-    _lens_offset,
-    _manifest_entries,
     _manifest_names,
     _prune_losers,
     _resolve_candidate_name,
@@ -71,14 +65,11 @@ from src.pipelines.inner_loop.critique_round import (
 )
 from src.pipelines.inner_loop.scoring import (
     DEFAULT_COMPLEXITY_PRIOR_CONST,
-    _best_exportable_model,
-    _best_model,
     _compare,
     _export,
     _record_history_step,
     _resolve_protected_names,
     _score,
-    _unreliable_names,
 )
 
 

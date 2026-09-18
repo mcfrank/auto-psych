@@ -15,7 +15,7 @@ import pytest
 import yaml
 
 from src.pipelines.inner_loop.model_zoo import DEFAULT_PRUNE_DSE_MULTIPLIER
-from src.pipelines.inner_loop.pymc_orchestrator import _write_existing_hypotheses
+from src.pipelines.inner_loop.candidate_agent import _write_existing_hypotheses
 
 
 # ── helpers ──────────────────────────────────────────────────────────────
@@ -338,7 +338,7 @@ class TestDescribeStanding:
     """The _describe_standing helper should produce correct one-line summaries."""
 
     def test_best_model(self):
-        from src.pipelines.inner_loop.pymc_orchestrator import _describe_standing
+        from src.pipelines.inner_loop.candidate_agent import _describe_standing
 
         row = {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
                "loo_unreliable": False}
@@ -347,7 +347,7 @@ class TestDescribeStanding:
         assert "best" in text.lower()
 
     def test_tied_model(self):
-        from src.pipelines.inner_loop.pymc_orchestrator import _describe_standing
+        from src.pipelines.inner_loop.candidate_agent import _describe_standing
 
         row = {"rank": 1, "elpd_loo": -42.0, "elpd_diff": 2.0, "dse": 2.0,
                "loo_unreliable": False}
@@ -356,7 +356,7 @@ class TestDescribeStanding:
         assert "tied" in text.lower()
 
     def test_losing_model(self):
-        from src.pipelines.inner_loop.pymc_orchestrator import _describe_standing
+        from src.pipelines.inner_loop.candidate_agent import _describe_standing
 
         row = {"rank": 2, "elpd_loo": -55.0, "elpd_diff": 15.0, "dse": 3.0,
                "loo_unreliable": False}
@@ -365,7 +365,7 @@ class TestDescribeStanding:
         assert "lost" in text.lower()
 
     def test_unreliable_loo(self):
-        from src.pipelines.inner_loop.pymc_orchestrator import _describe_standing
+        from src.pipelines.inner_loop.candidate_agent import _describe_standing
 
         row = {"rank": 1, "elpd_loo": -45.0, "elpd_diff": 5.0, "dse": 3.0,
                "loo_unreliable": True, "frac_bad_k": 0.15}

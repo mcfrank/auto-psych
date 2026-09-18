@@ -172,21 +172,21 @@ def test_screen_raises_when_a_model_is_simply_broken(tmp_path, monkeypatch, erro
     def boom(name, models_dir):
         raise error
 
-    monkeypatch.setattr("src.models.pymc_inference.load_pymc_model_cached", boom)
+    monkeypatch.setattr("src.models.model_loading.load_pymc_model_cached", boom)
     with pytest.raises(RuntimeError, match="broken"):
         eig_mod._screen_usable_models(["m"], tmp_path, {"sequence_a": "HT"})
 
 
 def test_screen_still_drops_an_unbindable_model_loudly(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
-        "src.models.pymc_inference.load_pymc_model_cached", lambda name, d: name
+        "src.models.model_loading.load_pymc_model_cached", lambda name, d: name
     )
 
     def fake_bind(model, rows):
         if model == "needs_participant":
             raise KeyError("participant_id")
 
-    monkeypatch.setattr("src.models.pymc_inference.make_stim_data", fake_bind)
+    monkeypatch.setattr("src.models.data_binding.make_stim_data", fake_bind)
     usable, dropped = eig_mod._screen_usable_models(
         ["needs_participant", "fine"], tmp_path, {"sequence_a": "HT"}
     )

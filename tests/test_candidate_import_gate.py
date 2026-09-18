@@ -206,7 +206,7 @@ class TestBriefsStateAllowlist:
     """The candidate and critique briefs name the import allowlist."""
 
     def test_candidate_context_states_allowlist(self, tmp_path):
-        from src.pipelines.inner_loop.pymc_orchestrator import _write_candidate_context
+        from src.pipelines.inner_loop.candidate_agent import _write_candidate_context
 
         candidate_dir = tmp_path / "candidate"
         candidate_dir.mkdir()

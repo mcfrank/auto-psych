@@ -11,7 +11,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.pipelines.outer_loop.orchestrator import _validate_implement
+from src.pipelines.outer_loop.orchestrator_validators import _validate_implement
 
 # A minimal index.html that satisfies every other implement guardrail (jsPsych,
 # button responses, the prose container, the data contract). ``{extra}`` lets a

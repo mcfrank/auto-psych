@@ -266,7 +266,7 @@ def _format_critiques_md(result: Dict[str, Any]) -> str:
 
 def _incumbent_response_col(incumbent: str, models_dir: Path) -> str:
     """Name of the incumbent model's observed-response ``pm.Data`` column."""
-    from src.models.pymc_inference import load_pymc_model, observed_response_data
+    from src.models.model_loading import load_pymc_model, observed_response_data
 
     return observed_response_data(load_pymc_model(incumbent, models_dir))
 

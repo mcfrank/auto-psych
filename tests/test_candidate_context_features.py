@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import yaml
 
-from src.pipelines.inner_loop.pymc_orchestrator import _write_candidate_context
+from src.pipelines.inner_loop.candidate_agent import _write_candidate_context
 
 HEADER = (
     "participant_id,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,"

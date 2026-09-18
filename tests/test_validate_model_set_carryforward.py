@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import yaml
 
-from src.pipelines.outer_loop.orchestrator import _validate_model_set
+from src.pipelines.outer_loop.orchestrator_validators import _validate_model_set
 
 
 def _write_manifest(exp_dir, models):

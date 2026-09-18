@@ -17,6 +17,7 @@ import numpy as np
 import pytest
 
 from src.models import pymc_inference as pi
+from src.models.data_binding import _augment_rows_with_features, _model_compute_features
 
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 # A model whose single hypothesis needs a feature the base 11 cannot express:
@@ -95,7 +96,7 @@ def test_model_with_declared_feature_has_finite_logp(tmp_path):
 def test_load_attaches_declared_featurizer(tmp_path):
     name = _write_model(tmp_path, ENDS_IN_H_MODEL)
     model = pi.load_pymc_model(name, tmp_path)
-    featurizer = pi._model_compute_features(model)
+    featurizer = _model_compute_features(model)
     assert callable(featurizer)
     assert featurizer("HTH", "TTT") == {"ends_h_a": 1.0, "ends_h_b": 0.0}
 
@@ -104,7 +105,7 @@ def test_load_finds_compute_features_when_present():
     model = pi.load_pymc_model(
         "bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR
     )
-    featurizer = pi._model_compute_features(model)
+    featurizer = _model_compute_features(model)
     assert featurizer is not None
     assert featurizer("HTH", "TTT") == {"n_a": 3, "h_a": 2, "n_b": 3, "h_b": 0}
 
@@ -129,14 +130,14 @@ def test_augment_is_noop_without_featurizer():
     with pm.Model() as model:
         pm.Data("n_a", np.zeros(1, dtype="int64"))
     rows = [{"n_a": "3", "sequence_a": "HTH"}]
-    assert pi._augment_rows_with_features(model, rows) == rows
+    assert _augment_rows_with_features(model, rows) == rows
 
 
 def test_augment_requires_raw_sequences(tmp_path):
     name = _write_model(tmp_path, ENDS_IN_H_MODEL)
     model = pi.load_pymc_model(name, tmp_path)
     with pytest.raises(ValueError, match="sequence_a"):
-        pi._augment_rows_with_features(model, [{"chose_left": "1"}])
+        _augment_rows_with_features(model, [{"chose_left": "1"}])
 
 
 def _model_from_featurizer(tmp_path, body: str, name: str):
@@ -161,7 +162,7 @@ def test_augment_rejects_non_numeric_feature(tmp_path):
         "nonnumeric",
     )
     with pytest.raises(ValueError, match="must be a number"):
-        pi._augment_rows_with_features(
+        _augment_rows_with_features(
             model, [{"sequence_a": "H", "sequence_b": "T", "chose_left": "1"}]
         )
 
@@ -175,7 +176,7 @@ def test_augment_rejects_shadowing_the_response_column(tmp_path):
         "collision",
     )
     with pytest.raises(ValueError, match="response/bookkeeping"):
-        pi._augment_rows_with_features(
+        _augment_rows_with_features(
             model, [{"sequence_a": "H", "sequence_b": "T", "chose_left": "1"}]
         )
 
@@ -192,7 +193,7 @@ def test_augment_rejects_inconsistent_keys(tmp_path):
         {"sequence_a": "TT", "sequence_b": "H", "chose_left": "0"},
     ]
     with pytest.raises(ValueError, match="inconsistent feature names"):
-        pi._augment_rows_with_features(model, rows)
+        _augment_rows_with_features(model, rows)
 
 
 # ── End-to-end with real MCMC (the full fit + posterior-predictive path) ───────
@@ -242,7 +243,7 @@ def test_recomputing_a_column_to_the_same_value_is_allowed(tmp_path):
     """A self-contained model recomputing a column that the row already carries
     (same value) must not fail — this happens on the generation and held-out
     evaluation paths."""
-    from src.models.pymc_inference import _augment_rows_with_features
+    from src.models.data_binding import _augment_rows_with_features
 
     class _Model:
         pass
@@ -256,7 +257,7 @@ def test_recomputing_a_column_to_the_same_value_is_allowed(tmp_path):
 
 
 def test_recomputing_a_column_to_a_different_value_still_fails_loudly(tmp_path):
-    from src.models.pymc_inference import _augment_rows_with_features
+    from src.models.data_binding import _augment_rows_with_features
 
     class _Model:
         pass

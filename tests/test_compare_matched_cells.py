@@ -15,9 +15,9 @@ import pytest
 
 import src.subjective_randomness.holdout_eval as holdout_eval
 import src.subjective_randomness.holdout_recovery as holdout_recovery
-from src.subjective_randomness.holdout_recovery import (
-    collect_trained_pairs,
+from src.subjective_randomness.holdout_eval import (
     _unordered_pair,
+    collect_trained_pairs,
 )
 
 

@@ -16,22 +16,10 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from src.pipelines.outer_loop.browser_steering import (  # noqa: F401 — re-export
-    _act_key,
-    _click_random_choice,
+from src.pipelines.outer_loop.browser_steering import (
     _drive_experiment_to_finish,
     _drive_experiment_with_llm,
     _DRIVE_TIMEOUT_MS,
-    _get_screen_content,
-)
-from src.pipelines.outer_loop.llm import get_llm, load_prompt_for_run  # noqa: F401 — re-export
-from src.pipelines.outer_loop.synthetic_data import (  # noqa: F401 — re-export
-    RESPONSE_OPTIONS,
-    _generate_from_models,
-    _generate_from_pymc_models,
-    _parse_participant_answer,
-    _present_sides,
-    generate_llm_participant_rows,
 )
 from src.runtime.console import log_status
 from src.runtime.observability import agent_log

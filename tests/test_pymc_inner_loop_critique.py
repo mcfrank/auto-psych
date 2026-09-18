@@ -87,10 +87,8 @@ def test_critique_default_significance_alpha():
     # comparisons correction); --critique-alpha overrides it per run.
     import inspect
 
-    from src.pipelines.inner_loop.pymc_orchestrator import (
-        CRITIQUE_SIGNIFICANCE_ALPHA,
-        run_pymc_inner_loop,
-    )
+    from src.pipelines.inner_loop.critique_round import CRITIQUE_SIGNIFICANCE_ALPHA
+    from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 
     assert CRITIQUE_SIGNIFICANCE_ALPHA == 0.05
     default = inspect.signature(run_pymc_inner_loop).parameters[
