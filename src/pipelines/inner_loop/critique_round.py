@@ -424,7 +424,7 @@ def _run_critique_round(
     forward rather than aborting the whole inner loop.
     """
     # Lazy import to avoid circular dependency (pymc_orchestrator imports us).
-    from src.pipelines.inner_loop.pymc_orchestrator import _best_exportable_model
+    from src.pipelines.inner_loop.scoring import _best_exportable_model
 
     incumbent = _best_exportable_model(posterior, comparison)
     critique_dir = round_dir / "critique"

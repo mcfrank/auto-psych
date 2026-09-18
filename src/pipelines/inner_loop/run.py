@@ -50,11 +50,11 @@ from src.models.mcmc_defaults import (
     PRODUCTION_TUNE,
 )
 from src.pipelines.inner_loop.pymc_orchestrator import (
-    DEFAULT_COMPLEXITY_PRIOR_CONST,
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     DEFAULT_PRUNE_DSE_MULTIPLIER,
     run_pymc_inner_loop,
 )
+from src.pipelines.inner_loop.scoring import DEFAULT_COMPLEXITY_PRIOR_CONST
 from src.runtime.coding_agent import select_backend
 from src.runtime.token_usage import start_usage_log, write_usage_report
 

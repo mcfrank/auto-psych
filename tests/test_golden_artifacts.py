@@ -254,7 +254,7 @@ def test_import_gate():
 
 
 def test_export_selection():
-    from src.pipelines.inner_loop.pymc_orchestrator import (
+    from src.pipelines.inner_loop.scoring import (
         _best_exportable_model,
         _best_model,
         _unreliable_names,

@@ -19,6 +19,7 @@ import yaml
 
 import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
+import src.pipelines.inner_loop.scoring as scoring
 import src.pipelines.outer_loop.orchestrator as orch
 from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME
 from src.pipelines.inner_loop.model_zoo import (
@@ -81,9 +82,9 @@ def _patch_loop_internals(monkeypatch):
         "n_trials": 2,
     }
     monkeypatch.setattr(
-        pymc_orchestrator, "model_posterior", lambda *a, **k: posterior
+        scoring, "model_posterior", lambda *a, **k: posterior
     )
-    monkeypatch.setattr(pymc_orchestrator, "compare_table", lambda *a, **k: {})
+    monkeypatch.setattr(scoring, "compare_table", lambda *a, **k: {})
     # _prune_losers looks up compare_table in model_zoo's namespace:
     monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: {})
     # Functions looked up in model_zoo's namespace:
