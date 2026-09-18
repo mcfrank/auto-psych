@@ -12,6 +12,7 @@ from __future__ import annotations
 import src.runtime.coding_agent as coding_agent
 import yaml
 
+from src.pipelines.inner_loop import critique_round
 from src.pipelines.inner_loop import pymc_orchestrator
 from src.pipelines.outer_loop import orchestrator as orch
 
@@ -63,17 +64,17 @@ def test_candidate_agent_threads_model(tmp_path, monkeypatch):
 def test_critique_agent_threads_model(tmp_path, monkeypatch):
     captured = _capture_run_coding_agent(monkeypatch, coding_agent)
     monkeypatch.setattr(
-        pymc_orchestrator, "_seed_critique_fit_cache", lambda *a, **k: None
+        critique_round, "_seed_critique_fit_cache", lambda *a, **k: None
     )
     monkeypatch.setattr(
-        pymc_orchestrator, "_write_critique_context", lambda *a, **k: None
+        critique_round, "_write_critique_context", lambda *a, **k: None
     )
     monkeypatch.setattr(
-        pymc_orchestrator, "_persist_critique_results", lambda *a, **k: None
+        critique_round, "_persist_critique_results", lambda *a, **k: None
     )
     responses = tmp_path / "responses.csv"
     responses.write_text("a\n1\n", encoding="utf-8")
-    pymc_orchestrator._spawn_critique_agent(
+    critique_round._spawn_critique_agent(
         tmp_path / "critique",
         "incumbent_model",
         models_dir=tmp_path,
