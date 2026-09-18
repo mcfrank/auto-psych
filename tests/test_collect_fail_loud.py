@@ -21,7 +21,7 @@ import urllib.error
 
 import pytest
 
-from src.pipelines.outer_loop import collect
+from src.pipelines.outer_loop import browser_steering, collect
 
 
 # ── Playwright doubles ──────────────────────────────────────────────────────
@@ -179,7 +179,7 @@ def test_drive_with_llm_propagates_llm_configuration_failure(tmp_path, monkeypat
     def boom(*args, **kwargs):
         raise RuntimeError("GOOGLE_API_KEY is not set")
 
-    monkeypatch.setattr(collect, "get_llm", boom)
+    monkeypatch.setattr(browser_steering, "get_llm", boom)
     with pytest.raises(RuntimeError, match="GOOGLE_API_KEY"):
         collect._drive_experiment_with_llm(
             _FakePage(), timeout_ms=10, project_id="p", run_id=1, logs_dir=tmp_path
@@ -187,8 +187,8 @@ def test_drive_with_llm_propagates_llm_configuration_failure(tmp_path, monkeypat
 
 
 def test_drive_with_llm_reports_a_missing_steering_prompt(tmp_path, monkeypatch, capsys):
-    monkeypatch.setattr(collect, "get_llm", lambda *a, **k: object())
-    monkeypatch.setattr(collect, "load_prompt_for_run", lambda *a, **k: "   ")
+    monkeypatch.setattr(browser_steering, "get_llm", lambda *a, **k: object())
+    monkeypatch.setattr(browser_steering, "load_prompt_for_run", lambda *a, **k: "   ")
     done, llm_used = collect._drive_experiment_with_llm(
         _FakePage(), timeout_ms=10, project_id="p", run_id=1, logs_dir=tmp_path
     )
