@@ -1,7 +1,7 @@
 """Pure parts of the consolidation driver.
 
 The consolidation plan (``docs/consolidation_plan_2026_09.md``) is executed as
-twenty-eight phases, P0..P27, one Claude Code session each. State lives on disk
+thirty-two phases, P0..P31, one Claude Code session each. State lives on disk
 under ``<work_root>/progress/`` as marker files the agent writes and the
 driver validates:
 
@@ -150,6 +150,21 @@ PHASES: tuple[Phase, ...] = (
     Phase(
         "P27", "Cleanup verdict and report",
         waits_for="cleanup_smoke_jobs.json", requires_files=("CLEANUP_REPORT.md",),
+    ),
+    # Appended at the user's request (2026-09-18, second amendment): sweep 2's
+    # empty-round check killed 5 of 20 cells, and every formal comparison
+    # returned zero paired cells because the analysis tools never extract an
+    # archived run tree. Fix both, then re-analyse offline from cached fits.
+    Phase("P28", "An empty candidate round must be recoverable"),
+    Phase("P29", "Make the analysis tooling work on real archived cells"),
+    Phase(
+        "P30", "Submit the offline re-analysis",
+        allows_sbatch=True, jobs_file="reanalysis_jobs.json",
+        required_labels=("analysis",), max_rounds=2,
+    ),
+    Phase(
+        "P31", "Final analysis and the selection-criterion decision memo",
+        waits_for="reanalysis_jobs.json", requires_files=("ANALYSIS_FINAL.md",),
     ),
 )
 

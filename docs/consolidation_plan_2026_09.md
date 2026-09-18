@@ -1361,3 +1361,153 @@ P12 did. Write `progress/cleanup_smoke_jobs.json`
 - a split would require changing what a fail-loud check does;
 - the equivalence check in P27 shows the design or the generated responses
   differ for the same seed.
+
+---
+
+## 12. Loop robustness and a real re-analysis (amendment of 2026-09-18, second)
+
+Sweep 2 fixed discovery (admission 14.9% → 62.1%, 164 candidates admitted, 13
+agent-written models surviving to final zoos) but surfaced two defects, both of
+which cost real information:
+
+1. **The empty-round check aborts a whole cell.** P17 made a round whose
+   candidates all fail to write raise `AllCandidatesNoFileError`. That check is
+   right to refuse to continue silently, but it is too blunt: heredoc writing
+   succeeds about 70% of the time per slot, so ~3% of three-slot rounds fail
+   entirely, and 5 of 20 cells died that way — several after admitting 5–8
+   candidates. The information in those cells is lost for a transient failure.
+2. **Every formal comparison returned zero paired cells.** The sweep-2 versus
+   sweep-1 isolation, the three featurized references, and the oracle-best
+   scoring all came back empty. **The archives are not the problem:**
+   `agent_runs.tar.gz` contains `_runs/<gt>/experiment<k>/data/responses.csv`,
+   `_runs/<gt>/eval_stimuli.json`, `_runs/<gt>/experiment<k>/design/stimuli.json`
+   and `pooled_responses.csv`. The tools resolve paths as if the run tree were
+   unarchived on disk (`<cell>/repo/_runs/...`) and never extract the archive —
+   the same defect the oracle CLI had in P15 round 2. This is analysis tooling
+   written in P3 that has never been run against a real archived cell.
+
+P28–P31 fix both and then do the re-analysis offline. No sweep is re-run: every
+fit these phases need is already in the cells' `mcmc_cache`, so the whole
+re-analysis costs compute, not agent spend.
+
+### P28 — An empty candidate round must be recoverable
+
+**Do:** replace the abort with a bounded retry. When a round ends with zero
+admitted candidates and every rejection is `no candidate.py written`:
+
+1. re-run that round once (fresh agent calls, same lens assignments and brief);
+2. if the retry also yields nothing, record a `round_abandoned` ledger entry
+   with the round's context and **continue to the next round** rather than
+   killing the cell;
+3. raise `AllCandidatesNoFileError` only if **every round of an entire
+   experiment** ends empty — that is a systemic failure, not a hiccup, and is
+   what the check was really for.
+
+Make the retry count and the abort condition explicit named constants, not
+literals buried in the loop.
+
+**Tests first:** a round that fails then succeeds on retry is admitted normally;
+a round that fails twice is recorded as `round_abandoned` and the loop proceeds
+to the next round; an experiment whose every round fails twice raises; the
+ledger records the retry and the abandonment with enough context to count them
+later. Use the existing inner-loop fixtures; no MCMC.
+
+**Also:** the verifier's candidate-admission check (added in P17) currently
+fails a run if any ledger shows an all-empty round. Change it to fail only on
+`round_abandoned` events above a stated threshold, and to report retried rounds
+as a warning with counts. State the threshold in the verifier's output.
+
+**Accept:** the new tests pass; the fast-suite failing set ⊆ the P0 baseline
+minus tests deleted in P9/P11/P24; tree clean.
+
+### P29 — Make the analysis tooling work on real archived cells
+
+**Do:** fix `compare_matched_cells.py` and `oracle_admitted_models.py` (under
+whatever names P23–P25 left them) so that a cell archived as
+`agent_runs.tar.gz` is handled exactly like an unarchived one:
+
+1. one shared helper that, given a cell directory, returns a usable run-tree
+   root — extracting `agent_runs.tar.gz` into a cached temp directory when the
+   tree is not on disk, and reusing that extraction across both tools and
+   across cells within one invocation;
+2. every path the tools resolve (`experiment<k>/data/responses.csv`,
+   `eval_stimuli.json`, `design/stimuli.json`, `model_loop/models/*.py`,
+   `model_loop/models/pruned/*.py`, `history.json`, `mcmc_cache/*.nc`) goes
+   through it;
+3. a cell that genuinely cannot be reconstructed is **listed in the output with
+   the reason**, never silently skipped — and the tool's exit status reflects
+   whether it produced any paired cells at all.
+
+**Tests first, and they must use real archives** (read-only, from
+`$WORK_ROOT/sweep` and `$WORK_ROOT/sweep_rerun`):
+
+- `compare_matched_cells.py` on one matched pair of real archived cells
+  produces exactly one paired row, with a common pool that excludes the union
+  of both cells' training pairs and is smaller than either cell's own pool;
+- `oracle_admitted_models.py --steps final` on one real archived cell writes
+  `oracle.json` with a non-zero number of scored steps and all four fields from
+  §0.2, using the cell's `mcmc_cache` (no new sampling);
+- a synthetic cell with a corrupt archive is reported as unreconstructable
+  rather than crashing the run.
+
+Mark them `slow` if needed, but they must run in the fast suite's `not slow`
+selection at least once against a small real cell — a tool that is only ever
+exercised inside a Slurm job will fail inside a Slurm job. That has now happened
+four times in this campaign.
+
+**Accept:** the new tests pass against real archives; both tools report
+per-cell reasons for anything they cannot reconstruct; tree clean.
+
+### P30 — Submit the offline re-analysis (may `sbatch`)
+
+One job, no agent spend, all fits from cache. Over both sweeps
+(`$WORK_ROOT/sweep`, 20 cells; `$WORK_ROOT/sweep_rerun`, 15 completed cells):
+
+1. `compare_matched_cells.py --sweep-a $WORK_ROOT/sweep --sweep-b $WORK_ROOT/sweep_rerun
+   --out $WORK_ROOT/analysis_final/rerun_vs_sweep1` — the isolating comparison:
+   matched seeds, one commit apart, differing only by the candidate-write fix;
+2. the same against `$ITER2_SWEEP`, `$ITER3_SWEEP` and `$BASELINE_SWEEP`
+   (confounded references, per §9) — reporting honestly if those older archives
+   cannot be reconstructed;
+3. `oracle_admitted_models.py` on **every** completed cell of both sweeps, so
+   the three-bucket diagnostic finally has oracle-best numbers;
+4. the recovery report over both sweeps.
+
+Give it generous walltime (`--time=1-00:00:00`, `--cpus-per-task=8`,
+`--mem=32GB`); predicting over the exhaustive pool for every admitted model is
+the expensive part, so use `--predict-max-draws` as the existing tools do.
+Write `progress/reanalysis_jobs.json` (`{"analysis": {...}}`). Do not wait.
+
+**Accept:** the jobs file has a numeric id; tree clean.
+
+### P31 — Final analysis and the selection-criterion decision memo
+
+**Preconditions (driver-checked):** the re-analysis job has left the queue.
+
+Write `$WORK_ROOT/ANALYSIS_FINAL.md`:
+
+1. **The isolating comparison**, per cell and per ground truth: sweep 2 minus
+   sweep 1 on a common pool. This is the only single-change comparison in the
+   campaign; report it as such, with the caveat that sweep 2 has 15 cells to
+   sweep 1's 20 and which cells are missing.
+2. **The three-bucket diagnostic with real oracle numbers**, per ground truth
+   and per cell: oracle-best RMSE, the selected incumbent's RMSE, the gap, and
+   the lost-incumbent events. Then state plainly, for `local_representativeness`
+   and `motif_stack` separately, whether the binding constraint is discovery
+   (the zoo never contained anything better) or selection (it did, and the
+   criterion missed it). Sweep 2's evidence suggested discovery for
+   `motif_stack`; confirm or refute it.
+3. **The confounded references**, if reconstructable, labelled as in §9.
+4. **A decision memo, not an implementation**, on the two structural changes:
+   - replacing trial-level ELPD-LOO with leave-one-**stimulus**-out CV for
+     selection and pruning, since with ~40 participants per stimulus the
+     current criterion barely measures stimulus generalization — the quantity
+     the benchmark grades;
+   - replacing the saturated softmax posterior (BMA gain was exactly 0.000 in
+     all 20 sweep-1 cells) with stacking weights or a tempered softmax.
+   For each: what it would change, what it would cost to implement and to
+   validate, what evidence in this analysis supports or undercuts it, and what
+   could go wrong. **Do not implement either** — they change what the benchmark
+   measures, and that is the user's decision.
+
+**Accept:** `ANALYSIS_FINAL.md` exists; tree clean.
