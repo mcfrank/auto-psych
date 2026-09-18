@@ -1,0 +1,19 @@
+{
+  "comparison": {
+    "seed_alpha": {"rank": 0, "elpd_loo": -50.0, "elpd_diff": 0.0, "dse": 0.0, "loo_unreliable": false},
+    "seed_beta": {"rank": 2, "elpd_loo": -55.0, "elpd_diff": 5.0, "dse": 1.5, "loo_unreliable": false},
+    "agent_model": {"rank": 1, "elpd_loo": -52.0, "elpd_diff": 2.0, "dse": 1.8, "loo_unreliable": false},
+    "flaky_model": {"rank": 3, "elpd_loo": -60.0, "elpd_diff": 10.0, "dse": 2.0, "loo_unreliable": true}
+  },
+  "posterior": {
+    "posteriors": {
+      "seed_alpha": 0.6,
+      "seed_beta": 0.1,
+      "agent_model": 0.25,
+      "flaky_model": 0.05
+    }
+  },
+  "best_exportable_model": "seed_alpha",
+  "best_argmax_model": "seed_alpha",
+  "unreliable_names": ["flaky_model"]
+}

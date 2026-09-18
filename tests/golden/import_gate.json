@@ -1,0 +1,6 @@
+{
+  "allowed_source": "import numpy as np\nimport pymc as pm\nimport pytensor.tensor as pt\nfrom scipy import stats\nfrom math import log\nfrom collections import Counter\n",
+  "allowed_result": [],
+  "forbidden_source": "import numpy as np\nimport pymc as pm\nfrom src.subjective_randomness.features import parse_motifs\nimport pandas as pd\n",
+  "forbidden_result": ["pandas", "src.subjective_randomness.features"]
+}
