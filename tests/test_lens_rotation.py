@@ -20,7 +20,7 @@ import yaml
 import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 import src.pipelines.inner_loop.scoring as scoring
-import src.pipelines.outer_loop.orchestrator as orch
+import src.pipelines.outer_loop.model_loop_runner as mlr
 from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME
 from src.pipelines.inner_loop.model_zoo import (
     _lens_index,
@@ -181,11 +181,11 @@ def _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir):
         return {"best_model": "stub_best"}
 
     monkeypatch.setattr(
-        orch, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
+        mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
     )
-    monkeypatch.setattr(orch, "write_responses_csv", lambda rows, out: out)
+    monkeypatch.setattr(mlr, "write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(
-        orch,
+        mlr,
         "_export_inner_loop_models",
         lambda e, l, *, best_model, protected_names: e,
     )
@@ -201,7 +201,7 @@ def test_outer_loop_sets_lens_offset_from_experiment_number(
 ):
     exp_dir = tmp_path / "subjective_randomness" / "experiment3"
     captured = _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir)
-    orch.run_inner_model_loop_programmatic(
+    mlr.run_inner_model_loop_programmatic(
         exp_dir,
         max_iterations=2,
         candidate_count=3,
@@ -216,7 +216,7 @@ def test_outer_loop_refuses_experiment_dir_without_a_number(
     exp_dir = tmp_path / "subjective_randomness" / "pilot"
     _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir)
     with pytest.raises(ValueError, match="experiment<k>"):
-        orch.run_inner_model_loop_programmatic(
+        mlr.run_inner_model_loop_programmatic(
             exp_dir,
             max_iterations=2,
             candidate_count=3,
