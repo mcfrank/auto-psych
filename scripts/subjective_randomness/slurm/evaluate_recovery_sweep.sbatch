@@ -17,6 +17,9 @@
 #   ITER3_SWEEP - iteration 3 sweep root (for comparison)
 #   BASELINE_SWEEP - pre-campaign baseline sweep root (for comparison)
 #
+# Optional env vars:
+#   SWEEP1_ROOT - first sweep root for the isolating comparison (sweep_rerun vs sweep)
+#
 # Each step fails loudly: set -e ensures a failure stops the job.
 set -euo pipefail
 
@@ -79,6 +82,15 @@ $VENV_PY scripts/subjective_randomness/compare_matched_cells.py \
     --out "$ANALYSIS_DIR/vs_baseline"
 echo ""
 
+if [[ -n "${SWEEP1_ROOT:-}" ]]; then
+    echo "  Comparing vs sweep1 (isolating comparison)..."
+    $VENV_PY scripts/subjective_randomness/compare_matched_cells.py \
+        --sweep-a "$SWEEP1_ROOT" \
+        --sweep-b "$WORK_ROOT" \
+        --out "$ANALYSIS_DIR/vs_sweep1"
+    echo ""
+fi
+
 # --- Step c: oracle diagnostics ----------------------------------------------
 echo "=== Step c: Running oracle diagnostics ==="
 for holdout_json in "$WORK_ROOT"/run*/*/holdout.json; do
@@ -93,12 +105,18 @@ echo ""
 
 # --- Step d: recovery report -------------------------------------------------
 echo "=== Step d: Generating recovery report ==="
+COMPARE_ARGS=(
+    --compare "vs_iter2=$ANALYSIS_DIR/vs_iter2"
+    --compare "vs_iter3=$ANALYSIS_DIR/vs_iter3"
+    --compare "vs_baseline=$ANALYSIS_DIR/vs_baseline"
+)
+if [[ -n "${SWEEP1_ROOT:-}" ]]; then
+    COMPARE_ARGS+=(--compare "vs_sweep1=$ANALYSIS_DIR/vs_sweep1")
+fi
 $VENV_PY scripts/subjective_randomness/recovery_report.py \
     --sweep "$WORK_ROOT" \
     --label consolidated_raw \
-    --compare "vs_iter2=$ANALYSIS_DIR/vs_iter2" \
-    --compare "vs_iter3=$ANALYSIS_DIR/vs_iter3" \
-    --compare "vs_baseline=$ANALYSIS_DIR/vs_baseline" \
+    "${COMPARE_ARGS[@]}" \
     --oracle-glob "$WORK_ROOT/run*/*/oracle.json" \
     --out "$ANALYSIS_DIR/RESULTS_auto.md"
 
