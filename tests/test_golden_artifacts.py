@@ -50,7 +50,7 @@ def test_recovery_metrics():
 
 @pytest.mark.slow
 def test_response_generation():
-    from src.subjective_randomness.holdout_recovery import generate_responses
+    from src.subjective_randomness.holdout_data import generate_responses
 
     fixture = _load("response_generation.json")
     rows = generate_responses(
@@ -75,7 +75,7 @@ def test_response_generation():
 
 
 def test_eval_pool():
-    from src.subjective_randomness.holdout_recovery import build_eval_stimuli
+    from src.subjective_randomness.holdout_eval import build_eval_stimuli
 
     fixture = _load("eval_pool.json")
 
@@ -128,7 +128,7 @@ def test_eval_pool():
 
 
 def test_leakage_check():
-    from src.subjective_randomness.holdout_recovery import leakage_check
+    from src.subjective_randomness.leakage_audit import leakage_check
 
     fixture = _load("leakage_check.json")
 

@@ -80,7 +80,7 @@ def _write_model_dir(path: Path, models: dict[str, str]):
 def test_featurized_model_in_raw_pool_raises_naming_model_and_columns(tmp_path):
     """A raw config with a pool model that cannot bind a raw row raises at
     config resolution, naming the model and the missing columns."""
-    from src.subjective_randomness.holdout_recovery import (
+    from src.subjective_randomness.holdout_data import (
         validate_raw_pool_models,
     )
 
@@ -93,7 +93,7 @@ def test_featurized_model_in_raw_pool_raises_naming_model_and_columns(tmp_path):
 
 
 def test_raw_model_with_compute_features_passes(tmp_path):
-    from src.subjective_randomness.holdout_recovery import (
+    from src.subjective_randomness.holdout_data import (
         validate_raw_pool_models,
     )
 
@@ -103,7 +103,7 @@ def test_raw_model_with_compute_features_passes(tmp_path):
 
 
 def test_raw_model_with_prepare_observed_passes(tmp_path):
-    from src.subjective_randomness.holdout_recovery import (
+    from src.subjective_randomness.holdout_data import (
         validate_raw_pool_models,
     )
 
@@ -114,7 +114,7 @@ def test_raw_model_with_prepare_observed_passes(tmp_path):
 
 def test_actual_seed_dirs_pass():
     """The shipped seed directories must pass the pool validation."""
-    from src.subjective_randomness.holdout_recovery import (
+    from src.subjective_randomness.holdout_data import (
         validate_raw_pool_models,
     )
     from tests.paths import REPO_ROOT
@@ -138,7 +138,7 @@ def test_actual_seed_dirs_pass():
 
 def test_pool_validation_catches_featurized_model(tmp_path):
     """A pool model that expects precomputed columns is caught by validation."""
-    from src.subjective_randomness.holdout_recovery import (
+    from src.subjective_randomness.holdout_data import (
         validate_raw_pool_models,
     )
 

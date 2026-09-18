@@ -105,7 +105,7 @@ def test_candidate_context_has_no_precomputed_feature_references(
     """When the CSV has only raw columns, CONTEXT.md must say there are no
     precomputed feature columns and that compute_features/prepare_observed is
     required."""
-    from src.pipelines.inner_loop.pymc_orchestrator import _write_candidate_context
+    from src.pipelines.inner_loop.candidate_agent import _write_candidate_context
 
     responses_csv = tmp_path / "responses.csv"
     _write_csv(responses_csv, [_raw_row()])

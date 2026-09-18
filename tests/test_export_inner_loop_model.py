@@ -18,10 +18,8 @@ import json
 import pytest
 import yaml
 
-from src.pipelines.outer_loop.orchestrator import (
-    _export_inner_loop_models,
-    _validate_model_loop,
-)
+from src.pipelines.outer_loop.model_loop_runner import _export_inner_loop_models
+from src.pipelines.outer_loop.orchestrator_validators import _validate_model_loop
 
 MODEL_SRC = "import pymc as pm\nwith pm.Model() as model:\n    pass\n"
 

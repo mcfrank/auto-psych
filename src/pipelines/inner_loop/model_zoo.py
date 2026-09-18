@@ -19,11 +19,11 @@ import numpy as np
 import yaml
 
 from src.models.model_manifest import manifest_path, read_manifest_entries
+from src.models.data_binding import make_stim_data
+from src.models.model_loading import load_pymc_model
 from src.models.pymc_inference import (
     evict_fit_cache,
     fit_model,
-    load_pymc_model,
-    make_stim_data,
     model_logp_is_finite,
 )
 from src.model_comparison.likelihood import log_likelihood

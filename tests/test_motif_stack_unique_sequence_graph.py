@@ -25,12 +25,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from src.models.pymc_inference import (
-    load_pymc_model,
-    make_stim_data,
-    observed_response_data,
-    pm_data_inputs,
-)
+from src.models.data_binding import make_stim_data
+from src.models.model_loading import load_pymc_model, observed_response_data, pm_data_inputs
 from src.subjective_randomness.model_families import motif_stack as twin
 from src.subjective_randomness.model_recovery import (
     p_left_fixed_params,

@@ -27,11 +27,12 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 import numpy as np
 
-from src.models.model_manifest import read_manifest_names
-from src.models.pymc_inference import load_pymc_model, make_stim_data
+from src.models.data_binding import make_stim_data
+from src.models.model_loading import load_pymc_model
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
-from src.pipelines.outer_loop.columns import write_responses_csv  # noqa: F401
+from src.pipelines.outer_loop.columns import write_responses_csv
 from src.subjective_randomness.config import resolve_path
+from src.subjective_randomness.holdout_data import seed_model_names
 from src.subjective_randomness.features import featurize_stimulus
 from src.subjective_randomness.simulate import load_stimuli
 
@@ -39,10 +40,6 @@ from src.subjective_randomness.simulate import load_stimuli
 # the derived feature columns.
 PASSTHROUGH_COLS = ["sequence_a", "sequence_b"]
 
-
-def seed_model_names(seed_models_dir: Path) -> List[str]:
-    """Read the ordered seed-model names from the directory's manifest."""
-    return read_manifest_names(seed_models_dir)
 
 
 def _default_params_from_file(path: Path) -> Dict[str, float]:

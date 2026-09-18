@@ -72,13 +72,13 @@ def _screen_usable_models(
     hypothesis set, and only for the data-binding reason above: a model that
     fails because its *code* is broken (``BROKEN_MODEL_CODE_ERRORS``) raises.
     """
-    from src.models.pymc_inference import (  # type: ignore
-        BROKEN_MODEL_CODE_ERRORS,
+    from src.models.data_binding import (  # type: ignore
         MissingStimulusColumns,
         NON_STIMULUS_COLUMNS,
-        load_pymc_model_cached,
         make_stim_data,
     )
+    from src.models.model_loading import load_pymc_model_cached  # type: ignore
+    from src.models.pymc_inference import BROKEN_MODEL_CODE_ERRORS  # type: ignore
 
     usable: List[str] = []
     dropped: List[Dict[str, Any]] = []
@@ -155,7 +155,8 @@ def _posterior_p_left_draws(
         DESIGN_TWIN_DRAWS,
         DESIGN_TWIN_TUNE,
     )
-    from src.models.pymc_inference import fit_model, make_stim_data  # type: ignore
+    from src.models.data_binding import make_stim_data  # type: ignore
+    from src.models.pymc_inference import fit_model  # type: ignore
 
     draws: Dict[str, Any] = {}
     for name in model_names:

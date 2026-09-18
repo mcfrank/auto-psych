@@ -22,7 +22,7 @@ import json
 import pytest
 import yaml
 
-from src.pipelines.outer_loop.orchestrator import update_registry_from_interpretation
+from src.pipelines.outer_loop.model_loop_runner import update_registry_from_interpretation
 
 
 def _write_posterior(exp_dir, weights) -> None:

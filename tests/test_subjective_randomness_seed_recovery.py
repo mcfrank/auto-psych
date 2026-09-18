@@ -6,7 +6,7 @@ from __future__ import annotations
 import numpy as np
 import yaml
 
-from src.models.pymc_inference import load_pymc_model, observed_response_data
+from src.models.model_loading import load_pymc_model, observed_response_data
 from src.pipelines.outer_loop.orchestrator import (
     get_ground_truth_models,
     seed_experiment_models_from_project,

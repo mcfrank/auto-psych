@@ -22,11 +22,15 @@ import yaml
 
 import src.subjective_randomness.holdout_eval as holdout_eval
 import src.subjective_randomness.holdout_recovery as holdout_recovery
-from src.subjective_randomness.holdout_recovery import (
-    _distinctive_param_names,
+from src.subjective_randomness.holdout_eval import (
     build_eval_stimuli,
-    leakage_check,
+)
+from src.subjective_randomness.holdout_recovery import (
     run_impossible_holdout_recovery_from_config,
+)
+from src.subjective_randomness.leakage_audit import (
+    _distinctive_param_names,
+    leakage_check,
 )
 from src.subjective_randomness.model_recovery import p_left_fixed_params
 from tests.model_registry import FAITHFUL_MODEL_NAMES

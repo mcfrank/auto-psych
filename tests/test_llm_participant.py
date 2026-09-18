@@ -15,7 +15,7 @@ import time
 import pytest
 
 from src.pipelines.outer_loop import participants
-from src.pipelines.outer_loop.collect import generate_llm_participant_rows
+from src.pipelines.outer_loop.synthetic_data import generate_llm_participant_rows
 from src.pipelines.outer_loop.participants import get_participant_model
 
 
@@ -174,7 +174,7 @@ def test_model_concurrency_limit_is_respected():
 
 
 def test_only_committed_answers_parse_loose_mentions_are_unparseable():
-    from src.pipelines.outer_loop.collect import _parse_participant_answer
+    from src.pipelines.outer_loop.synthetic_data import _parse_participant_answer
 
     # The committed forms parse.
     assert _parse_participant_answer("ANSWER: left") == "left"

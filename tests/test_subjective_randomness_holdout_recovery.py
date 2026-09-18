@@ -19,24 +19,29 @@ import numpy as np
 import pytest
 import yaml
 
+import src.subjective_randomness.holdout_data as holdout_data
 import src.subjective_randomness.holdout_eval as holdout_eval
 import src.subjective_randomness.holdout_recovery as holdout_recovery
 from src.pipelines.inner_loop import pymc_orchestrator
 from src.runtime import token_usage
-from src.subjective_randomness.holdout_recovery import (
+from src.subjective_randomness.holdout_data import (
+    strip_generating_model,
+)
+from src.subjective_randomness.holdout_eval import (
     TRAJECTORY_COLUMNS,
     build_eval_stimuli,
     collect_trained_pairs,
     evaluate_trajectory,
     fitted_seed_baseline_correlation,
-    leakage_check,
     reevaluate_trajectories,
+    seed_baseline_correlation,
+)
+from src.subjective_randomness.holdout_recovery import (
     run_holdout_experiments,
     run_holdout_recovery_from_config,
-    seed_baseline_correlation,
-    strip_generating_model,
     trajectory_tidy_rows,
 )
+from src.subjective_randomness.leakage_audit import leakage_check
 from src.subjective_randomness.recover import pearson_r
 from src.subjective_randomness.stimulus_design import generate_candidate_pool
 from tests.model_registry import FAITHFUL_MODEL_NAMES
@@ -682,9 +687,10 @@ def test_from_config_resume_skips_completed_gt_runs(tmp_path, monkeypatch):
         raise AssertionError("completed GT run must not re-run any work")
 
     for seam in ("run_design_programmatic", "seed_experiment_models_from_project",
-                 "generate_responses", "run_inner_model_loop_programmatic",
-                 "p_left_fixed_params", "fit_model"):
+                 "generate_responses", "run_inner_model_loop_programmatic"):
         monkeypatch.setattr(holdout_recovery, seam, tripwire)
+    for seam in ("p_left_fixed_params", "fit_model"):
+        monkeypatch.setattr(holdout_eval, seam, tripwire)
 
     config = {
         "seed_models_dir": str(SEED_MODELS_DIR),
@@ -1724,7 +1730,7 @@ def test_resolve_model_dir_finds_a_pruned_step_model(tmp_path):
     that a LATER pruning pass moved to models/pruned/. Reloading it for
     trajectory evaluation must look there, not fail — the history is still
     valid, the file just moved."""
-    from src.subjective_randomness.holdout_recovery import _resolve_model_dir
+    from src.subjective_randomness.holdout_eval import _resolve_model_dir
 
     models = tmp_path / "models"
     (models / "pruned").mkdir(parents=True)
@@ -1740,7 +1746,7 @@ def test_resolve_model_dir_defers_to_models_dir_when_absent(tmp_path):
     normal loader raises its clear 'model file not found' error — the resolver
     only redirects pruned models, it does not own the missing-file failure (and
     must not break callers that stub the loader without real .py files)."""
-    from src.subjective_randomness.holdout_recovery import _resolve_model_dir
+    from src.subjective_randomness.holdout_eval import _resolve_model_dir
 
     models = tmp_path / "models"
     models.mkdir()
@@ -1953,7 +1959,7 @@ def test_agent_csv_has_only_raw_columns(tmp_path, monkeypatch):
     with responses.open(encoding="utf-8", newline="") as f:
         reader = csv.DictReader(f)
         rows = list(reader)
-    assert set(reader.fieldnames) == set(holdout_recovery.RAW_RESPONSE_COLUMNS)
+    assert set(reader.fieldnames) == set(holdout_data.RAW_RESPONSE_COLUMNS)
     assert len(rows) == 2 * len(DESIGN_STIMULI)
 
 
@@ -1964,14 +1970,14 @@ def test_strip_to_raw_columns_keeps_only_the_raw_five():
             "trial_index": 3, "chose_left": 1, "p_alts_a": 1.0, "occ_n20_b": 0.5,
         }
     ]
-    (stripped,) = holdout_recovery.strip_to_raw_columns(rows)
-    assert tuple(stripped) == holdout_recovery.RAW_RESPONSE_COLUMNS
+    (stripped,) = holdout_data.strip_to_raw_columns(rows)
+    assert tuple(stripped) == holdout_data.RAW_RESPONSE_COLUMNS
     assert rows[0]["p_alts_a"] == 1.0  # input untouched
 
 
 def test_strip_to_raw_columns_fails_loudly_without_the_sequences():
     with pytest.raises(ValueError, match="sequence_a"):
-        holdout_recovery.strip_to_raw_columns([{"participant_id": 0, "chose_left": 1}])
+        holdout_data.strip_to_raw_columns([{"participant_id": 0, "chose_left": 1}])
 
 
 # ── Regression: existing metric values must not change ──────────────

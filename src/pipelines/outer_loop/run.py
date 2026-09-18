@@ -38,24 +38,26 @@ from src.models.mcmc_defaults import (
 )
 from src.pipelines.inner_loop.run import load_hints_file
 from src.pipelines.outer_loop.deployment import write_smoke_experiment
+from src.pipelines.outer_loop.model_loop_runner import (
+    init_registry,
+    run_inner_model_loop_programmatic,
+    update_registry_from_interpretation,
+)
 from src.pipelines.outer_loop.orchestrator import (
     carry_forward_cognitive_models,
     ensure_experiment_dirs,
     experiment_dir,
     get_ground_truth_models,
-    init_registry,
     outer_data_dir,
     outer_project_dir,
     run_collect_programmatic,
     run_deployment_programmatic,
     run_design_programmatic,
-    run_inner_model_loop_programmatic,
     seed_experiment_models_from_project,
     spawn_cc_agent,
-    update_registry_from_interpretation,
-    validate_cc_output,
     write_context,
 )
+from src.pipelines.outer_loop.orchestrator_validators import validate_cc_output
 from src.pipelines.outer_loop.participants import DEFAULT_OPEN_MODEL
 from src.runtime.coding_agent import select_backend
 from src.runtime.token_usage import (

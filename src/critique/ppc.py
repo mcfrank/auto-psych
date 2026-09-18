@@ -295,7 +295,8 @@ def build_critique_frames(
     """
     import pandas as pd
 
-    from src.models.pymc_inference import make_stim_data, observed_response_data
+    from src.models.data_binding import make_stim_data
+    from src.models.model_loading import observed_response_data
 
     responses_path = Path(responses_path)
     human_df = pd.read_csv(responses_path)

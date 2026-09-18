@@ -28,14 +28,16 @@ from pyprojroot import here
 
 sys.path.insert(0, str(here()))
 
-from src.subjective_randomness.holdout_recovery import (  # noqa: E402
+from src.subjective_randomness.holdout_eval import (  # noqa: E402
+    TRAJECTORY_COLUMNS,
     _unordered_pair,
     build_eval_stimuli,
     collect_trained_pairs,
     evaluate_trajectory,
     reevaluate_trajectories,
+)
+from src.subjective_randomness.holdout_recovery import (  # noqa: E402
     trajectory_tidy_rows,
-    TRAJECTORY_COLUMNS,
 )
 from src.subjective_randomness.config import resolve_path  # noqa: E402
 

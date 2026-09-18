@@ -13,7 +13,7 @@ import shutil
 
 import pytest
 
-from src.pipelines.outer_loop.collect import (
+from src.pipelines.outer_loop.synthetic_data import (
     _generate_from_models,
     _generate_from_pymc_models,
 )

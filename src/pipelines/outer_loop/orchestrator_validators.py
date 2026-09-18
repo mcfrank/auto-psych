@@ -52,7 +52,7 @@ def _validate_model_set(exp_dir: Path) -> tuple[bool, str]:
     only builds the model graph — it never samples.
     """
     sys.path.insert(0, str(REPO_ROOT))
-    from src.models.pymc_inference import load_pymc_model, observed_response_data  # type: ignore
+    from src.models.model_loading import load_pymc_model, observed_response_data  # type: ignore
 
     models_dir = exp_dir / "cognitive_models"
     # A validator reports; it does not raise. Anything the manifest reader

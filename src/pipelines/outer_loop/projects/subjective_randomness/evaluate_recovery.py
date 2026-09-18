@@ -27,7 +27,9 @@ from pyprojroot import here
 # than the canonical src.runtime.config.REPO_ROOT (same resolution).
 sys.path.insert(0, str(here()))
 
-from src.models.pymc_inference import fit_model, load_pymc_model, make_stim_data
+from src.models.data_binding import make_stim_data
+from src.models.model_loading import load_pymc_model
+from src.models.pymc_inference import fit_model
 from src.pipelines.outer_loop.orchestrator import (
     experiment_dir,
     get_ground_truth_models,

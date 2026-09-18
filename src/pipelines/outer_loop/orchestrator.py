@@ -31,17 +31,6 @@ from src.models.model_manifest import (
 from src.models.project.ground_truth import get_ground_truth_models
 from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS, write_responses_csv
 
-# Stage output validators live in orchestrator_validators.py; re-exported here
-# so `from ...orchestrator import validate_cc_output / _validate_*` keeps working.
-from src.pipelines.outer_loop.orchestrator_validators import (  # noqa: F401
-    _ZOO_NAME_RE,
-    _validate_collect,
-    _validate_design,
-    _validate_implement,
-    _validate_model_loop,
-    _validate_model_set,
-    validate_cc_output,
-)
 from src.runtime.coding_agent import run_coding_agent
 from src.runtime.config import PROJECT_ASSETS_DIR, REPO_ROOT
 
@@ -350,7 +339,7 @@ def _collect_llm_participant_programmatic(
     participant/stimulus pair; partial collections are saved as diagnostics and
     rejected before they can reach model fitting.
     """
-    from src.pipelines.outer_loop.collect import generate_llm_participant_rows
+    from src.pipelines.outer_loop.synthetic_data import generate_llm_participant_rows
     from src.pipelines.outer_loop.llm import load_prompt_for_run
     from src.pipelines.outer_loop.participants import get_participant_model
 
@@ -521,9 +510,11 @@ def run_collect_programmatic(
     from src.pipelines.outer_loop.collect import (
         _collect_from_firebase,
         _collect_live,
+        check_response_variation,
+    )
+    from src.pipelines.outer_loop.synthetic_data import (
         _generate_from_models,
         _generate_from_pymc_models,
-        check_response_variation,
     )
 
     stimuli_path = exp_dir / "design" / "stimuli.json"
@@ -721,25 +712,3 @@ def run_deployment_programmatic(
     return manifest_path
 
 
-# ─────────────────────────────────────────────
-# Inner-loop integration & registry helpers
-# ─────────────────────────────────────────────
-# Extracted to model_loop_runner.py; re-exported here so
-# `from ...orchestrator import X` keeps working.
-from src.pipelines.outer_loop.model_loop_runner import (  # noqa: E402, F401
-    _EXPERIMENT_DIR_RE,
-    _experiment_number,
-    _export_inner_loop_models,
-    _pooled_response_rows,
-    _protected_seed_names,
-    init_registry,
-    run_inner_model_loop_programmatic,
-    update_registry_from_interpretation,
-)
-
-# ─────────────────────────────────────────────
-# Validation
-# ─────────────────────────────────────────────
-# The stage output validators live in orchestrator_validators.py; they are
-# re-exported here (and imported at module top) so `from ...orchestrator import
-# _validate_*` keeps working.

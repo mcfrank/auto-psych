@@ -15,7 +15,9 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 
 import numpy as np
 
-from src.models.pymc_inference import fit_model, make_stim_data, pm_data_inputs
+from src.models.data_binding import make_stim_data
+from src.models.model_loading import pm_data_inputs
+from src.models.pymc_inference import fit_model
 from src.subjective_randomness.holdout_data import (
     _raw_eval_rows,
     p_left_fixed_params,

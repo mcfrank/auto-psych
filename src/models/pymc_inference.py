@@ -12,8 +12,8 @@ identified by tracing `model.observed_RVs[0]` back through the pytensor graph
 to its `TensorSharedVariable` ancestor.
 
 Model loading and data binding live in ``model_loading`` and ``data_binding``;
-this module re-exports their public (and test-used) names for backward
-compatibility, then adds prediction, fitting, and diagnostics.
+this module imports the names it needs from those children and adds prediction,
+fitting, and diagnostics.
 """
 
 from __future__ import annotations
@@ -42,38 +42,17 @@ from src.models.loo_reliability import (
 from src.models.probability import validate_probability, validate_probability_array
 from src.registry.io import validate_theory_weights
 
-# ---------------------------------------------------------------------------
-# Re-exports from model_loading — every name that callers import from here.
-# ---------------------------------------------------------------------------
-from src.models.model_loading import (  # noqa: F401
-    _COMPUTE_FEATURES_ATTR,
-    _PREPARE_OBSERVED_ATTR,
-    _MODEL_CACHE,
-    _import_pymc,
-    _import_arviz,
+from src.models.model_loading import (
     _exec_model_module,
+    _import_arviz,
+    _import_pymc,
     load_pymc_model,
-    pm_data_inputs,
-    observed_response_data,
     load_pymc_model_cached,
-    clear_model_cache,
+    observed_response_data,
 )
-
-# ---------------------------------------------------------------------------
-# Re-exports from data_binding — every name that callers import from here.
-# ---------------------------------------------------------------------------
-from src.models.data_binding import (  # noqa: F401
-    _read_csv_rows,
-    _model_compute_features,
-    _same_feature_value,
-    _augment_rows_with_features,
-    _model_prepare_observed,
-    _observed_via_hook,
-    make_stim_data,
+from src.models.data_binding import (
     extract_observed,
-    MissingStimulusColumns,
-    PROTECTED_ROW_COLUMNS,
-    NON_STIMULUS_COLUMNS,
+    make_stim_data,
 )
 
 

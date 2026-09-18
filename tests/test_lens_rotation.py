@@ -26,10 +26,8 @@ from src.pipelines.inner_loop.model_zoo import (
     _lens_index,
     _lens_offset,
 )
-from src.pipelines.inner_loop.pymc_orchestrator import (
-    DEFAULT_CANDIDATE_HINTS,
-    run_pymc_inner_loop,
-)
+from src.pipelines.inner_loop.candidate_agent import DEFAULT_CANDIDATE_HINTS
+from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from tests.inner_loop_fixtures import write_responses, write_seed_models
 
 

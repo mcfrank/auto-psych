@@ -45,9 +45,11 @@ from pyprojroot import here
 sys.path.insert(0, str(here()))
 
 from src.subjective_randomness.config import resolve_path  # noqa: E402
-from src.subjective_randomness.holdout_recovery import (  # noqa: E402
+from src.subjective_randomness.holdout_eval import (  # noqa: E402
     TRAJECTORY_COLUMNS,
     reevaluate_trajectories,
+)
+from src.subjective_randomness.holdout_recovery import (  # noqa: E402
     trajectory_tidy_rows,
 )
 from src.subjective_randomness.pymc_model_families import REGISTRY_DIR  # noqa: E402

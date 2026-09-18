@@ -25,7 +25,8 @@ from src.critique.ppc import (
     load_test_statistic_file,
     run_ppc_for_model,
 )
-from src.models.pymc_inference import FittedModel, load_pymc_model
+from src.models.model_loading import load_pymc_model
+from src.models.pymc_inference import FittedModel
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 
