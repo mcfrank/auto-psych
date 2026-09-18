@@ -14,6 +14,7 @@ both agent spawns are stubbed — these tests cover only the orchestration:
 from __future__ import annotations
 
 
+import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from tests.inner_loop_fixtures import canned_posterior, write_responses, write_seed_models
@@ -29,20 +30,23 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
 
     monkeypatch.setattr(pymc_orchestrator, "model_posterior", fake_model_posterior)
     monkeypatch.setattr(pymc_orchestrator, "compare_table", lambda *a, **k: {})
+    # _prune_losers looks up compare_table in model_zoo's namespace:
+    monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: {})
+    # Functions looked up in model_zoo's namespace:
     monkeypatch.setattr(
-        pymc_orchestrator, "model_logp_is_finite", lambda *a, **k: (True, "")
+        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
     )
     monkeypatch.setattr(
-        pymc_orchestrator, "load_pymc_model", lambda name, models_dir: object()
+        model_zoo, "load_pymc_model", lambda name, models_dir: object()
     )
     # Candidate admission now ends with a real MCMC fit-gate; stub it so the fake
     # stub candidates (not real PyMC models) are admitted without sampling.
-    monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
+    monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # Admission also gates on a finite ELPD-LOO; stub it finite for stub candidates.
-    monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: -100.0)
+    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
     # Novelty gate is covered by test_novelty_gate.py; neutralize it here.
     monkeypatch.setattr(
-        pymc_orchestrator, "_min_prediction_rmse",
+        model_zoo, "_min_prediction_rmse",
         lambda *a, **k: (None, float("inf")),
     )
 

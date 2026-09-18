@@ -217,7 +217,7 @@ def test_leakage_check():
 
 
 def test_lens_schedule():
-    from src.pipelines.inner_loop.pymc_orchestrator import _lens_index, _lens_offset
+    from src.pipelines.inner_loop.model_zoo import _lens_index, _lens_offset
 
     fixture = _load("lens_schedule.json")
 

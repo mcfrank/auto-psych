@@ -19,11 +19,11 @@ import json
 import yaml
 import pytest
 
-from src.pipelines.inner_loop import pymc_orchestrator
+from src.pipelines.inner_loop import model_zoo, pymc_orchestrator
+from src.pipelines.inner_loop.model_zoo import _prune_losers
 from src.pipelines.inner_loop.pymc_orchestrator import (
     _best_exportable_model,
     _export,
-    _prune_losers,
 )
 
 
@@ -44,11 +44,11 @@ def _models_dir(tmp_path, names):
 
 def _stub_comparison(monkeypatch, rows):
     monkeypatch.setattr(
-        pymc_orchestrator, "compare_table", lambda *a, **k: rows
+        model_zoo, "compare_table", lambda *a, **k: rows
     )
     evicted = []
     monkeypatch.setattr(
-        pymc_orchestrator, "evict_fit_cache", lambda name: evicted.append(name)
+        model_zoo, "evict_fit_cache", lambda name: evicted.append(name)
     )
     return evicted
 
@@ -478,7 +478,7 @@ def test_zero_multiplier_disables_pruning(tmp_path, monkeypatch):
     def tripwire(*a, **k):
         raise AssertionError("compare_table must not run when pruning is disabled")
 
-    monkeypatch.setattr(pymc_orchestrator, "compare_table", tripwire)
+    monkeypatch.setattr(model_zoo, "compare_table", tripwire)
     pruned = _prune_losers(
         models_dir,
         tmp_path / "responses.csv",

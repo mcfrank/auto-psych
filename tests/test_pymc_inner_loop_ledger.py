@@ -17,6 +17,7 @@ import json
 
 import yaml
 
+import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
@@ -72,14 +73,17 @@ def _patch_scoring(monkeypatch):
 
     monkeypatch.setattr(pymc_orchestrator, "model_posterior", fake_model_posterior)
     monkeypatch.setattr(pymc_orchestrator, "compare_table", fake_compare)
+    # _prune_losers looks up compare_table in model_zoo's namespace:
+    monkeypatch.setattr(model_zoo, "compare_table", fake_compare)
+    # Functions looked up in model_zoo's namespace:
     monkeypatch.setattr(
-        pymc_orchestrator, "model_logp_is_finite", lambda *a, **k: (True, "")
+        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
     )
-    monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
-    monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: -100.0)
-    monkeypatch.setattr(pymc_orchestrator, "evict_fit_cache", lambda name: None)
+    monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
+    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
+    monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
     monkeypatch.setattr(
-        pymc_orchestrator, "load_pymc_model", lambda name, models_dir: object()
+        model_zoo, "load_pymc_model", lambda name, models_dir: object()
     )
 
 
@@ -118,7 +122,7 @@ def test_ledger_inherits_records_every_slot_and_reaches_the_next_brief(
     _patch_candidates(monkeypatch, {0: "idea_one", 1: "idea_two"}, briefs)
     # Round 1's candidate predicts like model_a → rejected as a near-duplicate.
     monkeypatch.setattr(
-        pymc_orchestrator,
+        model_zoo,
         "_min_prediction_rmse",
         lambda name, *a, **k: ("model_a", 0.001) if name == "idea_two" else (None, float("inf")),
     )

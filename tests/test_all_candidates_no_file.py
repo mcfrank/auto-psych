@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from src.pipelines.inner_loop.pymc_orchestrator import (
+from src.pipelines.inner_loop.model_zoo import (
     AllCandidatesNoFileError,
     _check_round_admissions,
 )
