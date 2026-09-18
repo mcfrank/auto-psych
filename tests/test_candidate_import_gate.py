@@ -92,7 +92,7 @@ class TestAdmitCandidateImportGate:
 
     def test_rejects_candidate_with_forbidden_import(self, tmp_path, setup):
         from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
-        from src.pipelines.inner_loop.pymc_orchestrator import _admit_candidate
+        from src.pipelines.inner_loop.model_zoo import _admit_candidate
 
         models_dir, responses_path = setup
         candidate_dir = tmp_path / "candidate"
@@ -131,7 +131,7 @@ class TestAdmitCandidateImportGate:
         assert "forbidden import" in entries[0].detail
 
     def test_admits_candidate_with_allowed_imports(self, tmp_path, setup):
-        from src.pipelines.inner_loop.pymc_orchestrator import _admit_candidate
+        from src.pipelines.inner_loop.model_zoo import _admit_candidate
 
         models_dir, responses_path = setup
         candidate_dir = tmp_path / "candidate"
@@ -155,17 +155,17 @@ class TestAdmitCandidateImportGate:
         # The model will fail later gates (logp etc.) but should pass the import gate.
         # We just check it doesn't get rejected for imports by patching past the later gates.
         with patch(
-            "src.pipelines.inner_loop.pymc_orchestrator.load_pymc_model"
+            "src.pipelines.inner_loop.model_zoo.load_pymc_model"
         ) as mock_load, patch(
-            "src.pipelines.inner_loop.pymc_orchestrator.model_logp_is_finite",
+            "src.pipelines.inner_loop.model_zoo.model_logp_is_finite",
             return_value=(True, ""),
         ), patch(
-            "src.pipelines.inner_loop.pymc_orchestrator.fit_model"
+            "src.pipelines.inner_loop.model_zoo.fit_model"
         ), patch(
-            "src.pipelines.inner_loop.pymc_orchestrator.log_likelihood",
+            "src.pipelines.inner_loop.model_zoo.log_likelihood",
             return_value=-10.0,
         ), patch(
-            "src.pipelines.inner_loop.pymc_orchestrator._min_prediction_rmse",
+            "src.pipelines.inner_loop.model_zoo._min_prediction_rmse",
             return_value=(None, float("inf")),
         ):
             result = _admit_candidate(

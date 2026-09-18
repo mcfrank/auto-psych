@@ -14,10 +14,8 @@ from typing import Any, Dict, Optional
 import pytest
 import yaml
 
-from src.pipelines.inner_loop.pymc_orchestrator import (
-    DEFAULT_PRUNE_DSE_MULTIPLIER,
-    _write_existing_hypotheses,
-)
+from src.pipelines.inner_loop.model_zoo import DEFAULT_PRUNE_DSE_MULTIPLIER
+from src.pipelines.inner_loop.pymc_orchestrator import _write_existing_hypotheses
 
 
 # ── helpers ──────────────────────────────────────────────────────────────

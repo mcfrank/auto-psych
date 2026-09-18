@@ -23,6 +23,7 @@ import math
 import pytest
 import yaml
 
+import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 
 
@@ -52,7 +53,7 @@ def test_drops_carried_model_with_nonfinite_elpd_keeps_finite(
     models_dir = _models_dir(tmp_path, ["seed_good", "carried_nan"])
     elpd = {"seed_good": -100.0, "carried_nan": math.nan}
     monkeypatch.setattr(
-        pymc_orchestrator, "log_likelihood", lambda m, *a, **k: elpd[m]
+        model_zoo, "log_likelihood", lambda m, *a, **k: elpd[m]
     )
 
     pymc_orchestrator._drop_nonfinite_elpd_models(
@@ -70,7 +71,7 @@ def test_drops_each_kind_of_nonfinite_elpd(tmp_path, monkeypatch, bad):
     models_dir = _models_dir(tmp_path, ["seed_good", "bad"])
     elpd = {"seed_good": -100.0, "bad": bad}
     monkeypatch.setattr(
-        pymc_orchestrator, "log_likelihood", lambda m, *a, **k: elpd[m]
+        model_zoo, "log_likelihood", lambda m, *a, **k: elpd[m]
     )
 
     pymc_orchestrator._drop_nonfinite_elpd_models(
@@ -90,7 +91,7 @@ def test_drops_model_whose_elpd_computation_raises(tmp_path, monkeypatch):
             raise RuntimeError("PSIS-LOO blew up")
         return -100.0
 
-    monkeypatch.setattr(pymc_orchestrator, "log_likelihood", ll)
+    monkeypatch.setattr(model_zoo, "log_likelihood", ll)
 
     pymc_orchestrator._drop_nonfinite_elpd_models(
         models_dir, tmp_path / "responses.csv"
@@ -102,7 +103,7 @@ def test_drops_model_whose_elpd_computation_raises(tmp_path, monkeypatch):
 def test_raises_when_no_model_survives(tmp_path, monkeypatch):
     models_dir = _models_dir(tmp_path, ["a", "b"])
     monkeypatch.setattr(
-        pymc_orchestrator, "log_likelihood", lambda *a, **k: math.nan
+        model_zoo, "log_likelihood", lambda *a, **k: math.nan
     )
 
     with pytest.raises(ValueError, match="finite ELPD"):
@@ -114,7 +115,7 @@ def test_raises_when_no_model_survives(tmp_path, monkeypatch):
 def test_all_finite_keeps_every_model(tmp_path, monkeypatch):
     models_dir = _models_dir(tmp_path, ["a", "b", "c"])
     monkeypatch.setattr(
-        pymc_orchestrator, "log_likelihood", lambda *a, **k: -50.0
+        model_zoo, "log_likelihood", lambda *a, **k: -50.0
     )
 
     pymc_orchestrator._drop_nonfinite_elpd_models(
