@@ -20,6 +20,7 @@ import numpy as np
 import pytest
 import yaml
 
+import src.subjective_randomness.holdout_eval as holdout_eval
 import src.subjective_randomness.holdout_recovery as holdout_recovery
 from src.subjective_randomness.holdout_recovery import (
     _distinctive_param_names,
@@ -155,18 +156,18 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     # The GT reference p_left is stubbed (varied, so correlation is defined);
     # the impossible PyMC model file is exercised by the unit tests, not here.
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: np.linspace(
             0.1, 0.9, len(stimuli)
         ),
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "fit_model",
         lambda name, models_dir, responses_path, *, cache_dir=None, **kw: CannedPredictionFit(),
     )
@@ -398,18 +399,18 @@ def test_impossible_holdout_exhaustive_eval_thins_posterior(tmp_path, monkeypatc
         _stub_inner_loop("local_representativeness"),
     )
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: np.linspace(
             0.1, 0.9, len(stimuli)
         ),
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "fit_model",
         lambda name, models_dir, responses_path, *, cache_dir=None, **kw: (
             _RecordingFitted()

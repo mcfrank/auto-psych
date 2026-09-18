@@ -13,6 +13,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+import src.subjective_randomness.holdout_eval as holdout_eval
 import src.subjective_randomness.holdout_recovery as holdout_recovery
 from src.subjective_randomness.holdout_recovery import (
     collect_trained_pairs,
@@ -140,16 +141,16 @@ def test_compare_matched_cells_common_pool_excludes_union(tmp_path, monkeypatch)
 def _stub_eval_seams(monkeypatch, gt_p, pred):
     """Patch evaluation seams so no real models or manifests are needed."""
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: gt_p[:len(stimuli)],
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
     monkeypatch.setattr(
-        holdout_recovery, "seed_model_names",
+        holdout_eval, "seed_model_names",
         lambda pool_dir, *a, **kw: ["seed_a"],
     )
 
@@ -159,18 +160,17 @@ def _stub_eval_seams(monkeypatch, gt_p, pred):
             return pred[:stim_data["n"]]
 
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
 
-    from src.subjective_randomness.model_recovery import resolve_generating_params as _rgp
     monkeypatch.setattr(
-        holdout_recovery, "seed_baseline_correlation",
+        holdout_eval, "seed_baseline_correlation",
         lambda *a, **kw: {"mean_r": 0.5, "per_model": {}},
     )
     monkeypatch.setattr(
-        holdout_recovery, "fitted_seed_baseline_correlation",
+        holdout_eval, "fitted_seed_baseline_correlation",
         lambda *a, **kw: {"mean_r": 0.6, "mean_rmse": 0.2, "per_model": {}, "n_responses": 10},
     )
 

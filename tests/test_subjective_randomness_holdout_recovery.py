@@ -19,6 +19,7 @@ import numpy as np
 import pytest
 import yaml
 
+import src.subjective_randomness.holdout_eval as holdout_eval
 import src.subjective_randomness.holdout_recovery as holdout_recovery
 from src.pipelines.inner_loop import pymc_orchestrator
 from src.runtime import token_usage
@@ -180,23 +181,23 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         holdout_recovery, "run_inner_model_loop_programmatic", capturing_inner_loop
     )
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: np.linspace(
             0.1, 0.9, len(stimuli)
         ),
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
     # No model in these stubs indexes a participant random effect.
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     def fake_fit_model(name, models_dir, responses_path, *, cache_dir=None, **kw):
         fit_calls.append({"name": name, "cache_dir": cache_dir})
         return CannedPredictionFit()
 
-    monkeypatch.setattr(holdout_recovery, "fit_model", fake_fit_model)
+    monkeypatch.setattr(holdout_eval, "fit_model", fake_fit_model)
 
     config = {
         "project_id": "subjective_randomness",
@@ -813,15 +814,15 @@ def test_evaluate_trajectory_scores_every_history_step(tmp_path, monkeypatch):
     predictions = {"model_a": np.array([0.3, 0.9, 0.5]), "model_b": gt_p.copy()}
 
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: gt_p,
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
     # No model in these stubs indexes a participant random effect.
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
         model = None
@@ -833,7 +834,7 @@ def test_evaluate_trajectory_scores_every_history_step(tmp_path, monkeypatch):
             return predictions[self.name]
 
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(name),
     )
@@ -887,15 +888,15 @@ def test_evaluate_trajectory_computes_bayesian_model_average(tmp_path, monkeypat
     fit_names = []
 
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: gt_p,
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
     # No model in these stubs indexes a participant random effect.
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
         model = None
@@ -910,7 +911,7 @@ def test_evaluate_trajectory_computes_bayesian_model_average(tmp_path, monkeypat
         fit_names.append(name)
         return Fitted(name)
 
-    monkeypatch.setattr(holdout_recovery, "fit_model", fake_fit)
+    monkeypatch.setattr(holdout_eval, "fit_model", fake_fit)
 
     rows = evaluate_trajectory(
         run_root,
@@ -960,14 +961,14 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
     gt_p = np.array([0.3, 0.7])
 
     monkeypatch.setattr(
-        holdout_recovery, "p_left_fixed_params", lambda *a, **k: gt_p
+        holdout_eval, "p_left_fixed_params", lambda *a, **k: gt_p
     )
     monkeypatch.setattr(
-        holdout_recovery, "pm_data_inputs",
+        holdout_eval, "pm_data_inputs",
         lambda model: ["participant_id", "chose_left"],
     )
     # Pass rows straight through so the fake model can read participant_id.
-    monkeypatch.setattr(holdout_recovery, "make_stim_data", lambda model, rows: rows)
+    monkeypatch.setattr(holdout_eval, "make_stim_data", lambda model, rows: rows)
 
     # p_left per (participant, stimulus): participant offsets shift the curve.
     table = {
@@ -984,7 +985,7 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
             )
 
     monkeypatch.setattr(
-        holdout_recovery, "fit_model",
+        holdout_eval, "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
 
@@ -1027,12 +1028,12 @@ def test_fitted_seed_baseline_correlation_pools_all_experiments(tmp_path, monkey
     fit_responses = []
 
     monkeypatch.setattr(
-        holdout_recovery, "p_left_fixed_params", lambda *a, **k: gt_p
+        holdout_eval, "p_left_fixed_params", lambda *a, **k: gt_p
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
         model = None
@@ -1047,7 +1048,7 @@ def test_fitted_seed_baseline_correlation_pools_all_experiments(tmp_path, monkey
         fit_responses.append(Path(responses_path).name)
         return Fitted(name)
 
-    monkeypatch.setattr(holdout_recovery, "fit_model", fake_fit)
+    monkeypatch.setattr(holdout_eval, "fit_model", fake_fit)
 
     out = fitted_seed_baseline_correlation(
         run_root,
@@ -1080,12 +1081,12 @@ def test_seed_baseline_correlation_averages_other_seed_models(monkeypatch):
         "other_b": np.array([0.9, 0.6, 0.2]),  # 1.1 - gt_p, exact anti -> r = -1
     }
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: preds[model_name],
     )
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "resolve_generating_params",
         lambda spec, seed_models_dir, gt_family_dir=None: {
             "gt": {"a": 1.0}, "other_a": {"a": 1.0}, "other_b": {"a": 1.0}
@@ -1114,15 +1115,15 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
 
     gt_p = np.array([0.2, 0.5, 0.9])
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: gt_p,
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
     # No model in these stubs indexes a participant random effect.
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
         model = None
@@ -1131,7 +1132,7 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
             return gt_p
 
     monkeypatch.setattr(
-        holdout_recovery, "fit_model",
+        holdout_eval, "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
 
@@ -1190,11 +1191,11 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
             seen_gt_dirs.append(Path(models_dir))
         return np.linspace(0.1, 0.9, len(stimuli))
 
-    monkeypatch.setattr(holdout_recovery, "p_left_fixed_params", fake_p_left)
+    monkeypatch.setattr(holdout_eval, "p_left_fixed_params", fake_p_left)
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
         model = None
@@ -1203,7 +1204,7 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
             return np.linspace(0.1, 0.9, stim_data["n"])
 
     monkeypatch.setattr(
-        holdout_recovery, "fit_model",
+        holdout_eval, "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
 
@@ -1261,7 +1262,7 @@ def test_evaluate_trajectory_fails_loudly_without_history(tmp_path, monkeypatch)
     run_root = tmp_path / "run"
     (run_root / "experiment1" / "model_loop").mkdir(parents=True)
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: np.zeros(3),
     )
@@ -2021,14 +2022,14 @@ def test_evaluate_trajectory_regression_pearson_r_and_rmse_unchanged(
     }
 
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: gt_p,
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
         model = None
@@ -2040,7 +2041,7 @@ def test_evaluate_trajectory_regression_pearson_r_and_rmse_unchanged(
             return predictions[self.name]
 
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(name),
     )

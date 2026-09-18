@@ -18,29 +18,26 @@ Layout under ``results_root`` (one run per held-out model)::
 The expensive seams (`run_design_programmatic`, `generate_responses`,
 `fit_model`, ...) are imported at module level so tests can monkeypatch them
 here.
+
+Implementation is split across submodules:
+
+* ``holdout_data`` — response generation and data-prep helpers
+* ``holdout_eval`` — eval-pool construction and trajectory evaluation
+* ``leakage_audit`` — ground-truth leakage audit
+
+This module contains experiment orchestration and config-driven entry points,
+and re-exports every public name for backward compatibility.
 """
 
 from __future__ import annotations
 
-import csv
-import hashlib
 import json
-import re
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
-
-import numpy as np
-import yaml
+from typing import Any, Dict, List, Mapping, Optional
 
 from src.models.model_manifest import read_manifest_names
-from src.runtime.config import REPO_ROOT
-from src.models.pymc_inference import (
-    fit_model,
-    load_pymc_model,
-    make_stim_data,
-    pm_data_inputs,
-)
+from src.pipelines.outer_loop.columns import write_responses_csv
 from src.pipelines.outer_loop.orchestrator import (
     carry_forward_cognitive_models,
     ensure_experiment_dirs,
@@ -52,57 +49,82 @@ from src.pipelines.outer_loop.orchestrator import (
     update_registry_from_interpretation,
     validate_cc_output,
 )
+from src.runtime.config import REPO_ROOT
 from src.runtime.token_usage import start_usage_log, write_usage_report
 from src.subjective_randomness.config import resolve_path
-from src.subjective_randomness.recover import pearson_r
-from src.subjective_randomness.recovery_metrics import (
-    bias as _bias,
-    calibration as _calibration,
-    kl_regret as _kl_regret,
-    rmse as _rmse,
-)
 from src.subjective_randomness.simulate import load_stimuli
-from src.subjective_randomness.stimulus_design import (
-    enumerate_all_pairs,
-    generate_candidate_pool,
+
+# ─────────────────────────────────────────────
+# Re-exports from holdout_data (Seam A)
+# ─────────────────────────────────────────────
+from src.subjective_randomness.holdout_data import (  # noqa: F401
+    GENERATING_MODEL_COLUMN,
+    PROJECT_ID,
+    RAW_RESPONSE_COLUMNS,
+    _default_params_from_file,
+    _family_default_params,
+    _raw_eval_rows,
+    _require_exact_params,
+    _require_no_generating_model_column,
+    generate_responses,
+    p_left_fixed_params,
+    resolve_generating_params,
+    seed_exclusion,
+    seed_model_names,
+    strip_generating_model,
+    strip_to_raw_columns,
+    validate_raw_pool_models,
 )
 
-PROJECT_ID = "subjective_randomness"
+# ─────────────────────────────────────────────
+# Re-exports from holdout_eval (Seams C + D)
+# ─────────────────────────────────────────────
+from src.subjective_randomness.holdout_eval import (  # noqa: F401
+    TRAJECTORY_COLUMNS,
+    _bma_prediction,
+    _eval_prediction,
+    _fitted_seed_baseline,
+    _participant_ids_in,
+    _pool_experiment_responses,
+    _resolve_model_dir,
+    _unordered_pair,
+    build_eval_stimuli,
+    collect_trained_pairs,
+    evaluate_trajectory,
+    fitted_seed_baseline_correlation,
+    reevaluate_trajectories,
+    seed_baseline_correlation,
+)
 
-TRAJECTORY_COLUMNS = [
-    "gt_model",
-    "experiment",
-    "step",
-    "iteration",
-    "global_step",
-    "best_model",
-    "pearson_r",
-    "rmse",
-    "kl_regret",
-    "bias",
-    "calib_slope",
-    "calib_intercept",
-    "pearson_r_bma",
-    "rmse_bma",
-    "kl_regret_bma",
-    "bias_bma",
-    "calib_slope_bma",
-    "calib_intercept_bma",
-]
+# ─────────────────────────────────────────────
+# Re-exports from leakage_audit (Seam E)
+# ─────────────────────────────────────────────
+from src.subjective_randomness.leakage_audit import (  # noqa: F401
+    _PM_DATA_COLUMN,
+    _RESULTS_DIR_NAME,
+    _csv_header_columns,
+    _csvs_naming_generating_model,
+    _distinctive_param_names,
+    _manifests_naming_gt,
+    leakage_check,
+)
+
+# ─────────────────────────────────────────────
+# Patchable seams — imported at module level so tests can monkeypatch them
+# on this module. Functions that stay in this file (run_holdout_experiments,
+# _run_holdout_recovery_resolved) look them up from this module's globals.
+# ─────────────────────────────────────────────
+from src.models.pymc_inference import (  # noqa: F401
+    fit_model,
+    load_pymc_model,
+    make_stim_data,
+    pm_data_inputs,
+)
 
 
-def seed_exclusion(gt_model: str, pool_dir: Path) -> Tuple[str, ...]:
-    """Which seed models to withhold from experiment 1, by manifest name.
-
-    ``pool_dir`` must be the SAME directory seeding reads. The array scrubs the
-    held-out model out of the pool manifest it was told about, so a membership
-    test against a different pool would still say "exclude it" while seeding
-    reads a manifest that no longer lists it — and the exclusion raises
-    ``exclude names models not in the seed manifest``. A ground truth absent
-    from the pool (already scrubbed, superseded by a consolidation, or an
-    impossible theory) needs nothing withheld.
-    """
-    return (gt_model,) if gt_model in seed_model_names(pool_dir) else ()
+# ─────────────────────────────────────────────
+# Stage validation helpers (used only by run_holdout_experiments)
+# ─────────────────────────────────────────────
 
 
 def _require_valid(agent_key: str, exp_dir: Path) -> None:
@@ -126,270 +148,6 @@ def _stage_done(agent_key: str, exp_dir: Path) -> bool:
             flush=True,
         )
     return ok
-
-
-# ─────────────────────────────────────────────
-# What the agents may read
-# ─────────────────────────────────────────────
-
-# ``generate_responses`` tags every row with the name of the model that produced
-# it. That tag is the held-out model's identity: it must never reach the agents'
-# tree (data/responses.csv and the pooled model_loop/responses.csv derived from
-# it are listed column-by-column in every candidate's and critic's context).
-GENERATING_MODEL_COLUMN = "generating_model"
-
-from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS, write_responses_csv
-
-
-# ─────────────────────────────────────────────
-# Seed-model helpers (local to avoid a dependency on the research library)
-# ─────────────────────────────────────────────
-
-
-def seed_model_names(seed_models_dir: Path) -> List[str]:
-    """Read the ordered seed-model names from the directory's manifest."""
-    return read_manifest_names(seed_models_dir)
-
-
-def _default_params_from_file(path: Path) -> Dict[str, float]:
-    """Parse a family's ``DEFAULT_PARAMS`` from source WITHOUT importing it."""
-    import ast as _ast
-
-    tree = _ast.parse(Path(path).read_text(encoding="utf-8"))
-    for node in _ast.walk(tree):
-        target = None
-        if isinstance(node, _ast.AnnAssign):
-            target = getattr(node.target, "id", None)
-        elif isinstance(node, _ast.Assign):
-            target = next(
-                (t.id for t in node.targets if isinstance(t, _ast.Name)), None
-            )
-        if target == "DEFAULT_PARAMS":
-            return dict(_ast.literal_eval(node.value))
-    raise ValueError(f"No DEFAULT_PARAMS literal found in {path}")
-
-
-def _family_default_params(
-    name: str, gt_family_dir: Optional[Path] = None
-) -> Dict[str, float]:
-    """``DEFAULT_PARAMS`` of the pure-Python model family named ``name``."""
-    import importlib
-
-    if gt_family_dir is not None:
-        pristine = Path(gt_family_dir) / f"{name}.py"
-        if pristine.exists():
-            return _default_params_from_file(pristine)
-    module = importlib.import_module(f"src.subjective_randomness.model_families.{name}")
-    return dict(module.DEFAULT_PARAMS)
-
-
-def resolve_generating_params(
-    spec: Any,
-    seed_models_dir: Path,
-    gt_family_dir: Optional[Path] = None,
-) -> Dict[str, Dict[str, float]]:
-    """Turn a config's ``generating_models`` spec into per-model fixed params."""
-    if spec is None:
-        return {
-            name: _family_default_params(name, gt_family_dir)
-            for name in seed_model_names(seed_models_dir)
-        }
-    if isinstance(spec, (list, tuple)):
-        return {name: _family_default_params(name, gt_family_dir) for name in spec}
-    if isinstance(spec, Mapping):
-        return {
-            name: (
-                dict(params) if params else _family_default_params(name, gt_family_dir)
-            )
-            for name, params in spec.items()
-        }
-    raise TypeError(
-        f"generating_models must be null, a list of names, or a name->params "
-        f"mapping; got {type(spec).__name__}."
-    )
-
-
-def _raw_eval_rows(
-    stimuli: Sequence[Mapping[str, str]],
-) -> List[Dict[str, Any]]:
-    """Build raw stimulus rows for evaluation (no featurization).
-
-    Each model computes its own features through its ``compute_features`` or
-    ``prepare_observed`` hook when ``make_stim_data`` is called.
-    """
-    if not stimuli:
-        raise ValueError("No stimuli provided.")
-    return [
-        {
-            "sequence_a": stim["sequence_a"],
-            "sequence_b": stim["sequence_b"],
-            "chose_left": 0,
-        }
-        for stim in stimuli
-    ]
-
-
-def _require_exact_params(model: Any, params: Mapping[str, float]) -> None:
-    """Fail loudly unless ``params`` names exactly the model's free parameters."""
-    free = {rv.name for rv in model.free_RVs}
-    given = set(params)
-    if given != free:
-        missing = sorted(free - given)
-        extra = sorted(given - free)
-        raise ValueError(
-            f"Generating params must name exactly the model's free parameters "
-            f"{sorted(free)}. Missing: {missing}. Unexpected: {extra}."
-        )
-
-
-def p_left_fixed_params(
-    model_name: str,
-    models_dir: Path,
-    stimuli: Sequence[Mapping[str, str]],
-    params: Mapping[str, float],
-    *,
-    seed: int = 0,
-) -> np.ndarray:
-    """Deterministic ``p_left`` per stimulus for a seed model with fixed params.
-
-    Uses raw stimulus rows; the model computes its own features through its
-    ``compute_features`` or ``prepare_observed`` hook.
-    """
-    import pymc as pm
-
-    model = load_pymc_model(model_name, models_dir)
-    _require_exact_params(model, params)
-    rows = _raw_eval_rows(stimuli)
-    stim_data = make_stim_data(model, rows)
-
-    with model:
-        pm.set_data(stim_data)
-    fixed = pm.do(model, dict(params))
-    with fixed:
-        prior = pm.sample_prior_predictive(
-            draws=1, var_names=["p_left"], random_seed=seed
-        )
-    return np.asarray(prior.prior["p_left"].values).reshape(-1)
-
-
-def generate_responses(
-    model_name: str,
-    models_dir: Path,
-    stimuli: Sequence[Mapping[str, str]],
-    params: Mapping[str, float],
-    n_participants: int,
-    *,
-    seed: int = 0,
-) -> List[Dict[str, Any]]:
-    """Generate synthetic responses from a seed model with fixed parameters.
-
-    Returns rows with only raw columns (sequence_a, sequence_b, participant_id,
-    trial_index, chose_left) plus generating_model.
-    """
-    if n_participants < 1:
-        raise ValueError(f"n_participants must be >= 1, got {n_participants}.")
-
-    p_left = p_left_fixed_params(model_name, models_dir, stimuli, params, seed=seed)
-    rng = np.random.default_rng(seed)
-
-    rows: List[Dict[str, Any]] = []
-    for participant in range(n_participants):
-        draws = rng.random(len(stimuli)) < p_left
-        for trial_index, (stim, chose_left) in enumerate(
-            zip(stimuli, draws)
-        ):
-            rows.append(
-                {
-                    "sequence_a": stim["sequence_a"],
-                    "sequence_b": stim["sequence_b"],
-                    "participant_id": participant,
-                    "trial_index": trial_index,
-                    "chose_left": int(chose_left),
-                    "generating_model": model_name,
-                }
-            )
-    return rows
-
-
-def strip_generating_model(
-    rows: Sequence[Mapping[str, Any]],
-) -> List[Dict[str, Any]]:
-    """Copy ``rows`` without the ``generating_model`` column.
-
-    The input rows are not modified — the non-holdout recovery harness keeps
-    reading the tag from its own rows. Rows that never carried the column pass
-    through unchanged.
-    """
-    return [
-        {key: value for key, value in row.items() if key != GENERATING_MODEL_COLUMN}
-        for row in rows
-    ]
-
-
-def strip_to_raw_columns(
-    rows: Sequence[Mapping[str, Any]],
-) -> List[Dict[str, Any]]:
-    """Copy ``rows`` keeping only :data:`RAW_RESPONSE_COLUMNS`.
-
-    Fails loudly if a row lacks one of them: a raw CSV missing a sequence
-    column would leave every model unable to compute anything, and the useful
-    place to find that out is here.
-    """
-    rows = list(rows)
-    if rows:
-        missing = [c for c in RAW_RESPONSE_COLUMNS if c not in rows[0]]
-        if missing:
-            raise ValueError(
-                f"generated rows lack raw columns {missing}; "
-                f"got {sorted(rows[0])}"
-            )
-    return [{c: row[c] for c in RAW_RESPONSE_COLUMNS} for row in rows]
-
-
-def validate_raw_pool_models(pool_dir: Path) -> None:
-    """Raise if any model in ``pool_dir`` cannot bind a raw stimulus row.
-
-    Every model must compute its own features via ``compute_features`` or
-    ``prepare_observed``. A model that expects columns the raw CSV does not
-    carry would fail at fit time deep inside a sweep; catching it here fails
-    at config resolution with the model's name and the missing columns.
-    """
-    from src.models.pymc_inference import (
-        MissingStimulusColumns,
-        load_pymc_model,
-        make_stim_data,
-    )
-
-    raw_row = {c: "0" for c in RAW_RESPONSE_COLUMNS}
-    raw_row["sequence_a"] = "HHT"
-    raw_row["sequence_b"] = "THT"
-    for name in read_manifest_names(pool_dir):
-        try:
-            model = load_pymc_model(name, pool_dir)
-        except Exception as exc:
-            raise ValueError(
-                f"raw pool model {name!r} in {pool_dir} failed to load: {exc}"
-            ) from exc
-        try:
-            make_stim_data(model, [raw_row])
-        except MissingStimulusColumns as exc:
-            raise ValueError(
-                f"raw pool model {name!r} cannot bind a raw row — missing "
-                f"columns: {list(exc.missing)}. Every model must compute its "
-                f"own features via compute_features or prepare_observed."
-            ) from exc
-
-
-def _require_no_generating_model_column(responses_path: Path) -> None:
-    """Fail loudly if an agent-facing responses CSV names its generator."""
-    with Path(responses_path).open(encoding="utf-8", newline="") as f:
-        header = [column.strip() for column in f.readline().strip().split(",")]
-    if GENERATING_MODEL_COLUMN in header:
-        raise RuntimeError(
-            f"{responses_path} carries a {GENERATING_MODEL_COLUMN!r} column, which "
-            f"names the held-out model to every agent that opens the file. The "
-            f"holdout harness must write agent-facing responses without it."
-        )
 
 
 # ─────────────────────────────────────────────
@@ -558,795 +316,6 @@ def run_holdout_experiments(
         exp_dirs.append(exp_dir)
 
     return exp_dirs
-
-
-# ─────────────────────────────────────────────
-# Held-out eval set (post-run exclusion)
-# ─────────────────────────────────────────────
-
-
-def _unordered_pair(sequence_a: str, sequence_b: str) -> Tuple[str, str]:
-    return tuple(sorted((sequence_a, sequence_b)))  # type: ignore[return-value]
-
-
-def collect_trained_pairs(run_root: Path, n_experiments: int) -> Set[Tuple[str, str]]:
-    """Every unordered stimulus pair that appeared in the run's training data."""
-    pairs: Set[Tuple[str, str]] = set()
-    for exp_num in range(1, n_experiments + 1):
-        path = Path(run_root) / f"experiment{exp_num}" / "data" / "responses.csv"
-        if not path.exists():
-            raise FileNotFoundError(
-                f"Missing training responses for experiment {exp_num}: {path}"
-            )
-        with path.open(encoding="utf-8") as f:
-            for row in csv.DictReader(f):
-                pairs.add(_unordered_pair(row["sequence_a"], row["sequence_b"]))
-    return pairs
-
-
-def build_eval_stimuli(
-    run_root: Path,
-    *,
-    n_experiments: int,
-    n_pairs: int,
-    lengths: Sequence[int],
-    seed: int,
-    min_remaining: int = 1,
-    exhaustive: bool = False,
-    extra_excluded_pairs: Optional[Set[Tuple[str, str]]] = None,
-) -> Dict[str, Any]:
-    """Generate the held-out eval pool, excluding every pair used in training.
-
-    The design stage picks training stimuli by EIG, wherever in the pair space
-    they fall, so holdout is guaranteed *after* the run: any pool pair that
-    appeared (in either order) in any of the run's ``responses.csv`` files is
-    dropped. The surviving set is fixed and shared across every trajectory step.
-
-    With ``exhaustive=True`` the pool is every distinct same-length unordered
-    pair at the given ``lengths`` rather than an ``n_pairs`` sample, so the correlation is
-    measured over the whole stimulus space at those lengths (``n_pairs``/``seed``
-    are then unused).
-
-    ``extra_excluded_pairs``, when given, is an additional set of unordered
-    pairs to drop (e.g. the training pairs of a second cell in a matched-cell
-    comparison).
-    """
-    pool = (
-        enumerate_all_pairs(lengths, same_length_only=True)
-        if exhaustive
-        else generate_candidate_pool(n_pairs, lengths=tuple(lengths), seed=seed)
-    )
-    trained = collect_trained_pairs(run_root, n_experiments)
-    if extra_excluded_pairs:
-        trained = trained | extra_excluded_pairs
-    kept = [
-        stim
-        for stim in pool
-        if _unordered_pair(stim["sequence_a"], stim["sequence_b"]) not in trained
-    ]
-    if len(kept) < min_remaining:
-        raise ValueError(
-            f"Only {len(kept)} of {len(pool)} eval stimuli remain after excluding "
-            f"trained pairs (min_remaining={min_remaining}); enlarge the pool or "
-            f"its lengths."
-        )
-    return {"stimuli": kept, "n_pool": len(pool), "n_dropped": len(pool) - len(kept)}
-
-
-# ─────────────────────────────────────────────
-# Per-step correlation trajectory
-# ─────────────────────────────────────────────
-
-
-def _participant_ids_in(responses_path: Path) -> Optional[List[int]]:
-    """Distinct participant ids in a responses CSV, sorted.
-
-    Returns ``None`` when the responses carry no ``participant_id`` column —
-    only models with a participant random effect need it, so absence is fine
-    until such a model actually asks for it (then prediction raises loudly).
-    """
-    with Path(responses_path).open(encoding="utf-8", newline="") as f:
-        reader = csv.DictReader(f)
-        if "participant_id" not in (reader.fieldnames or []):
-            return None
-        ids = sorted({int(row["participant_id"]) for row in reader})
-    return ids or None
-
-
-def _eval_prediction(
-    fitted: Any,
-    base_rows: Sequence[Mapping[str, Any]],
-    *,
-    participant_ids: Optional[Sequence[int]],
-    max_draws: Optional[int] = None,
-) -> np.ndarray:
-    """Population-level held-out ``p_left`` for one fitted model.
-
-    Models without a participant random effect predict directly. A model that
-    indexes a ``participant_id`` container has no population-level ``p_left`` of
-    its own (its ``p_left`` is per participant), so we marginalize the random
-    effect: replicate each stimulus across the participants the model was fit on
-    and average the per-participant ``p_left`` (over participants *and* posterior
-    draws). The result is one population-mean probability per stimulus, directly
-    comparable to the non-hierarchical ground truth.
-
-    ``max_draws`` thins the posterior for the prediction (see
-    ``FittedModel.predict_p_left``); it is only forwarded when set, so callers
-    that pass a predictor without that keyword keep working.
-    """
-    predict_kwargs = {} if max_draws is None else {"max_draws": max_draws}
-    n_stim = len(base_rows)
-    if "participant_id" not in pm_data_inputs(fitted.model):
-        stim_data = make_stim_data(fitted.model, list(base_rows))
-        return np.asarray(
-            fitted.predict_p_left(stim_data, **predict_kwargs), dtype="float64"
-        )
-    if not participant_ids:
-        raise ValueError(
-            "Model indexes a participant_id random effect but the training "
-            "responses carry no participant_id to marginalize over."
-        )
-    rows = [
-        {**row, "participant_id": pid}
-        for pid in participant_ids
-        for row in base_rows
-    ]
-    stim_data = make_stim_data(fitted.model, rows)
-    preds = np.asarray(
-        fitted.predict_p_left(stim_data, **predict_kwargs), dtype="float64"
-    )
-    return preds.reshape(len(participant_ids), n_stim).mean(axis=0)
-
-
-def _fitted_seed_baseline(
-    seed_models: Sequence[str],
-    seed_models_dir: Path,
-    responses_path: Path,
-    eval_rows: Sequence[Mapping[str, Any]],
-    gt_p: np.ndarray,
-    *,
-    participant_ids: Optional[Sequence[int]],
-    cache_dir: Optional[Path],
-    fit_kwargs: Mapping[str, Any],
-    predict_max_draws: Optional[int] = None,
-) -> Dict[str, Any]:
-    """Fit each canonical seed model on ``responses_path`` and correlate with GT.
-
-    Predicts held-out ``p_left`` for each seed model and correlates with the
-    ground truth. Returns the mean Pearson r / RMSE over the seed models and the
-    per-model breakdown — the recovery from *fitting the existing starting
-    models*, with no agent-discovered structure.
-    """
-    per_model: Dict[str, Dict[str, Optional[float]]] = {}
-    for name in seed_models:
-        fitted = fit_model(
-            name,
-            seed_models_dir,
-            responses_path,
-            cache_dir=cache_dir,
-            **dict(fit_kwargs),
-        )
-        pred = _eval_prediction(
-            fitted, eval_rows, participant_ids=participant_ids,
-            max_draws=predict_max_draws,
-        )
-        per_model[name] = {
-            "pearson_r": pearson_r(gt_p.tolist(), pred.tolist()),
-            "rmse": float(np.sqrt(np.mean((gt_p - pred) ** 2))),
-        }
-    rs = [v["pearson_r"] for v in per_model.values() if v["pearson_r"] is not None]
-    rmses = [v["rmse"] for v in per_model.values()]
-    return {
-        "pearson_r": float(np.mean(rs)) if rs else None,
-        "rmse": float(np.mean(rmses)) if rmses else None,
-        "per_model": per_model,
-    }
-
-
-def _bma_prediction(
-    weights: Mapping[str, float], predictions: Mapping[str, np.ndarray]
-) -> np.ndarray:
-    """Posterior-weighted average of per-model ``p_left`` predictions.
-
-    ``weights`` are the model posterior probabilities; ``predictions`` holds one
-    ``p_left`` vector per model. The average is over the supplied (nonzero-weight)
-    models, renormalized by their total weight so it is an exact convex
-    combination even if those weights do not sum to exactly 1.
-    """
-    total = float(sum(weights.values()))
-    if total <= 0.0:
-        raise ValueError(
-            f"Bayesian model average needs positive posterior mass; got weights "
-            f"summing to {total} over {sorted(weights)}."
-        )
-    stacked = np.zeros_like(next(iter(predictions.values())), dtype="float64")
-    for name, weight in weights.items():
-        stacked += (weight / total) * predictions[name]
-    return stacked
-
-
-def _resolve_model_dir(models_dir: Path, name: str) -> Path:
-    """Directory to load ``{name}.py`` from: the models dir, or its ``pruned/``
-    subdir if the model was pruned after the history step recorded it.
-
-    A trajectory step names models (its best, and every nonzero-weight rival) as
-    they stood at that step. A LATER pruning pass can move one of them to
-    ``models/pruned/`` (see ``_prune_losers``); the recorded history is still
-    valid, so reloading it for trajectory evaluation has to look where the file
-    went. This only *redirects* pruned models — when the model is not in
-    ``pruned/`` we return the models dir unchanged and let the loader raise its
-    own clear error for a genuinely missing file.
-    """
-    models_dir = Path(models_dir)
-    if (models_dir / f"{name}.py").exists():
-        return models_dir
-    pruned_dir = models_dir / "pruned"
-    if (pruned_dir / f"{name}.py").exists():
-        return pruned_dir
-    return models_dir
-
-
-def evaluate_trajectory(
-    run_root: Path,
-    gt_model: str,
-    gt_params: Mapping[str, float],
-    eval_stimuli: Sequence[Mapping[str, str]],
-    *,
-    seed_models_dir: Path,
-    n_experiments: int,
-    cache_dir: Optional[Path],
-    fit_kwargs: Mapping[str, Any],
-    gt_models_dir: Optional[Path] = None,
-    predict_max_draws: Optional[int] = None,
-) -> List[Dict[str, Any]]:
-    """Correlate every inner-loop step's models with the ground truth.
-
-    For each experiment's ``history.json`` step we compute predictions of the
-    ground truth's held-out ``p_left`` and report the Pearson r / RMSE of each
-    against the fixed-param ground truth:
-
-    * ``pearson_r`` / ``rmse`` — the single then-best model.
-    * ``pearson_r_bma`` / ``rmse_bma`` — the Bayesian model average, i.e. the
-      posterior-weighted mean of every model with nonzero posterior mass.
-
-    Every needed model is refit on that experiment's pooled responses (a cache
-    hit when the run shared ``cache_dir``); zero-weight models are skipped.
-    """
-    run_root = Path(run_root)
-    gt_models_dir = (
-        Path(gt_models_dir) if gt_models_dir is not None else Path(seed_models_dir)
-    )
-    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
-    eval_rows = _raw_eval_rows(eval_stimuli)
-
-    rows: List[Dict[str, Any]] = []
-    global_step = 0
-    for exp_num in range(1, n_experiments + 1):
-        loop_dir = run_root / f"experiment{exp_num}" / "model_loop"
-        history_path = loop_dir / "history.json"
-        if not history_path.exists():
-            raise FileNotFoundError(f"No history.json for experiment {exp_num}: {history_path}")
-        history = json.loads(history_path.read_text(encoding="utf-8"))
-        if not history:
-            raise ValueError(f"Empty inner-loop history: {history_path}")
-        participant_ids = _participant_ids_in(loop_dir / "responses.csv")
-
-        for entry in history:
-            best = entry["best_model"]
-            posteriors = entry["posteriors"]
-            # The best line needs `best`; the BMA needs every nonzero-weight
-            # model. Fit each needed model once and reuse its prediction.
-            weights = {m: w for m, w in posteriors.items() if w > 0.0}
-            needed = sorted(set(weights) | {best})
-            predictions: Dict[str, np.ndarray] = {}
-            for name in needed:
-                fitted = fit_model(
-                    name,
-                    _resolve_model_dir(loop_dir / "models", name),
-                    loop_dir / "responses.csv",
-                    cache_dir=cache_dir,
-                    **dict(fit_kwargs),
-                )
-                try:
-                    predictions[name] = _eval_prediction(
-                        fitted, eval_rows, participant_ids=participant_ids,
-                        max_draws=predict_max_draws,
-                    )
-                except Exception as exc:
-                    raise RuntimeError(
-                        f"Could not predict held-out p_left with model {name!r} "
-                        f"(experiment {exp_num}, step {entry['step']}): {exc}"
-                    ) from exc
-
-            best_pred = predictions[best]
-            # With no positive-weight models (an empty/degenerate posterior at
-            # this step) the BMA has nothing to average — fall back to the best
-            # single model's prediction rather than failing the whole run.
-            bma_pred = _bma_prediction(weights, predictions) if weights else best_pred
-
-            gt_list = gt_p.tolist()
-            best_list = best_pred.tolist()
-            bma_list = bma_pred.tolist()
-            best_slope, best_intercept = _calibration(gt_list, best_list)
-            bma_slope, bma_intercept = _calibration(gt_list, bma_list)
-            rows.append(
-                {
-                    "experiment": exp_num,
-                    "step": entry["step"],
-                    "iteration": entry["iteration"],
-                    "global_step": global_step,
-                    "best_model": best,
-                    "pearson_r": pearson_r(gt_list, best_list),
-                    "rmse": float(np.sqrt(np.mean((gt_p - best_pred) ** 2))),
-                    "kl_regret": _kl_regret(gt_list, best_list),
-                    "bias": _bias(gt_list, best_list),
-                    "calib_slope": best_slope,
-                    "calib_intercept": best_intercept,
-                    "pearson_r_bma": pearson_r(gt_list, bma_list),
-                    "rmse_bma": float(np.sqrt(np.mean((gt_p - bma_pred) ** 2))),
-                    "kl_regret_bma": _kl_regret(gt_list, bma_list),
-                    "bias_bma": _bias(gt_list, bma_list),
-                    "calib_slope_bma": bma_slope,
-                    "calib_intercept_bma": bma_intercept,
-                }
-            )
-            global_step += 1
-    return rows
-
-
-def seed_baseline_correlation(
-    gt_model: str,
-    gt_params: Mapping[str, float],
-    eval_stimuli: Sequence[Mapping[str, str]],
-    *,
-    seed_models_dir: Path,
-    gt_models_dir: Optional[Path] = None,
-    gt_family_dir: Optional[Path] = None,
-) -> Dict[str, Any]:
-    """No-learning baseline: how well the *other* seed models predict the GT.
-
-    For every project seed model except ``gt_model``, compute its fixed
-    default-parameter ``p_left`` on the held-out stimuli and correlate it with
-    the ground truth's ``p_left`` (the same fixed-param forward pass that
-    generated the responses). Returns the per-model correlations and their mean
-    — the off-the-shelf alternatives the loop starts from in experiment 1,
-    before any fitting or agent-written models. Fails loudly only if *no* other
-    seed model yields a defined correlation.
-
-    ``gt_models_dir`` is where the ground-truth model lives (default:
-    ``seed_models_dir``); the *other* seed models always come from
-    ``seed_models_dir``. For an impossible ground truth these differ, and since
-    the impossible model is not among the project seeds nothing is excluded —
-    every seed model is scored against it.
-    """
-    seed_models_dir = Path(seed_models_dir)
-    gt_models_dir = (
-        Path(gt_models_dir) if gt_models_dir is not None else seed_models_dir
-    )
-    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
-    defaults = resolve_generating_params(None, seed_models_dir, gt_family_dir)
-
-    per_model: Dict[str, Optional[float]] = {}
-    for name, params in defaults.items():
-        if name == gt_model:
-            continue
-        pred = p_left_fixed_params(name, seed_models_dir, eval_stimuli, params)
-        per_model[name] = pearson_r(gt_p.tolist(), pred.tolist())
-
-    defined = [r for r in per_model.values() if r is not None]
-    if not defined:
-        raise ValueError(
-            f"No defined baseline correlation for held-out {gt_model!r}: every "
-            f"other seed model gave a constant prediction on the eval stimuli."
-        )
-    return {"mean_r": float(np.mean(defined)), "per_model": per_model}
-
-
-def _pool_experiment_responses(run_root: Path, n_experiments: int) -> Path:
-    """Concatenate every experiment's inner-loop responses into one CSV.
-
-    All experiments draw from the same ground-truth process (differing only in
-    stimuli), so their featurized responses share a schema and pool cleanly.
-    Written deterministically to ``run_root/pooled_responses.csv`` so the fit it
-    feeds is cache-stable across re-runs. Fails loudly on a missing file or a
-    column-schema mismatch.
-    """
-    run_root = Path(run_root)
-    fieldnames: Optional[Sequence[str]] = None
-    pooled: List[Dict[str, str]] = []
-    for exp_num in range(1, n_experiments + 1):
-        path = run_root / f"experiment{exp_num}" / "model_loop" / "responses.csv"
-        if not path.exists():
-            raise FileNotFoundError(
-                f"Missing inner-loop responses for experiment {exp_num}: {path}"
-            )
-        with path.open(encoding="utf-8", newline="") as f:
-            reader = csv.DictReader(f)
-            if fieldnames is None:
-                fieldnames = reader.fieldnames
-            elif reader.fieldnames != fieldnames:
-                raise ValueError(
-                    f"Response-column mismatch pooling experiment {exp_num}: "
-                    f"{reader.fieldnames} != {fieldnames}"
-                )
-            pooled.extend(reader)
-    out_path = run_root / "pooled_responses.csv"
-    with out_path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=list(fieldnames or []))
-        writer.writeheader()
-        writer.writerows(pooled)
-    return out_path
-
-
-def fitted_seed_baseline_correlation(
-    run_root: Path,
-    gt_model: str,
-    gt_params: Mapping[str, float],
-    eval_stimuli: Sequence[Mapping[str, str]],
-    *,
-    seed_models_dir: Path,
-    n_experiments: int,
-    other_seed_models: Sequence[str],
-    cache_dir: Optional[Path],
-    fit_kwargs: Mapping[str, Any],
-    gt_models_dir: Optional[Path] = None,
-    predict_max_draws: Optional[int] = None,
-) -> Dict[str, Any]:
-    """Fitted-seed baseline: other seed models fit on *all* collected data.
-
-    Pools every experiment's responses, fits each non-GT seed model once on the
-    pool, predicts held-out ``p_left``, and correlates with the ground truth.
-    Returns the mean Pearson r / RMSE over the seed models, the per-model
-    breakdown, and the pooled response count — one flat number per ground truth.
-    It isolates the value of agent-discovered structure: same data, same fitting
-    machinery, only the starting model forms.
-    """
-    run_root = Path(run_root)
-    gt_models_dir = (
-        Path(gt_models_dir) if gt_models_dir is not None else Path(seed_models_dir)
-    )
-    gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
-    eval_rows = _raw_eval_rows(eval_stimuli)
-    pooled_path = _pool_experiment_responses(run_root, n_experiments)
-    participant_ids = _participant_ids_in(pooled_path)
-    n_responses = sum(1 for _ in pooled_path.open(encoding="utf-8")) - 1
-
-    baseline = _fitted_seed_baseline(
-        other_seed_models,
-        Path(seed_models_dir),
-        pooled_path,
-        eval_rows,
-        gt_p,
-        participant_ids=participant_ids,
-        cache_dir=cache_dir,
-        fit_kwargs=fit_kwargs,
-        predict_max_draws=predict_max_draws,
-    )
-    if baseline["pearson_r"] is None:
-        raise ValueError(
-            f"No defined fitted-seed baseline for held-out {gt_model!r}: every "
-            f"other seed model gave a constant prediction on the eval stimuli."
-        )
-    baseline["mean_r"] = baseline.pop("pearson_r")
-    baseline["mean_rmse"] = baseline.pop("rmse")
-    baseline["n_responses"] = n_responses
-    return baseline
-
-
-def reevaluate_trajectories(
-    result: Mapping[str, Any],
-    *,
-    seed_models_dir: Path,
-    cache_dir: Optional[Path],
-    gt_models_dir: Optional[Path] = None,
-    eval_pool_override: Optional[Mapping[str, Any]] = None,
-    extra_excluded_pairs: Optional[Set[Tuple[str, str]]] = None,
-) -> Dict[str, Any]:
-    """Recompute every ground truth's trajectory from its finished run tree.
-
-    Reads each ``gt_run``'s on-disk ``run_root`` (its ``history.json`` per
-    experiment) and ``eval_stimuli.json``, then recomputes the best-model and
-    Bayesian-model-average trajectories plus the default-param and fitted-seed
-    baselines through the shared MCMC cache — so a run whose hours-long agentic
-    loop already finished can be re-analyzed (e.g. to add a baseline or
-    regenerate the figure) without re-running any agents. Returns a new result;
-    the input is not mutated.
-
-    ``gt_models_dir`` (default: ``seed_models_dir``) is where each ground-truth
-    generator lives. Pass the impossible-models directory to re-score a run
-    whose ground truth sits outside the seed pool.
-
-    ``eval_pool_override`` re-derives the held-out stimulus set instead of
-    reading each run's recorded ``eval_stimuli.json``. The run's *training*
-    pairs are still excluded (holdout is preserved), but the pool is rebuilt
-    from the override's ``lengths``/``exhaustive``/``n_pairs``/``seed``/
-    ``min_remaining`` (and ``predict_max_draws`` thins prediction). This is how
-    runs whose original eval pools differed (a sampled set vs. the exhaustive
-    space) are re-scored on one common pool. The enriched result then advertises
-    the pool it actually scored on (its top-level ``eval_pool`` and each
-    ``gt_run``'s ``n_eval_stimuli``/``n_eval_dropped`` are updated).
-    """
-    seed_models_dir = Path(seed_models_dir)
-    gt_models_dir = Path(gt_models_dir) if gt_models_dir is not None else None
-    n_experiments = int(result["n_experiments"])
-    fit_kwargs = dict(result.get("fit_kwargs", {}))
-
-    eval_pool = (
-        dict(eval_pool_override)
-        if eval_pool_override is not None
-        else dict(result.get("eval_pool", {}))
-    )
-    predict_max_draws = eval_pool.get("predict_max_draws")
-
-    # Names only — the fitted-seed baseline fits these by MCMC, so no
-    # pure-Python family twin (and no default params) is required here.
-    all_seed_models = set(seed_model_names(seed_models_dir))
-    new_runs: List[Dict[str, Any]] = []
-    for gt_run in result["gt_runs"]:
-        run_root = Path(gt_run["run_root"])
-        rebuilt: Optional[Dict[str, Any]] = None
-        if eval_pool_override is not None:
-            rebuilt = build_eval_stimuli(
-                run_root,
-                n_experiments=n_experiments,
-                n_pairs=int(eval_pool.get("n_pairs", 0)),
-                lengths=tuple(eval_pool["lengths"]),
-                seed=int(eval_pool.get("seed", 0)),
-                min_remaining=int(eval_pool.get("min_remaining", 1)),
-                exhaustive=bool(eval_pool.get("exhaustive", False)),
-                extra_excluded_pairs=extra_excluded_pairs,
-            )
-            eval_stimuli = rebuilt["stimuli"]
-        else:
-            eval_stimuli = json.loads(
-                (run_root / "eval_stimuli.json").read_text(encoding="utf-8")
-            )
-        other_seeds = sorted(all_seed_models - {gt_run["gt_model"]})
-        trajectory = evaluate_trajectory(
-            run_root,
-            gt_run["gt_model"],
-            gt_run["params"],
-            eval_stimuli,
-            seed_models_dir=seed_models_dir,
-            n_experiments=n_experiments,
-            cache_dir=cache_dir,
-            fit_kwargs=fit_kwargs,
-            gt_models_dir=gt_models_dir,
-            predict_max_draws=predict_max_draws,
-        )
-        baseline = seed_baseline_correlation(
-            gt_run["gt_model"],
-            gt_run["params"],
-            eval_stimuli,
-            seed_models_dir=seed_models_dir,
-            gt_models_dir=gt_models_dir,
-        )
-        fitted_baseline = fitted_seed_baseline_correlation(
-            run_root,
-            gt_run["gt_model"],
-            gt_run["params"],
-            eval_stimuli,
-            seed_models_dir=seed_models_dir,
-            n_experiments=n_experiments,
-            other_seed_models=other_seeds,
-            cache_dir=cache_dir,
-            fit_kwargs=fit_kwargs,
-            gt_models_dir=gt_models_dir,
-            predict_max_draws=predict_max_draws,
-        )
-        new_run = {
-            **gt_run,
-            "trajectory": trajectory,
-            "baseline": baseline,
-            "fitted_baseline": fitted_baseline,
-        }
-        if rebuilt is not None:
-            new_run["n_eval_stimuli"] = len(rebuilt["stimuli"])
-            new_run["n_eval_dropped"] = rebuilt["n_dropped"]
-        new_runs.append(new_run)
-
-    enriched = {**result, "gt_runs": new_runs}
-    if eval_pool_override is not None:
-        enriched["eval_pool"] = {**dict(result.get("eval_pool", {})), **eval_pool}
-    return enriched
-
-
-# ─────────────────────────────────────────────
-# Leakage audit
-# ─────────────────────────────────────────────
-
-
-def _distinctive_param_names(
-    gt_model: str, gt_family_dir: Optional[Path] = None
-) -> Set[str]:
-    """The GT family's parameter names that other families do not share.
-
-    An impossible ground truth has no pure-Python ``model_families`` counterpart;
-    in that case there are no distinctive family params to leak, so the set is
-    empty. (``beta``/``side_bias`` are shared by every family, so they are never
-    distinctive anyway.) Only a *missing* family is tolerated — any other import
-    error in an existing family still propagates loudly. ``gt_family_dir``
-    reroutes the held-out GT to a pristine off-cwd source.
-    """
-    try:
-        params = _family_default_params(gt_model, gt_family_dir)
-    except ModuleNotFoundError:
-        return set()
-    return set(params) - {"beta", "side_bias"}
-
-
-# Column names a candidate binds with ``pm.Data("<name>", ...)``: featurizer
-# columns the harness provides, as opposed to features the model computes.
-_PM_DATA_COLUMN = re.compile(r"""pm\.Data\(\s*["']([^"']+)["']""")
-
-
-def _csv_header_columns(path: Path) -> List[str]:
-    """The header row of a CSV as column names (``[]`` for an empty file)."""
-    with path.open(newline="", encoding="utf-8") as fh:
-        for row in csv.reader(fh):
-            return [column.strip() for column in row]
-    return []
-
-
-def _csvs_naming_generating_model(run_root: Path) -> List[str]:
-    """Run-relative paths of CSVs whose header carries the held-out label."""
-    return [
-        str(path.relative_to(run_root))
-        for path in sorted(run_root.rglob("*.csv"))
-        if GENERATING_MODEL_COLUMN in _csv_header_columns(path)
-    ]
-
-
-# The loop writes a manifest per experiment under its results root, listing the
-# models carried into that experiment. Those are OUTPUTS: a candidate the agent
-# happened to name after the held-out model belongs in ``any_gt_named``, not in
-# the manifest channel, which is about the seed catalogue shipped in the
-# checkout. The results root is ``<checkout>/_runs`` in the Slurm array.
-_RESULTS_DIR_NAME = "_runs"
-
-
-def _manifests_naming_gt(
-    checkout_root: Path, gt_model: str, *, run_root: Optional[Path] = None
-) -> List[str]:
-    """Checkout-relative paths of *seed* manifests that still list ``gt_model``.
-
-    Removing the held-out ``.py`` from the agent's checkout left its *name* and
-    rationale in the manifests beside it, which is the answer in plain text.
-    Matched on parsed model names, so a rationale mentioning another model is
-    not a false positive. Manifests the loop itself wrote (under ``run_root`` or
-    any ``_runs`` tree) are skipped — see ``_RESULTS_DIR_NAME``.
-    """
-    named: List[str] = []
-    run_root = Path(run_root).resolve() if run_root is not None else None
-    for path in sorted(checkout_root.rglob("models_manifest.yaml")):
-        if _RESULTS_DIR_NAME in path.parts:
-            continue
-        if run_root is not None and run_root in path.resolve().parents:
-            continue
-        try:
-            manifest = yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-        except yaml.YAMLError:
-            # A malformed manifest is the model-set validator's business, not
-            # this audit's; it fails loudly there in its own right.
-            continue
-        entries = manifest.get("models") or []
-        if any(
-            isinstance(entry, Mapping) and entry.get("name") == gt_model
-            for entry in entries
-        ):
-            named.append(str(path.relative_to(checkout_root)))
-    return named
-
-
-def leakage_check(
-    run_root: Path,
-    gt_model: str,
-    *,
-    seed_models_dir: Path,
-    n_experiments: int,
-    gt_models_dir: Optional[Path] = None,
-    gt_family_dir: Optional[Path] = None,
-    checkout_root: Optional[Path] = None,
-) -> Dict[str, Any]:
-    """Audit a run for ground-truth leakage into agent-written models.
-
-    Agents can read the project assets dir, which contains the held-out seed
-    model's source. This flags (without enforcing) byte-identical copies,
-    mentions of the GT family's distinctive parameter names, and files named
-    after the GT model, across every experiment's ``cognitive_models/`` and
-    ``model_loop/models/``. Heuristic: a paraphrased reimplementation can evade
-    it, so flags are an audit trail, not proof of a clean run.
-
-    ``gt_models_dir`` is where the ground-truth source lives for the byte-
-    identity hash (default: ``seed_models_dir``). For an impossible ground truth
-    it points at the impossible-models directory instead, and the source is not
-    in the project assets the agents can read, so identical-copy leakage is
-    effectively impossible.
-
-    It also audits the two channels that carried the held-out model's *name*
-    (the 2026-09 review panel's finding, closed at the source by
-    ``strip_generating_model`` and the array's manifest scrub):
-
-    * ``any_csv_generating_model`` — a CSV under the run tree whose header still
-      carries ``generating_model``, whose value is the held-out model on every
-      row. Every agent reads these files.
-    * ``any_manifest_gt_named`` — a ``models_manifest.yaml`` in the agent's
-      checkout still listing the held-out model by name. Needs
-      ``checkout_root``; without it the channel is unchecked and the flag is
-      ``None`` rather than ``False``, so an unchecked channel is never read as
-      a clean one.
-
-    Per admitted model it records ``data_columns``: the featurizer columns the
-    model binds with ``pm.Data(...)``. A model assembled entirely out of
-    provided columns is a regression on the harness's features rather than a
-    mechanism, so a report can say per ground truth how much of recovery is
-    which.
-    """
-    run_root = Path(run_root)
-    gt_models_dir = (
-        Path(gt_models_dir) if gt_models_dir is not None else Path(seed_models_dir)
-    )
-    gt_hash = hashlib.sha256(
-        (gt_models_dir / f"{gt_model}.py").read_bytes()
-    ).hexdigest()
-    gt_params: Dict[str, float] = {}
-    try:
-        gt_params = _family_default_params(gt_model, gt_family_dir)
-    except ModuleNotFoundError:
-        pass
-    distinctive = set(gt_params) - {"beta", "side_bias"}
-    # Distinctive param VALUES an agent could paste from the leaked source. Drop
-    # trivially common values (0/0.5/1) that would false-positive everywhere; a
-    # pasted 4-decimal generating value is otherwise near-impossible by chance.
-    distinctive_values = {
-        str(gt_params[k]) for k in distinctive if gt_params[k] not in (0.0, 0.5, 1.0)
-    }
-
-    files: List[Dict[str, Any]] = []
-    for exp_num in range(1, n_experiments + 1):
-        exp_dir = run_root / f"experiment{exp_num}"
-        for sub in ("cognitive_models", Path("model_loop") / "models"):
-            model_dir = exp_dir / sub
-            if not model_dir.is_dir():
-                continue
-            for path in sorted(model_dir.glob("*.py")):
-                source = path.read_text(encoding="utf-8")
-                data_columns = sorted(set(_PM_DATA_COLUMN.findall(source)))
-                files.append(
-                    {
-                        "path": str(path.relative_to(run_root)),
-                        "identical": hashlib.sha256(path.read_bytes()).hexdigest()
-                        == gt_hash,
-                        "mentions_gt_params": any(p in source for p in distinctive),
-                        "mentions_gt_values": any(
-                            v in source for v in distinctive_values
-                        ),
-                        "gt_named": path.name == f"{gt_model}.py",
-                        "data_columns": data_columns,
-                        "n_data_cols": len(data_columns),
-                    }
-                )
-    csv_flagged = _csvs_naming_generating_model(run_root)
-    manifest_flagged = (
-        _manifests_naming_gt(Path(checkout_root), gt_model, run_root=run_root)
-        if checkout_root is not None
-        else []
-    )
-    return {
-        "files": files,
-        "any_identical": any(f["identical"] for f in files),
-        "any_mention": any(f["mentions_gt_params"] for f in files),
-        "any_value_mention": any(f["mentions_gt_values"] for f in files),
-        "any_gt_named": any(f["gt_named"] for f in files),
-        "csv_generating_model_files": csv_flagged,
-        "any_csv_generating_model": bool(csv_flagged),
-        "manifest_gt_named_files": manifest_flagged,
-        # None, not False: nobody looked at this channel.
-        "any_manifest_gt_named": (
-            bool(manifest_flagged) if checkout_root is not None else None
-        ),
-        "max_data_cols": max((f["n_data_cols"] for f in files), default=0),
-    }
 
 
 # ─────────────────────────────────────────────
