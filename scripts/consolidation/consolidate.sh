@@ -10,6 +10,8 @@
 # cleanup and an equivalence smoke, ending in CLEANUP_REPORT.md. P28-P31 make
 # an empty candidate round recoverable, give the analysis tools archive-backed
 # tests, and re-analyse both sweeps offline, ending in ANALYSIS_FINAL.md.
+# P32-P33 measure one Claude Fable 5.1 smoke cell and report what a full Fable
+# sweep would cost (est. 2-2.5x Gemini) and whether it writes files reliably.
 #
 # Usage (login node; bash only, no Python):
 #   bash scripts/consolidation/consolidate.sh
@@ -159,7 +161,7 @@ job_id=$(sbatch --parsable "${SBATCH_ARGS[@]}")
 echo "$job_id" >> "$WORK_ROOT/jobs.txt"
 cat <<MSG
 submitted consolidation job $job_id
-  model $MODEL, up to $MAX_TURNS turns / ${TIMEOUT_SEC}s per phase session; phases P0..P31
+  model $MODEL, up to $MAX_TURNS turns / ${TIMEOUT_SEC}s per phase session; phases P0..P33
   (requeues itself for session limits, walltime, the smoke jobs, the P14 sweep, the P15 evaluation)
   sweep: $SWEEP_N_REPEATS repeats, BASE_SEED=$SWEEP_BASE_SEED, $SWEEP_MAX_PARALLEL concurrent
 

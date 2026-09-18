@@ -1,7 +1,7 @@
 """Pure parts of the consolidation driver.
 
 The consolidation plan (``docs/consolidation_plan_2026_09.md``) is executed as
-thirty-two phases, P0..P31, one Claude Code session each. State lives on disk
+thirty-four phases, P0..P33, one Claude Code session each. State lives on disk
 under ``<work_root>/progress/`` as marker files the agent writes and the
 driver validates:
 
@@ -165,6 +165,18 @@ PHASES: tuple[Phase, ...] = (
     Phase(
         "P31", "Final analysis and the selection-criterion decision memo",
         waits_for="reanalysis_jobs.json", requires_files=("ANALYSIS_FINAL.md",),
+    ),
+    # Appended at the user's request (2026-09-18, third amendment): measure one
+    # Claude Fable 5.1 cell before deciding whether to pay ~2-2.5x Gemini's bill
+    # for a full sweep.
+    Phase(
+        "P32", "Submit one Fable 5.1 smoke cell",
+        allows_sbatch=True, jobs_file="fable_smoke_jobs.json",
+        required_labels=("fable",), max_rounds=2,
+    ),
+    Phase(
+        "P33", "Fable 5.1 cost and reliability report",
+        waits_for="fable_smoke_jobs.json", requires_files=("FABLE_SMOKE_REPORT.md",),
     ),
 )
 
