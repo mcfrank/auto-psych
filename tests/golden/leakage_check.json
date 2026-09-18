@@ -1,0 +1,15 @@
+{
+  "gt_model": "falk_konold_dp",
+  "n_experiments": 1,
+  "expected": {
+    "any_identical": false,
+    "any_mention": false,
+    "any_value_mention": false,
+    "any_gt_named": false,
+    "any_csv_generating_model": false,
+    "any_manifest_gt_named": null,
+    "n_files": 2,
+    "clean_model_data_columns": ["chose_left"],
+    "another_model_data_columns": ["chose_left", "len_a"]
+  }
+}

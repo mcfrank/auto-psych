@@ -1,0 +1,20 @@
+[
+  {"experiment": 1, "iteration": 0, "candidate_idx": 0, "lens_offset": 0, "lens_index": 0},
+  {"experiment": 1, "iteration": 0, "candidate_idx": 1, "lens_offset": 0, "lens_index": 1},
+  {"experiment": 1, "iteration": 0, "candidate_idx": 2, "lens_offset": 0, "lens_index": 2},
+  {"experiment": 1, "iteration": 1, "candidate_idx": 0, "lens_offset": 0, "lens_index": 3},
+  {"experiment": 1, "iteration": 1, "candidate_idx": 1, "lens_offset": 0, "lens_index": 4},
+  {"experiment": 1, "iteration": 1, "candidate_idx": 2, "lens_offset": 0, "lens_index": 5},
+  {"experiment": 2, "iteration": 0, "candidate_idx": 0, "lens_offset": 6, "lens_index": 6},
+  {"experiment": 2, "iteration": 0, "candidate_idx": 1, "lens_offset": 6, "lens_index": 0},
+  {"experiment": 2, "iteration": 0, "candidate_idx": 2, "lens_offset": 6, "lens_index": 1},
+  {"experiment": 2, "iteration": 1, "candidate_idx": 0, "lens_offset": 6, "lens_index": 2},
+  {"experiment": 2, "iteration": 1, "candidate_idx": 1, "lens_offset": 6, "lens_index": 3},
+  {"experiment": 2, "iteration": 1, "candidate_idx": 2, "lens_offset": 6, "lens_index": 4},
+  {"experiment": 3, "iteration": 0, "candidate_idx": 0, "lens_offset": 12, "lens_index": 5},
+  {"experiment": 3, "iteration": 0, "candidate_idx": 1, "lens_offset": 12, "lens_index": 6},
+  {"experiment": 3, "iteration": 0, "candidate_idx": 2, "lens_offset": 12, "lens_index": 0},
+  {"experiment": 3, "iteration": 1, "candidate_idx": 0, "lens_offset": 12, "lens_index": 1},
+  {"experiment": 3, "iteration": 1, "candidate_idx": 1, "lens_offset": 12, "lens_index": 2},
+  {"experiment": 3, "iteration": 1, "candidate_idx": 2, "lens_offset": 12, "lens_index": 3}
+]

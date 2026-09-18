@@ -1,0 +1,13 @@
+{
+  "lengths": [4],
+  "exhaustive": true,
+  "trained_pairs": [
+    ["HHHT", "HTTH"],
+    ["HHTH", "HHTT"],
+    ["HTHT", "TTHH"]
+  ],
+  "expected_n_pool": 120,
+  "expected_n_dropped": 3,
+  "expected_n_kept": 117,
+  "expected_stimuli_sha256": "80e3d6650f5dc6725f0f6bf4ada069caba93d8d3d3588c3b47e639044bb5f1cc"
+}
