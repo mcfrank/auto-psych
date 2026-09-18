@@ -19,6 +19,7 @@ import yaml
 
 import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
+import src.pipelines.inner_loop.scoring as scoring
 from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from tests.inner_loop_fixtures import write_responses, write_seed_models
@@ -71,8 +72,8 @@ def _patch_scoring(monkeypatch):
             rank += 1
         return rows
 
-    monkeypatch.setattr(pymc_orchestrator, "model_posterior", fake_model_posterior)
-    monkeypatch.setattr(pymc_orchestrator, "compare_table", fake_compare)
+    monkeypatch.setattr(scoring, "model_posterior", fake_model_posterior)
+    monkeypatch.setattr(scoring, "compare_table", fake_compare)
     # _prune_losers looks up compare_table in model_zoo's namespace:
     monkeypatch.setattr(model_zoo, "compare_table", fake_compare)
     # Functions looked up in model_zoo's namespace:

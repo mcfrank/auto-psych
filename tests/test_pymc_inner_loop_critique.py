@@ -17,6 +17,7 @@ from __future__ import annotations
 import src.pipelines.inner_loop.critique_round as critique_round
 import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
+import src.pipelines.inner_loop.scoring as scoring
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from tests.inner_loop_fixtures import canned_posterior, write_responses, write_seed_models
 
@@ -29,8 +30,8 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
         calls["n"] += 1
         return result
 
-    monkeypatch.setattr(pymc_orchestrator, "model_posterior", fake_model_posterior)
-    monkeypatch.setattr(pymc_orchestrator, "compare_table", lambda *a, **k: {})
+    monkeypatch.setattr(scoring, "model_posterior", fake_model_posterior)
+    monkeypatch.setattr(scoring, "compare_table", lambda *a, **k: {})
     # _prune_losers looks up compare_table in model_zoo's namespace:
     monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: {})
     # Functions looked up in model_zoo's namespace:

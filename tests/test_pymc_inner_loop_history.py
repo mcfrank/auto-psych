@@ -13,6 +13,7 @@ import json
 
 import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
+import src.pipelines.inner_loop.scoring as scoring
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from tests.inner_loop_fixtures import canned_posterior, write_responses, write_seed_models
 
@@ -25,9 +26,9 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
         calls["n"] += 1
         return result
 
-    monkeypatch.setattr(pymc_orchestrator, "model_posterior", fake_model_posterior)
+    monkeypatch.setattr(scoring, "model_posterior", fake_model_posterior)
     monkeypatch.setattr(
-        pymc_orchestrator, "compare_table", lambda *args, **kwargs: {}
+        scoring, "compare_table", lambda *args, **kwargs: {}
     )
     # _prune_losers looks up compare_table in model_zoo's namespace:
     monkeypatch.setattr(
@@ -163,7 +164,7 @@ def test_history_best_model_follows_the_export_rule(tmp_path, monkeypatch):
                 rows[name] = _row(0, -10.0, unreliable=True)
         return rows
 
-    monkeypatch.setattr(pymc_orchestrator, "compare_table", fake_compare)
+    monkeypatch.setattr(scoring, "compare_table", fake_compare)
     # Pruning would call compare_table too; keep the round to selection only.
     monkeypatch.setattr(pymc_orchestrator, "_prune_losers", lambda *a, **k: [])
 

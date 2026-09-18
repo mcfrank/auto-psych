@@ -21,7 +21,7 @@ import pytest
 
 from src.pipelines.inner_loop import model_zoo, pymc_orchestrator
 from src.pipelines.inner_loop.model_zoo import _prune_losers
-from src.pipelines.inner_loop.pymc_orchestrator import (
+from src.pipelines.inner_loop.scoring import (
     _best_exportable_model,
     _export,
 )
