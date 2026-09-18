@@ -10,18 +10,20 @@ a column in the preprocessed responses CSV. The bridge auto-pulls
 `df[name].values` for each container. The observed-response container is
 identified by tracing `model.observed_RVs[0]` back through the pytensor graph
 to its `TensorSharedVariable` ancestor.
+
+Model loading and data binding live in ``model_loading`` and ``data_binding``;
+this module re-exports their public (and test-used) names for backward
+compatibility, then adds prediction, fitting, and diagnostics.
 """
 
 from __future__ import annotations
 
-import csv
 import hashlib
-import importlib.util
 import math
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Optional
 
 import numpy as np
 
@@ -40,459 +42,39 @@ from src.models.loo_reliability import (
 from src.models.probability import validate_probability, validate_probability_array
 from src.registry.io import validate_theory_weights
 
-# Imports of pymc / arviz / pytensor are local in each function so that
-# loading this module is cheap when only e.g. cache utilities are used.
-
-
-# Attribute under which a loaded model carries its ``compute_features`` hook.
-_COMPUTE_FEATURES_ATTR = "_auto_psych_compute_features"
-
-# Attribute under which a loaded model carries its optional data-preparation
-# hook (a ``prepare_observed(rows) -> dict[str, np.ndarray]`` callable).
-_PREPARE_OBSERVED_ATTR = "_auto_psych_prepare_observed"
-
-
-def _import_pymc():
-    import pymc as pm
-
-    return pm
-
-
-def _import_arviz():
-    import arviz as az
-
-    return az
-
-
-def _exec_model_module(py_path: Path, *, mod_prefix: str):
-    """Import a model `.py` as a standalone module and return the module object.
-
-    Shared by :func:`load_pymc_model` (which then requires a module-level
-    ``model``) and :func:`model_sampler_settings` (which only needs a
-    module-level constant, and must work even for a file that builds no model).
-    ``mod_prefix`` keeps the two callers' ``sys.modules`` entries distinct.
-    """
-    py_path = Path(py_path)
-    if not py_path.exists():
-        raise FileNotFoundError(f"PyMC model file not found: {py_path}")
-    unique_mod_name = (
-        f"{mod_prefix}{py_path.stem}_"
-        f"{hashlib.sha1(str(py_path).encode()).hexdigest()[:8]}"
-    )
-    spec = importlib.util.spec_from_file_location(
-        unique_mod_name, py_path, submodule_search_locations=[]
-    )
-    if spec is None or spec.loader is None:
-        raise ImportError(f"Cannot build module spec for {py_path}")
-    mod = importlib.util.module_from_spec(spec)
-    sys.modules[unique_mod_name] = mod
-    # Compile the source bytes ourselves instead of ``spec.loader.exec_module``,
-    # which consults ``__pycache__``. importlib validates a cached ``.pyc`` by
-    # (mtime, size) only, so a model file rewritten in the same second to the
-    # same length — e.g. a candidate whose `0.9` became `0.8` — loads STALE
-    # bytecode. Reading the source directly makes "loaded model" always mean
-    # "what is on disk right now", and writes no bytecode cache to invalidate.
-    source = py_path.read_bytes()
-    exec(compile(source, str(py_path), "exec"), mod.__dict__)
-    return mod
-
-
-def load_pymc_model(name: str, models_dir: Path):
-    """Import `models_dir/<name>.py` and return its module-level `model` attribute.
-
-    Fails loudly if the file is missing, fails to import, or does not expose a
-    `pm.Model` at module level.
-    """
-    pm = _import_pymc()
-    models_dir = Path(models_dir)
-    py_path = models_dir / f"{name}.py"
-    mod = _exec_model_module(py_path, mod_prefix="_pymc_model_")
-
-    model = getattr(mod, "model", None)
-    if not isinstance(model, pm.Model):
-        raise TypeError(
-            f"{py_path} must define a module-level `model: pm.Model` "
-            f"(got {type(model).__name__ if model is not None else 'missing'})"
-        )
-
-    # A model declares ``compute_features(sequence_a, sequence_b) -> dict``
-    # to derive numeric columns from raw H/T sequences. Attached to the model
-    # so every data-binding path computes them before binding pm.Data.
-    compute_features_fn = getattr(mod, "compute_features", None)
-    if compute_features_fn is not None and not callable(compute_features_fn):
-        raise TypeError(
-            f"{py_path}: `compute_features` must be a callable "
-            f"(sequence_a, sequence_b) -> dict, got {type(compute_features_fn).__name__}"
-        )
-    setattr(model, _COMPUTE_FEATURES_ATTR, compute_features_fn)
-
-    # Optional model-owned data-preparation hook: a model may declare
-    # ``prepare_observed(rows) -> dict[str, np.ndarray]`` to build its ``pm.Data``
-    # arrays itself. The default convention maps one CSV column per container,
-    # which cannot express layouts where the containers are not all trial-aligned
-    # — e.g. motif_stack's unique-sequence table plus per-trial gather indices.
-    # When declared, it REPLACES the column-mapping path entirely.
-    prepare_observed = getattr(mod, "prepare_observed", None)
-    if prepare_observed is not None and not callable(prepare_observed):
-        raise TypeError(
-            f"{py_path}: `prepare_observed` must be a callable "
-            f"(rows) -> dict[str, np.ndarray], got {type(prepare_observed).__name__}"
-        )
-    if prepare_observed is not None and compute_features_fn is not None:
-        raise ValueError(
-            f"{py_path} declares BOTH `prepare_observed` and `compute_features`. "
-            "They are alternative data-binding conventions — `prepare_observed` "
-            "owns every container, so `compute_features` would be silently "
-            "ignored. Declare exactly one."
-        )
-    setattr(model, _PREPARE_OBSERVED_ATTR, prepare_observed)
-    return model
-
-
-def pm_data_inputs(model) -> List[str]:
-    """Return the names of every `pm.Data` container in the model."""
-    from pytensor.tensor.sharedvar import TensorSharedVariable
-
-    return [
-        name
-        for name, var in model.named_vars.items()
-        if isinstance(var, TensorSharedVariable)
-    ]
-
-
-def observed_response_data(model) -> str:
-    """Return the name of the `pm.Data` container holding observed responses.
-
-    Walks back from `model.observed_RVs` through the pytensor graph to find
-    its `TensorSharedVariable` ancestor. Fails loudly if zero or more than
-    one observed RV, or if its observed tensor has zero or multiple shared
-    ancestors.
-    """
-    try:
-        from pytensor.graph.traversal import ancestors
-    except ImportError:  # pytensor < 2.31 kept it in graph.basic
-        from pytensor.graph.basic import ancestors
-    from pytensor.tensor.sharedvar import TensorSharedVariable
-
-    if len(model.observed_RVs) == 0:
-        raise ValueError(
-            "Model has no observed RVs; cannot identify response data container."
-        )
-    if len(model.observed_RVs) > 1:
-        raise ValueError(
-            f"Model has {len(model.observed_RVs)} observed RVs; expected exactly one. "
-            f"Got: {[rv.name for rv in model.observed_RVs]}"
-        )
-
-    rv = model.observed_RVs[0]
-    obs_value = model.rvs_to_values.get(rv)
-    if obs_value is None:
-        raise ValueError(f"Observed RV {rv.name!r} has no observed value tensor.")
-
-    shared = [a for a in ancestors([obs_value]) if isinstance(a, TensorSharedVariable)]
-    if not shared:
-        raise ValueError(
-            f"Observed RV {rv.name!r} is not backed by a pm.Data container. "
-            "Pass the pm.Data tensor directly to observed=."
-        )
-    if len(shared) > 1:
-        names = [s.name for s in shared]
-        raise ValueError(
-            f"Observed RV {rv.name!r} traces back to multiple pm.Data containers: {names}. "
-            "Pass exactly one pm.Data tensor to observed=."
-        )
-    return shared[0].name
-
-
-def _read_csv_rows(csv_path: Path) -> List[Dict[str, str]]:
-    with Path(csv_path).open(encoding="utf-8", newline="") as f:
-        return list(csv.DictReader(f))
-
-
-def _model_compute_features(model):
-    """The model's optional ``compute_features`` callable, or ``None``."""
-    return getattr(model, _COMPUTE_FEATURES_ATTR, None)
-
-
-# Columns a model's compute_features may never return: the observed response
-# and the row bookkeeping. A model that redefines one of these is wrong
-# regardless of the value it produces.
-PROTECTED_ROW_COLUMNS = frozenset(
-    {"chose_left", "participant_id", "trial_index", "sequence_a", "sequence_b"}
+# ---------------------------------------------------------------------------
+# Re-exports from model_loading — every name that callers import from here.
+# ---------------------------------------------------------------------------
+from src.models.model_loading import (  # noqa: F401
+    _COMPUTE_FEATURES_ATTR,
+    _PREPARE_OBSERVED_ATTR,
+    _MODEL_CACHE,
+    _import_pymc,
+    _import_arviz,
+    _exec_model_module,
+    load_pymc_model,
+    pm_data_inputs,
+    observed_response_data,
+    load_pymc_model_cached,
+    clear_model_cache,
 )
 
-
-def _same_feature_value(existing: Any, computed: Any) -> bool:
-    """Whether a model's computed feature value agrees with a column already present.
-
-    When the evaluation harness pre-populates feature columns (via
-    ``feature_rows``), a model's ``compute_features`` hook may recompute an
-    already-present column. Producing the same value is harmless; producing a
-    DIFFERENT value under the same name means the model silently redefines
-    a harness column, which must fail loudly.
-    """
-    try:
-        return math.isclose(float(existing), float(computed), rel_tol=1e-9, abs_tol=1e-12)
-    except (TypeError, ValueError):
-        return False
-
-
-def _augment_rows_with_features(
-    model, rows: List[Dict[str, Any]]
-) -> List[Dict[str, Any]]:
-    """Add a model's ``compute_features`` columns to each row.
-
-    Runs the model's ``compute_features(sequence_a, sequence_b)`` hook over
-    every row's raw H/T sequences and merges the returned columns. A no-op
-    (returns ``rows`` unchanged) for models that do not declare the hook.
-    Fails loudly if the hook is declared but rows lack the raw sequences,
-    returns non-dict/non-numeric values, varies its keys across rows, or
-    collides with a protected column.
-    """
-    compute_fn = _model_compute_features(model)
-    if compute_fn is None or not rows:
-        return rows
-
-    missing = {"sequence_a", "sequence_b"} - set(rows[0].keys())
-    if missing:
-        raise ValueError(
-            f"Model declares compute_features but rows are missing "
-            f"{sorted(missing)}; the raw H/T sequence columns are required to "
-            "compute extra features."
-        )
-
-    augmented: List[Dict[str, Any]] = []
-    expected_keys: Optional[tuple] = None
-    for i, r in enumerate(rows):
-        extra = compute_fn(r["sequence_a"], r["sequence_b"])
-        if not isinstance(extra, dict):
-            raise TypeError(
-                f"compute_features must return a dict of feature_name -> number, "
-                f"got {type(extra).__name__} for row {i}."
-            )
-        keys = tuple(sorted(extra.keys()))
-        if expected_keys is None:
-            expected_keys = keys
-        elif keys != expected_keys:
-            raise ValueError(
-                "compute_features returned inconsistent feature names: row 0 -> "
-                f"{list(expected_keys)}, row {i} -> {list(keys)}. It must return "
-                "the same feature names for every stimulus."
-            )
-        for name, value in extra.items():
-            if name in PROTECTED_ROW_COLUMNS:
-                raise ValueError(
-                    f"compute_features returned {name!r}, which collides with the "
-                    "response/bookkeeping columns a row must keep "
-                    f"({sorted(PROTECTED_ROW_COLUMNS)}); extra features must use "
-                    "new names."
-                )
-            if name in r and not _same_feature_value(r[name], value):
-                raise ValueError(
-                    f"compute_features feature {name!r} collides with an existing "
-                    f"column that holds a DIFFERENT value ({r[name]!r} vs "
-                    f"{value!r}); a model may recompute a column the harness also "
-                    "supplies, but it may not redefine what the name means."
-                )
-            if isinstance(value, bool) or not isinstance(value, (int, float)):
-                raise ValueError(
-                    f"compute_features feature {name!r} must be a number, got "
-                    f"{type(value).__name__} ({value!r})."
-                )
-            if not math.isfinite(float(value)):
-                raise ValueError(
-                    f"compute_features feature {name!r} is not finite ({value!r})."
-                )
-        augmented.append({**r, **extra})
-    return augmented
-
-
-def _model_prepare_observed(model):
-    """The model's optional ``prepare_observed`` callable, or ``None``."""
-    return getattr(model, _PREPARE_OBSERVED_ATTR, None)
-
-
-def _observed_via_hook(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
-    """Build every ``pm.Data`` array through the model's ``prepare_observed`` hook.
-
-    The hook owns the layout, so the harness cannot check it column by column.
-    It checks the contract instead, and fails loudly on any breach — a hook that
-    returned the wrong keys or a mis-shaped array would otherwise surface much
-    later as an inscrutable pytensor shape error, or worse, as a silently
-    mis-aligned likelihood:
-
-    - the returned keys must be exactly the model's ``pm.Data`` names;
-    - every value must be a numpy array whose rank matches the container's
-      placeholder, and whose dtype has the same *kind* (a float array for an
-      integer container would be truncated on binding);
-    - the observed-response container must have one entry per input row, which
-      is what makes ``p_left`` per-trial and keeps ELPD-LOO pointwise.
-
-    Exact dtype *width* is normalized here rather than demanded of the hook,
-    because the width is PyMC's choice, not the model's: ``pm.Data`` converts an
-    ``int64`` array to ``intX`` (int32 under PyMC 5.28), so a hook that hard-coded
-    a width would break on a different build. This mirrors what the
-    column-mapping path does with ``placeholder.dtype``.
-    """
-    prepare = _model_prepare_observed(model)
-    if prepare is None:
-        raise ValueError("Model declares no prepare_observed hook.")
-    out = prepare(list(rows))
-    if not isinstance(out, dict):
-        raise TypeError(
-            "prepare_observed must return a dict of pm.Data name -> numpy array, "
-            f"got {type(out).__name__}."
-        )
-    expected = set(pm_data_inputs(model))
-    got = set(out)
-    if got != expected:
-        missing = sorted(expected - got)
-        unexpected = sorted(got - expected)
-        raise ValueError(
-            "prepare_observed must return exactly the model's pm.Data containers. "
-            f"Missing: {missing}. Unexpected: {unexpected}."
-        )
-    bound: Dict[str, np.ndarray] = {}
-    for name in sorted(out):
-        arr = out[name]
-        if not isinstance(arr, np.ndarray):
-            raise TypeError(
-                f"prepare_observed returned {type(arr).__name__} for {name!r}; "
-                "every value must be a numpy array."
-            )
-        placeholder = model.named_vars[name].get_value()
-        if arr.ndim != placeholder.ndim:
-            raise ValueError(
-                f"prepare_observed returned a {arr.ndim}-D array for {name!r} but "
-                f"its pm.Data placeholder is {placeholder.ndim}-D."
-            )
-        if arr.dtype.kind != placeholder.dtype.kind:
-            raise ValueError(
-                f"prepare_observed returned dtype {arr.dtype} for {name!r} but its "
-                f"pm.Data placeholder is {placeholder.dtype} — the kinds differ, so "
-                "binding would silently reinterpret the values."
-            )
-        cast = arr.astype(placeholder.dtype, copy=False)
-        if not np.array_equal(cast, arr):
-            raise ValueError(
-                f"prepare_observed's {name!r} array does not survive the cast to the "
-                f"container's dtype {placeholder.dtype} (values out of range)."
-            )
-        bound[name] = cast
-    out = bound
-    response_name = observed_response_data(model)
-    n_response = len(out[response_name])
-    if n_response != len(rows):
-        raise ValueError(
-            f"prepare_observed returned {n_response} entries for the observed-response "
-            f"container {response_name!r} but was given {len(rows)} rows; the observed "
-            "response must stay one-per-trial."
-        )
-    return out
-
-
-# Columns a *response* row carries but a bare stimulus row never does. A model
-# that binds only these beyond the features is legitimately unevaluable on a
-# stimulus (a participant-level random effect, say) and may be screened out of
-# a design; anything else missing means the rows were built wrong.
-NON_STIMULUS_COLUMNS = frozenset({"participant_id", "trial_index"})
-
-
-class MissingStimulusColumns(ValueError):
-    """A model needs columns the given rows do not carry.
-
-    Subclasses ``ValueError`` so existing handlers still catch it, but exposes
-    ``missing`` and ``available`` as data. Callers that must decide *why* a
-    model would not bind — the EIG screen distinguishes a legitimate
-    participant-level mismatch from rows built without a featurizer — need that
-    structurally, not by re-parsing a formatted message.
-    """
-
-    def __init__(self, missing: Sequence[str], available: Sequence[str]):
-        self.missing = tuple(missing)
-        self.available = tuple(available)
-        super().__init__(
-            f"Rows missing columns {list(self.missing)} required by the model. "
-            f"Available: {list(self.available)}"
-        )
-
-    @property
-    def only_non_stimulus(self) -> bool:
-        """True when every missing column is response-row bookkeeping."""
-        return bool(self.missing) and set(self.missing) <= NON_STIMULUS_COLUMNS
-
-
-def make_stim_data(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
-    """Build a `pm.set_data` dict from a list of row dicts for a given model.
-
-    Each `pm.Data` container in `model` is filled with the corresponding column
-    from `rows`, cast to the placeholder's dtype. Useful for predict_p_left and
-    sample_synthetic_responses, where the caller has rows but not a CSV file.
-
-    If the model declares a ``prepare_observed`` hook it builds every container
-    itself and the column mapping is skipped. Otherwise, if the model declares a
-    ``compute_features`` featurizer, its extra columns are computed from each
-    row's raw sequences first.
-    """
-    if _model_prepare_observed(model) is not None:
-        return _observed_via_hook(model, rows)
-    rows = _augment_rows_with_features(model, rows)
-    inputs = pm_data_inputs(model)
-    missing = [c for c in inputs if rows and c not in rows[0]]
-    if missing:
-        raise MissingStimulusColumns(missing, list(rows[0].keys()) if rows else [])
-    out: Dict[str, np.ndarray] = {}
-    for col in inputs:
-        placeholder = model.named_vars[col].get_value()
-        dtype = placeholder.dtype
-        values = [r[col] for r in rows]
-        if np.issubdtype(dtype, np.integer):
-            arr = np.array([int(float(v)) for v in values], dtype=dtype)
-        elif np.issubdtype(dtype, np.floating):
-            arr = np.array([float(v) for v in values], dtype=dtype)
-        else:
-            arr = np.array(values, dtype=dtype)
-        out[col] = arr
-    return out
-
-
-def extract_observed(csv_path: Path, model) -> Dict[str, np.ndarray]:
-    """Read csv_path and pull one numpy array per pm.Data container in the model.
-
-    Dtype is inferred from the model's current pm.Data placeholder (int64,
-    float64, etc.). Fails loudly if any expected column is missing.
-
-    A model that declares a ``prepare_observed`` hook builds its containers from
-    the raw CSV rows instead (see :func:`_observed_via_hook`).
-    """
-    rows = _read_csv_rows(csv_path)
-    if not rows:
-        raise ValueError(f"No rows in {csv_path}")
-    if _model_prepare_observed(model) is not None:
-        return _observed_via_hook(model, rows)
-    rows = _augment_rows_with_features(model, rows)
-
-    inputs = pm_data_inputs(model)
-    missing = [c for c in inputs if c not in rows[0]]
-    if missing:
-        raise ValueError(
-            f"Responses CSV {csv_path} is missing columns {missing} required by the model. "
-            f"Available columns: {list(rows[0].keys())}"
-        )
-
-    out: Dict[str, np.ndarray] = {}
-    for col in inputs:
-        placeholder = model.named_vars[col].get_value()
-        dtype = placeholder.dtype
-        values = [r[col] for r in rows]
-        if np.issubdtype(dtype, np.integer):
-            arr = np.array([int(float(v)) for v in values], dtype=dtype)
-        elif np.issubdtype(dtype, np.floating):
-            arr = np.array([float(v) for v in values], dtype=dtype)
-        else:
-            arr = np.array(values, dtype=dtype)
-        out[col] = arr
-    return out
+# ---------------------------------------------------------------------------
+# Re-exports from data_binding — every name that callers import from here.
+# ---------------------------------------------------------------------------
+from src.models.data_binding import (  # noqa: F401
+    _read_csv_rows,
+    _model_compute_features,
+    _same_feature_value,
+    _augment_rows_with_features,
+    _model_prepare_observed,
+    _observed_via_hook,
+    make_stim_data,
+    extract_observed,
+    MissingStimulusColumns,
+    PROTECTED_ROW_COLUMNS,
+    NON_STIMULUS_COLUMNS,
+)
 
 
 # Errors that mean the *harness* (or the environment) is broken rather than
@@ -570,26 +152,9 @@ def model_logp_is_finite(
     return True, ""
 
 
-_MODEL_CACHE: Dict[tuple, Any] = {}
-
-
-def load_pymc_model_cached(name: str, models_dir: Path):
-    """Per-process cache of loaded PyMC models, keyed by (name, models_dir).
-
-    Loading involves importlib + executing the model file's `with pm.Model()`
-    block; cheap (no MCMC), but worth caching when called many times — e.g.
-    EIG over hundreds of candidate stimuli.
-    """
-    key = (name, str(Path(models_dir).resolve()))
-    if key not in _MODEL_CACHE:
-        _MODEL_CACHE[key] = load_pymc_model(name, Path(models_dir))
-    return _MODEL_CACHE[key]
-
-
-def clear_model_cache() -> None:
-    """Clear the loaded-model cache. Useful for tests."""
-    _MODEL_CACHE.clear()
-
+# ---------------------------------------------------------------------------
+# Prior prediction and EIG
+# ---------------------------------------------------------------------------
 
 def prior_predict_p_left(
     model_names: List[str],
@@ -602,11 +167,11 @@ def prior_predict_p_left(
 ) -> Dict[str, float]:
     """Prior-predictive mean of `p_left` for each model on a single stimulus.
 
-    `feature_row` is a dict of feature-column → value. Must include every
+    `feature_row` is a dict of feature-column -> value. Must include every
     `pm.Data` input the model expects, including the observed-response container
-    (whose value is unused for `p_left` predictions — pass a dummy 0/1).
+    (whose value is unused for `p_left` predictions -- pass a dummy 0/1).
 
-    No MCMC — samples `p_left` from each model's prior under the given stimulus,
+    No MCMC -- samples `p_left` from each model's prior under the given stimulus,
     averages over draws, returns one scalar per model.
     """
     pm = _import_pymc()
@@ -644,7 +209,7 @@ def prior_predict_p_left_draws(
     and runs a single ``sample_prior_predictive`` per model, so the fixed
     per-call cost (graph compilation, sampling setup) is paid once per model
     instead of once per model *per stimulus*. Returns
-    ``{model_name: array of shape (n_draws, n_rows)}`` — the full draws, which
+    ``{model_name: array of shape (n_draws, n_rows)}`` -- the full draws, which
     joint-EIG selection needs to see the correlation that shared parameters
     induce between stimuli within a model.
 
@@ -673,7 +238,7 @@ def prior_predict_p_left_draws(
         if draws.shape != (n_samples, len(feature_rows)):
             raise ValueError(
                 f"Model {name!r}: batched {var_name} has shape {arr.shape}, "
-                f"expected per-stimulus axis of length {len(feature_rows)} — "
+                f"expected per-stimulus axis of length {len(feature_rows)} -- "
                 "is the model's p_left per-stimulus?"
             )
         out[name] = draws
@@ -776,6 +341,10 @@ def expected_information_gain_prior_pymc(
     return eig_from_prior_means(preds, model_weights)
 
 
+# ---------------------------------------------------------------------------
+# Fitting infrastructure
+# ---------------------------------------------------------------------------
+
 def _sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     h.update(Path(path).read_bytes())
@@ -849,7 +418,7 @@ def model_sampler_settings(name: str, models_dir: Path) -> Dict[str, Any]:
 
     Read by importing the file directly rather than through
     :func:`load_pymc_model`, because the cache key must be computable for any
-    file the fitter will be handed — including one that builds no ``pm.Model``.
+    file the fitter will be handed -- including one that builds no ``pm.Model``.
     """
     py_path = Path(models_dir) / f"{name}.py"
     key = (str(py_path.resolve()), _sha256_file(py_path))
@@ -874,7 +443,7 @@ def resolve_fit_settings(
 
     ``None`` in ``explicit`` means "the caller did not ask for anything", which
     is why ``fit_model``'s sampler arguments default to ``None`` instead of to
-    the production values — a pinned default is indistinguishable from a
+    the production values -- a pinned default is indistinguishable from a
     deliberate request and would silently outrank the model's declaration.
 
     Both cache keys (the on-disk ``.nc`` fingerprint and the in-process
@@ -925,7 +494,7 @@ class FittedModel:
     idata: Any  # az.InferenceData
     fingerprint: str
     # PSIS-LOO is computed once per fit (it is a full importance-sampling pass
-    # over draws × trials) and shared by elpd_loo() and compare_table().
+    # over draws x trials) and shared by elpd_loo() and compare_table().
     _loo_diagnostics: Optional[LooDiagnostics] = field(
         default=None, init=False, repr=False, compare=False
     )
@@ -941,14 +510,14 @@ class FittedModel:
         """Per-draw posterior-predictive p_left for each stimulus row.
 
         `stim_data` must include every pm.Data input expected by the model
-        (the observed-response container can be set to dummies — it is unused).
-        Returns shape (n_draws, n_stim) with chains flattened — the posterior
+        (the observed-response container can be set to dummies -- it is unused).
+        Returns shape (n_draws, n_stim) with chains flattened -- the posterior
         counterpart of ``prior_predict_p_left_draws``, e.g. for joint-EIG
         stimulus selection under a fitted model.
 
         ``max_draws`` thins the posterior to at most that many samples before
         the posterior-predictive pass. The intermediate array scales with
-        draws × n_stim, so thinning keeps memory bounded when predicting over
+        draws x n_stim, so thinning keeps memory bounded when predicting over
         very large stimulus sets (e.g. an exhaustive design pool).
         """
         pm = _import_pymc()
@@ -975,7 +544,7 @@ class FittedModel:
         if draws.shape[1] != n_stim:
             raise ValueError(
                 f"Model {self.name!r}: posterior-predictive {var_name} has shape "
-                f"{arr.shape}, expected per-stimulus axis of length {n_stim} — "
+                f"{arr.shape}, expected per-stimulus axis of length {n_stim} -- "
                 "is the model's p_left per-stimulus?"
             )
         return draws
@@ -1012,7 +581,7 @@ class FittedModel:
     def elpd_loo(self) -> float:
         """Expected log pointwise predictive density (PSIS-LOO).
 
-        We do not silently return a number the diagnostic judged unreliable —
+        We do not silently return a number the diagnostic judged unreliable --
         an attributed, number-bearing warning goes to the run log (the value is
         still returned; the comparison acts on the same verdict through
         ``compare_table``'s ``loo_unreliable``).
@@ -1042,7 +611,7 @@ class FittedModel:
         if n_datasets > capacity:
             raise ValueError(
                 f"Requested {n_datasets} synthetic datasets but posterior only has "
-                f"{n_chains} chains × {n_draws} draws = {capacity}. Increase chains/draws or reduce n_datasets."
+                f"{n_chains} chains x {n_draws} draws = {capacity}. Increase chains/draws or reduce n_datasets."
             )
 
         response_rv_name = self.model.observed_RVs[0].name
@@ -1058,8 +627,8 @@ class FittedModel:
         flat = arr.reshape(-1, arr.shape[-1])  # (chain*draw, n_stim)
         if n_datasets >= flat.shape[0]:
             return flat
-        # Subsample WITHOUT replacement across the full chain×draw pool rather than
-        # taking flat[:n_datasets] — the reshape above is chain-major, so a head
+        # Subsample WITHOUT replacement across the full chain x draw pool rather than
+        # taking flat[:n_datasets] -- the reshape above is chain-major, so a head
         # slice would draw the PPC null distribution from a single chain's first
         # draws (autocorrelated, ignoring the other chains). A seeded, evenly
         # strided selection spreads the replicates across all chains/draws and is
@@ -1067,6 +636,10 @@ class FittedModel:
         idx = np.linspace(0, flat.shape[0] - 1, num=n_datasets, dtype=int)
         return flat[idx]
 
+
+# ---------------------------------------------------------------------------
+# Fit caching
+# ---------------------------------------------------------------------------
 
 _FIT_CACHE: Dict[tuple, FittedModel] = {}
 
@@ -1101,7 +674,7 @@ def fit_model(
 ) -> FittedModel:
     """Load the named PyMC model, fit it on `responses_path`, return a FittedModel.
 
-    Every sampler argument defaults to ``None``, meaning "unset — resolve it".
+    Every sampler argument defaults to ``None``, meaning "unset -- resolve it".
     :func:`resolve_fit_settings` then applies an explicit caller value first, the
     model file's own ``SAMPLER_SETTINGS`` declaration next, and the centralized
     production defaults last. Defaulting these to the production values instead
@@ -1133,7 +706,7 @@ def fit_model(
     )
 
     # Fingerprint from the model source + the responses-file bytes + the resolved
-    # sampler settings — the SAME inputs as the in-process ``_cache_key``, which
+    # sampler settings -- the SAME inputs as the in-process ``_cache_key``, which
     # resolves through the same ``resolve_fit_settings``. Keeping the two keyed
     # identically means the on-disk ``.nc`` and the in-process cache can never
     # disagree about which fit corresponds to a (model, data, sampler) triple, so
@@ -1182,12 +755,16 @@ def fit_model(
     return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
 
 
+# ---------------------------------------------------------------------------
+# Sampling diagnostics
+# ---------------------------------------------------------------------------
+
 def _divergence_count(idata: Any) -> Optional[int]:
     """Number of divergent transitions, or None if the trace does not record any.
 
     None is a real answer, not a failure: a sampler that is not NUTS (a model
     with discrete parameters falls back to Metropolis) writes no ``diverging``
-    stat. It is deliberately NOT folded into 0 — "no divergences" and "nobody
+    stat. It is deliberately NOT folded into 0 -- "no divergences" and "nobody
     checked" must not look the same. Anything else raises.
     """
     sample_stats = getattr(idata, "sample_stats", None)
@@ -1210,7 +787,7 @@ def _max_rhat(idata: Any) -> float:
 def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
     """Loudly surface NUTS trouble (divergences, poor R-hat) for a fit.
 
-    These are advisory, not fatal — ArviZ still returns usable arrays — but a fit
+    These are advisory, not fatal -- ArviZ still returns usable arrays -- but a fit
     with divergences or R-hat > 1.01 is suspect, and accepting its ELPD at face
     value is exactly the silent-quality trap the project's fail-loud rule guards
     against. Print an attributed warning so a degraded fit is visible in the run
@@ -1233,7 +810,7 @@ def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
     elif n_div > 0:
         print(
             f"  [warn] {name}: {n_div} divergence(s) during sampling; the posterior "
-            "may be biased — treat its ELPD-LOO with caution.",
+            "may be biased -- treat its ELPD-LOO with caution.",
             file=sys.stderr,
             flush=True,
         )
@@ -1241,7 +818,7 @@ def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
     if not math.isfinite(max_rhat):
         print(
             f"  [warn] {name}: R-hat is unavailable (got {max_rhat}); convergence "
-            "was NOT verified — a single-chain fit cannot report one.",
+            "was NOT verified -- a single-chain fit cannot report one.",
             file=sys.stderr,
             flush=True,
         )
@@ -1294,7 +871,7 @@ def clear_fit_cache() -> None:
 def evict_fit_cache(model_name: str) -> int:
     """Drop every cached fit for ``model_name``; return how many were evicted.
 
-    Used when the inner loop prunes a losing model — its InferenceData would
+    Used when the inner loop prunes a losing model -- its InferenceData would
     otherwise stay resident in the in-process cache for the rest of the run.
     The cache key leads with the model name (see ``_cache_key``).
     """
