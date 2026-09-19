@@ -37,7 +37,7 @@ from pathlib import Path
 from typing import Iterable, List, Optional
 
 LEDGER_FILENAME = "attempted_hypotheses.jsonl"
-OUTCOMES = ("admitted", "rejected", "pruned", "dropped")
+OUTCOMES = ("admitted", "rejected", "pruned", "dropped", "round_abandoned")
 
 # Hypotheses are 1–3 sentences; the brief shows one line per retired model.
 ONE_LINE_LIMIT = 240

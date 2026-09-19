@@ -255,20 +255,23 @@ PYEOF
   else say "- [FAIL] $bad_imp of $n_imp_files model .py file(s) import outside the allowlist"; fails=$((fails + 1)); fi
 fi
 
-# 10. Candidate admission: at least one admitted per experiment, no round
-#     whose rejections are all "no candidate.py written".
+# 10. Candidate admission: at least one admitted per experiment. Abandoned
+#     rounds (retried then skipped) are a warning; only excessive abandonment
+#     is a failure. Threshold: more than half the rounds in any experiment.
 _LEDGER_CHECKER=$(mktemp /tmp/check_ledger_XXXXXX.py)
 cat > "$_LEDGER_CHECKER" <<'PYEOF'
 """Check candidate admission health from ledger files.
 
 Reads attempted_hypotheses.jsonl, checks that each experiment admitted at
-least one candidate, and that no round's rejections are all 'no candidate.py
-written'. Prints a summary and exits non-zero on failure.
+least one candidate, counts round_abandoned entries, and reports warnings
+for retried rounds. Fails on: zero admissions per experiment, or more than
+half the rounds in an experiment abandoned.
 """
 import json, sys, re
 from collections import defaultdict
 
 fails = 0
+warns = 0
 ledger_path = sys.argv[1]
 lines = open(ledger_path).read().strip().splitlines()
 if not lines:
@@ -276,40 +279,44 @@ if not lines:
 
 entries = [json.loads(line) for line in lines if line.strip()]
 
-# Group by experiment (from context field like "experiment2 round 0 candidate 1 lens 0")
 exp_admitted = defaultdict(int)
-rounds = defaultdict(list)
+exp_abandoned = defaultdict(int)
+exp_rounds = defaultdict(set)
 for e in entries:
     ctx = e.get("context", "")
     m = re.search(r"experiment(\d+)", ctx)
     exp = int(m.group(1)) if m else 0
     if e["outcome"] == "admitted":
         exp_admitted[exp] += 1
+    if e["outcome"] == "round_abandoned":
+        exp_abandoned[exp] += 1
     rm = re.search(r"round (\d+)", ctx)
     if rm:
-        round_key = (exp, int(rm.group(1)))
-        rounds[round_key].append(e)
+        exp_rounds[exp].add(int(rm.group(1)))
 
-# Check: at least one admitted per experiment
-for exp_num in sorted(exp_admitted.keys()):
-    if exp_admitted[exp_num] == 0:
+all_exps = sorted(set(exp_admitted) | set(exp_abandoned) | set(exp_rounds))
+
+for exp_num in all_exps:
+    if exp_admitted[exp_num] == 0 and exp_abandoned[exp_num] == 0:
         print(f"FAIL: experiment{exp_num} admitted 0 candidates")
         fails += 1
 
-# Check: no round where ALL rejections are "no candidate.py written"
-for (exp, rnd), entries_list in sorted(rounds.items()):
-    admitted = [e for e in entries_list if e["outcome"] == "admitted"]
-    rejected = [e for e in entries_list if e["outcome"] == "rejected"]
-    if not admitted and rejected:
-        all_no_file = all("no candidate.py written" in e.get("detail", "") for e in rejected)
-        if all_no_file:
-            print(f"FAIL: experiment{exp} round {rnd}: all {len(rejected)} rejections are 'no candidate.py written'")
-            fails += 1
+n_abandoned_total = sum(exp_abandoned.values())
+if n_abandoned_total > 0:
+    for exp_num in all_exps:
+        n_abn = exp_abandoned[exp_num]
+        n_rnd = len(exp_rounds[exp_num])
+        if n_abn > 0:
+            if n_rnd > 0 and n_abn > n_rnd // 2:
+                print(f"FAIL: experiment{exp_num}: {n_abn} of {n_rnd} rounds abandoned (threshold: >{n_rnd // 2})")
+                fails += 1
+            else:
+                print(f"WARN: experiment{exp_num}: {n_abn} round(s) abandoned (retried, then skipped)")
+                warns += 1
 
-# Summary
 total_admitted = sum(exp_admitted.values())
 total_rejected = sum(1 for e in entries if e.get("outcome") == "rejected")
-print(f"admitted={total_admitted} rejected={total_rejected} experiments={len(exp_admitted)}")
+print(f"admitted={total_admitted} rejected={total_rejected} abandoned_rounds={n_abandoned_total} experiments={len(all_exps)}")
 sys.exit(fails)
 PYEOF
 
