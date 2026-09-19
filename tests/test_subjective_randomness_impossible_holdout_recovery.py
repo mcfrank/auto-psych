@@ -20,12 +20,17 @@ import numpy as np
 import pytest
 import yaml
 
+import src.subjective_randomness.holdout_eval as holdout_eval
 import src.subjective_randomness.holdout_recovery as holdout_recovery
-from src.subjective_randomness.holdout_recovery import (
-    _distinctive_param_names,
+from src.subjective_randomness.holdout_eval import (
     build_eval_stimuli,
-    leakage_check,
+)
+from src.subjective_randomness.holdout_recovery import (
     run_impossible_holdout_recovery_from_config,
+)
+from src.subjective_randomness.leakage_audit import (
+    _distinctive_param_names,
+    leakage_check,
 )
 from src.subjective_randomness.model_recovery import p_left_fixed_params
 from tests.model_registry import FAITHFUL_MODEL_NAMES
@@ -64,8 +69,7 @@ def _stub_design(calls):
 def _stub_generate_responses(calls):
     """Records ``models_dir`` so the test can assert the GT dir is threaded in."""
 
-    def generate(model_name, models_dir, stimuli, params, n_participants, *, seed=0,
-                 generator="pymc"):
+    def generate(model_name, models_dir, stimuli, params, n_participants, *, seed=0):
         calls.append(
             {"model_name": model_name, "models_dir": Path(models_dir), "seed": seed}
         )
@@ -94,7 +98,7 @@ def _stub_inner_loop(history_best):
     # separate directory).
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
             backend=None, agent_model=None, cache_dir=None, project_id=None,
-            agent_timeout_sec=900):
+            agent_timeout_sec=900, **kwargs):
         loop_dir = exp_dir / "model_loop"
         models_dir = loop_dir / "models"
         models_dir.mkdir(parents=True, exist_ok=True)
@@ -128,7 +132,7 @@ def _stub_inner_loop(history_best):
         (loop_dir / "report.md").write_text("# stub report\n", encoding="utf-8")
         (loop_dir / "responses.csv").write_text("chose_left\n1\n", encoding="utf-8")
 
-        # Mirror _export_inner_loop_model's new semantics: ``history_best`` is
+        # Mirror _export_inner_loop_models' semantics: ``history_best`` is
         # already in cognitive_models (a pool model that won), so nothing is
         # copied and the manifest is unchanged.
         return loop_dir
@@ -156,18 +160,18 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     # The GT reference p_left is stubbed (varied, so correlation is defined);
     # the impossible PyMC model file is exercised by the unit tests, not here.
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: np.linspace(
             0.1, 0.9, len(stimuli)
         ),
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "fit_model",
         lambda name, models_dir, responses_path, *, cache_dir=None, **kw: CannedPredictionFit(),
     )
@@ -399,18 +403,18 @@ def test_impossible_holdout_exhaustive_eval_thins_posterior(tmp_path, monkeypatc
         _stub_inner_loop("local_representativeness"),
     )
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: np.linspace(
             0.1, 0.9, len(stimuli)
         ),
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "fit_model",
         lambda name, models_dir, responses_path, *, cache_dir=None, **kw: (
             _RecordingFitted()

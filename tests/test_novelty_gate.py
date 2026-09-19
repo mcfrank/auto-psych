@@ -15,8 +15,8 @@ import numpy as np
 import pytest
 import yaml
 
-from src.pipelines.inner_loop import pymc_orchestrator
-from src.pipelines.inner_loop.pymc_orchestrator import (
+from src.pipelines.inner_loop import model_zoo
+from src.pipelines.inner_loop.model_zoo import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     _admit_candidate,
     _min_prediction_rmse,
@@ -61,12 +61,12 @@ def test_min_prediction_rmse_finds_nearest_admitted_model(tmp_path, monkeypatch)
         "seed_b": np.array([0.9, 0.1]),
     }
     monkeypatch.setattr(
-        pymc_orchestrator,
+        model_zoo,
         "fit_model",
         lambda name, *a, **k: _FakeFitted(predictions[name]),
     )
     monkeypatch.setattr(
-        pymc_orchestrator, "make_stim_data", lambda model, rows: {"rows": len(rows)}
+        model_zoo, "make_stim_data", lambda model, rows: {"rows": len(rows)}
     )
     # candidate_x must be present in the manifest set for other names to skip it.
     name, rmse = _min_prediction_rmse(
@@ -80,10 +80,10 @@ def test_min_prediction_rmse_with_no_other_models(tmp_path, monkeypatch):
     models_dir = _models_dir(tmp_path, [])
     responses = _responses(tmp_path)
     monkeypatch.setattr(
-        pymc_orchestrator, "fit_model", lambda *a, **k: _FakeFitted([0.5, 0.5])
+        model_zoo, "fit_model", lambda *a, **k: _FakeFitted([0.5, 0.5])
     )
     monkeypatch.setattr(
-        pymc_orchestrator, "make_stim_data", lambda model, rows: {}
+        model_zoo, "make_stim_data", lambda model, rows: {}
     )
     name, rmse = _min_prediction_rmse(
         "candidate_x", models_dir, responses, cache_dir=None, fit_kwargs=None
@@ -94,13 +94,13 @@ def test_min_prediction_rmse_with_no_other_models(tmp_path, monkeypatch):
 
 def _stub_admission_gates(monkeypatch):
     monkeypatch.setattr(
-        pymc_orchestrator, "load_pymc_model", lambda name, models_dir: object()
+        model_zoo, "load_pymc_model", lambda name, models_dir: object()
     )
     monkeypatch.setattr(
-        pymc_orchestrator, "model_logp_is_finite", lambda *a, **k: (True, "")
+        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
     )
-    monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
-    monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: -10.0)
+    monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
+    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -10.0)
 
 
 def _candidate(tmp_path):
@@ -116,7 +116,7 @@ def test_admission_rejects_near_duplicate(tmp_path, monkeypatch, capsys):
     responses = _responses(tmp_path)
     _stub_admission_gates(monkeypatch)
     monkeypatch.setattr(
-        pymc_orchestrator,
+        model_zoo,
         "_min_prediction_rmse",
         lambda *a, **k: ("seed_a", 0.01),
     )
@@ -138,7 +138,7 @@ def test_admission_accepts_genuinely_novel_candidate(tmp_path, monkeypatch):
     responses = _responses(tmp_path)
     _stub_admission_gates(monkeypatch)
     monkeypatch.setattr(
-        pymc_orchestrator,
+        model_zoo,
         "_min_prediction_rmse",
         lambda *a, **k: ("seed_a", 5 * DEFAULT_NOVELTY_RMSE_THRESHOLD),
     )
@@ -154,7 +154,7 @@ def test_threshold_zero_disables_the_gate(tmp_path, monkeypatch):
     def tripwire(*a, **k):
         raise AssertionError("gate must not run when the threshold is 0")
 
-    monkeypatch.setattr(pymc_orchestrator, "_min_prediction_rmse", tripwire)
+    monkeypatch.setattr(model_zoo, "_min_prediction_rmse", tripwire)
     assert _admit_candidate(
         _candidate(tmp_path),
         models_dir,

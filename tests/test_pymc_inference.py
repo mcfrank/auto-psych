@@ -9,6 +9,7 @@ import numpy as np
 import pytest
 
 from src.models import pymc_inference as pi
+from src.models.model_loading import clear_model_cache, pm_data_inputs
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 
@@ -26,7 +27,7 @@ def test_load_pymc_model_missing_file_raises():
 
 def test_pm_data_inputs_lists_all_data_containers():
     model = pi.load_pymc_model("bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR)
-    names = pi.pm_data_inputs(model)
+    names = pm_data_inputs(model)
     assert set(names) == {"n_a", "h_a", "n_b", "h_b", "chose_left"}
 
 
@@ -44,12 +45,12 @@ def test_extract_observed_pulls_columns_by_name_and_dtype(tmp_path):
     model = pi.load_pymc_model("bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR)
     csv_path = tmp_path / "responses.csv"
     with csv_path.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["n_a", "h_a", "n_b", "h_b", "chose_left"])
+        w = csv.DictWriter(f, fieldnames=["sequence_a", "sequence_b", "chose_left"])
         w.writeheader()
         w.writerow(
-            {"n_a": "10", "h_a": "5", "n_b": "10", "h_b": "5", "chose_left": "1"}
+            {"sequence_a": "HHHHHTTTT" + "T", "sequence_b": "HHHHHTTTTT", "chose_left": "1"}
         )
-        w.writerow({"n_a": "12", "h_a": "8", "n_b": "8", "h_b": "4", "chose_left": "0"})
+        w.writerow({"sequence_a": "HHHHHHHHTTTT", "sequence_b": "HHHHTTTT", "chose_left": "0"})
 
     observed = pi.extract_observed(csv_path, model)
     assert set(observed.keys()) == {"n_a", "h_a", "n_b", "h_b", "chose_left"}
@@ -62,10 +63,10 @@ def test_extract_observed_missing_column_raises(tmp_path):
     model = pi.load_pymc_model("bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR)
     csv_path = tmp_path / "responses.csv"
     with csv_path.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["n_a", "chose_left"])  # missing h_a, n_b, h_b
+        w = csv.DictWriter(f, fieldnames=["chose_left"])  # missing sequence_a, sequence_b
         w.writeheader()
-        w.writerow({"n_a": "10", "chose_left": "1"})
-    with pytest.raises(ValueError, match="missing columns"):
+        w.writerow({"chose_left": "1"})
+    with pytest.raises(ValueError, match="missing"):
         pi.extract_observed(csv_path, model)
 
 
@@ -126,10 +127,10 @@ class _StopSampling(Exception):
 
 def _write_fair_coin_responses(path):
     with path.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["n_a", "h_a", "n_b", "h_b", "chose_left"])
+        w = csv.DictWriter(f, fieldnames=["sequence_a", "sequence_b", "chose_left"])
         w.writeheader()
-        w.writerow({"n_a": "10", "h_a": "5", "n_b": "10", "h_b": "5", "chose_left": "1"})
-        w.writerow({"n_a": "12", "h_a": "8", "n_b": "8", "h_b": "4", "chose_left": "0"})
+        w.writerow({"sequence_a": "HHHHHTTTTT", "sequence_b": "HHHHHTTTTT", "chose_left": "1"})
+        w.writerow({"sequence_a": "HHHHHHHHTTTT", "sequence_b": "HHHHTTTT", "chose_left": "0"})
 
 
 def test_fit_model_funnels_centralized_production_settings_into_pm_sample(
@@ -238,12 +239,12 @@ def test_thin_posterior_is_noop_when_already_within_budget():
 
 
 def test_prior_predict_p_left_returns_per_model_means():
-    feature_row = {"n_a": 10, "h_a": 5, "n_b": 10, "h_b": 5, "chose_left": 0}
-    pi.clear_model_cache()
+    raw_row = {"sequence_a": "HHHHHTTTTT", "sequence_b": "HHHHHTTTTT", "chose_left": 0}
+    clear_model_cache()
     preds = pi.prior_predict_p_left(
         ["bayesian_fair_coin", "representativeness"],
         PYMC_MODEL_FIXTURES_DIR,
-        feature_row,
+        raw_row,
         n_samples=50,
     )
     assert set(preds.keys()) == {"bayesian_fair_coin", "representativeness"}
@@ -254,10 +255,10 @@ def test_prior_predict_p_left_returns_per_model_means():
 
 
 def test_expected_information_gain_prior_pymc_nonneg():
-    feature_row = {"n_a": 10, "h_a": 7, "n_b": 10, "h_b": 3, "chose_left": 0}
-    pi.clear_model_cache()
+    raw_row = {"sequence_a": "HHHHHHHTTT", "sequence_b": "HHHTTTTTT" + "T", "chose_left": 0}
+    clear_model_cache()
     eig = pi.expected_information_gain_prior_pymc(
-        feature_row,
+        raw_row,
         ["bayesian_fair_coin", "representativeness"],
         PYMC_MODEL_FIXTURES_DIR,
         n_samples=50,
@@ -337,9 +338,9 @@ def test_fitted_model_predict_p_left_draws_shape_and_mean_consistency(tmp_path):
         chains=2,
     )
     rows = [
-        {"n_a": 10, "h_a": 5, "n_b": 10, "h_b": 5, "chose_left": 0},
-        {"n_a": 8, "h_a": 7, "n_b": 6, "h_b": 3, "chose_left": 0},
-        {"n_a": 4, "h_a": 0, "n_b": 4, "h_b": 2, "chose_left": 0},
+        {"sequence_a": "HHHHHTTTTT", "sequence_b": "HHHHHTTTTT", "chose_left": 0},
+        {"sequence_a": "HHHHHHHH", "sequence_b": "HHHTTT", "chose_left": 0},
+        {"sequence_a": "TTTT", "sequence_b": "HHTT", "chose_left": 0},
     ]
     stim_data = pi.make_stim_data(model, rows)
 
@@ -357,11 +358,11 @@ def test_fitted_model_predict_p_left_draws_shape_and_mean_consistency(tmp_path):
 
 def test_prior_predict_p_left_draws_shape_and_mean_consistency():
     rows = [
-        {"n_a": 10, "h_a": 5, "n_b": 10, "h_b": 5, "chose_left": 0},
-        {"n_a": 8, "h_a": 7, "n_b": 6, "h_b": 3, "chose_left": 0},
+        {"sequence_a": "HHHHHTTTTT", "sequence_b": "HHHHHTTTTT", "chose_left": 0},
+        {"sequence_a": "HHHHHHHH", "sequence_b": "HHHTTT", "chose_left": 0},
     ]
     names = ["bayesian_fair_coin", "representativeness"]
-    pi.clear_model_cache()
+    clear_model_cache()
     draws = pi.prior_predict_p_left_draws(names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=40, seed=3)
     batch = pi.prior_predict_p_left_batch(names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=40, seed=3)
     for name in names:
@@ -373,12 +374,12 @@ def test_prior_predict_p_left_draws_shape_and_mean_consistency():
 
 def test_prior_predict_p_left_batch_matches_per_row():
     rows = [
-        {"n_a": 10, "h_a": 5, "n_b": 10, "h_b": 5, "chose_left": 0},
-        {"n_a": 8, "h_a": 7, "n_b": 6, "h_b": 3, "chose_left": 0},
-        {"n_a": 4, "h_a": 0, "n_b": 4, "h_b": 2, "chose_left": 0},
+        {"sequence_a": "HHHHHTTTTT", "sequence_b": "HHHHHTTTTT", "chose_left": 0},
+        {"sequence_a": "HHHHHHHH", "sequence_b": "HHHTTT", "chose_left": 0},
+        {"sequence_a": "TTTT", "sequence_b": "HHTT", "chose_left": 0},
     ]
     names = ["bayesian_fair_coin", "representativeness"]
-    pi.clear_model_cache()
+    clear_model_cache()
     batch = pi.prior_predict_p_left_batch(
         names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=50, seed=11
     )

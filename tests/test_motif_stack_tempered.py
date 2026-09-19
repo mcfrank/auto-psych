@@ -28,7 +28,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from src.models.pymc_inference import load_pymc_model, pm_data_inputs
+from src.models.model_loading import load_pymc_model, pm_data_inputs
 from src.subjective_randomness.model_families import motif_stack as viterbi_twin
 from src.subjective_randomness.model_families import motif_stack_softmax as softmax_twin
 from src.subjective_randomness.model_families import motif_stack_tempered as tempered_twin

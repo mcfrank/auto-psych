@@ -172,7 +172,7 @@ def stimulus_r2(meta, p_left, observed) -> float:
 
 
 def count_free_params(name: str, models_dir: Path) -> int:
-    from src.models.pymc_inference import load_pymc_model
+    from src.models.model_loading import load_pymc_model
 
     return len(load_pymc_model(name, models_dir).free_RVs)
 
@@ -215,7 +215,8 @@ def fit_group(models, train_meta, work, featurized_dir, fit_kwargs, cache_dir,
     InferenceData (for the in-train az.compare done by the caller) and param_rows
     holds one posterior-mean record per fitted parameter (per fit, not per eval).
     """
-    from src.models.pymc_inference import fit_model, make_stim_data
+    from src.models.data_binding import make_stim_data
+    from src.models.pymc_inference import fit_model
 
     train_feat = write_featurized(train_meta, featurized_dir / "train.csv")
     train_csv = featurized_dir / "train.csv"

@@ -14,7 +14,10 @@ both agent spawns are stubbed — these tests cover only the orchestration:
 from __future__ import annotations
 
 
+import src.pipelines.inner_loop.critique_round as critique_round
+import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
+import src.pipelines.inner_loop.scoring as scoring
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from tests.inner_loop_fixtures import canned_posterior, write_responses, write_seed_models
 
@@ -27,22 +30,25 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
         calls["n"] += 1
         return result
 
-    monkeypatch.setattr(pymc_orchestrator, "model_posterior", fake_model_posterior)
-    monkeypatch.setattr(pymc_orchestrator, "compare_table", lambda *a, **k: {})
+    monkeypatch.setattr(scoring, "model_posterior", fake_model_posterior)
+    monkeypatch.setattr(scoring, "compare_table", lambda *a, **k: {})
+    # _prune_losers looks up compare_table in model_zoo's namespace:
+    monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: {})
+    # Functions looked up in model_zoo's namespace:
     monkeypatch.setattr(
-        pymc_orchestrator, "model_logp_is_finite", lambda *a, **k: (True, "")
+        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
     )
     monkeypatch.setattr(
-        pymc_orchestrator, "load_pymc_model", lambda name, models_dir: object()
+        model_zoo, "load_pymc_model", lambda name, models_dir: object()
     )
     # Candidate admission now ends with a real MCMC fit-gate; stub it so the fake
     # stub candidates (not real PyMC models) are admitted without sampling.
-    monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
+    monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # Admission also gates on a finite ELPD-LOO; stub it finite for stub candidates.
-    monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: -100.0)
+    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
     # Novelty gate is covered by test_novelty_gate.py; neutralize it here.
     monkeypatch.setattr(
-        pymc_orchestrator, "_min_prediction_rmse",
+        model_zoo, "_min_prediction_rmse",
         lambda *a, **k: (None, float("inf")),
     )
 
@@ -72,7 +78,7 @@ def _patch_critique_agent(monkeypatch, spawn_log):
         return True
 
     monkeypatch.setattr(
-        pymc_orchestrator, "_spawn_critique_agent", fake_spawn_critique
+        critique_round, "_spawn_critique_agent", fake_spawn_critique
     )
 
 
@@ -81,10 +87,8 @@ def test_critique_default_significance_alpha():
     # comparisons correction); --critique-alpha overrides it per run.
     import inspect
 
-    from src.pipelines.inner_loop.pymc_orchestrator import (
-        CRITIQUE_SIGNIFICANCE_ALPHA,
-        run_pymc_inner_loop,
-    )
+    from src.pipelines.inner_loop.critique_round import CRITIQUE_SIGNIFICANCE_ALPHA
+    from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 
     assert CRITIQUE_SIGNIFICANCE_ALPHA == 0.05
     default = inspect.signature(run_pymc_inner_loop).parameters[
@@ -97,7 +101,7 @@ def test_critique_module_defines_repo_root():
     # Regression: `_spawn_critique_agent` runs the critique agent with
     # `cwd=REPO_ROOT`. A missing module-level import made every critique skip with
     # "NameError: name 'REPO_ROOT' is not defined". Guard the symbol's presence.
-    assert hasattr(pymc_orchestrator, "REPO_ROOT")
+    assert hasattr(critique_round, "REPO_ROOT")
 
 
 def test_critique_runs_before_each_candidate_round_and_feeds_candidates(

@@ -33,7 +33,7 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence
 import numpy as np
 
 from src.models.pymc_inference import fit_model
-from src.subjective_randomness.holdout_recovery import (
+from src.subjective_randomness.holdout_eval import (
     _eval_prediction,
     _participant_ids_in,
     _unordered_pair,

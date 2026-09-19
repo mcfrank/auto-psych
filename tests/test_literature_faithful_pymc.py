@@ -23,11 +23,8 @@ import pytest
 import yaml
 
 from src.models.theorist.loader import get_model_names_from_manifest
-from src.models.pymc_inference import (
-    load_pymc_model,
-    observed_response_data,
-    prior_predict_p_left,
-)
+from src.models.model_loading import load_pymc_model, observed_response_data
+from src.models.pymc_inference import prior_predict_p_left
 from src.subjective_randomness.features import featurize_stimulus
 from src.subjective_randomness.model_recovery import (
     p_left_fixed_params,

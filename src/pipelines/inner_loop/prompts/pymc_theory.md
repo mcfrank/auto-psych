@@ -11,8 +11,15 @@ Read these files in the current working directory before deciding what to write:
    model may read), and the inner-loop round number.
 2. `CANDIDATE_BRIEF.md` — what kind of hypothesis to attempt this round.
 3. `existing_hypotheses.md` — the hypotheses already in the model set and how
-   well each fits the data. Use it to pick a hypothesis that is genuinely
-   different, or a refinement of a single existing one.
+   each stands on the current data by ELPD-LOO rank (`elpd_diff ± dse` against
+   the best model). Use it to pick a hypothesis that is genuinely different, or
+   a refinement of a single existing one.
+4. `attempted_hypotheses.md` — hypotheses tried earlier that are no longer in
+   the model set, with what happened to each: pruned after losing to the best
+   model by a stated margin, or rejected at admission (most often as a
+   near-duplicate of a model still in the set). Do not propose any of them
+   again under a new name; a mechanism that lost by a wide margin is ruled out,
+   and one already covered by a live model needs no second copy.
 
 ## Goal
 
@@ -75,7 +82,13 @@ Inside the `with pm.Model() as model:` block:
   before passing it to `observed=` — the pipeline introspects the graph to
   identify the response container, and it must be the same node.
 
-Allowed top-level imports: `numpy as np`, `pymc as pm`, `pytensor.tensor as pt`.
+**Allowed imports (enforced — candidates that import anything else are rejected
+at admission):** `arviz`, `collections`, `dataclasses`, `functools`,
+`itertools`, `math`, `numpy`, `operator`, `pymc`, `pytensor`, `re`, `scipy`,
+`statistics`, `typing`. No other imports — no `pandas`, no `src.*`, no project
+library modules. Every helper your model needs must be written in the file
+itself (self-contained code only).
+
 Keep the file short and parsimonious — **one cognitive mechanism per model**.
 The number of free parameters and feature columns a model reads should match the
 single hypothesis; a model that needs many weighted cues to fit is a blend, not

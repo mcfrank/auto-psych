@@ -36,8 +36,8 @@ from pyprojroot import here
 sys.path.insert(0, str(here()))
 
 from src.subjective_randomness.config import load_config, resolve_path  # noqa: E402
+from src.subjective_randomness.holdout_eval import TRAJECTORY_COLUMNS  # noqa: E402
 from src.subjective_randomness.holdout_recovery import (  # noqa: E402
-    TRAJECTORY_COLUMNS,
     run_impossible_holdout_recovery_from_config,
     trajectory_tidy_rows,
 )

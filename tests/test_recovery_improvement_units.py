@@ -99,6 +99,21 @@ def test_comparison_table_marks_missing_aggregates(tmp_path):
     assert "| a | 0.900 ± 0.010 (n=5) | n/a |" in table
 
 
+def test_digest_run_row_accepts_legacy_csv_without_new_metric_columns(tmp_path):
+    root = tmp_path / "sweep"
+    cell = root / "run1" / "falk_konold_dp"
+    cell.mkdir(parents=True)
+    (cell / "holdout.csv").write_text(
+        "gt_model,experiment,step,iteration,global_step,best_model,pearson_r,rmse,pearson_r_bma,rmse_bma\n"
+        "falk_konold_dp,1,0,,0,seed,0.70,0.15,0.72,0.14\n",
+        encoding="utf-8",
+    )
+    summary = summarize_sweep(root)
+    (row,) = summary.rows
+    assert row.rmse_final == pytest.approx(0.15)
+    assert row.r_final == pytest.approx(0.70)
+
+
 def test_build_digest_rejects_unknown_primary(tmp_path):
     with pytest.raises(ValueError, match="primary label"):
         build_digest([("x", tmp_path)], primary_label="y")

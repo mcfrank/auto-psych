@@ -327,7 +327,7 @@ def verbal_digest(verbal_repo: Optional[Path]) -> str:
                 f"{_mean(firsts)} | {_mean(finals)} | {last_round} |"
             )
     lines.append("")
-    lines.append("Per-run trees: `<study>/<run>/` with `iter_<k>/` (critic + theorist + candidates), "
+    lines.append("Per-run trees: `<study>/<run>/` with `iter_<k>/` (critic + candidates), "
                  "`model_zoo/`, `final_comparison.md`, `best_model.py`, `token_usage.jsonl`.")
     return "\n".join(lines)
 

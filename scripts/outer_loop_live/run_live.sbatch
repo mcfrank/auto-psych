@@ -90,7 +90,7 @@ import json, sys, pathlib
 cfg_path, out = pathlib.Path(sys.argv[1]), sys.argv[2]
 cfg = json.loads(cfg_path.read_text()) if cfg_path.exists() else {"$schema": "https://opencode.ai/config.json"}
 perm = cfg.setdefault("permission", {})
-for k in ("edit", "bash", "webfetch"):
+for k in ("edit", "write", "bash", "webfetch"):
     perm.setdefault(k, "allow")
 ext = perm.setdefault("external_directory", {})
 ext[f"{out}/**"] = "allow"; ext[out] = "allow"
@@ -121,7 +121,6 @@ EXTRA=()
 [[ -n "${HINTS_FILE:-}" ]]             && EXTRA+=(--hints-file "$HINTS_FILE")
 [[ -n "${NOVELTY_RMSE_THRESHOLD:-}" ]] && EXTRA+=(--novelty-rmse-threshold "$NOVELTY_RMSE_THRESHOLD")
 [[ -n "${PRUNE_DSE_MULTIPLIER:-}" ]]   && EXTRA+=(--prune-dse-multiplier "$PRUNE_DSE_MULTIPLIER")
-[[ -n "${PRUNE_WEIGHT_FLOOR:-}" ]]     && EXTRA+=(--prune-weight-floor "$PRUNE_WEIGHT_FLOOR")
 [[ -n "${CANDIDATE_PARALLELISM:-}" ]]  && EXTRA+=(--candidate-parallelism "$CANDIDATE_PARALLELISM")
 # Money gate: run.py refuses --prolific-mode live without this flag; the config
 # bridge only exports it when the yaml sets `confirm_live_recruitment: true`.

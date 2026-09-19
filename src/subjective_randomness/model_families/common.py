@@ -1,12 +1,9 @@
 """Shared sequence features and choice helpers for subjective-randomness models.
 
-The sequence statistics themselves live in ``src/subjective_randomness/features.py``
-— the featurizer that turns raw H/T pairs into the numeric columns the PyMC
-models read — and this module wraps them for the pure-Python model families:
-each wrapper cleans its input once (``clean_sequence``) and caches on the raw
-string. Keeping one implementation means a PyMC model fitted on featurizer
-columns and its pure-Python twin can never disagree about what "periodicity" or
-"local imbalance" means.
+Each sequence statistic is implemented directly here so that the model families
+(and anything that runs in the pipeline or holdout harness) have no dependency
+on ``src/subjective_randomness/features.py``, which is a research-library
+module for offline analysis only.
 """
 
 from __future__ import annotations
@@ -15,8 +12,7 @@ import functools
 import math
 from typing import Dict, Iterable, Mapping, Sequence, Tuple
 
-from .. import features
-from ..features import LOCAL_WINDOW  # noqa: F401  re-exported for model families
+LOCAL_WINDOW = 4
 
 Stimulus = Tuple[str, str]
 
@@ -179,62 +175,122 @@ def max_run_norm(seq: str) -> float:
 def parse_motifs(seq: str) -> Tuple[int, int]:
     """Parse an H/T sequence into Falk & Konold (1997) motifs.
 
-    Returns ``(rep_motifs, alt_motifs)`` — n1 (repetition motifs: constant-run
-    chunks) and n2 (alternation motifs: strictly alternating chunks of length
-    >= 2) of the Difficulty Predictor parse, for which DP = n1 + 2*n2. Falk &
-    Konold (1997, p. 308) define the parse as the partition of the sequence
-    into such chunks that "achieve[s] the lowest possible number" — chunk
-    boundaries need not respect run boundaries (their example: XXXOXO ->
-    XX|XOXO, DP 3). DP ties are broken toward the fewest chunks (the most
-    compressed description), which makes (n1, n2) unique. For example
-    HHTTHTHT -> {HH, TT} repetition + {HTHT} alternation -> (2, 1), DP = 4;
-    HTHHTH -> {HTH, HTH} -> (0, 2), DP = 4. Implemented in ``features.py``.
+    Returns ``(rep_motifs, alt_motifs)`` — n1 and n2 of the Difficulty
+    Predictor parse, for which DP = n1 + 2*n2.
     """
-    return features.parse_motifs(clean_sequence(seq))
+    s = clean_sequence(seq)
+    n = len(s)
+    unreachable = (n * 2 + 1, n + 1)
+    best = [(0, 0)] + [unreachable] * n
+    for i in range(1, n + 1):
+        for j in range(i - 1, -1, -1):
+            chunk = s[j:i]
+            if all(c == chunk[0] for c in chunk):
+                cost = 1
+            elif all(a != b for a, b in zip(chunk, chunk[1:])):
+                cost = 2
+            else:
+                continue
+            candidate = (best[j][0] + cost, best[j][1] + 1)
+            if candidate < best[i]:
+                best[i] = candidate
+    dp, chunks = best[n]
+    rep_motifs = 2 * chunks - dp
+    alt_motifs = dp - chunks
+    return rep_motifs, alt_motifs
 
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
 def periodicity_score(seq: str) -> float:
-    """
-    Degree to which the sequence can be described by a short repeating template.
-
-    Returns 0 for weak periodicity and approaches 1 for obvious patterns like
-    HHHHHHHH or HTHTHTHT. Implemented in ``features.py``.
-    """
-    return features.periodicity_score(clean_sequence(seq))
+    """Degree to which the sequence matches a short repeating template."""
+    s = clean_sequence(seq)
+    n = len(s)
+    if n <= 2:
+        return 0.0
+    best_match = 0.5
+    for period in range(1, (n // 2) + 1):
+        template = s[:period]
+        matches = sum(1 for i, c in enumerate(s) if c == template[i % period])
+        best_match = max(best_match, matches / n)
+    return max(0.0, min(1.0, 2.0 * (best_match - 0.5)))
 
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
 def local_imbalance(seq: str) -> float:
-    """Worst H/T imbalance over sliding windows of length min(n, LOCAL_WINDOW).
-
-    2*|prop_heads - 0.5| of the most imbalanced window (Kahneman & Tversky
-    1972: representativeness holds "locally in each of its parts").
-    Implemented in ``features.py``.
-    """
-    return features.local_imbalance(clean_sequence(seq))
+    """Worst H/T imbalance over sliding windows of length min(n, LOCAL_WINDOW)."""
+    s = clean_sequence(seq)
+    n = len(s)
+    window = min(n, LOCAL_WINDOW)
+    worst = 0.0
+    for start in range(n - window + 1):
+        chunk = s[start : start + window]
+        heads = sum(1 for c in chunk if c == "H")
+        worst = max(worst, 2.0 * abs(heads / window - 0.5))
+    return worst
 
 
 @functools.lru_cache(maxsize=_CACHE_SIZE)
 def multiscale_local_imbalance(seq: str) -> float:
-    """Mean H/T imbalance across global and short local descriptions.
-
-    The global sequence and each sliding-window scale from two through four
-    receive equal weight. Within a scale, every window receives equal weight.
-    This makes the operationalization explicit and avoids allowing a single
-    worst window to determine the entire score. Implemented in ``features.py``.
-    """
-    return features.multiscale_local_imbalance(clean_sequence(seq))
+    """Mean H/T imbalance across global and short local descriptions."""
+    s = clean_sequence(seq)
+    n = len(s)
+    heads = sum(1 for c in s if c == "H")
+    global_imbalance = 2.0 * abs(heads / n - 0.5)
+    scale_scores = [global_imbalance]
+    for window in range(2, min(LOCAL_WINDOW, n - 1) + 1):
+        window_scores = []
+        for start in range(n - window + 1):
+            chunk = s[start : start + window]
+            chunk_heads = sum(1 for c in chunk if c == "H")
+            window_scores.append(2.0 * abs(chunk_heads / window - 0.5))
+        scale_scores.append(sum(window_scores) / len(window_scores))
+    return sum(scale_scores) / len(scale_scores)
 
 
 def occurrence_probability(pattern: str, n_global: int) -> float:
-    """P(``pattern`` occurs as a contiguous substring of ``n_global`` fair flips).
+    """P(``pattern`` occurs as a contiguous substring of ``n_global`` fair flips)."""
+    p = clean_sequence(pattern)
+    k = len(p)
+    if n_global < 0:
+        raise ValueError(f"n_global must be >= 0, got {n_global}")
+    if n_global < k:
+        return 0.0
 
-    The quantity of Hahn & Warren (2009): the probability that a length-k
-    string appears at least once within a finite global sequence of fair coin
-    flips. Implemented in ``features.py``.
-    """
-    return features.occurrence_probability(clean_sequence(pattern), n_global)
+    failure = [0] * k
+    for i in range(1, k):
+        j = failure[i - 1]
+        while j > 0 and p[i] != p[j]:
+            j = failure[j - 1]
+        failure[i] = j + 1 if p[i] == p[j] else 0
+
+    def next_state(state: int, symbol: str) -> int:
+        while True:
+            if symbol == p[state]:
+                return state + 1
+            if state == 0:
+                return 0
+            state = failure[state - 1]
+
+    transitions = [
+        {symbol: next_state(state, symbol) for symbol in "HT"} for state in range(k)
+    ]
+
+    dist = [0.0] * k
+    dist[0] = 1.0
+    absorbed = 0.0
+    for _ in range(n_global):
+        new_dist = [0.0] * k
+        for state, mass in enumerate(dist):
+            if mass == 0.0:
+                continue
+            for symbol in "HT":
+                target = transitions[state][symbol]
+                if target == k:
+                    absorbed += 0.5 * mass
+                else:
+                    new_dist[target] += 0.5 * mass
+        dist = new_dist
+    return absorbed
 
 
 def logsumexp(values: Iterable[float]) -> float:

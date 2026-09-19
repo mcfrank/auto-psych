@@ -5,11 +5,11 @@ Fits a set of PyMC cognitive models to observed responses, compares them by
 ELPD-LOO, optionally spawns a coding agent to propose new candidate models over
 several rounds, and exports the best model.
 
-The responses CSV must already carry the numeric feature columns the models read
-through `pm.Data` (e.g. produced by a project's `preprocess.py`). When driven by
-the outer loop, featurization and seeding happen in
-`outer_loop.orchestrator.run_inner_model_loop_programmatic`; this CLI is for
-running the inner loop directly on an already-featurized CSV + seed model set.
+The responses CSV carries only raw columns (sequence_a, sequence_b,
+participant_id, trial_index, chose_left); each model computes its own features
+via a ``compute_features`` hook. When driven by the outer loop, seeding happens
+in ``outer_loop.orchestrator.run_inner_model_loop_programmatic``; this CLI is
+for running the inner loop directly on a CSV + seed model set.
 
 Usage:
   # Compute only (no agent): fit + compare the seed models, export the best.
@@ -49,13 +49,12 @@ from src.models.mcmc_defaults import (
     PRODUCTION_DRAWS,
     PRODUCTION_TUNE,
 )
-from src.pipelines.inner_loop.pymc_orchestrator import (
-    DEFAULT_COMPLEXITY_PRIOR_CONST,
+from src.pipelines.inner_loop.model_zoo import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     DEFAULT_PRUNE_DSE_MULTIPLIER,
-    DEFAULT_PRUNE_WEIGHT_FLOOR,
-    run_pymc_inner_loop,
 )
+from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
+from src.pipelines.inner_loop.scoring import DEFAULT_COMPLEXITY_PRIOR_CONST
 from src.runtime.coding_agent import select_backend
 from src.runtime.token_usage import start_usage_log, write_usage_report
 
@@ -80,7 +79,7 @@ class Args:
     """PyMC inner model loop: fit, compare (ELPD-LOO), and export the best model."""
 
     responses: Path
-    """Path to a featurized responses CSV (columns match the models' pm.Data names)."""
+    """Path to a raw responses CSV (sequence_a, sequence_b, participant_id, trial_index, chose_left)."""
     seed_models: Path
     """Directory of seed PyMC models (<name>.py + models_manifest.yaml)."""
     results: Path
@@ -111,10 +110,8 @@ class Args:
     """Reject a candidate whose p_left is within this RMSE of an admitted
     model's on the observed stimuli (0 disables the novelty gate)."""
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER
-    """Prune agent models with elpd_diff > multiplier*dse AND stacking weight
-    below the floor after each scoring pass (0 disables pruning)."""
-    prune_weight_floor: float = DEFAULT_PRUNE_WEIGHT_FLOOR
-    """Stacking-weight floor for pruning (see --prune-dse-multiplier)."""
+    """Prune non-seed models with elpd_diff > multiplier*dse after each
+    scoring pass (0 disables pruning)."""
     candidate_parallelism: Optional[int] = None
     """Concurrent candidate agents per round (default: all of the round's
     candidates at once; 1 = sequential)."""
@@ -155,7 +152,6 @@ def main(args: Args) -> None:
             candidate_hints=hints,
             novelty_rmse_threshold=args.novelty_rmse_threshold,
             prune_dse_multiplier=args.prune_dse_multiplier,
-            prune_weight_floor=args.prune_weight_floor,
             candidate_parallelism=args.candidate_parallelism,
         )
     finally:

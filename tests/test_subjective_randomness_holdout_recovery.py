@@ -10,6 +10,7 @@ step against the ground truth on a held-out stimulus set.
 
 from __future__ import annotations
 
+import csv
 import json
 import shutil
 from pathlib import Path
@@ -18,22 +19,29 @@ import numpy as np
 import pytest
 import yaml
 
+import src.subjective_randomness.holdout_data as holdout_data
+import src.subjective_randomness.holdout_eval as holdout_eval
 import src.subjective_randomness.holdout_recovery as holdout_recovery
 from src.pipelines.inner_loop import pymc_orchestrator
 from src.runtime import token_usage
-from src.subjective_randomness.holdout_recovery import (
+from src.subjective_randomness.holdout_data import (
+    strip_generating_model,
+)
+from src.subjective_randomness.holdout_eval import (
     TRAJECTORY_COLUMNS,
     build_eval_stimuli,
     collect_trained_pairs,
     evaluate_trajectory,
     fitted_seed_baseline_correlation,
-    leakage_check,
     reevaluate_trajectories,
+    seed_baseline_correlation,
+)
+from src.subjective_randomness.holdout_recovery import (
     run_holdout_experiments,
     run_holdout_recovery_from_config,
-    seed_baseline_correlation,
     trajectory_tidy_rows,
 )
+from src.subjective_randomness.leakage_audit import leakage_check
 from src.subjective_randomness.recover import pearson_r
 from src.subjective_randomness.stimulus_design import generate_candidate_pool
 from tests.model_registry import FAITHFUL_MODEL_NAMES
@@ -77,8 +85,7 @@ def _stub_design(calls, stimuli=DESIGN_STIMULI):
 
 
 def _stub_generate_responses(calls):
-    def generate(model_name, models_dir, stimuli, params, n_participants, *, seed=0,
-                 generator="pymc"):
+    def generate(model_name, models_dir, stimuli, params, n_participants, *, seed=0):
         calls.append({"model_name": model_name, "seed": seed, "params": dict(params)})
         rows = []
         for participant in range(n_participants):
@@ -106,7 +113,7 @@ def _stub_inner_loop(history_best):
     # _complete_experiment_on_disk).
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
             backend=None, agent_model=None, cache_dir=None, project_id=None,
-            agent_timeout_sec=900):
+            agent_timeout_sec=900, **kwargs):
         # Mirror the real inner loop: every candidate-agent run records its
         # token usage (here one stub record per experiment's loop).
         token_usage.record_usage(
@@ -149,7 +156,7 @@ def _stub_inner_loop(history_best):
         (loop_dir / "report.md").write_text("# stub report\n", encoding="utf-8")
         (loop_dir / "responses.csv").write_text("chose_left\n1\n", encoding="utf-8")
 
-        # Mirror _export_inner_loop_model's new semantics: ``history_best`` is
+        # Mirror _export_inner_loop_models' semantics: ``history_best`` is
         # already in cognitive_models (a pool model that won), so nothing is
         # copied and the manifest is unchanged.
         return loop_dir
@@ -179,23 +186,23 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         holdout_recovery, "run_inner_model_loop_programmatic", capturing_inner_loop
     )
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: np.linspace(
             0.1, 0.9, len(stimuli)
         ),
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
     # No model in these stubs indexes a participant random effect.
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     def fake_fit_model(name, models_dir, responses_path, *, cache_dir=None, **kw):
         fit_calls.append({"name": name, "cache_dir": cache_dir})
         return CannedPredictionFit()
 
-    monkeypatch.setattr(holdout_recovery, "fit_model", fake_fit_model)
+    monkeypatch.setattr(holdout_eval, "fit_model", fake_fit_model)
 
     config = {
         "project_id": "subjective_randomness",
@@ -334,6 +341,109 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert usage_summary["total_tokens"] == 220
     assert usage_summary["by_source"]["inner:candidate"]["n_calls"] == 2
     assert "local_representativeness" in gt_run["experiments"][1]["manifest_models"]
+
+
+# ── what the agents may read ────────────────────────────────────────
+
+
+def test_run_holdout_experiments_strips_generating_model_from_agent_facing_csv(
+    tmp_path, monkeypatch
+):
+    """The agents read ``data/responses.csv`` (and the pooled ``model_loop``
+    copy derived from it). The generator's own name must not travel with the
+    data: it is the held-out model's identity, and a candidate agent that opens
+    the CSV would otherwise be told which model it is supposed to rediscover.
+    Every other column (features, sequences, choices, ids) is kept."""
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
+    monkeypatch.setattr(
+        holdout_recovery, "generate_responses", _stub_generate_responses([])
+    )
+    monkeypatch.setattr(
+        holdout_recovery,
+        "run_inner_model_loop_programmatic",
+        _stub_inner_loop("local_representativeness"),
+    )
+
+    run_holdout_experiments(
+        "prototype_similarity",
+        {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
+        tmp_path / "run",
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        n_participants=2,
+        inner_loop_iterations=0,
+        candidate_count=0,
+        fit_kwargs={},
+        seed=0,
+    )
+
+    responses = tmp_path / "run" / "experiment1" / "data" / "responses.csv"
+    with responses.open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+    assert "generating_model" not in reader.fieldnames
+    assert {"participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"} \
+        <= set(reader.fieldnames)
+    assert len(rows) == 2 * len(DESIGN_STIMULI)
+    assert "prototype_similarity" not in responses.read_text(encoding="utf-8")
+
+
+def test_resumed_run_refuses_responses_csv_that_names_its_generator(
+    tmp_path, monkeypatch
+):
+    """A resumed run keeps a data/responses.csv that already validates. If that
+    file (from an older harness) still carries the generator's name, the run
+    must stop loudly rather than feed the held-out identity to the inner loop."""
+    run_root = tmp_path / "run"
+    exp_dir = run_root / "experiment1"
+    _complete_experiment_on_disk(run_root, 1, with_model_loop=False)
+    (exp_dir / "data" / "responses.csv").write_text(
+        "participant_id,trial_index,sequence_a,sequence_b,chose_left,generating_model\n"
+        "0,0,HTHTHT,HHHHHH,1,prototype_similarity\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
+    inner_loop_calls = []
+    monkeypatch.setattr(
+        holdout_recovery,
+        "run_inner_model_loop_programmatic",
+        lambda exp_dir, **kwargs: inner_loop_calls.append(exp_dir),
+    )
+
+    with pytest.raises(RuntimeError, match="generating_model"):
+        run_holdout_experiments(
+            "prototype_similarity",
+            {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
+            run_root,
+            seed_models_dir=SEED_MODELS_DIR,
+            n_experiments=1,
+            n_participants=2,
+            inner_loop_iterations=0,
+            candidate_count=0,
+            fit_kwargs={},
+            seed=0,
+            resume=True,
+        )
+    assert inner_loop_calls == []
+
+
+def test_strip_generating_model_drops_only_that_column():
+    rows = [
+        {"sequence_a": "HTH", "chose_left": 1, "generating_model": "held_out"},
+        {"sequence_a": "HHH", "chose_left": 0, "generating_model": "held_out"},
+    ]
+    stripped = strip_generating_model(rows)
+    assert stripped == [
+        {"sequence_a": "HTH", "chose_left": 1},
+        {"sequence_a": "HHH", "chose_left": 0},
+    ]
+    # The caller's rows are left alone (the recovery bookkeeping still reads them).
+    assert all("generating_model" in row for row in rows)
+
+
+def test_strip_generating_model_is_a_no_op_without_the_column():
+    rows = [{"sequence_a": "HTH", "chose_left": 1}]
+    assert strip_generating_model(rows) == rows
 
 
 # ── harness error path ──────────────────────────────────────────────
@@ -577,9 +687,10 @@ def test_from_config_resume_skips_completed_gt_runs(tmp_path, monkeypatch):
         raise AssertionError("completed GT run must not re-run any work")
 
     for seam in ("run_design_programmatic", "seed_experiment_models_from_project",
-                 "generate_responses", "run_inner_model_loop_programmatic",
-                 "p_left_fixed_params", "fit_model"):
+                 "generate_responses", "run_inner_model_loop_programmatic"):
         monkeypatch.setattr(holdout_recovery, seam, tripwire)
+    for seam in ("p_left_fixed_params", "fit_model"):
+        monkeypatch.setattr(holdout_eval, seam, tripwire)
 
     config = {
         "seed_models_dir": str(SEED_MODELS_DIR),
@@ -709,15 +820,15 @@ def test_evaluate_trajectory_scores_every_history_step(tmp_path, monkeypatch):
     predictions = {"model_a": np.array([0.3, 0.9, 0.5]), "model_b": gt_p.copy()}
 
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: gt_p,
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
     # No model in these stubs indexes a participant random effect.
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
         model = None
@@ -729,7 +840,7 @@ def test_evaluate_trajectory_scores_every_history_step(tmp_path, monkeypatch):
             return predictions[self.name]
 
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(name),
     )
@@ -783,15 +894,15 @@ def test_evaluate_trajectory_computes_bayesian_model_average(tmp_path, monkeypat
     fit_names = []
 
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: gt_p,
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
     # No model in these stubs indexes a participant random effect.
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
         model = None
@@ -806,7 +917,7 @@ def test_evaluate_trajectory_computes_bayesian_model_average(tmp_path, monkeypat
         fit_names.append(name)
         return Fitted(name)
 
-    monkeypatch.setattr(holdout_recovery, "fit_model", fake_fit)
+    monkeypatch.setattr(holdout_eval, "fit_model", fake_fit)
 
     rows = evaluate_trajectory(
         run_root,
@@ -856,14 +967,14 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
     gt_p = np.array([0.3, 0.7])
 
     monkeypatch.setattr(
-        holdout_recovery, "p_left_fixed_params", lambda *a, **k: gt_p
+        holdout_eval, "p_left_fixed_params", lambda *a, **k: gt_p
     )
     monkeypatch.setattr(
-        holdout_recovery, "pm_data_inputs",
+        holdout_eval, "pm_data_inputs",
         lambda model: ["participant_id", "chose_left"],
     )
     # Pass rows straight through so the fake model can read participant_id.
-    monkeypatch.setattr(holdout_recovery, "make_stim_data", lambda model, rows: rows)
+    monkeypatch.setattr(holdout_eval, "make_stim_data", lambda model, rows: rows)
 
     # p_left per (participant, stimulus): participant offsets shift the curve.
     table = {
@@ -880,7 +991,7 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
             )
 
     monkeypatch.setattr(
-        holdout_recovery, "fit_model",
+        holdout_eval, "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
 
@@ -923,12 +1034,12 @@ def test_fitted_seed_baseline_correlation_pools_all_experiments(tmp_path, monkey
     fit_responses = []
 
     monkeypatch.setattr(
-        holdout_recovery, "p_left_fixed_params", lambda *a, **k: gt_p
+        holdout_eval, "p_left_fixed_params", lambda *a, **k: gt_p
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
         model = None
@@ -943,7 +1054,7 @@ def test_fitted_seed_baseline_correlation_pools_all_experiments(tmp_path, monkey
         fit_responses.append(Path(responses_path).name)
         return Fitted(name)
 
-    monkeypatch.setattr(holdout_recovery, "fit_model", fake_fit)
+    monkeypatch.setattr(holdout_eval, "fit_model", fake_fit)
 
     out = fitted_seed_baseline_correlation(
         run_root,
@@ -976,12 +1087,12 @@ def test_seed_baseline_correlation_averages_other_seed_models(monkeypatch):
         "other_b": np.array([0.9, 0.6, 0.2]),  # 1.1 - gt_p, exact anti -> r = -1
     }
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: preds[model_name],
     )
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "resolve_generating_params",
         lambda spec, seed_models_dir, gt_family_dir=None: {
             "gt": {"a": 1.0}, "other_a": {"a": 1.0}, "other_b": {"a": 1.0}
@@ -1010,15 +1121,15 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
 
     gt_p = np.array([0.2, 0.5, 0.9])
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: gt_p,
     )
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
     # No model in these stubs indexes a participant random effect.
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
         model = None
@@ -1027,7 +1138,7 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
             return gt_p
 
     monkeypatch.setattr(
-        holdout_recovery, "fit_model",
+        holdout_eval, "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
 
@@ -1086,11 +1197,11 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
             seen_gt_dirs.append(Path(models_dir))
         return np.linspace(0.1, 0.9, len(stimuli))
 
-    monkeypatch.setattr(holdout_recovery, "p_left_fixed_params", fake_p_left)
+    monkeypatch.setattr(holdout_eval, "p_left_fixed_params", fake_p_left)
     monkeypatch.setattr(
-        holdout_recovery, "make_stim_data", lambda model, rows: {"n": len(rows)}
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
     )
-    monkeypatch.setattr(holdout_recovery, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
         model = None
@@ -1099,7 +1210,7 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
             return np.linspace(0.1, 0.9, stim_data["n"])
 
     monkeypatch.setattr(
-        holdout_recovery, "fit_model",
+        holdout_eval, "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
 
@@ -1157,7 +1268,7 @@ def test_evaluate_trajectory_fails_loudly_without_history(tmp_path, monkeypatch)
     run_root = tmp_path / "run"
     (run_root / "experiment1" / "model_loop").mkdir(parents=True)
     monkeypatch.setattr(
-        holdout_recovery,
+        holdout_eval,
         "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: np.zeros(3),
     )
@@ -1335,10 +1446,18 @@ def test_trajectory_tidy_rows_one_row_per_step():
                 "trajectory": [
                     {"experiment": 1, "step": 0, "iteration": None,
                      "global_step": 0, "best_model": "a", "pearson_r": 0.5,
-                     "rmse": 0.1, "pearson_r_bma": 0.6, "rmse_bma": 0.08},
+                     "rmse": 0.1, "kl_regret": 0.01, "bias": 0.02,
+                     "calib_slope": 1.0, "calib_intercept": 0.0,
+                     "pearson_r_bma": 0.6, "rmse_bma": 0.08,
+                     "kl_regret_bma": 0.005, "bias_bma": 0.01,
+                     "calib_slope_bma": 0.99, "calib_intercept_bma": 0.01},
                     {"experiment": 1, "step": 1, "iteration": 0,
                      "global_step": 1, "best_model": "b", "pearson_r": None,
-                     "rmse": 0.2, "pearson_r_bma": None, "rmse_bma": 0.2},
+                     "rmse": 0.2, "kl_regret": 0.05, "bias": -0.01,
+                     "calib_slope": 0.8, "calib_intercept": 0.1,
+                     "pearson_r_bma": None, "rmse_bma": 0.2,
+                     "kl_regret_bma": 0.04, "bias_bma": -0.005,
+                     "calib_slope_bma": 0.85, "calib_intercept_bma": 0.08},
                 ],
             }
         ]
@@ -1611,7 +1730,7 @@ def test_resolve_model_dir_finds_a_pruned_step_model(tmp_path):
     that a LATER pruning pass moved to models/pruned/. Reloading it for
     trajectory evaluation must look there, not fail — the history is still
     valid, the file just moved."""
-    from src.subjective_randomness.holdout_recovery import _resolve_model_dir
+    from src.subjective_randomness.holdout_eval import _resolve_model_dir
 
     models = tmp_path / "models"
     (models / "pruned").mkdir(parents=True)
@@ -1627,8 +1746,330 @@ def test_resolve_model_dir_defers_to_models_dir_when_absent(tmp_path):
     normal loader raises its clear 'model file not found' error — the resolver
     only redirects pruned models, it does not own the missing-file failure (and
     must not break callers that stub the loader without real .py files)."""
-    from src.subjective_randomness.holdout_recovery import _resolve_model_dir
+    from src.subjective_randomness.holdout_eval import _resolve_model_dir
 
     models = tmp_path / "models"
     models.mkdir()
     assert _resolve_model_dir(models, "ghost") == models
+
+
+# ── leakage check: the two identity channels + featurizer columns ────
+
+
+def _make_agent_csv(run_root, exp_num, header, *, name="responses.csv", sub="data"):
+    csv_dir = run_root / f"experiment{exp_num}" / sub
+    csv_dir.mkdir(parents=True, exist_ok=True)
+    path = csv_dir / name
+    path.write_text(f"{header}\n" + "0," * (header.count(",")) + "0\n", encoding="utf-8")
+    return path
+
+
+def test_leakage_check_flags_a_generating_model_column_in_any_agent_facing_csv(tmp_path):
+    """The held-out model's NAME is the leak iteration 2 closed at the writer;
+    the audit must catch it coming back, in the design CSV or the pooled one."""
+    run_root = tmp_path / "run"
+    _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
+    _make_agent_csv(run_root, 1, "sequence_a,chose_left,generating_model")
+    _make_agent_csv(run_root, 1, "sequence_a,chose_left", sub="model_loop")
+
+    result = leakage_check(
+        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+    )
+    assert result["any_csv_generating_model"] is True
+    flagged = result["csv_generating_model_files"]
+    assert flagged == ["experiment1/data/responses.csv"]
+
+
+def test_leakage_check_leaves_a_stripped_csv_unflagged(tmp_path):
+    run_root = tmp_path / "run"
+    _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
+    _make_agent_csv(run_root, 1, "sequence_a,chose_left,participant_id")
+
+    result = leakage_check(
+        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+    )
+    assert result["any_csv_generating_model"] is False
+    assert result["csv_generating_model_files"] == []
+
+
+def test_leakage_check_flags_the_held_out_name_in_a_checkout_manifest(tmp_path):
+    """Deleting the held-out .py left its NAME and rationale in the manifests
+    the agents can open; iteration 2 scrubs them, so the audit must notice a
+    manifest that still lists it."""
+    run_root = tmp_path / "run"
+    _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
+    checkout = tmp_path / "checkout"
+    listed = checkout / "seed_models"
+    listed.mkdir(parents=True)
+    (listed / "models_manifest.yaml").write_text(
+        "models:\n  - name: prototype_similarity\n    rationale: similarity to a prototype\n"
+        "  - name: window_typicality\n    rationale: finite window\n",
+        encoding="utf-8",
+    )
+    scrubbed = checkout / "pymc_model_families"
+    scrubbed.mkdir(parents=True)
+    (scrubbed / "models_manifest.yaml").write_text(
+        "models:\n  - name: window_typicality\n    rationale: finite window\n",
+        encoding="utf-8",
+    )
+
+    result = leakage_check(
+        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1, checkout_root=checkout,
+    )
+    assert result["any_manifest_gt_named"] is True
+    assert result["manifest_gt_named_files"] == ["seed_models/models_manifest.yaml"]
+
+
+def test_leakage_check_without_a_checkout_root_reports_the_manifest_channel_unchecked(
+    tmp_path,
+):
+    run_root = tmp_path / "run"
+    _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
+
+    result = leakage_check(
+        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+    )
+    assert result["any_manifest_gt_named"] is None
+    assert result["manifest_gt_named_files"] == []
+
+
+def test_leakage_check_records_the_featurizer_columns_each_model_reads(tmp_path):
+    """Panel U4: how much of recovery is a regression on a provided column.
+    Recorded per model, so the report can answer it per ground truth."""
+    run_root = tmp_path / "run"
+    _make_model_dirs(
+        run_root,
+        1,
+        {
+            "regressor.py": (
+                'occ = pm.Data("occ_n20_a", rows["occ_n20_a"].to_numpy())\n'
+                "alt = pm.Data('p_alts_a', rows['p_alts_a'].to_numpy())\n"
+            ),
+            "from_scratch.py": "# computes its own features in compute_features\n",
+        },
+    )
+
+    result = leakage_check(
+        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+    )
+    by_name = {Path(f["path"]).name: f for f in result["files"]}
+    assert by_name["regressor.py"]["data_columns"] == ["occ_n20_a", "p_alts_a"]
+    assert by_name["regressor.py"]["n_data_cols"] == 2
+    assert by_name["from_scratch.py"]["data_columns"] == []
+    assert result["max_data_cols"] == 2
+
+
+def test_leakage_check_manifest_scan_ignores_the_loops_own_output_manifests(tmp_path):
+    """The run tree lives inside the agent's checkout and writes a manifest per
+    experiment listing the carried models. An agent model that happens to be
+    named after the held-out model belongs in `any_gt_named`, not in the
+    manifest channel, which is about the seed catalogue the agents can read."""
+    run_root = tmp_path / "checkout" / "_runs" / "gt"
+    _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
+    checkout = tmp_path / "checkout"
+    (run_root / "experiment1" / "cognitive_models" / "models_manifest.yaml").write_text(
+        "models:\n  - name: prototype_similarity\n    rationale: an agent's own model\n",
+        encoding="utf-8",
+    )
+    seeds = checkout / "seed_models"
+    seeds.mkdir(parents=True)
+    (seeds / "models_manifest.yaml").write_text(
+        "models:\n  - name: window_typicality\n    rationale: finite window\n",
+        encoding="utf-8",
+    )
+
+    result = leakage_check(
+        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1, checkout_root=checkout,
+    )
+    assert result["any_manifest_gt_named"] is False
+    assert result["manifest_gt_named_files"] == []
+
+
+def test_leakage_check_flags_gt_in_opposite_feature_regime_manifest(tmp_path):
+    """Both feature regimes' manifests live in the checkout. When only the
+    the seed manifest still lists the GT, the audit must catch it. The array
+    sbatch's catch-all scrub (added in the 2026-09 consolidation) closes this
+    channel."""
+    run_root = tmp_path / "checkout" / "_runs" / "gt"
+    _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
+    checkout = tmp_path / "checkout"
+
+    # Both manifests still list the GT — NOT scrubbed
+    seeds = checkout / "seed_models"
+    seeds.mkdir(parents=True)
+    (seeds / "models_manifest.yaml").write_text(
+        "models:\n  - name: prototype_similarity\n    rationale: similarity to a prototype\n"
+        "  - name: window_typicality\n    rationale: finite window\n",
+        encoding="utf-8",
+    )
+    families = checkout / "pymc_model_families"
+    families.mkdir(parents=True)
+    (families / "models_manifest.yaml").write_text(
+        "models:\n  - name: prototype_similarity\n    rationale: similarity to a prototype\n"
+        "  - name: window_typicality\n    rationale: finite window\n",
+        encoding="utf-8",
+    )
+
+    result = leakage_check(
+        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1, checkout_root=checkout,
+    )
+    assert result["any_manifest_gt_named"] is True
+    assert len(result["manifest_gt_named_files"]) == 2
+    assert "seed_models/models_manifest.yaml" in result["manifest_gt_named_files"]
+    assert "pymc_model_families/models_manifest.yaml" in result["manifest_gt_named_files"]
+
+
+# ── raw-only responses ────────────────────────────────────────
+
+
+def test_agent_csv_has_only_raw_columns(tmp_path, monkeypatch):
+    """The agents get only raw H/T sequences and response bookkeeping.
+    Every model computes its own features."""
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
+    monkeypatch.setattr(
+        holdout_recovery, "generate_responses", _stub_generate_responses([])
+    )
+    monkeypatch.setattr(
+        holdout_recovery,
+        "run_inner_model_loop_programmatic",
+        _stub_inner_loop("local_representativeness"),
+    )
+
+    run_holdout_experiments(
+        "prototype_similarity",
+        {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
+        tmp_path / "run",
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        n_participants=2,
+        inner_loop_iterations=0,
+        candidate_count=0,
+        fit_kwargs={},
+        seed=0,
+    )
+
+    responses = tmp_path / "run" / "experiment1" / "data" / "responses.csv"
+    with responses.open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        rows = list(reader)
+    assert set(reader.fieldnames) == set(holdout_data.RAW_RESPONSE_COLUMNS)
+    assert len(rows) == 2 * len(DESIGN_STIMULI)
+
+
+def test_strip_to_raw_columns_keeps_only_the_raw_five():
+    rows = [
+        {
+            "sequence_a": "HTHT", "sequence_b": "HHTT", "participant_id": 0,
+            "trial_index": 3, "chose_left": 1, "p_alts_a": 1.0, "occ_n20_b": 0.5,
+        }
+    ]
+    (stripped,) = holdout_data.strip_to_raw_columns(rows)
+    assert tuple(stripped) == holdout_data.RAW_RESPONSE_COLUMNS
+    assert rows[0]["p_alts_a"] == 1.0  # input untouched
+
+
+def test_strip_to_raw_columns_fails_loudly_without_the_sequences():
+    with pytest.raises(ValueError, match="sequence_a"):
+        holdout_data.strip_to_raw_columns([{"participant_id": 0, "chose_left": 1}])
+
+
+# ── Regression: existing metric values must not change ──────────────
+
+
+def test_trajectory_tidy_rows_accepts_legacy_rows_without_new_metrics():
+    """Legacy trajectory dicts (pre-metrics_version 2) lack kl_regret etc.
+
+    trajectory_tidy_rows must pass them through without crashing or fabricating
+    values; the missing keys simply won't be in the resulting row dicts.
+    """
+    legacy_entry = {
+        "experiment": 1, "step": 0, "iteration": None, "global_step": 0,
+        "best_model": "a", "pearson_r": 0.5, "rmse": 0.1,
+        "pearson_r_bma": 0.6, "rmse_bma": 0.08,
+    }
+    result = {"gt_runs": [{"gt_model": "gt", "trajectory": [legacy_entry]}]}
+    rows = trajectory_tidy_rows(result)
+    assert len(rows) == 1
+    assert rows[0]["pearson_r"] == 0.5
+    assert "kl_regret" not in rows[0]
+    assert "bias" not in rows[0]
+
+
+def test_evaluate_trajectory_regression_pearson_r_and_rmse_unchanged(
+    tmp_path, monkeypatch
+):
+    """Pin the exact pearson_r and rmse values produced by evaluate_trajectory.
+
+    If adding new columns changes these numbers, something is wrong.
+    """
+    run_root = tmp_path / "run"
+    history = [
+        {
+            "step": 0,
+            "iteration": None,
+            "best_model": "model_a",
+            "posteriors": {"model_a": 0.75, "model_b": 0.25},
+            "elpd_loo": {"model_a": -1.0, "model_b": -2.0},
+        }
+    ]
+    _write_loop_artifacts(run_root, 1, history)
+
+    gt_p = np.array([0.2, 0.5, 0.9])
+    predictions = {
+        "model_a": np.array([0.3, 0.6, 0.8]),
+        "model_b": np.array([0.9, 0.1, 0.5]),
+    }
+
+    monkeypatch.setattr(
+        holdout_eval,
+        "p_left_fixed_params",
+        lambda model_name, models_dir, stimuli, params, **kw: gt_p,
+    )
+    monkeypatch.setattr(
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
+    )
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
+
+    class Fitted:
+        model = None
+
+        def __init__(self, name):
+            self.name = name
+
+        def predict_p_left(self, stim_data):
+            return predictions[self.name]
+
+    monkeypatch.setattr(
+        holdout_eval,
+        "fit_model",
+        lambda name, models_dir, responses_path, **kw: Fitted(name),
+    )
+
+    rows = evaluate_trajectory(
+        run_root,
+        "gt",
+        {"a": 1.0},
+        EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        cache_dir=None,
+        fit_kwargs={},
+    )
+
+    row = rows[0]
+    assert row["pearson_r"] == pytest.approx(0.9806085723261284, rel=1e-10)
+    assert row["rmse"] == pytest.approx(0.1, rel=1e-10)
+    bma = 0.75 * predictions["model_a"] + 0.25 * predictions["model_b"]
+    assert row["pearson_r_bma"] == pytest.approx(
+        pearson_r(gt_p.tolist(), bma.tolist()), rel=1e-10
+    )
+    assert row["rmse_bma"] == pytest.approx(
+        float(np.sqrt(np.mean((gt_p - bma) ** 2))), rel=1e-10
+    )

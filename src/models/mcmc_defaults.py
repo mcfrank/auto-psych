@@ -3,33 +3,21 @@
 Every entry point (outer-loop run CLI, inner-loop run CLI, the PPC critique
 CLI, design-time family-twin fits) reads its defaults from here, so "what
 settings did this run use?" has one answer unless a config overrides it
-explicitly. Before this module the defaults had drifted per entry point
-(outer 2000/2000/4, inner CLI 500/500/2, ppc 2000/2000/4, design twins
-hard-coded 500/500/2).
+explicitly.
 """
 
 # Production sampling: full posteriors for model comparison (ELPD-LOO needs
 # reliable log-likelihood draws). Quick local runs should pass explicit lower
-# values rather than lowering these. draws/tune raised and target_accept lifted
-# off PyMC's implicit 0.8 default to shrink divergences and stabilise the
-# PSIS-LOO tail — high Pareto-k on the best-fitting model was hard-failing the
-# inner loop's export gate. (2026-08-13 audit: that gate no longer exists — the
-# only hard ELPD gates today are on NON-FINITE values — so 0.99 stands as
-# cautious tail stabilisation, not as protection for a live check. A model
-# whose posterior geometry makes 0.99 needlessly expensive can declare its own
-# SAMPLER_SETTINGS in its model file; see motif_stack.)
+# values rather than lowering these. A model whose posterior geometry makes
+# 0.99 needlessly expensive can declare its own SAMPLER_SETTINGS in its file.
 PRODUCTION_DRAWS = 4000
 PRODUCTION_TUNE = 3000
 PRODUCTION_CHAINS = 4
 PRODUCTION_TARGET_ACCEPT = 0.99
 
-# Chains run in parallel, one worker process each. This was 1 (i.e. the four
-# production chains ran *sequentially*) for no stated reason; measured
-# 2026-08-13 on macOS with chains=4, PyMC 5.28.5: cores=4 finished in 38 s vs
-# 110 s at cores=1, with no multiprocessing trouble. 4 matches
-# PRODUCTION_CHAINS, so every chain gets its own core and none queue behind
-# another. Callers that fit many models concurrently should pass cores=1
-# explicitly rather than lowering this, to avoid oversubscribing the machine.
+# Chains run in parallel, one worker process each. Matches PRODUCTION_CHAINS
+# so every chain gets its own core. Callers that fit many models concurrently
+# should pass cores=1 explicitly to avoid oversubscribing the machine.
 PRODUCTION_CORES = 4
 
 # Design-time fits (posterior-informed exhaustive design, experiments >= 2):

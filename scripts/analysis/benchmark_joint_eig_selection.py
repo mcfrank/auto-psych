@@ -50,11 +50,9 @@ from src.models.eig_selection import (  # noqa: E402
     estimate_joint_eig,
     select_n_joint_eig,
 )
-from src.models.pymc_inference import (  # noqa: E402
-    load_pymc_model_cached,
-    make_stim_data,
-    prior_predict_p_left_draws,
-)
+from src.models.data_binding import make_stim_data  # noqa: E402
+from src.models.model_loading import load_pymc_model_cached  # noqa: E402
+from src.models.pymc_inference import prior_predict_p_left_draws  # noqa: E402
 from src.subjective_randomness.features import featurize_stimulus  # noqa: E402
 from src.subjective_randomness.stimulus_design import (  # noqa: E402
     enumerate_all_pairs,

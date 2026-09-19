@@ -111,3 +111,28 @@ def read_loadable_model_names(models_dir: PathLike) -> List[str]:
             f"not exist: {missing}"
         )
     return names
+
+
+def remove_manifest_entry(models_dir: PathLike, name: str) -> bool:
+    """Rewrite ``models_dir``'s manifest without the model called ``name``.
+
+    This is the holdout-recovery sandbox scrub: after the held-out model's
+    ``.py`` is deleted from the agents' repo copy, its manifest entry — the
+    name plus the one-sentence ``rationale`` that states its mechanism — must go
+    too, or every agent that opens the manifest is told what it is supposed to
+    rediscover. The file is re-serialised from its parsed entries, so a header
+    comment (which typically lists every active model by name) is dropped as
+    well; the remaining entries keep their order and rationales.
+
+    Returns True when an entry was removed and False when ``name`` was not
+    listed (the file is then left untouched). A missing or malformed manifest
+    raises, exactly as ``read_manifest_entries`` does.
+    """
+    entries = read_manifest_entries(models_dir)
+    remaining = [entry for entry in entries if entry["name"] != name]
+    if len(remaining) == len(entries):
+        return False
+    manifest_path(models_dir).write_text(
+        yaml.safe_dump({"models": remaining}, sort_keys=False), encoding="utf-8"
+    )
+    return True

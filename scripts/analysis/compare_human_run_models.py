@@ -221,7 +221,9 @@ def fit_and_predict_p_left(
     ``eval_rows``. Hierarchical models (a ``participant_id`` input) have no single
     population-level ``p_left`` vector to compare and raise here.
     """
-    from src.models.pymc_inference import fit_model, make_stim_data, pm_data_inputs
+    from src.models.data_binding import make_stim_data
+    from src.models.model_loading import pm_data_inputs
+    from src.models.pymc_inference import fit_model
 
     loop_dir = Path(runs_root) / run / PROJECT_ID / experiment / "model_loop"
     models_dir = loop_dir / "models"

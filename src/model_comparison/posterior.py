@@ -135,13 +135,23 @@ def compare_table(
       only meaningfully distinguishable when ``elpd_diff`` is large relative to
       ``dse`` (a rough rule of thumb is ``elpd_diff > 2 * dse``).
     - ``weight``: Akaike-style stacking weight from ``az.compare``.
-    - ``loo_unreliable``: ``az.compare``'s ``warning`` flag — True when this
-      model's PSIS-LOO estimate is untrustworthy (many high Pareto-k points), so
-      its ELPD (and the posterior built from it) should be read with caution.
+    - ``loo_unreliable``: True when this model's PSIS-LOO estimate is
+      untrustworthy — more than a tolerated proportion of its trials have a
+      high Pareto k, trials whose LOO term is exact excluded (see
+      ``src.models.loo_reliability``; this is deliberately NOT arviz's blanket
+      any-k>0.7 ``warning``). Its ELPD (and the posterior built from it) should
+      then be read with caution: the inner loop excludes such a model from
+      export and the registry zeroes its design prior.
+    - ``n_bad_k``, ``frac_bad_k``, ``n_exact_loo_points``, ``max_pareto_k``:
+      the evidence behind that verdict, recorded for audit.
+
+    Each fit's PSIS-LOO is computed once (``FittedModel.loo_diagnostics``) and
+    handed to ``az.compare`` as pointwise ``ELPDData``, so nothing is rescored.
 
     Returns a plain dict keyed by model name (JSON-serialisable).
     """
     import arviz as az  # type: ignore
+    from src.models.loo_reliability import describe_unreliable  # type: ignore
     from src.models.model_manifest import read_loadable_model_names  # type: ignore
     from src.models.pymc_inference import fit_models_cached  # type: ignore
 
@@ -159,25 +169,29 @@ def compare_table(
         cache_dir=cache_dir,
         **fit_kwargs,
     )
-    idata_map = {name: fits[name].idata for name in model_names}
+    diagnostics = {name: fits[name].loo_diagnostics() for name in model_names}
 
-    cmp = az.compare(idata_map, ic="loo")
+    cmp = az.compare({name: d.loo for name, d in diagnostics.items()}, ic="loo")
 
     out: Dict[str, Dict[str, float]] = {}
     for rank, (name, row) in enumerate(cmp.iterrows()):
-        unreliable = bool(row["warning"]) if "warning" in cmp.columns else False
+        diag = diagnostics[name]
         out[name] = {
             "rank": rank,
             "elpd_loo": float(row["elpd_loo"]),
             "elpd_diff": float(row["elpd_diff"]),
             "dse": float(row["dse"]),
             "weight": float(row["weight"]),
-            "loo_unreliable": unreliable,
+            "loo_unreliable": diag.unreliable,
+            "n_bad_k": diag.n_bad_k,
+            "frac_bad_k": diag.frac_bad_k,
+            "n_exact_loo_points": diag.n_exact,
+            "max_pareto_k": diag.max_pareto_k,
         }
-        if unreliable:
+        if diag.unreliable:
             print(
-                f"  [warn] PSIS-LOO for {name!r} is unreliable (many high Pareto-k "
-                "points); its ELPD-LOO and any posterior built from it may be off.",
+                f"  [warn] PSIS-LOO for {describe_unreliable(name, diag)} Any "
+                "posterior built from it may be off.",
                 file=sys.stderr,
                 flush=True,
             )
@@ -292,6 +306,7 @@ class Args:
 
 
 def main(args: Args) -> None:
+    """CLI entry point: compute and write the Bayesian model posterior as JSON."""
     if not args.responses:
         print("Error: at least one --responses path is required", file=sys.stderr)
         sys.exit(1)

@@ -14,6 +14,7 @@ from pathlib import Path
 import pytest
 import yaml
 
+from src.pipelines.outer_loop import model_loop_runner as mlr
 from src.pipelines.outer_loop import orchestrator as orch
 
 PROJECT = "subjective_randomness"
@@ -99,21 +100,17 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
         return {"best_model": "stub_best"}
 
     monkeypatch.setattr(
-        orch, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
+        mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
     )
+    monkeypatch.setattr(mlr, "write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(
-        orch, "_load_project_featurizer",
-        lambda project_dir: captured.setdefault("featurizer_dir", project_dir) and None,
-    )
-    monkeypatch.setattr(orch, "_write_feature_csv", lambda rows, fz, out: out)
-    monkeypatch.setattr(
-        orch, "_export_inner_loop_model", lambda e, l, *, best_model: e
+        mlr, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e
     )
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
         fake_inner_loop,
     )
-    orch.run_inner_model_loop_programmatic(
+    mlr.run_inner_model_loop_programmatic(
         exp_dir, max_iterations=0, candidate_count=0, **kwargs
     )
     return captured
@@ -122,6 +119,11 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
 def test_inner_loop_programmatic_threads_cache_dir_and_timeout(tmp_path, monkeypatch):
     exp_dir = tmp_path / "data" / "outer_loop" / PROJECT / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
+    # A real project seed, so the wrapper can tell which models are protected.
+    (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
+        yaml.safe_dump({"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}),
+        encoding="utf-8",
+    )
     cache_dir = tmp_path / "cache"
 
     captured = _run_programmatic_loop(
@@ -136,12 +138,17 @@ def test_inner_loop_programmatic_explicit_project_id_overrides_parent_name(
     tmp_path, monkeypatch
 ):
     # Holdout layout: experiments live under <gt_model>/, so the parent dir is
-    # NOT the project id and the featurizer must resolve via the explicit one.
+    # NOT the project id and the protected seeds must resolve via the explicit one.
     exp_dir = tmp_path / "holdout_runs" / "prototype_similarity" / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
+    # A real project seed, so the wrapper can tell which models are protected.
+    (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
+        yaml.safe_dump({"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}),
+        encoding="utf-8",
+    )
 
     captured = _run_programmatic_loop(
         tmp_path, monkeypatch, exp_dir, project_id=PROJECT
     )
 
-    assert captured["featurizer_dir"] == orch.outer_project_dir(PROJECT)
+    assert "falk_konold_dp" in captured["inner_kwargs"]["protected_names"]

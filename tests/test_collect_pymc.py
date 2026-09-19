@@ -9,20 +9,16 @@ so the models can read their `pm.Data` columns.
 from __future__ import annotations
 
 import shutil
-from pathlib import Path
+
 
 import pytest
 
-from src.pipelines.outer_loop.collect import (
+from src.pipelines.outer_loop.synthetic_data import (
     _generate_from_models,
     _generate_from_pymc_models,
 )
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
-FEATURIZE = (
-    Path(__file__).resolve().parent.parent
-    / "src/pipelines/outer_loop/projects/subjective_randomness/preprocess.py"
-)
 
 
 def _seed(tmp_path):
@@ -48,7 +44,6 @@ def test_generate_from_pymc_models_shapes_and_columns(tmp_path):
         ["bayesian_fair_coin", "representativeness"],
         n_participants=3,
         models_dir=models_dir,
-        featurize_path=FEATURIZE,
         n_samples=100,
         seed=0,
     )
@@ -69,12 +64,12 @@ def test_generate_from_models_raises_when_the_model_cannot_be_resolved():
     was swallowed inside ``get_model_predictions``, which returned ``{}``, and
     ``_generate_from_models`` noticed the empty dict one frame later. Since the
     fail-loud sweep the original error propagates instead, so the message names
-    the actual problem (no theorist_dir) rather than its symptom.
+    the actual problem (no models dir) rather than its symptom.
     """
     stimuli = [{"sequence_a": "HHHT", "sequence_b": "HTHT"}]
     with pytest.raises(KeyError, match="theorist_dir required"):
         _generate_from_models(
-            stimuli, ["nonexistent_model"], n_participants=1, theorist_dir=None
+            stimuli, ["nonexistent_model"], n_participants=1, cognitive_models_dir=None
         )
 
 
@@ -102,7 +97,7 @@ def test_ground_truth_generation_rejects_invalid_probabilities(prediction):
 def test_generate_is_deterministic_under_fixed_seed(tmp_path):
     models_dir = _seed(tmp_path)
     stimuli = [{"sequence_a": "HHHT", "sequence_b": "HTHT"}]
-    kw = dict(models_dir=models_dir, featurize_path=FEATURIZE, n_samples=100, seed=7)
+    kw = dict(models_dir=models_dir, n_samples=100, seed=7)
     rows_a = _generate_from_pymc_models(stimuli, ["bayesian_fair_coin"], 2, **kw)
     rows_b = _generate_from_pymc_models(stimuli, ["bayesian_fair_coin"], 2, **kw)
     assert [r["chose_left"] for r in rows_a] == [r["chose_left"] for r in rows_b]
@@ -122,7 +117,6 @@ def test_synthetic_generation_counterbalances_sides(tmp_path):
         ["bayesian_fair_coin"],
         40,
         models_dir=models_dir,
-        featurize_path=FEATURIZE,
         n_samples=50,
         seed=0,
     )

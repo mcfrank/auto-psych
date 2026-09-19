@@ -11,7 +11,7 @@ import shutil
 import pytest
 import yaml
 
-from src.pipelines.outer_loop.orchestrator import run_inner_model_loop_programmatic
+from src.pipelines.outer_loop.model_loop_runner import run_inner_model_loop_programmatic
 from src.pipelines.inner_loop import pymc_orchestrator
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
