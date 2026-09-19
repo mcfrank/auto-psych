@@ -12,16 +12,16 @@ from __future__ import annotations
 
 import csv
 import json
-import math
 import os
 import re
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Sequence
+from typing import Any, Dict, Iterable, List, Optional, Sequence
 
 import yaml
 
+from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME
 from src.models.model_manifest import (
     manifest_path,
     read_loadable_model_names,
@@ -29,19 +29,8 @@ from src.models.model_manifest import (
     read_manifest_names,
 )
 from src.models.project.ground_truth import get_ground_truth_models
-from src.pipelines.outer_loop.featurizer import Featurizer, load_featurizer
+from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS, write_responses_csv
 
-# Stage output validators live in orchestrator_validators.py; re-exported here
-# so `from ...orchestrator import validate_cc_output / _validate_*` keeps working.
-from src.pipelines.outer_loop.orchestrator_validators import (  # noqa: F401
-    _ZOO_NAME_RE,
-    _validate_collect,
-    _validate_design,
-    _validate_implement,
-    _validate_model_loop,
-    _validate_model_set,
-    validate_cc_output,
-)
 from src.runtime.coding_agent import run_coding_agent
 from src.runtime.config import PROJECT_ASSETS_DIR, REPO_ROOT
 
@@ -53,11 +42,12 @@ PROMPTS_DIR = Path(__file__).resolve().parent / "prompts"
 
 
 def outer_projects_dir() -> Path:
-    """Project *assets* (problem_definition.md, ground_truth_models.py, preprocess.py)."""
+    """Project *assets* (problem_definition.md, ground_truth_models.py, seed_models/)."""
     return PROJECT_ASSETS_DIR
 
 
 def outer_project_dir(project_id: str) -> Path:
+    """Return the asset directory for a single project."""
     return outer_projects_dir() / project_id
 
 
@@ -73,6 +63,7 @@ def outer_data_dir() -> Path:
 
 
 def experiment_dir(project_id: str, exp_num: int) -> Path:
+    """Return the output directory for a numbered experiment within a project."""
     return outer_data_dir() / project_id / f"experiment{exp_num}"
 
 
@@ -82,12 +73,17 @@ def project_seed_models_dir(project_id: str) -> Path:
 
 
 def ensure_experiment_dirs(exp_dir: Path) -> None:
+    """Create the standard subdirectories inside an experiment output directory."""
     for sub in ["cognitive_models", "design", "experiment", "data", "model_loop"]:
         (exp_dir / sub).mkdir(parents=True, exist_ok=True)
 
 
 def seed_experiment_models_from_project(
-    exp_dir: Path, project_id: str, *, exclude: Sequence[str] = ()
+    exp_dir: Path,
+    project_id: str,
+    *,
+    exclude: Sequence[str] = (),
+    seed_dir: Optional[Path] = None,
 ) -> bool:
     """Copy project-level seed models into an empty experiment model directory.
 
@@ -99,8 +95,12 @@ def seed_experiment_models_from_project(
     ``exclude`` withholds the named seed models (e.g. one held out as a
     ground-truth generator). Unknown names or an exclusion that empties the
     seed set raise rather than silently seeding the wrong model set.
+
+    ``seed_dir`` overrides the project's default ``seed_models/``.
     """
-    seed_dir = project_seed_models_dir(project_id)
+    seed_dir = (
+        Path(seed_dir) if seed_dir is not None else project_seed_models_dir(project_id)
+    )
     seed_manifest = manifest_path(seed_dir)
     if not seed_manifest.exists():
         return False
@@ -146,10 +146,11 @@ def seed_experiment_models_from_project(
 def carry_forward_cognitive_models(prev_exp_dir: Path, exp_dir: Path) -> bool:
     """Copy the previous experiment's cognitive_models/ into a new experiment.
 
-    This replaces the removed outer-loop theorist agent's one mechanical job:
-    experiments >= 2 start from the previous experiment's model set (the carried
-    models plus the inner loop's exported best). New hypotheses enter only via
-    the inner loop.
+    Experiments >= 2 start from the previous experiment's model set (the live
+    set the inner loop exported: the protected seeds plus every surviving zoo
+    model, see ``_export_inner_loop_models``) together with its ledger of
+    attempted hypotheses (``attempted_hypotheses.jsonl``, when present). New
+    hypotheses enter only via the inner loop.
 
     Mirrors ``seed_experiment_models_from_project``: returns True on copy and
     False when the destination already has a manifest (so ``--resume`` never
@@ -185,6 +186,9 @@ def carry_forward_cognitive_models(prev_exp_dir: Path, exp_dir: Path) -> bool:
             )
         shutil.copyfile(src, dest_dir / f"{name}.py")
     shutil.copyfile(prev_manifest, dest_manifest)
+    prev_ledger = prev_dir / LEDGER_FILENAME
+    if prev_ledger.exists():
+        shutil.copyfile(prev_ledger, dest_dir / LEDGER_FILENAME)
     return True
 
 
@@ -337,7 +341,7 @@ def _collect_llm_participant_programmatic(
     participant/stimulus pair; partial collections are saved as diagnostics and
     rejected before they can reach model fitting.
     """
-    from src.pipelines.outer_loop.collect import generate_llm_participant_rows
+    from src.pipelines.outer_loop.synthetic_data import generate_llm_participant_rows
     from src.pipelines.outer_loop.llm import load_prompt_for_run
     from src.pipelines.outer_loop.participants import get_participant_model
 
@@ -425,13 +429,15 @@ def run_design_programmatic(
     Enumerates every H/T pair over the given lengths, scores it under the
     experiment's ACTUAL PyMC model set (batched per-draw p_left), and greedily
     picks the ``k`` stimuli with maximal joint EIG about model identity,
-    writing ``design/stimuli.json``. Experiment 1 scores from the models'
-    prior predictive with uniform model weights; experiments >= 2 fit each
-    model on the previous experiment's responses and score from its posterior
-    predictive, with model weights from the previous registry (weights over
-    models absent here fall back to uniform, loudly). Works for any PyMC model
-    in the set — no pure-Python family twin needed. Only implemented for
-    subjective_randomness (H/T pair enumeration).
+    writing ``design/stimuli.json``. Each model computes its own features from
+    raw stimulus rows via its ``compute_features`` or ``prepare_observed`` hook.
+    Experiment 1 scores from the models' prior predictive with uniform model
+    weights; experiments >= 2 fit each model on the previous experiment's
+    responses and score from its posterior predictive, with model weights from
+    the previous registry (weights over models absent here fall back to
+    uniform, loudly). Works for any PyMC model in the set — no pure-Python
+    family twin needed. Only implemented for subjective_randomness (H/T pair
+    enumeration).
     """
     if project_id != "subjective_randomness":
         raise ValueError(
@@ -441,11 +447,9 @@ def run_design_programmatic(
     from src.pipelines.outer_loop import eig as eig_mod
 
     models_dir = exp_dir / "cognitive_models"
-    featurize = outer_project_dir(project_id) / "preprocess.py"
     if exp_num <= 1 or prev_exp_dir is None:
         stimuli = eig_mod.design_exhaustive(
             models_dir,
-            featurize_path=featurize,
             screened_out_path=exp_dir / "design" / "screened_out.json",
             lengths=tuple(lengths),
             n_select=k,
@@ -457,7 +461,6 @@ def run_design_programmatic(
         stimuli = eig_mod.design_exhaustive(
             models_dir,
             prev_exp_dir / "model_registry.yaml",
-            featurize_path=featurize,
             screened_out_path=exp_dir / "design" / "screened_out.json",
             lengths=tuple(lengths),
             n_select=k,
@@ -501,7 +504,7 @@ def run_collect_programmatic(
         ``participant_model`` names the model). No browser, no Firebase.
       - ground_truth_model set: sample all participants from that project
         ground-truth callable (no browser).
-      - otherwise: sample from the theorist's PyMC models' prior-predictive.
+      - otherwise: sample from the cognitive PyMC models' prior-predictive.
 
     Writes exp_dir/data/responses.csv. Returns path to CSV.
     """
@@ -509,14 +512,16 @@ def run_collect_programmatic(
     from src.pipelines.outer_loop.collect import (
         _collect_from_firebase,
         _collect_live,
+        check_response_variation,
+    )
+    from src.pipelines.outer_loop.synthetic_data import (
         _generate_from_models,
         _generate_from_pymc_models,
-        check_response_variation,
     )
 
     stimuli_path = exp_dir / "design" / "stimuli.json"
-    theorist_dir = exp_dir / "cognitive_models"
-    theorist_manifest = manifest_path(theorist_dir)
+    cognitive_models_dir = exp_dir / "cognitive_models"
+    cognitive_models_manifest = manifest_path(cognitive_models_dir)
 
     stimuli: List[Dict[str, Any]] = []
     if stimuli_path.exists():
@@ -545,7 +550,7 @@ def run_collect_programmatic(
         "mode": mode,
         "deployment_config_path": str(config_path),
         "stimuli_path": str(stimuli_path),
-        "theorist_manifest_path": str(theorist_manifest),
+        "cognitive_models_manifest_path": str(cognitive_models_manifest),
     }
 
     # Track whether rows came from actual participants (browser / Firebase /
@@ -611,28 +616,23 @@ def run_collect_programmatic(
             model_registry=model_registry,
         )
     elif rows is None:
-        # Theorist models are PyMC models: sample synthetic responses from their
-        # prior-predictive p_left, featurizing each stimulus first.
+        # PyMC cognitive models: sample synthetic responses from their
+        # prior-predictive p_left.
         model_names: List[str] = []
-        if theorist_manifest.exists():
-            model_names = read_loadable_model_names(theorist_dir)
+        if cognitive_models_manifest.exists():
+            model_names = read_loadable_model_names(cognitive_models_dir)
         if not model_names:
             print(
-                f"  [collect] Warning: no loadable models in {theorist_dir} — cannot generate data",
+                f"  [collect] Warning: no loadable models in {cognitive_models_dir} — cannot generate data",
                 flush=True,
             )
             rows = []
         else:
-            # The featurizer is a project *asset* (src assets dir), not under the
-            # data tree where exp_dir now lives.
-            assets_dir = outer_project_dir(project_id or exp_dir.parent.name)
-            featurize_path = assets_dir / "preprocess.py"
             rows = _generate_from_pymc_models(
                 stimuli,
                 model_names,
                 n_participants,
-                models_dir=theorist_dir,
-                featurize_path=featurize_path if featurize_path.exists() else None,
+                models_dir=cognitive_models_dir,
             )
 
     # Fail loudly on degenerate collected data: if real participants produced no
@@ -714,310 +714,3 @@ def run_deployment_programmatic(
     return manifest_path
 
 
-# ─────────────────────────────────────────────
-# Programmatic: inner cognitive-model loop
-# ─────────────────────────────────────────────
-
-
-def _pooled_response_rows(exp_dir: Path) -> list[dict]:
-    project_dir = exp_dir.parent
-    current_num = int(exp_dir.name.removeprefix("experiment"))
-    rows: list[dict] = []
-    for exp_num in range(1, current_num + 1):
-        path = project_dir / f"experiment{exp_num}" / "data" / "responses.csv"
-        if path.exists():
-            rows.extend(csv.DictReader(path.open(encoding="utf-8")))
-    return rows
-
-
-def _load_project_featurizer(project_dir: Path) -> Optional[Featurizer]:
-    """Return `featurize_stimulus` from `<project_dir>/preprocess.py` if present.
-
-    A project supplies this to turn raw stimulus fields (e.g. H/T sequences)
-    into the numeric feature columns its PyMC models read via `pm.Data`. Returns
-    None only if the project has no preprocess module — then responses are
-    assumed to already carry the feature columns. A preprocess module that
-    exists but cannot be loaded raises (see `featurizer.load_featurizer`).
-    """
-    path = project_dir / "preprocess.py"
-    if not path.exists():
-        return None
-    return load_featurizer(path)
-
-
-def _write_feature_csv(
-    rows: List[Dict[str, Any]],
-    featurize: Optional[Callable[[str, str], Dict[str, Any]]],
-    out_path: Path,
-) -> Path:
-    """Write pooled responses to `out_path`, merging in derived feature columns.
-
-    If `featurize` is given and a row has `sequence_a`/`sequence_b`, its numeric
-    features are added; otherwise the row is written as-is (already featurized).
-    """
-    out_rows: List[Dict[str, Any]] = []
-    for r in rows:
-        row = dict(r)
-        if featurize is not None and "sequence_a" in r and "sequence_b" in r:
-            row.update(featurize(r["sequence_a"], r["sequence_b"]))
-        out_rows.append(row)
-    if not out_rows:
-        raise ValueError("No rows to write to feature CSV")
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fieldnames = list(out_rows[0].keys())
-    with out_path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
-        writer.writeheader()
-        writer.writerows(out_rows)
-    return out_path
-
-
-def _export_inner_loop_model(exp_dir: Path, loop_dir: Path, *, best_model: str) -> Path:
-    """Record the inner loop's best model in `cognitive_models/` + manifest.
-
-    The export keeps the model's own descriptive name and its hypothesis as the
-    manifest rationale, and only copies when the best model is genuinely new: a
-    seed (or a previously exported model) that wins again is already in the
-    set, and re-exporting it under a second name would split posterior mass
-    between two identical models in every later experiment. A fallback
-    auto-named winner (``iterN_candidateM`` — the agent wrote no usable
-    ``model_name.txt``) exports under the legacy stable name
-    ``inner_loop_model``, because zoo names must never enter the carried
-    manifest (the model-set validator rejects them).
-    """
-    zoo_dir = loop_dir / "models"
-    src = zoo_dir / f"{best_model}.py"
-    rationales = {
-        entry["name"]: (entry.get("rationale") or "").strip()
-        for entry in read_manifest_entries(zoo_dir)
-    }
-    if best_model not in rationales or not src.exists():
-        raise ValueError(
-            f"Best model {best_model!r} is not in the inner-loop zoo "
-            f"({zoo_dir}); cannot export it."
-        )
-    if not rationales[best_model]:
-        raise ValueError(
-            f"Best model {best_model!r} has an empty rationale in the zoo "
-            f"manifest; every exported model must state its hypothesis."
-        )
-
-    out_dir = exp_dir / "cognitive_models"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    out_manifest = manifest_path(out_dir)
-    models = read_manifest_entries(out_dir, missing_ok=True)
-    existing = {entry["name"] for entry in models}
-
-    if best_model in existing:
-        print(
-            f"  [inner-loop] Best model {best_model!r} is already in "
-            f"cognitive_models — nothing to export.",
-            flush=True,
-        )
-        return out_dir / f"{best_model}.py"
-
-    export_name = best_model
-    if _ZOO_NAME_RE.fullmatch(best_model):
-        export_name = "inner_loop_model"
-        suffix = 2
-        while export_name in existing:
-            export_name = f"inner_loop_model_{suffix}"
-            suffix += 1
-
-    model_path = out_dir / f"{export_name}.py"
-    shutil.copyfile(src, model_path)
-    models.append({"name": export_name, "rationale": rationales[best_model]})
-    out_manifest.write_text(
-        yaml.safe_dump({"models": models}, sort_keys=False), encoding="utf-8"
-    )
-    print(f"  [inner-loop] Exported best model as {model_path}", flush=True)
-    return model_path
-
-
-def run_inner_model_loop_programmatic(
-    exp_dir: Path,
-    *,
-    max_iterations: int,
-    candidate_count: int,
-    fit_kwargs: Optional[Dict[str, Any]] = None,
-    backend: Optional[str] = None,
-    agent_model: Optional[str] = None,
-    cache_dir: Optional[Path] = None,
-    project_id: Optional[str] = None,
-    agent_timeout_sec: int = 900,
-    complexity_prior_const: Optional[float] = None,
-    enable_critique: bool = True,
-    n_critique_proposals: Optional[int] = None,
-    critique_alpha: Optional[float] = None,
-    candidate_hints: Optional[List[str]] = None,
-    novelty_rmse_threshold: Optional[float] = None,
-    prune_dse_multiplier: Optional[float] = None,
-    prune_weight_floor: Optional[float] = None,
-    candidate_parallelism: Optional[int] = None,
-) -> Path:
-    """Run the PyMC inner model loop over pooled outer-loop data.
-
-    Pools responses across experiments, featurizes them (via the project's
-    `preprocess.py` if present), seeds the model set from this experiment's
-    `cognitive_models/` (the theorist's PyMC models), fits and compares them by
-    ELPD-LOO, and exports the best model back into `cognitive_models/`.
-
-    `project_id` locates the project assets; it defaults to `exp_dir.parent.name`
-    (the standard `data/outer_loop/<project>/experimentN` layout) and must be
-    passed explicitly when experiments live elsewhere. `cache_dir` shares the
-    MCMC fit cache so later analyses can re-load the loop's fits for free.
-    `complexity_prior_const` overrides the inner loop's default Occam line-count
-    prior (leave None to use it; pass 0.0 to disable the penalty).
-    `enable_critique` runs a CriticAL posterior-predictive critique of the
-    incumbent before each candidate round (the critique feeds the candidate
-    agents); `n_critique_proposals` (None ⇒ inner-loop default) sets how many test
-    statistics the critique agent proposes; `critique_alpha` (None ⇒ inner-loop
-    default) is the raw p threshold for flagging a discrepancy.
-    """
-    from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
-
-    rows = _pooled_response_rows(exp_dir)
-    if not rows:
-        raise ValueError(
-            f"No response rows found for inner loop under {exp_dir.parent}"
-        )
-
-    loop_dir = exp_dir / "model_loop"
-    loop_dir.mkdir(parents=True, exist_ok=True)
-    # The featurizer is a project *asset* (src assets dir), not under the data
-    # tree where exp_dir now lives.
-    featurize = _load_project_featurizer(
-        outer_project_dir(project_id or exp_dir.parent.name)
-    )
-    responses_path = _write_feature_csv(rows, featurize, loop_dir / "responses.csv")
-
-    seed_models_dir = exp_dir / "cognitive_models"
-    # None ⇒ inherit run_pymc_inner_loop's default Occam line-count prior.
-    extra = (
-        {}
-        if complexity_prior_const is None
-        else {"complexity_prior_const": complexity_prior_const}
-    )
-    # None ⇒ inherit run_pymc_inner_loop's default proposal count / critique alpha.
-    if n_critique_proposals is not None:
-        extra["n_critique_proposals"] = n_critique_proposals
-    if critique_alpha is not None:
-        extra["critique_significance_alpha"] = critique_alpha
-    # None ⇒ inherit run_pymc_inner_loop's defaults for the exploration knobs.
-    if candidate_hints is not None:
-        extra["candidate_hints"] = list(candidate_hints)
-    if novelty_rmse_threshold is not None:
-        extra["novelty_rmse_threshold"] = novelty_rmse_threshold
-    if prune_dse_multiplier is not None:
-        extra["prune_dse_multiplier"] = prune_dse_multiplier
-    if prune_weight_floor is not None:
-        extra["prune_weight_floor"] = prune_weight_floor
-    if candidate_parallelism is not None:
-        extra["candidate_parallelism"] = candidate_parallelism
-    result = run_pymc_inner_loop(
-        responses_path,
-        loop_dir,
-        seed_models_dir=seed_models_dir,
-        max_iterations=max_iterations,
-        candidate_count=candidate_count,
-        cache_dir=cache_dir,
-        agent_timeout_sec=agent_timeout_sec,
-        backend=backend,
-        agent_model=agent_model,
-        fit_kwargs=fit_kwargs,
-        enable_critique=enable_critique,
-        **extra,
-    )
-    _export_inner_loop_model(exp_dir, loop_dir, best_model=result["best_model"])
-    return loop_dir
-
-
-# ─────────────────────────────────────────────
-# Validation
-# ─────────────────────────────────────────────
-# The stage output validators live in orchestrator_validators.py; they are
-# re-exported here (and imported at module top) so `from ...orchestrator import
-# _validate_*` keeps working.
-
-
-# ─────────────────────────────────────────────
-# Registry helpers
-# ─────────────────────────────────────────────
-
-
-def init_registry(exp_dir: Path) -> None:
-    """Write a fresh model_registry.yaml for this experiment."""
-    sys.path.insert(0, str(REPO_ROOT))
-    from src.registry import write_registry  # type: ignore
-
-    registry_path = exp_dir / "model_registry.yaml"
-    if not registry_path.exists():
-        write_registry(registry_path, {})
-
-
-def update_registry_from_interpretation(exp_dir: Path) -> None:
-    """Record the inner loop's stacking weights over models in model_registry.yaml.
-
-    The registry is the model prior for the next experiment's EIG design, so it
-    must spread mass over every model that is predictively plausible. The inner
-    loop's ``posteriors`` map (softmax of total ELPD-LOO) is knowingly
-    overconfident — it reads ~1.0 for one model even when rivals are within
-    noise (see ``model_comparison/posterior.py``) — and a design prior that
-    collapses to one model makes EIG stop discriminating among live rivals. We
-    therefore record the **stacking weights** from ``az.compare`` (persisted per
-    model in ``model_posterior.json``'s ``comparison`` block), which are
-    computed exactly for weighting predictive distributions.
-
-    This runs only after a model loop completed, so a missing or malformed
-    export means the pipeline is broken — every such case raises loudly rather
-    than silently leaving a stale registry to steer the next design.
-    """
-    sys.path.insert(0, str(REPO_ROOT))
-    from src.registry import write_registry  # type: ignore
-
-    posterior_path = exp_dir / "model_loop" / "model_posterior.json"
-    registry_path = exp_dir / "model_registry.yaml"
-
-    if not posterior_path.exists():
-        raise FileNotFoundError(
-            f"Cannot update the design registry: {posterior_path} does not exist "
-            f"(the inner model loop should have exported it)."
-        )
-    try:
-        data = json.loads(posterior_path.read_text(encoding="utf-8"))
-    except json.JSONDecodeError as exc:
-        raise ValueError(f"Malformed JSON in {posterior_path}: {exc}") from exc
-
-    comparison = data.get("comparison")
-    if not isinstance(comparison, dict) or not comparison:
-        raise ValueError(
-            f"{posterior_path} has no 'comparison' block: the inner loop must "
-            f"export az.compare's stacking weights for the registry."
-        )
-    weights = {}
-    for name, row in comparison.items():
-        w = row.get("weight") if isinstance(row, dict) else None
-        if not isinstance(w, (int, float)) or not math.isfinite(float(w)) or w < 0.0:
-            raise ValueError(
-                f"Model {name!r} in {posterior_path} has no usable stacking "
-                f"weight (got {w!r})."
-            )
-        # A model whose PSIS-LOO estimate arviz flagged unreliable must not steer
-        # the next experiment's EIG: we cannot trust its predictive discrimination.
-        # Zero its prior mass (kept in the registry for transparency) and let the
-        # reliable models' weights renormalize below. If EVERY model is unreliable
-        # the total falls to 0 and the guard beneath raises loudly.
-        unreliable = bool(row.get("loo_unreliable")) if isinstance(row, dict) else False
-        weights[str(name)] = 0.0 if unreliable else float(w)
-    total = sum(weights.values())
-    if total <= 0:
-        raise ValueError(
-            f"Stacking weights in {posterior_path} sum to {total}; cannot form "
-            f"a model prior for the next design."
-        )
-    weights = {name: w / total for name, w in weights.items()}
-    write_registry(registry_path, weights, reserved_for_new=0.0)
-    print(
-        "  [registry] Recorded inner-loop stacking weights in model_registry.yaml",
-        flush=True,
-    )

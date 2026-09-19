@@ -171,7 +171,11 @@ The real pipeline does the work: the programmatic exhaustive design chooses
 each experiment's stimuli by joint EIG, the model set is carried forward
 between experiments (there is no theory agent — new hypotheses enter only via
 the inner loop), and the inner loop's candidate agents conjecture new PyMC
-models that are fit by MCMC and compared by ELPD-LOO.
+models that are fit by MCMC and compared by ELPD-LOO. What crosses an
+experiment boundary is the loop's **live set** — the seeds plus every model
+still within the pruning margin of the best, not only the winner — together
+with the ledger of every hypothesis tried (`attempted_hypotheses.jsonl`), and
+the next design's model prior is uniform over that carried set.
 
 After **every inner-loop scoring step** (the initial seed-set fit and each
 candidate round, in every experiment) the then-best model's posterior-predictive
@@ -207,6 +211,14 @@ per-experiment model sets, and a leakage audit). The combined JSON, tidy CSV
 global_step, best_model, pearson_r, rmse`), and correlation-vs-step figure land
 at the paths you pass.
 
+### Raw-only pipeline
+
+The pipeline carries only raw H/T sequences — there is no featurizer. Every
+model (seeds and candidates alike) must compute the features it uses via a
+`compute_features(sequence_a, sequence_b)` hook. This ensures recovery measures
+whether a model can *discover* its decision variable, not just regress on a
+harness-supplied column that reproduces the ground truth at R² 0.90–1.00.
+
 Details worth knowing:
 
 - **Held-out eval set.** The EIG design picks training stimuli from anywhere
@@ -220,18 +232,29 @@ Details worth knowing:
   are always evaluated on comparable pools; set `eval_pool.exhaustive: false`
   plus `n_pairs` for a sampled pool.
 - **Per-step history.** The inner loop now writes `model_loop/history.json`
-  (best model + posterior after the seed fit and after every candidate round);
+  (best model + posterior after the seed fit and after every candidate round;
+  `best_model` is selected exactly as the export is — ELPD-LOO rank among
+  PSIS-LOO-reliable models — with the raw `argmax_model` and the
+  `excluded_unreliable` list recorded beside it);
   the trajectory evaluation refits each step's best model through the shared
   MCMC cache (`--cache-dir`, default `<out dir>/mcmc_cache`), so evaluation
   costs no new sampling.
 - **The cache ignores fit kwargs.** Cached fits are keyed by model file + data
   only, so changing `--draws`/`--tune`/`--chains` for a fresh run requires
   clearing the cache directory first.
-- **Leakage is audited, not prevented.** Agents can read the project assets
-  dir, which contains the held-out model's source. `trajectory.json` flags
-  byte-identical copies, mentions of the ground truth's distinctive parameter
-  names, and files named after the ground truth — heuristics for auditing a
-  run, not proof it was clean.
+- **The held-out model's identity never enters the agents' tree.** The
+  synthetic `data/responses.csv` (and the pooled `model_loop/responses.csv`
+  derived from it) is written without the generator's `generating_model`
+  column — that column is listed in every candidate's and critic's context, so
+  it used to tell the agents which model to rediscover (`strip_generating_model`;
+  the harness refuses a responses file that still carries it). The Slurm array
+  task additionally deletes the held-out model's `.py` from both model
+  directories the agents can open and removes its manifest entry (name plus
+  mechanism rationale) with `remove_manifest_entry.py`.
+- **Residual leakage is audited, not prevented.** `trajectory.json` flags
+  byte-identical copies of the ground truth's source, mentions of its
+  distinctive parameter names, and files named after it — heuristics for
+  auditing a run, not proof it was clean.
 - **Design = exhaustive joint EIG.** Each experiment's design is the same
   programmatic exhaustive selection as the live pipeline: every H/T pair over
   the design lengths is scored under the experiment's actual PyMC model set

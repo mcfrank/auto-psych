@@ -38,24 +38,26 @@ from src.models.mcmc_defaults import (
 )
 from src.pipelines.inner_loop.run import load_hints_file
 from src.pipelines.outer_loop.deployment import write_smoke_experiment
+from src.pipelines.outer_loop.model_loop_runner import (
+    init_registry,
+    run_inner_model_loop_programmatic,
+    update_registry_from_interpretation,
+)
 from src.pipelines.outer_loop.orchestrator import (
     carry_forward_cognitive_models,
     ensure_experiment_dirs,
     experiment_dir,
     get_ground_truth_models,
-    init_registry,
     outer_data_dir,
     outer_project_dir,
     run_collect_programmatic,
     run_deployment_programmatic,
     run_design_programmatic,
-    run_inner_model_loop_programmatic,
     seed_experiment_models_from_project,
     spawn_cc_agent,
-    update_registry_from_interpretation,
-    validate_cc_output,
     write_context,
 )
+from src.pipelines.outer_loop.orchestrator_validators import validate_cc_output
 from src.pipelines.outer_loop.participants import DEFAULT_OPEN_MODEL
 from src.runtime.coding_agent import select_backend
 from src.runtime.token_usage import (
@@ -67,11 +69,10 @@ from src.runtime.token_usage import (
     write_usage_report,
 )
 
-# The pipeline stages. There is no theorist agent: experiment 1's model set is
-# seeded from the project's seed_models (required), experiments >= 2 carry the
-# previous experiment's cognitive_models forward, and new hypotheses enter only
-# via the inner loop (5_model_loop). There is no design agent either: 2_design
-# is the programmatic exhaustive EIG selection (run_design_programmatic).
+# The pipeline stages. Experiment 1's model set is seeded from the project's
+# seed_models (required); experiments >= 2 carry the previous experiment's
+# cognitive_models forward. New hypotheses enter only via the inner loop
+# (5_model_loop). 2_design is programmatic exhaustive EIG selection.
 AGENT_KEYS = ["2_design", "3_implement", "4_collect", "5_model_loop"]
 
 DEFAULT_N_PARTICIPANTS = 5
@@ -118,7 +119,6 @@ def _run_agent(
     candidate_hints: Optional[list] = None,
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
-    prune_weight_floor: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output stays invalid.
@@ -157,7 +157,6 @@ def _run_agent(
             candidate_hints=candidate_hints,
             novelty_rmse_threshold=novelty_rmse_threshold,
             prune_dse_multiplier=prune_dse_multiplier,
-            prune_weight_floor=prune_weight_floor,
             candidate_parallelism=candidate_parallelism,
         )
         _validate_or_exit(agent_key, exp_dir, validate)
@@ -256,7 +255,6 @@ def _run_experiment(
     candidate_hints: Optional[list] = None,
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
-    prune_weight_floor: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
@@ -306,7 +304,6 @@ def _run_experiment(
             candidate_hints=candidate_hints,
             novelty_rmse_threshold=novelty_rmse_threshold,
             prune_dse_multiplier=prune_dse_multiplier,
-            prune_weight_floor=prune_weight_floor,
             candidate_parallelism=candidate_parallelism,
         )
     finally:
@@ -346,7 +343,6 @@ def _run_experiment_stages(
     candidate_hints: Optional[list],
     novelty_rmse_threshold: Optional[float],
     prune_dse_multiplier: Optional[float],
-    prune_weight_floor: Optional[float],
     candidate_parallelism: Optional[int],
 ) -> None:
     """The body of one experiment, from smoke prep through the agent stages."""
@@ -388,8 +384,8 @@ def _run_experiment_stages(
 
     # Establish this experiment's model set (idempotent: an existing valid
     # cognitive_models/ is left alone, so --resume and --agent reruns are safe).
-    # There is no theorist agent — experiment 1 REQUIRES project seed models,
-    # and experiments >= 2 carry the previous experiment's set forward.
+    # Experiment 1 REQUIRES project seed models; experiments >= 2 carry the
+    # previous experiment's set forward.
     if exp_num == 1:
         if seed_experiment_models_from_project(exp_dir_path, project_id):
             print(
@@ -414,8 +410,7 @@ def _run_experiment_stages(
         else:
             hint = (
                 " (experiment 1 requires project seed models in "
-                f"{outer_project_dir(project_id) / 'seed_models'} — there is no "
-                "theorist agent to write them)"
+                f"{outer_project_dir(project_id) / 'seed_models'})"
                 if exp_num == 1
                 else ""
             )
@@ -478,7 +473,6 @@ def _run_experiment_stages(
             candidate_hints=candidate_hints,
             novelty_rmse_threshold=novelty_rmse_threshold,
             prune_dse_multiplier=prune_dse_multiplier,
-            prune_weight_floor=prune_weight_floor,
             candidate_parallelism=candidate_parallelism,
         )
         if agent_key == "3_implement" and deploy_target != "none":
@@ -545,7 +539,7 @@ class Args:
     ground_truth_model: Optional[str] = None
     """Generate synthetic participant data from this ground-truth model (must be in
     src/pipelines/outer_loop/projects/<project>/ground_truth_models.py). If omitted,
-    data is sampled from the theorist's models."""
+    data is sampled from the cognitive models' prior-predictive."""
     validate: bool = False
     """Validate each agent's output. A failed coding stage is fed its error and
     re-run to fix it in place (up to --max-validation-repairs times); the run
@@ -606,11 +600,8 @@ class Args:
     """Reject a candidate whose p_left is within this RMSE of an admitted
     model's (None ⇒ inner-loop default 0.02; 0 disables the gate)."""
     prune_dse_multiplier: Optional[float] = None
-    """Prune agent models with elpd_diff > multiplier*dse AND negligible
-    stacking weight after each scoring pass (None ⇒ inner-loop default 2.0;
-    0 disables pruning)."""
-    prune_weight_floor: Optional[float] = None
-    """Stacking-weight floor for pruning (None ⇒ inner-loop default 0.01)."""
+    """Prune non-seed models with elpd_diff > multiplier*dse after each
+    scoring pass (None ⇒ inner-loop default 2.0; 0 disables pruning)."""
     candidate_parallelism: Optional[int] = None
     """Concurrent candidate agents per inner-loop round (None ⇒ all of a
     round's candidates at once; 1 = sequential)."""
@@ -621,6 +612,7 @@ class Args:
 
 
 def main(args: Args) -> None:
+    """CLI entry point: run the outer experiment loop for one or more experiments."""
     # Money gate first — before any filesystem or network work. A YAML flag
     # alone must never be able to start real recruitment.
     if args.prolific_mode == "live" and not args.confirm_live_recruitment:
@@ -737,7 +729,6 @@ def main(args: Args) -> None:
             candidate_hints=candidate_hints,
             novelty_rmse_threshold=args.novelty_rmse_threshold,
             prune_dse_multiplier=args.prune_dse_multiplier,
-            prune_weight_floor=args.prune_weight_floor,
             candidate_parallelism=args.candidate_parallelism,
         )
 

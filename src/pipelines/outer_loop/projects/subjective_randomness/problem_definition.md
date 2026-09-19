@@ -99,8 +99,10 @@ the first page automatically.
 Each model is a **PyMC model** in `cognitive_models/<name>.py`. At module load
 the file builds, at top level, `with pm.Model() as model: ...` containing:
 
-- One `pm.Data` container per stimulus feature the theory uses (see the
-  feature-column list below). Each container must have a **1-element placeholder**
+- `pm.Data` containers for the stimulus features the theory uses. The pipeline
+  provides only the five raw columns below; each model must compute any derived
+  features it needs via a `compute_features(sequence_a, sequence_b)` hook (see
+  the data schema section). Each container must have a **1-element placeholder**
   of the correct dtype (e.g. `np.zeros(1, dtype="int64")`); the pipeline calls
   `pm.set_data(...)` to swap in real data before sampling.
 - Priors over the theory's free cognitive parameters (e.g. softmax temperature,
@@ -110,52 +112,40 @@ the file builds, at top level, `with pm.Model() as model: ...` containing:
   tensor (not a derived copy).
 - A `pm.Deterministic("p_left", ...)` exposing per-trial P(chose_left=1).
 
-The pipeline fits each model on the preprocessed responses, scores it by
-`arviz.loo` (ELPD-LOO), and uses posterior-predictive samples for correlations
-and posterior predictive checks. No callable-style `def model_name(stimulus,
+The pipeline fits each model on the raw responses, scores it by `arviz.loo`
+(ELPD-LOO), and uses posterior-predictive samples for correlations and posterior
+predictive checks. No callable-style `def model_name(stimulus,
 response_options)` functions — that is the old contract and is no longer used.
 
-## Preprocessed data schema
+## Data schema
 
-`model_loop/responses.csv` is produced by the project's `preprocess.py` helper.
-It carries the raw columns (`participant_id`, `trial_index`, `sequence_a`,
-`sequence_b`, `chose_left`) **plus** the following numeric feature columns, one
-per sequence (`_a` and `_b`). Use these names verbatim in your `pm.Data(...)`
-containers.
+`model_loop/responses.csv` carries only raw columns — no precomputed features:
 
 | Column           | Type  | Meaning                                          |
 | ---------------- | ----- | ------------------------------------------------ |
-| `n_a`, `n_b`     | int   | Length of the sequence                           |
-| `h_a`, `h_b`     | int   | Number of H's                                    |
-| `p_a`, `p_b`     | float | Head proportion (`h / n`)                        |
-| `alts_a`, `alts_b`     | int   | Alternation count (transitions H↔T)        |
-| `p_alts_a`, `p_alts_b` | float | Alternation proportion (`alts / (n-1)`)    |
-| `max_run_a`, `max_run_b` | int | Longest constant-character run                |
-| `max_run_norm_a`, `max_run_norm_b` | float | Longest run scaled to `[0, 1]`      |
-| `imbalance_a`, `imbalance_b` | float | Distance from balanced H/T counts          |
-| `periodicity_a`, `periodicity_b` | float | Match to a short repeating template       |
-| `rep_motifs_a`, `rep_motifs_b` | int | Repetition motifs (n1: constant-run chunks) in the minimal-DP Falk & Konold parse |
-| `alt_motifs_a`, `alt_motifs_b` | int | Alternation motifs (n2: alternating chunks) in the minimal-DP parse; DP = n1 + 2·n2 |
-| `sym1_a`…`sym8_a`, `sym1_b`…`sym8_b` | int | Raw symbols as 0/1 (H = 1), zero-padded past `n` |
-| `occ_n10_a`, `occ_n20_a`, `occ_n50_a` (and `_b`) | float | P(sequence occurs at least once within 10/20/50 fair flips; Hahn & Warren 2009) |
-| `local_imbalance_a`, `local_imbalance_b` | float | Worst H/T imbalance over sliding length-4 windows (K&T local representativeness) |
+| `sequence_a`     | str   | H/T string for the left sequence                 |
+| `sequence_b`     | str   | H/T string for the right sequence                |
+| `participant_id` | int   | Participant identifier                           |
+| `trial_index`    | int   | Trial number within the participant's session    |
+| `chose_left`     | int   | 1 if the participant chose sequence A, else 0    |
 
-And the observed response: `chose_left` ∈ {0, 1} — 1 means the participant
-chose sequence A. Use `chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))`
-in every model and pass it to `pm.Bernoulli(..., observed=chose_left)`.
+Models that need derived features (e.g. alternation counts, motif parses,
+occurrence probabilities) must define a module-level `compute_features`
+function:
 
-You may pick any subset of these feature columns per theory. You do not need
-to use them all — only the ones the theory commits to.
+```python
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    """Return a dict of feature-name → numeric-value pairs."""
+    ...
+```
+
+The pipeline calls this hook automatically and merges the returned columns
+into each row before setting `pm.Data`. See the seed models in
+`cognitive_models/` for examples.
 
 ## Running the active outer loop
 
 ```bash
-# 1. Preprocess a raw responses CSV (adds the feature columns above)
-uv run python scripts/subjective_randomness/preprocess.py \
-    --input-csv data/subjective_randomness/experiment1/responses.csv \
-    --output-csv data/subjective_randomness/responses.csv
-
-# 2. Run the outer loop (theory → design → collect → model loop)
 uv run python -m src.pipelines.outer_loop.run \
     --project subjective_randomness \
     --experiment 1 \

@@ -10,7 +10,7 @@ source.
 
 from __future__ import annotations
 
-from src.pipelines.inner_loop.pymc_orchestrator import (
+from src.pipelines.inner_loop.candidate_agent import (
     DEFAULT_CANDIDATE_HINTS,
     _write_candidate_context,
 )

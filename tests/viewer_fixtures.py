@@ -40,7 +40,7 @@ def _full_experiment(exp: Path, *, with_critique_results: bool) -> None:
     """A complete experiment dir: theory, design, implement, data, model loop, critique."""
     cm = exp / "cognitive_models"
     # The manifest as it looks AFTER the inner loop ran: the two theory-step seeds
-    # plus the exported inner-loop winner (appended by _export_inner_loop_model).
+    # plus the exported inner-loop winner (appended by _export_inner_loop_models).
     _write(
         cm / "models_manifest.yaml",
         "models:\n"

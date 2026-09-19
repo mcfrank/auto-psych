@@ -17,16 +17,19 @@
 #   * the copy EXCLUDES ground_truth_models.py / evaluate_recovery.py, the
 #     literature-model test files, and gt.txt (the source paper the faithful
 #     models implement), and has THIS task's held-out model deleted from BOTH
-#     PyMC locations (the registry $SEED_MODELS_REL and the live seed pool), so
-#     the GT recipe is not on the agent's disk;
+#     PyMC locations (the registry $SEED_MODELS_REL and the live seed pool) —
+#     its .py AND its manifest entry (name + mechanism rationale) — so neither
+#     the GT recipe nor its identity is on the agent's disk. The synthetic
+#     responses the parent writes carry no generating_model column either
+#     (holdout_recovery.strip_generating_model);
 #   * the ONE remaining on-disk copy of the GT recipe is the pure-Python family
 #     twin (src/subjective_randomness/model_families/<gt>.py) — the parent
 #     imports it for DEFAULT_PARAMS so it cannot be deleted; opencode read/
 #     glob/grep denies cover it (and both model-family dirs wholesale);
 #   * the parent reads the GT generator via --gt-models-dir from the pristine
 #     snapshot staged by the setup job ($WORK_ROOT/gt_models_src), which sits
-#     outside every agent's cwd. Seeding still excludes the GT (exclusion keys
-#     off the seed manifest, which the copy retains), so removing the file is safe;
+#     outside every agent's cwd. Seeding reads the (scrubbed) pool manifest, so
+#     the GT is simply never listed and never seeded — removing the file is safe;
 #   * opencode read/glob/grep are additionally denied on the off-limits paths.
 # The experiment tree (results-root) lives INSIDE the agent's cwd (the repo copy)
 # so opencode needs no external-directory grant for it — exactly like the normal
@@ -91,27 +94,16 @@ export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"
 echo "[task $TASK] repeat=$REPEAT gt=$GT seed=$SEED -> $RUN_DIR"
 [[ -f "$GT_MODELS_SRC/${GT}.py" ]] || { echo "ERROR: GT snapshot missing $GT_MODELS_SRC/${GT}.py (setup job didn't run?)" >&2; exit 1; }
 
-# --- isolated, sanitized repo copy on scratch ------------------------------
-# Besides caches/VCS, exclude every GT-recipe side channel the parent never
-# reads: the recovery-harness sources, the literature-model test files (they
-# encode each faithful model's behavior), and gt.txt (the extracted source
-# paper the faithful models implement).
-# node_modules: the Firebase Cloud Functions JS deps (functions/node_modules) are
-# ~88% of the repo's file count (~5.5k tiny files) and are never used by the
-# Python holdout pipeline. Copying them into every per-task repo exhausts the
-# $SCRATCH inode quota (20M) across a multi-run sweep -> mid-run "Disk quota
-# exceeded" (Errno 122) deaths. Excluding any dir named node_modules cuts each
-# copy from ~6.3k files to ~0.75k.
-rsync -a \
-  --exclude '.git' --exclude '.venv' --exclude 'data' \
-  --exclude '__pycache__' --exclude '*.nc' \
-  --exclude 'node_modules' \
-  --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
-  --exclude 'ground_truth_models.py' --exclude 'evaluate_recovery.py' \
-  --exclude 'test_literature_faithful_pymc.py' \
-  --exclude 'test_literature_model_families.py' \
-  --exclude 'gt.txt' --exclude 'REFACTOR_NOTES.md' \
-  "$REPO"/ "$RUN_REPO"/
+# --- isolated, sanitized agent tree on scratch --------------------------------
+# The agent tree is the scrubbed repo copy the coding agents run from. It is
+# built with the shared exclude file (agent_tree.exclude) which removes feature
+# code, research library modules, GT-recipe files, holdout configs, and build
+# artefacts. The HARNESS runs from a full copy (harness_repo, staged by the
+# setup job) so it can import everything it needs; the agents see only the
+# scrubbed tree. node_modules exclusion alone saves ~5.5k inodes per copy.
+AGENT_EXCLUDE="$SLURM_DIR/agent_tree.exclude"
+[[ -f "$AGENT_EXCLUDE" ]] || { echo "ERROR: $AGENT_EXCLUDE not found" >&2; exit 1; }
+rsync -a --exclude-from="$AGENT_EXCLUDE" "$REPO"/ "$RUN_REPO"/
 
 # pyprojroot.here() sentinel (we excluded .git from the copy).
 touch "$RUN_REPO/.here"
@@ -190,6 +182,39 @@ PY
 
 cd "$RUN_REPO"
 
+# Remove the held-out model's ENTRY from both manifests the agents can open.
+# Deleting the .py above leaves its manifest line behind, and that line is the
+# model's name plus a one-sentence rationale stating its mechanism — i.e. the
+# answer. Rewriting the manifest also drops the header comment that lists every
+# active model. Seeding keys off the pool manifest by name, so a name that is
+# simply absent is seeded around exactly like a superseded GT (--missing-ok
+# covers that case: a superseded GT was never listed). Run from $RUN_REPO so
+# pyprojroot resolves the copy; the --models-dir paths are absolute regardless.
+for models_rel in "$SEED_MODELS_REL" "$POOL_MODELS_REL"; do
+  [[ -f "$RUN_REPO/$models_rel/models_manifest.yaml" ]] || { echo "ERROR: no manifest at $RUN_REPO/$models_rel" >&2; exit 1; }
+  "$VENV_PY" "$RUN_REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
+    --models-dir "$RUN_REPO/$models_rel" --name "$GT" --missing-ok
+  if grep -q "$GT" "$RUN_REPO/$models_rel/models_manifest.yaml"; then
+    echo "ERROR: $models_rel/models_manifest.yaml still mentions $GT" >&2; exit 1
+  fi
+done
+echo "[task $TASK] scrubbed held-out GT entry from both manifests"
+
+# Catch-all: scrub the GT name from ANY remaining models_manifest.yaml in the
+# checkout. The loop above handles the active feature regime's pair, but the
+# other regime's manifests also exist and the leakage audit scans all of them.
+while IFS= read -r -d '' mf; do
+  if grep -q "$GT" "$mf"; then
+    "$VENV_PY" "$RUN_REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
+      --models-dir "$(dirname "$mf")" --name "$GT" --missing-ok
+    if grep -q "$GT" "$mf"; then
+      echo "ERROR: $mf still mentions $GT after scrub" >&2; exit 1
+    fi
+    mf_rel="${mf#$RUN_REPO/}"
+    echo "[task $TASK] scrubbed $GT from additional manifest: $mf_rel"
+  fi
+done < <(find "$RUN_REPO" -name "models_manifest.yaml" -not -path "*/_runs/*" -print0)
+
 # Optional cheap-run overrides (set by SMOKE mode or by hand). Values are
 # numeric, so unquoted word-splitting below is safe.
 EXTRA_FLAGS=""
@@ -201,18 +226,22 @@ EXTRA_FLAGS=""
 [[ -n "${TUNE:-}"                 ]] && EXTRA_FLAGS+=" --tune $TUNE"
 [[ -n "${AGENT_TIMEOUT_SEC:-}"    ]] && EXTRA_FLAGS+=" --agent-timeout-sec $AGENT_TIMEOUT_SEC"
 
-# Run the shared venv's interpreter directly (built by the setup job).
-# --gt-model restricts this task to the single held-out model.
-# --gt-models-dir reads the GT generator from the pristine scratch snapshot,
-#   so the deleted copy file can't leak; seeding still excludes it.
-# --chains maps onto the requested cores. --resume skips finished stages.
+# The harness runs from the FULL repo copy (harness_repo, staged once by the
+# setup job), not from the scrubbed agent tree. It can therefore import
+# stimulus_design, model_families, etc. that the agents must not see.
+# --agent-root points agent subprocesses at the scrubbed $RUN_REPO.
+HARNESS_REPO="${HARNESS_REPO:-$WORK_ROOT/harness_repo}"
+[[ -d "$HARNESS_REPO" ]] || { echo "ERROR: $HARNESS_REPO not found (setup job didn't run?)" >&2; exit 1; }
+cd "$HARNESS_REPO"
+
 "$VENV_PY" scripts/subjective_randomness/holdout_recovery.py \
   --config "$CONFIG" \
   --gt-model "$GT" \
   --gt-models-dir "$GT_MODELS_SRC" \
   --gt-family-dir "$GT_FAMILY_SRC" \
   --seed "$SEED" \
-  --backend opencode \
+  --backend "${AGENT_BACKEND:-opencode}" \
+  ${AGENT_MODEL:+--agent-model "$AGENT_MODEL"} \
   --chains "${CHAINS:-4}" \
   --out      "$RUN_DIR/holdout.json" \
   --tidy-csv "$RUN_DIR/holdout.csv" \
@@ -220,6 +249,7 @@ EXTRA_FLAGS=""
   --results-root "$RUN_REPO/_runs" \
   --summary-root "$WORK_ROOT/run${REPEAT}" \
   --cache-dir    "$RUN_DIR/mcmc_cache" \
+  --agent-root   "$RUN_REPO" \
   ${DESIGN_N_EIG:+--design-n-eig $DESIGN_N_EIG} \
   ${DESIGN_N_RANDOM:+--design-n-random $DESIGN_N_RANDOM} \
   --resume $EXTRA_FLAGS

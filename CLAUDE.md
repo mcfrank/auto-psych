@@ -54,8 +54,9 @@ Two nested loops. **The single most important fact: stages are decoupled
 processes that pass state through on-disk artifacts (CSV / JSON / YAML / `.py`
 files), not in-memory objects.** Every cognitive model is a self-contained `.py`
 file discovered via a `models_manifest.yaml`; MCMC fits are content-addressed and
-cached; the only state crossing an experiment boundary is (a) carried model files
-and (b) the registry's stacking weights.
+cached; the only state crossing an experiment boundary is (a) the carried model
+files (the live set), (b) the ledger of attempted hypotheses beside them and
+(c) the registry (a uniform prior over the carried set).
 
 ### Outer loop — `src/pipelines/outer_loop/` (`run.py` → `orchestrator.py`)
 
@@ -79,57 +80,103 @@ makes `--resume` (run into an existing `experimentN/` dir) and `--agent <stage>`
 
 Coding stages that fail their validator are re-spawned with the error injected as
 repair feedback (`--max-validation-repairs`); programmatic stages fail terminally.
-Validators (`_validate_*` in `orchestrator.py`) enforce the artifact contracts
-(e.g. jsPsych button-only + `chose_left` data column).
+Validators (`_validate_*` in `orchestrator_validators.py`) enforce the artifact
+contracts (e.g. jsPsych button-only + `chose_left` data column).
 
-### Inner loop — `src/pipelines/inner_loop/pymc_orchestrator.py`
+### Inner loop — `src/pipelines/inner_loop/`
 
-The only place new hypotheses enter. The model zoo lives at `model_loop/models/`;
-seeds are `protected_names` (never pruned). Each round: optional CriticAL critique
-→ spawn candidate agents in parallel (each steered by a rotating exploration
-"lens") → admit sequentially.
+`pymc_orchestrator.py` orchestrates; `model_zoo.py` manages seeding, admission,
+pruning and the novelty gate; `scoring.py` handles ELPD-LOO scoring, best-model
+selection and export; `candidate_agent.py` writes candidate briefs and spawns
+agents. The model zoo lives at `model_loop/models/`; the project's seeds are
+`protected_names` (never pruned — the outer loop passes them explicitly, so a
+model carried from an earlier experiment *can* lose and leave). Each round:
+optional CriticAL critique → spawn candidate agents in parallel (each steered by
+a rotating exploration "lens") → admit sequentially.
 
-- **Novelty gate** (`_admit_candidate`): a candidate is admitted only with a
+- **Novelty gate** (`_admit_candidate` in `model_zoo.py`): a candidate is admitted only with a
   loadable `candidate.py` (module-level `model: pm.Model`) + `hypothesis.md` +
   `model_name.txt`, passing logp/real-fit/finite-ELPD gates, AND with posterior-
   mean `p_left` ≥ `novelty_rmse_threshold` (0.02) RMSE from every admitted model.
-- **Pruning** (`_prune_losers`): non-protected models both statistically
-  distinguishable from best (`elpd_diff > dse_multiplier·dse`) and below
-  `prune_weight_floor` move to `models/pruned/`.
-- **Export**: the exported winner (`_best_exportable_model`) is the highest-
-  posterior model whose PSIS-LOO is *reliable* — which can differ from the raw
-  argmax. The outer loop copies a genuinely-new winner into `cognitive_models/`.
+- **Pruning** (`_prune_losers` in `model_zoo.py`): non-protected, PSIS-LOO-reliable models
+  statistically distinguishable from the best (`elpd_diff > dse_multiplier·dse`)
+  move to `models/pruned/`. There is no stacking-weight floor — pruning is on
+  `elpd_diff` vs `dse` alone (iteration 3 removed the weight floor because
+  stacking weights are ensemble coefficients, not plausibility). The survivors
+  are the uncertainty set — everything still within the margin of the best.
+- **Ledger** (`src/pipelines/inner_loop/hypothesis_ledger.py`):
+  `model_loop/attempted_hypotheses.jsonl` records every candidate slot
+  (admitted / rejected, with the reason) and every prune (with the margin),
+  continues the ledger the previous experiment carried, and is rendered into
+  every candidate brief as `attempted_hypotheses.md` ("already tried — do not
+  re-propose": the retired hypotheses, i.e. those no longer in the set).
+  Without it, pruned hypotheses vanished from `existing_hypotheses.md` and were
+  re-proposed (in the weakest recovery cell 11 of 13 re-proposals had already
+  been pruned there).
+- **Export**: the exported winner (`_best_exportable_model` in `scoring.py`) is the best model
+  by **ELPD-LOO rank** (`az.compare`'s `rank`) among those whose PSIS-LOO is
+  *reliable* — never the softmax posterior argmax: the posterior is rounded to
+  six decimals, so every model more than ~14 nats behind reads 0.0 and a
+  `max` over it picked by manifest order (62 of 230 baseline experiments
+  exported a far-behind seed that way). The same rule selects the per-step
+  `best_model` in `history.json` (which also records `argmax_model` and
+  `excluded_unreliable`) and the critique incumbent, so what the recovery
+  harness scores, what the critic critiques and what is carried agree. The
+  outer loop (`_export_inner_loop_models` in `model_loop_runner.py`) then makes `cognitive_models/` the
+  **live set**: the protected seeds plus every zoo survivor (not only the
+  winner — a rival within 2·dse is carried and left to the next design), with
+  a carried model the loop pruned removed, and the ledger copied beside the
+  manifest. Before this, only the winner crossed the boundary: 19 unresolved
+  rivals were dropped at 40 boundaries in the iteration-2 recovery sweep.
+  "Reliable" is `src/models/loo_reliability.py`'s verdict (a tolerated
+  proportion of high-Pareto-k trials, with constant-log-likelihood trials
+  exempt as exact), **not** arviz's blanket any-k>0.7 flag — that flag fired on
+  clipped `p_left` trials and was silently discarding genuine winners.
 
 ### How weights flow between experiments (the registry)
 
 `src/registry/io.py` schema: `{theories: {name: prob}, reserved_for_new}`. After
-experiment N, `update_registry_from_interpretation` reads
-`model_loop/model_posterior.json`, takes the **`az.compare` stacking weights**
-(deliberately not the overconfident softmax posteriors), and writes
-`model_registry.yaml`. Experiment N+1's design reads those weights as the model
-prior for EIG selection. Model *files* flow separately via carry-forward.
+experiment N, `update_registry_from_interpretation` writes a **uniform prior
+over the carried set** (the `cognitive_models/` manifest the export just
+wrote) to `model_registry.yaml`; experiment N+1's design reads it as the model
+prior for EIG selection. It used to copy `az.compare`'s stacking weights, which
+are ensemble coefficients rather than plausibility and were written over the
+whole zoo: in 15 of 40 next-experiment designs of the iteration-2 recovery
+sweep every model actually present had weight ~0 (or one had 1.0), so all 32
+EIG-selected stimuli had zero EIG. The stacking weights remain a report field
+in `model_posterior.json`. Model *files* flow separately via carry-forward.
 
 ### Supporting modules
 
 - **Screening a model out of a design is narrow and recorded.**
   `eig._screen_usable_models` may omit a model only when the columns it cannot
   bind are response-row bookkeeping (`NON_STIMULUS_COLUMNS`: `participant_id`,
-  `trial_index`) — a participant-level random effect, say. Missing *feature*
-  columns raise instead: that means the design rows were built without the
-  featurizer the models read, and dropping the model would renormalize EIG over
-  whichever ones happen to bind. `make_stim_data` signals this with
-  `MissingStimulusColumns`, which carries `.missing` as data so callers classify
-  structurally rather than by re-parsing a message. Every drop is written to
-  `design/screened_out.json` (empty list = the screen ran and dropped nothing),
-  so a silent shrink of the hypothesis set is visible in the run tree.
+  `trial_index`) — a participant-level random effect, say. Missing stimulus
+  columns raise instead: that means the design rows lack columns the model
+  needs, and dropping the model would renormalize EIG over whichever ones
+  happen to bind. `make_stim_data` signals this with `MissingStimulusColumns`,
+  which carries `.missing` as data so callers classify structurally rather than
+  by re-parsing a message. Every drop is written to `design/screened_out.json`
+  (empty list = the screen ran and dropped nothing), so a silent shrink of the
+  hypothesis set is visible in the run tree.
+- **Raw-only pipeline.** There is no featurizer: `responses.csv` carries only
+  the five `RAW_RESPONSE_COLUMNS` (`sequence_a`, `sequence_b`, `participant_id`,
+  `trial_index`, `chose_left`, defined in `src/pipelines/outer_loop/columns.py`).
+  Every model computes its own features via a `compute_features(sequence_a,
+  sequence_b)` or `prepare_observed(rows)` hook. `pymc_model_families/` (and
+  the live pool `seed_models/`) all carry `compute_features` hooks. The verifier
+  (`scripts/subjective_randomness/slurm/verify_holdout_run.sh`) checks that
+  every agent-facing CSV in a finished run carries only raw columns.
 - `src/models/mcmc_defaults.py` — the **single source of MCMC sampler defaults**
   (`PRODUCTION_*`, `DESIGN_TWIN_*`). Every entry point imports from here; change
   defaults only here.
-- `src/models/pymc_inference.py` — bridge from agent-written `.py` files to
-  inference. `load_pymc_model` requires a module-level `model: pm.Model`. Two
-  optional model hooks: `compute_features(seq_a, seq_b)` or `prepare_observed(rows)`
-  (mutually exclusive). Fits are cached on `(model sha, csv sha, sampler sig)`
-  in-process and on disk (`<name>.<fingerprint>.nc`).
+- `src/models/model_loading.py` — loads agent-written `.py` files; requires a
+  module-level `model: pm.Model`. Attaches optional data-binding hooks
+  (`compute_features`, `prepare_observed`, mutually exclusive).
+  `src/models/data_binding.py` maps CSV rows / row dicts to `pm.set_data` dicts.
+  `src/models/pymc_inference.py` adds fitting, prediction, caching and
+  diagnostics. Fits are cached on `(model sha, csv sha, sampler sig)` in-process
+  and on disk (`<name>.<fingerprint>.nc`).
 - `src/model_comparison/{posterior,likelihood}.py` — ELPD-LOO softmax posterior
   (`model_posterior`, documented as overconfident) + `az.compare` PSIS-LOO table.
 - `src/critique/ppc.py` — CriticAL posterior-predictive check: agent-written
@@ -144,10 +191,9 @@ prior for EIG selection. Model *files* flow separately via carry-forward.
 ### Projects vs. the research library — two different things
 
 - `src/pipelines/outer_loop/projects/<id>/` = **assets the generic pipeline
-  consumes** (`problem_definition.md`, `preprocess.py` featurizer,
-  `ground_truth_models.py`, `seed_models/`, `prolific_config.yaml`). Adding a
-  project = adding an asset directory. This lives under `src/`, not the
-  run-output `projects/` tree.
+  consumes** (`problem_definition.md`, `ground_truth_models.py`, `seed_models/`,
+  `evaluate_recovery.py`, `prolific_config.yaml`). Adding a project = adding an
+  asset directory. This lives under `src/`, not the run-output `projects/` tree.
 - `src/subjective_randomness/` = a **standalone research library** for the
   subjective-randomness domain (model families, `stimulus_design.py`,
   `sequence_stats.py`, recovery harnesses). Coupling to the pipeline is

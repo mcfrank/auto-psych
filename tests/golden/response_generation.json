@@ -1,0 +1,12 @@
+{
+  "model_name": "falk_konold_dp",
+  "stimuli": [
+    {"sequence_a": "HHHT", "sequence_b": "HTTH"},
+    {"sequence_a": "HHTH", "sequence_b": "HHTT"},
+    {"sequence_a": "HTHT", "sequence_b": "TTHH"}
+  ],
+  "params": {"beta": 2.0, "side_bias": 0.0},
+  "n_participants": 3,
+  "seed": 42,
+  "expected_csv_sha256": "69548d3ca0234727bbd5c5892e4158efac71fbbeb42a53b84d5178ad7458cb19"
+}

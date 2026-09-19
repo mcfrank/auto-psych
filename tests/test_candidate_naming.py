@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import yaml
 
-from src.pipelines.inner_loop.pymc_orchestrator import _resolve_candidate_name
+from src.pipelines.inner_loop.model_zoo import _resolve_candidate_name
 
 
 def _models_dir(tmp_path, names):

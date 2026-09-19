@@ -29,6 +29,7 @@ from src.models.model_manifest import (
     read_loadable_model_names,
     read_manifest_entries,
     read_manifest_names,
+    remove_manifest_entry,
 )
 from tests.paths import REPO_ROOT
 
@@ -184,3 +185,43 @@ def test_read_loadable_model_names_raises_for_a_missing_file(tmp_path):
     (tmp_path / "present.py").write_text("", encoding="utf-8")
     with pytest.raises(FileNotFoundError, match="ghost"):
         read_loadable_model_names(tmp_path)
+
+
+# ── remove_manifest_entry: the holdout sandbox scrub ────────────────────
+
+
+def test_remove_manifest_entry_drops_the_named_model_and_keeps_the_rest(tmp_path):
+    _write_manifest(
+        tmp_path,
+        "# Active set: keep_first, held_out, keep_last.\n"
+        "models:\n"
+        "  - name: keep_first\n    rationale: People do A.\n"
+        "  - name: held_out\n    rationale: The mechanism being held out.\n"
+        "  - name: keep_last\n    rationale: People do C.\n",
+    )
+
+    assert remove_manifest_entry(tmp_path, "held_out") is True
+
+    assert read_manifest_entries(tmp_path) == [
+        {"name": "keep_first", "rationale": "People do A."},
+        {"name": "keep_last", "rationale": "People do C."},
+    ]
+    # Neither the entry nor the header comment that listed the name survives:
+    # the rewritten file must not mention the removed model anywhere.
+    assert "held_out" not in (tmp_path / MANIFEST_FILENAME).read_text(encoding="utf-8")
+
+
+def test_remove_manifest_entry_reports_an_absent_name_and_leaves_the_file_alone(
+    tmp_path,
+):
+    _write_manifest(tmp_path, "models:\n  - name: only_one\n    rationale: A.\n")
+    before = (tmp_path / MANIFEST_FILENAME).read_text(encoding="utf-8")
+
+    assert remove_manifest_entry(tmp_path, "not_listed") is False
+
+    assert (tmp_path / MANIFEST_FILENAME).read_text(encoding="utf-8") == before
+
+
+def test_remove_manifest_entry_requires_a_manifest(tmp_path):
+    with pytest.raises(FileNotFoundError, match=MANIFEST_FILENAME):
+        remove_manifest_entry(tmp_path, "anything")

@@ -3,11 +3,13 @@
 Without pruning the model set only grows: every scoring pass re-ranks every
 model ever admitted, every InferenceData stays resident in the fit cache, and
 existing_hypotheses.md drags dead hypotheses into every candidate prompt. A
-model is pruned only when BOTH hold on the current data: it is statistically
-distinguishable from the best (``elpd_diff > multiplier·dse``) AND its stacking
-weight is negligible (< floor). The seeded set is never pruned — those are the
-baselines the run reports against. Pruned files move to ``models/pruned/`` (an
-audit trail, not a deletion).
+model is pruned when it is statistically distinguishable from the best on the
+current data (``elpd_diff > multiplier·dse`` among PSIS-LOO-reliable rows);
+stacking weight is not a criterion (it is an ensemble coefficient, not
+plausibility). The protected set — the project's seeds — is never pruned: those
+are the baselines the run reports against. Pruned files move to
+``models/pruned/`` (an audit trail, not a deletion) and the ledger records the
+margin.
 """
 
 from __future__ import annotations
@@ -17,8 +19,12 @@ import json
 import yaml
 import pytest
 
-from src.pipelines.inner_loop import pymc_orchestrator
-from src.pipelines.inner_loop.pymc_orchestrator import _export, _prune_losers
+from src.pipelines.inner_loop import model_zoo, pymc_orchestrator
+from src.pipelines.inner_loop.model_zoo import _prune_losers
+from src.pipelines.inner_loop.scoring import (
+    _best_exportable_model,
+    _export,
+)
 
 
 def _models_dir(tmp_path, names):
@@ -38,11 +44,11 @@ def _models_dir(tmp_path, names):
 
 def _stub_comparison(monkeypatch, rows):
     monkeypatch.setattr(
-        pymc_orchestrator, "compare_table", lambda *a, **k: rows
+        model_zoo, "compare_table", lambda *a, **k: rows
     )
     evicted = []
     monkeypatch.setattr(
-        pymc_orchestrator, "evict_fit_cache", lambda name: evicted.append(name)
+        model_zoo, "evict_fit_cache", lambda name: evicted.append(name)
     )
     return evicted
 
@@ -106,16 +112,18 @@ def test_protected_models_are_never_pruned(tmp_path, monkeypatch):
     assert (models_dir / "seed_b.py").exists()
 
 
-def test_indistinguishable_or_weighted_models_stay(tmp_path, monkeypatch):
-    models_dir = _models_dir(tmp_path, ["seed_a", "near_tie", "still_weighted"])
+def test_indistinguishable_models_stay_even_with_zero_stacking_weight(
+    tmp_path, monkeypatch
+):
+    models_dir = _models_dir(tmp_path, ["seed_a", "near_tie"])
     _stub_comparison(
         monkeypatch,
         {
             "seed_a": _row(0, 0.0, 0.0, 0.5),
-            # Within 2*dse of the best: statistically indistinguishable.
-            "near_tie": _row(1, 1.5, 1.0, 0.005),
-            # Distinguishable but still carries stacking weight above the floor.
-            "still_weighted": _row(2, 10.0, 2.0, 0.05),
+            # Within 2*dse of the best: statistically indistinguishable. Its
+            # stacking weight is ~0 because its predictions are redundant with
+            # the best's — that is not evidence against it.
+            "near_tie": _row(1, 1.5, 1.0, 0.0),
         },
     )
     pruned = _prune_losers(
@@ -126,6 +134,57 @@ def test_indistinguishable_or_weighted_models_stay(tmp_path, monkeypatch):
         fit_kwargs=None,
     )
     assert pruned == []
+
+
+def test_distinguishable_model_is_pruned_regardless_of_stacking_weight(
+    tmp_path, monkeypatch
+):
+    """Stacking weight is an ensemble coefficient, not plausibility: a model
+    95 nats behind can carry weight 0.33 because its predictions differ from
+    the best's. Losing by more than the margin is the only criterion."""
+    models_dir = _models_dir(tmp_path, ["seed_a", "still_weighted"])
+    _stub_comparison(
+        monkeypatch,
+        {
+            "seed_a": _row(0, 0.0, 0.0, 0.67),
+            "still_weighted": _row(1, 10.0, 2.0, 0.33),
+        },
+    )
+    pruned = _prune_losers(
+        models_dir,
+        tmp_path / "responses.csv",
+        protected={"seed_a"},
+        cache_dir=None,
+        fit_kwargs=None,
+    )
+    assert pruned == ["still_weighted"]
+    assert (models_dir / "pruned" / "still_weighted.py").exists()
+
+
+def test_pruning_records_the_margin_in_the_ledger(tmp_path, monkeypatch):
+    from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
+
+    models_dir = _models_dir(tmp_path, ["seed_a", "dead_end"])
+    _stub_comparison(
+        monkeypatch,
+        {"seed_a": _row(0, 0.0, 0.0, 1.0), "dead_end": _row(1, 12.0, 2.0, 0.0)},
+    )
+    ledger = HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
+    _prune_losers(
+        models_dir,
+        tmp_path / "responses.csv",
+        protected={"seed_a"},
+        cache_dir=None,
+        fit_kwargs=None,
+        ledger=ledger,
+        ledger_context="experiment1 round 0",
+    )
+    (entry,) = ledger.entries()
+    assert entry.name == "dead_end"
+    assert entry.outcome == "pruned"
+    assert entry.detail == "12.0 nats behind seed_a (6.0× dse)"
+    assert entry.hypothesis == "mechanism dead_end"
+    assert entry.context == "experiment1 round 0"
 
 
 def test_unreliable_loser_is_not_pruned(tmp_path, monkeypatch, capsys):
@@ -265,6 +324,96 @@ def test_unreliable_argmax_exports_best_reliable_model(tmp_path):
     assert payload["best_model"] == "runner_up"
 
 
+def _posterior(names):
+    return {
+        "posteriors": {n: (1.0 if i == 0 else 0.0) for i, n in enumerate(names)},
+        "elpd_loo": {n: -10.0 * (i + 1) for i, n in enumerate(names)},
+        "n_trials": 20,
+    }
+
+
+def test_best_exportable_model_is_the_lowest_rank_reliable_row():
+    posterior = _posterior(["argmax", "behind", "leader"])
+    comparison = {
+        "argmax": {**_row(0, 0.0, 0.0, 0.7), "loo_unreliable": True},
+        "behind": _row(2, 40.0, 5.0, 0.0),
+        "leader": _row(1, 20.0, 4.0, 0.3),
+    }
+    assert _best_exportable_model(posterior, comparison) == "leader"
+
+
+def test_best_exportable_model_falls_back_to_the_argmax_without_a_comparison():
+    assert _best_exportable_model(_posterior(["argmax", "other"]), {}) == "argmax"
+
+
+def test_best_exportable_model_rejects_duplicate_ranks_among_reliable_rows():
+    posterior = _posterior(["a", "b"])
+    comparison = {"a": _row(0, 0.0, 0.0, 0.5), "b": _row(0, 0.0, 0.0, 0.5)}
+    with pytest.raises(ValueError, match="rank"):
+        _best_exportable_model(posterior, comparison)
+
+
+def test_best_exportable_model_rejects_a_rank_that_contradicts_elpd():
+    # rank 0 must be the highest ELPD among reliable rows; a table where the
+    # lowest-rank reliable row is not the ELPD-best one is corrupt.
+    posterior = _posterior(["a", "b"])
+    comparison = {
+        "a": {**_row(0, 0.0, 0.0, 0.5), "elpd_loo": -30.0},
+        "b": {**_row(1, 5.0, 1.0, 0.5), "elpd_loo": -20.0},
+    }
+    with pytest.raises(ValueError, match="ELPD"):
+        _best_exportable_model(posterior, comparison)
+
+
+def test_best_exportable_model_rejects_a_posterior_model_missing_from_the_table():
+    posterior = _posterior(["a", "b"])
+    comparison = {"a": _row(0, 0.0, 0.0, 1.0)}
+    with pytest.raises(ValueError, match="b"):
+        _best_exportable_model(posterior, comparison)
+
+
+def test_export_selects_by_elpd_rank_not_by_rounded_posterior_order(tmp_path):
+    """The panel's dictionary-order bug (62 of 230 experiments in the baseline
+    sweeps): when the argmax is excluded as unreliable, every reliable model
+    more than ~14 nats behind has a softmax posterior that rounds to 0.0, so
+    ``max`` over posteriors returned whichever came first — a seed hundreds of
+    nats behind a reliable agent model. Selection must follow the ELPD rank
+    among reliable models, whatever the insertion order."""
+    models_dir = _models_dir(
+        tmp_path, ["unreliable_argmax", "seed_far_behind", "reliable_leader"]
+    )
+    results_dir = tmp_path / "results"
+    results_dir.mkdir()
+    # The far-behind seed is inserted BEFORE the reliable leader on purpose.
+    posterior = {
+        "posteriors": {
+            "unreliable_argmax": 1.0,
+            "seed_far_behind": 0.0,
+            "reliable_leader": 0.0,
+        },
+        "elpd_loo": {
+            "unreliable_argmax": -2864.4,
+            "seed_far_behind": -3267.0,
+            "reliable_leader": -2941.9,
+        },
+        "n_trials": 2560,
+    }
+    comparison = {
+        "unreliable_argmax": {**_row(0, 0.0, 0.0, 0.66), "loo_unreliable": True},
+        "seed_far_behind": _row(2, 402.6, 21.0, 0.0),
+        "reliable_leader": _row(1, 77.5, 12.0, 0.34),
+    }
+
+    result = _export(results_dir, models_dir, posterior, comparison)
+
+    assert result["best_model"] == "reliable_leader"
+    payload = json.loads(
+        (results_dir / "model_posterior.json").read_text(encoding="utf-8")
+    )
+    assert payload["best_model"] == "reliable_leader"
+    assert (results_dir / "best_model.py").read_text(encoding="utf-8") == "# model\n"
+
+
 def test_export_records_excluded_unreliable_models(tmp_path):
     """Excluded-as-unreliable models are recorded structurally (result dict +
     model_posterior.json), not only in the prose report, so downstream
@@ -329,7 +478,7 @@ def test_zero_multiplier_disables_pruning(tmp_path, monkeypatch):
     def tripwire(*a, **k):
         raise AssertionError("compare_table must not run when pruning is disabled")
 
-    monkeypatch.setattr(pymc_orchestrator, "compare_table", tripwire)
+    monkeypatch.setattr(model_zoo, "compare_table", tripwire)
     pruned = _prune_losers(
         models_dir,
         tmp_path / "responses.csv",

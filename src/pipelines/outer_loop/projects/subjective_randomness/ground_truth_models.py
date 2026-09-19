@@ -1,14 +1,14 @@
 """
 Ground-truth models for subjective_randomness. Used only for --ground-truth-model
 (data generation to verify the loop recovers the generative process). Not used
-for hypothesis generation or for assessing the theorist's models.
+for hypothesis generation or for assessing the pipeline's cognitive models.
 
 Each model: (stimulus, response_options) -> dict[response, probability].
 Stimulus is (seq_a, seq_b); response_options e.g. ["left", "right"].
 """
 
 import math
-from typing import Dict, List, Tuple
+from typing import Callable, Dict, List, Tuple
 
 Stimulus = Tuple[str, str]
 
@@ -87,7 +87,7 @@ def length_sensitive_alternation(
     The seed families capture alternation, balance, compressibility, and
     diagnosticity, but none has an explicit preference for longer samples as
     more trustworthy evidence. The active feature set exposes length, so the
-    theorist can discover a variant with this mechanism.
+    inner loop can discover a variant with this mechanism.
     """
     seq_a, seq_b = stimulus
 
@@ -116,8 +116,8 @@ def recency_weighted_alternation(
     return {response_options[0]: p_left, response_options[1]: 1.0 - p_left}
 
 
-# Only these are used for --ground-truth-model. Do not use for theorist/design/analyze/interpret.
-GROUND_TRUTH_MODELS: Dict[str, callable] = {
+# Only these are used for --ground-truth-model.
+GROUND_TRUTH_MODELS: Dict[str, Callable] = {
     "alternation": alternation,
     "prefer_more_heads": prefer_more_heads,
     "length_sensitive_alternation": length_sensitive_alternation,

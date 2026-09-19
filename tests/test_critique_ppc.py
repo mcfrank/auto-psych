@@ -25,7 +25,8 @@ from src.critique.ppc import (
     load_test_statistic_file,
     run_ppc_for_model,
 )
-from src.models.pymc_inference import FittedModel, load_pymc_model
+from src.models.model_loading import load_pymc_model
+from src.models.pymc_inference import FittedModel
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 
@@ -41,14 +42,14 @@ def _frames(observed, replicates):
     """Build a human frame and model replicate frames from raw response arrays.
 
     ``observed`` is the observed-response column; ``replicates`` is a list of
-    synthetic-response columns. Every frame carries one feature column so test
-    statistics that condition on features have something to read.
+    synthetic-response columns. Every frame carries one sequence column so test
+    statistics that condition on stimulus data have something to read.
     """
     n = len(observed)
-    feature = list(range(n))
-    human = pd.DataFrame({"chose_left": observed, "n_a": feature})
+    seqs = [f"H{'T' * i}" for i in range(n)]
+    human = pd.DataFrame({"chose_left": observed, "sequence_a": seqs})
     models = [
-        pd.DataFrame({"chose_left": rep, "n_a": feature}) for rep in replicates
+        pd.DataFrame({"chose_left": rep, "sequence_a": seqs}) for rep in replicates
     ]
     return human, models
 
@@ -139,16 +140,16 @@ def test_build_critique_frames_swaps_response_for_each_replicate():
         fitted, PYMC_MODEL_FIXTURES_DIR / "responses.csv", n_replicates=2, seed=0
     )
 
-    # Human frame holds the real observed responses and all feature columns.
+    # Human frame holds the real observed responses and all raw columns.
     assert list(human_df["chose_left"]) == list(df["chose_left"])
-    for col in ("n_a", "h_a", "n_b", "h_b"):
+    for col in ("sequence_a", "sequence_b"):
         assert list(human_df[col]) == list(df[col])
 
-    # Each replicate frame keeps the features but uses the synthetic response.
+    # Each replicate frame keeps the raw columns but uses the synthetic response.
     assert len(model_dfs) == 2
     assert list(model_dfs[0]["chose_left"]) == [0] * n
     assert list(model_dfs[1]["chose_left"]) == [1] * n
-    assert list(model_dfs[0]["n_a"]) == list(df["n_a"])
+    assert list(model_dfs[0]["sequence_a"]) == list(df["sequence_a"])
 
 
 def test_evaluate_test_stat_dir_marks_significant(tmp_path, monkeypatch):

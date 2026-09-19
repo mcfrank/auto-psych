@@ -197,7 +197,6 @@ def main() -> None:
         "HINTS_FILE": mdl.get("hints_file", ""),
         "NOVELTY_RMSE_THRESHOLD": mdl.get("novelty_rmse_threshold", ""),
         "PRUNE_DSE_MULTIPLIER": mdl.get("prune_dse_multiplier", ""),
-        "PRUNE_WEIGHT_FLOOR": mdl.get("prune_weight_floor", ""),
         "CANDIDATE_PARALLELISM": mdl.get("candidate_parallelism", ""),
     }
     for k, v in out.items():

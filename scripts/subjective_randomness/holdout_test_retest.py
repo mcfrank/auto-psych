@@ -142,7 +142,9 @@ def main(args: Args) -> None:
     if not csv_paths:
         raise SystemExit(f"No {args.tidy_name!r} under run*/ in {runs_root}")
 
-    # gt_model -> run_label -> {metric, pearson_r_bma, best_model, global_step}
+    EXTRA_METRICS = ("rmse", "kl_regret")
+
+    # gt_model -> run_label -> {metric, pearson_r_bma, best_model, global_step, rmse, kl_regret}
     per_gt: dict[str, dict[str, dict]] = defaultdict(dict)
     found_runs_set: set[str] = set()
 
@@ -150,12 +152,15 @@ def main(args: Args) -> None:
         run_label = csv_path.relative_to(runs_root).parts[0]  # e.g. "run3"
         found_runs_set.add(run_label)
         for gt, row in _final_rows_by_gt(csv_path, args.metric).items():
-            per_gt[gt][run_label] = {
+            entry = {
                 "metric": _as_float(row.get(args.metric)),
                 "pearson_r_bma": _as_float(row.get("pearson_r_bma")),
                 "best_model": row.get("best_model"),
                 "global_step": row.get("global_step") or row.get("step"),
             }
+            for em in EXTRA_METRICS:
+                entry[em] = _as_float(row.get(em))
+            per_gt[gt][run_label] = entry
 
     found_runs = sorted(found_runs_set)
     missing_runs: list[str] = []
@@ -195,6 +200,26 @@ def main(args: Args) -> None:
             "best_model_agreement": (modal_count / len(winners)) if winners else None,
         }
 
+    per_metric: dict[str, dict] = {}
+    for em in EXTRA_METRICS:
+        em_per_gt: dict[str, dict] = {}
+        for gt in gt_models:
+            vals = np.array(
+                [v[em] for v in per_gt[gt].values() if v.get(em) is not None],
+                dtype=float,
+            )
+            mean_v = float(vals.mean()) if vals.size else None
+            sd_v = float(vals.std(ddof=1)) if vals.size > 1 else (0.0 if vals.size == 1 else None)
+            em_per_gt[gt] = {
+                "n_runs": int(vals.size),
+                "mean": mean_v,
+                "sd": sd_v,
+                "min": float(vals.min()) if vals.size else None,
+                "max": float(vals.max()) if vals.size else None,
+                "values": [round(v, 6) for v in vals.tolist()],
+            }
+        per_metric[em] = {"per_gt_model": em_per_gt}
+
     summary = {
         "runs_root": str(runs_root),
         "metric": args.metric,
@@ -206,6 +231,7 @@ def main(args: Args) -> None:
         "icc_2_1": _icc_2_1(matrix) if matrix.size else None,
         "mean_pairwise_corr": _mean_pairwise_corr(matrix) if matrix.size else None,
         "per_gt_model": per_gt_summary,
+        "per_metric": per_metric,
     }
 
     out_path = resolve_path(args.out)
@@ -222,14 +248,26 @@ def main(args: Args) -> None:
     for gt, s in per_gt_summary.items():
         mean = s["mean"]
         sd = s["sd"]
-        print(
+        parts = [
             f"  {gt}: {args.metric} mean="
             f"{'n/a' if mean is None else f'{mean:.3f}'} "
             f"sd={'n/a' if sd is None else f'{sd:.3f}'} "
-            f"(n={s['n_runs']}), best-model agreement="
+            f"(n={s['n_runs']})"
+        ]
+        for em in EXTRA_METRICS:
+            em_s = per_metric.get(em, {}).get("per_gt_model", {}).get(gt, {})
+            em_mean = em_s.get("mean")
+            em_sd = em_s.get("sd")
+            parts.append(
+                f"{em} mean={'n/a' if em_mean is None else f'{em_mean:.4f}'} "
+                f"sd={'n/a' if em_sd is None else f'{em_sd:.4f}'}"
+            )
+        parts.append(
+            f"best-model agreement="
             f"{'n/a' if s['best_model_agreement'] is None else format(s['best_model_agreement'], '.2f')}"
             f" -> {s['modal_best_model']}"
         )
+        print(", ".join(parts))
 
     if args.csv is not None:
         csv_path = resolve_path(args.csv)
@@ -237,12 +275,15 @@ def main(args: Args) -> None:
         with csv_path.open("w", newline="", encoding="utf-8") as fh:
             writer = csv.writer(fh)
             writer.writerow(
-                ["gt_model", "run", args.metric, "pearson_r_bma", "best_model", "global_step"]
+                ["gt_model", "run", args.metric, *EXTRA_METRICS,
+                 "pearson_r_bma", "best_model", "global_step"]
             )
             for gt in gt_models:
                 for run_name, v in sorted(per_gt[gt].items()):
                     writer.writerow(
-                        [gt, run_name, v["metric"], v["pearson_r_bma"],
+                        [gt, run_name, v["metric"],
+                         *(v.get(em) for em in EXTRA_METRICS),
+                         v["pearson_r_bma"],
                          v["best_model"], v["global_step"]]
                     )
         print(f"Wrote per-run CSV to {csv_path}")

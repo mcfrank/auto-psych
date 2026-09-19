@@ -17,8 +17,8 @@ import math
 from pathlib import Path
 
 import src.critique.ppc as ppc
-from src.pipelines.inner_loop import pymc_orchestrator
-from src.pipelines.inner_loop.pymc_orchestrator import (
+from src.pipelines.inner_loop import critique_round
+from src.pipelines.inner_loop.critique_round import (
     _format_critiques_md,
     _persist_critique_results,
     _write_default_test_statistics,
@@ -63,7 +63,7 @@ def test_persist_uses_default_battery_when_agent_writes_no_stats(tmp_path: Path,
     responses.write_text(_RESPONSES_CSV, encoding="utf-8")
     # Avoid loading a real PyMC model just to learn the response column.
     monkeypatch.setattr(
-        pymc_orchestrator, "_incumbent_response_col", lambda *a, **k: "chose_left"
+        critique_round, "_incumbent_response_col", lambda *a, **k: "chose_left"
     )
 
     seen = {}
@@ -115,9 +115,9 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
     dir explicitly — otherwise it cannot reliably locate CRITIQUE_CONTEXT.md."""
     import src.runtime.coding_agent as coding_agent
 
-    monkeypatch.setattr(pymc_orchestrator, "_seed_critique_fit_cache", lambda *a, **k: None)
-    monkeypatch.setattr(pymc_orchestrator, "_write_critique_context", lambda *a, **k: None)
-    monkeypatch.setattr(pymc_orchestrator, "_persist_critique_results", lambda *a, **k: None)
+    monkeypatch.setattr(critique_round, "_seed_critique_fit_cache", lambda *a, **k: None)
+    monkeypatch.setattr(critique_round, "_write_critique_context", lambda *a, **k: None)
+    monkeypatch.setattr(critique_round, "_persist_critique_results", lambda *a, **k: None)
 
     captured = {}
 
@@ -131,7 +131,7 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
 
     monkeypatch.setattr(coding_agent, "run_coding_agent", fake_run)
     crit = tmp_path / "critique"
-    pymc_orchestrator._spawn_critique_agent(
+    critique_round._spawn_critique_agent(
         crit, "incumbent", models_dir=tmp_path, responses_path=tmp_path / "r.csv",
         cache_dir=None, fit_kwargs={}, n_proposals=8, significance_alpha=0.05,
         n_replicates=10, agent_timeout_sec=10, backend="opencode",

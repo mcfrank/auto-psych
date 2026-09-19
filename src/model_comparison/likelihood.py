@@ -83,6 +83,7 @@ class Args:
 
 
 def main(args: Args) -> None:
+    """CLI entry point: fit one model and print its ELPD-LOO as JSON."""
     if not args.responses.exists():
         print(f"Error: {args.responses} not found", file=sys.stderr)
         sys.exit(1)

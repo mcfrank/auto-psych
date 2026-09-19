@@ -11,8 +11,8 @@ from __future__ import annotations
 
 import yaml
 
-import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
-from src.pipelines.inner_loop.pymc_orchestrator import _admit_candidate
+import src.pipelines.inner_loop.model_zoo as model_zoo
+from src.pipelines.inner_loop.model_zoo import _admit_candidate
 
 
 def _models_dir_with_seed(tmp_path):
@@ -45,16 +45,16 @@ def _manifest(models_dir):
 
 def _stub_fittable(monkeypatch, ok=True, reason=""):
     monkeypatch.setattr(
-        pymc_orchestrator, "model_logp_is_finite", lambda *a, **k: (ok, reason)
+        model_zoo, "model_logp_is_finite", lambda *a, **k: (ok, reason)
     )
     # Admission ends with a real MCMC fit-gate; stub it to succeed so these
     # bookkeeping tests don't sample (the stub candidate isn't a real PyMC model).
-    monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
+    monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # Admission also gates on a finite ELPD-LOO (reuses the fit); stub it finite.
-    monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: -100.0)
+    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
     # Novelty gate is covered by test_novelty_gate.py; neutralize it here.
     monkeypatch.setattr(
-        pymc_orchestrator, "_min_prediction_rmse",
+        model_zoo, "_min_prediction_rmse",
         lambda *a, **k: (None, float("inf")),
     )
 
@@ -65,11 +65,11 @@ def _stub_fit_raises(monkeypatch):
     def _boom(*a, **k):
         raise RuntimeError("NUTS diverged")
 
-    monkeypatch.setattr(pymc_orchestrator, "fit_model", _boom)
+    monkeypatch.setattr(model_zoo, "fit_model", _boom)
 
 
 def test_admit_rejects_candidate_without_hypothesis(tmp_path, monkeypatch):
-    monkeypatch.setattr(pymc_orchestrator, "load_pymc_model", lambda n, d: object())
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())
     _stub_fittable(monkeypatch)
     models_dir = _models_dir_with_seed(tmp_path)
     cand_dir = _candidate_dir(tmp_path, hypothesis=None)
@@ -87,7 +87,7 @@ def test_admit_rejects_candidate_without_hypothesis(tmp_path, monkeypatch):
 
 
 def test_admit_rejects_candidate_with_empty_hypothesis(tmp_path, monkeypatch):
-    monkeypatch.setattr(pymc_orchestrator, "load_pymc_model", lambda n, d: object())
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())
     _stub_fittable(monkeypatch)
     models_dir = _models_dir_with_seed(tmp_path)
     cand_dir = _candidate_dir(tmp_path, hypothesis="   \n")
@@ -105,7 +105,7 @@ def test_admit_rejects_candidate_with_empty_hypothesis(tmp_path, monkeypatch):
 
 def test_admit_rejects_unfittable_candidate(tmp_path, monkeypatch):
     """A candidate that loads but evaluates to non-finite logp is rejected."""
-    monkeypatch.setattr(pymc_orchestrator, "load_pymc_model", lambda n, d: object())
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())
     _stub_fittable(monkeypatch, ok=False, reason="non-finite logp (-inf)")
     models_dir = _models_dir_with_seed(tmp_path)
     cand_dir = _candidate_dir(tmp_path, hypothesis="People use heuristic H.\n")
@@ -128,9 +128,9 @@ def test_admit_rejects_candidate_with_nonfinite_elpd(tmp_path, monkeypatch):
     crash model_posterior. Closes the gap the logp/real-fit gates miss."""
     import math
 
-    monkeypatch.setattr(pymc_orchestrator, "load_pymc_model", lambda n, d: object())
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())
     _stub_fittable(monkeypatch)  # logp finite + MCMC fit gate succeeds
-    monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: math.nan)
+    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: math.nan)
     models_dir = _models_dir_with_seed(tmp_path)
     cand_dir = _candidate_dir(tmp_path, hypothesis="People use heuristic H.\n")
 
@@ -147,7 +147,7 @@ def test_admit_rejects_candidate_with_nonfinite_elpd(tmp_path, monkeypatch):
 
 
 def test_admit_uses_hypothesis_as_rationale_and_copies_it(tmp_path, monkeypatch):
-    monkeypatch.setattr(pymc_orchestrator, "load_pymc_model", lambda n, d: object())
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())
     _stub_fittable(monkeypatch)
     models_dir = _models_dir_with_seed(tmp_path)
     hyp = "People judge a sequence as more random when it alternates more often."
@@ -173,9 +173,9 @@ def test_admit_rejects_candidate_whose_fit_raises(tmp_path, monkeypatch):
     """A candidate that passes the initial-point logp check but whose MCMC fit
     raises (NaN once NUTS jitters off the initial point) is rejected — not
     admitted — so it can't abort the round's scoring pass."""
-    monkeypatch.setattr(pymc_orchestrator, "load_pymc_model", lambda n, d: object())
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())
     monkeypatch.setattr(
-        pymc_orchestrator, "model_logp_is_finite", lambda *a, **k: (True, "")
+        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
     )
     _stub_fit_raises(monkeypatch)
     models_dir = _models_dir_with_seed(tmp_path)

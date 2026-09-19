@@ -326,19 +326,58 @@ def _cell(agg: Optional[dict], gt: str) -> str:
     return f"{format_number(s.get('mean'))} ± {format_number(s.get('sd'))} (n={s.get('n_runs', 0)})"
 
 
+def _metric_cell(agg: Optional[dict], metric: str, gt: str) -> str:
+    if not agg:
+        return "n/a"
+    per_metric = agg.get("per_metric") or {}
+    m_data = per_metric.get(metric, {}).get("per_gt_model", {}).get(gt)
+    if not m_data:
+        return "n/a"
+    return f"{format_number(m_data.get('mean'))} ± {format_number(m_data.get('sd'))}"
+
+
+def _metric_mean(agg: Optional[dict], metric: str) -> str:
+    if not agg:
+        return "n/a"
+    per_metric = agg.get("per_metric") or {}
+    m_data = per_metric.get(metric, {}).get("per_gt_model", {})
+    values = [v.get("mean") for v in m_data.values() if v.get("mean") is not None]
+    return format_number(sum(values) / len(values)) if values else "n/a"
+
+
 def render_comparison(summaries: list[SweepSummary]) -> str:
-    """Cross-sweep table: per ground truth, mean ± sd of the final r per sweep."""
+    """Cross-sweep table: per ground truth, RMSE first, then Pearson r."""
     gts: list[str] = []
     for s in summaries:
         for gt in (s.aggregate or {}).get("gt_models") or []:
             if gt not in gts:
                 gts.append(gt)
     labels = [s.label for s in summaries]
-    lines = ["## Comparison across sweeps (final-step pearson r, mean ± sd across repeats)", ""]
+    lines = ["## Comparison across sweeps (mean ± sd across repeats)", ""]
     if not gts:
         lines.append("No sweep has an aggregate yet; nothing to compare.")
         lines.append("")
         return "\n".join(lines)
+
+    lines.append("### RMSE (primary)")
+    lines.append("")
+    lines.append("| Ground truth | " + " | ".join(f"`{l}`" for l in labels) + " |")
+    lines.append("|---|" + "---|" * len(labels))
+    for gt in gts:
+        lines.append(
+            f"| {gt} | "
+            + " | ".join(_metric_cell(s.aggregate, "rmse", gt) for s in summaries)
+            + " |"
+        )
+    lines.append(
+        "| **mean** | "
+        + " | ".join(_metric_mean(s.aggregate, "rmse") for s in summaries)
+        + " |"
+    )
+    lines.append("")
+
+    lines.append("### Pearson r (descriptive)")
+    lines.append("")
     lines.append("| Ground truth | " + " | ".join(f"`{l}`" for l in labels) + " |")
     lines.append("|---|" + "---|" * len(labels))
     for gt in gts:
@@ -348,7 +387,7 @@ def render_comparison(summaries: list[SweepSummary]) -> str:
         per_gt = (s.aggregate or {}).get("per_gt_model") or {}
         values = [v.get("mean") for v in per_gt.values() if v.get("mean") is not None]
         means.append(format_number(sum(values) / len(values)) if values else "n/a")
-    lines.append("| **mean over ground truths** | " + " | ".join(means) + " |")
+    lines.append("| **mean** | " + " | ".join(means) + " |")
     lines.append(
         "| ICC(2,1) | "
         + " | ".join(format_number((s.aggregate or {}).get("icc_2_1")) for s in summaries)

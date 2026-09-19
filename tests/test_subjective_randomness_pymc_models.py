@@ -7,13 +7,9 @@ import yaml
 
 from src.subjective_randomness.features import featurize_stimulus
 from src.models.theorist.loader import get_model_names_from_manifest
-from src.models.pymc_inference import (
-    load_pymc_model,
-    make_stim_data,
-    observed_response_data,
-    pm_data_inputs,
-    prior_predict_p_left,
-)
+from src.models.data_binding import make_stim_data
+from src.models.model_loading import load_pymc_model, observed_response_data, pm_data_inputs
+from src.models.pymc_inference import prior_predict_p_left
 from tests.model_registry import faithful_model_names
 
 

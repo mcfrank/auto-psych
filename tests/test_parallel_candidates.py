@@ -12,7 +12,9 @@ from __future__ import annotations
 import threading
 
 
+import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
+import src.pipelines.inner_loop.scoring as scoring
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from tests.inner_loop_fixtures import write_responses, write_seed_models
 
@@ -24,21 +26,25 @@ def _patch_loop_internals(monkeypatch):
         "n_trials": 2,
     }
     monkeypatch.setattr(
-        pymc_orchestrator, "model_posterior", lambda *a, **k: posterior
+        scoring, "model_posterior", lambda *a, **k: posterior
     )
-    monkeypatch.setattr(pymc_orchestrator, "compare_table", lambda *a, **k: {})
+    monkeypatch.setattr(scoring, "compare_table", lambda *a, **k: {})
+    # _prune_losers looks up compare_table in model_zoo's namespace:
+    monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: {})
+    # Functions looked up in model_zoo's namespace (called by _admit_candidate,
+    # _drop_unfittable_models, etc. which now live in model_zoo):
     monkeypatch.setattr(
-        pymc_orchestrator, "model_logp_is_finite", lambda *a, **k: (True, "")
+        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
     )
-    monkeypatch.setattr(pymc_orchestrator, "fit_model", lambda *a, **k: object())
-    monkeypatch.setattr(pymc_orchestrator, "log_likelihood", lambda *a, **k: -100.0)
+    monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
+    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
     monkeypatch.setattr(
-        pymc_orchestrator,
+        model_zoo,
         "_min_prediction_rmse",
         lambda *a, **k: (None, float("inf")),
     )
     monkeypatch.setattr(
-        pymc_orchestrator, "load_pymc_model", lambda name, models_dir: object()
+        model_zoo, "load_pymc_model", lambda name, models_dir: object()
     )
 
 
