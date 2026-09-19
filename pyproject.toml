@@ -41,6 +41,12 @@ remote = [
 pymc = [
     "arviz>=0.17.0",
     "pymc>=5.10.0",
+    # arviz pulls h5py. 3.16.0 publishes an sdist but no cp311 wheel, so
+    # `uv sync --locked` tries to build it from source and needs the HDF5 C
+    # headers — which the CI runner does not have, failing the install before
+    # any test runs. Same class of cap as the numpy/scipy/pandas ones below:
+    # pin to a version that ships wheels. 3.14.0 is what the cluster venvs use.
+    "h5py<3.15",
 ]
 # Open-weight participant models (LLM-as-participant, --participant-backend open).
 # Heavy; install only when needed: `uv sync --group open-models`.
