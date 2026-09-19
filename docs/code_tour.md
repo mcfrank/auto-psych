@@ -203,6 +203,8 @@ Starting from `run_pymc_inner_loop` in `pymc_orchestrator.py`:
 | `src/subjective_randomness/holdout_data.py` | 289 | Ground-truth data generation, parameter resolution, pool validation |
 | `src/subjective_randomness/leakage_audit.py` | 215 | Audit agent-written models for ground-truth leakage |
 | `src/subjective_randomness/recovery_metrics.py` | 65 | RMSE, KL regret, bias, calibration |
+| `src/subjective_randomness/cell_archive.py` | 92 | Resolve a finished cell's run tree, extracting `agent_runs.tar.gz` when it is not on disk |
+| `src/subjective_randomness/recovery_ceiling.py` | 265 | Recovery ceiling: refit the held-out ground truth on a cell's own data to bound achievable RMSE |
 | `src/subjective_randomness/tidy.py` | 88 | `trajectory_tidy_rows` for holdout results |
 | `src/subjective_randomness/config.py` | 37 | Shared config/path helpers |
 | `src/pipelines/outer_loop/projects/subjective_randomness/evaluate_recovery.py` | 294 | Evaluation pool builder, `feature_rows` |
@@ -219,7 +221,10 @@ Starting from `run_pymc_inner_loop` in `pymc_orchestrator.py`:
 | `scripts/subjective_randomness/holdout_recovery.py` | CLI wrapper for holdout recovery |
 | `scripts/subjective_randomness/holdout_test_retest.py` | Test-retest analysis of holdout results |
 | `scripts/subjective_randomness/compare_matched_cells.py` | Paired comparison of matched-seed cells |
-| `scripts/subjective_randomness/oracle_admitted_models.py` | Oracle-best diagnostic |
+| `scripts/subjective_randomness/oracle_admitted_models.py` | Oracle-best diagnostic (**known broken**: scores 0 steps on archived cells) |
+| `scripts/subjective_randomness/recovery_report.py` | Per-sweep RMSE tables (**known bug**: repeats one lost-incumbent total under every ground truth) |
+| `scripts/subjective_randomness/recovery_ceiling.py` | Recovery-ceiling CLI over a finished sweep |
+| `scripts/subjective_randomness/slurm/recovery_ceiling.sbatch` | Ceiling job; runs its end-to-end test as a gate first |
 | `scripts/subjective_randomness/remove_manifest_entry.py` | Remove a model from manifest |
 | `scripts/subjective_randomness/slurm/submit_holdout_test_retest.sh` | Slurm launcher: chains setup → array → analysis |
 | `scripts/subjective_randomness/slurm/holdout_recovery_array.sbatch` | Array task: one (repeat, ground truth) cell |
