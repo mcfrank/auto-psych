@@ -45,14 +45,17 @@ from src.pipelines.inner_loop.candidate_agent import (
 from src.pipelines.inner_loop.model_zoo import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     DEFAULT_PRUNE_DSE_MULTIPLIER,
+    MAX_EMPTY_ROUND_RETRIES,
+    AllCandidatesNoFileError,
     _NO_FILE_DETAIL,
     _admit_candidate,
-    _check_round_admissions,
     _drop_nonfinite_elpd_models,
     _drop_unfittable_models,
+    _is_all_no_file_round,
     _lens_index,
     _manifest_names,
     _prune_losers,
+    _record,
     _resolve_candidate_name,
     _seed_model_set,
 )
@@ -214,6 +217,7 @@ def run_pymc_inner_loop(
     history: List[Dict[str, Any]] = []
     _record_history_step(history, results_dir, posterior, comparison, iteration=None)
 
+    rounds_abandoned = 0
     for iteration in range(max_iterations):
         round_dir = results_dir / f"iter_{iteration}"
         critique_path: Optional[Path] = None
@@ -234,85 +238,117 @@ def run_pymc_inner_loop(
                 agent_model=agent_model,
                 agent_root=agent_root,
             )
-        # Stage 1 — write every candidate's context, then spawn the agents
-        # concurrently: each is a CLI subprocess whose latency dominates the
-        # round, and they are independent given the shared round context.
-        candidate_dirs = []
-        for idx in range(candidate_count):
-            candidate_dir = round_dir / f"candidate_{idx}"
-            lens = _lens_index(
-                lens_offset, iteration, candidate_count, idx, n_lenses
-            )
-            docs = _write_candidate_context(
-                candidate_dir,
-                responses_path,
-                models_dir,
-                iteration,
-                idx,
-                candidate_count,
-                posterior,
-                critique_path=critique_path,
-                hints=candidate_hints,
-                ledger=ledger,
-                comparison=comparison,
-                lens_index=lens,
-            )
-            candidate_dirs.append((idx, candidate_dir, docs, lens))
 
-        def spawn(item) -> bool:
-            _, candidate_dir, docs, _lens = item
-            return _spawn_candidate_agent(
-                candidate_dir,
-                docs,
-                models_dir=models_dir,
-                responses_path=responses_path,
-                agent_timeout_sec=agent_timeout_sec,
-                backend=backend,
-                agent_model=agent_model,
-                agent_root=agent_root,
-            )
-
-        workers = min(candidate_parallelism or candidate_count, candidate_count)
-        if workers > 1:
-            with ThreadPoolExecutor(max_workers=workers) as pool:
-                spawn_ok = list(pool.map(spawn, candidate_dirs))
-        else:
-            spawn_ok = [spawn(item) for item in candidate_dirs]
-
-        # Stage 2 — admit sequentially in candidate order: admission mutates
-        # the manifest, uniquifies names, and runs MCMC + the novelty gate, so
-        # a fixed order keeps runs deterministic (earlier candidates win ties).
         round_context = f"{ledger_context} round {iteration}".strip()
         round_results: List[Dict[str, str]] = []
-        for (idx, candidate_dir, _, lens), ok in zip(candidate_dirs, spawn_ok):
-            if not ok:
-                round_results.append(
-                    {"outcome": "spawn_failed", "detail": "agent process failed"}
-                )
-                continue
-            admitted = _admit_candidate(
-                candidate_dir / "candidate.py",
-                models_dir,
-                model_name=_resolve_candidate_name(
-                    candidate_dir,
-                    models_dir,
-                    fallback=f"iter{iteration}_candidate{idx}",
-                ),
-                responses_path=responses_path,
-                cache_dir=cache_dir,
-                fit_kwargs=fit_kwargs,
-                novelty_rmse_threshold=novelty_rmse_threshold,
-                ledger=ledger,
-                ledger_context=f"{round_context} candidate {idx} lens {lens}",
-            )
-            if admitted:
-                round_results.append({"outcome": "admitted", "detail": ""})
+
+        for attempt in range(1 + MAX_EMPTY_ROUND_RETRIES):
+            if attempt == 0:
+                attempt_dir = round_dir
             else:
-                detail = _NO_FILE_DETAIL
-                if (candidate_dir / "candidate.py").exists():
-                    detail = "rejected after file written"
-                round_results.append({"outcome": "rejected", "detail": detail})
-        _check_round_admissions(round_results, round_context=round_context)
+                attempt_dir = results_dir / f"iter_{iteration}_retry_{attempt}"
+                print(
+                    f"  [retry] {round_context}: all candidates no-file on "
+                    f"attempt {attempt}/{1 + MAX_EMPTY_ROUND_RETRIES}, retrying",
+                    flush=True,
+                )
+
+            candidate_dirs = []
+            for idx in range(candidate_count):
+                candidate_dir = attempt_dir / f"candidate_{idx}"
+                lens = _lens_index(
+                    lens_offset, iteration, candidate_count, idx, n_lenses
+                )
+                docs = _write_candidate_context(
+                    candidate_dir,
+                    responses_path,
+                    models_dir,
+                    iteration,
+                    idx,
+                    candidate_count,
+                    posterior,
+                    critique_path=critique_path,
+                    hints=candidate_hints,
+                    ledger=ledger,
+                    comparison=comparison,
+                    lens_index=lens,
+                )
+                candidate_dirs.append((idx, candidate_dir, docs, lens))
+
+            def spawn(item) -> bool:
+                _, candidate_dir, docs, _lens = item
+                return _spawn_candidate_agent(
+                    candidate_dir,
+                    docs,
+                    models_dir=models_dir,
+                    responses_path=responses_path,
+                    agent_timeout_sec=agent_timeout_sec,
+                    backend=backend,
+                    agent_model=agent_model,
+                    agent_root=agent_root,
+                )
+
+            workers = min(candidate_parallelism or candidate_count, candidate_count)
+            if workers > 1:
+                with ThreadPoolExecutor(max_workers=workers) as pool:
+                    spawn_ok = list(pool.map(spawn, candidate_dirs))
+            else:
+                spawn_ok = [spawn(item) for item in candidate_dirs]
+
+            round_results = []
+            for (idx, candidate_dir, _, lens), ok in zip(candidate_dirs, spawn_ok):
+                if not ok:
+                    round_results.append(
+                        {"outcome": "spawn_failed", "detail": "agent process failed"}
+                    )
+                    continue
+                admitted_ok = _admit_candidate(
+                    candidate_dir / "candidate.py",
+                    models_dir,
+                    model_name=_resolve_candidate_name(
+                        candidate_dir,
+                        models_dir,
+                        fallback=f"iter{iteration}_candidate{idx}",
+                    ),
+                    responses_path=responses_path,
+                    cache_dir=cache_dir,
+                    fit_kwargs=fit_kwargs,
+                    novelty_rmse_threshold=novelty_rmse_threshold,
+                    ledger=ledger,
+                    ledger_context=f"{round_context} candidate {idx} lens {lens}",
+                )
+                if admitted_ok:
+                    round_results.append({"outcome": "admitted", "detail": ""})
+                else:
+                    detail = _NO_FILE_DETAIL
+                    if (candidate_dir / "candidate.py").exists():
+                        detail = "rejected after file written"
+                    round_results.append({"outcome": "rejected", "detail": detail})
+
+            if not _is_all_no_file_round(round_results):
+                break
+
+        if _is_all_no_file_round(round_results):
+            rounds_abandoned += 1
+            _record(
+                ledger,
+                name="__round__",
+                outcome="round_abandoned",
+                detail=(
+                    f"abandoned after {1 + MAX_EMPTY_ROUND_RETRIES} attempts "
+                    f"({len(round_results)} slots, all no-file)"
+                ),
+                hypothesis="",
+                context=round_context,
+            )
+            print(
+                f"  [abandon] {round_context}: abandoned after "
+                f"{1 + MAX_EMPTY_ROUND_RETRIES} attempts — continuing to the "
+                f"next round.",
+                flush=True,
+            )
+            continue
+
         posterior = _score(
             responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
         )
@@ -327,13 +363,20 @@ def run_pymc_inner_loop(
             ledger_context=round_context,
         )
         if pruned:
-            # Re-normalize over the surviving set (cached fits — no new MCMC).
             posterior = _score(
                 responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
             )
         comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
         _record_history_step(
             history, results_dir, posterior, comparison, iteration=iteration, pruned=pruned
+        )
+
+    if rounds_abandoned == max_iterations and max_iterations > 0:
+        raise AllCandidatesNoFileError(
+            f"Every round of the experiment ended with all candidates failing "
+            f"to write files ({rounds_abandoned} of {max_iterations} rounds "
+            f"abandoned after {1 + MAX_EMPTY_ROUND_RETRIES} attempts each). "
+            f"This is a systemic failure, not a transient hiccup."
         )
 
     result = _export(results_dir, models_dir, posterior, comparison)

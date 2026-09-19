@@ -50,35 +50,26 @@ class AllCandidatesNoFileError(RuntimeError):
 
 _NO_FILE_DETAIL = "no candidate.py written"
 
+MAX_EMPTY_ROUND_RETRIES = 1
 
-def _check_round_admissions(
-    round_results: list[dict],
-    *,
-    round_context: str,
-) -> None:
-    """Raise if a round produced zero candidates and every slot is no-file.
+
+def _is_all_no_file_round(round_results: list[dict]) -> bool:
+    """True when a non-empty round produced zero candidates and every slot is no-file.
 
     ``round_results`` is a list of dicts with ``outcome`` and ``detail`` keys,
     one per candidate slot (including spawn failures recorded as
     ``outcome='spawn_failed'``).
     """
     if not round_results:
-        return
+        return False
     n_admitted = sum(1 for r in round_results if r["outcome"] == "admitted")
     if n_admitted > 0:
-        return
+        return False
     no_file_reasons = {_NO_FILE_DETAIL, "agent process failed"}
-    all_no_file = all(
+    return all(
         r["detail"] in no_file_reasons or r["outcome"] == "spawn_failed"
         for r in round_results
     )
-    if all_no_file:
-        raise AllCandidatesNoFileError(
-            f"Round {round_context!r}: every candidate slot produced "
-            f"no candidate.py written — 0 of {len(round_results)} admitted. "
-            f"This is the signature of a configuration bug (missing opencode "
-            f"write permission, cwd outside the worktree, etc.)."
-        )
 
 
 def _lens_offset(exp_num: int, *, max_iterations: int, candidate_count: int) -> int:
