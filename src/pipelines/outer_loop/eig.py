@@ -37,6 +37,7 @@ sys.path.insert(0, str(here()))
 
 
 def _load_model_names(models_dir: Path) -> List[str]:
+    """Model names from the manifest that have a matching ``.py`` file."""
     from src.models.model_manifest import read_loadable_model_names  # type: ignore
 
     model_names = read_loadable_model_names(models_dir)
@@ -46,6 +47,7 @@ def _load_model_names(models_dir: Path) -> List[str]:
 
 
 def _load_model_weights(registry_path: Optional[Path]) -> Dict[str, float]:
+    """Load the design prior from a registry YAML, or return empty (uniform)."""
     if registry_path is None:
         return {}
     from src.registry.io import load_registry  # type: ignore
@@ -369,6 +371,7 @@ class Args:
 
 
 def _write_output(stimuli: List[Dict[str, Any]], out: Optional[Path]) -> None:
+    """Write the selected stimuli to ``out`` (or stdout if ``None``)."""
     output = json.dumps(stimuli, indent=2)
     if out:
         out.write_text(output, encoding="utf-8")
@@ -383,6 +386,7 @@ def _write_output(stimuli: List[Dict[str, Any]], out: Optional[Path]) -> None:
 
 
 def main(args: Args) -> None:
+    """CLI entry point: run exhaustive EIG design and write selected stimuli."""
     selected = design_exhaustive(
         models_dir=args.models_dir,
         registry_path=args.registry,

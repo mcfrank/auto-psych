@@ -168,3 +168,69 @@ the results.
 4. **Featurized arm from the same commit.** The raw-vs-featurized gate (above)
    requires a featurized arm from the consolidated commit. This is not part of the
    current sweep (`SWEEP_ARMS=raw`); the user may run it separately.
+
+## History of specific choices
+
+Empirical observations that motivated specific constants, rules and designs.
+Moved here from inline source comments during P25 so the code carries only
+the "why" while the provenance stays recorded.
+
+### Export by ELPD-LOO rank, not softmax argmax (`scoring._best_exportable_model`)
+
+The softmax posterior is rounded to six decimals, so every model more than ~14
+nats behind the argmax reads 0.0 and ties. A `max` over those ties returned
+whichever model came first in the manifest. In the pre-campaign baseline sweeps,
+62 of 230 experiments exported a far-behind seed model this way — hundreds of
+nats behind a reliable agent-written model. The fix: select by `az.compare`'s
+ELPD-LOO rank among PSIS-LOO-reliable rows.
+
+### The hypothesis ledger (`hypothesis_ledger.py`)
+
+Without the ledger, pruned hypotheses disappeared from `existing_hypotheses.md`
+and were re-proposed by the next round's candidate agents. In the iteration-2
+recovery sweep, 15% of candidate slots re-proposed a name already tried in the
+same cell; in the weakest cell 11 of 13 re-proposals had already been pruned
+there. The ledger records every event and renders into every candidate brief as
+the "already tried — do not re-propose" section.
+
+### Novelty RMSE threshold 0.02 (`model_zoo.DEFAULT_NOVELTY_RMSE_THRESHOLD`)
+
+0.02 sits just below the closest genuinely-distinct pair observed across the
+human replicates (run 2's two winners, RMSE 0.029). Below this, two models'
+posterior-mean predictions are empirically indistinguishable on the observed
+stimuli.
+
+### Stacking weights are not plausibility (`model_zoo._prune_losers`)
+
+Pruning uses `elpd_diff > multiplier * dse`, not stacking weights, because
+`az.compare`'s weights are ensemble coefficients: a model 1.6 nats behind the
+best can read 0.000 (its predictions are redundant with the best's) while one
+95 nats behind can read 0.33 (they differ). The weight floor was removed in
+iteration 3 for this reason.
+
+### Seven-lens rotation (`candidate_agent.DEFAULT_CANDIDATE_HINTS`)
+
+The old three-hint rotation pushed genuine novelty in only one candidate of
+three; the remaining two hints encouraged conservative revision. The seven-lens
+battery assigns each candidate a distinct exploration strategy so the full
+hypothesis space is covered more evenly across rounds.
+
+### MCMC sampler defaults (`mcmc_defaults.py`)
+
+Before the centralized defaults module, sampler settings had drifted per entry
+point (outer 2000/2000/4, inner CLI 500/500/2, PPC 2000/2000/4, design twins
+hard-coded 500/500/2). `draws` and `tune` were raised, and `target_accept`
+was lifted from PyMC's implicit 0.8 default to 0.99 to shrink divergences and
+stabilize the PSIS-LOO tail. (2026-08-13 audit: the hard export gate on
+Pareto-k no longer exists — the only hard ELPD gates today are on non-finite
+values — so 0.99 stands as cautious tail stabilization.) `cores` was changed
+from 1 (four production chains ran sequentially for no stated reason) to 4;
+measured 2026-08-13 on macOS, chains=4, PyMC 5.28.5: cores=4 finished in 38 s
+vs 110 s at cores=1, with no multiprocessing trouble.
+
+### PSIS-LOO exact-trial exemption (`loo_reliability.py`)
+
+Measured on the 2026-08/09 holdout sweeps, every non-finite k in the excluded
+winners' fits was a constant-log-likelihood trial (40–720 per model, one per
+participant × stimulus), and not one trial had a finite k above 0.7. Those
+winners were dropped for nothing.

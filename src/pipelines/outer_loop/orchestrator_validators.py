@@ -32,8 +32,7 @@ def validate_cc_output(agent_key: str, exp_dir: Path) -> tuple[bool, str]:
     validators = {
         # "models" is not an agent stage: it validates the experiment's
         # cognitive_models/ set after seeding (experiment 1) or carry-forward
-        # (experiments >= 2). The theorist agent that used to produce this
-        # output was removed — new hypotheses enter only via the inner loop.
+        # (experiments >= 2). New hypotheses enter only via the inner loop.
         "models": _validate_model_set,
         "2_design": _validate_design,
         "3_implement": _validate_implement,

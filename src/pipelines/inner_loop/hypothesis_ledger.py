@@ -3,16 +3,16 @@
 The zoo (``models/`` + its manifest) only ever shows the *current* model set.
 A candidate that was rejected at admission, or a model that was pruned after
 losing, disappears from ``existing_hypotheses.md`` at once — and the next
-round's candidate agents (or the next experiment's) propose it again. In the
-iteration-2 recovery sweep 15 % of candidate slots re-proposed a name already
-tried in the same cell, and in the weakest cell 11 of 13 re-proposals had
-already been pruned there.
+round's candidate agents (or the next experiment's) propose it again under
+a new name, wasting candidate slots.
 
 The ledger is the loop's memory: one JSON line per event, appended the moment
 it happens so a crashed run still leaves the record, started from the ledger
 the previous experiment carried in ``cognitive_models/``, and rendered into
 every candidate brief as the "already tried — do not re-propose" section
-(``render_markdown``). Events:
+(``render_markdown``).  See ``docs/consolidation_decision_record.md`` §
+"History of specific choices" for the empirical evidence that motivated this
+module. Events:
 
 - ``admitted`` — the candidate entered the zoo (its later fate, if any, is a
   later line under the same name);
@@ -53,6 +53,8 @@ def one_line(text: str, *, limit: int = ONE_LINE_LIMIT) -> str:
 
 @dataclass(frozen=True)
 class LedgerEntry:
+    """One event in the hypothesis ledger: a candidate admitted, rejected, pruned, or dropped."""
+
     name: str
     outcome: str
     detail: str
@@ -67,10 +69,12 @@ class LedgerEntry:
             )
 
     def to_json(self) -> str:
+        """Serialize to a single JSON line for appending to the JSONL ledger."""
         return json.dumps(asdict(self), ensure_ascii=False)
 
     @classmethod
     def from_json(cls, line: str, *, source: Path) -> "LedgerEntry":
+        """Deserialize one JSON line. Raises ``ValueError`` on malformed input."""
         try:
             data = json.loads(line)
         except json.JSONDecodeError as exc:
@@ -114,10 +118,12 @@ class HypothesisLedger:
         return cls(path)
 
     def append(self, entry: LedgerEntry) -> None:
+        """Append one event to the ledger file (one JSON line per call)."""
         with self.path.open("a", encoding="utf-8") as f:
             f.write(entry.to_json() + "\n")
 
     def entries(self) -> List[LedgerEntry]:
+        """All entries in chronological order. Raises ``FileNotFoundError`` if the ledger is missing."""
         if not self.path.exists():
             raise FileNotFoundError(f"Hypothesis ledger does not exist: {self.path}")
         lines = self.path.read_text(encoding="utf-8").splitlines()

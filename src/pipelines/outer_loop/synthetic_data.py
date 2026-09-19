@@ -233,7 +233,7 @@ def _generate_from_pymc_models(
 ) -> list[dict[str, Any]]:
     """Generate synthetic responses by sampling each model's prior-predictive p_left.
 
-    Each participant is assigned a random theorist model; for every stimulus the
+    Each participant is assigned a random cognitive model; for every stimulus the
     model's prior-predictive mean p_left is the choice probability for a binary
     draw. The side each sequence is shown on is randomized per trial (see
     :func:`_present_sides`), and the model is evaluated on the *presented* order so
@@ -288,12 +288,18 @@ def _generate_from_models(
     stimuli: list[dict[str, Any]],
     model_names: list[str],
     n_participants: int,
-    theorist_dir: Path | None = None,
+    cognitive_models_dir: Path | None = None,
     model_registry: dict[str, Any] | None = None,
     seed: int = 0,
 ) -> list[dict[str, Any]]:
-    # Use a seeded local RNG (not the unseeded global `random`) so synthetic
-    # ground-truth data is reproducible across runs, like _generate_from_pymc_models.
+    """Generate synthetic responses from ground-truth models (non-PyMC path).
+
+    Each participant draws a random model; each trial draws a binary choice
+    from that model's predicted left-probability. If ``model_registry``
+    maps ``model_name`` to a callable, that callable is used directly;
+    otherwise ``get_model_predictions`` loads the model from
+    ``cognitive_models_dir``. Uses a seeded RNG for reproducibility.
+    """
     rng = random.Random(seed)
     rows: list[dict[str, Any]] = []
     for participant_id in range(n_participants):
@@ -311,7 +317,7 @@ def _generate_from_models(
                 preds = {model_name: fn(stimulus_tuple, RESPONSE_OPTIONS)}
             else:
                 preds = get_model_predictions(
-                    stimulus_tuple, RESPONSE_OPTIONS, [model_name], theorist_dir
+                    stimulus_tuple, RESPONSE_OPTIONS, [model_name], cognitive_models_dir
                 )
             if not preds:
                 # Backstop. get_model_predictions now raises rather than dropping

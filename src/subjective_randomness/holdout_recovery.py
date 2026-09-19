@@ -135,7 +135,7 @@ def run_holdout_experiments(
     Experiment 1 is seeded with every live-pool seed model *except* ``gt_model``
     (when the GT is in the pool at all — an old-registry or impossible GT simply
     is not); experiments >= 2 carry the previous experiment's cognitive_models
-    forward, exactly as the live pipeline does (there is no theorist agent).
+    forward, exactly as the live pipeline does.
     Each experiment runs the programmatic exhaustive EIG design, collects
     responses programmatically from the held-out model (fixed params,
     ``pm.do``), and runs the inner model loop (which records the per-step
@@ -185,9 +185,9 @@ def run_holdout_experiments(
         prev_exp_dir = run_root / f"experiment{exp_num - 1}" if exp_num > 1 else None
 
         # Model set: seeded pool in experiment 1; experiments >= 2 carry the
-        # previous experiment's cognitive_models forward. There is no theorist
-        # agent — new hypotheses enter only via the inner loop, exactly as in
-        # the live pipeline this harness validates.
+        # previous experiment's cognitive_models forward. New hypotheses enter
+        # only via the inner loop, exactly as in the live pipeline this harness
+        # validates.
         if not (resume and _stage_done("models", exp_dir)):
             if exp_num == 1:
                 seeded = seed_experiment_models_from_project(

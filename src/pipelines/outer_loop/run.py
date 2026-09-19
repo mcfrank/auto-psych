@@ -69,11 +69,10 @@ from src.runtime.token_usage import (
     write_usage_report,
 )
 
-# The pipeline stages. There is no theorist agent: experiment 1's model set is
-# seeded from the project's seed_models (required), experiments >= 2 carry the
-# previous experiment's cognitive_models forward, and new hypotheses enter only
-# via the inner loop (5_model_loop). There is no design agent either: 2_design
-# is the programmatic exhaustive EIG selection (run_design_programmatic).
+# The pipeline stages. Experiment 1's model set is seeded from the project's
+# seed_models (required); experiments >= 2 carry the previous experiment's
+# cognitive_models forward. New hypotheses enter only via the inner loop
+# (5_model_loop). 2_design is programmatic exhaustive EIG selection.
 AGENT_KEYS = ["2_design", "3_implement", "4_collect", "5_model_loop"]
 
 DEFAULT_N_PARTICIPANTS = 5
@@ -385,8 +384,8 @@ def _run_experiment_stages(
 
     # Establish this experiment's model set (idempotent: an existing valid
     # cognitive_models/ is left alone, so --resume and --agent reruns are safe).
-    # There is no theorist agent — experiment 1 REQUIRES project seed models,
-    # and experiments >= 2 carry the previous experiment's set forward.
+    # Experiment 1 REQUIRES project seed models; experiments >= 2 carry the
+    # previous experiment's set forward.
     if exp_num == 1:
         if seed_experiment_models_from_project(exp_dir_path, project_id):
             print(
@@ -411,8 +410,7 @@ def _run_experiment_stages(
         else:
             hint = (
                 " (experiment 1 requires project seed models in "
-                f"{outer_project_dir(project_id) / 'seed_models'} — there is no "
-                "theorist agent to write them)"
+                f"{outer_project_dir(project_id) / 'seed_models'})"
                 if exp_num == 1
                 else ""
             )
@@ -541,7 +539,7 @@ class Args:
     ground_truth_model: Optional[str] = None
     """Generate synthetic participant data from this ground-truth model (must be in
     src/pipelines/outer_loop/projects/<project>/ground_truth_models.py). If omitted,
-    data is sampled from the theorist's models."""
+    data is sampled from the cognitive models' prior-predictive."""
     validate: bool = False
     """Validate each agent's output. A failed coding stage is fed its error and
     re-run to fix it in place (up to --max-validation-repairs times); the run
@@ -614,6 +612,7 @@ class Args:
 
 
 def main(args: Args) -> None:
+    """CLI entry point: run the outer experiment loop for one or more experiments."""
     # Money gate first — before any filesystem or network work. A YAML flag
     # alone must never be able to start real recruitment.
     if args.prolific_mode == "live" and not args.confirm_live_recruitment:

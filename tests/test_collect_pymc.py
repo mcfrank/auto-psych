@@ -64,12 +64,12 @@ def test_generate_from_models_raises_when_the_model_cannot_be_resolved():
     was swallowed inside ``get_model_predictions``, which returned ``{}``, and
     ``_generate_from_models`` noticed the empty dict one frame later. Since the
     fail-loud sweep the original error propagates instead, so the message names
-    the actual problem (no theorist_dir) rather than its symptom.
+    the actual problem (no models dir) rather than its symptom.
     """
     stimuli = [{"sequence_a": "HHHT", "sequence_b": "HTHT"}]
     with pytest.raises(KeyError, match="theorist_dir required"):
         _generate_from_models(
-            stimuli, ["nonexistent_model"], n_participants=1, theorist_dir=None
+            stimuli, ["nonexistent_model"], n_participants=1, cognitive_models_dir=None
         )
 
 

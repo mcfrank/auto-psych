@@ -14,7 +14,7 @@ import hashlib
 import importlib.util
 import sys
 from pathlib import Path
-from typing import Any, Dict, List
+from typing import Any, Dict, List  # Any used for lazily-imported pymc types
 
 
 # ---------------------------------------------------------------------------
@@ -33,13 +33,15 @@ _PREPARE_OBSERVED_ATTR = "_auto_psych_prepare_observed"
 # Lazy heavy-library imports
 # ---------------------------------------------------------------------------
 
-def _import_pymc():
+def _import_pymc() -> Any:
+    """Lazy-import ``pymc``; avoids the cost when only cache utilities are used."""
     import pymc as pm
 
     return pm
 
 
-def _import_arviz():
+def _import_arviz() -> Any:
+    """Lazy-import ``arviz``."""
     import arviz as az
 
     return az
@@ -49,7 +51,7 @@ def _import_arviz():
 # Module execution
 # ---------------------------------------------------------------------------
 
-def _exec_model_module(py_path: Path, *, mod_prefix: str):
+def _exec_model_module(py_path: Path, *, mod_prefix: str) -> Any:
     """Import a model `.py` as a standalone module and return the module object.
 
     Shared by :func:`load_pymc_model` (which then requires a module-level
@@ -86,11 +88,11 @@ def _exec_model_module(py_path: Path, *, mod_prefix: str):
 # Model loading
 # ---------------------------------------------------------------------------
 
-def load_pymc_model(name: str, models_dir: Path):
-    """Import `models_dir/<name>.py` and return its module-level `model` attribute.
+def load_pymc_model(name: str, models_dir: Path) -> Any:
+    """Import ``models_dir/<name>.py`` and return its module-level ``pm.Model``.
 
     Fails loudly if the file is missing, fails to import, or does not expose a
-    `pm.Model` at module level.
+    ``pm.Model`` at module level.
     """
     pm = _import_pymc()
     models_dir = Path(models_dir)
@@ -142,7 +144,7 @@ def load_pymc_model(name: str, models_dir: Path):
 # Model introspection
 # ---------------------------------------------------------------------------
 
-def pm_data_inputs(model) -> List[str]:
+def pm_data_inputs(model: Any) -> List[str]:
     """Return the names of every `pm.Data` container in the model."""
     from pytensor.tensor.sharedvar import TensorSharedVariable
 
@@ -153,7 +155,7 @@ def pm_data_inputs(model) -> List[str]:
     ]
 
 
-def observed_response_data(model) -> str:
+def observed_response_data(model: Any) -> str:
     """Return the name of the `pm.Data` container holding observed responses.
 
     Walks back from `model.observed_RVs` through the pytensor graph to find
@@ -204,7 +206,7 @@ def observed_response_data(model) -> str:
 _MODEL_CACHE: Dict[tuple, Any] = {}
 
 
-def load_pymc_model_cached(name: str, models_dir: Path):
+def load_pymc_model_cached(name: str, models_dir: Path) -> Any:
     """Per-process cache of loaded PyMC models, keyed by (name, models_dir).
 
     Loading involves importlib + executing the model file's `with pm.Model()`

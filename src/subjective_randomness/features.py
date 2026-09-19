@@ -4,7 +4,7 @@ Takes an "old"-style responses.csv with raw H/T sequence strings:
     participant_id, trial_index, sequence_a, sequence_b, chose_left, chose_right, model
 
 and produces numeric feature columns derived from each sequence. The numeric
-columns are what theorist PyMC models pull into ``pm.Data`` containers (one
+columns are what PyMC cognitive models pull into ``pm.Data`` containers (one
 container per numeric column name).
 
 Feature columns per sequence (``a`` and ``b``):
@@ -352,7 +352,7 @@ def periodicity_score(seq: str) -> float:
 def featurize_stimulus(sequence_a: str, sequence_b: str) -> Dict[str, float]:
     """Return the full feature-column dict for a single candidate stimulus pair.
 
-    Keys match the ``pm.Data`` container names theorist PyMC models use:
+    Keys match the ``pm.Data`` container names PyMC cognitive models use:
     n_a, h_a, p_a, alts_a, p_alts_a, max_run_a, max_run_norm_a,
     imbalance_a, periodicity_a and the _b counterparts.
     """

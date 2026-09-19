@@ -35,7 +35,8 @@ from src.runtime.config import REPO_ROOT
 # ─────────────────────────────────────────────
 
 
-def _pooled_response_rows(exp_dir: Path) -> list[dict]:
+def _pooled_response_rows(exp_dir: Path) -> list[dict[str, str]]:
+    """Concatenate response rows from experiment 1 through ``exp_dir``."""
     project_dir = exp_dir.parent
     current_num = int(exp_dir.name.removeprefix("experiment"))
     rows: list[dict] = []
@@ -46,7 +47,7 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict]:
     return rows
 
 
-def _protected_seed_names(project_id: str, models_dir: Path) -> set:
+def _protected_seed_names(project_id: str, models_dir: Path) -> set[str]:
     """The project's seed models present in ``models_dir``.
 
     These are the baselines every run reports against: the inner loop never

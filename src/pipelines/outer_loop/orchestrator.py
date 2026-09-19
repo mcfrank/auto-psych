@@ -47,6 +47,7 @@ def outer_projects_dir() -> Path:
 
 
 def outer_project_dir(project_id: str) -> Path:
+    """Return the asset directory for a single project."""
     return outer_projects_dir() / project_id
 
 
@@ -62,6 +63,7 @@ def outer_data_dir() -> Path:
 
 
 def experiment_dir(project_id: str, exp_num: int) -> Path:
+    """Return the output directory for a numbered experiment within a project."""
     return outer_data_dir() / project_id / f"experiment{exp_num}"
 
 
@@ -71,6 +73,7 @@ def project_seed_models_dir(project_id: str) -> Path:
 
 
 def ensure_experiment_dirs(exp_dir: Path) -> None:
+    """Create the standard subdirectories inside an experiment output directory."""
     for sub in ["cognitive_models", "design", "experiment", "data", "model_loop"]:
         (exp_dir / sub).mkdir(parents=True, exist_ok=True)
 
@@ -143,8 +146,7 @@ def seed_experiment_models_from_project(
 def carry_forward_cognitive_models(prev_exp_dir: Path, exp_dir: Path) -> bool:
     """Copy the previous experiment's cognitive_models/ into a new experiment.
 
-    This replaces the removed outer-loop theorist agent's one mechanical job:
-    experiments >= 2 start from the previous experiment's model set (the live
+    Experiments >= 2 start from the previous experiment's model set (the live
     set the inner loop exported: the protected seeds plus every surviving zoo
     model, see ``_export_inner_loop_models``) together with its ledger of
     attempted hypotheses (``attempted_hypotheses.jsonl``, when present). New
@@ -502,7 +504,7 @@ def run_collect_programmatic(
         ``participant_model`` names the model). No browser, no Firebase.
       - ground_truth_model set: sample all participants from that project
         ground-truth callable (no browser).
-      - otherwise: sample from the theorist's PyMC models' prior-predictive.
+      - otherwise: sample from the cognitive PyMC models' prior-predictive.
 
     Writes exp_dir/data/responses.csv. Returns path to CSV.
     """
@@ -518,8 +520,8 @@ def run_collect_programmatic(
     )
 
     stimuli_path = exp_dir / "design" / "stimuli.json"
-    theorist_dir = exp_dir / "cognitive_models"
-    theorist_manifest = manifest_path(theorist_dir)
+    cognitive_models_dir = exp_dir / "cognitive_models"
+    cognitive_models_manifest = manifest_path(cognitive_models_dir)
 
     stimuli: List[Dict[str, Any]] = []
     if stimuli_path.exists():
@@ -548,7 +550,7 @@ def run_collect_programmatic(
         "mode": mode,
         "deployment_config_path": str(config_path),
         "stimuli_path": str(stimuli_path),
-        "theorist_manifest_path": str(theorist_manifest),
+        "cognitive_models_manifest_path": str(cognitive_models_manifest),
     }
 
     # Track whether rows came from actual participants (browser / Firebase /
@@ -614,14 +616,14 @@ def run_collect_programmatic(
             model_registry=model_registry,
         )
     elif rows is None:
-        # Theorist models are PyMC models: sample synthetic responses from their
-        # prior-predictive p_left, featurizing each stimulus first.
+        # PyMC cognitive models: sample synthetic responses from their
+        # prior-predictive p_left.
         model_names: List[str] = []
-        if theorist_manifest.exists():
-            model_names = read_loadable_model_names(theorist_dir)
+        if cognitive_models_manifest.exists():
+            model_names = read_loadable_model_names(cognitive_models_dir)
         if not model_names:
             print(
-                f"  [collect] Warning: no loadable models in {theorist_dir} — cannot generate data",
+                f"  [collect] Warning: no loadable models in {cognitive_models_dir} — cannot generate data",
                 flush=True,
             )
             rows = []
@@ -630,7 +632,7 @@ def run_collect_programmatic(
                 stimuli,
                 model_names,
                 n_participants,
-                models_dir=theorist_dir,
+                models_dir=cognitive_models_dir,
             )
 
     # Fail loudly on degenerate collected data: if real participants produced no
