@@ -130,7 +130,9 @@ def test_compare_matched_cells_common_pool_excludes_union(tmp_path, monkeypatch)
     result_a = json.loads((cell_a / "holdout.json").read_text(encoding="utf-8"))
     result_b = json.loads((cell_b / "holdout.json").read_text(encoding="utf-8"))
 
-    pool = _common_eval_pool(result_a, result_b, gt)
+    run_root_a = Path(result_a["gt_runs"][0]["run_root"])
+    run_root_b = Path(result_b["gt_runs"][0]["run_root"])
+    pool = _common_eval_pool(result_a, result_b, gt, run_root_a=run_root_a, run_root_b=run_root_b)
     pool_pairs = {
         _unordered_pair(s["sequence_a"], s["sequence_b"]) for s in pool
     }

@@ -17,8 +17,6 @@ from __future__ import annotations
 import csv
 import json
 import sys
-import tarfile
-import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Literal, Mapping, Optional, Sequence
@@ -35,6 +33,10 @@ from src.models.pymc_inference import fit_model  # noqa: E402
 from src.pipelines.inner_loop.hypothesis_ledger import (  # noqa: E402
     HypothesisLedger,
     LEDGER_FILENAME,
+)
+from src.subjective_randomness.cell_archive import (  # noqa: E402
+    CellArchiveManager,
+    resolve_run_root,
 )
 from src.subjective_randomness.holdout_data import (  # noqa: E402
     _raw_eval_rows,
@@ -180,17 +182,6 @@ def _find_lost_incumbents(
     return lost
 
 
-def _extract_archive(cell_dir: Path) -> Optional[tempfile.TemporaryDirectory]:
-    """If the run tree is archived, extract to a temp dir and return it."""
-    tar_path = cell_dir / "agent_runs.tar.gz"
-    if not tar_path.exists():
-        return None
-    td = tempfile.TemporaryDirectory(dir=cell_dir, prefix="oracle_extract_")
-    with tarfile.open(tar_path) as tf:
-        tf.extractall(td.name, filter="data")
-    return td
-
-
 def main(args: Args) -> None:
     result_path = resolve_path(args.result)
     result = json.loads(result_path.read_text(encoding="utf-8"))
@@ -202,111 +193,100 @@ def main(args: Args) -> None:
 
     all_steps: list[dict] = []
     all_lost: list[dict] = []
-    temp_dirs: list[tempfile.TemporaryDirectory] = []
 
     cell_dir = result_path.parent
 
-    for gt_run in result["gt_runs"]:
-        gt_model = gt_run["gt_model"]
-        gt_params = gt_run["params"]
-        run_root = Path(gt_run["run_root"])
+    with CellArchiveManager() as archive_mgr:
+        for gt_run in result["gt_runs"]:
+            gt_model = gt_run["gt_model"]
+            gt_params = gt_run["params"]
 
-        if not run_root.exists():
-            td = _extract_archive(cell_dir)
-            if td is None:
-                raise FileNotFoundError(
-                    f"Run root {run_root} does not exist and no "
-                    f"agent_runs.tar.gz found at {cell_dir}"
-                )
-            temp_dirs.append(td)
-            run_root = Path(td.name) / "_runs" / gt_model
-            if not run_root.exists():
-                raise FileNotFoundError(
-                    f"Extracted archive but {run_root} not found"
-                )
-
-        eval_stimuli_path = run_root / "eval_stimuli.json"
-        if not eval_stimuli_path.exists():
-            raise FileNotFoundError(f"No eval_stimuli.json at {eval_stimuli_path}")
-        eval_stimuli = json.loads(eval_stimuli_path.read_text(encoding="utf-8"))
-        eval_rows = _raw_eval_rows(eval_stimuli)
-
-        seed_models_dir = Path(result["seed_models_dir"])
-        gt_p = p_left_fixed_params(gt_model, seed_models_dir, eval_stimuli, gt_params)
-
-        cache_dir = cell_dir / "mcmc_cache"
-        if not cache_dir.is_dir():
-            cache_dir = run_root.parent / "mcmc_cache"
-        if not cache_dir.is_dir():
-            print(
-                f"WARNING: no mcmc_cache at {cell_dir / 'mcmc_cache'} or "
-                f"{run_root.parent / 'mcmc_cache'} — fits will run uncached "
-                f"(very slow).",
-                file=sys.stderr,
+            run_root = resolve_run_root(
+                cell_dir, gt_run["run_root"], gt_model, archive_mgr,
             )
-            cache_dir = None
 
-        all_history: list[dict] = []
-        for exp_num in range(1, n_experiments + 1):
-            loop_dir = run_root / f"experiment{exp_num}" / "model_loop"
-            history_path = loop_dir / "history.json"
-            if not history_path.exists():
-                continue
-            history = json.loads(history_path.read_text(encoding="utf-8"))
-            all_history.extend(history)
+            eval_stimuli_path = run_root / "eval_stimuli.json"
+            if not eval_stimuli_path.exists():
+                raise FileNotFoundError(f"No eval_stimuli.json at {eval_stimuli_path}")
+            eval_stimuli = json.loads(eval_stimuli_path.read_text(encoding="utf-8"))
+            eval_rows = _raw_eval_rows(eval_stimuli)
 
-            if args.steps == "final":
-                steps_to_score = [history[-1]] if history else []
-            else:
-                steps_to_score = history
+            seed_models_dir = Path(result["seed_models_dir"])
+            gt_p = p_left_fixed_params(gt_model, seed_models_dir, eval_stimuli, gt_params)
 
-            for step_entry in steps_to_score:
-                model_names = _discover_models(loop_dir)
-                if not model_names:
-                    continue
-
-                participant_ids = _participant_ids_in(loop_dir / "responses.csv")
-                scores = []
-                for name in model_names:
-                    score = _score_model(
-                        name, loop_dir, eval_rows, gt_p,
-                        cache_dir, fit_kwargs, participant_ids, predict_max_draws,
-                    )
-                    if score is not None:
-                        scores.append(score)
-
-                if not scores:
-                    continue
-
-                oracle_best = min(scores, key=lambda s: s["rmse"])
-                incumbent = step_entry["best_model"]
-                incumbent_score = next(
-                    (s for s in scores if s["model"] == incumbent), None
+            cache_dir = cell_dir / "mcmc_cache"
+            if not cache_dir.is_dir():
+                cache_dir = run_root.parent / "mcmc_cache"
+            if not cache_dir.is_dir():
+                print(
+                    f"WARNING: no mcmc_cache at {cell_dir / 'mcmc_cache'} or "
+                    f"{run_root.parent / 'mcmc_cache'} — fits will run uncached "
+                    f"(very slow).",
+                    file=sys.stderr,
                 )
+                cache_dir = None
 
-                step_result = {
-                    "gt_model": gt_model,
-                    "experiment": exp_num,
-                    "step": step_entry["step"],
-                    "n_models_scored": len(scores),
-                    "oracle_best_model": oracle_best["model"],
-                    "oracle_rmse": oracle_best["rmse"],
-                    "incumbent_model": incumbent,
-                    "incumbent_rmse": incumbent_score["rmse"] if incumbent_score else None,
-                    "oracle_incumbent_gap": (
-                        (incumbent_score["rmse"] - oracle_best["rmse"])
-                        if incumbent_score else None
-                    ),
-                    "final_model": step_entry["best_model"],
-                    "final_rmse": incumbent_score["rmse"] if incumbent_score else None,
-                }
-                all_steps.append(step_result)
+            all_history: list[dict] = []
+            for exp_num in range(1, n_experiments + 1):
+                loop_dir = run_root / f"experiment{exp_num}" / "model_loop"
+                history_path = loop_dir / "history.json"
+                if not history_path.exists():
+                    continue
+                history = json.loads(history_path.read_text(encoding="utf-8"))
+                all_history.extend(history)
 
-        ledger_path = (
-            run_root / f"experiment{n_experiments}" / "model_loop" / LEDGER_FILENAME
-        )
-        lost = _find_lost_incumbents(all_history, ledger_path)
-        all_lost.extend(lost)
+                if args.steps == "final":
+                    steps_to_score = [history[-1]] if history else []
+                else:
+                    steps_to_score = history
+
+                for step_entry in steps_to_score:
+                    model_names = _discover_models(loop_dir)
+                    if not model_names:
+                        continue
+
+                    participant_ids = _participant_ids_in(loop_dir / "responses.csv")
+                    scores = []
+                    for name in model_names:
+                        score = _score_model(
+                            name, loop_dir, eval_rows, gt_p,
+                            cache_dir, fit_kwargs, participant_ids, predict_max_draws,
+                        )
+                        if score is not None:
+                            scores.append(score)
+
+                    if not scores:
+                        continue
+
+                    oracle_best = min(scores, key=lambda s: s["rmse"])
+                    incumbent = step_entry["best_model"]
+                    incumbent_score = next(
+                        (s for s in scores if s["model"] == incumbent), None
+                    )
+
+                    step_result = {
+                        "gt_model": gt_model,
+                        "experiment": exp_num,
+                        "step": step_entry["step"],
+                        "n_models_scored": len(scores),
+                        "oracle_best_model": oracle_best["model"],
+                        "oracle_rmse": oracle_best["rmse"],
+                        "incumbent_model": incumbent,
+                        "incumbent_rmse": incumbent_score["rmse"] if incumbent_score else None,
+                        "oracle_incumbent_gap": (
+                            (incumbent_score["rmse"] - oracle_best["rmse"])
+                            if incumbent_score else None
+                        ),
+                        "final_model": step_entry["best_model"],
+                        "final_rmse": incumbent_score["rmse"] if incumbent_score else None,
+                    }
+                    all_steps.append(step_result)
+
+            ledger_path = (
+                run_root / f"experiment{n_experiments}" / "model_loop" / LEDGER_FILENAME
+            )
+            lost = _find_lost_incumbents(all_history, ledger_path)
+            all_lost.extend(lost)
 
     output = {
         "result_path": str(result_path),
@@ -336,9 +316,6 @@ def main(args: Args) -> None:
         print(f"  {len(all_lost)} lost incumbent(s):")
         for lost in all_lost:
             print(f"    {lost['model']}: {lost['outcome']} ({lost['detail']})")
-
-    for td in temp_dirs:
-        td.cleanup()
 
 
 if __name__ == "__main__":
