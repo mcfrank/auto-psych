@@ -264,15 +264,19 @@ def test_legacy_compat_reproduces_the_historical_algorithm():
     )
 
     # The first selection, up to complement symmetry. The earlier pin here
-    # claimed this selection was tie-free by a wide margin; it is not. The EIG
-    # multiset above contains 0.149885 twice, and the two attaining it are a
-    # pair and its H<->T complement, whose EIGs are equal by construction —
-    # exactly the symmetry this docstring warns about. Which member argsort
-    # returns differs between machines on a last-ulp difference, so pin the
-    # selection up to that symmetry instead of picking a winner arbitrarily.
-    first = ("HTH", "HTTH")
-    complement = tuple(s.translate(str.maketrans("HT", "TH")) for s in first)
-    assert pairs[0] in (first, complement)
+    # claimed this selection was tie-free by a wide margin; it is not. Every
+    # model here scores a sequence by its structure (runs, alternations,
+    # motifs), all invariant under relabelling H<->T, so complementing *either*
+    # sequence of a pair leaves every model's p_left — and therefore the pair's
+    # EIG — exactly unchanged. Four pairs tie, and which one argsort returns
+    # differs by machine on a last-ulp difference: this cluster returns
+    # ("THT", "THHT"), the CI runner ("THT", "HTTH"). Canonicalising each
+    # sequence collapses all four, so the assertion pins the selection without
+    # picking a winner among equals.
+    def canonical(seq: str) -> str:
+        return min(seq, seq.translate(str.maketrans("HT", "TH")))
+
+    assert tuple(canonical(s) for s in pairs[0]) == ("HTH", "HTTH")
 
     repeat = build_exhaustive_design(
         k=5, lengths=(3, 4), n_scenarios=200, prefilter=200, seed=0, legacy_compat=True
