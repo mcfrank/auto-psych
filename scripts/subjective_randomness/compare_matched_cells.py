@@ -28,6 +28,10 @@ from pyprojroot import here
 
 sys.path.insert(0, str(here()))
 
+from src.subjective_randomness.cell_archive import (  # noqa: E402
+    CellArchiveManager,
+    resolve_run_root,
+)
 from src.subjective_randomness.holdout_eval import (  # noqa: E402
     TRAJECTORY_COLUMNS,
     _unordered_pair,
@@ -83,17 +87,16 @@ def _common_eval_pool(
     result_a: Mapping[str, Any],
     result_b: Mapping[str, Any],
     gt_model: str,
+    *,
+    run_root_a: Path,
+    run_root_b: Path,
 ) -> list[dict[str, str]]:
     """Build the exhaustive eval pool minus the union of both cells' training."""
     n_exp_a = int(result_a["n_experiments"])
     n_exp_b = int(result_b["n_experiments"])
 
-    run_root_a = Path(result_a["gt_runs"][0]["run_root"])
-    run_root_b = Path(result_b["gt_runs"][0]["run_root"])
-
     trained_a = collect_trained_pairs(run_root_a, n_exp_a)
     trained_b = collect_trained_pairs(run_root_b, n_exp_b)
-    union = trained_a | trained_b
 
     info = build_eval_stimuli(
         run_root_a,
@@ -143,6 +146,26 @@ def _rescore_cell(
     )
 
 
+def _resolve_result_run_roots(
+    result: Dict[str, Any],
+    cell_dir: Path,
+    manager: CellArchiveManager,
+) -> Dict[str, Any]:
+    """Return a copy of ``result`` with each gt_run's run_root resolved.
+
+    If the recorded ``run_root`` does not exist on disk, the cell's
+    ``agent_runs.tar.gz`` is extracted and the path is rewritten.
+    """
+    new_runs = []
+    for gt_run in result["gt_runs"]:
+        gt_name = gt_run["gt_model"]
+        resolved = resolve_run_root(
+            cell_dir, gt_run["run_root"], gt_name, manager,
+        )
+        new_runs.append({**gt_run, "run_root": str(resolved)})
+    return {**result, "gt_runs": new_runs}
+
+
 def main(args: Args) -> None:
     sweep_a = resolve_path(args.sweep_a)
     sweep_b = resolve_path(args.sweep_b)
@@ -167,64 +190,80 @@ def main(args: Args) -> None:
     pairs: List[Dict[str, Any]] = []
     unreconstructable: List[str] = []
 
-    for key in common_keys:
-        cell_dir_a = cells_a[key]
-        cell_dir_b = cells_b[key]
-        gt_model = key.split("/", 1)[1]
-        run_label = key.split("/", 1)[0]
+    with CellArchiveManager() as archive_mgr:
+        for key in common_keys:
+            cell_dir_a = cells_a[key]
+            cell_dir_b = cells_b[key]
+            gt_model = key.split("/", 1)[1]
+            run_label = key.split("/", 1)[0]
 
-        try:
-            result_a = _load_result(cell_dir_a)
-            result_b = _load_result(cell_dir_b)
-        except FileNotFoundError as exc:
-            unreconstructable.append(f"{key}: {exc}")
-            continue
+            try:
+                result_a = _load_result(cell_dir_a)
+                result_b = _load_result(cell_dir_b)
+            except FileNotFoundError as exc:
+                unreconstructable.append(f"{key}: {exc}")
+                continue
 
-        try:
-            common_pool = _common_eval_pool(result_a, result_b, gt_model)
-        except (FileNotFoundError, ValueError) as exc:
-            unreconstructable.append(f"{key}: common pool failed: {exc}")
-            continue
+            try:
+                result_a = _resolve_result_run_roots(result_a, cell_dir_a, archive_mgr)
+                result_b = _resolve_result_run_roots(result_b, cell_dir_b, archive_mgr)
+            except (FileNotFoundError, Exception) as exc:
+                unreconstructable.append(f"{key}: archive extraction failed: {exc}")
+                continue
 
-        seed_dir_a = Path(result_a["seed_models_dir"])
-        seed_dir_b = Path(result_b["seed_models_dir"])
-        cache_a = Path(result_a["gt_runs"][0]["run_root"]).parent / "mcmc_cache"
-        cache_b = Path(result_b["gt_runs"][0]["run_root"]).parent / "mcmc_cache"
+            run_root_a = Path(result_a["gt_runs"][0]["run_root"])
+            run_root_b = Path(result_b["gt_runs"][0]["run_root"])
 
-        run_root_a = Path(result_a["gt_runs"][0]["run_root"])
-        run_root_b = Path(result_b["gt_runs"][0]["run_root"])
-        trained_a = collect_trained_pairs(run_root_a, int(result_a["n_experiments"]))
-        trained_b = collect_trained_pairs(run_root_b, int(result_b["n_experiments"]))
+            try:
+                common_pool = _common_eval_pool(
+                    result_a, result_b, gt_model,
+                    run_root_a=run_root_a, run_root_b=run_root_b,
+                )
+            except (FileNotFoundError, ValueError) as exc:
+                unreconstructable.append(f"{key}: common pool failed: {exc}")
+                continue
 
-        try:
-            rescored_a = _rescore_cell(result_a, common_pool, trained_b, seed_dir_a, cache_a)
-            rescored_b = _rescore_cell(result_b, common_pool, trained_a, seed_dir_b, cache_b)
-        except Exception as exc:
-            unreconstructable.append(f"{key}: rescore failed: {exc}")
-            continue
+            seed_dir_a = Path(result_a["seed_models_dir"])
+            seed_dir_b = Path(result_b["seed_models_dir"])
+            cache_a = cell_dir_a / "mcmc_cache"
+            if not cache_a.is_dir():
+                cache_a = run_root_a.parent / "mcmc_cache"
+            cache_b = cell_dir_b / "mcmc_cache"
+            if not cache_b.is_dir():
+                cache_b = run_root_b.parent / "mcmc_cache"
 
-        final_a = _final_row(rescored_a)
-        final_b = _final_row(rescored_b)
-        if final_a is None or final_b is None:
-            unreconstructable.append(f"{key}: no final trajectory row")
-            continue
+            trained_a = collect_trained_pairs(run_root_a, int(result_a["n_experiments"]))
+            trained_b = collect_trained_pairs(run_root_b, int(result_b["n_experiments"]))
 
-        pair_entry: Dict[str, Any] = {
-            "cell": key,
-            "gt_model": gt_model,
-            "run": run_label,
-            "n_eval_stimuli": len(common_pool),
-        }
-        for metric in METRICS:
-            val_a = final_a.get(metric)
-            val_b = final_b.get(metric)
-            pair_entry[f"{metric}_a"] = val_a
-            pair_entry[f"{metric}_b"] = val_b
-            if val_a is not None and val_b is not None:
-                pair_entry[f"delta_{metric}"] = val_b - val_a
-            else:
-                pair_entry[f"delta_{metric}"] = None
-        pairs.append(pair_entry)
+            try:
+                rescored_a = _rescore_cell(result_a, common_pool, trained_b, seed_dir_a, cache_a)
+                rescored_b = _rescore_cell(result_b, common_pool, trained_a, seed_dir_b, cache_b)
+            except Exception as exc:
+                unreconstructable.append(f"{key}: rescore failed: {exc}")
+                continue
+
+            final_a = _final_row(rescored_a)
+            final_b = _final_row(rescored_b)
+            if final_a is None or final_b is None:
+                unreconstructable.append(f"{key}: no final trajectory row")
+                continue
+
+            pair_entry: Dict[str, Any] = {
+                "cell": key,
+                "gt_model": gt_model,
+                "run": run_label,
+                "n_eval_stimuli": len(common_pool),
+            }
+            for metric in METRICS:
+                val_a = final_a.get(metric)
+                val_b = final_b.get(metric)
+                pair_entry[f"{metric}_a"] = val_a
+                pair_entry[f"{metric}_b"] = val_b
+                if val_a is not None and val_b is not None:
+                    pair_entry[f"delta_{metric}"] = val_b - val_a
+                else:
+                    pair_entry[f"delta_{metric}"] = None
+            pairs.append(pair_entry)
 
     per_gt: Dict[str, Dict[str, Any]] = {}
     gt_models = sorted(set(p["gt_model"] for p in pairs))
@@ -278,6 +317,12 @@ def main(args: Args) -> None:
         print(f"  {gt}: delta RMSE mean={summary['mean_delta_rmse']}, "
               f"delta KL mean={summary['mean_delta_kl_regret']}, "
               f"delta r mean={summary['mean_delta_pearson_r']}")
+
+    if not pairs:
+        raise SystemExit(
+            f"No paired cells produced. {len(unreconstructable)} cell(s) "
+            f"could not be reconstructed."
+        )
 
 
 if __name__ == "__main__":
