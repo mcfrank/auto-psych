@@ -126,53 +126,64 @@ Starting from `run_pymc_inner_loop` in `pymc_orchestrator.py`:
 
 | Check | Module | Protects against |
 |---|---|---|
-| `MissingStimulusColumns` (raises on missing feature columns) | `pymc_inference.py` | Models dropped from design because the data lacks their columns |
+| `MissingStimulusColumns` (raises on missing feature columns) | `data_binding.py` | Models dropped from design because the data lacks their columns |
 | `NON_STIMULUS_COLUMNS` screening (allows `participant_id`, `trial_index` drops only) | `eig.py` | Silent hypothesis-set shrinkage at design time |
 | `screened_out.json` written even when empty | `eig.py` | Invisible drops — the verifier asserts `[]` for raw runs |
 | Import gate (AST allowlist) | `import_gate.py` | Candidates importing feature code or other forbidden modules |
 | Agent-tree isolation (`agent_tree.exclude` + rsync) | `holdout_recovery_array.sbatch` | Agents reading ground-truth recipes, feature library, or holdout configs |
 | Manifest scrub (held-out model's name + rationale removed) | `remove_manifest_entry.py` | Agents seeing the held-out model's identity |
 | `generating_model` column stripped | `holdout_recovery.py` | Response data leaking which model generated it |
-| Leakage audit (`any_csv_generating_model`, `any_manifest_gt_named`) | `holdout_recovery.py` | Held-out label present in any agent-visible artifact |
+| Leakage audit (`any_csv_generating_model`, `any_manifest_gt_named`) | `leakage_audit.py` | Held-out label present in any agent-visible artifact |
 | PSIS-LOO reliability (tolerating exempt constant-logp trials) | `loo_reliability.py` | arviz's blanket k>0.7 flag discarding winners on clipped trials |
-| Best-by-ELPD-rank export (not softmax argmax) | `pymc_orchestrator.py` | Exporting a far-behind model that reads 0.0 in the rounded posterior |
-| Novelty RMSE gate (0.02) | `pymc_orchestrator.py` | Re-skinned duplicates wasting candidate slots |
+| Best-by-ELPD-rank export (not softmax argmax) | `scoring.py` | Exporting a far-behind model that reads 0.0 in the rounded posterior |
+| Novelty RMSE gate (0.02) | `model_zoo.py` | Re-skinned duplicates wasting candidate slots |
 | Config-time raw-column binding check | `holdout_recovery.py` | A seed model that cannot bind raw rows reaching design and failing there |
 
 ## Module reference
 
-### Core pipeline
+### Inner loop
 
 | Module | Lines | Purpose |
 |---|---|---|
-| `src/pipelines/inner_loop/pymc_orchestrator.py` | 2031 | Inner loop: candidate spawn, admission, pruning, export, critique, history |
+| `src/pipelines/inner_loop/pymc_orchestrator.py` | 344 | Top-level orchestrator: seed → score → critique → candidate → prune loop |
+| `src/pipelines/inner_loop/model_zoo.py` | 690 | Model zoo: seeding, admission gates, pruning, novelty check, lens rotation |
+| `src/pipelines/inner_loop/candidate_agent.py` | 387 | Candidate brief generation and agent spawning |
+| `src/pipelines/inner_loop/scoring.py` | 339 | ELPD-LOO scoring, best-model selection, history, export artifacts |
+| `src/pipelines/inner_loop/hypothesis_ledger.py` | 185 | Append-only JSONL ledger of attempted hypotheses |
 | `src/pipelines/inner_loop/run.py` | 171 | CLI entry point for the inner loop |
-| `src/pipelines/inner_loop/hypothesis_ledger.py` | 179 | Append-only JSONL ledger of attempted hypotheses |
 | `src/pipelines/inner_loop/import_gate.py` | 62 | AST-based import allowlist for candidate/critique code |
-| `src/pipelines/outer_loop/orchestrator.py` | 1094 | Outer loop: seeding, carry-forward, stage dispatch, export |
-| `src/pipelines/outer_loop/orchestrator_validators.py` | 317 | Validators for outer-loop stage outputs |
-| `src/pipelines/outer_loop/run.py` | 743 | CLI entry point for the outer loop |
-| `src/pipelines/outer_loop/eig.py` | 400 | EIG-based design: screen models, enumerate stimuli, greedy selection |
-| `src/pipelines/outer_loop/columns.py` | 16 | `RAW_RESPONSE_COLUMNS` constant |
-| `src/pipelines/outer_loop/collect.py` | 1094 | Data collection: simulated, LLM, browser, live participants |
-| `src/pipelines/outer_loop/participants.py` | 232 | Participant simulation (ground-truth model responses) |
-| `src/pipelines/outer_loop/llm.py` | 172 | LLM-as-participant prompt and response parsing |
-| `src/pipelines/outer_loop/deployment/` | ~1200 | Firebase, Prolific, local, smoke deployment |
-| `src/pipelines/outer_loop/results_collection.py` | 367 | Post-run results collection and sanitization |
+
+### Outer loop
+
+| Module | Lines | Purpose |
+|---|---|---|
+| `src/pipelines/outer_loop/run.py` | 744 | CLI entry point for the outer loop |
+| `src/pipelines/outer_loop/orchestrator.py` | 716 | Seeding, carry-forward, stage dispatch, context writing, agent spawning |
+| `src/pipelines/outer_loop/collect.py` | 454 | Data collection: live Prolific, Firebase retrieval, QC |
+| `src/pipelines/outer_loop/eig.py` | 405 | EIG-based design: screen models, enumerate stimuli, greedy selection |
+| `src/pipelines/outer_loop/model_loop_runner.py` | 379 | Inner-loop integration: pool responses, protect seeds, export, registry |
+| `src/pipelines/outer_loop/synthetic_data.py` | 352 | Synthetic data: LLM-as-participant and model-based response generation |
+| `src/pipelines/outer_loop/orchestrator_validators.py` | 316 | Validators for outer-loop stage outputs |
+| `src/pipelines/outer_loop/browser_steering.py` | 315 | Playwright browser automation for jsPsych experiments |
+| `src/pipelines/outer_loop/participants.py` | 232 | LLM participant backends (closed API, open Hugging Face) |
+| `src/pipelines/outer_loop/columns.py` | 36 | `RAW_RESPONSE_COLUMNS` constant and CSV writer |
+| `src/pipelines/outer_loop/deployment/` | ~1560 | Firebase, Prolific, local, smoke deployment |
 
 ### Models and inference
 
 | Module | Lines | Purpose |
 |---|---|---|
-| `src/models/pymc_inference.py` | 1309 | PyMC model loading, fitting, caching, prediction, `compute_features` hooks |
+| `src/models/pymc_inference.py` | 860 | PyMC fitting, caching, prior/posterior prediction, EIG, diagnostics |
+| `src/models/data_binding.py` | 334 | CSV → `pm.set_data` dict; `compute_features` and `prepare_observed` hooks |
 | `src/models/eig_selection.py` | 327 | Greedy max-EIG stimulus set selection |
-| `src/models/loo_reliability.py` | 167 | PSIS-LOO reliability with exempt-trial logic |
-| `src/models/mcmc_defaults.py` | 40 | Single source of MCMC sampler defaults |
+| `src/models/model_loading.py` | 224 | Load agent-written `.py` models, attach hooks, per-process cache |
+| `src/models/loo_reliability.py` | 165 | PSIS-LOO reliability with exempt-trial logic |
 | `src/models/model_manifest.py` | 138 | `models_manifest.yaml` parser and writer |
 | `src/models/probability.py` | 65 | Probability validation helpers |
-| `src/model_comparison/posterior.py` | 352 | Bayesian model posterior via softmax ELPD + `az.compare` |
-| `src/model_comparison/likelihood.py` | 112 | ELPD-LOO computation for a single model |
-| `src/critique/ppc.py` | 576 | CriticAL posterior-predictive check |
+| `src/models/mcmc_defaults.py` | 28 | Single source of MCMC sampler defaults |
+| `src/model_comparison/posterior.py` | 353 | Bayesian model posterior via softmax ELPD + `az.compare` |
+| `src/model_comparison/likelihood.py` | 113 | ELPD-LOO computation for a single model |
+| `src/critique/ppc.py` | 578 | CriticAL posterior-predictive check |
 | `src/registry/io.py` | 138 | `model_registry.yaml` I/O and validation |
 
 ### Runtime
@@ -180,16 +191,20 @@ Starting from `run_pymc_inner_loop` in `pymc_orchestrator.py`:
 | Module | Lines | Purpose |
 |---|---|---|
 | `src/runtime/coding_agent.py` | 561 | Backend-agnostic agent launcher (claude, opencode, codex) |
-| `src/runtime/config.py` | 78 | `REPO_ROOT`, path resolution, secrets |
 | `src/runtime/token_usage.py` | 189 | LLM token-usage accounting |
+| `src/runtime/config.py` | 78 | `REPO_ROOT`, path resolution, secrets |
 
 ### Holdout recovery harness
 
 | Module | Lines | Purpose |
 |---|---|---|
-| `src/subjective_randomness/holdout_recovery.py` | 1813 | Holdout recovery: generate data, run loops, evaluate trajectory |
+| `src/subjective_randomness/holdout_recovery.py` | 693 | Holdout recovery orchestrator: generate data, run loops, dispatch eval |
+| `src/subjective_randomness/holdout_eval.py` | 649 | Trajectory evaluation: fit, predict, score against held-out pool |
+| `src/subjective_randomness/holdout_data.py` | 289 | Ground-truth data generation, parameter resolution, pool validation |
+| `src/subjective_randomness/leakage_audit.py` | 215 | Audit agent-written models for ground-truth leakage |
 | `src/subjective_randomness/recovery_metrics.py` | 65 | RMSE, KL regret, bias, calibration |
 | `src/subjective_randomness/tidy.py` | 88 | `trajectory_tidy_rows` for holdout results |
+| `src/subjective_randomness/config.py` | 37 | Shared config/path helpers |
 | `src/pipelines/outer_loop/projects/subjective_randomness/evaluate_recovery.py` | 294 | Evaluation pool builder, `feature_rows` |
 | `src/pipelines/outer_loop/projects/subjective_randomness/ground_truth_models.py` | 125 | Ground-truth model registry |
 | `src/pipelines/outer_loop/projects/subjective_randomness/seed_models/` | ~820 | 4 seed models + archive models + manifest |
@@ -219,7 +234,7 @@ Starting from `run_pymc_inner_loop` in `pymc_orchestrator.py`:
 | `src/subjective_randomness/features.py` | 415 | Feature engineering (user-side analysis only) |
 | `src/subjective_randomness/sequence_stats.py` | 434 | Sequence statistics (runs, motifs, etc.) |
 | `src/subjective_randomness/stimulus_design.py` | 867 | Stimulus pool generation and analysis |
-| `src/subjective_randomness/model_recovery.py` | 464 | Closed-ended model recovery |
+| `src/subjective_randomness/model_recovery.py` | 444 | Closed-ended model recovery |
 | `src/subjective_randomness/adaptive_recovery.py` | 731 | Sequential Bayesian optimal design recovery |
 | `src/subjective_randomness/reporting.py` | 1118 | Recovery reporting and figure generation |
 
@@ -228,6 +243,6 @@ Starting from `run_pymc_inner_loop` in `pymc_orchestrator.py`:
 | Module | Lines | Purpose |
 |---|---|---|
 | `src/viewer/` | ~1050 | Flask SPA run explorer and static-site freezer |
-| `src/monitor/` | ~560 | Live dashboard for in-progress human studies |
-| `src/recovery_improvement/` | ~2200 | Autonomous recovery-improvement campaign driver |
+| `src/monitor/` | ~660 | Live dashboard for in-progress human studies |
+| `src/recovery_improvement/` | ~2220 | Autonomous recovery-improvement campaign driver |
 | `src/consolidation/driver.py` | 318 | Consolidation plan driver |

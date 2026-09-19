@@ -80,22 +80,25 @@ makes `--resume` (run into an existing `experimentN/` dir) and `--agent <stage>`
 
 Coding stages that fail their validator are re-spawned with the error injected as
 repair feedback (`--max-validation-repairs`); programmatic stages fail terminally.
-Validators (`_validate_*` in `orchestrator.py`) enforce the artifact contracts
-(e.g. jsPsych button-only + `chose_left` data column).
+Validators (`_validate_*` in `orchestrator_validators.py`) enforce the artifact
+contracts (e.g. jsPsych button-only + `chose_left` data column).
 
-### Inner loop — `src/pipelines/inner_loop/pymc_orchestrator.py`
+### Inner loop — `src/pipelines/inner_loop/`
 
-The only place new hypotheses enter. The model zoo lives at `model_loop/models/`;
-the project's seeds are `protected_names` (never pruned — the outer loop passes
-them explicitly, so a model carried from an earlier experiment *can* lose and
-leave). Each round: optional CriticAL critique → spawn candidate agents in
-parallel (each steered by a rotating exploration "lens") → admit sequentially.
+`pymc_orchestrator.py` orchestrates; `model_zoo.py` manages seeding, admission,
+pruning and the novelty gate; `scoring.py` handles ELPD-LOO scoring, best-model
+selection and export; `candidate_agent.py` writes candidate briefs and spawns
+agents. The model zoo lives at `model_loop/models/`; the project's seeds are
+`protected_names` (never pruned — the outer loop passes them explicitly, so a
+model carried from an earlier experiment *can* lose and leave). Each round:
+optional CriticAL critique → spawn candidate agents in parallel (each steered by
+a rotating exploration "lens") → admit sequentially.
 
-- **Novelty gate** (`_admit_candidate`): a candidate is admitted only with a
+- **Novelty gate** (`_admit_candidate` in `model_zoo.py`): a candidate is admitted only with a
   loadable `candidate.py` (module-level `model: pm.Model`) + `hypothesis.md` +
   `model_name.txt`, passing logp/real-fit/finite-ELPD gates, AND with posterior-
   mean `p_left` ≥ `novelty_rmse_threshold` (0.02) RMSE from every admitted model.
-- **Pruning** (`_prune_losers`): non-protected, PSIS-LOO-reliable models
+- **Pruning** (`_prune_losers` in `model_zoo.py`): non-protected, PSIS-LOO-reliable models
   statistically distinguishable from the best (`elpd_diff > dse_multiplier·dse`)
   move to `models/pruned/`. There is no stacking-weight floor — pruning is on
   `elpd_diff` vs `dse` alone (iteration 3 removed the weight floor because
@@ -110,7 +113,7 @@ parallel (each steered by a rotating exploration "lens") → admit sequentially.
   Without it, pruned hypotheses vanished from `existing_hypotheses.md` and were
   re-proposed (in the weakest recovery cell 11 of 13 re-proposals had already
   been pruned there).
-- **Export**: the exported winner (`_best_exportable_model`) is the best model
+- **Export**: the exported winner (`_best_exportable_model` in `scoring.py`) is the best model
   by **ELPD-LOO rank** (`az.compare`'s `rank`) among those whose PSIS-LOO is
   *reliable* — never the softmax posterior argmax: the posterior is rounded to
   six decimals, so every model more than ~14 nats behind reads 0.0 and a
@@ -119,7 +122,7 @@ parallel (each steered by a rotating exploration "lens") → admit sequentially.
   `best_model` in `history.json` (which also records `argmax_model` and
   `excluded_unreliable`) and the critique incumbent, so what the recovery
   harness scores, what the critic critiques and what is carried agree. The
-  outer loop (`_export_inner_loop_models`) then makes `cognitive_models/` the
+  outer loop (`_export_inner_loop_models` in `model_loop_runner.py`) then makes `cognitive_models/` the
   **live set**: the protected seeds plus every zoo survivor (not only the
   winner — a rival within 2·dse is carried and left to the next design), with
   a carried model the loop pruned removed, and the ledger copied beside the
@@ -167,11 +170,13 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 - `src/models/mcmc_defaults.py` — the **single source of MCMC sampler defaults**
   (`PRODUCTION_*`, `DESIGN_TWIN_*`). Every entry point imports from here; change
   defaults only here.
-- `src/models/pymc_inference.py` — bridge from agent-written `.py` files to
-  inference. `load_pymc_model` requires a module-level `model: pm.Model`. Two
-  optional model hooks: `compute_features(seq_a, seq_b)` or `prepare_observed(rows)`
-  (mutually exclusive). Fits are cached on `(model sha, csv sha, sampler sig)`
-  in-process and on disk (`<name>.<fingerprint>.nc`).
+- `src/models/model_loading.py` — loads agent-written `.py` files; requires a
+  module-level `model: pm.Model`. Attaches optional data-binding hooks
+  (`compute_features`, `prepare_observed`, mutually exclusive).
+  `src/models/data_binding.py` maps CSV rows / row dicts to `pm.set_data` dicts.
+  `src/models/pymc_inference.py` adds fitting, prediction, caching and
+  diagnostics. Fits are cached on `(model sha, csv sha, sampler sig)` in-process
+  and on disk (`<name>.<fingerprint>.nc`).
 - `src/model_comparison/{posterior,likelihood}.py` — ELPD-LOO softmax posterior
   (`model_posterior`, documented as overconfident) + `az.compare` PSIS-LOO table.
 - `src/critique/ppc.py` — CriticAL posterior-predictive check: agent-written
