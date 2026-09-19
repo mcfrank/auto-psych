@@ -127,3 +127,37 @@ def test_codex_stream_reads_last_message_and_sums_usage():
     usage = stream.usage_fields()
     assert usage["input_tokens"] == 900 and usage["cache_read_tokens"] == 600
     assert usage["output_tokens"] == 60 and usage["reasoning_tokens"] == 20
+
+
+def test_claude_stream_captures_cache_tokens():
+    from src.runtime.coding_agent import _ClaudeStream
+
+    stream = _ClaudeStream()
+    stream.feed({
+        "type": "assistant",
+        "message": {"usage": {
+            "input_tokens": 100,
+            "cache_creation_input_tokens": 5000,
+            "cache_read_input_tokens": 3000,
+            "output_tokens": 50,
+        }},
+    })
+    stream.feed({
+        "type": "result",
+        "subtype": "success",
+        "result": "done",
+        "total_cost_usd": 0.42,
+        "usage": {
+            "input_tokens": 100,
+            "cache_creation_input_tokens": 5000,
+            "cache_read_input_tokens": 3000,
+            "output_tokens": 50,
+        },
+    })
+    assert stream.success
+    usage = stream.usage_fields()
+    assert usage["input_tokens"] == 100
+    assert usage["output_tokens"] == 50
+    assert usage["cache_write_tokens"] == 5000
+    assert usage["cache_read_tokens"] == 3000
+    assert usage["cost_usd"] == 0.42
