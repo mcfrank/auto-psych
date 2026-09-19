@@ -24,12 +24,11 @@ from src.runtime.config import REPO_ROOT
 _PKG_DIR = Path(__file__).resolve().parent
 _THEORY_PROMPT = _PKG_DIR / "prompts" / "pymc_theory.md"
 
-# Exploration lenses, one per candidate per round (candidate_idx % len). Each
-# is a distinct way to search the hypothesis space; together they push rounds
-# toward genuine novelty rather than conservative revision of the incumbent
-# (the old 3-hint rotation pushed novelty in only one candidate of three).
-# Every lens still demands exactly ONE mechanism per model. Override per run
-# with the `candidate_hints` parameter / `--hints-file` knob.
+# Exploration lenses, one per candidate per round. Each is a distinct way to
+# search the hypothesis space; together they push rounds toward genuine novelty
+# rather than conservative revision of the incumbent. Every lens still demands
+# exactly ONE mechanism per model. Override per run with the `candidate_hints`
+# parameter / `--hints-file` knob. See the decision record for the rationale.
 DEFAULT_CANDIDATE_HINTS = [
     "Refine one existing hypothesis within its single mechanism — e.g. a "
     "different functional form, prior, or normalization. Do NOT graft cues "

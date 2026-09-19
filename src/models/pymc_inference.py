@@ -1,15 +1,15 @@
 """PyMC inference bridge for cognitive models.
 
-The theorist agent writes each model as a `<name>.py` file with a module-level
-`with pm.Model() as model:` block. This module loads those models, fits them
+Each model is a ``<name>.py`` file with a module-level
+``with pm.Model() as model:`` block. This module loads those models, fits them
 to observed data via MCMC, and exposes posterior-mean predictions, ELPD-LOO
 for Bayesian model comparison, and posterior-predictive samples for PPC.
 
-Convention: every `pm.Data` container in the model must have a name matching
+Convention: every ``pm.Data`` container in the model must have a name matching
 a column in the preprocessed responses CSV. The bridge auto-pulls
-`df[name].values` for each container. The observed-response container is
-identified by tracing `model.observed_RVs[0]` back through the pytensor graph
-to its `TensorSharedVariable` ancestor.
+``df[name].values`` for each container. The observed-response container is
+identified by tracing ``model.observed_RVs[0]`` back through the pytensor graph
+to its ``TensorSharedVariable`` ancestor.
 
 Model loading and data binding live in ``model_loading`` and ``data_binding``;
 this module imports the names it needs from those children and adds prediction,

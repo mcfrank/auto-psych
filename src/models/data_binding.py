@@ -27,6 +27,7 @@ from src.models.model_loading import (
 # ---------------------------------------------------------------------------
 
 def _read_csv_rows(csv_path: Path) -> List[Dict[str, str]]:
+    """Read a CSV file into a list of row dicts."""
     with Path(csv_path).open(encoding="utf-8", newline="") as f:
         return list(csv.DictReader(f))
 
@@ -35,7 +36,7 @@ def _read_csv_rows(csv_path: Path) -> List[Dict[str, str]]:
 # Feature hooks
 # ---------------------------------------------------------------------------
 
-def _model_compute_features(model):
+def _model_compute_features(model: Any) -> Any:
     """The model's optional ``compute_features`` callable, or ``None``."""
     return getattr(model, _COMPUTE_FEATURES_ATTR, None)
 
@@ -64,7 +65,7 @@ def _same_feature_value(existing: Any, computed: Any) -> bool:
 
 
 def _augment_rows_with_features(
-    model, rows: List[Dict[str, Any]]
+    model: Any, rows: List[Dict[str, Any]]
 ) -> List[Dict[str, Any]]:
     """Add a model's ``compute_features`` columns to each row.
 
@@ -137,12 +138,12 @@ def _augment_rows_with_features(
 # prepare_observed hook
 # ---------------------------------------------------------------------------
 
-def _model_prepare_observed(model):
+def _model_prepare_observed(model: Any) -> Any:
     """The model's optional ``prepare_observed`` callable, or ``None``."""
     return getattr(model, _PREPARE_OBSERVED_ATTR, None)
 
 
-def _observed_via_hook(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
+def _observed_via_hook(model: Any, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
     """Build every ``pm.Data`` array through the model's ``prepare_observed`` hook.
 
     The hook owns the layout, so the harness cannot check it column by column.
@@ -260,7 +261,7 @@ class MissingStimulusColumns(ValueError):
 # Public data-binding API
 # ---------------------------------------------------------------------------
 
-def make_stim_data(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
+def make_stim_data(model: Any, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
     """Build a `pm.set_data` dict from a list of row dicts for a given model.
 
     Each `pm.Data` container in `model` is filled with the corresponding column
@@ -269,8 +270,8 @@ def make_stim_data(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
 
     If the model declares a ``prepare_observed`` hook it builds every container
     itself and the column mapping is skipped. Otherwise, if the model declares a
-    ``compute_features`` featurizer, its extra columns are computed from each
-    row's raw sequences first.
+    ``compute_features`` hook, its extra columns are computed from each row's
+    raw sequences first.
     """
     if _model_prepare_observed(model) is not None:
         return _observed_via_hook(model, rows)
@@ -294,7 +295,7 @@ def make_stim_data(model, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
     return out
 
 
-def extract_observed(csv_path: Path, model) -> Dict[str, np.ndarray]:
+def extract_observed(csv_path: Path, model: Any) -> Dict[str, np.ndarray]:
     """Read csv_path and pull one numpy array per pm.Data container in the model.
 
     Dtype is inferred from the model's current pm.Data placeholder (int64,

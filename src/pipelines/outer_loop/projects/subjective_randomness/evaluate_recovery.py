@@ -57,6 +57,7 @@ def parse_experiments(value: str) -> List[int]:
 
 
 def random_sequence(rng: random.Random, length: int) -> str:
+    """Return a random H/T string of the given length."""
     return "".join(rng.choice("HT") for _ in range(length))
 
 
@@ -85,6 +86,7 @@ def ground_truth_p_left(
     fn: Callable[[Stimulus, List[str]], Dict[str, float]],
     stimuli: List[Stimulus],
 ) -> np.ndarray:
+    """Return the ground-truth p(left) for each stimulus pair."""
     return np.array(
         [
             float(fn(stimulus, RESPONSE_OPTIONS)[RESPONSE_OPTIONS[0]])
@@ -95,6 +97,7 @@ def ground_truth_p_left(
 
 
 def feature_rows(stimuli: List[Stimulus]) -> List[Dict[str, Any]]:
+    """Build featurized row dicts for each stimulus pair, suitable for model binding."""
     rows: List[Dict[str, Any]] = []
     for sequence_a, sequence_b in stimuli:
         row: Dict[str, Any] = {
@@ -108,6 +111,7 @@ def feature_rows(stimuli: List[Stimulus]) -> List[Dict[str, Any]]:
 
 
 def metrics(p_true: np.ndarray, p_pred: np.ndarray) -> Dict[str, float]:
+    """Return RMSE, MAE, cross-entropy, and KL divergence between true and predicted p(left)."""
     eps = 1e-9
     pred = np.clip(p_pred.astype("float64"), eps, 1.0 - eps)
     true = np.clip(p_true.astype("float64"), eps, 1.0 - eps)
@@ -127,6 +131,7 @@ def metrics(p_true: np.ndarray, p_pred: np.ndarray) -> Dict[str, float]:
 
 
 def posterior_summary(exp_dir: Path) -> Dict[str, Any]:
+    """Load the model posterior JSON for an experiment, returning an empty dict if absent."""
     path = exp_dir / "model_loop" / "model_posterior.json"
     if not path.exists():
         return {}
@@ -149,6 +154,7 @@ def evaluate_experiment(
     tune: int,
     chains: int,
 ) -> Dict[str, Any]:
+    """Refit an experiment's best model and score its heldout p(left) against ground truth."""
     exp_dir = experiment_dir(project_id, exp_num)
     models_dir = exp_dir / "cognitive_models"
     responses_path = exp_dir / "model_loop" / "responses.csv"
@@ -234,6 +240,7 @@ class Args:
 
 
 def main(args: Args) -> None:
+    """Run heldout recovery evaluation for the specified experiments and print results."""
     registry = get_ground_truth_models(args.project)
     if args.ground_truth_model not in registry:
         allowed = sorted(registry)

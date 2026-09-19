@@ -541,6 +541,7 @@ class Args:
 
 
 def main(args: Args) -> None:
+    """CLI entry point: run the posterior-predictive critique and write results as JSON."""
     if not args.responses.exists():
         print(f"Error: responses not found: {args.responses}", file=sys.stderr)
         sys.exit(1)

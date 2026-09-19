@@ -41,8 +41,8 @@ def _distinctive_param_names(
     return set(params) - {"beta", "side_bias"}
 
 
-# Column names a candidate binds with ``pm.Data("<name>", ...)``: featurizer
-# columns the harness provides, as opposed to features the model computes.
+# Column names a candidate binds with ``pm.Data("<name>", ...)``: harness-
+# provided columns, as opposed to features the model computes via its hook.
 _PM_DATA_COLUMN = re.compile(r"""pm\.Data\(\s*["']([^"']+)["']""")
 
 

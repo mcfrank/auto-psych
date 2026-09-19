@@ -306,6 +306,7 @@ class Args:
 
 
 def main(args: Args) -> None:
+    """CLI entry point: compute and write the Bayesian model posterior as JSON."""
     if not args.responses:
         print("Error: at least one --responses path is required", file=sys.stderr)
         sys.exit(1)

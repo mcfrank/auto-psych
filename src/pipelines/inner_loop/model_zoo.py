@@ -117,10 +117,12 @@ def _manifest_entries(models_dir: Path) -> List[Dict[str, str]]:
 
 
 def _manifest_names(models_dir: Path) -> List[str]:
+    """Ordered model names from the zoo's manifest."""
     return [e["name"] for e in _manifest_entries(models_dir)]
 
 
 def _write_manifest(models_dir: Path, entries: List[Dict[str, str]]) -> None:
+    """Overwrite the zoo's ``models_manifest.yaml`` with ``entries``."""
     manifest_path(models_dir).write_text(
         yaml.safe_dump({"models": entries}, sort_keys=False), encoding="utf-8"
     )
@@ -379,20 +381,17 @@ def _min_prediction_rmse(
 
 # Pruning: after each scoring pass, a non-protected model is dropped when it is
 # statistically distinguishable from the best (elpd_diff > multiplier·dse among
-# PSIS-LOO-reliable rows). The surviving set is then the uncertainty set by
-# construction — every non-protected survivor is within the margin of the best
-# — which is what the outer loop carries into the next experiment. Stacking
-# weight is deliberately NOT a criterion: az.compare's weights are ensemble
-# coefficients, not plausibility (a model 1.6 nats behind the best reads 0.000
-# because its predictions are redundant with the best's; one 95 nats behind can
-# read 0.33 because they differ). Multiplier 0 disables pruning.
+# PSIS-LOO-reliable rows). The surviving set is the uncertainty set — every
+# non-protected survivor is within the margin of the best — which is what the
+# outer loop carries into the next experiment. Stacking weight is deliberately
+# NOT a criterion: az.compare's weights are ensemble coefficients, not
+# plausibility. See the decision record for the empirical evidence.
 DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
 
 # Novelty gate: a candidate whose posterior-mean p_left is within this RMSE of
 # an admitted model's (on the observed stimuli) is a re-skinned duplicate, not
-# a new hypothesis — reject it at admission. 0.02 sits just below the closest
-# genuinely-distinct pair observed across the human replicates (run2's two
-# winners, RMSE 0.029). Set to 0 to disable.
+# a new hypothesis — reject it at admission. See the decision record for how
+# this threshold was calibrated. Set to 0 to disable.
 DEFAULT_NOVELTY_RMSE_THRESHOLD = 0.02
 
 
@@ -400,7 +399,7 @@ def _prune_losers(
     models_dir: Path,
     responses_path: Path,
     *,
-    protected: set,
+    protected: set[str],
     cache_dir: Optional[Path],
     fit_kwargs: Optional[Dict[str, Any]],
     dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER,

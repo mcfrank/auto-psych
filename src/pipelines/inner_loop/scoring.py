@@ -30,8 +30,8 @@ DEFAULT_COMPLEXITY_PRIOR_CONST = -0.05
 
 
 def _resolve_protected_names(
-    protected_names: Optional[Iterable[str]], seeded_names: set
-) -> set:
+    protected_names: Optional[Iterable[str]], seeded_names: set[str]
+) -> set[str]:
     """The subset of the seeded set that pruning must never touch.
 
     ``None`` protects the whole seeded set. An explicit set is intersected
@@ -76,10 +76,9 @@ def _best_exportable_model(
     restricted to reliable rows. It deliberately does NOT use the softmax
     ``posteriors``: those are rounded to six decimals, so every model more
     than ~14 nats behind the argmax reads 0.0 and ties, and a ``max`` over
-    them returned whichever came first in the manifest — in the baseline
-    sweeps that exported a seed hundreds of nats behind a reliable agent
-    model in 62 of 230 experiments. The posterior (which also carries the
-    line-count complexity prior) stays a report field.
+    them picks whichever comes first in the manifest. See the decision record
+    for the empirical evidence that motivated this rule. The posterior (which
+    also carries the line-count complexity prior) stays a report field.
 
     With no comparison table (no reliability or rank information available)
     we fall back to the plain posterior argmax. Every model in the posterior
@@ -163,6 +162,7 @@ def _score(
     cache_dir: Optional[Path],
     fit_kwargs: Dict[str, Any],
 ) -> Dict[str, Any]:
+    """Compute the ELPD-LOO softmax posterior over all models in the zoo."""
     return model_posterior(
         responses_path,
         models_dir,
@@ -188,6 +188,11 @@ def _export(
     posterior: Dict[str, Any],
     comparison: Optional[Dict[str, Dict[str, float]]] = None,
 ) -> Dict[str, Any]:
+    """Write the inner loop's final artifacts and return a summary dict.
+
+    Writes ``model_posterior.json``, ``best_model.py``, and ``report.md``
+    into ``results_dir``. Raises if no model has a reliable PSIS-LOO estimate.
+    """
     comparison = comparison or {}
     argmax_model = _best_model(posterior)
     # Models arviz flagged unreliable are excluded from selection AND from the
