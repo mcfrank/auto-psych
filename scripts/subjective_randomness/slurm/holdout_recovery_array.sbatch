@@ -240,7 +240,8 @@ cd "$HARNESS_REPO"
   --gt-models-dir "$GT_MODELS_SRC" \
   --gt-family-dir "$GT_FAMILY_SRC" \
   --seed "$SEED" \
-  --backend opencode \
+  --backend "${AGENT_BACKEND:-opencode}" \
+  ${AGENT_MODEL:+--agent-model "$AGENT_MODEL"} \
   --chains "${CHAINS:-4}" \
   --out      "$RUN_DIR/holdout.json" \
   --tidy-csv "$RUN_DIR/holdout.csv" \

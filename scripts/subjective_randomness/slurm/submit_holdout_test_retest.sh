@@ -66,6 +66,10 @@ ARRAY_SPEC="1-${TOTAL}%${MAX_PARALLEL}"
 # The array sbatch turns it into the CLI flag; run_no_inner_loop_test_retest.sh
 # pins it to 0.
 [[ -n "${INNER_LOOP_ITERATIONS:-}" ]] && export INNER_LOOP_ITERATIONS
+# Agent backend/model override: lets a smoke or sweep use a different coding
+# agent (e.g. AGENT_BACKEND=claude AGENT_MODEL=claude-fable-5-1).
+[[ -n "${AGENT_BACKEND:-}" ]] && export AGENT_BACKEND
+[[ -n "${AGENT_MODEL:-}"   ]] && export AGENT_MODEL
 
 # Keep Slurm logs off $HOME (15 GB, NFS). Mirror _env.sh's WORK_ROOT default.
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:-$GROUP_SCRATCH}/auto-psych/holdout_test_retest}"
