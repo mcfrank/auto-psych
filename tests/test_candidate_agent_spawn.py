@@ -1,10 +1,11 @@
 """The candidate agent must be spawned so opencode loads its directory grants.
 
-opencode sandboxes file access to its working directory and only reaches paths
-outside it through the ``external_directory`` grants in the run copy's
-``opencode.json`` — which it discovers by walking up from its ``cwd``. The run
-harness patches those grants into the worktree's ``opencode.json`` (``REPO_ROOT``
-at run time), so an agent only sees them when it runs *from* the worktree.
+opencode sandboxes file access to its session directory — the launcher pins
+that to the agent's ``cwd`` (see ``src/runtime/coding_agent.py``) — and only
+reaches paths outside it through the ``external_directory`` grants in that
+directory's ``opencode.json``. The run harness patches those grants into the
+worktree's ``opencode.json`` (``REPO_ROOT`` at run time), so an agent only sees
+them when it runs *from* the worktree.
 
 The candidate agent previously ran with ``cwd=candidate_dir`` on ``$SCRATCH``,
 outside the worktree, so opencode found no ``opencode.json``, loaded no grants,
