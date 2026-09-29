@@ -227,7 +227,16 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   `src/models/data_binding.py` maps CSV rows / row dicts to `pm.set_data` dicts.
   `src/models/pymc_inference.py` adds fitting, prediction, caching and
   diagnostics. Fits are cached on `(model sha, csv sha, sampler sig)` in-process
-  and on disk (`<name>.<fingerprint>.nc`).
+  and on disk (`<name>.<fingerprint>.nc`). `fit_models_cached` samples the
+  models that need MCMC concurrently: a spawned `ProcessPoolExecutor` whose
+  workers (`fit_workers`; by default as many as `workers × cores-per-fit`
+  fits in the CPUs Slurm allocated, `allocated_cpus`) each fit one model
+  with BLAS pinned to one thread and persist its `.nc`, which the parent
+  loads. `fit_models_to_cache` is the tolerant sibling (failures reported
+  by name) that the experiment-start ELPD screen
+  (`model_zoo._drop_nonfinite_elpd_models`) uses to sample the whole set in
+  one batch. The candidate real-fit gate in `_admit_candidate_with_reason`
+  still fits one candidate at a time.
 - `src/model_comparison/{posterior,likelihood}.py` — ELPD-LOO softmax posterior
   (`model_posterior`, documented as overconfident) + `az.compare` PSIS-LOO table.
 - `src/critique/ppc.py` — CriticAL posterior-predictive check: agent-written
