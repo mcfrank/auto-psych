@@ -10,7 +10,7 @@ from __future__ import annotations
 import csv
 import math
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence
+from typing import Any, Dict, List, Mapping, Optional, Sequence
 
 import numpy as np
 
@@ -168,7 +168,18 @@ def _observed_via_hook(model: Any, rows: List[Dict[str, Any]]) -> Dict[str, np.n
     prepare = _model_prepare_observed(model)
     if prepare is None:
         raise ValueError("Model declares no prepare_observed hook.")
-    out = prepare(list(rows))
+    rows = list(rows)
+    try:
+        out = prepare(rows)
+    except KeyError as e:
+        # A hook that reads row["participant_id"] off a bare stimulus row needs
+        # a column those rows lack — report it the way the column-mapping path
+        # does, so callers can reject or screen the model instead of crashing.
+        missing = _bookkeeping_column_missing_from(e, rows)
+        if missing is None:
+            raise  # the hook's own bug, not a column the rows lack
+        available = sorted(rows[0]) if rows else []
+        raise MissingStimulusColumns([missing], available) from e
     if not isinstance(out, dict):
         raise TypeError(
             "prepare_observed must return a dict of pm.Data name -> numpy array, "
@@ -255,6 +266,24 @@ class MissingStimulusColumns(ValueError):
     def only_non_stimulus(self) -> bool:
         """True when every missing column is response-row bookkeeping."""
         return bool(self.missing) and set(self.missing) <= NON_STIMULUS_COLUMNS
+
+
+def _bookkeeping_column_missing_from(
+    error: KeyError, rows: Sequence[Mapping[str, Any]]
+) -> Optional[str]:
+    """The bookkeeping column a hook's ``KeyError`` names, if the rows truly lack it.
+
+    Only ``NON_STIMULUS_COLUMNS`` can be legitimately absent from a row, and
+    only if some row really does lack it. Any other ``KeyError`` — a lookup in
+    the hook's own tables, or a bookkeeping key every row actually carries —
+    is a bug in the hook and returns ``None`` so the caller re-raises it.
+    """
+    if len(error.args) != 1 or error.args[0] not in NON_STIMULUS_COLUMNS:
+        return None
+    column = error.args[0]
+    if all(column in row for row in rows):
+        return None
+    return column
 
 
 # ---------------------------------------------------------------------------

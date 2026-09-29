@@ -278,6 +278,71 @@ def test_candidate_that_needs_response_row_columns_is_rejected_not_crashed(
     assert not (models_dir / "needs_trial.py").exists()
 
 
+# A prepare_observed model that reads participant_id straight off each row,
+# without exposing a participant_id pm.Data container. The novelty pool's
+# marginalisation keys off that container, so this model is handed bare
+# stimulus rows. GPT-6 Luna wrote one (session_order_side_drift) and the
+# resulting KeyError took down a whole holdout cell 23 minutes in, because the
+# tests above stub make_stim_data and never exercise the real hook path.
+_HOOK_READS_PARTICIPANT = '''
+import numpy as np
+import pymc as pm
+
+
+def prepare_observed(rows):
+    participant = np.array([int(row["participant_id"]) for row in rows])
+    return {
+        "odd_participant": (participant % 2).astype("float64"),
+        "chose_left": np.array([int(row["chose_left"]) for row in rows], dtype="int64"),
+    }
+
+
+with pm.Model() as model:
+    odd_participant = pm.Data("odd_participant", np.zeros(2))
+    chose_left = pm.Data("chose_left", np.zeros(2, dtype="int64"))
+    weight = pm.Normal("weight", 0.0, 1.0)
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(weight * odd_participant))
+    pm.Bernoulli("obs", p=p_left, observed=chose_left)
+'''
+
+
+def test_hook_reading_participant_id_is_rejected_not_crashed(
+    tmp_path, monkeypatch, capsys
+):
+    """The real binding layer, not a stub: the candidate is a recorded
+    rejection naming participant_id, and admission returns normally."""
+    from src.models.model_loading import load_pymc_model
+
+    hook_dir = tmp_path / "hook_model"
+    hook_dir.mkdir()
+    (hook_dir / "reads_participant.py").write_text(
+        _HOOK_READS_PARTICIPANT, encoding="utf-8"
+    )
+    real_model = load_pymc_model("reads_participant", hook_dir)
+
+    models_dir = _models_dir(tmp_path, ["seed_a"])
+    responses = _write_responses(tmp_path, participant_ids=(0, 1))
+    _stub_admission_gates(monkeypatch)
+    # Only the MCMC is faked; make_stim_data and pm_data_inputs are real.
+    monkeypatch.setattr(
+        model_zoo,
+        "fit_model",
+        lambda name, *a, **k: SimpleNamespace(
+            model=real_model, predict_p_left=lambda stim_data, **kw: np.full(1, 0.5)
+        ),
+    )
+
+    admitted = _admit_candidate(
+        _candidate(tmp_path), models_dir, "reads_participant", responses
+    )
+
+    assert not admitted
+    out = capsys.readouterr().out
+    assert "[reject] reads_participant" in out
+    assert "participant_id" in out
+    assert not (models_dir / "reads_participant.py").exists()
+
+
 def test_an_admitted_model_that_cannot_bind_the_pool_is_a_loud_error(
     tmp_path, monkeypatch
 ):
