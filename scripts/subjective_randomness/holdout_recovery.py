@@ -88,6 +88,11 @@ class Args:
     """Override the config's inner-loop candidate rounds (0 = seed set only)."""
     inner_loop_candidates: Optional[int] = None
     """Override the config's candidate models per inner-loop round."""
+    novelty_rmse_threshold: Optional[float] = None
+    """Override the config's inner_loop.novelty_rmse_threshold: a candidate
+    whose posterior-mean p_left is within this RMSE of an admitted model's on
+    the loop's novelty pool is rejected as a near-duplicate (0 disables the
+    gate). Lets a sweep A/B the gate without editing the config."""
     design_n_eig: Optional[int] = None
     """Override the config's design.n_eig (stimuli chosen by max joint-EIG)."""
     design_n_random: Optional[int] = None
@@ -158,6 +163,7 @@ def main(args: Args) -> None:
         for key, value in (
             ("max_iterations", args.inner_loop_iterations),
             ("candidate_count", args.inner_loop_candidates),
+            ("novelty_rmse_threshold", args.novelty_rmse_threshold),
         )
         if value is not None
     }

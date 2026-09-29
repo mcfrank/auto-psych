@@ -37,6 +37,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 from src.models.model_manifest import read_manifest_names
 from src.pipelines.outer_loop.columns import write_responses_csv
+from src.pipelines.inner_loop.model_zoo import DEFAULT_NOVELTY_RMSE_THRESHOLD
 from src.pipelines.outer_loop.model_loop_runner import (
     init_registry,
     run_inner_model_loop_programmatic,
@@ -134,6 +135,7 @@ def run_holdout_experiments(
     design_n_random: int = 0,
     pool_models_dir: Optional[Path] = None,
     agent_root: Optional[Path] = None,
+    novelty_rmse_threshold: Optional[float] = None,
 ) -> List[Path]:
     """Run the full agentic pipeline for ``n_experiments`` with a held-out GT.
 
@@ -261,6 +263,7 @@ def run_holdout_experiments(
                 project_id=project_id,
                 agent_timeout_sec=agent_timeout_sec,
                 agent_root=agent_root,
+                novelty_rmse_threshold=novelty_rmse_threshold,
             )
             update_registry_from_interpretation(exp_dir)
             _require_valid("5_model_loop", exp_dir)
@@ -310,7 +313,7 @@ def run_holdout_recovery_from_config(
     gt_model_override: Optional[str] = None,
     n_experiments_override: Optional[int] = None,
     n_participants_override: Optional[int] = None,
-    inner_loop_overrides: Optional[Mapping[str, int]] = None,
+    inner_loop_overrides: Optional[Mapping[str, Any]] = None,
     fit_overrides: Optional[Mapping[str, Any]] = None,
     design_overrides: Optional[Mapping[str, int]] = None,
     seed_override: Optional[int] = None,
@@ -344,7 +347,9 @@ def run_holdout_recovery_from_config(
         gt_models         null | [names] | {name: params|null}; null params ->
                           the family's DEFAULT_PARAMS
         n_experiments, n_participants, seed
-        inner_loop        {max_iterations, candidate_count}
+        inner_loop        {max_iterations, candidate_count,
+                           novelty_rmse_threshold (absent -> the inner loop's
+                           default; 0 disables the novelty gate)}
         agent             {timeout_sec, backend}
         eval_pool         {n_pairs, lengths, seed, min_remaining}
         fit               MCMC kwargs (draws/tune/chains/...)
@@ -401,6 +406,16 @@ def run_holdout_recovery_from_config(
     inner_cfg = {**dict(config.get("inner_loop", {})), **dict(inner_loop_overrides or {})}
     inner_loop_iterations = int(inner_cfg.get("max_iterations", 2))
     candidate_count = int(inner_cfg.get("candidate_count", 3))
+    # The novelty gate's threshold, resolved here (absent -> the inner loop's
+    # default) so the value the result records is always the one the loop used.
+    novelty_rmse_threshold = float(
+        inner_cfg.get("novelty_rmse_threshold", DEFAULT_NOVELTY_RMSE_THRESHOLD)
+    )
+    if novelty_rmse_threshold < 0:
+        raise ValueError(
+            "inner_loop.novelty_rmse_threshold must be >= 0 (0 disables the "
+            f"novelty gate); got {novelty_rmse_threshold}."
+        )
     # Design split: n_eig stimuli chosen by EIG + n_random for coverage. The
     # random half is a single fixed sample per experiment (shown to every
     # participant); ablations set n_eig=0 (all random) or n_random=0 (all EIG).
@@ -452,6 +467,7 @@ def run_holdout_recovery_from_config(
             n_participants=n_participants,
             inner_loop_iterations=inner_loop_iterations,
             candidate_count=candidate_count,
+            novelty_rmse_threshold=novelty_rmse_threshold,
             fit_kwargs=fit_kwargs,
             eval_pool=eval_pool,
             seed=seed,
@@ -482,6 +498,7 @@ def _run_holdout_recovery_resolved(
     n_participants: int,
     inner_loop_iterations: int,
     candidate_count: int,
+    novelty_rmse_threshold: float,
     fit_kwargs: Dict[str, Any],
     eval_pool: Dict[str, Any],
     seed: int,
@@ -549,6 +566,7 @@ def _run_holdout_recovery_resolved(
             design_n_random=design_n_random,
             pool_models_dir=pool_models_dir,
             agent_root=agent_root,
+            novelty_rmse_threshold=novelty_rmse_threshold,
         )
 
         eval_info = build_eval_stimuli(
@@ -652,6 +670,7 @@ def _run_holdout_recovery_resolved(
         "inner_loop": {
             "max_iterations": inner_loop_iterations,
             "candidate_count": candidate_count,
+            "novelty_rmse_threshold": novelty_rmse_threshold,
         },
         "fit_kwargs": fit_kwargs,
         "seed": seed,
