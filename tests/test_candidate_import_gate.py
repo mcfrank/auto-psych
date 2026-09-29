@@ -12,6 +12,7 @@ from src.pipelines.inner_loop.import_gate import (
     CANDIDATE_IMPORT_ALLOWLIST,
     check_forbidden_imports,
 )
+from tests.inner_loop_fixtures import write_task_description_beside
 
 
 class TestCheckForbiddenImports:
@@ -88,6 +89,7 @@ class TestAdmitCandidateImportGate:
             "HHT,THT,0,0,1\n",
             encoding="utf-8",
         )
+        write_task_description_beside(responses_path)
         return models_dir, responses_path
 
     def test_rejects_candidate_with_forbidden_import(self, tmp_path, setup):
@@ -216,6 +218,7 @@ class TestBriefsStateAllowlist:
             "HHT,THT,0,0,1\n",
             encoding="utf-8",
         )
+        write_task_description_beside(responses_path)
         models_dir = tmp_path / "models"
         models_dir.mkdir()
 

@@ -86,8 +86,14 @@ def _stub_design(calls, stimuli=DESIGN_STIMULI):
 
 
 def _stub_generate_responses(calls):
-    def generate(model_name, models_dir, stimuli, params, n_participants, *, seed=0):
-        calls.append({"model_name": model_name, "seed": seed, "params": dict(params)})
+    def generate(
+        model_name, models_dir, stimuli, params, n_participants, *, seed=0,
+        participant_id_offset,
+    ):
+        calls.append({
+            "model_name": model_name, "seed": seed, "params": dict(params),
+            "participant_id_offset": participant_id_offset,
+        })
         rows = []
         for participant in range(n_participants):
             for trial_index, stim in enumerate(stimuli):
@@ -287,6 +293,9 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # per-experiment seed offset.
     assert [c["model_name"] for c in collect_calls] == ["prototype_similarity"] * 2
     assert [c["seed"] for c in collect_calls] == [6, 7]
+    # Each experiment's participants are different people: ids never repeat
+    # across the pooled experiments (3 participants per experiment).
+    assert [c["participant_id_offset"] for c in collect_calls] == [0, 3]
 
     # Trajectory: one row per history step per experiment, monotone global_step,
     # and (with identical stub predictions) perfect correlation.

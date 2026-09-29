@@ -60,6 +60,7 @@ def test_response_generation():
         fixture["params"],
         fixture["n_participants"],
         seed=fixture["seed"],
+        participant_id_offset=0,
     )
 
     buf = io.StringIO()

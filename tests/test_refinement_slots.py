@@ -34,6 +34,7 @@ from src.pipelines.inner_loop.model_zoo import (
     prune_margin_detail,
     slot_roles,
 )
+from tests.inner_loop_fixtures import write_task_description_beside
 
 E, I, C = SLOT_EXPLORE, SLOT_REFINE_INCUMBENT, SLOT_REFINE_CHOSEN
 
@@ -256,6 +257,7 @@ def _context(tmp_path, role, *, incumbent="model_a", ledger="default", compariso
     models_dir, default_comparison, default_ledger = _menu_fixture(tmp_path)
     responses = tmp_path / "responses.csv"
     responses.write_text("sequence_a,sequence_b,chose_left\nHHT,HTH,1\n", encoding="utf-8")
+    write_task_description_beside(responses)
     candidate_dir = tmp_path / "iter_0" / "candidate_1"
     docs = _write_candidate_context(
         candidate_dir,

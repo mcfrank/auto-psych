@@ -44,6 +44,11 @@ FORBIDDEN_PATHS = [
     "HERO_RUN_DESIDERATA.md",
     # Every agent could read the Prolific, Firebase, Google and Claude tokens.
     ".secrets",
+    # The ground truths' source papers and notes that cite them or hint at
+    # mechanisms; agents get the neutral task_description.md instead.
+    "src/pipelines/outer_loop/projects/subjective_randomness/references",
+    "src/pipelines/outer_loop/projects/subjective_randomness/instruction_literature.md",
+    "src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md",
 ]
 
 GROUND_TRUTHS = [

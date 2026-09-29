@@ -29,10 +29,22 @@ def write_seed_models(tmp_path: Path, names=("model_a", "model_b")) -> Path:
 
 
 def write_responses(tmp_path: Path) -> Path:
-    """Two trials — enough for the loop to have data; never actually fitted."""
+    """Two trials — enough for the loop to have data; never actually fitted.
+
+    Also writes the task description the outer loop puts beside them.
+    """
     responses = tmp_path / "responses.csv"
     responses.write_text("chose_left,n_a\n1,6\n0,6\n", encoding="utf-8")
+    write_task_description_beside(responses)
     return responses
+
+
+def write_task_description_beside(responses: Path) -> Path:
+    """The task description inner-loop agents are told, beside ``responses``."""
+    path = Path(responses).parent / "task_description.md"
+    path.write_text("# The task\n\nPick the sequence that looks more random.\n",
+                    encoding="utf-8")
+    return path
 
 
 def canned_posterior(best: str, others) -> dict:

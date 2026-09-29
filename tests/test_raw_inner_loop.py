@@ -14,6 +14,7 @@ import yaml
 
 from src.pipelines.outer_loop import model_loop_runner as mlr
 from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
+from tests.inner_loop_fixtures import write_task_description_beside
 
 
 # --- helpers ---
@@ -109,6 +110,7 @@ def test_candidate_context_has_no_precomputed_feature_references(
 
     responses_csv = tmp_path / "responses.csv"
     _write_csv(responses_csv, [_raw_row()])
+    write_task_description_beside(responses_csv)
     models_dir = tmp_path / "models"
     models_dir.mkdir()
     (models_dir / "models_manifest.yaml").write_text(

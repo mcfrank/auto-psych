@@ -11,6 +11,7 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
+from src.pipelines.inner_loop.task_description import read_task_description
 from src.models.mcmc_defaults import (
     CANDIDATE_CHECK_CHAINS,
     CANDIDATE_CHECK_DRAWS,
@@ -433,6 +434,10 @@ def _write_candidate_context(
     lines = [
         f"# Inner Loop — round {iteration}, candidate {candidate_idx} of "
         f"{candidate_count} ({_ROLE_LABELS[role]})",
+        "",
+        read_task_description(responses_path),
+        "",
+        "## Your job",
         "",
         f"Responses CSV: `{responses_path}`",
         f"Columns in the responses CSV: `{header}`",

@@ -69,7 +69,10 @@ def _stub_design(calls):
 def _stub_generate_responses(calls):
     """Records ``models_dir`` so the test can assert the GT dir is threaded in."""
 
-    def generate(model_name, models_dir, stimuli, params, n_participants, *, seed=0):
+    def generate(
+        model_name, models_dir, stimuli, params, n_participants, *, seed=0,
+        participant_id_offset,
+    ):
         calls.append(
             {"model_name": model_name, "models_dir": Path(models_dir), "seed": seed}
         )

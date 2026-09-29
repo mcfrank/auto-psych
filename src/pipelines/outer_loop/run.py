@@ -432,7 +432,8 @@ def _run_experiment_stages(
         # see the current models.
         if agent_key == "2_design":
             run_design_programmatic(
-                exp_dir_path, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir
+                exp_dir_path, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir,
+                n_responses=n_participants,  # every participant answers every stimulus
             )
             if validate:
                 ok, msg = validate_cc_output("2_design", exp_dir_path)

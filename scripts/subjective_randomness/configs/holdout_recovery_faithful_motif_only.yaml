@@ -53,7 +53,7 @@ design:
   n_random: 32
 
 agent:
-  timeout_sec: 900
+  timeout_sec: 1800  # 30 min: Opus often ran out at 15 while checking a finished candidate
   backend: opencode # null -> CODING_AGENT env var, then "claude"
   model: google/gemini-3.1-pro-preview
 

@@ -27,6 +27,7 @@ from src.pipelines.inner_loop.critique_round import (
     _usable_test_statistics,
 )
 from src.runtime.config import REPO_ROOT
+from tests.inner_loop_fixtures import write_task_description_beside
 
 _RESULT = {
     "model": "bayesian_fair_coin",
@@ -104,6 +105,7 @@ def test_critique_prompt_refuses_an_empty_context(tmp_path: Path):
 def test_write_critique_context_returns_the_text_it_wrote(tmp_path: Path):
     responses = tmp_path / "responses.csv"
     responses.write_text("chose_left,n_a\n1,6\n0,6\n", encoding="utf-8")
+    write_task_description_beside(responses)
     models_dir = tmp_path / "models"
     models_dir.mkdir()
     (models_dir / "models_manifest.yaml").write_text(

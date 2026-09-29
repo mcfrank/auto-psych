@@ -180,8 +180,16 @@ def generate_responses(
     n_participants: int,
     *,
     seed: int = 0,
+    participant_id_offset: int,
 ) -> List[Dict[str, Any]]:
     """Generate synthetic responses from a seed model with fixed parameters.
+
+    Left/right is counterbalanced as in the human experiments: each
+    participant sees each pair in a random order (a fair coin per trial), the
+    row records the pair as displayed, and ``chose_left`` is drawn from the
+    model's ``p_left`` for that displayed order. Participant ids run from
+    ``participant_id_offset``, so that ids stay unique when several
+    experiments' responses are pooled.
 
     Returns rows with only raw columns (sequence_a, sequence_b, participant_id,
     trial_index, chose_left) plus generating_model.
@@ -189,22 +197,29 @@ def generate_responses(
     if n_participants < 1:
         raise ValueError(f"n_participants must be >= 1, got {n_participants}.")
 
+    swapped_stimuli = [
+        {"sequence_a": s["sequence_b"], "sequence_b": s["sequence_a"]} for s in stimuli
+    ]
     p_left = p_left_fixed_params(model_name, models_dir, stimuli, params, seed=seed)
+    p_left_swapped = p_left_fixed_params(
+        model_name, models_dir, swapped_stimuli, params, seed=seed
+    )
     rng = np.random.default_rng(seed)
 
     rows: List[Dict[str, Any]] = []
     for participant in range(n_participants):
-        draws = rng.random(len(stimuli)) < p_left
-        for trial_index, (stim, chose_left) in enumerate(
-            zip(stimuli, draws)
-        ):
+        swap = rng.random(len(stimuli)) < 0.5
+        p_shown = np.where(swap, p_left_swapped, p_left)
+        chose_left = rng.random(len(stimuli)) < p_shown
+        for trial_index, stim in enumerate(stimuli):
+            shown = swapped_stimuli[trial_index] if swap[trial_index] else stim
             rows.append(
                 {
-                    "sequence_a": stim["sequence_a"],
-                    "sequence_b": stim["sequence_b"],
-                    "participant_id": participant,
+                    "sequence_a": shown["sequence_a"],
+                    "sequence_b": shown["sequence_b"],
+                    "participant_id": participant_id_offset + participant,
                     "trial_index": trial_index,
-                    "chose_left": int(chose_left),
+                    "chose_left": int(chose_left[trial_index]),
                     "generating_model": model_name,
                 }
             )

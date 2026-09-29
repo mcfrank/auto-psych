@@ -8,11 +8,16 @@ shared parameters induce between stimuli *within* a model, so a near-duplicate
 of an already-selected stimulus is correctly scored as mostly redundant.
 
 Estimation is by Monte Carlo scenarios. A scenario is one simulated "world":
-a model sampled from the model prior, one of its parameter draws, and Bernoulli
-responses for the selected stimuli generated from that draw's ``p_left``. Each
-scenario tracks per-draw log-likelihoods for every model, giving a posterior
-over models via p(r_S | m) = mean over draws of the product likelihood; joint
-EIG is H(M) minus the mean posterior entropy across scenarios.
+a model sampled from the model prior, one of its parameter draws, and responses
+for the selected stimuli generated from that draw's ``p_left``. Each stimulus is
+answered ``n_responses`` times (an experiment shows every stimulus to all its
+participants, who share one ``p_left``), so a stimulus yields a count
+k ~ Binomial(n_responses, p_left); ``n_responses=1`` is a single Bernoulli
+response. Each scenario tracks per-draw log-likelihoods for every model, giving
+a posterior over models via p(k_S | m) = mean over draws of the product
+likelihood; joint EIG is H(M) minus the mean posterior entropy across scenarios.
+The binomial coefficient is the same for every model and draw, so it cancels
+from the posterior and is left out of the likelihoods.
 
 Selection is greedy: at each step add the stimulus with the largest expected
 posterior-entropy reduction. Marginal gains for all candidates are computed in
@@ -33,6 +38,7 @@ for an unbiased estimate of a chosen set.
 from __future__ import annotations
 
 import heapq
+import math
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Sequence, Tuple
 
@@ -94,6 +100,11 @@ def _model_prior(
     return w / w.sum()
 
 
+def _validate_n_responses(n_responses: int) -> None:
+    if not isinstance(n_responses, (int, np.integer)) or n_responses < 1:
+        raise ValueError(f"n_responses must be an integer >= 1, got {n_responses!r}.")
+
+
 def _entropy_bits(w: np.ndarray, axis: int = -1) -> np.ndarray:
     """Shannon entropy in bits along ``axis``, with 0·log(0) = 0."""
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -115,8 +126,10 @@ class _ScenarioState:
         prior: np.ndarray,
         n_scenarios: int,
         rng: np.random.Generator,
+        n_responses: int = 1,
     ) -> None:
         self.p = p
+        self.n_responses = n_responses
         self.names = list(p)
         self.prior = prior
         self.rng = rng
@@ -172,37 +185,58 @@ class _ScenarioState:
     def marginal_gains(self, cols: np.ndarray, h_current: np.ndarray) -> np.ndarray:
         """Expected posterior-entropy reduction from adding each candidate.
 
-        One matmul per model per response outcome contracts the draw axis:
-        mean_d(L[t, d] · p[d, j]) = (L @ P) / n_draws, giving each candidate's
-        marginal model likelihood without materializing a (T, D, n) tensor.
+        For each outcome k = 0..n_responses (the count of "left" responses),
+        one matmul per model contracts the draw axis:
+        mean_d(L[t, d] · p[d, j]^k (1 - p[d, j])^(n - k)) = (L @ P_k) / n_draws,
+        giving each candidate's marginal model likelihood of that outcome
+        without materializing a (T, D, n) tensor. The posterior entropy after
+        outcome k is weighted by its probability under the scenario's true
+        p_left, Binomial(k; n, q).
         """
+        n = self.n_responses
         lhat = self._scaled_likelihoods()
-        marg_left, marg_right = [], []
-        for n in self.names:
-            p_cols = self.p[n][:, cols]
-            n_draws = p_cols.shape[0]
-            marg_left.append(lhat[n] @ p_cols / n_draws)
-            marg_right.append(lhat[n] @ (1.0 - p_cols) / n_draws)
-        h_left = self._entropy_of(np.stack(marg_left, axis=1))
-        h_right = self._entropy_of(np.stack(marg_right, axis=1))
         q = self.generative_p(cols)
-        h_next = q * h_left + (1.0 - q) * h_right
+        h_next = np.zeros_like(q)
+        for k in range(n + 1):
+            marg = []
+            for name in self.names:
+                p_cols = self.p[name][:, cols]
+                n_draws = p_cols.shape[0]
+                outcome_lik = p_cols**k * (1.0 - p_cols) ** (n - k)
+                marg.append(lhat[name] @ outcome_lik / n_draws)
+            h_k = self._entropy_of(np.stack(marg, axis=1))
+            h_next += math.comb(n, k) * q**k * (1.0 - q) ** (n - k) * h_k
         return h_current.mean() - h_next.mean(axis=0)
 
     def _entropy_of(self, marg: np.ndarray) -> np.ndarray:
-        """Posterior entropy from (T, K, C) marginal likelihoods, shape (T, C)."""
+        """Posterior entropy from (T, K, C) marginal likelihoods, shape (T, C).
+
+        An outcome whose likelihood underflows to 0 under every model has
+        (numerically) zero probability; its entropy is set to 0 rather than NaN.
+        """
         w = marg * self.prior[None, :, None]
-        w /= w.sum(axis=1, keepdims=True)
+        total = w.sum(axis=1, keepdims=True)
+        w = np.divide(w, total, out=np.zeros_like(w), where=total > 0)
         return _entropy_bits(w, axis=1)
 
+    def _draw_counts(self, q: np.ndarray) -> np.ndarray:
+        """Count of "left" among n_responses Bernoulli(q) responses, per entry.
+
+        Drawn as n_responses uniform arrays (not rng.binomial) so that with one
+        response the random stream is exactly the single-response one.
+        """
+        return (self.rng.random((self.n_responses,) + q.shape) < q).sum(axis=0)
+
     def observe(self, col: int) -> None:
-        """Sample each scenario's response to ``col`` and fold it into logL."""
+        """Sample each scenario's responses to ``col`` and fold them into logL."""
         q = self.generative_p(np.array([col]))[:, 0]
-        r = self.rng.random(len(q)) < q
-        for n in self.names:
-            p_col = self.p[n][:, col]
-            self.logL[n] += np.where(
-                r[:, None], np.log(p_col)[None, :], np.log1p(-p_col)[None, :]
+        k = self._draw_counts(q)
+        n = self.n_responses
+        for name in self.names:
+            p_col = self.p[name][:, col]
+            self.logL[name] += (
+                k[:, None] * np.log(p_col)[None, :]
+                + (n - k)[:, None] * np.log1p(-p_col)[None, :]
             )
         self._lhat_cache = None
 
@@ -223,8 +257,11 @@ def estimate_joint_eig(
     model_weights: Optional[Dict[str, float]] = None,
     n_scenarios: int = 1000,
     seed: int = 42,
+    n_responses: int = 1,
 ) -> float:
-    """Monte Carlo estimate of I(M; R_S) in bits for the stimulus set ``indices``."""
+    """Monte Carlo estimate of I(M; R_S) in bits for the stimulus set ``indices``,
+    each stimulus answered ``n_responses`` times."""
+    _validate_n_responses(n_responses)
     p, n_stim = _validated_p(p_left_draws)
     cols = np.asarray(list(indices), dtype=int)
     if cols.size == 0:
@@ -235,14 +272,16 @@ def estimate_joint_eig(
         raise ValueError(f"n_scenarios must be >= 1, got {n_scenarios}.")
 
     prior = _model_prior(list(p), model_weights)
-    state = _ScenarioState(p, prior, n_scenarios, np.random.default_rng(seed))
-    # Sample all responses at once and fold them in with one matmul per model:
-    # logL[t, d] = sum_i [r_ti · log p_di + (1 - r_ti) · log(1 - p_di)].
+    state = _ScenarioState(
+        p, prior, n_scenarios, np.random.default_rng(seed), n_responses
+    )
+    # Sample all response counts at once and fold them in with one matmul per
+    # model: logL[t, d] = sum_i [k_ti · log p_di + (n - k_ti) · log(1 - p_di)].
     q = state.generative_p(cols)
-    r = state.rng.random(q.shape) < q
-    for n in state.names:
-        p_cols = state.p[n][:, cols]
-        state.logL[n] = r @ np.log(p_cols).T + (~r) @ np.log1p(-p_cols).T
+    k = state._draw_counts(q)
+    for name in state.names:
+        p_cols = state.p[name][:, cols]
+        state.logL[name] = k @ np.log(p_cols).T + (n_responses - k) @ np.log1p(-p_cols).T
     state._lhat_cache = None  # logL set directly, bypassing observe()
     h_prior = float(_entropy_bits(prior))
     return h_prior - float(state.posterior_entropy().mean())
@@ -257,6 +296,7 @@ def select_n_joint_eig(
     seed: int = 42,
     lazy: bool = False,
     chunk_size: int = 4096,
+    n_responses: int = 1,
 ) -> JointEIGSelection:
     """Greedily select ``n_select`` stimuli maximizing joint EIG about M.
 
@@ -269,7 +309,10 @@ def select_n_joint_eig(
         greedy. ``True`` uses CELF lazy re-evaluation: much faster, but can
         miss synergistic candidates whose gain grew (see module docstring).
     chunk_size: candidates per vectorized pass (memory/perf knob only).
+    n_responses: responses each selected stimulus receives (an experiment's
+        participant count). Scoring cost grows linearly with it.
     """
+    _validate_n_responses(n_responses)
     p, n_stim = _validated_p(p_left_draws)
     if not 1 <= n_select <= n_stim:
         raise ValueError(
@@ -281,7 +324,9 @@ def select_n_joint_eig(
         raise ValueError(f"chunk_size must be >= 1, got {chunk_size}.")
 
     prior = _model_prior(list(p), model_weights)
-    state = _ScenarioState(p, prior, n_scenarios, np.random.default_rng(seed))
+    state = _ScenarioState(
+        p, prior, n_scenarios, np.random.default_rng(seed), n_responses
+    )
     h_prior = float(_entropy_bits(prior))
     h_current = state.posterior_entropy()
 
