@@ -306,7 +306,7 @@ def test_motif_stack_is_not_dropped_by_the_eig_screener():
     probe_row = _raw_row(
         {"sequence_a": "HHTHTTHT", "sequence_b": "HTHTHTHT"}
     )
-    usable, dropped = _screen_usable_models(["motif_stack"], MODEL_DIR, probe_row)
+    usable, dropped = _screen_usable_models(["motif_stack"], MODEL_DIR, [probe_row])
     assert usable == ["motif_stack"]
     assert dropped == []
 

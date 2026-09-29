@@ -60,20 +60,24 @@ def _load_model_weights(registry_path: Optional[Path]) -> Dict[str, float]:
 
 
 def _screen_usable_models(
-    model_names: List[str], models_dir: Path, probe_row: Dict[str, Any]
+    model_names: List[str], models_dir: Path, rows: List[Dict[str, Any]]
 ) -> Tuple[List[str], List[Dict[str, Any]]]:
-    """Drop models that cannot be evaluated on a bare stimulus row.
+    """Drop models that cannot be evaluated on the design pool's stimulus rows.
 
     E.g. a carried-forward model with a participant-level pm.Data
-    (participant_id) that stimulus rows never carry. One such model would
-    otherwise raise inside the prior-predictive pass and abort the entire
-    annotation. Probe each model against a representative stimulus row,
-    drop the unbindable ones loudly, and keep the rest; fail only if none can
-    be evaluated.
+    (participant_id) that stimulus rows never carry, or one whose features
+    cannot be computed for some pairs (a hook that indexes past the end of a
+    length-2 sequence: admission never binds pairs shorter than 4). One such
+    model would otherwise raise inside the predictive pass and abort the
+    design — identically on every retry. Bind each model to every row, drop
+    the ones that fail loudly and on record, and keep the rest; fail only if
+    none can be evaluated.
 
-    This is the ONE place the pipeline is allowed to omit a model from the
-    hypothesis set, and only for the data-binding reason above: a model that
-    fails because its *code* is broken (``BROKEN_MODEL_CODE_ERRORS``) raises.
+    A failure is the model's when its own code raised it, or when it is not a
+    code error at all (``is_model_failure``). A code error raised by the
+    harness (``BROKEN_MODEL_CODE_ERRORS`` outside the model's file) and an
+    infrastructure error raise: dropping every model for a broken harness
+    would renormalize EIG over whichever models happen to load.
     """
     from src.models.data_binding import (  # type: ignore
         MissingStimulusColumns,
@@ -81,20 +85,18 @@ def _screen_usable_models(
         make_stim_data,
     )
     from src.models.model_loading import load_pymc_model_cached  # type: ignore
-    from src.models.pymc_inference import BROKEN_MODEL_CODE_ERRORS  # type: ignore
+    from src.models.pymc_inference import (  # type: ignore
+        INFRASTRUCTURE_ERRORS,
+        is_model_failure,
+    )
 
     usable: List[str] = []
     dropped: List[Dict[str, Any]] = []
     for name in model_names:
+        model = None
         try:
-            make_stim_data(load_pymc_model_cached(name, models_dir), [probe_row])
-        except BROKEN_MODEL_CODE_ERRORS as e:
-            raise RuntimeError(
-                f"model {name!r} in {models_dir} is broken "
-                f"({type(e).__name__}: {e}). That is a code error, not a "
-                "stimulus-binding mismatch — fix the model rather than letting "
-                "EIG silently renormalize over the models that happen to load."
-            ) from e
+            model = load_pymc_model_cached(name, models_dir)
+            make_stim_data(model, rows)
         except MissingStimulusColumns as e:
             if not e.only_non_stimulus:
                 raise RuntimeError(
@@ -112,19 +114,47 @@ def _screen_usable_models(
             )
             print(f"  [drop] EIG: model {name!r} {reason}; excluding it from EIG.", flush=True)
             continue
-        except Exception as e:  # noqa: BLE001 — unbindable model can't be scored
+        except INFRASTRUCTURE_ERRORS:
+            raise
+        except Exception as e:
+            if not is_model_failure(e, Path(models_dir) / f"{name}.py"):
+                raise RuntimeError(
+                    f"model {name!r} in {models_dir} could not be evaluated "
+                    f"({type(e).__name__}: {e}), and the model's own code did not "
+                    "raise it: the harness is broken. Not dropping "
+                    "the model — EIG must not silently renormalize over the "
+                    "models that happen to load."
+                ) from e
             reason = f"cannot be evaluated on a stimulus ({type(e).__name__}: {e})"
+            if model is not None:
+                reason += f"; fails on pairs of length {_failing_pair_lengths(model, rows)}"
             dropped.append({"model": name, "missing": [], "reason": reason})
             print(f"  [drop] EIG: model {name!r} {reason}; excluding it from EIG.", flush=True)
             continue
         usable.append(name)
     if not usable:
         raise ValueError(
-            f"No models in {models_dir} can be evaluated on a stimulus row "
+            f"No models in {models_dir} can be evaluated on the design pool's stimulus rows "
             "(every model requires columns absent from stimuli, e.g. "
-            "participant_id); cannot compute EIG."
+            "participant_id, or fails on its pairs); cannot compute EIG."
         )
     return usable, dropped
+
+
+def _failing_pair_lengths(model: Any, rows: List[Dict[str, Any]]) -> List[int]:
+    """The pair lengths among ``rows`` on which ``model`` cannot be bound."""
+    from src.models.data_binding import make_stim_data  # type: ignore
+
+    by_length: Dict[int, List[Dict[str, Any]]] = {}
+    for row in rows:
+        by_length.setdefault(len(row["sequence_a"]), []).append(row)
+    failing = []
+    for length, length_rows in sorted(by_length.items()):
+        try:
+            make_stim_data(model, length_rows)
+        except Exception:  # noqa: BLE001 — only which lengths fail is wanted here
+            failing.append(length)
+    return failing
 
 
 def _invalid_predictions_entry(
@@ -429,9 +459,7 @@ def design_exhaustive(
     if n_select > 0:
         model_names = _load_model_names(models_dir)
         model_weights = _load_model_weights(registry_path)
-        model_names, screened_out = _screen_usable_models(
-            model_names, models_dir, rows[0]
-        )
+        model_names, screened_out = _screen_usable_models(model_names, models_dir, rows)
         if model_weights and not any(model_weights.get(n, 0.0) > 0 for n in model_names):
             print(
                 f"  [design] registry weights over {sorted(model_weights)} do not "

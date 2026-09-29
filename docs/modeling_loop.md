@@ -355,18 +355,24 @@ Entry: `run_design_programmatic` (orchestrator.py:422) →
 ### 3.2 Screening (`_screen_usable_models`, eig.py:62)
 
 Each model named in `cognitive_models/models_manifest.yaml` that has a `.py`
-file is probed with `make_stim_data(model, [rows[0]])`. The probe row is the
-first pool pair (`HH` vs `HT`) with only `sequence_a`, `sequence_b` and
-`chose_left=0`. Outcomes:
+file is bound to **every** pool row with `make_stim_data(model, rows)` (rows
+carry only `sequence_a`, `sequence_b` and `chose_left=0`). Until 2026-09-28
+only the first row (`HH` vs `HT`) was probed, so a carried model whose
+features failed on some other length 2–3 pair crashed the design on every
+retry. Outcomes:
 
-- `BROKEN_MODEL_CODE_ERRORS` (ImportError, SyntaxError, NameError,
-  AttributeError, IndentationError): **raise**.
 - `MissingStimulusColumns` where the missing columns are only
   `participant_id`/`trial_index` (`NON_STIMULUS_COLUMNS`, data_binding.py:244):
   the model is **dropped** from the design and recorded.
 - `MissingStimulusColumns` naming any other column: **raise**.
-- Any other exception: the model is **dropped** and recorded with the error
-  (eig.py:115-119).
+- An infrastructure error (`INFRASTRUCTURE_ERRORS`: `OSError`,
+  `MemoryError`, …): **raise**.
+- A code error (`BROKEN_MODEL_CODE_ERRORS`: ImportError, SyntaxError,
+  NameError, AttributeError, IndentationError) that the model's own file did
+  not raise (a broken harness): **raise**.
+- Any other exception, or a code error raised in the model's own file
+  (`is_model_failure`, pymc_inference.py): the model is **dropped** and
+  recorded with the error and the pair lengths it fails on.
 - No usable model: raise.
 
 After the predictive draws (§3.3), a model whose `p_left` is undefined (NaN
@@ -1043,7 +1049,7 @@ the candidate (`reject` records it in the ledger with the reason):
 | 2 | `hypothesis.md` exists and is non-empty | |
 | 3 | code gate | AST walk, `import_gate.py`: imports only from numpy, pymc, pytensor, arviz, scipy, math, itertools, functools, collections, re, typing, dataclasses, statistics, operator; relative imports and unparseable source are forbidden; no use of the names `open`, `__import__`, `exec`, `eval`, `compile`, `globals`, `vars`, `locals`, `getattr`, `setattr`, `delattr`, `breakpoint`, `input`, `__builtins__`, `__loader__`, `__spec__`; no attribute (nor `from … import` name, nor dotted import component) in `FORBIDDEN_ATTRIBUTES`: module names that allowed modules re-export (`.sys`, `.os`, `.builtins`, `.io`, `.npyio`, …), file readers and writers (`.open`, `.read`, `.load`, `.DataSource`, `.read_*`, `.to_csv`, `.save`, …), `attrgetter`/`methodcaller`, and introspection routes (`__dict__`, `__traceback__`, frame attributes, …); no `str.format` whose fields look up attributes (`"{0.sys}".format(...)`). The same gate screens critique statistics, which run with `pd` injected. The harness also clears `sys.argv`/`sys.orig_argv` once parsed (`forget_command_line`), since they name the GT |
 | 4 | loadable | `load_pymc_model`: a module-level `model: pm.Model`, with hooks attached |
-| 5 | finite logp and gradient at the initial point on the pooled responses | `model_logp_is_finite` |
+| 5 | finite logp and gradient at the initial point on the pooled responses | `model_logp_is_finite`. A code error raised in the candidate's own file (a `NameError` in its `compute_features`) is a rejection with the error; the same error raised by the harness, or an infrastructure error, still raises (`is_model_failure`). Before 2026-09-28 every `NameError`/`AttributeError` raised, ending the cell, in admission and in the concurrent prefit |
 | 6 | real fit | full production `fit_model` (§5.3), cached, with the escalation refit if the first fit is a near miss, each sampling run limited to 15 min: "too slow to fit: … was still sampling after the 15-minute limit and was stopped. Every sampling run of a candidate's admission fit has a 15-minute limit. Make the model cheaper to evaluate …" (vectorise over trials, features once per unique sequence, fewer weakly identified parameters). A sampling error reads "MCMC sampling failed (<Type>: <message>)" |
 | 7 | convergence | the returned fit passes the gate (§5.3). For a multi-chain fit the rejection reason says either that the fit, a near miss, already ran at target_accept ≥ 0.95, or that it was too far from converging for smaller steps to help (and gives the near-miss thresholds); either way raising target_accept will not help. It suggests changing the geometry: non-centred parameterisations, tighter priors on weakly constrained parameters, fewer weakly identified parameters, no hard thresholds (it used to suggest declaring `SAMPLER_SETTINGS = {"target_accept": 0.95}`, which the refit had already done) |
 | 8 | finite ELPD-LOO | from that fit |
@@ -1072,7 +1078,11 @@ or carried model stays in the zoo, likewise unselectable and unprunable.
   `participant_id` is averaged over the training participant ids. A candidate
   that needs other non-stimulus columns (e.g. `trial_index`) is rejected.
   A candidate whose `p_left` is undefined (NaN or outside [0, 1]) on any pool
-  stimulus is rejected, with the count and example pairs in the reason. A zoo
+  stimulus is rejected, with the count and example pairs in the reason. A
+  candidate whose own code fails on the pool (no `p_left`, a `p_left` without
+  one value per stimulus, a hook that breaks on some pool pair:
+  `NoveltyPoolFailed`) is rejected with the error; an infrastructure error or
+  a harness code error still raises. A zoo
   model undefined on some pool stimuli is compared on the rest (a
   `[novelty]` line says so) and is left out when undefined on all of them.
 - `RMSE(c, m) = sqrt(mean_j (p̄_c,j − p̄_m,j)²)`. The candidate is rejected if
@@ -1230,11 +1240,17 @@ This runs in the harness after the three experiments
     positive-weight model excludes it). The row records `n_eval_excluded` and
     `eval_excluded_models` (both also columns of `holdout.csv`), the cell's
     log gets a line `[eval] WARNING: experiment E step S: N of M held-out
-    pairs excluded (p_left undefined for [...]); its metrics cover M − N
+    pairs excluded (p_left undefined or not computable for [...]); its metrics cover M − N
     pairs, fewer than the no-learning baseline's M`, and each affected step
     appends one JSON line (`"scored": "trajectory"`, with the pairs) to
     `RUN_DIR/eval_exclusions.jsonl`, which the evaluation starts afresh. The
-    step raises if every pair is excluded. Any other prediction error raises.
+    step raises if every pair is excluded. A pair the model cannot even be
+    bound to (its own code fails on it, e.g. a hook indexing past the end of
+    a length-1–3 sequence; admission never binds pairs shorter than 4) is
+    NaN in the same way, with an `[eval] WARNING: model '<name>' cannot be
+    bound to N of the M held-out pairs (lengths [...]; <error>)` line; it
+    used to end the cell at its last stage. Any other prediction error
+    raises.
     The user accepted on 2026-09-27 that such a step's metrics cover fewer
     pairs than the baselines', provided it is stated wherever it happens
     (audit B6): here, in `holdout.csv`, and in the sweep summary

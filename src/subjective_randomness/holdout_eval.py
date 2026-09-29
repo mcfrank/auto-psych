@@ -16,8 +16,8 @@ from typing import Any, Dict, List, Mapping, Optional, Sequence, Set, Tuple
 import numpy as np
 
 from src.models.data_binding import make_stim_data
-from src.models.model_loading import pm_data_inputs
-from src.models.pymc_inference import InvalidPredictions, fit_model
+from src.models.model_loading import model_source_file, pm_data_inputs
+from src.models.pymc_inference import InvalidPredictions, fit_model, is_model_failure
 from src.subjective_randomness.holdout_data import (
     _raw_eval_rows,
     p_left_fixed_params,
@@ -209,7 +209,80 @@ def _eval_prediction(
     ``max_draws`` thins the posterior for the prediction (see
     ``FittedModel.predict_p_left``); it is only forwarded when set, so callers
     that pass a predictor without that keyword keep working.
+
+    With ``mask_invalid``, a pair the model cannot be bound to (its own code
+    fails on it — admission never binds pairs shorter than 4, and the eval
+    pool starts at length 1) comes back NaN like an undefined ``p_left``, and
+    the caller excludes and records it; before, one such model ended the cell
+    at its very last stage.
     """
+    try:
+        return _predict_eval_rows(
+            fitted, base_rows, participant_ids=participant_ids,
+            max_draws=max_draws, mask_invalid=mask_invalid,
+        )
+    except Exception as exc:
+        if not mask_invalid or not is_model_failure(exc, model_source_file(fitted.model)):
+            raise
+        bindable = _bindable_rows(fitted.model, base_rows, participant_ids)
+        if bindable.all():
+            raise  # not a pair the model cannot bind: a failure of its own
+        failure = exc
+    lengths = sorted({len(base_rows[i]["sequence_a"]) for i in np.flatnonzero(~bindable)})
+    print(
+        f"  [eval] WARNING: model {getattr(fitted, 'name', '?')!r} cannot be bound to "
+        f"{int((~bindable).sum())} of the {len(base_rows)} held-out pairs (lengths "
+        f"{lengths}; {type(failure).__name__}: {failure}); they are left out like an "
+        "undefined p_left.",
+        flush=True,
+    )
+    pred = np.full(len(base_rows), np.nan)
+    if bindable.any():
+        pred[bindable] = _predict_eval_rows(
+            fitted, [row for row, ok in zip(base_rows, bindable) if ok],
+            participant_ids=participant_ids, max_draws=max_draws,
+            mask_invalid=mask_invalid,
+        )
+    return pred
+
+
+def _bindable_rows(
+    model: Any, base_rows: Sequence[Mapping[str, Any]], participant_ids: Optional[Sequence[int]]
+) -> np.ndarray:
+    """Which of ``base_rows`` ``model`` can be bound to, one length at a time
+    and, within a length that fails, one pair at a time."""
+
+    def binds(rows: Sequence[Mapping[str, Any]]) -> bool:
+        if participant_ids:
+            rows = [{**row, "participant_id": participant_ids[0]} for row in rows]
+        try:
+            make_stim_data(model, list(rows))
+        except Exception as exc:
+            if not is_model_failure(exc, model_source_file(model)):
+                raise
+            return False
+        return True
+
+    ok = np.ones(len(base_rows), dtype=bool)
+    by_length: Dict[int, List[int]] = {}
+    for i, row in enumerate(base_rows):
+        by_length.setdefault(len(row["sequence_a"]), []).append(i)
+    for indices in by_length.values():
+        if not binds([base_rows[i] for i in indices]):
+            for i in indices:
+                ok[i] = binds([base_rows[i]])
+    return ok
+
+
+def _predict_eval_rows(
+    fitted: Any,
+    base_rows: Sequence[Mapping[str, Any]],
+    *,
+    participant_ids: Optional[Sequence[int]],
+    max_draws: Optional[int],
+    mask_invalid: bool,
+) -> np.ndarray:
+    """``_eval_prediction`` on rows the model can be bound to."""
     predict_kwargs = {} if max_draws is None else {"max_draws": max_draws}
     n_stim = len(base_rows)
 
@@ -254,7 +327,7 @@ def _report_exclusions(
     n_excluded, n_pool = int((~valid).sum()), int(valid.size)
     print(
         f"  [eval] WARNING: {what}: {n_excluded} of {n_pool} held-out pairs excluded "
-        f"(p_left undefined for {sorted(models)}); its metrics cover "
+        f"(p_left undefined or not computable for {sorted(models)}); its metrics cover "
         f"{n_pool - n_excluded} pairs, fewer than the no-learning baseline's {n_pool}.",
         flush=True,
     )

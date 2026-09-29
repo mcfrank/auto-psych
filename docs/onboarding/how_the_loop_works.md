@@ -101,7 +101,8 @@ participants could tell them apart.
 - *Models left out of the design.* A model that cannot make a valid prediction
   for some pairs (a probability that is undefined, or outside 0–1) is left out
   of that experiment's design. So is a model whose predictions depend on the
-  participant. Every model left out is listed in `design/screened_out.json`,
+  participant, and one whose own code fails on some pairs (for example a
+  feature that looks at the fourth flip, on a pair of length 2). Every model left out is listed in `design/screened_out.json`,
   which is written even when it is empty.
 
 Code: `run_design_programmatic` (`orchestrator.py`) →
@@ -262,6 +263,11 @@ order (`_admit_candidate_with_reason` in `model_zoo.py`):
    (lengths 4–8, written to `model_loop/novelty_pool.json`), not on the
    training stimuli. Two models that agree on the 64 training pairs but differ
    elsewhere therefore count as different.
+
+A proposal whose own code breaks (a typo in its feature function, no
+`p_left`, a `p_left` that is not one probability per pair) is rejected with the
+error, like any other failed check. A failure of the machine or of the
+pipeline's own code is not blamed on the proposal: it stops the run.
 
 An agent that writes nothing gets one retry. A proposal that is rejected gets
 one repair attempt, with the rejection reason in the agent's prompt. Every

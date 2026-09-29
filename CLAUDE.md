@@ -154,7 +154,14 @@ target — see **Slot roles**) → admit sequentially.
   participants; one that binds `trial_index` is rejected with that reason
   (it cannot be evaluated on any stimulus pool), and so is one whose `p_left`
   is undefined (NaN or outside [0, 1]) on any pool stimulus
-  (`NoveltyPoolUndefined`, the reason names example pairs). An admitted model
+  (`NoveltyPoolUndefined`, the reason names example pairs), and so is one
+  whose own code fails on the pool (`NoveltyPoolFailed`: no `p_left`, a
+  `p_left` without one value per stimulus, a hook that breaks on some pair).
+  A code error (`NameError`, `AttributeError`, …) raised in the candidate's
+  own file is a rejection at the logp gate too, in admission and in the
+  prefit; the same error raised by the harness, or an infrastructure error,
+  still raises (`is_model_failure` in `pymc_inference.py`, which tells them
+  apart by the traceback). An admitted model
   undefined on some pool stimuli is compared on the rest (and left out when
   undefined on all). The threshold is a knob of
   the holdout config (`inner_loop.novelty_rmse_threshold`, CLI
@@ -277,9 +284,13 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 - **Screening a model out of a design is recorded.**
   `eig._screen_usable_models` omits a model whose only unbindable columns are
   response-row bookkeeping (`NON_STIMULUS_COLUMNS`: `participant_id`,
-  `trial_index`) — a participant-level random effect, say — and also one whose
-  probe raises any other non-code error (recorded with the error); broken model
-  code raises. Missing stimulus columns raise too: that means the design rows lack columns the model
+  `trial_index`) — a participant-level random effect, say — and also one that
+  fails to bind any design-pool row for a reason of its own (bound to every
+  row, not one probe row: a hook that breaks on a length-2 pair used to crash
+  the design; recorded with the error and the failing pair lengths). A code
+  error the harness raised, or an infrastructure error, raises (a code error
+  raised in the model's own file is the model's: `is_model_failure`).
+  Missing stimulus columns raise too: that means the design rows lack columns the model
   needs, and dropping the model would renormalize EIG over whichever ones
   happen to bind. `make_stim_data` signals this with `MissingStimulusColumns`,
   which carries `.missing` as data so callers classify structurally rather than

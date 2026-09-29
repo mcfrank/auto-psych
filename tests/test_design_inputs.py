@@ -103,7 +103,7 @@ def test_a_saturated_selection_is_filled_by_single_response_eig(tmp_path, monkey
         lambda names, d, rows, **k: {n: np.full((4, len(rows)), 0.5) for n in names},
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
-    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, row: (names, []))
+    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, rows: (names, []))
 
     stimuli = eig_mod.design_exhaustive(
         tmp_path, lengths=(2, 3), n_select=5, n_responses=40, seed=9
@@ -139,7 +139,7 @@ def test_the_design_search_settings_reach_both_selections(tmp_path, monkeypatch)
         lambda names, d, rows, **k: {n: np.full((4, len(rows)), 0.5) for n in names},
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
-    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, row: (names, []))
+    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, rows: (names, []))
 
     eig_mod.design_exhaustive(
         tmp_path, lengths=(2, 3), n_select=2, n_responses=40, seed=9,
@@ -174,7 +174,7 @@ def test_the_design_searches_lazily_in_float32_by_default(tmp_path, monkeypatch)
         lambda names, d, rows, **k: {n: np.full((4, len(rows)), 0.5) for n in names},
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
-    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, row: (names, []))
+    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, rows: (names, []))
 
     eig_mod.design_exhaustive(tmp_path, lengths=(2, 3), n_select=2, n_responses=40, seed=9)
 

@@ -14,7 +14,7 @@ import hashlib
 import importlib.util
 import sys
 from pathlib import Path
-from typing import Any, Dict, List  # Any used for lazily-imported pymc types
+from typing import Any, Dict, List, Optional  # Any used for lazily-imported pymc types
 
 
 # ---------------------------------------------------------------------------
@@ -27,6 +27,11 @@ _COMPUTE_FEATURES_ATTR = "_auto_psych_compute_features"
 # Attribute under which a loaded model carries its optional data-preparation
 # hook (a ``prepare_observed(rows) -> dict[str, np.ndarray]`` callable).
 _PREPARE_OBSERVED_ATTR = "_auto_psych_prepare_observed"
+
+# Attribute under which a loaded model carries the path of the ``.py`` file it
+# was loaded from, so an error can be traced to the model's own code
+# (``src.models.pymc_inference.is_model_failure``).
+_SOURCE_FILE_ATTR = "_auto_psych_source_file"
 
 
 # ---------------------------------------------------------------------------
@@ -137,7 +142,13 @@ def load_pymc_model(name: str, models_dir: Path) -> Any:
             "ignored. Declare exactly one."
         )
     setattr(model, _PREPARE_OBSERVED_ATTR, prepare_observed)
+    setattr(model, _SOURCE_FILE_ATTR, py_path)
     return model
+
+
+def model_source_file(model: Any) -> Optional[Path]:
+    """The ``.py`` file ``load_pymc_model`` loaded ``model`` from, else ``None``."""
+    return getattr(model, _SOURCE_FILE_ATTR, None)
 
 
 # ---------------------------------------------------------------------------
