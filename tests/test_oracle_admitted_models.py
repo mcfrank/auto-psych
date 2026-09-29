@@ -365,6 +365,16 @@ def _real_cell_exists() -> bool:
 
 @pytest.mark.slow
 @pytest.mark.skipif(not _real_cell_exists(), reason="sweep cell not available")
+@pytest.mark.skipif(
+    not os.environ.get("RUN_ARCHIVED_CELL_TESTS"),
+    reason=(
+        "opt-in (RUN_ARCHIVED_CELL_TESTS=1): replays an archived September cell "
+        "whose cached fits no longer match the current sampler settings (1000 "
+        "draws, near-miss refits), so every fit is redone and the run exceeds "
+        "its 300 s limit; the oracle script also predates prune-at-experiment-end "
+        "(second audit, B11)"
+    ),
+)
 def test_oracle_against_real_archived_cell(tmp_path):
     """Run oracle on an actual archived cell (cached fits, ``--steps final``).
 

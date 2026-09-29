@@ -2209,7 +2209,7 @@ def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypa
     config = {
         "project_id": "subjective_randomness",
         "seed_models_dir": str(SEED_MODELS_DIR),
-        "gt_models": ["prototype_similarity"],
+        "gt_models": ["motif_stack"],
         "n_experiments": 1,
         "n_participants": 8,
         "seed": 3,
@@ -2226,9 +2226,10 @@ def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypa
     gt_run = result["gt_runs"][0]
     trajectory = gt_run["trajectory"]
     assert len(trajectory) == 1  # seed-only scoring step
-    # The held-out GT (the superseded prototype_similarity) is not in the live
-    # pool at all; the recovered best model is whichever faithful seed best
-    # fits the small design sample. This is a pipeline/caching smoke test, so
+    # The held-out GT (motif_stack, the fastest to leave out: the three
+    # remaining seeds fit quickly) is withheld from the seeded pool; the
+    # recovered best model is whichever remaining seed best fits the small
+    # design sample. This is a pipeline/caching smoke test, so
     # we only require a valid seeded model, not a specific winner.
     assert trajectory[0]["best_model"] in FAITHFUL_MODEL_NAMES
     r = trajectory[0]["pearson_r"]
@@ -2240,13 +2241,13 @@ def test_holdout_single_experiment_real_mcmc_with_stub_agents(tmp_path, monkeypa
     assert cached
     # ...and re-evaluating the trajectory is a pure cache hit: same numbers,
     # no new fit files.
-    run_root = tmp_path / "runs" / "prototype_similarity"
+    run_root = Path(gt_run["run_root"])
     eval_stimuli = json.loads(
         (run_root / "eval_stimuli.json").read_text(encoding="utf-8")
     )
     rows = evaluate_trajectory(
         run_root,
-        "prototype_similarity",
+        "motif_stack",
         gt_run["params"],
         eval_stimuli,
         seed_models_dir=SEED_MODELS_DIR,
