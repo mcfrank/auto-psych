@@ -70,7 +70,7 @@ fi
 # (an API quota, a bad commit) must not resubmit all of them at once.
 ARRAY_SPEC="1-${TOTAL}%${MAX_PARALLEL}"
 [[ -n "${ARRAY_TASKS:-}" ]] && ARRAY_SPEC="${ARRAY_TASKS}%${MAX_PARALLEL}"
-# ARRAY_MEM overrides the array's --mem (32GB) for this submission only (the
+# ARRAY_MEM overrides the array's --mem (64GB) for this submission only (the
 # retry job sets it for its out-of-memory group). It is passed as --mem, never
 # through SBATCH_MEM_PER_NODE, which sbatch reads from the environment of every
 # later job; unset here so no job inherits it (see submit_holdout_test_retest.sh).

@@ -70,7 +70,7 @@ added nothing that refitting the literature could not.
 `SMOKE=1 bash scripts/subjective_randomness/slurm/run_faithful_test_retest.sh`
 first (one cheap cell), then without `SMOKE` for the sweep, and
 `run_impossible_test_retest.sh` for the controls. Each chains setup, the cell
-array (1 day, 16 CPUs / 64 GB; impossible cells 8 CPUs / 32 GB), up to two
+array (1 day, 16 CPUs / 64 GB, the same for impossible cells), up to two
 rounds of automatic retries, and a summary. A sweep runs on one version of
 the code, recorded at setup. Claude agents need `CLAUDE_AUTH=subscription`
 or `api` and its key; agents that hit a usage limit wait for its reset (up
