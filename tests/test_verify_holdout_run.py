@@ -41,13 +41,24 @@ def _make_log(path: Path, *, finished: bool = True):
         path.write_text("started\n", encoding="utf-8")
 
 
-def _history(*round_statuses):
+def _history(*round_statuses, bests=None):
     """An inner-loop history.json: the seed step, then one round per status
-    (``None`` = a round recorded before the critique status existed)."""
-    seed = {"step": 0, "iteration": None, "best_model": "seed", "posteriors": {}, "elpd_loo": {}}
+    (``None`` = a round recorded before the critique status existed).
+    ``bests`` names the incumbent at each step; by default the seed step's
+    ``seed`` is displaced by ``candidate_<i>`` at round i, so a history with
+    a round has an incumbent change and the incumbent check stays quiet in
+    tests that are about something else. The seed step scores ``seed`` and
+    ``rival`` (the cell's starting set)."""
+    if bests is None:
+        bests = ["seed", *(f"candidate_{i}" for i in range(len(round_statuses)))]
+    if len(bests) != 1 + len(round_statuses):
+        raise ValueError("bests must name one incumbent per step")
+    seed = {"step": 0, "iteration": None, "best_model": bests[0],
+            "posteriors": {"seed": 0.6, "rival": 0.4}, "elpd_loo": {}}
     rounds = []
     for i, status in enumerate(round_statuses):
-        entry = {"step": i + 1, "iteration": i, "best_model": "seed", "posteriors": {}, "elpd_loo": {}}
+        entry = {"step": i + 1, "iteration": i, "best_model": bests[i + 1],
+                 "posteriors": {bests[i + 1]: 1.0}, "elpd_loo": {}}
         if status is not None:
             entry["critique"] = status
         rounds.append(entry)
@@ -64,8 +75,12 @@ _NO_CRITIQUE = {
 }
 
 
-def _build_clean_raw_tree(work_root: Path, history: str | None = None):
-    """A valid raw run tree: all CSVs have only raw columns, no drops, no featurizer imports."""
+def _build_clean_raw_tree(
+    work_root: Path, history: str | None = None, history2: str | None = None
+):
+    """A valid raw run tree: all CSVs have only raw columns, no drops, no
+    featurizer imports. ``history`` / ``history2`` are experiment 1's and 2's
+    inner-loop history.json (omitted when None)."""
     _make_log(work_root / "slurm_logs" / "holdout_recovery_1.out")
 
     # Build a tar archive simulating a completed task
@@ -103,6 +118,10 @@ def _build_clean_raw_tree(work_root: Path, history: str | None = None):
     (design_dir / "screened_out.json").write_text("[]", encoding="utf-8")
     if history is not None:
         (exp1_ml / "history.json").write_text(history, encoding="utf-8")
+    if history2 is not None:
+        exp2_ml = tar_staging / "experiment2" / "model_loop"
+        exp2_ml.mkdir(parents=True)
+        (exp2_ml / "history.json").write_text(history2, encoding="utf-8")
 
     with tarfile.open(tar_path, "w:gz") as tar:
         for p in tar_staging.rglob("*"):
@@ -241,3 +260,88 @@ class TestVerifyCritiquePresence:
         result = _run_verifier(work_root)
         assert result.returncode != 0, result.stdout
         assert "critique status" in result.stdout
+
+
+def _write_live_cell(work_root: Path, gt: str, histories: list[str]) -> None:
+    """A cell whose repo copy was kept (KEEP_REPO_COPY=1): its experiments'
+    history.json files live under run1/<gt>/repo/_runs/<gt>/ instead of an
+    archive."""
+    run_root = work_root / "run1" / gt / "repo" / "_runs" / gt
+    for exp_num, history in enumerate(histories, start=1):
+        loop_dir = run_root / f"experiment{exp_num}" / "model_loop"
+        loop_dir.mkdir(parents=True)
+        (loop_dir / "history.json").write_text(history, encoding="utf-8")
+        data_dir = run_root / f"experiment{exp_num}" / "data"
+        data_dir.mkdir(parents=True)
+        (data_dir / "responses.csv").write_text(RAW_HEADER + "\nHHT,THT,0,0,1\n", encoding="utf-8")
+        (loop_dir / "responses.csv").write_text(RAW_HEADER + "\nHHT,THT,0,0,1\n", encoding="utf-8")
+
+
+class TestVerifyIncumbentChanges:
+    """The loop-improvement plan's primary metric, surfaced by the verifier:
+    a finished cell in which the exported best model never changed is
+    flagged. A warning, not a failure — zero is the current true value."""
+
+    def test_cell_whose_incumbent_never_changes_is_flagged_but_not_failed(self, tmp_path):
+        work_root = _build_clean_raw_tree(
+            tmp_path / "frozen",
+            history=_history(_CRITIQUED, _CRITIQUED, bests=["seed", "seed", "seed"]),
+            history2=_history(_CRITIQUED, bests=["seed", "seed"]),
+        )
+        result = _run_verifier(work_root)
+        assert result.returncode == 0, result.stdout
+        assert "[WARN]" in result.stdout
+        assert "incumbent" in result.stdout
+        # Five steps over two experiments, no change, the seed at the end.
+        assert "steps=5 changes=0 discovered_steps=0 final=seed" in result.stdout
+        assert "incumbent" in (work_root / "VERDICT.md").read_text(encoding="utf-8")
+
+    def test_cell_whose_incumbent_changes_is_ok(self, tmp_path):
+        work_root = _build_clean_raw_tree(
+            tmp_path / "moved", history=_history(_CRITIQUED, _CRITIQUED)
+        )
+        result = _run_verifier(work_root)
+        assert result.returncode == 0, result.stdout
+        assert "[ok]   incumbent" in result.stdout
+        assert "[WARN]" not in result.stdout
+        # candidate_0 then candidate_1: two changes, neither a starting model.
+        assert "steps=3 changes=2 discovered_steps=2 final=candidate_1" in result.stdout
+
+    def test_a_change_across_the_experiment_boundary_counts(self, tmp_path):
+        # Experiment 1 never moves; experiment 2 opens with a different
+        # incumbent (a carried model refit on more data). That is a change.
+        work_root = _build_clean_raw_tree(
+            tmp_path / "boundary",
+            history=_history(_CRITIQUED, bests=["seed", "seed"]),
+            history2=_history(_CRITIQUED, bests=["rival", "rival"]),
+        )
+        result = _run_verifier(work_root)
+        assert result.returncode == 0, result.stdout
+        assert "[ok]   incumbent" in result.stdout
+        assert "steps=4 changes=1 discovered_steps=0 final=rival" in result.stdout
+
+    def test_a_kept_repo_copy_is_read_like_an_archive(self, tmp_path):
+        work_root = _build_clean_raw_tree(tmp_path / "mixed", history=_history(_CRITIQUED))
+        _write_live_cell(
+            work_root, "gt_live",
+            [_history(_CRITIQUED, bests=["seed", "seed"]), _history(_CRITIQUED, bests=["seed", "seed"])],
+        )
+        result = _run_verifier(work_root)
+        assert result.returncode == 0, result.stdout
+        assert "[WARN] 1 of 2 cell(s)" in result.stdout
+        assert "run1/gt_live: steps=4 changes=0" in result.stdout
+
+    def test_a_history_without_a_seed_step_fails_loudly(self, tmp_path):
+        broken = json.dumps([
+            {"step": 1, "iteration": 0, "best_model": "seed", "posteriors": {"seed": 1.0}, "elpd_loo": {}},
+        ])
+        work_root = _build_clean_raw_tree(tmp_path / "broken", history=broken)
+        result = _run_verifier(work_root)
+        assert result.returncode != 0
+        assert "[FAIL]" in result.stdout and "incumbent" in result.stdout
+
+    def test_no_history_is_informational(self, tmp_path):
+        work_root = _build_clean_raw_tree(tmp_path / "bare")
+        result = _run_verifier(work_root)
+        assert result.returncode == 0, result.stdout
+        assert "[info] no inner-loop history.json found for the incumbent check" in result.stdout

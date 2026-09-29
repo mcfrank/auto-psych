@@ -436,7 +436,101 @@ else
   say "- [skip] critique check (python3 not found)"
 fi
 
-# 12. Recovery, if any cell finished.
+# 12. Incumbent changes: the loop-improvement plan's primary metric. A cell's
+#     scoring steps are its experiments' history.json entries in order; the
+#     incumbent at a step is its best_model (the model the loop exports and
+#     carries). A finished cell in which the incumbent NEVER changed is flagged
+#     as a WARNING, not a failure — zero is the true value of every archived
+#     motif_stack cell (0 changes over 27 steps) and must not block a run. The
+#     per-cell line also counts steps at which the incumbent was a discovered
+#     model, i.e. not among the models scored at experiment 1's seed step.
+#     Mirrors src/subjective_randomness/incumbent.py (stdlib only here).
+_INCUMBENT_CHECKER=$(mktemp /tmp/check_incumbent_XXXXXX.py)
+cat > "$_INCUMBENT_CHECKER" <<'PYEOF'
+"""Count incumbent changes over one cell's history.json files (experiment order).
+
+Prints one line of counts. Exit 0: the incumbent changed at least once (or
+there are fewer than two steps). Exit 1: two or more steps and no change.
+Exit 3: a history that is not a whole experiment record (no seed step, no
+scored models, an entry without best_model) — a pipeline bug, reported as a
+failure.
+"""
+import json, sys
+
+steps = []
+starting = None
+for exp_num, path in enumerate(sys.argv[1:], start=1):
+    history = json.load(open(path))
+    if not history:
+        print(f"experiment {exp_num}: empty history")
+        sys.exit(3)
+    if exp_num == 1:
+        first = history[0]
+        if first.get("step") != 0 or first.get("iteration") is not None or not first.get("posteriors"):
+            print("experiment 1 does not open with a seed step that scored models")
+            sys.exit(3)
+        starting = set(first["posteriors"])
+    for entry in history:
+        if "best_model" not in entry:
+            print(f"experiment {exp_num} step {entry.get('step')!r}: no best_model")
+            sys.exit(3)
+        steps.append(entry["best_model"])
+changes = sum(1 for a, b in zip(steps, steps[1:]) if a != b)
+discovered = sum(1 for m in steps if m not in starting)
+print(f"steps={len(steps)} changes={changes} discovered_steps={discovered} final={steps[-1]}")
+sys.exit(0 if changes > 0 or len(steps) < 2 else 1)
+PYEOF
+
+if [[ -n "$_PY3" ]]; then
+  n_inc_cells=0; n_frozen=0; n_badinc=0
+  _check_cell_incumbent() {  # $1 = cell label, $2.. = history.json paths in experiment order
+    local label="$1" result rc; shift
+    n_inc_cells=$((n_inc_cells + 1))
+    result=$("$_PY3" "$_INCUMBENT_CHECKER" "$@" 2>&1); rc=$?
+    case "$rc" in
+      0) say "      $label: $result";;
+      1) n_frozen=$((n_frozen + 1)); say "      $label: $result  <- incumbent never changed";;
+      *) n_badinc=$((n_badinc + 1)); say "      $label: unreadable history ($result)";;
+    esac
+  }
+  for CELL in "$W"/run*/*/; do
+    CELL="${CELL%/}"
+    label="$(basename "$(dirname "$CELL")")/$(basename "$CELL")"
+    TAR="$CELL/agent_runs.tar.gz"
+    if [[ -f "$TAR" ]]; then
+      # Archived cell: pull each experiment's history.json into a temp dir,
+      # numerically ordered (experiment10 after experiment9).
+      members=$(tar tzf "$TAR" 2>/dev/null | grep -E "(^|/)experiment[0-9]+/model_loop/history\.json$" | sort -V)
+      [[ -n "$members" ]] || continue
+      TMPINC=$(mktemp -d /tmp/incumbent_XXXXXX)
+      paths=()
+      while IFS= read -r MEMBER; do
+        out="$TMPINC/$(echo "$MEMBER" | tr '/' '_')"
+        tar xzOf "$TAR" "$MEMBER" > "$out" 2>/dev/null || true
+        paths+=("$out")
+      done <<< "$members"
+      _check_cell_incumbent "$label" "${paths[@]}"
+      rm -rf "$TMPINC"
+    else
+      # Kept repo copy (KEEP_REPO_COPY=1): read the live run tree.
+      live=$(ls "$CELL"/repo/_runs/*/experiment*/model_loop/history.json 2>/dev/null | sort -V)
+      [[ -n "$live" ]] || continue
+      paths=()
+      while IFS= read -r H; do paths+=("$H"); done <<< "$live"
+      _check_cell_incumbent "$label" "${paths[@]}"
+    fi
+  done
+  rm -f "$_INCUMBENT_CHECKER"
+  if [[ "$n_inc_cells" == "0" ]]; then say "- [info] no inner-loop history.json found for the incumbent check"
+  elif [[ "$n_badinc" -gt 0 ]]; then say "- [FAIL] $n_badinc of $n_inc_cells cell(s) have an unreadable history for the incumbent check"; fails=$((fails + 1))
+  elif [[ "$n_frozen" -gt 0 ]]; then say "- [WARN] $n_frozen of $n_inc_cells cell(s) never changed incumbent — the exported best model was the same at every scoring step (a warning, not a failure; the plan's baseline is 0 changes)"
+  else say "- [ok]   incumbent: changed at least once in every cell ($n_inc_cells)"; fi
+else
+  rm -f "$_INCUMBENT_CHECKER"
+  say "- [skip] incumbent check (python3 not found)"
+fi
+
+# 13. Recovery, if any cell finished.
 say ""
 say "## Recovery (final-step pearson r per cell)"
 say '```'
@@ -448,7 +542,7 @@ done
 say '```'
 say ""
 
-# 13. Print config, code SHA, feature mode, and harness/agent paths.
+# 14. Print config, code SHA, feature mode, and harness/agent paths.
 say "## Run info"
 for CFG in "$W"/run*/*/config.yaml; do
   [[ -f "$CFG" ]] || continue
