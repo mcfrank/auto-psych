@@ -213,25 +213,34 @@ def test_leakage_check():
     assert sorted(by_path["experiment1/model_loop/models/another_model.py"]["data_columns"]) == expected["another_model_data_columns"]
 
 
-# ── 5. Lens schedule over 3 experiments × 2 rounds × 3 candidates ─────
+# ── 5. Lens schedule over 3 experiments × 2 rounds × 6 candidates ─────
+#
+# Regenerated at P42 (a behaviour change, not a refactor): only a round's
+# exploratory slots walk the lens battery — the first three of a six-slot
+# round — and the battery has twelve lenses.
 
 
 def test_lens_schedule():
-    from src.pipelines.inner_loop.model_zoo import _lens_index, _lens_offset
+    from src.pipelines.inner_loop.model_zoo import (
+        _lens_index,
+        _lens_offset,
+        exploratory_slots_per_round,
+    )
 
     fixture = _load("lens_schedule.json")
+    assert exploratory_slots_per_round(6) == 3
 
     for entry in fixture:
         offset = _lens_offset(
-            entry["experiment"], max_iterations=2, candidate_count=3
+            entry["experiment"], max_iterations=2, candidate_count=6
         )
         assert offset == entry["lens_offset"], (
             f"Experiment {entry['experiment']}: expected offset {entry['lens_offset']}, got {offset}"
         )
-        idx = _lens_index(offset, entry["iteration"], 3, entry["candidate_idx"], 7)
+        idx = _lens_index(offset, entry["iteration"], 3, entry["exploratory_idx"], 12)
         assert idx == entry["lens_index"], (
-            f"Exp {entry['experiment']} iter {entry['iteration']} cand {entry['candidate_idx']}: "
-            f"expected lens {entry['lens_index']}, got {idx}"
+            f"Exp {entry['experiment']} iter {entry['iteration']} exploratory "
+            f"{entry['exploratory_idx']}: expected lens {entry['lens_index']}, got {idx}"
         )
 
 
