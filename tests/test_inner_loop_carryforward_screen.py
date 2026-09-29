@@ -27,6 +27,15 @@ import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 
 
+@pytest.fixture(autouse=True)
+def _no_batch_fit(monkeypatch):
+    """The screen samples the whole set in one ``fit_models_to_cache`` batch
+    before scoring. The stub model files here cannot be fit, so by default that
+    batch is a no-op reporting no failures; the tests about the batch itself
+    override it."""
+    monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})
+
+
 def _models_dir(tmp_path, names):
     models_dir = tmp_path / "models"
     models_dir.mkdir()
@@ -123,3 +132,66 @@ def test_all_finite_keeps_every_model(tmp_path, monkeypatch):
     )
 
     assert _manifest_names(models_dir) == ["a", "b", "c"]
+
+
+# ---------------------------------------------------------------------------
+# The screen is the experiment's first MCMC pass, and it runs as one batch
+# ---------------------------------------------------------------------------
+
+
+def test_screen_fits_the_whole_set_in_one_batch_before_scoring(tmp_path, monkeypatch):
+    """Every carried model meets this experiment's data for the first time here,
+    so this is where the set gets sampled. It goes through ``fit_models_to_cache``
+    as one batch (the concurrent path), and the per-model ELPD calls that follow
+    are cache hits in manifest order."""
+    models_dir = _models_dir(tmp_path, ["a", "b", "c"])
+    batches = []
+
+    def fake_batch(names, models_dir_, responses_, *, cache_dir, **fit_kwargs):
+        batches.append((list(names), cache_dir, fit_kwargs))
+        return {}
+
+    monkeypatch.setattr(model_zoo, "fit_models_to_cache", fake_batch)
+    scored = []
+    monkeypatch.setattr(
+        model_zoo, "log_likelihood", lambda m, *a, **k: scored.append(m) or -50.0
+    )
+
+    pymc_orchestrator._drop_nonfinite_elpd_models(
+        models_dir,
+        tmp_path / "responses.csv",
+        cache_dir=tmp_path / "cache",
+        fit_kwargs={"chains": 2},
+    )
+
+    assert batches == [(["a", "b", "c"], tmp_path / "cache", {"chains": 2})]
+    assert scored == ["a", "b", "c"]
+    assert _manifest_names(models_dir) == ["a", "b", "c"]
+
+
+def test_a_model_whose_batch_fit_failed_is_dropped_without_a_second_fit(
+    tmp_path, monkeypatch, capsys
+):
+    models_dir = _models_dir(tmp_path, ["seed_good", "diverges"])
+    monkeypatch.setattr(
+        model_zoo,
+        "fit_models_to_cache",
+        lambda names, *a, **k: {"diverges": "RuntimeError: bad initial energy"},
+    )
+    scored = []
+    monkeypatch.setattr(
+        model_zoo, "log_likelihood", lambda m, *a, **k: scored.append(m) or -100.0
+    )
+    ledger = model_zoo.HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
+
+    pymc_orchestrator._drop_nonfinite_elpd_models(
+        models_dir, tmp_path / "responses.csv", ledger=ledger, ledger_context="exp 2"
+    )
+
+    assert _manifest_names(models_dir) == ["seed_good"]
+    assert scored == ["seed_good"]  # the failed fit is not attempted again
+    out = capsys.readouterr().out
+    assert "diverges" in out and "bad initial energy" in out
+    (entry,) = ledger.entries()
+    assert entry.name == "diverges" and entry.outcome == "dropped"
+    assert "bad initial energy" in entry.detail
