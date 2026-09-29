@@ -100,11 +100,31 @@ def test_a_non_converged_candidate_is_rejected_with_the_numbers_and_the_fix(tmp_
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: ["12 divergent transitions"])
     verdict = model_zoo._admit_candidate_with_reason(
-        cand / "candidate.py", models_dir, "iter0_candidate0", tmp_path / "r.csv"
+        cand / "candidate.py", models_dir, "iter0_candidate0", tmp_path / "r.csv",
+        fit_kwargs={"target_accept": 0.8},  # the faithful sweep's setting
     )
     assert not verdict.admitted
     assert "did not converge" in verdict.reason and "12 divergent" in verdict.reason
-    assert "SAMPLER_SETTINGS" in verdict.reason
+    # The fitter already refit it with smaller steps: advice to declare
+    # target_accept 0.95 made the repair re-sample the same failing fit.
+    assert "even at target_accept 0.95" in verdict.reason
+    assert "raising target_accept will not help" in verdict.reason
+    assert "SAMPLER_SETTINGS" not in verdict.reason
+    assert "non-centred" in verdict.reason and "weakly identified" in verdict.reason
+
+
+def test_the_brief_does_not_offer_smaller_steps_as_a_convergence_fix(tmp_path):
+    from src.pipelines.inner_loop.candidate_agent import _write_candidate_context
+    from tests.inner_loop_fixtures import write_responses, write_seed_models
+
+    _write_candidate_context(
+        tmp_path / "candidate_0", write_responses(tmp_path), write_seed_models(tmp_path),
+        iteration=0, candidate_idx=0, candidate_count=1, current_posterior=None,
+    )
+    context = (tmp_path / "candidate_0" / "CONTEXT.md").read_text(encoding="utf-8")
+    assert "SAMPLER_SETTINGS" not in context
+    assert "already refit once with smaller NUTS steps" in context
+    assert "non-centred" in context
 
 
 def _row(rank, *, unreliable=False, not_converged=False):

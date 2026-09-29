@@ -223,14 +223,40 @@ def test_refinement_menu_ranks_live_by_standing_and_pruned_by_margin(tmp_path):
     assert "Far: " + LONG in pruned
     assert "…" not in text
     assert str(models_dir / "pruned" / "far_idea.py") in pruned
-    # A model pruned in an earlier experiment has no source in this tree; say so.
+    # A pruned model whose file cannot be found is listed without one; say so.
     assert "near_idea.py" not in pruned
-    assert "earlier experiment" in pruned
+    assert "none on disk" in pruned
     # Rejected candidates never entered the set: not on the menu.
     assert "dup_idea" not in text
     # A menu, not a blacklist.
     assert "do not re-propose" not in text.lower()
     assert "menu" in text.lower()
+
+
+def test_refinement_menu_shows_the_source_of_a_model_an_earlier_experiment_pruned(tmp_path):
+    """Pruning runs at the end of an experiment and each experiment starts a
+    fresh zoo, so during the rounds a pruned model's file is in the zoo of
+    the experiment that pruned it — which the menu used to never look in."""
+    run = tmp_path / "cell_1"
+    earlier_pruned = run / "experiment1" / "model_loop" / "models" / "pruned"
+    earlier_pruned.mkdir(parents=True)
+    (earlier_pruned / "near_idea.py").write_text("# near_idea\n", encoding="utf-8")
+    (run / "experiment2" / "model_loop").mkdir(parents=True)
+    models_dir = _models_dir(run / "experiment2" / "model_loop", [("model_a", "A."), ("model_b", "B.")])
+    ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
+    ledger.append(
+        _entry(
+            "near_idea", "pruned", detail="8.0 nats behind model_a (2.1× dse)",
+            hypothesis="Near.", context="experiment1 end of experiment",
+        )
+    )
+    candidate_dir = tmp_path / "candidate_2"
+    candidate_dir.mkdir()
+
+    text = _write_refinement_menu(candidate_dir, models_dir, {}, ledger, incumbent="model_a")
+
+    pruned = text.split("## Pruned", 1)[1]
+    assert f"**Source:** `{earlier_pruned / 'near_idea.py'}`" in pruned
 
 
 def test_refinement_menu_says_when_nothing_has_been_pruned(tmp_path):

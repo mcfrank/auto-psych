@@ -778,11 +778,11 @@ For `iteration` in 0..4 (pymc_orchestrator.py:324-585):
    | Section | Explore slot | Refine-incumbent slot | Refine-chosen slot |
    | --- | --- | --- | --- |
    | `ATTEMPT_NOTE.md` (retry/repair only) | yes | yes | yes |
-   | `CONTEXT.md`: the task description (§5.1), responses path and columns, the note that no feature columns exist so `compute_features`/`prepare_observed` is required, the import allowlist and the ban on file reads and interpreter escapes, the 3-step instruction, the `check_candidate` command with a note that admission also requires convergence (almost no divergent transitions, R-hat ≤ 1.05, bulk ESS ≥ 100) and that a model may declare `SAMPLER_SETTINGS = {"target_accept": 0.95}`, a description of the other docs | yes | yes | yes |
+   | `CONTEXT.md`: the task description (§5.1), responses path and columns, the note that no feature columns exist so `compute_features`/`prepare_observed` is required, the import allowlist and the ban on file reads and interpreter escapes, the 3-step instruction, the `check_candidate` command with a note that admission also requires convergence (almost no divergent transitions, R-hat ≤ 1.05, bulk ESS ≥ 100), that a failing fit is already refit once at target_accept 0.95 so smaller steps are not a fix, and which reparameterisations are (non-centred, priors that constrain every parameter, no parameters that trade off, no hard thresholds), a description of the other docs | yes | yes | yes |
    | `CANDIDATE_BRIEF.md` | the lens text + the one-hypothesis rule (+ critique note) | names the incumbent, its standing, hypothesis and source; lifts the anti-grafting/anti-composition rules; asks for one stated change (+ critique note) | "refine a model of your choosing" from the menu; same lifted rules (+ critique note) |
    | `existing_hypotheses.md`: every zoo model's manifest rationale, ranked by `az.compare` with "rank r, Δ ± dse nats behind (x× dse: tied/lost), ELPD" (trial-level `dse`) and a PSIS-reliability note | yes | yes | yes |
    | `attempted_hypotheses.md` ("Tried before"): the ledger's retired entries with a hypothesis (§5.10) | yes | no | no |
-   | `refinement_menu.md`: live non-incumbent models ranked by standing, then ledger-pruned models, narrowest margin first, each with hypothesis and source path | no | yes | yes |
+   | `refinement_menu.md`: live non-incumbent models ranked by standing, then ledger-pruned models, narrowest margin first, each with hypothesis and source path (a pruned model's file is in the `model_loop/models/pruned/` of the experiment that pruned it, found through the ledger context; `candidate_agent._pruned_source`) | no | yes | yes |
    | `critiques.md` (only if the round has a critique) | yes | yes | yes |
 
 5. **Spawn.** All pending slots run concurrently (`ThreadPoolExecutor`, 6
@@ -913,7 +913,7 @@ the candidate (`reject` records it in the ledger with the reason):
 | 4 | loadable | `load_pymc_model`: a module-level `model: pm.Model`, with hooks attached |
 | 5 | finite logp and gradient at the initial point on the pooled responses | `model_logp_is_finite` |
 | 6 | real fit | full production `fit_model` (§5.3), cached, with the escalation refit if needed |
-| 7 | convergence | the returned fit passes the gate (§5.3); the rejection reason suggests reparameterising or declaring `SAMPLER_SETTINGS = {"target_accept": 0.95}` |
+| 7 | convergence | the returned fit passes the gate (§5.3); the rejection reason says the fit already ran at target_accept ≥ 0.95 (for a multi-chain fit), so raising it will not help, and suggests changing the geometry: non-centred parameterisations, tighter priors on weakly constrained parameters, fewer weakly identified parameters, no hard thresholds (it used to suggest declaring `SAMPLER_SETTINGS = {"target_accept": 0.95}`, which the refit had already done) |
 | 8 | finite ELPD-LOO | from that fit |
 | 9 | novelty | see below; skipped if threshold = 0 |
 
@@ -1054,7 +1054,8 @@ zoo). Untrusted survivors are included. Then
 the `5_model_loop` validator checks `model_posterior.json` and `report.md`.
 Experiment k+1 copies this set (§2), re-seeds its zoo from it, and refits
 everything on the larger pooled data. `models/pruned/` is not carried; pruned
-models survive only as ledger lines.
+models survive as ledger lines, and their files stay in the pruning
+experiment's `model_loop/models/pruned/`, where the refinement menu points.
 
 ---
 
