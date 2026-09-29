@@ -126,6 +126,7 @@ def _record_history_step(
     comparison: Dict[str, Dict[str, Any]],
     iteration: Optional[int],
     pruned: Optional[List[str]] = None,
+    critique: Optional[Dict[str, Any]] = None,
 ) -> None:
     """Append one scoring step to the history and persist it immediately.
 
@@ -137,7 +138,16 @@ def _record_history_step(
     and the models excluded as unreliable are recorded beside it for audit.
     ``pruned`` records any models dropped by the pruning pass this step (the
     posterior and comparison in the entry are over the surviving set).
+    ``critique`` is the status of the critique the round ran with (see
+    ``critique_round.CRITIQUE_STATUS_*``): required for a round's step, so an
+    absent critique is visible in the run record, and absent for the seed
+    scoring step (``iteration=None``), which precedes any round.
     """
+    if (iteration is None) != (critique is None):
+        raise ValueError(
+            "a round's history step must record its critique status and the seed "
+            f"step must not: iteration={iteration!r}, critique={critique!r}"
+        )
     entry = {
         "step": len(history),
         "iteration": iteration,
@@ -149,6 +159,8 @@ def _record_history_step(
     }
     if pruned:
         entry["pruned"] = list(pruned)
+    if critique is not None:
+        entry["critique"] = dict(critique)
     history.append(entry)
     (results_dir / "history.json").write_text(
         json.dumps(history, indent=2), encoding="utf-8"

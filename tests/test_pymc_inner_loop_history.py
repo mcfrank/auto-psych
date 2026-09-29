@@ -187,3 +187,34 @@ def test_history_best_model_follows_the_export_rule(tmp_path, monkeypatch):
     assert history[0]["excluded_unreliable"] == ["model_a"]
     assert history[1]["excluded_unreliable"] == ["iter0_candidate0"]
     assert result["best_model"] == history[-1]["best_model"]
+
+
+def test_record_history_step_stores_the_round_critique_status(tmp_path):
+    """Every round's history entry carries the critique status the round ran
+    with (statistics proposed / significant, "no critique", or disabled), so
+    an absent critique is visible in the run record rather than only in the
+    log. The seed scoring step precedes any round and has none."""
+    from src.pipelines.inner_loop.scoring import _record_history_step
+
+    history: list = []
+    posterior = canned_posterior("model_a", ["model_b"])
+    _record_history_step(history, tmp_path, posterior, {}, iteration=None)
+    assert "critique" not in history[0]
+
+    status = {
+        "status": "critiqued", "incumbent": "model_a", "attempts": 1,
+        "n_statistics": 8, "n_significant": 2, "n_significant_fdr": 1,
+    }
+    _record_history_step(history, tmp_path, posterior, {}, iteration=0, critique=status)
+    assert history[1]["critique"] == status
+    on_disk = json.loads((tmp_path / "history.json").read_text(encoding="utf-8"))
+    assert on_disk[1]["critique"] == status
+
+    import pytest
+
+    with pytest.raises(ValueError, match="critique"):
+        _record_history_step(history, tmp_path, posterior, {}, iteration=1)
+    with pytest.raises(ValueError, match="critique"):
+        _record_history_step(
+            history, tmp_path, posterior, {}, iteration=None, critique=status
+        )

@@ -5,13 +5,21 @@ incumbent (best) model via a posterior-predictive check.  The critique agent
 proposes test statistics; the PPC harness scores each as a two-sided empirical
 p-value; significant discrepancies steer the next round of candidates.
 
-Extracted from ``pymc_orchestrator`` — only ``_run_critique_round`` is called
-from the main loop.
+The critique either works or is visibly absent. The agent's context is inlined
+into its prompt; an agent that writes no usable statistic is re-spawned once
+(``MAX_CRITIQUE_RETRIES``); if the retry writes none either, the round has
+**no** critique: no ``critiques.md`` is written, the candidates run without
+one, and the round's ``history.json`` entry records ``"no_critique"``. There is
+no pipeline-written fallback battery (see ``_persist_critique_results``).
+
+Extracted from ``pymc_orchestrator`` — only ``_run_critique_round`` (and the
+status vocabulary) is used from the main loop.
 """
 
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -35,6 +43,40 @@ CRITIQUE_N_PROPOSALS = 8
 # --critique-alpha.
 CRITIQUE_SIGNIFICANCE_ALPHA = 0.05
 CRITIQUE_PPC_REPLICATES = 200
+# A critique agent that writes no usable test statistic is re-spawned this many
+# times (with a prompt that says the previous attempt wrote nothing). After
+# that the round proceeds with no critique, recorded as such.
+MAX_CRITIQUE_RETRIES = 1
+
+# Per-round critique status, recorded in every round's history.json entry
+# under "critique" (``scoring._record_history_step``).
+CRITIQUE_STATUS_CRITIQUED = "critiqued"  # statistics proposed and scored
+CRITIQUE_STATUS_NONE = "no_critique"  # the round ran without a critique
+CRITIQUE_STATUS_DISABLED = "disabled"  # enable_critique=False
+
+
+def critique_disabled_status() -> Dict[str, Any]:
+    """The status recorded for a round run with the critique switched off."""
+    return {"status": CRITIQUE_STATUS_DISABLED}
+
+
+@dataclass(frozen=True)
+class CritiqueRoundOutcome:
+    """What a critique round produced.
+
+    ``critiques_md`` is the round's ``critiques.md`` to hand to the candidate
+    agents, or ``None`` when there was no critique; ``status`` is the record
+    written into the round's ``history.json`` entry (see the
+    ``CRITIQUE_STATUS_*`` vocabulary).
+    """
+
+    critiques_md: Optional[Path]
+    status: Dict[str, Any]
+
+
+def _critique_log_name(attempt: int) -> str:
+    """The agent log for the given attempt: ``agent.jsonl``, then ``agent.retry_<n>.jsonl``."""
+    return "agent.jsonl" if attempt == 0 else f"agent.retry_{attempt}.jsonl"
 
 
 # ─────────────────────────────────────────────
@@ -89,8 +131,13 @@ def _write_critique_context(
     n_proposals: int,
     significance_alpha: float,
     n_replicates: int,
-) -> None:
-    """Write CRITIQUE_CONTEXT.md: the incumbent, the data schema, and the PPC command."""
+) -> str:
+    """Write CRITIQUE_CONTEXT.md (the incumbent, the data schema, the PPC command).
+
+    Returns the text: it is inlined into the critique agent's prompt by
+    ``_build_critique_prompt``, so the agent never has to open the file. The
+    file stays on disk for audit.
+    """
     critique_dir.mkdir(parents=True, exist_ok=True)
     with responses_path.open(encoding="utf-8") as f:
         header = f.readline().strip()
@@ -136,9 +183,58 @@ def _write_critique_context(
         f"is a **significant discrepancy** when its `p_value` ≤ {significance_alpha} "
         "(raw, no multiple-comparisons correction).",
     ]
-    (critique_dir / "CRITIQUE_CONTEXT.md").write_text(
-        "\n".join(lines) + "\n", encoding="utf-8"
-    )
+    text = "\n".join(lines) + "\n"
+    (critique_dir / "CRITIQUE_CONTEXT.md").write_text(text, encoding="utf-8")
+    return text
+
+
+def _build_critique_prompt(critique_dir: Path, context_text: str, *, attempt: int = 0) -> str:
+    """The critique agent's full prompt: the critique brief + the inlined context.
+
+    The context is a delimited section of the prompt, exactly as the candidate
+    agent's documents are (``_build_candidate_prompt``). It used to be a file
+    the agent had to read first; when that read was denied the agent wrote no
+    statistics and exited, and nobody noticed because a fallback battery
+    filled in. ``attempt`` > 0 marks a retry after an attempt that wrote no
+    usable statistic, and says so.
+    """
+    if not context_text:
+        raise ValueError("the critique context is empty; nothing to inline into the prompt")
+    test_stats_dir = critique_dir / "test_stats"
+    # Name critique_dir explicitly: the agent runs from agent_root (opencode's
+    # session directory, whose opencode.json is the permission config in force
+    # — the launcher pins PWD to it), NOT from critique_dir, so a bare "in this
+    # directory" leaves it guessing where to write.
+    sections = [
+        _CRITIQUE_PROMPT.read_text(encoding="utf-8"),
+        "---",
+        f"Your working directory for this critique is `{critique_dir}`.\n"
+        f"Write your test statistics into `{test_stats_dir}/` (one "
+        f"`test_statistic(df)` per file). You do NOT need to run the harness or "
+        f"write `critiques.md` — the pipeline runs the posterior-predictive check "
+        f"over your statistics and records the results.\n\n"
+        f"Use the **bash** tool with a heredoc to create each file. Example:\n"
+        f"```bash\n"
+        f"mkdir -p {test_stats_dir}\n"
+        f"cat << 'EOF' > {test_stats_dir}/my_statistic.py\n"
+        f"def test_statistic(df): ...\n"
+        f"EOF\n"
+        f"```\n"
+        f"Do NOT use the `write` tool — use `bash` with `cat << 'EOF' > path`.\n\n"
+        f"The critique context below is also on disk at "
+        f"`{critique_dir}/CRITIQUE_CONTEXT.md` for reference.",
+        f"## CRITIQUE_CONTEXT.md\n\n{context_text}",
+    ]
+    if attempt > 0:
+        sections.insert(
+            2,
+            f"NOTE: this is the second attempt at this critique round. The first "
+            f"attempt ended without a single usable test statistic in "
+            f"`{test_stats_dir}/`. If that happens again the round proceeds with "
+            f"no critique at all, so write the statistic files first, before "
+            f"anything else.",
+        )
+    return "\n\n".join(sections) + "\n"
 
 
 def _spawn_critique_agent(
@@ -156,12 +252,19 @@ def _spawn_critique_agent(
     backend: Optional[str],
     agent_model: Optional[str] = None,
     agent_root: Optional[Path] = None,
-) -> bool:
+) -> Dict[str, Any]:
     """Critique the incumbent: seed its fit, write context, spawn the critique agent.
 
-    The agent proposes test statistics, runs the PPC harness (which loads the
-    seeded fit — no refit), and writes `critiques.md` describing the significant
-    discrepancies. Returns the agent's success flag.
+    The agent proposes test statistics into ``critique_dir/test_stats``; the
+    pipeline then runs the PPC harness over them (loading the seeded fit — no
+    refit) and writes ``ppc_results.json`` + ``critiques.md``. An agent that
+    leaves no usable statistic is re-spawned up to ``MAX_CRITIQUE_RETRIES``
+    times, each attempt with its own log; when every attempt leaves none the
+    harness is not run and the round has no critique.
+
+    Returns the round's status record: ``{"status": "critiqued", "incumbent",
+    "attempts", "n_statistics", "n_significant", "n_significant_fdr"}`` or
+    ``{"status": "no_critique", "incumbent", "attempts", "reason"}``.
     """
     from src.runtime.coding_agent import run_coding_agent
 
@@ -172,7 +275,7 @@ def _spawn_critique_agent(
     _seed_critique_fit_cache(
         incumbent, models_dir, responses_path, fit_cache_dir, fit_kwargs
     )
-    _write_critique_context(
+    context_text = _write_critique_context(
         critique_dir,
         incumbent,
         models_dir,
@@ -183,43 +286,50 @@ def _spawn_critique_agent(
         n_replicates=n_replicates,
     )
 
-    # Name critique_dir explicitly: the agent runs from agent_root (opencode's
-    # session directory, whose opencode.json is the permission config in force
-    # — the launcher pins PWD to it), NOT from critique_dir, so a bare "in this
-    # directory" leaves it guessing where CRITIQUE_CONTEXT.md is — which it
-    # sometimes gets wrong, then writes no statistics. Same fix as the
-    # candidate agent.
+    # The agent runs from agent_root (opencode's session directory, whose
+    # opencode.json is the permission config in force — the launcher pins PWD
+    # to it); the prompt names critique_dir explicitly.
     cwd = agent_root if agent_root is not None else REPO_ROOT
-    prompt = (
-        f"{_CRITIQUE_PROMPT.read_text(encoding='utf-8')}\n\n"
-        f"---\n\nYour working directory for this critique is `{critique_dir}`.\n"
-        f"Read `CRITIQUE_CONTEXT.md` there, then write your test statistics into "
-        f"`{critique_dir}/test_stats/` (one `test_statistic(df)` per file). You do "
-        f"NOT need to run the harness or write `critiques.md` — the pipeline runs the "
-        f"posterior-predictive check over your statistics and records the results.\n\n"
-        f"Use the **bash** tool with a heredoc to create each file. Example:\n"
-        f"```bash\n"
-        f"mkdir -p {critique_dir}/test_stats\n"
-        f"cat << 'EOF' > {critique_dir}/test_stats/my_statistic.py\n"
-        f"def test_statistic(df): ...\n"
-        f"EOF\n"
-        f"```\n"
-        f"Do NOT use the `write` tool — use `bash` with `cat << 'EOF' > path`.\n"
-    )
-    log_path = critique_dir / "agent.jsonl"
-    success, _ = run_coding_agent(
-        prompt,
-        cwd=cwd,
-        log_path=log_path,
-        allowed_dirs=[critique_dir, models_dir, responses_path.parent],
-        timeout_secs=agent_timeout_sec,
-        backend=backend,
-        model=agent_model,
-        usage_label="inner:critique",
-    )
+    test_stats_dir = critique_dir / "test_stats"
+    n_attempts = 1 + MAX_CRITIQUE_RETRIES
+    usable: List[Path] = []
+    attempts_made = 0
+    for attempt in range(n_attempts):
+        attempts_made = attempt + 1
+        success, _ = run_coding_agent(
+            _build_critique_prompt(critique_dir, context_text, attempt=attempt),
+            cwd=cwd,
+            log_path=critique_dir / _critique_log_name(attempt),
+            allowed_dirs=[critique_dir, models_dir, responses_path.parent],
+            timeout_secs=agent_timeout_sec,
+            backend=backend,
+            model=agent_model,
+            usage_label="inner:critique",
+        )
+        usable = _usable_test_statistics(test_stats_dir)
+        if usable:
+            break
+        print(
+            f"  [critique] attempt {attempts_made}/{n_attempts}: the critique agent "
+            f"wrote no usable test statistic in {test_stats_dir} (agent "
+            f"{'succeeded' if success else 'failed'})"
+            + (" — retrying" if attempts_made < n_attempts else ""),
+            flush=True,
+        )
+    if not usable:
+        reason = (
+            f"the critique agent wrote no usable test statistic in {n_attempts} attempts"
+        )
+        print(f"  [critique] NO CRITIQUE this round: {reason}", flush=True)
+        return {
+            "status": CRITIQUE_STATUS_NONE,
+            "incumbent": incumbent,
+            "attempts": attempts_made,
+            "reason": reason,
+        }
     # Run the PPC harness ourselves so the results are always persisted, rather
     # than relying on the agent to have run it.
-    _persist_critique_results(
+    result = _persist_critique_results(
         critique_dir,
         incumbent,
         models_dir=models_dir,
@@ -229,7 +339,14 @@ def _spawn_critique_agent(
         n_replicates=n_replicates,
         significance_alpha=significance_alpha,
     )
-    return success
+    return {
+        "status": CRITIQUE_STATUS_CRITIQUED,
+        "incumbent": incumbent,
+        "attempts": attempts_made,
+        "n_statistics": int(result["n_test_statistics"]),
+        "n_significant": int(result["n_significant"]),
+        "n_significant_fdr": int(result["n_significant_fdr"]),
+    }
 
 
 def _format_critiques_md(result: Dict[str, Any]) -> str:
@@ -266,68 +383,28 @@ def _format_critiques_md(result: Dict[str, Any]) -> str:
     return "\n".join(lines) + "\n"
 
 
-def _incumbent_response_col(incumbent: str, models_dir: Path) -> str:
-    """Name of the incumbent model's observed-response ``pm.Data`` column."""
-    from src.models.model_loading import load_pymc_model, observed_response_data
+def _usable_test_statistics(test_stats_dir: Path) -> List[Path]:
+    """The agent's statistic files that pass the import gate, sorted.
 
-    return observed_response_data(load_pymc_model(incumbent, models_dir))
-
-
-def _write_default_test_statistics(
-    test_stats_dir: Path, responses_path: Path, response_col: str
-) -> int:
-    """Write a deterministic fallback battery of PPC test statistics.
-
-    Used when the critique agent proposes none, so the posterior-predictive
-    critique still runs instead of silently producing nothing. The statistics are
-    generic discrepancy probes built from the data's *actual* columns — the
-    marginal response rate, and the response's linear association with each
-    varying numeric feature — so they work for any project's responses. Returns
-    the number of statistic files written.
+    A file importing outside the candidate allowlist is deleted (loudly): it
+    could reach the project's feature code, which the critique must not see.
+    An absent directory simply has no statistics.
     """
-    import pandas as pd
-
-    test_stats_dir.mkdir(parents=True, exist_ok=True)
-    df = pd.read_csv(responses_path)
-    if response_col not in df.columns:
-        raise ValueError(
-            f"response column {response_col!r} not in {responses_path}; "
-            f"columns: {list(df.columns)}"
-        )
-    numeric = df.select_dtypes(include="number")
-    # Probe each varying numeric feature, but not the response itself, an id
-    # column, or the response's mechanical complement.
-    id_like = {response_col, "chose_right", "participant_id", "trial_index"}
-    feature_cols = [
-        c
-        for c in numeric.columns
-        if c not in id_like and float(numeric[c].std(skipna=True) or 0.0) > 0.0
-    ]
-
-    stats: Dict[str, tuple[str, str]] = {
-        "fallback_mean_response": (
-            "Marginal mean of the response column (the overall choice rate).",
-            f'    return float(df["{response_col}"].astype(float).mean())',
-        )
-    }
-    for col in feature_cols:
-        stats[f"fallback_corr_{col}"] = (
-            f"Pearson correlation between the response and the `{col}` feature.",
-            f'    x = df["{response_col}"].astype(float)\n'
-            f'    y = df["{col}"].astype(float)\n'
-            "    if x.std() == 0 or y.std() == 0:\n"
-            "        return 0.0\n"
-            "    return float(np.corrcoef(x, y)[0, 1])",
-        )
-    for name, (desc, body) in stats.items():
-        code = (
-            f"# name: {name}\n"
-            f"# description: {desc}\n"
-            "def test_statistic(df):\n"
-            f"{body}\n"
-        )
-        (test_stats_dir / f"{name}.py").write_text(code, encoding="utf-8")
-    return len(stats)
+    if not test_stats_dir.is_dir():
+        return []
+    usable: List[Path] = []
+    for stat_file in sorted(test_stats_dir.glob("*.py")):
+        forbidden = check_forbidden_imports(stat_file.read_text(encoding="utf-8"))
+        if forbidden:
+            print(
+                f"  [critique] removing {stat_file.name}: forbidden import "
+                f"{', '.join(forbidden)}",
+                flush=True,
+            )
+            stat_file.unlink()
+            continue
+        usable.append(stat_file)
+    return usable
 
 
 def _persist_critique_results(
@@ -340,40 +417,30 @@ def _persist_critique_results(
     fit_kwargs: Dict[str, Any],
     n_replicates: int,
     significance_alpha: float,
-) -> None:
+) -> Dict[str, Any]:
     """Run the PPC harness over the agent's ``test_stats/`` and persist the results.
 
     Writes ``ppc_results.json`` (the per-statistic p-values) and a derived
-    ``critiques.md``. This runs deterministically in-process so the critique
-    results are always recorded — it does not depend on the agent having run the
-    harness. The fit is reused from ``fit_cache_dir`` (no resampling).
+    ``critiques.md``, and returns the harness's result dict. This runs
+    deterministically in-process so the critique results are always recorded
+    — it does not depend on the agent having run the harness. The fit is
+    reused from ``fit_cache_dir`` (no resampling).
 
-    If the agent proposed no usable statistics, a deterministic default battery is
-    written first (loudly) so the critique never silently produces nothing.
+    Requires at least one usable statistic and raises otherwise: there is no
+    pipeline-written fallback battery. (There used to be one; under the
+    raw-only schema it reduced to the marginal choice rate, which any fitted
+    Bernoulli likelihood matches by construction, so a critique agent that had
+    written nothing looked like one that had found nothing — through a whole
+    sweep.) The caller retries the agent and then records "no critique".
     """
     from src.critique.ppc import run_ppc_for_model
 
     test_stats_dir = critique_dir / "test_stats"
-    if not test_stats_dir.is_dir() or not any(test_stats_dir.glob("*.py")):
-        print(
-            "  [critique] agent wrote no test statistics — using default battery",
-            flush=True,
+    if not _usable_test_statistics(test_stats_dir):
+        raise ValueError(
+            f"no usable test statistic in {test_stats_dir}; the critique agent "
+            "must write at least one before the PPC harness can run"
         )
-        response_col = _incumbent_response_col(incumbent, models_dir)
-        n_default = _write_default_test_statistics(
-            test_stats_dir, responses_path, response_col
-        )
-        print(f"  [critique] wrote {n_default} default test statistics", flush=True)
-
-    for stat_file in sorted(test_stats_dir.glob("*.py")):
-        forbidden = check_forbidden_imports(stat_file.read_text(encoding="utf-8"))
-        if forbidden:
-            print(
-                f"  [critique] removing {stat_file.name}: forbidden import "
-                f"{', '.join(forbidden)}",
-                flush=True,
-            )
-            stat_file.unlink()
 
     result = run_ppc_for_model(
         incumbent,
@@ -396,6 +463,7 @@ def _persist_critique_results(
         "statistics show a significant discrepancy",
         flush=True,
     )
+    return result
 
 
 def _run_critique_round(
@@ -414,16 +482,20 @@ def _run_critique_round(
     backend: Optional[str],
     agent_model: Optional[str] = None,
     agent_root: Optional[Path] = None,
-) -> Optional[Path]:
-    """Critique the current incumbent before a candidate round; return critiques.md.
+) -> CritiqueRoundOutcome:
+    """Critique the current incumbent before a candidate round.
 
     The incumbent is the model the loop would export right now
     (``_best_exportable_model``), so the critique targets the model that is
     actually carried, not a posterior argmax that may be unreliable.
 
-    Returns the path to the round's ``critiques.md`` when the critique agent
-    produced one, else ``None`` (with a loud warning) so a failed critique skips
-    forward rather than aborting the whole inner loop.
+    Returns the round's ``critiques.md`` (to feed the candidate agents) with a
+    ``"critiqued"`` status when the agent's statistics were scored; otherwise
+    no path and a ``"no_critique"`` status carrying the reason — the agent
+    wrote no usable statistic in any attempt, or the critique crashed (a
+    critique failure must not abort a long inner-loop run, but it is recorded,
+    never swallowed). A permission denial is re-raised: that is a misconfigured
+    launch every later agent would hit too.
     """
     # Lazy import to avoid circular dependency (pymc_orchestrator imports us).
     from src.pipelines.inner_loop.scoring import _best_exportable_model
@@ -432,7 +504,7 @@ def _run_critique_round(
     critique_dir = round_dir / "critique"
     print(f"  [critique] critiquing incumbent {incumbent!r}", flush=True)
     try:
-        _spawn_critique_agent(
+        status = _spawn_critique_agent(
             critique_dir,
             incumbent,
             models_dir=models_dir,
@@ -452,14 +524,22 @@ def _run_critique_round(
         # would be denied the same way. Let it kill the run.
         raise
     except Exception as e:  # a critique failure must not kill a long inner-loop run
-        print(f"  [critique] skipped — {type(e).__name__}: {e}", flush=True)
-        return None
+        reason = f"{type(e).__name__}: {e}"
+        print(f"  [critique] NO CRITIQUE this round — {reason}", flush=True)
+        return CritiqueRoundOutcome(
+            None,
+            {"status": CRITIQUE_STATUS_NONE, "incumbent": incumbent, "reason": reason},
+        )
 
+    if status["status"] != CRITIQUE_STATUS_CRITIQUED:
+        print(
+            "  [critique] candidates run without a critique this round", flush=True
+        )
+        return CritiqueRoundOutcome(None, status)
     critiques_md = critique_dir / "critiques.md"
     if not critiques_md.exists():
-        print(
-            "  [critique] agent produced no critiques.md — candidates run without it",
-            flush=True,
+        raise RuntimeError(
+            f"critique status is {status['status']!r} but {critiques_md} was not "
+            "written; _persist_critique_results must write it whenever it scores"
         )
-        return None
-    return critiques_md
+    return CritiqueRoundOutcome(critiques_md, status)

@@ -21,7 +21,8 @@ Layout under ``results_dir``::
         attempted_hypotheses.jsonl  # ledger: every candidate/prune event
         iter_0/candidate_0/     # per-candidate agent working dirs
         model_posterior.json    # ELPD-LOO posterior over models/
-        history.json            # best model + posterior after every scoring step
+        history.json            # best model + posterior after every scoring step,
+                                # with each round's critique status
         best_model.py           # copy of the exported (best reliable) model
         report.md
 """
@@ -65,6 +66,7 @@ from src.pipelines.inner_loop.critique_round import (
     CRITIQUE_PPC_REPLICATES,
     CRITIQUE_SIGNIFICANCE_ALPHA,
     _run_critique_round,
+    critique_disabled_status,
 )
 from src.pipelines.inner_loop.scoring import (
     DEFAULT_COMPLEXITY_PRIOR_CONST,
@@ -144,6 +146,9 @@ def run_pymc_inner_loop(
         When True, run a CriticAL posterior-predictive critique of the incumbent
         (best) model before each candidate round and feed the resulting
         ``critiques.md`` to the candidate agents (see ``src/critique/ppc.py``).
+        A critique agent that writes no usable statistic is retried once; a
+        round can end with no critique, and every round's ``history.json``
+        entry records its critique status either way.
     n_critique_proposals, critique_significance_alpha, n_critique_replicates
         Test statistics the critique agent proposes per round, the raw p-value
         threshold for a significant discrepancy, and the posterior-predictive replicates
@@ -221,8 +226,9 @@ def run_pymc_inner_loop(
     for iteration in range(max_iterations):
         round_dir = results_dir / f"iter_{iteration}"
         critique_path: Optional[Path] = None
+        critique_status = critique_disabled_status()
         if enable_critique:
-            critique_path = _run_critique_round(
+            critique = _run_critique_round(
                 round_dir,
                 responses_path=responses_path,
                 models_dir=models_dir,
@@ -238,6 +244,8 @@ def run_pymc_inner_loop(
                 agent_model=agent_model,
                 agent_root=agent_root,
             )
+            critique_path = critique.critiques_md
+            critique_status = critique.status
 
         round_context = f"{ledger_context} round {iteration}".strip()
         round_results: List[Dict[str, str]] = []
@@ -368,7 +376,13 @@ def run_pymc_inner_loop(
             )
         comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
         _record_history_step(
-            history, results_dir, posterior, comparison, iteration=iteration, pruned=pruned
+            history,
+            results_dir,
+            posterior,
+            comparison,
+            iteration=iteration,
+            pruned=pruned,
+            critique=critique_status,
         )
 
     if rounds_abandoned == max_iterations and max_iterations > 0:
