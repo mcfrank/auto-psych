@@ -252,6 +252,7 @@ def _spawn_critique_agent(
     backend: Optional[str],
     agent_model: Optional[str] = None,
     agent_root: Optional[Path] = None,
+    notes_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Critique the incumbent: seed its fit, write context, spawn the critique agent.
 
@@ -306,6 +307,7 @@ def _spawn_critique_agent(
             model=agent_model,
             usage_label="inner:critique",
             stock=True,  # a subject of the experiment: none of the user's Claude setup
+            memory_dir=notes_dir,  # notes shared with later agents of this run only
         )
         usable = _usable_test_statistics(test_stats_dir)
         if usable:
@@ -483,6 +485,7 @@ def _run_critique_round(
     backend: Optional[str],
     agent_model: Optional[str] = None,
     agent_root: Optional[Path] = None,
+    notes_dir: Optional[Path] = None,
 ) -> CritiqueRoundOutcome:
     """Critique the current incumbent before a candidate round.
 
@@ -519,6 +522,7 @@ def _run_critique_round(
             backend=backend,
             agent_model=agent_model,
             agent_root=agent_root,
+            notes_dir=notes_dir,
         )
     except AgentPermissionDenied:
         # A misconfigured launch, not a critique failure: every later agent

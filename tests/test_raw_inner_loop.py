@@ -134,3 +134,22 @@ def test_candidate_context_has_no_precomputed_feature_references(
     for col in ("rep_motifs", "occ_n20", "multiscale_imbalance"):
         assert col not in context
     assert "chose_left" in context
+
+
+def test_the_inner_loop_gets_its_runs_own_notes_dir(tmp_path, monkeypatch):
+    """Claude agents keep notes for later agents of the same run (every
+    experiment of it), and never see another run's: each run's notes live in
+    that run's own directory, beside its experiment<N>/ trees."""
+    monkeypatch.setattr(mlr, "_pooled_response_rows", lambda e: [_raw_row()])
+    captured = _patch_inner_loop(monkeypatch)
+
+    notes = []
+    for run in ("run_a", "run_b"):
+        exp_dir = _setup_exp_dir(tmp_path / run, [_raw_row()])
+        mlr.run_inner_model_loop_programmatic(
+            exp_dir, max_iterations=0, candidate_count=0,
+            project_id="subjective_randomness",
+        )
+        notes.append(captured["inner_kwargs"]["agent_notes_dir"])
+        assert notes[-1] == exp_dir.parent / "agent_notes"
+    assert notes[0] != notes[1]

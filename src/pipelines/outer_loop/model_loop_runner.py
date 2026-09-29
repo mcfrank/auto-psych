@@ -47,6 +47,18 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict[str, str]]:
     return rows
 
 
+def agent_notes_dir(exp_dir: Path) -> Path:
+    """Where a run's Claude agents keep notes for later agents of the same run.
+
+    One directory per run, beside its ``experiment<N>/`` trees (the run is
+    ``exp_dir.parent``, as for the pooled responses above), so notes carry
+    across the run's rounds and experiments and are given to no other run's
+    agents. Agents run without a read sandbox, so one that searches the
+    filesystem can still find another run's notes.
+    """
+    return exp_dir.parent / "agent_notes"
+
+
 def _protected_seed_names(project_id: str, models_dir: Path) -> set[str]:
     """The project's seed models present in ``models_dir``.
 
@@ -289,6 +301,7 @@ def run_inner_model_loop_programmatic(
     result = run_pymc_inner_loop(
         responses_path,
         loop_dir,
+        agent_notes_dir=agent_notes_dir(exp_dir),
         seed_models_dir=seed_models_dir,
         max_iterations=max_iterations,
         candidate_count=candidate_count,

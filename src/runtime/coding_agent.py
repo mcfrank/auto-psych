@@ -152,7 +152,13 @@ def _link_opencode_credentials(inherited_data_home: Path, private_data_home: Pat
 
 
 def child_environment(
-    *, backend: str, cwd: Path, log_path: Path, env: Optional[dict], stock: bool = False
+    *,
+    backend: str,
+    cwd: Path,
+    log_path: Path,
+    env: Optional[dict],
+    stock: bool = False,
+    memory_dir: Optional[Path] = None,
 ) -> Dict[str, str]:
     """The environment the agent subprocess runs with.
 
@@ -165,7 +171,7 @@ def child_environment(
     """
     child = dict(os.environ if env is None else env)
     child["PWD"] = str(Path(cwd).resolve())
-    if backend == "claude" and stock:
+    if backend == "claude" and stock and memory_dir is None:
         child.update(STOCK_CLAUDE_ENV)
     if backend == "opencode":
         inherited = Path(child.get("XDG_DATA_HOME") or Path.home() / ".local" / "share")
@@ -278,8 +284,10 @@ STOCK_CLAUDE_ARGS = (
     "--strict-mcp-config",                 # no MCP servers unless --mcp-config names them
     "--no-session-persistence",            # no session transcripts in ~/.claude/projects
 )
-# Auto-memory has no flag; this variable removes it. With it on, every agent of
-# a cell (they share a working directory) would share one memory directory.
+# Auto-memory has no flag; this variable removes it. A stock agent keeps it only
+# when given a memory_dir: its notes then live in that directory (the loop
+# passes one per run) instead of the user's ~/.claude, where every run sharing
+# a working directory would share them.
 STOCK_CLAUDE_ENV = {"CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}
 
 
@@ -291,6 +299,7 @@ def build_command(
     model: Optional[str],
     extra_args: Sequence[str] = (),
     stock: bool = False,
+    memory_dir: Optional[Path] = None,
 ) -> list[str]:
     """Build the CLI argv for the given backend.
 
@@ -306,7 +315,9 @@ def build_command(
     for a long-running supervisor session). ``stock`` runs Claude without the
     user's personal configuration (see ``STOCK_CLAUDE_ARGS``); codex and
     opencode have no user-level instruction files here, so it adds nothing to
-    their command lines.
+    their command lines. ``memory_dir`` is where a Claude agent keeps its
+    auto-memory (notes for later sessions); codex and opencode have no
+    equivalent.
     """
     if backend not in _DEFAULT_MODEL:
         raise ValueError(f"unknown coding-agent backend: {backend!r}")
@@ -323,6 +334,8 @@ def build_command(
             cmd += ["--add-dir", str(d)]
         if stock:
             cmd += STOCK_CLAUDE_ARGS
+        if memory_dir is not None:
+            cmd += ["--settings", json.dumps({"autoMemoryDirectory": str(memory_dir)})]
         cmd += ["--model", model, *extra_args, "-p"]
         if not prompt_via_stdin(backend, prompt):
             cmd.append(prompt)
@@ -585,11 +598,13 @@ def run_coding_agent(
     usage_label: str = "coding_agent",
     extra_args: Sequence[str] = (),
     stock: bool = False,
+    memory_dir: Optional[Path] = None,
 ) -> tuple[bool, str]:
     """Spawn the selected coding agent, stream output to ``log_path``.
 
     ``stock=True`` runs a Claude agent with none of the user's personal
-    configuration (``STOCK_CLAUDE_ARGS``, ``STOCK_CLAUDE_ENV``).
+    configuration (``STOCK_CLAUDE_ARGS``, ``STOCK_CLAUDE_ENV``);
+    ``memory_dir`` gives it an auto-memory there instead of none.
 
     Returns ``(success, result_text)``. For Claude, success and the final
     result come from the terminal ``result`` stream-json event; for opencode
@@ -621,10 +636,12 @@ def run_coding_agent(
         model=model,
         extra_args=extra_args,
         stock=stock,
+        memory_dir=memory_dir,
     )
     log_path.parent.mkdir(parents=True, exist_ok=True)
     child_env = child_environment(
-        backend=backend, cwd=cwd, log_path=log_path, env=env, stock=stock
+        backend=backend, cwd=cwd, log_path=log_path, env=env, stock=stock,
+        memory_dir=memory_dir,
     )
     if backend == "opencode":
         granted = ensure_opencode_external_grants(cwd, list(allowed_dirs or []))
