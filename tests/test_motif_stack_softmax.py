@@ -40,10 +40,8 @@ import pytest
 from src.models.model_loading import load_pymc_model, pm_data_inputs
 from src.subjective_randomness.model_families import motif_stack as viterbi_twin
 from src.subjective_randomness.model_families import motif_stack_softmax as softmax_twin
-from src.subjective_randomness.model_recovery import (
-    p_left_fixed_params,
-    p_left_model_family,
-)
+from src.subjective_randomness.holdout_data import p_left_fixed_params
+from tests.recovery_fixtures import p_left_model_family
 
 MODEL_DIR = (
     Path(__file__).resolve().parent.parent

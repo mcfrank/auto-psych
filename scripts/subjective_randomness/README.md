@@ -10,51 +10,12 @@ that says which of them are active live in
 `src/subjective_randomness/model_families/`. Data (stimuli and responses) lives
 under `data/subjective_randomness/`.
 
-## Closed-Ended Model Recovery
-
-*Closed-ended model recovery* asks: if a known model generated the data, does
-the inner model loop — comparing a *closed* set of models, with no agent-proposed candidates — put its posterior mass back on
-the true model? (The model set throughout this harness is the frozen recovery
-registry, `src/subjective_randomness/pymc_model_families` — not the live seed
-pool; see Holdout Recovery below for the distinction.)
-
-For each generating seed model, the pipeline fixes that model's PyMC parameters,
-samples synthetic choices over the stimuli, runs the inner loop
-(`max_iterations=0`) on the seed set, and records the recovered posterior over
-models. The output is a generating-model × recovered-model confusion matrix; a
-well-behaved pipeline concentrates posterior mass on the diagonal.
-
-```bash
-uv run python scripts/subjective_randomness/model_recovery.py \
-  --config scripts/subjective_randomness/configs/model_recovery.yaml \
-  --out data/subjective_randomness/model_recovery/confusion.json \
-  --tidy-csv data/subjective_randomness/model_recovery/confusion.csv
-```
-
-The JSON holds the full result (per generating model: recovered posterior,
-ELPD-LOO, and the best model). The tidy CSV has one row per
-`(generating_model, recovered_model)` cell — columns `generating_model,
-recovered_model, posterior, elpd_loo, is_true_model, is_best_model` — which
-drops straight into a confusion-matrix heatmap.
-
-The config's `generating_models` key selects which models generate data and
-their fixed parameters; omit it to recover every seed model with its family's
-default parameters. MCMC settings (`--draws`, `--tune`, `--chains`) and
-`--n-participants` can be overridden on the command line.
-
-By default the synthetic data is generated from the **PyMC seed model** itself
-(`generator: pymc`), so the true model and one fitted candidate are identical.
-Set `generator: model_family` (or pass `--generator model_family`) to instead
-generate from the pure-Python `model_families` family of the same name. Its
-functional form differs from the PyMC fit, making recovery a harder, more honest
-test of whether the loop can re-identify the generating process.
-
 ## Holdout Recovery — the Full Agentic Loop vs. a Held-Out Ground Truth
 
-Closed-ended recovery (above) keeps the true model *in* the candidate set.
-*Holdout recovery* removes it: each ground-truth model in turn generates every
-synthetic response from fixed parameters, while the full agentic outer+inner
-loop starts from the live seed pool and tries to recover the held-out process.
+*Holdout recovery* keeps the true model *out of* the candidate set: each
+ground-truth model in turn generates every synthetic response from fixed
+parameters, while the full agentic outer+inner loop starts from the live seed
+pool and tries to recover the held-out process.
 
 Ground truths come from the recovery registry
 (`src/subjective_randomness/pymc_model_families`, the config's

@@ -203,7 +203,6 @@ _TREE_FORBIDDEN_ANCHORED=(
   "src/subjective_randomness/features.py"
   "src/subjective_randomness/sequence_stats.py"
   "src/subjective_randomness/stimulus_design.py"
-  "src/subjective_randomness/model_recovery.py"
 )
 # CLAUDE.md / AGENTS.md: agent CLIs load them into every session, and the
 # project's CLAUDE.md names the held-out model.
