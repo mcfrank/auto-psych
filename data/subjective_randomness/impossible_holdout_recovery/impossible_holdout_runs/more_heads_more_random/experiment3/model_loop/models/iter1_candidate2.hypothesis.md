@@ -1,1 +1,0 @@
-People evaluate the randomness of a sequence based on the square root of the number of heads it contains, reflecting a diminishing sensitivity to each additional head, and their choices are subject to a constant lapse rate representing occasional random guessing.

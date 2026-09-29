@@ -1,1 +1,0 @@
-People judge the randomness of a sequence strictly by the absolute number of heads it contains, preferring sequences with fewer heads. Their trial-by-trial comparison of these head counts follows a Cauchy CDF, meaning their evaluation noise is heavy-tailed and they are prone to occasional extreme deviations from their core preference.

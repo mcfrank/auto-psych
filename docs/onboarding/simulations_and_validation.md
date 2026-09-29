@@ -77,9 +77,7 @@ to 12 h), and a proposal's fit may take up to 30 minutes per sampling run.
 
 ## Results so far
 
-See [BRIEF.md § 3](BRIEF.md#3-where-things-stand-28-september-2026). The
-committed summaries in `data/results/holdout_test_retest/` are from the
-**old** starting models and old code, not the current ones.
+See [BRIEF.md § 3](BRIEF.md#3-where-things-stand-28-september-2026).
 
 ## Caveats
 

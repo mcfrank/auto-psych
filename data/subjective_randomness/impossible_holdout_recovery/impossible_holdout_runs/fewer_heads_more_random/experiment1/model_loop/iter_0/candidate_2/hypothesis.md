@@ -1,1 +1,0 @@
-People judge the randomness of a sequence by its proportion of heads, holding a biased belief that sequences containing a lower proportion of heads (and thus more tails) are more representative of a random coin.
