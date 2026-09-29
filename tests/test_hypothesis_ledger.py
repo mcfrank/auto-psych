@@ -17,7 +17,7 @@ from src.pipelines.inner_loop.hypothesis_ledger import (
     LEDGER_FILENAME,
     HypothesisLedger,
     LedgerEntry,
-    one_line,
+    collapse_whitespace,
 )
 
 
@@ -115,8 +115,76 @@ def test_render_lists_retired_hypotheses_under_the_do_not_re_propose_heading(tmp
 
     assert text.startswith("# Already tried")
     assert "do not re-propose" in text.lower()
-    assert "| runs | pruned (experiment1 round 0): 20.0 nats behind seed (4.0× dse) | People dislike long runs. |" in text
-    assert "live" not in text.split("|", 1)[1]
+    # One heading per retired model, with the outcome's detail and the
+    # hypothesis as paragraphs of their own — not a table, whose cells would
+    # force a hypothesis onto a single line.
+    assert (
+        "### runs — pruned (experiment1 round 0)\n"
+        "\n"
+        "**Outcome:** 20.0 nats behind seed (4.0× dse)\n"
+        "\n"
+        "**Hypothesis:** People dislike long runs.\n"
+    ) in text
+    assert "| runs |" not in text
+    assert "live" not in text.split("###", 1)[1]
+
+
+def test_render_marks_an_entry_that_recorded_no_hypothesis(tmp_path):
+    """A slot whose agent wrote nothing has no hypothesis text; say so rather than leave a bare label."""
+    ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
+    ledger.append(
+        _entry("empty", "rejected", detail="no candidate.py written", hypothesis="",
+               context="experiment1 round 1 candidate 2 lens 2")
+    )
+    text = ledger.render_markdown(live_names=set())
+    assert "**Outcome:** no candidate.py written\n" in text
+    assert "**Hypothesis:** *(none recorded)*\n" in text
+
+
+def test_render_round_trips_a_long_hypothesis_intact(tmp_path):
+    """append → entries() → render_markdown loses nothing of a 2000-character hypothesis."""
+    ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
+    hypothesis = " ".join(
+        f"Claim {i}: people weigh feature {i} against its complement | not alone."
+        for i in range(40)
+    )
+    assert len(hypothesis) > 2000
+    ledger.append(
+        _entry("big", "rejected", detail="predicts like existing model seed (rmse 0.001)",
+               hypothesis=hypothesis, context="experiment1 round 2 candidate 1 lens 1")
+    )
+
+    [entry] = ledger.entries()
+    assert entry.hypothesis == hypothesis
+    text = ledger.render_markdown(live_names=set())
+    assert hypothesis in text
+    assert "…" not in text
+
+
+def test_a_ledger_written_before_full_hypotheses_still_parses(tmp_path):
+    """Earlier ledgers hold hypotheses cut to 240 characters ending in '…'.
+
+    The key set is unchanged, so experiment N+1 inherits them as they are.
+    """
+    inherited = tmp_path / "prev" / LEDGER_FILENAME
+    inherited.parent.mkdir()
+    old_line = json.dumps(
+        {
+            "name": "old",
+            "outcome": "pruned",
+            "detail": "30.0 nats behind seed (6.0× dse)",
+            "hypothesis": "People judge " + "x" * 226 + "…",
+            "context": "experiment1 round 0",
+        },
+        ensure_ascii=False,
+    )
+    inherited.write_text(old_line + "\n", encoding="utf-8")
+
+    ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=inherited)
+
+    [entry] = ledger.entries()
+    assert entry.name == "old" and entry.hypothesis.endswith("…")
+    assert "### old — pruned (experiment1 round 0)" in ledger.render_markdown(live_names=set())
 
 
 def test_render_with_nothing_retired_says_so(tmp_path):
@@ -126,9 +194,11 @@ def test_render_with_nothing_retired_says_so(tmp_path):
     assert "No earlier hypothesis has been retired yet" in text
 
 
-def test_one_line_collapses_whitespace_and_truncates():
-    assert one_line("People  judge\nby runs.  Then more.") == "People judge by runs. Then more."
-    long = "word " * 100
-    shortened = one_line(long, limit=40)
-    assert len(shortened) <= 41 and shortened.endswith("…")
-    assert one_line("   ") == ""
+def test_collapse_whitespace_joins_lines_and_never_truncates():
+    assert collapse_whitespace("People  judge\nby runs.\n\nThen more.") == (
+        "People judge by runs. Then more."
+    )
+    assert collapse_whitespace("   ") == ""
+    long = " ".join(f"Sentence {i} of a long hypothesis." for i in range(80))
+    assert len(long) > 2000
+    assert collapse_whitespace(long) == long

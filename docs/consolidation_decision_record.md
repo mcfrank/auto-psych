@@ -272,6 +272,29 @@ the coupling concern above is answered by keeping the repair a prompt-only
 mechanism — admission itself is unchanged and the novelty gate has no
 exemption.
 
+### The ledger stores hypotheses in full (`hypothesis_ledger.collapse_whitespace`)
+
+Until P37, `_record` passed every hypothesis through `one_line(text,
+limit=240)` before the JSONL line was written, so a hypothesis longer than 240
+characters was cut with `…` *in the ledger itself* — the full text was gone,
+not merely hidden — and the brief's markdown table could only ever show one
+line per retired model. That is harmless while the ledger is a blacklist, and
+load-bearing once candidate agents choose a refinement target from these
+descriptions (P42).
+
+P37 changes the write path and the rendering, and nothing else:
+
+- `_record` stores the hypothesis with whitespace collapsed and no length
+  limit (`collapse_whitespace`; `one_line` and its limit are gone).
+- `render_markdown` renders one heading per retired model with the outcome
+  detail and the full hypothesis as paragraphs of their own, instead of a
+  table whose cells forced single lines and rewrote `|` characters.
+- `LedgerEntry` gains no field: `from_json` requires an exact key-set match,
+  so a new field would make every inherited ledger unreadable and
+  `HypothesisLedger.create` would raise on the file experiment N-1 carried.
+  A ledger written before P37 (its hypotheses ending in `…`) parses and
+  renders unchanged.
+
 ### No fallback critique battery; retry once, then no critique (`critique_round.py`)
 
 In the September 2026 20-cell sweep (`sweep_rerun`) the critique agent never
