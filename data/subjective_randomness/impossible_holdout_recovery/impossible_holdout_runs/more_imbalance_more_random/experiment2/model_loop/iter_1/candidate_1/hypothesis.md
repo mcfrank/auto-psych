@@ -1,1 +1,0 @@
-People judge sequence randomness by evaluating the raw numerical difference between the counts of the two outcomes, perceiving sequences with a larger absolute difference between the number of heads and tails as more random.

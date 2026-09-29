@@ -7,8 +7,8 @@ The importable library code lives in `src/subjective_randomness/`; these are the
 runnable command-line entry points. The PyMC model families and the manifest
 that says which of them are active live in
 `src/subjective_randomness/pymc_model_families/`, their pure-Python twins in
-`src/subjective_randomness/model_families/`. Data (stimuli and responses) lives
-under `data/subjective_randomness/`.
+`src/subjective_randomness/model_families/`. The examples below write their
+results under `data/subjective_randomness/`.
 
 ## Holdout Recovery — the Full Agentic Loop vs. a Held-Out Ground Truth
 

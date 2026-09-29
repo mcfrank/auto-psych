@@ -1,1 +1,0 @@
-People judge which sequence looks more random by focusing on the longest unbroken run of identical outcomes (e.g., five heads in a row). The sequence with the shorter maximum run length appears more random, because long streaks are the most perceptually salient violation of randomness expectations. All other structural features of the sequence are ignored.

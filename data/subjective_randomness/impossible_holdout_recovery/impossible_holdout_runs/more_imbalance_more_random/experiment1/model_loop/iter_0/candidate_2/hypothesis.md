@@ -1,1 +1,0 @@
-People judge sequence randomness purely based on the relative frequencies of outcomes: sequences with a smaller imbalance between the number of heads and tails are perceived as more random.

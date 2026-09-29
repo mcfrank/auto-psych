@@ -47,6 +47,6 @@ computes its own features via its `compute_features` hook):
 
 ```bash
 uv run python -m src.model_comparison.posterior \
-  --responses data/subjective_randomness/responses.csv \
+  --responses path/to/responses.csv \
   --models-dir src/subjective_randomness/pymc_model_families
 ```

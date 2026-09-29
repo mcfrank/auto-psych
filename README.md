@@ -251,7 +251,7 @@ stacking weights remain a report field in `model_posterior.json`).
 A live web explorer presents one page per **run**. A run is any directory under
 `data/` that holds experiments (or a single bare model loop) — for example
 `data/outer_loop/subjective_randomness` or
-`data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random`.
+`data/results/human_experiment/run1/subjective_randomness`.
 The sidebar is a directory tree of every run found; clicking one opens its page.
 
 Each run page stacks its experiments as collapsible panels (the first open).

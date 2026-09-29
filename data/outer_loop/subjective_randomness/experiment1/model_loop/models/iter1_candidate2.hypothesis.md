@@ -1,1 +1,0 @@
-People judge which sequence looks more random by detecting periodic structure: regular, cyclic patterns signal a non-random (patterned or deterministic) generator, so the sequence with lower periodicity is chosen as more random. Only this one perceptual cue — how strongly a sequence repeats itself at regular intervals — drives the choice; balance and run structure are ignored.
