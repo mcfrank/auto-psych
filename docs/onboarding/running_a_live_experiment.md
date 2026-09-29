@@ -107,11 +107,31 @@ label you choose.
   still skips the prompt, deletion included. Collect earlier results first
   (§ 11), or use `RUNS=` to pick other indices.
 
+**F. One number of participants.**
+
+- Prolific places used to come from the project's `prolific_config.yaml`
+  (the committed copy was a stale render: 40 places, 5 minutes), while
+  `--n-participants` set the design's N and the waiting target. A direct
+  `run.py --n-participants 5` recruited and paid 40 people.
+- Now `--n-participants` (`N_PARTICIPANTS`, from the config's
+  `prolific.participants`) is the only count: the study's places, the
+  design's N and the waiting target all come from it. The launchers no longer
+  write a count into `prolific_config.yaml`; a file that still has
+  `total_available_places` must agree, or `run.py` stops before any stage
+  with `… sets total_available_places: 40, but this run was started with
+  --n-participants 5 …`.
+- The stale render is no longer in the repository (the file is gitignored).
+  Any run with `--prolific-mode test` or `live` stops before any stage with
+  `No Prolific study settings at …` until the file is rendered, instead of
+  creating a study from built-in defaults ($0.50, 5 min). The launchers
+  render it for you; for direct calls run
+  `"$VENV_PY" scripts/outer_loop_live/_pilot_config.py <your.yaml> --render-only`
+  in the checkout the job runs from.
+
 ### Surprises that cost money or data if you don't know them
 
 | # | What | Consequence | What to do |
 |---|---|---|---|
-| F | When calling `run.py` directly (not via the launchers), **the number of Prolific places comes from the project's `prolific_config.yaml`, not from `--n-participants`**. The committed file says 40 places, 5 minutes, $12/h. `--n-participants` only sets the design's N and the waiting target. | E.g. `--n-participants 5` recruits and pays 40 people, and the pipeline moves on after 5. | Use the launchers. They write that file from your config, so the two numbers agree. |
 | G | The cost summary covers **Prolific only**. Language-model spending is recorded afterwards (`token_usage_summary.json`) but not estimated beforehand. | — | Check your opencode/Gemini or Anthropic billing separately. |
 | H | Payment is **automatic on completion** (`AUTOMATICALLY_APPROVE`). Set `completion_code_action: MANUALLY_REVIEW` under `prolific:` to review first. | Low-effort submissions are paid. | Deliberate choice: data quality is handled in analysis, not by withholding pay. |
 
@@ -305,12 +325,12 @@ Check `metadata.prolific_payload`: `reward` (cents), `total_available_places`,
 `external_study_url`. The staged page is under `…/experiment1/deployment/public/`.
 
 - The payload uses `src/pipelines/outer_loop/projects/subjective_randomness/prolific_config.yaml`
-  from the checkout. As committed, that file is a stale copy (40 places,
-  5 min). To see *your* config's numbers, write it into that file first with
-  `"$VENV_PY" scripts/outer_loop_live/_pilot_config.py <your.yaml> --render-only`.
-  That overwrites the tracked file; `git checkout` it afterwards if you like.
-  `--render-only` still validates the config, so a `live` config needs
-  `confirm_live_recruitment: true` or it stops.
+  from the checkout, which is not in the repository (§ 0 F): write your
+  config's settings into it first with
+  `"$VENV_PY" scripts/outer_loop_live/_pilot_config.py <your.yaml> --render-only`
+  (the file is gitignored). `--render-only` still validates the config, so a
+  `live` config needs `confirm_live_recruitment: true` or it stops. The
+  payload's `total_available_places` is `--n-participants`.
 - Re-running with the same output directory fails with "experiment directory
   already exists". Delete `$WORK_ROOT/rehearsal-dry` first.
 
@@ -560,8 +580,10 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
   alone with `EXPERIMENT=2` (all stages, new study), or the rest of the
   sequence with `EXPERIMENTS=2-<last>`. Relaunching the whole range stops at
   experiment 1 with `LiveStudyAlreadyRecorded` (§ 0 C).
-- `N_PARTICIPANTS` sets the design's N in a new experiment, so keep it equal
-  to the config's `participants`.
+- `N_PARTICIPANTS` is the number recruited, the design's N and the waiting
+  target (§ 0 F), so keep it equal to the config's `participants`. A run copy
+  rendered before 28 September 2026 still has `total_available_places` in its
+  `prolific_config.yaml`; a different `N_PARTICIPANTS` then stops the run.
 
 ## 11. Collecting and storing the results
 

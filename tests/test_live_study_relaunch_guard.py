@@ -86,6 +86,10 @@ def _live_args(**overrides) -> outer_run.Args:
 
 @pytest.fixture
 def live_run_dir(tmp_path, monkeypatch):
+    # The study settings a launcher renders (run.py checks them up front).
+    monkeypatch.setattr(prolific_client, "project_assets_dir", lambda pid: tmp_path / pid)
+    (tmp_path / PROJECT).mkdir()
+    (tmp_path / PROJECT / "prolific_config.yaml").write_text("reward: 100\n", encoding="utf-8")
     monkeypatch.setenv("AUTO_PSYCH_OUTPUT_DIR", str(tmp_path / "output"))
     monkeypatch.setenv("CODING_AGENT", "claude")
     exp_dir = orchestrator.experiment_dir(PROJECT, 1)

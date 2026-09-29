@@ -102,8 +102,10 @@ def main() -> None:
 
     # --- render the project's prolific_config.yaml from the prolific block.
     # Same resolution the pipeline's loader uses, so what we render is what runs.
+    # The participant count is NOT rendered: it reaches the pipeline once, as
+    # N_PARTICIPANTS -> --n-participants, which sets the study's places, the
+    # design's N and the collection target alike.
     rendered = {k: v for k, v in pro.items() if k != "participants"}
-    rendered["total_available_places"] = participants
     pcfg_path = project_assets_dir(project) / "prolific_config.yaml"
     if not check_only:
         if not pcfg_path.parent.is_dir():

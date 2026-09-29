@@ -387,7 +387,8 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 
 - `src/pipelines/outer_loop/projects/<id>/` = **assets the generic pipeline
   consumes** (`problem_definition.md`, `ground_truth_models.py`, `seed_models/`,
-  `evaluate_recovery.py`, `prolific_config.yaml`). Adding a project = adding an
+  `evaluate_recovery.py`, and a gitignored per-run `prolific_config.yaml`
+  rendered by the live launchers). Adding a project = adding an
   asset directory. This lives under `src/`, not the run-output `projects/` tree.
 - `src/subjective_randomness/` = a **standalone research library** for the
   subjective-randomness domain (model families, `stimulus_design.py`,
@@ -439,6 +440,11 @@ used by the active loops (per `README.md`).
   `src/runtime/prolific.py`; PAUSE is reversible, STOP is not) and raises if it
   cannot; the partial data are then modelled as before. A study that reached
   its target is left alone (its places are full).
+- **One participant count.** `--n-participants` sets the study's places, the
+  design's N and the collection target (`load_recruitment_config` in
+  `deployment/prolific.py`, checked in `run.py` before any stage). The rendered
+  `prolific_config.yaml` carries no count (a legacy `total_available_places`
+  must agree) and is never committed; a Prolific run without it raises.
 - **One live study per experiment.** The live job always passes `--resume`, so
   a relaunch used to redesign, redeploy and publish a second study. Now an
   experiment whose `deployment/deployment_manifest.json` records a live

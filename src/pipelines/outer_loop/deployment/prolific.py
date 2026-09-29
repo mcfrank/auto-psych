@@ -151,6 +151,40 @@ def external_study_url(base_url: str) -> str:
     )
 
 
+def load_recruitment_config(project_id: str, n_participants: int) -> dict[str, Any]:
+    """The project's Prolific settings for a study that recruits ``n_participants``.
+
+    ``--n-participants`` is the one participant count: it sets the design's N,
+    the collection poll's target and the study's places. The rendered
+    prolific_config.yaml carries no count of its own; one that does (an older
+    render) must agree, and a missing file raises rather than creating a
+    study from the loader's defaults.
+    """
+    from src.runtime.prolific import load_prolific_config, prolific_config_path
+
+    if n_participants < 1:
+        raise ValueError(f"--n-participants must be >= 1, got {n_participants}.")
+    path = prolific_config_path(project_id)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"No Prolific study settings at {path}. Render them from your launcher "
+            "config: python scripts/outer_loop_live/_pilot_config.py <config.yaml> "
+            "--render-only (run_pilot.sh and start_full_run.sh do this for you)."
+        )
+    cfg = load_prolific_config(project_id)
+    places = cfg.get("total_available_places")
+    if places is not None and int(places) != n_participants:
+        raise ValueError(
+            f"{path} sets total_available_places: {places}, but this run was started "
+            f"with --n-participants {n_participants}. The study would recruit and pay "
+            f"{places} people while the design and the collection target use "
+            f"{n_participants}. --n-participants is the participant count: delete "
+            "total_available_places from that file (re-render it with "
+            "_pilot_config.py --render-only) or pass the number you mean to recruit."
+        )
+    return cfg
+
+
 def build_prolific_plan(
     *,
     project_id: str,
@@ -159,12 +193,10 @@ def build_prolific_plan(
     mode: str,
     test_participant_id: str | None = None,
 ) -> ProlificStudyPlan:
-    from src.runtime.prolific import load_prolific_config
-
     if not manifest.experiment_url:
         raise ValueError("Prolific study creation requires an experiment_url")
 
-    cfg = load_prolific_config(project_id)
+    cfg = load_recruitment_config(project_id, n_participants)
     completion_code = str(cfg.get("completion_code") or "AUTO_PSYCH_COMPLETE")
     redirect = str(cfg.get("prolific_redirect_url") or completion_redirect_url(completion_code))
     completion_action = str(cfg.get("completion_code_action") or DEFAULT_COMPLETION_ACTION)
@@ -190,7 +222,7 @@ def build_prolific_plan(
             }
         ],
         "estimated_completion_time": int(cfg.get("estimated_completion_time") or 5),
-        "total_available_places": int(cfg.get("total_available_places") or n_participants),
+        "total_available_places": n_participants,
         "reward": compute_reward_cents(cfg),
         "device_compatibility": cfg.get("device_compatibility") or ["desktop"],
     }
