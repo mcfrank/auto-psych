@@ -1432,12 +1432,10 @@ This runs in the harness after the three experiments
   into complete (`holdout.json`), partial (a directory without one) and
   missing (no directory); the expected grid is `--n-repeats`/`--gt-models`
   when given (the analysis job passes `N_REPEATS`/`GT_MODELS`), else inferred
-  from the directories and said so. `recovery_report.py`, `holdout_test_retest.py`,
-  `incumbent_report.py`, `recovery_ceiling.py` and the two combined-figure
-  scripts print that accounting. The incumbent report now counts only
-  complete cells (it read partial cells' run records as whole cells), and
-  `compare_matched_cells.py` lists cells complete in only one sweep
-  (`unmatched`).
+  from the directories and said so. `holdout_test_retest.py`,
+  `incumbent_report.py` and the two combined-figure scripts print that
+  accounting. The incumbent report now counts only complete cells (it read
+  partial cells' run records as whole cells).
 - **Alignment.** `reporting.aggregate_holdout_trajectories` pools cells by
   position within an experiment — its seed step, each round (`iteration`)
   every cell recorded, and its end (each cell's last step) — not by
@@ -1455,18 +1453,12 @@ This runs in the harness after the three experiments
   loop's final point; `baseline_series` holds every position. Before, the
   baselines were flat final-data values averaged over whichever cells
   defined them, while the loop's mean covered every cell (second audit W2).
-- **Reports.** `recovery_report.py` summarises the loop's final step and the
-  fitted-seed baseline (`fitted_baseline.elpd_best_*`) over the same cells,
-  listing complete cells left out and why, and its header counts complete
-  cells per ground truth (it used integer division over all cells).
-  `holdout_test_retest.py` adds `cells` (the survey) and
+- **Reports.** `holdout_test_retest.py` adds `cells` (the survey) and
   `loop_vs_fitted_baseline`: per ground truth, experiment end and metric
   (r, RMSE), the loop's and the baseline's means and their mean paired
   difference over the cells where both are defined, with the others and why.
   `runs_missing_tidy` now lists the expected cells without a `holdout.csv`
-  (it was always empty). `recovery_ceiling.py` adds
-  `mean_ceiling_rmse_same_cells` (over the `n_with_loop` cells with a loop
-  RMSE) beside the loop's mean.
+  (it was always empty).
 
 ### 7.4 Incumbent record (incumbent.py)
 
@@ -1611,7 +1603,7 @@ Bugs and behaviour worth a decision (read from the code, not observed in a run):
   `source`.
 - **Metrics on different pair sets.** A step with excluded pairs, and a
   fitted seed with excluded pairs, are scored on fewer pairs than the
-  no-learning baseline and the recovery ceiling (user decision 2026-09-27).
+  no-learning baseline (user decision 2026-09-27).
   It is stated in the cell's log, `holdout.csv`, `eval_exclusions.jsonl` and
   the sweep summary, not corrected for.
 

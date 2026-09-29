@@ -285,19 +285,6 @@ def test_the_test_retest_summary_lists_cells_and_compares_on_common_cells(tmp_pa
     assert ends[("gt_a", 2)]["excluded"] == {"run2/gt_a": pytest.approx(ends[("gt_a", 2)]["excluded"]["run2/gt_a"])}
 
 
-def test_the_recovery_report_lists_partial_and_missing_cells(tmp_path):
-    from tests.paths import REPO_ROOT, load_script_module
-
-    module = load_script_module(REPO_ROOT / "scripts/subjective_randomness/recovery_report.py")
-    root = _cli_sweep(tmp_path)
-    out = tmp_path / "report.md"
-    module.main(module.Args(sweep=root, label="t", out=out, n_repeats=2, gt_models="gt_a gt_b"))
-    text = out.read_text()
-    assert "`run1/gt_b` (partial)" in text and "`run2/gt_b` (missing)" in text
-    assert "run2/gt_a" in text and "no fitted-seed baseline" in text
-    assert "gt_a: 2 of 2" in text
-
-
 def test_the_incumbent_report_reads_only_complete_cells(tmp_path, monkeypatch):
     from tests.paths import REPO_ROOT, load_script_module
 
