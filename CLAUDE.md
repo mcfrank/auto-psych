@@ -331,7 +331,11 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   `FitInfrastructureFailure`) raise everywhere — never a drop, a rejection or
   a ledger line. The screen never drops a protected seed (it raises), and
   `.nc` files are written to a temporary name and `os.replace`d into place
-  (`write_fit_file`).
+  (`write_fit_file`). Every fit process (pool worker or time-limited child)
+  gets an `XDG_CACHE_HOME` of its own under a temporary root the parent
+  removes (`_fit_process_caches`): arviz writes a once-a-day marker there on
+  import through a fixed-name temporary file, and fit processes started
+  together after midnight collided on it (11 of 24 cells, 2026-09-28).
 - `src/model_comparison/{posterior,likelihood}.py` — ELPD-LOO softmax posterior
   (`model_posterior`, documented as overconfident) + `az.compare` PSIS-LOO table.
 - `src/critique/ppc.py` — CriticAL posterior-predictive check: agent-written
