@@ -170,9 +170,12 @@ def test_design_drops_model_that_cannot_bind_to_stimulus(
 def test_screen_raises_when_a_model_is_simply_broken(tmp_path, monkeypatch, error):
     """Screening exists to drop models that cannot *bind to a stimulus row*.
 
-    Broken code is a different failure: dropping it would quietly shrink the
+    A code error the model's own file did not raise (here the loader) means
+    the harness is broken: dropping the model would quietly shrink the
     hypothesis space and renormalize EIG over the survivors, so the researcher
-    would never learn their model never ran. Those raise.
+    would never learn their model never ran. Those raise. (A code error raised
+    in the model's own file is the model's, and screened out on record: see
+    tests/test_bad_candidate_never_ends_a_cell.py.)
     """
 
     def boom(name, models_dir):
@@ -180,7 +183,7 @@ def test_screen_raises_when_a_model_is_simply_broken(tmp_path, monkeypatch, erro
 
     monkeypatch.setattr("src.models.model_loading.load_pymc_model_cached", boom)
     with pytest.raises(RuntimeError, match="broken"):
-        eig_mod._screen_usable_models(["m"], tmp_path, {"sequence_a": "HT"})
+        eig_mod._screen_usable_models(["m"], tmp_path, [{"sequence_a": "HT"}])
 
 
 def test_screen_still_drops_an_unbindable_model_loudly(tmp_path, monkeypatch, capsys):
@@ -194,7 +197,7 @@ def test_screen_still_drops_an_unbindable_model_loudly(tmp_path, monkeypatch, ca
 
     monkeypatch.setattr("src.models.data_binding.make_stim_data", fake_bind)
     usable, dropped = eig_mod._screen_usable_models(
-        ["needs_participant", "fine"], tmp_path, {"sequence_a": "HT"}
+        ["needs_participant", "fine"], tmp_path, [{"sequence_a": "HT"}]
     )
     assert usable == ["fine"]
     assert [d["model"] for d in dropped] == ["needs_participant"]
@@ -413,7 +416,7 @@ def test_screen_drops_a_participant_level_model_and_reports_which(tmp_path, caps
     models_dir = _seed_with_participant_model(tmp_path)
 
     usable, dropped = eig_mod._screen_usable_models(
-        eig_mod._load_model_names(models_dir), models_dir, _probe_row()
+        eig_mod._load_model_names(models_dir), models_dir, [_probe_row()]
     )
 
     assert "participant_re" not in usable
@@ -448,7 +451,7 @@ def test_screen_raises_when_model_needs_feature_columns_it_cannot_compute(tmp_pa
 
     with pytest.raises(RuntimeError, match="feature column"):
         eig_mod._screen_usable_models(
-            eig_mod._load_model_names(models_dir), models_dir, raw_row
+            eig_mod._load_model_names(models_dir), models_dir, [raw_row]
         )
 
 

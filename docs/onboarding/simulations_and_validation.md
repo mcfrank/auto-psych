@@ -55,6 +55,12 @@ training. The metrics (`src/subjective_randomness/recovery_metrics.py`) are:
 - `kl_regret`: extra prediction error in bits compared with the truth;
 - `bias` and `calib_slope` / `calib_intercept`: calibration.
 
+A pair on which a model's `p_left` is undefined, or on which the model's own
+code cannot compute its features (say, a feature that looks at the fourth flip
+of a length-2 sequence), is left out of that step's metrics. The cell's log
+and `eval_exclusions.jsonl` say so, and `holdout.csv` counts the excluded
+pairs (`n_eval_excluded`).
+
 The same metrics with the suffix `_bma` are computed for the average of all
 models, weighted by the reported posterior.
 

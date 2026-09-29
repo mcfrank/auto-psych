@@ -88,6 +88,36 @@ BROKEN_MODEL_CODE_ERRORS = (
 )
 
 
+def raised_in_file(exc: BaseException, source_file: Path) -> bool:
+    """Whether ``exc`` was raised in, or below, code from ``source_file``: one
+    frame of its traceback runs that file's code."""
+    target = Path(source_file).resolve()
+    tb = exc.__traceback__
+    while tb is not None:
+        if Path(tb.tb_frame.f_code.co_filename).resolve() == target:
+            return True
+        tb = tb.tb_next
+    return False
+
+
+def is_model_failure(exc: BaseException, source_file: Optional[Path]) -> bool:
+    """Whether ``exc`` is the failure of the model loaded from ``source_file``
+    rather than of the harness or the machine.
+
+    An infrastructure error (``INFRASTRUCTURE_ERRORS``) never is. A code error
+    (``BROKEN_MODEL_CODE_ERRORS``: a ``NameError`` in a ``compute_features``
+    hook, say) is the model's when it was raised in the model's own file, and
+    the harness's otherwise — a broken harness must not be blamed on every
+    model it touches. Any other error (a feature that is not finite, a hook
+    indexing past the end of a short sequence) is the model's.
+    """
+    if isinstance(exc, INFRASTRUCTURE_ERRORS):
+        return False
+    if isinstance(exc, BROKEN_MODEL_CODE_ERRORS):
+        return source_file is not None and raised_in_file(exc, source_file)
+    return True
+
+
 def model_logp_is_finite(
     name: str, models_dir: Path, responses_path: Path
 ) -> tuple[bool, str]:
@@ -109,19 +139,23 @@ def model_logp_is_finite(
     the common non-finite-gradient failure that a logp-only check misses.
 
     ``(False, reason)`` states one thing only: *this model cannot be fit to this
-    data*. A broken harness (see ``BROKEN_MODEL_CODE_ERRORS``) is not that, and
-    propagates — otherwise a missing dependency would silently condemn every
-    candidate the inner loop generated.
+    data*. A broken harness is not that, and propagates — otherwise a missing
+    dependency would silently condemn every candidate the inner loop
+    generated. A code error (``BROKEN_MODEL_CODE_ERRORS``) raised in the
+    model's own file — a typo in its ``compute_features`` — is the model's,
+    and a ``(False, reason)`` like any other (``is_model_failure``); it used
+    to propagate and end the cell.
     """
     pm = _import_pymc()
+    model_file = Path(models_dir) / f"{name}.py"
     model = load_pymc_model(name, models_dir)
     try:
         observed = extract_observed(responses_path, model)
         with model:
             pm.set_data(observed)
-    except BROKEN_MODEL_CODE_ERRORS:
-        raise
     except Exception as e:
+        if not is_model_failure(e, model_file):
+            raise
         # A candidate (or seed) model that references feature columns the
         # responses don't carry — e.g. it declares extra pm.Data inputs without
         # a matching compute_features featurizer — is simply unfittable. Reject
@@ -131,17 +165,17 @@ def model_logp_is_finite(
     try:
         point = model.initial_point()
         logp = float(model.compile_logp()(point))
-    except BROKEN_MODEL_CODE_ERRORS:
-        raise
     except Exception as e:  # a graph that cannot even be evaluated
+        if not is_model_failure(e, model_file):
+            raise
         return False, f"logp evaluation raised: {type(e).__name__}: {e}"
     if not math.isfinite(logp):
         return False, f"non-finite logp ({logp}) at the initial point"
     try:
         grad = np.asarray(model.compile_dlogp()(point), dtype=float)
-    except BROKEN_MODEL_CODE_ERRORS:
-        raise
     except Exception as e:
+        if not is_model_failure(e, model_file):
+            raise
         return False, f"gradient evaluation raised: {type(e).__name__}: {e}"
     if not np.all(np.isfinite(grad)):
         return False, "non-finite gradient of logp at the initial point"

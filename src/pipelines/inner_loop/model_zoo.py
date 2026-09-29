@@ -41,6 +41,7 @@ from src.models.pymc_inference import (
     fit_model,
     fit_models_to_cache,
     fit_time_limited_concurrently,
+    is_model_failure,
     is_near_miss,
     model_logp_is_finite,
     resolve_fit_settings,
@@ -491,6 +492,24 @@ class NoveltyPoolUndefined(ValueError):
         )
 
 
+class NoveltyPoolFailed(ValueError):
+    """A *candidate* whose ``p_left`` cannot be predicted on the novelty pool
+    at all: its own code raised (``is_model_failure``) — no ``p_left``, a
+    ``p_left`` without one value per stimulus, a ``compute_features`` that
+    breaks on some pool pair.
+
+    The admission gate turns it into a recorded rejection with the error. It
+    used to propagate out of the inner loop and end the cell.
+    """
+
+    def __init__(self, model_name: str, error: BaseException):
+        self.model_name = model_name
+        self.error = f"{type(error).__name__}: {error}"
+        super().__init__(
+            f"model {model_name!r} cannot predict p_left on the novelty pool ({self.error})"
+        )
+
+
 def _pair_labels(pool_rows: Sequence[Mapping[str, str]], mask: np.ndarray) -> List[str]:
     """``"<sequence_a> vs <sequence_b>"`` for the pool rows ``mask`` selects."""
     return [
@@ -567,9 +586,10 @@ def _min_prediction_rmse(
     fit-gate and after scoring has fit every admitted model, so no new MCMC
     happens here. Returns the nearest model's name and the RMSE —
     ``(None, inf)`` when the set holds no other model. Raises
-    ``NoveltyPoolUnbindable`` when the candidate cannot bind bare stimulus rows
-    and ``NoveltyPoolUndefined`` when its ``p_left`` is undefined on some pool
-    stimuli. An admitted model whose ``p_left`` is undefined on some stimuli
+    ``NoveltyPoolUnbindable`` when the candidate cannot bind bare stimulus rows,
+    ``NoveltyPoolUndefined`` when its ``p_left`` is undefined on some pool
+    stimuli and ``NoveltyPoolFailed`` when its own code fails on the pool.
+    An admitted model whose ``p_left`` is undefined on some stimuli
     is compared on the rest (said out loud), and skipped when it is undefined
     on all of them; before, it crashed every later candidate's admission.
     """
@@ -590,6 +610,10 @@ def _min_prediction_rmse(
         candidate_p = posterior_mean_p_left(model_name)
     except MissingStimulusColumns as e:
         raise NoveltyPoolUnbindable(model_name, e.missing) from e
+    except Exception as e:
+        if not is_model_failure(e, Path(models_dir) / f"{model_name}.py"):
+            raise
+        raise NoveltyPoolFailed(model_name, e) from e
     undefined = ~np.isfinite(candidate_p)
     if undefined.any():
         raise NoveltyPoolUndefined(
@@ -1293,6 +1317,16 @@ def _admit_candidate_with_reason(
                 "including pairs unlike the training stimuli: guard the "
                 "computation (no log(0), no division by zero, no overflow; keep "
                 "p_left inside [0, 1])."
+            )
+        except NoveltyPoolFailed as e:
+            staged.unlink(missing_ok=True)
+            return reject(
+                f"p_left could not be predicted on the {len(pool)}-stimulus novelty "
+                f"pool of same-length pairs ({e.error}). The model must define "
+                "p_left (a pm.Deterministic named 'p_left') with one value per "
+                "stimulus row, and its compute_features or prepare_observed must "
+                "work for every same-length H/T pair, including all-H and all-T "
+                "sequences and pairs unlike the training stimuli."
             )
         if nearest is not None and rmse < novelty_rmse_threshold:
             staged.unlink(missing_ok=True)
