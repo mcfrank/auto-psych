@@ -903,9 +903,12 @@ experiment means every carried model is refit on it.
   (loo_reliability.py:91) → `az.loo(idata, pointwise=True)` on the per-trial
   Bernoulli log-likelihood. It is computed once per fit.
 - **Softmax "posterior"** (`model_posterior`, posterior.py:231):
-  `score_m = elpd_m + c · lines_m`, with `c = DEFAULT_COMPLEXITY_PRIOR_CONST = −0.05`
-  (scoring.py:29) and `lines_m` the number of non-blank, non-comment lines in
-  the model file. Then `posterior_m = softmax(score)`, rounded to 6 decimals.
+  `score_m = elpd_m + c · lines_m`, with `c = DEFAULT_COMPLEXITY_PRIOR_CONST`
+  (scoring.py) and `lines_m` the number of non-blank, non-comment lines in
+  the model file. By default `c = 0`, so there is **no complexity prior** and
+  the posterior is a softmax of ELPD-LOO alone (user decision 2026-09-29; it
+  was −0.05: on 14 finished recovery cells the penalty left held-out accuracy
+  unchanged within noise). Then `posterior_m = softmax(score)`, rounded to 6 decimals.
   It raises on a non-finite ELPD. It is used only as a report field and as the
   BMA weights in evaluation (§7). It does **not** select the best model.
 - **Comparison table** (`compare_table`, posterior.py:120): `az.compare` on the

@@ -105,11 +105,13 @@ Each item says what changed and why. Code pointers are in
 7. **How the best model is picked.** The score is still ELPD-LOO. The best
    model is now the top-ranked one whose leave-one-out estimate is reliable
    (at most 1% of trials fail the estimator's diagnostic), not the argmax of
-   the softmax "posterior" over models. That posterior (with the paper's
-   penalty of 0.05 per code line) is still reported but never used. *Why:*
-   it is rounded to six decimals, so all far-behind models tied at 0, and
-   the argmax then picked by file order. In 62 of 230 simulated experiments
-   it exported a starting model that was far behind.
+   the softmax "posterior" over models. That posterior is still reported
+   but never used for the choice. *Why:* it is rounded to six decimals, so
+   all far-behind models tied at 0, and the argmax then picked by file
+   order. In 62 of 230 simulated experiments it exported a starting model
+   that was far behind. The posterior also no longer has the paper's
+   penalty of 0.05 per code line: in finished runs, code length told
+   nothing about which model predicts better.
 
 8. **What is kept and carried over.** The paper carried only the winner. Now,
    at the end of each experiment, any model (starting models included) is

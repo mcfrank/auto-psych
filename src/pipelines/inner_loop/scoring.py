@@ -19,14 +19,14 @@ from typing import Any, Dict, Iterable, List, Optional
 from src.model_comparison.posterior import compare_table, model_posterior
 from src.pipelines.inner_loop.model_zoo import _manifest_entries
 
-# Occam backstop for model selection: each model's log-prior is this constant
-# times its non-comment line count (see ``model_complexity``). Negative ⇒ leaner
-# models are preferred when fit is comparable. It is deliberately *gentle* — a
-# tie-breaker among hypotheses the data barely distinguishes, not the main guard
-# against blended models (the hypothesis-first candidate generation is that). The
-# proxy is imperfect: it also nicks a verbose but legitimately single-mechanism
-# model (e.g. a full Bayesian model), so keep the magnitude small.
-DEFAULT_COMPLEXITY_PRIOR_CONST = -0.05
+# Complexity prior of the softmax model posterior (a report field and the
+# model-average weights; selection, pruning and carry-forward use ELPD-LOO
+# alone): each model's log-prior is this constant times its non-comment line
+# count (``model_complexity``). 0.0: no prior (user decision 2026-09-29; it was
+# -0.05). On 14 finished recovery cells a line-count penalty left held-out
+# accuracy unchanged within noise, and among near-tied models the one with
+# shorter code was closer to the hidden model only half the time.
+DEFAULT_COMPLEXITY_PRIOR_CONST = 0.0
 
 
 def _best_model(posterior: Dict[str, Any]) -> str:

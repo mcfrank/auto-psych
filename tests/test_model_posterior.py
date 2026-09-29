@@ -114,3 +114,13 @@ def test_missing_manifest_raises(tmp_path):
     (tmp_path / "cognitive_models").mkdir()
     with pytest.raises(FileNotFoundError):
         mp.model_posterior(tmp_path / "responses.csv", tmp_path / "cognitive_models")
+
+
+def test_the_loops_default_posterior_has_no_complexity_prior():
+    """User decision 2026-09-29: the real runs use no complexity penalty. On 14
+    finished recovery cells, no penalty and the line-count penalty were
+    indistinguishable in held-out accuracy, and among near-tied models the one
+    with shorter code was closer to the hidden model half the time."""
+    from src.pipelines.inner_loop import scoring
+
+    assert scoring.DEFAULT_COMPLEXITY_PRIOR_CONST == 0.0
