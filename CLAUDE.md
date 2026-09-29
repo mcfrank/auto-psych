@@ -128,7 +128,11 @@ target — see **Slot roles**) → admit sequentially.
   pool: the loop must not select models on the stimuli it is scored against.
   A candidate that binds `participant_id` is marginalised over the training
   participants; one that binds `trial_index` is rejected with that reason
-  (it cannot be evaluated on any stimulus pool). The threshold is a knob of
+  (it cannot be evaluated on any stimulus pool), and so is one whose `p_left`
+  is undefined (NaN or outside [0, 1]) on any pool stimulus
+  (`NoveltyPoolUndefined`, the reason names example pairs). An admitted model
+  undefined on some pool stimuli is compared on the rest (and left out when
+  undefined on all). The threshold is a knob of
   the holdout config (`inner_loop.novelty_rmse_threshold`, CLI
   `--novelty-rmse-threshold`, sbatch `NOVELTY_RMSE_THRESHOLD`).
 - **Slot retry and repair** (`_Slot` in `pymc_orchestrator.py`): a round is
@@ -249,7 +253,12 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   needs, and dropping the model would renormalize EIG over whichever ones
   happen to bind. `make_stim_data` signals this with `MissingStimulusColumns`,
   which carries `.missing` as data so callers classify structurally rather than
-  by re-parsing a message. Every drop is written to `design/screened_out.json`
+  by re-parsing a message. A model whose predictive `p_left` is undefined (NaN
+  or outside [0, 1]) on some design-pool pairs (`InvalidPredictions`, prior or
+  posterior) is also left out of that design — it used to crash the cell, on
+  every retry — recorded with `invalid_pairs` and a reason naming example
+  pairs; `verify_holdout_run.sh` warns on those rather than failing. Every
+  drop is written to `design/screened_out.json`
   (empty list = the screen ran and dropped nothing), so a silent shrink of the
   hypothesis set is visible in the run tree.
 - **Raw-only pipeline.** There is no featurizer: `responses.csv` carries only

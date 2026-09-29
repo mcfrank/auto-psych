@@ -26,7 +26,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Optional, Tuple
 
 import tyro
 from pyprojroot import here
@@ -127,6 +127,52 @@ def _screen_usable_models(
     return usable, dropped
 
 
+def _invalid_predictions_entry(
+    name: str, exc: Any, rows: List[Dict[str, Any]], basis: str
+) -> Dict[str, Any]:
+    """The ``screened_out.json`` record of a model whose ``p_left`` is undefined
+    (NaN or outside [0, 1]) on some design-pool pairs (``exc`` is its
+    ``InvalidPredictions``)."""
+    bad = [int(i) for i in exc.invalid_stimuli().nonzero()[0]]
+    examples = [f"{rows[i]['sequence_a']} vs {rows[i]['sequence_b']}" for i in bad[:5]]
+    reason = (
+        f"{basis} p_left is undefined (NaN or outside [0, 1]) on {len(bad)} of "
+        f"{len(rows)} design-pool pairs (e.g. {', '.join(examples)})"
+    )
+    return {"model": name, "missing": [], "reason": reason, "invalid_pairs": len(bad)}
+
+
+def _screen_invalid_predictions(
+    draws_of: Callable[[str], Any], model_names: List[str], rows: List[Dict[str, Any]], basis: str
+) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
+    """``{name: draws_of(name)}`` over the models whose ``p_left`` is a
+    probability on every pair, and a ``screened_out.json`` record for each
+    model whose ``p_left`` is not.
+
+    A carried model can break on pairs unlike any it was trained on (the
+    recovery evaluation met one, commit 4de536c), and one such model used to
+    crash the design — identically on every retry, since a resume reuses the
+    same models and fits. It is left out of this design, loudly and on
+    record, like a model that cannot bind a stimulus row.
+    """
+    from src.models.pymc_inference import InvalidPredictions  # type: ignore
+
+    draws: Dict[str, Any] = {}
+    screened: List[Dict[str, Any]] = []
+    for name in model_names:
+        try:
+            draws[name] = draws_of(name)
+        except InvalidPredictions as exc:
+            entry = _invalid_predictions_entry(name, exc, rows, basis)
+            screened.append(entry)
+            print(
+                f"  [screen] EIG: model {name!r} excluded from this design: "
+                f"{entry['reason']}.",
+                flush=True,
+            )
+    return draws, screened
+
+
 def _raw_row(item: Dict[str, Any]) -> Dict[str, Any]:
     """Build a raw stimulus row: sequence_a, sequence_b, chose_left (dummy)."""
     row: Dict[str, Any] = dict(item)
@@ -153,7 +199,9 @@ def _posterior_p_left_draws(
     ``src.models.mcmc_defaults`` unless overridden; target_accept is the
     model's own declared value, else DESIGN_TWIN_TARGET_ACCEPT) and predicts
     p_left draws for the stimulus pool, thinned to ``max_draws`` posterior
-    samples.
+    samples. Returns the draws of every model whose p_left is defined on the
+    whole pool, and the ``screened_out.json`` records of the others
+    (``_screen_invalid_predictions``).
     """
     from src.models.mcmc_defaults import (  # type: ignore
         DESIGN_TWIN_CHAINS,
@@ -164,8 +212,7 @@ def _posterior_p_left_draws(
     from src.models.data_binding import make_stim_data  # type: ignore
     from src.models.pymc_inference import fit_model, model_sampler_settings  # type: ignore
 
-    draws: Dict[str, Any] = {}
-    for name in model_names:
+    def posterior_draws(name: str) -> Any:
         fitted = fit_model(
             name,
             models_dir,
@@ -179,10 +226,9 @@ def _posterior_p_left_draws(
             ),
         )
         stim_data = make_stim_data(fitted.model, rows)
-        draws[name] = fitted.predict_p_left_draws(
-            stim_data, seed=seed, max_draws=max_draws
-        )
-    return draws
+        return fitted.predict_p_left_draws(stim_data, seed=seed, max_draws=max_draws)
+
+    return _screen_invalid_predictions(posterior_draws, model_names, rows, "posterior-predictive")
 
 
 def design_exhaustive(
@@ -264,13 +310,6 @@ def design_exhaustive(
         model_names, screened_out = _screen_usable_models(
             model_names, models_dir, rows[0]
         )
-        if screened_out_path is not None:
-            # Written even when empty: "the screen ran and dropped nothing" and
-            # "nobody looked" must not be the same absent file.
-            Path(screened_out_path).parent.mkdir(parents=True, exist_ok=True)
-            Path(screened_out_path).write_text(
-                json.dumps(screened_out, indent=2), encoding="utf-8"
-            )
         if model_weights and not any(model_weights.get(n, 0.0) > 0 for n in model_names):
             print(
                 f"  [design] registry weights over {sorted(model_weights)} do not "
@@ -285,11 +324,16 @@ def design_exhaustive(
             flush=True,
         )
         if responses_csv is None:
-            draws = prior_predict_p_left_draws(
-                model_names, models_dir, rows, n_samples=n_samples, seed=seed
+            draws, invalid = _screen_invalid_predictions(
+                lambda name: prior_predict_p_left_draws(
+                    [name], models_dir, rows, n_samples=n_samples, seed=seed
+                )[name],
+                model_names,
+                rows,
+                "prior-predictive",
             )
         else:
-            draws = _posterior_p_left_draws(
+            draws, invalid = _posterior_p_left_draws(
                 model_names,
                 models_dir,
                 rows,
@@ -300,6 +344,19 @@ def design_exhaustive(
                 fit_draws=fit_draws,
                 fit_tune=fit_tune,
                 fit_chains=fit_chains,
+            )
+        screened_out += invalid
+        if screened_out_path is not None:
+            # Written even when empty: "the screen ran and dropped nothing" and
+            # "nobody looked" must not be the same absent file.
+            Path(screened_out_path).parent.mkdir(parents=True, exist_ok=True)
+            Path(screened_out_path).write_text(
+                json.dumps(screened_out, indent=2), encoding="utf-8"
+            )
+        if not draws:
+            raise ValueError(
+                f"No model in {models_dir} has a defined p_left on the design pool "
+                f"({[e['model'] for e in invalid]} screened out); cannot compute EIG."
             )
         # With all n_responses answers counted, a few picks can identify the
         # model; after that every gain is Monte Carlo noise, so selection stops

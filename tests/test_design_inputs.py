@@ -73,11 +73,12 @@ def test_design_fits_use_the_models_own_target_accept_else_0_9(tmp_path, monkeyp
     monkeypatch.setattr(pymc_inference, "fit_model", fake_fit_model)
     monkeypatch.setattr(pymc_inference, "model_sampler_settings", lambda n, d: declared[n])
     monkeypatch.setattr(data_binding, "make_stim_data", lambda model, rows: {})
-    eig_mod._posterior_p_left_draws(
+    draws, screened = eig_mod._posterior_p_left_draws(
         ["careful", "plain"], tmp_path, [], responses_csv=tmp_path / "r.csv",
         fit_cache_dir=None, max_draws=10, seed=0,
     )
     assert requested == {"careful": 0.97, "plain": 0.9}
+    assert draws == {"careful": "draws", "plain": "draws"} and screened == []
 
 
 def test_a_saturated_selection_is_filled_by_single_response_eig(tmp_path, monkeypatch):
