@@ -1413,9 +1413,9 @@ Discrepancies, where the code wins:
 6. **pymc_orchestrator.py:6-8 (module docstring)** says the softmax posterior
    "selects the incumbent". Selection is by `az.compare` rank among trusted
    models.
-7. **holdout_recovery_array.sbatch:25-29 and model_loop_runner.py:75-76** say
-   agents run with "no read sandbox". Every loop agent runs in bubblewrap
-   (`sandbox=True`).
+7. *(Fixed 2026-09-28.)* `holdout_recovery_array.sbatch` and
+   `model_loop_runner.agent_notes_dir` said agents run with "no read
+   sandbox"; both now describe the bubblewrap sandbox.
 8. **Faithful config, `agent.backend` comment** says "null -> CODING_AGENT env
    var, then 'claude'". The code default is `opencode` (coding_agent.py:57).
    Under the array the config key is overridden anyway by
