@@ -169,8 +169,8 @@ job_id=$(sbatch --parsable "${SBATCH_ARGS[@]}")
 echo "$job_id" >> "$WORK_ROOT/jobs.txt"
 cat <<MSG
 submitted consolidation job $job_id
-  model $MODEL, up to $MAX_TURNS turns / ${TIMEOUT_SEC}s per phase session; phases P0..P33
-  (requeues itself for session limits, walltime, the smoke jobs, the P14 sweep, the P15 evaluation)
+  model $MODEL, up to $MAX_TURNS turns / ${TIMEOUT_SEC}s per phase session; phases P0..P48
+  (requeues itself for session limits, walltime, and every phase that submits jobs)
   sweep: $SWEEP_N_REPEATS repeats, BASE_SEED=$SWEEP_BASE_SEED, $SWEEP_MAX_PARALLEL concurrent
 
 follow:   tail -f $WORK_ROOT/slurm_logs/${JOB_NAME}_${job_id}.out
