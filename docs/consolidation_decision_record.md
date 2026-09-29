@@ -465,3 +465,51 @@ Cost: a three-candidate round now has one exploratory slot instead of three,
 so breadth per round drops until P45 raises `candidate_count` to six (three
 exploratory, two incumbent, one chosen). That trade is the point: the sweep
 measured breadth saturating with zero depth.
+
+### The LOO design effect is measured, not assumed (`src/subjective_randomness/loo_design_effect.py`)
+
+**Decision (P43, analysis only — no pruning code changed).** The inner loop
+prunes on `elpd_diff > 2·dse` from a trial-level PSIS-LOO, which treats a
+participant's response to a stimulus as an independent observation. A
+holdout cell's 40 participants all answer the same 64 stimuli and the models
+differ *by stimulus*, so the pointwise ELPD differences within a stimulus are
+correlated and the trial-level `dse` is too small by a design effect. P43
+measured it from the cached fits of the 20-cell September 2026 sweep (no new
+MCMC) and wrote the recommendation for the user in
+`$WORK_ROOT/LOO_DESIGN_EFFECT.md`.
+
+**What was measured.** Every recorded scoring step's comparison (159 steps,
+240 prune decisions, 167 prunes) rebuilt under three units: the loop's
+trial-level PSIS-LOO — reproduced and checked against the recorded ELPDs, the
+archived prune sets and the ledger margins, so the cache-to-decision mapping
+is verified; a stimulus-clustered standard error of the same ELPD difference
+(`sqrt(G · var(per-stimulus sums))`); and a leave-one-stimulus-out PSIS-LOO
+with its own reliability verdict.
+
+**Numbers.** The clustered `dse` is 1.99× the trial-level `dse` at the
+median (1.05–5.54 over 207 comparisons; by ground truth 1.44 for
+finite_experience_occurrence to 2.57 for motif_stack; larger on pooled data,
+where the EIG-selected stimuli concentrate the disagreement). Under the
+clustered unit 18 of the loop's 167 prunes (10.8 %) would have been kept —
+all at 2–5× the trial `dse`, none at 5× or more, no survivor pruned, no
+step's best model involved. Leave-one-stimulus-out PSIS-LOO gives the same
+ratio (2.01) but degrades PSIS (20 of 381 fits unreliable against 6; one
+model with 85 % high-k stimuli), changes the estimand, and disagrees with
+the trial-level best at 8 of 159 steps (all ties).
+
+**Recommendation (for the user; not applied).** Replace `dse` in
+`_prune_losers`' rule with the stimulus-clustered standard error, keep the
+2× multiplier, keep trial-level PSIS-LOO for the estimates, ranking and
+export. Same estimand, no new MCMC, one prune in nine stays in the
+uncertainty set — the near-miss models P42's refinement menu is meant for.
+On human data the honest unit is a two-way cluster (stimulus × participant);
+participants here are simulated i.i.d. given the stimulus.
+
+**Two findings from running it.** The loop never prunes at a seed step (a
+model carried into the next experiment can be far behind on the pooled data
+and is still scored there; pruning runs only after a round), so the record
+check compares prune sets at round steps only. And a stimulus whose forty
+trials are all clipped has a grouped log-likelihood that is constant across
+draws up to floating-point noise; arviz's PSIS returned NaN weights for that
+near-constant column, so such groups are snapped to a constant before PSIS
+(the exact-trial rule `loo_reliability` already applies).
