@@ -232,13 +232,23 @@ def _posterior_p_left_draws(
 
 
 # How the design searches for the max-joint-EIG set (src/models/eig_selection.py):
-# exact greedy (a full pass over the pool per pick) or lazy batched greedy
-# (re-scoring only the best-ranked candidates between full passes every
-# DESIGN_REFRESH_EVERY picks), in float64 or float32.
-DESIGN_LAZY_SEARCH = False
+# lazy batched greedy — a full pass over the pool every DESIGN_REFRESH_EVERY
+# picks, and in between only the best-ranked candidates re-scored in batches of
+# DESIGN_LAZY_BATCH_SIZE — in float32. Exact greedy (a full pass per pick, in
+# float64) took 11-13 h per later-experiment design; this takes ~3 min on 16
+# CPUs. Validated on two experiment-2 designs of the September 2026 sweep
+# (scripts/subjective_randomness/validate_lazy_eig.py, 2026-09-27): float32
+# picked the same sets as float64, and lazy greedy's out-of-sample joint EIG
+# was within Monte Carlo noise of exact greedy's (design 1, over three
+# scenario seeds each: 2.078 vs 2.080 bits; design 2: 0.0006 bits lower, of
+# 2.69), while exact greedy itself moved by up to 0.008 bits between scenario
+# seeds. It is an approximation all the same (joint EIG is not submodular);
+# exact greedy stays available (lazy=False, scoring_dtype "float64", or the
+# eig CLI's --no-lazy --scoring-dtype float64).
+DESIGN_LAZY_SEARCH = True
 DESIGN_LAZY_BATCH_SIZE = 512
 DESIGN_REFRESH_EVERY = 16
-DESIGN_SCORING_DTYPE = "float64"
+DESIGN_SCORING_DTYPE = "float32"
 
 
 def select_design_picks(

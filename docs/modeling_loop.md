@@ -4,7 +4,12 @@ Describes the code at commit `555a6d0` (branch `consolidate/2026-09`).
 `file:line` references were taken at `4de536c`; `555a6d0` fixed the two
 crashes this document had found (the fit pool and a refit, the refinement
 menu and a cap retirement), so lines in `pymc_inference.py` and `model_zoo.py`
-after those spots are off by a few.
+after those spots are off by a few. The speedup changes of 2026-09-27 (branch
+`fix/audit-2026-09-27`: lazy batched greedy design search in float32, refit
+only near misses, a time limit on candidate fits and concurrent candidate
+fits, 1000 draws per chain) are described where they apply; `file:line`
+references into `eig_selection.py`, `eig.py`, `pymc_inference.py`,
+`model_zoo.py` and `pymc_orchestrator.py` are off after them.
 
 This is a reference for reviewing what the code does in one holdout-recovery
 cell, from the Slurm array task to the recovery metrics. It was written by
@@ -58,7 +63,7 @@ loop's critique agent and candidate agents.
 | GT parameters | family `DEFAULT_PARAMS` (config values are `null`) | `holdout_data.resolve_generating_params` |
 | Experiments per cell | 3 | config `n_experiments` |
 | Synthetic participants per experiment | 40 | config `n_participants` |
-| Stimuli per experiment | 64, all chosen by EIG (40-response EIG until its noise floor, then single-response EIG fill); 0 random | config `design: {n_eig: 64, n_random: 0}` |
+| Stimuli per experiment | 64, all chosen by EIG (40-response EIG until its noise floor, then single-response EIG fill); 0 random; lazy batched greedy search in float32 | config `design: {n_eig: 64, n_random: 0}`; `DESIGN_*` in eig.py |
 | Design pair lengths | 2..8, same-length pairs only | `run_design_programmatic` default `lengths` (orchestrator.py:430), `design_exhaustive` (eig.py:253) |
 | Cell seed | `BASE_SEED + REPEAT` (default 0 + r) | sbatch:83, passed as `--seed`; **overrides config `seed: 7`** |
 | Per-purpose seeds | `derive_seed(cell seed, GT, experiment, purpose)` | holdout_recovery.py:294 (§8) |
@@ -466,8 +471,12 @@ the three seeds of experiment 1).
 
 ### 3.6 Greedy joint selection with a noise-floor stop (`select_n_joint_eig`, eig_selection.py:302)
 
-First call (eig.py:310-318): `n_select = 64`, `n_responses = 40`,
-`stop_below_noise=True`, exact greedy (`lazy=False`, `chunk_size=4096`):
+`eig.select_design_picks` makes two calls. First call: `n_select = 64`,
+`n_responses = 40`, `stop_below_noise=True`, **lazy batched greedy**
+(`lazy=True`, `lazy_batch_size=512`, `refresh_every=16`), candidate scoring in
+**float32** (`dtype`), chunks of 64 candidates (`chunk_size`) scored on
+`allocated_cpus()` threads. Exact greedy — the reference, and the only search
+until 2026-09-27 — is this loop with a full pass at every pick:
 
 ```
 S ← ∅;  H_t ← H(π) for all t
@@ -487,17 +496,48 @@ repeat up to 64 times:
   S ← S ∪ {j*};  record joint_eig_bits = H(π) − mean_t H_t(S)
 ```
 
-`next_entropy` (eig_selection.py:203) computes `E_t(j)`: for each outcome k,
-one matrix product per model, `lhat[m] @ (p^k (1−p)^{n−k}) / D_m`, gives each
-candidate's marginal likelihood without a (T, D, N) tensor. Each candidate's
+`next_entropy` computes `E_t(j)`: for each outcome k, one matrix product per
+model, `(π(m)/D_m · lhat[m]) @ exp(k log p + (n−k) log(1−p) − max_p)`, gives
+each candidate's marginal likelihood without a (T, D, N) tensor. The
+subtracted `max_p[k] = k log(k/n) + (n−k) log(1−k/n)` is the same for every
+model and draw, so it cancels in the posterior; it keeps the likelihood of the
+draws that make outcome k probable near 1, which float32 needs at n = 40
+(0.05^40 is below its range). The posterior is normalised before its entropy
+is taken; an outcome whose likelihood underflows under every model gets
+entropy 0. Each candidate's
 outcome is marginalised analytically using the scenario's true probability,
 while earlier outcomes are the sampled counts held in `logL`. `observe`
 (eig_selection.py:240) samples the count as 40 uniform draws rather than
 `rng.binomial`, so that with one response the random stream is the
 single-response one.
 
+**Lazy batched greedy** (the design's search since 2026-09-27). The first
+pick of a call, and every 16th after it, is a full pass as above; each full
+pass stores every candidate's gain. A pick in between sorts the remaining
+candidates by stored gain, re-scores the top 512 in one call (their stored
+gains become fresh), and accepts the best fresh gain if it is at least the
+highest stored gain among the candidates not re-scored in this step;
+otherwise it re-scores the next 512, and so on. Ties go to the lowest pool
+index, as in `np.argmax`. If gains only shrank as picks accumulate
+(submodularity), a stored gain would bound the current one and this would be
+exact greedy; joint EIG with per-draw likelihoods is **not** submodular (a
+stimulus can gain from a correlated partner), so a candidate whose gain grew
+while outside the re-scored batches is missed until the next full pass: an
+approximation. On the two experiment-2 designs of the September 2026 sweep
+(`validate_lazy_eig.py`, SPEEDUP_REPORT of 2026-09-27) it used ~7 full passes'
+worth of scoring instead of 64, and its out-of-sample joint EIG was within
+Monte Carlo noise of exact greedy's (design 1, three scenario seeds each:
+2.078 vs 2.080 bits; design 2: 0.0006 bits lower, of 2.69), while exact
+greedy itself moved by up to 0.008 bits between scenario seeds. float32 scoring
+gains are within 1e-6 bits of float64 and picked the same sets. One full pass
+over 43,434 pairs at 40 responses and 8 models: 607 s single-threaded in
+float64 (the old setting), 20 s in float32 on 16 threads. BLAS is held to one
+thread per chunk (a scoped `threadpoolctl` limit), and chunk boundaries do not
+depend on the thread count, so neither do the picks.
+
 **Noise-floor stop** (eig_selection.py:391-396). Before adding the best
-candidate j*, the code recomputes its per-scenario gains `g_t` (T = 1000
+candidate j* (found by the full pass or the lazy batches), the code
+recomputes its per-scenario gains `g_t` in float64 (T = 1000
 values; their mean is `gain(j*)`) and stops if the mean is at most twice its
 Monte Carlo standard error (`sd` with ddof=1, divided by √T), or at most
 `NEGLIGIBLE_GAIN_BITS = 1e-6` (eig_selection.py:56). The check runs at every
@@ -513,8 +553,9 @@ than 64 picks, a second `select_n_joint_eig` fills the remaining
 
 - It builds **new** scenarios (new `m_t`, `d_t` from `seed + 1`).
 - It first `observe`s every preselected stimulus in every scenario as **one**
-  Bernoulli response (not 40), then runs exact greedy with single-response
-  gains, `gain[S ∪ preselected] ← −∞`, for exactly `64 − n_picks` steps.
+  Bernoulli response (not 40), then runs the same lazy search with
+  single-response gains, `gain[S ∪ preselected] ← −∞`, for exactly
+  `64 − n_picks` steps.
 - So the fill picks are conditioned on the preselected picks, but in
   single-response units: its objective is the information of one more
   response per stimulus given one response to each earlier pick.

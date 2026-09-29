@@ -152,3 +152,31 @@ def test_the_design_search_settings_reach_both_selections(tmp_path, monkeypatch)
         assert call["n_threads"] == 7
         assert call["lazy_batch_size"] == eig_mod.DESIGN_LAZY_BATCH_SIZE
         assert call["refresh_every"] == eig_mod.DESIGN_REFRESH_EVERY
+
+
+def test_the_design_searches_lazily_in_float32_by_default(tmp_path, monkeypatch):
+    """Validated against exact float64 greedy on two experiment-2 designs
+    (scripts/subjective_randomness/validate_lazy_eig.py)."""
+    import src.models.eig_selection as eig_selection
+    import src.models.pymc_inference as pymc_inference
+    from src.models.eig_selection import JointEIGSelection
+
+    calls = []
+
+    def fake_select(draws, n_select, **kwargs):
+        calls.append(kwargs)
+        return JointEIGSelection([3, 4], [1.0, 1.2], 10)
+
+    monkeypatch.setattr(eig_selection, "select_n_joint_eig", fake_select)
+    monkeypatch.setattr(
+        pymc_inference, "prior_predict_p_left_draws",
+        lambda names, d, rows, **k: {n: np.full((4, len(rows)), 0.5) for n in names},
+    )
+    monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
+    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, row: (names, []))
+
+    eig_mod.design_exhaustive(tmp_path, lengths=(2, 3), n_select=2, n_responses=40, seed=9)
+
+    [call] = calls
+    assert call["lazy"] is True and call["dtype"] == "float32"
+    assert (call["lazy_batch_size"], call["refresh_every"]) == (512, 16)
