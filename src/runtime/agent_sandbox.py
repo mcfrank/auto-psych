@@ -90,8 +90,12 @@ def sandbox_command(
     args += _login(backend, env, user_home, private_home)
 
     env["TMPDIR"] = "/tmp"
-    # The harness's compile dir (node-local or its own tree) is not mounted.
-    env["PYTENSOR_FLAGS"] = "base_compiledir=/tmp/pytensor"
+    # Caches go to the private home, removed when the agent exits, so scratch/
+    # holds only the agent's own files. Sherlock exports PYTHONPYCACHEPREFIX=/tmp
+    # for every user, which put a .pyc for every import into scratch/ (about
+    # 2,300 files per agent). The harness's pytensor compile dir is not mounted.
+    env["PYTHONPYCACHEPREFIX"] = str(user_home / ".cache" / "pycache")
+    env["PYTENSOR_FLAGS"] = f"base_compiledir={user_home / '.cache' / 'pytensor'}"
     for var, default in (
         ("XDG_CACHE_HOME", ".cache"),
         ("XDG_STATE_HOME", ".local/state"),

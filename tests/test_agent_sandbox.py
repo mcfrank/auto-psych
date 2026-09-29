@@ -100,6 +100,24 @@ def test_tmp_is_the_agents_own_scratch_dir_on_disk(tmp_path):
 
 
 @needs_bwrap
+def test_scratch_holds_only_the_agents_own_files_not_python_caches(tmp_path, monkeypatch):
+    """Sherlock exports PYTHONPYCACHEPREFIX=/tmp for every user, so inside the
+    sandbox every import wrote a .pyc into scratch/ (about 2,300 per candidate
+    in the first sandboxed smoke, 4 M inodes a sweep). Python's and pytensor's
+    caches go to the private home, which is removed when the agent exits."""
+    import sys
+
+    monkeypatch.setenv("PYTHONPYCACHEPREFIX", "/tmp")
+    script = f"echo 'print(1)' > /tmp/explore.py && {sys.executable} -c 'import numpy, json'"
+    result, _, agent_dir, _ = _run(tmp_path, script)
+    assert result.returncode == 0, result.stderr
+    scratch = agent_dir / "scratch"
+    # Files only: where tmp_path is under /tmp, bwrap's mount points for the
+    # tree show up in scratch/ as empty directories.
+    assert sorted(p.name for p in scratch.rglob("*") if p.is_file()) == ["explore.py"]
+
+
+@needs_bwrap
 def test_home_is_private(tmp_path):
     result, _, agent_dir, _ = _run(tmp_path, "echo hi > ~/.hello && ls -A ~")
     assert result.returncode == 0, result.stderr
