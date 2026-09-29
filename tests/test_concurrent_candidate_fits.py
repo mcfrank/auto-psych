@@ -63,6 +63,7 @@ def test_only_candidates_that_pass_the_cheap_gates_are_fitted(tmp_path, monkeypa
         model_zoo, "model_logp_is_finite",
         lambda name, d, r: (name != "nan_logp", "logp is NaN"),
     )
+    monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     models_dir = tmp_path / "models"
     models_dir.mkdir()
     candidates = [

@@ -136,8 +136,15 @@ target — see **Slot roles**) → admit sequentially.
   `dataclasses.builtins`), no file reader (`np.DataSource`, `pd.read_*`) and
   no attribute lookup inside `str.format` — the code runs in the harness
   process, which clears its own argv once parsed) + `hypothesis.md` (`model_name.txt` is
-  optional; a slot name is the fallback), passing logp/real-fit/finite-ELPD
-  gates and the **convergence gate** (≤0.1% divergent transitions, R-hat ≤
+  optional; a slot name is the fallback), passing the logp gate, the **data
+  contract** (`model_contract_violation` in `src/models/model_contract.py`,
+  no sampling: the observed data are the CSV's `chose_left` in row order,
+  `p_left` has one entry per trial, and at the initial point and 3 jittered
+  points the likelihood's probability of each response equals
+  Bernoulli(chose_left; p_left) within 1e-5; no `pm.Potential` on the
+  responses — also run on every starting model at experiment start, where a
+  protected seed that breaks it raises, and by `check_candidate`), the
+  real-fit/finite-ELPD gates and the **convergence gate** (≤0.1% divergent transitions, R-hat ≤
   1.05, bulk ESS ≥ 100; `fit_model` refits a failing fit once at
   `target_accept` 0.95, with a random seed of its own derived from the first
   fit's seed and fingerprint (`refit_settings`), only when it is a near miss

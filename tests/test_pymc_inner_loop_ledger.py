@@ -81,6 +81,7 @@ def _patch_scoring(monkeypatch):
     monkeypatch.setattr(
         model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
     )
+    monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     # The stub fit is not a real trace: pass the convergence gate.
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())

@@ -4,7 +4,9 @@ The candidate agent writes a PyMC model it has never run. This is the one
 command ``CONTEXT.md`` documents for it (``check_candidate_command``): the
 pipeline's own interpreter runs the admission gates the agent can act on —
 the import allowlist, a loadable module-level ``model: pm.Model``, a finite
-log-probability on the real responses, a short MCMC fit and a finite
+log-probability on the real responses, the data contract (observed data =
+``chose_left`` in row order, a per-trial ``p_left`` that is the likelihood's
+probability; ``src/models/model_contract.py``), a short MCMC fit and a finite
 ELPD-LOO — with the small ``CANDIDATE_CHECK_*`` sampler settings from
 ``src/models/mcmc_defaults.py``. It is a smoke fit, not a production fit: it
 never writes to the pipeline's fit cache, and it does not run the novelty
@@ -35,6 +37,7 @@ from src.models.mcmc_defaults import (
     CANDIDATE_CHECK_DRAWS,
     CANDIDATE_CHECK_TUNE,
 )
+from src.models.model_contract import model_contract_violation
 from src.models.model_loading import load_pymc_model
 from src.models.pymc_inference import fit_model, model_logp_is_finite
 from src.pipelines.inner_loop.import_gate import (
@@ -107,6 +110,10 @@ def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
     if not fittable:
         raise CandidateCheckFailed(f"model cannot be fit — {reason}")
 
+    violation = model_contract_violation(CANDIDATE_MODULE, candidate_dir, responses_path)
+    if violation is not None:
+        raise CandidateCheckFailed(f"model breaks the data contract — {violation}")
+
     try:
         fit_model(
             CANDIDATE_MODULE, candidate_dir, responses_path, cache_dir=None, **CHECK_FIT_KWARGS
@@ -133,7 +140,8 @@ def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
 
     return (
         f"OK: {candidate_file} loads as a module-level pm.Model, has a finite "
-        f"log-probability on {responses_path}, completed a "
+        f"log-probability on {responses_path}, honours the data contract "
+        f"(observed = chose_left, p_left = the likelihood's probability), completed a "
         f"{CANDIDATE_CHECK_DRAWS}-draw / {CANDIDATE_CHECK_TUNE}-tune smoke fit "
         f"({CANDIDATE_CHECK_CHAINS} chain) and has a finite ELPD-LOO ({elpd:.1f} "
         f"on this smoke fit). Not checked here: novelty against the other models."

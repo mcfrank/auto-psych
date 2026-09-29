@@ -27,6 +27,7 @@ from src.models.mcmc_defaults import (
     NEAR_MISS_MAX_R_HAT,
     NEAR_MISS_MIN_BULK_ESS,
 )
+from src.models.model_contract import model_contract_violation
 from src.models.model_manifest import manifest_path, read_manifest_entries
 from src.models.data_binding import MissingStimulusColumns, make_stim_data
 from src.models.model_loading import load_pymc_model, pm_data_inputs
@@ -349,8 +350,10 @@ def _drop_unfittable_models(
     *,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
+    protected: Iterable[str] = (),
 ) -> None:
-    """Remove from the manifest any seed model that cannot be MCMC-fit.
+    """Remove from the manifest any starting model that cannot be MCMC-fit or
+    breaks the data contract.
 
     A seed/theory model whose logp is non-finite on the data (e.g. a
     numerically unsafe construct that NaNs in PyTensor) would otherwise crash
@@ -359,27 +362,48 @@ def _drop_unfittable_models(
     kill a long agentic run. Fails loudly only if **no** model survives. Each
     drop is recorded in the ledger so a carried model that vanishes here is
     still accounted for.
+
+    A model that breaks the data contract (``model_contract_violation``: its
+    observed data are not the responses' ``chose_left`` in row order, or its
+    ``p_left`` is not the per-trial probability its likelihood uses) is
+    dropped the same way, except a ``protected`` one: a starting model the
+    run reports against that is scored on something other than the responses
+    is a broken project, and raises.
     """
+    protected = set(protected)
     keep: List[Dict[str, str]] = []
     for entry in _manifest_entries(models_dir):
         name = entry["name"]
         fittable, reason = model_logp_is_finite(name, models_dir, responses_path)
         if fittable:
-            keep.append(entry)
+            violation = model_contract_violation(name, models_dir, responses_path)
+            if violation is None:
+                keep.append(entry)
+                continue
+            if name in protected:
+                raise RuntimeError(
+                    f"Protected starting model {name!r} breaks the data contract on "
+                    f"{responses_path}: {violation}. A protected seed is never "
+                    "dropped from the set; fix the seed."
+                )
+            reason = f"breaks the data contract — {violation}"
+            print(f"  [drop] model {name!r} {reason}", flush=True)
+            detail = f"{reason} (on this experiment's data)"
         else:
             print(f"  [drop] seed model {name!r} cannot be fit — {reason}", flush=True)
-            _record(
-                ledger,
-                name=name,
-                outcome="dropped",
-                detail=f"cannot be fit on this experiment's data — {reason}",
-                hypothesis=entry.get("rationale") or "",
-                context=ledger_context,
-            )
+            detail = f"cannot be fit on this experiment's data — {reason}"
+        _record(
+            ledger,
+            name=name,
+            outcome="dropped",
+            detail=detail,
+            hypothesis=entry.get("rationale") or "",
+            context=ledger_context,
+        )
     if not keep:
         raise ValueError(
             f"No fittable seed models remain in {models_dir} — every seed model's "
-            "logp was non-finite on the data."
+            "logp was non-finite on the data or broke the data contract."
         )
     _write_manifest(models_dir, keep)
 
@@ -1095,7 +1119,8 @@ def _cheap_gate_rejection(
     responses_path: Path,
 ) -> Optional[str]:
     """Admission's gates before the fit, in order: the files, the code gate, a
-    loadable model and a finite logp. Stages the candidate as
+    loadable model, a finite logp and the data contract
+    (``model_contract_violation``). Stages the candidate as
     ``models_dir/<model_name>.py`` and returns None when it passes them; else
     removes the staged file and returns the rejection reason.
 
@@ -1130,6 +1155,10 @@ def _cheap_gate_rejection(
     if not fittable:
         staged.unlink(missing_ok=True)
         return f"model cannot be fit — {reason}"
+    violation = model_contract_violation(model_name, models_dir, responses_path)
+    if violation is not None:
+        staged.unlink(missing_ok=True)
+        return f"model breaks the data contract — {violation}"
     return None
 
 

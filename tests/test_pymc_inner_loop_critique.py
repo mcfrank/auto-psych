@@ -46,6 +46,7 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
     monkeypatch.setattr(
         model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
     )
+    monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     monkeypatch.setattr(
         model_zoo, "load_pymc_model", lambda name, models_dir: object()
     )
