@@ -19,6 +19,7 @@ Everything else raises:
 """
 
 import os
+from pathlib import Path
 from typing import Any, Dict, Optional, Tuple
 
 import requests
@@ -31,18 +32,24 @@ DEFAULT_ESTIMATED_COMPLETION_MINUTES = 5
 DEFAULT_COMPLETION_CODE = "AUTO_PSYCH_COMPLETE"
 
 
+def prolific_config_path(project_id: str) -> Path:
+    """The project's prolific_config.yaml: rendered from a launcher config
+    (``scripts/outer_loop_live/_pilot_config.py``), never committed."""
+    return project_assets_dir(project_id) / "prolific_config.yaml"
+
+
 def load_prolific_config(project_id: str) -> Dict[str, Any]:
     """
     Load the project's prolific_config.yaml with defaults.
     Keys: estimated_completion_time (min), completion_code, test_participant_email (for test_prolific),
-    total_available_places, reward (cents), name, description, etc.
+    reward (cents), name, description, etc. There is no default for
+    total_available_places: the number recruited is the run's --n-participants.
     """
-    path = project_assets_dir(project_id) / "prolific_config.yaml"
+    path = prolific_config_path(project_id)
     out = {
         "estimated_completion_time": DEFAULT_ESTIMATED_COMPLETION_MINUTES,
         "completion_code": DEFAULT_COMPLETION_CODE,
         "test_participant_email": None,
-        "total_available_places": 1,
         "reward": 50,
         "name": "Auto-psych experiment",
         "description": "Psychology experiment (auto-psych pipeline).",

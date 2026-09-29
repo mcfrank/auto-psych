@@ -39,6 +39,7 @@ from src.models.mcmc_defaults import (
 from src.pipelines.inner_loop.run import load_hints_file
 from src.pipelines.outer_loop.deployment import write_smoke_experiment
 from src.pipelines.outer_loop.deployment.manifest import refuse_second_live_study
+from src.pipelines.outer_loop.deployment.prolific import load_recruitment_config
 from src.pipelines.outer_loop.model_loop_runner import (
     init_registry,
     run_inner_model_loop_programmatic,
@@ -554,7 +555,9 @@ class Args:
     ] = "simulated_participants"
     """Data-collection mode."""
     n_participants: int = DEFAULT_N_PARTICIPANTS
-    """Number of participants to collect or simulate."""
+    """Number of participants to collect or simulate. With a Prolific study this
+    is also the number recruited (the study's places); the project's
+    prolific_config.yaml must not name a different one."""
     ground_truth_model: Optional[str] = None
     """Generate synthetic participant data from this ground-truth model (must be in
     src/pipelines/outer_loop/projects/<project>/ground_truth_models.py). If omitted,
@@ -676,6 +679,13 @@ def main(args: Args) -> None:
     else:
         print("Error: specify --experiment N or --experiments N", file=sys.stderr)
         sys.exit(1)
+
+    # One participant count: --n-participants sets the design's N, the
+    # collection target and the Prolific study's places. Check the study
+    # settings against it before any stage runs (and before anything is
+    # deployed or published).
+    if args.prolific_mode != "none":
+        load_recruitment_config(project_id, args.n_participants)
 
     participant_model = (
         (args.hf_model or DEFAULT_OPEN_MODEL)

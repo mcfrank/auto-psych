@@ -11,6 +11,18 @@ from src.pipelines.outer_loop.deployment.prolific import (
 )
 
 
+@pytest.fixture(autouse=True)
+def rendered_settings(tmp_path, monkeypatch):
+    """A rendered prolific_config.yaml that sets nothing, so the payload shows
+    the loader's defaults (a study is never built without a rendered file)."""
+    import src.runtime.prolific as prolific_client
+
+    monkeypatch.setattr(prolific_client, "project_assets_dir", lambda pid: tmp_path / pid)
+    project_dir = tmp_path / "project_with_default_settings"
+    project_dir.mkdir()
+    (project_dir / "prolific_config.yaml").write_text("{}\n", encoding="utf-8")
+
+
 def _live_filters_snapshot() -> list[dict]:
     """A minimal stand-in for Prolific's GET /filters/ payload covering the
     filters whose choice IDs we hardcode."""
@@ -107,7 +119,7 @@ def _manifest() -> DeploymentManifest:
 
 def test_build_prolific_payload_without_network():
     plan = build_prolific_plan(
-        project_id="missing_project_uses_defaults",
+        project_id="project_with_default_settings",
         manifest=_manifest(),
         n_participants=7,
         mode="test",
@@ -163,7 +175,7 @@ def test_live_study_applies_data_quality_eligibility_filters():
     # Integration: a real-recruitment (live) study restricts to US-based,
     # English-fluent participants with an approval rate of at least 98%.
     plan = build_prolific_plan(
-        project_id="missing_project_uses_defaults",
+        project_id="project_with_default_settings",
         manifest=_manifest(),
         n_participants=10,
         mode="live",
@@ -182,7 +194,7 @@ def test_payload_uses_completion_codes_array_matching_the_redirect():
     is redirected to (`?cc=...`), or Prolific won't recognise the completion.
     """
     plan = build_prolific_plan(
-        project_id="missing_project_uses_defaults",
+        project_id="project_with_default_settings",
         manifest=_manifest(),
         n_participants=5,
         mode="live",

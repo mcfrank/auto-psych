@@ -85,3 +85,7 @@ analysis/behavioral/data/mega_model_predictions.csv
 analysis/behavioral/*.html
 analysis/behavioral/*_files/
 functions/.env
+
+# Prolific study settings, rendered per run from a launcher config
+# (scripts/outer_loop_live/_pilot_config.py --render-only); never committed.
+src/pipelines/outer_loop/projects/*/prolific_config.yaml

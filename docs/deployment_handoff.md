@@ -311,9 +311,10 @@ Current caveat:
 
 ### 5. Prolific Test Mode
 
-For Prolific test mode, first create
+For Prolific test mode, first render
 `src/pipelines/outer_loop/projects/subjective_randomness/prolific_config.yaml`
-from the example and set a test participant email.
+(gitignored) with `scripts/outer_loop_live/_pilot_config.py <config.yaml> --render-only`;
+a Prolific run without it stops. The study's places are `--n-participants`.
 
 ```bash
 uv run python -m src.pipelines.outer_loop.run \

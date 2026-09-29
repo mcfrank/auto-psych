@@ -71,7 +71,12 @@ and the npm registry directly.
    (participants, reward, task length, study name/description, #experiments,
    walltime). `run_pilot.sh` renders
    `src/pipelines/outer_loop/projects/<project>/prolific_config.yaml` from it on
-   launch, so **that file is now auto-generated — edit `pilot.yaml`, not it.**
+   launch, so **that file is auto-generated (and gitignored) — edit
+   `pilot.yaml`, not it.** It carries no participant count: `participants`
+   reaches the job as `N_PARTICIPANTS` → `--n-participants`, which sets the
+   study's places, the design's N and the collection target alike. A file with
+   a disagreeing `total_available_places`, or no rendered file at all, stops a
+   Prolific run before any stage.
 
 4. **IRB consent** — deployment hard-requires a consent gate; confirm
    `templates/consent.txt` is your IRB-approved wording (it is injected as a
@@ -154,7 +159,9 @@ map onto the same-named `run.py` flags.
 
 ## Run (advanced: direct / parallel)
 
-**One run, no cost summary/confirmation:**
+**One run, no cost summary/confirmation** (render the study settings into the
+checkout first — `"$VENV_PY" scripts/outer_loop_live/_pilot_config.py <config.yaml> --render-only`
+— or it stops with `No Prolific study settings at …`):
 
 ```bash
 sbatch --export=ALL,RUN_LABEL=pilotA,N_PARTICIPANTS=20 \
