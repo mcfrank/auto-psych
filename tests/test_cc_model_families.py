@@ -1,18 +1,12 @@
 """Smoke tests for hand-authored subjective-randomness model families."""
 
-from src.subjective_randomness.model_families import (
-    bayesian_diagnosticity,
-    encoding_compressibility,
-    prototype_similarity,
-    window_typicality,
-)
+import importlib
 
+from tests.model_registry import faithful_model_names
 
 MODEL_MODULES = [
-    bayesian_diagnosticity,
-    encoding_compressibility,
-    prototype_similarity,
-    window_typicality,
+    importlib.import_module(f"src.subjective_randomness.model_families.{name}")
+    for name in faithful_model_names()
 ]
 
 TEST_STIMULI = [

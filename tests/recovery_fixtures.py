@@ -1,53 +1,19 @@
-"""Stand-ins for a fitted PyMC model, shared by the recovery test modules.
+"""Helpers shared by the recovery test modules.
 
-Recovery tests monkeypatch ``fit_model`` so no MCMC runs, and every one of them
-needs the same shape of object back. There are two shapes, because the two
-recovery paths ask a fit for different things:
-
-* ``CannedPosteriorFit`` — carries an ``idata`` with a fixed posterior. The
-  ``recover``/``pipeline`` path reads parameter estimates out of it.
-* ``CannedPredictionFit`` — answers ``predict_p_left``. The holdout path only
-  ever asks a fit to predict on the held-out stimuli.
-
-Each was duplicated verbatim in two test modules before it lived here.
+* ``CannedPredictionFit`` — a stand-in for a fitted PyMC model. Recovery tests
+  monkeypatch ``fit_model`` so no MCMC runs, and the holdout path only ever
+  asks a fit to predict on the held-out stimuli.
+* ``p_left_model_family`` — ``p_left`` from a registry model's pure-Python
+  twin, the independent implementation each PyMC adapter is checked against.
 """
 
 from __future__ import annotations
 
-import numpy as np
+import importlib
 from types import SimpleNamespace
+from typing import Mapping, Sequence
 
-# The canned posterior: two chains x two draws for each parameter the
-# subjective-randomness families expose.
-CANNED_POSTERIOR = {
-    "theta_alt": [[0.60, 0.70], [0.65, 0.67]],
-    "alt_weight": [[0.50, 0.55], [0.58, 0.57]],
-    "beta": [[3.8, 4.2], [4.0, 4.1]],
-    "side_bias": [[-0.1, 0.0], [0.1, 0.0]],
-}
-
-
-class FakeParam:
-    """One posterior variable, exposing ``.values`` like an xarray DataArray."""
-
-    def __init__(self, values):
-        self.values = np.array(values, dtype=float)
-
-
-class FakeIdata:
-    """An InferenceData stand-in: ``.posterior`` maps a name to a FakeParam."""
-
-    def __init__(self, params):
-        self.posterior = {name: FakeParam(values) for name, values in params.items()}
-
-
-class CannedPosteriorFit:
-    """A fitted model whose posterior is fixed, for the parameter-recovery path."""
-
-    fingerprint = "fake-fit"
-
-    def __init__(self):
-        self.idata = FakeIdata(CANNED_POSTERIOR)
+import numpy as np
 
 
 class CannedPredictionFit:
@@ -68,3 +34,26 @@ class CannedPredictionFit:
 
     def convergence_problems(self):
         return []
+
+
+def p_left_model_family(
+    model_name: str,
+    stimuli: Sequence[Mapping[str, str]],
+    params: Mapping[str, float],
+) -> np.ndarray:
+    """``p_left`` per stimulus from the pure-Python model family ``model_name``.
+
+    Fails loudly unless ``params`` names exactly the family's parameters.
+    """
+    module = importlib.import_module(f"src.subjective_randomness.model_families.{model_name}")
+    expected = set(module.DEFAULT_PARAMS)
+    if set(params) != expected:
+        missing = sorted(expected - set(params))
+        extra = sorted(set(params) - expected)
+        raise ValueError(
+            f"Generating params must name exactly {model_name}'s parameters "
+            f"{sorted(expected)}. Missing: {missing}. Unexpected: {extra}."
+        )
+    return np.array(
+        [module.predict_left(stim, dict(params)) for stim in stimuli], dtype="float64"
+    )

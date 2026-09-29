@@ -1,4 +1,0 @@
-gt_model,experiment,step,iteration,global_step,best_model,pearson_r,rmse,pearson_r_bma,rmse_bma
-window_typicality,1,0,,0,encoding_compressibility,0.8809926034208155,0.16693327062271462,0.8809926034208155,0.16693327062271462
-window_typicality,2,0,,1,length_sensitive_alternation,0.7549525393437017,0.24280634322192382,0.7549525393437017,0.24280634322192382
-window_typicality,3,0,,2,length_sensitive_alternation,0.7652614926172797,0.2342218664667999,0.7652614926172797,0.2342218664667999

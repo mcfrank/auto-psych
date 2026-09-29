@@ -105,7 +105,6 @@ dataclass — `--help` lists every knob with its documented default.
 
 | Command | What it does |
 |---|---|
-| `python scripts/subjective_randomness/model_recovery.py` | Closed-ended recovery: confusion matrix over the frozen registry models (no agents). |
 | `python scripts/subjective_randomness/holdout_recovery.py` | Full agentic loop vs. a held-out registry ground truth; per-step recovery trajectory. |
 | `python scripts/subjective_randomness/impossible_holdout_recovery.py` | Same, with deliberately-weird "impossible" ground truths outside every model family. |
 | `python scripts/subjective_randomness/reanalyze_holdout_exhaustive.py` | Re-evaluate finished holdout runs on the exhaustive stimulus pool (no agents, cached fits). |
@@ -118,7 +117,6 @@ dataclass — `--help` lists every knob with its documented default.
 | `python -m src.viewer.server` | Browser explorer for finished runs on disk (models, designs, critiques, posterior trajectories, transcripts). |
 | `python -m src.viewer.freeze` | Freeze curated runs into a static site for public hosting. |
 | `python -m src.monitor.server` | Live dashboard for an **in-progress** human study (Firestore + Prolific; flags degenerate data early). |
-| `scripts/analysis/*.py` | Post-hoc analyses of the human runs (model-similarity RMSE, fit comparisons, combined recovery figures). |
 
 ## Run The Active Outer Loop
 
@@ -253,7 +251,7 @@ stacking weights remain a report field in `model_posterior.json`).
 A live web explorer presents one page per **run**. A run is any directory under
 `data/` that holds experiments (or a single bare model loop) — for example
 `data/outer_loop/subjective_randomness` or
-`data/subjective_randomness/impossible_holdout_recovery/impossible_holdout_runs/fewer_heads_more_random`.
+`data/results/human_experiment/run1/subjective_randomness`.
 The sidebar is a directory tree of every run found; clicking one opens its page.
 
 Each run page stacks its experiments as collapsible panels (the first open).
@@ -351,7 +349,7 @@ src/
       participants.py        # closed (Gemini) + open (HuggingFace) participant models
       llm.py eig.py
       prompts/               # 3_implement / 4_collect_* prompts (no theorist or design stage)
-      projects/<project>/    # problem_definition.md, ground_truth_models.py, preprocess.py, seed_models/
+      projects/<project>/    # problem_definition.md, ground_truth_models.py, evaluate_recovery.py, seed_models/
       deployment/            # firebase.py firestore.py prolific.py manifest.py local.py smoke.py
     inner_loop/
       run.py                 # `python -m src.pipelines.inner_loop.run` (entry point)
@@ -367,14 +365,13 @@ src/
     mcmc_defaults.py         # the ONE source of MCMC sampler defaults for every entry point
     theorist/                # loader.py + predictions.py (pure-Python prediction callables)
     project/                 # ground_truth.py
-  subjective_randomness/     # research library: model families, recovery harnesses, stimulus design
+  subjective_randomness/     # research library: model families, recovery harnesses, stimulus pair pools
                              # (pymc_model_families/ = the frozen recovery registry — see its README)
   runtime/
     coding_agent.py          # backend-agnostic Claude Code / opencode subprocess launcher
     config.py console.py observability.py prolific.py
   registry/
     io.py                    # per-run model_registry.yaml (model -> weight, the EIG design prior)
-  experiments/ validation/   # LEGACY (old pipeline) — not used by the live loops
   viewer/                    # browser-based run explorer (Flask + static SPA)
     server.py                # `python -m src.viewer.server`
     freeze.py                # `python -m src.viewer.freeze` -> static snapshot for web hosting

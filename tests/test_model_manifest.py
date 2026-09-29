@@ -51,7 +51,7 @@ LIVE_SEED_DIR = (
 def test_every_manifest_model_has_a_pure_python_twin(models_dir):
     """Each active model resolves to ``model_families.<name>.DEFAULT_PARAMS``.
 
-    Recovery needs the twin: ``model_recovery.default_generating_params``
+    Recovery needs the twin: ``holdout_data.resolve_generating_params``
     imports it by name to fix the generating parameters, and the twin is what
     the PyMC adapter is validated against. A manifest name without a twin is a
     ``ModuleNotFoundError`` waiting for the next recovery run.
@@ -94,13 +94,10 @@ def test_live_seed_pool_is_byte_identical_to_the_registry():
 
 
 def test_the_motif_stack_seed_is_the_viterbi_model():
-    """The seed is the registry's Viterbi motif_stack with its declared 0.9,
-    not the softmax rewrite it briefly was (reverted 2026-09-27)."""
+    """The seed is the registry's Viterbi motif_stack with its declared 0.9
+    (a softmax rewrite briefly replaced it and was reverted 2026-09-27)."""
     from src.models.pymc_inference import model_sampler_settings
 
-    assert (LIVE_SEED_DIR / "motif_stack.py").read_bytes() != (
-        REGISTRY_DIR / "motif_stack_softmax.py"
-    ).read_bytes()
     assert model_sampler_settings("motif_stack", LIVE_SEED_DIR) == {"target_accept": 0.9}
 
 

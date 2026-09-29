@@ -65,28 +65,6 @@ class Args:
     inferred from the directories present, and said so)."""
 
 
-def discover_cells(sweep: Path, *, gt_model: Optional[str] = None) -> Dict[str, Path]:
-    """``'run<r>/<gt>' -> cell dir`` for every cell directory of the sweep,
-    sorted by label. Raises when the root is missing or the selection is empty."""
-    sweep = Path(sweep)
-    if not sweep.is_dir():
-        raise FileNotFoundError(f"The sweep root does not exist: {sweep}")
-    cells: Dict[str, Path] = {}
-    for run_dir in sorted(sweep.glob("run*")):
-        if not run_dir.is_dir():
-            continue
-        for cell_dir in sorted(run_dir.iterdir()):
-            if not cell_dir.is_dir():
-                continue
-            if gt_model is not None and cell_dir.name != gt_model:
-                continue
-            cells[f"{run_dir.name}/{cell_dir.name}"] = cell_dir
-    if not cells:
-        selection = f" for ground truth {gt_model!r}" if gt_model else ""
-        raise FileNotFoundError(f"No run<r>/<gt>/ cells{selection} under {sweep}")
-    return cells
-
-
 def incumbent_records(cells: Dict[str, Path]) -> Dict[str, Dict[str, Any]]:
     """The per-cell incumbent summary for every cell, in label order."""
     records: Dict[str, Dict[str, Any]] = {}

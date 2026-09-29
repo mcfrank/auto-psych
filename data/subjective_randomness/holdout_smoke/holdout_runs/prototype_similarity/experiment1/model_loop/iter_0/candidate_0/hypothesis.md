@@ -1,1 +1,0 @@
-People judge the randomness of a sequence by the proportion of the sequence made up of its longest continuous run, perceiving sequences where a single run occupies a larger fraction of the total length as less random.

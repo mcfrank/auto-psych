@@ -30,7 +30,9 @@ def test_inner_model_loop_exports_best_pymc_model(tmp_path, monkeypatch):
         }
 
     monkeypatch.setattr(pymc_orchestrator, "_compare", comparison_for_export_test)
-    exp_dir = tmp_path / "project" / "experiment1"
+    # The run's folder names its project: the outer loop reads the project's
+    # task description (every inner-loop agent is told the task) from it.
+    exp_dir = tmp_path / "subjective_randomness" / "experiment1"
 
     # Seed the experiment's model set with the two fixture PyMC models.
     models_dir = exp_dir / "cognitive_models"
@@ -41,7 +43,7 @@ def test_inner_model_loop_exports_best_pymc_model(tmp_path, monkeypatch):
         PYMC_MODEL_FIXTURES_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
     )
 
-    # Pooled responses already carry the feature columns the models read.
+    # Raw responses; each fixture model computes its own features.
     data_dir = exp_dir / "data"
     data_dir.mkdir(parents=True)
     shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / "responses.csv", data_dir / "responses.csv")

@@ -13,11 +13,10 @@
 # literature-faithful models, each replacing the superseded original it was
 # built to correct (falk_konold_dp <- encoding_compressibility, motif_stack <-
 # bayesian_diagnosticity, finite_experience_occurrence <- window_typicality,
-# local_representativeness <- prototype_similarity). The superseded model
-# files and their pure-Python twins remain on disk (in the registry) so old
-# run artifacts can still be refit, but only the models listed here are
-# active — for recovery, fitted/no-learning baselines, and EIG stimulus design
-# defaults alike (see stimulus_design.default_model_family_names).
+# local_representativeness <- prototype_similarity). The superseded models
+# were removed in September 2026 (git history keeps them). Only the models
+# listed here are active — for recovery and the fitted/no-learning baselines
+# alike.
 models:
   - name: falk_konold_dp
     rationale: |

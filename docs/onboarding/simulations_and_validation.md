@@ -10,10 +10,9 @@ and cluster launchers: `scripts/subjective_randomness/` (its `README.md` and
 
 | check | question | agents? | entry point |
 |---|---|---|---|
-| model recovery | if a starting model generated the data, does fitting and comparing pick it? | no | `model_recovery.py` |
 | held-out recovery | with the true model removed from the start set, do the agents rebuild something that predicts like it? | yes | `holdout_recovery.py` |
 | impossible controls (the paper's "alien" rules) | with an implausible true rule, does the loop fail, as it should? | yes | `impossible_holdout_recovery.py` |
-| no-inner-loop variants | how much do the agents add? | no | `run_no_inner_loop_test_retest.sh`, `run_impossible_no_inner_loop_test_retest.sh` |
+| no-inner-loop variants | how much do the agents add? | no | `INNER_LOOP_ITERATIONS=0`, `run_impossible_no_inner_loop_test_retest.sh` |
 
 Settings (`configs/holdout_recovery_faithful.yaml`; the impossible config is
 identical apart from the hidden models, and a test keeps it so): 40
@@ -70,7 +69,7 @@ added nothing that refitting the literature could not.
 `SMOKE=1 bash scripts/subjective_randomness/slurm/run_faithful_test_retest.sh`
 first (one cheap cell), then without `SMOKE` for the sweep, and
 `run_impossible_test_retest.sh` for the controls. Each chains setup, the cell
-array (1 day, 16 CPUs / 64 GB; impossible cells 8 CPUs / 32 GB), up to two
+array (1 day, 16 CPUs / 64 GB, the same for impossible cells), up to two
 rounds of automatic retries, and a summary. A sweep runs on one version of
 the code, recorded at setup. Claude agents need `CLAUDE_AUTH=subscription`
 or `api` and its key; agents that hit a usage limit wait for its reset (up
@@ -78,13 +77,10 @@ to 12 h), and a proposal's fit may take up to 30 minutes per sampling run.
 
 ## Results so far
 
-See [BRIEF.md § 3](BRIEF.md#3-where-things-stand-28-september-2026). The
-committed summaries in `data/results/holdout_test_retest/` are from the
-**old** starting models and old code, not the current ones.
+See [BRIEF.md § 3](BRIEF.md#3-where-things-stand-28-september-2026).
 
 ## Caveats
 
-- `slurm/run_test_retest.sh` pins old model names and aborts; use
-  `run_faithful_test_retest.sh` (its comments give outdated settings; the
-  config is authoritative).
+- `slurm/run_faithful_test_retest.sh`'s comments give outdated settings; the
+  config is authoritative.
 - The live presets do not use these settings (runbook § 3).

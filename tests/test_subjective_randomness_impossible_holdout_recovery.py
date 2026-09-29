@@ -33,15 +33,14 @@ from src.subjective_randomness.leakage_audit import (
     _distinctive_param_names,
     leakage_check,
 )
-from src.subjective_randomness.model_recovery import p_left_fixed_params
+from src.subjective_randomness.holdout_data import p_left_fixed_params
 from tests.model_registry import FAITHFUL_MODEL_NAMES
 from tests.recovery_fixtures import CannedPredictionFit
 from tests.paths import REPO_ROOT
 
 # The recovery GT/baseline registry: the models with pure-Python family twins,
 # and the single source of truth for the active seed set (the live project
-# seed_models dir mirrors this manifest). It also keeps superseded models on
-# disk, so a superseded ground truth can be generated without being in the pool.
+# seed_models dir mirrors this manifest).
 SEED_MODELS_DIR = REPO_ROOT / "src/subjective_randomness/pymc_model_families"
 IMPOSSIBLE_MODELS_DIR = REPO_ROOT / "src/subjective_randomness/impossible_models"
 
@@ -180,7 +179,7 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     monkeypatch.setattr(
         holdout_recovery,
         "run_inner_model_loop_programmatic",
-        _stub_inner_loop("local_representativeness"),
+        _stub_inner_loop("falk_konold_dp"),
     )
     # The GT reference p_left is stubbed (varied, so correlation is defined);
     # the impossible PyMC model file is exercised by the unit tests, not here.
@@ -334,7 +333,7 @@ def test_distinctive_param_names_empty_for_impossible_model():
     # distinctive params to leak (and no crash).
     assert _distinctive_param_names("more_heads_more_random") == set()
     # An existing family still reports its distinctive params (no regression).
-    assert _distinctive_param_names("prototype_similarity")
+    assert _distinctive_param_names("local_representativeness")
 
 
 def test_leakage_check_robust_to_missing_model_family(tmp_path):
@@ -436,7 +435,7 @@ def test_impossible_holdout_exhaustive_eval_thins_posterior(tmp_path, monkeypatc
     monkeypatch.setattr(
         holdout_recovery,
         "run_inner_model_loop_programmatic",
-        _stub_inner_loop("local_representativeness"),
+        _stub_inner_loop("falk_konold_dp"),
     )
     monkeypatch.setattr(
         holdout_eval,

@@ -11,10 +11,9 @@ def format_number(value: object, ndigits: int = 3) -> str:
     so ``None`` renders as ``n/a`` instead of crashing the report. Anything
     non-numeric — a model name, a label — passes through as its string form.
 
-    Note the sibling ``_fmt`` helpers in ``subjective_randomness/reporting.py``
-    (4 significant digits) and ``discriminating_probe.py`` (``undefined`` for
-    missing values) are deliberately *not* this function: their output strings
-    are part of those reports' formats.
+    Note the sibling ``_fmt`` helper in ``subjective_randomness/reporting.py``
+    (4 significant digits) is deliberately *not* this function: its output
+    strings are part of that report's format.
     """
     if value is None:
         return "n/a"

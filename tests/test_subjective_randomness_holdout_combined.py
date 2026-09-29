@@ -9,8 +9,6 @@ per-model panels as the single-run figure but with error bars across runs.
 
 from __future__ import annotations
 
-import json
-
 import plotnine
 import pytest
 
@@ -20,14 +18,6 @@ from src.subjective_randomness.reporting import (
     holdout_trajectories_ggplot,
     plot_holdout_trajectories_combined,
 )
-
-from tests.paths import ANALYSIS_SCRIPTS_DIR, load_script_module
-
-
-@pytest.fixture(scope="module")
-def cli():
-    """The analysis script, loaded as a module — its helpers are the units."""
-    return load_script_module(ANALYSIS_SCRIPTS_DIR / "plot_holdout_combined.py")
 
 
 def _gt_run(gt_model: str, traj_rows, *, baseline, fitted_baseline, fitted_experiment_1=None):
@@ -372,43 +362,3 @@ def test_plot_combined_writes_a_figure(tmp_path):
     out = tmp_path / "combined_rmse.pdf"
     plot_holdout_trajectories_combined(agg, out)
     assert out.exists() and out.stat().st_size > 0
-
-
-def test_cli_combines_run_tree_into_figures(cli, tmp_path):
-    runs_root = tmp_path / "holdout_test_retest"
-    for run_name, result in (("run1", RUN_A), ("run2", RUN_B)):
-        gt = result["gt_runs"][0]["gt_model"]
-        dest = runs_root / run_name / gt
-        dest.mkdir(parents=True)
-        (dest / "holdout.json").write_text(json.dumps(result), encoding="utf-8")
-
-    out_dir = tmp_path / "figs"
-    cli.main(cli.Args(runs_root=runs_root, out_dir=out_dir, metric="both"))
-
-    assert (out_dir / "holdout_combined_rmse.pdf").exists()
-    assert (out_dir / "holdout_combined_pearson_r.pdf").exists()
-    assert (out_dir / "holdout_combined.csv").exists()
-
-
-def test_cli_name_suffix_appears_in_output_filenames(cli, tmp_path):
-    runs_root = tmp_path / "holdout_no_inner_loop"
-    for run_name, result in (("run1", RUN_A), ("run2", RUN_B)):
-        gt = result["gt_runs"][0]["gt_model"]
-        dest = runs_root / run_name / gt
-        dest.mkdir(parents=True)
-        (dest / "holdout.json").write_text(json.dumps(result), encoding="utf-8")
-
-    out_dir = tmp_path / "figs"
-    cli.main(
-        cli.Args(
-            runs_root=runs_root,
-            out_dir=out_dir,
-            metric="rmse",
-            name_suffix="_no_inner_loop",
-        )
-    )
-
-    assert (out_dir / "holdout_combined_no_inner_loop_rmse.pdf").exists()
-    assert (out_dir / "holdout_combined_no_inner_loop.csv").exists()
-    # The un-suffixed default name is not written when a suffix is given.
-    assert not (out_dir / "holdout_combined_rmse.pdf").exists()

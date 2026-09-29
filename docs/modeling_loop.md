@@ -372,7 +372,7 @@ Entry: `run_design_programmatic` (orchestrator.py:422) →
 ### 3.1 Candidate pair space
 
 `enumerate_all_pairs(lengths, same_length_only=True)`
-(stimulus_design.py:114, called at eig.py:253):
+(stimulus_design.py:86, called at eig.py:253):
 
 - All `2^L` H/T strings for each L in 2..8, pooled in order (L ascending,
   then `itertools.product("HT", repeat=L)` order).
@@ -748,7 +748,7 @@ receive `problem_definition.md`, which is also excluded from the agent tree.
 2. The run's starting models (passed as `starting_models`, else the seeded
    names) become names no candidate may take (`reserved_names`); they are
    not protected.
-3. `HypothesisLedger.create` (hypothesis_ledger.py:102) copies
+3. `HypothesisLedger.create` (hypothesis_ledger.py:101) copies
    `cognitive_models/attempted_hypotheses.jsonl` if present, and otherwise
    starts empty.
 4. `_drop_unfittable_models` (model_zoo.py:284) runs `model_logp_is_finite`
@@ -900,12 +900,15 @@ experiment means every carried model is refit on it.
 ### 5.4 Scoring
 
 - **ELPD-LOO:** `FittedModel.loo_diagnostics` → `loo_diagnostics`
-  (loo_reliability.py:92) → `az.loo(idata, pointwise=True)` on the per-trial
+  (loo_reliability.py:91) → `az.loo(idata, pointwise=True)` on the per-trial
   Bernoulli log-likelihood. It is computed once per fit.
 - **Softmax "posterior"** (`model_posterior`, posterior.py:231):
-  `score_m = elpd_m + c · lines_m`, with `c = DEFAULT_COMPLEXITY_PRIOR_CONST = −0.05`
-  (scoring.py:29) and `lines_m` the number of non-blank, non-comment lines in
-  the model file. Then `posterior_m = softmax(score)`, rounded to 6 decimals.
+  `score_m = elpd_m + c · lines_m`, with `c = DEFAULT_COMPLEXITY_PRIOR_CONST`
+  (scoring.py) and `lines_m` the number of non-blank, non-comment lines in
+  the model file. By default `c = 0`, so there is **no complexity prior** and
+  the posterior is a softmax of ELPD-LOO alone (user decision 2026-09-29; it
+  was −0.05: on 14 finished recovery cells the penalty left held-out accuracy
+  unchanged within noise). Then `posterior_m = softmax(score)`, rounded to 6 decimals.
   It raises on a non-finite ELPD. It is used only as a report field and as the
   BMA weights in evaluation (§7). It does **not** select the best model.
 - **Comparison table** (`compare_table`, posterior.py:120): `az.compare` on the
@@ -1138,7 +1141,7 @@ or carried model stays in the zoo, likewise unselectable and unprunable.
 **Novelty gate** (`_min_prediction_rmse`, model_zoo.py:475):
 
 - Pool: `novelty_pool_rows()` = `generate_candidate_pool(512, lengths=(4,5,6,7,8), seed=20260919)`
-  (model_zoo.py:582-603, stimulus_design.py:45). That is 512 distinct
+  (model_zoo.py:582-603, stimulus_design.py:17). That is 512 distinct
   same-length unordered pairs, sampled round-robin over lengths (103, 103,
   102, 102, 102). The sample is identical in every cell. It is deliberately
   not the eval pool, and it does not include length 2–3 pairs, which the
@@ -1432,12 +1435,9 @@ This runs in the harness after the three experiments
   into complete (`holdout.json`), partial (a directory without one) and
   missing (no directory); the expected grid is `--n-repeats`/`--gt-models`
   when given (the analysis job passes `N_REPEATS`/`GT_MODELS`), else inferred
-  from the directories and said so. `recovery_report.py`, `holdout_test_retest.py`,
-  `incumbent_report.py`, `recovery_ceiling.py` and the two combined-figure
-  scripts print that accounting. The incumbent report now counts only
-  complete cells (it read partial cells' run records as whole cells), and
-  `compare_matched_cells.py` lists cells complete in only one sweep
-  (`unmatched`).
+  from the directories and said so. `holdout_test_retest.py` and
+  `incumbent_report.py` print that accounting. The incumbent report now counts only complete cells (it read
+  partial cells' run records as whole cells).
 - **Alignment.** `reporting.aggregate_holdout_trajectories` pools cells by
   position within an experiment — its seed step, each round (`iteration`)
   every cell recorded, and its end (each cell's last step) — not by
@@ -1455,18 +1455,12 @@ This runs in the harness after the three experiments
   loop's final point; `baseline_series` holds every position. Before, the
   baselines were flat final-data values averaged over whichever cells
   defined them, while the loop's mean covered every cell (second audit W2).
-- **Reports.** `recovery_report.py` summarises the loop's final step and the
-  fitted-seed baseline (`fitted_baseline.elpd_best_*`) over the same cells,
-  listing complete cells left out and why, and its header counts complete
-  cells per ground truth (it used integer division over all cells).
-  `holdout_test_retest.py` adds `cells` (the survey) and
+- **Reports.** `holdout_test_retest.py` adds `cells` (the survey) and
   `loop_vs_fitted_baseline`: per ground truth, experiment end and metric
   (r, RMSE), the loop's and the baseline's means and their mean paired
   difference over the cells where both are defined, with the others and why.
   `runs_missing_tidy` now lists the expected cells without a `holdout.csv`
-  (it was always empty). `recovery_ceiling.py` adds
-  `mean_ceiling_rmse_same_cells` (over the `n_with_loop` cells with a loop
-  RMSE) beside the loop's mean.
+  (it was always empty).
 
 ### 7.4 Incumbent record (incumbent.py)
 
@@ -1611,7 +1605,7 @@ Bugs and behaviour worth a decision (read from the code, not observed in a run):
   `source`.
 - **Metrics on different pair sets.** A step with excluded pairs, and a
   fitted seed with excluded pairs, are scored on fewer pairs than the
-  no-learning baseline and the recovery ceiling (user decision 2026-09-27).
+  no-learning baseline (user decision 2026-09-27).
   It is stated in the cell's log, `holdout.csv`, `eval_exclusions.jsonl` and
   the sweep summary, not corrected for.
 

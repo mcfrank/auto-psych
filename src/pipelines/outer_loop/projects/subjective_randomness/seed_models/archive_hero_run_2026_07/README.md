@@ -13,8 +13,8 @@ pool had diverged from the recovery registry
 review had meanwhile consolidated onto four literature-faithful models. Two
 disjoint "seed sets" were live at once, and because these four have **no
 pure-Python twin** in `src/subjective_randomness/model_families/`, every helper
-that resolves a seed name to its twin — `model_recovery.default_generating_params`
-above all — raised `ModuleNotFoundError` for all of them. The registry is now
+that resolves a seed name to its twin raised `ModuleNotFoundError` for all of
+them. The registry is now
 the single source of truth and the live pool mirrors it.
 
 Nothing loads this directory automatically. The models are kept so that
