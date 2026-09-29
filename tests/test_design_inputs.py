@@ -143,12 +143,13 @@ def test_the_design_search_settings_reach_both_selections(tmp_path, monkeypatch)
 
     eig_mod.design_exhaustive(
         tmp_path, lengths=(2, 3), n_select=2, n_responses=40, seed=9,
-        lazy=True, scoring_dtype="float32",
+        lazy=True, scoring_dtype="float32", leave_one_out=False,
     )
 
     assert len(calls) == 2
     for call in calls:
         assert call["lazy"] is True and call["dtype"] == "float32"
+        assert call["leave_one_out"] is False
         assert call["n_threads"] == 7
         assert call["lazy_batch_size"] == eig_mod.DESIGN_LAZY_BATCH_SIZE
         assert call["refresh_every"] == eig_mod.DESIGN_REFRESH_EVERY
@@ -180,3 +181,5 @@ def test_the_design_searches_lazily_in_float32_by_default(tmp_path, monkeypatch)
     [call] = calls
     assert call["lazy"] is True and call["dtype"] == "float32"
     assert (call["lazy_batch_size"], call["refresh_every"]) == (512, 16)
+    # Each scenario's generating draw is left out of its likelihood average.
+    assert call["leave_one_out"] is True

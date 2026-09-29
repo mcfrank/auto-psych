@@ -23,9 +23,10 @@ from tests.paths import ANALYSIS_SCRIPTS_DIR, PYMC_MODEL_FIXTURES_DIR, load_scri
 
 
 def test_estimate_joint_eig_matches_closed_form_single_stimulus():
-    # No parameter uncertainty (one draw): A predicts 0.8, B predicts 0.2.
-    # Exact I(M; R) = 1 - H_b(0.8) = 0.278072 bits.
-    draws = {"A": np.array([[0.8]]), "B": np.array([[0.2]])}
+    # No parameter uncertainty: A predicts 0.8, B predicts 0.2 (two identical
+    # draws each, since a scenario's likelihood average leaves its generating
+    # draw out). Exact I(M; R) = 1 - H_b(0.8) = 0.278072 bits.
+    draws = {"A": np.array([[0.8], [0.8]]), "B": np.array([[0.2], [0.2]])}
     est = estimate_joint_eig(draws, [0], n_scenarios=20000, seed=1)
     assert est == pytest.approx(0.278072, abs=0.02)
 
@@ -37,12 +38,16 @@ def test_estimate_joint_eig_correlated_pair_beats_zero_marginals():
     # under both models), but the PAIR does: under A the two responses agree
     # 82% of the time, under B 50%. Exact enumeration gives I = 0.0848 bits.
     # Only per-draw likelihoods can see this; a mean-based estimator returns 0.
+    # Each parameter value is 200 draws, so leaving a scenario's generating
+    # draw out of its average moves the posterior by well under the tolerance.
     draws = {
-        "A": np.array([[0.9, 0.9], [0.1, 0.1]]),
-        "B": np.array([[0.5, 0.5], [0.5, 0.5]]),
+        "A": np.repeat(np.array([[0.9, 0.9], [0.1, 0.1]]), 200, axis=0),
+        "B": np.repeat(np.array([[0.5, 0.5], [0.5, 0.5]]), 200, axis=0),
     }
     marginal = estimate_joint_eig(draws, [0], n_scenarios=5000, seed=2)
-    assert marginal == pytest.approx(0.0, abs=1e-9)
+    # Not exactly 0: without its generating draw, A's average leans 199:200
+    # away from the value that generated the response.
+    assert marginal == pytest.approx(0.0, abs=1e-5)
     joint = estimate_joint_eig(draws, [0, 1], n_scenarios=20000, seed=2)
     assert joint == pytest.approx(0.0848, abs=0.02)
 

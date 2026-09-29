@@ -19,6 +19,19 @@ likelihood; joint EIG is H(M) minus the mean posterior entropy across scenarios.
 The binomial coefficient is the same for every model and draw, so it cancels
 from the posterior and is left out of the likelihoods.
 
+The draw average of a scenario's own model **leaves out the draw that
+generated the scenario** (``leave_one_out``; first audit, C5). Including it
+biases the estimate upward: the generating draw explains its own responses
+better than any independent draw would, so the true model's likelihood is
+inflated, the posterior is overconfident and the joint EIG too high — most for
+designs that pin down individual draws (a model set of identical models, each
+with its own independent draws, reads as informative). Leaving it out makes
+the inner average independent of the scenario, so the estimate is consistent;
+it is still a nested Monte Carlo estimate, with the small bias of a finite
+inner average, so it is not unbiased. Leave-one-out needs at least two draws
+per model. It costs nothing measurable: the generating draw's entry is zeroed
+in the likelihood factor that the scoring matmul already uses.
+
 Selection is greedy: at each step add the stimulus with the largest expected
 posterior-entropy reduction. Scoring one candidate costs, for every outcome
 k = 0..n_responses and every model, a matmul over the draw axis plus the
@@ -52,8 +65,9 @@ over p_left), so nothing that matters underflows. The noise-floor stop always
 judges the chosen pick in float64.
 
 The ``joint_eig_bits`` trajectory is estimated from the same scenarios used
-for selection (in-sample); use :func:`estimate_joint_eig` with a fresh seed
-for an unbiased estimate of a chosen set.
+for selection, so it is optimistic for the chosen set (the set was picked to
+do well on those scenarios); :func:`estimate_joint_eig` with a fresh seed
+scores a chosen set on scenarios it was not selected on.
 """
 
 from __future__ import annotations
@@ -167,7 +181,9 @@ class _ScenarioState:
 
     Holds, for each scenario t and model m, the log-likelihood of the responses
     observed so far under every parameter draw d of m. The model posterior of a
-    scenario is prior(m) · mean_d exp(logL[t, m, d]), normalized over m.
+    scenario is prior(m) · mean_d exp(logL[t, m, d]), normalized over m; with
+    ``leave_one_out`` the mean over the scenario's own model skips the draw
+    that generated the scenario.
     """
 
     def __init__(
@@ -177,63 +193,98 @@ class _ScenarioState:
         n_scenarios: int,
         rng: np.random.Generator,
         n_responses: int = 1,
+        leave_one_out: bool = True,
     ) -> None:
         self.p = p
         self.n_responses = n_responses
         self.names = list(p)
         self.prior = prior
         self.rng = rng
-        self.m_idx = rng.choice(len(self.names), size=n_scenarios, p=prior)
+        self.leave_one_out = leave_one_out
         n_draws = np.array([p[n].shape[0] for n in self.names])
+        if leave_one_out and n_draws.min() < 2:
+            too_few = [n for n in self.names if p[n].shape[0] < 2]
+            raise ValueError(
+                f"Model(s) {too_few} have a single draw: leaving the generating "
+                "draw out of a scenario's likelihood average needs at least two "
+                "draws per model."
+            )
+        self.m_idx = rng.choice(len(self.names), size=n_scenarios, p=prior)
         self.d_idx = rng.integers(0, n_draws[self.m_idx])
         self.logL = {
             n: np.zeros((n_scenarios, p[n].shape[0])) for n in self.names
+        }
+        # Per model: the draws its likelihood is averaged over, per scenario —
+        # every draw, or with leave_one_out every draw but the generating one.
+        self._n_averaged = {
+            n: np.where(
+                (self.m_idx == i) & leave_one_out, p[n].shape[0] - 1, p[n].shape[0]
+            ).astype(float)
+            for i, n in enumerate(self.names)
         }
         self._lhat_cache: Optional[Dict[str, np.ndarray]] = None
         self._weighted_cache: Dict[np.dtype, List[np.ndarray]] = {}
         self._log_comb = _log_binomial_coefficients(n_responses)
         self._kernel_max = _outcome_kernel_maxima(n_responses)
 
+    def _averaged_log_likelihoods(self) -> Dict[str, np.ndarray]:
+        """logL per model, with the generating draw's entry at -inf (so it
+        drops out of every average) under ``leave_one_out``."""
+        if not self.leave_one_out:
+            return self.logL
+        out = {}
+        for i, n in enumerate(self.names):
+            rows = np.flatnonzero(self.m_idx == i)
+            masked = self.logL[n].copy()
+            masked[rows, self.d_idx[rows]] = -np.inf
+            out[n] = masked
+        return out
+
     def _scaled_likelihoods(self) -> Dict[str, np.ndarray]:
-        """exp(logL - c_t) per model — likelihoods scaled by a per-scenario
-        constant that cancels when the posterior is normalized over models.
+        """exp(logL - c_t) per model over the averaged draws — likelihoods
+        scaled by a per-scenario constant that cancels when the posterior is
+        normalized over models. The constant is the maximum over the averaged
+        draws, so a left-out generating draw far ahead of the others cannot
+        push them all to zero.
 
         Cached between observations: logL only changes in ``observe``.
         """
         if self._lhat_cache is not None:
             return self._lhat_cache
-        c = np.max(
-            np.stack([self.logL[n].max(axis=1) for n in self.names]), axis=0
-        )
+        log_l = self._averaged_log_likelihoods()
+        c = np.max(np.stack([log_l[n].max(axis=1) for n in self.names]), axis=0)
         if not np.isfinite(c).all():
             raise FloatingPointError(
                 "A scenario's observed responses have zero likelihood under "
                 "every model and draw; p_left clipping should prevent this."
             )
-        self._lhat_cache = {
-            n: np.exp(self.logL[n] - c[:, None]) for n in self.names
-        }
+        self._lhat_cache = {n: np.exp(log_l[n] - c[:, None]) for n in self.names}
         return self._lhat_cache
 
     def _weighted_likelihoods(self, dtype: np.dtype) -> List[np.ndarray]:
-        """prior(m) / n_draws(m) · scaled likelihoods, per model, in ``dtype``:
-        the left factor of the matmul that marginalizes over draws. Cached
-        between observations."""
+        """prior(m) / (draws averaged) · scaled likelihoods, per model, in
+        ``dtype``: the left factor of the matmul that marginalizes over draws.
+        Cached between observations."""
         if dtype not in self._weighted_cache:
             lhat = self._scaled_likelihoods()
             self._weighted_cache[dtype] = [
-                (lhat[n] * (self.prior[i] / lhat[n].shape[1])).astype(dtype)
+                (lhat[n] * (self.prior[i] / self._n_averaged[n])[:, None]).astype(dtype)
                 for i, n in enumerate(self.names)
             ]
         return self._weighted_cache[dtype]
 
+    def posterior(self) -> np.ndarray:
+        """Each scenario's current model posterior, shape (T, n_models)."""
+        lhat = self._scaled_likelihoods()
+        marg = np.stack(
+            [lhat[n].sum(axis=1) / self._n_averaged[n] for n in self.names], axis=1
+        )
+        w = marg * self.prior[None, :]
+        return w / w.sum(axis=1, keepdims=True)
+
     def posterior_entropy(self) -> np.ndarray:
         """Entropy (bits) of each scenario's current model posterior, shape (T,)."""
-        lhat = self._scaled_likelihoods()
-        marg = np.stack([lhat[n].mean(axis=1) for n in self.names], axis=1)
-        w = marg * self.prior[None, :]
-        w /= w.sum(axis=1, keepdims=True)
-        return _entropy_bits(w, axis=1)
+        return _entropy_bits(self.posterior(), axis=1)
 
     def generative_p(self, cols: np.ndarray) -> np.ndarray:
         """Each scenario's true p_left for ``cols`` (from its model + draw),
@@ -350,9 +401,11 @@ def scenario_posterior_entropies(
     n_scenarios: int = 1000,
     seed: int = 42,
     n_responses: int = 1,
+    leave_one_out: bool = True,
 ) -> np.ndarray:
     """Each scenario's model-posterior entropy (bits) after observing the
     stimulus set ``indices``, each answered ``n_responses`` times; shape (T,).
+    ``leave_one_out``: see the module docstring.
 
     Two sets scored with the same ``seed`` share their scenarios' models and
     draws (the responses differ with the stimuli), so the per-scenario
@@ -370,7 +423,7 @@ def scenario_posterior_entropies(
 
     prior = _model_prior(list(p), model_weights)
     state = _ScenarioState(
-        p, prior, n_scenarios, np.random.default_rng(seed), n_responses
+        p, prior, n_scenarios, np.random.default_rng(seed), n_responses, leave_one_out
     )
     # Sample all response counts at once and fold them in with one matmul per
     # model: logL[t, d] = sum_i [k_ti · log p_di + (n - k_ti) · log(1 - p_di)].
@@ -391,9 +444,11 @@ def estimate_joint_eig(
     n_scenarios: int = 1000,
     seed: int = 42,
     n_responses: int = 1,
+    leave_one_out: bool = True,
 ) -> float:
     """Monte Carlo estimate of I(M; R_S) in bits for the stimulus set ``indices``,
-    each stimulus answered ``n_responses`` times."""
+    each stimulus answered ``n_responses`` times (``leave_one_out``: see the
+    module docstring)."""
     h_posterior = scenario_posterior_entropies(
         p_left_draws,
         indices,
@@ -401,6 +456,7 @@ def estimate_joint_eig(
         n_scenarios=n_scenarios,
         seed=seed,
         n_responses=n_responses,
+        leave_one_out=leave_one_out,
     )
     names = list(p_left_draws)
     h_prior = float(_entropy_bits(_model_prior(names, model_weights)))
@@ -423,6 +479,7 @@ def select_n_joint_eig(
     n_responses: int = 1,
     stop_below_noise: bool = False,
     preselected: Sequence[int] = (),
+    leave_one_out: bool = True,
 ) -> JointEIGSelection:
     """Greedily select ``n_select`` stimuli maximizing joint EIG about M.
 
@@ -455,6 +512,10 @@ def select_n_joint_eig(
     preselected: stimuli already chosen (by another objective): their
         responses are observed first, they are never picked again, and they
         are not part of the returned ``indices``.
+    leave_one_out: average a scenario's own model's likelihood over every
+        draw but the one that generated the scenario (the module docstring
+        says why). ``False`` includes the generating draw, as the estimator
+        did before 2026-09-27.
     """
     _validate_n_responses(n_responses)
     p, n_stim = _validated_p(p_left_draws)
@@ -478,7 +539,7 @@ def select_n_joint_eig(
 
     prior = _model_prior(list(p), model_weights)
     state = _ScenarioState(
-        p, prior, n_scenarios, np.random.default_rng(seed), n_responses
+        p, prior, n_scenarios, np.random.default_rng(seed), n_responses, leave_one_out
     )
     h_prior = float(_entropy_bits(prior))
     for j in preselected:
