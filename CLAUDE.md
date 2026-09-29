@@ -508,11 +508,6 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   Prolific), discovered from `deployment_manifest.json` files. Its first job is
   catching degenerate data (participants answering one side every trial).
 
-### Legacy / not part of the live loops
-
-`src/experiments/` and `src/validation/` are from the old pipeline and are not
-used by the active loops (per `README.md`).
-
 ## Cluster & live runs
 
 - Holdout sweeps resume their own failed cells: after each array a retry job

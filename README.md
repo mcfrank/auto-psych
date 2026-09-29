@@ -365,14 +365,13 @@ src/
     mcmc_defaults.py         # the ONE source of MCMC sampler defaults for every entry point
     theorist/                # loader.py + predictions.py (pure-Python prediction callables)
     project/                 # ground_truth.py
-  subjective_randomness/     # research library: model families, recovery harnesses, stimulus design
+  subjective_randomness/     # research library: model families, recovery harnesses, stimulus pair pools
                              # (pymc_model_families/ = the frozen recovery registry — see its README)
   runtime/
     coding_agent.py          # backend-agnostic Claude Code / opencode subprocess launcher
     config.py console.py observability.py prolific.py
   registry/
     io.py                    # per-run model_registry.yaml (model -> weight, the EIG design prior)
-  experiments/ validation/   # LEGACY (old pipeline) — not used by the live loops
   viewer/                    # browser-based run explorer (Flask + static SPA)
     server.py                # `python -m src.viewer.server`
     freeze.py                # `python -m src.viewer.freeze` -> static snapshot for web hosting
