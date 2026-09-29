@@ -288,7 +288,8 @@ own API login. Each agent has a 15-minute limit.
 After the last round, within the same `5_model_loop` stage:
 
 - **Pruning.** A non-starting model is removed when its score is trustworthy
-  and it is clearly worse than the best: its ELPD-LOO deficit exceeds 2
+  and it is clearly worse than the best model whose score is trustworthy
+  (a leader with an untrustworthy score does not count): its ELPD-LOO deficit exceeds 2
   standard errors of the difference. That standard error is computed with all
   responses to the same stimulus pair treated as one cluster
   (`src/models/clustered_se.py`). Responses to the same pair are correlated, so

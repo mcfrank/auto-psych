@@ -760,8 +760,11 @@ def _prune_losers(
 ) -> List[str]:
     """Drop non-protected models that have lost; return their names.
 
-    "Lost" means statistically distinguishable from the best on the current
-    data: ``elpd_diff > dse_multiplier·dse`` among PSIS-LOO-reliable rows. The
+    "Lost" means statistically distinguishable from the best trusted model
+    (reliable PSIS-LOO and converged) on the current data:
+    ``elpd_diff > dse_multiplier·dse_clustered`` against it, among trusted
+    rows. When the rank-0 model is untrusted, the comparison is recomputed
+    over the trusted models only, so it is against the best of them. The
     survivors are therefore the uncertainty set — every non-protected model
     still within the margin of the best — which is what the outer loop carries
     into the next experiment. ``protected`` names (the project's seed models)
@@ -785,27 +788,45 @@ def _prune_losers(
     if not comparison:
         return []
     # Reliability gates are deliberately narrow. Every elpd_diff is measured
-    # against the rank-0 baseline, so an unreliable baseline poisons every
-    # comparison and blocks all pruning. Beyond that, a model is only shielded
-    # by its OWN unreliable row — agent-written candidates trip Pareto-k
-    # warnings routinely, and one flaky bystander must not switch pruning off
-    # wholesale (the active set would then only ever grow).
-    baseline = min(comparison, key=lambda name: comparison[name]["rank"])
-    if _untrusted(comparison[baseline]):
-        print(
-            f"  [warn] Skipping model pruning: baseline model {baseline!r} "
-            "(rank 0) has an unreliable LOO estimate or a non-converged fit, so "
-            "every elpd_diff against it is untrustworthy.",
-            file=sys.stderr,
-            flush=True,
-        )
-        return []
+    # against the best *trusted* model: an untrusted baseline would poison
+    # every comparison. It used to switch pruning off for the whole
+    # experiment instead, and the live-set cap then retired that model
+    # without pruning being rerun. Beyond that, a model is only shielded by
+    # its OWN untrusted row — agent-written candidates trip Pareto-k warnings
+    # routinely, and one flaky bystander must not switch pruning off wholesale
+    # (the active set would then only ever grow).
     unreliable = sorted(name for name, row in comparison.items() if _untrusted(row))
     if unreliable:
         print(
             "  [warn] Not pruning models with unreliable LOO estimates or "
             "non-converged fits: "
             + ", ".join(unreliable),
+            file=sys.stderr,
+            flush=True,
+        )
+    trusted = [name for name, row in comparison.items() if not _untrusted(row)]
+    if len(trusted) < 2:
+        print(
+            f"  [warn] Skipping model pruning: {len(trusted)} model(s) with a "
+            "reliable LOO estimate and a converged fit; pruning compares trusted "
+            "models with the best of them.",
+            file=sys.stderr,
+            flush=True,
+        )
+        return []
+    top = min(comparison, key=lambda name: comparison[name]["rank"])
+    if _untrusted(comparison[top]):
+        # Untrusted rows drop out here; they are never pruned anyway.
+        comparison = compare_table(
+            responses_path, models_dir, cache_dir=cache_dir, names=trusted,
+            **(fit_kwargs or {}),
+        )
+    baseline = min(comparison, key=lambda name: comparison[name]["rank"])
+    if baseline != top:
+        print(
+            f"  [warn] The rank-0 model {top!r} has an unreliable LOO estimate or "
+            f"a non-converged fit; pruning against the best trusted model, "
+            f"{baseline!r}, instead.",
             file=sys.stderr,
             flush=True,
         )
