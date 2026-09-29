@@ -8,11 +8,11 @@ Error contract — ONE rule for every wrapper here. Each returns
 class of outcome: **the API call itself failed** — a non-2xx response, or a
 transport error (``requests.RequestException``). Callers treat that as
 recoverable and retryable; ``_poll_prolific_until_target`` in particular logs it
-and keeps polling for up to two hours.
+and keeps polling for up to three hours (``_PROLIFIC_MAX_WAIT_SEC``).
 
 Everything else raises:
 - a missing/invalid ``PROLIFIC_API_TOKEN`` (``_headers``) is a *configuration*
-  error — folding it into the error string made a two-hour poll repeat the same
+  error — folding it into the error string made a multi-hour poll repeat the same
   message every 30 seconds and then report "0 participants";
 - programming errors in this module are bugs, and must not masquerade as a
   flaky Prolific endpoint.

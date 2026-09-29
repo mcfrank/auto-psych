@@ -62,8 +62,9 @@ NEAR_MISS_MAX_DIVERGENCE_FRACTION = 0.02
 # Wall-clock limit on each sampling run of a candidate's admission fit (the
 # first fit and a near-miss refit are limited separately). A candidate still
 # sampling at the limit is stopped (its process group is killed) and rejected
-# as too slow to fit. Seeds and carried models are never time-limited.
-CANDIDATE_FIT_TIME_LIMIT_SEC = 15 * 60
+# as too slow to fit (user decision 2026-09-28: 30 minutes, was 15). Starting
+# and carried models are never time-limited.
+CANDIDATE_FIT_TIME_LIMIT_SEC = 30 * 60
 
 # The candidate agent's self-check (src/pipelines/inner_loop/check_candidate.py):
 # a smoke fit that proves the model loads, samples and scores — never a

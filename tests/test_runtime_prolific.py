@@ -123,7 +123,7 @@ def test_list_submissions_returns_error_on_non_200(monkeypatch):
 # error. Configuration errors (no API token) and programming errors are NOT
 # funnelled into that string, because callers treat `error` as "the study is
 # temporarily unreachable" and keep polling: a missing token used to make
-# `_poll_prolific_until_target` log the same message every 30s for two hours.
+# `_poll_prolific_until_target` log the same message every 30s for hours.
 
 
 def test_missing_token_raises_instead_of_becoming_an_error_string(monkeypatch):

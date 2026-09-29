@@ -11,7 +11,7 @@
 #
 # Run ONE live experiment end-to-end: exhaustive EIG design (programmatic) ->
 # implement (coding agent) -> deploy to Firebase -> create + publish a Prolific
-# study -> poll for human submissions (<= 2 h/experiment) -> fetch results ->
+# study -> poll for human submissions (<= 3 h/experiment) -> fetch results ->
 # inner model loop.
 #
 # No GPU: the coding agents are remote, participants are real humans, and only
