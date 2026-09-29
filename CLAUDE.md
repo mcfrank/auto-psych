@@ -465,7 +465,7 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 
 - **Sweep summaries compare like with like** (`src/subjective_randomness/sweep_cells.py`,
   `reporting.aggregate_holdout_trajectories`). Every summary (test-retest,
-  incumbent report, combined figures) lists the expected
+  incumbent report) lists the expected
   cells that are partial (no `holdout.json`) or missing; trajectories are
   pooled by position within an experiment (seed step, rounds every cell ran,
   end), never by `global_step` (abandoned rounds write no step); and at each

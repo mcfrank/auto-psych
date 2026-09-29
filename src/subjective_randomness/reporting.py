@@ -681,7 +681,7 @@ def aggregate_holdout_trajectories(
     return {"metric": metric, "error": error, "gt_models": panels}
 
 
-# One tidy row per pooled point (plot_holdout_combined / plot_impossible_combined).
+# One tidy row per pooled point.
 # ``position``/``experiment``/``label`` replace the old ``global_step`` column:
 # points are aligned by experiment now, and the baselines are per position.
 AGGREGATE_TIDY_COLUMNS = [
