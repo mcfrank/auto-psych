@@ -227,7 +227,9 @@ def _build_critique_prompt(
     (``broken``: file stem -> error) so the agent can fix it.
     """
     if not context_text:
-        raise ValueError("the critique context is empty; nothing to inline into the prompt")
+        raise ValueError(
+            "the critique context is empty; nothing to inline into the prompt"
+        )
     test_stats_dir = critique_dir / "test_stats"
     # Name critique_dir explicitly: the agent runs from agent_root (opencode's
     # session directory, whose opencode.json is the permission config in force
@@ -264,7 +266,9 @@ def _build_critique_prompt(
             + (
                 "\n\nThese statistics were set aside because they failed when run "
                 "once on the observed data:\n"
-                + "\n".join(f"- {name}: {error}" for name, error in sorted(broken.items()))
+                + "\n".join(
+                    f"- {name}: {error}" for name, error in sorted(broken.items())
+                )
                 if broken
                 else ""
             ),
@@ -311,7 +315,9 @@ def _spawn_critique_agent(
     critique_dir.mkdir(parents=True, exist_ok=True)
     # Share the inner loop's on-disk cache when it has one; otherwise keep a small
     # per-round cache so the harness process reuses the just-computed fit.
-    fit_cache_dir = Path(cache_dir) if cache_dir is not None else critique_dir / ".fit_cache"
+    fit_cache_dir = (
+        Path(cache_dir) if cache_dir is not None else critique_dir / ".fit_cache"
+    )
     _seed_critique_fit_cache(
         incumbent, models_dir, responses_path, fit_cache_dir, fit_kwargs
     )
@@ -367,9 +373,7 @@ def _spawn_critique_agent(
             flush=True,
         )
     if not usable:
-        reason = (
-            f"the critique agent wrote no usable test statistic in {n_attempts} attempts"
-        )
+        reason = f"the critique agent wrote no usable test statistic in {n_attempts} attempts"
         print(f"  [critique] NO CRITIQUE this round: {reason}", flush=True)
         return {
             "status": CRITIQUE_STATUS_NONE,
@@ -429,22 +433,21 @@ def _format_critiques_md(result: Dict[str, Any]) -> str:
     sig = [r for r in results if r.get("significant")]
     n_total = len(results)
     n_evaluated = _n_evaluated(result)
-    failed = [
-        f"- **{r['name']}** — {r['error']}" for r in results if r.get("error")
-    ]
-    failed_section = (
-        ["", "## Could not be evaluated", "", *failed] if failed else []
-    )
+    failed = [f"- **{r['name']}** — {r['error']}" for r in results if r.get("error")]
+    failed_section = ["", "## Could not be evaluated", "", *failed] if failed else []
     if n_evaluated == 0:
-        return "\n".join(
-            [
-                f"# Critique of `{result.get('model')}`",
-                "",
-                f"0 of {n_total} test statistics could be evaluated, so there is no "
-                "critique this round.",
-                *failed_section,
-            ]
-        ) + "\n"
+        return (
+            "\n".join(
+                [
+                    f"# Critique of `{result.get('model')}`",
+                    "",
+                    f"0 of {n_total} test statistics could be evaluated, so there is no "
+                    "critique this round.",
+                    *failed_section,
+                ]
+            )
+            + "\n"
+        )
     not_evaluated = (
         f" ({n_total - n_evaluated} of {n_total} could not be evaluated)"
         if n_evaluated < n_total
@@ -460,7 +463,9 @@ def _format_critiques_md(result: Dict[str, Any]) -> str:
         "",
     ]
     if sig:
-        lines.append("## Significant discrepancies (a better model should address these)")
+        lines.append(
+            "## Significant discrepancies (a better model should address these)"
+        )
         lines.append("")
         lines.append(
             "Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across "
@@ -655,9 +660,7 @@ def _run_critique_round(
         )
 
     if status["status"] != CRITIQUE_STATUS_CRITIQUED:
-        print(
-            "  [critique] candidates run without a critique this round", flush=True
-        )
+        print("  [critique] candidates run without a critique this round", flush=True)
         return CritiqueRoundOutcome(None, status)
     critiques_md = critique_dir / "critiques.md"
     if not critiques_md.exists():

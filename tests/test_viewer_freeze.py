@@ -16,6 +16,7 @@ import pytest
 
 from src.viewer.freeze import freeze_snapshot
 from src.viewer.scan import scan_run, scan_run_experiment
+
 # Imported so pytest discovers the fixture here; the tests below request it
 # by name rather than calling it.
 from tests.viewer_fixtures import data_root  # noqa: F401
@@ -47,8 +48,13 @@ def test_run_json_matches_live_scan(snapshot: Path, data_root: Path):
 def test_experiment_json_per_unit_matches_live_scan(snapshot: Path, data_root: Path):
     # Each experiment unit becomes its own static file (the ?unit= query string
     # cannot drive routing on a static host).
-    frozen = json.loads((_run_dir(snapshot) / "experiment" / "experiment1.json").read_text())
-    assert frozen == scan_run_experiment(data_root, "outer_loop/demo", "experiment1").model_dump()
+    frozen = json.loads(
+        (_run_dir(snapshot) / "experiment" / "experiment1.json").read_text()
+    )
+    assert (
+        frozen
+        == scan_run_experiment(data_root, "outer_loop/demo", "experiment1").model_dump()
+    )
     assert (_run_dir(snapshot) / "experiment" / "smoke.json").is_file()
 
 
@@ -57,8 +63,12 @@ def test_referenced_files_are_copied(snapshot: Path):
     assert fig.read_bytes()[:4] == b"\x89PNG"
     # The deployed experiment page is lazy-loaded by the frontend, so it must be
     # copied for units whose has_index_html is true (experiment1, not smoke).
-    assert (_run_dir(snapshot) / "files" / "experiment1" / "experiment" / "index.html").is_file()
-    assert not (_run_dir(snapshot) / "files" / "smoke" / "experiment" / "index.html").exists()
+    assert (
+        _run_dir(snapshot) / "files" / "experiment1" / "experiment" / "index.html"
+    ).is_file()
+    assert not (
+        _run_dir(snapshot) / "files" / "smoke" / "experiment" / "index.html"
+    ).exists()
 
 
 def test_frontend_is_self_contained_static(snapshot: Path):

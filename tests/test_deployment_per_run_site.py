@@ -51,7 +51,9 @@ def test_per_run_site_drives_experiment_url(tmp_path, monkeypatch):
 
 def test_default_site_when_env_unset(tmp_path, monkeypatch):
     m = _build(tmp_path, monkeypatch, None)
-    assert m.hosting_site == "auto-psych-2c5da"  # falls back to the project's default site
+    assert (
+        m.hosting_site == "auto-psych-2c5da"
+    )  # falls back to the project's default site
     assert m.experiment_url == "https://auto-psych-2c5da.web.app/e1-run2/"
 
 

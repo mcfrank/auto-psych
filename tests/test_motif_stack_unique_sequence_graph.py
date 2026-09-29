@@ -26,7 +26,11 @@ import numpy as np
 import pytest
 
 from src.models.data_binding import make_stim_data
-from src.models.model_loading import load_pymc_model, observed_response_data, pm_data_inputs
+from src.models.model_loading import (
+    load_pymc_model,
+    observed_response_data,
+    pm_data_inputs,
+)
 from src.subjective_randomness.model_families import motif_stack as twin
 from src.subjective_randomness.holdout_data import p_left_fixed_params
 from tests.recovery_fixtures import p_left_model_family
@@ -262,7 +266,10 @@ def test_no_data_assert_remains_in_the_logp_graph():
 def test_rows_without_chose_left_are_accepted_with_dummy_zeros():
     """EIG design pools and predict_p_left_draws pass stimuli, not responses."""
     model = load_pymc_model("motif_stack", MODEL_DIR)
-    rows = [{"sequence_a": s["sequence_a"], "sequence_b": s["sequence_b"]} for s in STIMULI[:5]]
+    rows = [
+        {"sequence_a": s["sequence_a"], "sequence_b": s["sequence_b"]}
+        for s in STIMULI[:5]
+    ]
     stim_data = make_stim_data(model, rows)
     assert stim_data["chose_left"].tolist() == [0, 0, 0, 0, 0]
 
@@ -301,9 +308,7 @@ def test_motif_stack_is_not_dropped_by_the_eig_screener():
     line — quietly renormalizing the design over the remaining models."""
     from src.pipelines.outer_loop.eig import _raw_row, _screen_usable_models
 
-    probe_row = _raw_row(
-        {"sequence_a": "HHTHTTHT", "sequence_b": "HTHTHTHT"}
-    )
+    probe_row = _raw_row({"sequence_a": "HHTHTTHT", "sequence_b": "HTHTHTHT"})
     usable, dropped = _screen_usable_models(["motif_stack"], MODEL_DIR, [probe_row])
     assert usable == ["motif_stack"]
     assert dropped == []
@@ -326,14 +331,22 @@ def test_smoke_fit_and_posterior_prediction(tmp_path):
     from src.subjective_randomness.features import featurize_responses_csv
 
     rng = np.random.default_rng(0)
-    pairs = [(s["sequence_a"], s["sequence_b"]) for s in STIMULI if len(s["sequence_a"]) == 8][:16]
+    pairs = [
+        (s["sequence_a"], s["sequence_b"]) for s in STIMULI if len(s["sequence_a"]) == 8
+    ][:16]
     assert pairs, "need length-8 pairs for the smoke fit"
 
     raw = tmp_path / "raw.csv"
     with raw.open("w", newline="", encoding="utf-8") as handle:
         writer = csv.DictWriter(
             handle,
-            fieldnames=["participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"],
+            fieldnames=[
+                "participant_id",
+                "trial_index",
+                "sequence_a",
+                "sequence_b",
+                "chose_left",
+            ],
         )
         writer.writeheader()
         for participant in range(4):

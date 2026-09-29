@@ -22,7 +22,9 @@ import json
 import pytest
 import yaml
 
-from src.pipelines.outer_loop.model_loop_runner import update_registry_from_interpretation
+from src.pipelines.outer_loop.model_loop_runner import (
+    update_registry_from_interpretation,
+)
 
 
 def _write_posterior(exp_dir, weights) -> None:
@@ -36,8 +38,14 @@ def _write_posterior(exp_dir, weights) -> None:
                 "posteriors": {n: (1.0 if n == names[0] else 0.0) for n in names},
                 "elpd_loo": {n: -10.0 - i for i, n in enumerate(names)},
                 "comparison": {
-                    n: {"rank": i, "elpd_loo": -10.0 - i, "elpd_diff": float(i),
-                        "dse": 2.0, "weight": w, "loo_unreliable": False}
+                    n: {
+                        "rank": i,
+                        "elpd_loo": -10.0 - i,
+                        "elpd_diff": float(i),
+                        "dse": 2.0,
+                        "weight": w,
+                        "loo_unreliable": False,
+                    }
                     for i, (n, w) in enumerate(weights.items())
                 },
             }

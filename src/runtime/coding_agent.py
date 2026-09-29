@@ -131,7 +131,9 @@ class AgentPermissionDenied(RuntimeError):
 # "! permission requested: external_directory (<dir>/*); auto-rejecting" — a
 # notice opencode prints on a line of its own, outside its JSON event stream.
 _DENIAL_NOTICE = re.compile(r"^! permission requested: .*; auto-rejecting$")
-_EXTERNAL_DIRECTORY_DENIAL = re.compile(r"external_directory \((.+?)/?\*?\); auto-rejecting")
+_EXTERNAL_DIRECTORY_DENIAL = re.compile(
+    r"external_directory \((.+?)/?\*?\); auto-rejecting"
+)
 
 
 def check_for_permission_denials(log_path: Path, own_dirs: Sequence[Path]) -> list[str]:
@@ -161,7 +163,9 @@ def check_for_permission_denials(log_path: Path, own_dirs: Sequence[Path]) -> li
         if not _DENIAL_NOTICE.match(line):
             continue
         match = _EXTERNAL_DIRECTORY_DENIAL.search(line)
-        if match and not any(Path(match.group(1)).resolve().is_relative_to(d) for d in own):
+        if match and not any(
+            Path(match.group(1)).resolve().is_relative_to(d) for d in own
+        ):
             refused_outside.append(match.group(1))
         else:
             denials.append(line)
@@ -185,7 +189,9 @@ def agent_data_home(log_path: Path) -> Path:
     return Path(log_path).parent / AGENT_DATA_HOME_NAME
 
 
-def _link_opencode_credentials(inherited_data_home: Path, private_data_home: Path) -> None:
+def _link_opencode_credentials(
+    inherited_data_home: Path, private_data_home: Path
+) -> None:
     """Make credentials stored under the inherited data home visible to the agent.
 
     opencode reads ``$XDG_DATA_HOME/opencode/auth.json`` (else
@@ -336,9 +342,10 @@ def prompt_via_stdin(backend: str, prompt: str) -> bool:
 # review panel) do not. --bare would also drop all of it, but it refuses OAuth,
 # which would move the agents off the subscription onto per-token API billing.
 STOCK_CLAUDE_ARGS = (
-    "--setting-sources", "project,local",  # skips user settings and ~/.claude/CLAUDE.md
-    "--strict-mcp-config",                 # no MCP servers unless --mcp-config names them
-    "--no-session-persistence",            # no session transcripts in ~/.claude/projects
+    "--setting-sources",
+    "project,local",  # skips user settings and ~/.claude/CLAUDE.md
+    "--strict-mcp-config",  # no MCP servers unless --mcp-config names them
+    "--no-session-persistence",  # no session transcripts in ~/.claude/projects
 )
 # Auto-memory has no flag; this variable removes it. A stock agent keeps it only
 # when given a memory_dir: its notes then live in that directory (the loop
@@ -408,8 +415,16 @@ def build_command(
         # prompt goes on stdin (`-`): briefs with an inlined evidence pack are
         # far over the argv limit.
         return [
-            "codex", "exec", "--model", model, "--sandbox", "danger-full-access",
-            "--skip-git-repo-check", "--json", *extra_args, "-",
+            "codex",
+            "exec",
+            "--model",
+            model,
+            "--sandbox",
+            "danger-full-access",
+            "--skip-git-repo-check",
+            "--json",
+            *extra_args,
+            "-",
         ]
     # Reachable only if _DEFAULT_MODEL gains a backend without a branch here.
     # Fail loudly rather than returning None into subprocess.Popen.
@@ -574,7 +589,9 @@ class _CodexStream:
             if isinstance(usage, dict):
                 self._saw_usage = True
                 cached = int(usage.get("cached_input_tokens", 0))
-                self._token_sums["input_tokens"] += int(usage.get("input_tokens", 0)) - cached
+                self._token_sums["input_tokens"] += (
+                    int(usage.get("input_tokens", 0)) - cached
+                )
                 self._token_sums["cache_read_tokens"] += cached
                 self._token_sums["output_tokens"] += int(usage.get("output_tokens", 0))
                 self._token_sums["reasoning_tokens"] += int(
@@ -635,9 +652,7 @@ class _OpencodeStream:
                 cache = tokens.get("cache", {})
                 self._token_sums["input_tokens"] += int(tokens.get("input", 0))
                 self._token_sums["output_tokens"] += int(tokens.get("output", 0))
-                self._token_sums["reasoning_tokens"] += int(
-                    tokens.get("reasoning", 0)
-                )
+                self._token_sums["reasoning_tokens"] += int(tokens.get("reasoning", 0))
                 self._token_sums["cache_read_tokens"] += int(cache.get("read", 0))
                 self._token_sums["cache_write_tokens"] += int(cache.get("write", 0))
             cost = part.get("cost")
@@ -730,7 +745,11 @@ def run_coding_agent(
     )
     log_path.parent.mkdir(parents=True, exist_ok=True)
     child_env = child_environment(
-        backend=backend, cwd=cwd, log_path=log_path, env=env, stock=stock,
+        backend=backend,
+        cwd=cwd,
+        log_path=log_path,
+        env=env,
+        stock=stock,
         memory_dir=memory_dir,
     )
     if sandbox and writable_dirs is None:
@@ -766,7 +785,9 @@ def run_coding_agent(
     stdin_text = prompt if prompt_via_stdin(backend, prompt) else None
     # How a Claude agent is billed (agent_sandbox.require_claude_auth), for the record.
     claude_auth = child_env.get(CLAUDE_AUTH_ENV) if backend == "claude" else None
-    own_dirs = [*writable_dirs, log_path.parent] if sandbox and wait_out_usage_limits else []
+    own_dirs = (
+        [*writable_dirs, log_path.parent] if sandbox and wait_out_usage_limits else []
+    )
     kept = [log_path, log_path.parent / HOME_NAME, agent_data_home(log_path)]
     kept += [memory_dir] if memory_dir else []
     waited_sec = 0.0
@@ -788,7 +809,9 @@ def run_coding_agent(
             usage = stream.usage_fields()
             messages = [] if timed_out else _cli_messages(backend, stream, raw_output)
             limit = detect_usage_limit(messages) if wait_out_usage_limits else None
-            login_failure = detect_login_failure(messages) if wait_out_usage_limits else None
+            login_failure = (
+                detect_login_failure(messages) if wait_out_usage_limits else None
+            )
             if limit is None and login_failure is None:
                 break
             delay = 0.0
@@ -799,10 +822,17 @@ def run_coding_agent(
                     margin_sec=AGENT_USAGE_LIMIT_RESET_MARGIN_SEC,
                     fallback_sec=AGENT_USAGE_LIMIT_FALLBACK_WAIT_SEC,
                 )
-            give_up = login_failure is not None or waited_sec + delay > AGENT_USAGE_LIMIT_MAX_WAIT_SEC
+            give_up = (
+                login_failure is not None
+                or waited_sec + delay > AGENT_USAGE_LIMIT_MAX_WAIT_SEC
+            )
             token_usage.record_usage(
-                source=usage_label, backend=backend, model=model, **usage,
-                claude_auth=claude_auth, usage_limit=login_failure or limit.message,
+                source=usage_label,
+                backend=backend,
+                model=model,
+                **usage,
+                claude_auth=claude_auth,
+                usage_limit=login_failure or limit.message,
                 usage_limit_wait_sec=0.0 if give_up else delay,
             )
             if sandbox:
@@ -827,7 +857,11 @@ def run_coding_agent(
             run_cmd, run_env = launch()
 
     token_usage.record_usage(
-        source=usage_label, backend=backend, model=model, **usage, claude_auth=claude_auth
+        source=usage_label,
+        backend=backend,
+        model=model,
+        **usage,
+        claude_auth=claude_auth,
     )
     if usage.get("usage_missing") and on_summary:
         on_summary(
@@ -867,7 +901,11 @@ def run_coding_agent(
 
 
 def _run_agent_with_lock_retries(
-    cmd: list[str], *, backend: str, log_mode: str, on_summary: Optional[Callable[[str], None]],
+    cmd: list[str],
+    *,
+    backend: str,
+    log_mode: str,
+    on_summary: Optional[Callable[[str], None]],
     **run_kwargs: Any,
 ) -> tuple[Any, str, bool, Optional[int]]:
     """One run of the agent, retried while opencode's session store is locked.
@@ -940,7 +978,9 @@ def _announce_usage_limit_wait(
     if on_summary and on_summary is not print:
         on_summary(message)
     with open(log_path, "a", encoding="utf-8") as log_file:
-        log_file.write(f"\n--- usage limit; waiting {delay_sec:.0f}s: {limit.message} ---\n")
+        log_file.write(
+            f"\n--- usage limit; waiting {delay_sec:.0f}s: {limit.message} ---\n"
+        )
 
 
 def _wait(seconds: float) -> None:
@@ -964,8 +1004,10 @@ class _OwnDirsSnapshot:
             for i, directory in enumerate(self._dirs):
                 if directory.exists():
                     shutil.copytree(
-                        directory, Path(self._saved.name) / str(i),
-                        symlinks=True, ignore=self._ignore,
+                        directory,
+                        Path(self._saved.name) / str(i),
+                        symlinks=True,
+                        ignore=self._ignore,
                     )
         return self
 
@@ -1008,7 +1050,9 @@ class _OwnDirsSnapshot:
 def _outermost_dirs(paths: Sequence[Path]) -> list[Path]:
     """The paths, minus any that lie inside another one."""
     unique = list(dict.fromkeys(paths))
-    return [p for p in unique if not any(p != o and p.is_relative_to(o) for o in unique)]
+    return [
+        p for p in unique if not any(p != o and p.is_relative_to(o) for o in unique)
+    ]
 
 
 def _run_agent_once(
@@ -1031,7 +1075,11 @@ def _run_agent_once(
     from a helper thread so a child that emits output before draining stdin
     cannot deadlock against us.
     """
-    streams = {"claude": _ClaudeStream, "codex": _CodexStream, "opencode": _OpencodeStream}
+    streams = {
+        "claude": _ClaudeStream,
+        "codex": _CodexStream,
+        "opencode": _OpencodeStream,
+    }
     summarisers = {
         "claude": _summarise_claude_event,
         "codex": _summarise_codex_event,
@@ -1062,6 +1110,7 @@ def _run_agent_once(
             start_new_session=True,
         )
         if stdin_text is not None:
+
             def _feed_stdin(text: str = stdin_text) -> None:
                 try:
                     proc.stdin.write(text)

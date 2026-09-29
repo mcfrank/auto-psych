@@ -26,6 +26,7 @@ from src.models.model_loading import (
 # CSV reading
 # ---------------------------------------------------------------------------
 
+
 def _read_csv_rows(csv_path: Path) -> List[Dict[str, str]]:
     """Read a CSV file into a list of row dicts."""
     with Path(csv_path).open(encoding="utf-8", newline="") as f:
@@ -35,6 +36,7 @@ def _read_csv_rows(csv_path: Path) -> List[Dict[str, str]]:
 # ---------------------------------------------------------------------------
 # Feature hooks
 # ---------------------------------------------------------------------------
+
 
 def _model_compute_features(model: Any) -> Any:
     """The model's optional ``compute_features`` callable, or ``None``."""
@@ -59,7 +61,9 @@ def _same_feature_value(existing: Any, computed: Any) -> bool:
     a harness column, which must fail loudly.
     """
     try:
-        return math.isclose(float(existing), float(computed), rel_tol=1e-9, abs_tol=1e-12)
+        return math.isclose(
+            float(existing), float(computed), rel_tol=1e-9, abs_tol=1e-12
+        )
     except (TypeError, ValueError):
         return False
 
@@ -137,6 +141,7 @@ def _augment_rows_with_features(
 # ---------------------------------------------------------------------------
 # prepare_observed hook
 # ---------------------------------------------------------------------------
+
 
 def _model_prepare_observed(model: Any) -> Any:
     """The model's optional ``prepare_observed`` callable, or ``None``."""
@@ -289,6 +294,7 @@ def _bookkeeping_column_missing_from(
 # ---------------------------------------------------------------------------
 # Public data-binding API
 # ---------------------------------------------------------------------------
+
 
 def make_stim_data(model: Any, rows: List[Dict[str, Any]]) -> Dict[str, np.ndarray]:
     """Build a `pm.set_data` dict from a list of row dicts for a given model.

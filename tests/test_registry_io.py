@@ -60,9 +60,7 @@ def test_invalid_theory_weight_raises(tmp_path, weight):
 
 @pytest.mark.parametrize("reserved", [-0.1, 1.1, ".nan", ".inf"])
 def test_out_of_range_reserved_mass_raises(tmp_path, reserved):
-    path = _write(
-        tmp_path, f"theories:\n  a: 0.5\nreserved_for_new: {reserved}\n"
-    )
+    path = _write(tmp_path, f"theories:\n  a: 0.5\nreserved_for_new: {reserved}\n")
     with pytest.raises(ValueError, match="reserved_for_new"):
         load_registry(path)
 

@@ -95,12 +95,8 @@ def test_min_prediction_rmse_with_no_other_models(tmp_path, monkeypatch):
     responses = _responses(tmp_path)
     # The stub fit is not a real trace: pass the convergence gate.
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
-    monkeypatch.setattr(
-        model_zoo, "fit_model", lambda *a, **k: _FakeFitted([0.5, 0.5])
-    )
-    monkeypatch.setattr(
-        model_zoo, "make_stim_data", lambda model, rows: {}
-    )
+    monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: _FakeFitted([0.5, 0.5]))
+    monkeypatch.setattr(model_zoo, "make_stim_data", lambda model, rows: {})
     monkeypatch.setattr(model_zoo, "pm_data_inputs", lambda model: ["chose_left"])
     name, rmse = _min_prediction_rmse(
         "candidate_x",
@@ -115,12 +111,8 @@ def test_min_prediction_rmse_with_no_other_models(tmp_path, monkeypatch):
 
 
 def _stub_admission_gates(monkeypatch):
-    monkeypatch.setattr(
-        model_zoo, "load_pymc_model", lambda name, models_dir: object()
-    )
-    monkeypatch.setattr(
-        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
-    )
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
+    monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     # The stub fit is not a real trace: pass the convergence gate.
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
@@ -145,9 +137,7 @@ def test_admission_rejects_near_duplicate(tmp_path, monkeypatch, capsys):
         "_min_prediction_rmse",
         lambda *a, **k: ("seed_a", DEFAULT_NOVELTY_RMSE_THRESHOLD / 2),
     )
-    admitted = _admit_candidate(
-        _candidate(tmp_path), models_dir, "near_dup", responses
-    )
+    admitted = _admit_candidate(_candidate(tmp_path), models_dir, "near_dup", responses)
     assert not admitted
     out = capsys.readouterr().out
     assert "seed_a" in out and "near_dup" in out

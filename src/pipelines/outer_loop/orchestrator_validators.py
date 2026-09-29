@@ -35,6 +35,7 @@ _ZOO_NAME_RE = re.compile(r"iter\d+_candidate\d+")
 # cognitive_models/ and the registry.
 EXPORT_RECORD_FILENAME = "export_complete.json"
 
+
 def ledger_sha256(models_dir: Path) -> Optional[str]:
     """The sha256 of ``models_dir``'s ledger of attempted hypotheses, or None."""
     path = Path(models_dir) / LEDGER_FILENAME
@@ -225,7 +226,7 @@ def _validate_implement(exp_dir: Path) -> tuple[bool, str]:
     if "auto-psych-prose" not in text:
         return False, (
             "readability: instructions and debrief must be wrapped in the fixed "
-            "`<div class=\"auto-psych-prose\">…</div>` container (a max-width, "
+            '`<div class="auto-psych-prose">…</div>` container (a max-width, '
             "left-aligned, line-height block) so prose does not span the full screen "
             "width. Copy the .auto-psych-prose rule and wrappers from the skeleton."
         )

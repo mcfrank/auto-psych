@@ -44,9 +44,9 @@ graph = GraphBuilder(start_state)
 
 graph.explore_operation(
     curr_state,
-    operation="12+5=17",      # string describing the arithmetic step
+    operation="12+5=17",  # string describing the arithmetic step
     resulting_state=(5, 17),  # resulting numbers after the operation
-    comment="..."             # optional comment
+    comment="...",  # optional comment
 )
 
 graph.move_to_node(state)
@@ -70,8 +70,9 @@ Each cognitive model is a Python function:
 def model_name(stimulus, response_options):
     """Brief docstring."""
     import json, random, itertools
-    choices = json.loads(stimulus[0])          # list of 4 ints
-    target = int(float(stimulus[1]))           # int (24 in this dataset)
+
+    choices = json.loads(stimulus[0])  # list of 4 ints
+    target = int(float(stimulus[1]))  # int (24 in this dataset)
     # response_options == ["left", "right"]
     # "left" = correct (solved), "right" = incorrect (failed)
 
@@ -98,17 +99,18 @@ To enumerate all states reachable from a state (list of ints), try all pairs and
 def generate_successors(nums):
     """Return list of (result_nums, op_str) for all valid one-step operations."""
     import itertools
+
     successors = []
     for i, j in itertools.combinations(range(len(nums)), 2):
         a, b = nums[i], nums[j]
         rest = [nums[k] for k in range(len(nums)) if k != i and k != j]
         for result, op_str in [
-            (a + b, f"{a}+{b}={a+b}"),
-            (a * b, f"{a}*{b}={a*b}"),
-            (b - a, f"{b}-{a}={b-a}"),
-            (a - b, f"{a}-{b}={a-b}"),
-            (b / a if a != 0 else None, f"{b}/{a}={b/a:.0f}" if a != 0 else None),
-            (a / b if b != 0 else None, f"{a}/{b}={a/b:.0f}" if b != 0 else None),
+            (a + b, f"{a}+{b}={a + b}"),
+            (a * b, f"{a}*{b}={a * b}"),
+            (b - a, f"{b}-{a}={b - a}"),
+            (a - b, f"{a}-{b}={a - b}"),
+            (b / a if a != 0 else None, f"{b}/{a}={b / a:.0f}" if a != 0 else None),
+            (a / b if b != 0 else None, f"{a}/{b}={a / b:.0f}" if b != 0 else None),
         ]:
             if result is not None and result == int(result) and result >= 0:
                 successors.append((sorted(rest + [int(result)]), op_str))

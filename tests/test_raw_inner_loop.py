@@ -47,9 +47,7 @@ def _setup_exp_dir(tmp_path, rows, project_id="subjective_randomness"):
     exp_dir = tmp_path / "data" / "outer_loop" / project_id / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
     (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
-        yaml.safe_dump(
-            {"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}
-        ),
+        yaml.safe_dump({"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}),
         encoding="utf-8",
     )
     _write_csv(exp_dir / "data" / "responses.csv", rows)
@@ -82,9 +80,7 @@ def _patch_inner_loop(monkeypatch):
 def test_inner_loop_writes_only_raw_columns(tmp_path, monkeypatch):
     """model_loop/responses.csv has exactly the five raw columns."""
     exp_dir = _setup_exp_dir(tmp_path, [_raw_row()])
-    monkeypatch.setattr(
-        mlr, "_pooled_response_rows", lambda e: [_raw_row()]
-    )
+    monkeypatch.setattr(mlr, "_pooled_response_rows", lambda e: [_raw_row()])
     _patch_inner_loop(monkeypatch)
 
     mlr.run_inner_model_loop_programmatic(
@@ -149,7 +145,9 @@ def test_the_inner_loop_gets_its_runs_own_notes_dir(tmp_path, monkeypatch):
     for run in ("run_a", "run_b"):
         exp_dir = _setup_exp_dir(tmp_path / run, [_raw_row()])
         mlr.run_inner_model_loop_programmatic(
-            exp_dir, max_iterations=0, candidate_count=0,
+            exp_dir,
+            max_iterations=0,
+            candidate_count=0,
             project_id="subjective_randomness",
         )
         notes.append(captured["inner_kwargs"]["agent_notes_dir"])

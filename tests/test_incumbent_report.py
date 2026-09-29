@@ -26,7 +26,9 @@ def _entry(step, iteration, best, posteriors=None):
 
 
 def _seed_step(best, starting=("seed_a", "seed_b")):
-    return _entry(0, None, best, posteriors={name: 1.0 / len(starting) for name in starting})
+    return _entry(
+        0, None, best, posteriors={name: 1.0 / len(starting) for name in starting}
+    )
 
 
 def _archived_cell(cell_dir: Path, gt: str, histories) -> None:
@@ -54,27 +56,41 @@ def _finished(cell_dir: Path) -> None:
 def _live_cell(cell_dir: Path, gt: str, histories) -> None:
     _finished(cell_dir)
     for exp_num, history in enumerate(histories, start=1):
-        loop_dir = cell_dir / "repo" / "_runs" / gt / f"experiment{exp_num}" / "model_loop"
+        loop_dir = (
+            cell_dir / "repo" / "_runs" / gt / f"experiment{exp_num}" / "model_loop"
+        )
         loop_dir.mkdir(parents=True)
         (loop_dir / "history.json").write_text(json.dumps(history), encoding="utf-8")
 
 
 def _build_sweep(root: Path) -> Path:
     # run1/alpha: archived, the incumbent never moves (the baseline shape).
-    _archived_cell(root / "run1" / "alpha", "alpha", [
-        [_seed_step("seed_a"), _entry(1, 0, "seed_a")],
-        [_seed_step("seed_a"), _entry(1, 0, "seed_a")],
-    ])
+    _archived_cell(
+        root / "run1" / "alpha",
+        "alpha",
+        [
+            [_seed_step("seed_a"), _entry(1, 0, "seed_a")],
+            [_seed_step("seed_a"), _entry(1, 0, "seed_a")],
+        ],
+    )
     # run2/alpha: archived, a seed rival takes over inside experiment 1.
-    _archived_cell(root / "run2" / "alpha", "alpha", [
-        [_seed_step("seed_a"), _entry(1, 0, "seed_b")],
-        [_seed_step("seed_b")],
-    ])
+    _archived_cell(
+        root / "run2" / "alpha",
+        "alpha",
+        [
+            [_seed_step("seed_a"), _entry(1, 0, "seed_b")],
+            [_seed_step("seed_b")],
+        ],
+    )
     # run1/beta: kept repo copy, a discovered model wins experiment 2.
-    _live_cell(root / "run1" / "beta", "beta", [
-        [_seed_step("seed_a"), _entry(1, 0, "seed_a")],
-        [_seed_step("seed_a"), _entry(1, 0, "new_model")],
-    ])
+    _live_cell(
+        root / "run1" / "beta",
+        "beta",
+        [
+            [_seed_step("seed_a"), _entry(1, 0, "seed_a")],
+            [_seed_step("seed_a"), _entry(1, 0, "new_model")],
+        ],
+    )
     return root
 
 
@@ -110,7 +126,13 @@ def test_report_records_every_cell_and_the_totals(tmp_path, capsys):
     assert report["cells"]["run1/beta"]["n_incumbent_changes"] == 1
     assert report["cells"]["run1/beta"]["n_steps_discovered_incumbent"] == 1
     assert report["cells"]["run1/beta"]["changes"] == [
-        {"global_step": 3, "experiment": 2, "step": 1, "from": "seed_a", "to": "new_model"}
+        {
+            "global_step": 3,
+            "experiment": 2,
+            "step": 1,
+            "from": "seed_a",
+            "to": "new_model",
+        }
     ]
     assert report["totals"] == {
         "n_cells": 3,

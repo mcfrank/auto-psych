@@ -28,7 +28,7 @@ with pm.Model() as model:
     base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
 
     # Exponent for the penalty function (e.g. 1.0 = linear, 2.0 = quadratic)
-    # Using a LogNormal prior centered around 0 (so exponent is around 1.0), 
+    # Using a LogNormal prior centered around 0 (so exponent is around 1.0),
     # but allowing it to flexibly fit the Minkowski distance exponent.
     penalty_power = pm.LogNormal("penalty_power", mu=0.0, sigma=0.5)
 
@@ -39,24 +39,26 @@ with pm.Model() as model:
     p_a = pt.cast(h_a, "float64") / n_a_f
     p_b = pt.cast(h_b, "float64") / n_b_f
 
-    alt_rate_a = pt.cast(alts_a, "float64") / pt.maximum(pt.cast(n_a - 1, "float64"), 1.0)
-    alt_rate_b = pt.cast(alts_b, "float64") / pt.maximum(pt.cast(n_b - 1, "float64"), 1.0)
+    alt_rate_a = pt.cast(alts_a, "float64") / pt.maximum(
+        pt.cast(n_a - 1, "float64"), 1.0
+    )
+    alt_rate_b = pt.cast(alts_b, "float64") / pt.maximum(
+        pt.cast(n_b - 1, "float64"), 1.0
+    )
 
     # Calculate absolute deviations (add epsilon for numerical safety with powers < 1)
     dev_p_a = pt.abs(p_a - ideal_p) + 1e-6
     dev_alt_a = pt.abs(alt_rate_a - ideal_alt) + 1e-6
-    
+
     dev_p_b = pt.abs(p_b - ideal_p) + 1e-6
     dev_alt_b = pt.abs(alt_rate_b - ideal_alt) + 1e-6
 
     # Calculate per-event typicality using the non-linear penalty function
     typ_a = base_typ - (
-        w_p * pt.pow(dev_p_a, penalty_power) + 
-        w_alt * pt.pow(dev_alt_a, penalty_power)
+        w_p * pt.pow(dev_p_a, penalty_power) + w_alt * pt.pow(dev_alt_a, penalty_power)
     )
     typ_b = base_typ - (
-        w_p * pt.pow(dev_p_b, penalty_power) + 
-        w_alt * pt.pow(dev_alt_b, penalty_power)
+        w_p * pt.pow(dev_p_b, penalty_power) + w_alt * pt.pow(dev_alt_b, penalty_power)
     )
 
     # Total randomness score is the accumulated typicality over the sequence length

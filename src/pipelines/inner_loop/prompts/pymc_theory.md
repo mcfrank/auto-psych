@@ -131,7 +131,12 @@ recency cue):
 def compute_features(sequence_a, sequence_b):
     def ends_heads(seq):
         return 1.0 if seq.strip().upper().endswith("H") else 0.0
-    return {"ends_heads_a": ends_heads(sequence_a), "ends_heads_b": ends_heads(sequence_b)}
+
+    return {
+        "ends_heads_a": ends_heads(sequence_a),
+        "ends_heads_b": ends_heads(sequence_b),
+    }
+
 
 # ... then inside the model:
 #   ends_heads_a = pm.Data("ends_heads_a", np.zeros(1, dtype="float64"))

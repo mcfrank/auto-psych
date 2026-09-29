@@ -79,14 +79,11 @@ def _matrices(delta: float, alpha: float) -> tuple[List[float], List[List[float]
     return [value / init_total for value in init_raw], transition
 
 
-def _viterbi_prefix_probabilities(
-    seq: str, delta: float, alpha: float
-) -> List[float]:
+def _viterbi_prefix_probabilities(seq: str, delta: float, alpha: float) -> List[float]:
     """Maximum hidden-path joint probability after each observed prefix."""
     init, transition = _matrices(delta, alpha)
     best = [
-        init[state] if _EMITS[state] == seq[0] else 0.0
-        for state in range(N_STATES)
+        init[state] if _EMITS[state] == seq[0] else 0.0 for state in range(N_STATES)
     ]
     prefix_probabilities = [max(best)]
     for symbol in seq[1:]:
@@ -134,14 +131,10 @@ def _memory_patterns(seq: str) -> Dict[str, bool]:
     }
 
 
-def log_p_regular(
-    seq: str, params: Mapping[str, float] | None = None
-) -> float:
+def log_p_regular(seq: str, params: Mapping[str, float] | None = None) -> float:
     p = merge_params(DEFAULT_PARAMS, params)
     s = clean_sequence(seq)
-    prefixes = _viterbi_prefix_probabilities(
-        s, float(p["delta"]), float(p["alpha"])
-    )
+    prefixes = _viterbi_prefix_probabilities(s, float(p["delta"]), float(p["alpha"]))
     weights = _method_weights(p)
     method_probabilities = [weights["repetition"] * prefixes[-1]]
     prefix_probability = prefixes[(len(s) + 1) // 2 - 1]
@@ -154,9 +147,7 @@ def log_p_regular(
     return math.log(regular_probability)
 
 
-def score_sequence(
-    seq: str, params: Mapping[str, float] | None = None
-) -> float:
+def score_sequence(seq: str, params: Mapping[str, float] | None = None) -> float:
     s = clean_sequence(seq)
     return len(s) * math.log(0.5) - log_p_regular(s, params)
 

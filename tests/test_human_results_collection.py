@@ -43,9 +43,24 @@ def _posterior_fixture() -> dict:
         },
         "n_trials": 1280,
         "comparison": {
-            "iter1_candidate0": {"rank": 0, "elpd_loo": -788.83, "elpd_diff": 0.0, "dse": 0.0},
-            "iter0_candidate0": {"rank": 1, "elpd_loo": -796.31, "elpd_diff": 7.486, "dse": 4.011},
-            "prototype_similarity": {"rank": 2, "elpd_loo": -809.56, "elpd_diff": 20.73, "dse": 5.59},
+            "iter1_candidate0": {
+                "rank": 0,
+                "elpd_loo": -788.83,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+            },
+            "iter0_candidate0": {
+                "rank": 1,
+                "elpd_loo": -796.31,
+                "elpd_diff": 7.486,
+                "dse": 4.011,
+            },
+            "prototype_similarity": {
+                "rank": 2,
+                "elpd_loo": -809.56,
+                "elpd_diff": 20.73,
+                "dse": 5.59,
+            },
         },
     }
 
@@ -67,15 +82,23 @@ def _write_experiment(exp_dir, posterior=None):
         encoding="utf-8",
     )
     (exp_dir / "design").mkdir()
-    (exp_dir / "design" / "design_rationale.md").write_text("why these stimuli", encoding="utf-8")
+    (exp_dir / "design" / "design_rationale.md").write_text(
+        "why these stimuli", encoding="utf-8"
+    )
     (exp_dir / "deployment").mkdir()
     (exp_dir / "deployment" / "deployment_manifest.json").write_text(
-        json.dumps({"prolific_study_id": FAKE_STUDY_ID,
-                    "external_study_url": "https://x/?PROLIFIC_PID={{%PROLIFIC_PID%}}"}),
+        json.dumps(
+            {
+                "prolific_study_id": FAKE_STUDY_ID,
+                "external_study_url": "https://x/?PROLIFIC_PID={{%PROLIFIC_PID%}}",
+            }
+        ),
         encoding="utf-8",
     )
     (exp_dir / "cognitive_models").mkdir()
-    (exp_dir / "cognitive_models" / "best.py").write_text("def p(): ...", encoding="utf-8")
+    (exp_dir / "cognitive_models" / "best.py").write_text(
+        "def p(): ...", encoding="utf-8"
+    )
     model_loop = exp_dir / "model_loop"
     model_loop.mkdir()
     (model_loop / "model_posterior.json").write_text(
@@ -83,8 +106,7 @@ def _write_experiment(exp_dir, posterior=None):
         encoding="utf-8",
     )
     (model_loop / "responses.csv").write_text(
-        "participant_id,participant_id_str,h_a\n"
-        f"0,{FAKE_PID},0.5\n",
+        f"participant_id,participant_id_str,h_a\n0,{FAKE_PID},0.5\n",
         encoding="utf-8",
     )
     (model_loop / "iter_0" / "critique").mkdir(parents=True)
@@ -134,8 +156,12 @@ def test_collect_copies_results_excluding_heavy_material(tmp_path):
 
     report = collect_human_results(source, dest, project=PROJECT)
 
-    assert (dest / "run1" / PROJECT / "experiment1" / "data" / "responses.csv").is_file()
-    assert (dest / "run2" / PROJECT / "experiment3" / "model_loop" / "model_posterior.json").is_file()
+    assert (
+        dest / "run1" / PROJECT / "experiment1" / "data" / "responses.csv"
+    ).is_file()
+    assert (
+        dest / "run2" / PROJECT / "experiment3" / "model_loop" / "model_posterior.json"
+    ).is_file()
     assert not (dest / "pilot1").exists()
     assert not (dest / "_validate_sim").exists()
     assert not list(dest.rglob("*.nc"))
@@ -163,7 +189,9 @@ def test_collect_scrubs_every_prolific_id(tmp_path):
             assert not find_prolific_ids(text), path
 
     # The participant_id_str column is gone, but the anonymized index remains.
-    resp = (dest / "run1" / PROJECT / "experiment1" / "data" / "responses.csv").read_text()
+    resp = (
+        dest / "run1" / PROJECT / "experiment1" / "data" / "responses.csv"
+    ).read_text()
     assert "participant_id_str" not in resp
     assert "participant_id" in resp  # header still present
     assert report.n_ids_scrubbed > 0
@@ -203,10 +231,7 @@ def test_redact_text_replaces_ids_but_leaves_data_and_placeholders():
 
 
 def test_redact_csv_text_drops_pii_column_and_redacts_residual_ids():
-    csv_text = (
-        "participant_id,participant_id_str,sequence_a\n"
-        f"0,{FAKE_PID},HHTT\n"
-    )
+    csv_text = f"participant_id,participant_id_str,sequence_a\n0,{FAKE_PID},HHTT\n"
     out = redact_csv_text(csv_text)
     assert "participant_id_str" not in out
     assert FAKE_PID not in out
@@ -215,7 +240,10 @@ def test_redact_csv_text_drops_pii_column_and_redacts_residual_ids():
 
 
 def test_find_prolific_ids_detects_and_redaction_clears_them():
-    assert find_prolific_ids(f"a {FAKE_PID} b {FAKE_STUDY_ID}") == {FAKE_PID, FAKE_STUDY_ID}
+    assert find_prolific_ids(f"a {FAKE_PID} b {FAKE_STUDY_ID}") == {
+        FAKE_PID,
+        FAKE_STUDY_ID,
+    }
     assert find_prolific_ids(redact_text(f"{FAKE_PID} {FAKE_STUDY_ID}")) == set()
 
 
@@ -236,14 +264,30 @@ def test_summarize_model_posterior_picks_winner_and_runner_up():
 
 def test_render_summary_tabulates_runs_and_winners():
     records = [
-        {"run": "run1", "experiment": "experiment1", "best_model": "iter1_candidate0",
-         "best_posterior": 0.999, "n_trials": 1280, "n_responses": 1280,
-         "n_participants": 32, "runner_up": "iter0_candidate0",
-         "runner_up_delta_elpd": 7.49, "runner_up_dse": 4.01},
-        {"run": "run2", "experiment": "experiment1", "best_model": "iter0_candidate1",
-         "best_posterior": 0.8, "n_trials": 1280, "n_responses": 1280,
-         "n_participants": 32, "runner_up": "prototype_similarity",
-         "runner_up_delta_elpd": 3.1, "runner_up_dse": 2.0},
+        {
+            "run": "run1",
+            "experiment": "experiment1",
+            "best_model": "iter1_candidate0",
+            "best_posterior": 0.999,
+            "n_trials": 1280,
+            "n_responses": 1280,
+            "n_participants": 32,
+            "runner_up": "iter0_candidate0",
+            "runner_up_delta_elpd": 7.49,
+            "runner_up_dse": 4.01,
+        },
+        {
+            "run": "run2",
+            "experiment": "experiment1",
+            "best_model": "iter0_candidate1",
+            "best_posterior": 0.8,
+            "n_trials": 1280,
+            "n_responses": 1280,
+            "n_participants": 32,
+            "runner_up": "prototype_similarity",
+            "runner_up_delta_elpd": 3.1,
+            "runner_up_dse": 2.0,
+        },
     ]
     md = render_human_experiment_summary(records, source="/scratch/x")
     assert "run1" in md and "run2" in md

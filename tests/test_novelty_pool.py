@@ -65,9 +65,7 @@ def test_novelty_pool_is_loop_generated_and_not_the_eval_pool():
     assert pool == novelty_pool_rows()
     assert len(pool) == NOVELTY_POOL_N_PAIRS
     assert all(set(row) == {"sequence_a", "sequence_b"} for row in pool)
-    assert all(
-        set(row["sequence_a"] + row["sequence_b"]) <= {"H", "T"} for row in pool
-    )
+    assert all(set(row["sequence_a"] + row["sequence_b"]) <= {"H", "T"} for row in pool)
     assert all(len(row["sequence_a"]) == len(row["sequence_b"]) for row in pool)
     assert {len(row["sequence_a"]) for row in pool} == set(NOVELTY_POOL_LENGTHS)
     assert len({_unordered(row) for row in pool}) == len(pool)
@@ -152,7 +150,11 @@ def _write_responses(tmp_path, stimuli=TRAINING_STIMULI, participant_ids=(0,)):
         writer = csv.DictWriter(
             f,
             fieldnames=[
-                "sequence_a", "sequence_b", "participant_id", "trial_index", "chose_left",
+                "sequence_a",
+                "sequence_b",
+                "participant_id",
+                "trial_index",
+                "chose_left",
             ],
         )
         writer.writeheader()
@@ -274,7 +276,9 @@ def test_candidate_that_needs_response_row_columns_is_rejected_not_crashed(
             "needs_trial": _FakeFitted(lambda row: 0.5, needs=("trial_index",)),
         },
     )
-    assert not _admit_candidate(_candidate(tmp_path), models_dir, "needs_trial", responses)
+    assert not _admit_candidate(
+        _candidate(tmp_path), models_dir, "needs_trial", responses
+    )
     out = capsys.readouterr().out
     assert "[reject] needs_trial" in out
     assert "trial_index" in out
@@ -287,7 +291,7 @@ def test_candidate_that_needs_response_row_columns_is_rejected_not_crashed(
 # stimulus rows. GPT-6 Luna wrote one (session_order_side_drift) and the
 # resulting KeyError took down a whole holdout cell 23 minutes in, because the
 # tests above stub make_stim_data and never exercise the real hook path.
-_HOOK_READS_PARTICIPANT = '''
+_HOOK_READS_PARTICIPANT = """
 import numpy as np
 import pymc as pm
 
@@ -306,7 +310,7 @@ with pm.Model() as model:
     weight = pm.Normal("weight", 0.0, 1.0)
     p_left = pm.Deterministic("p_left", pm.math.sigmoid(weight * odd_participant))
     pm.Bernoulli("obs", p=p_left, observed=chose_left)
-'''
+"""
 
 
 def test_hook_reading_participant_id_is_rejected_not_crashed(
@@ -376,7 +380,10 @@ def test_candidate_predicting_identically_to_an_existing_model_is_rejected(
     _stub_admission_gates(monkeypatch)
     _stub_prediction_plumbing(
         monkeypatch,
-        {"seed_a": _FakeFitted(lambda row: 0.6), "re_skin": _FakeFitted(lambda row: 0.6)},
+        {
+            "seed_a": _FakeFitted(lambda row: 0.6),
+            "re_skin": _FakeFitted(lambda row: 0.6),
+        },
     )
 
     assert not _admit_candidate(_candidate(tmp_path), models_dir, "re_skin", responses)
@@ -455,7 +462,8 @@ def _patch_scoring(monkeypatch):
                 "rank": rank,
                 "elpd_loo": -10.0 - rank,
                 "elpd_diff": 0.0 if n == "model_a" else 1.0,
-                "dse": 0.0 if n == "model_a" else 5.0, "dse_clustered": 0.0 if n == "model_a" else 5.0,
+                "dse": 0.0 if n == "model_a" else 5.0,
+                "dse_clustered": 0.0 if n == "model_a" else 5.0,
                 "weight": 1.0 if n == "model_a" else 0.0,
                 "loo_unreliable": False,
             }
@@ -595,9 +603,14 @@ def test_a_candidate_undefined_on_the_pool_is_rejected_with_the_reason(
     _stub_admission_gates(monkeypatch)
     _stub_prediction_plumbing(
         monkeypatch,
-        {"seed_a": _FakeFitted(lambda row: 0.5), "blows_up": _UndefinedOn(lambda row: 0.9, _long)},
+        {
+            "seed_a": _FakeFitted(lambda row: 0.5),
+            "blows_up": _UndefinedOn(lambda row: 0.9, _long),
+        },
     )
-    ledger = model_zoo.HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
+    ledger = model_zoo.HypothesisLedger.create(
+        tmp_path / "ledger.jsonl", inherit_from=None
+    )
 
     admission = model_zoo._admit_candidate_with_reason(
         _candidate(tmp_path), models_dir, "blows_up", responses, ledger=ledger

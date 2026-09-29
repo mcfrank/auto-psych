@@ -80,7 +80,9 @@ def _write_frontend(out_dir: Path) -> None:
     html = (_STATIC_DIR / "index.html").read_text()
     # The live shell loads assets from the Flask /static mount; a static host
     # serves them next to index.html, so relativise the references.
-    html = html.replace("/static/styles.css", "styles.css").replace("/static/app.js", "app.js")
+    html = html.replace("/static/styles.css", "styles.css").replace(
+        "/static/app.js", "app.js"
+    )
     # Tell app.js to resolve API paths against the frozen files instead of Flask.
     html = html.replace(
         '<script src="app.js"></script>',
@@ -106,7 +108,9 @@ def _freeze_run(data_root: Path, out_data: Path, run_path: str) -> tuple[int, in
     n_preview_rows = 0
     for ref in run.experiments:
         exp = scan_run_experiment(data_root, run_path, ref.unit)
-        _write_json(run_out / "experiment" / f"{_unit_slug(ref.unit)}.json", exp.model_dump())
+        _write_json(
+            run_out / "experiment" / f"{_unit_slug(ref.unit)}.json", exp.model_dump()
+        )
         if exp.data is not None:
             n_preview_rows += len(exp.data.rows_preview)
         # The deployed experiment page is lazy-loaded by the frontend on demand,

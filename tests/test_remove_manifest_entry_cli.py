@@ -28,7 +28,9 @@ def _manifest(tmp_path, names):
     models_dir = tmp_path / "models"
     models_dir.mkdir()
     (models_dir / MANIFEST_FILENAME).write_text(
-        "# active: " + ", ".join(names) + "\n"
+        "# active: "
+        + ", ".join(names)
+        + "\n"
         + yaml.safe_dump(
             {"models": [{"name": n, "rationale": f"mechanism of {n}"} for n in names]},
             sort_keys=False,
@@ -44,8 +46,13 @@ def test_cli_removes_the_entry_and_reports_it(tmp_path, capsys):
 
     mod.main(mod.Args(models_dir=models_dir, name="held_out"))
 
-    assert [e["name"] for e in read_manifest_entries(models_dir)] == ["keep_a", "keep_b"]
-    assert "held_out" not in (models_dir / MANIFEST_FILENAME).read_text(encoding="utf-8")
+    assert [e["name"] for e in read_manifest_entries(models_dir)] == [
+        "keep_a",
+        "keep_b",
+    ]
+    assert "held_out" not in (models_dir / MANIFEST_FILENAME).read_text(
+        encoding="utf-8"
+    )
     assert "removed 'held_out'" in capsys.readouterr().out
 
 

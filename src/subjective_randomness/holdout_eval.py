@@ -232,17 +232,24 @@ def _eval_prediction(
     """
     try:
         return _predict_eval_rows(
-            fitted, base_rows, participant_ids=participant_ids,
-            max_draws=max_draws, mask_invalid=mask_invalid,
+            fitted,
+            base_rows,
+            participant_ids=participant_ids,
+            max_draws=max_draws,
+            mask_invalid=mask_invalid,
         )
     except Exception as exc:
-        if not mask_invalid or not is_model_failure(exc, model_source_file(fitted.model)):
+        if not mask_invalid or not is_model_failure(
+            exc, model_source_file(fitted.model)
+        ):
             raise
         bindable = _bindable_rows(fitted.model, base_rows, participant_ids)
         if bindable.all():
             raise  # not a pair the model cannot bind: a failure of its own
         failure = exc
-    lengths = sorted({len(base_rows[i]["sequence_a"]) for i in np.flatnonzero(~bindable)})
+    lengths = sorted(
+        {len(base_rows[i]["sequence_a"]) for i in np.flatnonzero(~bindable)}
+    )
     print(
         f"  [eval] WARNING: model {getattr(fitted, 'name', '?')!r} cannot be bound to "
         f"{int((~bindable).sum())} of the {len(base_rows)} held-out pairs (lengths "
@@ -253,15 +260,19 @@ def _eval_prediction(
     pred = np.full(len(base_rows), np.nan)
     if bindable.any():
         pred[bindable] = _predict_eval_rows(
-            fitted, [row for row, ok in zip(base_rows, bindable) if ok],
-            participant_ids=participant_ids, max_draws=max_draws,
+            fitted,
+            [row for row, ok in zip(base_rows, bindable) if ok],
+            participant_ids=participant_ids,
+            max_draws=max_draws,
             mask_invalid=mask_invalid,
         )
     return pred
 
 
 def _bindable_rows(
-    model: Any, base_rows: Sequence[Mapping[str, Any]], participant_ids: Optional[Sequence[int]]
+    model: Any,
+    base_rows: Sequence[Mapping[str, Any]],
+    participant_ids: Optional[Sequence[int]],
 ) -> np.ndarray:
     """Which of ``base_rows`` ``model`` can be bound to, one length at a time
     and, within a length that fails, one pair at a time."""
@@ -319,9 +330,7 @@ def _predict_eval_rows(
             "responses carry no participant_id to marginalize over."
         )
     rows = [
-        {**row, "participant_id": pid}
-        for pid in participant_ids
-        for row in base_rows
+        {**row, "participant_id": pid} for pid in participant_ids for row in base_rows
     ]
     stim_data = make_stim_data(fitted.model, rows)
     preds = np.asarray(predict(stim_data), dtype="float64")
@@ -350,10 +359,18 @@ def _report_exclusions(
             raise ValueError("Logging excluded pairs needs the eval stimuli.")
         pairs = [dict(eval_stimuli[i]) for i in np.flatnonzero(~valid)]
         with Path(exclusions_log).open("a", encoding="utf-8") as f:
-            f.write(json.dumps({
-                **record, "models": sorted(models),
-                "n_excluded": n_excluded, "n_pool": n_pool, "pairs": pairs,
-            }) + "\n")
+            f.write(
+                json.dumps(
+                    {
+                        **record,
+                        "models": sorted(models),
+                        "n_excluded": n_excluded,
+                        "n_pool": n_pool,
+                        "pairs": pairs,
+                    }
+                )
+                + "\n"
+            )
 
 
 def _fitted_seed_baseline(
@@ -400,8 +417,11 @@ def _fitted_seed_baseline(
             **dict(fit_kwargs),
         )
         pred = _eval_prediction(
-            fitted, eval_rows, participant_ids=participant_ids,
-            max_draws=predict_max_draws, mask_invalid=True,
+            fitted,
+            eval_rows,
+            participant_ids=participant_ids,
+            max_draws=predict_max_draws,
+            mask_invalid=True,
         )
         valid = np.isfinite(pred)
         if not valid.any():
@@ -411,9 +431,16 @@ def _fitted_seed_baseline(
             )
         if not valid.all():
             _report_exclusions(
-                f"fitted-seed baseline, seed {name!r}", valid, [name], eval_stimuli,
+                f"fitted-seed baseline, seed {name!r}",
+                valid,
+                [name],
+                eval_stimuli,
                 exclusions_log,
-                {"scored": "fitted_seed_baseline", "model": name, **(exclusion_record or {})},
+                {
+                    "scored": "fitted_seed_baseline",
+                    "model": name,
+                    **(exclusion_record or {}),
+                },
             )
         loo = fitted.loo_diagnostics()
         per_model[name] = {
@@ -429,7 +456,9 @@ def _fitted_seed_baseline(
     rs = [per_model[name]["pearson_r"] for name in r_models]
     rmses = [v["rmse"] for v in per_model.values()]
     trusted = [name for name, v in per_model.items() if v["trusted"]]
-    best = max(trusted, key=lambda name: per_model[name]["elpd_loo"]) if trusted else None
+    best = (
+        max(trusted, key=lambda name: per_model[name]["elpd_loo"]) if trusted else None
+    )
     return {
         "pearson_r": float(np.mean(rs)) if rs else None,
         "rmse": float(np.mean(rmses)) if rmses else None,
@@ -440,7 +469,9 @@ def _fitted_seed_baseline(
         "elpd_best_r": per_model[best]["pearson_r"] if best else None,
         "elpd_best_rmse": per_model[best]["rmse"] if best else None,
         "elpd_best_reason": (
-            None if best else "no seed's fit can be trusted (unreliable PSIS-LOO or no convergence)"
+            None
+            if best
+            else "no seed's fit can be trusted (unreliable PSIS-LOO or no convergence)"
         ),
     }
 
@@ -536,7 +567,9 @@ def evaluate_trajectory(
         loop_dir = run_root / f"experiment{exp_num}" / "model_loop"
         history_path = loop_dir / "history.json"
         if not history_path.exists():
-            raise FileNotFoundError(f"No history.json for experiment {exp_num}: {history_path}")
+            raise FileNotFoundError(
+                f"No history.json for experiment {exp_num}: {history_path}"
+            )
         history = json.loads(history_path.read_text(encoding="utf-8"))
         if not history:
             raise ValueError(f"Empty inner-loop history: {history_path}")
@@ -560,8 +593,11 @@ def evaluate_trajectory(
                 )
                 try:
                     predictions[name] = _eval_prediction(
-                        fitted, eval_rows, participant_ids=participant_ids,
-                        max_draws=predict_max_draws, mask_invalid=True,
+                        fitted,
+                        eval_rows,
+                        participant_ids=participant_ids,
+                        max_draws=predict_max_draws,
+                        mask_invalid=True,
                     )
                 except Exception as exc:
                     raise RuntimeError(
@@ -583,16 +619,29 @@ def evaluate_trajectory(
                     f"{exp_num}, step {entry['step']}; nothing to score."
                 )
             undefined_models = sorted(
-                name for name, pred in predictions.items() if not np.isfinite(pred).all()
+                name
+                for name, pred in predictions.items()
+                if not np.isfinite(pred).all()
             )
             if not valid.all():
                 _report_exclusions(
-                    f"experiment {exp_num} step {entry['step']}", valid,
-                    undefined_models, eval_stimuli, exclusions_log,
-                    {"scored": "trajectory", "experiment": exp_num,
-                     "step": entry["step"], "best_model": best},
+                    f"experiment {exp_num} step {entry['step']}",
+                    valid,
+                    undefined_models,
+                    eval_stimuli,
+                    exclusions_log,
+                    {
+                        "scored": "trajectory",
+                        "experiment": exp_num,
+                        "step": entry["step"],
+                        "best_model": best,
+                    },
                 )
-            gt_p_valid, best_pred, bma_pred = gt_p[valid], best_pred[valid], bma_pred[valid]
+            gt_p_valid, best_pred, bma_pred = (
+                gt_p[valid],
+                best_pred[valid],
+                bma_pred[valid],
+            )
 
             gt_list = gt_p_valid.tolist()
             best_list = best_pred.tolist()
@@ -696,7 +745,9 @@ def _all_responses_so_far(run_root: Path, n_experiments: int) -> Path:
     for exp_num in range(1, n_experiments + 1):
         data = run_root / f"experiment{exp_num}" / "data" / "responses.csv"
         if not data.exists():
-            raise FileNotFoundError(f"Missing responses for experiment {exp_num}: {data}")
+            raise FileNotFoundError(
+                f"Missing responses for experiment {exp_num}: {data}"
+            )
         expected += _n_rows(data)
     if _n_rows(final) != expected:
         raise ValueError(
@@ -807,8 +858,13 @@ def fitted_seed_baseline_by_experiment(
         {
             "experiment": k,
             **fitted_seed_baseline_correlation(
-                run_root, gt_model, gt_params, eval_stimuli, n_experiments=k,
-                exclusion_record={"experiment": k}, **kwargs,
+                run_root,
+                gt_model,
+                gt_params,
+                eval_stimuli,
+                n_experiments=k,
+                exclusion_record={"experiment": k},
+                **kwargs,
             ),
         }
         for k in range(1, n_experiments + 1)

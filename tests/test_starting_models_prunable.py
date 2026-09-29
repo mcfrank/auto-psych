@@ -44,7 +44,11 @@ from src.pipelines.outer_loop.model_loop_runner import (
 from src.pipelines.outer_loop.orchestrator import carry_forward_cognitive_models
 from src.subjective_randomness import holdout_eval
 from tests.inner_loop_fixtures import write_responses, write_seed_models
-from tests.test_pymc_inner_loop_ledger import _ledger_rows, _manifest_names, _patch_scoring
+from tests.test_pymc_inner_loop_ledger import (
+    _ledger_rows,
+    _manifest_names,
+    _patch_scoring,
+)
 
 MODEL_SRC = "import pymc as pm\nwith pm.Model() as model:\n    pass\n"
 
@@ -101,8 +105,12 @@ def test_a_starting_model_clearly_behind_is_pruned_and_recorded(tmp_path, monkey
     ledger = _ledger(tmp_path)
 
     pruned = _prune_losers(
-        models_dir, tmp_path / "r.csv", cache_dir=None, fit_kwargs={},
-        ledger=ledger, ledger_context="experiment1 end of experiment",
+        models_dir,
+        tmp_path / "r.csv",
+        cache_dir=None,
+        fit_kwargs={},
+        ledger=ledger,
+        ledger_context="experiment1 end of experiment",
     )
 
     assert pruned == ["seed_b"]
@@ -119,7 +127,10 @@ def test_a_tied_starting_model_is_kept(tmp_path, monkeypatch):
     _stub_comparison(
         monkeypatch, {"discovered": _row(0, 0.0, 0.0), "seed_a": _row(1, 3.0, 2.0)}
     )
-    assert _prune_losers(models_dir, tmp_path / "r.csv", cache_dir=None, fit_kwargs={}) == []
+    assert (
+        _prune_losers(models_dir, tmp_path / "r.csv", cache_dir=None, fit_kwargs={})
+        == []
+    )
     assert (models_dir / "seed_a.py").exists()
 
 
@@ -132,8 +143,13 @@ def test_the_cap_can_retire_a_starting_model(tmp_path, monkeypatch):
     ledger = _ledger(tmp_path)
 
     retired = _cap_live_set(
-        models_dir, tmp_path / "r.csv", cache_dir=None, fit_kwargs={}, cap=2,
-        ledger=ledger, ledger_context="experiment1 end of experiment",
+        models_dir,
+        tmp_path / "r.csv",
+        cache_dir=None,
+        fit_kwargs={},
+        cap=2,
+        ledger=ledger,
+        ledger_context="experiment1 end of experiment",
     )
 
     assert retired == ["seed_a"]
@@ -159,7 +175,9 @@ def test_pruning_keeps_the_best_trusted_model_even_when_everything_else_loses(
             "flaky": _row(3, 70.0, 5.0, untrusted=True),
         },
     )
-    pruned = _prune_losers(models_dir, tmp_path / "r.csv", cache_dir=None, fit_kwargs={})
+    pruned = _prune_losers(
+        models_dir, tmp_path / "r.csv", cache_dir=None, fit_kwargs={}
+    )
     assert sorted(pruned) == ["loser", "seed_b"]
     # The untrusted model is never pruned (its margin cannot be trusted).
     assert model_zoo._manifest_names(models_dir) == ["seed_a", "flaky"]
@@ -184,9 +202,13 @@ def test_the_cap_never_retires_the_best_trusted_model(tmp_path, monkeypatch):
 
 def test_a_cap_below_one_is_refused(tmp_path, monkeypatch):
     models_dir = _models_dir(tmp_path, ["seed_a", "m1"])
-    _stub_comparison(monkeypatch, {"seed_a": _row(0, 0.0, 0.0), "m1": _row(1, 1.0, 1.0)})
+    _stub_comparison(
+        monkeypatch, {"seed_a": _row(0, 0.0, 0.0), "m1": _row(1, 1.0, 1.0)}
+    )
     with pytest.raises(ValueError, match="at least one model"):
-        _cap_live_set(models_dir, tmp_path / "r.csv", cache_dir=None, fit_kwargs={}, cap=0)
+        _cap_live_set(
+            models_dir, tmp_path / "r.csv", cache_dir=None, fit_kwargs={}, cap=0
+        )
 
 
 # ── A starting model that cannot be fitted is dropped and recorded ─────
@@ -203,7 +225,10 @@ def test_a_starting_model_with_a_nonfinite_logp_is_dropped(tmp_path, monkeypatch
     ledger = _ledger(tmp_path)
 
     _drop_unfittable_models(
-        models_dir, tmp_path / "r.csv", ledger=ledger, ledger_context="experiment1",
+        models_dir,
+        tmp_path / "r.csv",
+        ledger=ledger,
+        ledger_context="experiment1",
         starting_models={"seed_a", "seed_b"},
     )
 
@@ -236,11 +261,11 @@ def test_a_starting_model_whose_fit_fails_or_elpd_is_nonfinite_is_dropped(
     ]
 
 
-def test_an_infrastructure_failure_on_a_starting_model_still_raises(tmp_path, monkeypatch):
+def test_an_infrastructure_failure_on_a_starting_model_still_raises(
+    tmp_path, monkeypatch
+):
     models_dir = _models_dir(tmp_path, ["seed_a", "seed_b"])
-    monkeypatch.setattr(
-        model_zoo, "fit_models_to_cache", lambda names, *a, **k: {}
-    )
+    monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})
 
     def broken(name, *a, **k):
         raise OSError("disk quota exceeded")
@@ -251,16 +276,22 @@ def test_an_infrastructure_failure_on_a_starting_model_still_raises(tmp_path, mo
     assert model_zoo._manifest_names(models_dir) == ["seed_a", "seed_b"]
 
 
-def test_a_starting_model_that_breaks_the_data_contract_still_raises(tmp_path, monkeypatch):
+def test_a_starting_model_that_breaks_the_data_contract_still_raises(
+    tmp_path, monkeypatch
+):
     """Not a fitting failure: a starting model scored on something other than
     the responses is a broken project asset (and would make the fitted
     starting-model baseline meaningless), so it stops the cell."""
     models_dir = _models_dir(tmp_path, ["seed_a", "candidate"])
     monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(
-        model_zoo, "model_contract_violation", lambda name, *a, **k: "observed data flipped"
+        model_zoo,
+        "model_contract_violation",
+        lambda name, *a, **k: "observed data flipped",
     )
-    with pytest.raises(RuntimeError, match="Starting model 'seed_a' breaks the data contract"):
+    with pytest.raises(
+        RuntimeError, match="Starting model 'seed_a' breaks the data contract"
+    ):
         _drop_unfittable_models(
             models_dir, tmp_path / "r.csv", starting_models={"seed_a"}
         )
@@ -294,13 +325,17 @@ def test_the_loop_prunes_a_starting_model_and_the_menu_offers_it(tmp_path, monke
     assert [(r["name"], r["outcome"]) for r in rows] == [("carried_c", "pruned")]
 
     # In the next experiment's refinement menu, with its source.
-    next_models = _models_dir(run_root / "experiment2" / "model_loop", ["model_a", "model_b"])
+    next_models = _models_dir(
+        run_root / "experiment2" / "model_loop", ["model_a", "model_b"]
+    )
     ledger = HypothesisLedger.create(
         tmp_path / "exp2_ledger.jsonl", inherit_from=results_dir / LEDGER_FILENAME
     )
     candidate_dir = tmp_path / "candidate_2"
     candidate_dir.mkdir()
-    menu = _write_refinement_menu(candidate_dir, next_models, {}, ledger, incumbent="model_a")
+    menu = _write_refinement_menu(
+        candidate_dir, next_models, {}, ledger, incumbent="model_a"
+    )
     pruned_part = menu.split("## Pruned", 1)[1]
     assert "### carried_c — pruned (experiment1 end of experiment)" in pruned_part
     assert f"**Source:** `{pruned_file}`" in pruned_part
@@ -354,7 +389,9 @@ def test_a_pruned_starting_model_leaves_the_carried_set_and_the_design_prior(tmp
     exp2 = tmp_path / "experiment2"
     assert carry_forward_cognitive_models(exp1, exp2)
 
-    carried = yaml.safe_load((exp2 / "cognitive_models" / "models_manifest.yaml").read_text())
+    carried = yaml.safe_load(
+        (exp2 / "cognitive_models" / "models_manifest.yaml").read_text()
+    )
     assert [m["name"] for m in carried["models"]] == ["seed_a", "winner"]
     for gone in ("seed_b", "seed_c"):
         assert not (exp2 / "cognitive_models" / f"{gone}.py").exists()
@@ -401,10 +438,16 @@ def test_a_run_without_a_record_has_no_prunable_flag(tmp_path):
 
 def test_the_wrapper_passes_the_starting_models_as_names_only(tmp_path, monkeypatch):
     exp_dir = tmp_path / "run" / "experiment2"
-    _models_dir(exp_dir, ["falk_konold_dp", "carried"]).rename(exp_dir / "cognitive_models")
+    _models_dir(exp_dir, ["falk_konold_dp", "carried"]).rename(
+        exp_dir / "cognitive_models"
+    )
     (exp_dir.parent / STARTING_MODELS_FILENAME).write_text(
-        json.dumps({"starting_models": ["falk_konold_dp", "motif_stack"],
-                    "starting_models_prunable": True})
+        json.dumps(
+            {
+                "starting_models": ["falk_konold_dp", "motif_stack"],
+                "starting_models_prunable": True,
+            }
+        )
     )
     captured = {}
 
@@ -415,7 +458,8 @@ def test_the_wrapper_passes_the_starting_models_as_names_only(tmp_path, monkeypa
     monkeypatch.setattr(mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])
     monkeypatch.setattr(mlr, "write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(
-        "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop", fake_inner_loop
+        "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
+        fake_inner_loop,
     )
     monkeypatch.setattr(mlr, "_export_inner_loop_models", lambda e, l, *, best_model: e)
 
@@ -454,13 +498,21 @@ def test_the_fitted_baseline_fits_a_pruned_starting_model_from_its_pruned_file(
 
     monkeypatch.setattr(holdout_eval, "fit_model", fake_fit)
     monkeypatch.setattr(
-        holdout_eval, "_eval_prediction", lambda fitted, rows, **k: np.array([0.2, 0.6, 0.7])
+        holdout_eval,
+        "_eval_prediction",
+        lambda fitted, rows, **k: np.array([0.2, 0.6, 0.7]),
     )
 
     holdout_eval._require_seeded(["seed_a", "seed_b"], seeded)
     baseline = holdout_eval._fitted_seed_baseline(
-        ["seed_a", "seed_b"], seeded, tmp_path / "r.csv", [{}, {}, {}],
-        np.array([0.1, 0.5, 0.9]), participant_ids=None, cache_dir=None, fit_kwargs={},
+        ["seed_a", "seed_b"],
+        seeded,
+        tmp_path / "r.csv",
+        [{}, {}, {}],
+        np.array([0.1, 0.5, 0.9]),
+        participant_ids=None,
+        cache_dir=None,
+        fit_kwargs={},
     )
 
     assert set(baseline["per_model"]) == {"seed_a", "seed_b"}

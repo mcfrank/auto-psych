@@ -64,12 +64,24 @@ with pm.Model() as model:
 
     raw_motif_dev_a = pt.abs(p_alt_motifs_a - theta_alt_motif)
     raw_motif_dev_b = pt.abs(p_alt_motifs_b - theta_alt_motif)
-    smooth_motif_dev_a = (n_alt_motifs_a_f / (n_alt_motifs_a_f + K_motif)) * raw_motif_dev_a
-    smooth_motif_dev_b = (n_alt_motifs_b_f / (n_alt_motifs_b_f + K_motif)) * raw_motif_dev_b
+    smooth_motif_dev_a = (
+        n_alt_motifs_a_f / (n_alt_motifs_a_f + K_motif)
+    ) * raw_motif_dev_a
+    smooth_motif_dev_b = (
+        n_alt_motifs_b_f / (n_alt_motifs_b_f + K_motif)
+    ) * raw_motif_dev_b
 
     # Score sequences based on their smoothed distance from the ideal (higher distance = lower score)
-    score_a = -(balance_weight * smooth_imb_a + alt_weight * smooth_alt_dev_a + motif_weight * smooth_motif_dev_a)
-    score_b = -(balance_weight * smooth_imb_b + alt_weight * smooth_alt_dev_b + motif_weight * smooth_motif_dev_b)
+    score_a = -(
+        balance_weight * smooth_imb_a
+        + alt_weight * smooth_alt_dev_a
+        + motif_weight * smooth_motif_dev_a
+    )
+    score_b = -(
+        balance_weight * smooth_imb_b
+        + alt_weight * smooth_alt_dev_b
+        + motif_weight * smooth_motif_dev_b
+    )
 
     # Softmax decision rule
     p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)

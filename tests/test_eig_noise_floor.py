@@ -25,7 +25,11 @@ def _one_decisive_stimulus():
 
 def test_selection_stops_when_further_picks_are_noise():
     sel = select_n_joint_eig(
-        _one_decisive_stimulus(), 4, n_scenarios=2000, seed=1, n_responses=40,
+        _one_decisive_stimulus(),
+        4,
+        n_scenarios=2000,
+        seed=1,
+        n_responses=40,
         stop_below_noise=True,
     )
     assert sel.indices == [0]
@@ -34,7 +38,11 @@ def test_selection_stops_when_further_picks_are_noise():
 
 def test_without_the_floor_it_fills_every_slot():
     sel = select_n_joint_eig(
-        _one_decisive_stimulus(), 4, n_scenarios=500, seed=1, n_responses=40,
+        _one_decisive_stimulus(),
+        4,
+        n_scenarios=500,
+        seed=1,
+        n_responses=40,
     )
     assert len(sel.indices) == 4 and not sel.stopped_at_noise_floor
 

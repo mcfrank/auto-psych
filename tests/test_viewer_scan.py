@@ -12,6 +12,7 @@ from pathlib import Path
 import pytest
 
 from src.viewer.scan import scan_index, scan_run, scan_run_experiment
+
 # Imported so pytest discovers the fixture here; the tests below request it
 # by name rather than calling it.
 from tests.viewer_fixtures import data_root  # noqa: F401
@@ -41,7 +42,10 @@ def test_scan_run_units_and_figures(data_root: Path):
 
 def test_scan_run_experiment_full(data_root: Path):
     exp = scan_run_experiment(data_root, "outer_loop/demo", "experiment1")
-    assert {m.name for m in exp.theory.models} >= {"equally_likely", "bayesian_fair_coin"}
+    assert {m.name for m in exp.theory.models} >= {
+        "equally_likely",
+        "bayesian_fair_coin",
+    }
     assert exp.design.n_stimuli == 2
     assert exp.data.n_participants == 2
     assert exp.best_model == "bayesian_fair_coin"
@@ -106,7 +110,14 @@ def test_bare_loop_run(data_root: Path):
 
 
 def test_corrupt_json_fails_loudly(data_root: Path):
-    bad = data_root / "outer_loop" / "demo" / "experiment1" / "model_loop" / "history.json"
+    bad = (
+        data_root
+        / "outer_loop"
+        / "demo"
+        / "experiment1"
+        / "model_loop"
+        / "history.json"
+    )
     bad.write_text("{ not valid json")
     with pytest.raises(ValueError, match="history.json"):
         scan_run_experiment(data_root, "outer_loop/demo", "experiment1")

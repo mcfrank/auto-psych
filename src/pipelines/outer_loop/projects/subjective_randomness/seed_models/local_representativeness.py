@@ -32,20 +32,14 @@ with pm.Model() as model:
     side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
 
     balance_weight = 1.0 - alt_weight
-    irregularity_a = (
-        (1.0 - periodic_share) * pt.abs(p_alts_a - theta_alt)
-        + periodic_share * periodicity_a
-    )
-    irregularity_b = (
-        (1.0 - periodic_share) * pt.abs(p_alts_b - theta_alt)
-        + periodic_share * periodicity_b
-    )
-    score_a = -(
-        balance_weight * multiscale_imbalance_a + alt_weight * irregularity_a
-    )
-    score_b = -(
-        balance_weight * multiscale_imbalance_b + alt_weight * irregularity_b
-    )
+    irregularity_a = (1.0 - periodic_share) * pt.abs(
+        p_alts_a - theta_alt
+    ) + periodic_share * periodicity_a
+    irregularity_b = (1.0 - periodic_share) * pt.abs(
+        p_alts_b - theta_alt
+    ) + periodic_share * periodicity_b
+    score_a = -(balance_weight * multiscale_imbalance_a + alt_weight * irregularity_a)
+    score_b = -(balance_weight * multiscale_imbalance_b + alt_weight * irregularity_b)
 
     p_left = pm.Deterministic(
         "p_left",

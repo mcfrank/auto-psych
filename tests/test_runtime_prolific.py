@@ -94,7 +94,9 @@ def test_list_submissions_terminates_on_degenerate_next_link(monkeypatch):
 
     def fake_get(url, **kw):
         calls["n"] += 1
-        assert calls["n"] <= 5, "list_submissions followed the degenerate next link in a loop"
+        assert calls["n"] <= 5, (
+            "list_submissions followed the degenerate next link in a loop"
+        )
         return _FakeResponse(200, page)
 
     monkeypatch.setattr(prol, "_headers", lambda: {"Authorization": "Token x"})

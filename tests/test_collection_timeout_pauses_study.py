@@ -79,12 +79,15 @@ class _Clock:
 @pytest.fixture
 def run_collection(tmp_path, monkeypatch):
     def run(prolific: FakeProlific, target: int = 3):
-        monkeypatch.setattr(prolific_client, "_headers", lambda: {"Authorization": "Token x"})
+        monkeypatch.setattr(
+            prolific_client, "_headers", lambda: {"Authorization": "Token x"}
+        )
         monkeypatch.setattr(prolific_client.requests, "get", prolific.get)
         monkeypatch.setattr(prolific_client.requests, "post", prolific.post)
         monkeypatch.setattr(collect, "time", _Clock())
         monkeypatch.setattr(
-            collect.urllib.request, "urlopen",
+            collect.urllib.request,
+            "urlopen",
             lambda *a, **k: io.BytesIO(RESULTS_CSV.encode("utf-8")),
         )
         monkeypatch.setenv("AUTO_PSYCH_RESULTS_TOKEN", "token")

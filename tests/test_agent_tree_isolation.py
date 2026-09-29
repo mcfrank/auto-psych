@@ -171,7 +171,8 @@ class TestNoGroundTruthNamed:
     def test_ground_truth_named_only_in_the_seed_pool(self, agent_tree, gt):
         result = subprocess.run(
             ["grep", "-rIl", "--", gt, str(agent_tree)],
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
         )
         hits = [
             os.path.relpath(line, agent_tree)
@@ -181,7 +182,9 @@ class TestNoGroundTruthNamed:
         assert not hits, f"{gt!r} named in the agent tree: {hits}"
 
 
-def test_rebuilding_a_resumed_tree_removes_newly_excluded_files_but_keeps_runs(tmp_path):
+def test_rebuilding_a_resumed_tree_removes_newly_excluded_files_but_keeps_runs(
+    tmp_path,
+):
     tree = tmp_path / "repo"
     (tree / "docs").mkdir(parents=True)
     (tree / "docs" / "old.md").write_text("motif_stack\n", encoding="utf-8")

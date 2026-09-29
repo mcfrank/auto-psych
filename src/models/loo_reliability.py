@@ -134,7 +134,9 @@ def loo_diagnostics(
     bad = ~exact & ~(pareto_k <= good_k)
     finite_nonexact = np.isfinite(pareto_k) & ~exact
     max_pareto_k = (
-        float(pareto_k[finite_nonexact].max()) if finite_nonexact.any() else float("nan")
+        float(pareto_k[finite_nonexact].max())
+        if finite_nonexact.any()
+        else float("nan")
     )
     n_points = int(pareto_k.shape[0])
     n_bad = int(bad.sum())

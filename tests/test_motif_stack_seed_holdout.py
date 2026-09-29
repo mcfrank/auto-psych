@@ -66,12 +66,20 @@ def staged_sweep(tmp_path_factory):
         encoding="utf-8",
     )
     scripts = slurm.parent
-    shutil.copy(REPO_ROOT / "scripts" / "subjective_randomness" / "remove_manifest_entry.py",
-                scripts / "remove_manifest_entry.py")
+    shutil.copy(
+        REPO_ROOT / "scripts" / "subjective_randomness" / "remove_manifest_entry.py",
+        scripts / "remove_manifest_entry.py",
+    )
     (scripts / "holdout_recovery.py").write_text(_FAKE_HARNESS, encoding="utf-8")
     subprocess.run(
-        ["rsync", "-a", "--exclude-from", str(SLURM_DIR / "agent_tree.exclude"),
-         f"{REPO_ROOT}/", f"{work / 'agent_src'}/"],
+        [
+            "rsync",
+            "-a",
+            "--exclude-from",
+            str(SLURM_DIR / "agent_tree.exclude"),
+            f"{REPO_ROOT}/",
+            f"{work / 'agent_src'}/",
+        ],
         check=True,
     )
     shutil.copytree(REGISTRY_DIR, work / "gt_models_src")
@@ -104,7 +112,10 @@ def _agent_tree(tmp_path: Path, staged: Path, gt: str) -> Path:
     }
     result = subprocess.run(
         ["bash", str(SLURM_DIR / "holdout_recovery_array.sbatch")],
-        env=env, capture_output=True, text=True, timeout=300,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=300,
     )
     assert result.returncode == 0, result.stdout + result.stderr
     tree_id = (work / "run1" / gt / "agent_tree_id").read_text(encoding="utf-8")
@@ -113,8 +124,11 @@ def _agent_tree(tmp_path: Path, staged: Path, gt: str) -> Path:
 
 def _tree_files(tree: Path) -> list[Path]:
     return [
-        path for path in tree.rglob("*")
-        if path.is_file() and not path.is_symlink() and "_runs" not in path.relative_to(tree).parts
+        path
+        for path in tree.rglob("*")
+        if path.is_file()
+        and not path.is_symlink()
+        and "_runs" not in path.relative_to(tree).parts
     ]
 
 
@@ -154,7 +168,11 @@ def test_with_another_ground_truth_held_out_the_agents_motif_stack_seed_is_the_v
 
 @pytest.mark.parametrize(
     "gt, seeded_motif_stack",
-    [("falk_konold_dp", VITERBI), ("local_representativeness", VITERBI), ("motif_stack", None)],
+    [
+        ("falk_konold_dp", VITERBI),
+        ("local_representativeness", VITERBI),
+        ("motif_stack", None),
+    ],
 )
 def test_the_harness_seeds_experiment_1_with_the_viterbi_motif_stack_unless_it_is_held_out(
     tmp_path, gt, seeded_motif_stack
@@ -170,9 +188,9 @@ def test_the_harness_seeds_experiment_1_with_the_viterbi_motif_stack_unless_it_i
     if seeded_motif_stack is None:
         assert not list(seeded.glob("*motif_stack*"))
         assert not [
-            p for p in seeded.glob("*.py")
+            p
+            for p in seeded.glob("*.py")
             if any(code in p.read_text(encoding="utf-8") for code in MOTIF_STACK_CODE)
         ]
     else:
         assert (seeded / "motif_stack.py").read_bytes() == seeded_motif_stack
-

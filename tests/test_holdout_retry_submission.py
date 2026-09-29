@@ -72,7 +72,10 @@ def _run_submit(
     }
     return subprocess.run(
         ["bash", str(SLURM_DIR / script)],
-        env=env, capture_output=True, text=True, timeout=30,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=30,
     )
 
 
@@ -91,7 +94,9 @@ def test_a_first_submission_stages_the_code_and_caps_the_array(tmp_path):
     assert not any(a.startswith("--mem") for a in array["args"])
 
 
-def test_a_retry_skips_setup_keeps_the_cap_and_asks_for_memory_only_for_its_array(tmp_path):
+def test_a_retry_skips_setup_keeps_the_cap_and_asks_for_memory_only_for_its_array(
+    tmp_path,
+):
     (tmp_path / "work").mkdir()
     (tmp_path / "work" / "code_commit").write_text("abc123\n", encoding="utf-8")
     result = _run_submit(
@@ -126,9 +131,18 @@ def test_a_retry_without_staged_code_fails_loudly(tmp_path):
 def _staged_harness(tmp_path: Path) -> Path:
     """harness_repo with the retry's collaborators: a stub _env.sh, the real
     cell_status.py, and a submit script that records how it was called."""
-    staged = tmp_path / "work" / "harness_repo" / "scripts" / "subjective_randomness" / "slurm"
+    staged = (
+        tmp_path
+        / "work"
+        / "harness_repo"
+        / "scripts"
+        / "subjective_randomness"
+        / "slurm"
+    )
     staged.mkdir(parents=True)
-    (staged / "_env.sh").write_text(f'export VENV_PY="{sys.executable}"\n', encoding="utf-8")
+    (staged / "_env.sh").write_text(
+        f'export VENV_PY="{sys.executable}"\n', encoding="utf-8"
+    )
     shutil.copy(SLURM_DIR / "cell_status.py", staged / "cell_status.py")
     (staged / "submit_holdout_test_retest.sh").write_text(
         'echo "tasks=$ARRAY_TASKS mem=${ARRAY_MEM:-} round=$RETRY_ROUND" >> "$SUBMIT_LOG"\n',
@@ -162,7 +176,10 @@ def test_the_retry_resumes_on_the_staged_scripts_with_memory_per_group(tmp_path)
     }
     result = subprocess.run(
         ["bash", str(SLURM_DIR / "holdout_retry.sbatch")],
-        env=env, capture_output=True, text=True, timeout=60,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     assert result.returncode == 0, result.stderr
     assert submit_log.read_text(encoding="utf-8").splitlines() == [
@@ -182,7 +199,9 @@ def test_the_retry_plan_skips_a_task_whose_cell_finished(tmp_path):
     assert plan == {"same_memory": [], "more_memory": [4]}
 
 
-@pytest.mark.parametrize("script", ["holdout_recovery_array.sbatch", "holdout_retry.sbatch"])
+@pytest.mark.parametrize(
+    "script", ["holdout_recovery_array.sbatch", "holdout_retry.sbatch"]
+)
 def test_jobs_after_setup_read_no_code_from_the_live_checkout(script):
     """They source the staged scripts; the array builds agent trees from the
     staged agent source."""
@@ -196,7 +215,9 @@ def test_jobs_after_setup_read_no_code_from_the_live_checkout(script):
 # ── holdout_recovery_array.sbatch: a cell's code and a finished cell ──
 
 
-def _run_array_task(tmp_path: Path, *, staged_code: str = "abc123") -> subprocess.CompletedProcess:
+def _run_array_task(
+    tmp_path: Path, *, staged_code: str = "abc123"
+) -> subprocess.CompletedProcess:
     """Task 1 (run1/gtone) of the array against a staged harness whose _env.sh is
     a stub. It stops, at the latest, at the missing GT snapshot."""
     staged = _staged_harness(tmp_path)
@@ -216,14 +237,19 @@ def _run_array_task(tmp_path: Path, *, staged_code: str = "abc123") -> subproces
     }
     return subprocess.run(
         ["bash", str(SLURM_DIR / "holdout_recovery_array.sbatch")],
-        env=env, capture_output=True, text=True, timeout=60,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
 
 
 def test_a_new_cell_records_the_code_it_starts_on(tmp_path):
     result = _run_array_task(tmp_path)
     assert "GT snapshot missing" in result.stderr  # got past the code check
-    assert (tmp_path / "work" / "run1" / "gtone" / "code_commit").read_text().strip() == "abc123"
+    assert (
+        tmp_path / "work" / "run1" / "gtone" / "code_commit"
+    ).read_text().strip() == "abc123"
 
 
 def test_a_cell_is_not_resumed_on_other_code(tmp_path):
@@ -271,7 +297,9 @@ def test_the_agent_tree_has_a_random_id_recorded_in_the_cell(tmp_path):
     tree_id = (cell / "agent_tree_id").read_text(encoding="utf-8")
     assert re.fullmatch(r"[0-9a-f]{16}", tree_id)
     assert tree_id != hashlib.sha256(str(cell).encode()).hexdigest()[:16]
-    assert (cell / "repo").resolve() == (tmp_path / "agent_trees" / tree_id / "repo").resolve()
+    assert (cell / "repo").resolve() == (
+        tmp_path / "agent_trees" / tree_id / "repo"
+    ).resolve()
 
     # A resubmitted task finds the same tree.
     (tmp_path / "work" / "code_commit").unlink()
@@ -287,7 +315,9 @@ def test_the_agent_tree_has_a_random_id_recorded_in_the_cell(tmp_path):
 def _git(repo: Path, *args: str) -> None:
     subprocess.run(
         ["git", "-c", "user.name=t", "-c", "user.email=t@t", *args],
-        cwd=repo, check=True, capture_output=True,
+        cwd=repo,
+        check=True,
+        capture_output=True,
     )
 
 
@@ -301,7 +331,9 @@ def _checkout(tmp_path: Path) -> Path:
     (repo / "src").mkdir()
     (repo / "src" / "loop.py").write_text("VERSION = 1\n", encoding="utf-8")
     (repo / "tests").mkdir()
-    (repo / "tests" / "test_loop.py").write_text("# names the ground truth\n", encoding="utf-8")
+    (repo / "tests" / "test_loop.py").write_text(
+        "# names the ground truth\n", encoding="utf-8"
+    )
     _git(repo, "init", "-q")
     _git(repo, "add", "-A")
     _git(repo, "commit", "-q", "-m", "first")
@@ -312,7 +344,9 @@ def _stage(repo: Path, work: Path) -> subprocess.CompletedProcess:
     return subprocess.run(
         ["bash", str(SLURM_DIR / "stage_sweep_code.sh")],
         env={**os.environ, "REPO": str(repo), "WORK_ROOT": str(work)},
-        capture_output=True, text=True, timeout=60,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
 
 
@@ -321,8 +355,13 @@ def test_the_code_is_staged_once_and_a_changed_checkout_is_refused(tmp_path):
 
     first = _stage(repo, work)
     assert first.returncode == 0, first.stderr
-    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True,
-                          text=True, check=True).stdout.strip()
+    head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo,
+        capture_output=True,
+        text=True,
+        check=True,
+    ).stdout.strip()
     assert (work / "code_commit").read_text().strip() == head
     assert (work / "harness_repo" / "tests" / "test_loop.py").exists()
     assert (work / "harness_repo" / ".here").exists()
@@ -368,15 +407,23 @@ def test_the_impossible_sweep_chains_the_shared_retry_job_and_a_summary(tmp_path
     array, retry = calls[1], calls[2]
     assert "--array=1-20%5" in array["args"]
     assert "--dependency=afterany:1002" in retry["args"]
-    assert any("RETRY_ARRAY_ID=1002" in a and "RETRY_ROUND=0" in a for a in retry["args"])
+    assert any(
+        "RETRY_ARRAY_ID=1002" in a and "RETRY_ROUND=0" in a for a in retry["args"]
+    )
     assert "--dependency=afterany:1002" in calls[3]["args"]
 
 
-def test_an_impossible_retry_skips_setup_keeps_the_cap_and_the_memory_to_its_array(tmp_path):
+def test_an_impossible_retry_skips_setup_keeps_the_cap_and_the_memory_to_its_array(
+    tmp_path,
+):
     (tmp_path / "work").mkdir()
     (tmp_path / "work" / "code_commit").write_text("abc123\n", encoding="utf-8")
     result = _run_submit(
-        tmp_path, IMPOSSIBLE, RETRY_ROUND="2", ARRAY_TASKS="3,7", ARRAY_MEM="128G",
+        tmp_path,
+        IMPOSSIBLE,
+        RETRY_ROUND="2",
+        ARRAY_TASKS="3,7",
+        ARRAY_MEM="128G",
         MAX_PARALLEL="4",
     )
     assert result.returncode == 0, result.stderr
@@ -419,7 +466,10 @@ def test_the_retry_job_resubmits_through_the_impossible_submitter(tmp_path):
     }
     result = subprocess.run(
         ["bash", str(SLURM_DIR / "holdout_retry.sbatch")],
-        env=env, capture_output=True, text=True, timeout=60,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     assert result.returncode == 0, result.stderr
     assert submit_log.read_text(encoding="utf-8").splitlines() == [
@@ -431,11 +481,17 @@ def test_the_retry_job_resubmits_through_the_impossible_submitter(tmp_path):
 def test_the_retry_job_needs_to_be_told_which_sweep_it_retries(tmp_path):
     _staged_harness(tmp_path)
     env = {
-        "PATH": os.environ["PATH"], "HOME": str(tmp_path), "WORK_ROOT": str(tmp_path / "work"),
-        "GT_MODELS": "a b", "RETRY_ARRAY_ID": "9",
+        "PATH": os.environ["PATH"],
+        "HOME": str(tmp_path),
+        "WORK_ROOT": str(tmp_path / "work"),
+        "GT_MODELS": "a b",
+        "RETRY_ARRAY_ID": "9",
     }
     result = subprocess.run(
         ["bash", str(SLURM_DIR / "holdout_retry.sbatch")],
-        env=env, capture_output=True, text=True, timeout=60,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     assert result.returncode != 0 and "RETRY_SUBMIT_SCRIPT" in result.stderr

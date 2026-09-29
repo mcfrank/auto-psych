@@ -20,10 +20,11 @@ from src.models import pymc_inference as pi
 from src.models.data_binding import _augment_rows_with_features, _model_compute_features
 
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
+
 # A model whose single hypothesis needs a feature the base 11 cannot express:
 # whether each sequence *ends* in H (a recency/position statistic, invisible to
 # the order-destroying aggregate features).
-ENDS_IN_H_MODEL = '''
+ENDS_IN_H_MODEL = """
 import numpy as np
 import pymc as pm
 
@@ -47,7 +48,7 @@ with pm.Model() as model:
         "p_left", pm.math.sigmoid(beta * (ends_h_a - ends_h_b) + side_bias)
     )
     pm.Bernoulli("response", p=p_left, observed=chose_left)
-'''
+"""
 
 
 def _write_model(models_dir: Path, source: str, name: str = "ends_in_h") -> str:
@@ -102,9 +103,7 @@ def test_load_attaches_declared_featurizer(tmp_path):
 
 
 def test_load_finds_compute_features_when_present():
-    model = pi.load_pymc_model(
-        "bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR
-    )
+    model = pi.load_pymc_model("bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR)
     featurizer = _model_compute_features(model)
     assert featurizer is not None
     assert featurizer("HTH", "TTT") == {"n_a": 3, "h_a": 2, "n_b": 3, "h_b": 0}
@@ -113,7 +112,7 @@ def test_load_finds_compute_features_when_present():
 def test_load_rejects_non_callable_compute_features(tmp_path):
     source = ENDS_IN_H_MODEL.replace(
         "def compute_features(sequence_a, sequence_b):\n"
-        '    def ends_h(s):\n'
+        "    def ends_h(s):\n"
         '        return 1.0 if s.strip().upper().endswith("H") else 0.0\n\n'
         '    return {"ends_h_a": ends_h(sequence_a), "ends_h_b": ends_h(sequence_b)}',
         "compute_features = 7",
@@ -184,7 +183,7 @@ def test_augment_rejects_shadowing_the_response_column(tmp_path):
 def test_augment_rejects_inconsistent_keys(tmp_path):
     model = _model_from_featurizer(
         tmp_path,
-        'def compute_features(a, b):\n'
+        "def compute_features(a, b):\n"
         '    return {"ends_h_a": 1.0} if a == "H" else {"other": 1.0}',
         "inconsistent",
     )
@@ -220,9 +219,7 @@ def test_custom_feature_model_fits_and_predicts_end_to_end(tmp_path):
             chose_left = int(a.endswith("H") and not b.endswith("H"))
             w.writerow({"sequence_a": a, "sequence_b": b, "chose_left": chose_left})
 
-    fitted = pi.fit_model(
-        name, tmp_path, csv_path, draws=200, tune=200, chains=2
-    )
+    fitted = pi.fit_model(name, tmp_path, csv_path, draws=200, tune=200, chains=2)
 
     stim_data = pi.make_stim_data(
         fitted.model, [{"sequence_a": "HTH", "sequence_b": "TTT", "chose_left": 0}]
@@ -249,8 +246,11 @@ def test_recomputing_a_column_to_the_same_value_is_allowed(tmp_path):
         pass
 
     model = _Model()
-    setattr(model, "_auto_psych_compute_features",
-            lambda a, b: {"n_a": float(len(a)), "n_b": float(len(b))})
+    setattr(
+        model,
+        "_auto_psych_compute_features",
+        lambda a, b: {"n_a": float(len(a)), "n_b": float(len(b))},
+    )
     rows = [{"sequence_a": "HTH", "sequence_b": "HHTT", "n_a": 3, "n_b": 4}]
     (out,) = _augment_rows_with_features(model, rows)
     assert out["n_a"] == 3 and out["n_b"] == 4

@@ -109,7 +109,9 @@ _LEFT_KEYS = {"f", "arrowleft"}
 _RIGHT_KEYS = {"j", "arrowright"}
 
 
-def _press_key_or_raise(page, key: str, what: str, click_error: Exception | None) -> None:
+def _press_key_or_raise(
+    page, key: str, what: str, click_error: Exception | None
+) -> None:
     """Press ``key``; raise if that fails too, naming both failed modalities.
 
     The keyboard is the last resort after the button modality was tried. If it

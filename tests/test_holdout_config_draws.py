@@ -23,7 +23,9 @@ CONFIGS = [
 
 @pytest.mark.parametrize("name", CONFIGS)
 def test_production_fits_draw_1000_per_chain_and_enough_in_all(name):
-    config = yaml.safe_load((SCRIPTS_DIR / "subjective_randomness" / "configs" / name).read_text())
+    config = yaml.safe_load(
+        (SCRIPTS_DIR / "subjective_randomness" / "configs" / name).read_text()
+    )
     fit = config["fit"]
     assert (fit["draws"], fit["tune"], fit["chains"]) == (1000, 1000, 4)
     posterior_draws = fit["draws"] * fit["chains"]

@@ -75,8 +75,20 @@ PII_COLUMN_DENYLIST = {
 
 # File suffixes we treat as text for redaction / the verification scan.
 TEXT_SUFFIXES = {
-    ".csv", ".tsv", ".json", ".jsonl", ".log", ".md", ".txt",
-    ".py", ".yaml", ".yml", ".html", ".htm", ".js", ".css",
+    ".csv",
+    ".tsv",
+    ".json",
+    ".jsonl",
+    ".log",
+    ".md",
+    ".txt",
+    ".py",
+    ".yaml",
+    ".yml",
+    ".html",
+    ".htm",
+    ".js",
+    ".css",
 }
 
 
@@ -116,7 +128,9 @@ def redact_csv_text(text: str, drop_columns: set[str] = PII_COLUMN_DENYLIST) -> 
     if not rows:
         return redact_text(text)
     header = rows[0]
-    keep = [i for i, name in enumerate(header) if name.strip().lower() not in drop_columns]
+    keep = [
+        i for i, name in enumerate(header) if name.strip().lower() not in drop_columns
+    ]
     out = io.StringIO()
     writer = csv.writer(out)
     for row in rows:
@@ -185,7 +199,9 @@ def _count_responses(responses_csv: Path) -> tuple[int, Optional[int]]:
         rows = list(csv.DictReader(fh))
     n_responses = len(rows)
     n_participants = (
-        len({r["participant_id"] for r in rows}) if rows and "participant_id" in rows[0] else None
+        len({r["participant_id"] for r in rows})
+        if rows and "participant_id" in rows[0]
+        else None
     )
     return n_responses, n_participants
 
@@ -202,7 +218,9 @@ def _experiment_record(run: str, exp_dir: Path) -> dict:
 
     responses_path = exp_dir / "data" / "responses.csv"
     if responses_path.is_file():
-        record["n_responses"], record["n_participants"] = _count_responses(responses_path)
+        record["n_responses"], record["n_participants"] = _count_responses(
+            responses_path
+        )
     return record
 
 
@@ -222,8 +240,10 @@ def collect_human_results(
     if not source.is_dir():
         raise FileNotFoundError(f"Source run root is not a directory: {source}")
 
-    selected = runs if runs is not None else discover_runs(
-        source, project=project, include_pilots=include_pilots
+    selected = (
+        runs
+        if runs is not None
+        else discover_runs(source, project=project, include_pilots=include_pilots)
     )
     if not selected:
         raise FileNotFoundError(
@@ -242,7 +262,9 @@ def collect_human_results(
     for run in selected:
         src_project = source / run / "data" / project
         if not src_project.is_dir():
-            raise FileNotFoundError(f"Expected {src_project} for run {run!r}, not found.")
+            raise FileNotFoundError(
+                f"Expected {src_project} for run {run!r}, not found."
+            )
         dst_project = dest / run / project  # drop the redundant data/ level
         shutil.copytree(
             src_project, dst_project, ignore=_copy_ignore, dirs_exist_ok=overwrite
@@ -364,6 +386,8 @@ def render_human_experiment_summary(records: list[dict], source: str) -> str:
         ]
         unique = sorted(set(winners))
         agree = "yes" if len(unique) == 1 else "no"
-        lines.append(f"- {exp}: agreement={agree} → {', '.join(unique) if unique else 'n/a'}")
+        lines.append(
+            f"- {exp}: agreement={agree} → {', '.join(unique) if unique else 'n/a'}"
+        )
     lines.append("")
     return "\n".join(lines)

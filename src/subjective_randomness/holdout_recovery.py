@@ -111,7 +111,7 @@ def forget_command_line() -> None:
     del sys.argv[1:]
     orig_argv = getattr(sys, "orig_argv", None)
     if orig_argv is not None and len(orig_argv) >= n_args:
-        del orig_argv[len(orig_argv) - n_args:]
+        del orig_argv[len(orig_argv) - n_args :]
 
 
 def _require_valid(agent_key: str, exp_dir: Path) -> None:
@@ -233,7 +233,9 @@ def run_holdout_experiments(
         if not (resume and _stage_done("models", exp_dir)):
             if exp_num == 1:
                 seeded = seed_experiment_models_from_project(
-                    exp_dir, project_id, exclude=seed_exclude,
+                    exp_dir,
+                    project_id,
+                    exclude=seed_exclude,
                     seed_dir=pool_models_dir,
                 )
                 if not seeded:
@@ -256,8 +258,12 @@ def run_holdout_experiments(
         # after all data so far (registry weights over the carried models).
         if not (resume and _stage_done("2_design", exp_dir)):
             run_design_programmatic(
-                exp_dir, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir,
-                k=design_n_eig, n_random=design_n_random,
+                exp_dir,
+                project_id,
+                exp_num=exp_num,
+                prev_exp_dir=prev_exp_dir,
+                k=design_n_eig,
+                n_random=design_n_random,
                 n_responses=n_participants,  # every participant answers every stimulus
                 seed=derive_seed(seed, gt_model, exp_num, "design"),
             )
@@ -462,7 +468,10 @@ def run_holdout_recovery_from_config(
         raise ValueError(f"n_participants must be >= 1, got {n_participants}.")
     seed = seed_override if seed_override is not None else int(config.get("seed", 0))
 
-    inner_cfg = {**dict(config.get("inner_loop", {})), **dict(inner_loop_overrides or {})}
+    inner_cfg = {
+        **dict(config.get("inner_loop", {})),
+        **dict(inner_loop_overrides or {}),
+    }
     inner_loop_iterations = int(inner_cfg.get("max_iterations", 2))
     candidate_count = int(inner_cfg.get("candidate_count", 3))
     # The novelty gate's threshold, resolved here (absent -> the inner loop's
@@ -491,7 +500,9 @@ def run_holdout_recovery_from_config(
     # participant); ablations set n_eig=0 (all random) or n_random=0 (all EIG).
     design_cfg = {**dict(config.get("design", {})), **dict(design_overrides or {})}
     pool_models_dir = (
-        resolve_path(config["pool_models_dir"]) if config.get("pool_models_dir") else None
+        resolve_path(config["pool_models_dir"])
+        if config.get("pool_models_dir")
+        else None
     )
     design_n_eig = int(design_cfg.get("n_eig", 32))
     design_n_random = int(design_cfg.get("n_random", 0))
@@ -569,7 +580,11 @@ def run_holdout_recovery_from_config(
 def _one_condition(gt_runs: Iterable[Mapping[str, Any]]) -> bool:
     """Whether this result's runs could prune their starting models; runs of
     both conditions in one result raise rather than being pooled."""
-    stale = [gt_run["gt_model"] for gt_run in gt_runs if "starting_models_prunable" not in gt_run]
+    stale = [
+        gt_run["gt_model"]
+        for gt_run in gt_runs
+        if "starting_models_prunable" not in gt_run
+    ]
     if stale:
         raise ValueError(
             f"The recorded runs for {stale} predate the starting-models-prunable "
@@ -716,7 +731,9 @@ def _run_holdout_recovery_resolved(
         # seeded from — the two must agree or the record is not about this run.
         starting_models = starting_models_of_run(run_root)
         _require_seeded_from_pool(
-            starting_models, gt_model, pool_models_dir or project_seed_models_dir(project_id)
+            starting_models,
+            gt_model,
+            pool_models_dir or project_seed_models_dir(project_id),
         )
         trajectory = annotate_incumbents(trajectory, starting_models)
         leakage = leakage_check(

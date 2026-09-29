@@ -45,7 +45,9 @@ def p_left_model_family(
 
     Fails loudly unless ``params`` names exactly the family's parameters.
     """
-    module = importlib.import_module(f"src.subjective_randomness.model_families.{model_name}")
+    module = importlib.import_module(
+        f"src.subjective_randomness.model_families.{model_name}"
+    )
     expected = set(module.DEFAULT_PARAMS)
     if set(params) != expected:
         missing = sorted(expected - set(params))

@@ -97,7 +97,10 @@ def test_prune_margin_round_trips():
     detail = prune_margin_detail(elpd_diff=30.04, dse=5.0, baseline="model_a")
     assert detail == "30.0 nats behind model_a (6.0× dse)"
     assert parse_prune_margin(detail) == 30.0
-    assert parse_prune_margin("415.5 nats behind local_representativeness (15.7× dse)") == 415.5
+    assert (
+        parse_prune_margin("415.5 nats behind local_representativeness (15.7× dse)")
+        == 415.5
+    )
     with pytest.raises(ValueError, match="prune margin"):
         parse_prune_margin("no candidate.py written")
 
@@ -107,7 +110,11 @@ def test_prune_margin_round_trips():
 
 def _entry(name, outcome, *, detail="", hypothesis="H.", context="experiment1 round 0"):
     return LedgerEntry(
-        name=name, outcome=outcome, detail=detail, hypothesis=hypothesis, context=context
+        name=name,
+        outcome=outcome,
+        detail=detail,
+        hypothesis=hypothesis,
+        context=context,
     )
 
 
@@ -137,7 +144,9 @@ def _models_dir(tmp_path, entries):
     for name, rationale in entries:
         (models_dir / f"{name}.py").write_text(f"# {name}\n", encoding="utf-8")
         lines += [f"  - name: {name}", f"    rationale: {json.dumps(rationale)}"]
-    (models_dir / "models_manifest.yaml").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    (models_dir / "models_manifest.yaml").write_text(
+        "\n".join(lines) + "\n", encoding="utf-8"
+    )
     return models_dir
 
 
@@ -233,7 +242,9 @@ def test_refinement_menu_ranks_live_by_standing_and_pruned_by_margin(tmp_path):
     assert "menu" in text.lower()
 
 
-def test_refinement_menu_shows_the_source_of_a_model_an_earlier_experiment_pruned(tmp_path):
+def test_refinement_menu_shows_the_source_of_a_model_an_earlier_experiment_pruned(
+    tmp_path,
+):
     """Pruning runs at the end of an experiment and each experiment starts a
     fresh zoo, so during the rounds a pruned model's file is in the zoo of
     the experiment that pruned it — which the menu used to never look in."""
@@ -242,18 +253,25 @@ def test_refinement_menu_shows_the_source_of_a_model_an_earlier_experiment_prune
     earlier_pruned.mkdir(parents=True)
     (earlier_pruned / "near_idea.py").write_text("# near_idea\n", encoding="utf-8")
     (run / "experiment2" / "model_loop").mkdir(parents=True)
-    models_dir = _models_dir(run / "experiment2" / "model_loop", [("model_a", "A."), ("model_b", "B.")])
+    models_dir = _models_dir(
+        run / "experiment2" / "model_loop", [("model_a", "A."), ("model_b", "B.")]
+    )
     ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
     ledger.append(
         _entry(
-            "near_idea", "pruned", detail="8.0 nats behind model_a (2.1× dse)",
-            hypothesis="Near.", context="experiment1 end of experiment",
+            "near_idea",
+            "pruned",
+            detail="8.0 nats behind model_a (2.1× dse)",
+            hypothesis="Near.",
+            context="experiment1 end of experiment",
         )
     )
     candidate_dir = tmp_path / "candidate_2"
     candidate_dir.mkdir()
 
-    text = _write_refinement_menu(candidate_dir, models_dir, {}, ledger, incumbent="model_a")
+    text = _write_refinement_menu(
+        candidate_dir, models_dir, {}, ledger, incumbent="model_a"
+    )
 
     pruned = text.split("## Pruned", 1)[1]
     assert f"**Source:** `{earlier_pruned / 'near_idea.py'}`" in pruned
@@ -264,7 +282,9 @@ def test_refinement_menu_says_when_nothing_has_been_pruned(tmp_path):
     ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
     candidate_dir = tmp_path / "candidate_2"
     candidate_dir.mkdir()
-    text = _write_refinement_menu(candidate_dir, models_dir, {}, ledger, incumbent="model_a")
+    text = _write_refinement_menu(
+        candidate_dir, models_dir, {}, ledger, incumbent="model_a"
+    )
     assert "### model_b" in text
     assert "No model has been pruned" in text
 
@@ -279,10 +299,14 @@ def test_refinement_menu_requires_the_incumbent_to_be_live(tmp_path):
 # ── The per-slot briefs ────────────────────────────────────────────────
 
 
-def _context(tmp_path, role, *, incumbent="model_a", ledger="default", comparison="default"):
+def _context(
+    tmp_path, role, *, incumbent="model_a", ledger="default", comparison="default"
+):
     models_dir, default_comparison, default_ledger = _menu_fixture(tmp_path)
     responses = tmp_path / "responses.csv"
-    responses.write_text("sequence_a,sequence_b,chose_left\nHHT,HTH,1\n", encoding="utf-8")
+    responses.write_text(
+        "sequence_a,sequence_b,chose_left\nHHT,HTH,1\n", encoding="utf-8"
+    )
     write_task_description_beside(responses)
     candidate_dir = tmp_path / "iter_0" / "candidate_1"
     docs = _write_candidate_context(
@@ -331,7 +355,9 @@ def test_incumbent_slot_names_the_incumbent_and_lifts_the_composition_rules(tmp_
     assert "hypothesis.md" in brief  # say which model you refined, in prose
     # The retired list is a menu here, not a blacklist.
     assert docs["attempted"] is None
-    assert docs["menu"] == (candidate_dir / "refinement_menu.md").read_text(encoding="utf-8")
+    assert docs["menu"] == (candidate_dir / "refinement_menu.md").read_text(
+        encoding="utf-8"
+    )
     assert not (candidate_dir / "attempted_hypotheses.md").exists()
     assert "refinement_menu.md" in docs["context"]
     assert "Do not re-propose" not in docs["context"]
@@ -373,4 +399,6 @@ def test_prompt_inlines_the_menu_for_refinement_slots(tmp_path):
     assert "## refinement_menu.md\n\n# Refinement menu" in prompt
     assert "## attempted_hypotheses.md" not in prompt
     docs["menu"] = None
-    assert "## refinement_menu.md" not in _build_candidate_prompt(tmp_path / "candidate_0", docs)
+    assert "## refinement_menu.md" not in _build_candidate_prompt(
+        tmp_path / "candidate_0", docs
+    )

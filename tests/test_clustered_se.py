@@ -59,16 +59,19 @@ def _zoo(tmp_path):
     return models_dir
 
 
-def test_a_model_behind_by_2_trial_ses_but_not_2_clustered_ses_is_kept(tmp_path, monkeypatch):
+def test_a_model_behind_by_2_trial_ses_but_not_2_clustered_ses_is_kept(
+    tmp_path, monkeypatch
+):
     comparison = {
         "best": {"rank": 0, "elpd_diff": 0.0, "dse": 0.0, "dse_clustered": 0.0},
         "loser": {"rank": 1, "elpd_diff": 10.0, "dse": 3.0, "dse_clustered": 6.0},
     }
     monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: comparison)
     monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
-    assert _prune_losers(
-        _zoo(tmp_path), tmp_path / "r.csv", cache_dir=None, fit_kwargs={}
-    ) == []
+    assert (
+        _prune_losers(_zoo(tmp_path), tmp_path / "r.csv", cache_dir=None, fit_kwargs={})
+        == []
+    )
 
 
 def test_pruning_without_a_clustered_se_fails_loudly(tmp_path, monkeypatch):
@@ -78,6 +81,4 @@ def test_pruning_without_a_clustered_se_fails_loudly(tmp_path, monkeypatch):
     }
     monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: comparison)
     with pytest.raises(KeyError, match="dse_clustered"):
-        _prune_losers(
-            _zoo(tmp_path), tmp_path / "r.csv", cache_dir=None, fit_kwargs={}
-        )
+        _prune_losers(_zoo(tmp_path), tmp_path / "r.csv", cache_dir=None, fit_kwargs={})

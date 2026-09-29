@@ -330,9 +330,7 @@ def _run_experiment(
             publish_another_prolific_study=publish_another_prolific_study,
         )
     finally:
-        write_usage_report(
-            exp_dir_path, usage_marker, heading=f"experiment {exp_num}"
-        )
+        write_usage_report(exp_dir_path, usage_marker, heading=f"experiment {exp_num}")
 
 
 def _run_experiment_stages(
@@ -469,13 +467,18 @@ def _run_experiment_stages(
         # see the current models.
         if agent_key == "2_design":
             run_design_programmatic(
-                exp_dir_path, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir,
+                exp_dir_path,
+                project_id,
+                exp_num=exp_num,
+                prev_exp_dir=prev_exp_dir,
                 n_responses=n_participants,  # every participant answers every stimulus
             )
             if validate:
                 ok, msg = validate_cc_output("2_design", exp_dir_path)
                 if not ok:
-                    print(f"  [error] Exhaustive design invalid: {msg}", file=sys.stderr)
+                    print(
+                        f"  [error] Exhaustive design invalid: {msg}", file=sys.stderr
+                    )
                     sys.exit(1)
             continue
         # No-browser mode never uses the jsPsych experiment, so skip building it
@@ -542,7 +545,10 @@ def _run_experiment_stages(
                     "URL with a made-up PROLIFIC_PID. Stopping before collection/modeling.",
                     flush=True,
                 )
-                print(f"\nExperiment {exp_num} (test) complete. Outputs: {exp_dir_path}", flush=True)
+                print(
+                    f"\nExperiment {exp_num} (test) complete. Outputs: {exp_dir_path}",
+                    flush=True,
+                )
                 return
             if prolific_mode == "none" and mode == "live":
                 # A live run with no Prolific study: the page is deployed for
@@ -552,7 +558,10 @@ def _run_experiment_stages(
                     "experiment URL to try it. Stopping before collection/modeling.",
                     flush=True,
                 )
-                print(f"\nExperiment {exp_num} (deploy only) complete. Outputs: {exp_dir_path}", flush=True)
+                print(
+                    f"\nExperiment {exp_num} (deploy only) complete. Outputs: {exp_dir_path}",
+                    flush=True,
+                )
                 return
 
     print(f"\nExperiment {exp_num} complete. Outputs: {exp_dir_path}", flush=True)
@@ -568,9 +577,9 @@ class Args:
     """Single experiment number."""
     experiments: Optional[str] = None
     """Experiments to run: N (1..N) or A-B (e.g. 4-6). Overrides --experiment."""
-    agent: Optional[
-        Literal["2_design", "3_implement", "4_collect", "5_model_loop"]
-    ] = None
+    agent: Optional[Literal["2_design", "3_implement", "4_collect", "5_model_loop"]] = (
+        None
+    )
     """Run only this stage. Omit for full pipeline. 2_design is the programmatic
     exhaustive EIG selection (no coding agent)."""
     run_label: Optional[str] = None

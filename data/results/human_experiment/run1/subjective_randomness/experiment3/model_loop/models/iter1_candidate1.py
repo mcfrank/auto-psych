@@ -6,11 +6,15 @@ import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
+
 def kl_divergence(p, q):
     """Computes the Kullback-Leibler divergence D_KL(P || Q) for two Bernoulli distributions."""
     p_safe = pt.clip(p, 1e-6, 1.0 - 1e-6)
     q_safe = pt.clip(q, 1e-6, 1.0 - 1e-6)
-    return p_safe * pt.log(p_safe / q_safe) + (1.0 - p_safe) * pt.log((1.0 - p_safe) / (1.0 - q_safe))
+    return p_safe * pt.log(p_safe / q_safe) + (1.0 - p_safe) * pt.log(
+        (1.0 - p_safe) / (1.0 - q_safe)
+    )
+
 
 with pm.Model() as model:
     # Stimulus inputs

@@ -114,7 +114,12 @@ def survey_sweep(
         stated.append(f"{n_repeats} repeats")
     if gt_models is None:
         gt_models = sorted(
-            {cell.name for path in run_dirs.values() for cell in path.iterdir() if cell.is_dir()}
+            {
+                cell.name
+                for path in run_dirs.values()
+                for cell in path.iterdir()
+                if cell.is_dir()
+            }
         )
         inferred.append(
             f"ground truths {', '.join(gt_models) or '(none)'} (every one present in some repeat)"
@@ -129,7 +134,8 @@ def survey_sweep(
         parts.append("stated: " + "; ".join(stated))
     if inferred:
         parts.append(
-            "inferred from the directories present: " + "; ".join(inferred)
+            "inferred from the directories present: "
+            + "; ".join(inferred)
             + " (a repeat or ground truth with no directory anywhere is not seen; "
             "pass the sweep's repeat count and ground truths to state them)"
         )

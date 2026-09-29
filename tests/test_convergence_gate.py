@@ -30,7 +30,9 @@ from src.pipelines.inner_loop.scoring import _best_exportable_model
 def _idata(chains, *, diverging=None):
     posterior = {"theta": np.asarray(chains, dtype=float)}
     shape = posterior["theta"].shape
-    stats = {"diverging": np.zeros(shape, dtype=bool) if diverging is None else diverging}
+    stats = {
+        "diverging": np.zeros(shape, dtype=bool) if diverging is None else diverging
+    }
     return az.from_dict(posterior=posterior, sample_stats=stats)
 
 
@@ -81,11 +83,23 @@ def test_a_declared_target_accept_is_a_floor_on_the_loops(tmp_path):
     (tmp_path / "careful.py").write_text(
         'SAMPLER_SETTINGS = {"target_accept": 0.95}\nmodel = None\n', encoding="utf-8"
     )
-    assert pi.resolve_fit_settings("careful", tmp_path, {"target_accept": 0.8})["target_accept"] == 0.95
-    assert pi.resolve_fit_settings("careful", tmp_path, {"target_accept": 0.99})["target_accept"] == 0.99
+    assert (
+        pi.resolve_fit_settings("careful", tmp_path, {"target_accept": 0.8})[
+            "target_accept"
+        ]
+        == 0.95
+    )
+    assert (
+        pi.resolve_fit_settings("careful", tmp_path, {"target_accept": 0.99})[
+            "target_accept"
+        ]
+        == 0.99
+    )
 
 
-def test_a_non_converged_candidate_is_rejected_with_the_numbers_and_the_fix(tmp_path, monkeypatch):
+def test_a_non_converged_candidate_is_rejected_with_the_numbers_and_the_fix(
+    tmp_path, monkeypatch
+):
     models_dir = tmp_path / "models"
     models_dir.mkdir()
     (models_dir / "models_manifest.yaml").write_text(
@@ -100,10 +114,19 @@ def test_a_non_converged_candidate_is_rejected_with_the_numbers_and_the_fix(tmp_
     monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
-    monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: ["12 divergent transitions"])
-    monkeypatch.setattr(model_zoo, "convergence_diagnostics_of", lambda fitted: NEAR_MISS)
+    monkeypatch.setattr(
+        model_zoo,
+        "convergence_problems_of",
+        lambda fitted: ["12 divergent transitions"],
+    )
+    monkeypatch.setattr(
+        model_zoo, "convergence_diagnostics_of", lambda fitted: NEAR_MISS
+    )
     verdict = model_zoo._admit_candidate_with_reason(
-        cand / "candidate.py", models_dir, "iter0_candidate0", tmp_path / "r.csv",
+        cand / "candidate.py",
+        models_dir,
+        "iter0_candidate0",
+        tmp_path / "r.csv",
         fit_kwargs={"target_accept": 0.8},  # the faithful sweep's setting
     )
     assert not verdict.admitted
@@ -116,9 +139,14 @@ def test_a_non_converged_candidate_is_rejected_with_the_numbers_and_the_fix(tmp_
     assert "non-centred" in verdict.reason and "weakly identified" in verdict.reason
 
     # A fit far from converging was not refit; the reason says why.
-    monkeypatch.setattr(model_zoo, "convergence_diagnostics_of", lambda fitted: HOPELESS)
+    monkeypatch.setattr(
+        model_zoo, "convergence_diagnostics_of", lambda fitted: HOPELESS
+    )
     verdict = model_zoo._admit_candidate_with_reason(
-        cand / "candidate.py", models_dir, "iter0_candidate1", tmp_path / "r.csv",
+        cand / "candidate.py",
+        models_dir,
+        "iter0_candidate1",
+        tmp_path / "r.csv",
         fit_kwargs={"target_accept": 0.8},
     )
     assert "too far from converging for smaller NUTS steps to help" in verdict.reason
@@ -131,8 +159,13 @@ def test_the_brief_does_not_offer_smaller_steps_as_a_convergence_fix(tmp_path):
     from tests.inner_loop_fixtures import write_responses, write_seed_models
 
     _write_candidate_context(
-        tmp_path / "candidate_0", write_responses(tmp_path), write_seed_models(tmp_path),
-        iteration=0, candidate_idx=0, candidate_count=1, current_posterior=None,
+        tmp_path / "candidate_0",
+        write_responses(tmp_path),
+        write_seed_models(tmp_path),
+        iteration=0,
+        candidate_idx=0,
+        candidate_count=1,
+        current_posterior=None,
     )
     context = (tmp_path / "candidate_0" / "CONTEXT.md").read_text(encoding="utf-8")
     assert "SAMPLER_SETTINGS" not in context
@@ -141,8 +174,14 @@ def test_the_brief_does_not_offer_smaller_steps_as_a_convergence_fix(tmp_path):
 
 
 def _row(rank, *, unreliable=False, not_converged=False):
-    return {"rank": rank, "elpd_loo": -100.0 - rank, "elpd_diff": float(rank),
-            "dse": 1.0, "loo_unreliable": unreliable, "not_converged": not_converged}
+    return {
+        "rank": rank,
+        "elpd_loo": -100.0 - rank,
+        "elpd_diff": float(rank),
+        "dse": 1.0,
+        "loo_unreliable": unreliable,
+        "not_converged": not_converged,
+    }
 
 
 def test_a_non_converged_model_is_never_exported():
@@ -152,8 +191,12 @@ def test_a_non_converged_model_is_never_exported():
 
 
 # A failed fit that smaller steps can plausibly fix, and one they cannot.
-NEAR_MISS = pi.ConvergenceDiagnostics(n_divergent=25, n_draws=4000, max_r_hat=1.06, min_bulk_ess=80)
-HOPELESS = pi.ConvergenceDiagnostics(n_divergent=1000, n_draws=4000, max_r_hat=2.5, min_bulk_ess=5)
+NEAR_MISS = pi.ConvergenceDiagnostics(
+    n_divergent=25, n_draws=4000, max_r_hat=1.06, min_bulk_ess=80
+)
+HOPELESS = pi.ConvergenceDiagnostics(
+    n_divergent=1000, n_draws=4000, max_r_hat=2.5, min_bulk_ess=5
+)
 
 
 class _StubFit(dict):
@@ -173,11 +216,14 @@ def _escalation(monkeypatch, *, converges_at, diagnostics=NEAR_MISS, seeds=None)
         tried.append(settings["target_accept"])
         if seeds is not None:
             seeds.append(settings["random_seed"])
-        return _StubFit(target_accept=settings["target_accept"], random_seed=settings["random_seed"])
+        return _StubFit(
+            target_accept=settings["target_accept"], random_seed=settings["random_seed"]
+        )
 
     monkeypatch.setattr(pi, "_fit_once", fake_fit_once)
     monkeypatch.setattr(
-        pi, "convergence_problems_of",
+        pi,
+        "convergence_problems_of",
         lambda fitted: [] if fitted["target_accept"] >= converges_at else ["R-hat 1.2"],
     )
     monkeypatch.setattr(pi, "convergence_diagnostics_of", lambda fitted: diagnostics)
@@ -187,7 +233,9 @@ def _escalation(monkeypatch, *, converges_at, diagnostics=NEAR_MISS, seeds=None)
 
 def test_a_near_miss_is_refit_once_at_0_95(tmp_path, monkeypatch):
     tried = _escalation(monkeypatch, converges_at=0.95)
-    fitted = pi.fit_model("m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4)
+    fitted = pi.fit_model(
+        "m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4
+    )
     assert tried == [0.8, 0.95]
     assert fitted["target_accept"] == 0.95
 
@@ -228,14 +276,18 @@ def test_the_refit_seed_is_part_of_the_refits_cache_fingerprint(tmp_path):
         "m", tmp_path, responses, old_style
     )
     other_first = pi.fit_fingerprint("other", tmp_path, responses, settings)
-    assert pi.refit_settings(settings, other_first)["random_seed"] != refit["random_seed"]
+    assert (
+        pi.refit_settings(settings, other_first)["random_seed"] != refit["random_seed"]
+    )
 
 
 def test_a_fit_far_from_converging_is_not_refit(tmp_path, monkeypatch, capsys):
     """A chain stuck in another mode (R-hat 2.5, ESS 5) is a geometry problem:
     the refit at 0.95 used to double the cost of the same rejection."""
     tried = _escalation(monkeypatch, converges_at=0.95, diagnostics=HOPELESS)
-    fitted = pi.fit_model("m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4)
+    fitted = pi.fit_model(
+        "m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4
+    )
     assert tried == [0.8]
     assert fitted["target_accept"] == 0.8  # returned as is; the gate rejects it
     assert "not refitting" in capsys.readouterr().out
@@ -245,12 +297,21 @@ def test_a_fit_far_from_converging_is_not_refit(tmp_path, monkeypatch, capsys):
     "diagnostics, near",
     [
         (NEAR_MISS, True),
-        (pi.ConvergenceDiagnostics(80, 4000, 1.2, 20), True),  # every threshold met exactly
+        (
+            pi.ConvergenceDiagnostics(80, 4000, 1.2, 20),
+            True,
+        ),  # every threshold met exactly
         (pi.ConvergenceDiagnostics(81, 4000, 1.05, 400), False),  # > 2% divergent
         (pi.ConvergenceDiagnostics(0, 4000, 1.21, 400), False),  # R-hat above 1.2
         (pi.ConvergenceDiagnostics(0, 4000, 1.03, 19), False),  # bulk ESS below 20
-        (pi.ConvergenceDiagnostics(None, 4000, 1.03, 400), False),  # no divergence statistic
-        (pi.ConvergenceDiagnostics(0, 4000, float("nan"), 400), False),  # R-hat undefined
+        (
+            pi.ConvergenceDiagnostics(None, 4000, 1.03, 400),
+            False,
+        ),  # no divergence statistic
+        (
+            pi.ConvergenceDiagnostics(0, 4000, float("nan"), 400),
+            False,
+        ),  # R-hat undefined
         (HOPELESS, False),
     ],
 )
@@ -266,7 +327,9 @@ def test_a_converged_fit_is_not_refit(tmp_path, monkeypatch):
 
 def test_the_refit_is_not_repeated_if_it_also_fails(tmp_path, monkeypatch):
     tried = _escalation(monkeypatch, converges_at=1.1)
-    fitted = pi.fit_model("m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4)
+    fitted = pi.fit_model(
+        "m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4
+    )
     assert tried == [0.8, 0.95]
     assert fitted["target_accept"] == 0.95  # the gate then rejects it
 

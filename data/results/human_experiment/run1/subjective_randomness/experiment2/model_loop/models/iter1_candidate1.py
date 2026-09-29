@@ -39,12 +39,12 @@ with pm.Model() as model:
     alt_penalty_a = pt.switch(
         alt_rate_a < ideal_alt,
         w_alt_under * pt.square(alt_rate_a - ideal_alt),
-        w_alt_over * pt.square(alt_rate_a - ideal_alt)
+        w_alt_over * pt.square(alt_rate_a - ideal_alt),
     )
     alt_penalty_b = pt.switch(
         alt_rate_b < ideal_alt,
         w_alt_under * pt.square(alt_rate_b - ideal_alt),
-        w_alt_over * pt.square(alt_rate_b - ideal_alt)
+        w_alt_over * pt.square(alt_rate_b - ideal_alt),
     )
 
     # Calculate per-event typicality as a base rate minus the deviation penalty

@@ -120,9 +120,13 @@ def stage_inputs(cell: Path, work_dir: Path, experiment: int) -> Path:
     """
     cell, work_dir = Path(cell).resolve(), Path(work_dir).resolve()
     if work_dir == cell or cell in work_dir.parents:
-        raise ValueError(f"--work-dir {work_dir} is inside the cell {cell}; it must not be.")
+        raise ValueError(
+            f"--work-dir {work_dir} is inside the cell {cell}; it must not be."
+        )
     if experiment < 2:
-        raise ValueError("Only a posterior design (experiment >= 2) has fits to rebuild from.")
+        raise ValueError(
+            "Only a posterior design (experiment >= 2) has fits to rebuild from."
+        )
     staged = work_dir / "inputs"
     exp, prev = f"experiment{experiment}", f"experiment{experiment - 1}"
     copies = [
@@ -147,7 +151,11 @@ def stage_inputs(cell: Path, work_dir: Path, experiment: int) -> Path:
 
 
 def design_draws(
-    staged: Path, experiment: int, rows: List[Dict[str, Any]], n_samples: int, cache: Path
+    staged: Path,
+    experiment: int,
+    rows: List[Dict[str, Any]],
+    n_samples: int,
+    cache: Path,
 ) -> Dict[str, np.ndarray]:
     """The design's per-draw posterior-predictive ``p_left`` over ``rows``.
 
@@ -163,12 +171,17 @@ def design_draws(
     fit_cache = exp / "design" / "_fit_cache"
     before = set(fit_cache.iterdir())
     names = eig_mod._load_model_names(exp / "cognitive_models")
-    names, unbindable = eig_mod._screen_usable_models(names, exp / "cognitive_models", rows[0])
+    names, unbindable = eig_mod._screen_usable_models(
+        names, exp / "cognitive_models", rows[0]
+    )
     draws, undefined = eig_mod._posterior_p_left_draws(
         names,
         exp / "cognitive_models",
         rows,
-        responses_csv=staged / f"experiment{experiment - 1}" / "model_loop" / "responses.csv",
+        responses_csv=staged
+        / f"experiment{experiment - 1}"
+        / "model_loop"
+        / "responses.csv",
         fit_cache_dir=fit_cache,
         max_draws=n_samples,
         seed=42,
@@ -180,17 +193,24 @@ def design_draws(
             "does not hold the design's fits, so these draws would not be the design's."
         )
     if unbindable or undefined:
-        print(f"  [inputs] screened out as in the design: {unbindable + undefined}", flush=True)
+        print(
+            f"  [inputs] screened out as in the design: {unbindable + undefined}",
+            flush=True,
+        )
     np.savez(cache, **draws)
     return draws
 
 
-def pool_index_of(pool: Sequence[Dict[str, str]], stimuli: Sequence[Dict[str, Any]]) -> List[int]:
+def pool_index_of(
+    pool: Sequence[Dict[str, str]], stimuli: Sequence[Dict[str, Any]]
+) -> List[int]:
     """Pool indices of ``stimuli`` (the sweep's chosen pairs), in their order."""
     index = {(p["sequence_a"], p["sequence_b"]): i for i, p in enumerate(pool)}
     missing = [s for s in stimuli if (s["sequence_a"], s["sequence_b"]) not in index]
     if missing:
-        raise ValueError(f"{len(missing)} chosen stimuli are not in the pool, e.g. {missing[0]}.")
+        raise ValueError(
+            f"{len(missing)} chosen stimuli are not in the pool, e.g. {missing[0]}."
+        )
     return [index[(s["sequence_a"], s["sequence_b"])] for s in stimuli]
 
 
@@ -270,10 +290,14 @@ def score_sets(
         entry["fresh_bits"] = round(h_prior - float(h.mean()), 4)
         entry["fresh_diff_vs_reference"] = round(float(diff.mean()), 4)
         entry["fresh_diff_se"] = round(float(diff.std(ddof=1) / np.sqrt(len(diff))), 4)
-        entry["overlap_with_reference"] = len(set(entry["indices"]) & set(ref["indices"]))
+        entry["overlap_with_reference"] = len(
+            set(entry["indices"]) & set(ref["indices"])
+        )
         if entry["n_response_picks"]:
             prefix = entry["indices"][: entry["n_response_picks"]]
-            entry["fresh_bits_n_response_picks"] = round(h_prior - float(entropies(prefix).mean()), 4)
+            entry["fresh_bits_n_response_picks"] = round(
+                h_prior - float(entropies(prefix).mean()), 4
+            )
         else:
             entry["fresh_bits_n_response_picks"] = None
 
@@ -320,12 +344,17 @@ def compare(
     sets: Dict[str, Dict[str, Any]] = {}
     for name, lazy, dtype, seed in runs:
         print(f"[{label}] {name} ...", flush=True)
-        sets[name] = run_selection(draws, weights, args, lazy=lazy, dtype=dtype, seed=seed, threads=threads)
+        sets[name] = run_selection(
+            draws, weights, args, lazy=lazy, dtype=dtype, seed=seed, threads=threads
+        )
         print(f"[{label}] {name}: {sets[name]['seconds']} s", flush=True)
     for name, (indices, stimuli) in (extra_sets or {}).items():
         n_response = [s["joint_eig_bits"] for s in stimuli if s["source"] == "eig"]
         sets[name] = {
-            "lazy": None, "dtype": None, "seed": None, "seconds": None,
+            "lazy": None,
+            "dtype": None,
+            "seed": None,
+            "seconds": None,
             "indices": indices,
             "sources": [s["source"] for s in stimuli],
             "n_response_picks": len(n_response),
@@ -333,7 +362,11 @@ def compare(
         }
     reference = "exact_float64" if exact_float64 else "exact_float32"
     score_sets(draws, weights, sets, reference, args)
-    return {"n_pairs": int(next(iter(draws.values())).shape[1]), "reference": reference, "sets": sets}
+    return {
+        "n_pairs": int(next(iter(draws.values())).shape[1]),
+        "reference": reference,
+        "sets": sets,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -369,7 +402,13 @@ def markdown(results: Dict[str, Any]) -> str:
                 f"| {s['overlap_with_reference']} |"
             )
     if "timing" in results:
-        lines += ["", "## One full scoring pass over the pool (seconds)", "", "| dtype | 1 thread | all threads |", "|---|---|---|"]
+        lines += [
+            "",
+            "## One full scoring pass over the pool (seconds)",
+            "",
+            "| dtype | 1 thread | all threads |",
+            "|---|---|---|",
+        ]
         for dtype, row in results["timing"].items():
             lines.append(f"| {dtype} | {row['1']} | {row['all']} |")
     return "\n".join(lines) + "\n"
@@ -385,10 +424,15 @@ def main(args: Args) -> None:
 
     pool = enumerate_all_pairs(list(args.lengths), same_length_only=True)
     rows = [eig_mod._raw_row(item) for item in pool]
-    draws = design_draws(staged, args.experiment, rows, args.n_samples, work_dir / "draws.npz")
-    weights = eig_mod._load_model_weights(
-        staged / f"experiment{args.experiment - 1}" / "model_registry.yaml"
-    ) or None
+    draws = design_draws(
+        staged, args.experiment, rows, args.n_samples, work_dir / "draws.npz"
+    )
+    weights = (
+        eig_mod._load_model_weights(
+            staged / f"experiment{args.experiment - 1}" / "model_registry.yaml"
+        )
+        or None
+    )
     threads = args.threads or allocated_cpus()
     results: Dict[str, Any] = {
         "cell": str(args.cell),
@@ -401,14 +445,22 @@ def main(args: Args) -> None:
     }
 
     def save() -> None:
-        (work_dir / "validation.json").write_text(json.dumps(results, indent=2), encoding="utf-8")
+        (work_dir / "validation.json").write_text(
+            json.dumps(results, indent=2), encoding="utf-8"
+        )
         (work_dir / "validation.md").write_text(markdown(results), encoding="utf-8")
 
     subsample = np.sort(
-        np.random.default_rng(args.subsample_seed).choice(len(pool), args.subsample, replace=False)
+        np.random.default_rng(args.subsample_seed).choice(
+            len(pool), args.subsample, replace=False
+        )
     )
     results["subsample"] = compare(
-        "subsample", {n: a[:, subsample] for n, a in draws.items()}, weights, args, threads,
+        "subsample",
+        {n: a[:, subsample] for n, a in draws.items()},
+        weights,
+        args,
+        threads,
         exact_float64=True,
     )
     save()
@@ -423,10 +475,16 @@ def main(args: Args) -> None:
         save()
     if args.full_pool:
         stimuli = json.loads(
-            (staged / f"experiment{args.experiment}" / "design" / "stimuli.json").read_text()
+            (
+                staged / f"experiment{args.experiment}" / "design" / "stimuli.json"
+            ).read_text()
         )
         results["full_pool"] = compare(
-            "full pool", draws, weights, args, threads,
+            "full pool",
+            draws,
+            weights,
+            args,
+            threads,
             exact_float64=args.full_pool_float64,
             extra_sets={"sweep_design": (pool_index_of(pool, stimuli), stimuli)},
         )

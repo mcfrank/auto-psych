@@ -18,9 +18,7 @@ def _validate_lengths(q: Sequence[float], p: Sequence[float]) -> int:
     return len(q)
 
 
-def kl_regret(
-    q: Sequence[float], p: Sequence[float], eps: float = 1e-9
-) -> float:
+def kl_regret(q: Sequence[float], p: Sequence[float], eps: float = 1e-9) -> float:
     """Expected Bernoulli KL divergence from the ground truth to the estimate.
 
     ``KL(q || p) = q·log(q/p) + (1−q)·log((1−q)/(1−p))``, averaged over
@@ -43,9 +41,7 @@ def bias(q: Sequence[float], p: Sequence[float]) -> float:
     return sum(pi - qi for qi, pi in zip(q, p)) / n
 
 
-def calibration(
-    q: Sequence[float], p: Sequence[float]
-) -> Tuple[float, float]:
+def calibration(q: Sequence[float], p: Sequence[float]) -> Tuple[float, float]:
     """OLS regression of ``p`` on ``q``: returns ``(slope, intercept)``."""
     n = _validate_lengths(q, p)
     mean_q = sum(q) / n

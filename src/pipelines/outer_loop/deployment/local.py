@@ -58,17 +58,24 @@ def run_deployment(
     publish_another_prolific_study: bool = False,
 ) -> Path:
     if deploy_target == "none":
-        raise ValueError("run_deployment should not be called with deploy_target='none'")
+        raise ValueError(
+            "run_deployment should not be called with deploy_target='none'"
+        )
     if publish_another_prolific_study:
         if recorded_live_study(exp_dir) is not None:
             archived = archive_superseded_manifest(exp_dir)
-            print(f"  [deploy] Kept the earlier live study's manifest at {archived}", flush=True)
+            print(
+                f"  [deploy] Kept the earlier live study's manifest at {archived}",
+                flush=True,
+            )
     else:
         refuse_second_live_study(exp_dir, refused="deploy this experiment again")
 
     resolved_project = firebase_project or firebase_project_from_rc(repo_root)
     if deploy_target == "firebase" and not resolved_project:
-        raise RuntimeError("Firebase deploy requires --firebase-project or a real .firebaserc")
+        raise RuntimeError(
+            "Firebase deploy requires --firebase-project or a real .firebaserc"
+        )
     if deploy_target == "firebase":
         # Fail before any staging or Prolific work if the admin token for the
         # protected /results endpoint is missing.
@@ -105,7 +112,9 @@ def run_deployment(
                 manifest,
                 experiment_url=f"https://example.invalid/auto-psych/{manifest.deployment_id}",
             )
-            manifest.metadata["dry_run_experiment_url"] = payload_manifest.experiment_url
+            manifest.metadata["dry_run_experiment_url"] = (
+                payload_manifest.experiment_url
+            )
         plan = build_prolific_plan(
             project_id=project_id,
             manifest=payload_manifest,
@@ -119,9 +128,17 @@ def run_deployment(
     # experiment leaves earlier experiments' live pages untouched. The whole
     # public/ tree is what Firebase Hosting serves.
     hosting_subdir = manifest.hosting_path or ""
-    public_root = repo_root / "public" if deploy_target == "firebase" else deployment_dir / "public"
+    public_root = (
+        repo_root / "public"
+        if deploy_target == "firebase"
+        else deployment_dir / "public"
+    )
     public_dir = public_root / hosting_subdir
-    firebase_config_path = repo_root / "firebase.generated.json" if deploy_target == "firebase" else deployment_dir / "firebase.generated.json"
+    firebase_config_path = (
+        repo_root / "firebase.generated.json"
+        if deploy_target == "firebase"
+        else deployment_dir / "firebase.generated.json"
+    )
     manifest.staged_public_dir = str(public_dir)
     manifest.firebase_config_path = str(firebase_config_path)
 
@@ -139,7 +156,9 @@ def run_deployment(
         if plan is not None:
             # The page is live: create the draft now and record its id at
             # once (collection and the relaunch guard read it from disk).
-            plan = create_draft_study(project_id, manifest, n_participants, prolific_mode)
+            plan = create_draft_study(
+                project_id, manifest, n_participants, prolific_mode
+            )
             _record_plan(manifest, plan)
             write_client_config(exp_dir, manifest, existing=existing_config)
             write_manifest(exp_dir, manifest)

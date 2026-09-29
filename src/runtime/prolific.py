@@ -60,7 +60,9 @@ def load_prolific_config(project_id: str) -> Dict[str, Any]:
         except yaml.YAMLError as exc:
             raise ValueError(f"Malformed Prolific config at {path}: {exc}") from exc
         if not isinstance(data, dict):
-            raise ValueError(f"Prolific config at {path} must be a mapping, got {type(data).__name__}")
+            raise ValueError(
+                f"Prolific config at {path} must be a mapping, got {type(data).__name__}"
+            )
         for k, v in data.items():
             if v is not None:
                 out[k] = v

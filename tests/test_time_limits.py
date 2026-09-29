@@ -22,5 +22,7 @@ def test_a_candidate_fit_gets_thirty_minutes_per_sampling_run():
 
 def test_live_collection_waits_three_hours():
     assert collect._PROLIFIC_MAX_WAIT_SEC == 3 * 60 * 60
-    default = inspect.signature(collect._poll_prolific_until_target).parameters["max_wait_sec"]
+    default = inspect.signature(collect._poll_prolific_until_target).parameters[
+        "max_wait_sec"
+    ]
     assert default.default == 3 * 60 * 60

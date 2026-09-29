@@ -17,7 +17,9 @@ from tests.monitor_fixtures import response_doc
 
 
 def test_participant_stat_counts_choices():
-    doc_id, data = response_doc("PID_A", [True, False, True, False, True], created_at="2026-06-19T18:05:00Z")
+    doc_id, data = response_doc(
+        "PID_A", [True, False, True, False, True], created_at="2026-06-19T18:05:00Z"
+    )
     stat = participant_stat(doc_id, data)
     assert stat.participant_id == "PID_A"
     assert stat.n_trials == 5
@@ -44,8 +46,16 @@ def test_participant_stat_ignores_invalid_trials():
         "created_at": "2026-06-19T18:00:00Z",
         "trials": [
             {"sequence_a": [0, 1], "sequence_b": [1, 1], "chose_left": True},
-            {"sequence_a": None, "sequence_b": [1, 1], "chose_left": False},  # no stimulus
-            {"sequence_a": [0, 1], "sequence_b": [1, 1], "chose_left": None},  # no response
+            {
+                "sequence_a": None,
+                "sequence_b": [1, 1],
+                "chose_left": False,
+            },  # no stimulus
+            {
+                "sequence_a": [0, 1],
+                "sequence_b": [1, 1],
+                "chose_left": None,
+            },  # no response
         ],
     }
     stat = participant_stat("PID_X", data)
@@ -63,8 +73,12 @@ def test_too_few_trials_is_not_degenerate():
 
 def test_choice_balance_healthy():
     stats = [
-        participant_stat(*response_doc("A", [True, False, True, False], created_at="t")),
-        participant_stat(*response_doc("B", [False, True, False, True], created_at="t")),
+        participant_stat(
+            *response_doc("A", [True, False, True, False], created_at="t")
+        ),
+        participant_stat(
+            *response_doc("B", [False, True, False, True], created_at="t")
+        ),
     ]
     balance = summarize_choice_balance(stats)
     assert balance.total_valid_trials == 8
@@ -74,7 +88,10 @@ def test_choice_balance_healthy():
 
 
 def test_choice_balance_degenerate_all_left():
-    stats = [participant_stat(*response_doc(f"P{i}", [True] * 6, created_at="t")) for i in range(3)]
+    stats = [
+        participant_stat(*response_doc(f"P{i}", [True] * 6, created_at="t"))
+        for i in range(3)
+    ]
     balance = summarize_choice_balance(stats)
     assert balance.p_left == pytest.approx(1.0)
     assert balance.is_degenerate is True

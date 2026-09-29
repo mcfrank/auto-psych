@@ -42,7 +42,9 @@ def no_prolific(monkeypatch):
         monkeypatch.setattr(prolific_client, name, contacted)
 
 
-def _record_study(exp_dir, *, prolific_mode="live", study_id=LIVE_STUDY, published=True):
+def _record_study(
+    exp_dir, *, prolific_mode="live", study_id=LIVE_STUDY, published=True
+):
     manifest = DeploymentManifest(
         project_id=PROJECT,
         experiment_id=f"{PROJECT}_experiment1",
@@ -87,9 +89,13 @@ def _live_args(**overrides) -> outer_run.Args:
 @pytest.fixture
 def live_run_dir(tmp_path, monkeypatch):
     # The study settings a launcher renders (run.py checks them up front).
-    monkeypatch.setattr(prolific_client, "project_assets_dir", lambda pid: tmp_path / pid)
+    monkeypatch.setattr(
+        prolific_client, "project_assets_dir", lambda pid: tmp_path / pid
+    )
     (tmp_path / PROJECT).mkdir()
-    (tmp_path / PROJECT / "prolific_config.yaml").write_text("reward: 100\n", encoding="utf-8")
+    (tmp_path / PROJECT / "prolific_config.yaml").write_text(
+        "reward: 100\n", encoding="utf-8"
+    )
     monkeypatch.setenv("AUTO_PSYCH_OUTPUT_DIR", str(tmp_path / "output"))
     monkeypatch.setenv("CODING_AGENT", "claude")
     # A claude run states its billing mode and holds its credential.
@@ -112,7 +118,9 @@ def stages_run(monkeypatch):
     monkeypatch.setattr(outer_run, "spawn_cc_agent", recorder("3_implement"))
     monkeypatch.setattr(outer_run, "run_deployment_programmatic", recorder("deploy"))
     monkeypatch.setattr(outer_run, "run_collect_programmatic", recorder("4_collect"))
-    monkeypatch.setattr(outer_run, "run_inner_model_loop_programmatic", recorder("5_model_loop"))
+    monkeypatch.setattr(
+        outer_run, "run_inner_model_loop_programmatic", recorder("5_model_loop")
+    )
     monkeypatch.setattr(outer_run, "begin_model_loop_stage", lambda *a, **k: None)
     monkeypatch.setattr(outer_run, "finish_model_loop_stage", recorder("registry"))
     return ran
@@ -170,8 +178,12 @@ def test_resume_agents_route_finishes_from_the_existing_study(
     assert stages_run[0] == stage
 
 
-def test_a_test_mode_draft_does_not_block_a_relaunch(live_run_dir, stages_run, no_prolific):
-    _record_study(live_run_dir, prolific_mode="test", study_id="draft-1", published=False)
+def test_a_test_mode_draft_does_not_block_a_relaunch(
+    live_run_dir, stages_run, no_prolific
+):
+    _record_study(
+        live_run_dir, prolific_mode="test", study_id="draft-1", published=False
+    )
     outer_run.main(_live_args(agent="2_design", prolific_mode="test"))
     assert stages_run == ["2_design"]
 
@@ -196,10 +208,14 @@ def _deploy(exp_dir, **kwargs):
 
 def _experiment_to_deploy(exp_dir):
     (exp_dir / "experiment").mkdir(parents=True, exist_ok=True)
-    (exp_dir / "experiment" / "index.html").write_text("<html></html>", encoding="utf-8")
+    (exp_dir / "experiment" / "index.html").write_text(
+        "<html></html>", encoding="utf-8"
+    )
 
 
-def test_the_deployment_itself_refuses_to_deploy_over_a_live_study(tmp_path, no_prolific):
+def test_the_deployment_itself_refuses_to_deploy_over_a_live_study(
+    tmp_path, no_prolific
+):
     exp_dir = tmp_path / "experiment1"
     _experiment_to_deploy(exp_dir)
     _record_study(exp_dir)
@@ -207,17 +223,27 @@ def test_the_deployment_itself_refuses_to_deploy_over_a_live_study(tmp_path, no_
     with pytest.raises(LiveStudyAlreadyRecorded):
         _deploy(exp_dir)
 
-    assert json.loads(manifest_path(exp_dir).read_text())["prolific_study_id"] == LIVE_STUDY
+    assert (
+        json.loads(manifest_path(exp_dir).read_text())["prolific_study_id"]
+        == LIVE_STUDY
+    )
 
 
-def test_the_override_deploys_and_keeps_the_earlier_study_on_record(tmp_path, no_prolific):
+def test_the_override_deploys_and_keeps_the_earlier_study_on_record(
+    tmp_path, no_prolific
+):
     exp_dir = tmp_path / "experiment1"
     _experiment_to_deploy(exp_dir)
     _record_study(exp_dir)
 
     _deploy(exp_dir, publish_another_prolific_study=True)
 
-    superseded = sorted(manifest_dir(exp_dir).glob("deployment_manifest.superseded-*.json"))
+    superseded = sorted(
+        manifest_dir(exp_dir).glob("deployment_manifest.superseded-*.json")
+    )
     assert len(superseded) == 1
     assert json.loads(superseded[0].read_text())["prolific_study_id"] == LIVE_STUDY
-    assert json.loads(manifest_path(exp_dir).read_text())["deployment_id"] != "deploy_first"
+    assert (
+        json.loads(manifest_path(exp_dir).read_text())["deployment_id"]
+        != "deploy_first"
+    )

@@ -145,8 +145,8 @@ def test_leakage_check():
         cm = run_root / "experiment1" / "cognitive_models"
         cm.mkdir(parents=True)
         (cm / "clean_model.py").write_text(
-            'import pymc as pm\nimport numpy as np\n\n'
-            'with pm.Model() as model:\n'
+            "import pymc as pm\nimport numpy as np\n\n"
+            "with pm.Model() as model:\n"
             '    beta = pm.Normal("beta", 0, 1)\n'
             '    p_left = pm.Deterministic("p_left", pm.math.sigmoid(beta))\n'
             '    obs = pm.Bernoulli("obs", p=p_left, '
@@ -156,14 +156,14 @@ def test_leakage_check():
         ml = run_root / "experiment1" / "model_loop" / "models"
         ml.mkdir(parents=True)
         (ml / "another_model.py").write_text(
-            'import pymc as pm\nimport numpy as np\n\n'
-            'def compute_features(sequence_a, sequence_b):\n'
+            "import pymc as pm\nimport numpy as np\n\n"
+            "def compute_features(sequence_a, sequence_b):\n"
             '    return {"len_a": len(sequence_a)}\n\n'
-            'with pm.Model() as model:\n'
+            "with pm.Model() as model:\n"
             '    beta = pm.Normal("beta", 0, 1)\n'
             '    feat = pm.Data("len_a", [4])\n'
             '    p_left = pm.Deterministic("p_left", '
-            'pm.math.sigmoid(beta * feat))\n'
+            "pm.math.sigmoid(beta * feat))\n"
             '    obs = pm.Bernoulli("obs", p=p_left, '
             'observed=pm.Data("chose_left", [0]))\n'
         )
@@ -210,8 +210,16 @@ def test_leakage_check():
     assert len(result["files"]) == expected["n_files"]
 
     by_path = {f["path"]: f for f in result["files"]}
-    assert sorted(by_path["experiment1/cognitive_models/clean_model.py"]["data_columns"]) == expected["clean_model_data_columns"]
-    assert sorted(by_path["experiment1/model_loop/models/another_model.py"]["data_columns"]) == expected["another_model_data_columns"]
+    assert (
+        sorted(by_path["experiment1/cognitive_models/clean_model.py"]["data_columns"])
+        == expected["clean_model_data_columns"]
+    )
+    assert (
+        sorted(
+            by_path["experiment1/model_loop/models/another_model.py"]["data_columns"]
+        )
+        == expected["another_model_data_columns"]
+    )
 
 
 # ── 5. Lens schedule over 3 experiments × 2 rounds × 6 candidates ─────
@@ -232,9 +240,7 @@ def test_lens_schedule():
     assert exploratory_slots_per_round(6) == 3
 
     for entry in fixture:
-        offset = _lens_offset(
-            entry["experiment"], max_iterations=2, candidate_count=6
-        )
+        offset = _lens_offset(entry["experiment"], max_iterations=2, candidate_count=6)
         assert offset == entry["lens_offset"], (
             f"Experiment {entry['experiment']}: expected offset {entry['lens_offset']}, got {offset}"
         )
@@ -272,6 +278,9 @@ def test_export_selection():
 
     fixture = _load("export_selection.json")
 
-    assert _best_exportable_model(fixture["posterior"], fixture["comparison"]) == fixture["best_exportable_model"]
+    assert (
+        _best_exportable_model(fixture["posterior"], fixture["comparison"])
+        == fixture["best_exportable_model"]
+    )
     assert _best_model(fixture["posterior"]) == fixture["best_argmax_model"]
     assert _unreliable_names(fixture["comparison"]) == fixture["unreliable_names"]

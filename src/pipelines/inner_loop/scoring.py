@@ -265,7 +265,9 @@ def _export(
         "| --- | --- | --- |",
     ]
     if best_model != argmax_model:
-        idx = next(i for i, line in enumerate(lines) if line.startswith("- Best model:"))
+        idx = next(
+            i for i, line in enumerate(lines) if line.startswith("- Best model:")
+        )
         if argmax_excluded:
             note = (
                 f"- NOTE: the posterior argmax (**{argmax_model}**) was **excluded "
@@ -287,7 +289,9 @@ def _export(
     ]
     lines += ["", "## Hypotheses", ""]
     for name, _ in ranked:
-        lines.append(f"- **{name}**: {hypotheses.get(name) or '(no stated hypothesis)'}")
+        lines.append(
+            f"- **{name}**: {hypotheses.get(name) or '(no stated hypothesis)'}"
+        )
 
     if comparison:
         # Ordered by az.compare rank (0 = best by RAW ELPD-LOO — no complexity

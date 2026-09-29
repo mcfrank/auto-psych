@@ -53,7 +53,9 @@ def read_manifest_entries(
     try:
         manifest = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
-        raise ValueError(f"Invalid YAML in {MANIFEST_FILENAME} at {path}: {exc}") from exc
+        raise ValueError(
+            f"Invalid YAML in {MANIFEST_FILENAME} at {path}: {exc}"
+        ) from exc
     if not isinstance(manifest, dict):
         raise ValueError(f"{path} must be a mapping with a 'models' key")
     if "models" not in manifest:
@@ -78,9 +80,7 @@ def read_manifest_entries(
         if not name:
             raise ValueError(f"{path} has a model entry with no name: {entry!r}")
         if not isinstance(name, str):
-            raise ValueError(
-                f"{path} has a model name that is not a string: {name!r}"
-            )
+            raise ValueError(f"{path} has a model name that is not a string: {name!r}")
         if name in seen_names:
             raise ValueError(f"{path} has duplicate model name {name!r}")
         seen_names.add(name)
@@ -88,11 +88,12 @@ def read_manifest_entries(
     return entries
 
 
-def read_manifest_names(
-    models_dir: PathLike, *, missing_ok: bool = False
-) -> List[str]:
+def read_manifest_names(models_dir: PathLike, *, missing_ok: bool = False) -> List[str]:
     """The model names ``models_dir``'s manifest lists, in manifest order."""
-    return [entry["name"] for entry in read_manifest_entries(models_dir, missing_ok=missing_ok)]
+    return [
+        entry["name"]
+        for entry in read_manifest_entries(models_dir, missing_ok=missing_ok)
+    ]
 
 
 def read_loadable_model_names(models_dir: PathLike) -> List[str]:

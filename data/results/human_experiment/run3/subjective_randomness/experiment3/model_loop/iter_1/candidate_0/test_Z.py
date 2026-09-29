@@ -2,8 +2,8 @@ import numpy as np
 import pytensor.tensor as pt
 import pytensor
 
-n_f = pt.dvector('n_f')
-gamma = pt.dscalar('gamma')
+n_f = pt.dvector("n_f")
+gamma = pt.dscalar("gamma")
 
 max_len = 100
 k = pt.arange(max_len + 1, dtype="float64")

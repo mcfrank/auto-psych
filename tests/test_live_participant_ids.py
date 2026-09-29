@@ -52,7 +52,8 @@ def _collect(monkeypatch, exp_num: int, results_csv: str):
     )
     monkeypatch.setattr(collect, "_poll_prolific_until_target", lambda *a, **k: 2)
     monkeypatch.setattr(
-        collect.urllib.request, "urlopen",
+        collect.urllib.request,
+        "urlopen",
         lambda *a, **k: io.BytesIO(results_csv.encode("utf-8")),
     )
     orchestrator.run_collect_programmatic(
@@ -63,10 +64,15 @@ def _collect(monkeypatch, exp_num: int, results_csv: str):
 
 def _ids_by_person(path) -> dict:
     with open(path, encoding="utf-8", newline="") as f:
-        return {row["participant_id_str"]: int(row["participant_id"]) for row in csv.DictReader(f)}
+        return {
+            row["participant_id_str"]: int(row["participant_id"])
+            for row in csv.DictReader(f)
+        }
 
 
-def test_live_participant_ids_are_unique_across_a_runs_experiments(tmp_path, monkeypatch):
+def test_live_participant_ids_are_unique_across_a_runs_experiments(
+    tmp_path, monkeypatch
+):
     monkeypatch.setenv("AUTO_PSYCH_OUTPUT_DIR", str(tmp_path / "output"))
     exp1 = _collect(monkeypatch, 1, _results(ALICE, BOB))
     # Experiment 2: two new people, and Bob again. /results numbers them 0-2.
@@ -86,7 +92,9 @@ def test_live_participant_ids_are_unique_across_a_runs_experiments(tmp_path, mon
         assert not any(person in text for person in (ALICE, BOB, CAROL, DAVE))
 
 
-def test_simulated_run_py_participants_are_unique_across_experiments_too(tmp_path, monkeypatch):
+def test_simulated_run_py_participants_are_unique_across_experiments_too(
+    tmp_path, monkeypatch
+):
     """Rows without a Prolific ID (browser-free simulation) are renumbered
     after the earlier experiments' ids."""
     monkeypatch.setenv("AUTO_PSYCH_OUTPUT_DIR", str(tmp_path / "output"))
@@ -98,8 +106,15 @@ def test_simulated_run_py_participants_are_unique_across_experiments_too(tmp_pat
     )
     exp2 = orchestrator.experiment_dir(PROJECT, 2)
     rows = [
-        {"sequence_a": "HT", "sequence_b": "TH", "participant_id": p, "trial_index": t, "chose_left": 1}
-        for p in (0, 1) for t in (0, 1)
+        {
+            "sequence_a": "HT",
+            "sequence_b": "TH",
+            "participant_id": p,
+            "trial_index": t,
+            "chose_left": 1,
+        }
+        for p in (0, 1)
+        for t in (0, 1)
     ]
     renumbered = orchestrator.run_unique_participant_ids(rows, exp2)
     assert [row["participant_id"] for row in renumbered] == [2, 2, 3, 3]
@@ -111,7 +126,8 @@ def test_simulated_run_py_participants_are_unique_across_experiments_too(tmp_pat
 def _firebase(monkeypatch, tmp_path, results_csv: str):
     monkeypatch.setattr(collect, "_unique_batch_id", lambda: "b1")
     monkeypatch.setattr(
-        collect.urllib.request, "urlopen",
+        collect.urllib.request,
+        "urlopen",
         lambda *a, **k: io.BytesIO(results_csv.encode("utf-8")),
     )
     return collect._collect_from_firebase(
@@ -127,13 +143,21 @@ def _firebase(monkeypatch, tmp_path, results_csv: str):
 OURS = [f"{PROJECT}_run1_b1_p0", f"{PROJECT}_run1_b1_p1"]
 
 
-def test_firebase_collection_raises_when_no_row_is_this_collections(tmp_path, monkeypatch):
-    with pytest.raises(RuntimeError, match="none from this collection's 2 participants"):
+def test_firebase_collection_raises_when_no_row_is_this_collections(
+    tmp_path, monkeypatch
+):
+    with pytest.raises(
+        RuntimeError, match="none from this collection's 2 participants"
+    ):
         _firebase(monkeypatch, tmp_path, _results(ALICE, BOB))
 
 
-def test_firebase_collection_raises_when_rows_cannot_be_attributed(tmp_path, monkeypatch):
-    no_ids = "participant_id,trial_index,sequence_a,sequence_b,chose_left\n0,0,HT,TH,1\n"
+def test_firebase_collection_raises_when_rows_cannot_be_attributed(
+    tmp_path, monkeypatch
+):
+    no_ids = (
+        "participant_id,trial_index,sequence_a,sequence_b,chose_left\n0,0,HT,TH,1\n"
+    )
     with pytest.raises(RuntimeError, match="without a participant_id_str"):
         _firebase(monkeypatch, tmp_path, no_ids)
 
@@ -142,5 +166,6 @@ def test_firebase_collection_keeps_only_this_collections_rows(tmp_path, monkeypa
     rows = _firebase(monkeypatch, tmp_path, _results(ALICE, OURS[1], OURS[0]))
     assert {row["participant_id_str"] for row in rows} == set(OURS)
     assert {(row["participant_id_str"], row["participant_id"]) for row in rows} == {
-        (OURS[0], 0), (OURS[1], 1)
+        (OURS[0], 0),
+        (OURS[1], 1),
     }

@@ -13,6 +13,7 @@ from pathlib import Path
 import pytest
 
 from src.viewer.server import create_app
+
 # Imported so pytest discovers the fixture here; the tests below request it
 # by name rather than calling it.
 from tests.viewer_fixtures import data_root  # noqa: F401
@@ -75,7 +76,9 @@ def test_run_file_serves_figure(client):
 
 def test_unknown_run_is_404(client):
     assert client.get("/api/run/outer_loop/nope").status_code == 404
-    assert client.get("/api/run/outer_loop/demo/experiment?unit=nope").status_code == 404
+    assert (
+        client.get("/api/run/outer_loop/demo/experiment?unit=nope").status_code == 404
+    )
 
 
 def test_root_serves_html_shell(client):
