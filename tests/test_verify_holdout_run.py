@@ -207,6 +207,34 @@ class TestVerifyRawFeaturesRun:
             f"Verifier should pass on clean raw tree.\nstdout: {result.stdout}\nstderr: {result.stderr}"
         )
 
+    @staticmethod
+    def _kept_tree_behind_a_symlink(work_root: Path, leaked_file: str) -> None:
+        """A kept agent tree in the current layout: the real tree lives under
+        an opaque agent_trees/<id>/ and run<r>/<gt>/repo is a symlink to it."""
+        real_repo = work_root / "agent_trees" / "0123abcd" / "repo"
+        _write_file(real_repo / leaked_file, "leaked\n")
+        cell = work_root / "run1" / "gt_kept"
+        cell.mkdir(parents=True)
+        (cell / "repo").symlink_to(real_repo)
+
+    def test_a_leak_in_a_symlinked_kept_tree_fails(self, tmp_path):
+        """find does not descend into a symlinked starting directory unless
+        told to, which would make this check pass on every kept tree."""
+        work_root = _build_clean_raw_tree(tmp_path / "symlinked")
+        self._kept_tree_behind_a_symlink(work_root, "deep/ground_truth_models.py")
+        result = _run_verifier(work_root)
+        assert result.returncode != 0, result.stdout
+        assert "ground_truth_models.py" in result.stdout
+
+    def test_a_claude_md_in_a_kept_tree_fails(self, tmp_path):
+        """The claude backend loads CLAUDE.md into every agent session; the
+        project's names the held-out model."""
+        work_root = _build_clean_raw_tree(tmp_path / "claude_md")
+        self._kept_tree_behind_a_symlink(work_root, "CLAUDE.md")
+        result = _run_verifier(work_root)
+        assert result.returncode != 0, result.stdout
+        assert "CLAUDE.md" in result.stdout
+
     def test_no_csv_tree_warns(self, tmp_path):
         """A tree with no candidate-facing CSV should warn (exit non-zero once
         the verifier checks for missing CSVs)."""

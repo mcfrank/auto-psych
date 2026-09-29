@@ -199,7 +199,12 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
 
     # The agentic loop is seeded with the NORMAL project seed models; the
     # impossible ground truth never enters experiment 1's seed set.
-    run_root = tmp_path / "runs" / "more_heads_more_random"
+    # The run tree is cell_<i>, never named after the held-out model: every
+    # path in it reaches an agent's prompt.
+    run_root = tmp_path / "runs" / "cell_1"
+    assert not [
+        p for p in (tmp_path / "runs").rglob("*") if "more_heads_more_random" in p.name
+    ]
     exp1_models = run_root / "experiment1" / "cognitive_models"
     assert not (exp1_models / "more_heads_more_random.py").exists()
     seeded = yaml.safe_load(

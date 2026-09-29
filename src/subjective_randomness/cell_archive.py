@@ -72,21 +72,24 @@ def resolve_run_root(
 
     If ``recorded_run_root`` (the path from ``holdout.json``) exists on disk,
     return it directly. Otherwise extract ``cell_dir/agent_runs.tar.gz`` via
-    ``manager`` and locate ``_runs/<gt_name>`` inside the extraction.
+    ``manager`` and locate the recorded run directory inside ``_runs/``. That
+    directory is ``cell_<i>`` in current runs and was the GT's own name in runs
+    before September 2026, so it is read from the record rather than assumed;
+    ``gt_name`` only labels the error.
 
     Raises ``FileNotFoundError`` if neither the on-disk path nor the archive
-    exists, or if the archive does not contain the expected ground truth.
+    exists, or if the archive does not contain the recorded run directory.
     """
     on_disk = Path(recorded_run_root)
     if on_disk.exists():
         return on_disk
 
     extract_root = manager.get_or_extract(cell_dir)
-    resolved = extract_root / "_runs" / gt_name
+    resolved = extract_root / "_runs" / on_disk.name
     if not resolved.exists():
         raise FileNotFoundError(
-            f"Extracted archive at {cell_dir} but {gt_name} not found "
-            f"inside _runs/ (available: "
+            f"Extracted archive at {cell_dir} but the run directory for {gt_name} "
+            f"({on_disk.name!r}) is not inside _runs/ (available: "
             f"{sorted(p.name for p in (extract_root / '_runs').iterdir()) if (extract_root / '_runs').exists() else []})"
         )
     return resolved

@@ -20,6 +20,11 @@ test_literature_faithful_pymc.py
 test_literature_model_families.py
 gt.txt
 REFACTOR_NOTES.md
+# Agent CLIs load these into every session (claude: CLAUDE.md; codex and
+# opencode: AGENTS.md). The project CLAUDE.md names the held-out model, and
+# a candidate agent needs none of it: its brief is self-contained.
+CLAUDE.md
+AGENTS.md
 
 # Research library: agents must not read feature-computation or stimulus-design code
 /src/subjective_randomness/features.py

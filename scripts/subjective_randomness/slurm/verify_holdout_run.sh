@@ -158,7 +158,9 @@ _TREE_FORBIDDEN_ANCHORED=(
   "src/subjective_randomness/model_recovery.py"
   "src/subjective_randomness/pymc_recover.py"
 )
-_TREE_FORBIDDEN_UNANCHORED=(ground_truth_models.py evaluate_recovery.py preprocess.py)
+# CLAUDE.md / AGENTS.md: agent CLIs load them into every session, and the
+# project's CLAUDE.md names the held-out model.
+_TREE_FORBIDDEN_UNANCHORED=(ground_truth_models.py evaluate_recovery.py preprocess.py CLAUDE.md AGENTS.md)
 _TREE_FORBIDDEN_DIRS=("src/subjective_randomness/model_families")
 bad_tree=0; n_tree=0
 for TREPO in "$W"/run*/*/repo; do
@@ -173,7 +175,9 @@ for TREPO in "$W"/run*/*/repo; do
   for fn in "${_TREE_FORBIDDEN_UNANCHORED[@]}"; do
     while IFS= read -r found; do
       bad_tree=$((bad_tree + 1)); say "      leaked: $found"
-    done < <(find "$TREPO" -name "$fn" -not -path "*/_runs/*" 2>/dev/null)
+    # -H: run<r>/<gt>/repo is a symlink to the real tree under agent_trees/,
+    # and find does not descend into a symlinked starting point without it.
+    done < <(find -H "$TREPO" -name "$fn" -not -path "*/_runs/*" 2>/dev/null)
   done
 done
 for TAR in "$W"/run*/*/agent_runs.tar.gz; do

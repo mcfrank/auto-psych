@@ -63,6 +63,24 @@ def test_resolve_run_root_existing_on_disk(tmp_path):
     assert (resolved / "experiment1" / "data" / "responses.csv").exists()
 
 
+def test_resolve_run_root_finds_an_opaquely_named_run_tree_in_the_archive(tmp_path):
+    """The run tree is named cell_<i>, not after the ground truth (the name
+    reached every agent's prompt). The archive is searched for the directory
+    holdout.json recorded, not for the GT's name."""
+    staging = tmp_path / "staging"
+    staging.mkdir()
+    _build_run_tree(staging, "cell_1")
+    cell_dir = tmp_path / "cell"
+    cell_dir.mkdir()
+    _archive_run_tree(cell_dir, staging)
+
+    recorded = cell_dir / "repo" / "_runs" / "cell_1"
+    with CellArchiveManager() as mgr:
+        resolved = resolve_run_root(cell_dir, str(recorded), "motif_stack", mgr)
+        assert resolved.name == "cell_1"
+        assert (resolved / "experiment1" / "data" / "responses.csv").exists()
+
+
 def test_resolve_run_root_extracts_archive(tmp_path):
     """When run_root doesn't exist but agent_runs.tar.gz does, extract it."""
     staging = tmp_path / "staging"

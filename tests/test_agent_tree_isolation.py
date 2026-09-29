@@ -25,6 +25,10 @@ FORBIDDEN_PATHS = [
     "src/subjective_randomness/model_recovery.py",
     "src/subjective_randomness/pymc_recover.py",
     "src/subjective_randomness/model_families",
+    # Alternative implementations of the ground truths (motif_stack_softmax.py
+    # describes a held-out motif_stack in full); only opencode honoured the
+    # read deny-list that used to cover it.
+    "src/subjective_randomness/pymc_model_families",
 ]
 
 FORBIDDEN_GLOBS = [
@@ -36,6 +40,10 @@ FORBIDDEN_ANYWHERE = [
     "ground_truth_models.py",
     "evaluate_recovery.py",
     "gt.txt",
+    # Agent CLIs load these into every session; the project CLAUDE.md names
+    # the held-out model.
+    "CLAUDE.md",
+    "AGENTS.md",
 ]
 
 FORBIDDEN_DEFS = [
