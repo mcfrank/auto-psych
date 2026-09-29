@@ -169,19 +169,13 @@ with pm.Model() as model:
 
 ## Self-check
 
-Before stopping, confirm all three files exist — `hypothesis.md` (non-empty),
-`model_name.txt` (one snake_case line), and a `candidate.py` that imports and
-exposes a `pm.Model`. A candidate with no `hypothesis.md` is rejected; a
+Before stopping, confirm all three files exist at the absolute paths given in
+your instructions — `hypothesis.md` (non-empty), `model_name.txt` (one
+snake_case line) and `candidate.py` — then run the check command documented in
+`CONTEXT.md`. It loads `candidate.py` the way admission does (a module-level
+`model: pm.Model`), binds the real responses, checks the log-probability is
+finite, completes a short MCMC fit and checks ELPD-LOO is finite, printing
+`OK` or the exact reason admission would reject the file. Fix anything it
+reports before you finish. A candidate with no `hypothesis.md` is rejected; a
 missing or invalid `model_name.txt` demotes your model to an auto-generated
 name.
-
-```bash
-test -s hypothesis.md && echo "hypothesis.md OK"
-test -s model_name.txt && echo "model_name.txt OK"
-python3 -c "
-from pathlib import Path
-from src.models.pymc_inference import load_pymc_model, observed_response_data
-m = load_pymc_model('candidate', Path('.'))
-print('observed:', observed_response_data(m))
-"
-```

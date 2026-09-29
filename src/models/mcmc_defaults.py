@@ -26,3 +26,11 @@ PRODUCTION_CORES = 4
 DESIGN_TWIN_DRAWS = 500
 DESIGN_TWIN_TUNE = 500
 DESIGN_TWIN_CHAINS = 2
+
+# The candidate agent's self-check (src/pipelines/inner_loop/check_candidate.py):
+# a smoke fit that proves the model loads, samples and scores — never a
+# production fit. One chain on one core keeps it cheap inside an agent
+# session; production sampling happens at admission with the values above.
+CANDIDATE_CHECK_DRAWS = 100
+CANDIDATE_CHECK_TUNE = 100
+CANDIDATE_CHECK_CHAINS = 1

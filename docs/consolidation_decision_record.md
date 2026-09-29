@@ -76,7 +76,9 @@ by ELPD-LOO with `elpd_diff +/- dse` and a separation verdict; lenses rotate
 with `(offset + iteration * candidate_count + candidate_idx) % n_lenses` so
 all seven fire. What is deliberately not brought over: `incumbent_fit.py`,
 per-stimulus residual tables, `AdmissionOutcome`, candidate repair,
-carried-model repair, and the `candidate_repairs` knob.
+carried-model repair, and the `candidate_repairs` knob. (Candidate repair was
+later reintroduced in a bounded form by P36 of the loop-improvement plan —
+see "One retry and one repair per candidate slot" below.)
 
 ### 8. Honest metrics
 
@@ -158,7 +160,8 @@ the results.
    and candidate repair (re-running a rejected candidate with the rejection reason
    injected). This was not included because it couples admission and generation
    and makes the novelty gate less clean. It may be worth revisiting if discovery
-   failure rates are high.
+   failure rates are high. *Resolved (September 2026, P36):* discovery failure
+   rates were high — see "One retry and one repair per candidate slot" below.
 
 3. **Process-level import isolation.** Agent-written candidates can import the
    project featurizer at runtime. The verifier catches this after the fact by
@@ -227,6 +230,47 @@ values — so 0.99 stands as cautious tail stabilization.) `cores` was changed
 from 1 (four production chains ran sequentially for no stated reason) to 4;
 measured 2026-08-13 on macOS, chains=4, PyMC 5.28.5: cores=4 finished in 38 s
 vs 110 s at cores=1, with no multiprocessing trouble.
+
+### One retry and one repair per candidate slot (`pymc_orchestrator._Slot`)
+
+In the 2026-09 sweep (`sweep_rerun`, 20 cells), 104 of 360 candidate slots
+(29%) ended as "no candidate.py written" — most of them permission denials
+(fixed in P34) — against 29 rejections of every other kind combined. The only
+retry, the all-slots-empty round retry, requires every slot of a round to be
+empty (~2% of three-slot rounds at that failure rate) and never fired. Of the
+29 reasoned rejections, 17 were "predicts like existing model X"; the agent
+never saw the reason and had no second attempt, and `CONTEXT.md` never told it
+how to check that its model loads and samples before finishing.
+
+P36 makes every slot end admitted or with a recorded reason the agent had a
+chance to act on:
+
+- A slot whose agent wrote no `candidate.py` (or whose agent process failed)
+  is re-spawned once, in its own directory (`candidate_<i>_retry_1/`), with a
+  fresh context, the same lens and a note saying the first attempt wrote
+  nothing. A retry that stays empty is final.
+- A candidate rejected at admission is re-spawned once
+  (`candidate_<i>_repair_1/`) with the rejection reason injected verbatim into
+  its prompt and the rejected files copied in as a starting point; its own
+  rejected name is left out of "already tried — do not re-propose". A repair
+  is always final, and a slot that did write a candidate never reads as an
+  unfilled slot to the round guard — otherwise a repair that wrote nothing
+  would trip the all-slots-empty retry and, with one slot, the systemic
+  `AllCandidatesNoFileError`.
+- Every attempt is a ledger line: retry and repair contexts carry
+  ` retry 1` / ` repair 1` after `candidate <i> lens <j>`.
+- `CONTEXT.md` documents one self-check command
+  (`src/pipelines/inner_loop/check_candidate.py`, run with the pipeline's own
+  interpreter) that runs the admission gates the agent can act on — import
+  allowlist, loadable module-level model, finite logp, a short fit, finite
+  ELPD-LOO — with `CANDIDATE_CHECK_DRAWS/TUNE/CHAINS = 100/100/1` from
+  `mcmc_defaults.py`, no fit-cache writes, and no novelty check.
+
+At most three agent attempts per slot. The consolidation plan's "do not bring
+over candidate repair" exclusion is lifted by the loop-improvement plan §0.3;
+the coupling concern above is answered by keeping the repair a prompt-only
+mechanism — admission itself is unchanged and the novelty gate has no
+exemption.
 
 ### No fallback critique battery; retry once, then no critique (`critique_round.py`)
 

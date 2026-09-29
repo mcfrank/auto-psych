@@ -98,6 +98,17 @@ a rotating exploration "lens") → admit sequentially.
   loadable `candidate.py` (module-level `model: pm.Model`) + `hypothesis.md` +
   `model_name.txt`, passing logp/real-fit/finite-ELPD gates, AND with posterior-
   mean `p_left` ≥ `novelty_rmse_threshold` (0.02) RMSE from every admitted model.
+- **Slot retry and repair** (`_Slot` in `pymc_orchestrator.py`): a round is
+  spawn → settle waves. A slot whose agent wrote no `candidate.py` (or whose
+  agent process failed) is re-spawned once in `candidate_<i>_retry_1/`; a
+  candidate that `_admit_candidate_with_reason` rejects is re-spawned once in
+  `candidate_<i>_repair_1/` with the rejection reason verbatim in its prompt
+  (`_repair_note`) and the rejected files copied in — a repair is always
+  final and never counts as an unfilled slot. Every attempt is a ledger line
+  (`… retry 1` / `… repair 1` in its context). The all-slots-empty round
+  retry (`MAX_EMPTY_ROUND_RETRIES`) stays as the outer guard. `CONTEXT.md`
+  documents a self-check command (`check_candidate.py`; `CANDIDATE_CHECK_*`
+  in `mcmc_defaults.py`) that runs the admission gates with a smoke fit.
 - **Pruning** (`_prune_losers` in `model_zoo.py`): non-protected, PSIS-LOO-reliable models
   statistically distinguishable from the best (`elpd_diff > dse_multiplier·dse`)
   move to `models/pruned/`. There is no stacking-weight floor — pruning is on

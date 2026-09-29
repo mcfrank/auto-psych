@@ -27,6 +27,10 @@ Active development is organized around two explicit loops:
   pipeline never substitutes statistics of its own) — then spawns candidate
   agents in parallel, each steered by a distinct exploration lens, to write one
   new single-mechanism PyMC model apiece (self-named via `model_name.txt`).
+  A slot whose agent writes nothing is retried once; a candidate rejected at
+  admission is repaired once, with the rejection reason in the agent's
+  prompt; every attempt is in the ledger, and the agent can run a documented
+  self-check (a smoke fit) before it finishes.
   Candidates are admitted only if they fit by MCMC, achieve finite ELPD-LOO,
   and are **genuinely novel** (a candidate predicting within 0.02 RMSE of an
   existing model's `p_left` is rejected as a duplicate). After each scoring
