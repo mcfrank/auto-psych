@@ -69,3 +69,21 @@ def test_no_validation_means_a_single_spawn_and_no_repair(tmp_path, monkeypatch)
     monkeypatch.setattr(run, "validate_cc_output", boom)
     feedback = _run_implement(monkeypatch, tmp_path, [], max_repairs=2, validate=False)
     assert feedback == [None]  # spawned exactly once, never repaired
+
+
+def test_outer_loop_coding_agent_is_a_stock_agent(tmp_path, monkeypatch):
+    """A loop agent runs as the stock CLI: none of the user's Claude setup."""
+    from src.pipelines.outer_loop import orchestrator
+
+    captured = {}
+
+    def fake_run_coding_agent(prompt, **kwargs):
+        captured.update(kwargs)
+        return True, "done"
+
+    monkeypatch.setattr(orchestrator, "run_coding_agent", fake_run_coding_agent)
+    exp_dir = tmp_path / "experiment1"
+    exp_dir.mkdir()
+    (exp_dir / "CONTEXT.md").write_text("context\n", encoding="utf-8")
+    orchestrator.spawn_cc_agent("3_implement", exp_dir, backend="claude")
+    assert captured["stock"] is True

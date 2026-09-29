@@ -312,6 +312,7 @@ def spawn_cc_agent(
         backend=backend,
         model=model,
         usage_label=f"outer:{agent_key}",
+        stock=True,  # a loop agent: none of the user's Claude setup
     )
     if success:
         print(f"  [agent] {agent_key} completed.", flush=True)

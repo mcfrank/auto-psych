@@ -161,3 +161,47 @@ def test_claude_stream_captures_cache_tokens():
     assert usage["cache_write_tokens"] == 5000
     assert usage["cache_read_tokens"] == 3000
     assert usage["cost_usd"] == 0.42
+
+
+# ── Stock agents: none of the user's personal Claude configuration ────
+# Verified against claude 2.1.280's init event: by default a spawned agent
+# loaded the user's global CLAUDE.md, four plugins and five MCP servers (the
+# user's claude.ai Gmail, Google Drive, Calendar and Docs connectors among
+# them), kept an auto-memory directory in the user's ~/.claude, and persisted
+# every session there. --bare would drop all of it but refuses OAuth, which
+# would move the agents off the subscription onto per-token API billing.
+
+STOCK_CLAUDE_FLAGS = (
+    "--setting-sources", "project,local",
+    "--strict-mcp-config",
+    "--no-session-persistence",
+)
+
+
+def test_stock_claude_agent_loads_no_user_configuration():
+    cmd = build_command("claude", prompt="p", allowed_dirs=[], model=None, stock=True)
+    joined = " ".join(cmd)
+    assert "--setting-sources project,local" in joined  # no ~/.claude settings or CLAUDE.md
+    assert "--strict-mcp-config" in cmd                 # no MCP servers or connectors
+    assert "--no-session-persistence" in cmd            # nothing written to ~/.claude
+    assert "--bare" not in cmd                          # keeps subscription auth
+    assert cmd[-1] == "p" and cmd[-2] == "-p"
+
+
+def test_claude_agent_keeps_the_user_configuration_unless_asked():
+    """The campaign driver and review panel are the user's own agents."""
+    cmd = build_command("claude", prompt="p", allowed_dirs=[], model=None)
+    assert not set(STOCK_CLAUDE_FLAGS) & set(cmd)
+
+
+def test_stock_claude_agent_has_auto_memory_off(tmp_path):
+    from src.runtime.coding_agent import child_environment
+
+    stock = child_environment(
+        backend="claude", cwd=tmp_path, log_path=tmp_path / "a.jsonl", env={}, stock=True
+    )
+    user = child_environment(
+        backend="claude", cwd=tmp_path, log_path=tmp_path / "a.jsonl", env={}
+    )
+    assert stock["CLAUDE_CODE_DISABLE_AUTO_MEMORY"] == "1"
+    assert "CLAUDE_CODE_DISABLE_AUTO_MEMORY" not in user
