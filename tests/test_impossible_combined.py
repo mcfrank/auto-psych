@@ -54,7 +54,8 @@ def _result(gt_model, *, r1):
                     "per_model": {
                         "s1": {"pearson_r": 0.10, "rmse": 0.40},
                         "s2": {"pearson_r": 0.20, "rmse": 0.35},
-                    }
+                    },
+                    "elpd_best_model": "s2", "elpd_best_r": 0.20, "elpd_best_rmse": 0.35,
                 },
             )
         ]

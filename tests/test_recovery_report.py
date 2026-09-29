@@ -56,6 +56,15 @@ def _write_holdout_csv(
             ),
         ]
     csv_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    # The cell's result, written with the CSV when the cell finishes; the
+    # report reads the fitted-seed baseline from it.
+    (cell_dir / "holdout.json").write_text(
+        json.dumps({"gt_runs": [{
+            "gt_model": gt_model,
+            "fitted_baseline": {"elpd_best_rmse": rmse + 0.05, "elpd_best_r": 0.5},
+        }]}),
+        encoding="utf-8",
+    )
 
 
 def _write_paired_csv(out_dir: Path, pairs: list[dict]) -> None:

@@ -63,6 +63,7 @@ fi
 
 "$VENV_PY" scripts/subjective_randomness/holdout_test_retest.py \
   --runs-root "$WORK_ROOT" \
+  --n-repeats "$N_REPEATS" --gt-models "$GT_MODELS" \
   --out    "$WORK_ROOT/test_retest.json" \
   --csv    "$WORK_ROOT/test_retest.csv" \
   --figure "$WORK_ROOT/test_retest.png"

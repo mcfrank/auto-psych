@@ -1355,7 +1355,61 @@ This runs in the harness after the three experiments
   `elpd_best_rmse` — the trusted seed with the highest ELPD-LOO, chosen on the
   training data as the loop chooses its winner — or `None` with
   `elpd_best_reason` if no seed is trusted; `mean_r` and `mean_rmse` over the
-  seeds as reference fields; and `n_responses`.
+  seeds as reference fields, with the seeds each covers (`mean_r_models`,
+  `mean_rmse_models`: a seed predicting a constant has no r but has an RMSE,
+  so the two means can cover different seeds); and `n_responses`.
+- **`fitted_baseline_by_experiment`** (since 2026-09-28,
+  `fitted_seed_baseline_by_experiment`): the same baseline at the end of
+  every experiment k, fit on experiment k's cumulative
+  `model_loop/responses.csv` (the data the loop's steps in experiment k were
+  fit on; the loop's own seed fits, so cache hits), one entry per experiment
+  with `"experiment": k`; its exclusion lines carry `"experiment"`. The last
+  entry is `fitted_baseline`, whose meaning is unchanged. Before, the only
+  fitted baseline was the final data's, drawn flat across every step, so
+  only the final experiment's steps were compared with it on the same data
+  (second audit W1).
+
+### 7.3a Sweep summaries: which cells, aligned how (since 2026-09-28)
+
+- **Cells.** `sweep_cells.survey_sweep` sorts the expected `run<r>/<gt>` cells
+  into complete (`holdout.json`), partial (a directory without one) and
+  missing (no directory); the expected grid is `--n-repeats`/`--gt-models`
+  when given (the analysis job passes `N_REPEATS`/`GT_MODELS`), else inferred
+  from the directories and said so. `recovery_report.py`, `holdout_test_retest.py`,
+  `incumbent_report.py`, `recovery_ceiling.py` and the two combined-figure
+  scripts print that accounting. The incumbent report now counts only
+  complete cells (it read partial cells' run records as whole cells), and
+  `compare_matched_cells.py` lists cells complete in only one sweep
+  (`unmatched`).
+- **Alignment.** `reporting.aggregate_holdout_trajectories` pools cells by
+  position within an experiment — its seed step, each round (`iteration`)
+  every cell recorded, and its end (each cell's last step) — not by
+  `global_step`: an abandoned round writes no step, so step k used to average
+  different rounds of different cells. Points carry `x`, `experiment`,
+  `label`; the tidy CSVs' `global_step` column became
+  `position`/`experiment`/`label`.
+- **Same cells.** At each position a cell counts only if the loop's value
+  (best and model average) and every baseline's are defined: the fitted-seed
+  baseline of that experiment (`fitted_baseline_by_experiment`; a result
+  scored before it existed joins only at its final experiment) and, for
+  Pearson r, the default-params baseline. Left-out cells are listed per
+  position (`excluded`, and `<stem>_cells.md`). `baselines` (the headline)
+  is each baseline at the end of the final experiment over the cells of the
+  loop's final point; `baseline_series` holds every position. Before, the
+  baselines were flat final-data values averaged over whichever cells
+  defined them, while the loop's mean covered every cell (second audit W2).
+- **Reports.** `recovery_report.py` summarises the loop's final step and the
+  fitted-seed baseline (`fitted_baseline.elpd_best_*`) over the same cells,
+  listing complete cells left out and why, and its header counts complete
+  cells per ground truth (it used integer division over all cells).
+  `holdout_test_retest.py` adds `cells` (the survey) and
+  `loop_vs_fitted_baseline`: per ground truth, experiment end and metric
+  (r, RMSE), the loop's and the baseline's means and their mean paired
+  difference over the cells where both are defined, with the others and why.
+  `runs_missing_tidy` now lists the expected cells without a `holdout.csv`
+  (it was always empty). `recovery_ceiling.py` adds
+  `mean_ceiling_rmse_same_cells` (over the `n_with_loop` cells with a loop
+  RMSE) beside the loop's mean.
 
 ### 7.4 Incumbent record (incumbent.py)
 

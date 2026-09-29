@@ -30,6 +30,7 @@ def _seed_step(best, starting=("seed_a", "seed_b")):
 
 
 def _archived_cell(cell_dir: Path, gt: str, histories) -> None:
+    _finished(cell_dir)
     staging = cell_dir / "_staging"
     for exp_num, history in enumerate(histories, start=1):
         loop_dir = staging / "_runs" / gt / f"experiment{exp_num}" / "model_loop"
@@ -44,7 +45,14 @@ def _archived_cell(cell_dir: Path, gt: str, histories) -> None:
     shutil.rmtree(staging)
 
 
+def _finished(cell_dir: Path) -> None:
+    """The cell's result: only a finished cell is reported."""
+    cell_dir.mkdir(parents=True, exist_ok=True)
+    (cell_dir / "holdout.json").write_text("{}", encoding="utf-8")
+
+
 def _live_cell(cell_dir: Path, gt: str, histories) -> None:
+    _finished(cell_dir)
     for exp_num, history in enumerate(histories, start=1):
         loop_dir = cell_dir / "repo" / "_runs" / gt / f"experiment{exp_num}" / "model_loop"
         loop_dir.mkdir(parents=True)
@@ -138,7 +146,7 @@ def test_report_fails_loudly_on_an_empty_selection_or_an_unreadable_cell(tmp_pat
     sweep = _build_sweep(tmp_path / "sweep")
     with pytest.raises(FileNotFoundError, match="gamma"):
         main(Args(sweep=sweep, out=tmp_path / "none.md", gt_model="gamma"))
-    (sweep / "run3" / "beta").mkdir(parents=True)
+    _finished(sweep / "run3" / "beta")  # finished, but its run record is gone
     with pytest.raises(FileNotFoundError, match="run3/beta"):
         main(Args(sweep=sweep, out=tmp_path / "broken.md"))
     with pytest.raises(FileNotFoundError, match="sweep root"):

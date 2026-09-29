@@ -242,7 +242,13 @@ def run_ceiling(
 
 
 def summarize_by_ground_truth(run: CeilingRun) -> List[Dict[str, Any]]:
-    """Per ground truth: mean ceiling, mean loop RMSE, mean gap, n."""
+    """Per ground truth: mean ceiling, mean loop RMSE, mean gap, n.
+
+    ``mean_ceiling_rmse`` covers every scored cell; ``mean_loop_rmse`` and
+    ``mean_gap`` only those with a loop RMSE (``n_with_loop``), and
+    ``mean_ceiling_rmse_same_cells`` is the ceiling over those same cells, the
+    one to set beside the loop's.
+    """
     by_gt: Dict[str, List[CellCeiling]] = {}
     for cell in run.cells:
         by_gt.setdefault(cell.gt_model, []).append(cell)
@@ -250,7 +256,8 @@ def summarize_by_ground_truth(run: CeilingRun) -> List[Dict[str, Any]]:
     for gt_model, cells in sorted(by_gt.items()):
         ceilings = [c.ceiling_rmse for c in cells]
         gaps = [c.gap_to_ceiling for c in cells if c.gap_to_ceiling is not None]
-        loops = [c.loop_rmse for c in cells if c.loop_rmse is not None]
+        with_loop = [c for c in cells if c.loop_rmse is not None]
+        loops = [c.loop_rmse for c in with_loop]
         rows.append(
             {
                 "gt_model": gt_model,
@@ -259,6 +266,10 @@ def summarize_by_ground_truth(run: CeilingRun) -> List[Dict[str, Any]]:
                 "max_ceiling_rmse": float(np.max(ceilings)),
                 "mean_loop_rmse": float(np.mean(loops)) if loops else None,
                 "mean_gap": float(np.mean(gaps)) if gaps else None,
+                "n_with_loop": len(with_loop),
+                "mean_ceiling_rmse_same_cells": (
+                    float(np.mean([c.ceiling_rmse for c in with_loop])) if with_loop else None
+                ),
             }
         )
     return rows

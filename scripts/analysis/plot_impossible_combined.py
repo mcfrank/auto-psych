@@ -14,11 +14,19 @@ truths across all runs and draws the same per-model panels as
 per-step error bars, and the seed-model baselines as means with a shaded spread
 band — then writes a tidy CSV of every pooled point.
 
-It reuses the holdout aggregation, which drops degenerate points (``None``,
-``NaN``, or ``inf`` — common for impossible ground truths, where a constant
-prediction makes the correlation undefined) instead of crashing.
+It reuses the holdout aggregation, which leaves a cell out of a point — loop
+and baselines alike — where a value is degenerate (``None``, ``NaN``, or
+``inf``: common for impossible ground truths, where a constant prediction
+makes the correlation undefined) instead of crashing, and lists it.
 
 It fails loudly if no run files are found under ``--runs-root``.
+
+Points are aligned by experiment (its seed step, the rounds every cell ran, its
+end), and at each point the loop and every baseline cover the same cells (see
+``aggregate_holdout_trajectories``). ``<stem>_cells.md`` lists the expected
+cells that are partial or missing and, per point, the complete cells left out
+and why. Pass ``--n-repeats``/``--gt-models`` so cells that never started are
+listed too.
 
 Usage:
     # Default: pool data/results/impossible_holdout_test_retest, both metrics
@@ -45,9 +53,16 @@ sys.path.insert(0, str(here()))
 
 from src.subjective_randomness.config import resolve_path  # noqa: E402
 from src.subjective_randomness.reporting import (  # noqa: E402
+    AGGREGATE_TIDY_COLUMNS,
     DEFAULT_TRAJECTORY_X_LABEL,
+    aggregate_exclusion_lines,
     aggregate_holdout_trajectories,
+    aggregate_tidy_rows,
     plot_holdout_trajectories_combined,
+)
+from src.subjective_randomness.sweep_cells import (  # noqa: E402
+    accounting_lines,
+    survey_sweep,
 )
 from src.subjective_randomness.tidy import write_tidy_csv  # noqa: E402
 
@@ -66,16 +81,7 @@ STRIP_TEXT_SIZE = 15
 # Both metrics the recovery figure understands, in the order figures are written.
 ALL_METRICS = ("rmse", "pearson_r")
 
-TIDY_COLUMNS = [
-    "gt_model",
-    "metric",
-    "error",
-    "series",
-    "global_step",
-    "mean",
-    "err",
-    "n",
-]
+TIDY_COLUMNS = AGGREGATE_TIDY_COLUMNS
 
 
 @dataclass
@@ -94,6 +100,12 @@ class Args:
     x_label: str = DEFAULT_TRAJECTORY_X_LABEL
     """X-axis label. The default fits the full pipeline; the no-inner-loop ablation
     has one step per experiment, so pass ``--x-label experiment`` for it."""
+    n_repeats: Optional[int] = None
+    """The sweep's repeat count, so cells that never started are listed as
+    missing (default: inferred from the run<r>/ directories, and said so)."""
+    gt_models: Optional[str] = None
+    """The sweep's ground truths, space-separated (as GT_MODELS; default:
+    inferred from the directories present, and said so)."""
     name_suffix: str = ""
     """Appended to the output filename stem to mark a variant, e.g.
     ``--name-suffix _no_inner_loop`` -> ``impossible_combined_no_inner_loop_rmse.pdf``."""
@@ -109,43 +121,8 @@ def load_results(files: Iterable[Path]) -> List[Mapping[str, Any]]:
 
 
 def tidy_rows(aggregated: Mapping[str, Any]) -> List[Mapping[str, Any]]:
-    """Flatten a pooled aggregate into one tidy row per plotted point.
-
-    Trajectory points carry their ``global_step``; the two flat seed-model
-    baselines (constant across steps) carry an empty ``global_step``.
-    """
-    metric, error = aggregated["metric"], aggregated["error"]
-    rows: List[Mapping[str, Any]] = []
-    for panel in aggregated["gt_models"]:
-        gt = panel["gt_model"]
-        for point in panel["best"]:
-            rows.append(
-                {
-                    "gt_model": gt,
-                    "metric": metric,
-                    "error": error,
-                    "series": "best",
-                    "global_step": point["global_step"],
-                    "mean": point["mean"],
-                    "err": point["err"],
-                    "n": point["n"],
-                }
-            )
-        for series, stats in panel["baselines"].items():
-            if stats is not None:
-                rows.append(
-                    {
-                        "gt_model": gt,
-                        "metric": metric,
-                        "error": error,
-                        "series": series,
-                        "global_step": "",
-                        "mean": stats["mean"],
-                        "err": stats["err"],
-                        "n": stats["n"],
-                    }
-                )
-    return rows
+    """One tidy row per plotted point (``aggregate_tidy_rows``)."""
+    return aggregate_tidy_rows(aggregated)
 
 
 def main(args: Args) -> None:
@@ -157,6 +134,14 @@ def main(args: Args) -> None:
         raise FileNotFoundError(
             f"No run files matched {runs_root}/run*/*/holdout.json — nothing to pool."
         )
+    # Every expected cell, so the unfinished ones are listed, not silently absent.
+    survey = survey_sweep(
+        runs_root,
+        n_repeats=args.n_repeats,
+        gt_models=args.gt_models.split() if args.gt_models else None,
+    )
+    files = [cell / "holdout.json" for _, cell in sorted(survey.complete.items())]
+    labels = sorted(survey.complete)
     results = load_results(files)
     print(f"Pooling {len(files)} impossible-ground-truth run file(s) under {runs_root}")
 
@@ -166,9 +151,10 @@ def main(args: Args) -> None:
     # One CSV holds every metric's pooled points; figures are per metric.
     stem = f"impossible_combined{args.name_suffix}"
     all_rows: List[Mapping[str, Any]] = []
+    cell_lines = accounting_lines(survey, included=labels)
     for metric in metrics:
         aggregated = aggregate_holdout_trajectories(
-            results, metric=metric, error=args.error
+            results, metric=metric, error=args.error, labels=labels
         )
         figure_path = out_dir / f"{stem}_{metric}.pdf"
         plot_holdout_trajectories_combined(
@@ -180,10 +166,15 @@ def main(args: Args) -> None:
         )
         print(f"Wrote {metric} figure to {figure_path}")
         all_rows.extend(tidy_rows(aggregated))
+        cell_lines.extend(aggregate_exclusion_lines(aggregated))
 
     csv_path = out_dir / f"{stem}.csv"
     write_tidy_csv(all_rows, csv_path, columns=TIDY_COLUMNS)
     print(f"Wrote tidy pooled CSV to {csv_path}")
+    cells_path = out_dir / f"{stem}_cells.md"
+    cells_path.write_text("\n".join(cell_lines) + "\n", encoding="utf-8")
+    print("\n".join(accounting_lines(survey, included=labels)))
+    print(f"Wrote the cells each point covers to {cells_path}")
 
 
 if __name__ == "__main__":

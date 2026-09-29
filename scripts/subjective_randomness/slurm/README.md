@@ -72,6 +72,10 @@ Watch: `squeue --me`. A full 3-model repeat takes hours; the array requests
   and `eval_exclusions`: every cell and step whose metrics cover fewer
   held-out pairs than its pool (a model's `p_left` undefined there), and every
   fitted seed likewise (also printed in the analysis log).
+  It also lists every expected cell that is partial (started, no
+  `holdout.json`) or missing (`cells`), and compares, at the end of every
+  experiment, the loop's best model with the fitted-seed baseline fit on that
+  experiment's data over the same cells (`loop_vs_fitted_baseline`).
 - `test_retest.csv` — one row per (gt_model, run) final-step metric.
 - `test_retest.png` — final r per ground-truth model across repeats.
 

@@ -71,7 +71,8 @@ from src.subjective_randomness.holdout_data import (
 from src.subjective_randomness.holdout_eval import (
     build_eval_stimuli,
     evaluate_trajectory,
-    fitted_seed_baseline_correlation,
+    final_fitted_baseline,
+    fitted_seed_baseline_by_experiment,
     seed_baseline_correlation,
     seeded_models_dir,
 )
@@ -706,7 +707,10 @@ def _run_holdout_recovery_resolved(
             gt_models_dir=gt_models_dir,
             gt_family_dir=gt_family_dir,
         )
-        fitted_baseline = fitted_seed_baseline_correlation(
+        # At the end of every experiment, on that experiment's cumulative data
+        # (the loop's own seed fits: cache hits), so every experiment's steps
+        # are compared with the baseline on the data they were fit on.
+        fitted_by_experiment = fitted_seed_baseline_by_experiment(
             run_root,
             gt_model,
             gt_params,
@@ -720,6 +724,7 @@ def _run_holdout_recovery_resolved(
             predict_max_draws=eval_pool["predict_max_draws"],
             exclusions_log=exclusions_log,
         )
+        fitted_baseline = final_fitted_baseline(fitted_by_experiment)
 
         gt_run = {
             "gt_model": gt_model,
@@ -731,6 +736,7 @@ def _run_holdout_recovery_resolved(
             "incumbent": summarise_incumbents(trajectory, starting_models),
             "baseline": baseline,
             "fitted_baseline": fitted_baseline,
+            "fitted_baseline_by_experiment": fitted_by_experiment,
             "leakage": leakage,
             "experiments": [
                 {

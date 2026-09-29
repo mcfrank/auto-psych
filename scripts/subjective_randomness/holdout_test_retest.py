@@ -15,6 +15,12 @@ Pearson r. From the resulting ``gt_model x repeat`` matrix we report:
 * the mean pairwise across-repeat Pearson correlation, and
 * best-model selection agreement (how often the repeats land on the same winner).
 
+It lists the sweep's expected cells that are partial (started, no
+``holdout.json``) or missing (never started) — pass ``--n-repeats`` and
+``--gt-models`` to state the expected grid — and, at the end of every
+experiment, compares the loop's best model with the fitted-seed baseline fit
+on that experiment's data over the same cells (``loop_vs_fitted_baseline``).
+
 It also lists every cell and step whose metrics were computed on fewer held-out
 pairs than the pool (``eval_exclusions``): a trajectory step where some model's
 ``p_left`` is undefined on some pairs (``n_eval_excluded`` in ``holdout.csv``)
@@ -46,6 +52,7 @@ from pyprojroot import here
 sys.path.insert(0, str(here()))
 
 from src.subjective_randomness.config import resolve_path  # noqa: E402
+from src.subjective_randomness.sweep_cells import survey_sweep  # noqa: E402
 
 
 @dataclass
@@ -64,6 +71,12 @@ class Args:
     """Name of the tidy trajectory CSV written under each run<r>/[<gt>]/ dir."""
     metric: str = "pearson_r"
     """Which trajectory column to treat as the recovered fit metric."""
+    n_repeats: Optional[int] = None
+    """The sweep's repeat count, so cells that never started are listed as
+    missing (default: inferred from the run<r>/ directories, and said so)."""
+    gt_models: Optional[str] = None
+    """The sweep's ground truths, space-separated (as GT_MODELS; default:
+    inferred from the directories present, and said so)."""
 
 
 def _final_rows_by_gt(tidy_path: Path, metric: str) -> dict[str, dict]:
@@ -153,6 +166,75 @@ def print_exclusions(exclusions: dict) -> None:
         )
 
 
+# The fitted-seed baseline's field for each trajectory metric it has.
+_FITTED_FIELDS = {"pearson_r": "elpd_best_r", "rmse": "elpd_best_rmse"}
+
+
+def _finite(value) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool) and np.isfinite(value)
+
+
+def loop_vs_fitted_baseline(results: dict[str, dict]) -> list[dict]:
+    """At the end of every experiment, the loop's best model against the
+    fitted-seed baseline fit on the same data, over the same cells.
+
+    ``results`` maps a cell (``run<r>/<gt>``) to its ``holdout.json``. For each
+    ground truth, experiment and metric: the cells where both the loop's value
+    at the experiment's last step and the baseline's
+    (``fitted_baseline_by_experiment``) are defined, their means and the mean
+    paired difference (loop minus baseline), and every other cell with the
+    reason it is left out. A result scored before per-experiment baselines
+    existed has one only for its final experiment (``fitted_baseline``).
+    """
+    rows: list[dict] = []
+    by_key: dict = defaultdict(lambda: {"cells": {}, "excluded": {}})
+    for cell, result in sorted(results.items()):
+        for gt_run in result["gt_runs"]:
+            ends: dict[int, dict] = {}
+            for row in gt_run["trajectory"]:
+                if row["experiment"] not in ends or row["step"] >= ends[row["experiment"]]["step"]:
+                    ends[row["experiment"]] = row
+            final_experiment = max(ends) if ends else 0
+            by_experiment = {
+                int(e["experiment"]): e for e in gt_run.get("fitted_baseline_by_experiment") or []
+            }
+            for experiment, end in sorted(ends.items()):
+                baseline = by_experiment.get(experiment)
+                if baseline is None and not by_experiment and experiment == final_experiment:
+                    baseline = gt_run.get("fitted_baseline")
+                for metric, field in _FITTED_FIELDS.items():
+                    entry = by_key[(gt_run["gt_model"], experiment, metric)]
+                    loop_value = end.get(metric)
+                    base_value = (baseline or {}).get(field)
+                    if not _finite(loop_value):
+                        entry["excluded"][cell] = f"loop {metric} undefined at the end of the experiment"
+                    elif baseline is None:
+                        entry["excluded"][cell] = (
+                            "no fitted-seed baseline for this experiment (scored before "
+                            "per-experiment baselines; re-score it)"
+                        )
+                    elif not _finite(base_value):
+                        entry["excluded"][cell] = (
+                            baseline.get("elpd_best_reason") or f"fitted-seed {field} undefined"
+                        )
+                    else:
+                        entry["cells"][cell] = (float(loop_value), float(base_value))
+    for (gt_model, experiment, metric), entry in sorted(by_key.items()):
+        pairs = list(entry["cells"].values())
+        loop = np.array([p[0] for p in pairs])
+        base = np.array([p[1] for p in pairs])
+        rows.append({
+            "gt_model": gt_model, "experiment": experiment, "metric": metric,
+            "n_cells": len(pairs),
+            "loop_mean": float(loop.mean()) if pairs else None,
+            "fitted_baseline_mean": float(base.mean()) if pairs else None,
+            "mean_difference": float((loop - base).mean()) if pairs else None,
+            "cells": sorted(entry["cells"]),
+            "excluded": dict(sorted(entry["excluded"].items())),
+        })
+    return rows
+
+
 def _as_float(value: Optional[str]) -> Optional[float]:
     if value is None or value == "":
         return None
@@ -217,6 +299,21 @@ def main(args: Args) -> None:
     )
     if not csv_paths:
         raise SystemExit(f"No {args.tidy_name!r} under run*/ in {runs_root}")
+    # Every expected run<r>/<gt> cell, so the cells without a result are
+    # listed rather than silently absent from every number below. (The old
+    # one-file-per-repeat layout has no cells to survey.)
+    survey = None
+    results: dict[str, dict] = {}
+    if any(runs_root.glob(f"run*/*/{args.tidy_name}")):
+        survey = survey_sweep(
+            runs_root,
+            n_repeats=args.n_repeats,
+            gt_models=args.gt_models.split() if args.gt_models else None,
+        )
+        results = {
+            label: json.loads((cell / "holdout.json").read_text(encoding="utf-8"))
+            for label, cell in survey.complete.items()
+        }
 
     EXTRA_METRICS = ("rmse", "kl_regret")
 
@@ -239,7 +336,11 @@ def main(args: Args) -> None:
             per_gt[gt][run_label] = entry
 
     found_runs = sorted(found_runs_set)
-    missing_runs: list[str] = []
+    # Expected cells without a tidy CSV (unfinished or never started).
+    missing_runs = sorted(
+        label for label in (*survey.partial, *survey.missing, *survey.complete)
+        if not (runs_root / label / args.tidy_name).exists()
+    ) if survey is not None else []
 
     gt_models = sorted(per_gt)
     # Complete matrix (gt_models x runs) of the chosen metric, runs present in all.
@@ -309,6 +410,8 @@ def main(args: Args) -> None:
         "per_gt_model": per_gt_summary,
         "per_metric": per_metric,
         "eval_exclusions": exclusion_report(csv_paths, runs_root),
+        "cells": survey.as_dict() if survey is not None else None,
+        "loop_vs_fitted_baseline": loop_vs_fitted_baseline(results),
     }
 
     out_path = resolve_path(args.out)
@@ -316,8 +419,26 @@ def main(args: Args) -> None:
     out_path.write_text(json.dumps(summary, indent=2), encoding="utf-8")
     print(f"Wrote test-retest summary to {out_path}")
     print(f"  runs used: {len(found_runs)} ({', '.join(found_runs)})")
+    if survey is not None:
+        print(
+            f"  cells: {survey.n_expected} expected ({survey.expected_from}); "
+            f"{len(survey.complete)} complete, {len(survey.partial)} partial, "
+            f"{len(survey.missing)} missing"
+        )
+        for label, reason in sorted({**survey.partial, **survey.missing}.items()):
+            print(f"    left out {label}: {reason}")
     if missing_runs:
-        print(f"  runs missing {args.tidy_name}: {', '.join(missing_runs)}")
+        print(f"  cells missing {args.tidy_name}: {', '.join(missing_runs)}")
+    for row in summary["loop_vs_fitted_baseline"]:
+        if row["n_cells"] == 0:
+            print(f"  {row['gt_model']} exp{row['experiment']} {row['metric']}: no cell has both")
+            continue
+        print(
+            f"  {row['gt_model']} end of exp{row['experiment']} {row['metric']}: loop "
+            f"{row['loop_mean']:.4f} vs fitted seeds {row['fitted_baseline_mean']:.4f} "
+            f"(diff {row['mean_difference']:+.4f}, same {row['n_cells']} cells; "
+            f"{len(row['excluded'])} left out)"
+        )
     icc = summary["icc_2_1"]
     mpc = summary["mean_pairwise_corr"]
     print(f"  ICC(2,1) = {'n/a' if icc is None else f'{icc:.3f}'}   "
