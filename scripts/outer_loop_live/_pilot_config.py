@@ -84,6 +84,8 @@ def main() -> None:
             "`coding_agent: claude` needs `claude_auth: subscription` "
             "(CLAUDE_CODE_OAUTH_TOKEN) or `claude_auth: api` (ANTHROPIC_API_KEY)"
         )
+    # The agents' model ("" = the backend's default, e.g. google/gemini-3.1-pro-preview).
+    agent_model = str(cfg.get("agent_model") or "")
     prolific_mode = str(cfg.get("prolific_mode") or "test")  # safe default: test, not live
     if prolific_mode not in VALID_PROLIFIC_MODES:
         die(f"`prolific_mode` must be one of {sorted(VALID_PROLIFIC_MODES)}")
@@ -166,6 +168,7 @@ def main() -> None:
     print(f"  reward            : ${reward/100:,.2f}/participant  (~${reward/minutes*60/100:,.2f}/hr)", file=w)
     print(f"  eligibility       : US residents, English-fluent, approval >= {min_approval}%", file=w)
     print(f"  experiments       : {experiments}  (design=exhaustive; coding agent={coding_agent})", file=w)
+    print(f"  agent model       : {agent_model or 'backend default'}", file=w)
     if prolific_mode == "test":
         print("  prolific mode     : TEST — creates a DRAFT study (NOT published); preview it in "
               "Prolific with a made-up PROLIFIC_PID, then it stops (no collect/model).", file=w)
@@ -199,6 +202,7 @@ def main() -> None:
         "N_EXPERIMENTS": experiments,
         "CODING_AGENT": coding_agent,
         "CLAUDE_AUTH": claude_auth,
+        "CODING_AGENT_MODEL": agent_model,
         "PROLIFIC_MODE": prolific_mode,
         "CONFIRM_LIVE_RECRUITMENT": "1" if confirm_live else "",
         "FIREBASE_PROJECT": firebase_project,

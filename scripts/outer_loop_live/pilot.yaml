@@ -16,6 +16,8 @@ experiments: 2                     # how many experiments to run, in sequence (1
                                    # (Stimulus design is always the exhaustive joint-EIG selection.)
 coding_agent: opencode             # backend for ALL coding agents (implement/inner loop):
                                    # opencode (opencode + Gemini, default) | claude (Claude Code)
+# agent_model: google/gemini-3.7-flash  # optional: the agents' model (default: the backend's,
+                                   # google/gemini-3.1-pro-preview for opencode, claude-sonnet-4-6 for claude)
 # claude_auth: subscription        # required with coding_agent: claude — how its agents are billed:
                                    # subscription (CLAUDE_CODE_OAUTH_TOKEN) | api (ANTHROPIC_API_KEY)
 prolific_mode: test                # test = deploy, then create a DRAFT study (NOT published) and STOP so you
