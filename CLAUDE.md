@@ -182,6 +182,14 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 - `src/critique/ppc.py` — CriticAL posterior-predictive check: agent-written
   `test_statistic(df) -> float` scored against posterior-predictive replicates,
   two-sided empirical p + BH-FDR q; results steer the next candidate round.
+  The critique agent's context is inlined into its prompt
+  (`critique_round._build_critique_prompt`); an agent that writes no usable
+  statistic is retried once, then the round runs with **no** critique and the
+  round's `history.json` entry records `"no_critique"`. There is no
+  pipeline-written fallback battery — one existed and, under the raw-only
+  schema, reduced to the marginal choice rate, which hid a critique subsystem
+  that had never produced a statistic through an entire sweep.
+  `verify_holdout_run.sh` warns when no round of an experiment was critiqued.
 - `src/runtime/coding_agent.py` — backend-agnostic agent launcher.
   `run_coding_agent(...)` is the single call site; `select_backend` resolves
   explicit arg → `CODING_AGENT` env → `opencode` default. `claude` uses

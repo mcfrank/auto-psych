@@ -21,7 +21,10 @@ Active development is organized around two explicit loops:
   observed data go to the inner model loop.
 - `src/pipelines/inner_loop`: **model-discovery loop** — the only place new
   hypotheses enter. Each round it critiques the incumbent best model with a
-  CriticAL posterior-predictive check (`src/critique`), then spawns candidate
+  CriticAL posterior-predictive check (`src/critique`) — the critique agent
+  proposes the test statistics; if it writes none it is retried once, and
+  after that the round runs with no critique and `history.json` says so (the
+  pipeline never substitutes statistics of its own) — then spawns candidate
   agents in parallel, each steered by a distinct exploration lens, to write one
   new single-mechanism PyMC model apiece (self-named via `model_name.txt`).
   Candidates are admitted only if they fit by MCMC, achieve finite ELPD-LOO,
@@ -67,7 +70,7 @@ dataclass — `--help` lists every knob with its documented default.
 | `python -m src.pipelines.outer_loop.run` | The main pipeline: per experiment, seed/carry-forward the model set → `2_design` (programmatic exhaustive EIG selection) → `3_implement` (+ Firebase deploy when `--deploy-target firebase`) → `4_collect` → `5_model_loop`. `--agent <stage>` reruns one stage; `--resume` continues an existing tree. |
 | `python -m src.pipelines.inner_loop.run` | The inner model loop standalone, on an already-featurized responses CSV + a seed-model dir. Exposes all discovery knobs (`--hints-file`, `--novelty-rmse-threshold`, `--prune-*`, `--candidate-parallelism`). |
 | `python -m src.pipelines.outer_loop.eig` | Exhaustive stimulus design against a model dir: enumerates every H/T pair over `--lengths` and greedily selects the max-joint-EIG set of `--select` stimuli (prior-predictive; `--registry` weights the models, `--responses` designs from the posterior). The pipeline's design stage runs this logic; the CLI is also usable directly. |
-| `python -m src.critique.ppc` | The CriticAL posterior-predictive harness: computes agent-proposed test statistics on observed vs. replicated data (raw p + BH-FDR q). Run by the critique agent; usable standalone on any fitted model. |
+| `python -m src.critique.ppc` | The CriticAL posterior-predictive harness: computes agent-proposed test statistics on observed vs. replicated data (raw p + BH-FDR q). The inner loop runs it over the critique agent's statistics; usable standalone on any fitted model. |
 | `python -m src.model_comparison.posterior` | Fit + ELPD-LOO-compare every model in a manifest dir on a responses CSV. |
 
 **Cluster launchers (live runs — real money)** — see
@@ -193,10 +196,10 @@ model_loop/
 model_loop/models/                             # the model zoo (seeds + admitted candidates, each with <name>.hypothesis.md)
 model_loop/models/pruned/                      # models pruned as clear losers (audit trail)
 model_loop/model_posterior.json                # posterior + ELPD-LOO + az.compare table (stacking weights)
-model_loop/history.json                        # best model + posterior after every scoring step
-model_loop/iter_<i>/critique/test_stats/*.py   # proposed test statistics
-model_loop/iter_<i>/critique/ppc_results.json  # empirical + FDR-adjusted p-values
-model_loop/iter_<i>/critique/critiques.md      # significant discrepancies of the incumbent
+model_loop/history.json                        # best model + posterior after every scoring step, and each round's critique status
+model_loop/iter_<i>/critique/test_stats/*.py   # the critique agent's test statistics (none ⇒ the round had no critique)
+model_loop/iter_<i>/critique/ppc_results.json  # empirical + FDR-adjusted p-values (absent when the round had no critique)
+model_loop/iter_<i>/critique/critiques.md      # significant discrepancies of the incumbent (absent when the round had no critique)
 cognitive_models/<winning_model>.py            # a NEW winning candidate, exported under its own name
 cognitive_models/models_manifest.yaml          # the carried model set (name + hypothesis rationale)
 token_usage.jsonl                              # one line per LLM call/agent run (tokens + cost, labelled by stage)
