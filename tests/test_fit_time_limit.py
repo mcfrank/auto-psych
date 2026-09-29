@@ -137,6 +137,10 @@ def test_the_limit_must_be_positive(tmp_path):
 # ---------------------------------------------------------------------------
 
 
+class _StubFit(dict):
+    fingerprint = "first-fit-fingerprint"
+
+
 def _limited_fit_model(monkeypatch, *, outcomes, near_miss):
     """fit_model with the child process and the loading stubbed."""
     runs = []
@@ -153,7 +157,7 @@ def _limited_fit_model(monkeypatch, *, outcomes, near_miss):
         return [outcome]
 
     def fake_fit_once(name, models_dir, responses_path, settings, cache_dir):
-        return {"target_accept": settings["target_accept"]}
+        return _StubFit(target_accept=settings["target_accept"])
 
     monkeypatch.setattr(pi, "sample_fits_time_limited", fake_sample)
     monkeypatch.setattr(pi, "_fit_once", fake_fit_once)

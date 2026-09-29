@@ -8,8 +8,9 @@ measures whether single trials dominate the fit, not whether the chains mixed.
 A fit is converged when at most 0.1% of its transitions diverged and R-hat <=
 1.05 and bulk ESS >= 100 on every free parameter (user decision 2026-09-26: the
 stricter 1.01 / 400 / zero-divergence gate rejected most seeds at the sweep's
-target_accept). A fit that fails is refit once at target_accept 0.95, and that
-fit is used everywhere. A model file's declared target_accept is a floor on
+target_accept). A fit that fails as a near miss is refit once at
+target_accept 0.95, with a random seed of its own, and that fit is used
+everywhere. A model file's declared target_accept is a floor on
 the loop's.
 """
 
@@ -154,13 +155,24 @@ NEAR_MISS = pi.ConvergenceDiagnostics(n_divergent=25, n_draws=4000, max_r_hat=1.
 HOPELESS = pi.ConvergenceDiagnostics(n_divergent=1000, n_draws=4000, max_r_hat=2.5, min_bulk_ess=5)
 
 
-def _escalation(monkeypatch, *, converges_at, diagnostics=NEAR_MISS):
-    """fit_model with the sampling stubbed: record each target_accept tried."""
+class _StubFit(dict):
+    """A stubbed fit: its settings, and a fingerprint made from them."""
+
+    @property
+    def fingerprint(self):
+        return f"fp-{self['target_accept']}-{self['random_seed']}"
+
+
+def _escalation(monkeypatch, *, converges_at, diagnostics=NEAR_MISS, seeds=None):
+    """fit_model with the sampling stubbed: record each target_accept tried
+    (and, in ``seeds``, each random seed)."""
     tried = []
 
     def fake_fit_once(name, models_dir, responses_path, settings, cache_dir):
         tried.append(settings["target_accept"])
-        return {"target_accept": settings["target_accept"]}
+        if seeds is not None:
+            seeds.append(settings["random_seed"])
+        return _StubFit(target_accept=settings["target_accept"], random_seed=settings["random_seed"])
 
     monkeypatch.setattr(pi, "_fit_once", fake_fit_once)
     monkeypatch.setattr(
@@ -177,6 +189,45 @@ def test_a_near_miss_is_refit_once_at_0_95(tmp_path, monkeypatch):
     fitted = pi.fit_model("m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4)
     assert tried == [0.8, 0.95]
     assert fitted["target_accept"] == 0.95
+
+
+def test_the_refit_samples_with_a_random_seed_of_its_own(tmp_path, monkeypatch):
+    """It used to reuse the first fit's seed (42), re-sampling from the same
+    draws. Its seed now comes from the first fit's seed and fingerprint."""
+    seeds = []
+    _escalation(monkeypatch, converges_at=0.95, seeds=seeds)
+    pi.fit_model("m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4)
+    first_fingerprint = _StubFit(target_accept=0.8, random_seed=42).fingerprint
+    assert seeds == [42, pi.refit_random_seed(42, first_fingerprint)]
+    assert seeds[1] != 42
+
+
+def test_refit_seeds_are_deterministic_and_differ_between_fits():
+    assert pi.refit_random_seed(42, "aaaa") == pi.refit_random_seed(42, "aaaa")
+    seeds = {pi.refit_random_seed(42, fp) for fp in ("aaaa", "bbbb", "cccc")}
+    assert len(seeds) == 3 and 42 not in seeds
+    assert pi.refit_random_seed(7, "aaaa") != pi.refit_random_seed(42, "aaaa")
+    assert all(0 <= seed < 2**31 for seed in seeds)
+
+
+def test_the_refit_seed_is_part_of_the_refits_cache_fingerprint(tmp_path):
+    """A resume finds the refit it sampled, and never a refit sampled at the
+    first fit's seed (the old code's) in its place."""
+    (tmp_path / "m.py").write_text("# model\n", encoding="utf-8")
+    (tmp_path / "other.py").write_text("# another model\n", encoding="utf-8")
+    responses = tmp_path / "r.csv"
+    responses.write_text("chose_left\n1\n", encoding="utf-8")
+    settings = pi.resolve_fit_settings("m", tmp_path, {"target_accept": 0.8})
+    first = pi.fit_fingerprint("m", tmp_path, responses, settings)
+    refit = pi.refit_settings(settings, first)
+    assert refit["target_accept"] == 0.95
+    assert refit["random_seed"] == pi.refit_random_seed(settings["random_seed"], first)
+    old_style = {**settings, "target_accept": 0.95}
+    assert pi.fit_fingerprint("m", tmp_path, responses, refit) != pi.fit_fingerprint(
+        "m", tmp_path, responses, old_style
+    )
+    other_first = pi.fit_fingerprint("other", tmp_path, responses, settings)
+    assert pi.refit_settings(settings, other_first)["random_seed"] != refit["random_seed"]
 
 
 def test_a_fit_far_from_converging_is_not_refit(tmp_path, monkeypatch, capsys):

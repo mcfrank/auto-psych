@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 import yaml
@@ -159,14 +160,17 @@ def test_concurrent_fits_sample_first_fits_then_the_near_miss_refits(tmp_path, m
     responses.write_text("chose_left\n1\n", encoding="utf-8")
     batches = []
 
+    refit_seeds = []
+
     def fake_sample(requests, *, time_limit_sec, workers):
         batches.append([(r.name, r.settings["target_accept"]) for r in requests])
+        refit_seeds.extend(r.settings["random_seed"] for r in requests if r.settings["target_accept"] == 0.95)
         return [pi.FitTimeLimitExceeded(r.name, time_limit_sec, 0.8) if r.name == "slow" else None
                 for r in requests]
 
     monkeypatch.setattr(pi, "sample_fits_time_limited", fake_sample)
-    monkeypatch.setattr(pi, "_fit_once", lambda name, *a: name)
-    monkeypatch.setattr(pi, "_refit_decision", lambda name, fitted, settings: name == "near")
+    monkeypatch.setattr(pi, "_fit_once", lambda name, *a: SimpleNamespace(name=name, fingerprint=f"fp-{name}"))
+    monkeypatch.setattr(pi, "_refit_decision", lambda name, fitted, settings: fitted.name == "near")
     monkeypatch.setattr(pi, "allocated_cpus", lambda: 16)
 
     pi.fit_time_limited_concurrently(
@@ -175,6 +179,8 @@ def test_concurrent_fits_sample_first_fits_then_the_near_miss_refits(tmp_path, m
     )
 
     assert batches == [[("fine", 0.8), ("near", 0.8), ("slow", 0.8)], [("near", 0.95)]]
+    # The refit samples with its own seed, derived from the first fit's.
+    assert refit_seeds == [pi.refit_random_seed(42, "fp-near")]
 
 
 # ---------------------------------------------------------------------------
