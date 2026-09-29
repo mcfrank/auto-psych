@@ -271,9 +271,18 @@ def test_top_pairs_matches_dense_reference_across_tile_sizes(tile):
 
     ref_i, ref_j, ref_eig = _dense_reference(table, w, top_k=10)
     got_i, got_j, got_eig = es.top_pairs_by_marginal_eig(table, w, top_k=10, tile=tile)
-    assert np.array_equal(ref_i, got_i)
-    assert np.array_equal(ref_j, got_j)
+
+    # Same pairs, same EIGs, still ranked — but not necessarily in the same
+    # order *within a tie*. This universe contains pairs whose true EIG is
+    # equal, and the tiled scan sums in a different order than the dense
+    # reference: at tile=1 ranks 4 and 5 swap on a 1.1e-16 difference (one ulp),
+    # with no numerical error anywhere. Asserting index-by-index identity
+    # pinned an arbitrary argsort outcome, not a property of the algorithm.
     assert np.allclose(ref_eig, got_eig, atol=1e-12)
+    assert set(zip(ref_i.tolist(), ref_j.tolist())) == set(
+        zip(got_i.tolist(), got_j.tolist())
+    )
+    assert np.all(np.diff(got_eig) <= 1e-12), "results must stay ranked by EIG"
 
 
 def test_top_pairs_is_exactly_deterministic_given_fixed_arguments():

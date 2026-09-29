@@ -240,7 +240,7 @@ def test_legacy_compat_reproduces_the_historical_algorithm():
     reproduced on this one (verified failing at 1c8436c, the commit that
     introduced it). What IS stable, and is asserted below: the multiset of EIG
     values (tie partners share an EIG by construction, so swapping one changes
-    nothing), the selections that are tie-free by a wide margin, the selection
+    nothing), each selection up to complement symmetry, the selection
     bookkeeping, the candidate universe, and determinism.
     """
     sel = build_exhaustive_design(
@@ -263,10 +263,20 @@ def test_legacy_compat_reproduces_the_historical_algorithm():
         [0.120592, 0.125002, 0.125002, 0.149885, 0.149885], abs=1e-6
     )
 
-    # The first selection is not a tie: its mean posterior entropy beats the
-    # runner-up's by a relative 4.6e-3 (measured), a margin no libm rounding
-    # difference can cross, and exactly one candidate attains the minimum.
-    assert pairs[0] == ("HTH", "HTTH")
+    # The first selection, up to complement symmetry. The earlier pin here
+    # claimed this selection was tie-free by a wide margin; it is not. Every
+    # model here scores a sequence by its structure (runs, alternations,
+    # motifs), all invariant under relabelling H<->T, so complementing *either*
+    # sequence of a pair leaves every model's p_left — and therefore the pair's
+    # EIG — exactly unchanged. Four pairs tie, and which one argsort returns
+    # differs by machine on a last-ulp difference: this cluster returns
+    # ("THT", "THHT"), the CI runner ("THT", "HTTH"). Canonicalising each
+    # sequence collapses all four, so the assertion pins the selection without
+    # picking a winner among equals.
+    def canonical(seq: str) -> str:
+        return min(seq, seq.translate(str.maketrans("HT", "TH")))
+
+    assert tuple(canonical(s) for s in pairs[0]) == ("HTH", "HTTH")
 
     repeat = build_exhaustive_design(
         k=5, lengths=(3, 4), n_scenarios=200, prefilter=200, seed=0, legacy_compat=True
