@@ -28,6 +28,16 @@ REFACTOR_NOTES.md
 /src/subjective_randomness/model_recovery.py
 /src/subjective_randomness/pymc_recover.py
 /src/subjective_randomness/model_families/
+# The PyMC registry holds alternative implementations of the ground truths: for
+# a motif_stack holdout, motif_stack_softmax.py and motif_stack_tempered.py
+# describe the held-out mechanism in full and motif_hmm.py is a close sibling.
+# The array sbatch deletes only <gt>.py, so until now those were covered ONLY by
+# opencode's read/glob/grep deny-list — which the claude and codex backends
+# ignore entirely. Exclude the directory outright, symmetric with
+# model_families/ above. The pipeline reads this registry from the harness
+# checkout (--gt-models-dir / the config's seed_models_dir), never from the
+# agent tree.
+/src/subjective_randomness/pymc_model_families/
 
 # Holdout configs name the GT models
 /scripts/subjective_randomness/configs/holdout_recovery*.yaml

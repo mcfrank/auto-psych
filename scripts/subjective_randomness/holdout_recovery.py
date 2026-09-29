@@ -113,8 +113,16 @@ class Args:
     """Override the config's RNG seed for the synthetic choices."""
     agent_timeout_sec: Optional[int] = None
     """Override the per-agent timeout in seconds."""
-    backend: Optional[Literal["claude", "opencode"]] = None
-    """Override the coding-agent backend (default: config, then CODING_AGENT env)."""
+    backend: Optional[Literal["claude", "opencode", "codex"]] = None
+    """Override the coding-agent backend (default: config, then CODING_AGENT env).
+
+    ``codex`` reads the ChatGPT subscription login at ``~/.codex/auth.json``.
+    Only ``opencode`` honours the read/glob/grep deny-list the array sbatch
+    writes into ``opencode.json``; ``claude`` and ``codex`` ignore it, so with
+    those backends the ground-truth material must be kept out of the agent tree
+    physically — see ``agent_tree.exclude`` and the GT-leak verifier in
+    ``holdout_recovery_array.sbatch``.
+    """
     agent_model: Optional[str] = None
     """Override the coding-agent model id (default: the config's agent.model,
     then the backend's default). Per-backend format — opencode wants

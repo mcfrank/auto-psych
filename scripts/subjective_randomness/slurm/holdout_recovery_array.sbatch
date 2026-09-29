@@ -208,6 +208,14 @@ cd "$RUN_REPO"
 # covers that case: a superseded GT was never listed). Run from $RUN_REPO so
 # pyprojroot resolves the copy; the --models-dir paths are absolute regardless.
 for models_rel in "$SEED_MODELS_REL" "$POOL_MODELS_REL"; do
+  # A directory the agent tree excludes outright (agent_tree.exclude now drops
+  # the whole PyMC registry, whose files describe the ground truths) has nothing
+  # left to scrub. An absent directory is fine; a present one without a manifest
+  # is still an error.
+  if [[ ! -d "$RUN_REPO/$models_rel" ]]; then
+    echo "[task $TASK] $models_rel is not in the agent tree (excluded) — nothing to scrub"
+    continue
+  fi
   [[ -f "$RUN_REPO/$models_rel/models_manifest.yaml" ]] || { echo "ERROR: no manifest at $RUN_REPO/$models_rel" >&2; exit 1; }
   "$VENV_PY" "$RUN_REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
     --models-dir "$RUN_REPO/$models_rel" --name "$GT" --missing-ok
@@ -231,6 +239,49 @@ while IFS= read -r -d '' mf; do
     echo "[task $TASK] scrubbed $GT from additional manifest: $mf_rel"
   fi
 done < <(find "$RUN_REPO" -name "models_manifest.yaml" -not -path "*/_runs/*" -print0)
+
+# --- GT-leak verifier: backend-agnostic, runs for EVERY backend --------------
+# Everything above this point that protects the ground truth is either physical
+# (rsync excludes, rm of <gt>.py, manifest scrubs) or a permission rule in
+# opencode.json. Only opencode reads that file: the claude backend runs with
+# --dangerously-skip-permissions, and codex's sandbox is pinned by enterprise
+# policy to a profile with filesystem read access. So for those backends the
+# deny-list is inert and the physical scrub is the ONLY protection. Assert it
+# actually worked, before a single agent starts, rather than discovering after
+# the fact that a cell "recovered" the ground truth by reading it.
+# Remove every file in the agent tree NAMED after the held-out model. Beyond
+# the registry entry the step above deletes, the checkout carries unit tests and
+# analysis scripts for the ground truths (test_motif_stack_softmax.py,
+# compare_motif_stack_predictions.py, ...). A test for a mechanism encodes that
+# mechanism, and opencode's deny-list covers neither tests/ nor scripts/ — so
+# these have been readable in every run to date, under every backend. Keyed on
+# $GT so it generalises to any held-out model; nothing the pipeline runs lives
+# under these names (the harness runs from its own full checkout).
+while IFS= read -r -d '' named; do
+  rm -f "$named"
+  echo "[task $TASK] removed GT-named file from agent tree: ${named#$RUN_REPO/}"
+done < <(find "$RUN_REPO" -name "*${GT}*" -type f -not -path "*/_runs/*" -print0)
+
+# Assert the three physical protections actually landed. A blanket grep for
+# "$GT" is useless here — 40-odd benign files name it (this script, the exclude
+# file, the watchdog, docs) — so check the artefacts that carry the *mechanism*:
+# the two model-family directories must be absent from the tree entirely, and
+# no implementation file for the held-out model may remain anywhere.
+for forbidden_dir in src/subjective_randomness/pymc_model_families \
+                     src/subjective_randomness/model_families; do
+  if [[ -d "$RUN_REPO/$forbidden_dir" ]]; then
+    echo "ERROR: $forbidden_dir is present in the agent tree; it holds implementations of the ground truths." >&2
+    echo "Add it to agent_tree.exclude. (Only opencode honours the read deny-list; claude and codex ignore it.)" >&2
+    exit 1
+  fi
+done
+leak_files=$(find "$RUN_REPO" -name "*${GT}*.py" -not -path "*/_runs/*" 2>/dev/null || true)
+if [[ -n "$leak_files" ]]; then
+  echo "ERROR: implementation files for the held-out ground truth '$GT' remain in the agent tree:" >&2
+  printf '  %s\n' ${leak_files//$RUN_REPO\//} >&2
+  exit 1
+fi
+echo "[task $TASK] GT-leak verifier: no ${GT} implementation and no model-family dir in the agent tree"
 
 # Optional cheap-run overrides (set by SMOKE mode or by hand). Values are
 # numeric, so unquoted word-splitting below is safe.
