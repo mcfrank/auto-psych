@@ -72,7 +72,15 @@ models, weighted by the reported posterior.
   headline numbers are `elpd_best_r` and `elpd_best_rmse`. **The key question
   is whether the loop's final model beats the fitted baseline.** If not, the
   agents' new models added nothing that refitting the literature models could
-  not.
+  not. `fitted_baseline_by_experiment` repeats it at the end of every
+  experiment on that experiment's data, so each experiment's steps are
+  compared with the seeds fitted on the same data (the last entry is
+  `fitted_baseline`).
+- Sweep summaries (the test-retest summary, the recovery report, the combined
+  figures) list the cells that did not finish or never started, align the
+  loop's steps by experiment (seed step, rounds every cell ran, end of
+  experiment), and average the loop and every baseline over the same cells at
+  each point.
 
 A *cell* (a code term) is one repeat of one held-out model. A standard
 sweep is 4 held-out models × 5 repeats = 20 cells. Repeats differ only in their

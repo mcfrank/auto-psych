@@ -184,7 +184,8 @@ recover them.
 
 **Fitted-seed baseline** (code: `fitted_baseline`). The remaining starting
 models fitted to the same data. The loop must beat it to show that discovery
-added something.
+added something. `fitted_baseline_by_experiment` has it at the end of every
+experiment, fitted on that experiment's cumulative data.
 
 **Leak / leakage** (code terms). Any route by which the hidden model's
 identity could reach the agents. Checked before the agents start (name scan) and

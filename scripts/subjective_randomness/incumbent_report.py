@@ -1,6 +1,7 @@
 """CLI: the incumbent record over a finished holdout sweep.
 
-For every cell ``run<r>/<gt>/`` of a sweep, read the inner-loop
+For every complete cell ``run<r>/<gt>/`` of a sweep (one with its
+``holdout.json``; partial and missing cells are listed, not counted), read the inner-loop
 ``history.json`` of each experiment (from the cell's archived
 ``agent_runs.tar.gz`` or its kept repo copy), and report the loop-improvement
 plan's primary metric: how many scoring steps exported a different best model
@@ -37,6 +38,11 @@ from src.subjective_randomness.incumbent import (  # noqa: E402
     cell_histories,
     incumbent_summary_for_histories,
 )
+from src.subjective_randomness.sweep_cells import (  # noqa: E402
+    SweepSurvey,
+    accounting_lines,
+    survey_sweep,
+)
 
 
 @dataclass
@@ -51,6 +57,12 @@ class Args:
     it (same stem, .json)."""
     gt_model: Optional[str] = None
     """Only report the cells of this ground truth."""
+    n_repeats: Optional[int] = None
+    """The sweep's repeat count, so cells that never started are listed as
+    missing (default: inferred from the run<r>/ directories, and said so)."""
+    gt_models: Optional[str] = None
+    """The sweep's ground truths, space-separated (as GT_MODELS; default:
+    inferred from the directories present, and said so)."""
 
 
 def discover_cells(sweep: Path, *, gt_model: Optional[str] = None) -> Dict[str, Path]:
@@ -113,11 +125,14 @@ def _format_changes(record: Dict[str, Any]) -> str:
     )
 
 
-def render_markdown(sweep: Path, records: Dict[str, Dict[str, Any]]) -> str:
+def render_markdown(
+    sweep: Path, records: Dict[str, Dict[str, Any]], survey: Optional[SweepSurvey] = None
+) -> str:
     total = totals(records)
     lines = [
         f"# Incumbent record: `{sweep}`",
         "",
+        *(accounting_lines(survey, included=list(records)) if survey is not None else []),
         "Per cell: scoring steps, steps at which the exported best model differed "
         "from the previous step's, steps at which it was a discovered model (not "
         "scored at experiment 1's seed step), the final incumbent, and the changes.",
@@ -145,16 +160,29 @@ def render_markdown(sweep: Path, records: Dict[str, Dict[str, Any]]) -> str:
 
 
 def main(args: Args) -> None:
-    cells = discover_cells(args.sweep, gt_model=args.gt_model)
-    records = incumbent_records(cells)
-    markdown = render_markdown(args.sweep, records)
+    # Only complete cells (a holdout.json): a cell that stopped part-way has a
+    # run record too, and used to be counted as if its steps were the whole
+    # cell. The unfinished and never-started cells are listed instead.
+    survey = survey_sweep(
+        args.sweep,
+        n_repeats=args.n_repeats,
+        gt_models=args.gt_models.split() if args.gt_models else None,
+    ).select(args.gt_model)
+    if not survey.complete:
+        selection = f" for ground truth {args.gt_model!r}" if args.gt_model else ""
+        raise FileNotFoundError(
+            f"No complete run<r>/<gt>/ cells (with holdout.json){selection} under {args.sweep}"
+        )
+    records = incumbent_records(dict(sorted(survey.complete.items())))
+    markdown = render_markdown(args.sweep, records, survey)
     out_md = Path(args.out)
     out_md.parent.mkdir(parents=True, exist_ok=True)
     out_md.write_text(markdown, encoding="utf-8")
     out_json = out_md.with_suffix(".json")
     out_json.write_text(
         json.dumps(
-            {"sweep": str(args.sweep), "cells": records, "totals": totals(records)},
+            {"sweep": str(args.sweep), "cells": records, "totals": totals(records),
+             "cell_survey": survey.as_dict()},
             indent=2,
         ),
         encoding="utf-8",

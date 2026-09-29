@@ -136,3 +136,17 @@ def test_ceiling_runs_end_to_end_on_a_real_archived_cell():
     assert result.oracle_rmse == pytest.approx(0.0, abs=1e-12)
     assert 0.0 <= result.ceiling_rmse < 1.0
     assert result.gt_model == cell_dir.name
+
+
+def test_the_ceiling_beside_the_loop_covers_the_same_cells():
+    run = CeilingRun(
+        cells=[
+            CellCeiling("run1/a", "a", 10, 0.01, 0.0, 0.0, loop_rmse=0.05, gap_to_ceiling=0.04),
+            CellCeiling("run2/a", "a", 10, 0.05, 0.0, 0.0, loop_rmse=None, gap_to_ceiling=None),
+        ]
+    )
+    (row,) = summarize_by_ground_truth(run)
+    assert row["mean_ceiling_rmse"] == pytest.approx(0.03)  # every scored cell
+    assert row["n_with_loop"] == 1
+    assert row["mean_ceiling_rmse_same_cells"] == pytest.approx(0.01)
+    assert row["mean_loop_rmse"] == pytest.approx(0.05)

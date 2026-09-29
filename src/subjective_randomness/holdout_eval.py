@@ -355,6 +355,7 @@ def _fitted_seed_baseline(
     predict_max_draws: Optional[int] = None,
     eval_stimuli: Optional[Sequence[Mapping[str, str]]] = None,
     exclusions_log: Optional[Path] = None,
+    exclusion_record: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Fit each seed model (its file in ``models_dir``) on ``responses_path``
     and correlate with GT.
@@ -397,7 +398,8 @@ def _fitted_seed_baseline(
         if not valid.all():
             _report_exclusions(
                 f"fitted-seed baseline, seed {name!r}", valid, [name], eval_stimuli,
-                exclusions_log, {"scored": "fitted_seed_baseline", "model": name},
+                exclusions_log,
+                {"scored": "fitted_seed_baseline", "model": name, **(exclusion_record or {})},
             )
         loo = fitted.loo_diagnostics()
         per_model[name] = {
@@ -407,13 +409,18 @@ def _fitted_seed_baseline(
             "trusted": not loo.unreliable and not fitted.convergence_problems(),
             "n_eval_excluded": int((~valid).sum()),
         }
-    rs = [v["pearson_r"] for v in per_model.values() if v["pearson_r"] is not None]
+    # The two reference means cover different seeds when a seed predicts a
+    # constant (its r is undefined, its RMSE is not); each names its seeds.
+    r_models = [name for name, v in per_model.items() if v["pearson_r"] is not None]
+    rs = [per_model[name]["pearson_r"] for name in r_models]
     rmses = [v["rmse"] for v in per_model.values()]
     trusted = [name for name, v in per_model.items() if v["trusted"]]
     best = max(trusted, key=lambda name: per_model[name]["elpd_loo"]) if trusted else None
     return {
         "pearson_r": float(np.mean(rs)) if rs else None,
         "rmse": float(np.mean(rmses)) if rmses else None,
+        "mean_r_models": r_models,
+        "mean_rmse_models": list(per_model),
         "per_model": per_model,
         "elpd_best_model": best,
         "elpd_best_r": per_model[best]["pearson_r"] if best else None,
@@ -702,8 +709,13 @@ def fitted_seed_baseline_correlation(
     gt_models_dir: Optional[Path] = None,
     predict_max_draws: Optional[int] = None,
     exclusions_log: Optional[Path] = None,
+    exclusion_record: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
     """Fitted-seed baseline: other seed models fit on *all* collected data.
+
+    "All" is experiments ``1..n_experiments``: passing a smaller
+    ``n_experiments`` scores the baseline at the end of that experiment
+    (``fitted_seed_baseline_by_experiment``).
 
     Fits each non-GT seed model once on every experiment's responses (each
     counted once), predicts held-out ``p_left``, and correlates with the
@@ -741,6 +753,7 @@ def fitted_seed_baseline_correlation(
         predict_max_draws=predict_max_draws,
         eval_stimuli=eval_stimuli,
         exclusions_log=exclusions_log,
+        exclusion_record=exclusion_record,
     )
     if baseline["pearson_r"] is None:
         raise ValueError(
@@ -751,6 +764,47 @@ def fitted_seed_baseline_correlation(
     baseline["mean_rmse"] = baseline.pop("rmse")
     baseline["n_responses"] = n_responses
     return baseline
+
+
+def fitted_seed_baseline_by_experiment(
+    run_root: Path,
+    gt_model: str,
+    gt_params: Mapping[str, float],
+    eval_stimuli: Sequence[Mapping[str, str]],
+    *,
+    n_experiments: int,
+    **kwargs: Any,
+) -> List[Dict[str, Any]]:
+    """The fitted-seed baseline at the end of every experiment, one entry per
+    experiment ``k`` (``"experiment": k``), each fit on that experiment's
+    cumulative data (experiments 1..k, the data the loop's step at the end of
+    experiment ``k`` was fit on) — ``fitted_seed_baseline_correlation`` with
+    ``n_experiments=k``. The seed fits are the loop's own, so with the run's
+    ``cache_dir`` they are cache hits. The last entry is the ``fitted_baseline``
+    the harness records (the final data).
+
+    The baseline used to be scored only on the final data and drawn flat
+    across every step, so only the final experiment's steps were compared with
+    it on the same data (second audit W1).
+    """
+    return [
+        {
+            "experiment": k,
+            **fitted_seed_baseline_correlation(
+                run_root, gt_model, gt_params, eval_stimuli, n_experiments=k,
+                exclusion_record={"experiment": k}, **kwargs,
+            ),
+        }
+        for k in range(1, n_experiments + 1)
+    ]
+
+
+def final_fitted_baseline(by_experiment: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
+    """``fitted_baseline`` (the final data's) from the per-experiment list: its
+    last entry without the ``experiment`` key, so the field keeps its meaning."""
+    final = dict(by_experiment[-1])
+    final.pop("experiment")
+    return final
 
 
 def reevaluate_trajectories(
@@ -842,7 +896,7 @@ def reevaluate_trajectories(
             seeded_models_dir=seeded_models_dir(run_root),
             gt_models_dir=gt_models_dir,
         )
-        fitted_baseline = fitted_seed_baseline_correlation(
+        fitted_by_experiment = fitted_seed_baseline_by_experiment(
             run_root,
             gt_run["gt_model"],
             gt_run["params"],
@@ -855,6 +909,7 @@ def reevaluate_trajectories(
             gt_models_dir=gt_models_dir,
             predict_max_draws=predict_max_draws,
         )
+        fitted_baseline = final_fitted_baseline(fitted_by_experiment)
         # The incumbent record is recomputed from the on-disk histories exactly
         # as the live harness computes it (see _run_holdout_recovery_resolved).
         starting_models = starting_models_of_run(run_root)
@@ -865,6 +920,7 @@ def reevaluate_trajectories(
             "incumbent": summarise_incumbents(trajectory, starting_models),
             "baseline": baseline,
             "fitted_baseline": fitted_baseline,
+            "fitted_baseline_by_experiment": fitted_by_experiment,
         }
         if rebuilt is not None:
             new_run["n_eval_stimuli"] = len(rebuilt["stimuli"])

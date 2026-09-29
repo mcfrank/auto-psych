@@ -181,6 +181,12 @@ def main(args: Args) -> None:
         cells_b = {cell_b_key: cells_b[cell_b_key]}
 
     common_keys = sorted(set(cells_a) & set(cells_b))
+    # A cell finished in only one sweep has no pair; say so rather than let it
+    # drop out of the comparison unseen.
+    unmatched = {
+        key: f"complete only in {'A' if key in cells_a else 'B'}"
+        for key in sorted(set(cells_a) ^ set(cells_b))
+    }
     if not common_keys:
         raise SystemExit(
             f"No common cells between {sweep_a} and {sweep_b}. "
@@ -296,6 +302,7 @@ def main(args: Args) -> None:
         "pairs": pairs,
         "per_gt": per_gt,
         "unreconstructable": unreconstructable,
+        "unmatched": unmatched,
     }
 
     (out_dir / "paired.json").write_text(json.dumps(output, indent=2), encoding="utf-8")
@@ -309,6 +316,8 @@ def main(args: Args) -> None:
         writer.writerows(pairs)
 
     print(f"Wrote {len(pairs)} paired comparisons to {out_dir}")
+    for key, reason in unmatched.items():
+        print(f"  unpaired {key}: {reason}")
     if unreconstructable:
         print(f"  {len(unreconstructable)} cell(s) could not be reconstructed:")
         for u in unreconstructable:

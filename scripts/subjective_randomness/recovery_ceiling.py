@@ -33,6 +33,10 @@ from src.subjective_randomness.recovery_ceiling import (  # noqa: E402
     run_ceiling,
     summarize_by_ground_truth,
 )
+from src.subjective_randomness.sweep_cells import (  # noqa: E402
+    accounting_lines,
+    survey_sweep,
+)
 
 
 @dataclass
@@ -55,6 +59,12 @@ class Args:
     limit_eval: Optional[int] = None
     """Score only the first N eval stimuli. For smoke-testing this CLI only —
     a real run must leave it unset."""
+    n_repeats: Optional[int] = None
+    """The sweep's repeat count, so cells that never started are listed as
+    missing (default: inferred from the run<r>/ directories, and said so)."""
+    gt_models: Optional[str] = None
+    """The sweep's ground truths, space-separated (as GT_MODELS; default:
+    inferred from the directories present, and said so)."""
 
 
 def main(args: Args) -> None:
@@ -75,6 +85,13 @@ def main(args: Args) -> None:
         gt_models_dir=args.gt_models_dir,
     )
     summary = summarize_by_ground_truth(run)
+    # Only complete cells can be scored; list the others rather than let them
+    # vanish from the summary.
+    survey = survey_sweep(
+        args.sweep,
+        n_repeats=args.n_repeats,
+        gt_models=args.gt_models.split() if args.gt_models else None,
+    )
 
     args.out.mkdir(parents=True, exist_ok=True)
     rows = [c.as_row() for c in run.cells]
@@ -91,6 +108,7 @@ def main(args: Args) -> None:
                 "cells": rows,
                 "unscored": run.unscored,
                 "by_ground_truth": summary,
+                "cell_survey": survey.as_dict(),
             },
             indent=2,
         ),
@@ -107,15 +125,22 @@ def main(args: Args) -> None:
         "",
         f"Cells scored: {len(run.cells)}; unscored: {len(run.unscored)}",
         "",
-        "| ground truth | n | mean ceiling | max ceiling | mean loop RMSE | mean gap |",
-        "|---|---|---|---|---|---|",
+        *accounting_lines(survey, included=[c.cell for c in run.cells]),
+        "The loop RMSE, the gap and the same-cells ceiling cover the n' scored "
+        "cells with a loop RMSE; the first ceiling column covers all n.",
+        "",
+        "| ground truth | n | mean ceiling | max ceiling | n' | mean ceiling (same cells) "
+        "| mean loop RMSE | mean gap |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for row in summary:
         def fmt(v):
             return "n/a" if v is None else f"{v:.4f}"
         lines.append(
             f"| {row['gt_model']} | {row['n']} | {fmt(row['mean_ceiling_rmse'])} | "
-            f"{fmt(row['max_ceiling_rmse'])} | {fmt(row['mean_loop_rmse'])} | {fmt(row['mean_gap'])} |"
+            f"{fmt(row['max_ceiling_rmse'])} | {row['n_with_loop']} | "
+            f"{fmt(row['mean_ceiling_rmse_same_cells'])} | "
+            f"{fmt(row['mean_loop_rmse'])} | {fmt(row['mean_gap'])} |"
         )
     if run.unscored:
         lines += ["", "## Unscored cells", ""]

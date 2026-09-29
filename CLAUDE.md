@@ -433,10 +433,23 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   the project seeds the cell started with). The harness writes the two flags
   onto every `trajectory.json` row / `holdout.csv` column and a per-cell
   `incumbent` summary block; `scripts/subjective_randomness/incumbent_report.py`
-  reports it over a finished sweep (archives or kept repo copies), and
+  reports it over the finished (complete) cells of a sweep (archives or kept
+  repo copies; partial and missing cells are listed, not counted), and
   `verify_holdout_run.sh` warns (never fails) on a cell with zero changes.
   Baseline: 0 changes over 27 steps in the three complete `motif_stack` cells
   of the September 2026 sweep.
+
+- **Sweep summaries compare like with like** (`src/subjective_randomness/sweep_cells.py`,
+  `reporting.aggregate_holdout_trajectories`). Every summary (recovery report,
+  test-retest, incumbent report, ceiling, combined figures) lists the expected
+  cells that are partial (no `holdout.json`) or missing; trajectories are
+  pooled by position within an experiment (seed step, rounds every cell ran,
+  end), never by `global_step` (abandoned rounds write no step); and at each
+  position the loop and every baseline are averaged over the same cells. The
+  harness scores the fitted-seed baseline at the end of every experiment on
+  that experiment's cumulative data (`fitted_baseline_by_experiment`; the
+  loop's own seed fits, so cache hits); `fitted_baseline` stays the final
+  data's.
 
 ### Projects vs. the research library — two different things
 

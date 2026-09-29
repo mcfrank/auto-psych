@@ -349,6 +349,13 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # superseded prototype_similarity, no longer in the registry, so no seed
     # is excluded and the baseline covers the whole faithful set.
     assert set(gt_run["fitted_baseline"]["per_model"]) == FAITHFUL_MODEL_NAMES
+    # The fitted-seed baseline at the end of every experiment, on its data;
+    # the final one is fitted_baseline.
+    by_experiment = gt_run["fitted_baseline_by_experiment"]
+    assert [entry["experiment"] for entry in by_experiment] == [1, 2]
+    assert {k: v for k, v in by_experiment[-1].items() if k != "experiment"} == (
+        gt_run["fitted_baseline"]
+    )
     assert gt_run["fitted_baseline"]["mean_r"] == pytest.approx(1.0)
 
     # Evaluation refits go through the shared MCMC cache. The BMA fits every
@@ -2823,7 +2830,7 @@ def test_the_sweep_summary_lists_every_cell_and_step_with_excluded_pairs(tmp_pat
             writer.writerows(rows)
         seed_excluded = 3 if cell == "run2/gt_a" else 0
         (tmp_path / cell / "holdout.json").write_text(json.dumps({"gt_runs": [{
-            "gt_model": "gt_a", "n_eval_stimuli": 900,
+            "gt_model": "gt_a", "n_eval_stimuli": 900, "trajectory": [],
             "fitted_baseline": {"per_model": {"seed_x": {"n_eval_excluded": seed_excluded}}},
         }]}), encoding="utf-8")
     # A cell whose CSV predates the exclusion columns.
