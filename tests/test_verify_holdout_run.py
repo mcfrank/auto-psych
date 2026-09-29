@@ -86,6 +86,7 @@ def _build_clean_raw_tree(
     # Build a tar archive simulating a completed task
     cell = work_root / "run1" / "gt"
     cell.mkdir(parents=True)
+    (cell / "holdout.json").write_text("{}", encoding="utf-8")
     tar_path = cell / "agent_runs.tar.gz"
 
     # Create temp files for the tar
@@ -215,6 +216,7 @@ class TestVerifyRawFeaturesRun:
         _write_file(real_repo / leaked_file, "leaked\n")
         cell = work_root / "run1" / "gt_kept"
         cell.mkdir(parents=True)
+        (cell / "holdout.json").write_text("{}", encoding="utf-8")
         (cell / "repo").symlink_to(real_repo)
 
     def test_a_leak_in_a_symlinked_kept_tree_fails(self, tmp_path):
@@ -294,6 +296,8 @@ def _write_live_cell(work_root: Path, gt: str, histories: list[str]) -> None:
     """A cell whose repo copy was kept (KEEP_REPO_COPY=1): its experiments'
     history.json files live under run1/<gt>/repo/_runs/<gt>/ instead of an
     archive."""
+    (work_root / "run1" / gt).mkdir(parents=True)
+    (work_root / "run1" / gt / "holdout.json").write_text("{}", encoding="utf-8")
     run_root = work_root / "run1" / gt / "repo" / "_runs" / gt
     for exp_num, history in enumerate(histories, start=1):
         loop_dir = run_root / f"experiment{exp_num}" / "model_loop"
@@ -373,3 +377,50 @@ class TestVerifyIncumbentChanges:
         result = _run_verifier(work_root)
         assert result.returncode == 0, result.stdout
         assert "[info] no inner-loop history.json found for the incumbent check" in result.stdout
+
+
+class TestVerifyJudgesCellsByTheirResults:
+    """A cell that failed and was resumed by a retry leaves its failed
+    attempt's log behind. The verifier judges cells by their results
+    (holdout.json, MISSING_CELLS.txt), so such a sweep passes; a cell with
+    no result fails whatever its logs say."""
+
+    @staticmethod
+    def _failed_attempt_log(work_root: Path, cell: Path, name: str) -> None:
+        _write_file(
+            work_root / "slurm_logs" / name,
+            f"[task 1] repeat=1 gt=gt seed=1 -> {cell}\n"
+            "Traceback (most recent call last):\n  MemoryError\n",
+        )
+
+    def test_a_cell_finished_by_a_retry_passes(self, tmp_path):
+        work_root = _build_clean_raw_tree(tmp_path / "retried")
+        self._failed_attempt_log(work_root, work_root / "run1" / "gt", "holdout_recovery_7_1.out")
+        result = _run_verifier(work_root)
+        assert result.returncode == 0, result.stdout
+        assert "[ok]   all 1 cell(s) have a result" in result.stdout
+        assert "[info] 1 failed attempt(s) of cells a later attempt finished" in result.stdout
+
+    def test_a_traceback_of_a_cell_without_a_result_still_fails(self, tmp_path):
+        work_root = _build_clean_raw_tree(tmp_path / "unfinished")
+        cell = work_root / "run2" / "gt"
+        cell.mkdir(parents=True)
+        self._failed_attempt_log(work_root, cell, "holdout_recovery_7_5.out")
+        result = _run_verifier(work_root)
+        assert result.returncode != 0, result.stdout
+        assert "cell(s) have no holdout.json: run2/gt" in result.stdout
+        assert "error line(s)" in result.stdout
+
+    def test_a_cell_without_a_result_fails_even_if_every_log_finished(self, tmp_path):
+        work_root = _build_clean_raw_tree(tmp_path / "no_result")
+        (work_root / "run1" / "gt" / "holdout.json").unlink()
+        result = _run_verifier(work_root)
+        assert result.returncode != 0, result.stdout
+        assert "no holdout.json: run1/gt" in result.stdout
+
+    def test_missing_cells_listed_by_the_summary_job_fail(self, tmp_path):
+        work_root = _build_clean_raw_tree(tmp_path / "missing")
+        (work_root / "MISSING_CELLS.txt").write_text("run3/gt\n", encoding="utf-8")
+        result = _run_verifier(work_root)
+        assert result.returncode != 0, result.stdout
+        assert "(MISSING_CELLS.txt)" in result.stdout and "run3/gt" in result.stdout

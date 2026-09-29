@@ -48,7 +48,17 @@
 # starts. holdout.{json,csv,png} and the MCMC cache live at $WORK_ROOT/run<r>/<gt>/.
 
 set -euo pipefail
-SLURM_DIR="${HOLDOUT_SLURM_DIR:-${SLURM_SUBMIT_DIR:-$(pwd)}}"
+# Every cell of a sweep, first attempt or retry, runs on the code the setup job
+# staged once for the sweep: the harness repo (which also holds these Slurm
+# scripts) and the agent source. Nothing below reads the live checkout's code.
+: "${WORK_ROOT:?WORK_ROOT is not set}"
+HARNESS_REPO="${HARNESS_REPO:-$WORK_ROOT/harness_repo}"
+AGENT_SRC="${AGENT_SRC:-$WORK_ROOT/agent_src}"
+CODE_COMMIT_FILE="$WORK_ROOT/code_commit"
+[[ -f "$CODE_COMMIT_FILE" && -d "$HARNESS_REPO" && -d "$AGENT_SRC" ]] \
+  || { echo "ERROR: $WORK_ROOT has no staged code (code_commit, harness_repo, agent_src); the setup job didn't run?" >&2; exit 1; }
+STAGED_CODE=$(cat "$CODE_COMMIT_FILE")
+SLURM_DIR="$HARNESS_REPO/scripts/subjective_randomness/slurm"
 source "$SLURM_DIR/_env.sh"
 
 # The coding agents inherit this shell's environment. _env.sh exports
@@ -100,6 +110,30 @@ if ! bash "$SLURM_DIR/cell_lock.sh" "$RUN_DIR/.cell_lock" "${SLURM_JOB_ID:-local
   exit 0
 fi
 trap 'rm -f "$RUN_DIR/.cell_lock"' EXIT
+# A finished cell is left alone. Slurm can mark a task that finished as
+# OUT_OF_MEMORY or TIMEOUT (in its final clean-up), and a resubmission that ran
+# on would rebuild an empty _runs/, overwrite the real agent_runs.tar.gz with
+# it, and blank the cell's leak record (gt_name_mentions.txt, agent_activity.md).
+if [[ -f "$RUN_DIR/holdout.json" ]]; then
+  echo "[task $TASK] $RUN_DIR is already complete (holdout.json); nothing to do."
+  exit 0
+fi
+# The code this cell runs on: recorded when the cell starts, and a cell is
+# never resumed on other code. A cell directory holding anything but its lock
+# and no record started before records were kept, on unknown code.
+if [[ -f "$RUN_DIR/code_commit" ]]; then
+  cell_code=$(cat "$RUN_DIR/code_commit")
+  if [[ "$cell_code" != "$STAGED_CODE" ]]; then
+    echo "ERROR: $RUN_DIR started on code $cell_code, but this sweep's staged code is $STAGED_CODE; refusing to resume it on other code." >&2
+    exit 1
+  fi
+elif [[ -n "$(ls -A "$RUN_DIR" | grep -Fvx '.cell_lock')" ]]; then
+  echo "ERROR: $RUN_DIR has earlier work but no record of the code it ran on; refusing to resume it on $STAGED_CODE." >&2
+  exit 1
+else
+  printf '%s\n' "$STAGED_CODE" > "$RUN_DIR/code_commit"
+fi
+echo "[task $TASK] code: $STAGED_CODE"
 if [[ -e "$RUN_DIR/repo" && ! -L "$RUN_DIR/repo" ]]; then
   echo "ERROR: $RUN_DIR/repo is a real directory, from a task started before the agent tree moved out of the cell directory. Resume it with the script it started under, or use a new WORK_ROOT." >&2
   exit 1
@@ -145,7 +179,7 @@ AGENT_EXCLUDE="$SLURM_DIR/agent_tree.exclude"
 # protect filter keeps the agents' results root, whose data/ and *.nc match
 # exclude patterns.
 rsync -a --delete --delete-excluded --filter='P /_runs/***' \
-  --exclude-from="$AGENT_EXCLUDE" "$REPO"/ "$RUN_REPO"/
+  --exclude-from="$AGENT_EXCLUDE" "$AGENT_SRC"/ "$RUN_REPO"/
 
 # pyprojroot.here() sentinel (we excluded .git from the copy).
 touch "$RUN_REPO/.here"
@@ -246,7 +280,7 @@ for models_rel in "$SEED_MODELS_REL" "$POOL_MODELS_REL"; do
     continue
   fi
   [[ -f "$RUN_REPO/$models_rel/models_manifest.yaml" ]] || { echo "ERROR: no manifest at $RUN_REPO/$models_rel" >&2; exit 1; }
-  "$VENV_PY" "$REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
+  "$VENV_PY" "$HARNESS_REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
     --models-dir "$RUN_REPO/$models_rel" --name "$GT" --missing-ok
   if grep -q "$GT" "$RUN_REPO/$models_rel/models_manifest.yaml"; then
     echo "ERROR: $models_rel/models_manifest.yaml still mentions $GT" >&2; exit 1
@@ -259,7 +293,7 @@ echo "[task $TASK] scrubbed held-out GT entry from both manifests"
 # other regime's manifests also exist and the leakage audit scans all of them.
 while IFS= read -r -d '' mf; do
   if grep -q "$GT" "$mf"; then
-    "$VENV_PY" "$REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
+    "$VENV_PY" "$HARNESS_REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
       --models-dir "$(dirname "$mf")" --name "$GT" --missing-ok
     if grep -q "$GT" "$mf"; then
       echo "ERROR: $mf still mentions $GT after scrub" >&2; exit 1
@@ -334,8 +368,6 @@ EXTRA_FLAGS=""
 # setup job), not from the scrubbed agent tree. It can therefore import
 # stimulus_design, model_families, etc. that the agents must not see.
 # --agent-root points agent subprocesses at the scrubbed $RUN_REPO.
-HARNESS_REPO="${HARNESS_REPO:-$WORK_ROOT/harness_repo}"
-[[ -d "$HARNESS_REPO" ]] || { echo "ERROR: $HARNESS_REPO not found (setup job didn't run?)" >&2; exit 1; }
 cd "$HARNESS_REPO"
 
 # Two more paths reach agents' briefs: the critique brief prints the MCMC cache
@@ -408,15 +440,20 @@ bash "$SLURM_DIR/scan_gt_name.sh" --after-run "$GT" "$RUN_REPO/_runs" "$RUN_DIR/
 # A FAILED task exits before here (set -e), leaving its copy intact for
 # debugging and resume. Set KEEP_REPO_COPY=1 to opt out.
 if [[ -z "${KEEP_REPO_COPY:-}" ]]; then
-  if [[ -d "$RUN_REPO/_runs" ]]; then
-    tar czf "$RUN_DIR/agent_runs.tar.gz" -C "$RUN_REPO" _runs \
-      && echo "[task $TASK] archived agent _runs -> $RUN_DIR/agent_runs.tar.gz"
+  if [[ -e "$RUN_DIR/agent_runs.tar.gz" ]]; then
+    # Never overwrite an archive: it may be the only record of an earlier run.
+    echo "[task $TASK] WARNING: $RUN_DIR/agent_runs.tar.gz already exists; not overwriting it, and keeping the agent tree $AGENT_DIR"
+  else
+    if [[ -d "$RUN_REPO/_runs" ]]; then
+      tar czf "$RUN_DIR/agent_runs.tar.gz" -C "$RUN_REPO" _runs \
+        && echo "[task $TASK] archived agent _runs -> $RUN_DIR/agent_runs.tar.gz"
+    fi
+    # rm -rf unlinks the venv and mcmc_cache symlinks inside AGENT_DIR without
+    # following them: the shared venv and this cell's cache are untouched.
+    rm -rf "$AGENT_DIR"
+    rm -f "$RUN_DIR/repo"
+    echo "[task $TASK] removed the agent tree to reclaim inodes: $AGENT_DIR"
   fi
-  # rm -rf unlinks the venv and mcmc_cache symlinks inside AGENT_DIR without
-  # following them: the shared venv and this cell's cache are untouched.
-  rm -rf "$AGENT_DIR"
-  rm -f "$RUN_DIR/repo"
-  echo "[task $TASK] removed the agent tree to reclaim inodes: $AGENT_DIR"
 else
   echo "[task $TASK] KEEP_REPO_COPY set — leaving repo copy in place: $RUN_REPO"
 fi

@@ -24,7 +24,7 @@ does not reach the agents.
 
 ```
 submit_holdout_test_retest.sh   (submits setup → array → retry → analysis)
-holdout_setup.sbatch            (once per submission: stage harness_repo, gt_models_src, gt_family_src)
+holdout_setup.sbatch            (once per sweep: stage harness_repo, agent_src, gt_models_src, gt_family_src; record code_commit)
 holdout_recovery_array.sbatch   (one task = one (repeat, ground truth) cell)
  └─ scripts/subjective_randomness/holdout_recovery.py : main
      └─ src/subjective_randomness/holdout_recovery.py : run_holdout_recovery_from_config
@@ -95,13 +95,28 @@ longer queued is stale and is taken over. The lock is removed on exit.
 **Automatic resume.** `submit_holdout_test_retest.sh` submits
 `holdout_retry.sbatch` with `--dependency=afterany` on the array. It reads the
 array's end states from `sacct` (`cell_status.py retry-plan`) and resubmits,
-through the same submit script, every task that ended `FAILED`, `TIMEOUT`,
+through the staged submit script, every task that ended `FAILED`, `TIMEOUT`,
 `NODE_FAIL`, `PREEMPTED` or `BOOT_FAIL` (same memory) or `OUT_OF_MEMORY` (with
-128 GB). Cancelled tasks are left alone. Each resubmission chains its own
-retry job, up to `MAX_RETRY_ROUNDS` (default 2). A resubmission also resubmits
-the setup job, and the resubmitted tasks run with `--resume` (they always do).
-`holdout_analysis.sbatch` writes `$WORK_ROOT/MISSING_CELLS.txt` listing every
-expected cell without a `holdout.json`.
+`--mem=128G` on that group's array only). Cancelled tasks are left alone, and
+so is a task whose cell already has its `holdout.json`. The retry array keeps
+the `%MAX_PARALLEL` cap. Each resubmission chains its own retry job, up to
+`MAX_RETRY_ROUNDS` (default 2), and the resubmitted tasks run with `--resume`
+(they always do). `holdout_analysis.sbatch` writes
+`$WORK_ROOT/MISSING_CELLS.txt` listing every expected cell without a
+`holdout.json`.
+
+**One code for the whole sweep.** The setup job stages the code once:
+`harness_repo` (which also holds the Slurm scripts every later job sources),
+`agent_src` (the repo scrubbed with `agent_tree.exclude`, from which each cell
+builds its agent tree) and the GT snapshots, then writes
+`$WORK_ROOT/code_commit` (`code_commit.sh`: the commit, plus a hash of any
+uncommitted changes). A retry skips the setup job and runs the staged scripts.
+A later setup on the same `WORK_ROOT` re-stages nothing and fails if the
+checkout's code differs. Each cell writes `RUN_DIR/code_commit` when it starts
+and refuses to resume on other code (or, with earlier work and no record, at
+all). A cell that already has `holdout.json` exits at once, so a resubmission
+cannot overwrite its archive or its leak record; an existing
+`agent_runs.tar.gz` is never overwritten.
 
 Directories:
 
@@ -110,7 +125,9 @@ Directories:
 | `$WORK_ROOT/run<r>/<gt>/` (`RUN_DIR`) | `holdout.{json,csv,png}`, `trajectory.json`, `eval_exclusions.jsonl`, `mcmc_cache/`, `agent_runs.tar.gz`, `gt_name_mentions.txt` (only if any), `agent_activity.md`, `.cell_lock`, `repo` → the agent tree | no |
 | `$AGENT_TREES_ROOT/<sha256(RUN_DIR)[:16]>/` (`AGENT_DIR`) | `repo/` (agent tree), `mcmc_cache` → `RUN_DIR/mcmc_cache`, `venv` → the shared venv, `.xdg/` | only `repo/` (see §1.5) |
 | `AGENT_DIR/repo/_runs/cell_1/` | the run tree: `experiment1..3/`, `agent_notes/`, `eval_stimuli.json` | yes (read-only, except own dirs) |
-| `$WORK_ROOT/harness_repo` | full repo copy; the harness process runs from here | no |
+| `$WORK_ROOT/harness_repo` | full repo copy staged once per sweep; the harness process and every job after setup run from here | no |
+| `$WORK_ROOT/agent_src` | the repo scrubbed with `agent_tree.exclude`, staged once per sweep; each cell's agent tree is built from it | no |
+| `$WORK_ROOT/code_commit`, `RUN_DIR/code_commit` | the staged code's identity; the code a cell started on | no |
 | `$WORK_ROOT/gt_models_src`, `gt_family_src` | pristine copies of `pymc_model_families/` and `model_families/` | no |
 
 The run directory is named `cell_<i>`, not after the ground truth
@@ -120,7 +137,7 @@ The run directory is named `cell_<i>`, not after the ground truth
 
 In order (sbatch:134-318):
 
-1. `rsync -a --delete --delete-excluded --filter='P /_runs/***' --exclude-from=agent_tree.exclude $REPO/ $RUN_REPO/`
+1. `rsync -a --delete --delete-excluded --filter='P /_runs/***' --exclude-from=agent_tree.exclude $WORK_ROOT/agent_src/ $RUN_REPO/`
    (sbatch:147-148). `--delete-excluded` also cleans a resumed cell's tree
    built before an exclusion was added; the filter protects the run tree. The
    exclude list drops `.git`, `.venv`, `data`, caches, `node_modules`, `*.nc`,

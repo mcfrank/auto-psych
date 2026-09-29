@@ -22,17 +22,22 @@ SACCT = """\
 """
 
 
-def test_failed_tasks_are_resumed_and_out_of_memory_ones_get_more_memory():
-    plan = retry_plan(SACCT)
+GTS = ["a", "b", "c"]
+
+
+def test_failed_tasks_are_resumed_and_out_of_memory_ones_get_more_memory(tmp_path):
+    plan = retry_plan(SACCT, work_root=tmp_path, gt_models=GTS)
     assert plan == {"same_memory": [2, 4, 6], "more_memory": [3]}
 
 
-def test_a_task_the_user_cancelled_is_not_resumed():
-    assert 5 not in retry_plan(SACCT)["same_memory"] + retry_plan(SACCT)["more_memory"]
+def test_a_task_the_user_cancelled_is_not_resumed(tmp_path):
+    plan = retry_plan(SACCT, work_root=tmp_path, gt_models=GTS)
+    assert 5 not in plan["same_memory"] + plan["more_memory"]
 
 
-def test_a_clean_array_needs_no_retry():
-    assert retry_plan("1_1|COMPLETED\n1_2|COMPLETED\n") == {"same_memory": [], "more_memory": []}
+def test_a_clean_array_needs_no_retry(tmp_path):
+    plan = retry_plan("1_1|COMPLETED\n1_2|COMPLETED\n", work_root=tmp_path, gt_models=GTS)
+    assert plan == {"same_memory": [], "more_memory": []}
 
 
 def test_missing_cells_are_every_expected_cell_without_a_result(tmp_path):

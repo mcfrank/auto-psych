@@ -7,14 +7,19 @@ repeats.
 ## Files
 
 - `submit_holdout_test_retest.sh` — submits the 3-stage chained pipeline.
-- `holdout_setup.sbatch` — stage 1: `uv sync` the env **once** (off `$HOME`)
-  and create one git worktree per repeat at `$WORK_ROOT/worktrees/run<i>`.
-- `holdout_recovery_array.sbatch` — stage 2: array of N repeats. Each task runs
-  from its own worktree (the opencode agent works in its CWD, so per-task
-  worktrees prevent collisions). Repeat *i* uses `--seed BASE_SEED+i` and writes
-  output to `$WORK_ROOT/run<i>/`.
+- `holdout_setup.sbatch` — stage 1: build the venv **once** (off `$HOME`) and
+  stage the sweep's code **once**: `$WORK_ROOT/harness_repo` (the harness and
+  every later job's Slurm scripts), `$WORK_ROOT/agent_src` (the scrubbed source
+  of every agent tree) and the GT snapshots; records the code's identity in
+  `$WORK_ROOT/code_commit` (`code_commit.sh`).
+- `holdout_recovery_array.sbatch` — stage 2: one task per (repeat, ground
+  truth) cell, run from the staged code. Repeat *i* uses `--seed BASE_SEED+i`
+  and writes output to `$WORK_ROOT/run<i>/<gt>/`, including the code the cell
+  started on (`code_commit`).
+- `holdout_retry.sbatch` — after the array: resumes its failed tasks (see
+  Resume).
 - `holdout_analysis.sbatch` — stage 3: `holdout_test_retest.py`, runs
-  `afterok` the array. Writes `test_retest.{json,csv,png}` to `$WORK_ROOT`.
+  `afterany` the array. Writes `test_retest.{json,csv,png}` to `$WORK_ROOT`.
 - `_env.sh` — shared env (modules, caches off `$HOME`, agent credentials).
 
 ## Prerequisite: coding-agent credentials
@@ -32,10 +37,12 @@ GOOGLE_API_KEY=<your key>
 
 ## Before submitting: commit your code
 
-The per-repeat worktrees are checked out at `HEAD`, so **commit any local edits
-to `src/` or `holdout_recovery.py` before submitting** — uncommitted changes
-won't reach the worktrees. (The Slurm scripts themselves run from your main
-checkout, so they don't need committing.)
+The setup job stages the checkout as it is when the setup job *runs* and
+records its commit (with a `-dirty-<hash>` suffix for uncommitted changes).
+Every cell of the sweep, retries included, runs on that staged copy, so later
+edits to the checkout do not reach a running sweep, and a later setup on the
+same `WORK_ROOT` (a manual resubmission, `submit_extra_repeat.sh`) fails if the
+checkout's code differs from what was staged.
 
 ## Submit
 
@@ -67,9 +74,17 @@ Watch: `squeue --me`. A full 3-model repeat takes hours; the array requests
 
 ## Resume
 
-Each repeat runs with `--resume`: a requeued task skips ground truths that
-already have a `trajectory.json`. Re-running `submit_*.sh` with the same
-`WORK_ROOT` continues where it stopped.
+Each task runs with `--resume`: a resubmitted task continues its cell from the
+last finished stage, and a task whose cell already has `holdout.json` exits at
+once. After each array a retry job resumes the tasks that failed, timed out or
+hit a node failure, and resubmits the out-of-memory ones with `--mem=128G`
+(that group's array only), keeping the `%MAX_PARALLEL` cap, up to
+`MAX_RETRY_ROUNDS` (2). Retries skip the setup job and run the staged code; a
+cell refuses to resume on code other than the code it started on. Re-running
+`submit_*.sh` with the same `WORK_ROOT` continues where it stopped, provided the
+checkout's code is unchanged. `verify_holdout_run.sh` judges cells by their
+`holdout.json` and `MISSING_CELLS.txt`; a failed attempt that a retry finished
+is listed, not failed.
 
 ## Impossible-theory variant
 

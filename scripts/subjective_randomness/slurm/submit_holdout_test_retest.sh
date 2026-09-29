@@ -1,6 +1,8 @@
 #!/bin/bash
 # Submit the holdout-recovery test-retest pipeline as three chained jobs:
-#   1. setup    - sync the uv env + stage a pristine GT-model snapshot on scratch
+#   1. setup    - sync the uv env + stage the sweep's code once (harness_repo,
+#                 agent_src, GT snapshots; $WORK_ROOT/code_commit). Retries
+#                 skip it and run on the staged code.
 #   2. array    - R repeats x G ground truths tasks, each holding out ONE model
 #                 with a distinct per-repeat seed
 #   3. analysis - test-retest reliability summary, runs after the array
@@ -33,7 +35,9 @@ export SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_
 read -r -a _GTS <<< "$GT_MODELS"
 export N_GTS="${#_GTS[@]}"
 TOTAL=$(( N_REPEATS * N_GTS ))
-MAX_PARALLEL="${MAX_PARALLEL:-5}"   # cap simultaneous tasks (API rate + cores)
+# Cap on simultaneous tasks (API rate + cores). Exported so a retry round's
+# resubmission keeps the sweep's cap.
+export MAX_PARALLEL="${MAX_PARALLEL:-5}"
 ARRAY_TIME=""                       # use the sbatch directive's walltime
 
 # SMOKE=1: validate the whole chain cheaply — ONE task (repeat 1, first GT),
@@ -54,8 +58,22 @@ fi
 # Array spec: full sweep by default; ARRAY_TASKS overrides it to rerun a subset
 # (e.g. ARRAY_TASKS=14 to redo one failed task on the same WORK_ROOT via --resume,
 # or "1,4,14" / "1-5"). Pair with the original WORK_ROOT so --resume reuses work.
+# The %MAX_PARALLEL cap applies to a subset too: a failure that hit every task
+# (an API quota, a bad commit) must not resubmit all of them at once.
 ARRAY_SPEC="1-${TOTAL}%${MAX_PARALLEL}"
-[[ -n "${ARRAY_TASKS:-}" ]] && ARRAY_SPEC="$ARRAY_TASKS"
+[[ -n "${ARRAY_TASKS:-}" ]] && ARRAY_SPEC="${ARRAY_TASKS}%${MAX_PARALLEL}"
+# ARRAY_MEM overrides the array's --mem for this submission only (the retry job
+# sets it for its out-of-memory group). It is passed as --mem, never through
+# SBATCH_MEM_PER_NODE: sbatch reads that from the environment, so it reached
+# the setup, retry and analysis jobs too, and --export=ALL carried it into
+# every later retry round. Unset here so no job inherits it.
+array_mem="${ARRAY_MEM:-}"
+unset ARRAY_MEM
+# RETRY_ROUND > 0: a retry of this sweep's cells. It must run on the code the
+# sweep staged, so it skips the setup job (which stages the code on a first
+# submission and refuses a checkout that differs from what it staged).
+is_retry=""
+(( ${RETRY_ROUND:-0} > 0 )) && is_retry=1
 
 # Optional pass-throughs (only export if the caller set them).
 [[ -n "${BASE_SEED:-}" ]] && export BASE_SEED
@@ -78,16 +96,22 @@ mkdir -p "$LOGDIR"
 
 cd "$HOLDOUT_SLURM_DIR"
 
-setup_id=$(sbatch --parsable --export=ALL \
-  --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
-  holdout_setup.sbatch)
-echo "submitted setup job:    $setup_id"
+setup_id=""
+if [[ -n "$is_retry" ]]; then
+  [[ -f "$WORK_ROOT/code_commit" ]] || { echo "ERROR: a retry needs the code the sweep staged, and $WORK_ROOT/code_commit does not exist" >&2; exit 1; }
+  echo "retry round ${RETRY_ROUND}: no setup job; the cells resume on the staged code ($(cat "$WORK_ROOT/code_commit"))"
+else
+  setup_id=$(sbatch --parsable --export=ALL \
+    --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
+    holdout_setup.sbatch)
+  echo "submitted setup job:    $setup_id"
+fi
 
-array_id=$(sbatch --parsable --dependency=afterok:"$setup_id" --export=ALL \
-  --array="$ARRAY_SPEC" ${ARRAY_TIME:+--time="$ARRAY_TIME"} \
+array_id=$(sbatch --parsable ${setup_id:+--dependency=afterok:"$setup_id"} --export=ALL \
+  --array="$ARRAY_SPEC" ${ARRAY_TIME:+--time="$ARRAY_TIME"} ${array_mem:+--mem="$array_mem"} \
   --output="$LOGDIR/%x_%A_%a.out" --error="$LOGDIR/%x_%A_%a.out" \
   holdout_recovery_array.sbatch)
-echo "submitted array job:    $array_id (1-$TOTAL%$MAX_PARALLEL  =  $N_REPEATS repeats x $N_GTS GTs)"
+echo "submitted array job:    $array_id ($ARRAY_SPEC${array_mem:+, --mem=$array_mem}; $N_REPEATS repeats x $N_GTS GTs)"
 
 # Resume the array's failed tasks (timeouts, crashes, out-of-memory) once it
 # finishes, up to MAX_RETRY_ROUNDS rounds (holdout_retry.sbatch). RETRY_ROUND
