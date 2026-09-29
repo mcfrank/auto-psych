@@ -54,9 +54,18 @@ if [[ -z "${GOOGLE_API_KEY:-}${GEMINI_API_KEY:-}" ]]; then
   echo "         opencode+gemini runs will fail. Set it before the array runs." >&2
 fi
 
+# Stage the sweep's code ONCE, exactly as the faithful sweep does
+# (stage_sweep_code.sh: harness_repo, agent_src — the repo scrubbed with
+# agent_tree.exclude, which already drops src/subjective_randomness/ with the
+# impossible models and scripts/ with the configs — and code_commit). The array
+# runs the harness from harness_repo and builds each agent tree from agent_src.
+HARNESS_REPO="${HARNESS_REPO:-$WORK_ROOT/harness_repo}"
+HARNESS_REPO="$HARNESS_REPO" bash "$REPO/scripts/subjective_randomness/slurm/stage_sweep_code.sh"
+cd "$HARNESS_REPO"
+
 # Fail fast: syntax-check the scripts the array/analysis jobs run, and import the
 # whole holdout chain so a missing dependency aborts here (afterok) rather than
-# after tasks have launched.
+# after tasks have launched. Checked on the staged copy the jobs will run.
 "$VENV_PY" -m py_compile \
   scripts/subjective_randomness/impossible_holdout_recovery.py \
   scripts/subjective_randomness/holdout_test_retest.py \
@@ -79,14 +88,14 @@ IMPOSSIBLE_CONFIG_SRC="${IMPOSSIBLE_CONFIG_SRC:-$WORK_ROOT/impossible_config_src
 
 echo "[setup] staging impossible models  -> $IMPOSSIBLE_MODELS_SRC"
 mkdir -p "$IMPOSSIBLE_MODELS_SRC"
-rsync -a "$REPO/$IMPOSSIBLE_MODELS_REL"/ "$IMPOSSIBLE_MODELS_SRC"/
+rsync -a --delete "$HARNESS_REPO/$IMPOSSIBLE_MODELS_REL"/ "$IMPOSSIBLE_MODELS_SRC"/
 
 echo "[setup] staging impossible config  -> $IMPOSSIBLE_CONFIG_SRC"
-cp "$REPO/$CFG_REL" "$IMPOSSIBLE_CONFIG_SRC"
+cp "$HARNESS_REPO/$CFG_REL" "$IMPOSSIBLE_CONFIG_SRC"
 
 # Validate that the array's GT list matches the config's gt_models, that the
 # seed path matches, and that the snapshot holds every impossible GT file.
-SRC_CONFIG="$REPO/$CFG_REL" \
+SRC_CONFIG="$HARNESS_REPO/$CFG_REL" \
 IMPOSSIBLE_MODELS_SRC="$IMPOSSIBLE_MODELS_SRC" \
 SEED_MODELS_REL="${SEED_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}" \
 IMPOSSIBLE_MODELS_REL="$IMPOSSIBLE_MODELS_REL" \

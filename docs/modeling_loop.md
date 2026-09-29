@@ -123,7 +123,7 @@ Directories:
 | Path | Contents | Seen by agents? |
 | --- | --- | --- |
 | `$WORK_ROOT/run<r>/<gt>/` (`RUN_DIR`) | `holdout.{json,csv,png}`, `trajectory.json`, `eval_exclusions.jsonl`, `mcmc_cache/`, `agent_runs.tar.gz`, `gt_name_mentions.txt` (only if any), `agent_activity.md`, `.cell_lock`, `repo` → the agent tree | no |
-| `$AGENT_TREES_ROOT/<sha256(RUN_DIR)[:16]>/` (`AGENT_DIR`) | `repo/` (agent tree), `mcmc_cache` → `RUN_DIR/mcmc_cache`, `venv` → the shared venv, `.xdg/` | only `repo/` (see §1.5) |
+| `$AGENT_TREES_ROOT/<random id>/` (`AGENT_DIR`; the id is in `RUN_DIR/agent_tree_id`) | `repo/` (agent tree), `mcmc_cache` → `RUN_DIR/mcmc_cache`, `venv` → the shared venv, `.xdg/` | only `repo/` (see §1.5) |
 | `AGENT_DIR/repo/_runs/cell_1/` | the run tree: `experiment1..3/`, `agent_notes/`, `eval_stimuli.json` | yes (read-only, except own dirs) |
 | `$WORK_ROOT/harness_repo` | full repo copy staged once per sweep; the harness process and every job after setup run from here | no |
 | `$WORK_ROOT/agent_src` | the repo scrubbed with `agent_tree.exclude`, staged once per sweep; each cell's agent tree is built from it | no |

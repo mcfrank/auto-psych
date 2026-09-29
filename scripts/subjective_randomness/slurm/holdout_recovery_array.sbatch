@@ -93,15 +93,7 @@ GT="${GTS[$(( (TASK - 1) % N_GTS ))]}"
 SEED=$(( BASE_SEED + REPEAT ))
 
 RUN_DIR="$WORK_ROOT/run${REPEAT}/${GT}"
-
-# The agents' tree must not live under the GT-named RUN_DIR: every path in it
-# reaches an agent's prompt. It lives under an opaque id — a hash of RUN_DIR, so
-# a resubmitted task finds its tree again — and RUN_DIR/repo links to it.
-AGENT_TREES_ROOT="${AGENT_TREES_ROOT:-${SCRATCH:-$GROUP_SCRATCH}/auto-psych/agent_trees}"
-AGENT_DIR="$AGENT_TREES_ROOT/$(printf '%s' "$RUN_DIR" | sha256sum | cut -c1-16)"
-RUN_REPO="$AGENT_DIR/repo"
-[[ "$AGENT_DIR" != *"$GT"* ]] || { echo "ERROR: the agent directory names the held-out model: $AGENT_DIR (set AGENT_TREES_ROOT elsewhere)" >&2; exit 1; }
-mkdir -p "$RUN_DIR" "$RUN_REPO"
+mkdir -p "$RUN_DIR"
 # One job per cell: the retry job and the sweep watcher can both resubmit a
 # failed cell, and two jobs in one cell would corrupt it. A duplicate exits
 # here, before touching anything; the lock goes when this job exits.
@@ -134,6 +126,21 @@ else
   printf '%s\n' "$STAGED_CODE" > "$RUN_DIR/code_commit"
 fi
 echo "[task $TASK] code: $STAGED_CODE"
+
+# The agents' tree must not live under the GT-named RUN_DIR: every path in it
+# reaches an agent's prompt. It lives under an opaque, random id, recorded in
+# RUN_DIR/agent_tree_id so a resubmitted task finds its tree again, and
+# RUN_DIR/repo links to it. (The id used to be a hash of RUN_DIR: an agent
+# that found $WORK_ROOT, e.g. in the venv's bin/activate, could hash the four
+# candidate paths and confirm the ground truth.)
+AGENT_TREES_ROOT="${AGENT_TREES_ROOT:-${SCRATCH:-$GROUP_SCRATCH}/auto-psych/agent_trees}"
+if [[ ! -s "$RUN_DIR/agent_tree_id" ]]; then
+  head -c 8 /dev/urandom | od -An -tx1 | tr -d ' \n' > "$RUN_DIR/agent_tree_id"
+fi
+AGENT_DIR="$AGENT_TREES_ROOT/$(cat "$RUN_DIR/agent_tree_id")"
+RUN_REPO="$AGENT_DIR/repo"
+[[ "$AGENT_DIR" != *"$GT"* ]] || { echo "ERROR: the agent directory names the held-out model: $AGENT_DIR (set AGENT_TREES_ROOT elsewhere)" >&2; exit 1; }
+mkdir -p "$RUN_REPO"
 if [[ -e "$RUN_DIR/repo" && ! -L "$RUN_DIR/repo" ]]; then
   echo "ERROR: $RUN_DIR/repo is a real directory, from a task started before the agent tree moved out of the cell directory. Resume it with the script it started under, or use a new WORK_ROOT." >&2
   exit 1

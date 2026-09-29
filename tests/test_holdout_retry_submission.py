@@ -255,3 +255,89 @@ def test_a_finished_cell_is_left_untouched(tmp_path):
     assert (cell / "agent_runs.tar.gz").read_bytes() == b"the real archive"
     assert (cell / "gt_name_mentions.txt").read_text() == "x.py\n"
     assert not (cell / "repo").exists()
+
+
+def test_the_agent_tree_has_a_random_id_recorded_in_the_cell(tmp_path):
+    """The id used to be a hash of the GT-named cell path, which an agent
+    that found WORK_ROOT could recompute for each candidate ground truth."""
+    import hashlib
+    import re
+
+    _run_array_task(tmp_path)
+    cell = tmp_path / "work" / "run1" / "gtone"
+    tree_id = (cell / "agent_tree_id").read_text(encoding="utf-8")
+    assert re.fullmatch(r"[0-9a-f]{16}", tree_id)
+    assert tree_id != hashlib.sha256(str(cell).encode()).hexdigest()[:16]
+    assert (cell / "repo").resolve() == (tmp_path / "agent_trees" / tree_id / "repo").resolve()
+
+    # A resubmitted task finds the same tree.
+    (tmp_path / "work" / "code_commit").unlink()
+    shutil.rmtree(tmp_path / "work" / "harness_repo")
+    shutil.rmtree(tmp_path / "work" / "agent_src")
+    _run_array_task(tmp_path)
+    assert (cell / "agent_tree_id").read_text(encoding="utf-8") == tree_id
+
+
+# ── stage_sweep_code.sh: the sweep's code, staged once ────────────────
+
+
+def _git(repo: Path, *args: str) -> None:
+    subprocess.run(
+        ["git", "-c", "user.name=t", "-c", "user.email=t@t", *args],
+        cwd=repo, check=True, capture_output=True,
+    )
+
+
+def _checkout(tmp_path: Path) -> Path:
+    """A git checkout carrying the staging scripts, a src/ file and a test."""
+    repo = tmp_path / "checkout"
+    slurm = repo / "scripts" / "subjective_randomness" / "slurm"
+    slurm.mkdir(parents=True)
+    for name in ("code_commit.sh", "agent_tree.exclude"):
+        shutil.copy(SLURM_DIR / name, slurm / name)
+    (repo / "src").mkdir()
+    (repo / "src" / "loop.py").write_text("VERSION = 1\n", encoding="utf-8")
+    (repo / "tests").mkdir()
+    (repo / "tests" / "test_loop.py").write_text("# names the ground truth\n", encoding="utf-8")
+    _git(repo, "init", "-q")
+    _git(repo, "add", "-A")
+    _git(repo, "commit", "-q", "-m", "first")
+    return repo
+
+
+def _stage(repo: Path, work: Path) -> subprocess.CompletedProcess:
+    return subprocess.run(
+        ["bash", str(SLURM_DIR / "stage_sweep_code.sh")],
+        env={**os.environ, "REPO": str(repo), "WORK_ROOT": str(work)},
+        capture_output=True, text=True, timeout=60,
+    )
+
+
+def test_the_code_is_staged_once_and_a_changed_checkout_is_refused(tmp_path):
+    repo, work = _checkout(tmp_path), tmp_path / "work"
+
+    first = _stage(repo, work)
+    assert first.returncode == 0, first.stderr
+    head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=repo, capture_output=True,
+                          text=True, check=True).stdout.strip()
+    assert (work / "code_commit").read_text().strip() == head
+    assert (work / "harness_repo" / "tests" / "test_loop.py").exists()
+    assert (work / "harness_repo" / ".here").exists()
+    assert (work / "agent_src" / "src" / "loop.py").exists()
+    assert not (work / "agent_src" / "tests").exists()  # agent_tree.exclude
+
+    again = _stage(repo, work)
+    assert again.returncode == 0 and "not re-staging" in again.stdout
+
+    (repo / "src" / "loop.py").write_text("VERSION = 2\n", encoding="utf-8")
+    dirty = _stage(repo, work)
+    assert dirty.returncode != 0 and "staged from code" in dirty.stderr
+    assert (work / "harness_repo" / "src" / "loop.py").read_text() == "VERSION = 1\n"
+
+
+def test_cells_without_a_code_record_are_not_restaged_under(tmp_path):
+    repo, work = _checkout(tmp_path), tmp_path / "work"
+    (work / "run1" / "motif_stack").mkdir(parents=True)
+    result = _stage(repo, work)
+    assert result.returncode != 0 and "no record of the code" in result.stderr
+    assert not (work / "harness_repo").exists()

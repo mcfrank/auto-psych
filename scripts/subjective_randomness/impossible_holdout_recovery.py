@@ -61,6 +61,9 @@ class Args:
     """Optional correlation-vs-step plot (one panel per held-out model)."""
     results_root: Optional[Path] = None
     """Where the per-model experiment trees go (default: <out dir>/<out stem>_runs)."""
+    summary_root: Optional[Path] = None
+    """Where each GT's params-bearing trajectory.json is written (default:
+    results_root). Point this OUTSIDE the agent tree, as the faithful array does."""
     cache_dir: Optional[Path] = None
     """PyMC .nc fit cache shared by the run and the trajectory evaluation
     (default: <out dir>/mcmc_cache — the cache is what makes the per-step
@@ -85,8 +88,13 @@ class Args:
     """Override the config's RNG seed for the synthetic choices."""
     agent_timeout_sec: Optional[int] = None
     """Override the per-agent timeout in seconds."""
-    backend: Optional[Literal["claude", "opencode"]] = None
+    backend: Optional[Literal["claude", "opencode", "codex"]] = None
     """Override the coding-agent backend (default: config, then CODING_AGENT env)."""
+    agent_model: Optional[str] = None
+    """Override the coding-agent model id (default: the config's agent.model)."""
+    agent_root: Optional[Path] = None
+    """Scrubbed agent tree the coding agents use as their working directory;
+    the harness then runs from its own full checkout (the cwd)."""
     resume: bool = False
     """Continue a stopped run: skip ground truths with a trajectory.json and,
     within incomplete runs, skip stages whose output already validates."""
@@ -136,8 +144,11 @@ def main(args: Args) -> None:
         seed_override=args.seed,
         cache_dir=cache_dir,
         backend_override=args.backend,
+        agent_model_override=args.agent_model,
         agent_timeout_override=args.agent_timeout_sec,
         resume=args.resume,
+        summary_root=resolve_path(args.summary_root) if args.summary_root is not None else None,
+        agent_root=resolve_path(args.agent_root) if args.agent_root is not None else None,
     )
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
