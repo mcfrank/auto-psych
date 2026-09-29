@@ -17,7 +17,7 @@ import numpy as np
 
 from src.models.data_binding import make_stim_data
 from src.models.model_loading import pm_data_inputs
-from src.models.pymc_inference import fit_model
+from src.models.pymc_inference import InvalidPredictions, fit_model
 from src.subjective_randomness.holdout_data import (
     _raw_eval_rows,
     p_left_fixed_params,
@@ -166,6 +166,7 @@ def _eval_prediction(
     *,
     participant_ids: Optional[Sequence[int]],
     max_draws: Optional[int] = None,
+    mask_invalid: bool = False,
 ) -> np.ndarray:
     """Population-level held-out ``p_left`` for one fitted model.
 
@@ -183,11 +184,20 @@ def _eval_prediction(
     """
     predict_kwargs = {} if max_draws is None else {"max_draws": max_draws}
     n_stim = len(base_rows)
+
+    def predict(stim_data):
+        # With mask_invalid, a stimulus where any draw is not a probability
+        # comes back NaN (the caller excludes and logs it) instead of raising.
+        try:
+            return fitted.predict_p_left(stim_data, **predict_kwargs)
+        except InvalidPredictions as exc:
+            if not mask_invalid:
+                raise
+            return exc.draws.mean(axis=0)
+
     if "participant_id" not in pm_data_inputs(fitted.model):
         stim_data = make_stim_data(fitted.model, list(base_rows))
-        return np.asarray(
-            fitted.predict_p_left(stim_data, **predict_kwargs), dtype="float64"
-        )
+        return np.asarray(predict(stim_data), dtype="float64")
     if not participant_ids:
         raise ValueError(
             "Model indexes a participant_id random effect but the training "
@@ -199,9 +209,7 @@ def _eval_prediction(
         for row in base_rows
     ]
     stim_data = make_stim_data(fitted.model, rows)
-    preds = np.asarray(
-        fitted.predict_p_left(stim_data, **predict_kwargs), dtype="float64"
-    )
+    preds = np.asarray(predict(stim_data), dtype="float64")
     return preds.reshape(len(participant_ids), n_stim).mean(axis=0)
 
 
@@ -321,8 +329,17 @@ def evaluate_trajectory(
     fit_kwargs: Mapping[str, Any],
     gt_models_dir: Optional[Path] = None,
     predict_max_draws: Optional[int] = None,
+    exclusions_log: Optional[Path] = None,
 ) -> List[Dict[str, Any]]:
     """Correlate every inner-loop step's models with the ground truth.
+
+    A held-out pair where the step's best model, or a model in its average,
+    predicts a p_left that is not a probability (NaN, or outside [0, 1] — a
+    model can break on pairs unlike any it was trained on) is excluded from
+    that step's metrics (user decision 2026-09-26). The row records how many
+    pairs and which models (``n_eval_excluded``, ``eval_excluded_models``), and
+    ``exclusions_log``, when given, gets one JSON line per affected step with
+    the pairs themselves.
 
     For each experiment's ``history.json`` step we compute predictions of the
     ground truth's held-out ``p_left`` and report the Pearson r / RMSE of each
@@ -373,7 +390,7 @@ def evaluate_trajectory(
                 try:
                     predictions[name] = _eval_prediction(
                         fitted, eval_rows, participant_ids=participant_ids,
-                        max_draws=predict_max_draws,
+                        max_draws=predict_max_draws, mask_invalid=True,
                     )
                 except Exception as exc:
                     raise RuntimeError(
@@ -387,7 +404,35 @@ def evaluate_trajectory(
             # single model's prediction rather than failing the whole run.
             bma_pred = _bma_prediction(weights, predictions) if weights else best_pred
 
-            gt_list = gt_p.tolist()
+            # Pairs where a model's p_left is undefined (NaN after masking).
+            valid = np.isfinite(best_pred) & np.isfinite(bma_pred)
+            if not valid.any():
+                raise RuntimeError(
+                    f"Every held-out pair has an undefined p_left at experiment "
+                    f"{exp_num}, step {entry['step']}; nothing to score."
+                )
+            undefined_models = sorted(
+                name for name, pred in predictions.items() if not np.isfinite(pred).all()
+            )
+            if not valid.all():
+                excluded = [dict(eval_stimuli[i]) for i in np.flatnonzero(~valid)]
+                print(
+                    f"  [eval] experiment {exp_num} step {entry['step']}: "
+                    f"{len(excluded)} held-out pair(s) excluded — p_left undefined "
+                    f"for {undefined_models}",
+                    flush=True,
+                )
+                if exclusions_log is not None:
+                    with Path(exclusions_log).open("a", encoding="utf-8") as f:
+                        f.write(json.dumps({
+                            "experiment": exp_num, "step": entry["step"],
+                            "best_model": best, "models": undefined_models,
+                            "n_excluded": len(excluded), "n_pool": int(valid.size),
+                            "pairs": excluded,
+                        }) + "\n")
+            gt_p_valid, best_pred, bma_pred = gt_p[valid], best_pred[valid], bma_pred[valid]
+
+            gt_list = gt_p_valid.tolist()
             best_list = best_pred.tolist()
             bma_list = bma_pred.tolist()
             best_slope, best_intercept = _calibration(gt_list, best_list)
@@ -400,17 +445,19 @@ def evaluate_trajectory(
                     "global_step": global_step,
                     "best_model": best,
                     "pearson_r": pearson_r(gt_list, best_list),
-                    "rmse": float(np.sqrt(np.mean((gt_p - best_pred) ** 2))),
+                    "rmse": float(np.sqrt(np.mean((gt_p_valid - best_pred) ** 2))),
                     "kl_regret": _kl_regret(gt_list, best_list),
                     "bias": _bias(gt_list, best_list),
                     "calib_slope": best_slope,
                     "calib_intercept": best_intercept,
                     "pearson_r_bma": pearson_r(gt_list, bma_list),
-                    "rmse_bma": float(np.sqrt(np.mean((gt_p - bma_pred) ** 2))),
+                    "rmse_bma": float(np.sqrt(np.mean((gt_p_valid - bma_pred) ** 2))),
                     "kl_regret_bma": _kl_regret(gt_list, bma_list),
                     "bias_bma": _bias(gt_list, bma_list),
                     "calib_slope_bma": bma_slope,
                     "calib_intercept_bma": bma_intercept,
+                    "n_eval_excluded": int((~valid).sum()),
+                    "eval_excluded_models": undefined_models,
                 }
             )
             global_step += 1

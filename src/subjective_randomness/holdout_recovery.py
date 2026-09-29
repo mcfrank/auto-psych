@@ -626,6 +626,9 @@ def _run_holdout_recovery_resolved(
         )
 
         other_seeds = sorted(all_seed_models - {gt_model})
+        # Held-out pairs where a model's p_left is undefined are excluded from
+        # that step's metrics and listed here, beside trajectory.json.
+        summary_dir.mkdir(parents=True, exist_ok=True)
         trajectory = evaluate_trajectory(
             run_root,
             gt_model,
@@ -637,6 +640,7 @@ def _run_holdout_recovery_resolved(
             fit_kwargs=fit_kwargs,
             gt_models_dir=gt_models_dir,
             predict_max_draws=eval_pool["predict_max_draws"],
+            exclusions_log=summary_dir / "eval_exclusions.jsonl",
         )
         # The incumbent record: per step, did the exported best model change
         # and is it a discovered model; per cell, the counts. "Discovered"

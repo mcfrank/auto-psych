@@ -2609,3 +2609,54 @@ def test_holdout_cli_forwards_n_critique_proposals_as_an_inner_loop_override(
     )
     mod.main(args)
     assert captured["inner_loop_overrides"] == {"n_critique_proposals": 6}
+
+
+def test_pairs_where_a_model_is_undefined_are_excluded_and_logged(tmp_path, monkeypatch):
+    """A model can produce p_left that is not a probability on held-out pairs
+    unlike any it was trained on (a Opus 5.5 cell lost 15 hours to one at its
+    final evaluation). Those pairs are dropped from that step's metrics — the
+    user's decision 2026-09-26 — and the drop is recorded in the row and in the
+    exclusions log, pair by pair."""
+    import json
+
+    from src.models.pymc_inference import InvalidPredictions
+
+    run_root = tmp_path / "run"
+    _write_loop_artifacts(run_root, 1, [_history_step(0, None, "model_b")])
+    gt_p = np.array([0.2, 0.5, 0.9])
+    monkeypatch.setattr(holdout_eval, "p_left_fixed_params", lambda *a, **k: gt_p)
+    monkeypatch.setattr(holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)})
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
+
+    class Fitted:
+        model = None
+
+        def predict_p_left(self, stim_data):
+            draws = np.array([[0.2, np.nan, 0.9], [0.2, 0.4, 0.9]])
+            raise InvalidPredictions("p_left values must be finite and in [0, 1]", draws)
+
+    monkeypatch.setattr(holdout_eval, "fit_model", lambda *a, **k: Fitted())
+    log = tmp_path / "eval_exclusions.jsonl"
+
+    [row] = evaluate_trajectory(
+        run_root, "prototype_similarity", {"theta_alt": 0.65}, EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR, n_experiments=1, cache_dir=None,
+        fit_kwargs={}, exclusions_log=log,
+    )
+
+    assert row["n_eval_excluded"] == 1
+    assert row["eval_excluded_models"] == ["model_b"]
+    assert row["rmse"] == pytest.approx(0.0)  # exact on the two defined pairs
+    [entry] = [json.loads(line) for line in log.read_text().splitlines()]
+    assert entry["models"] == ["model_b"] and entry["experiment"] == 1
+    assert entry["pairs"] == [EVAL_STIMULI[1]]
+
+
+def test_undefined_predictions_still_fail_loudly_outside_the_evaluation():
+    """Only the recovery evaluation masks them; every other caller still gets
+    the error (as a ValueError, with the masked draws attached)."""
+    from src.models.pymc_inference import InvalidPredictions
+
+    error = InvalidPredictions("bad", np.array([[np.nan]]))
+    assert isinstance(error, ValueError)
+    assert np.isnan(error.draws).all()

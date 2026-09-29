@@ -482,6 +482,17 @@ def _thin_posterior(idata: Any, max_draws: int) -> Any:
     return idata.isel(draw=idx)
 
 
+class InvalidPredictions(ValueError):
+    """Posterior-predictive p_left that is not a probability (NaN, or outside
+    [0, 1]). ``draws`` holds the (draw, stimulus) predictions with every
+    invalid value set to NaN, so the recovery evaluation can exclude exactly
+    those stimuli — and log them — while every other caller fails loudly."""
+
+    def __init__(self, message: str, draws: np.ndarray) -> None:
+        super().__init__(message)
+        self.draws = draws
+
+
 @dataclass
 class FittedModel:
     """A fitted PyMC model and its InferenceData."""
@@ -527,10 +538,15 @@ class FittedModel:
                 random_seed=seed,
                 progressbar=False,
             )
-        arr = validate_probability_array(
-            pp.posterior_predictive[var_name].values,
-            context=f"Model {self.name!r} posterior-predictive {var_name}",
-        )  # (chain, draw, n_stim)
+        raw = pp.posterior_predictive[var_name].values
+        try:
+            arr = validate_probability_array(
+                raw, context=f"Model {self.name!r} posterior-predictive {var_name}"
+            )  # (chain, draw, n_stim)
+        except ValueError as exc:
+            bad = ~np.isfinite(raw) | (raw < 0) | (raw > 1)
+            masked = np.where(bad, np.nan, raw).reshape(-1, raw.shape[-1])
+            raise InvalidPredictions(str(exc), masked) from exc
         draws = arr.reshape(-1, arr.shape[-1])
         # Count trials from the observed-response container, which is per-trial by
         # construction, rather than from an arbitrary first entry of ``stim_data``.
