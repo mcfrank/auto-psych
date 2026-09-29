@@ -56,10 +56,12 @@ print(json.dumps({"type": "step_finish", "part": {"tokens": {"input": 1, "output
       "reasoning": 0, "cache": {"read": 0, "write": 0}}, "cost": 0.0}}))
 """
 
-_FAKE_OPENCODE_DENIED = f"""
-import json
-print({ARCHIVED_DENIAL_LINE!r})
-print(json.dumps({{"type": "text", "part": {{"text": "gave up"}}}}))
+# Denies FAKE_DENIED_DIR (set by each test): the agent's own directory, or one
+# outside everything it was given.
+_FAKE_OPENCODE_DENIED = """
+import json, os
+print("! permission requested: external_directory (" + os.environ["FAKE_DENIED_DIR"] + "/*); auto-rejecting")
+print(json.dumps({"type": "text", "part": {"text": "carried on"}}))
 """
 
 
@@ -230,14 +232,21 @@ def test_run_coding_agent_writes_the_grants_before_spawning(tmp_path, monkeypatc
 # --- a denial is a misconfiguration, never a per-slot rejection ---------------
 
 
-def test_a_log_with_an_auto_rejected_permission_raises(tmp_path):
+# The archived line denied the agent its own candidate directory: the session
+# was rooted in the wrong tree. That is a misconfigured launch.
+ARCHIVED_AGENT_TREE = Path(
+    "/scratch/users/benpry/auto-psych/consolidation_2026_09/sweep_rerun/run3/motif_stack/repo"
+)
+
+
+def test_a_denial_of_the_agents_own_directory_raises(tmp_path):
     log = tmp_path / "agent.jsonl"
     log.write_text(
         json.dumps({"type": "step_start"}) + "\n" + ARCHIVED_DENIAL_LINE + "\n",
         encoding="utf-8",
     )
     with pytest.raises(coding_agent.AgentPermissionDenied) as info:
-        coding_agent.check_for_permission_denials(log)
+        coding_agent.check_for_permission_denials(log, own_dirs=[ARCHIVED_AGENT_TREE])
     assert "external_directory" in str(info.value)
     assert "candidate_2" in str(info.value)
     assert str(log) in str(info.value)
@@ -249,19 +258,50 @@ def test_a_clean_log_does_not_raise(tmp_path):
         json.dumps({"type": "text", "part": {"text": "wrote candidate.py"}}) + "\n",
         encoding="utf-8",
     )
-    coding_agent.check_for_permission_denials(log)
+    assert coding_agent.check_for_permission_denials(log, own_dirs=[tmp_path]) == []
 
 
-def test_run_coding_agent_raises_on_a_denied_permission_and_keeps_the_log(tmp_path, monkeypatch):
+def test_a_denial_outside_the_agents_directories_is_returned_not_raised(tmp_path):
+    """The agent reached outside its tree and was refused: that is the refusal
+    working, not a misconfiguration. The caller reports it and carries on."""
+    tree = tmp_path / "run_a" / "repo"
+    outside = tmp_path / "run_b" / "repo"
+    log = tmp_path / "agent.jsonl"
+    log.write_text(
+        f"! permission requested: external_directory ({outside}/*); auto-rejecting\n",
+        encoding="utf-8",
+    )
+    refused = coding_agent.check_for_permission_denials(log, own_dirs=[tree])
+    assert refused == [str(outside)]
+
+
+def test_run_coding_agent_raises_when_denied_its_own_directory(tmp_path, monkeypatch):
     _install_fake_opencode(tmp_path, monkeypatch, _FAKE_OPENCODE_DENIED)
     tree = _agent_tree(tmp_path)
-    log_path = tmp_path / "candidate_0" / "agent.jsonl"
+    candidate_dir = tree / "candidate_0"
+    monkeypatch.setenv("FAKE_DENIED_DIR", str(candidate_dir))
+    log_path = candidate_dir / "agent.jsonl"
     with pytest.raises(coding_agent.AgentPermissionDenied):
         coding_agent.run_coding_agent(
             "hello", cwd=tree, log_path=log_path, backend="opencode",
-            timeout_secs=30, on_summary=None,
+            allowed_dirs=[candidate_dir], timeout_secs=30, on_summary=None,
         )
     assert "auto-rejecting" in log_path.read_text(encoding="utf-8")
+
+
+def test_an_agent_refused_a_directory_outside_its_own_carries_on(tmp_path, monkeypatch):
+    _install_fake_opencode(tmp_path, monkeypatch, _FAKE_OPENCODE_DENIED)
+    tree = _agent_tree(tmp_path)
+    candidate_dir = tree / "candidate_0"
+    monkeypatch.setenv("FAKE_DENIED_DIR", str(tmp_path / "another_run"))
+    summaries = []
+    success, text = coding_agent.run_coding_agent(
+        "hello", cwd=tree, log_path=candidate_dir / "agent.jsonl", backend="opencode",
+        allowed_dirs=[candidate_dir], timeout_secs=30, on_summary=summaries.append,
+    )
+    assert success
+    assert "carried on" in text
+    assert any("refused" in s and "another_run" in s for s in summaries)
 
 
 def test_critique_round_does_not_swallow_a_permission_denial(tmp_path, monkeypatch):

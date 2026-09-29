@@ -262,3 +262,25 @@ def test_a_sandboxed_run_wraps_the_cli_in_the_agents_sandbox(tmp_path, monkeypat
     assert seen["backend"] == "opencode"
     assert seen["agent_dir"] == agent_dir
     assert list(seen["writable_dirs"]) == [agent_dir]
+
+
+def test_a_sandboxed_agents_private_home_is_removed_when_it_exits(tmp_path, monkeypatch):
+    """CLI state (codex installs ~200 files of stock skills and plugins per
+    agent) goes; the agent's scratch dir, with its scripts, stays."""
+    import src.runtime.coding_agent as coding_agent
+
+    agent_dir = tmp_path / "candidate_0"
+
+    def fake_sandbox_command(cmd, *, agent_dir, env, **kwargs):
+        (agent_dir / ".home" / ".codex").mkdir(parents=True)
+        (agent_dir / "scratch").mkdir(parents=True)
+        (agent_dir / "scratch" / "explore.py").write_text("print(1)\n", encoding="utf-8")
+        return ["true"], dict(env)
+
+    monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
+    coding_agent.run_coding_agent(
+        "p", cwd=tmp_path, log_path=agent_dir / "agent.jsonl", backend="opencode",
+        allowed_dirs=[agent_dir], sandbox=True, on_summary=None, timeout_secs=30,
+    )
+    assert not (agent_dir / ".home").exists()
+    assert (agent_dir / "scratch" / "explore.py").exists()

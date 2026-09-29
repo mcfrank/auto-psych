@@ -25,6 +25,7 @@ caps network namespaces at 0 anyway.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import sys
@@ -99,9 +100,32 @@ def sandbox_command(
         env[var] = str(user_home / default)
     if backend != "opencode":  # opencode's own XDG_DATA_HOME is in the agent dir
         env["XDG_DATA_HOME"] = str(user_home / ".local" / "share")
+    if backend == "opencode":
+        # opencode's own guard answers a path outside the tree with a permission
+        # prompt, and `opencode run` auto-rejects it by ending the whole session:
+        # the agent stops working. The sandbox already keeps it in (with a plain
+        # "No such file"), so the guard is switched off. OPENCODE_PERMISSION is
+        # merged over opencode.json, whose other rules stay.
+        permission = json.loads(env.get("OPENCODE_PERMISSION") or "{}")
+        permission["external_directory"] = "allow"
+        env["OPENCODE_PERMISSION"] = json.dumps(permission)
 
     args += ["--chdir", str(cwd), "--", executable, *cmd[1:]]
     return args, env
+
+
+def remove_private_home(agent_dir: Path) -> None:
+    """Delete a finished agent's private home; its ``scratch/`` is kept.
+
+    The home only holds CLI state (codex installs about 200 files of stock
+    skills and plugins per agent); the agent's log is its record. A login
+    mounted into it (codex's auth.json) was a mount inside the namespace only:
+    on the host it is an empty mount-point file, so this cannot touch the real
+    one — a test runs a real sandbox to check exactly that.
+    """
+    home = Path(agent_dir) / HOME_NAME
+    if home.exists():
+        shutil.rmtree(home)
 
 
 def _outermost(paths: Sequence[Path]) -> List[Path]:
