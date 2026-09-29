@@ -1,357 +1,167 @@
 # How the loop works
 
-This page walks through one experiment and then explains what carries over to
-the next one. Each step says what happens, why it was designed that way, and
-where the code is. Terms in *italics* are defined in the [glossary](glossary.md).
+One experiment, step by step, with where the code is. Why each piece exists
+is in the [brief](BRIEF.md) § 2. The stage names (`2_design`, …) are the ones
+the code, the logs and the `--agent` flag use; there is no stage 1.
 
-## The task and the data
+## The data
 
-The project directory is
-`src/pipelines/outer_loop/projects/subjective_randomness/`. It holds the task
-definition (`problem_definition.md`, including the exact wording participants
-see), the starting models and the Prolific study settings.
-
-On each trial a participant sees two H/T sequences **of the same length**
-(2 to 8 flips) and clicks the one that looks more random. Every response becomes
-one row with five columns (`src/pipelines/outer_loop/columns.py`):
+A trial is a pair of H/T sequences of the **same length** (2–8). Every
+response is one row with five columns (`src/pipelines/outer_loop/columns.py`):
 
 | column | meaning |
 |---|---|
-| `sequence_a`, `sequence_b` | the two sequences **as shown**: `sequence_a` is the one on the left (the web page randomly decides, per trial, which of the designed pair goes left) |
-| `participant_id` | an integer, unique across the run's experiments (a new person gets the next number) |
+| `sequence_a`, `sequence_b` | the pair **as shown**; `sequence_a` was on the left (the page randomises the side per trial) |
+| `participant_id` | an integer, unique across the run's experiments |
 | `trial_index` | trial number within the participant |
-| `chose_left` | 1 if the participant clicked the left sequence (`sequence_a`), else 0 |
+| `chose_left` | 1 if the left sequence was chosen |
 
-Every model is a self-contained PyMC file with a module-level `model`. It
-computes its own features from the raw sequences through a hook
-(`compute_features(sequence_a, sequence_b)` or `prepare_observed(rows)`). The
-pipeline never hands models precomputed features. Every model is a
-Bayesian model of `p_left`, the probability of choosing `sequence_a`, and
-usually has free parameters such as decision noise or a side bias.
+A model is one `.py` file with a module-level `model` (a `pm.Model`), a
+`p_left` per trial, and a Bernoulli likelihood on `chose_left`. It computes
+its own features with `compute_features(sequence_a, sequence_b)` or
+`prepare_observed(rows)`. Task assets, including the wording participants see,
+are in `src/pipelines/outer_loop/projects/subjective_randomness/`.
 
-## Step 0: the starting models
+## Step 0: the model set
 
-Experiment 1 starts from the four models in
-`projects/subjective_randomness/seed_models/` (the code calls them *seed
-models*). Each is a quantitative version of a published account:
+- **Experiment 1** copies the four starting models from `seed_models/`
+  (`seed_experiment_models_from_project` in `orchestrator.py`). The run records
+  them in `starting_models.json`, beside the experiment folders; those are
+  the protected models.
+- **Later experiments** copy the previous experiment's `cognitive_models/`
+  (`carry_forward_cognitive_models`), only if that experiment's model stage
+  finished (its `model_loop/export_complete.json` validates).
 
-| model | idea |
+## Step 1: choose stimuli (`2_design`, no agent)
+
+`run_design_programmatic` (`orchestrator.py`) → `design_exhaustive`
+(`src/pipelines/outer_loop/eig.py`) → the estimator in
+`src/models/eig_selection.py`.
+
+- **Candidates:** every distinct same-length pair, lengths 2–8 (43,434).
+- **Score:** joint EIG, the expected drop in uncertainty (bits) about which
+  model is right. The pipeline pretends each model in turn is true, draws
+  parameters (200 per model), simulates N participants' answers to each pair
+  (a count of "left" choices, Binomial(N, `p_left`)), and averages over 1,000
+  such scenarios. The model prior is uniform over the models carried in.
+- **Selection:** 64 pairs, one at a time, each maximising the whole set's
+  EIG. When the best gain is within two Monte Carlo standard errors of zero,
+  the remaining places go to the pairs most informative for one answer
+  (marked `eig_single_response_fill` in `design/stimuli.json`).
+- **Priors or posteriors:** experiment 1 uses the models' priors. Later
+  experiments first fit each model to all data so far (500 draws, 2 chains)
+  and use the posteriors.
+- **Speed:** the search re-scores only the most promising pairs between full
+  passes, in single precision (minutes instead of hours). A scenario's
+  likelihood leaves out the draw that generated it, so the true model is not
+  flattered.
+- **Models left out:** a model whose `p_left` is undefined or whose own code
+  fails on some pairs is left out of that design only, and listed in
+  `design/screened_out.json` (written even when empty).
+
+## Step 2: build and deploy the page (`3_implement`)
+
+A coding agent follows the fixed template in
+`src/pipelines/outer_loop/prompts/3_implement.md` and writes
+`experiment/index.html` (jsPsych, two buttons, side randomised). A validator
+checks it; with `--validate` a failure goes back to the agent up to
+`--max-validation-repairs` (default 2) more times.
+
+With `--deploy-target firebase` (`run_deployment` in
+`src/pipelines/outer_loop/deployment/local.py`), in this order: the results
+token is checked; the deployment record is built (it records the git commit,
+and **stops if the code is not in a git checkout**, which is the case for
+the launchers' run copies; see the runbook); a **draft** Prolific study is
+created (US, English-fluent, approval ≥ 98%, desktop, automatic payment on
+completion) and its id written to `deployment/deployment_manifest.json`; the
+IRB consent page from `templates/consent.txt` is put in front of the
+experiment; the site and functions (`/submit`, and the token-protected
+`/results` and `/register_session`) are deployed; the collection session is
+registered; the page is fetched to check it is live; and, in `live` mode
+only, the study is published.
+
+## Step 3: collect (`4_collect`, no agent)
+
+`run_collect_programmatic` (`orchestrator.py`), `_collect_live` (`collect.py`).
+In live mode it checks Prolific every 30 s until N people have finished or 2
+hours have passed; in the second case it pauses the study. It downloads from
+`/results`, numbers participants uniquely across the run, and writes the five
+raw columns to `data/responses.csv`. The full download, Prolific IDs
+included, goes to `<project>/raw_collected/experiment<N>_responses.csv`,
+beside the experiment folders. It aborts if every response is on one side.
+
+Simulated modes: `simulated_participants` draws answers from the models'
+priors (or `--ground-truth-model`); `simulated_participants_nobrowser` asks a
+language model to answer.
+
+## Step 4: the model stage (`5_model_loop`, the inner loop)
+
+Code: `src/pipelines/inner_loop/` (`pymc_orchestrator.py` runs it,
+`model_zoo.py` admission and removal, `scoring.py` comparison,
+`candidate_agent.py` and `critique_round.py` the agents).
+
+1. **Start.** `begin_model_loop_stage` records (or, on a restart, restores)
+   the model set and agent notes the stage started from, and empties
+   `model_loop/`. All experiments' responses are pooled into
+   `model_loop/responses.csv`.
+2. **Fit and score.** Every model is fitted by MCMC (defaults in
+   `src/models/mcmc_defaults.py`: 4 chains, 4,000 draws, 3,000 tuning steps,
+   `target_accept` 0.99; the live configs use 2,000–3,000 draws). Models are
+   ranked by ELPD-LOO; the best is the top-ranked one with a reliable
+   estimate (`_best_exportable_model`; reliability in
+   `src/models/loo_reliability.py`). A starting model that cannot be fitted,
+   or breaks the data contract, stops the run.
+3. **Rounds** (`--inner-loop-iterations`, default 2). Each round:
+   - **Critique.** An agent writes up to 8 test statistics; each is computed
+     on the data and on 1,000 datasets simulated from the best model
+     (`src/critique/ppc.py`). Those with p ≤ 0.05 go into `critiques.md` for
+     the theorists. A round without a usable statistic is marked
+     `no_critique` in `history.json`.
+   - **Proposals.** `--inner-loop-candidates` agents (default 3) run in
+     parallel, each writing `candidate.py` and `hypothesis.md`. Roles
+     (`slot_roles` in `model_zoo.py`): with C ≥ 4, C−3 explore (angles from
+     `DEFAULT_CANDIDATE_HINTS` in `candidate_agent.py`), 2 improve the best,
+     1 improves a model of its choice from `refinement_menu.md`; with 3: one
+     of each; with 2: explore and improve-the-best; with 1: explore.
+   - **Admission** (`_admit_candidate_with_reason`), in order: code check
+     (`import_gate.py`); loadable with finite log-probability; data contract
+     (`src/models/model_contract.py`); fit within 15 minutes; converged; finite
+     ELPD-LOO; RMSE ≥ 0.002 from every admitted model on
+     `model_loop/novelty_pool.json`. Candidates are fitted concurrently, then
+     admitted one by one. A candidate's own broken code is a rejection; a
+     machine or pipeline failure stops the run.
+   - An empty slot is rerun once; a rejected proposal gets one repair
+     attempt. Every attempt goes into `model_loop/attempted_hypotheses.jsonl`.
+4. **End of experiment.** `_prune_losers`: non-starting models with a
+   trustworthy score that trail the best trustworthy model by more than
+   2 × the clustered standard error (`src/models/clustered_se.py`) move to
+   `model_loop/models/pruned/`. `_cap_live_set` keeps at most 8
+   (untrustworthy scores go first, then the lowest). The survivors, the
+   starting models and the attempts log are exported to `cognitive_models/`
+   (`_export_inner_loop_models` in `model_loop_runner.py`). Then
+   `finish_model_loop_stage` writes `model_registry.yaml` (equal weights) and
+   `model_loop/export_complete.json`.
+
+Agents are opencode with `google/gemini-3.1-pro-preview` (default) or Claude
+Code (`--coding-agent claude`, `claude-sonnet-4-6`), each with a 15-minute
+limit, run in a bubblewrap sandbox (`src/runtime/agent_sandbox.py`).
+
+## What a finished experiment contains
+
+Under `<output dir>/subjective_randomness/experiment<N>/`:
+
+| path | contents |
 |---|---|
-| `falk_konold_dp` | Falk & Konold's (1997) "difficulty predictor": sequences that would be harder to memorise look more random |
-| `motif_stack` | Griffiths et al. (2018): the likelihood ratio of "fair coin" versus a simple automaton that generates regular motifs |
-| `finite_experience_occurrence` | Hahn & Warren (2009): how likely the string is to appear at least once in 20 fair flips |
-| `local_representativeness` | Kahneman & Tversky (1972): sequences whose local windows look balanced and irregular look more random |
-
-The starting models are **protected**: they are never removed, however badly
-they fit. That keeps the literature baselines in every comparison. The run
-records which models it started from (`starting_models.json`, beside the
-experiment folders), and only those are protected. A proposal cannot take the
-name of a starting model, or of any model removed earlier in the run; it is
-renamed (`name_2`), and the record of attempts says so.
-
-> The main `README.md` says the starting models are "the best models discovered
-> by three earlier human replicate runs", and `scripts/outer_loop_live/hero_run.yaml`
-> says the same. That is out of date. The manifest
-> (`seed_models/models_manifest.yaml`) says these four literature models replaced
-> that earlier set.
-
-Code: `seed_experiment_models_from_project` in
-`src/pipelines/outer_loop/orchestrator.py`.
-
-## Step 1: choosing the stimuli (`2_design`, no AI)
-
-**What.** The pipeline lists every pair of distinct same-length sequences with
-lengths 2–8, which is 43,434 pairs. It then picks 64 of them, one at a time:
-each pick is the pair that most increases the *expected information gain* of the
-whole set.
-
-**Expected information gain (EIG)**, in plain terms: before running the
-experiment, how many bits of uncertainty about *which model is right* would
-the responses to these stimuli remove, on average over the outcomes the models
-themselves predict? The calculation works like this:
-
-- Pretend one of the models is true, draw plausible parameter values from it,
-  and simulate what N participants would answer to each pair.
-- Each pair yields a count of "left" choices, k ~ Binomial(N, p_left), where N is
-  the planned number of participants (`--n-participants`).
-- See how much that simulated data would shift the posterior over models.
-- Average over 1,000 such simulated scenarios, with 200 parameter draws per
-  model.
-
-The models start with equal prior weight.
-
-**Why this design.** Pairs where every model predicts the same thing are wasted
-trials. EIG puts the trials where models disagree, weighted by how sharply N
-participants could tell them apart.
-
-**Details you may see in the output (`design/stimuli.json`):**
-
-- *Stopping and filling.* The information gained by adding one more pair to the
-  set shrinks quickly. Once the best available gain is within two Monte Carlo
-  standard errors of zero, the remaining slots are chosen differently. Each is
-  the pair with the highest information gain for a *single* response, given the
-  pairs already picked. These are labelled `"source": "eig_single_response_fill"`;
-  the main picks are labelled `"eig"`.
-- *Experiment 1 versus later experiments.* Experiment 1 simulates from the
-  models' priors. From experiment 2 on, every model is first fitted (quickly:
-  500 draws, 500 tuning steps, 2 chains) to *all* data collected so far, and the
-  simulation uses those posteriors.
-- *Speed-ups.* The search is a fast approximation (re-scoring only the most
-  promising candidates between full passes, in single precision). The
-  developers checked it against the exact search on two designs. It takes
-  minutes instead of hours. Each simulated scenario also leaves out the
-  parameter draw that generated it when it averages the likelihood, so
-  the true model is not rewarded for "remembering" its own draw.
-- *Models left out of the design.* A model that cannot make a valid prediction
-  for some pairs (a probability that is undefined, or outside 0–1) is left out
-  of that experiment's design. So is a model whose predictions depend on the
-  participant, and one whose own code fails on some pairs (for example a
-  feature that looks at the fourth flip, on a pair of length 2). Every model left out is listed in `design/screened_out.json`,
-  which is written even when it is empty.
-
-Code: `run_design_programmatic` (`orchestrator.py`) →
-`design_exhaustive` (`src/pipelines/outer_loop/eig.py`) → the
-estimator in `src/models/eig_selection.py`.
-
-> The standalone design command (`python -m src.pipelines.outer_loop.eig`) has
-> different defaults (32 stimuli, lengths 4–8) from the pipeline (64 stimuli,
-> lengths 2–8).
-
-## Step 2: building and deploying the experiment (`3_implement`)
-
-**What.** An AI coding agent reads a *fixed* template
-(`src/pipelines/outer_loop/prompts/3_implement.md`), the task wording and
-the chosen stimuli. It writes `experiment/index.html` (jsPsych 7, button
-responses only, left/right order randomised on each trial) and
-`experiment/config.json`. A validator checks the output. With `--validate`
-(the live launchers always pass it), a failure is sent back to the agent up to
-`--max-validation-repairs` (default 2) more times before the run stops.
-
-**Note.** The template is fixed and only the stimuli change, so this step is
-close to mechanical, but it is still done by an agent. The prompt insists the
-page be identical across experiments apart from the stimuli. It is worth
-opening the generated page yourself before any live study (see the rehearsal
-in the runbook).
-
-**Deployment** (`src/pipelines/outer_loop/deployment/local.py`, only when
-`--deploy-target firebase`):
-
-1. The IRB consent text in `templates/consent.txt` is injected as a
-   full-screen "I agree" page in front of the experiment. The agent never
-   writes consent text.
-2. The site and two small server functions are deployed to Firebase:
-   `/submit` stores a participant's data in Firestore, and `/results` returns
-   it as CSV. `/results` and `/register_session` require a shared secret token.
-3. The run's collection session is registered, so `/submit` accepts data only
-   for this deployment.
-4. The pipeline checks that the page actually loads, and refuses to go on if
-   it does not.
-5. A Prolific study is created: US residents, fluent in English, approval
-   rate ≥ 98% by default, desktop only, with payment approved automatically on
-   completion. The study is **published only in `live` mode**.
-
-## Step 3: collecting responses (`4_collect`, no AI)
-
-- **Live mode.** The pipeline checks Prolific every 30 seconds until the target
-  number of participants have finished, **or 2 hours have passed**; in the
-  second case it pauses the study so nobody else is recruited. It then
-  downloads all submissions from `/results`. `data/responses.csv` gets the
-  five raw columns only; the full download, Prolific IDs included, is kept in
-  `raw_collected/experiment<N>_responses.csv` beside the experiment
-  directories, which no agent is given.
-- **Simulated modes.** Responses are simulated from the current models' priors
-  (`--mode simulated_participants`, the default), or produced by asking a
-  language model to act as each participant
-  (`--mode simulated_participants_nobrowser`).
-
-A basic quality check aborts the run if *every* collected response is on the
-same side. The live dashboard (see the runbook) catches subtler problems while
-the study is running.
-
-Code: `run_collect_programmatic` (`orchestrator.py`), `_collect_live`
-(`collect.py`).
-
-## Step 4: finding better models (`5_model_loop`)
-
-This is the only place where new hypotheses enter. The code calls it the
-*inner loop*, as opposed to the *outer loop* over experiments. It works in the
-directory `experimentN/model_loop/`.
-
-### 4a. Fit everything
-
-All responses from experiment 1 up to the current one are pooled into
-`model_loop/responses.csv`, and every current model is fitted by MCMC.
-Defaults: 4 chains, 4,000 draws and 3,000 tuning steps per chain,
-`target_accept` 0.99 unless the model declares its own. These defaults are in
-`src/models/mcmc_defaults.py`; the launcher configs set 2,000–3,000 draws and
-2,000 tuning steps. A model that cannot be fitted or has no finite score is
-dropped at this point; if that happens to a starting model, the run stops
-instead.
-
-**Comparison.** Models are compared by **ELPD-LOO**, the expected log predictive
-density under leave-one-out cross-validation. For each response: fit the model
-without it, and see how much probability the model gives to what the
-participant actually chose. Sum over responses. Higher is better, and the
-leave-one-out step penalises overfitting. It is estimated from the MCMC samples
-by an importance-sampling shortcut (*PSIS*). That shortcut comes with a
-diagnostic (*Pareto k*) saying when it cannot be trusted for a given response.
-If more than 1% of responses fail that diagnostic, the model's score is marked
-*unreliable* (`src/models/loo_reliability.py`).
-
-**The best model** is the top-ranked model by ELPD-LOO among those whose score
-is reliable and whose MCMC converged (`_best_exportable_model` in
-`src/pipelines/inner_loop/scoring.py`). A "posterior probability" for each model
-is also reported (`model_posterior.json`). It is a softmax of ELPD-LOO with a
-small penalty for code length, it is known to be overconfident, and nothing
-is selected on it.
-
-### 4b. Rounds of critique and proposals
-
-Each experiment runs a fixed number of rounds: `--inner-loop-iterations`
-(default 2; the hero config uses 4). Each round has two parts.
-
-1. **Critique** (the "CriticAL" method; `src/pipelines/inner_loop/critique_round.py`,
-   `src/critique/ppc.py`). An agent proposes up to 8 test statistics that
-   might reveal where the current best model fails, for example "how often
-   people choose the sequence with more alternations". Each statistic is
-   computed on the real data and on 1,000 datasets simulated from the fitted
-   model (a posterior predictive check). Statistics with p ≤ 0.05 are reported
-   as discrepancies, with a false-discovery-rate adjusted q alongside for
-   information. They are written to `critiques.md` and passed to every
-   proposing agent. If the agent writes no usable statistic twice, the round
-   runs without a critique and `history.json` says so.
-
-2. **Proposals.** Several agents, `--inner-loop-candidates` per round, run in
-   parallel. Each writes one new model (`candidate.py`), a plain-language
-   hypothesis (`hypothesis.md`) and optionally a name (`model_name.txt`). Each
-   agent has a role:
-
-   | number of agents per round | roles |
-   |---|---|
-   | 1 | 1 explore |
-   | 2 | 1 explore, 1 improve-the-best |
-   | 3 (default) | 1 explore, 1 improve-the-best, 1 improve-another |
-   | C ≥ 4 | C−3 explore, 2 improve-the-best, 1 improve-another |
-
-   - **Explore** agents must propose one genuinely new mechanism. Each gets a
-     different "angle" from a fixed list of twelve (e.g. "a process-level
-     account: memory, attention, encoding cost", "the decision rule: lapses,
-     side bias, probability matching", "exemplar or prototype similarity";
-     `DEFAULT_CANDIDATE_HINTS` in `candidate_agent.py`). They are told which
-     hypotheses have already been tried and dropped, and not to re-propose them.
-   - **Improve-the-best** agents get the current best model's code and
-     hypothesis and must make one deliberate, stated change that would beat it.
-   - **Improve-another** agents pick any other current or previously dropped
-     model from a menu and improve it.
-
-   Why the roles? An earlier batch of simulation runs showed the best model
-   never changed. New proposals were all "breadth", and nobody was refining the
-   leader.
-
-**Admission.** A proposal joins the set only if it passes every check, in this
-order (`_admit_candidate_with_reason` in `model_zoo.py`):
-
-1. The files exist and the code passes a safety check: only an allowlist of
-   imports (numpy, pymc, scipy, …), and no file access or `eval`.
-2. It is a loadable PyMC model with a finite log-probability, and it honours
-   the data contract: it is fitted to exactly the responses (`chose_left`, in
-   row order), and its `p_left` has one value per trial and is the probability
-   its likelihood uses. Otherwise a model could be scored on one thing and
-   used (by the design, the novelty check and the evaluation) through another.
-   This check needs no sampling; the starting models get it too.
-3. It can be fitted within 15 minutes.
-4. The MCMC converged. That means the chains agree (R-hat ≤ 1.05), there are
-   enough effectively independent draws (bulk ESS ≥ 100), and ≤ 0.1% of
-   transitions were divergent. A fit that just misses is refitted once at a
-   higher `target_accept`. Because the default is already 0.99, in practice
-   this retry only happens for models that declare a lower `target_accept`.
-5. It has a finite ELPD-LOO.
-6. It is **not a near-duplicate**. Its predicted `p_left` must differ from
-   every model already in the set by a root-mean-square difference of at least
-   0.002. This is measured on a separate set of 512 random same-length pairs
-   (lengths 4–8, written to `model_loop/novelty_pool.json`), not on the
-   training stimuli. Two models that agree on the 64 training pairs but differ
-   elsewhere therefore count as different.
-
-A proposal whose own code breaks (a typo in its feature function, no
-`p_left`, a `p_left` that is not one probability per pair) is rejected with the
-error, like any other failed check. A failure of the machine or of the
-pipeline's own code is not blamed on the proposal: it stops the run.
-
-An agent that writes nothing gets one retry. A proposal that is rejected gets
-one repair attempt, with the rejection reason in the agent's prompt. Every
-attempt, admitted or not, is recorded in `model_loop/attempted_hypotheses.jsonl`,
-together with every model removal. The code calls this file the *ledger*. It
-carries over to later experiments, so agents are not asked to rediscover
-hypotheses that were already tried and dropped.
-
-**Where the agents run.** Agents are command-line coding assistants: opencode
-with Google's Gemini (default model `google/gemini-3.1-pro-preview`), or Claude
-Code (`claude-sonnet-4-6`), chosen with `--coding-agent`. Each runs inside a
-`bubblewrap` sandbox (`src/runtime/agent_sandbox.py`). It can read the
-code, write only its own directory, and sees none of the credentials except its
-own API login. Each agent has a 15-minute limit.
-
-### 4c. End of the experiment: who survives
-
-After the last round, within the same `5_model_loop` stage:
-
-- **Pruning.** A non-starting model is removed when its score is trustworthy
-  and it is clearly worse than the best model whose score is trustworthy
-  (a leader with an untrustworthy score does not count): its ELPD-LOO deficit exceeds 2
-  standard errors of the difference. That standard error is computed with all
-  responses to the same stimulus pair treated as one cluster
-  (`src/models/clustered_se.py`). Responses to the same pair are correlated, so
-  the ordinary per-response standard error is about half as large as it should
-  be.
-- **Size limit.** At most 8 models are kept. Models with untrustworthy scores go
-  first, then the lowest ELPD-LOO. Starting models are always kept.
-- Removed models are moved to `model_loop/models/pruned/`, not deleted.
-- **Export.** All survivors, not just the winner, are copied to
-  `experimentN/cognitive_models/` with a `models_manifest.yaml` giving each
-  model's hypothesis. The attempts record goes next to them. A rival that the
-  data cannot yet separate from the winner is kept, and the next design is
-  aimed at separating them.
-- `model_registry.yaml` then gives every surviving model **equal prior
-  weight** for the next design. Last, `model_loop/export_complete.json`
-  records what was exported; only then is the experiment's model stage done.
-  A stage that was interrupted starts again from the model set and the agent
-  notes it first started from (`cognitive_models_input/`,
-  `agent_notes_at_start/`), so a restart never builds on a half-written export
-  or on notes about candidates that no longer exist.
-
-Code: `_prune_losers`, `_cap_live_set` (`model_zoo.py`);
-`_export_inner_loop_models`, `update_registry_from_interpretation`
-(`src/pipelines/outer_loop/model_loop_runner.py`).
-
-## Step 5: the next experiment
-
-Experiment N+1 copies experiment N's `cognitive_models/` (models + manifest +
-attempts record) and repeats steps 1–4 (`carry_forward_cognitive_models` in
-`orchestrator.py`). It fails loudly if experiment N did not finish. **Only these
-files cross the boundary**: model files, the attempts record, and the equal-weight
-prior. The data cross implicitly, because every experiment's model stage and
-every later design pool all earlier `data/responses.csv` files.
-
-## The final output
-
-For each experiment, under `<output dir>/<project>/experimentN/`:
-
-| file | contents |
-|---|---|
-| `cognitive_models/` | the surviving models (code + `models_manifest.yaml` with each hypothesis) |
+| `cognitive_models/` | the surviving models, `models_manifest.yaml` with each hypothesis, the attempts log |
+| `design/stimuli.json`, `screened_out.json` | the 64 pairs and their EIG; models left out |
+| `data/responses.csv` | the responses, five raw columns |
 | `model_loop/report.md` | readable summary of the model stage |
-| `model_loop/model_posterior.json` | the comparison table (ELPD-LOO, differences, standard errors, reliability and convergence flags), best model, reported posterior |
-| `model_loop/history.json` | the best model and scores after every round, and whether each round had a critique |
-| `model_loop/best_model.py` | the winning model's code |
-| `model_loop/iter_<i>/` | every proposal (code, hypothesis, agent transcript) and every critique |
-| `design/stimuli.json` | the stimuli and their information gain |
-| `data/responses.csv` | the collected responses, five raw columns (runs collected before 28 September 2026 also contain Prolific IDs) |
-| `../raw_collected/experiment<N>_responses.csv` | everything collection returned (**contains Prolific IDs in live runs**; see the privacy rules in the runbook) |
-| `token_usage_summary.json` | language-model token use and cost for the experiment |
+| `model_loop/model_posterior.json` | comparison table (ELPD-LOO, differences, standard errors, reliability, convergence) |
+| `model_loop/history.json` | best model and scores after every round |
+| `model_loop/iter_<i>/` | every proposal, critique and agent transcript |
+| `token_usage_summary.json` | language-model use and cost |
 
-The answer to "what did the loop discover?" is the best model of the last
-experiment, read together with the other survivors and the ELPD differences
-between them. To browse all of it, run
-`uv run python -m src.viewer.server --data-root <output dir>` and open
-`http://127.0.0.1:8000`.
+The answer to "what did the loop find?" is the best model of the last
+experiment, read with the other survivors and the ELPD gaps. Browse runs with
+`python -m src.viewer.server --data-root <output dir>` (port 8000; on Sherlock
+run it inside a job and reach it by SSH port forwarding).

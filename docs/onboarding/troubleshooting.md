@@ -1,105 +1,41 @@
 # Troubleshooting
 
-The messages below are quoted from the code (shortened with `…`). Each is
-grouped by where it appears, with its cause and what to do. The code generally
-**fails loudly rather than silently substituting data**, so an error usually
-means something needs a decision, not a retry.
+Messages are quoted from the code, shortened with `…`. The code stops with an
+error rather than guess, so an error usually needs a decision, not a retry.
 
-First rule for any failure during a live run: **check the Prolific dashboard.**
-If a study is published and the pipeline has stopped, pause or stop the study
-first, then debug. Recover with `RESUME_AGENTS`, not a plain relaunch: a
-relaunch of an experiment with a live study is refused (see
-[running_a_live_experiment.md § 0 C and § 10](running_a_live_experiment.md)).
-
-## When launching (`run_pilot.sh`, `start_full_run.sh`)
+**First, for any failure in a live run: look at the Prolific dashboard.** If a
+study is published and the job has stopped, pause it, then debug. Recover
+with `RESUME_AGENTS` ([runbook § 9](running_a_live_experiment.md#9-recovering-without-paying-again)),
+never with a plain relaunch.
 
 | message | cause | what to do |
 |---|---|---|
-| `PREFLIGHT FAILED: venv not built — run once: sbatch …/setup.sbatch` | no `$WORK_ROOT/venv` | build it as in runbook § 2 (export `OUTER_LIVE_SLURM_DIR` first; the command in the message alone fails) |
-| `PREFLIGHT FAILED: FIREBASE_TOKEN missing in .secrets` / `PROLIFIC_API_TOKEN missing` | key absent from `$REPO/.secrets`, or `REPO` points at another checkout | add the key; `export REPO=<your checkout>` |
-| `PREFLIGHT FAILED: no IRB consent text at templates/consent.txt` | consent file missing | restore the IRB-approved text |
-| ``pilot config error: `prolific_mode: live` recruits and PAYS real participants. Add `confirm_live_recruitment: true` …`` | the second live-mode gate | add the line only if you mean to pay people |
-| ``pilot config error: `design_mode` was removed …`` | old config key | delete the key |
-| ``pilot config error: missing required `prolific.participants` `` (or `project`, `run_label`) | incomplete config | add it |
-| `pilot config error: Prolific token check FAILED: GET /users/me/ 401 …` | wrong or expired token | make a new token in Prolific's settings |
-| `min_approval_rate must be a percentage between 0 and 100` / `Prolific reward config is non-positive …` | bad `prolific:` values | fix the config |
-| `Aborted — nothing was deployed or published.` / `Aborted — nothing deleted, nothing launched.` | you did not type `yes` | — nothing was changed |
+| `PREFLIGHT FAILED: venv not built …` | no `$WORK_ROOT/venv` | runbook § 2 (export `OUTER_LIVE_SLURM_DIR` first) |
+| `PREFLIGHT FAILED: FIREBASE_TOKEN missing …` / `PROLIFIC_API_TOKEN missing` | key absent, or `REPO` points at another checkout | add it; `export REPO=<your checkout>` |
+| ``pilot config error: `prolific_mode: live` recruits and PAYS … `` | live without `confirm_live_recruitment: true` | add it only if you mean to pay people |
+| `…/_env.sh: No such file or directory` (top of a job log) | `sbatch` without `OUTER_LIVE_SLURM_DIR` | export it, resubmit |
+| ``RuntimeError: `git rev-parse HEAD` failed in … cannot record deployment provenance`` | the launchers' run copy has no `.git` ([runbook § 0](running_a_live_experiment.md#0-blocking-problem-read-first)) | needs a code change; nothing was created |
+| ``live collection needs `prolific_study_id` …`` | `prolific_mode: none` through the launchers, or a fresh experiment resumed with `PROLIFIC_MODE=none` | live collection needs a study |
+| `FATAL: bwrap not on PATH …` | the `system bubblewrap` module did not load | `ml spider bubblewrap`; if the module is broken, that is a cluster problem (below) |
+| `Error: --prolific-mode live … Pass --confirm-live-recruitment` | `run.py` or `run_live.sbatch` called by hand | `CONFIRM_LIVE_RECRUITMENT=1`, or `PROLIFIC_MODE=none` for a recovery |
+| `No Prolific study settings at …` / `… sets total_available_places: …, but this run was started with --n-participants …` | study settings not rendered, or a different count | render with `_pilot_config.py <config> --render-only` in the checkout the job runs from; keep one count |
+| `The researchers' raw collected data would be written to …` | `run.py` by hand with the output tree inside the repository | set `AUTO_PSYCH_OUTPUT_DIR` outside it |
+| `LiveStudyAlreadyRecorded: experiment<N> already has a live Prolific study …` | relaunch of an experiment with a live study | nothing ran. `RESUME_AGENTS=4_collect:5_model_loop`; a second study only after stopping the first, with `PUBLISH_ANOTHER_PROLIFIC_STUDY=1` |
+| `[error] Experiment N's model loop is not complete (…)` | the previous experiment's model stage did not finish | rerun it (`RESUME_AGENTS=5_model_loop` for that experiment) |
+| `[error] 3_implement still invalid after 3 attempt(s): …` | the agent could not make a valid page | read `experiment<N>/logs/3_implement.jsonl`; nothing was deployed |
+| `AUTO_PSYCH_RESULTS_TOKEN is not set …` | missing key | at deploy time nothing was created; at collection time the study is already running: add it, recover with `RESUME_AGENTS=4_collect:5_model_loop` |
+| `Firebase deploy failed …` / `… the experiment page is NOT live …` | expired `FIREBASE_TOKEN`, permissions, outage, hosting not published | nothing was published, but a **draft** study exists and is recorded: delete it in Prolific, fix the cause, then relaunch with `PUBLISH_ANOTHER_PROLIFIC_STUDY=1` (a plain relaunch is refused) |
+| `Failed to create Prolific study: …` / `Failed to publish …` | often insufficient funds | a draft may exist: check and delete it |
+| log stays at `Prolific poll: … completed=k target=N` | slow recruitment | normal for up to 2 h, then the study is paused |
+| `PAUSED Prolific study <id>: collection gave up at k/N …` | 2 hours passed | expected; the partial data are modelled |
+| `Could not pause Prolific study …` (or it `… is in state '…'`) | API error or unusual state | **pause it in the dashboard now**, then recover |
+| `live results fetch failed …` | wrong token or network | data are safe in Firestore; fix, recover with `RESUME_AGENTS=4_collect:5_model_loop` |
+| `Collected data failed the quality check: all N responses are identical …` | broken buttons or bots | inspect the page and the dashboard; nothing was modelled |
+| proposal rejected with a reason | a failed admission check | expected, unless every proposal fails every round |
+| `"no_critique"` in `history.json` | the critic produced no usable statistic | the round still ran; see `iter_<i>/critique/` |
+| `OUT_OF_MEMORY` in `sacct`, or the time limit | large pooled fits, many rounds | raise `--mem` or `walltime`; recover with `RESUME_AGENTS` |
 
-## Early in the job
-
-| message | cause | what to do |
-|---|---|---|
-| a line ending in `_env.sh: No such file or directory` at the top of a job log | the job was submitted from a directory other than `scripts/outer_loop_live` without `OUTER_LIVE_SLURM_DIR` | `export OUTER_LIVE_SLURM_DIR=$REPO/scripts/outer_loop_live` before `sbatch` |
-| `Error: --prolific-mode live recruits and PAYS real participants. Pass --confirm-live-recruitment …` | `run.py`'s own gate, e.g. calling `run_live.sbatch` by hand | export `CONFIRM_LIVE_RECRUITMENT=1`, or use `PROLIFIC_MODE=none` for a recovery (runbook § 10) |
-| `Error: experiment directory already exists: … Use --resume …` | calling `run.py` directly into an existing output | new `AUTO_PSYCH_OUTPUT_DIR` or label. Do not add `--resume` to a live run without reading runbook § 0 C. |
-| `LiveStudyAlreadyRecorded: experiment<N> already has a live Prolific study … Refusing to …` | a relaunch (or `--agent 2_design` / `3_implement`, or `--deploy-only`) of an experiment whose deployment manifest records a live study (runbook § 0 C) | nothing ran and no study was created. Finish the experiment with `RESUME_AGENTS=4_collect:5_model_loop`, then run later experiments with `EXPERIMENTS=<next>-<last>`. Only if you want a second study: stop the first in Prolific, then set `PUBLISH_ANOTHER_PROLIFIC_STUDY=1` |
-| `[error] Model-set validation failed: … (experiment 1 requires project seed models in …)` | starting models missing or unloadable | check `projects/subjective_randomness/seed_models/` in the run copy |
-| `Cannot carry the model set forward: … does not exist (did experiment 'experimentN' complete?)` | experiment N+1 launched before N finished | finish or recover experiment N first |
-| `FATAL: bwrap not on PATH after ml load system bubblewrap` | `_env.sh` could not load the `system bubblewrap` module (runbook § 0 B) | check `ml spider bubblewrap`; if the module is gone or broken, report it to srcc-support@stanford.edu |
-| ``Sandboxed agents need bubblewrap on PATH (on Sherlock: `ml load system bubblewrap`).`` | a job that did not source an `_env.sh` of this repository, or a run copy with code from before 28 September 2026 (runbook § 0 B, fixed) | launch through the scripts, or copy the current code into the run copy |
-| `'opencode' (the opencode CLI) is not on PATH.` (or `'claude'`) | module not loaded | `_env.sh` loads `opencode` and `claude-code`; check `ml spider opencode` |
-| `[error] 3_implement still invalid after 3 attempt(s): …` | the agent could not produce a page that passes the validator (e.g. `index.html does not mention jsPsych`) | read `experimentN/logs/3_implement.jsonl`; no deploy has happened yet |
-
-## Deploy
-
-| message | cause | what to do |
-|---|---|---|
-| `AUTO_PSYCH_RESULTS_TOKEN is not set. Generate a secret …` | results token missing (it is not in `.secrets.example`) | add it to `.secrets`. Nothing was deployed or created. |
-| `Firebase deploy requires --firebase-project or a real .firebaserc` | no project id | the launchers always pass one; for direct calls add `--firebase-project auto-psych-2c5da` |
-| `IRB consent text not found at …` | consent file missing in the run copy | restore it and relaunch with a new label |
-| `Firebase Functions dependencies are missing and npm is not installed` / `Failed to install Firebase Functions dependencies with npm` | Node not loaded or npm failure | `_env.sh` loads Node 24 (firebase-tools does not support Node 25); rerun `setup.sbatch` |
-| `Firebase deploy failed (--only functions,firestore)` / `(--only hosting)` + output | expired `FIREBASE_TOKEN`, missing permissions, or a Firebase outage | the output says which. Regenerate the token with `firebase login:ci`. No study has been created yet. |
-| `Could not create Firebase Hosting site '…-run<i>'` | parallel-run site creation refused (permissions or quota) | see the output; unverified whether the project has room for more sites |
-| `Firebase deploy reported success but the experiment page is NOT live: GET … -> 404 …` | hosting did not publish | no study was published. Investigate before relaunching with a new label. |
-| `Could not register collection session …` | `/register_session` rejected the token or was unreachable | results token mismatch between `.secrets` and the deployed functions, or a network problem |
-| `Could not fetch Prolific filters …` / `Prolific choice ID drift: …` | Prolific's country/language IDs could not be confirmed | the hard-coded IDs in `deployment/prolific.py` need checking against Prolific. Nothing was created. |
-| `Failed to create Prolific study: …` / `Failed to publish Prolific study: …` | Prolific API refused (often insufficient funds or invalid fields) | check the Prolific dashboard: a *draft* may already exist, so delete it before retrying |
-
-## Collection
-
-| message / symptom | cause | what to do |
-|---|---|---|
-| log stays at `Prolific poll: … completed=k target=N` | recruitment slow | normal for up to 2 h, then it **pauses the study** and moves on with partial data (runbook § 0 D) |
-| `PAUSED Prolific study <id>: collection gave up at k/N …` | the 2-hour limit passed before N participants finished | expected. Resume the study in the dashboard only if you want the rest; this run will not use them |
-| `Could not pause Prolific study <id> after collection gave up …` / `… could not be read to pause it …` / `… is in state '…', which this run does not know how to pause` | Prolific API error or an unusual study state | **pause or stop the study in the dashboard now**. Then recover with `RESUME_AGENTS=4_collect:5_model_loop` (it waits up to 2 h again before modelling what exists) |
-| ``live collection needs `prolific_study_id` in the experiment config …`` | `--mode live` without a Prolific study (e.g. `--prolific-mode none` on a fresh experiment) | live collection needs a study |
-| `mode='live' requires a deployed experiment to collect from …` | no `results_api_url` in `experiment/config.json` | the deploy did not complete |
-| `AUTO_PSYCH_RESULTS_TOKEN is not set — cannot fetch the token-guarded /results endpoint.` | token missing in the collecting environment | add it; recover with `RESUME_AGENTS=4_collect:5_model_loop` |
-| `live results fetch failed for …: HTTPError … refusing to report zero responses` | wrong token (403) or network | data are safe in Firestore; fix, then recover as above |
-| `Participant collection returned no data (0 rows).` | nothing reached `/submit` | open the page yourself; check the browser console; check the monitor |
-| `Collected data failed the quality check: all N responses are identical …` | everyone pressed the same side: broken button mapping, or a bot farm | inspect the page and the monitor. The data were **not** written for modelling. |
-| `/results (…) returned N rows, none from this collection's M participants …` / `… without a participant_id_str column …` | browser-simulated Firebase collection (not a Prolific run): the session's rows belong to other collections, or the deployed results function is old | check `collection_session_id` / `project_id`+`run_id` in `experiment/config.json` and redeploy; before 28 September 2026 every row was kept |
-| `A collected row has an empty participant_id_str …` | a `/results` row without its participant | inspect the collected rows; the results function changed |
-| `The researchers' raw collected data would be written to …, inside …, the working tree every agent of this run can read …` | `run.py` run by hand without `AUTO_PSYCH_OUTPUT_DIR` (the default output tree is inside the repository) | set `AUTO_PSYCH_OUTPUT_DIR` to a directory outside the repository and rerun; nothing was run |
-| `CERTIFICATE_VERIFY_FAILED` | Python cannot find the system certificates | `_env.sh` sets `SSL_CERT_FILE` / `REQUESTS_CA_BUNDLE`; make sure it was sourced |
-
-## Model stage (`5_model_loop`)
-
-| message / symptom | cause | what to do |
-|---|---|---|
-| `ValueError: …/model_loop/responses.csv has column(s) ['participant_id_str', 'chose_right', 'model'] beyond the raw ones …` | code from before 28 September 2026 (runbook § 0 A, fixed) | copy the current code into the run copy; pooling now keeps only the five raw columns. Recover with `RESUME_AGENTS=5_model_loop` (§ 10) |
-| `response row … lacks raw column(s) [...]` | a collected row, or a `data/responses.csv`, is missing one of the five raw columns | inspect the collected file in `raw_collected/`; the collector or `/results` changed |
-| `No response rows found for inner loop under …` | no `data/responses.csv` in any experiment so far | collection did not finish |
-| a proposal rejected with a reason (in `attempted_hypotheses.jsonl` and the round's directory) | expected: failed code check, no convergence, too slow (15 min), or near-duplicate | nothing, unless *every* proposal is rejected every round |
-| `history.json` shows `"no_critique"` for a round | critique agent wrote no usable statistic twice, or none produced a p-value | the round still ran; look at `iter_<i>/critique/` |
-| `SQLITE_CORRUPT: database disk image is malformed` (opencode) | two runs sharing opencode's database | `run_live.sbatch` gives each run a private one; don't run agents outside it |
-| `Stale file handle` from PyTensor | shared compile cache on NFS | `run_live.sbatch` puts it on node-local disk; same advice |
-| job killed for memory (`OUT_OF_MEMORY` in `sacct`) | pooled multi-experiment fits are memory-heavy | raise `--mem` (the job asks for 64 GB) and recover with `RESUME_AGENTS` |
-| job hits its time limit | too many rounds or proposals for `walltime` | recover the remaining stages with `RESUME_AGENTS`; raise `walltime` or `qos: long` next time |
-
-## Monitor, viewer and collection of results
-
-| message | cause | what to do |
-|---|---|---|
-| `Firestore read needs Application Default Credentials. Run: gcloud auth application-default login && …` | no Google credentials on this computer | run the two commands it prints (on your own computer) |
-| monitor shows no studies | `--data-root` has no `deployment/deployment_manifest.json` with `deploy_target: firebase` | rsync the manifests again (runbook § 7); dry-run deploys are never shown |
-| Prolific error shown inline in the monitor | no `PROLIFIC_API_TOKEN` on that computer, or Prolific down | the participant data still display |
-| `ERROR: interpreter '…/.venv/bin/python' not found — set PY=…` | `collect_results.sh` defaults to a checkout `.venv` | `PY=$SCRATCH/auto-psych/outer_loop_live/venv/bin/python` |
-| collector refuses a non-empty destination | `DEST` already exists | pick a new `DEST` (the default holds earlier results); `--overwrite` replaces them |
-| collector raises because a Prolific ID survived | an ID in an unexpected place | do not work around it: find the file and extend the scrubber |
-
-## When something on the cluster itself looks broken
-
-If the scheduler, a filesystem, modules or the network look broken, send the
-symptom, hostname, time and job id to srcc-support@stanford.edu. Do not try to
-work around it. Prolific studies still need stopping by hand.
+**If the cluster itself looks broken** (scheduler, filesystem, modules,
+network): stop, note the symptom, hostname, time and job id, and send them to
+srcc-support@stanford.edu yourself. Prolific studies still need pausing by
+hand.
