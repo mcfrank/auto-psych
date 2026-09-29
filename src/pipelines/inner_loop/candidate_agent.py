@@ -715,6 +715,7 @@ def _spawn_candidate_agent(
         cwd=cwd,
         log_path=log_path,
         allowed_dirs=[candidate_dir, models_dir, responses_path.parent],
+        writable_dirs=[candidate_dir],  # the zoo and the data are read-only
         timeout_secs=agent_timeout_sec,
         backend=backend,
         model=agent_model,

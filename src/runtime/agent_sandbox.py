@@ -6,13 +6,14 @@ went looking could read other runs' notes, models and hypotheses, the user's
 home, and — through `ps` — the harness's --gt-models-dir. ``sandbox_command``
 wraps the CLI's argv in a bubblewrap mount namespace that contains only:
 
-- read-write: the agent's working tree (and any allowed directory outside it),
-  its own ``scratch/`` directory mounted at /tmp (agents habitually write their
-  analysis scripts there; this keeps them on disk, with the run), and a private
-  home directory;
-- read-only: system software (/usr, /etc, and /share/software, where Sherlock's
-  modules live), the Python venv the harness runs with and its base
-  interpreter, and the agent's own CLI;
+- read-write: the agent's own directories (its candidate or critique dir, its
+  run's notes), its own ``scratch/`` directory mounted at /tmp (agents
+  habitually write their analysis scripts there; this keeps them on disk, with
+  the run), and a private home directory;
+- read-only: the rest of its working tree (the shared model zoo, the data,
+  other agents' directories), system software (/usr, /etc, and
+  /share/software, where Sherlock's modules live), the Python venv the harness
+  runs with and its base interpreter, and the agent's own CLI;
 - the agent's login and nothing else of the user's configuration: Claude
   through the long-lived CLAUDE_CODE_OAUTH_TOKEN, codex through a private
   CODEX_HOME holding only auth.json, opencode through the provider key in its
@@ -51,11 +52,14 @@ def sandbox_command(
     writable_dirs: Sequence[Path],
     agent_dir: Path,
     env: Mapping[str, str],
+    readable_dirs: Sequence[Path] = (),
 ) -> Tuple[List[str], Dict[str, str]]:
     """``cmd`` wrapped in a bubblewrap sandbox, and the environment to run it with.
 
-    ``agent_dir`` is the agent's own directory (the one holding its log); its
-    ``scratch/`` becomes /tmp and its ``.home/`` becomes $HOME.
+    ``cwd`` (the agent's tree) and ``readable_dirs`` are mounted read-only;
+    ``writable_dirs`` and ``agent_dir`` (the agent's own directory, the one
+    holding its log) read-write. The agent dir's ``scratch/`` becomes /tmp and
+    its ``.home/`` becomes $HOME.
     """
     bwrap = shutil.which("bwrap")
     if bwrap is None:
@@ -82,7 +86,13 @@ def sandbox_command(
     # is then mounted on top of them rather than hidden by them.
     args += ["--bind", str(private_home), str(user_home)]
     args += ["--bind", str(scratch), "/tmp"]
-    for directory in _outermost([Path(cwd), *map(Path, writable_dirs), agent_dir]):
+    # The tree is read-only and the agent's own directories are writable on
+    # top of it: a Gemini candidate once emptied an admitted model in the
+    # shared zoo with a broken heredoc, and the cell crashed on it.
+    for directory in _outermost([Path(cwd), *map(Path, readable_dirs)]):
+        args += ["--ro-bind", str(directory), str(directory)]
+    for directory in _outermost([*map(Path, writable_dirs), agent_dir]):
+        directory.mkdir(parents=True, exist_ok=True)
         args += ["--bind", str(directory), str(directory)]
 
     # Read-only on top of all that.

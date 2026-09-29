@@ -199,7 +199,7 @@ def _patch_critique_agent_process(monkeypatch, on_run):
 
     def fake_run(
         prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False, memory_dir=None, sandbox=False,
+        model=None, stock=False, memory_dir=None, sandbox=False, writable_dirs=None,
     ):
         calls.append({"prompt": prompt, "log_path": log_path})
         on_run(log_path.parent)

@@ -132,13 +132,14 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
 
     def fake_run(
         prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False, memory_dir=None, sandbox=False,
+        model=None, stock=False, memory_dir=None, sandbox=False, writable_dirs=None,
     ):
         captured["prompt"] = prompt
         captured["cwd"] = cwd
         captured["stock"] = stock
         captured["memory_dir"] = memory_dir
         captured["sandbox"] = sandbox
+        captured["writable_dirs"] = writable_dirs
         _write_stat(log_path.parent / "test_stats", "alternation_gap")
         return True, ""
 
@@ -157,6 +158,8 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
     # ...keeping notes for later agents of the same run.
     assert captured["memory_dir"] == tmp_path / "agent_notes"
     assert captured["sandbox"] is True
+    # It reads the zoo and the data; it may write only its own dir.
+    assert captured["writable_dirs"] == [crit]
 
 
 # ─────────────────────────────────────────────
@@ -240,7 +243,7 @@ def _patch_agent(monkeypatch, on_run):
 
     def fake_run(
         prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False, memory_dir=None, sandbox=False,
+        model=None, stock=False, memory_dir=None, sandbox=False, writable_dirs=None,
     ):
         calls.append({"prompt": prompt, "log_path": log_path})
         on_run(log_path.parent)
