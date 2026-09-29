@@ -23,7 +23,6 @@ FORBIDDEN_PATHS = [
     "src/subjective_randomness/sequence_stats.py",
     "src/subjective_randomness/stimulus_design.py",
     "src/subjective_randomness/model_recovery.py",
-    "src/subjective_randomness/pymc_recover.py",
     "src/subjective_randomness/model_families",
     # Alternative implementations of the ground truths (motif_stack_softmax.py
     # describes a held-out motif_stack in full); only opencode honoured the

@@ -1,22 +1,13 @@
 """Human-readable text blocks and figures for recovery results.
 
-One implementation shared by the `analyze_recovery.py` CLI (which prints the
-text and writes one figure) and the pipeline runner (which aggregates the same
-text into a key-results file alongside the figures):
-
 * `parameter_recovery_text` / `plot_parameter_recovery` — per-parameter
-  recovery quality for a `pymc_recover.py` report. Sampled-truth reports get a
-  ground-truth vs. recovered correlation scatter per parameter; fixed-truth
-  reports get the estimate spread around the single true value.
+  recovery quality for a PyMC parameter-recovery report. Sampled-truth reports
+  get a ground-truth vs. recovered correlation scatter per parameter;
+  fixed-truth reports get the estimate spread around the single true value.
 
 * `model_recovery_text` / `plot_model_recovery` — per-generating-model
   recovery and the posterior confusion heatmap for a closed-ended
   `model_recovery.py` result.
-
-* `selection_comparison_parameter_text` / `selection_comparison_model_text` /
-  `plot_selection_comparison_parameters` / `plot_selection_comparison_models`
-  — side-by-side EIG-optimized vs. random stimulus sets for the
-  `adaptive_recovery.compare_*` reports.
 """
 
 from __future__ import annotations
@@ -133,164 +124,6 @@ def model_recovery_text(confusion: Mapping[str, Any]) -> str:
             "smaller margins mean the top models are statistically tied."
         )
     return "\n".join(lines)
-
-
-def selection_comparison_parameter_text(report: Mapping[str, Any]) -> str:
-    """EIG-optimized vs. random stimulus set, per parameter, one text table."""
-    arms = report["arms"]
-    lines = [
-        f"Stimulus-selection comparison — model: {report['model']} "
-        "(EIG-optimized vs. random stimulus set; grid-posterior recovery)"
-    ]
-    lines.append(
-        f"  repeats: {report['n_repeats']} | stimuli/set: {report['n_stimuli']} | "
-        f"participants/stimulus: {report['n_participants']}"
-    )
-    lines.append(
-        "  mean EIG of the chosen set (bits): "
-        + " vs. ".join(
-            f"{name} {_fmt(arm['mean_stimulus_eig'])}" for name, arm in arms.items()
-        )
-    )
-    header = ["parameter", "r_eig", "r_random", "rmse_eig", "rmse_random"]
-    lines.append("  " + "  ".join(f"{h:>14}" for h in header))
-    for param in arms["eig"]["summary"]:
-        eig = arms["eig"]["summary"][param]
-        random_ = arms["random"]["summary"][param]
-        row = [
-            param,
-            eig["pearson_r"],
-            random_["pearson_r"],
-            eig["rmse"],
-            random_["rmse"],
-        ]
-        lines.append("  " + "  ".join(f"{_fmt(v):>14}" for v in row))
-    return "\n".join(lines)
-
-
-def selection_comparison_model_text(report: Mapping[str, Any]) -> str:
-    """EIG-optimized vs. random stimulus set for model recovery, as text."""
-    arms = report["arms"]
-    lines = [
-        "Model-recovery stimulus-selection comparison "
-        "(EIG-optimized vs. random stimulus set; grid-posterior recovery)"
-    ]
-    lines.append(
-        f"  {report['n_repeats']} repeats x {len(report['model_names'])} generating "
-        f"models | stimuli/set: {report['n_stimuli']} | "
-        f"participants/stimulus: {report['n_participants']}"
-    )
-    lines.append(
-        "  accuracy: "
-        + ", ".join(f"{name} {arm['accuracy']:.2f}" for name, arm in arms.items())
-        + " | mean posterior on true model: "
-        + ", ".join(
-            f"{name} {arm['mean_true_posterior']:.3f}" for name, arm in arms.items()
-        )
-    )
-    header = ["generating_model", "P(true)_eig", "P(true)_random"]
-    lines.append("  " + "  ".join(f"{h:>20}" for h in header))
-    for gen in report["model_names"]:
-        row = [
-            gen,
-            f"{arms['eig']['confusion'][gen][gen]:.3f}",
-            f"{arms['random']['confusion'][gen][gen]:.3f}",
-        ]
-        lines.append("  " + "  ".join(f"{v:>20}" for v in row))
-    return "\n".join(lines)
-
-
-def plot_selection_comparison_parameters(
-    report: Mapping[str, Any], out_path: Path
-) -> None:
-    """Truth vs. recovered scatter per parameter, one row per selection rule."""
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-
-    arms = report["arms"]
-    params = list(next(iter(arms.values()))["summary"])
-    arm_colors = {"eig": "#4878CF", "random": "#D65F5F"}
-    fig, axes = plt.subplots(
-        len(arms),
-        len(params),
-        figsize=(3.4 * len(params), 3.4 * len(arms)),
-        squeeze=False,
-    )
-    for row, (arm_name, arm) in enumerate(arms.items()):
-        for col, param in enumerate(params):
-            ax = axes[row][col]
-            trues = [r["true_params"][param] for r in arm["runs"]]
-            ests = [r["posterior_mean"][param] for r in arm["runs"]]
-            lo = min(trues + ests)
-            hi = max(trues + ests)
-            pad = 0.05 * ((hi - lo) or 1.0)
-            ax.plot(
-                [lo - pad, hi + pad],
-                [lo - pad, hi + pad],
-                color="#999999",
-                linestyle="--",
-                linewidth=1,
-            )
-            ax.scatter(
-                trues, ests, alpha=0.6, color=arm_colors.get(arm_name, "#4878CF")
-            )
-            r = arm["summary"][param]["pearson_r"]
-            ax.set_title(
-                f"{arm_name}: {param}" + ("" if r is None else f" (r = {r:.2f})")
-            )
-            ax.set_xlabel("true value")
-            ax.set_ylabel("recovered estimate")
-    fig.suptitle(
-        f"Stimulus-selection comparison — {report['model']} "
-        "(EIG-optimized vs. random set)"
-    )
-    fig.tight_layout()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=150)
-    plt.close(fig)
-
-
-def plot_selection_comparison_models(report: Mapping[str, Any], out_path: Path) -> None:
-    """Mean-posterior confusion heatmap per selection rule, side by side."""
-    import matplotlib
-
-    matplotlib.use("Agg")
-    import matplotlib.pyplot as plt
-    import numpy as np
-
-    models = report["model_names"]
-    arms = report["arms"]
-    panel = 1.4 * len(models) + 2
-    fig, axes = plt.subplots(
-        1, len(arms), figsize=(panel * len(arms), panel), squeeze=False
-    )
-    for ax, (arm_name, arm) in zip(axes[0], arms.items()):
-        matrix = np.array([[arm["confusion"][g][m] for m in models] for g in models])
-        im = ax.imshow(matrix, cmap="Blues", vmin=0.0, vmax=1.0)
-        ax.set_xticks(range(len(models)), models, rotation=30, ha="right")
-        ax.set_yticks(range(len(models)), models)
-        ax.set_xlabel("recovered model")
-        ax.set_ylabel("generating model")
-        ax.set_title(f"{arm_name} (accuracy {arm['accuracy']:.2f})")
-        for i in range(len(models)):
-            for j in range(len(models)):
-                val = matrix[i, j]
-                ax.text(
-                    j,
-                    i,
-                    f"{val:.2f}",
-                    ha="center",
-                    va="center",
-                    color="white" if val > 0.5 else "black",
-                )
-        fig.colorbar(im, ax=ax, label="mean posterior")
-    fig.suptitle("Model recovery — EIG-optimized vs. random stimulus set")
-    fig.tight_layout()
-    out_path.parent.mkdir(parents=True, exist_ok=True)
-    fig.savefig(out_path, dpi=150)
-    plt.close(fig)
 
 
 def plot_parameter_recovery(report: Mapping[str, Any], out_path: Path) -> None:

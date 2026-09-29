@@ -1,6 +1,6 @@
 """Reshape parameter-recovery reports into tidy (long-format) rows for plotting.
 
-`pymc_recover.py` writes nested JSON reports; visualization tools (ggplot,
+Parameter-recovery reports are nested JSON; visualization tools (ggplot,
 seaborn, pandas) want one row per observation instead. This module flattens a
 report into one row per (parameter, repeat): the true value, the recovered
 estimate (`run["posterior"][param]["mean"]`), and their error.
@@ -28,8 +28,8 @@ def _estimate_for_param(run: Mapping[str, Any], param: str) -> float:
         return float(run["posterior"][param]["mean"])
     raise KeyError(
         f"Run {run.get('repeat')!r} has no 'posterior' entry; cannot extract an "
-        f"estimate for {param!r}. Parameter fitting is Bayesian-only — "
-        "regenerate the report with pymc_recover.py."
+        f"estimate for {param!r}. Parameter fitting is Bayesian-only, so a "
+        "report must carry PyMC posterior summaries."
     )
 
 

@@ -31,7 +31,6 @@ AGENTS.md
 /src/subjective_randomness/sequence_stats.py
 /src/subjective_randomness/stimulus_design.py
 /src/subjective_randomness/model_recovery.py
-/src/subjective_randomness/pymc_recover.py
 /src/subjective_randomness/model_families/
 # The PyMC registry holds alternative implementations of the ground truths: for
 # a motif_stack holdout, motif_stack_softmax.py and motif_stack_tempered.py

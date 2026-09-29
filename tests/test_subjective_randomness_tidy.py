@@ -16,7 +16,7 @@ from src.subjective_randomness.tidy import (
     write_tidy_csv,
 )
 
-# A minimal PyMC recovery report (as written by pymc_recover.py): each run
+# A minimal PyMC parameter-recovery report: each run
 # carries a `posterior` whose per-parameter `mean` is that repeat's estimate.
 PYMC_REPORT = {
     "model": "bayesian_diagnosticity",
@@ -58,7 +58,7 @@ def test_pymc_report_yields_one_row_per_param_and_repeat():
     assert alt_r0["error"] == pytest.approx(0.33 - 0.4)
 
 
-# A sampled-truth report (the pymc_recover.py default): no top-level
+# A sampled-truth report: no top-level
 # `true_params`; each run carries the ground-truth vector it was simulated from.
 SAMPLED_REPORT = {
     "model": "prototype_similarity",
