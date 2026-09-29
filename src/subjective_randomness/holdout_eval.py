@@ -24,6 +24,12 @@ from src.subjective_randomness.holdout_data import (
     resolve_generating_params,
     seed_model_names,
 )
+from src.subjective_randomness.incumbent import (
+    INCUMBENT_COLUMNS,
+    annotate_incumbents,
+    starting_models_of_run,
+    summarise_incumbents,
+)
 from src.subjective_randomness.recover import pearson_r
 from src.subjective_randomness.recovery_metrics import (
     bias as _bias,
@@ -55,6 +61,9 @@ TRAJECTORY_COLUMNS = [
     "bias_bma",
     "calib_slope_bma",
     "calib_intercept_bma",
+    # The incumbent record (src/subjective_randomness/incumbent.py), appended
+    # last: downstream readers index the older columns by position.
+    *INCUMBENT_COLUMNS,
 ]
 
 
@@ -632,9 +641,14 @@ def reevaluate_trajectories(
             gt_models_dir=gt_models_dir,
             predict_max_draws=predict_max_draws,
         )
+        # The incumbent record is recomputed from the on-disk histories exactly
+        # as the live harness computes it (see _run_holdout_recovery_resolved).
+        starting_models = starting_models_of_run(run_root)
+        trajectory = annotate_incumbents(trajectory, starting_models)
         new_run = {
             **gt_run,
             "trajectory": trajectory,
+            "incumbent": summarise_incumbents(trajectory, starting_models),
             "baseline": baseline,
             "fitted_baseline": fitted_baseline,
         }

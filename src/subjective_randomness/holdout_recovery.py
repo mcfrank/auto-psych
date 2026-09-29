@@ -33,7 +33,7 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional
+from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 from src.models.model_manifest import read_manifest_names
 from src.pipelines.outer_loop.columns import write_responses_csv
@@ -69,6 +69,11 @@ from src.subjective_randomness.holdout_eval import (
     evaluate_trajectory,
     fitted_seed_baseline_correlation,
     seed_baseline_correlation,
+)
+from src.subjective_randomness.incumbent import (
+    annotate_incumbents,
+    starting_models_of_run,
+    summarise_incumbents,
 )
 from src.subjective_randomness.leakage_audit import leakage_check
 
@@ -276,6 +281,25 @@ def run_holdout_experiments(
 
 def _manifest_model_names(exp_dir: Path) -> List[str]:
     return read_manifest_names(exp_dir / "cognitive_models")
+
+
+def _require_seeded_from_pool(
+    starting_models: Iterable[str], gt_model: str, pool_dir: Path
+) -> None:
+    """The models a cell started with must all come from the seed pool it was
+    seeded from, minus the held-out ground truth. Anything else means the
+    recorded history is not this run's, or seeding did not do what the
+    harness believes — either way the incumbent record would be about the
+    wrong model set, so this raises instead of labelling models "discovered".
+    """
+    allowed = set(seed_model_names(pool_dir)) - {gt_model}
+    stray = sorted(set(starting_models) - allowed)
+    if stray:
+        raise RuntimeError(
+            f"Experiment 1's seed step scored model(s) {stray} that are not in "
+            f"the seed pool {pool_dir} (minus the held-out {gt_model!r}); the "
+            "incumbent record cannot tell seeds from discoveries for this run."
+        )
 
 
 def run_holdout_recovery_from_config(
@@ -553,6 +577,16 @@ def _run_holdout_recovery_resolved(
             gt_models_dir=gt_models_dir,
             predict_max_draws=eval_pool["predict_max_draws"],
         )
+        # The incumbent record: per step, did the exported best model change
+        # and is it a discovered model; per cell, the counts. "Discovered"
+        # means not among the models the cell started with, read from
+        # experiment 1's seed step and checked here against the pool it was
+        # seeded from — the two must agree or the record is not about this run.
+        starting_models = starting_models_of_run(run_root)
+        _require_seeded_from_pool(
+            starting_models, gt_model, pool_models_dir or project_seed_models_dir(project_id)
+        )
+        trajectory = annotate_incumbents(trajectory, starting_models)
         leakage = leakage_check(
             run_root,
             gt_model,
@@ -594,6 +628,7 @@ def _run_holdout_recovery_resolved(
             "n_eval_stimuli": len(eval_info["stimuli"]),
             "n_eval_dropped": eval_info["n_dropped"],
             "trajectory": trajectory,
+            "incumbent": summarise_incumbents(trajectory, starting_models),
             "baseline": baseline,
             "fitted_baseline": fitted_baseline,
             "leakage": leakage,
