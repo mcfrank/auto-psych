@@ -166,7 +166,11 @@ mkdir -p "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
 # shared across concurrent tasks, so its C-compile filelock contends and goes
 # stale ("OSError: [Errno 116] Stale file handle"). Give each task a private
 # compiledir on node-local SSD (reliable flock, fast, and off $HOME).
-PYTENSOR_BASE="${L_SCRATCH:-$AGENT_DIR/.cache}/pytensor"
+# $L_SCRATCH is per user and node, not per job: without the job id every cell
+# on a node compiled under one lock, and one died waiting for it (2026-09-28).
+# The cell's fit processes each compile in a slot of their own below this
+# (_compile_dirs in src/models/pymc_inference.py).
+PYTENSOR_BASE="${L_SCRATCH:-$AGENT_DIR/.cache}/pytensor/job_${SLURM_JOB_ID}"
 mkdir -p "$PYTENSOR_BASE"
 export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"
 

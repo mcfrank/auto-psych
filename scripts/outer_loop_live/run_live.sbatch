@@ -46,7 +46,8 @@ mkdir -p "$AUTO_PSYCH_OUTPUT_DIR"
 # Per-run PyTensor compile dir off NFS $HOME: stage-5 PyMC JIT-compiles models,
 # and concurrent runs sharing ~/.pytensor contend on its compile filelock
 # ("Stale file handle"). Node-local SSD is fast and gives a reliable flock.
-PYTENSOR_BASE="${L_SCRATCH:-$WORK_ROOT/$RUN_LABEL/.cache}/pytensor"
+# $L_SCRATCH is per user and node, so the job id keeps runs on one node apart.
+PYTENSOR_BASE="${L_SCRATCH:-$WORK_ROOT/$RUN_LABEL/.cache}/pytensor/job_${SLURM_JOB_ID}"
 mkdir -p "$PYTENSOR_BASE"
 export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"
 

@@ -34,7 +34,8 @@ ml load gcc/14.2.0 2>/dev/null || ml load gcc 2>/dev/null || true
 # Caches off $HOME (15 GB, NFS), compile dir on node-local scratch.
 export XDG_CACHE_HOME="$WORK_ROOT/.cache"
 export MPLCONFIGDIR="$WORK_ROOT/.cache/matplotlib"
-export PYTENSOR_FLAGS="base_compiledir=${L_SCRATCH:-$WORK_ROOT/.cache}/pytensor"
+# One compile dir per job: $L_SCRATCH is per user and node, not per job.
+export PYTENSOR_FLAGS="base_compiledir=${L_SCRATCH:-$WORK_ROOT/.cache}/pytensor/job_${SLURM_JOB_ID}"
 export OMP_NUM_THREADS=1 MKL_NUM_THREADS=1
 mkdir -p "$XDG_CACHE_HOME" "$MPLCONFIGDIR" "$OUT_ROOT"
 

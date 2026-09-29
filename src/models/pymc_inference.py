@@ -18,13 +18,17 @@ fitting, and diagnostics.
 
 from __future__ import annotations
 
+import atexit
 import hashlib
 import math
 import multiprocessing
 import os
+import shutil
 import signal
+import socket
 import sys
 import tempfile
+import threading
 import time
 import traceback
 from concurrent.futures import CancelledError, ProcessPoolExecutor, as_completed
@@ -1279,8 +1283,8 @@ def _fit_process_caches() -> Iterator[str]:
 
 
 def _use_own_cache_dir(cache_root: str) -> None:
-    """First step of every fit process: point ``XDG_CACHE_HOME`` at a new
-    directory of its own under ``cache_root``, before anything imports arviz."""
+    """Point ``XDG_CACHE_HOME`` at a new directory of its own under
+    ``cache_root``, before anything imports arviz."""
     if "arviz" in sys.modules:
         raise RuntimeError(
             "arviz was imported in this fit process before it got a cache directory "
@@ -1291,10 +1295,114 @@ def _use_own_cache_dir(cache_root: str) -> None:
     os.environ["XDG_CACHE_HOME"] = str(own)
 
 
-def _run_with_own_cache_dir(cache_root: str, target: Any, *args: Any) -> None:
-    """Entry point of a time-limited fit process: ``target(*args)`` with a
-    cache directory of its own."""
+# PyTensor compiles a model's C code in its compile directory under one file
+# lock (``<compiledir>/.lock``), and a process gives up after waiting
+# ``compile__timeout`` (120 s) for it. Every process of a node used to share one
+# directory (``$L_SCRATCH`` is per user and node, not per job), so the
+# concurrent fit processes of a cell, and those of the other cells on the node,
+# queued on one lock, and a cell died on ``Timeout: The file lock
+# '.../compiledir_.../.lock' could not be acquired`` (2026-09-28). Each fit
+# process therefore compiles in a directory no other running process uses: a
+# numbered *slot* under this process's own root, held while the fit process
+# runs and handed to the next one after it, so compiled code is reused within
+# a cell (a cold compile costs about 50 s a fit, a warm one a few).
+_COMPILE_SLOTS_LOCK = threading.Lock()
+_COMPILE_SLOTS_IN_USE: set = set()
+_COMPILE_SLOTS_ROOT: Optional[Path] = None
+
+
+def _compile_slots_root() -> Path:
+    """This process's root of fit-process compile directories: a new directory
+    under its own PyTensor ``base_compiledir``, removed when it exits."""
+    global _COMPILE_SLOTS_ROOT
+    if _COMPILE_SLOTS_ROOT is None:
+        from pytensor import config as pytensor_config
+
+        base = Path(pytensor_config.base_compiledir)
+        base.mkdir(parents=True, exist_ok=True)
+        _COMPILE_SLOTS_ROOT = Path(tempfile.mkdtemp(
+            prefix=f"fit-compiledirs-{socket.gethostname()}-{os.getpid()}-", dir=base
+        ))
+        atexit.register(shutil.rmtree, _COMPILE_SLOTS_ROOT, True)
+    return _COMPILE_SLOTS_ROOT
+
+
+@contextmanager
+def _compile_dirs(n: int) -> Iterator[List[str]]:
+    """``n`` compile directories that no other fit process of this process
+    uses until the block ends (see ``_COMPILE_SLOTS_LOCK``)."""
+    root = _compile_slots_root()
+    with _COMPILE_SLOTS_LOCK:
+        slots = []
+        slot = 0
+        while len(slots) < n:
+            if slot not in _COMPILE_SLOTS_IN_USE:
+                slots.append(slot)
+            slot += 1
+        _COMPILE_SLOTS_IN_USE.update(slots)
+    try:
+        directories = [root / f"slot-{slot}" for slot in slots]
+        for directory in directories:
+            directory.mkdir(exist_ok=True)
+        yield [str(directory) for directory in directories]
+    finally:
+        with _COMPILE_SLOTS_LOCK:
+            _COMPILE_SLOTS_IN_USE.difference_update(slots)
+
+
+def _use_own_compile_dir(compile_dir: str) -> None:
+    """Make ``compile_dir`` this process's PyTensor ``base_compiledir``, before
+    anything imports pytensor; the process's other PyTensor flags stay."""
+    if "pytensor" in sys.modules:
+        raise RuntimeError(
+            "pytensor was imported in this fit process before it got a compile "
+            "directory of its own; it would compile in the shared one."
+        )
+    os.environ["PYTENSOR_FLAGS"] = _flags_with_base_compiledir(
+        os.environ.get("PYTENSOR_FLAGS", ""), compile_dir
+    )
+    from pytensor import config as pytensor_config
+
+    if not Path(pytensor_config.compiledir).is_relative_to(compile_dir):
+        raise RuntimeError(
+            f"this fit process compiles in {pytensor_config.compiledir}, not under its "
+            f"own {compile_dir} (a .pytensorrc setting compiledir?)."
+        )
+
+
+def _flags_with_base_compiledir(flags: str, compile_dir: str) -> str:
+    """``PYTENSOR_FLAGS`` value ``flags`` with its ``base_compiledir`` set to
+    ``compile_dir`` and every other flag kept."""
+    entries = [f for f in flags.split(",") if f.strip()]
+    names = [f.split("=", 1)[0].strip() for f in entries]
+    if "compiledir" in names:
+        raise RuntimeError(
+            "PYTENSOR_FLAGS sets compiledir, which overrides the base_compiledir "
+            "each fit process gets; set base_compiledir instead."
+        )
+    kept = [f for f, name in zip(entries, names) if name != "base_compiledir"]
+    return ",".join([*kept, f"base_compiledir={compile_dir}"])
+
+
+def _use_own_dirs(cache_root: str, compile_dir: str) -> None:
+    """First step of every fit process: a cache directory and a PyTensor
+    compile directory of its own."""
     _use_own_cache_dir(cache_root)
+    _use_own_compile_dir(compile_dir)
+
+
+def _use_own_dirs_from_queue(cache_root: str, compile_dirs: Any) -> None:
+    """Pool-worker initializer: ``_use_own_dirs`` with the next compile
+    directory from ``compile_dirs``, which holds one per worker."""
+    if compile_dirs.empty():
+        raise RuntimeError("a fit-pool worker started with no compile directory left for it.")
+    _use_own_dirs(cache_root, compile_dirs.get())
+
+
+def _run_with_own_dirs(cache_root: str, compile_dir: str, target: Any, *args: Any) -> None:
+    """Entry point of a time-limited fit process: ``target(*args)`` with a
+    cache directory and a compile directory of its own."""
+    _use_own_dirs(cache_root, compile_dir)
     target(*args)
 
 
@@ -1416,8 +1524,9 @@ def sample_fits_time_limited(
         elif not request.nc_path().exists():
             queue.append(i)
     context = multiprocessing.get_context("spawn")
-    running: Dict[Any, tuple] = {}  # sentinel -> (index, process, receiver, deadline)
-    with _fit_process_caches() as cache_root:
+    # sentinel -> (index, process, receiver, deadline, compile dir)
+    running: Dict[Any, tuple] = {}
+    with _fit_process_caches() as cache_root, _compile_dirs(workers) as free_compile_dirs:
         try:
             while queue or running:
                 while queue and len(running) < workers:
@@ -1425,10 +1534,11 @@ def sample_fits_time_limited(
                     request = requests[i]
                     Path(request.cache_dir).mkdir(parents=True, exist_ok=True)
                     receiver, sender = context.Pipe(duplex=False)
+                    compile_dir = free_compile_dirs.pop()
                     process = context.Process(
-                        target=_run_with_own_cache_dir,
+                        target=_run_with_own_dirs,
                         args=(
-                            cache_root, _target or _sample_in_own_session,
+                            cache_root, compile_dir, _target or _sample_in_own_session,
                             request.name, request.models_dir, request.responses_path,
                             request.settings, request.cache_dir, sender,
                         ),
@@ -1436,19 +1546,23 @@ def sample_fits_time_limited(
                     )
                     process.start()
                     sender.close()
-                    running[process.sentinel] = (i, process, receiver, time.monotonic() + time_limit_sec)
+                    running[process.sentinel] = (
+                        i, process, receiver, time.monotonic() + time_limit_sec, compile_dir,
+                    )
                 next_deadline = min(entry[3] for entry in running.values())
                 finished = mp_connection.wait(
                     list(running), timeout=max(0.0, next_deadline - time.monotonic())
                 )
                 for sentinel in finished:
-                    i, process, receiver, _ = running.pop(sentinel)
+                    i, process, receiver, _, compile_dir = running.pop(sentinel)
+                    free_compile_dirs.append(compile_dir)
                     outcomes[i] = _fit_process_outcome(process, receiver, requests[i])
                 now = time.monotonic()
-                for sentinel, (i, process, receiver, deadline) in list(running.items()):
+                for sentinel, (i, process, receiver, deadline, compile_dir) in list(running.items()):
                     if now >= deadline:
                         del running[sentinel]
                         _stop_fit_process(process, requests[i])
+                        free_compile_dirs.append(compile_dir)
                         request = requests[i]
                         print(
                             f"  [fit] {request.name}: still sampling after the "
@@ -1459,7 +1573,7 @@ def sample_fits_time_limited(
                             request.name, time_limit_sec, float(request.settings["target_accept"])
                         )
         finally:
-            for i, process, _, _ in running.values():
+            for i, process, _, _, _ in running.values():
                 _stop_fit_process(process, requests[i])
     for request, outcome in zip(requests, outcomes):
         if outcome is not None:
@@ -1560,9 +1674,13 @@ def _fit_model_in_worker(
     return fitted.fingerprint
 
 
-def _fit_executor(workers: int, cache_root: str) -> ProcessPoolExecutor:
+def _fit_executor(
+    workers: int, cache_root: str, compile_dirs: Sequence[str]
+) -> ProcessPoolExecutor:
     """The pool the fits run in: fresh (spawned) interpreters, not forks, each
-    with a cache directory of its own under ``cache_root`` (``_fit_process_caches``).
+    with a cache directory of its own under ``cache_root`` (``_fit_process_caches``)
+    and one of ``compile_dirs`` (``_compile_dirs``, one per worker; a pool never
+    replaces a worker — one that dies breaks it).
 
     A worker forks PyMC's chain processes itself, so it must not be a daemon
     (``multiprocessing.Pool`` workers are; ``ProcessPoolExecutor``'s are not).
@@ -1572,11 +1690,17 @@ def _fit_executor(workers: int, cache_root: str) -> ProcessPoolExecutor:
     fit needs the usual ``if __name__ == "__main__":`` guard (all of the
     repo's do; an ad-hoc script without one re-runs itself in each worker).
     """
+    if len(compile_dirs) < workers:
+        raise ValueError(f"{workers} fit-pool workers need as many compile directories.")
+    context = multiprocessing.get_context("spawn")
+    handed_out = context.SimpleQueue()
+    for compile_dir in compile_dirs:
+        handed_out.put(compile_dir)
     return ProcessPoolExecutor(
         max_workers=workers,
-        mp_context=multiprocessing.get_context("spawn"),
-        initializer=_use_own_cache_dir,
-        initargs=(cache_root,),
+        mp_context=context,
+        initializer=_use_own_dirs_from_queue,
+        initargs=(cache_root, handed_out),
     )
 
 
@@ -1622,8 +1746,9 @@ def _sample_models_in_pool(
         )
         expected[name] = {first, refit}
     outcomes: Dict[str, Optional[BaseException]] = {}
-    with _fit_process_caches() as cache_root, \
-            _fit_executor(min(workers, len(names)), cache_root) as pool:
+    n_workers = min(workers, len(names))
+    with _fit_process_caches() as cache_root, _compile_dirs(n_workers) as compile_dirs, \
+            _fit_executor(n_workers, cache_root, compile_dirs) as pool:
         futures = {
             pool.submit(
                 _fit_model_in_worker,

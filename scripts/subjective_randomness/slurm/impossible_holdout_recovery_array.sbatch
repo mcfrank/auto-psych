@@ -111,7 +111,7 @@ export XDG_DATA_HOME="$AGENT_DIR/.xdg/data"
 export XDG_STATE_HOME="$AGENT_DIR/.xdg/state"
 export XDG_CACHE_HOME="$AGENT_DIR/.xdg/cache"
 mkdir -p "$XDG_DATA_HOME" "$XDG_STATE_HOME" "$XDG_CACHE_HOME"
-PYTENSOR_BASE="${L_SCRATCH:-$AGENT_DIR/.cache}/pytensor"
+PYTENSOR_BASE="${L_SCRATCH:-$AGENT_DIR/.cache}/pytensor/job_${SLURM_JOB_ID}"
 mkdir -p "$PYTENSOR_BASE"
 export PYTENSOR_FLAGS="base_compiledir=$PYTENSOR_BASE"
 
