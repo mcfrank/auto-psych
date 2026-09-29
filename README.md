@@ -118,7 +118,6 @@ dataclass — `--help` lists every knob with its documented default.
 | `python -m src.viewer.server` | Browser explorer for finished runs on disk (models, designs, critiques, posterior trajectories, transcripts). |
 | `python -m src.viewer.freeze` | Freeze curated runs into a static site for public hosting. |
 | `python -m src.monitor.server` | Live dashboard for an **in-progress** human study (Firestore + Prolific; flags degenerate data early). |
-| `scripts/analysis/*.py` | Post-hoc analyses of the human runs (model-similarity RMSE, fit comparisons, combined recovery figures). |
 
 ## Run The Active Outer Loop
 

@@ -1432,9 +1432,8 @@ This runs in the harness after the three experiments
   into complete (`holdout.json`), partial (a directory without one) and
   missing (no directory); the expected grid is `--n-repeats`/`--gt-models`
   when given (the analysis job passes `N_REPEATS`/`GT_MODELS`), else inferred
-  from the directories and said so. `holdout_test_retest.py`,
-  `incumbent_report.py` and the two combined-figure scripts print that
-  accounting. The incumbent report now counts only complete cells (it read
+  from the directories and said so. `holdout_test_retest.py` and
+  `incumbent_report.py` print that accounting. The incumbent report now counts only complete cells (it read
   partial cells' run records as whole cells).
 - **Alignment.** `reporting.aggregate_holdout_trajectories` pools cells by
   position within an experiment — its seed step, each round (`iteration`)
