@@ -1,5 +1,17 @@
 # The modeling loop, step by step: one holdout-recovery cell
 
+> **Written at `aa14051`; the loop has changed since** (2026-09-26, commits
+> `905bf80`…`3dbdab5`): the design fits on all data so far with
+> `target_accept` 0.9, scores 64 stimuli by EIG over all 40 responses, and
+> derives its seeds per cell; simulated participants see counterbalanced
+> left/right order with ids unique across experiments; agents are told the
+> task; failed agents' candidates go through admission; convergence gates
+> admission, export and pruning; pruning runs once per experiment with a live
+> set capped at 8; the critique test-runs its statistics and uses 1000
+> replicates; the fitted-seed baseline counts each experiment once and reports
+> the ELPD-best seed. Sections 3–7 and the issue list describe the earlier code.
+
+
 This is a reference for reviewing what the code does in one holdout-recovery
 cell, from the Slurm array task to the recovery metrics. It was written by
 reading the code on branch `consolidate/2026-09`. Where a docstring, `README.md`
