@@ -22,11 +22,12 @@
 #   repeat = (T-1)/G + 1   (distinct --seed per repeat -> different synthetic data)
 #   gt     = GT_MODELS[(T-1)%G]
 #
-# LEAK PREVENTION. The agents run as this Unix user with no read sandbox
-# (claude skips permissions; codex's sandbox is pinned open for reads; opencode
-# agents read through bash). An agent that goes LOOKING can find the ground
-# truth — `ps` shows this script's arguments. What this script guarantees is
-# that nothing hands it to them without looking:
+# LEAK PREVENTION. The agents run as this Unix user inside a bubblewrap
+# sandbox (src/runtime/agent_sandbox.py): their own tree read-only, their own
+# directories writable, system software, and a private PID namespace (`ps`
+# shows none of the harness's arguments). The network is open. On top of that,
+# this script guarantees that nothing in what they can read hands them the
+# ground truth:
 #   * each task's agents work in their OWN scrubbed copy of the repo, built with
 #     agent_tree.exclude: no feature code, no model-family implementations
 #     (model_families/ and pymc_model_families/), no GT-recipe or evaluation

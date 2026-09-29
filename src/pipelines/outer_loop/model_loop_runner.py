@@ -80,8 +80,11 @@ def agent_notes_dir(exp_dir: Path) -> Path:
     One directory per run, beside its ``experiment<N>/`` trees (the run is
     ``exp_dir.parent``, as for the pooled responses above), so notes carry
     across the run's rounds and experiments and are given to no other run's
-    agents. Agents run without a read sandbox, so one that searches the
-    filesystem can still find another run's notes.
+    agents: each agent runs in a bubblewrap sandbox holding only its working
+    tree and the directories it is given (``src.runtime.agent_sandbox``), so
+    another run's notes are out of reach unless the output tree lies inside
+    that working tree (``run.py``'s default ``REPO_ROOT/data/outer_loop``;
+    the harness and the live launchers put it elsewhere).
     """
     return exp_dir.parent / "agent_notes"
 
