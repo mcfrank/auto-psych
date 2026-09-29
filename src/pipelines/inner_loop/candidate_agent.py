@@ -50,7 +50,6 @@ _THEORY_PROMPT = _PKG_DIR / "prompts" / "pymc_theory.md"
 # demands exactly ONE mechanism per model. Twelve lenses so a six-candidate
 # round (three exploratory slots) walks four rounds without repeating one.
 # Override per run with the `candidate_hints` parameter / `--hints-file` knob.
-# See the decision record for the rationale.
 DEFAULT_CANDIDATE_HINTS = [
     "Refine one existing hypothesis within its single mechanism — e.g. a "
     "different functional form, prior, or normalization. Do NOT graft cues "

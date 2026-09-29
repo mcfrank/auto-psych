@@ -1,6 +1,6 @@
 """Unit tests for the incumbent record (``src.subjective_randomness.incumbent``).
 
-The loop-improvement plan's primary metric is whether the exported best model
+The primary metric for improving the loop is whether the exported best model
 ("the incumbent") ever changes across a cell's scoring steps, and whether it
 is ever a model the loop discovered rather than one the cell was seeded with.
 These tests pin the pure bookkeeping: the per-step flags, the per-cell

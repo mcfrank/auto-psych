@@ -60,8 +60,8 @@ def _best_exportable_model(
     restricted to reliable rows. It deliberately does NOT use the softmax
     ``posteriors``: those are rounded to six decimals, so every model more
     than ~14 nats behind the argmax reads 0.0 and ties, and a ``max`` over
-    them picks whichever comes first in the manifest. See the decision record
-    for the empirical evidence that motivated this rule. The posterior (which
+    them picks whichever comes first in the manifest (62 of 230 baseline
+    experiments exported a far-behind seed that way). The posterior (which
     also carries the line-count complexity prior) stays a report field.
 
     With no comparison table (no reliability or rank information available)

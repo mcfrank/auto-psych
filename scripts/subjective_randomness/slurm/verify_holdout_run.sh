@@ -133,7 +133,7 @@ elif [[ "$bad_csv" == "0" ]]; then say "- [ok]   all $n_csv agent CSV(s) carry o
 else say "- [FAIL] $bad_csv of $n_csv agent CSV(s) carry extra columns"; fails=$((fails + 1)); fi
 
 # 5. Did any candidate import the featurizer this arm removed from the data?
-#    Isolation here is by data, not by import (docs/raw_features_arm.md).
+#    Isolation here is by data, not by import.
 IMPORT_RE='^[[:space:]]*(from|import)[[:space:]].*(subjective_randomness\.features|featurize_stimulus)'
 n_imp=$(grep -rlE "$IMPORT_RE" \
         "$W"/run*/*/repo/_runs/*/experiment*/model_loop/models/*.py 2>/dev/null | wc -l)
@@ -485,7 +485,7 @@ else
   say "- [skip] critique check (python3 not found)"
 fi
 
-# 12. Incumbent changes: the loop-improvement plan's primary metric. A cell's
+# 12. Incumbent changes: the primary metric for improving the loop. A cell's
 #     scoring steps are its experiments' history.json entries in order; the
 #     incumbent at a step is its best_model (the model the loop exports and
 #     carries). A finished cell in which the incumbent NEVER changed is flagged

@@ -109,7 +109,7 @@ def _is_all_no_file_round(round_results: list[dict]) -> bool:
 # once pruned, could not be revived by design. A role is the slot's
 # *assignment*: it shapes the prompt and the ledger context. Which model the
 # agent actually refined is stated in its hypothesis, in prose; nothing in
-# the pipeline parses it or branches on it. See the decision record.
+# the pipeline parses it or branches on it.
 SLOT_EXPLORE = "explore"
 SLOT_REFINE_INCUMBENT = "refine incumbent"
 SLOT_REFINE_CHOSEN = "refine chosen"
@@ -737,7 +737,7 @@ def parse_prune_margin(detail: str) -> float:
 # is the uncertainty set — every trusted survivor is within the margin of the
 # best — which is what the outer loop carries into the next experiment. Stacking weight is deliberately
 # NOT a criterion: az.compare's weights are ensemble coefficients, not
-# plausibility. See the decision record for the empirical evidence.
+# plausibility.
 DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
 
 # Novelty gate: a candidate whose posterior-mean p_left is within this RMSE of
@@ -748,7 +748,7 @@ DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
 # bimodal — about five re-skins at ~0 (0.0000 x2, 0.0001, 0.0002, 0.0004; two
 # predicted identically) and about eighteen spread evenly from 0.006 to 0.019,
 # distinct mechanisms that happened to agree on the training points. 0.002
-# sits in the gap. See the decision record. Set to 0 to disable.
+# sits in the gap. Set to 0 to disable.
 DEFAULT_NOVELTY_RMSE_THRESHOLD = 0.002
 
 # The novelty pool: the stimuli on which a candidate's predictions are compared

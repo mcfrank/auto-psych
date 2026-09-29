@@ -313,7 +313,7 @@ def _write_live_cell(work_root: Path, gt: str, histories: list[str]) -> None:
 
 
 class TestVerifyIncumbentChanges:
-    """The loop-improvement plan's primary metric, surfaced by the verifier:
+    """The primary metric for improving the loop, surfaced by the verifier:
     a finished cell in which the exported best model never changed is
     flagged. A warning, not a failure — zero is the current true value."""
 

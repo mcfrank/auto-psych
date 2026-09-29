@@ -1,9 +1,9 @@
 """The incumbent record: does the loop's exported best model ever change?
 
-The loop-improvement plan (September 2026) found that across the three archived
-``motif_stack`` cells of the 20-cell sweep — 27 scoring steps — the exported
-best model was the same seed at every step: the loop had never once beaten its
-own starting point, and RMSE drift hid that. This module makes the question a
+In September 2026, across the three archived ``motif_stack`` cells of the
+20-cell sweep — 27 scoring steps — the exported best model was the same seed
+at every step: the loop had never once beaten its own starting point, and RMSE
+drift hid that. This module makes the question a
 first-class output of every cell, so later changes to the loop are judged on
 it rather than on RMSE alone.
 
