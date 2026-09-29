@@ -83,6 +83,7 @@ def main(args: Args) -> None:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(enriched, indent=2), encoding="utf-8")
     print(f"Wrote enriched holdout-recovery result to {out_path}")
+
     def _fmt(value: object) -> str:
         return "undefined" if value is None else f"{value:.3f}"
 
@@ -100,7 +101,9 @@ def main(args: Args) -> None:
         if args.tidy_csv is not None
         else result_path.with_suffix(".csv")
     )
-    write_tidy_csv(trajectory_tidy_rows(enriched), tidy_path, columns=TRAJECTORY_COLUMNS)
+    write_tidy_csv(
+        trajectory_tidy_rows(enriched), tidy_path, columns=TRAJECTORY_COLUMNS
+    )
     print(f"Wrote tidy trajectory CSV to {tidy_path}")
 
     figure_path = (
@@ -111,7 +114,9 @@ def main(args: Args) -> None:
     plot_holdout_trajectories(enriched, figure_path, metric="pearson_r")
     print(f"Wrote trajectory figure (Pearson r) to {figure_path}")
 
-    rmse_figure_path = figure_path.with_name(f"{figure_path.stem}_rmse{figure_path.suffix}")
+    rmse_figure_path = figure_path.with_name(
+        f"{figure_path.stem}_rmse{figure_path.suffix}"
+    )
     plot_holdout_trajectories(enriched, rmse_figure_path, metric="rmse")
     print(f"Wrote trajectory figure (RMSE) to {rmse_figure_path}")
 

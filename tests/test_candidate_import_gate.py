@@ -113,9 +113,7 @@ class TestAdmitCandidateImportGate:
         (candidate_dir / "hypothesis.md").write_text(
             "Test hypothesis.\n", encoding="utf-8"
         )
-        ledger = HypothesisLedger.create(
-            tmp_path / "ledger.jsonl", inherit_from=None
-        )
+        ledger = HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
 
         result = _admit_candidate(
             candidate_dir / "candidate.py",
@@ -156,25 +154,29 @@ class TestAdmitCandidateImportGate:
 
         # The model will fail later gates (logp etc.) but should pass the import gate.
         # We just check it doesn't get rejected for imports by patching past the later gates.
-        with patch(
-            "src.pipelines.inner_loop.model_zoo.load_pymc_model"
-        ) as mock_load, patch(
-            "src.pipelines.inner_loop.model_zoo.model_logp_is_finite",
-            return_value=(True, ""),
-        ), patch(
-            "src.pipelines.inner_loop.model_zoo.model_contract_violation",
-            return_value=None,
-        ), patch(
-            "src.pipelines.inner_loop.model_zoo.fit_model"
-        ), patch(
-            "src.pipelines.inner_loop.model_zoo.convergence_problems_of",
-            return_value=[],
-        ), patch(
-            "src.pipelines.inner_loop.model_zoo.log_likelihood",
-            return_value=-10.0,
-        ), patch(
-            "src.pipelines.inner_loop.model_zoo._min_prediction_rmse",
-            return_value=(None, float("inf")),
+        with (
+            patch("src.pipelines.inner_loop.model_zoo.load_pymc_model") as mock_load,
+            patch(
+                "src.pipelines.inner_loop.model_zoo.model_logp_is_finite",
+                return_value=(True, ""),
+            ),
+            patch(
+                "src.pipelines.inner_loop.model_zoo.model_contract_violation",
+                return_value=None,
+            ),
+            patch("src.pipelines.inner_loop.model_zoo.fit_model"),
+            patch(
+                "src.pipelines.inner_loop.model_zoo.convergence_problems_of",
+                return_value=[],
+            ),
+            patch(
+                "src.pipelines.inner_loop.model_zoo.log_likelihood",
+                return_value=-10.0,
+            ),
+            patch(
+                "src.pipelines.inner_loop.model_zoo._min_prediction_rmse",
+                return_value=(None, float("inf")),
+            ),
         ):
             result = _admit_candidate(
                 candidate_dir / "candidate.py",
@@ -242,7 +244,10 @@ class TestBriefsStateAllowlist:
         assert "pymc" in context
         assert "pytensor" in context
         assert "allowlist" in context.lower() or "allowed imports" in context.lower()
-        assert "written in the file itself" in context.lower() or "self-contained" in context.lower()
+        assert (
+            "written in the file itself" in context.lower()
+            or "self-contained" in context.lower()
+        )
 
     def test_pymc_theory_states_allowlist(self):
         prompt_path = (

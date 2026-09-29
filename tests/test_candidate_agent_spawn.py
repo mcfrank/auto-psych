@@ -30,8 +30,19 @@ def _spawn(tmp_path, monkeypatch):
     captured = {}
 
     def fake_run_coding_agent(
-        prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False, memory_dir=None, sandbox=False, writable_dirs=None,
+        prompt,
+        *,
+        cwd,
+        log_path,
+        allowed_dirs,
+        timeout_secs,
+        backend,
+        usage_label,
+        model=None,
+        stock=False,
+        memory_dir=None,
+        sandbox=False,
+        writable_dirs=None,
     ):
         captured["stock"] = stock
         captured["memory_dir"] = memory_dir

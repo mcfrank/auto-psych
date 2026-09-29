@@ -122,7 +122,9 @@ def _fitted_with_stub_ppc(synthetic: np.ndarray) -> FittedModel:
     deterministic stub so the frame builder is exercised without sampling.
     """
     model = load_pymc_model("bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR)
-    fitted = FittedModel(name="bayesian_fair_coin", model=model, idata=None, fingerprint="x")
+    fitted = FittedModel(
+        name="bayesian_fair_coin", model=model, idata=None, fingerprint="x"
+    )
     fitted.sample_synthetic_responses = (  # type: ignore[method-assign]
         lambda stim_data, n_datasets, seed=42: np.asarray(synthetic)[:n_datasets]
     )

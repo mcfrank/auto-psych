@@ -186,7 +186,9 @@ def test_drive_with_llm_propagates_llm_configuration_failure(tmp_path, monkeypat
         )
 
 
-def test_drive_with_llm_reports_a_missing_steering_prompt(tmp_path, monkeypatch, capsys):
+def test_drive_with_llm_reports_a_missing_steering_prompt(
+    tmp_path, monkeypatch, capsys
+):
     monkeypatch.setattr(browser_steering, "get_llm", lambda *a, **k: object())
     monkeypatch.setattr(browser_steering, "load_prompt_for_run", lambda *a, **k: "   ")
     done, llm_used = collect._drive_experiment_with_llm(

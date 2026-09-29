@@ -83,7 +83,11 @@ def response_doc(
     only cares that they are present (valid trial) and what was chosen.
     """
     trials = [
-        {"sequence_a": [0, 1, 1, 0], "sequence_b": [1, 1, 1, 1], "chose_left": chose_left}
+        {
+            "sequence_a": [0, 1, 1, 0],
+            "sequence_b": [1, 1, 1, 1],
+            "chose_left": chose_left,
+        }
         for chose_left in chose_left_per_trial
     ]
     data = {
@@ -97,10 +101,14 @@ def response_doc(
 class FakeFirestore:
     """A Firestore source backed by an in-memory ``{session_id: [response, ...]}``."""
 
-    def __init__(self, responses_by_session: dict[str, list[tuple[str, dict[str, Any]]]]):
+    def __init__(
+        self, responses_by_session: dict[str, list[tuple[str, dict[str, Any]]]]
+    ):
         self._responses = responses_by_session
 
-    def list_responses(self, collection_session_id: str) -> list[tuple[str, dict[str, Any]]]:
+    def list_responses(
+        self, collection_session_id: str
+    ) -> list[tuple[str, dict[str, Any]]]:
         return list(self._responses.get(collection_session_id, []))
 
 
@@ -123,7 +131,9 @@ class FakeProlific:
             return None, self._errors[study_id]
         return self._statuses.get(study_id), None
 
-    def submission_counts(self, study_id: str) -> tuple[dict[str, int] | None, str | None]:
+    def submission_counts(
+        self, study_id: str
+    ) -> tuple[dict[str, int] | None, str | None]:
         if study_id in self._errors:
             return None, self._errors[study_id]
         return self._counts.get(study_id), None

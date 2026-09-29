@@ -89,7 +89,11 @@ def fetch_prolific_status(
 
     errors = [e for e in (status_err, counts_err) if e]
     status_data = status_data or {}
-    counts = {str(k): int(v) for k, v in (counts_data or {}).items() if isinstance(v, (int, float))}
+    counts = {
+        str(k): int(v)
+        for k, v in (counts_data or {}).items()
+        if isinstance(v, (int, float))
+    }
 
     return ProlificStatus(
         study_id=study_id,

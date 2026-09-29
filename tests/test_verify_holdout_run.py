@@ -22,7 +22,9 @@ import pytest
 
 from tests.paths import REPO_ROOT
 
-VERIFIER = REPO_ROOT / "scripts" / "subjective_randomness" / "slurm" / "verify_holdout_run.sh"
+VERIFIER = (
+    REPO_ROOT / "scripts" / "subjective_randomness" / "slurm" / "verify_holdout_run.sh"
+)
 
 RAW_HEADER = "sequence_a,sequence_b,participant_id,trial_index,chose_left"
 FEATURIZED_HEADER = RAW_HEADER + ",n_a,n_b,rep_motifs_a,rep_motifs_b"
@@ -53,12 +55,22 @@ def _history(*round_statuses, bests=None):
         bests = ["seed", *(f"candidate_{i}" for i in range(len(round_statuses)))]
     if len(bests) != 1 + len(round_statuses):
         raise ValueError("bests must name one incumbent per step")
-    seed = {"step": 0, "iteration": None, "best_model": bests[0],
-            "posteriors": {"seed": 0.6, "rival": 0.4}, "elpd_loo": {}}
+    seed = {
+        "step": 0,
+        "iteration": None,
+        "best_model": bests[0],
+        "posteriors": {"seed": 0.6, "rival": 0.4},
+        "elpd_loo": {},
+    }
     rounds = []
     for i, status in enumerate(round_statuses):
-        entry = {"step": i + 1, "iteration": i, "best_model": bests[i + 1],
-                 "posteriors": {bests[i + 1]: 1.0}, "elpd_loo": {}}
+        entry = {
+            "step": i + 1,
+            "iteration": i,
+            "best_model": bests[i + 1],
+            "posteriors": {bests[i + 1]: 1.0},
+            "elpd_loo": {},
+        }
         if status is not None:
             entry["critique"] = status
         rounds.append(entry)
@@ -66,11 +78,17 @@ def _history(*round_statuses, bests=None):
 
 
 _CRITIQUED = {
-    "status": "critiqued", "incumbent": "seed", "attempts": 1,
-    "n_statistics": 8, "n_significant": 2, "n_significant_fdr": 1,
+    "status": "critiqued",
+    "incumbent": "seed",
+    "attempts": 1,
+    "n_statistics": 8,
+    "n_significant": 2,
+    "n_significant_fdr": 1,
 }
 _NO_CRITIQUE = {
-    "status": "no_critique", "incumbent": "seed", "attempts": 2,
+    "status": "no_critique",
+    "incumbent": "seed",
+    "attempts": 2,
     "reason": "the critique agent wrote no usable test statistic in 2 attempts",
 }
 
@@ -113,9 +131,7 @@ def _build_clean_raw_tree(
     # CONTEXT.md with raw columns only
     cand_dir = exp1_ml / "round0" / "candidate0"
     cand_dir.mkdir(parents=True)
-    (cand_dir / "CONTEXT.md").write_text(
-        f"Columns: `{RAW_HEADER}`\n", encoding="utf-8"
-    )
+    (cand_dir / "CONTEXT.md").write_text(f"Columns: `{RAW_HEADER}`\n", encoding="utf-8")
     # screened_out.json
     design_dir = tar_staging / "experiment1" / "design"
     design_dir.mkdir(parents=True)
@@ -247,7 +263,11 @@ class TestVerifyRawFeaturesRun:
         result = _run_verifier(work_root)
         # The current verifier prints [warn] for no CSV found, which is not
         # a hard failure yet. After P2 strengthening, it should fail.
-        assert "no" in result.stdout.lower() or "warn" in result.stdout.lower() or result.returncode != 0
+        assert (
+            "no" in result.stdout.lower()
+            or "warn" in result.stdout.lower()
+            or result.returncode != 0
+        )
 
 
 class TestVerifyCritiquePresence:
@@ -260,7 +280,9 @@ class TestVerifyCritiquePresence:
         assert "[ok]   critique" in result.stdout
         assert "[WARN]" not in result.stdout
 
-    def test_run_with_no_critique_in_any_round_is_flagged_but_not_failed(self, tmp_path):
+    def test_run_with_no_critique_in_any_round_is_flagged_but_not_failed(
+        self, tmp_path
+    ):
         work_root = _build_clean_raw_tree(
             tmp_path / "absent", history=_history(_NO_CRITIQUE, _NO_CRITIQUE)
         )
@@ -280,7 +302,9 @@ class TestVerifyCritiquePresence:
         assert "[WARN]" in result.stdout
 
     def test_run_recorded_before_the_status_existed_is_informational(self, tmp_path):
-        work_root = _build_clean_raw_tree(tmp_path / "old", history=_history(None, None))
+        work_root = _build_clean_raw_tree(
+            tmp_path / "old", history=_history(None, None)
+        )
         result = _run_verifier(work_root)
         assert result.returncode == 0, result.stdout
         assert "[WARN]" not in result.stdout
@@ -308,8 +332,12 @@ def _write_live_cell(work_root: Path, gt: str, histories: list[str]) -> None:
         (loop_dir / "history.json").write_text(history, encoding="utf-8")
         data_dir = run_root / f"experiment{exp_num}" / "data"
         data_dir.mkdir(parents=True)
-        (data_dir / "responses.csv").write_text(RAW_HEADER + "\nHHT,THT,0,0,1\n", encoding="utf-8")
-        (loop_dir / "responses.csv").write_text(RAW_HEADER + "\nHHT,THT,0,0,1\n", encoding="utf-8")
+        (data_dir / "responses.csv").write_text(
+            RAW_HEADER + "\nHHT,THT,0,0,1\n", encoding="utf-8"
+        )
+        (loop_dir / "responses.csv").write_text(
+            RAW_HEADER + "\nHHT,THT,0,0,1\n", encoding="utf-8"
+        )
 
 
 class TestVerifyIncumbentChanges:
@@ -317,7 +345,9 @@ class TestVerifyIncumbentChanges:
     a finished cell in which the exported best model never changed is
     flagged. A warning, not a failure — zero is the current true value."""
 
-    def test_cell_whose_incumbent_never_changes_is_flagged_but_not_failed(self, tmp_path):
+    def test_cell_whose_incumbent_never_changes_is_flagged_but_not_failed(
+        self, tmp_path
+    ):
         work_root = _build_clean_raw_tree(
             tmp_path / "frozen",
             history=_history(_CRITIQUED, _CRITIQUED, bests=["seed", "seed", "seed"]),
@@ -356,10 +386,16 @@ class TestVerifyIncumbentChanges:
         assert "steps=4 changes=1 discovered_steps=0 final=rival" in result.stdout
 
     def test_a_kept_repo_copy_is_read_like_an_archive(self, tmp_path):
-        work_root = _build_clean_raw_tree(tmp_path / "mixed", history=_history(_CRITIQUED))
+        work_root = _build_clean_raw_tree(
+            tmp_path / "mixed", history=_history(_CRITIQUED)
+        )
         _write_live_cell(
-            work_root, "gt_live",
-            [_history(_CRITIQUED, bests=["seed", "seed"]), _history(_CRITIQUED, bests=["seed", "seed"])],
+            work_root,
+            "gt_live",
+            [
+                _history(_CRITIQUED, bests=["seed", "seed"]),
+                _history(_CRITIQUED, bests=["seed", "seed"]),
+            ],
         )
         result = _run_verifier(work_root)
         assert result.returncode == 0, result.stdout
@@ -367,9 +403,17 @@ class TestVerifyIncumbentChanges:
         assert "run1/gt_live: steps=4 changes=0" in result.stdout
 
     def test_a_history_without_a_seed_step_fails_loudly(self, tmp_path):
-        broken = json.dumps([
-            {"step": 1, "iteration": 0, "best_model": "seed", "posteriors": {"seed": 1.0}, "elpd_loo": {}},
-        ])
+        broken = json.dumps(
+            [
+                {
+                    "step": 1,
+                    "iteration": 0,
+                    "best_model": "seed",
+                    "posteriors": {"seed": 1.0},
+                    "elpd_loo": {},
+                },
+            ]
+        )
         work_root = _build_clean_raw_tree(tmp_path / "broken", history=broken)
         result = _run_verifier(work_root)
         assert result.returncode != 0
@@ -379,7 +423,10 @@ class TestVerifyIncumbentChanges:
         work_root = _build_clean_raw_tree(tmp_path / "bare")
         result = _run_verifier(work_root)
         assert result.returncode == 0, result.stdout
-        assert "[info] no inner-loop history.json found for the incumbent check" in result.stdout
+        assert (
+            "[info] no inner-loop history.json found for the incumbent check"
+            in result.stdout
+        )
 
 
 class TestVerifyJudgesCellsByTheirResults:
@@ -398,11 +445,16 @@ class TestVerifyJudgesCellsByTheirResults:
 
     def test_a_cell_finished_by_a_retry_passes(self, tmp_path):
         work_root = _build_clean_raw_tree(tmp_path / "retried")
-        self._failed_attempt_log(work_root, work_root / "run1" / "gt", "holdout_recovery_7_1.out")
+        self._failed_attempt_log(
+            work_root, work_root / "run1" / "gt", "holdout_recovery_7_1.out"
+        )
         result = _run_verifier(work_root)
         assert result.returncode == 0, result.stdout
         assert "[ok]   all 1 cell(s) have a result" in result.stdout
-        assert "[info] 1 failed attempt(s) of cells a later attempt finished" in result.stdout
+        assert (
+            "[info] 1 failed attempt(s) of cells a later attempt finished"
+            in result.stdout
+        )
 
     def test_a_traceback_of_a_cell_without_a_result_still_fails(self, tmp_path):
         work_root = _build_clean_raw_tree(tmp_path / "unfinished")
@@ -436,14 +488,22 @@ class TestVerifyScreenedOutModels:
 
     def test_a_model_with_an_undefined_p_left_is_a_warning(self, tmp_path):
         entry = {"model": "m", "missing": [], "reason": "undefined", "invalid_pairs": 3}
-        work_root = _build_clean_raw_tree(tmp_path / "undefined", screened_out=json.dumps([entry]))
+        work_root = _build_clean_raw_tree(
+            tmp_path / "undefined", screened_out=json.dumps([entry])
+        )
         result = _run_verifier(work_root)
         assert result.returncode == 0, result.stdout
         assert "[WARN] 1 model(s) screened out of a design" in result.stdout
 
     def test_a_model_that_cannot_bind_fails(self, tmp_path):
-        entry = {"model": "m", "missing": ["participant_id"], "reason": "needs participant_id"}
-        work_root = _build_clean_raw_tree(tmp_path / "unbound", screened_out=json.dumps([entry]))
+        entry = {
+            "model": "m",
+            "missing": ["participant_id"],
+            "reason": "needs participant_id",
+        }
+        work_root = _build_clean_raw_tree(
+            tmp_path / "unbound", screened_out=json.dumps([entry])
+        )
         result = _run_verifier(work_root)
         assert result.returncode != 0, result.stdout
         assert "[FAIL] 1 of 1 screened_out.json(s) are non-empty" in result.stdout

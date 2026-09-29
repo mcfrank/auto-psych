@@ -54,7 +54,9 @@ def _write_models_dir(tmp_path):
 def test_context_documents_the_check_command(tmp_path):
     models_dir = _write_models_dir(tmp_path)
     responses = tmp_path / "responses.csv"
-    responses.write_text("sequence_a,sequence_b,chose_left\nHHT,HTH,1\n", encoding="utf-8")
+    responses.write_text(
+        "sequence_a,sequence_b,chose_left\nHHT,HTH,1\n", encoding="utf-8"
+    )
     write_task_description_beside(responses)
     candidate_dir = tmp_path / "iter_0" / "candidate_0"
 
@@ -111,7 +113,8 @@ def test_check_fits_with_the_small_settings_and_no_cache(tmp_path, monkeypatch):
     candidate_dir = tmp_path / "candidate_0"
     candidate_dir.mkdir()
     shutil.copyfile(
-        PYMC_MODEL_FIXTURES_DIR / "bayesian_fair_coin.py", candidate_dir / "candidate.py"
+        PYMC_MODEL_FIXTURES_DIR / "bayesian_fair_coin.py",
+        candidate_dir / "candidate.py",
     )
     calls = {}
 
@@ -123,12 +126,18 @@ def test_check_fits_with_the_small_settings_and_no_cache(tmp_path, monkeypatch):
         calls["elpd"] = (name, models_dir, kwargs)
         return -12.5
 
-    monkeypatch.setattr(check_candidate, "model_logp_is_finite", lambda *a, **k: (True, ""))
-    monkeypatch.setattr(check_candidate, "model_contract_violation", lambda *a, **k: None)
+    monkeypatch.setattr(
+        check_candidate, "model_logp_is_finite", lambda *a, **k: (True, "")
+    )
+    monkeypatch.setattr(
+        check_candidate, "model_contract_violation", lambda *a, **k: None
+    )
     monkeypatch.setattr(check_candidate, "fit_model", fake_fit_model)
     monkeypatch.setattr(check_candidate, "log_likelihood", fake_log_likelihood)
 
-    report = run_candidate_check(candidate_dir, PYMC_MODEL_FIXTURES_DIR / "responses.csv")
+    report = run_candidate_check(
+        candidate_dir, PYMC_MODEL_FIXTURES_DIR / "responses.csv"
+    )
 
     assert calls["fit"][0] == "candidate" and calls["fit"][1] == candidate_dir
     fit_kwargs = calls["fit"][2]
@@ -145,12 +154,15 @@ def test_check_reports_a_non_finite_logp(tmp_path, monkeypatch):
     candidate_dir = tmp_path / "candidate_0"
     candidate_dir.mkdir()
     shutil.copyfile(
-        PYMC_MODEL_FIXTURES_DIR / "bayesian_fair_coin.py", candidate_dir / "candidate.py"
+        PYMC_MODEL_FIXTURES_DIR / "bayesian_fair_coin.py",
+        candidate_dir / "candidate.py",
     )
     monkeypatch.setattr(
         check_candidate, "model_logp_is_finite", lambda *a, **k: (False, "logp is -inf")
     )
-    monkeypatch.setattr(check_candidate, "model_contract_violation", lambda *a, **k: None)
+    monkeypatch.setattr(
+        check_candidate, "model_contract_violation", lambda *a, **k: None
+    )
     with pytest.raises(CandidateCheckFailed, match="logp is -inf"):
         run_candidate_check(candidate_dir, PYMC_MODEL_FIXTURES_DIR / "responses.csv")
 
@@ -159,10 +171,15 @@ def test_check_reports_a_non_finite_elpd(tmp_path, monkeypatch):
     candidate_dir = tmp_path / "candidate_0"
     candidate_dir.mkdir()
     shutil.copyfile(
-        PYMC_MODEL_FIXTURES_DIR / "bayesian_fair_coin.py", candidate_dir / "candidate.py"
+        PYMC_MODEL_FIXTURES_DIR / "bayesian_fair_coin.py",
+        candidate_dir / "candidate.py",
     )
-    monkeypatch.setattr(check_candidate, "model_logp_is_finite", lambda *a, **k: (True, ""))
-    monkeypatch.setattr(check_candidate, "model_contract_violation", lambda *a, **k: None)
+    monkeypatch.setattr(
+        check_candidate, "model_logp_is_finite", lambda *a, **k: (True, "")
+    )
+    monkeypatch.setattr(
+        check_candidate, "model_contract_violation", lambda *a, **k: None
+    )
     monkeypatch.setattr(check_candidate, "fit_model", lambda *a, **k: object())
     monkeypatch.setattr(check_candidate, "log_likelihood", lambda *a, **k: float("nan"))
     with pytest.raises(CandidateCheckFailed, match="non-finite ELPD-LOO"):
@@ -193,9 +210,12 @@ def test_check_passes_a_real_model_end_to_end(tmp_path):
     candidate_dir = tmp_path / "candidate_0"
     candidate_dir.mkdir()
     shutil.copyfile(
-        PYMC_MODEL_FIXTURES_DIR / "bayesian_fair_coin.py", candidate_dir / "candidate.py"
+        PYMC_MODEL_FIXTURES_DIR / "bayesian_fair_coin.py",
+        candidate_dir / "candidate.py",
     )
-    command = check_candidate_command(candidate_dir, PYMC_MODEL_FIXTURES_DIR / "responses.csv")
+    command = check_candidate_command(
+        candidate_dir, PYMC_MODEL_FIXTURES_DIR / "responses.csv"
+    )
     proc = subprocess.run(
         command.replace("\\\n", " ").split(),
         cwd=REPO_ROOT,

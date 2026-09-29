@@ -52,7 +52,9 @@ def test_markdown_bold_inside_comments_is_not_flagged(tmp_path: Path):
         "  //    convert **bold** -> <strong>bold</strong>. NEVER emit raw Markdown (no `**`).\n"
         "  /* see **note** for details */\n"
     )
-    exp = _make_experiment(tmp_path, extra, trailing="\n<!-- TODO: **review** wording -->\n")
+    exp = _make_experiment(
+        tmp_path, extra, trailing="\n<!-- TODO: **review** wording -->\n"
+    )
     ok, msg = _validate_implement(exp)
     assert ok, msg
 

@@ -65,8 +65,16 @@ def sources() -> MonitorSources:
     firestore = FakeFirestore(
         {
             HEALTHY_SESSION: [
-                response_doc("PID_A", [True, False, True, False, True], created_at="2026-06-19T18:05:00Z"),
-                response_doc("PID_B", [False, True, False, False, True], created_at="2026-06-19T18:09:00Z"),
+                response_doc(
+                    "PID_A",
+                    [True, False, True, False, True],
+                    created_at="2026-06-19T18:05:00Z",
+                ),
+                response_doc(
+                    "PID_B",
+                    [False, True, False, False, True],
+                    created_at="2026-06-19T18:09:00Z",
+                ),
             ],
             # Every participant chose left on every trial: the canary.
             DEGENERATE_SESSION: [
@@ -77,8 +85,21 @@ def sources() -> MonitorSources:
         }
     )
     prolific = FakeProlific(
-        statuses={HEALTHY_STUDY: {"status": "ACTIVE", "total_available_places": 30, "places_taken": 2}},
-        counts={HEALTHY_STUDY: {"AWAITING_REVIEW": 2, "APPROVED": 0, "RETURNED": 1, "TIMED_OUT": 0}},
+        statuses={
+            HEALTHY_STUDY: {
+                "status": "ACTIVE",
+                "total_available_places": 30,
+                "places_taken": 2,
+            }
+        },
+        counts={
+            HEALTHY_STUDY: {
+                "AWAITING_REVIEW": 2,
+                "APPROVED": 0,
+                "RETURNED": 1,
+                "TIMED_OUT": 0,
+            }
+        },
     )
     return MonitorSources(firestore=firestore, prolific=prolific)
 
@@ -93,7 +114,7 @@ def client(data_root: Path, sources: MonitorSources):
 def test_index_page_served(client):
     resp = client.get("/")
     assert resp.status_code == 200
-    assert b"<div id=\"app\">" in resp.data
+    assert b'<div id="app">' in resp.data
 
 
 def test_sessions_lists_only_real_deployments_newest_first(client):
@@ -105,7 +126,9 @@ def test_sessions_lists_only_real_deployments_newest_first(client):
 
 def test_session_summary_reports_live_progress(client):
     body = client.get("/api/sessions").get_json()
-    healthy = next(s for s in body["sessions"] if s["collection_session_id"] == HEALTHY_SESSION)
+    healthy = next(
+        s for s in body["sessions"] if s["collection_session_id"] == HEALTHY_SESSION
+    )
     assert healthy["experiment_id"] == "subjective_randomness_experiment1"
     assert healthy["n_responses"] == 2
     assert healthy["n_with_data"] == 2
@@ -118,7 +141,9 @@ def test_session_summary_reports_live_progress(client):
 
 def test_summary_flags_degenerate_session(client):
     body = client.get("/api/sessions").get_json()
-    bad = next(s for s in body["sessions"] if s["collection_session_id"] == DEGENERATE_SESSION)
+    bad = next(
+        s for s in body["sessions"] if s["collection_session_id"] == DEGENERATE_SESSION
+    )
     assert bad["overall_p_left"] == pytest.approx(1.0)
     assert bad["n_degenerate_participants"] == 3
     assert bad["has_warning"] is True
@@ -163,10 +188,17 @@ def test_unknown_session_returns_404(client):
 
 def test_prolific_error_surfaces_without_breaking_detail(data_root: Path):
     firestore = FakeFirestore(
-        {HEALTHY_SESSION: [response_doc("PID_A", [True, False], created_at="2026-06-19T18:05:00Z")]}
+        {
+            HEALTHY_SESSION: [
+                response_doc("PID_A", [True, False], created_at="2026-06-19T18:05:00Z")
+            ]
+        }
     )
     prolific = FakeProlific(errors={HEALTHY_STUDY: "GET /studies/ 503: upstream down"})
-    app = create_app(data_root=data_root, sources=MonitorSources(firestore=firestore, prolific=prolific))
+    app = create_app(
+        data_root=data_root,
+        sources=MonitorSources(firestore=firestore, prolific=prolific),
+    )
     app.config.update(TESTING=True)
     detail = app.test_client().get(f"/api/session/{HEALTHY_SESSION}").get_json()
     # The Firestore-derived data is still present; the Prolific failure is shown.

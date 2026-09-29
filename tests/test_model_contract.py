@@ -36,7 +36,7 @@ from src.pipelines.inner_loop.check_candidate import (
 from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
 from tests.paths import REPO_ROOT
 
-_GOOD = '''
+_GOOD = """
 import numpy as np
 import pymc as pm
 
@@ -52,14 +52,14 @@ with pm.Model() as model:
     bias = pm.Normal("bias", 0.0, 1.0)
     p_left = pm.Deterministic("p_left", pm.math.sigmoid(beta * h_diff + bias))
     pm.Bernoulli("obs", p=p_left, observed=chose_left)
-'''
+"""
 
 # Fitted to the opposite of the responses.
 _FLIPPED = _GOOD.replace("observed=chose_left", "observed=1 - chose_left")
 
 # Reorders the rows it binds: the ELPD total is unchanged, the pointwise LOO
 # values no longer line up with the CSV rows.
-_REORDERED = '''
+_REORDERED = """
 import numpy as np
 import pymc as pm
 
@@ -84,7 +84,7 @@ with pm.Model() as model:
     bias = pm.Normal("bias", 0.0, 1.0)
     p_left = pm.Deterministic("p_left", pm.math.sigmoid(beta * h_diff + bias))
     pm.Bernoulli("obs", p=p_left, observed=chose_left)
-'''
+"""
 
 # A lapse applied after p_left: scored on one probability, used through another.
 _LAPSE_AFTER_P_LEFT = _GOOD.replace(
@@ -98,7 +98,9 @@ _SCALAR_P_LEFT = _GOOD.replace(
     'p_left = pm.Deterministic("p_left", pm.math.sigmoid(bias))',
 )
 
-_NO_P_LEFT = _GOOD.replace('pm.Deterministic("p_left", ', 'pm.Deterministic("p_choice", ')
+_NO_P_LEFT = _GOOD.replace(
+    'pm.Deterministic("p_left", ', 'pm.Deterministic("p_choice", '
+)
 
 # A likelihood term outside the observed variable: LOO never sees it.
 _RESPONSE_POTENTIAL = _GOOD.replace(
@@ -147,11 +149,14 @@ def _write_model(models_dir: Path, name: str, source: str) -> None:
 
 def _violation(tmp_path: Path, source: str) -> str | None:
     _write_model(tmp_path / "models", "m", source)
-    return model_contract_violation("m", tmp_path / "models", _write_responses(tmp_path))
+    return model_contract_violation(
+        "m", tmp_path / "models", _write_responses(tmp_path)
+    )
 
 
 @pytest.mark.parametrize(
-    "source", [_GOOD, _LOGIT_FORM, _CLIP_GUARD, _PARAMETER_POTENTIAL],
+    "source",
+    [_GOOD, _LOGIT_FORM, _CLIP_GUARD, _PARAMETER_POTENTIAL],
     ids=["plain", "logit_p", "clip_guard", "parameter_potential"],
 )
 def test_a_model_honouring_the_contract_passes(tmp_path, source):
@@ -271,11 +276,15 @@ def _model_files():
             yield pytest.param(directory, name, id=f"{directory.name}/{name}")
     for path in sorted(_IMPOSSIBLE.glob("*.py")):
         if path.name != "__init__.py":
-            yield pytest.param(_IMPOSSIBLE, path.stem, id=f"{_IMPOSSIBLE.name}/{path.stem}")
+            yield pytest.param(
+                _IMPOSSIBLE, path.stem, id=f"{_IMPOSSIBLE.name}/{path.stem}"
+            )
 
 
 @pytest.mark.parametrize("models_dir, name", list(_model_files()))
 def test_every_starting_model_and_ground_truth_honours_the_contract(
     tmp_path, models_dir, name
 ):
-    assert model_contract_violation(name, models_dir, _write_responses(tmp_path)) is None
+    assert (
+        model_contract_violation(name, models_dir, _write_responses(tmp_path)) is None
+    )

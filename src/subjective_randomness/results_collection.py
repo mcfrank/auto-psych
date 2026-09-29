@@ -76,7 +76,9 @@ def collect_results(
     if not source.is_dir():
         raise FileNotFoundError(f"Source run root is not a directory: {source}")
 
-    aggregate_paths = [source / f"{AGGREGATE_STEM}.{ext}" for ext in ARTIFACT_EXTENSIONS]
+    aggregate_paths = [
+        source / f"{AGGREGATE_STEM}.{ext}" for ext in ARTIFACT_EXTENSIONS
+    ]
     missing = [p for p in aggregate_paths if not p.is_file()]
     if missing:
         raise FileNotFoundError(
@@ -114,7 +116,9 @@ def collect_results(
         shutil.copy2(src_path, out_path)
         copied_per_run.append(out_path)
 
-    summary = json.loads((source / f"{AGGREGATE_STEM}.json").read_text(encoding="utf-8"))
+    summary = json.loads(
+        (source / f"{AGGREGATE_STEM}.json").read_text(encoding="utf-8")
+    )
     summary_path = dest / "SUMMARY.md"
     summary_path.write_text(render_test_retest_summary(summary), encoding="utf-8")
 

@@ -89,8 +89,7 @@ def test_register_collection_session_posts_token_and_payload(tmp_path, monkeypat
     assert captured["url"].startswith("https://")
     assert captured["token"] == "sekrit"
     assert (
-        captured["payload"]["collection_session_id"]
-        == manifest.collection_session_id
+        captured["payload"]["collection_session_id"] == manifest.collection_session_id
     )
 
 

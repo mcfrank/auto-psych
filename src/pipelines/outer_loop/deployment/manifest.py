@@ -19,7 +19,12 @@ VALID_PROLIFIC_MODES = {"none", "test", "live"}
 
 
 def utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def slug(value: str) -> str:
@@ -117,9 +122,9 @@ def code_provenance(repo_root: Path) -> dict[str, Any]:
     record = json.loads(record_path.read_text(encoding="utf-8"))
     commit = record.get("git_commit") if isinstance(record, dict) else None
     dirty = record.get("git_dirty") if isinstance(record, dict) else None
-    if not (isinstance(commit, str) and re.fullmatch(r"[0-9a-f]{40}", commit)) or not isinstance(
-        dirty, bool
-    ):
+    if not (
+        isinstance(commit, str) and re.fullmatch(r"[0-9a-f]{40}", commit)
+    ) or not isinstance(dirty, bool):
         raise ValueError(
             f"{record_path} must hold a 40-character git_commit and a boolean "
             f"git_dirty; got {record!r}."
@@ -215,7 +220,9 @@ def build_manifest(
     if prolific_mode not in VALID_PROLIFIC_MODES:
         raise ValueError(f"Unknown Prolific mode: {prolific_mode}")
 
-    resolved_run_id = run_id if run_id is not None else experiment_number_from_dir(exp_dir)
+    resolved_run_id = (
+        run_id if run_id is not None else experiment_number_from_dir(exp_dir)
+    )
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
     git = code_provenance(repo_root)
     short_sha = git["git_commit"][:7]
@@ -285,10 +292,16 @@ def experiment_manifest_path(exp_dir: Path) -> Path:
 def write_manifest(exp_dir: Path, manifest: DeploymentManifest) -> Path:
     out = manifest_path(exp_dir)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.write_text(json.dumps(manifest.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    out.write_text(
+        json.dumps(manifest.to_dict(), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     mirror = experiment_manifest_path(exp_dir)
     mirror.parent.mkdir(parents=True, exist_ok=True)
-    mirror.write_text(json.dumps(manifest.to_dict(), indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    mirror.write_text(
+        json.dumps(manifest.to_dict(), indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
     return out
 
 
@@ -365,11 +378,17 @@ def archive_superseded_manifest(exp_dir: Path) -> Path:
     return archived
 
 
-def write_client_config(exp_dir: Path, manifest: DeploymentManifest, existing: dict[str, Any] | None = None) -> Path:
+def write_client_config(
+    exp_dir: Path, manifest: DeploymentManifest, existing: dict[str, Any] | None = None
+) -> Path:
     config_path = exp_dir / "experiment" / "config.json"
     merged = dict(existing or {})
     merged.update(manifest.to_client_config())
-    merged.setdefault("run_mode", "deployed" if manifest.deploy_target == "firebase" else "dry_run")
+    merged.setdefault(
+        "run_mode", "deployed" if manifest.deploy_target == "firebase" else "dry_run"
+    )
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    config_path.write_text(json.dumps(merged, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    config_path.write_text(
+        json.dumps(merged, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return config_path

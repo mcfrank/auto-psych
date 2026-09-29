@@ -19,7 +19,7 @@ with pm.Model() as model:
 
     # Free cognitive parameters
     baseline_evidence = pm.Normal("baseline_evidence", mu=0.0, sigma=1.0)
-    
+
     # Ideal prototype features
     ideal_imbalance = pm.HalfNormal("ideal_imbalance", sigma=0.5)
     ideal_p_alts = pm.Beta("ideal_p_alts", alpha=2.0, beta=2.0)
@@ -29,20 +29,24 @@ with pm.Model() as model:
     w_imbalance = pm.HalfNormal("w_imbalance", sigma=5.0)
     w_alts = pm.HalfNormal("w_alts", sigma=5.0)
     w_max_run = pm.HalfNormal("w_max_run", sigma=5.0)
-    
+
     # Decision noise
     tau = pm.HalfNormal("tau", sigma=1.0)
 
     # Evidence calculation: baseline times sequence length, minus weighted quadratic deviations
-    ev_a = n_a * baseline_evidence \
-           - w_imbalance * (imbalance_a - ideal_imbalance)**2 \
-           - w_alts * (p_alts_a - ideal_p_alts)**2 \
-           - w_max_run * (max_run_norm_a - ideal_max_run)**2
+    ev_a = (
+        n_a * baseline_evidence
+        - w_imbalance * (imbalance_a - ideal_imbalance) ** 2
+        - w_alts * (p_alts_a - ideal_p_alts) ** 2
+        - w_max_run * (max_run_norm_a - ideal_max_run) ** 2
+    )
 
-    ev_b = n_b * baseline_evidence \
-           - w_imbalance * (imbalance_b - ideal_imbalance)**2 \
-           - w_alts * (p_alts_b - ideal_p_alts)**2 \
-           - w_max_run * (max_run_norm_b - ideal_max_run)**2
+    ev_b = (
+        n_b * baseline_evidence
+        - w_imbalance * (imbalance_b - ideal_imbalance) ** 2
+        - w_alts * (p_alts_b - ideal_p_alts) ** 2
+        - w_max_run * (max_run_norm_b - ideal_max_run) ** 2
+    )
 
     # Logistic choice rule based on difference in evidence
     # Clip probabilities for numerical safety

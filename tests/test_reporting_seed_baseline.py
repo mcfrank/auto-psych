@@ -8,7 +8,10 @@ training data (``elpd_best_*``, recorded by holdout_eval).
 
 from __future__ import annotations
 
-from src.subjective_randomness.reporting import _HOLDOUT_METRIC_SPECS as METRIC_SPECS, _best_seed_value
+from src.subjective_randomness.reporting import (
+    _HOLDOUT_METRIC_SPECS as METRIC_SPECS,
+    _best_seed_value,
+)
 
 FITTED = {
     "per_model": {

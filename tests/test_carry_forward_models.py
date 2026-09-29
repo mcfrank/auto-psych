@@ -33,7 +33,9 @@ def _prev_experiment_with_export(tmp_path):
     manifest["models"].append(
         {"name": "inner_loop_model", "rationale": "exported inner-loop best"}
     )
-    manifest_path.write_text(yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8")
+    manifest_path.write_text(
+        yaml.safe_dump(manifest, sort_keys=False), encoding="utf-8"
+    )
     return prev, manifest
 
 

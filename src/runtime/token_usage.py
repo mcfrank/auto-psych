@@ -196,7 +196,9 @@ def format_summary(summary: Dict, heading: str) -> str:
             f"on one; waited {summary['usage_limit_wait_sec'] / 3600:.2f} h in all"
         )
     if summary["claude_auth"]:
-        lines.append(f"  [tokens]   claude billing: {', '.join(summary['claude_auth'])}")
+        lines.append(
+            f"  [tokens]   claude billing: {', '.join(summary['claude_auth'])}"
+        )
     for source, totals in summary["by_source"].items():
         lines.append(
             f"  [tokens]   {source}: {totals['total_tokens']:,} tokens "

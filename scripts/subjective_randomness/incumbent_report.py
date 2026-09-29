@@ -104,13 +104,19 @@ def _format_changes(record: Dict[str, Any]) -> str:
 
 
 def render_markdown(
-    sweep: Path, records: Dict[str, Dict[str, Any]], survey: Optional[SweepSurvey] = None
+    sweep: Path,
+    records: Dict[str, Dict[str, Any]],
+    survey: Optional[SweepSurvey] = None,
 ) -> str:
     total = totals(records)
     lines = [
         f"# Incumbent record: `{sweep}`",
         "",
-        *(accounting_lines(survey, included=list(records)) if survey is not None else []),
+        *(
+            accounting_lines(survey, included=list(records))
+            if survey is not None
+            else []
+        ),
         "Per cell: scoring steps, steps at which the exported best model differed "
         "from the previous step's, steps at which it was a discovered model (not "
         "scored at experiment 1's seed step), the final incumbent, and the changes.",
@@ -159,8 +165,12 @@ def main(args: Args) -> None:
     out_json = out_md.with_suffix(".json")
     out_json.write_text(
         json.dumps(
-            {"sweep": str(args.sweep), "cells": records, "totals": totals(records),
-             "cell_survey": survey.as_dict()},
+            {
+                "sweep": str(args.sweep),
+                "cells": records,
+                "totals": totals(records),
+                "cell_survey": survey.as_dict(),
+            },
             indent=2,
         ),
         encoding="utf-8",

@@ -24,7 +24,12 @@ from src.subjective_randomness.model_families import (
     motif_stack,
 )
 
-FAMILIES = (falk_konold_dp, finite_experience_occurrence, local_representativeness, motif_stack)
+FAMILIES = (
+    falk_konold_dp,
+    finite_experience_occurrence,
+    local_representativeness,
+    motif_stack,
+)
 
 
 def _all_sequences(max_length: int) -> list[str]:
@@ -139,7 +144,9 @@ def test_parse_motifs_matches_a_brute_force_minimal_partition_reference():
 
 def test_clean_sequence_exception_behavior_preserved():
     assert common.clean_sequence("hth ") == "HTH"
-    assert common.clean_sequence("h t t") == "HTT"  # internal whitespace is dropped, not rejected
+    assert (
+        common.clean_sequence("h t t") == "HTT"
+    )  # internal whitespace is dropped, not rejected
     for bad in ("", "   ", "HTX", "123", "H_T"):
         with pytest.raises(ValueError):
             common.clean_sequence(bad)

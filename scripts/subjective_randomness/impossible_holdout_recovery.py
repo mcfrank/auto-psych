@@ -153,8 +153,12 @@ def main(args: Args) -> None:
         agent_model_override=args.agent_model,
         agent_timeout_override=args.agent_timeout_sec,
         resume=args.resume,
-        summary_root=resolve_path(args.summary_root) if args.summary_root is not None else None,
-        agent_root=resolve_path(args.agent_root) if args.agent_root is not None else None,
+        summary_root=resolve_path(args.summary_root)
+        if args.summary_root is not None
+        else None,
+        agent_root=resolve_path(args.agent_root)
+        if args.agent_root is not None
+        else None,
     )
 
     out_path.parent.mkdir(parents=True, exist_ok=True)

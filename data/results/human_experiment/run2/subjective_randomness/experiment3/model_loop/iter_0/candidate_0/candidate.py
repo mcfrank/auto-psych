@@ -33,10 +33,10 @@ with pm.Model() as model:
 
     n_a_f = pt.cast(n_a, "float64")
     n_b_f = pt.cast(n_b, "float64")
-    
+
     p_rep_a = pt.cast(rep_motifs_a, "float64") / pt.clip(n_a_f, 1.0, np.inf)
     p_rep_b = pt.cast(rep_motifs_b, "float64") / pt.clip(n_b_f, 1.0, np.inf)
-    
+
     p_alt_a = pt.cast(alt_motifs_a, "float64") / pt.clip(n_a_f, 1.0, np.inf)
     p_alt_b = pt.cast(alt_motifs_b, "float64") / pt.clip(n_b_f, 1.0, np.inf)
 

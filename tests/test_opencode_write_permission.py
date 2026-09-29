@@ -57,14 +57,13 @@ def test_sbatch_hardening_does_not_add_write_permission(tmp_path):
     ext[f"{repo}/**"] = "allow"
     ext[f"{repo}/*"] = "allow"
 
-    assert "write" not in perm, (
-        "sbatch hardening added a write permission"
-    )
+    assert "write" not in perm, "sbatch hardening added a write permission"
 
 
 def test_candidate_prompt_instructs_bash_writing():
     """The candidate prompt must tell agents to use bash for file creation."""
     from src.pipelines.inner_loop.candidate_agent import _build_candidate_prompt
+
     prompt = _build_candidate_prompt(
         Path("/tmp/test_candidate_dir"),
         {

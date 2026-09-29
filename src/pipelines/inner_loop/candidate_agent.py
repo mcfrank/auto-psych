@@ -177,7 +177,7 @@ def _write_existing_hypotheses(
         "deficit against the best and the standard error of that difference: "
         f"within about {DEFAULT_PRUNE_DSE_MULTIPLIER:g}·dse the two are "
         "statistically tied on this data; beyond it the model has lost. "
-        "\"PSIS-LOO unreliable\" means the estimate itself is untrustworthy (too "
+        '"PSIS-LOO unreliable" means the estimate itself is untrustworthy (too '
         "many high-Pareto-k trials), not that the model is bad. Propose a "
         "hypothesis that is genuinely different from these, or a refinement of a "
         "single one of them — never a combination of several.\n\n" + body
@@ -207,7 +207,9 @@ def _pruned_source(models_dir: Path, entry: LedgerEntry) -> Optional[Path]:
     if not experiment:
         return None
     run_root = models_dir.parent.parent.parent
-    source = run_root / experiment / "model_loop" / "models" / "pruned" / f"{entry.name}.py"
+    source = (
+        run_root / experiment / "model_loop" / "models" / "pruned" / f"{entry.name}.py"
+    )
     return source if source.exists() else None
 
 
@@ -651,7 +653,9 @@ def _retry_note(previous_dir: Path) -> str:
 def _repair_note(previous_dir: Path, reason: str) -> str:
     """The note a slot's repair opens with: the rejection reason, verbatim."""
     if not reason.strip():
-        raise ValueError("a repair attempt needs the rejection reason; got an empty one")
+        raise ValueError(
+            "a repair attempt needs the rejection reason; got an empty one"
+        )
     return (
         "NOTE: this is a repair attempt. Your previous attempt at this candidate "
         f"slot, in `{previous_dir}`, was rejected at admission for this reason:\n\n"
@@ -666,9 +670,7 @@ def _repair_note(previous_dir: Path, reason: str) -> str:
     )
 
 
-def _build_candidate_prompt(
-    candidate_dir: Path, docs: Dict[str, Optional[str]]
-) -> str:
+def _build_candidate_prompt(candidate_dir: Path, docs: Dict[str, Optional[str]]) -> str:
     """The candidate agent's full prompt: task instructions + injected context.
 
     Every context document is inlined as a delimited section so the agent

@@ -84,11 +84,15 @@ def test_render_template_experiment_writes_design_and_config(tmp_path):
     exp_dir = tmp_path / "smoke_experiment"
     render_template_experiment(exp_dir, n_stimuli=2)
 
-    stimuli = json.loads((exp_dir / "design" / "stimuli.json").read_text(encoding="utf-8"))
+    stimuli = json.loads(
+        (exp_dir / "design" / "stimuli.json").read_text(encoding="utf-8")
+    )
     assert len(stimuli) == 2
     assert {"sequence_a", "sequence_b"} <= set(stimuli[0])
 
-    config = json.loads((exp_dir / "experiment" / "config.json").read_text(encoding="utf-8"))
+    config = json.loads(
+        (exp_dir / "experiment" / "config.json").read_text(encoding="utf-8")
+    )
     # Deploy fills experiment_url later; before deploy it must be null, not absent.
     assert config["experiment_url"] is None
 
@@ -100,5 +104,7 @@ def test_render_template_experiment_embeds_custom_stimuli(tmp_path):
 
     index = (experiment_dir / "index.html").read_text(encoding="utf-8")
     assert "HHTT" in index and "HTHT" in index
-    stimuli = json.loads((exp_dir / "design" / "stimuli.json").read_text(encoding="utf-8"))
+    stimuli = json.loads(
+        (exp_dir / "design" / "stimuli.json").read_text(encoding="utf-8")
+    )
     assert stimuli == custom

@@ -65,8 +65,14 @@ The function must be self-contained (no imports of non-stdlib modules except mat
 For `lm_code_translation_list`-based statistics: parse the code string as plain text (do not execute it). Count method calls by searching for substrings, e.g.:
 
 ```python
-n_ops = sum(code.count("explore_operation(") for code in row["lm_code_translation_list"])
-mean_ops = n_ops / len(row["lm_code_translation_list"]) if row["lm_code_translation_list"] else 0.0
+n_ops = sum(
+    code.count("explore_operation(") for code in row["lm_code_translation_list"]
+)
+mean_ops = (
+    n_ops / len(row["lm_code_translation_list"])
+    if row["lm_code_translation_list"]
+    else 0.0
+)
 ```
 
 ---

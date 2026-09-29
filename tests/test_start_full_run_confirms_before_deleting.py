@@ -43,7 +43,9 @@ def launch(tmp_path):
     (scripts / "stand_in_python").write_text(_STAND_IN_PYTHON, encoding="utf-8")
     (scripts / "stand_in_python").chmod(0o755)
     (scripts / "submit_parallel.sh").write_text(_STAND_IN_SUBMIT, encoding="utf-8")
-    (scripts / "full_run.yaml").write_text("project: subjective_randomness\n", encoding="utf-8")
+    (scripts / "full_run.yaml").write_text(
+        "project: subjective_randomness\n", encoding="utf-8"
+    )
     work_root = tmp_path / "work"
     earlier = [work_root / "run1", work_root / "runs" / "run1", work_root / "run2"]
     for directory in earlier:
@@ -62,9 +64,13 @@ def launch(tmp_path):
                 "K": "2",
                 "CALLS": str(calls),
             },
-            capture_output=True, text=True, timeout=60,
+            capture_output=True,
+            text=True,
+            timeout=60,
         )
-        logged = calls.read_text(encoding="utf-8").splitlines() if calls.exists() else []
+        logged = (
+            calls.read_text(encoding="utf-8").splitlines() if calls.exists() else []
+        )
         return result, logged
 
     return run, earlier

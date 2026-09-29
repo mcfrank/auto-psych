@@ -38,20 +38,39 @@ _RESULT = {
     "n_significant": 1,
     "n_significant_fdr": 0,
     "results": [
-        {"name": "alternation_gap", "description": "alternation proportion of A",
-         "t_observed": 0.55, "null_mean": 0.50, "null_std": 0.02, "z_score": 2.5,
-         "p_value": 0.012, "p_value_fdr": 0.024, "significant": True,
-         "significant_fdr": False, "error": None},
-        {"name": "max_run", "description": "max run length",
-         "t_observed": 2.1, "null_mean": 2.0, "null_std": 0.3, "z_score": 0.5,
-         "p_value": 0.6, "p_value_fdr": 0.6, "significant": False,
-         "significant_fdr": False, "error": None},
+        {
+            "name": "alternation_gap",
+            "description": "alternation proportion of A",
+            "t_observed": 0.55,
+            "null_mean": 0.50,
+            "null_std": 0.02,
+            "z_score": 2.5,
+            "p_value": 0.012,
+            "p_value_fdr": 0.024,
+            "significant": True,
+            "significant_fdr": False,
+            "error": None,
+        },
+        {
+            "name": "max_run",
+            "description": "max run length",
+            "t_observed": 2.1,
+            "null_mean": 2.0,
+            "null_std": 0.3,
+            "z_score": 0.5,
+            "p_value": 0.6,
+            "p_value_fdr": 0.6,
+            "significant": False,
+            "significant_fdr": False,
+            "error": None,
+        },
     ],
 }
 
 _OBSERVED = pd.DataFrame(
     {"sequence_a": ["HT", "HH"], "sequence_b": ["TH", "TT"], "chose_left": [1, 0]}
 )
+
 
 def _observed_csv(tmp_path: Path) -> Path:
     """The observed responses on disk: every statistic is test-run on them."""
@@ -125,8 +144,14 @@ def test_write_critique_context_returns_the_text_it_wrote(tmp_path: Path):
     )
     crit = tmp_path / "critique"
     text = critique_round._write_critique_context(
-        crit, "seed_a", models_dir, responses, tmp_path / "cache",
-        n_proposals=8, significance_alpha=0.05, n_replicates=200,
+        crit,
+        "seed_a",
+        models_dir,
+        responses,
+        tmp_path / "cache",
+        n_proposals=8,
+        significance_alpha=0.05,
+        n_replicates=200,
     )
     assert text == (crit / "CRITIQUE_CONTEXT.md").read_text(encoding="utf-8")
     assert "people use H" in text
@@ -138,15 +163,32 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
     dir explicitly — otherwise it cannot reliably locate its output directory."""
     import src.runtime.coding_agent as coding_agent
 
-    monkeypatch.setattr(critique_round, "_seed_critique_fit_cache", lambda *a, **k: None)
-    monkeypatch.setattr(critique_round, "_write_critique_context", lambda *a, **k: "ctx")
-    monkeypatch.setattr(critique_round, "_persist_critique_results", lambda *a, **k: _RESULT)
+    monkeypatch.setattr(
+        critique_round, "_seed_critique_fit_cache", lambda *a, **k: None
+    )
+    monkeypatch.setattr(
+        critique_round, "_write_critique_context", lambda *a, **k: "ctx"
+    )
+    monkeypatch.setattr(
+        critique_round, "_persist_critique_results", lambda *a, **k: _RESULT
+    )
 
     captured = {}
 
     def fake_run(
-        prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False, memory_dir=None, sandbox=False, writable_dirs=None,
+        prompt,
+        *,
+        cwd,
+        log_path,
+        allowed_dirs,
+        timeout_secs,
+        backend,
+        usage_label,
+        model=None,
+        stock=False,
+        memory_dir=None,
+        sandbox=False,
+        writable_dirs=None,
     ):
         captured["prompt"] = prompt
         captured["cwd"] = cwd
@@ -160,9 +202,17 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(coding_agent, "run_coding_agent", fake_run)
     crit = tmp_path / "critique"
     critique_round._spawn_critique_agent(
-        crit, "incumbent", models_dir=tmp_path, responses_path=_observed_csv(tmp_path),
-        cache_dir=None, fit_kwargs={}, n_proposals=8, significance_alpha=0.05,
-        n_replicates=10, agent_timeout_sec=10, backend="opencode",
+        crit,
+        "incumbent",
+        models_dir=tmp_path,
+        responses_path=_observed_csv(tmp_path),
+        cache_dir=None,
+        fit_kwargs={},
+        n_proposals=8,
+        significance_alpha=0.05,
+        n_replicates=10,
+        agent_timeout_sec=10,
+        backend="opencode",
         notes_dir=tmp_path / "agent_notes",
     )
     assert str(crit) in captured["prompt"]
@@ -181,11 +231,14 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
 # ─────────────────────────────────────────────
 
 
-def test_usable_test_statistics_removes_forbidden_imports_and_keeps_the_rest(tmp_path: Path):
+def test_usable_test_statistics_removes_forbidden_imports_and_keeps_the_rest(
+    tmp_path: Path,
+):
     stats_dir = tmp_path / "test_stats"
     good = _write_stat(stats_dir, "good")
     _write_stat(
-        stats_dir, "leaky",
+        stats_dir,
+        "leaky",
         "# name: leaky\n# description: d\nfrom src.subjective_randomness import features\n"
         "def test_statistic(df):\n    return 0.0\n",
     )
@@ -196,24 +249,34 @@ def test_usable_test_statistics_removes_forbidden_imports_and_keeps_the_rest(tmp
 
 
 def test_usable_test_statistics_is_empty_without_a_directory(tmp_path: Path):
-    assert _usable_test_statistics(tmp_path / "missing", _OBSERVED, n_replicates=10) == ([], {})
+    assert _usable_test_statistics(
+        tmp_path / "missing", _OBSERVED, n_replicates=10
+    ) == ([], {})
 
 
-def test_a_statistic_that_fails_on_the_observed_data_is_set_aside_with_its_error(tmp_path: Path):
+def test_a_statistic_that_fails_on_the_observed_data_is_set_aside_with_its_error(
+    tmp_path: Path,
+):
     """Every statistic is run once on the observed data before the check: one
     that raises or returns a non-finite value is moved to broken_statistics/
     (kept for audit), with its error, and never reaches the check."""
     stats_dir = tmp_path / "critique" / "test_stats"
     good = _write_stat(stats_dir, "good")
-    _write_stat(stats_dir, "raises",
-                "def test_statistic(df):\n    return df['no_such_column'].mean()\n")
+    _write_stat(
+        stats_dir,
+        "raises",
+        "def test_statistic(df):\n    return df['no_such_column'].mean()\n",
+    )
     _write_stat(stats_dir, "nan", "def test_statistic(df):\n    return float('nan')\n")
     usable, broken = _usable_test_statistics(stats_dir, _OBSERVED, n_replicates=10)
     assert usable == [good]
     assert "KeyError" in broken["raises"]
     assert "non-finite" in broken["nan"]
-    assert sorted(p.name for p in (tmp_path / "critique" / "broken_statistics").glob("*.py")) == [
-        "nan.py", "raises.py",
+    assert sorted(
+        p.name for p in (tmp_path / "critique" / "broken_statistics").glob("*.py")
+    ) == [
+        "nan.py",
+        "raises.py",
     ]
 
 
@@ -226,10 +289,19 @@ def test_the_retry_prompt_carries_the_broken_statistics_errors(tmp_path: Path):
 
 
 def test_a_critique_where_nothing_ran_does_not_say_the_model_fits():
-    result = {**_RESULT, "n_significant": 0, "results": [
-        {**r, "significant": False, "error": "ValueError: boom", "p_value": float("nan")}
-        for r in _RESULT["results"]
-    ]}
+    result = {
+        **_RESULT,
+        "n_significant": 0,
+        "results": [
+            {
+                **r,
+                "significant": False,
+                "error": "ValueError: boom",
+                "p_value": float("nan"),
+            }
+            for r in _RESULT["results"]
+        ],
+    }
     md = _format_critiques_md(result)
     assert "fits" not in md
     assert "0 of 2" in md and "could be evaluated" in md
@@ -244,8 +316,13 @@ def test_persist_raises_when_the_agent_wrote_no_statistics(tmp_path: Path, monke
     (crit / "test_stats").mkdir(parents=True)
     with pytest.raises(ValueError, match="no usable test statistic"):
         _persist_critique_results(
-            crit, "m", models_dir=tmp_path, responses_path=_observed_csv(tmp_path),
-            fit_cache_dir=tmp_path, fit_kwargs={}, n_replicates=10,
+            crit,
+            "m",
+            models_dir=tmp_path,
+            responses_path=_observed_csv(tmp_path),
+            fit_cache_dir=tmp_path,
+            fit_kwargs={},
+            n_replicates=10,
             significance_alpha=0.05,
         )
     assert ppc_calls == []
@@ -259,9 +336,14 @@ def test_persist_writes_results_and_critiques(tmp_path: Path, monkeypatch):
     _write_stat(crit / "test_stats", "alternation_gap")
 
     result = _persist_critique_results(
-        crit, "bayesian_fair_coin", models_dir=tmp_path,
-        responses_path=_observed_csv(tmp_path), fit_cache_dir=tmp_path,
-        fit_kwargs={}, n_replicates=200, significance_alpha=0.05,
+        crit,
+        "bayesian_fair_coin",
+        models_dir=tmp_path,
+        responses_path=_observed_csv(tmp_path),
+        fit_cache_dir=tmp_path,
+        fit_kwargs={},
+        n_replicates=200,
+        significance_alpha=0.05,
     )
 
     assert result == _RESULT
@@ -278,24 +360,47 @@ def test_persist_writes_results_and_critiques(tmp_path: Path, monkeypatch):
 
 def _spawn(tmp_path: Path, **overrides):
     kwargs = dict(
-        models_dir=tmp_path, responses_path=_observed_csv(tmp_path), cache_dir=None,
-        fit_kwargs={}, n_proposals=8, significance_alpha=0.05, n_replicates=10,
-        agent_timeout_sec=10, backend="opencode",
+        models_dir=tmp_path,
+        responses_path=_observed_csv(tmp_path),
+        cache_dir=None,
+        fit_kwargs={},
+        n_proposals=8,
+        significance_alpha=0.05,
+        n_replicates=10,
+        agent_timeout_sec=10,
+        backend="opencode",
     )
     kwargs.update(overrides)
-    return critique_round._spawn_critique_agent(tmp_path / "critique", "incumbent", **kwargs)
+    return critique_round._spawn_critique_agent(
+        tmp_path / "critique", "incumbent", **kwargs
+    )
 
 
 def _patch_agent(monkeypatch, on_run):
     import src.runtime.coding_agent as coding_agent
 
-    monkeypatch.setattr(critique_round, "_seed_critique_fit_cache", lambda *a, **k: None)
-    monkeypatch.setattr(critique_round, "_write_critique_context", lambda *a, **k: "ctx")
+    monkeypatch.setattr(
+        critique_round, "_seed_critique_fit_cache", lambda *a, **k: None
+    )
+    monkeypatch.setattr(
+        critique_round, "_write_critique_context", lambda *a, **k: "ctx"
+    )
     calls: list = []
 
     def fake_run(
-        prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False, memory_dir=None, sandbox=False, writable_dirs=None,
+        prompt,
+        *,
+        cwd,
+        log_path,
+        allowed_dirs,
+        timeout_secs,
+        backend,
+        usage_label,
+        model=None,
+        stock=False,
+        memory_dir=None,
+        sandbox=False,
+        writable_dirs=None,
     ):
         calls.append({"prompt": prompt, "log_path": log_path})
         on_run(log_path.parent)
@@ -318,7 +423,8 @@ def test_spawn_retries_once_when_no_statistics_then_reports_no_critique(
 
     crit = tmp_path / "critique"
     assert [c["log_path"] for c in calls] == [
-        crit / "agent.jsonl", crit / "agent.retry_1.jsonl",
+        crit / "agent.jsonl",
+        crit / "agent.retry_1.jsonl",
     ]
     assert "second attempt" not in calls[0]["prompt"]
     assert "second attempt" in calls[1]["prompt"]
@@ -331,18 +437,24 @@ def test_spawn_retries_once_when_no_statistics_then_reports_no_critique(
     }
 
 
-def test_spawn_retries_when_every_statistic_failed_the_import_gate(tmp_path: Path, monkeypatch):
+def test_spawn_retries_when_every_statistic_failed_the_import_gate(
+    tmp_path: Path, monkeypatch
+):
     """A statistic importing forbidden code is not usable; a round of only
     those is retried like an empty one."""
+
     def write_leaky(critique_dir):
         _write_stat(
-            critique_dir / "test_stats", "leaky",
+            critique_dir / "test_stats",
+            "leaky",
             "# name: leaky\n# description: d\nimport pandas as pd\n"
             "def test_statistic(df):\n    return 0.0\n",
         )
 
     calls = _patch_agent(monkeypatch, on_run=write_leaky)
-    monkeypatch.setattr(critique_round, "_persist_critique_results", lambda *a, **k: _RESULT)
+    monkeypatch.setattr(
+        critique_round, "_persist_critique_results", lambda *a, **k: _RESULT
+    )
 
     status = _spawn(tmp_path)
 
@@ -354,7 +466,9 @@ def test_spawn_does_not_retry_when_statistics_were_written(tmp_path: Path, monke
     calls = _patch_agent(
         monkeypatch, on_run=lambda d: _write_stat(d / "test_stats", "alternation_gap")
     )
-    monkeypatch.setattr(critique_round, "_persist_critique_results", lambda *a, **k: _RESULT)
+    monkeypatch.setattr(
+        critique_round, "_persist_critique_results", lambda *a, **k: _RESULT
+    )
 
     status = _spawn(tmp_path)
 
@@ -379,7 +493,9 @@ def test_spawn_second_attempt_can_still_succeed(tmp_path: Path, monkeypatch):
             _write_stat(critique_dir / "test_stats", "alternation_gap")
 
     calls = _patch_agent(monkeypatch, on_run=flaky)
-    monkeypatch.setattr(critique_round, "_persist_critique_results", lambda *a, **k: _RESULT)
+    monkeypatch.setattr(
+        critique_round, "_persist_critique_results", lambda *a, **k: _RESULT
+    )
 
     status = _spawn(tmp_path)
 
@@ -405,15 +521,23 @@ def _run_round(tmp_path: Path):
     )
 
 
-def test_run_critique_round_returns_the_critiques_path_and_status(tmp_path: Path, monkeypatch):
+def test_run_critique_round_returns_the_critiques_path_and_status(
+    tmp_path: Path, monkeypatch
+):
     critiqued = {
-        "status": "critiqued", "incumbent": "seed", "attempts": 1,
-        "n_statistics": 2, "n_significant": 1, "n_significant_fdr": 0,
+        "status": "critiqued",
+        "incumbent": "seed",
+        "attempts": 1,
+        "n_statistics": 2,
+        "n_significant": 1,
+        "n_significant_fdr": 0,
     }
 
     def fake_spawn(critique_dir, incumbent, **kwargs):
         critique_dir.mkdir(parents=True, exist_ok=True)
-        (critique_dir / "critiques.md").write_text("# Critique of seed\n", encoding="utf-8")
+        (critique_dir / "critiques.md").write_text(
+            "# Critique of seed\n", encoding="utf-8"
+        )
         return critiqued
 
     monkeypatch.setattr(critique_round, "_spawn_critique_agent", fake_spawn)
@@ -422,9 +546,13 @@ def test_run_critique_round_returns_the_critiques_path_and_status(tmp_path: Path
     assert outcome.status == critiqued
 
 
-def test_run_critique_round_without_statistics_feeds_no_critique(tmp_path: Path, monkeypatch):
+def test_run_critique_round_without_statistics_feeds_no_critique(
+    tmp_path: Path, monkeypatch
+):
     absent = {
-        "status": "no_critique", "incumbent": "seed", "attempts": 2,
+        "status": "no_critique",
+        "incumbent": "seed",
+        "attempts": 2,
         "reason": "the critique agent wrote no usable test statistic in 2 attempts",
     }
     monkeypatch.setattr(critique_round, "_spawn_critique_agent", lambda *a, **k: absent)
@@ -433,10 +561,13 @@ def test_run_critique_round_without_statistics_feeds_no_critique(tmp_path: Path,
     assert outcome.status == absent
 
 
-def test_run_critique_round_records_a_harness_failure_as_no_critique(tmp_path: Path, monkeypatch):
+def test_run_critique_round_records_a_harness_failure_as_no_critique(
+    tmp_path: Path, monkeypatch
+):
     """A crash inside the critique (e.g. the PPC harness on a malformed
     statistic) must not kill a long inner-loop run — but it is recorded as
     "no critique" with the reason, not swallowed."""
+
     def boom(*a, **k):
         raise RuntimeError("statistic file has no test_statistic")
 
@@ -454,10 +585,16 @@ def test_run_critique_round_refuses_a_critiqued_status_without_critiques_md(
     tmp_path: Path, monkeypatch
 ):
     critiqued = {
-        "status": "critiqued", "incumbent": "seed", "attempts": 1,
-        "n_statistics": 1, "n_significant": 0, "n_significant_fdr": 0,
+        "status": "critiqued",
+        "incumbent": "seed",
+        "attempts": 1,
+        "n_statistics": 1,
+        "n_significant": 0,
+        "n_significant_fdr": 0,
     }
-    monkeypatch.setattr(critique_round, "_spawn_critique_agent", lambda *a, **k: critiqued)
+    monkeypatch.setattr(
+        critique_round, "_spawn_critique_agent", lambda *a, **k: critiqued
+    )
     with pytest.raises(RuntimeError, match="critiques.md"):
         _run_round(tmp_path)
 
@@ -472,10 +609,18 @@ _ALL_FAILED = {
     "n_significant": 0,
     "n_significant_fdr": 0,
     "results": [
-        {**_RESULT["results"][0], "p_value": float("nan"), "significant": False,
-         "error": "TimeoutError: test statistic exceeded 5s (on replicate 17 of 1000)"},
-        {**_RESULT["results"][1], "p_value": float("nan"), "significant": False,
-         "error": "KeyError: 'n_heads' (on the observed data)"},
+        {
+            **_RESULT["results"][0],
+            "p_value": float("nan"),
+            "significant": False,
+            "error": "TimeoutError: test statistic exceeded 5s (on replicate 17 of 1000)",
+        },
+        {
+            **_RESULT["results"][1],
+            "p_value": float("nan"),
+            "significant": False,
+            "error": "KeyError: 'n_heads' (on the observed data)",
+        },
     ],
 }
 
@@ -483,8 +628,12 @@ _ALL_FAILED = {
 def test_a_round_whose_statistics_all_failed_is_recorded_as_no_critique(
     tmp_path: Path, monkeypatch
 ):
-    _patch_agent(monkeypatch, on_run=lambda d: _write_stat(d / "test_stats", "alternation_gap"))
-    monkeypatch.setattr(critique_round, "_persist_critique_results", lambda *a, **k: _ALL_FAILED)
+    _patch_agent(
+        monkeypatch, on_run=lambda d: _write_stat(d / "test_stats", "alternation_gap")
+    )
+    monkeypatch.setattr(
+        critique_round, "_persist_critique_results", lambda *a, **k: _ALL_FAILED
+    )
 
     status = _spawn(tmp_path)
 

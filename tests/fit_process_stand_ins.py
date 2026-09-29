@@ -12,7 +12,9 @@ import time
 from pathlib import Path
 
 
-def sample_with_a_chain_forever(name, models_dir, responses_path, settings, cache_dir, sender):
+def sample_with_a_chain_forever(
+    name, models_dir, responses_path, settings, cache_dir, sender
+):
     """Start a session, fork a 'chain', leave a half-written fit, and never
     finish; the pids go to ``cache_dir/pids`` for the test to check."""
     os.setsid()
@@ -25,7 +27,9 @@ def sample_with_a_chain_forever(name, models_dir, responses_path, settings, cach
     time.sleep(600)
 
 
-def die_without_reporting(name, models_dir, responses_path, settings, cache_dir, sender):
+def die_without_reporting(
+    name, models_dir, responses_path, settings, cache_dir, sender
+):
     os._exit(3)
 
 
@@ -37,21 +41,29 @@ def write_the_fit(name, models_dir, responses_path, settings, cache_dir, sender)
     """Persist a stand-in fit where the parent expects it, and report success."""
     from src.models.pymc_inference import cached_fit_path, fit_fingerprint
 
-    fingerprint = fit_fingerprint(name, Path(models_dir), Path(responses_path), settings)
+    fingerprint = fit_fingerprint(
+        name, Path(models_dir), Path(responses_path), settings
+    )
     cached_fit_path(Path(cache_dir), name, fingerprint).write_text("fit")
     sender.send(("ok", ""))
 
 
-def write_the_fit_and_hang(name, models_dir, responses_path, settings, cache_dir, sender):
+def write_the_fit_and_hang(
+    name, models_dir, responses_path, settings, cache_dir, sender
+):
     """Persist a stand-in fit, then never report."""
     from src.models.pymc_inference import cached_fit_path, fit_fingerprint
 
-    fingerprint = fit_fingerprint(name, Path(models_dir), Path(responses_path), settings)
+    fingerprint = fit_fingerprint(
+        name, Path(models_dir), Path(responses_path), settings
+    )
     cached_fit_path(Path(cache_dir), name, fingerprint).write_text("fit")
     time.sleep(600)
 
 
-def import_arviz_and_write_the_fit(name, models_dir, responses_path, settings, cache_dir, sender):
+def import_arviz_and_write_the_fit(
+    name, models_dir, responses_path, settings, cache_dir, sender
+):
     """Import arviz (which writes its once-a-day marker under the cache
     directory), then persist a stand-in fit and report success."""
     import arviz  # noqa: F401
@@ -67,7 +79,9 @@ def import_arviz_and_name_the_cache_dir() -> str:
     return os.environ["XDG_CACHE_HOME"]
 
 
-def take_the_compile_lock_and_write_the_fit(name, models_dir, responses_path, settings, cache_dir, sender):
+def take_the_compile_lock_and_write_the_fit(
+    name, models_dir, responses_path, settings, cache_dir, sender
+):
     """Take PyTensor's compile lock as a compile does (2 s patience), note the
     compile directory, then persist a stand-in fit and report success."""
     from pytensor import config

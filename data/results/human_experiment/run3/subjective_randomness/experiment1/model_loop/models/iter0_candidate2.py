@@ -8,13 +8,15 @@ import pytensor.tensor as pt
 from collections import Counter
 import math
 
+
 def compute_features(sequence_a: str, sequence_b: str) -> dict:
     """Compute the Shannon entropy of the run-length distribution."""
+
     def rle_entropy(seq):
         seq = seq.strip().upper()
         if not seq:
             return 0.0
-        
+
         runs = []
         current = seq[0]
         count = 1
@@ -26,7 +28,7 @@ def compute_features(sequence_a: str, sequence_b: str) -> dict:
                 current = char
                 count = 1
         runs.append(count)
-        
+
         c = Counter(runs)
         total = sum(c.values())
         ent = 0.0
@@ -37,8 +39,9 @@ def compute_features(sequence_a: str, sequence_b: str) -> dict:
 
     return {
         "run_entropy_a": rle_entropy(sequence_a),
-        "run_entropy_b": rle_entropy(sequence_b)
+        "run_entropy_b": rle_entropy(sequence_b),
     }
+
 
 with pm.Model() as model:
     # Stimulus inputs

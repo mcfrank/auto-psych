@@ -126,9 +126,18 @@ class TestOccurrenceProbability:
             occurrence_probability,
         )
 
-        expected_nonoccurrence = {5: 0.91, 10: 0.75, 15: 0.63, 20: 0.52, 50: 0.17, 100: 0.03}
+        expected_nonoccurrence = {
+            5: 0.91,
+            10: 0.75,
+            15: 0.63,
+            20: 0.52,
+            50: 0.17,
+            100: 0.03,
+        }
         for n, q in expected_nonoccurrence.items():
-            assert 1.0 - occurrence_probability("HHHH", n) == pytest.approx(q, abs=0.005)
+            assert 1.0 - occurrence_probability("HHHH", n) == pytest.approx(
+                q, abs=0.005
+            )
 
     def test_wait_times_match_hahn_warren_figure_3a(self):
         # Expected wait time = sum over n >= 0 of P(not yet occurred by n).
@@ -221,9 +230,9 @@ class TestLocalRepresentativeness:
             multiscale_local_imbalance,
         )
 
-        assert multiscale_local_imbalance(
-            "HHHHTTTT"
-        ) > multiscale_local_imbalance("HHTTHHTT")
+        assert multiscale_local_imbalance("HHHHTTTT") > multiscale_local_imbalance(
+            "HHTTHHTT"
+        )
 
     def test_obvious_periodicity_is_not_mistaken_for_local_balance(self):
         from src.subjective_randomness.model_families import local_representativeness

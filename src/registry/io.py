@@ -31,8 +31,7 @@ def load_registry(registry_path: Path) -> Dict[str, Any]:
         data = {}
     if not isinstance(data, dict):
         raise ValueError(
-            f"Model registry at {path} must be a mapping, got "
-            f"{type(data).__name__}."
+            f"Model registry at {path} must be a mapping, got {type(data).__name__}."
         )
     if "theories" in data:
         theories = data["theories"]
@@ -48,7 +47,9 @@ def load_registry(registry_path: Path) -> Dict[str, Any]:
             f"Model registry at {path} has a malformed `theories` block: expected "
             f"a mapping of model_name -> probability, got {type(theories).__name__}."
         )
-    validated_theories = validate_theory_weights(theories, context=f"registry at {path}")
+    validated_theories = validate_theory_weights(
+        theories, context=f"registry at {path}"
+    )
     validated_reserved = _validate_reserved(
         data.get("reserved_for_new", DEFAULT_RESERVED_FOR_NEW),
         context=f"registry at {path}",
@@ -67,7 +68,9 @@ def validate_theory_weights(
         if not isinstance(name, str) or not name.strip():
             raise ValueError(f"{context} contains an invalid model name {name!r}.")
         if isinstance(value, bool) or not isinstance(value, Real):
-            raise ValueError(f"{context} weight for {name!r} must be numeric, got {value!r}.")
+            raise ValueError(
+                f"{context} weight for {name!r} must be numeric, got {value!r}."
+            )
         weight = float(value)
         if not math.isfinite(weight) or weight < 0.0:
             raise ValueError(

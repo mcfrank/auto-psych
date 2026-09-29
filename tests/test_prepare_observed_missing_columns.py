@@ -24,7 +24,7 @@ from src.models.data_binding import MissingStimulusColumns, make_stim_data
 from src.models.model_loading import load_pymc_model
 
 # The PyMC block every test model shares: one float input, the response.
-_MODEL_BLOCK = '''
+_MODEL_BLOCK = """
 
 with pm.Model() as model:
     signal = pm.Data("signal", np.zeros(2))
@@ -32,7 +32,7 @@ with pm.Model() as model:
     weight = pm.Normal("weight", 0.0, 1.0)
     p_left = pm.Deterministic("p_left", pm.math.sigmoid(weight * signal))
     pm.Bernoulli("obs", p=p_left, observed=chose_left)
-'''
+"""
 
 
 def _hook_model(tmp_path, name: str, signal_expression: str):
@@ -43,8 +43,7 @@ def _hook_model(tmp_path, name: str, signal_expression: str):
         "def prepare_observed(rows):\n"
         f"    signal = np.array([float({signal_expression}) for row in rows])\n"
         "    chose_left = np.array([int(row['chose_left']) for row in rows], dtype='int64')\n"
-        "    return {'signal': signal, 'chose_left': chose_left}\n"
-        + _MODEL_BLOCK
+        "    return {'signal': signal, 'chose_left': chose_left}\n" + _MODEL_BLOCK
     )
     (tmp_path / f"{name}.py").write_text(source, encoding="utf-8")
     return load_pymc_model(name, tmp_path)

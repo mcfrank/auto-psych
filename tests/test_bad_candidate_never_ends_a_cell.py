@@ -35,7 +35,7 @@ from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
 from src.pipelines.outer_loop import eig as eig_mod
 from src.subjective_randomness.holdout_eval import _eval_prediction
 
-_GOOD = '''
+_GOOD = """
 import numpy as np
 import pymc as pm
 
@@ -50,7 +50,7 @@ with pm.Model() as model:
     beta = pm.Normal("beta", 0.0, 1.0)
     p_left = pm.Deterministic("p_left", pm.math.sigmoid(beta * h_diff))
     pm.Bernoulli("obs", p=p_left, observed=chose_left)
-'''
+"""
 
 # A typo in the candidate's own hook: NameError at binding time, after the
 # module loaded fine.
@@ -88,7 +88,9 @@ def _write_models(models_dir: Path, sources: dict) -> Path:
     for name, source in sources.items():
         (models_dir / f"{name}.py").write_text(source, encoding="utf-8")
     (models_dir / "models_manifest.yaml").write_text(
-        yaml.safe_dump({"models": [{"name": n, "rationale": f"mechanism {n}"} for n in sources]}),
+        yaml.safe_dump(
+            {"models": [{"name": n, "rationale": f"mechanism {n}"} for n in sources]}
+        ),
         encoding="utf-8",
     )
     return models_dir
@@ -98,7 +100,9 @@ def _responses(tmp_path: Path) -> Path:
     path = tmp_path / "responses.csv"
     with path.open("w", encoding="utf-8", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["sequence_a", "sequence_b", "participant_id", "trial_index", "chose_left"])
+        writer.writerow(
+            ["sequence_a", "sequence_b", "participant_id", "trial_index", "chose_left"]
+        )
         for i, (a, b, y) in enumerate(
             [("HHTTHT", "HTHTHT", 1), ("HHHHTT", "HTHTTH", 0), ("HTTHTH", "HHHTTT", 1)]
         ):
@@ -123,7 +127,9 @@ def _prior_fit(name: str, models_dir: Path) -> FittedModel:
     model = load_pymc_model(name, models_dir)
     with model:
         prior = pm.sample_prior_predictive(draws=20, random_seed=1)
-    idata = az.InferenceData(posterior=prior.prior.drop_vars(["p_left", "prob"], errors="ignore"))
+    idata = az.InferenceData(
+        posterior=prior.prior.drop_vars(["p_left", "prob"], errors="ignore")
+    )
     return FittedModel(name=name, model=model, idata=idata, fingerprint=name)
 
 
@@ -166,7 +172,11 @@ def test_admission_rejects_a_candidate_with_a_typo_in_its_hook(tmp_path):
     ledger = HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
 
     admission = model_zoo._admit_candidate_with_reason(
-        _candidate(tmp_path, _TYPO), models_dir, "typo", _responses(tmp_path), ledger=ledger
+        _candidate(tmp_path, _TYPO),
+        models_dir,
+        "typo",
+        _responses(tmp_path),
+        ledger=ledger,
     )
 
     assert not admission.admitted
@@ -176,13 +186,20 @@ def test_admission_rejects_a_candidate_with_a_typo_in_its_hook(tmp_path):
     assert entry.outcome == "rejected" and "NameError" in entry.detail
 
 
-def test_the_concurrent_prefit_skips_a_candidate_with_a_typo_in_its_hook(tmp_path, monkeypatch):
+def test_the_concurrent_prefit_skips_a_candidate_with_a_typo_in_its_hook(
+    tmp_path, monkeypatch
+):
     fitted = []
     monkeypatch.setattr(
-        model_zoo, "fit_time_limited_concurrently", lambda names, *a, **k: fitted.extend(names)
+        model_zoo,
+        "fit_time_limited_concurrently",
+        lambda names, *a, **k: fitted.extend(names),
     )
     ready = model_zoo.prefit_candidates(
-        [(_candidate(tmp_path, _TYPO), "typo"), (_candidate(tmp_path, _GOOD, "candidate_1"), "good")],
+        [
+            (_candidate(tmp_path, _TYPO), "typo"),
+            (_candidate(tmp_path, _GOOD, "candidate_1"), "good"),
+        ],
         _responses(tmp_path),
         cache_dir=tmp_path / "cache",
     )
@@ -207,7 +224,9 @@ def _stub_fit_and_scoring(monkeypatch):
     monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -2.0)
 
 
-@pytest.mark.parametrize("source", [_NO_P_LEFT, _SCALAR_P_LEFT], ids=["no_p_left", "scalar_p_left"])
+@pytest.mark.parametrize(
+    "source", [_NO_P_LEFT, _SCALAR_P_LEFT], ids=["no_p_left", "scalar_p_left"]
+)
 def test_the_novelty_gate_rejects_a_candidate_whose_p_left_cannot_be_predicted(
     tmp_path, monkeypatch, source
 ):
@@ -220,8 +239,12 @@ def test_the_novelty_gate_rejects_a_candidate_whose_p_left_cannot_be_predicted(
     ledger = HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
 
     admission = model_zoo._admit_candidate_with_reason(
-        _candidate(tmp_path, source), models_dir, "bad_p_left", _responses(tmp_path),
-        ledger=ledger, novelty_pool=model_zoo.novelty_pool_rows()[:40],
+        _candidate(tmp_path, source),
+        models_dir,
+        "bad_p_left",
+        _responses(tmp_path),
+        ledger=ledger,
+        novelty_pool=model_zoo.novelty_pool_rows()[:40],
     )
 
     assert not admission.admitted
@@ -243,7 +266,10 @@ def test_the_novelty_gate_still_raises_an_infrastructure_error(tmp_path, monkeyp
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: OutOfMemory())
     with pytest.raises(MemoryError):
         model_zoo._min_prediction_rmse(
-            "cand", models_dir, _responses(tmp_path), pool_rows=model_zoo.novelty_pool_rows()[:10]
+            "cand",
+            models_dir,
+            _responses(tmp_path),
+            pool_rows=model_zoo.novelty_pool_rows()[:10],
         )
 
 
@@ -253,12 +279,20 @@ def test_the_novelty_gate_still_raises_an_infrastructure_error(tmp_path, monkeyp
 def test_a_carried_model_that_cannot_bind_short_pairs_is_screened_out_of_the_design(
     tmp_path, capsys
 ):
-    models_dir = _write_models(tmp_path / "cognitive_models", {"good": _GOOD, "short_fails": _SHORT_FAILS})
+    models_dir = _write_models(
+        tmp_path / "cognitive_models", {"good": _GOOD, "short_fails": _SHORT_FAILS}
+    )
     screened = tmp_path / "design" / "screened_out.json"
 
     picks = eig_mod.design_exhaustive(
-        models_dir, lengths=(2, 3, 4), n_select=3, n_samples=20, n_scenarios=50,
-        screened_out_path=screened, n_responses=5, n_threads=1,
+        models_dir,
+        lengths=(2, 3, 4),
+        n_select=3,
+        n_samples=20,
+        n_scenarios=50,
+        screened_out_path=screened,
+        n_responses=5,
+        n_threads=1,
     )
 
     assert len(picks) == 3
@@ -268,7 +302,9 @@ def test_a_carried_model_that_cannot_bind_short_pairs_is_screened_out_of_the_des
     assert "short_fails" in capsys.readouterr().out
 
 
-def test_the_design_still_raises_when_the_harness_binding_is_broken(tmp_path, monkeypatch):
+def test_the_design_still_raises_when_the_harness_binding_is_broken(
+    tmp_path, monkeypatch
+):
     models_dir = _write_models(tmp_path / "cognitive_models", {"good": _GOOD})
 
     def broken(model, rows):
@@ -276,13 +312,18 @@ def test_the_design_still_raises_when_the_harness_binding_is_broken(tmp_path, mo
 
     monkeypatch.setattr("src.models.data_binding.make_stim_data", broken)
     with pytest.raises(RuntimeError, match="harness is broken"):
-        eig_mod._screen_usable_models(["good"], models_dir, [{"sequence_a": "HT", "sequence_b": "TH"}])
+        eig_mod._screen_usable_models(
+            ["good"], models_dir, [{"sequence_a": "HT", "sequence_b": "TH"}]
+        )
 
 
 def _eval_rows(lengths):
     from src.subjective_randomness.stimulus_design import enumerate_all_pairs
 
-    return [{**pair, "chose_left": 0} for pair in enumerate_all_pairs(list(lengths), same_length_only=True)]
+    return [
+        {**pair, "chose_left": 0}
+        for pair in enumerate_all_pairs(list(lengths), same_length_only=True)
+    ]
 
 
 def test_evaluation_leaves_out_pairs_a_model_cannot_bind(tmp_path, capsys):
@@ -291,13 +332,19 @@ def test_evaluation_leaves_out_pairs_a_model_cannot_bind(tmp_path, capsys):
     short = np.array([len(row["sequence_a"]) < 4 for row in rows])
 
     pred = _eval_prediction(
-        _prior_fit("short_fails", models_dir), rows, participant_ids=None, mask_invalid=True
+        _prior_fit("short_fails", models_dir),
+        rows,
+        participant_ids=None,
+        mask_invalid=True,
     )
 
     assert np.isnan(pred[short]).all()
     assert np.isfinite(pred[~short]).all()
     out = capsys.readouterr().out
-    assert f"cannot be bound to {int(short.sum())} of the {len(rows)} held-out pairs" in out
+    assert (
+        f"cannot be bound to {int(short.sum())} of the {len(rows)} held-out pairs"
+        in out
+    )
     assert "lengths [1, 2, 3]" in out
 
 
@@ -305,5 +352,7 @@ def test_evaluation_without_masking_still_raises(tmp_path):
     models_dir = _write_models(tmp_path / "models", {"short_fails": _SHORT_FAILS})
     with pytest.raises(IndexError):
         _eval_prediction(
-            _prior_fit("short_fails", models_dir), _eval_rows((2, 4)), participant_ids=None
+            _prior_fit("short_fails", models_dir),
+            _eval_rows((2, 4)),
+            participant_ids=None,
         )

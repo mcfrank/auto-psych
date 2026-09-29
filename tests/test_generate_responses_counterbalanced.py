@@ -26,9 +26,7 @@ def prefers_the_mixed_sequence(monkeypatch):
     """A ground truth that almost always picks the sequence that is not all H."""
 
     def fake_p_left(model_name, models_dir, stimuli, params, *, seed=0):
-        return np.array(
-            [0.95 if "T" in s["sequence_a"] else 0.05 for s in stimuli]
-        )
+        return np.array([0.95 if "T" in s["sequence_a"] else 0.05 for s in stimuli])
 
     monkeypatch.setattr(holdout_data, "p_left_fixed_params", fake_p_left)
 
@@ -50,9 +48,7 @@ def test_about_half_of_the_trials_show_the_pair_swapped():
 
 def test_the_choice_follows_the_displayed_order():
     rows = _generate()
-    picked_mixed = [
-        (r["chose_left"] == 1) == ("T" in r["sequence_a"]) for r in rows
-    ]
+    picked_mixed = [(r["chose_left"] == 1) == ("T" in r["sequence_a"]) for r in rows]
     assert np.mean(picked_mixed) > 0.9
 
 

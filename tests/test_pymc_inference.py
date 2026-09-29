@@ -48,9 +48,15 @@ def test_extract_observed_pulls_columns_by_name_and_dtype(tmp_path):
         w = csv.DictWriter(f, fieldnames=["sequence_a", "sequence_b", "chose_left"])
         w.writeheader()
         w.writerow(
-            {"sequence_a": "HHHHHTTTT" + "T", "sequence_b": "HHHHHTTTTT", "chose_left": "1"}
+            {
+                "sequence_a": "HHHHHTTTT" + "T",
+                "sequence_b": "HHHHHTTTTT",
+                "chose_left": "1",
+            }
         )
-        w.writerow({"sequence_a": "HHHHHHHHTTTT", "sequence_b": "HHHHTTTT", "chose_left": "0"})
+        w.writerow(
+            {"sequence_a": "HHHHHHHHTTTT", "sequence_b": "HHHHTTTT", "chose_left": "0"}
+        )
 
     observed = pi.extract_observed(csv_path, model)
     assert set(observed.keys()) == {"n_a", "h_a", "n_b", "h_b", "chose_left"}
@@ -63,7 +69,9 @@ def test_extract_observed_missing_column_raises(tmp_path):
     model = pi.load_pymc_model("bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR)
     csv_path = tmp_path / "responses.csv"
     with csv_path.open("w", newline="") as f:
-        w = csv.DictWriter(f, fieldnames=["chose_left"])  # missing sequence_a, sequence_b
+        w = csv.DictWriter(
+            f, fieldnames=["chose_left"]
+        )  # missing sequence_a, sequence_b
         w.writeheader()
         w.writerow({"chose_left": "1"})
     with pytest.raises(ValueError, match="missing"):
@@ -110,8 +118,12 @@ def test_cache_key_changes_when_sampler_settings_change(tmp_path):
     distinguish draws/tune/chains/cores/seed."""
     csv = tmp_path / "a.csv"
     csv.write_text("col,col2\n1,2\n")
-    base = pi._cache_key("bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR, csv, {"draws": 500})
-    more = pi._cache_key("bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR, csv, {"draws": 2000})
+    base = pi._cache_key(
+        "bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR, csv, {"draws": 500}
+    )
+    more = pi._cache_key(
+        "bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR, csv, {"draws": 2000}
+    )
     assert base != more
     # Default settings and an explicit-but-equal spec must collide (cache hit).
     default = pi._cache_key("bayesian_fair_coin", PYMC_MODEL_FIXTURES_DIR, csv)
@@ -129,8 +141,12 @@ def _write_fair_coin_responses(path):
     with path.open("w", newline="") as f:
         w = csv.DictWriter(f, fieldnames=["sequence_a", "sequence_b", "chose_left"])
         w.writeheader()
-        w.writerow({"sequence_a": "HHHHHTTTTT", "sequence_b": "HHHHHTTTTT", "chose_left": "1"})
-        w.writerow({"sequence_a": "HHHHHHHHTTTT", "sequence_b": "HHHHTTTT", "chose_left": "0"})
+        w.writerow(
+            {"sequence_a": "HHHHHTTTTT", "sequence_b": "HHHHHTTTTT", "chose_left": "1"}
+        )
+        w.writerow(
+            {"sequence_a": "HHHHHHHHTTTT", "sequence_b": "HHHHTTTT", "chose_left": "0"}
+        )
 
 
 def test_fit_model_funnels_centralized_production_settings_into_pm_sample(
@@ -255,7 +271,11 @@ def test_prior_predict_p_left_returns_per_model_means():
 
 
 def test_expected_information_gain_prior_pymc_nonneg():
-    raw_row = {"sequence_a": "HHHHHHHTTT", "sequence_b": "HHHTTTTTT" + "T", "chose_left": 0}
+    raw_row = {
+        "sequence_a": "HHHHHHHTTT",
+        "sequence_b": "HHHTTTTTT" + "T",
+        "chose_left": 0,
+    }
     clear_model_cache()
     eig = pi.expected_information_gain_prior_pymc(
         raw_row,
@@ -295,7 +315,10 @@ def test_eig_from_prior_means_weighted_matches_definition():
     p_left = sum(preds[m] * p_model[m] for m in preds)
     h_m = -sum(p * math.log2(p) for p in p_model.values())
     h_given = 0.0
-    for response_p, lik in ((p_left, preds), (1.0 - p_left, {m: 1.0 - preds[m] for m in preds})):
+    for response_p, lik in (
+        (p_left, preds),
+        (1.0 - p_left, {m: 1.0 - preds[m] for m in preds}),
+    ):
         post = {m: lik[m] * p_model[m] / response_p for m in preds}
         h_given += response_p * -sum(p * math.log2(p) for p in post.values() if p > 0)
     expected = h_m - h_given
@@ -318,9 +341,7 @@ def test_eig_from_prior_means_rejects_invalid_probability(prediction):
 @pytest.mark.parametrize("weight", [-1.0, float("nan"), float("inf")])
 def test_eig_from_prior_means_rejects_invalid_weight(weight):
     with pytest.raises(ValueError, match="m1"):
-        pi.eig_from_prior_means(
-            {"m1": 0.8, "m2": 0.2}, {"m1": weight, "m2": 1.0}
-        )
+        pi.eig_from_prior_means({"m1": 0.8, "m2": 0.2}, {"m1": weight, "m2": 1.0})
 
 
 @pytest.mark.slow
@@ -363,8 +384,12 @@ def test_prior_predict_p_left_draws_shape_and_mean_consistency():
     ]
     names = ["bayesian_fair_coin", "representativeness"]
     clear_model_cache()
-    draws = pi.prior_predict_p_left_draws(names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=40, seed=3)
-    batch = pi.prior_predict_p_left_batch(names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=40, seed=3)
+    draws = pi.prior_predict_p_left_draws(
+        names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=40, seed=3
+    )
+    batch = pi.prior_predict_p_left_batch(
+        names, PYMC_MODEL_FIXTURES_DIR, rows, n_samples=40, seed=3
+    )
     for name in names:
         assert draws[name].shape == (40, len(rows))
         assert np.all((0.0 <= draws[name]) & (draws[name] <= 1.0))
@@ -389,7 +414,9 @@ def test_prior_predict_p_left_batch_matches_per_row():
     # Same seed → same prior parameter draws → the batched means must match the
     # per-row path (which re-seeds identically for every row).
     for i, row in enumerate(rows):
-        per_row = pi.prior_predict_p_left(names, PYMC_MODEL_FIXTURES_DIR, row, n_samples=50, seed=11)
+        per_row = pi.prior_predict_p_left(
+            names, PYMC_MODEL_FIXTURES_DIR, row, n_samples=50, seed=11
+        )
         for name in names:
             assert batch[name][i] == pytest.approx(per_row[name], abs=1e-8)
 
@@ -474,7 +501,9 @@ def test_in_process_cache_hits_rerun_sampling_diagnostics(tmp_path, monkeypatch)
     pi._FIT_CACHE[key] = cached
     checked = []
     monkeypatch.setattr(
-        pi, "_warn_sampling_diagnostics", lambda name, value: checked.append((name, value))
+        pi,
+        "_warn_sampling_diagnostics",
+        lambda name, value: checked.append((name, value)),
     )
 
     result = pi.fit_models_cached(["m"], models_dir, responses)
@@ -512,7 +541,9 @@ def test_disk_cache_hits_rerun_sampling_diagnostics(tmp_path, monkeypatch):
     monkeypatch.setattr(pi, "load_pymc_model", lambda name, directory: object())
     checked = []
     monkeypatch.setattr(
-        pi, "_warn_sampling_diagnostics", lambda name, value: checked.append((name, value))
+        pi,
+        "_warn_sampling_diagnostics",
+        lambda name, value: checked.append((name, value)),
     )
 
     fitted = pi.fit_model("m", models_dir, responses, cache_dir=cache_dir)

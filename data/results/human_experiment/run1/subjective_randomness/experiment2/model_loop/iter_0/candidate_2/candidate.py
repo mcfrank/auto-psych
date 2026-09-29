@@ -48,7 +48,7 @@ with pm.Model() as model:
 
     # Weber's law normalisation by total length
     total_length = pt.maximum(pt.cast(n_a + n_b, "float64"), 1.0)
-    
+
     # Choice probability based on relative difference
     p_left_raw = pm.math.sigmoid((rand_a - rand_b) / total_length)
     p_left = pm.Deterministic("p_left", pt.clip(p_left_raw, 1e-6, 1.0 - 1e-6))

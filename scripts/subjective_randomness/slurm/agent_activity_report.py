@@ -19,7 +19,9 @@ from typing import Dict, Sequence, Tuple
 import tyro
 
 URL = re.compile(r"https?://[^\s\"'\\)>\]]+")
-ABSOLUTE_PATH = re.compile(r"(?<![\w.:])/(?:scratch|home|oak|share|tmp|users|groups)/[^\s\"'\;|&)]+")
+ABSOLUTE_PATH = re.compile(
+    r"(?<![\w.:])/(?:scratch|home|oak|share|tmp|users|groups)/[^\s\"'\;|&)]+"
+)
 # Where an agent is expected to be: its scratch (/tmp) and the modules tree.
 EXPECTED_PREFIXES = ("/tmp", "/share/software")
 
@@ -77,7 +79,9 @@ def main(args: Args) -> None:
             f"WARNING: agents touched {len(outside)} path(s) outside their own "
             f"directory; see {args.out}"
         )
-    print(f"[activity] {len(urls)} URL(s), {len(outside)} outside path(s) -> {args.out}")
+    print(
+        f"[activity] {len(urls)} URL(s), {len(outside)} outside path(s) -> {args.out}"
+    )
 
 
 if __name__ == "__main__":

@@ -61,7 +61,9 @@ def retry_plan(
     return {key: sorted(tasks) for key, tasks in plan.items()}
 
 
-def missing_cells(work_root: Path, *, n_repeats: int, gt_models: Sequence[str]) -> List[str]:
+def missing_cells(
+    work_root: Path, *, n_repeats: int, gt_models: Sequence[str]
+) -> List[str]:
     """Every expected ``run<r>/<gt>`` cell that has no ``holdout.json``."""
     return [
         f"run{repeat}/{gt}"
@@ -92,12 +94,20 @@ class Missing:
 
 def main(command: Union[RetryPlan, Missing]) -> None:
     if isinstance(command, RetryPlan):
-        print(json.dumps(retry_plan(
-            sys.stdin.read(), work_root=command.work_root, gt_models=command.gt_models.split()
-        )))
+        print(
+            json.dumps(
+                retry_plan(
+                    sys.stdin.read(),
+                    work_root=command.work_root,
+                    gt_models=command.gt_models.split(),
+                )
+            )
+        )
     else:
         for cell in missing_cells(
-            command.work_root, n_repeats=command.n_repeats, gt_models=command.gt_models.split()
+            command.work_root,
+            n_repeats=command.n_repeats,
+            gt_models=command.gt_models.split(),
         ):
             print(cell)
 

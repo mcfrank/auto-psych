@@ -158,9 +158,10 @@ def _check_bound_model(model: Any, chose_left: np.ndarray) -> Optional[str]:
 
     expected_side = chose_left == 1
     for i, point in enumerate(_test_points(model)):
-        p, ll = (np.asarray(v, dtype=float) for v in evaluate(
-            *[point[v.name] for v in model.value_vars]
-        ))
+        p, ll = (
+            np.asarray(v, dtype=float)
+            for v in evaluate(*[point[v.name] for v in model.value_vars])
+        )
         if p.shape != (n_trials,):
             return (
                 f"p_left has shape {p.shape}, not one entry per trial ({n_trials} "

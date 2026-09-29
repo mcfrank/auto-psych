@@ -44,9 +44,7 @@ def _manifest(models_dir):
 
 
 def _stub_fittable(monkeypatch, ok=True, reason=""):
-    monkeypatch.setattr(
-        model_zoo, "model_logp_is_finite", lambda *a, **k: (ok, reason)
-    )
+    monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (ok, reason))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     # Admission ends with a real MCMC fit-gate; stub it to succeed so these
     # bookkeeping tests don't sample (the stub candidate isn't a real PyMC model).
@@ -57,7 +55,8 @@ def _stub_fittable(monkeypatch, ok=True, reason=""):
     monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
     # Novelty gate is covered by test_novelty_gate.py; neutralize it here.
     monkeypatch.setattr(
-        model_zoo, "_min_prediction_rmse",
+        model_zoo,
+        "_min_prediction_rmse",
         lambda *a, **k: (None, float("inf")),
     )
 
@@ -179,9 +178,7 @@ def test_admit_rejects_candidate_whose_fit_raises(tmp_path, monkeypatch):
     raises (NaN once NUTS jitters off the initial point) is rejected — not
     admitted — so it can't abort the round's scoring pass."""
     monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())
-    monkeypatch.setattr(
-        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
-    )
+    monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     _stub_fit_raises(monkeypatch)
     models_dir = _models_dir_with_seed(tmp_path)
@@ -232,7 +229,9 @@ def test_a_candidate_too_slow_to_fit_is_rejected_with_the_limit(tmp_path, monkey
     assert not (models_dir / "slow_model.py").exists()
 
 
-def test_a_fit_failure_from_the_fit_process_keeps_its_original_type(tmp_path, monkeypatch):
+def test_a_fit_failure_from_the_fit_process_keeps_its_original_type(
+    tmp_path, monkeypatch
+):
     from src.models.pymc_inference import FitWorkerFailure
 
     monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())

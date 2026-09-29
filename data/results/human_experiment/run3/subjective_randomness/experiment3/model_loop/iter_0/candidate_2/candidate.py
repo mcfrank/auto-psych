@@ -7,27 +7,27 @@ import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
+
 def compute_features(sequence_a: str, sequence_b: str) -> dict:
     """Return new numeric feature columns for one stimulus pair."""
+
     def get_s_fact(seq):
-        if not seq: 
+        if not seq:
             return 0.0
         runs = []
         current_run = 1
         for i in range(1, len(seq)):
-            if seq[i] == seq[i-1]:
+            if seq[i] == seq[i - 1]:
                 current_run += 1
             else:
                 runs.append(current_run)
                 current_run = 1
         runs.append(current_run)
-        
+
         return float(sum(math.log(math.factorial(r - 1)) for r in runs))
-        
-    return {
-        "s_fact_a": get_s_fact(sequence_a),
-        "s_fact_b": get_s_fact(sequence_b)
-    }
+
+    return {"s_fact_a": get_s_fact(sequence_a), "s_fact_b": get_s_fact(sequence_b)}
+
 
 with pm.Model() as model:
     # Stimulus inputs
@@ -47,7 +47,7 @@ with pm.Model() as model:
     m_a = pt.cast(alts_a + 1, "float64")
     rep_a = pt.cast(n_a - 1 - alts_a, "float64")
     n_a_f = pt.cast(n_a, "float64")
-    
+
     # Randomness score A = average log-likelihood per flip under the subjective Poisson-run model
     log_lambda = pt.log(lambda_run + 1e-6)
     ll_a = -m_a * lambda_run + rep_a * log_lambda - s_fact_a
@@ -57,7 +57,7 @@ with pm.Model() as model:
     m_b = pt.cast(alts_b + 1, "float64")
     rep_b = pt.cast(n_b - 1 - alts_b, "float64")
     n_b_f = pt.cast(n_b, "float64")
-    
+
     # Randomness score B
     ll_b = -m_b * lambda_run + rep_b * log_lambda - s_fact_b
     score_b = ll_b / pt.maximum(n_b_f, 1.0)

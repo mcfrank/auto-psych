@@ -49,12 +49,18 @@ def test_collection_refuses_to_write_the_raw_file_inside_the_agents_tree(
     )
     monkeypatch.setattr(collect, "_poll_prolific_until_target", lambda *a, **k: 1)
     monkeypatch.setattr(
-        collect.urllib.request, "urlopen", lambda *a, **k: io.BytesIO(RESULTS_CSV.encode())
+        collect.urllib.request,
+        "urlopen",
+        lambda *a, **k: io.BytesIO(RESULTS_CSV.encode()),
     )
 
     with pytest.raises(RuntimeError, match="AUTO_PSYCH_OUTPUT_DIR"):
         orchestrator.run_collect_programmatic(
-            exp_dir, mode="live", n_participants=1, project_id=PROJECT, prolific_mode="live"
+            exp_dir,
+            mode="live",
+            n_participants=1,
+            project_id=PROJECT,
+            prolific_mode="live",
         )
 
     assert not orchestrator.raw_collected_responses_path(exp_dir).parent.exists()
@@ -70,15 +76,24 @@ def test_collection_outside_the_agents_tree_is_unchanged(repo, tmp_path, monkeyp
 @pytest.fixture
 def stages_run(monkeypatch):
     ran = []
-    for name in ("run_design_programmatic", "spawn_cc_agent", "run_deployment_programmatic",
-                 "run_collect_programmatic", "run_inner_model_loop_programmatic"):
+    for name in (
+        "run_design_programmatic",
+        "spawn_cc_agent",
+        "run_deployment_programmatic",
+        "run_collect_programmatic",
+        "run_inner_model_loop_programmatic",
+    ):
         monkeypatch.setattr(outer_run, name, lambda *a, _n=name, **k: ran.append(_n))
     return ran
 
 
 def _args(**overrides):
     return outer_run.Args(
-        project=PROJECT, experiment=1, n_participants=2, coding_agent="claude", **overrides
+        project=PROJECT,
+        experiment=1,
+        n_participants=2,
+        coding_agent="claude",
+        **overrides,
     )
 
 
@@ -86,8 +101,12 @@ def test_run_py_refuses_an_output_tree_inside_the_repository_before_any_stage(
     repo, stages_run, monkeypatch
 ):
     monkeypatch.delenv("AUTO_PSYCH_OUTPUT_DIR", raising=False)
-    monkeypatch.setattr(orchestrator, "outer_data_dir", lambda: repo / "data" / "outer_loop")
-    monkeypatch.setattr(outer_run, "outer_data_dir", lambda: repo / "data" / "outer_loop")
+    monkeypatch.setattr(
+        orchestrator, "outer_data_dir", lambda: repo / "data" / "outer_loop"
+    )
+    monkeypatch.setattr(
+        outer_run, "outer_data_dir", lambda: repo / "data" / "outer_loop"
+    )
     monkeypatch.setenv("CODING_AGENT", "claude")
 
     with pytest.raises(RuntimeError, match="inside .*repo"):
@@ -97,9 +116,13 @@ def test_run_py_refuses_an_output_tree_inside_the_repository_before_any_stage(
     assert not (repo / "data").exists()
 
 
-def test_run_py_without_collection_is_not_refused(repo, stages_run, monkeypatch, tmp_path):
+def test_run_py_without_collection_is_not_refused(
+    repo, stages_run, monkeypatch, tmp_path
+):
     """A model-stage-only rerun writes no raw file."""
-    monkeypatch.setattr(outer_run, "outer_data_dir", lambda: repo / "data" / "outer_loop")
+    monkeypatch.setattr(
+        outer_run, "outer_data_dir", lambda: repo / "data" / "outer_loop"
+    )
     monkeypatch.setattr(outer_run, "_run_experiment", lambda **k: None)
     monkeypatch.setenv("CODING_AGENT", "claude")
     monkeypatch.setenv("CLAUDE_AUTH", "subscription")

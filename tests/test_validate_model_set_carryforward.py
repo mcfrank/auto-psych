@@ -46,4 +46,6 @@ def test_zoo_rule_ignores_best_and_normal_names(tmp_path):
     ok, msg = _validate_model_set(tmp_path)
     assert not ok  # still invalid (no .py file), but NOT due to the zoo rule
     assert "candidate" not in msg.lower()  # the zoo rule did not fire
-    assert "model file" in msg or ".py" in msg  # failed for the real reason: missing file
+    assert (
+        "model file" in msg or ".py" in msg
+    )  # failed for the real reason: missing file

@@ -52,10 +52,10 @@ with pm.Model() as model:
     smooth_alt_dev_a = (n_alts_a_f / (n_alts_a_f + K_alt)) * raw_alt_dev_a
     smooth_alt_dev_b = (n_alts_b_f / (n_alts_b_f + K_alt)) * raw_alt_dev_b
 
-    # Score sequences based on their SQUARED smoothed distance from the ideal 
+    # Score sequences based on their SQUARED smoothed distance from the ideal
     # (higher distance = lower score)
-    score_a = -(balance_weight * (smooth_imb_a ** 2) + alt_weight * (smooth_alt_dev_a ** 2))
-    score_b = -(balance_weight * (smooth_imb_b ** 2) + alt_weight * (smooth_alt_dev_b ** 2))
+    score_a = -(balance_weight * (smooth_imb_a**2) + alt_weight * (smooth_alt_dev_a**2))
+    score_b = -(balance_weight * (smooth_imb_b**2) + alt_weight * (smooth_alt_dev_b**2))
 
     # Softmax decision rule
     p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)

@@ -118,20 +118,33 @@ def plot_holdout_trajectories(
         # data's, drawn over the final experiment's steps.
         by_experiment = gt_run.get("fitted_baseline_by_experiment") or []
         if not by_experiment and gt_run.get("fitted_baseline") and trajectory:
-            by_experiment = [{**gt_run["fitted_baseline"],
-                              "experiment": max(row["experiment"] for row in trajectory)}]
+            by_experiment = [
+                {
+                    **gt_run["fitted_baseline"],
+                    "experiment": max(row["experiment"] for row in trajectory),
+                }
+            ]
         drawn = False
         for entry in by_experiment:
             value = entry.get(spec["fitted_baseline_field"])
-            steps = [row["global_step"] for row in trajectory
-                     if row["experiment"] == entry["experiment"]]
+            steps = [
+                row["global_step"]
+                for row in trajectory
+                if row["experiment"] == entry["experiment"]
+            ]
             if value is None or not steps:
                 continue
             plotted_values.append(value)
             ax.hlines(
-                value, min(steps) - 0.4, max(steps) + 0.4,
-                colors=SEED_FIT_COLOR, linestyles=":", linewidth=1.6,
-                label=None if drawn else "ELPD-best seed model (fit to the experiment's data)",
+                value,
+                min(steps) - 0.4,
+                max(steps) + 0.4,
+                colors=SEED_FIT_COLOR,
+                linestyles=":",
+                linewidth=1.6,
+                label=None
+                if drawn
+                else "ELPD-best seed model (fit to the experiment's data)",
             )
             drawn = True
         # The other seed models with default params: no data, so flat.
@@ -258,7 +271,9 @@ def _best_seed_value(
     return max(values) if spec["higher_is_better"] else min(values)
 
 
-def _experiment_rows(trajectory: Iterable[Mapping[str, Any]]) -> "dict[int, List[Mapping[str, Any]]]":
+def _experiment_rows(
+    trajectory: Iterable[Mapping[str, Any]],
+) -> "dict[int, List[Mapping[str, Any]]]":
     """A cell's trajectory rows grouped by experiment, in step order."""
     by_experiment: "defaultdict[int, List[Mapping[str, Any]]]" = defaultdict(list)
     for row in trajectory:
@@ -285,12 +300,15 @@ def _aligned_labels(cells: List[List[Mapping[str, Any]]]) -> List[str]:
     (each cell's last step). A position that is every cell's last step is
     shown once, as the end."""
     common = set.intersection(
-        *({row["iteration"] for row in rows[1:] if row.get("iteration") is not None}
-          for rows in cells)
+        *(
+            {row["iteration"] for row in rows[1:] if row.get("iteration") is not None}
+            for rows in cells
+        )
     )
     labels = ["seed"] + [f"round {i}" for i in sorted(common)]
     labels = [
-        label for label in labels
+        label
+        for label in labels
         if not all(_row_at(rows, label) is rows[-1] for rows in cells)
     ]
     return labels + ["end"]
@@ -309,7 +327,9 @@ def _fitted_seed_value(
     """
     by_experiment = gt_run.get("fitted_baseline_by_experiment")
     if by_experiment is not None:
-        entry = next((e for e in by_experiment if int(e["experiment"]) == experiment), None)
+        entry = next(
+            (e for e in by_experiment if int(e["experiment"]) == experiment), None
+        )
         if entry is None:
             return None, f"no fitted-seed baseline recorded for experiment {experiment}"
     elif experiment == final_experiment:
@@ -321,7 +341,10 @@ def _fitted_seed_value(
             "reevaluate_trajectories)"
         )
     if field not in entry:
-        return None, f"no {field!r} in its fitted-seed baseline (scored before it existed; re-score it)"
+        return (
+            None,
+            f"no {field!r} in its fitted-seed baseline (scored before it existed; re-score it)",
+        )
     value = entry[field]
     if not _is_finite(value):
         return None, (
@@ -387,13 +410,16 @@ def aggregate_holdout_trajectories(
     for index, result in enumerate(results):
         for gt_run in result["gt_runs"]:
             label = (
-                labels[index] if labels is not None
+                labels[index]
+                if labels is not None
                 else str(gt_run.get("run_root") or f"result{index}")
             )
             runs_by_model[gt_run["gt_model"]].append((label, gt_run))
 
     series_keys = {"best": spec["best_key"], "bma": spec["bma_key"]}
-    baseline_keys = ["fitted_baseline"] + (["baseline"] if metric == "pearson_r" else [])
+    baseline_keys = ["fitted_baseline"] + (
+        ["baseline"] if metric == "pearson_r" else []
+    )
 
     panels: List[Mapping[str, Any]] = []
     for name in sorted(runs_by_model):
@@ -411,12 +437,21 @@ def aggregate_holdout_trajectories(
         boundaries: List[int] = []
         x = 0
         for experiment in experiments:
-            present = [(label, gt_run, rows[experiment]) for label, gt_run, rows in cells
-                       if experiment in rows]
+            present = [
+                (label, gt_run, rows[experiment])
+                for label, gt_run, rows in cells
+                if experiment in rows
+            ]
             for label, _, rows in cells:
                 if experiment not in rows:
-                    excluded.append({"cell": label, "experiment": experiment,
-                                     "label": "all", "reason": f"no experiment {experiment}"})
+                    excluded.append(
+                        {
+                            "cell": label,
+                            "experiment": experiment,
+                            "label": "all",
+                            "reason": f"no experiment {experiment}",
+                        }
+                    )
             if not present:
                 continue
             if experiment > experiments[0]:
@@ -428,13 +463,19 @@ def aggregate_holdout_trajectories(
                     row = _row_at(rows, position)
                     value = {key: row.get(field) for key, field in series_keys.items()}
                     reason = next(
-                        (f"loop {series_keys[key]} undefined" for key in series_keys
-                         if not _is_finite(value[key])),
+                        (
+                            f"loop {series_keys[key]} undefined"
+                            for key in series_keys
+                            if not _is_finite(value[key])
+                        ),
                         "",
                     )
                     if not reason:
                         value["fitted_baseline"], why = _fitted_seed_value(
-                            gt_run, experiment, final_experiment, spec["fitted_baseline_field"]
+                            gt_run,
+                            experiment,
+                            final_experiment,
+                            spec["fitted_baseline_field"],
                         )
                         if why:
                             reason = f"fitted-seed baseline: {why}"
@@ -445,29 +486,47 @@ def aggregate_holdout_trajectories(
                         if not _is_finite(value["baseline"]):
                             reason = "default-params baseline undefined"
                     if reason:
-                        excluded.append({"cell": label, "experiment": experiment,
-                                         "label": position, "reason": reason})
+                        excluded.append(
+                            {
+                                "cell": label,
+                                "experiment": experiment,
+                                "label": position,
+                                "reason": reason,
+                            }
+                        )
                         continue
                     included.append(label)
                     for key in values:
                         values[key].append(value[key])
-                positions.append({"x": x, "experiment": experiment, "label": position,
-                                  "cells": included})
+                positions.append(
+                    {
+                        "x": x,
+                        "experiment": experiment,
+                        "label": position,
+                        "cells": included,
+                    }
+                )
                 if included:
                     where = {"x": x, "experiment": experiment, "label": position}
                     best.append({**where, **_summarize(values["best"], error)})
                     bma.append({**where, **_summarize(values["bma"], error)})
                     for key in baseline_keys:
-                        baseline_series[key].append({**where, **_summarize(values[key], error)})
+                        baseline_series[key].append(
+                            {**where, **_summarize(values[key], error)}
+                        )
                 x += 1
 
         # The headline: each baseline at the loop's final point (the end of
         # the final experiment), over the same cells.
-        final = best[-1] if best and best[-1]["experiment"] == final_experiment else None
+        final = (
+            best[-1] if best and best[-1]["experiment"] == final_experiment else None
+        )
         headline = {"fitted_baseline": None, "baseline": None}
         if final is not None:
             for key in baseline_keys:
-                headline[key] = next(p for p in baseline_series[key] if p["x"] == final["x"])
+                headline[key] = next(
+                    p for p in baseline_series[key] if p["x"] == final["x"]
+                )
         panels.append(
             {
                 "gt_model": name,
@@ -489,8 +548,16 @@ def aggregate_holdout_trajectories(
 # ``position``/``experiment``/``label`` replace the old ``global_step`` column:
 # points are aligned by experiment now, and the baselines are per position.
 AGGREGATE_TIDY_COLUMNS = [
-    "gt_model", "metric", "error", "series", "position", "experiment", "label",
-    "mean", "err", "n",
+    "gt_model",
+    "metric",
+    "error",
+    "series",
+    "position",
+    "experiment",
+    "label",
+    "mean",
+    "err",
+    "n",
 ]
 
 
@@ -503,12 +570,20 @@ def aggregate_tidy_rows(aggregated: Mapping[str, Any]) -> List[Mapping[str, Any]
         series = {"best": panel["best"], **panel["baseline_series"]}
         for name, points in series.items():
             for point in points:
-                rows.append({
-                    "gt_model": panel["gt_model"], "metric": metric, "error": error,
-                    "series": name, "position": point["x"],
-                    "experiment": point["experiment"], "label": point["label"],
-                    "mean": point["mean"], "err": point["err"], "n": point["n"],
-                })
+                rows.append(
+                    {
+                        "gt_model": panel["gt_model"],
+                        "metric": metric,
+                        "error": error,
+                        "series": name,
+                        "position": point["x"],
+                        "experiment": point["experiment"],
+                        "label": point["label"],
+                        "mean": point["mean"],
+                        "err": point["err"],
+                        "n": point["n"],
+                    }
+                )
     return rows
 
 
@@ -706,18 +781,39 @@ def holdout_combined_frames(
         "error": aggregated["error"],
         "trajectory": _framed(
             traj_rows,
-            ["gt_model", "facet", "series", "position", "experiment", "label",
-             "mean", "err", "ymin", "ymax", "n"],
+            [
+                "gt_model",
+                "facet",
+                "series",
+                "position",
+                "experiment",
+                "label",
+                "mean",
+                "err",
+                "ymin",
+                "ymax",
+                "n",
+            ],
         ),
         "baselines": _framed(
             baseline_rows,
-            ["gt_model", "facet", "series", "position", "experiment", "mean", "err",
-             "ymin", "ymax", "xmin", "xmax", "n"],
+            [
+                "gt_model",
+                "facet",
+                "series",
+                "position",
+                "experiment",
+                "mean",
+                "err",
+                "ymin",
+                "ymax",
+                "xmin",
+                "xmax",
+                "n",
+            ],
         ),
         "boundaries": _framed(boundary_rows, ["gt_model", "facet", "boundary", "x"]),
-        "rounds": _framed(
-            round_rows, ["gt_model", "facet", "round", "label", "x"]
-        ),
+        "rounds": _framed(round_rows, ["gt_model", "facet", "round", "label", "x"]),
     }
 
 
@@ -811,9 +907,7 @@ def holdout_trajectories_ggplot(
     )
     n_panels = max(len(aggregated["gt_models"]), 1)
     # Integer x ticks at the aligned positions (no 2.5/7.5 fractions).
-    x_breaks = sorted(
-        {pt["x"] for p in aggregated["gt_models"] for pt in p["best"]}
-    )
+    x_breaks = sorted({pt["x"] for p in aggregated["gt_models"] for pt in p["best"]})
 
     plot = (
         ggplot()
@@ -827,8 +921,14 @@ def holdout_trajectories_ggplot(
         )
         + geom_segment(
             baselines,
-            aes(x="xmin", xend="xmax", y="mean", yend="mean", color="series",
-                linetype="series"),
+            aes(
+                x="xmin",
+                xend="xmax",
+                y="mean",
+                yend="mean",
+                color="series",
+                linetype="series",
+            ),
             size=1.0,
         )
         # Best-model recovery trajectory: line + error bars + points.
@@ -843,9 +943,7 @@ def holdout_trajectories_ggplot(
             width=0.3,
             size=0.6,
         )
-        + geom_point(
-            trajectory, aes(x="position", y="mean", color="series"), size=2.2
-        )
+        + geom_point(trajectory, aes(x="position", y="mean", color="series"), size=2.2)
         + facet_wrap("facet", nrow=1)
         + scale_x_continuous(breaks=x_breaks)
         + scale_color_manual(values=series_colors, name="")

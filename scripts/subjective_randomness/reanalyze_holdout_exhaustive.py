@@ -174,7 +174,9 @@ def main(args: Args) -> None:
         if args.tidy_csv is not None
         else result_path.with_suffix(".csv")
     )
-    write_tidy_csv(trajectory_tidy_rows(enriched), tidy_path, columns=TRAJECTORY_COLUMNS)
+    write_tidy_csv(
+        trajectory_tidy_rows(enriched), tidy_path, columns=TRAJECTORY_COLUMNS
+    )
     print(f"Wrote tidy trajectory CSV to {tidy_path}")
 
     figure_path = (

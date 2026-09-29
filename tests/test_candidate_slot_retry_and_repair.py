@@ -60,7 +60,8 @@ def _patch_scoring(monkeypatch, *, near_duplicate_names=()):
                 "rank": rank,
                 "elpd_loo": -10.0 - rank,
                 "elpd_diff": 0.0 if n == "model_a" else 1.0,
-                "dse": 0.0 if n == "model_a" else 5.0, "dse_clustered": 0.0 if n == "model_a" else 5.0,
+                "dse": 0.0 if n == "model_a" else 5.0,
+                "dse_clustered": 0.0 if n == "model_a" else 5.0,
                 "weight": 1.0 if n == "model_a" else 0.0,
                 "loo_unreliable": False,
             }
@@ -166,7 +167,10 @@ def test_empty_slot_is_retried_once_in_its_own_directory(tmp_path, monkeypatch):
     slot_1 = [r for r in _ledger_rows(results_dir) if "candidate 1" in r["context"]]
     assert [(r["outcome"], r["context"]) for r in slot_1] == [
         ("rejected", "experiment1 round 0 candidate 1 refine incumbent model_a"),
-        ("admitted", "experiment1 round 0 candidate 1 refine incumbent model_a retry 1"),
+        (
+            "admitted",
+            "experiment1 round 0 candidate 1 refine incumbent model_a retry 1",
+        ),
     ]
     assert slot_1[0]["detail"] == "no candidate.py written"
     assert slot_1[1]["name"] == "second_idea"
@@ -209,14 +213,22 @@ def test_empty_slot_that_stays_empty_is_final(tmp_path, monkeypatch):
     assert spawns == ["candidate_0", "candidate_1", "candidate_1_retry_1"]
     slot_1 = [r for r in _ledger_rows(results_dir) if "candidate 1" in r["context"]]
     assert [(r["outcome"], r["detail"], r["context"]) for r in slot_1] == [
-        ("rejected", "no candidate.py written", "experiment1 round 0 candidate 1 refine incumbent model_a"),
+        (
+            "rejected",
+            "no candidate.py written",
+            "experiment1 round 0 candidate 1 refine incumbent model_a",
+        ),
         (
             "rejected",
             "no candidate.py written",
             "experiment1 round 0 candidate 1 refine incumbent model_a retry 1",
         ),
     ]
-    assert _manifest_names(results_dir / "models") == ["model_a", "model_b", "only_idea"]
+    assert _manifest_names(results_dir / "models") == [
+        "model_a",
+        "model_b",
+        "only_idea",
+    ]
 
 
 def test_failed_agent_process_is_retried_and_recorded(tmp_path, monkeypatch):
@@ -241,7 +253,10 @@ def test_failed_agent_process_is_retried_and_recorded(tmp_path, monkeypatch):
     slot_1 = [r for r in _ledger_rows(results_dir) if "candidate 1" in r["context"]]
     assert [(r["outcome"], r["context"]) for r in slot_1] == [
         ("rejected", "experiment1 round 0 candidate 1 refine incumbent model_a"),
-        ("admitted", "experiment1 round 0 candidate 1 refine incumbent model_a retry 1"),
+        (
+            "admitted",
+            "experiment1 round 0 candidate 1 refine incumbent model_a retry 1",
+        ),
     ]
     assert "agent process failed" in slot_1[0]["detail"]
     assert "late_idea" in _manifest_names(results_dir / "models")
@@ -317,9 +332,15 @@ def test_rejected_candidate_is_repaired_once_with_the_reason_in_its_prompt(
             _write_candidate(candidate_dir, name="dup_idea", hypothesis="Same as A.")
         elif candidate_dir.name == "candidate_0_repair_1":
             # The rejected attempt's files are already there as a starting point.
-            assert (candidate_dir / "candidate.py").read_text(encoding="utf-8") == "# dup_idea\n"
-            assert (candidate_dir / "hypothesis.md").read_text(encoding="utf-8") == "Same as A.\n"
-            assert (candidate_dir / "model_name.txt").read_text(encoding="utf-8") == "dup_idea\n"
+            assert (candidate_dir / "candidate.py").read_text(
+                encoding="utf-8"
+            ) == "# dup_idea\n"
+            assert (candidate_dir / "hypothesis.md").read_text(
+                encoding="utf-8"
+            ) == "Same as A.\n"
+            assert (candidate_dir / "model_name.txt").read_text(
+                encoding="utf-8"
+            ) == "dup_idea\n"
             _write_candidate(candidate_dir, name="fresh_idea", hypothesis="Different.")
         return True
 
@@ -336,7 +357,11 @@ def test_rejected_candidate_is_repaired_once_with_the_reason_in_its_prompt(
     # The repair is not told not to re-propose the very model it is repairing.
     assert "dup_idea" not in repair_docs["attempted"]
 
-    assert _manifest_names(results_dir / "models") == ["model_a", "model_b", "fresh_idea"]
+    assert _manifest_names(results_dir / "models") == [
+        "model_a",
+        "model_b",
+        "fresh_idea",
+    ]
     rows = _ledger_rows(results_dir)
     assert [(r["name"], r["outcome"], r["context"]) for r in rows] == [
         ("dup_idea", "rejected", "experiment1 round 0 candidate 0 lens 0"),
@@ -448,7 +473,10 @@ def test_admission_verdict_carries_the_rejection_reason(tmp_path, monkeypatch):
     )
     assert verdict == Admission(admitted=False, reason="no candidate.py written")
     # The boolean form is unchanged for callers that only need the verdict.
-    assert _admit_candidate(missing, models_dir, "iter0_candidate0", tmp_path / "r.csv") is False
+    assert (
+        _admit_candidate(missing, models_dir, "iter0_candidate0", tmp_path / "r.csv")
+        is False
+    )
 
 
 def test_admission_verdict_rejects_inconsistent_states():

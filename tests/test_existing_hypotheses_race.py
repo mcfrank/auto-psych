@@ -65,18 +65,39 @@ class TestRacePresentation:
     """With a comparison table, existing_hypotheses.md shows the race."""
 
     def test_best_first_ordering(self, tmp_path):
-        models_dir = _make_models_dir(tmp_path, {
-            "alpha": "Alpha hypothesis",
-            "beta": "Beta hypothesis",
-            "gamma": "Gamma hypothesis",
-        })
+        models_dir = _make_models_dir(
+            tmp_path,
+            {
+                "alpha": "Alpha hypothesis",
+                "beta": "Beta hypothesis",
+                "gamma": "Gamma hypothesis",
+            },
+        )
         comparison = {
-            "alpha": {"rank": 1, "elpd_loo": -50.0, "elpd_diff": 3.2, "dse": 2.0,
-                       "weight": 0.3, "loo_unreliable": False},
-            "beta":  {"rank": 0, "elpd_loo": -46.8, "elpd_diff": 0.0, "dse": 0.0,
-                       "weight": 0.5, "loo_unreliable": False},
-            "gamma": {"rank": 2, "elpd_loo": -60.0, "elpd_diff": 13.2, "dse": 3.0,
-                       "weight": 0.2, "loo_unreliable": False},
+            "alpha": {
+                "rank": 1,
+                "elpd_loo": -50.0,
+                "elpd_diff": 3.2,
+                "dse": 2.0,
+                "weight": 0.3,
+                "loo_unreliable": False,
+            },
+            "beta": {
+                "rank": 0,
+                "elpd_loo": -46.8,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 0.5,
+                "loo_unreliable": False,
+            },
+            "gamma": {
+                "rank": 2,
+                "elpd_loo": -60.0,
+                "elpd_diff": 13.2,
+                "dse": 3.0,
+                "weight": 0.2,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"alpha": 0.3, "beta": 0.5, "gamma": 0.2})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -92,15 +113,30 @@ class TestRacePresentation:
         assert model_headers[2].startswith("## gamma")
 
     def test_rank_and_elpd_diff_shown(self, tmp_path):
-        models_dir = _make_models_dir(tmp_path, {
-            "best": "The best model",
-            "runner": "Second place",
-        })
+        models_dir = _make_models_dir(
+            tmp_path,
+            {
+                "best": "The best model",
+                "runner": "Second place",
+            },
+        )
         comparison = {
-            "best":   {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                        "weight": 0.7, "loo_unreliable": False},
-            "runner": {"rank": 1, "elpd_loo": -43.5, "elpd_diff": 3.5, "dse": 2.1,
-                        "weight": 0.3, "loo_unreliable": False},
+            "best": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 0.7,
+                "loo_unreliable": False,
+            },
+            "runner": {
+                "rank": 1,
+                "elpd_loo": -43.5,
+                "elpd_diff": 3.5,
+                "dse": 2.1,
+                "weight": 0.3,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"best": 0.7, "runner": 0.3})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -116,15 +152,30 @@ class TestRacePresentation:
 
     def test_tied_verdict(self, tmp_path):
         """A model within 2·dse of the best is 'not clearly separated'."""
-        models_dir = _make_models_dir(tmp_path, {
-            "best": "Best",
-            "close": "Close rival",
-        })
+        models_dir = _make_models_dir(
+            tmp_path,
+            {
+                "best": "Best",
+                "close": "Close rival",
+            },
+        )
         comparison = {
-            "best":  {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                       "weight": 0.7, "loo_unreliable": False},
-            "close": {"rank": 1, "elpd_loo": -42.0, "elpd_diff": 2.0, "dse": 2.0,
-                       "weight": 0.3, "loo_unreliable": False},
+            "best": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 0.7,
+                "loo_unreliable": False,
+            },
+            "close": {
+                "rank": 1,
+                "elpd_loo": -42.0,
+                "elpd_diff": 2.0,
+                "dse": 2.0,
+                "weight": 0.3,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"best": 0.7, "close": 0.3})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -134,20 +185,40 @@ class TestRacePresentation:
         )
 
         # The close model's verdict should indicate it's still in the race
-        close_section = text.split("## close")[1].split("## ")[0] if "## close" in text else ""
-        assert "tied" in close_section.lower() or "not clearly separated" in close_section.lower()
+        close_section = (
+            text.split("## close")[1].split("## ")[0] if "## close" in text else ""
+        )
+        assert (
+            "tied" in close_section.lower()
+            or "not clearly separated" in close_section.lower()
+        )
 
     def test_loser_verdict(self, tmp_path):
         """A model beyond 2·dse of the best is 'clearly behind'."""
-        models_dir = _make_models_dir(tmp_path, {
-            "best": "Best",
-            "loser": "Far behind",
-        })
+        models_dir = _make_models_dir(
+            tmp_path,
+            {
+                "best": "Best",
+                "loser": "Far behind",
+            },
+        )
         comparison = {
-            "best":  {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                       "weight": 0.7, "loo_unreliable": False},
-            "loser": {"rank": 1, "elpd_loo": -55.0, "elpd_diff": 15.0, "dse": 3.0,
-                       "weight": 0.3, "loo_unreliable": False},
+            "best": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 0.7,
+                "loo_unreliable": False,
+            },
+            "loser": {
+                "rank": 1,
+                "elpd_loo": -55.0,
+                "elpd_diff": 15.0,
+                "dse": 3.0,
+                "weight": 0.3,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"best": 0.7, "loser": 0.3})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -156,19 +227,39 @@ class TestRacePresentation:
             candidate_dir, models_dir, posterior, comparison=comparison
         )
 
-        loser_section = text.split("## loser")[1].split("## ")[0] if "## loser" in text else ""
-        assert "lost" in loser_section.lower() or "clearly behind" in loser_section.lower()
+        loser_section = (
+            text.split("## loser")[1].split("## ")[0] if "## loser" in text else ""
+        )
+        assert (
+            "lost" in loser_section.lower() or "clearly behind" in loser_section.lower()
+        )
 
     def test_unreliable_loo_shown(self, tmp_path):
-        models_dir = _make_models_dir(tmp_path, {
-            "good": "Good model",
-            "shaky": "Model with unreliable LOO",
-        })
+        models_dir = _make_models_dir(
+            tmp_path,
+            {
+                "good": "Good model",
+                "shaky": "Model with unreliable LOO",
+            },
+        )
         comparison = {
-            "good":  {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                       "weight": 0.7, "loo_unreliable": False},
-            "shaky": {"rank": 1, "elpd_loo": -42.0, "elpd_diff": 2.0, "dse": 1.5,
-                       "weight": 0.3, "loo_unreliable": True, "frac_bad_k": 0.25},
+            "good": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 0.7,
+                "loo_unreliable": False,
+            },
+            "shaky": {
+                "rank": 1,
+                "elpd_loo": -42.0,
+                "elpd_diff": 2.0,
+                "dse": 1.5,
+                "weight": 0.3,
+                "loo_unreliable": True,
+                "frac_bad_k": 0.25,
+            },
         }
         posterior = _make_posterior({"good": 0.7, "shaky": 0.3})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -182,15 +273,30 @@ class TestRacePresentation:
 
     def test_no_softmax_posterior(self, tmp_path):
         """The text must not contain softmax posterior values."""
-        models_dir = _make_models_dir(tmp_path, {
-            "a": "Model A",
-            "b": "Model B",
-        })
+        models_dir = _make_models_dir(
+            tmp_path,
+            {
+                "a": "Model A",
+                "b": "Model B",
+            },
+        )
         comparison = {
-            "a": {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                   "weight": 0.7, "loo_unreliable": False},
-            "b": {"rank": 1, "elpd_loo": -43.0, "elpd_diff": 3.0, "dse": 2.0,
-                   "weight": 0.3, "loo_unreliable": False},
+            "a": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 0.7,
+                "loo_unreliable": False,
+            },
+            "b": {
+                "rank": 1,
+                "elpd_loo": -43.0,
+                "elpd_diff": 3.0,
+                "dse": 2.0,
+                "weight": 0.3,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"a": 0.97, "b": 0.03})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -207,8 +313,14 @@ class TestRacePresentation:
     def test_no_per_stimulus_residuals(self, tmp_path):
         models_dir = _make_models_dir(tmp_path, {"a": "Model A"})
         comparison = {
-            "a": {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                   "weight": 1.0, "loo_unreliable": False},
+            "a": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 1.0,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"a": 1.0})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -222,8 +334,14 @@ class TestRacePresentation:
     def test_no_parameter_values(self, tmp_path):
         models_dir = _make_models_dir(tmp_path, {"a": "Model A"})
         comparison = {
-            "a": {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                   "weight": 1.0, "loo_unreliable": False},
+            "a": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 1.0,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"a": 1.0})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -237,8 +355,14 @@ class TestRacePresentation:
     def test_no_source_code(self, tmp_path):
         models_dir = _make_models_dir(tmp_path, {"a": "Model A"})
         comparison = {
-            "a": {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                   "weight": 1.0, "loo_unreliable": False},
+            "a": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 1.0,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"a": 1.0})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -255,8 +379,14 @@ class TestRacePresentation:
         """The best model (rank 0) shows as rank 0, best position."""
         models_dir = _make_models_dir(tmp_path, {"best": "The best"})
         comparison = {
-            "best": {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                      "weight": 1.0, "loo_unreliable": False},
+            "best": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 1.0,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"best": 1.0})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -270,8 +400,14 @@ class TestRacePresentation:
     def test_file_written(self, tmp_path):
         models_dir = _make_models_dir(tmp_path, {"a": "Model A"})
         comparison = {
-            "a": {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                   "weight": 1.0, "loo_unreliable": False},
+            "a": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 1.0,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"a": 1.0})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -297,10 +433,13 @@ class TestWithoutComparison:
         assert "-42.5" in text
 
     def test_fallback_manifest_order(self, tmp_path):
-        models_dir = _make_models_dir(tmp_path, {
-            "zebra": "Z model",
-            "alpha": "A model",
-        })
+        models_dir = _make_models_dir(
+            tmp_path,
+            {
+                "zebra": "Z model",
+                "alpha": "A model",
+            },
+        )
         posterior = _make_posterior({"zebra": 0.5, "alpha": 0.5})
         candidate_dir = _make_candidate_dir(tmp_path)
 
@@ -315,13 +454,22 @@ class TestModelWithNoComparisonRow:
     """A model present in the manifest but absent from comparison should not crash."""
 
     def test_no_crash_on_missing_comparison_row(self, tmp_path):
-        models_dir = _make_models_dir(tmp_path, {
-            "a": "Model A",
-            "new_model": "Just admitted, not yet scored",
-        })
+        models_dir = _make_models_dir(
+            tmp_path,
+            {
+                "a": "Model A",
+                "new_model": "Just admitted, not yet scored",
+            },
+        )
         comparison = {
-            "a": {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                   "weight": 1.0, "loo_unreliable": False},
+            "a": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 1.0,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"a": 1.0})
         candidate_dir = _make_candidate_dir(tmp_path)
@@ -340,8 +488,13 @@ class TestDescribeStanding:
     def test_best_model(self):
         from src.pipelines.inner_loop.candidate_agent import _describe_standing
 
-        row = {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-               "loo_unreliable": False}
+        row = {
+            "rank": 0,
+            "elpd_loo": -40.0,
+            "elpd_diff": 0.0,
+            "dse": 0.0,
+            "loo_unreliable": False,
+        }
         text = _describe_standing(row)
         assert "rank 0" in text
         assert "best" in text.lower()
@@ -349,8 +502,13 @@ class TestDescribeStanding:
     def test_tied_model(self):
         from src.pipelines.inner_loop.candidate_agent import _describe_standing
 
-        row = {"rank": 1, "elpd_loo": -42.0, "elpd_diff": 2.0, "dse": 2.0,
-               "loo_unreliable": False}
+        row = {
+            "rank": 1,
+            "elpd_loo": -42.0,
+            "elpd_diff": 2.0,
+            "dse": 2.0,
+            "loo_unreliable": False,
+        }
         text = _describe_standing(row)
         assert "rank 1" in text
         assert "tied" in text.lower()
@@ -358,8 +516,13 @@ class TestDescribeStanding:
     def test_losing_model(self):
         from src.pipelines.inner_loop.candidate_agent import _describe_standing
 
-        row = {"rank": 2, "elpd_loo": -55.0, "elpd_diff": 15.0, "dse": 3.0,
-               "loo_unreliable": False}
+        row = {
+            "rank": 2,
+            "elpd_loo": -55.0,
+            "elpd_diff": 15.0,
+            "dse": 3.0,
+            "loo_unreliable": False,
+        }
         text = _describe_standing(row)
         assert "rank 2" in text
         assert "lost" in text.lower()
@@ -367,8 +530,14 @@ class TestDescribeStanding:
     def test_unreliable_loo(self):
         from src.pipelines.inner_loop.candidate_agent import _describe_standing
 
-        row = {"rank": 1, "elpd_loo": -45.0, "elpd_diff": 5.0, "dse": 3.0,
-               "loo_unreliable": True, "frac_bad_k": 0.15}
+        row = {
+            "rank": 1,
+            "elpd_loo": -45.0,
+            "elpd_diff": 5.0,
+            "dse": 3.0,
+            "loo_unreliable": True,
+            "frac_bad_k": 0.15,
+        }
         text = _describe_standing(row)
         assert "unreliable" in text.lower()
         assert "15%" in text
@@ -380,8 +549,14 @@ class TestDseMultiplierInPreamble:
     def test_preamble_mentions_dse_threshold(self, tmp_path):
         models_dir = _make_models_dir(tmp_path, {"a": "Model A"})
         comparison = {
-            "a": {"rank": 0, "elpd_loo": -40.0, "elpd_diff": 0.0, "dse": 0.0,
-                   "weight": 1.0, "loo_unreliable": False},
+            "a": {
+                "rank": 0,
+                "elpd_loo": -40.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 1.0,
+                "loo_unreliable": False,
+            },
         }
         posterior = _make_posterior({"a": 1.0})
         candidate_dir = _make_candidate_dir(tmp_path)

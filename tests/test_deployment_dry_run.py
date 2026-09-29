@@ -16,7 +16,9 @@ def test_dry_run_deployment_writes_manifest_config_and_staging(tmp_path):
         encoding="utf-8",
     )
     (exp_dir / "experiment" / "config.json").write_text('{"experiment_url": null}\n')
-    (exp_dir / "design" / "stimuli.json").write_text('[{"sequence_a":"HH","sequence_b":"HT"}]\n')
+    (exp_dir / "design" / "stimuli.json").write_text(
+        '[{"sequence_a":"HH","sequence_b":"HT"}]\n'
+    )
 
     manifest_path = run_deployment(
         exp_dir=exp_dir,
@@ -36,7 +38,9 @@ def test_dry_run_deployment_writes_manifest_config_and_staging(tmp_path):
     assert manifest_path.exists()
     # Staged under the per-experiment, per-run subdir (e{run}-{label}), not root.
     assert (exp_dir / "deployment" / "public" / "e2-t" / "index.html").exists()
-    config = json.loads((exp_dir / "experiment" / "config.json").read_text(encoding="utf-8"))
+    config = json.loads(
+        (exp_dir / "experiment" / "config.json").read_text(encoding="utf-8")
+    )
     assert config["deployment_id"].startswith("deploy_subjective_randomness-e2-")
     assert config["collection_owner"] == "linas"
     assert config["deploy_target"] == "dry-run"
