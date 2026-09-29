@@ -13,6 +13,7 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from src.pipelines.inner_loop.task_description import read_task_description
 from src.models.mcmc_defaults import (
+    CANDIDATE_FIT_TIME_LIMIT_SEC,
     ESCALATED_TARGET_ACCEPT,
     MAX_R_HAT,
     MIN_BULK_ESS,
@@ -533,14 +534,18 @@ def _write_candidate_context(
         f"tune, {CANDIDATE_CHECK_CHAINS} chain: a smoke test, not a full "
         "production fit) and a finite ELPD-LOO — and prints `OK` or the exact "
         "reason admission would reject the file. Fix anything it reports. It "
-        "does not check novelty against the other models, nor convergence: "
-        "admission's full fit must have almost no divergent transitions, R-hat <= "
-        f"{MAX_R_HAT} and bulk ESS >= {MIN_BULK_ESS}. A fit that fails is already "
-        f"refit once with smaller NUTS steps (target_accept {ESCALATED_TARGET_ACCEPT:g}), "
-        "so asking for smaller steps is not a fix: prefer smooth, well-identified "
-        "parameterisations (non-centred hierarchical or scale parameters, priors "
-        "that constrain every parameter, no parameters that trade off against "
-        "each other, no hard thresholds in the likelihood).",
+        "does not check novelty against the other models, nor convergence, nor "
+        "speed: admission's full fit must have almost no divergent transitions, "
+        f"R-hat <= {MAX_R_HAT} and bulk ESS >= {MIN_BULK_ESS}, and each of its "
+        f"sampling runs must finish within {CANDIDATE_FIT_TIME_LIMIT_SEC / 60:g} "
+        "minutes (a model still sampling then is stopped and rejected as too slow). "
+        "A fit that narrowly fails is already refit once with smaller NUTS steps "
+        f"(target_accept {ESCALATED_TARGET_ACCEPT:g}), and one far from converging "
+        "is not refit at all, so asking for smaller steps is not a fix: prefer "
+        "smooth, well-identified parameterisations (non-centred hierarchical or "
+        "scale parameters, priors that constrain every parameter, no parameters "
+        "that trade off against each other, no hard thresholds in the likelihood) "
+        "and a likelihood vectorised over trials.",
         "",
         "```bash",
         check_candidate_command(candidate_dir, responses_path),
@@ -669,7 +674,8 @@ def _repair_note(previous_dir: Path, reason: str) -> str:
         "Its `hypothesis.md`, `model_name.txt` and `candidate.py` have been copied "
         "into your working directory as a starting point. Fix what the reason "
         "describes — a different mechanism if the model predicts like an existing "
-        "one, corrected code if it does not load, fit or score — and write all "
+        "one, corrected code if it does not load, fit or score, a cheaper model if "
+        "it was too slow to fit — and write all "
         "three files again to the paths above. A second rejection is final: there "
         "is no further attempt at this slot.\n"
     )

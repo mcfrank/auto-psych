@@ -19,17 +19,27 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 import numpy as np
 import yaml
 
-from src.models.mcmc_defaults import ESCALATED_TARGET_ACCEPT
+from src.models.mcmc_defaults import (
+    CANDIDATE_FIT_TIME_LIMIT_SEC,
+    ESCALATED_TARGET_ACCEPT,
+    NEAR_MISS_MAX_DIVERGENCE_FRACTION,
+    NEAR_MISS_MAX_R_HAT,
+    NEAR_MISS_MIN_BULK_ESS,
+)
 from src.models.model_manifest import manifest_path, read_manifest_entries
 from src.models.data_binding import MissingStimulusColumns, make_stim_data
 from src.models.model_loading import load_pymc_model, pm_data_inputs
 from src.models.pymc_inference import (
     INFRASTRUCTURE_ERRORS,
+    FitTimeLimitExceeded,
     InvalidPredictions,
+    _describe_failure,
+    convergence_diagnostics_of,
     convergence_problems_of,
     evict_fit_cache,
     fit_model,
     fit_models_to_cache,
+    is_near_miss,
     model_logp_is_finite,
     resolve_fit_settings,
 )
@@ -923,6 +933,7 @@ def _admit_candidate(
     novelty_pool: Optional[Sequence[Mapping[str, str]]] = None,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
+    fit_time_limit_sec: Optional[float] = CANDIDATE_FIT_TIME_LIMIT_SEC,
 ) -> bool:
     """``_admit_candidate_with_reason`` for callers that only need the verdict."""
     return _admit_candidate_with_reason(
@@ -936,27 +947,51 @@ def _admit_candidate(
         novelty_pool=novelty_pool,
         ledger=ledger,
         ledger_context=ledger_context,
+        fit_time_limit_sec=fit_time_limit_sec,
     ).admitted
 
 
 def _smaller_steps_already_tried(
-    model_name: str, models_dir: Path, fit_kwargs: Optional[Dict[str, Any]]
+    model_name: str, models_dir: Path, fit_kwargs: Optional[Dict[str, Any]], fitted: Any
 ) -> str:
-    """The convergence rejection's note that smaller NUTS steps were tried.
+    """The convergence rejection's note on smaller NUTS steps.
 
-    ``fit_model`` refits a failing multi-chain fit once at
-    ``ESCALATED_TARGET_ACCEPT``, and a model's declared ``target_accept`` is a
-    floor on it, so the fit admission rejects was already sampled at that
-    step size or smaller. Advising agents to declare it (as the rejection
-    used to) made the repair re-sample the same failing fit.
+    ``fit_model`` refits a failing multi-chain fit that is a near miss once at
+    ``ESCALATED_TARGET_ACCEPT`` (a model's declared ``target_accept`` is a
+    floor on it), and returns a fit far from converging as it is. A rejected
+    fit that is a near miss was therefore already sampled at that step size or
+    smaller; one far from converging is a geometry problem smaller steps do
+    not fix. Either way, advising agents to declare a higher target_accept (as
+    the rejection used to) only re-samples the same failing fit.
     """
     settings = resolve_fit_settings(model_name, models_dir, fit_kwargs or {})
     if settings["chains"] < 2:
         return ""  # a single-chain fit is never refit
     tried = max(float(settings["target_accept"]), ESCALATED_TARGET_ACCEPT)
+    if is_near_miss(convergence_diagnostics_of(fitted)):
+        return (
+            f", even at target_accept {tried:g} (the fitter already refits a near "
+            "miss with smaller NUTS steps, so raising target_accept will not help)"
+        )
     return (
-        f", even at target_accept {tried:g} (the fitter already refits a failing "
-        "fit with smaller NUTS steps, so raising target_accept will not help)"
+        ", too far from converging for smaller NUTS steps to help (the fitter "
+        "refits only a near miss — at most "
+        f"{NEAR_MISS_MAX_DIVERGENCE_FRACTION:.0%} divergent transitions, R-hat <= "
+        f"{NEAR_MISS_MAX_R_HAT}, bulk ESS >= {NEAR_MISS_MIN_BULK_ESS} — at "
+        f"target_accept {tried:g}), so raising target_accept will not help"
+    )
+
+
+def _too_slow_reason(exc: FitTimeLimitExceeded) -> str:
+    """The rejection of a candidate whose admission fit ran out of time."""
+    return (
+        f"too slow to fit: {exc}. Every sampling run of a candidate's admission "
+        f"fit has a {exc.limit_sec / 60:g}-minute limit. Make the model cheaper to "
+        "evaluate and easier to sample: vectorise the likelihood over trials (no "
+        "Python loops, pytensor scan or per-trial subgraphs), compute features once "
+        "per unique sequence (in compute_features or prepare_observed, not in the "
+        "graph), and drop or merge parameters the data barely constrain — a weakly "
+        "identified posterior makes NUTS take maximal-length trajectories."
     )
 
 
@@ -972,6 +1007,7 @@ def _admit_candidate_with_reason(
     novelty_pool: Optional[Sequence[Mapping[str, str]]] = None,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
+    fit_time_limit_sec: Optional[float] = CANDIDATE_FIT_TIME_LIMIT_SEC,
 ) -> Admission:
     """Validate a candidate and, if valid, admit it to the model set.
 
@@ -1002,6 +1038,11 @@ def _admit_candidate_with_reason(
     run — so admission ends with a real fit (its result is cached and reused by
     scoring, adding no extra MCMC), containing any sampling failure to this one
     candidate.
+
+    Each sampling run of the admission fit is stopped at
+    ``fit_time_limit_sec`` (``CANDIDATE_FIT_TIME_LIMIT_SEC``); a candidate
+    still sampling then is rejected as too slow to fit, with the limit in the
+    reason.
 
     The novelty gate compares the candidate's posterior-mean ``p_left`` with
     every admitted model's on ``novelty_pool`` (``None`` ⇒ the loop's default
@@ -1066,16 +1107,20 @@ def _admit_candidate_with_reason(
             models_dir,
             responses_path,
             cache_dir=cache_dir,
+            time_limit_sec=fit_time_limit_sec,
             **(fit_kwargs or {}),
         )
     except INFRASTRUCTURE_ERRORS:
         # Not the candidate's failure: it must not reach the ledger as one.
         staged.unlink(missing_ok=True)
         raise
+    except FitTimeLimitExceeded as e:
+        staged.unlink(missing_ok=True)
+        return reject(_too_slow_reason(e))
     except Exception as e:
         staged.unlink(missing_ok=True)
         return reject(
-            f"MCMC sampling failed ({type(e).__name__}: {e}); dropping it so it "
+            f"MCMC sampling failed ({_describe_failure(e)}); dropping it so it "
             "cannot abort scoring."
         )
 
@@ -1085,7 +1130,7 @@ def _admit_candidate_with_reason(
     # trials, not mixing).
     problems = convergence_problems_of(fitted)
     if problems:
-        already_tried = _smaller_steps_already_tried(model_name, models_dir, fit_kwargs)
+        already_tried = _smaller_steps_already_tried(model_name, models_dir, fit_kwargs, fitted)
         staged.unlink(missing_ok=True)
         return reject(
             f"MCMC did not converge ({'; '.join(problems)})"

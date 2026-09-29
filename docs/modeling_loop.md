@@ -72,7 +72,8 @@ loop's critique agent and candidate agents.
 | Agent backend / model | `opencode` / `google/gemini-3.1-pro-preview` | sbatch `--backend ${AGENT_BACKEND:-opencode}` (sbatch:372); config `agent.model` unless `AGENT_MODEL` is set |
 | Agent timeout | 1800 s per agent attempt | config `agent.timeout_sec` |
 | Production MCMC | 2000 draws, 1000 tune, 4 chains, target_accept 0.8 (a model's declared value is a floor), max_treedepth 10, seed 42 | config `fit` + `_FIT_DEFAULTS` (pymc_inference.py:350), `resolve_fit_settings` (pymc_inference.py:421) |
-| Convergence gate | ≤ 0.1% divergent transitions, R-hat ≤ 1.05, bulk ESS ≥ 100; one refit at target_accept 0.95 on failure | mcmc_defaults.py:39-44 |
+| Convergence gate | ≤ 0.1% divergent transitions, R-hat ≤ 1.05, bulk ESS ≥ 100; one refit at target_accept 0.95 when a failed fit is a near miss (≤ 2% divergent, R-hat ≤ 1.2, bulk ESS ≥ 20) | `mcmc_defaults.py` (`MAX_*`, `NEAR_MISS_*`) |
+| Candidate fit time limit | 15 min of wall-clock time per sampling run of a candidate's admission fit (first fit, near-miss refit); seeds and carried models are not limited | `CANDIDATE_FIT_TIME_LIMIT_SEC` (mcmc_defaults.py) |
 | Eval pool | exhaustive same-length pairs, lengths 1..8, minus trained pairs; ≤500 posterior draws per prediction | config `eval_pool` |
 
 ---
@@ -386,9 +387,10 @@ enumeration orientation) under parameter draw d.
   `DESIGN_TWIN_TARGET_ACCEPT = 0.9` (mcmc_defaults.py:32, eig.py:177-179). The
   config's `fit` block does not reach the design. Other settings: `cores` 4
   (2 chain processes), `random_seed` 42, max_treedepth 10. A fit that fails
-  the convergence gate (§5.3) is refit once at target_accept 0.95 and that fit
-  is used; if the refit also fails, the model is still scored (the design does
-  not check the gate itself). The posterior is thinned by
+  the convergence gate (§5.3) as a near miss is refit once at target_accept
+  0.95 and that fit is used; a fit far from converging is used as it is. Either
+  way a model that fails is still scored (the design does not check the gate
+  itself). The posterior is thinned by
   `_thin_posterior(max_draws=200)` (pymc_inference.py:466) to 100 evenly
   spaced draws per chain, and `pm.sample_posterior_predictive` of `p_left`
   (`predict_p_left_draws`, pymc_inference.py:510, seed = design seed) gives
@@ -684,13 +686,36 @@ model's free RVs). A fit has not converged if any of these holds:
 - max R-hat > `MAX_R_HAT = 1.05`, or R-hat is undefined (e.g. one chain);
 - min bulk ESS < `MIN_BULK_ESS = 100`.
 
-**Escalation** (pymc_inference.py:756-768). If the fit has ≥ 2 chains, its
-`target_accept` is below 0.95, and it fails the gate, `fit_model` refits once
-at `target_accept = 0.95` and returns that fit whether or not it passes. Both
-fits are written to the disk cache under their own fingerprints; a later
-`fit_model` call with the original settings loads the first, finds it failing
-and loads the second, so every caller gets the escalated fit. A one-chain fit
-(the candidate self-check) is never refit.
+**Escalation** (`fit_model`, `_refit_decision`). If the fit has ≥ 2 chains,
+its `target_accept` is below 0.95, and it fails the gate **as a near miss**
+(`is_near_miss`: at most `NEAR_MISS_MAX_DIVERGENCE_FRACTION = 0.02` of the
+transitions diverged, max R-hat ≤ `NEAR_MISS_MAX_R_HAT = 1.2` and min bulk ESS
+≥ `NEAR_MISS_MIN_BULK_ESS = 20`; a trace without a divergence statistic or an
+R-hat is never a near miss), `fit_model` refits once at `target_accept = 0.95`
+and returns that fit whether or not it passes. A fit further off (a chain stuck
+in another mode: R-hat ~1.5–2.5, ESS ~5, a quarter of all transitions
+divergent) is returned as it is and fails the gate with its own numbers; the
+log says which (`[fit] … a near miss; refitting` / `… too far from converging
+…; not refitting`). Until 2026-09-27 every failed fit was refit, and the refits
+of hopeless motif_stack variants cost ~40 min each before the same rejection.
+Both fits are written to the disk cache under their own fingerprints; a later
+`fit_model` call with the original settings loads the first, finds it a failing
+near miss and loads the second, so every caller gets the escalated fit. A
+one-chain fit (the candidate self-check) is never refit.
+
+**Time limit** (`fit_model(time_limit_sec=…)`, `sample_fits_time_limited`).
+Candidate admission passes `CANDIDATE_FIT_TIME_LIMIT_SEC = 900`. Each sampling
+run that is not already in the cache — the first fit and a near-miss refit,
+each with its own limit — then runs in a spawned child process that starts
+its own session; the chain processes PyMC forks from it share that process
+group. A child still sampling at the limit is killed with its whole group (the
+sampling stops, not just the wait for it), its half-written `.nc`, if any, is
+removed, and `FitTimeLimitExceeded` is raised. A model's own sampling error
+comes back as `FitWorkerFailure("<Type>: <message>")`; a child that dies
+without reporting (e.g. out of memory) raises `FitInfrastructureFailure`. A
+failed or timed-out run is remembered by (name, fingerprint) for the rest of
+the process and not sampled again. Every other fit (seeds, carried models,
+scoring, the design) is unlimited.
 
 The gate is used by admission (§5.9), best-model selection and export (§5.5),
 pruning and the live-set cap (§5.11), and the fitted-seed baseline (§7.3).
@@ -787,7 +812,7 @@ For `iteration` in 0..4 (pymc_orchestrator.py:324-585):
    | Section | Explore slot | Refine-incumbent slot | Refine-chosen slot |
    | --- | --- | --- | --- |
    | `ATTEMPT_NOTE.md` (retry/repair only) | yes | yes | yes |
-   | `CONTEXT.md`: the task description (§5.1), responses path and columns, the note that no feature columns exist so `compute_features`/`prepare_observed` is required, the import allowlist and the ban on file reads and interpreter escapes, the 3-step instruction, the `check_candidate` command with a note that admission also requires convergence (almost no divergent transitions, R-hat ≤ 1.05, bulk ESS ≥ 100), that a failing fit is already refit once at target_accept 0.95 so smaller steps are not a fix, and which reparameterisations are (non-centred, priors that constrain every parameter, no parameters that trade off, no hard thresholds), a description of the other docs | yes | yes | yes |
+   | `CONTEXT.md`: the task description (§5.1), responses path and columns, the note that no feature columns exist so `compute_features`/`prepare_observed` is required, the import allowlist and the ban on file reads and interpreter escapes, the 3-step instruction, the `check_candidate` command with a note that admission also requires convergence (almost no divergent transitions, R-hat ≤ 1.05, bulk ESS ≥ 100), the 15-minute limit on each sampling run of the admission fit, that a narrowly failing fit is already refit once at target_accept 0.95 (and one far from converging not at all) so smaller steps are not a fix, and which reparameterisations are (non-centred, priors that constrain every parameter, no parameters that trade off, no hard thresholds), a description of the other docs | yes | yes | yes |
    | `CANDIDATE_BRIEF.md` | the lens text + the one-hypothesis rule (+ critique note) | names the incumbent, its standing, hypothesis and source; lifts the anti-grafting/anti-composition rules; asks for one stated change (+ critique note) | "refine a model of your choosing" from the menu; same lifted rules (+ critique note) |
    | `existing_hypotheses.md`: every zoo model's manifest rationale, ranked by `az.compare` with "rank r, Δ ± dse nats behind (x× dse: tied/lost), ELPD" (trial-level `dse`) and a PSIS-reliability note | yes | yes | yes |
    | `attempted_hypotheses.md` ("Tried before"): the ledger's retired entries with a hypothesis (§5.10) | yes | no | no |
@@ -921,8 +946,8 @@ the candidate (`reject` records it in the ledger with the reason):
 | 3 | code gate | AST walk, `import_gate.py`: imports only from numpy, pymc, pytensor, arviz, scipy, math, itertools, functools, collections, re, typing, dataclasses, statistics, operator; relative imports and unparseable source are forbidden; no use of the names `open`, `__import__`, `exec`, `eval`, `compile`, `globals`, `vars`, `locals`, `getattr`, `setattr`, `delattr`, `breakpoint`, `input`, `__builtins__`, `__loader__`, `__spec__`; no attribute (nor `from … import` name, nor dotted import component) in `FORBIDDEN_ATTRIBUTES`: module names that allowed modules re-export (`.sys`, `.os`, `.builtins`, `.io`, `.npyio`, …), file readers and writers (`.open`, `.read`, `.load`, `.DataSource`, `.read_*`, `.to_csv`, `.save`, …), `attrgetter`/`methodcaller`, and introspection routes (`__dict__`, `__traceback__`, frame attributes, …); no `str.format` whose fields look up attributes (`"{0.sys}".format(...)`). The same gate screens critique statistics, which run with `pd` injected. The harness also clears `sys.argv`/`sys.orig_argv` once parsed (`forget_command_line`), since they name the GT |
 | 4 | loadable | `load_pymc_model`: a module-level `model: pm.Model`, with hooks attached |
 | 5 | finite logp and gradient at the initial point on the pooled responses | `model_logp_is_finite` |
-| 6 | real fit | full production `fit_model` (§5.3), cached, with the escalation refit if needed |
-| 7 | convergence | the returned fit passes the gate (§5.3); the rejection reason says the fit already ran at target_accept ≥ 0.95 (for a multi-chain fit), so raising it will not help, and suggests changing the geometry: non-centred parameterisations, tighter priors on weakly constrained parameters, fewer weakly identified parameters, no hard thresholds (it used to suggest declaring `SAMPLER_SETTINGS = {"target_accept": 0.95}`, which the refit had already done) |
+| 6 | real fit | full production `fit_model` (§5.3), cached, with the escalation refit if the first fit is a near miss, each sampling run limited to 15 min: "too slow to fit: … was still sampling after the 15-minute limit and was stopped. Every sampling run of a candidate's admission fit has a 15-minute limit. Make the model cheaper to evaluate …" (vectorise over trials, features once per unique sequence, fewer weakly identified parameters). A sampling error reads "MCMC sampling failed (<Type>: <message>)" |
+| 7 | convergence | the returned fit passes the gate (§5.3). For a multi-chain fit the rejection reason says either that the fit, a near miss, already ran at target_accept ≥ 0.95, or that it was too far from converging for smaller steps to help (and gives the near-miss thresholds); either way raising target_accept will not help. It suggests changing the geometry: non-centred parameterisations, tighter priors on weakly constrained parameters, fewer weakly identified parameters, no hard thresholds (it used to suggest declaring `SAMPLER_SETTINGS = {"target_accept": 0.95}`, which the refit had already done) |
 | 8 | finite ELPD-LOO | from that fit |
 | 9 | novelty | see below; skipped if threshold = 0 |
 

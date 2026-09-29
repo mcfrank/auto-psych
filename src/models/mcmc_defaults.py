@@ -39,9 +39,31 @@ DESIGN_TWIN_TARGET_ACCEPT = 0.9
 MAX_R_HAT = 1.05
 MIN_BULK_ESS = 100
 MAX_DIVERGENCE_FRACTION = 0.001
-# A fit that fails the gate is refit once at this target_accept (smaller NUTS
-# steps), and that fit is the model's fit from then on.
+# A fit that fails the gate but is a near miss (below) is refit once at this
+# target_accept (smaller NUTS steps), and that fit is the model's fit from then
+# on.
 ESCALATED_TARGET_ACCEPT = 0.95
+
+# A near miss: a failed fit that smaller steps can plausibly fix — at most
+# NEAR_MISS_MAX_DIVERGENCE_FRACTION of its transitions diverged, max R-hat <=
+# NEAR_MISS_MAX_R_HAT and bulk ESS >= NEAR_MISS_MIN_BULK_ESS on every free
+# parameter. Anything worse (a chain stuck in another mode, R-hat ~1.5-2.5 and
+# bulk ESS ~5; a quarter of all transitions divergent) is a geometry problem
+# that the refit only repeats, at twice the cost: in the September 2026 sweep
+# such refits of variants of one slow seed model took ~40 min each before the
+# same rejection. The failures in the sweep's ledgers were bimodal — 0.3-0.7%
+# divergent with R-hat and ESS fine, or 25% divergent with R-hat >= 1.5 and
+# ESS <= 7 — and these thresholds sit in the gap between the two modes. A fit
+# with no divergence statistic (not NUTS) is never a near miss.
+NEAR_MISS_MAX_R_HAT = 1.2
+NEAR_MISS_MIN_BULK_ESS = 20
+NEAR_MISS_MAX_DIVERGENCE_FRACTION = 0.02
+
+# Wall-clock limit on each sampling run of a candidate's admission fit (the
+# first fit and a near-miss refit are limited separately). A candidate still
+# sampling at the limit is stopped (its process group is killed) and rejected
+# as too slow to fit. Seeds and carried models are never time-limited.
+CANDIDATE_FIT_TIME_LIMIT_SEC = 15 * 60
 
 # The candidate agent's self-check (src/pipelines/inner_loop/check_candidate.py):
 # a smoke fit that proves the model loads, samples and scores — never a
