@@ -182,6 +182,7 @@ def run_pymc_inner_loop(
     ledger_context: str = "",
     lens_offset: int = 0,
     agent_root: Optional[Path] = None,
+    agent_notes_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Run the PyMC inner model loop and export the best model.
 
@@ -255,6 +256,10 @@ def run_pymc_inner_loop(
         Starting position in the lens battery. The outer loop
         passes ``_lens_offset(exp_num, ...)`` so experiment k+1 continues the
         walk where experiment k stopped.
+    agent_notes_dir
+        Where Claude agents keep notes for later agents of the same run (their
+        auto-memory; ``None`` gives them none). The outer loop passes one
+        directory per run.
 
     Returns a dict with ``best_model``, ``posteriors``, ``elpd_loo``,
     ``live_models`` (the surviving zoo, in manifest order) and paths.
@@ -334,6 +339,7 @@ def run_pymc_inner_loop(
                 backend=backend,
                 agent_model=agent_model,
                 agent_root=agent_root,
+                notes_dir=agent_notes_dir,
             )
             critique_path = critique.critiques_md
             critique_status = critique.status
@@ -415,6 +421,7 @@ def run_pymc_inner_loop(
                     backend=backend,
                     agent_model=agent_model,
                     agent_root=agent_root,
+                    notes_dir=agent_notes_dir,
                 )
 
             def settle(slot: _Slot, spawned_ok: bool) -> bool:

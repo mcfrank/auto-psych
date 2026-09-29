@@ -30,6 +30,7 @@ from src.models.model_manifest import (
 )
 from src.models.project.ground_truth import get_ground_truth_models
 from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS, write_responses_csv
+from src.pipelines.outer_loop.model_loop_runner import agent_notes_dir
 
 from src.runtime.coding_agent import run_coding_agent
 from src.runtime.config import PROJECT_ASSETS_DIR, REPO_ROOT
@@ -313,6 +314,7 @@ def spawn_cc_agent(
         model=model,
         usage_label=f"outer:{agent_key}",
         stock=True,  # a loop agent: none of the user's Claude setup
+        memory_dir=agent_notes_dir(exp_dir),  # notes shared within this run only
     )
     if success:
         print(f"  [agent] {agent_key} completed.", flush=True)

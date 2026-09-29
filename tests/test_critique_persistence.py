@@ -132,11 +132,12 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
 
     def fake_run(
         prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False,
+        model=None, stock=False, memory_dir=None,
     ):
         captured["prompt"] = prompt
         captured["cwd"] = cwd
         captured["stock"] = stock
+        captured["memory_dir"] = memory_dir
         _write_stat(log_path.parent / "test_stats", "alternation_gap")
         return True, ""
 
@@ -146,11 +147,14 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
         crit, "incumbent", models_dir=tmp_path, responses_path=tmp_path / "r.csv",
         cache_dir=None, fit_kwargs={}, n_proposals=8, significance_alpha=0.05,
         n_replicates=10, agent_timeout_sec=10, backend="opencode",
+        notes_dir=tmp_path / "agent_notes",
     )
     assert str(crit) in captured["prompt"]
     assert captured["cwd"] == REPO_ROOT
     # The critic is part of the experiment too: a stock agent.
     assert captured["stock"] is True
+    # ...keeping notes for later agents of the same run.
+    assert captured["memory_dir"] == tmp_path / "agent_notes"
 
 
 # ─────────────────────────────────────────────
@@ -234,7 +238,7 @@ def _patch_agent(monkeypatch, on_run):
 
     def fake_run(
         prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False,
+        model=None, stock=False, memory_dir=None,
     ):
         calls.append({"prompt": prompt, "log_path": log_path})
         on_run(log_path.parent)

@@ -694,6 +694,7 @@ def _spawn_candidate_agent(
     backend: Optional[str],
     agent_model: Optional[str] = None,
     agent_root: Optional[Path] = None,
+    notes_dir: Optional[Path] = None,
 ) -> bool:
     from src.runtime.coding_agent import run_coding_agent
 
@@ -719,5 +720,6 @@ def _spawn_candidate_agent(
         model=agent_model,
         usage_label="inner:candidate",
         stock=True,  # a subject of the experiment: none of the user's Claude setup
+        memory_dir=notes_dir,  # notes shared with later agents of this run only
     )
     return success

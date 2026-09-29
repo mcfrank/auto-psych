@@ -205,3 +205,33 @@ def test_stock_claude_agent_has_auto_memory_off(tmp_path):
     )
     assert stock["CLAUDE_CODE_DISABLE_AUTO_MEMORY"] == "1"
     assert "CLAUDE_CODE_DISABLE_AUTO_MEMORY" not in user
+
+
+# ── Per-run notes: a stock agent's auto-memory, pointed into the run ──
+# Verified against claude 2.1.280: --settings autoMemoryDirectory moves the
+# memory there (init event memory_paths), a fresh session reads what an
+# earlier one saved, and nothing is written to ~/.claude/projects.
+
+
+def test_stock_claude_agent_with_a_notes_dir_keeps_its_memory_there(tmp_path):
+    import json
+
+    from src.runtime.coding_agent import child_environment
+
+    notes = tmp_path / "run" / "agent_notes"
+    cmd = build_command(
+        "claude", prompt="p", allowed_dirs=[], model=None, stock=True, memory_dir=notes
+    )
+    settings = json.loads(cmd[cmd.index("--settings") + 1])
+    assert settings == {"autoMemoryDirectory": str(notes)}
+    assert cmd[-1] == "p" and cmd[-2] == "-p"
+    env = child_environment(
+        backend="claude", cwd=tmp_path, log_path=tmp_path / "a.jsonl", env={},
+        stock=True, memory_dir=notes,
+    )
+    assert "CLAUDE_CODE_DISABLE_AUTO_MEMORY" not in env
+
+
+def test_stock_claude_agent_without_a_notes_dir_has_no_memory_at_all(tmp_path):
+    cmd = build_command("claude", prompt="p", allowed_dirs=[], model=None, stock=True)
+    assert "--settings" not in cmd

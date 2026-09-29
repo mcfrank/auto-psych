@@ -31,9 +31,10 @@ def _spawn(tmp_path, monkeypatch):
 
     def fake_run_coding_agent(
         prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False,
+        model=None, stock=False, memory_dir=None,
     ):
         captured["stock"] = stock
+        captured["memory_dir"] = memory_dir
         captured["prompt"] = prompt
         captured["cwd"] = cwd
         captured["allowed_dirs"] = list(allowed_dirs)
@@ -62,6 +63,7 @@ def _spawn(tmp_path, monkeypatch):
         responses_path=responses_path,
         agent_timeout_sec=10,
         backend="opencode",
+        notes_dir=tmp_path / "agent_notes",
     )
     return captured, candidate_dir, models_dir, responses_path
 
@@ -89,3 +91,8 @@ def test_candidate_agent_is_a_stock_agent(tmp_path, monkeypatch):
     CLI: none of the user's CLAUDE.md, plugins, MCP connectors or memory."""
     captured, *_ = _spawn(tmp_path, monkeypatch)
     assert captured["stock"] is True
+
+
+def test_candidate_agent_keeps_notes_in_its_runs_notes_dir(tmp_path, monkeypatch):
+    captured, *_ = _spawn(tmp_path, monkeypatch)
+    assert captured["memory_dir"] == tmp_path / "agent_notes"
