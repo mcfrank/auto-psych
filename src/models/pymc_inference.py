@@ -811,9 +811,11 @@ def _fit_once_within(
     if time_limit_sec is None:
         return _fit_once(name, models_dir, responses_path, settings, cache_dir)
     if cache_dir is not None:
+        # A remembered failure or timeout comes back before a cached file is
+        # looked at: a child killed at its limit just after writing its fit
+        # still timed out.
         request = TimeLimitedFit(name, models_dir, responses_path, settings, Path(cache_dir))
-        if not request.nc_path().exists():
-            _raise_failure(sample_fits_time_limited([request], time_limit_sec=time_limit_sec)[0])
+        _raise_failure(sample_fits_time_limited([request], time_limit_sec=time_limit_sec)[0])
         return _fit_once(name, models_dir, responses_path, settings, cache_dir)
     with tempfile.TemporaryDirectory(prefix="pymc_fit_") as transport:
         request = TimeLimitedFit(name, models_dir, responses_path, settings, Path(transport))
@@ -1193,8 +1195,9 @@ class TimeLimitedFit:
         return cached_fit_path(self.cache_dir, self.name, self.fingerprint())
 
 
-# Failures of time-limited sampling runs, by (model name, fit fingerprint):
-# a run that failed or ran out of time is not sampled again in this process.
+# Failures of time-limited sampling runs, by (model name, fit fingerprint,
+# time limit): a run that failed or ran out of time is not sampled again in
+# this process.
 _FAILED_TIME_LIMITED_FITS: Dict[tuple, BaseException] = {}
 
 
@@ -1293,8 +1296,8 @@ def sample_fits_time_limited(
     ``FitTimeLimitExceeded`` for one still sampling at the limit — whose
     process group (the fit and its chain processes) is killed, so the
     sampling really stops, and whose half-written file, if any, is removed.
-    Failures are remembered by (name, fingerprint) and returned again without
-    sampling. An infrastructure failure (a process that died without
+    Failures are remembered by (name, fingerprint, limit) and returned again
+    without sampling, before any file on disk is looked at. An infrastructure failure (a process that died without
     reporting, an ``OSError``/``MemoryError`` inside one) raises, after every
     other running fit is stopped.
 
@@ -1310,7 +1313,7 @@ def sample_fits_time_limited(
     outcomes: List[Optional[BaseException]] = [None] * len(requests)
     queue: List[int] = []
     for i, request in enumerate(requests):
-        known = _FAILED_TIME_LIMITED_FITS.get((request.name, request.fingerprint()))
+        known = _FAILED_TIME_LIMITED_FITS.get((request.name, request.fingerprint(), time_limit_sec))
         if known is not None:
             outcomes[i] = known
         elif not request.nc_path().exists():
@@ -1361,7 +1364,7 @@ def sample_fits_time_limited(
             _stop_fit_process(process, requests[i])
     for request, outcome in zip(requests, outcomes):
         if outcome is not None:
-            _FAILED_TIME_LIMITED_FITS[(request.name, request.fingerprint())] = outcome
+            _FAILED_TIME_LIMITED_FITS[(request.name, request.fingerprint(), time_limit_sec)] = outcome
     return outcomes
 
 
