@@ -35,7 +35,7 @@ from src.runtime.usage_limits import (
 
 LA = ZoneInfo("America/Los_Angeles")
 
-STUB = r'''
+STUB = r"""
 import json, sys
 from pathlib import Path
 
@@ -75,7 +75,7 @@ if backend == "claude":
 else:
     emit({"type": "text", "part": {"text": "Wrote candidate.py."}})
     emit({"type": "step_finish", "part": {"tokens": {"input": 100, "output": 50}, "cost": 0.1}})
-'''
+"""
 
 
 def claude_limit_message(hours_ahead: float = 1.0) -> str:
@@ -106,15 +106,27 @@ def run_stub(tmp_path, monkeypatch, agent, *, backend, n_limited, message):
         (agent_dir / "scratch").mkdir(exist_ok=True)
         (agent_dir / ".home").mkdir(exist_ok=True)
         return [
-            sys.executable, str(agent["stub"]), str(agent["calls"]), str(agent_dir),
-            str(n_limited), backend, message,
+            sys.executable,
+            str(agent["stub"]),
+            str(agent["calls"]),
+            str(agent_dir),
+            str(n_limited),
+            backend,
+            message,
         ], dict(env)
 
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
     return coding_agent.run_coding_agent(
-        "p", cwd=tmp_path, log_path=agent["dir"] / "agent.jsonl", backend=backend,
-        allowed_dirs=[agent["dir"]], writable_dirs=[agent["dir"]], sandbox=True,
-        on_summary=None, timeout_secs=60, usage_label="inner:candidate",
+        "p",
+        cwd=tmp_path,
+        log_path=agent["dir"] / "agent.jsonl",
+        backend=backend,
+        allowed_dirs=[agent["dir"]],
+        writable_dirs=[agent["dir"]],
+        sandbox=True,
+        on_summary=None,
+        timeout_secs=60,
+        usage_label="inner:candidate",
     )
 
 
@@ -124,9 +136,15 @@ def assert_only_the_real_candidate(agent_dir: Path) -> None:
     assert (agent_dir / "CONTEXT.md").read_text() == "the brief"
 
 
-def test_claude_session_limit_is_waited_out_and_the_agent_run_again(tmp_path, monkeypatch, agent):
+def test_claude_session_limit_is_waited_out_and_the_agent_run_again(
+    tmp_path, monkeypatch, agent
+):
     success, result = run_stub(
-        tmp_path, monkeypatch, agent, backend="claude", n_limited=3,
+        tmp_path,
+        monkeypatch,
+        agent,
+        backend="claude",
+        n_limited=3,
         message=claude_limit_message(hours_ahead=1),
     )
     assert (success, result) == (True, "Wrote candidate.py.")
@@ -138,7 +156,9 @@ def test_claude_session_limit_is_waited_out_and_the_agent_run_again(tmp_path, mo
     assert not (agent["dir"] / "scratch" / "explore.py").exists()
     records = token_usage.records_since(0)
     assert [r.usage_limit is not None for r in records] == [True, True, True, False]
-    assert all(r.usage_limit.startswith("You've hit your session limit") for r in records[:3])
+    assert all(
+        r.usage_limit.startswith("You've hit your session limit") for r in records[:3]
+    )
     summary = token_usage.summarize(records)
     assert summary["n_usage_limit_hits"] == 3
     assert summary["usage_limit_wait_sec"] == pytest.approx(sum(agent["waits"]))
@@ -146,12 +166,18 @@ def test_claude_session_limit_is_waited_out_and_the_agent_run_again(tmp_path, mo
     assert log.count("--- usage limit; waiting") == 3
 
 
-def test_a_limit_that_never_lifts_raises_after_the_maximum_wait(tmp_path, monkeypatch, agent):
+def test_a_limit_that_never_lifts_raises_after_the_maximum_wait(
+    tmp_path, monkeypatch, agent
+):
     monkeypatch.setattr(coding_agent, "AGENT_USAGE_LIMIT_MAX_WAIT_SEC", 3 * 600)
     monkeypatch.setattr(coding_agent, "AGENT_USAGE_LIMIT_FALLBACK_WAIT_SEC", 600)
     with pytest.raises(AgentUsageLimitExceeded, match="did not lift within"):
         run_stub(
-            tmp_path, monkeypatch, agent, backend="claude", n_limited="forever",
+            tmp_path,
+            monkeypatch,
+            agent,
+            backend="claude",
+            n_limited="forever",
             message="You've reached your usage limit.",  # no reset time: fixed waits
         )
     assert agent["waits"] == [600, 600, 600]
@@ -164,7 +190,11 @@ def test_a_limit_that_never_lifts_raises_after_the_maximum_wait(tmp_path, monkey
 def test_a_reset_beyond_the_maximum_wait_raises_at_once(tmp_path, monkeypatch, agent):
     with pytest.raises(AgentUsageLimitExceeded):
         run_stub(
-            tmp_path, monkeypatch, agent, backend="claude", n_limited="forever",
+            tmp_path,
+            monkeypatch,
+            agent,
+            backend="claude",
+            n_limited="forever",
             message="You've hit your weekly limit · resets in 3 days 2 hours",
         )
     assert agent["waits"] == []
@@ -173,7 +203,11 @@ def test_a_reset_beyond_the_maximum_wait_raises_at_once(tmp_path, monkeypatch, a
 
 def test_api_rate_limit_waits_the_fixed_interval(tmp_path, monkeypatch, agent):
     success, _ = run_stub(
-        tmp_path, monkeypatch, agent, backend="claude", n_limited=1,
+        tmp_path,
+        monkeypatch,
+        agent,
+        backend="claude",
+        n_limited=1,
         message='API Error: 429 {"type":"error","error":{"type":"rate_limit_error"}}',
     )
     assert success
@@ -183,7 +217,11 @@ def test_api_rate_limit_waits_the_fixed_interval(tmp_path, monkeypatch, agent):
 
 def test_opencode_quota_error_event_is_waited_out(tmp_path, monkeypatch, agent):
     success, result = run_stub(
-        tmp_path, monkeypatch, agent, backend="opencode", n_limited=2,
+        tmp_path,
+        monkeypatch,
+        agent,
+        backend="opencode",
+        n_limited=2,
         message="Resource has been exhausted (e.g. check quota).",
     )
     assert (success, result) == (True, "Wrote candidate.py.")
@@ -191,33 +229,57 @@ def test_opencode_quota_error_event_is_waited_out(tmp_path, monkeypatch, agent):
     assert_only_the_real_candidate(agent["dir"])
 
 
-def test_an_exhausted_api_credit_balance_raises_without_waiting(tmp_path, monkeypatch, agent):
+def test_an_exhausted_api_credit_balance_raises_without_waiting(
+    tmp_path, monkeypatch, agent
+):
     with pytest.raises(AgentLoginFailed, match="Credit balance is too low"):
         run_stub(
-            tmp_path, monkeypatch, agent, backend="claude", n_limited="forever",
+            tmp_path,
+            monkeypatch,
+            agent,
+            backend="claude",
+            n_limited="forever",
             message="Credit balance is too low",
         )
     assert agent["waits"] == []
     assert not (agent["dir"] / "candidate.py").exists()
 
 
-def test_tools_that_requeue_on_limits_still_get_the_result_back(tmp_path, monkeypatch, agent):
+def test_tools_that_requeue_on_limits_still_get_the_result_back(
+    tmp_path, monkeypatch, agent
+):
     def fake_sandbox_command(cmd, *, agent_dir, env, **kwargs):
-        return [sys.executable, str(agent["stub"]), str(agent["calls"]), str(agent_dir),
-                "forever", "claude", "You've hit your session limit · resets 3pm"], dict(env)
+        return [
+            sys.executable,
+            str(agent["stub"]),
+            str(agent["calls"]),
+            str(agent_dir),
+            "forever",
+            "claude",
+            "You've hit your session limit · resets 3pm",
+        ], dict(env)
 
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
     (agent["dir"] / "scratch").mkdir()
     success, result = coding_agent.run_coding_agent(
-        "p", cwd=tmp_path, log_path=agent["dir"] / "agent.jsonl", backend="claude",
-        allowed_dirs=[agent["dir"]], writable_dirs=[agent["dir"]], sandbox=True,
-        on_summary=None, timeout_secs=60, wait_out_usage_limits=False,
+        "p",
+        cwd=tmp_path,
+        log_path=agent["dir"] / "agent.jsonl",
+        backend="claude",
+        allowed_dirs=[agent["dir"]],
+        writable_dirs=[agent["dir"]],
+        sandbox=True,
+        on_summary=None,
+        timeout_secs=60,
+        wait_out_usage_limits=False,
     )
     assert result.startswith("You've hit your session limit")
     assert agent["waits"] == []
 
 
-def test_a_candidate_slot_spends_no_retry_on_a_usage_limit(tmp_path, monkeypatch, agent):
+def test_a_candidate_slot_spends_no_retry_on_a_usage_limit(
+    tmp_path, monkeypatch, agent
+):
     """Through the candidate launcher: the slot's first attempt succeeds."""
     from src.pipelines.inner_loop.candidate_agent import _spawn_candidate_agent
 
@@ -225,13 +287,22 @@ def test_a_candidate_slot_spends_no_retry_on_a_usage_limit(tmp_path, monkeypatch
 
     def fake_sandbox_command(cmd, *, agent_dir, env, **kwargs):
         (agent_dir / "scratch").mkdir(exist_ok=True)
-        return [sys.executable, str(agent["stub"]), str(agent["calls"]), str(agent_dir),
-                "2", "claude", message], dict(env)
+        return [
+            sys.executable,
+            str(agent["stub"]),
+            str(agent["calls"]),
+            str(agent_dir),
+            "2",
+            "claude",
+            message,
+        ], dict(env)
 
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
     responses = tmp_path / "data" / "responses.csv"
     responses.parent.mkdir()
-    responses.write_text("sequence_a,sequence_b,participant_id,trial_index,chose_left\n")
+    responses.write_text(
+        "sequence_a,sequence_b,participant_id,trial_index,chose_left\n"
+    )
     ok = _spawn_candidate_agent(
         agent["dir"],
         {"context": "c", "brief": "b", "existing_hypotheses": "h"},
@@ -249,7 +320,9 @@ def test_a_candidate_slot_spends_no_retry_on_a_usage_limit(tmp_path, monkeypatch
 def test_critique_round_does_not_swallow_a_usage_limit(tmp_path, monkeypatch):
     from src.pipelines.inner_loop import critique_round, scoring
 
-    monkeypatch.setattr(scoring, "_best_exportable_model", lambda posterior, comparison: "seed")
+    monkeypatch.setattr(
+        scoring, "_best_exportable_model", lambda posterior, comparison: "seed"
+    )
 
     def limited(*args, **kwargs):
         raise AgentUsageLimitExceeded("limit")
@@ -276,23 +349,38 @@ def test_critique_round_does_not_swallow_a_usage_limit(tmp_path, monkeypatch):
     "message, reset",
     [
         # The two messages of the 2026-09-28 logs.
-        ("You've hit your session limit · resets 2:20pm (America/Los_Angeles)",
-         datetime(2026, 9, 28, 14, 20, tzinfo=LA)),
-        ("You've hit your session limit · resets 11:20pm (America/Los_Angeles)",
-         datetime(2026, 9, 28, 23, 20, tzinfo=LA)),
+        (
+            "You've hit your session limit · resets 2:20pm (America/Los_Angeles)",
+            datetime(2026, 9, 28, 14, 20, tzinfo=LA),
+        ),
+        (
+            "You've hit your session limit · resets 11:20pm (America/Los_Angeles)",
+            datetime(2026, 9, 28, 23, 20, tzinfo=LA),
+        ),
         # A reset that has just passed is this one, not tomorrow's.
-        ("You've hit your session limit · resets 1:55pm (America/Los_Angeles)",
-         datetime(2026, 9, 28, 13, 55, tzinfo=LA)),
-        ("Claude AI usage limit reached|1790636400",
-         datetime.fromtimestamp(1790636400).astimezone()),
-        ("You've hit your usage limit. Upgrade to Pro or try again in 2 hours 5 minutes.",
-         datetime(2026, 9, 28, 16, 5, tzinfo=LA)),
-        ("You've hit your usage limit. Try again in 3 days 1 hour.",
-         datetime(2026, 10, 1, 15, 0, tzinfo=LA)),
+        (
+            "You've hit your session limit · resets 1:55pm (America/Los_Angeles)",
+            datetime(2026, 9, 28, 13, 55, tzinfo=LA),
+        ),
+        (
+            "Claude AI usage limit reached|1790636400",
+            datetime.fromtimestamp(1790636400).astimezone(),
+        ),
+        (
+            "You've hit your usage limit. Upgrade to Pro or try again in 2 hours 5 minutes.",
+            datetime(2026, 9, 28, 16, 5, tzinfo=LA),
+        ),
+        (
+            "You've hit your usage limit. Try again in 3 days 1 hour.",
+            datetime(2026, 10, 1, 15, 0, tzinfo=LA),
+        ),
         ('API Error: 529 {"type":"error","error":{"type":"overloaded_error"}}', None),
         ("API Error: Repeated 529 Overloaded errors", None),
         ('{"code": 429, "status": "RESOURCE_EXHAUSTED"}', None),
-        ("stream error: exceeded retry limit, last status: 429 Too Many Requests", None),
+        (
+            "stream error: exceeded retry limit, last status: 429 Too Many Requests",
+            None,
+        ),
     ],
 )
 def test_limit_messages_and_their_reset_times(message, reset):
@@ -312,8 +400,19 @@ def test_claude_limit_is_read_only_from_the_start_of_the_result_text():
     class Stream:
         final_result = "x" * 250 + " You've hit your session limit · resets 3pm"
 
-    assert detect_usage_limit(coding_agent._cli_messages("claude", Stream(), "")) is None
-    events = json.dumps({"type": "assistant", "message": {"content": [
-        {"type": "text", "text": "API Error: 429 rate_limit_error"}]}})
+    assert (
+        detect_usage_limit(coding_agent._cli_messages("claude", Stream(), "")) is None
+    )
+    events = json.dumps(
+        {
+            "type": "assistant",
+            "message": {
+                "content": [{"type": "text", "text": "API Error: 429 rate_limit_error"}]
+            },
+        }
+    )
     Stream.final_result = "Done."
-    assert detect_usage_limit(coding_agent._cli_messages("claude", Stream(), events)) is None
+    assert (
+        detect_usage_limit(coding_agent._cli_messages("claude", Stream(), events))
+        is None
+    )

@@ -37,7 +37,9 @@ STUDY_SETTINGS = {
 @pytest.fixture
 def assets(tmp_path, monkeypatch):
     """A project assets dir whose prolific_config.yaml the test writes."""
-    monkeypatch.setattr(prolific_client, "project_assets_dir", lambda pid: tmp_path / pid)
+    monkeypatch.setattr(
+        prolific_client, "project_assets_dir", lambda pid: tmp_path / pid
+    )
     (tmp_path / PROJECT).mkdir()
 
     def write(settings):
@@ -69,7 +71,10 @@ def _manifest() -> DeploymentManifest:
 
 def _plan(n_participants):
     return build_prolific_plan(
-        project_id=PROJECT, manifest=_manifest(), n_participants=n_participants, mode="live"
+        project_id=PROJECT,
+        manifest=_manifest(),
+        n_participants=n_participants,
+        mode="live",
     )
 
 
@@ -97,17 +102,28 @@ def test_no_rendered_config_raises_instead_of_using_defaults(assets):
 @pytest.fixture
 def stages_run(monkeypatch):
     ran = []
-    for name in ("run_design_programmatic", "spawn_cc_agent", "run_deployment_programmatic",
-                 "run_collect_programmatic", "run_inner_model_loop_programmatic"):
+    for name in (
+        "run_design_programmatic",
+        "spawn_cc_agent",
+        "run_deployment_programmatic",
+        "run_collect_programmatic",
+        "run_inner_model_loop_programmatic",
+    ):
         monkeypatch.setattr(outer_run, name, lambda *a, _n=name, **k: ran.append(_n))
     return ran
 
 
 def _live_args(n_participants):
     return outer_run.Args(
-        project=PROJECT, experiment=1, mode="live", deploy_target="firebase",
-        prolific_mode="live", confirm_live_recruitment=True, n_participants=n_participants,
-        coding_agent="claude", firebase_project="auto-psych-test",
+        project=PROJECT,
+        experiment=1,
+        mode="live",
+        deploy_target="firebase",
+        prolific_mode="live",
+        confirm_live_recruitment=True,
+        n_participants=n_participants,
+        coding_agent="claude",
+        firebase_project="auto-psych-test",
     )
 
 
@@ -138,15 +154,20 @@ def test_run_py_refuses_a_missing_config_before_any_stage(
 
 
 def test_the_launchers_render_no_participant_count(tmp_path, monkeypatch):
-    pilot_config = load_script_module(SCRIPTS_DIR / "outer_loop_live" / "_pilot_config.py")
+    pilot_config = load_script_module(
+        SCRIPTS_DIR / "outer_loop_live" / "_pilot_config.py"
+    )
     monkeypatch.setattr(pilot_config, "project_assets_dir", lambda pid: tmp_path / pid)
     (tmp_path / PROJECT).mkdir()
     config = tmp_path / "pilot.yaml"
     config.write_text(
-        yaml.safe_dump({
-            "project": PROJECT, "run_label": "t",
-            "prolific": {"participants": 10, **STUDY_SETTINGS},
-        }),
+        yaml.safe_dump(
+            {
+                "project": PROJECT,
+                "run_label": "t",
+                "prolific": {"participants": 10, **STUDY_SETTINGS},
+            }
+        ),
         encoding="utf-8",
     )
     monkeypatch.setattr(sys, "argv", ["_pilot_config.py", str(config), "--render-only"])
@@ -160,7 +181,14 @@ def test_the_launchers_render_no_participant_count(tmp_path, monkeypatch):
 
 def test_no_rendered_config_is_committed():
     committed = subprocess.run(
-        ["git", "ls-files", f"src/pipelines/outer_loop/projects/{PROJECT}/prolific_config.yaml"],
-        cwd=REPO_ROOT, capture_output=True, text=True, check=True,
+        [
+            "git",
+            "ls-files",
+            f"src/pipelines/outer_loop/projects/{PROJECT}/prolific_config.yaml",
+        ],
+        cwd=REPO_ROOT,
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout
     assert committed == ""

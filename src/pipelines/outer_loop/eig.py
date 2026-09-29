@@ -112,7 +112,10 @@ def _screen_usable_models(
             dropped.append(
                 {"model": name, "missing": list(e.missing), "reason": reason}
             )
-            print(f"  [drop] EIG: model {name!r} {reason}; excluding it from EIG.", flush=True)
+            print(
+                f"  [drop] EIG: model {name!r} {reason}; excluding it from EIG.",
+                flush=True,
+            )
             continue
         except INFRASTRUCTURE_ERRORS:
             raise
@@ -127,9 +130,14 @@ def _screen_usable_models(
                 ) from e
             reason = f"cannot be evaluated on a stimulus ({type(e).__name__}: {e})"
             if model is not None:
-                reason += f"; fails on pairs of length {_failing_pair_lengths(model, rows)}"
+                reason += (
+                    f"; fails on pairs of length {_failing_pair_lengths(model, rows)}"
+                )
             dropped.append({"model": name, "missing": [], "reason": reason})
-            print(f"  [drop] EIG: model {name!r} {reason}; excluding it from EIG.", flush=True)
+            print(
+                f"  [drop] EIG: model {name!r} {reason}; excluding it from EIG.",
+                flush=True,
+            )
             continue
         usable.append(name)
     if not usable:
@@ -173,7 +181,10 @@ def _invalid_predictions_entry(
 
 
 def _screen_invalid_predictions(
-    draws_of: Callable[[str], Any], model_names: List[str], rows: List[Dict[str, Any]], basis: str
+    draws_of: Callable[[str], Any],
+    model_names: List[str],
+    rows: List[Dict[str, Any]],
+    basis: str,
 ) -> Tuple[Dict[str, Any], List[Dict[str, Any]]]:
     """``{name: draws_of(name)}`` over the models whose ``p_left`` is a
     probability on every pair, and a ``screened_out.json`` record for each
@@ -258,7 +269,9 @@ def _posterior_p_left_draws(
         stim_data = make_stim_data(fitted.model, rows)
         return fitted.predict_p_left_draws(stim_data, seed=seed, max_draws=max_draws)
 
-    return _screen_invalid_predictions(posterior_draws, model_names, rows, "posterior-predictive")
+    return _screen_invalid_predictions(
+        posterior_draws, model_names, rows, "posterior-predictive"
+    )
 
 
 # How the design searches for the max-joint-EIG set (src/models/eig_selection.py):
@@ -338,8 +351,11 @@ def select_design_picks(
             else ""
         )
         + f", {dtype} scoring on {search['n_threads']} thread(s), "
-        + ("generating draw left out of each scenario's likelihood average."
-           if leave_one_out else "generating draw included in each likelihood average."),
+        + (
+            "generating draw left out of each scenario's likelihood average."
+            if leave_one_out
+            else "generating draw included in each likelihood average."
+        ),
         flush=True,
     )
     selection = select_n_joint_eig(
@@ -351,7 +367,10 @@ def select_design_picks(
         stop_below_noise=True,
         **search,
     )
-    picks = [(idx, bits, "eig") for idx, bits in zip(selection.indices, selection.joint_eig_bits)]
+    picks = [
+        (idx, bits, "eig")
+        for idx, bits in zip(selection.indices, selection.joint_eig_bits)
+    ]
     if len(selection.indices) < n_select:
         fill = select_n_joint_eig(
             draws,
@@ -460,7 +479,9 @@ def design_exhaustive(
         model_names = _load_model_names(models_dir)
         model_weights = _load_model_weights(registry_path)
         model_names, screened_out = _screen_usable_models(model_names, models_dir, rows)
-        if model_weights and not any(model_weights.get(n, 0.0) > 0 for n in model_names):
+        if model_weights and not any(
+            model_weights.get(n, 0.0) > 0 for n in model_names
+        ):
             print(
                 f"  [design] registry weights over {sorted(model_weights)} do not "
                 f"overlap this model set {model_names}; using a uniform model prior.",

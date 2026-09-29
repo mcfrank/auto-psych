@@ -166,21 +166,24 @@ def test_holdout_test_retest_emits_rmse_and_kl_regret_summaries(tmp_path):
             "pearson_r,rmse,kl_regret,bias,calib_slope,calib_intercept,"
             "pearson_r_bma,rmse_bma,kl_regret_bma,bias_bma,"
             "calib_slope_bma,calib_intercept_bma\n"
-            f"gt_a,1,0,,0,seed,0.{80+r},0.{10+r},0.0{r},0.01,1.0,0.0,"
-            f"0.{80+r},0.{10+r},0.0{r},0.01,1.0,0.0\n",
+            f"gt_a,1,0,,0,seed,0.{80 + r},0.{10 + r},0.0{r},0.01,1.0,0.0,"
+            f"0.{80 + r},0.{10 + r},0.0{r},0.01,1.0,0.0\n",
             encoding="utf-8",
         )
 
     out_json = tmp_path / "test_retest.json"
     out_csv = tmp_path / "test_retest.csv"
-    main(Args(
-        runs_root=runs_root,
-        out=out_json,
-        csv=out_csv,
-        metric="pearson_r",
-    ))
+    main(
+        Args(
+            runs_root=runs_root,
+            out=out_json,
+            csv=out_csv,
+            metric="pearson_r",
+        )
+    )
 
     import json
+
     summary = json.loads(out_json.read_text(encoding="utf-8"))
 
     assert "per_metric" in summary

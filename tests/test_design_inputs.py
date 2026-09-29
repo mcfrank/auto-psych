@@ -43,8 +43,12 @@ def test_later_designs_fit_on_all_data_collected_so_far(tmp_path, captured_desig
 def test_the_eig_counts_every_participants_response(tmp_path, captured_design, exp_num):
     prev = tmp_path / "experiment1" if exp_num > 1 else None
     run_design_programmatic(
-        tmp_path / f"experiment{exp_num}", "subjective_randomness",
-        exp_num=exp_num, prev_exp_dir=prev, k=4, n_responses=40,
+        tmp_path / f"experiment{exp_num}",
+        "subjective_randomness",
+        exp_num=exp_num,
+        prev_exp_dir=prev,
+        k=4,
+        n_responses=40,
     )
     assert captured_design["n_responses"] == 40
 
@@ -72,11 +76,18 @@ def test_design_fits_use_the_models_own_target_accept_else_0_9(tmp_path, monkeyp
 
     declared = {"careful": {"target_accept": 0.97}, "plain": {}}
     monkeypatch.setattr(pymc_inference, "fit_model", fake_fit_model)
-    monkeypatch.setattr(pymc_inference, "model_sampler_settings", lambda n, d: declared[n])
+    monkeypatch.setattr(
+        pymc_inference, "model_sampler_settings", lambda n, d: declared[n]
+    )
     monkeypatch.setattr(data_binding, "make_stim_data", lambda model, rows: {})
     draws, screened = eig_mod._posterior_p_left_draws(
-        ["careful", "plain"], tmp_path, [], responses_csv=tmp_path / "r.csv",
-        fit_cache_dir=None, max_draws=10, seed=0,
+        ["careful", "plain"],
+        tmp_path,
+        [],
+        responses_csv=tmp_path / "r.csv",
+        fit_cache_dir=None,
+        max_draws=10,
+        seed=0,
     )
     assert requested == {"careful": 0.97, "plain": 0.9}
     assert draws == {"careful": "draws", "plain": "draws"} and screened == []
@@ -95,16 +106,21 @@ def test_a_saturated_selection_is_filled_by_single_response_eig(tmp_path, monkey
     def fake_select(draws, n_select, **kwargs):
         calls.append({"n_select": n_select, **kwargs})
         if kwargs["n_responses"] == 40:
-            return JointEIGSelection([3, 7], [1.0, 1.5], 10, stopped_at_noise_floor=True)
+            return JointEIGSelection(
+                [3, 7], [1.0, 1.5], 10, stopped_at_noise_floor=True
+            )
         return JointEIGSelection([1, 2, 5], [0.4, 0.6, 0.7], 10)
 
     monkeypatch.setattr(eig_selection, "select_n_joint_eig", fake_select)
     monkeypatch.setattr(
-        pymc_inference, "prior_predict_p_left_draws",
+        pymc_inference,
+        "prior_predict_p_left_draws",
         lambda names, d, rows, **k: {n: np.full((4, len(rows)), 0.5) for n in names},
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
-    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, rows: (names, []))
+    monkeypatch.setattr(
+        eig_mod, "_screen_usable_models", lambda names, d, rows: (names, [])
+    )
 
     stimuli = eig_mod.design_exhaustive(
         tmp_path, lengths=(2, 3), n_select=5, n_responses=40, seed=9
@@ -113,7 +129,9 @@ def test_a_saturated_selection_is_filled_by_single_response_eig(tmp_path, monkey
     assert calls[0]["stop_below_noise"] is True and calls[0]["n_responses"] == 40
     assert calls[1]["n_select"] == 3 and calls[1]["n_responses"] == 1
     assert list(calls[1]["preselected"]) == [3, 7]
-    assert [s["source"] for s in stimuli] == ["eig"] * 2 + ["eig_single_response_fill"] * 3
+    assert [s["source"] for s in stimuli] == ["eig"] * 2 + [
+        "eig_single_response_fill"
+    ] * 3
     assert [s["selection_rank"] for s in stimuli] == [1, 2, 3, 4, 5]
 
 
@@ -136,15 +154,24 @@ def test_the_design_search_settings_reach_both_selections(tmp_path, monkeypatch)
     monkeypatch.setattr(eig_selection, "select_n_joint_eig", fake_select)
     monkeypatch.setattr(pymc_inference, "allocated_cpus", lambda: 7)
     monkeypatch.setattr(
-        pymc_inference, "prior_predict_p_left_draws",
+        pymc_inference,
+        "prior_predict_p_left_draws",
         lambda names, d, rows, **k: {n: np.full((4, len(rows)), 0.5) for n in names},
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
-    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, rows: (names, []))
+    monkeypatch.setattr(
+        eig_mod, "_screen_usable_models", lambda names, d, rows: (names, [])
+    )
 
     eig_mod.design_exhaustive(
-        tmp_path, lengths=(2, 3), n_select=2, n_responses=40, seed=9,
-        lazy=True, scoring_dtype="float32", leave_one_out=False,
+        tmp_path,
+        lengths=(2, 3),
+        n_select=2,
+        n_responses=40,
+        seed=9,
+        lazy=True,
+        scoring_dtype="float32",
+        leave_one_out=False,
     )
 
     assert len(calls) == 2
@@ -171,13 +198,18 @@ def test_the_design_searches_lazily_in_float32_by_default(tmp_path, monkeypatch)
 
     monkeypatch.setattr(eig_selection, "select_n_joint_eig", fake_select)
     monkeypatch.setattr(
-        pymc_inference, "prior_predict_p_left_draws",
+        pymc_inference,
+        "prior_predict_p_left_draws",
         lambda names, d, rows, **k: {n: np.full((4, len(rows)), 0.5) for n in names},
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
-    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, rows: (names, []))
+    monkeypatch.setattr(
+        eig_mod, "_screen_usable_models", lambda names, d, rows: (names, [])
+    )
 
-    eig_mod.design_exhaustive(tmp_path, lengths=(2, 3), n_select=2, n_responses=40, seed=9)
+    eig_mod.design_exhaustive(
+        tmp_path, lengths=(2, 3), n_select=2, n_responses=40, seed=9
+    )
 
     [call] = calls
     assert call["lazy"] is True and call["dtype"] == "float32"
@@ -192,7 +224,11 @@ def _seed_experiment_models(exp_dir):
 
     models_dir = exp_dir / "cognitive_models"
     models_dir.mkdir(parents=True)
-    for name in ("bayesian_fair_coin.py", "representativeness.py", "models_manifest.yaml"):
+    for name in (
+        "bayesian_fair_coin.py",
+        "representativeness.py",
+        "models_manifest.yaml",
+    ):
         shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / name, models_dir / name)
     return models_dir
 
@@ -227,23 +263,33 @@ def test_run_design_programmatic_posterior_wiring(tmp_path, monkeypatch):
         calls["registry_path"] = registry_path
         calls.update(kwargs)
         return [
-            {"sequence_a": "HHH", "sequence_b": "HTH", "eig": 0.5,
-             "selection_rank": 1, "joint_eig_bits": 0.5}
+            {
+                "sequence_a": "HHH",
+                "sequence_b": "HTH",
+                "eig": 0.5,
+                "selection_rank": 1,
+                "joint_eig_bits": 0.5,
+            }
         ]
 
-    monkeypatch.setattr(
-        "src.pipelines.outer_loop.eig.design_exhaustive", fake_design
-    )
+    monkeypatch.setattr("src.pipelines.outer_loop.eig.design_exhaustive", fake_design)
 
     prev = tmp_path / "experiment1"
     (prev / "model_loop").mkdir(parents=True)
-    (prev / "model_loop" / "responses.csv").write_text("participant_id\n", encoding="utf-8")
+    (prev / "model_loop" / "responses.csv").write_text(
+        "participant_id\n", encoding="utf-8"
+    )
     exp_dir = tmp_path / "experiment2"
     exp_dir.mkdir()
 
     run_design_programmatic(
-        exp_dir, "subjective_randomness", exp_num=2, prev_exp_dir=prev,
-        k=1, lengths=(3, 4), n_responses=40,
+        exp_dir,
+        "subjective_randomness",
+        exp_num=2,
+        prev_exp_dir=prev,
+        k=1,
+        lengths=(3, 4),
+        n_responses=40,
     )
 
     assert calls["models_dir"] == exp_dir / "cognitive_models"

@@ -15,7 +15,11 @@ import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 import src.pipelines.inner_loop.scoring as scoring
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
-from tests.inner_loop_fixtures import canned_posterior, write_responses, write_seed_models
+from tests.inner_loop_fixtures import (
+    canned_posterior,
+    write_responses,
+    write_seed_models,
+)
 
 
 def _patch_scoring(monkeypatch, posteriors_per_call):
@@ -27,19 +31,13 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
         return result
 
     monkeypatch.setattr(scoring, "model_posterior", fake_model_posterior)
-    monkeypatch.setattr(
-        scoring, "compare_table", lambda *args, **kwargs: {}
-    )
+    monkeypatch.setattr(scoring, "compare_table", lambda *args, **kwargs: {})
     # _prune_losers looks up compare_table in model_zoo's namespace:
-    monkeypatch.setattr(
-        model_zoo, "compare_table", lambda *args, **kwargs: {}
-    )
+    monkeypatch.setattr(model_zoo, "compare_table", lambda *args, **kwargs: {})
     # Stub fittability so the fake stub seed models are not dropped/scored as
     # un-fittable (they are not real PyMC models). These functions are looked up
     # in model_zoo's namespace (where _drop_unfittable_models etc. now live).
-    monkeypatch.setattr(
-        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
-    )
+    monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     # Candidate admission now ends with a real MCMC fit-gate; stub it so the fake
     # stub candidates (not real PyMC models) are admitted without sampling.
@@ -52,7 +50,8 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
     monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
     # Novelty gate is covered by test_novelty_gate.py; neutralize it here.
     monkeypatch.setattr(
-        model_zoo, "_min_prediction_rmse",
+        model_zoo,
+        "_min_prediction_rmse",
         lambda *a, **k: (None, float("inf")),
     )
 
@@ -68,9 +67,7 @@ def _patch_candidates(monkeypatch):
         return True
 
     monkeypatch.setattr(pymc_orchestrator, "_spawn_candidate_agent", fake_spawn)
-    monkeypatch.setattr(
-        model_zoo, "load_pymc_model", lambda name, models_dir: object()
-    )
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
 
 
 def test_inner_loop_writes_history_entry_per_scoring_step(tmp_path, monkeypatch):
@@ -79,7 +76,9 @@ def test_inner_loop_writes_history_entry_per_scoring_step(tmp_path, monkeypatch)
         [
             canned_posterior("model_a", ["model_b"]),
             canned_posterior("iter0_candidate0", ["model_a", "model_b"]),
-            canned_posterior("iter1_candidate0", ["model_a", "model_b", "iter0_candidate0"]),
+            canned_posterior(
+                "iter1_candidate0", ["model_a", "model_b", "iter0_candidate0"]
+            ),
         ],
     )
     _patch_candidates(monkeypatch)
@@ -162,7 +161,8 @@ def test_history_best_model_follows_the_export_rule(tmp_path, monkeypatch):
             elif name == "model_a":
                 candidate_admitted = "iter0_candidate0" in names
                 rows[name] = _row(
-                    2 if candidate_admitted else 0, -12.0,
+                    2 if candidate_admitted else 0,
+                    -12.0,
                     unreliable=not candidate_admitted,
                 )
             else:
@@ -207,8 +207,12 @@ def test_record_history_step_stores_the_round_critique_status(tmp_path):
     assert "critique" not in history[0]
 
     status = {
-        "status": "critiqued", "incumbent": "model_a", "attempts": 1,
-        "n_statistics": 8, "n_significant": 2, "n_significant_fdr": 1,
+        "status": "critiqued",
+        "incumbent": "model_a",
+        "attempts": 1,
+        "n_statistics": 8,
+        "n_significant": 2,
+        "n_significant_fdr": 1,
     }
     _record_history_step(history, tmp_path, posterior, {}, iteration=0, critique=status)
     assert history[1]["critique"] == status

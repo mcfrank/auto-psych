@@ -19,20 +19,27 @@ from tests.paths import SCRIPTS_DIR, load_script_module
 
 
 def _summary(tmp_path, monkeypatch, capsys, prolific_mode):
-    pilot_config = load_script_module(SCRIPTS_DIR / "outer_loop_live" / "_pilot_config.py")
+    pilot_config = load_script_module(
+        SCRIPTS_DIR / "outer_loop_live" / "_pilot_config.py"
+    )
     monkeypatch.setattr(pilot_config, "get_me", lambda: ({"id": "researcher"}, None))
     config = tmp_path / "pilot.yaml"
     config.write_text(
-        yaml.safe_dump({
-            "project": "subjective_randomness",
-            "run_label": "t",
-            "experiments": 2,
-            "coding_agent": "opencode",
-            "prolific_mode": prolific_mode,
-            "confirm_live_recruitment": True,
-            "prolific": {"participants": 10, "reward_per_hour": 1200,
-                         "estimated_completion_time": 7},
-        }),
+        yaml.safe_dump(
+            {
+                "project": "subjective_randomness",
+                "run_label": "t",
+                "experiments": 2,
+                "coding_agent": "opencode",
+                "prolific_mode": prolific_mode,
+                "confirm_live_recruitment": True,
+                "prolific": {
+                    "participants": 10,
+                    "reward_per_hour": 1200,
+                    "estimated_completion_time": 7,
+                },
+            }
+        ),
         encoding="utf-8",
     )
     monkeypatch.setattr(sys, "argv", ["_pilot_config.py", str(config), "--check"])

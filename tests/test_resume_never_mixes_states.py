@@ -53,11 +53,15 @@ def _write_set(models_dir: Path, names, *, ledger_lines=("{}",)) -> None:
     for name in names:
         (models_dir / f"{name}.py").write_text(f"# {name}\n", encoding="utf-8")
     (models_dir / "models_manifest.yaml").write_text(
-        yaml.safe_dump({"models": [{"name": n, "rationale": f"{n} hypothesis"} for n in names]}),
+        yaml.safe_dump(
+            {"models": [{"name": n, "rationale": f"{n} hypothesis"} for n in names]}
+        ),
         encoding="utf-8",
     )
     if ledger_lines is not None:
-        (models_dir / LEDGER).write_text("\n".join(ledger_lines) + "\n", encoding="utf-8")
+        (models_dir / LEDGER).write_text(
+            "\n".join(ledger_lines) + "\n", encoding="utf-8"
+        )
 
 
 def _crash_on_copy_of(monkeypatch, filename: str) -> None:
@@ -75,7 +79,9 @@ def _crash_on_copy_of(monkeypatch, filename: str) -> None:
 
 
 @pytest.mark.parametrize("killed_at", ["b.py", "models_manifest.yaml", LEDGER])
-def test_a_crashed_carry_forward_leaves_no_set_and_reruns_whole(tmp_path, monkeypatch, killed_at):
+def test_a_crashed_carry_forward_leaves_no_set_and_reruns_whole(
+    tmp_path, monkeypatch, killed_at
+):
     prev, new = tmp_path / "experiment1", tmp_path / "experiment2"
     _write_set(prev / "cognitive_models", ["a", "b"], ledger_lines=['{"x": 1}'])
     (new / "cognitive_models").mkdir(parents=True)  # ensure_experiment_dirs made it
@@ -103,9 +109,13 @@ def test_a_crashed_seeding_leaves_no_set(tmp_path, monkeypatch):
     with monkeypatch.context() as m:
         _crash_on_copy_of(m, "s2.py")
         with pytest.raises(Crash):
-            seed_experiment_models_from_project(exp, "unused", exclude=["gt"], seed_dir=seed_dir)
+            seed_experiment_models_from_project(
+                exp, "unused", exclude=["gt"], seed_dir=seed_dir
+            )
     assert not (exp / "cognitive_models" / "models_manifest.yaml").exists()
-    assert seed_experiment_models_from_project(exp, "unused", exclude=["gt"], seed_dir=seed_dir)
+    assert seed_experiment_models_from_project(
+        exp, "unused", exclude=["gt"], seed_dir=seed_dir
+    )
     assert read_manifest_names(exp / "cognitive_models") == ["s1", "s2"]
 
 
@@ -116,7 +126,9 @@ def _experiment(tmp_path: Path) -> Path:
     exp = tmp_path / "run" / "experiment2"
     for sub in ("cognitive_models", "design", "data", "model_loop"):
         (exp / sub).mkdir(parents=True, exist_ok=True)
-    _write_set(exp / "cognitive_models", ["seed_a", "carried_b"], ledger_lines=['{"old": 1}'])
+    _write_set(
+        exp / "cognitive_models", ["seed_a", "carried_b"], ledger_lines=['{"old": 1}']
+    )
     mlr.init_registry(exp)
     notes = mlr.agent_notes_dir(exp)
     notes.mkdir(parents=True)
@@ -130,28 +142,41 @@ def _fake_loop_and_export(exp: Path, *, best="new_c") -> None:
     loop = exp / "model_loop"
     (loop / "models").mkdir(parents=True, exist_ok=True)
     (loop / "model_posterior.json").write_text(
-        json.dumps({"posteriors": {best: 1.0}, "best_model": best, "comparison": {best: {}}}),
+        json.dumps(
+            {"posteriors": {best: 1.0}, "best_model": best, "comparison": {best: {}}}
+        ),
         encoding="utf-8",
     )
     (loop / "report.md").write_text("# report\n", encoding="utf-8")
     (loop / "history.json").write_text("[]", encoding="utf-8")
     notes = mlr.agent_notes_dir(exp)
-    (notes / "MEMORY.md").write_text("notes about candidates of the attempt\n", encoding="utf-8")
+    (notes / "MEMORY.md").write_text(
+        "notes about candidates of the attempt\n", encoding="utf-8"
+    )
     (notes / "attempt.md").write_text("more\n", encoding="utf-8")
-    _write_set(exp / "cognitive_models", ["seed_a", best], ledger_lines=['{"old": 1}', '{"new": 2}'])
+    _write_set(
+        exp / "cognitive_models",
+        ["seed_a", best],
+        ledger_lines=['{"old": 1}', '{"new": 2}'],
+    )
 
 
 def test_the_stage_records_its_input_and_notes_on_first_start(tmp_path):
     exp = _experiment(tmp_path)
     mlr.begin_model_loop_stage(exp)
-    assert read_manifest_names(exp / mlr.MODEL_LOOP_INPUT_DIRNAME) == ["seed_a", "carried_b"]
+    assert read_manifest_names(exp / mlr.MODEL_LOOP_INPUT_DIRNAME) == [
+        "seed_a",
+        "carried_b",
+    ]
     assert (exp / mlr.AGENT_NOTES_SNAPSHOT_DIRNAME / "MEMORY.md").read_text(
         encoding="utf-8"
     ) == "notes from experiment 1\n"
 
 
 @pytest.mark.parametrize("crash_after", ["export", "registry"])
-def test_a_restart_after_a_crash_redoes_the_stage_from_its_recorded_input(tmp_path, crash_after):
+def test_a_restart_after_a_crash_redoes_the_stage_from_its_recorded_input(
+    tmp_path, crash_after
+):
     exp = _experiment(tmp_path)
     mlr.begin_model_loop_stage(exp)
     _fake_loop_and_export(exp)
@@ -170,7 +195,9 @@ def test_a_restart_after_a_crash_redoes_the_stage_from_its_recorded_input(tmp_pa
     assert get_model_weights(exp / "model_registry.yaml") == {}
     notes = mlr.agent_notes_dir(exp)
     assert sorted(p.name for p in notes.iterdir()) == ["MEMORY.md"]
-    assert (notes / "MEMORY.md").read_text(encoding="utf-8") == "notes from experiment 1\n"
+    assert (notes / "MEMORY.md").read_text(
+        encoding="utf-8"
+    ) == "notes from experiment 1\n"
 
 
 def test_a_crash_while_restoring_the_input_is_itself_recoverable(tmp_path, monkeypatch):
@@ -194,11 +221,16 @@ def test_a_finished_stage_validates_and_records_what_it_exported(tmp_path):
     assert validate_cc_output("5_model_loop", exp)[0]
     record = json.loads((exp / "model_loop" / mlr.EXPORT_RECORD_FILENAME).read_text())
     assert record["models"] == ["seed_a", "new_c"]
-    assert get_model_weights(exp / "model_registry.yaml") == {"seed_a": 0.5, "new_c": 0.5}
+    assert get_model_weights(exp / "model_registry.yaml") == {
+        "seed_a": 0.5,
+        "new_c": 0.5,
+    }
 
 
 @pytest.mark.parametrize("tamper", ["manifest", "registry", "ledger", "file"])
-def test_the_validator_refuses_an_export_that_disagrees_with_its_record(tmp_path, tamper):
+def test_the_validator_refuses_an_export_that_disagrees_with_its_record(
+    tmp_path, tamper
+):
     exp = _experiment(tmp_path)
     mlr.begin_model_loop_stage(exp)
     _fake_loop_and_export(exp)
@@ -209,7 +241,9 @@ def test_the_validator_refuses_an_export_that_disagrees_with_its_record(tmp_path
     elif tamper == "registry":
         from src.registry.io import write_registry
 
-        write_registry(exp / "model_registry.yaml", {"seed_a": 1.0}, reserved_for_new=0.0)
+        write_registry(
+            exp / "model_registry.yaml", {"seed_a": 1.0}, reserved_for_new=0.0
+        )
     elif tamper == "ledger":
         (models / LEDGER).unlink()
     else:
@@ -238,7 +272,9 @@ def test_the_design_reads_the_recorded_input_set(tmp_path):
 # ── the holdout harness, end to end ──────────────────────────────────────
 
 
-def test_a_cell_killed_between_export_and_registry_redoes_its_model_loop(tmp_path, monkeypatch):
+def test_a_cell_killed_between_export_and_registry_redoes_its_model_loop(
+    tmp_path, monkeypatch
+):
     """The harness resumes an experiment whose loop exported and was killed
     before the registry: the rerun loop starts from the carried set (not the
     export), with the notes as they were, and the stage then completes."""
@@ -258,10 +294,12 @@ def test_a_cell_killed_between_export_and_registry_redoes_its_model_loop(tmp_pat
     seen = []
 
     def exporting_loop(exp_dir, **kwargs):
-        seen.append({
-            "set": read_manifest_names(exp_dir / "cognitive_models"),
-            "notes": sorted(p.name for p in mlr.agent_notes_dir(exp_dir).glob("*")),
-        })
+        seen.append(
+            {
+                "set": read_manifest_names(exp_dir / "cognitive_models"),
+                "notes": sorted(p.name for p in mlr.agent_notes_dir(exp_dir).glob("*")),
+            }
+        )
         loop_dir = stub(exp_dir, **kwargs)
         notes = mlr.agent_notes_dir(exp_dir)
         notes.mkdir(exist_ok=True)
@@ -276,9 +314,13 @@ def test_a_cell_killed_between_export_and_registry_redoes_its_model_loop(tmp_pat
         )
         return loop_dir
 
-    monkeypatch.setattr(holdout_recovery, "run_inner_model_loop_programmatic", exporting_loop)
+    monkeypatch.setattr(
+        holdout_recovery, "run_inner_model_loop_programmatic", exporting_loop
+    )
     monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
-    monkeypatch.setattr(holdout_recovery, "generate_responses", _stub_generate_responses([]))
+    monkeypatch.setattr(
+        holdout_recovery, "generate_responses", _stub_generate_responses([])
+    )
     real_finish = mlr.finish_model_loop_stage
 
     def killed(exp_dir):
@@ -287,10 +329,21 @@ def test_a_cell_killed_between_export_and_registry_redoes_its_model_loop(tmp_pat
 
     run = dict(
         gt_model="local_representativeness",
-        gt_params={"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
-        run_root=run_root, seed_models_dir=SEED_MODELS_DIR, n_experiments=1,
-        n_participants=2, inner_loop_iterations=0, candidate_count=0, fit_kwargs={},
-        seed=0, resume=True,
+        gt_params={
+            "theta_alt": 0.65,
+            "alt_weight": 0.55,
+            "beta": 4.0,
+            "side_bias": 0.0,
+        },
+        run_root=run_root,
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        n_participants=2,
+        inner_loop_iterations=0,
+        candidate_count=0,
+        fit_kwargs={},
+        seed=0,
+        resume=True,
     )
     monkeypatch.setattr(holdout_recovery, "finish_model_loop_stage", killed)
     with pytest.raises(Crash):
@@ -303,7 +356,9 @@ def test_a_cell_killed_between_export_and_registry_redoes_its_model_loop(tmp_pat
     assert [s["set"] for s in seen] == [started_with, started_with]
     assert [s["notes"] for s in seen] == [[], []]
     assert validate_cc_output("5_model_loop", exp_dir)[0]
-    assert read_manifest_names(exp_dir / "cognitive_models") == started_with + ["new_model"]
+    assert read_manifest_names(exp_dir / "cognitive_models") == started_with + [
+        "new_model"
+    ]
     assert sorted(get_model_weights(exp_dir / "model_registry.yaml")) == sorted(
         started_with + ["new_model"]
     )
@@ -318,17 +373,37 @@ def test_run_py_carries_forward_only_a_finished_model_loop(tmp_path, monkeypatch
     exp2 = outer_run.experiment_dir("subjective_randomness", 2)
     exp2.mkdir(parents=True)
     stages = dict(
-        project_id="subjective_randomness", exp_num=2, exp_dir_path=exp2,
-        mode="simulated_participants_nobrowser", n_participants=2, validate=True,
-        ground_truth_model=None, agent_filter=None, inner_loop_iterations=0,
-        inner_loop_candidates=0, fit_kwargs=None, backend=None,
-        participant_backend="gemini", participant_model=None, deploy_target="none",
-        collection_owner="x", firebase_project=None, firebase_region="x",
-        prolific_mode="none", deploy_only=False, prepare_smoke_experiment=False,
-        enable_critique=False, n_critique_proposals=None, critique_alpha=None,
-        run_label=None, max_validation_repairs=0, candidate_hints=None,
-        novelty_rmse_threshold=None, prune_dse_multiplier=None,
-        candidate_parallelism=None, publish_another_prolific_study=False,
+        project_id="subjective_randomness",
+        exp_num=2,
+        exp_dir_path=exp2,
+        mode="simulated_participants_nobrowser",
+        n_participants=2,
+        validate=True,
+        ground_truth_model=None,
+        agent_filter=None,
+        inner_loop_iterations=0,
+        inner_loop_candidates=0,
+        fit_kwargs=None,
+        backend=None,
+        participant_backend="gemini",
+        participant_model=None,
+        deploy_target="none",
+        collection_owner="x",
+        firebase_project=None,
+        firebase_region="x",
+        prolific_mode="none",
+        deploy_only=False,
+        prepare_smoke_experiment=False,
+        enable_critique=False,
+        n_critique_proposals=None,
+        critique_alpha=None,
+        run_label=None,
+        max_validation_repairs=0,
+        candidate_hints=None,
+        novelty_rmse_threshold=None,
+        prune_dse_multiplier=None,
+        candidate_parallelism=None,
+        publish_another_prolific_study=False,
     )
     with pytest.raises(SystemExit):
         outer_run._run_experiment_stages(**stages)

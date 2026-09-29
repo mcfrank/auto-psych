@@ -23,14 +23,15 @@ def _run(tmp_path, lock, job, live_jobs):
     # A fake squeue: the job id for "live" jobs, and — like the real one — an
     # error on stdout for a job that has left the queue.
     squeue.write_text(
-        "#!/bin/bash\njob=\"$3\"\n"
+        '#!/bin/bash\njob="$3"\n'
         + "".join(f'[[ "$job" == "{j}" ]] && echo "{j}" && exit 0\n' for j in live_jobs)
         + 'echo "slurm_load_jobs error: Invalid job id specified"\nexit 1\n'
     )
     squeue.chmod(0o755)
     env = {**os.environ, "SQUEUE": str(squeue)}
-    return subprocess.run(["bash", str(LOCK), str(lock), job], env=env,
-                          capture_output=True, text=True)
+    return subprocess.run(
+        ["bash", str(LOCK), str(lock), job], env=env, capture_output=True, text=True
+    )
 
 
 def test_a_free_cell_is_taken(tmp_path):

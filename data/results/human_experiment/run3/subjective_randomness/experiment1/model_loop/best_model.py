@@ -8,13 +8,13 @@ with pm.Model() as model:
     # Read the necessary precomputed columns
     n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
     n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
-    
+
     imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
     imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
-    
+
     p_alts_a = pm.Data("p_alts_a", np.zeros(1, dtype="float64"))
     p_alts_b = pm.Data("p_alts_b", np.zeros(1, dtype="float64"))
-    
+
     chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
 
     # Free cognitive parameters
@@ -28,20 +28,20 @@ with pm.Model() as model:
     # Scale absolute deviations by the square root of the relevant sample size
     sqrt_n_a = pt.sqrt(pt.cast(n_a, "float64"))
     sqrt_n_b = pt.sqrt(pt.cast(n_b, "float64"))
-    
+
     n_alts_a = pt.maximum(n_a - 1, 1)
     n_alts_b = pt.maximum(n_b - 1, 1)
     sqrt_n_alts_a = pt.sqrt(pt.cast(n_alts_a, "float64"))
     sqrt_n_alts_b = pt.sqrt(pt.cast(n_alts_b, "float64"))
 
     score_a = -(
-        balance_weight * sqrt_n_a * imbalance_a + 
-        alt_weight * sqrt_n_alts_a * pt.abs(p_alts_a - theta_alt)
+        balance_weight * sqrt_n_a * imbalance_a
+        + alt_weight * sqrt_n_alts_a * pt.abs(p_alts_a - theta_alt)
     )
-    
+
     score_b = -(
-        balance_weight * sqrt_n_b * imbalance_b + 
-        alt_weight * sqrt_n_alts_b * pt.abs(p_alts_b - theta_alt)
+        balance_weight * sqrt_n_b * imbalance_b
+        + alt_weight * sqrt_n_alts_b * pt.abs(p_alts_b - theta_alt)
     )
 
     p_left_raw = pm.math.sigmoid(beta * (score_a - score_b) + side_bias)

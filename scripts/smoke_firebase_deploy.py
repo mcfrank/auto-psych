@@ -239,7 +239,10 @@ def _collect_and_verify(args: Args, exp_dir: Path, manifest) -> None:
         row.get("participant_id_str") or row.get("participant_id") for row in rows
     }
     print("\n== Verify ==", flush=True)
-    print(f"  {csv_path}: {len(rows)} rows from {len(participants)} participant(s)", flush=True)
+    print(
+        f"  {csv_path}: {len(rows)} rows from {len(participants)} participant(s)",
+        flush=True,
+    )
 
     if not rows:
         _fail(
@@ -257,7 +260,10 @@ def _collect_and_verify(args: Args, exp_dir: Path, manifest) -> None:
             manifest.collection_session_id,
         )
         n_result_rows = max(0, len(raw.strip().splitlines()) - 1)
-        print(f"  /results endpoint returned {n_result_rows} data row(s) directly", flush=True)
+        print(
+            f"  /results endpoint returned {n_result_rows} data row(s) directly",
+            flush=True,
+        )
     except Exception as exc:
         print(f"  (could not re-fetch /results directly: {exc})", flush=True)
 
@@ -268,7 +274,10 @@ def _collect_and_verify(args: Args, exp_dir: Path, manifest) -> None:
         "  Delete this session in the Firebase console if you don't want the data.",
         flush=True,
     )
-    print(f"\nPASS: {len(rows)} rows round-tripped through the deployed setup.", flush=True)
+    print(
+        f"\nPASS: {len(rows)} rows round-tripped through the deployed setup.",
+        flush=True,
+    )
 
 
 def main(args: Args) -> None:

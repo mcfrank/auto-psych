@@ -6,8 +6,10 @@ import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
+
 def compute_features(sequence_a: str, sequence_b: str) -> dict:
     """Return the sum of squared run lengths for each sequence."""
+
     def get_sum_sq_runs(seq):
         seq = seq.strip().upper()
         if not seq:
@@ -15,7 +17,7 @@ def compute_features(sequence_a: str, sequence_b: str) -> dict:
         runs = []
         current_run = 1
         for i in range(1, len(seq)):
-            if seq[i] == seq[i-1]:
+            if seq[i] == seq[i - 1]:
                 current_run += 1
             else:
                 runs.append(current_run)
@@ -25,8 +27,9 @@ def compute_features(sequence_a: str, sequence_b: str) -> dict:
 
     return {
         "sum_sq_runs_a": get_sum_sq_runs(sequence_a),
-        "sum_sq_runs_b": get_sum_sq_runs(sequence_b)
+        "sum_sq_runs_b": get_sum_sq_runs(sequence_b),
     }
+
 
 with pm.Model() as model:
     # Stimulus inputs
@@ -34,10 +37,10 @@ with pm.Model() as model:
     n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
     imbalance_a = pm.Data("imbalance_a", np.zeros(1, dtype="float64"))
     imbalance_b = pm.Data("imbalance_b", np.zeros(1, dtype="float64"))
-    
+
     alts_a = pm.Data("alts_a", np.zeros(1, dtype="int64"))
     alts_b = pm.Data("alts_b", np.zeros(1, dtype="int64"))
-    
+
     sum_sq_runs_a = pm.Data("sum_sq_runs_a", np.zeros(1, dtype="float64"))
     sum_sq_runs_b = pm.Data("sum_sq_runs_b", np.zeros(1, dtype="float64"))
 
@@ -47,7 +50,7 @@ with pm.Model() as model:
     # Free cognitive parameters
     ideal_run = pm.Uniform("ideal_run", lower=1.0, upper=5.0)
     theta_imb = pm.Uniform("theta_imb", lower=0.0, upper=1.0)
-    
+
     run_weight = pm.Uniform("run_weight", lower=0.01, upper=0.99)
     balance_weight = 1.0 - run_weight
 
@@ -66,8 +69,12 @@ with pm.Model() as model:
     # The penalty for the run-length prototype is the sum of (L_i - ideal_run)^2 over all runs.
     # Expanded mathematically: sum(L_i^2) - 2 * ideal_run * sum(L_i) + num_runs * ideal_run^2
     # Since sum(L_i) is just the total length n
-    run_penalty_a = sum_sq_runs_a - 2.0 * ideal_run * n_a_f + num_runs_a * (ideal_run ** 2)
-    run_penalty_b = sum_sq_runs_b - 2.0 * ideal_run * n_b_f + num_runs_b * (ideal_run ** 2)
+    run_penalty_a = (
+        sum_sq_runs_a - 2.0 * ideal_run * n_a_f + num_runs_a * (ideal_run**2)
+    )
+    run_penalty_b = (
+        sum_sq_runs_b - 2.0 * ideal_run * n_b_f + num_runs_b * (ideal_run**2)
+    )
 
     # Because this penalty scales with sequence length (it's a sum over runs),
     # we average it per-item to combine with the item-level baseline evidence,
@@ -81,10 +88,12 @@ with pm.Model() as model:
 
     # Evidence accumulation: length * (baseline - penalty)
     score_a = n_a_f * (
-        base_evidence - (balance_weight * imb_penalty_a + run_weight * avg_run_penalty_a)
+        base_evidence
+        - (balance_weight * imb_penalty_a + run_weight * avg_run_penalty_a)
     )
     score_b = n_b_f * (
-        base_evidence - (balance_weight * imb_penalty_b + run_weight * avg_run_penalty_b)
+        base_evidence
+        - (balance_weight * imb_penalty_b + run_weight * avg_run_penalty_b)
     )
 
     # Sigmoid link to probability, clamped for numerical safety

@@ -54,8 +54,7 @@ def test_default_hint_set_is_a_broad_battery():
 
 def test_each_candidate_gets_a_distinct_default_hint(tmp_path):
     briefs = [
-        _context(tmp_path, idx)["brief"]
-        for idx in range(len(DEFAULT_CANDIDATE_HINTS))
+        _context(tmp_path, idx)["brief"] for idx in range(len(DEFAULT_CANDIDATE_HINTS))
     ]
     for hint, brief in zip(DEFAULT_CANDIDATE_HINTS, briefs):
         assert hint in brief

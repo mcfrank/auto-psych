@@ -32,6 +32,7 @@ def _argmax_posteriors(posteriors: dict, source: object) -> str | None:
     except (TypeError, ValueError) as exc:
         raise ValueError(f"Non-numeric posterior values in {source}: {exc}") from exc
 
+
 from src.viewer.models import (
     Candidate,
     CognitiveModel,
@@ -53,8 +54,15 @@ from src.viewer.transcripts import strip_ansi
 
 # Directories that are never experiments / runs in their own right.
 _NON_EXPERIMENT_DIRS = {"analysis", "__pycache__"}
-_CACHE_DIRS = {"mcmc_cache", "probe_cache", ".fit_cache", "__pycache__",
-               ".DS_Store", "models", "test_stats"}
+_CACHE_DIRS = {
+    "mcmc_cache",
+    "probe_cache",
+    ".fit_cache",
+    "__pycache__",
+    ".DS_Store",
+    "models",
+    "test_stats",
+}
 _MAX_PREVIEW_ROWS = 25
 _MAX_RUN_DEPTH = 8
 
@@ -121,7 +129,10 @@ def _scan_theory(exp_dir: Path) -> TheoryStage:
         # Since the descriptive-naming change (2026-07), winners are exported
         # under their own names with real hypotheses, which this heuristic
         # cannot distinguish from seeds; they render as ordinary models.
-        is_carried = name == "inner_loop_model" or "inner model-improvement loop" in rationale.lower()
+        is_carried = (
+            name == "inner_loop_model"
+            or "inner model-improvement loop" in rationale.lower()
+        )
         models.append(
             CognitiveModel(
                 name=name,
@@ -169,10 +180,18 @@ def _scan_data(exp_dir: Path) -> DataSummary | None:
         columns = reader.fieldnames or []
         rows = list(reader)
 
-    participants = {r.get("participant_id") for r in rows if r.get("participant_id") not in (None, "")}
+    participants = {
+        r.get("participant_id")
+        for r in rows
+        if r.get("participant_id") not in (None, "")
+    }
     p_chose_left = None
     if "chose_left" in columns:
-        vals = [float(r["chose_left"]) for r in rows if r.get("chose_left") not in (None, "")]
+        vals = [
+            float(r["chose_left"])
+            for r in rows
+            if r.get("chose_left") not in (None, "")
+        ]
         if vals:
             p_chose_left = sum(vals) / len(vals)
 
@@ -270,7 +289,10 @@ def _quick_loop_stats(ml_dir: Path) -> tuple[str | None, int | None, int | None]
         )
     iters = _iter_dirs(ml_dir) if ml_dir.is_dir() else []
     n_cand = sum(
-        1 for it in iters for c in it.iterdir() if c.is_dir() and _CAND_DIR.match(c.name)
+        1
+        for it in iters
+        for c in it.iterdir()
+        if c.is_dir() and _CAND_DIR.match(c.name)
     )
     return best, (len(iters) or None), (n_cand or None)
 
@@ -334,7 +356,9 @@ def _scan_critique_dir(cdir: Path, iteration: int | None) -> CritiqueRound:
                 used.add(name)
                 stats.append(_stat_from_result(name, result, description, code))
             else:
-                stats.append(CritiqueStat(name=name, description=description, code=code))
+                stats.append(
+                    CritiqueStat(name=name, description=description, code=code)
+                )
     # PPC results that had no matching source file are still surfaced.
     for name, result in results_by_name.items():
         if name not in used:
@@ -359,7 +383,11 @@ def _scan_critiques(exp_dir: Path) -> list[CritiqueRound]:
         for iter_dir in _iter_dirs(ml_dir):
             cdir = iter_dir / "critique"
             if cdir.is_dir():
-                rounds.append(_scan_critique_dir(cdir, int(_ITER_DIR.match(iter_dir.name).group(1))))
+                rounds.append(
+                    _scan_critique_dir(
+                        cdir, int(_ITER_DIR.match(iter_dir.name).group(1))
+                    )
+                )
     exp_critique = exp_dir / "critique"
     if exp_critique.is_dir():
         rounds.append(_scan_critique_dir(exp_critique, None))
@@ -397,7 +425,9 @@ def scan_loop_dir(loop_dir: Path, project: str, name: str) -> Experiment:
     return Experiment(
         project=project,
         name=name,
-        data=_scan_data(loop_dir.parent) if (loop_dir.parent / "data").is_dir() else None,
+        data=_scan_data(loop_dir.parent)
+        if (loop_dir.parent / "data").is_dir()
+        else None,
         model_loop=model_loop,
         critiques=_scan_critiques(loop_dir),
         best_model=_best_model(model_loop),
@@ -430,8 +460,11 @@ def _run_units(run_dir: Path) -> list[tuple[str, str]]:
     ``"."`` when the run dir is itself the experiment / model loop.
     """
     exp_children = sorted(
-        (c.name for c in run_dir.iterdir()
-         if _is_experiment_dir(c) and c.name not in _NON_EXPERIMENT_DIRS),
+        (
+            c.name
+            for c in run_dir.iterdir()
+            if _is_experiment_dir(c) and c.name not in _NON_EXPERIMENT_DIRS
+        ),
         key=_exp_sort_key,
     )
     if exp_children:
@@ -465,7 +498,9 @@ def find_runs(data_root: Path) -> list[RunRef]:
         if _is_run(d):
             units = _run_units(d)
             kind = "loop" if all(k == "loop" for _, k in units) else "experiments"
-            runs.append(RunRef(path=rel, label=d.name, kind=kind, n_experiments=len(units)))
+            runs.append(
+                RunRef(path=rel, label=d.name, kind=kind, n_experiments=len(units))
+            )
             return  # a run is a leaf — do not descend into its experiments
         for child in sorted(c for c in d.iterdir() if c.is_dir()):
             walk(child, f"{rel}/{child.name}" if rel else child.name, depth + 1)
@@ -499,9 +534,11 @@ def scan_run(data_root: Path, run_path: str) -> Run:
     if not units:
         raise FileNotFoundError(f"Not a run: {run_path}")
 
-    figures = sorted(
-        f"analysis/{f.name}" for f in (run_dir / "analysis").glob("*.png")
-    ) if (run_dir / "analysis").is_dir() else []
+    figures = (
+        sorted(f"analysis/{f.name}" for f in (run_dir / "analysis").glob("*.png"))
+        if (run_dir / "analysis").is_dir()
+        else []
+    )
 
     experiments = []
     for unit, kind in units:
@@ -515,7 +552,9 @@ def scan_run(data_root: Path, run_path: str) -> Run:
                 n_candidates=n_cand,
             )
         )
-    return Run(path=run_path, label=run_dir.name, figures=figures, experiments=experiments)
+    return Run(
+        path=run_path, label=run_dir.name, figures=figures, experiments=experiments
+    )
 
 
 def scan_run_experiment(data_root: Path, run_path: str, unit: str) -> Experiment:

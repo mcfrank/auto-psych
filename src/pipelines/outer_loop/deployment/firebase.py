@@ -328,7 +328,9 @@ def relativize_config_fetch(index_html: str) -> str:
     ).replace(f"'/{CLIENT_CONFIG_FILENAME}'", f"'{CLIENT_CONFIG_FILENAME}'")
 
 
-def stage_experiment(exp_dir: Path, manifest: DeploymentManifest, public_dir: Path) -> Path:
+def stage_experiment(
+    exp_dir: Path, manifest: DeploymentManifest, public_dir: Path
+) -> Path:
     source_dir = exp_dir / "experiment"
     index_path = source_dir / "index.html"
     if not index_path.exists():
@@ -377,11 +379,17 @@ def write_firebase_config(config_path: Path, manifest: DeploymentManifest) -> Pa
         "rewrites": [
             {
                 "source": "/submit",
-                "function": {"functionId": "submit", "region": manifest.firebase_region},
+                "function": {
+                    "functionId": "submit",
+                    "region": manifest.firebase_region,
+                },
             },
             {
                 "source": "/results",
-                "function": {"functionId": "results", "region": manifest.firebase_region},
+                "function": {
+                    "functionId": "results",
+                    "region": manifest.firebase_region,
+                },
             },
             {
                 "source": "/register_session",
@@ -406,7 +414,9 @@ def write_firebase_config(config_path: Path, manifest: DeploymentManifest) -> Pa
         "firestore": {"rules": "firestore.rules"},
     }
     config_path.parent.mkdir(parents=True, exist_ok=True)
-    config_path.write_text(json.dumps(config, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    config_path.write_text(
+        json.dumps(config, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
     return config_path
 
 
@@ -414,7 +424,9 @@ def ensure_functions_dependencies(repo_root: Path) -> None:
     functions_dir = repo_root / "functions"
     package_json = functions_dir / "package.json"
     if not package_json.exists():
-        raise DeploymentError(f"Firebase Functions package.json not found at {package_json}")
+        raise DeploymentError(
+            f"Firebase Functions package.json not found at {package_json}"
+        )
 
     required_packages = [
         functions_dir / "node_modules" / "firebase-functions",
@@ -506,8 +518,11 @@ def _ensure_hosting_site(site: str, project: str, repo_root: Path, env: dict) ->
     firebase = shutil.which("firebase")
     base = [firebase] if firebase else ["npx", "-y", "firebase-tools"]
     cmd = base + [
-        "hosting:sites:create", site,
-        "--project", project, "--non-interactive",
+        "hosting:sites:create",
+        site,
+        "--project",
+        project,
+        "--non-interactive",
     ]
     result = subprocess.run(cmd, cwd=repo_root, text=True, capture_output=True, env=env)
     if result.returncode != 0:
@@ -564,7 +579,9 @@ def _verify_hosting_live(url: str, *, attempts: int = 12, delay: float = 6.0) ->
     )
 
 
-def run_firebase_deploy(repo_root: Path, manifest: DeploymentManifest, config_path: Path) -> None:
+def run_firebase_deploy(
+    repo_root: Path, manifest: DeploymentManifest, config_path: Path
+) -> None:
     if not manifest.firebase_project:
         raise DeploymentError("Firebase deploy requires firebase_project")
     ensure_functions_dependencies(repo_root)
@@ -575,7 +592,9 @@ def run_firebase_deploy(repo_root: Path, manifest: DeploymentManifest, config_pa
     # success without actually releasing hosting (the experiment page stays 404);
     # a standalone hosting deploy releases reliably.
     with _deploy_lock(project):
-        _run_one_deploy(_deploy_argv("functions,firestore", project, config_path), repo_root, env)
+        _run_one_deploy(
+            _deploy_argv("functions,firestore", project, config_path), repo_root, env
+        )
         # When deploying to a non-default (per-run) site, make sure it exists
         # first so the hosting deploy targets an isolated site instead of the
         # shared one (which parallel deploys would otherwise overwrite).

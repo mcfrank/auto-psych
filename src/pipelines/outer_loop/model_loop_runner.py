@@ -145,7 +145,8 @@ def run_starting_models(exp_dir: Path, project_id: str) -> set[str]:
     write_text_atomically(
         record,
         json.dumps(
-            {"starting_models": sorted(names), "starting_models_prunable": True}, indent=2
+            {"starting_models": sorted(names), "starting_models_prunable": True},
+            indent=2,
         )
         + "\n",
     )
@@ -174,8 +175,8 @@ def _read_starting_models_record(record: Path) -> Dict[str, Any]:
     names = data.get("starting_models") if isinstance(data, dict) else None
     if not isinstance(names, list) or not all(isinstance(n, str) for n in names):
         raise ValueError(
-            f"{record} must hold {{\"starting_models\": [names], "
-            f"\"starting_models_prunable\": true}}; got {data!r}"
+            f'{record} must hold {{"starting_models": [names], '
+            f'"starting_models_prunable": true}}; got {data!r}'
         )
     return data
 
@@ -201,7 +202,9 @@ def _project_seed_names(project_id: str, models_dir: Path) -> set[str]:
     return set(read_manifest_names(seed_dir)) & set(read_manifest_names(models_dir))
 
 
-def _export_inner_loop_models(exp_dir: Path, loop_dir: Path, *, best_model: str) -> Path:
+def _export_inner_loop_models(
+    exp_dir: Path, loop_dir: Path, *, best_model: str
+) -> Path:
     """Record the inner loop's live set in `cognitive_models/` + manifest.
 
     After the loop, ``cognitive_models/`` — the set the next experiment starts
@@ -276,11 +279,16 @@ def _export_inner_loop_models(exp_dir: Path, loop_dir: Path, *, best_model: str)
     out_dir = exp_dir / "cognitive_models"
     previous = read_manifest_entries(out_dir, missing_ok=True)
     kept = [entry for entry in previous if entry["name"] in rationales]
-    removed = [entry["name"] for entry in previous if entry["name"] not in
-               {kept_entry["name"] for kept_entry in kept}]
+    removed = [
+        entry["name"]
+        for entry in previous
+        if entry["name"] not in {kept_entry["name"] for kept_entry in kept}
+    ]
 
     existing = {entry["name"] for entry in kept}
-    new_names = [entry["name"] for entry in zoo_entries if entry["name"] not in existing]
+    new_names = [
+        entry["name"] for entry in zoo_entries if entry["name"] not in existing
+    ]
     # Assign export names best-first so a zoo-named best takes `inner_loop_model`.
     export_names = {}
     taken = set(existing)
@@ -295,15 +303,20 @@ def _export_inner_loop_models(exp_dir: Path, loop_dir: Path, *, best_model: str)
         taken.add(export_name)
         export_names[name] = export_name
     exported = list(kept) + [
-        {"name": export_names[name], "rationale": rationales[name]} for name in new_names
+        {"name": export_names[name], "rationale": rationales[name]}
+        for name in new_names
     ]
     ledger = loop_dir / LEDGER_FILENAME
 
     def build(staging: Path) -> None:
         for entry in kept:
-            shutil.copyfile(out_dir / f"{entry['name']}.py", staging / f"{entry['name']}.py")
+            shutil.copyfile(
+                out_dir / f"{entry['name']}.py", staging / f"{entry['name']}.py"
+            )
         for name in new_names:
-            shutil.copyfile(zoo_dir / f"{name}.py", staging / f"{export_names[name]}.py")
+            shutil.copyfile(
+                zoo_dir / f"{name}.py", staging / f"{export_names[name]}.py"
+            )
         manifest_path(staging).write_text(
             yaml.safe_dump({"models": exported}, sort_keys=False), encoding="utf-8"
         )

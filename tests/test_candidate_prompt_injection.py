@@ -87,9 +87,7 @@ def test_write_candidate_context_returns_the_written_documents(tmp_path):
         current_posterior=None,
     )
 
-    assert docs["context"] == (candidate_dir / "CONTEXT.md").read_text(
-        encoding="utf-8"
-    )
+    assert docs["context"] == (candidate_dir / "CONTEXT.md").read_text(encoding="utf-8")
     assert docs["brief"] == (candidate_dir / "CANDIDATE_BRIEF.md").read_text(
         encoding="utf-8"
     )

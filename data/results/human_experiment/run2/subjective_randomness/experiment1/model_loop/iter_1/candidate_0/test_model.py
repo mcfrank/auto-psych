@@ -16,7 +16,9 @@ with pm.Model() as model:
     theta_alt = pm.Uniform("theta_alt", lower=0.35, upper=0.95)
     alt_weight = pm.Uniform("alt_weight", lower=0.01, upper=0.99)
     asym = pm.Uniform("asym", lower=0.01, upper=0.99)
-    beta = pm.Uniform("beta", lower=0.2, upper=25.0) # increased upper bound because squared values are smaller
+    beta = pm.Uniform(
+        "beta", lower=0.2, upper=25.0
+    )  # increased upper bound because squared values are smaller
     side_bias = pm.Uniform("side_bias", lower=-2.0, upper=2.0)
 
     balance_weight = 1.0 - alt_weight
@@ -24,17 +26,17 @@ with pm.Model() as model:
     # Quadratic asymmetric distance for alternation rate
     diff_a = p_alts_a - theta_alt
     alt_penalty_a = pm.math.switch(
-        diff_a > 0, asym * (diff_a ** 2), (1.0 - asym) * (diff_a ** 2)
+        diff_a > 0, asym * (diff_a**2), (1.0 - asym) * (diff_a**2)
     )
 
     diff_b = p_alts_b - theta_alt
     alt_penalty_b = pm.math.switch(
-        diff_b > 0, asym * (diff_b ** 2), (1.0 - asym) * (diff_b ** 2)
+        diff_b > 0, asym * (diff_b**2), (1.0 - asym) * (diff_b**2)
     )
 
     # Quadratic penalty for imbalance
-    imbalance_penalty_a = imbalance_a ** 2
-    imbalance_penalty_b = imbalance_b ** 2
+    imbalance_penalty_a = imbalance_a**2
+    imbalance_penalty_b = imbalance_b**2
 
     score_a = -(balance_weight * imbalance_penalty_a + alt_weight * alt_penalty_a)
     score_b = -(balance_weight * imbalance_penalty_b + alt_weight * alt_penalty_b)

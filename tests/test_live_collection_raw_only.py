@@ -48,7 +48,8 @@ def _collect_live_results(tmp_path, monkeypatch):
     )
     monkeypatch.setattr(collect, "_poll_prolific_until_target", lambda *a, **k: 2)
     monkeypatch.setattr(
-        collect.urllib.request, "urlopen",
+        collect.urllib.request,
+        "urlopen",
         lambda *a, **k: io.BytesIO(RESULTS_CSV.encode("utf-8")),
     )
     orchestrator.run_collect_programmatic(
@@ -72,17 +73,20 @@ def _prepare_model_loop(exp_dir, monkeypatch):
 
     def first_round(responses_path, loop_dir, **kw):
         _write_candidate_context(
-            loop_dir / "iter_0" / "candidate_0", responses_path, models_dir,
-            iteration=0, candidate_idx=0, candidate_count=1, current_posterior=None,
+            loop_dir / "iter_0" / "candidate_0",
+            responses_path,
+            models_dir,
+            iteration=0,
+            candidate_idx=0,
+            candidate_count=1,
+            current_posterior=None,
         )
         return {"best_model": "falk_konold_dp"}
 
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop", first_round
     )
-    monkeypatch.setattr(
-        mlr, "_export_inner_loop_models", lambda e, l, *, best_model: e
-    )
+    monkeypatch.setattr(mlr, "_export_inner_loop_models", lambda e, l, *, best_model: e)
     mlr.run_inner_model_loop_programmatic(
         exp_dir, max_iterations=1, candidate_count=1, project_id=PROJECT
     )
@@ -105,10 +109,14 @@ def test_agents_see_only_raw_columns_and_no_prolific_id(tmp_path, monkeypatch):
     for name in ("data/responses.csv", "model_loop/responses.csv"):
         header = (exp_dir / name).read_text(encoding="utf-8").splitlines()[0]
         assert header.split(",") == list(RAW_RESPONSE_COLUMNS)
-    assert (exp_dir / "model_loop" / "responses.csv").read_text(encoding="utf-8").count("\n") == 5
+    assert (exp_dir / "model_loop" / "responses.csv").read_text(encoding="utf-8").count(
+        "\n"
+    ) == 5
 
 
-def test_the_researchers_keep_the_raw_collected_file_outside_the_experiment(tmp_path, monkeypatch):
+def test_the_researchers_keep_the_raw_collected_file_outside_the_experiment(
+    tmp_path, monkeypatch
+):
     exp_dir = _collect_live_results(tmp_path, monkeypatch)
 
     raw = orchestrator.raw_collected_responses_path(exp_dir)
@@ -122,7 +130,9 @@ def test_pooling_keeps_only_raw_columns_from_an_older_wide_file(tmp_path, monkey
     monkeypatch.setenv("AUTO_PSYCH_OUTPUT_DIR", str(tmp_path / "output"))
     exp_dir = orchestrator.experiment_dir(PROJECT, 1)
     (exp_dir / "data").mkdir(parents=True)
-    (exp_dir / "data" / "responses.csv").write_text(RESULTS_CSV + "\n", encoding="utf-8")
+    (exp_dir / "data" / "responses.csv").write_text(
+        RESULTS_CSV + "\n", encoding="utf-8"
+    )
 
     rows = mlr._pooled_response_rows(exp_dir)
     assert [list(row) for row in rows] == [list(RAW_RESPONSE_COLUMNS)] * 4

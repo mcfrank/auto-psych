@@ -48,32 +48,107 @@ CANDIDATE_IMPORT_ALLOWLIST = frozenset(
 # denylist over the known routes, not a proof: the harness also forgets its
 # command line once parsed (scripts/subjective_randomness/holdout_recovery.py).
 FORBIDDEN_NAMES = frozenset(
-    {"open", "__import__", "exec", "eval", "compile", "globals", "vars", "locals",
-     "breakpoint", "input", "__builtins__", "getattr", "setattr", "delattr",
-     "__loader__", "__spec__"}
+    {
+        "open",
+        "__import__",
+        "exec",
+        "eval",
+        "compile",
+        "globals",
+        "vars",
+        "locals",
+        "breakpoint",
+        "input",
+        "__builtins__",
+        "getattr",
+        "setattr",
+        "delattr",
+        "__loader__",
+        "__spec__",
+    }
 )
 FORBIDDEN_ATTRIBUTES = frozenset(
     {
         # modules reachable as attributes of allowed ones
-        "sys", "os", "builtins", "io", "subprocess", "pathlib", "shutil",
-        "importlib", "ctypes", "ctypeslib", "socket", "pickle", "marshal",
-        "npyio", "_datasource", "modules",
+        "sys",
+        "os",
+        "builtins",
+        "io",
+        "subprocess",
+        "pathlib",
+        "shutil",
+        "importlib",
+        "ctypes",
+        "ctypeslib",
+        "socket",
+        "pickle",
+        "marshal",
+        "npyio",
+        "_datasource",
+        "modules",
         # file readers and writers
-        "open", "read", "write", "load", "loadtxt", "genfromtxt",
-        "fromfile", "fromregex", "memmap", "open_memmap", "DataSource",
-        "loadmat", "savemat", "from_netcdf", "from_json", "from_zarr",
-        "load_arviz_data", "save", "savez", "savez_compressed", "savetxt",
-        "tofile", "to_netcdf", "to_csv", "to_pickle", "to_parquet", "to_hdf",
-        "to_sql", "to_excel", "to_feather", "to_stata",
+        "open",
+        "read",
+        "write",
+        "load",
+        "loadtxt",
+        "genfromtxt",
+        "fromfile",
+        "fromregex",
+        "memmap",
+        "open_memmap",
+        "DataSource",
+        "loadmat",
+        "savemat",
+        "from_netcdf",
+        "from_json",
+        "from_zarr",
+        "load_arviz_data",
+        "save",
+        "savez",
+        "savez_compressed",
+        "savetxt",
+        "tofile",
+        "to_netcdf",
+        "to_csv",
+        "to_pickle",
+        "to_parquet",
+        "to_hdf",
+        "to_sql",
+        "to_excel",
+        "to_feather",
+        "to_stata",
         # getattr by another name
-        "attrgetter", "methodcaller",
+        "attrgetter",
+        "methodcaller",
         # introspection escapes
-        "__globals__", "__builtins__", "__subclasses__", "__code__",
-        "__getattribute__", "__dict__", "__bases__", "__base__", "__mro__",
-        "__traceback__", "__loader__", "__spec__", "__closure__", "__self__",
-        "__func__", "__reduce__", "__reduce_ex__", "tb_frame", "tb_next",
-        "f_back", "f_globals", "f_locals", "f_builtins", "f_code", "gi_frame",
-        "cr_frame", "ag_frame",
+        "__globals__",
+        "__builtins__",
+        "__subclasses__",
+        "__code__",
+        "__getattribute__",
+        "__dict__",
+        "__bases__",
+        "__base__",
+        "__mro__",
+        "__traceback__",
+        "__loader__",
+        "__spec__",
+        "__closure__",
+        "__self__",
+        "__func__",
+        "__reduce__",
+        "__reduce_ex__",
+        "tb_frame",
+        "tb_next",
+        "f_back",
+        "f_globals",
+        "f_locals",
+        "f_builtins",
+        "f_code",
+        "gi_frame",
+        "cr_frame",
+        "ag_frame",
     }
 )
 # Attribute prefixes: pandas' file readers (read_csv, read_json, read_pickle, ...).
@@ -97,7 +172,9 @@ def _format_reaches_attributes(node: ast.Call) -> bool:
     if not (isinstance(func.value, ast.Constant) and isinstance(func.value.value, str)):
         return True
     try:
-        fields = [field for _, field, _, _ in string.Formatter().parse(func.value.value)]
+        fields = [
+            field for _, field, _, _ in string.Formatter().parse(func.value.value)
+        ]
     except ValueError:
         return True
     return any(field and ("." in field or "[" in field) for field in fields)

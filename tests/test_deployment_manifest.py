@@ -48,7 +48,9 @@ def test_manifest_contains_required_provenance(tmp_path):
     assert manifest.project_id == "subjective_randomness"
     assert manifest.experiment_id == "subjective_randomness_experiment3"
     assert manifest.deployment_id.startswith("deploy_subjective_randomness-e3-")
-    assert manifest.collection_session_id.startswith("session_subjective_randomness-e3-")
+    assert manifest.collection_session_id.startswith(
+        "session_subjective_randomness-e3-"
+    )
     assert manifest.agent_backend == "opencode"
     assert manifest.collection_owner == "linas"
     assert "git_commit" in manifest.to_client_config()
@@ -116,7 +118,9 @@ def test_manifest_and_client_config_are_written(tmp_path):
     )
 
     manifest_path = write_manifest(exp_dir, manifest)
-    config_path = write_client_config(exp_dir, manifest, existing={"experiment_url": None})
+    config_path = write_client_config(
+        exp_dir, manifest, existing={"experiment_url": None}
+    )
 
     assert manifest_path.exists()
     assert (exp_dir / "experiment" / "deployment_manifest.json").exists()

@@ -46,7 +46,10 @@ def test_rejected_for_other_reason_returns_false():
     """
     round_results = [
         {"outcome": "rejected", "detail": "no candidate.py written"},
-        {"outcome": "rejected", "detail": "candidate.py is not a loadable PyMC model: ..."},
+        {
+            "outcome": "rejected",
+            "detail": "candidate.py is not a loadable PyMC model: ...",
+        },
         {"outcome": "rejected", "detail": "no candidate.py written"},
     ]
     assert _is_all_no_file_round(round_results) is False

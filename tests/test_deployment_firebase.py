@@ -20,7 +20,9 @@ def _manifest(tmp_path):
         "<!doctype html><html><body><script>window.__experimentData = [];</script></body></html>",
         encoding="utf-8",
     )
-    (exp_dir / "design" / "stimuli.json").write_text('[{"sequence_a":"HH","sequence_b":"HT"}]\n')
+    (exp_dir / "design" / "stimuli.json").write_text(
+        '[{"sequence_a":"HH","sequence_b":"HT"}]\n'
+    )
     manifest = build_manifest(
         exp_dir=exp_dir,
         project_id="subjective_randomness",
@@ -60,10 +62,10 @@ def test_stage_experiment_relativizes_agent_absolute_config_fetch(tmp_path):
     # An agent that wrote its own submit with an absolute config fetch would
     # break under subpath hosting; staging must normalize it to a relative path.
     (exp_dir / "experiment" / "index.html").write_text(
-        '<html><body><script>'
+        "<html><body><script>"
         'fetch("/auto_psych_config.json").then(r=>r.json());'
         'fetch("/submit",{method:"POST"});'
-        'window.__experimentData=[];</script></body></html>',
+        "window.__experimentData=[];</script></body></html>",
         encoding="utf-8",
     )
     public_dir = stage_experiment(exp_dir, manifest, tmp_path / "public")
@@ -82,9 +84,13 @@ def test_stage_experiment_copies_files_and_leaves_source_untouched(tmp_path):
     assert (public_dir / "index.html").exists()
     assert (public_dir / "stimuli.json").exists()
     assert "/submit" in (public_dir / "index.html").read_text(encoding="utf-8")
-    cfg = json.loads((public_dir / "auto_psych_config.json").read_text(encoding="utf-8"))
+    cfg = json.loads(
+        (public_dir / "auto_psych_config.json").read_text(encoding="utf-8")
+    )
     assert cfg["collection_session_id"] == manifest.collection_session_id
-    assert (exp_dir / "experiment" / "index.html").read_text(encoding="utf-8") == source_before
+    assert (exp_dir / "experiment" / "index.html").read_text(
+        encoding="utf-8"
+    ) == source_before
 
 
 def test_ensure_consent_gate_injects_verbatim_irb_text():

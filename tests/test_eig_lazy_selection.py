@@ -59,7 +59,9 @@ def test_lazy_with_batches_covering_the_pool_is_exact_greedy():
     p = _random_pool()
     kwargs = dict(n_scenarios=300, seed=5, n_responses=3)
     exact = select_n_joint_eig(p, 12, **kwargs)
-    lazy = select_n_joint_eig(p, 12, lazy=True, lazy_batch_size=300, refresh_every=7, **kwargs)
+    lazy = select_n_joint_eig(
+        p, 12, lazy=True, lazy_batch_size=300, refresh_every=7, **kwargs
+    )
     assert lazy.indices == exact.indices
     assert lazy.joint_eig_bits == exact.joint_eig_bits
 
@@ -68,7 +70,9 @@ def test_lazy_with_a_full_pass_at_every_pick_is_exact_greedy():
     p = _random_pool()
     kwargs = dict(n_scenarios=300, seed=6, n_responses=3)
     exact = select_n_joint_eig(p, 12, **kwargs)
-    lazy = select_n_joint_eig(p, 12, lazy=True, lazy_batch_size=8, refresh_every=1, **kwargs)
+    lazy = select_n_joint_eig(
+        p, 12, lazy=True, lazy_batch_size=8, refresh_every=1, **kwargs
+    )
     assert lazy.indices == exact.indices
     assert lazy.joint_eig_bits == exact.joint_eig_bits
 
@@ -82,7 +86,9 @@ def test_lazy_matches_exact_greedy_under_diminishing_returns_with_far_less_scori
     exact = select_n_joint_eig(p, 20, **kwargs)
     exact_columns = sum(scored)
     scored.clear()
-    lazy = select_n_joint_eig(p, 20, lazy=True, lazy_batch_size=64, refresh_every=8, **kwargs)
+    lazy = select_n_joint_eig(
+        p, 20, lazy=True, lazy_batch_size=64, refresh_every=8, **kwargs
+    )
     lazy_columns = sum(scored)
 
     assert lazy.indices == exact.indices
@@ -98,8 +104,15 @@ def test_the_noise_floor_stop_fires_in_lazy_selection():
     p = {"a": np.full((5, 1000), 0.5), "b": np.full((5, 1000), 0.5)}
     p["a"][:, 0], p["b"][:, 0] = 0.05, 0.95  # the one decisive stimulus
     sel = select_n_joint_eig(
-        p, 4, n_scenarios=2000, seed=1, n_responses=40, stop_below_noise=True,
-        lazy=True, lazy_batch_size=64, refresh_every=16,
+        p,
+        4,
+        n_scenarios=2000,
+        seed=1,
+        n_responses=40,
+        stop_below_noise=True,
+        lazy=True,
+        lazy_batch_size=64,
+        refresh_every=16,
     )
     assert sel.indices == [0]
     assert sel.stopped_at_noise_floor
@@ -111,7 +124,9 @@ def test_the_noise_floor_is_judged_on_the_lazily_chosen_pick():
     p = _graded_pool(1000)
     kwargs = dict(n_scenarios=500, seed=3, n_responses=40, stop_below_noise=True)
     exact = select_n_joint_eig(p, 30, **kwargs)
-    lazy = select_n_joint_eig(p, 30, lazy=True, lazy_batch_size=64, refresh_every=16, **kwargs)
+    lazy = select_n_joint_eig(
+        p, 30, lazy=True, lazy_batch_size=64, refresh_every=16, **kwargs
+    )
     assert exact.stopped_at_noise_floor and lazy.stopped_at_noise_floor
     assert lazy.indices == exact.indices
 
@@ -129,21 +144,34 @@ def test_float32_scoring_picks_what_float64_picks():
 def test_float32_gains_agree_with_float64_on_forty_responses():
     p = _random_pool(200, seed=9)
     state = eig_selection._ScenarioState(
-        eig_selection._validated_p(p)[0], np.full(3, 1 / 3), 500, np.random.default_rng(0), 40
+        eig_selection._validated_p(p)[0],
+        np.full(3, 1 / 3),
+        500,
+        np.random.default_rng(0),
+        40,
     )
     for j in (3, 50, 120):
         state.observe(j)
     cols = np.arange(200)
     double = state.next_entropy(cols).mean(axis=0)
-    single = state.next_entropy(cols, np.dtype(np.float32)).mean(axis=0, dtype=np.float64)
+    single = state.next_entropy(cols, np.dtype(np.float32)).mean(
+        axis=0, dtype=np.float64
+    )
     assert np.abs(single - double).max() < 1e-4
     assert double.std() > 100 * np.abs(single - double).max()
 
 
 def test_the_thread_count_does_not_change_the_selection():
     p = _random_pool(700, seed=2)
-    kwargs = dict(n_scenarios=200, seed=8, n_responses=5, chunk_size=32, lazy=True,
-                  lazy_batch_size=64, refresh_every=4)
+    kwargs = dict(
+        n_scenarios=200,
+        seed=8,
+        n_responses=5,
+        chunk_size=32,
+        lazy=True,
+        lazy_batch_size=64,
+        refresh_every=4,
+    )
     one = select_n_joint_eig(p, 9, n_threads=1, **kwargs)
     four = select_n_joint_eig(p, 9, n_threads=4, **kwargs)
     assert four.indices == one.indices
@@ -152,7 +180,9 @@ def test_the_thread_count_does_not_change_the_selection():
 
 def test_paired_scenario_entropies_average_to_the_joint_eig():
     p = _random_pool(50, seed=4)
-    h = scenario_posterior_entropies(p, [1, 2, 3], n_scenarios=500, seed=7, n_responses=4)
+    h = scenario_posterior_entropies(
+        p, [1, 2, 3], n_scenarios=500, seed=7, n_responses=4
+    )
     assert h.shape == (500,)
     eig = estimate_joint_eig(p, [1, 2, 3], n_scenarios=500, seed=7, n_responses=4)
     assert eig == pytest.approx(np.log2(3) - h.mean())

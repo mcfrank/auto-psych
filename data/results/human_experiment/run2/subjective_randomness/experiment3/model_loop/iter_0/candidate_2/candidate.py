@@ -20,7 +20,7 @@ with pm.Model() as model:
     w_baseline = pm.HalfNormal("w_baseline", sigma=2.0)
     ideal_imb = pm.Uniform("ideal_imb", lower=0.0, upper=0.5)
     w_imb = pm.HalfNormal("w_imb", sigma=5.0)
-    
+
     ideal_alt = pm.Uniform("ideal_alt", lower=0.0, upper=1.0)
     w_under = pm.HalfNormal("w_under", sigma=10.0)
     w_over = pm.HalfNormal("w_over", sigma=10.0)
@@ -29,13 +29,17 @@ with pm.Model() as model:
 
     # Calculate evidence for A
     diff_alt_a = p_alts_a - ideal_alt
-    penalty_alt_a = pt.switch(diff_alt_a < 0, w_under * (diff_alt_a ** 2), w_over * (diff_alt_a ** 2))
+    penalty_alt_a = pt.switch(
+        diff_alt_a < 0, w_under * (diff_alt_a**2), w_over * (diff_alt_a**2)
+    )
     penalty_imb_a = w_imb * ((imbalance_a - ideal_imb) ** 2)
     ev_a = w_baseline * n_a - penalty_imb_a - penalty_alt_a
 
     # Calculate evidence for B
     diff_alt_b = p_alts_b - ideal_alt
-    penalty_alt_b = pt.switch(diff_alt_b < 0, w_under * (diff_alt_b ** 2), w_over * (diff_alt_b ** 2))
+    penalty_alt_b = pt.switch(
+        diff_alt_b < 0, w_under * (diff_alt_b**2), w_over * (diff_alt_b**2)
+    )
     penalty_imb_b = w_imb * ((imbalance_b - ideal_imb) ** 2)
     ev_b = w_baseline * n_b - penalty_imb_b - penalty_alt_b
 

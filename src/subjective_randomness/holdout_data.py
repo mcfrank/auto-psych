@@ -255,8 +255,7 @@ def strip_to_raw_columns(
         missing = [c for c in RAW_RESPONSE_COLUMNS if c not in rows[0]]
         if missing:
             raise ValueError(
-                f"generated rows lack raw columns {missing}; "
-                f"got {sorted(rows[0])}"
+                f"generated rows lack raw columns {missing}; got {sorted(rows[0])}"
             )
     return [{c: row[c] for c in RAW_RESPONSE_COLUMNS} for row in rows]
 

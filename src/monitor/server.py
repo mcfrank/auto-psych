@@ -42,7 +42,12 @@ _LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1", ""})
 
 
 def _utc_now() -> str:
-    return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
+    return (
+        datetime.now(timezone.utc)
+        .replace(microsecond=0)
+        .isoformat()
+        .replace("+00:00", "Z")
+    )
 
 
 def create_app(*, data_root: Path, sources: MonitorSources) -> Flask:

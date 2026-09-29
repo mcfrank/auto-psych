@@ -19,14 +19,34 @@ def test_urls_and_outside_paths_are_collected_with_counts(tmp_path):
     logs = agent_dir / "repo" / "_runs" / "cell_1" / "iter_0" / "candidate_0"
     logs.mkdir(parents=True)
     lines = [
-        {"tool": "webfetch", "input": {"url": "https://psycnet.apa.org/record/1997-03707-001"}},
-        {"tool": "bash", "input": {"command": f"cat {agent_dir}/repo/_runs/cell_1/models/m.py"}},
-        {"tool": "bash", "input": {"command": "ls /scratch/users/someone/auto-psych/sweep/run1"}},
-        {"tool": "bash", "input": {"command": "cat /tmp/explore.py; ls /share/software/modules"}},
-        {"tool": "webfetch", "input": {"url": "https://psycnet.apa.org/record/1997-03707-001"}},
-        {"tool": "bash", "input": {"command": "cat /home/users/someone/.claude/tool-results/x"}},
+        {
+            "tool": "webfetch",
+            "input": {"url": "https://psycnet.apa.org/record/1997-03707-001"},
+        },
+        {
+            "tool": "bash",
+            "input": {"command": f"cat {agent_dir}/repo/_runs/cell_1/models/m.py"},
+        },
+        {
+            "tool": "bash",
+            "input": {"command": "ls /scratch/users/someone/auto-psych/sweep/run1"},
+        },
+        {
+            "tool": "bash",
+            "input": {"command": "cat /tmp/explore.py; ls /share/software/modules"},
+        },
+        {
+            "tool": "webfetch",
+            "input": {"url": "https://psycnet.apa.org/record/1997-03707-001"},
+        },
+        {
+            "tool": "bash",
+            "input": {"command": "cat /home/users/someone/.claude/tool-results/x"},
+        },
     ]
-    (logs / "agent.jsonl").write_text("\n".join(json.dumps(x) for x in lines), encoding="utf-8")
+    (logs / "agent.jsonl").write_text(
+        "\n".join(json.dumps(x) for x in lines), encoding="utf-8"
+    )
 
     urls, outside = activity(agent_dir, also_expected=["/home/users/someone"])
     assert urls == {"https://psycnet.apa.org/record/1997-03707-001": 2}

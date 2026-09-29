@@ -142,7 +142,9 @@ def test_child_environment_pins_pwd_for_every_backend(tmp_path):
 # --- a private opencode store per spawned agent -------------------------------
 
 
-def test_opencode_agent_gets_a_private_data_home_under_its_own_dir(tmp_path, monkeypatch):
+def test_opencode_agent_gets_a_private_data_home_under_its_own_dir(
+    tmp_path, monkeypatch
+):
     _install_fake_opencode(tmp_path, monkeypatch, _FAKE_OPENCODE_REPORT_ENV)
     tree = _agent_tree(tmp_path)
     monkeypatch.setenv("XDG_DATA_HOME", str(tmp_path / "shared_xdg"))
@@ -156,9 +158,12 @@ def test_opencode_agent_gets_a_private_data_home_under_its_own_dir(tmp_path, mon
 def test_private_data_home_is_only_for_opencode(tmp_path):
     log_path = tmp_path / "candidate_0" / "agent.jsonl"
     shared = {"XDG_DATA_HOME": "/shared"}
-    assert coding_agent.child_environment(
-        backend="claude", cwd=tmp_path, log_path=log_path, env=shared
-    )["XDG_DATA_HOME"] == "/shared"
+    assert (
+        coding_agent.child_environment(
+            backend="claude", cwd=tmp_path, log_path=log_path, env=shared
+        )["XDG_DATA_HOME"]
+        == "/shared"
+    )
     assert coding_agent.child_environment(
         backend="opencode", cwd=tmp_path, log_path=log_path, env=shared
     )["XDG_DATA_HOME"] == str(coding_agent.agent_data_home(log_path))
@@ -171,14 +176,18 @@ def test_private_data_home_links_the_inherited_credentials(tmp_path):
     auth.write_text('{"google": {"type": "api", "key": "k"}}', encoding="utf-8")
     log_path = tmp_path / "candidate_0" / "agent.jsonl"
     env = coding_agent.child_environment(
-        backend="opencode", cwd=tmp_path, log_path=log_path,
+        backend="opencode",
+        cwd=tmp_path,
+        log_path=log_path,
         env={"XDG_DATA_HOME": str(shared)},
     )
     linked = Path(env["XDG_DATA_HOME"]) / "opencode" / "auth.json"
     assert linked.is_symlink() and linked.resolve() == auth.resolve()
     # Idempotent: a retry in the same directory must not trip over the link.
     coding_agent.child_environment(
-        backend="opencode", cwd=tmp_path, log_path=log_path,
+        backend="opencode",
+        cwd=tmp_path,
+        log_path=log_path,
         env={"XDG_DATA_HOME": str(shared)},
     )
     assert linked.resolve() == auth.resolve()
@@ -265,15 +274,16 @@ def test_an_agent_displaying_the_denial_text_is_not_a_denial(tmp_path):
     """Tool calls and their output are JSON events in the log. An agent that
     cat-s coding_agent.py (or its own earlier log) shows the signature inside
     one; that used to raise AgentPermissionDenied and kill the cell."""
-    shown = (
-        "PERMISSION_DENIAL_SIGNATURE = \"auto-rejecting\"\n"
-        + ARCHIVED_DENIAL_LINE
-    )
+    shown = 'PERMISSION_DENIAL_SIGNATURE = "auto-rejecting"\n' + ARCHIVED_DENIAL_LINE
     log = tmp_path / "agent.jsonl"
     log.write_text(
-        json.dumps({"type": "tool_use", "part": {"tool": "bash", "state": {"output": shown}}})
+        json.dumps(
+            {"type": "tool_use", "part": {"tool": "bash", "state": {"output": shown}}}
+        )
         + "\n"
-        + json.dumps({"type": "text", "part": {"text": "auto-rejecting is opencode's word"}})
+        + json.dumps(
+            {"type": "text", "part": {"text": "auto-rejecting is opencode's word"}}
+        )
         + "\n",
         encoding="utf-8",
     )
@@ -302,8 +312,13 @@ def test_run_coding_agent_raises_when_denied_its_own_directory(tmp_path, monkeyp
     log_path = candidate_dir / "agent.jsonl"
     with pytest.raises(coding_agent.AgentPermissionDenied):
         coding_agent.run_coding_agent(
-            "hello", cwd=tree, log_path=log_path, backend="opencode",
-            allowed_dirs=[candidate_dir], timeout_secs=30, on_summary=None,
+            "hello",
+            cwd=tree,
+            log_path=log_path,
+            backend="opencode",
+            allowed_dirs=[candidate_dir],
+            timeout_secs=30,
+            on_summary=None,
         )
     assert "auto-rejecting" in log_path.read_text(encoding="utf-8")
 
@@ -315,8 +330,13 @@ def test_an_agent_refused_a_directory_outside_its_own_carries_on(tmp_path, monke
     monkeypatch.setenv("FAKE_DENIED_DIR", str(tmp_path / "another_run"))
     summaries = []
     success, text = coding_agent.run_coding_agent(
-        "hello", cwd=tree, log_path=candidate_dir / "agent.jsonl", backend="opencode",
-        allowed_dirs=[candidate_dir], timeout_secs=30, on_summary=summaries.append,
+        "hello",
+        cwd=tree,
+        log_path=candidate_dir / "agent.jsonl",
+        backend="opencode",
+        allowed_dirs=[candidate_dir],
+        timeout_secs=30,
+        on_summary=summaries.append,
     )
     assert success
     assert "carried on" in text
@@ -326,7 +346,9 @@ def test_an_agent_refused_a_directory_outside_its_own_carries_on(tmp_path, monke
 def test_critique_round_does_not_swallow_a_permission_denial(tmp_path, monkeypatch):
     from src.pipelines.inner_loop import critique_round, scoring
 
-    monkeypatch.setattr(scoring, "_best_exportable_model", lambda posterior, comparison: "seed")
+    monkeypatch.setattr(
+        scoring, "_best_exportable_model", lambda posterior, comparison: "seed"
+    )
 
     def denied(*args, **kwargs):
         raise coding_agent.AgentPermissionDenied("denied")

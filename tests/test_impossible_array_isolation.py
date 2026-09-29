@@ -41,23 +41,36 @@ def _staged_sweep(tmp_path: Path) -> Path:
     work = tmp_path / "work"
     staged = work / "harness_repo" / "scripts" / "subjective_randomness"
     (staged / "slurm").mkdir(parents=True)
-    for name in ("cell_lock.sh", "agent_tree.exclude", "scan_gt_name.sh", "agent_activity_report.py",
-                 "archive_agent_tree.sh"):
+    for name in (
+        "cell_lock.sh",
+        "agent_tree.exclude",
+        "scan_gt_name.sh",
+        "agent_activity_report.py",
+        "archive_agent_tree.sh",
+    ):
         shutil.copy(SLURM_DIR / name, staged / "slurm" / name)
     (staged / "slurm" / "_env.sh").write_text(
         f'export VENV_PY="{sys.executable}"\nexport REPO="{tmp_path / "checkout"}"\n',
         encoding="utf-8",
     )
-    (staged / "impossible_holdout_recovery.py").write_text(_FAKE_HARNESS, encoding="utf-8")
+    (staged / "impossible_holdout_recovery.py").write_text(
+        _FAKE_HARNESS, encoding="utf-8"
+    )
     # The staged agent source: what agent_tree.exclude leaves of a checkout.
     agent_src = work / "agent_src"
     (agent_src / "src" / "pipelines").mkdir(parents=True)
-    (agent_src / "src" / "pipelines" / "loop.py").write_text("# the loop\n", encoding="utf-8")
+    (agent_src / "src" / "pipelines" / "loop.py").write_text(
+        "# the loop\n", encoding="utf-8"
+    )
     (agent_src / "opencode.json").write_text("{}", encoding="utf-8")
     (work / "code_commit").write_text("abc123\n", encoding="utf-8")
     (work / "impossible_models_src").mkdir()
-    (work / "impossible_models_src" / f"{GT}.py").write_text("# the recipe\n", encoding="utf-8")
-    (work / "impossible_config_src.yaml").write_text("gt_models_dir: x\n", encoding="utf-8")
+    (work / "impossible_models_src" / f"{GT}.py").write_text(
+        "# the recipe\n", encoding="utf-8"
+    )
+    (work / "impossible_config_src.yaml").write_text(
+        "gt_models_dir: x\n", encoding="utf-8"
+    )
     return work
 
 
@@ -79,7 +92,10 @@ def _run(tmp_path: Path, work: Path) -> subprocess.CompletedProcess:
     }
     return subprocess.run(
         ["bash", str(SLURM_DIR / "impossible_holdout_recovery_array.sbatch")],
-        env=env, capture_output=True, text=True, timeout=120,
+        env=env,
+        capture_output=True,
+        text=True,
+        timeout=120,
     )
 
 
@@ -121,8 +137,15 @@ def test_a_tree_that_names_the_recipe_stops_before_any_agent_runs(tmp_path):
     assert not (tmp_path / "harness.json").exists()
 
 
-def test_the_impossible_cli_forwards_the_agent_root_and_summary_root(tmp_path, monkeypatch):
-    cli = load_script_module(REPO_ROOT / "scripts" / "subjective_randomness" / "impossible_holdout_recovery.py")
+def test_the_impossible_cli_forwards_the_agent_root_and_summary_root(
+    tmp_path, monkeypatch
+):
+    cli = load_script_module(
+        REPO_ROOT
+        / "scripts"
+        / "subjective_randomness"
+        / "impossible_holdout_recovery.py"
+    )
     seen = {}
 
     def fake_run(config, config_path, results_root, **overrides):
@@ -131,11 +154,15 @@ def test_the_impossible_cli_forwards_the_agent_root_and_summary_root(tmp_path, m
 
     monkeypatch.setattr(cli, "run_impossible_holdout_recovery_from_config", fake_run)
     monkeypatch.setattr(cli, "load_config", lambda path: {})
-    cli.main(cli.Args(
-        config=tmp_path / "c.yaml", out=tmp_path / "out.json",
-        agent_root=tmp_path / "tree", summary_root=tmp_path / "summary",
-        agent_model="google/gemini-3.1-pro-preview",
-    ))
+    cli.main(
+        cli.Args(
+            config=tmp_path / "c.yaml",
+            out=tmp_path / "out.json",
+            agent_root=tmp_path / "tree",
+            summary_root=tmp_path / "summary",
+            agent_model="google/gemini-3.1-pro-preview",
+        )
+    )
     assert seen["agent_root"] == tmp_path / "tree"
     assert seen["summary_root"] == tmp_path / "summary"
     assert seen["agent_model_override"] == "google/gemini-3.1-pro-preview"

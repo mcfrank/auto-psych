@@ -67,9 +67,8 @@ def score_sequence(seq: str, params: Mapping[str, float] | None = None) -> float
     alternation_distance = abs(alternation_rate(seq) - p["theta_alt"])
     periodic_share = max(0.0, min(1.0, p["periodic_share"]))
     irregularity_distance = (
-        (1.0 - periodic_share) * alternation_distance
-        + periodic_share * periodicity_score(seq)
-    )
+        1.0 - periodic_share
+    ) * alternation_distance + periodic_share * periodicity_score(seq)
     return -(balance_weight * balance_distance + alt_weight * irregularity_distance)
 
 

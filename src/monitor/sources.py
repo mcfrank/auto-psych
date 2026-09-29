@@ -22,7 +22,9 @@ ADC_HELP = (
 class FirestoreSource(Protocol):
     """Reads the live response documents for a collection session."""
 
-    def list_responses(self, collection_session_id: str) -> list[tuple[str, dict[str, Any]]]:
+    def list_responses(
+        self, collection_session_id: str
+    ) -> list[tuple[str, dict[str, Any]]]:
         """Return ``(doc_id, data)`` pairs for every submitted response."""
         ...
 
@@ -36,9 +38,13 @@ class ProlificSource(Protocol):
     reported rather than raised.
     """
 
-    def study_status(self, study_id: str) -> tuple[dict[str, Any] | None, str | None]: ...
+    def study_status(
+        self, study_id: str
+    ) -> tuple[dict[str, Any] | None, str | None]: ...
 
-    def submission_counts(self, study_id: str) -> tuple[dict[str, Any] | None, str | None]: ...
+    def submission_counts(
+        self, study_id: str
+    ) -> tuple[dict[str, Any] | None, str | None]: ...
 
 
 @dataclass
@@ -68,7 +74,9 @@ class LiveFirestoreSource:
             raise RuntimeError(ADC_HELP) from exc
         return self._client
 
-    def list_responses(self, collection_session_id: str) -> list[tuple[str, dict[str, Any]]]:
+    def list_responses(
+        self, collection_session_id: str
+    ) -> list[tuple[str, dict[str, Any]]]:
         client = self._get_client()
         responses = (
             client.collection("collection_sessions")
@@ -97,7 +105,9 @@ class LiveProlificSource:
         except ValueError as exc:
             return (None, f"Prolific is not configured: {exc}")
 
-    def submission_counts(self, study_id: str) -> tuple[dict[str, Any] | None, str | None]:
+    def submission_counts(
+        self, study_id: str
+    ) -> tuple[dict[str, Any] | None, str | None]:
         from src.runtime.prolific import get_submission_counts
 
         try:

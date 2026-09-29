@@ -119,9 +119,7 @@ def test_actual_seed_dirs_pass():
     )
     from tests.paths import REPO_ROOT
 
-    registry = (
-        REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families"
-    )
+    registry = REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families"
     pool = (
         REPO_ROOT
         / "src"
@@ -143,9 +141,7 @@ def test_pool_validation_catches_featurized_model(tmp_path):
     )
 
     pool = tmp_path / "pool"
-    _write_model_dir(
-        pool, {"featurized_model": _FEATURIZED_MODEL_CODE}
-    )
+    _write_model_dir(pool, {"featurized_model": _FEATURIZED_MODEL_CODE})
 
     with pytest.raises(ValueError, match="featurized_model"):
         validate_raw_pool_models(pool)

@@ -40,9 +40,7 @@ def raw_response_rows(rows: Iterable[Mapping[str, Any]]) -> List[Dict[str, Any]]
     return raw_rows
 
 
-def write_responses_csv(
-    rows: Sequence[Mapping[str, Any]], out_path: Path
-) -> Path:
+def write_responses_csv(rows: Sequence[Mapping[str, Any]], out_path: Path) -> Path:
     """Write response rows to a CSV. Returns the path written."""
     if not rows:
         raise ValueError("No response rows to write.")

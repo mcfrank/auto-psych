@@ -49,7 +49,13 @@ def _source(env_script: Path, tmp_path: Path, *, module_provides_bwrap: bool):
     (tools / "ml").chmod(0o755)
     ml_log = tmp_path / "ml.log"
     result = subprocess.run(
-        [str(tools / "bash"), "-c", 'source "$1" >/dev/null && command -v bwrap', "_", str(env_script)],
+        [
+            str(tools / "bash"),
+            "-c",
+            'source "$1" >/dev/null && command -v bwrap',
+            "_",
+            str(env_script),
+        ],
         env={
             "PATH": f"{module_bin}:{tools}",
             "HOME": str(tmp_path),
@@ -59,13 +65,17 @@ def _source(env_script: Path, tmp_path: Path, *, module_provides_bwrap: bool):
             "MODULE_BIN": str(module_bin),
             "MODULE_PROVIDES_BWRAP": "1" if module_provides_bwrap else "",
         },
-        capture_output=True, text=True, timeout=60,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
     loads = ml_log.read_text(encoding="utf-8").splitlines() if ml_log.exists() else []
     return result, loads
 
 
-@pytest.mark.parametrize("env_script", AGENT_JOB_ENV_SCRIPTS, ids=lambda p: str(p.relative_to(REPO_ROOT)))
+@pytest.mark.parametrize(
+    "env_script", AGENT_JOB_ENV_SCRIPTS, ids=lambda p: str(p.relative_to(REPO_ROOT))
+)
 def test_the_env_script_puts_bwrap_on_path(env_script, tmp_path):
     result, loads = _source(env_script, tmp_path, module_provides_bwrap=True)
     assert result.returncode == 0, result.stderr
@@ -74,7 +84,9 @@ def test_the_env_script_puts_bwrap_on_path(env_script, tmp_path):
     assert loads.index("load system bubblewrap") > loads.index("purge")
 
 
-@pytest.mark.parametrize("env_script", AGENT_JOB_ENV_SCRIPTS, ids=lambda p: str(p.relative_to(REPO_ROOT)))
+@pytest.mark.parametrize(
+    "env_script", AGENT_JOB_ENV_SCRIPTS, ids=lambda p: str(p.relative_to(REPO_ROOT))
+)
 def test_the_env_script_stops_when_bubblewrap_is_unavailable(env_script, tmp_path):
     result, _ = _source(env_script, tmp_path, module_provides_bwrap=False)
     assert result.returncode != 0

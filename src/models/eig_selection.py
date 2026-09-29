@@ -155,7 +155,10 @@ def _entropy_bits(w: np.ndarray, axis: int = -1) -> np.ndarray:
 def _log_binomial_coefficients(n: int) -> np.ndarray:
     """log C(n, k) for k = 0..n."""
     return np.array(
-        [math.lgamma(n + 1) - math.lgamma(k + 1) - math.lgamma(n - k + 1) for k in range(n + 1)]
+        [
+            math.lgamma(n + 1) - math.lgamma(k + 1) - math.lgamma(n - k + 1)
+            for k in range(n + 1)
+        ]
     )
 
 
@@ -211,9 +214,7 @@ class _ScenarioState:
             )
         self.m_idx = rng.choice(len(self.names), size=n_scenarios, p=prior)
         self.d_idx = rng.integers(0, n_draws[self.m_idx])
-        self.logL = {
-            n: np.zeros((n_scenarios, p[n].shape[0])) for n in self.names
-        }
+        self.logL = {n: np.zeros((n_scenarios, p[n].shape[0])) for n in self.names}
         # Per model: the draws its likelihood is averaged over, per scenario —
         # every draw, or with leave_one_out every draw but the generating one.
         self._n_averaged = {
@@ -301,7 +302,9 @@ class _ScenarioState:
         (float64 scoring; see ``next_entropy``)."""
         return h_current.mean() - self.next_entropy(cols).mean(axis=0)
 
-    def next_entropy(self, cols: np.ndarray, dtype: np.dtype = np.dtype(np.float64)) -> np.ndarray:
+    def next_entropy(
+        self, cols: np.ndarray, dtype: np.dtype = np.dtype(np.float64)
+    ) -> np.ndarray:
         """Each scenario's expected posterior entropy after adding each
         candidate, shape (T, len(cols)), computed in ``dtype``.
 
@@ -336,14 +339,18 @@ class _ScenarioState:
         tiny = np.finfo(dtype).tiny
         for k in range(n + 1):
             for i in range(n_models):
-                outcome_lik = np.exp(bases[i] + k * slopes[i] - dtype.type(self._kernel_max[k]))
+                outcome_lik = np.exp(
+                    bases[i] + k * slopes[i] - dtype.type(self._kernel_max[k])
+                )
                 np.matmul(weighted[i], outcome_lik, out=post[i])
             # Posterior entropy, normalized first so that it is accurate in
             # float32 too. An outcome whose likelihood underflows (below the
             # smallest normal number) under every model has numerically zero
             # probability; its entropy is set to 0.
             total = post.sum(axis=0)
-            inv_total = np.divide(1.0, total, out=np.zeros_like(total), where=total >= tiny)
+            inv_total = np.divide(
+                1.0, total, out=np.zeros_like(total), where=total >= tiny
+            )
             post *= inv_total
             np.maximum(post, tiny, out=log_post)
             np.log(log_post, out=log_post)
@@ -431,7 +438,9 @@ def scenario_posterior_entropies(
     k = state._draw_counts(q)
     for name in state.names:
         p_cols = state.p[name][:, cols]
-        state.logL[name] = k @ np.log(p_cols).T + (n_responses - k) @ np.log1p(-p_cols).T
+        state.logL[name] = (
+            k @ np.log(p_cols).T + (n_responses - k) @ np.log1p(-p_cols).T
+        )
     state.forget_likelihoods()  # logL set directly, bypassing observe()
     return state.posterior_entropy()
 
@@ -534,7 +543,9 @@ def select_n_joint_eig(
         if value < 1:
             raise ValueError(f"{knob} must be >= 1, got {value}.")
     if dtype not in _SCORING_DTYPES:
-        raise ValueError(f"dtype must be one of {sorted(_SCORING_DTYPES)}, got {dtype!r}.")
+        raise ValueError(
+            f"dtype must be one of {sorted(_SCORING_DTYPES)}, got {dtype!r}."
+        )
     scoring_dtype = np.dtype(dtype)
 
     prior = _model_prior(list(p), model_weights)
@@ -559,7 +570,9 @@ def select_n_joint_eig(
 
         def score(cols: np.ndarray) -> np.ndarray:
             """Expected next posterior entropy, (T, len(cols)), chunk by chunk."""
-            state._weighted_likelihoods(scoring_dtype)  # fill the cache before the threads read it
+            state._weighted_likelihoods(
+                scoring_dtype
+            )  # fill the cache before the threads read it
             chunks = [cols[i : i + chunk_size] for i in range(0, len(cols), chunk_size)]
             parts = pool.map(lambda c: state.next_entropy(c, scoring_dtype), chunks)
             return np.concatenate(list(parts), axis=1)

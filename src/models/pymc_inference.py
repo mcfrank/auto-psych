@@ -190,6 +190,7 @@ def model_logp_is_finite(
 # Prior prediction and EIG
 # ---------------------------------------------------------------------------
 
+
 def prior_predict_p_left(
     model_names: List[str],
     models_dir: Path,
@@ -379,6 +380,7 @@ def expected_information_gain_prior_pymc(
 # Fitting infrastructure
 # ---------------------------------------------------------------------------
 
+
 def _sha256_file(path: Path) -> str:
     h = hashlib.sha256()
     h.update(Path(path).read_bytes())
@@ -499,7 +501,9 @@ def resolve_fit_settings(
     # (a model declaring 0.9 ran at the sweep's 0.8), and declaring a higher value
     # is how a candidate rejected for divergences fixes itself.
     if "target_accept" in declared:
-        settings["target_accept"] = max(settings["target_accept"], declared["target_accept"])
+        settings["target_accept"] = max(
+            settings["target_accept"], declared["target_accept"]
+        )
     return settings
 
 
@@ -593,7 +597,9 @@ class FittedModel:
         very large stimulus sets (e.g. an exhaustive design pool).
         """
         pm = _import_pymc()
-        idata = self.idata if max_draws is None else _thin_posterior(self.idata, max_draws)
+        idata = (
+            self.idata if max_draws is None else _thin_posterior(self.idata, max_draws)
+        )
         with self.model:
             pm.set_data(stim_data)
             pp = pm.sample_posterior_predictive(
@@ -823,11 +829,17 @@ def fit_model(
         },
     )
 
-    fitted = _fit_once_within(name, models_dir, responses_path, settings, cache_dir, time_limit_sec)
+    fitted = _fit_once_within(
+        name, models_dir, responses_path, settings, cache_dir, time_limit_sec
+    )
     if _refit_decision(name, fitted, settings):
         fitted = _fit_once_within(
-            name, models_dir, responses_path, refit_settings(settings, fitted.fingerprint),
-            cache_dir, time_limit_sec,
+            name,
+            models_dir,
+            responses_path,
+            refit_settings(settings, fitted.fingerprint),
+            cache_dir,
+            time_limit_sec,
         )
     return fitted
 
@@ -854,7 +866,9 @@ def refit_settings(settings: Dict[str, Any], first_fingerprint: str) -> Dict[str
 def refit_random_seed(base_seed: int, first_fingerprint: str) -> int:
     """A refit's random seed, from everything that identifies its first fit
     (the style of the harness's ``derive_seed``); never the first fit's own."""
-    digest = hashlib.sha256(f"{base_seed}|{first_fingerprint}|refit".encode("utf-8")).digest()
+    digest = hashlib.sha256(
+        f"{base_seed}|{first_fingerprint}|refit".encode("utf-8")
+    ).digest()
     seed = int.from_bytes(digest[:4], "big") % 2**31
     return seed if seed != base_seed else (seed + 1) % 2**31
 
@@ -880,14 +894,24 @@ def _fit_once_within(
         # A remembered failure or timeout comes back before a cached file is
         # looked at: a child killed at its limit just after writing its fit
         # still timed out.
-        request = TimeLimitedFit(name, models_dir, responses_path, settings, Path(cache_dir))
-        _raise_failure(sample_fits_time_limited([request], time_limit_sec=time_limit_sec)[0])
+        request = TimeLimitedFit(
+            name, models_dir, responses_path, settings, Path(cache_dir)
+        )
+        _raise_failure(
+            sample_fits_time_limited([request], time_limit_sec=time_limit_sec)[0]
+        )
         return _fit_once(name, models_dir, responses_path, settings, cache_dir)
     with tempfile.TemporaryDirectory(prefix="pymc_fit_") as transport:
-        request = TimeLimitedFit(name, models_dir, responses_path, settings, Path(transport))
-        _raise_failure(sample_fits_time_limited([request], time_limit_sec=time_limit_sec)[0])
+        request = TimeLimitedFit(
+            name, models_dir, responses_path, settings, Path(transport)
+        )
+        _raise_failure(
+            sample_fits_time_limited([request], time_limit_sec=time_limit_sec)[0]
+        )
         with _import_arviz().rc_context(rc={"data.load": "eager"}):
-            return _fit_once(name, models_dir, responses_path, settings, Path(transport))
+            return _fit_once(
+                name, models_dir, responses_path, settings, Path(transport)
+            )
 
 
 def _raise_failure(outcome: Optional[BaseException]) -> None:
@@ -971,6 +995,7 @@ def write_fit_file(idata: Any, nc_path: Path) -> None:
 # Sampling diagnostics
 # ---------------------------------------------------------------------------
 
+
 def _divergence_count(idata: Any) -> Optional[int]:
     """Number of divergent transitions, or None if the trace does not record any.
 
@@ -1022,7 +1047,9 @@ class ConvergenceDiagnostics:
         return self.n_divergent / self.n_draws
 
 
-def convergence_diagnostics(idata: Any, var_names: Sequence[str]) -> ConvergenceDiagnostics:
+def convergence_diagnostics(
+    idata: Any, var_names: Sequence[str]
+) -> ConvergenceDiagnostics:
     """Divergences, worst R-hat and lowest bulk ESS over the free parameters ``var_names``."""
     az = _import_arviz()
     n_draws = int(idata.posterior.sizes["chain"] * idata.posterior.sizes["draw"])
@@ -1031,7 +1058,9 @@ def convergence_diagnostics(idata: Any, var_names: Sequence[str]) -> Convergence
         posterior = idata.posterior[list(var_names)]
         rhat = az.rhat(posterior)
         worst_rhat = [float(rhat[v].max()) for v in rhat.data_vars]
-        max_r_hat = float("nan") if any(math.isnan(v) for v in worst_rhat) else max(worst_rhat)
+        max_r_hat = (
+            float("nan") if any(math.isnan(v) for v in worst_rhat) else max(worst_rhat)
+        )
         ess = az.ess(posterior, method="bulk")
         min_bulk_ess = min(float(ess[v].min()) for v in ess.data_vars)
     return ConvergenceDiagnostics(
@@ -1054,7 +1083,9 @@ def convergence_problems(idata: Any, var_names: Sequence[str]) -> List[str]:
     diag = convergence_diagnostics(idata, var_names)
     problems: List[str] = []
     if diag.n_divergent is None:
-        problems.append("the trace records no divergence statistic, so sampling could not be checked")
+        problems.append(
+            "the trace records no divergence statistic, so sampling could not be checked"
+        )
     elif diag.n_divergent > MAX_DIVERGENCE_FRACTION * diag.n_draws:
         problems.append(f"{diag.n_divergent} divergent transitions of {diag.n_draws}")
     if var_names:
@@ -1088,7 +1119,9 @@ def is_near_miss(diag: ConvergenceDiagnostics) -> bool:
 
 def convergence_diagnostics_of(fitted: "FittedModel") -> ConvergenceDiagnostics:
     """``convergence_diagnostics`` over a fitted model's free parameters."""
-    return convergence_diagnostics(fitted.idata, [rv.name for rv in fitted.model.free_RVs])
+    return convergence_diagnostics(
+        fitted.idata, [rv.name for rv in fitted.model.free_RVs]
+    )
 
 
 def _refit_decision(name: str, fitted: "FittedModel", settings: Dict[str, Any]) -> bool:
@@ -1213,7 +1246,12 @@ class FitInfrastructureFailure(RuntimeError):
 
 
 # Failures of the machinery rather than of a model; see FitInfrastructureFailure.
-INFRASTRUCTURE_ERRORS = (OSError, MemoryError, BrokenProcessPool, FitInfrastructureFailure)
+INFRASTRUCTURE_ERRORS = (
+    OSError,
+    MemoryError,
+    BrokenProcessPool,
+    FitInfrastructureFailure,
+)
 
 
 class FitWorkerFailure(RuntimeError):
@@ -1255,7 +1293,9 @@ class TimeLimitedFit:
     cache_dir: Path
 
     def fingerprint(self) -> str:
-        return fit_fingerprint(self.name, self.models_dir, self.responses_path, self.settings)
+        return fit_fingerprint(
+            self.name, self.models_dir, self.responses_path, self.settings
+        )
 
     def nc_path(self) -> Path:
         return cached_fit_path(self.cache_dir, self.name, self.fingerprint())
@@ -1320,9 +1360,12 @@ def _compile_slots_root() -> Path:
 
         base = Path(pytensor_config.base_compiledir)
         base.mkdir(parents=True, exist_ok=True)
-        _COMPILE_SLOTS_ROOT = Path(tempfile.mkdtemp(
-            prefix=f"fit-compiledirs-{socket.gethostname()}-{os.getpid()}-", dir=base
-        ))
+        _COMPILE_SLOTS_ROOT = Path(
+            tempfile.mkdtemp(
+                prefix=f"fit-compiledirs-{socket.gethostname()}-{os.getpid()}-",
+                dir=base,
+            )
+        )
         atexit.register(shutil.rmtree, _COMPILE_SLOTS_ROOT, True)
     return _COMPILE_SLOTS_ROOT
 
@@ -1395,11 +1438,15 @@ def _use_own_dirs_from_queue(cache_root: str, compile_dirs: Any) -> None:
     """Pool-worker initializer: ``_use_own_dirs`` with the next compile
     directory from ``compile_dirs``, which holds one per worker."""
     if compile_dirs.empty():
-        raise RuntimeError("a fit-pool worker started with no compile directory left for it.")
+        raise RuntimeError(
+            "a fit-pool worker started with no compile directory left for it."
+        )
     _use_own_dirs(cache_root, compile_dirs.get())
 
 
-def _run_with_own_dirs(cache_root: str, compile_dir: str, target: Any, *args: Any) -> None:
+def _run_with_own_dirs(
+    cache_root: str, compile_dir: str, target: Any, *args: Any
+) -> None:
     """Entry point of a time-limited fit process: ``target(*args)`` with a
     cache directory and a compile directory of its own."""
     _use_own_dirs(cache_root, compile_dir)
@@ -1430,7 +1477,9 @@ def _sample_in_own_session(
 
     try:
         with threadpool_limits(limits=1):
-            _fit_once(name, Path(models_dir), Path(responses_path), settings, Path(cache_dir))
+            _fit_once(
+                name, Path(models_dir), Path(responses_path), settings, Path(cache_dir)
+            )
     except INFRASTRUCTURE_ERRORS as e:
         traceback.print_exc(file=sys.stderr)
         sender.send(("infrastructure", f"{type(e).__name__}: {e}"))
@@ -1453,7 +1502,9 @@ def _stop_fit_process(process: Any, request: TimeLimitedFit) -> None:
     except ProcessLookupError:
         pass
     process.join()
-    for partial in Path(request.cache_dir).glob(f".{request.name}.*.nc.{process.pid}.partial"):
+    for partial in Path(request.cache_dir).glob(
+        f".{request.name}.*.nc.{process.pid}.partial"
+    ):
         partial.unlink(missing_ok=True)
 
 
@@ -1518,7 +1569,9 @@ def sample_fits_time_limited(
     outcomes: List[Optional[BaseException]] = [None] * len(requests)
     queue: List[int] = []
     for i, request in enumerate(requests):
-        known = _FAILED_TIME_LIMITED_FITS.get((request.name, request.fingerprint(), time_limit_sec))
+        known = _FAILED_TIME_LIMITED_FITS.get(
+            (request.name, request.fingerprint(), time_limit_sec)
+        )
         if known is not None:
             outcomes[i] = known
         elif not request.nc_path().exists():
@@ -1526,7 +1579,10 @@ def sample_fits_time_limited(
     context = multiprocessing.get_context("spawn")
     # sentinel -> (index, process, receiver, deadline, compile dir)
     running: Dict[Any, tuple] = {}
-    with _fit_process_caches() as cache_root, _compile_dirs(workers) as free_compile_dirs:
+    with (
+        _fit_process_caches() as cache_root,
+        _compile_dirs(workers) as free_compile_dirs,
+    ):
         try:
             while queue or running:
                 while queue and len(running) < workers:
@@ -1538,16 +1594,26 @@ def sample_fits_time_limited(
                     process = context.Process(
                         target=_run_with_own_dirs,
                         args=(
-                            cache_root, compile_dir, _target or _sample_in_own_session,
-                            request.name, request.models_dir, request.responses_path,
-                            request.settings, request.cache_dir, sender,
+                            cache_root,
+                            compile_dir,
+                            _target or _sample_in_own_session,
+                            request.name,
+                            request.models_dir,
+                            request.responses_path,
+                            request.settings,
+                            request.cache_dir,
+                            sender,
                         ),
                         name=f"fit-{request.name}",
                     )
                     process.start()
                     sender.close()
                     running[process.sentinel] = (
-                        i, process, receiver, time.monotonic() + time_limit_sec, compile_dir,
+                        i,
+                        process,
+                        receiver,
+                        time.monotonic() + time_limit_sec,
+                        compile_dir,
                     )
                 next_deadline = min(entry[3] for entry in running.values())
                 finished = mp_connection.wait(
@@ -1558,7 +1624,9 @@ def sample_fits_time_limited(
                     free_compile_dirs.append(compile_dir)
                     outcomes[i] = _fit_process_outcome(process, receiver, requests[i])
                 now = time.monotonic()
-                for sentinel, (i, process, receiver, deadline, compile_dir) in list(running.items()):
+                for sentinel, (i, process, receiver, deadline, compile_dir) in list(
+                    running.items()
+                ):
                     if now >= deadline:
                         del running[sentinel]
                         _stop_fit_process(process, requests[i])
@@ -1570,14 +1638,18 @@ def sample_fits_time_limited(
                             flush=True,
                         )
                         outcomes[i] = FitTimeLimitExceeded(
-                            request.name, time_limit_sec, float(request.settings["target_accept"])
+                            request.name,
+                            time_limit_sec,
+                            float(request.settings["target_accept"]),
                         )
         finally:
             for i, process, _, _, _ in running.values():
                 _stop_fit_process(process, requests[i])
     for request, outcome in zip(requests, outcomes):
         if outcome is not None:
-            _FAILED_TIME_LIMITED_FITS[(request.name, request.fingerprint(), time_limit_sec)] = outcome
+            _FAILED_TIME_LIMITED_FITS[
+                (request.name, request.fingerprint(), time_limit_sec)
+            ] = outcome
     return outcomes
 
 
@@ -1606,26 +1678,42 @@ def fit_time_limited_concurrently(
     cache_dir = Path(cache_dir)
     first = [
         TimeLimitedFit(
-            name, Path(models_dir), Path(responses_path),
-            resolve_fit_settings(name, models_dir, fit_kwargs), cache_dir,
+            name,
+            Path(models_dir),
+            Path(responses_path),
+            resolve_fit_settings(name, models_dir, fit_kwargs),
+            cache_dir,
         )
         for name in names
     ]
     if not first:
         return
     if workers is None:
-        workers = default_fit_workers(allocated_cpus(), [_fit_cpus(r.settings) for r in first])
-    outcomes = sample_fits_time_limited(first, time_limit_sec=time_limit_sec, workers=workers)
+        workers = default_fit_workers(
+            allocated_cpus(), [_fit_cpus(r.settings) for r in first]
+        )
+    outcomes = sample_fits_time_limited(
+        first, time_limit_sec=time_limit_sec, workers=workers
+    )
     refits = []
     for request, outcome in zip(first, outcomes):
         if outcome is not None:
             continue
-        fitted = _fit_once(request.name, request.models_dir, request.responses_path, request.settings, cache_dir)
+        fitted = _fit_once(
+            request.name,
+            request.models_dir,
+            request.responses_path,
+            request.settings,
+            cache_dir,
+        )
         if _refit_decision(request.name, fitted, request.settings):
             refits.append(
                 TimeLimitedFit(
-                    request.name, request.models_dir, request.responses_path,
-                    refit_settings(request.settings, fitted.fingerprint), cache_dir,
+                    request.name,
+                    request.models_dir,
+                    request.responses_path,
+                    refit_settings(request.settings, fitted.fingerprint),
+                    cache_dir,
                 )
             )
     if refits:
@@ -1691,7 +1779,9 @@ def _fit_executor(
     repo's do; an ad-hoc script without one re-runs itself in each worker).
     """
     if len(compile_dirs) < workers:
-        raise ValueError(f"{workers} fit-pool workers need as many compile directories.")
+        raise ValueError(
+            f"{workers} fit-pool workers need as many compile directories."
+        )
     context = multiprocessing.get_context("spawn")
     handed_out = context.SimpleQueue()
     for compile_dir in compile_dirs:
@@ -1747,12 +1837,19 @@ def _sample_models_in_pool(
         expected[name] = {first, refit}
     outcomes: Dict[str, Optional[BaseException]] = {}
     n_workers = min(workers, len(names))
-    with _fit_process_caches() as cache_root, _compile_dirs(n_workers) as compile_dirs, \
-            _fit_executor(n_workers, cache_root, compile_dirs) as pool:
+    with (
+        _fit_process_caches() as cache_root,
+        _compile_dirs(n_workers) as compile_dirs,
+        _fit_executor(n_workers, cache_root, compile_dirs) as pool,
+    ):
         futures = {
             pool.submit(
                 _fit_model_in_worker,
-                name, models_dir, responses_path, cache_dir, dict(fit_kwargs),
+                name,
+                models_dir,
+                responses_path,
+                cache_dir,
+                dict(fit_kwargs),
             ): name
             for name in names
         }
@@ -1852,7 +1949,8 @@ def _fit_outcomes(
         for name in pending
         if cache_dir is None
         or not cached_fit_path(
-            cache_dir, name,
+            cache_dir,
+            name,
             fit_fingerprint(name, models_dir, responses_path, settings[name]),
         ).exists()
     ]
@@ -1896,8 +1994,13 @@ def _fit_outcomes(
             flush=True,
         )
         sampled = _sample_models_in_pool(
-            to_sample, models_dir, responses_path, pool_dir, fit_kwargs,
-            workers=workers, stop_on_failure=stop_on_failure,
+            to_sample,
+            models_dir,
+            responses_path,
+            pool_dir,
+            fit_kwargs,
+            workers=workers,
+            stop_on_failure=stop_on_failure,
         )
         for name, failure in sampled.items():
             if failure is not None:
@@ -1932,8 +2035,12 @@ def fit_models_cached(
     pool cancelled because of it are not reported.
     """
     outcomes = _fit_outcomes(
-        model_names, models_dir, responses_path,
-        cache_dir=cache_dir, fit_workers=fit_workers, fit_kwargs=fit_kwargs,
+        model_names,
+        models_dir,
+        responses_path,
+        cache_dir=cache_dir,
+        fit_workers=fit_workers,
+        fit_kwargs=fit_kwargs,
         stop_on_failure=True,
     )
     failures = [o for o in outcomes.values() if isinstance(o, BaseException)]
@@ -1968,8 +2075,12 @@ def fit_models_to_cache(
     (``FitInfrastructureFailure``, ``INFRASTRUCTURE_ERRORS``) raises.
     """
     outcomes = _fit_outcomes(
-        model_names, models_dir, responses_path,
-        cache_dir=cache_dir, fit_workers=fit_workers, fit_kwargs=fit_kwargs,
+        model_names,
+        models_dir,
+        responses_path,
+        cache_dir=cache_dir,
+        fit_workers=fit_workers,
+        fit_kwargs=fit_kwargs,
         stop_on_failure=False,
     )
     return {

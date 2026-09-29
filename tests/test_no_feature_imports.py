@@ -29,7 +29,13 @@ GUARDED_FILES = [
 ]
 
 SEED_DIRS = [
-    REPO / "src" / "pipelines" / "outer_loop" / "projects" / "subjective_randomness" / "seed_models",
+    REPO
+    / "src"
+    / "pipelines"
+    / "outer_loop"
+    / "projects"
+    / "subjective_randomness"
+    / "seed_models",
     REPO / "src" / "subjective_randomness" / "pymc_model_families",
 ]
 
@@ -40,7 +46,13 @@ FORBIDDEN_MODULES = {
 
 # Research analysis tools that legitimately need the feature library.
 EXCLUDED_FILES = {
-    REPO / "src" / "pipelines" / "outer_loop" / "projects" / "subjective_randomness" / "evaluate_recovery.py",
+    REPO
+    / "src"
+    / "pipelines"
+    / "outer_loop"
+    / "projects"
+    / "subjective_randomness"
+    / "evaluate_recovery.py",
 }
 
 
@@ -65,7 +77,9 @@ def _ast_imports_feature_module(path: Path) -> list[str]:
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):
             for alias in node.names:
-                if any(alias.name.endswith(m) or alias.name == m for m in FORBIDDEN_MODULES):
+                if any(
+                    alias.name.endswith(m) or alias.name == m for m in FORBIDDEN_MODULES
+                ):
                     hits.append(f"import {alias.name}")
         elif isinstance(node, ast.ImportFrom):
             mod = node.module or ""
@@ -79,14 +93,18 @@ def _ast_imports_feature_module(path: Path) -> list[str]:
             if node.level and node.names:
                 for alias in node.names:
                     if alias.name == "features":
-                        hits.append(f"from {'.'*node.level}{node.module or ''} import features")
+                        hits.append(
+                            f"from {'.' * node.level}{node.module or ''} import features"
+                        )
     return hits
 
 
 class TestASTNoFeatureImports:
     """No AST-level import of src.subjective_randomness.features."""
 
-    @pytest.mark.parametrize("root", GUARDED_TREES + SEED_DIRS, ids=lambda p: str(p.relative_to(REPO)))
+    @pytest.mark.parametrize(
+        "root", GUARDED_TREES + SEED_DIRS, ids=lambda p: str(p.relative_to(REPO))
+    )
     def test_guarded_trees(self, root):
         violations = {}
         for py in _python_files(root):
@@ -95,7 +113,9 @@ class TestASTNoFeatureImports:
                 violations[str(py.relative_to(REPO))] = hits
         assert not violations, f"Feature imports found:\n{violations}"
 
-    @pytest.mark.parametrize("path", GUARDED_FILES, ids=lambda p: str(p.relative_to(REPO)))
+    @pytest.mark.parametrize(
+        "path", GUARDED_FILES, ids=lambda p: str(p.relative_to(REPO))
+    )
     def test_guarded_files(self, path):
         hits = _ast_imports_feature_module(path)
         assert not hits, f"Feature imports in {path.relative_to(REPO)}:\n{hits}"

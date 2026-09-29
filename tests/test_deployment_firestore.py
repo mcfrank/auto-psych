@@ -5,8 +5,14 @@ from src.pipelines.outer_loop.deployment.firestore import (
 
 
 def test_validate_submit_payload_accepts_session_or_legacy_shape():
-    assert validate_submit_payload({"collection_session_id": "s", "trials": []}) == (True, "")
-    assert validate_submit_payload({"project_id": "p", "run_id": 1, "trials": []}) == (True, "")
+    assert validate_submit_payload({"collection_session_id": "s", "trials": []}) == (
+        True,
+        "",
+    )
+    assert validate_submit_payload({"project_id": "p", "run_id": 1, "trials": []}) == (
+        True,
+        "",
+    )
     ok, msg = validate_submit_payload({"project_id": "p", "trials": []})
     assert not ok
     assert "collection_session_id" in msg

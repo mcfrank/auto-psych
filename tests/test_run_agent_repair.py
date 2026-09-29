@@ -10,7 +10,9 @@ import pytest
 from src.pipelines.outer_loop import run
 
 
-def _run_implement(monkeypatch, tmp_path, validate_results, *, max_repairs, validate=True):
+def _run_implement(
+    monkeypatch, tmp_path, validate_results, *, max_repairs, validate=True
+):
     """Drive _run_agent for the 3_implement coding stage with its seams stubbed.
 
     ``validate_results`` is the sequence of booleans ``validate_cc_output`` returns.
@@ -21,7 +23,9 @@ def _run_implement(monkeypatch, tmp_path, validate_results, *, max_repairs, vali
 
     spawn_feedback = []
 
-    def fake_spawn(agent_key, exp_dir, allowed_dirs=None, backend=None, repair_feedback=None, **k):
+    def fake_spawn(
+        agent_key, exp_dir, allowed_dirs=None, backend=None, repair_feedback=None, **k
+    ):
         spawn_feedback.append(repair_feedback)
         return True, ""
 

@@ -166,7 +166,9 @@ def _lens_index(
     """Which lens the ``exploratory_idx``-th exploratory slot of round ``iteration`` works."""
     if n_lenses < 1:
         raise ValueError("The lens battery is empty.")
-    return (lens_offset + iteration * exploratory_per_round + exploratory_idx) % n_lenses
+    return (
+        lens_offset + iteration * exploratory_per_round + exploratory_idx
+    ) % n_lenses
 
 
 # ─────────────────────────────────────────────
@@ -536,7 +538,9 @@ class NoveltyPoolUndefined(ValueError):
     cell.
     """
 
-    def __init__(self, model_name: str, examples: Sequence[str], n_invalid: int, n_pool: int):
+    def __init__(
+        self, model_name: str, examples: Sequence[str], n_invalid: int, n_pool: int
+    ):
         self.model_name = model_name
         self.examples = list(examples)
         self.n_invalid = n_invalid
@@ -672,7 +676,10 @@ def _min_prediction_rmse(
     undefined = ~np.isfinite(candidate_p)
     if undefined.any():
         raise NoveltyPoolUndefined(
-            model_name, _pair_labels(pool_rows, undefined)[:5], int(undefined.sum()), len(pool_rows)
+            model_name,
+            _pair_labels(pool_rows, undefined)[:5],
+            int(undefined.sum()),
+            len(pool_rows),
         )
     nearest: Optional[str] = None
     nearest_rmse = float("inf")
@@ -856,8 +863,7 @@ def _prune_losers(
     if unreliable:
         print(
             "  [warn] Not pruning models with unreliable LOO estimates or "
-            "non-converged fits: "
-            + ", ".join(unreliable),
+            "non-converged fits: " + ", ".join(unreliable),
             file=sys.stderr,
             flush=True,
         )
@@ -875,7 +881,10 @@ def _prune_losers(
     if _untrusted(comparison[top]):
         # Untrusted rows drop out here; they are never pruned.
         comparison = compare_table(
-            responses_path, models_dir, cache_dir=cache_dir, names=trusted,
+            responses_path,
+            models_dir,
+            cache_dir=cache_dir,
+            names=trusted,
             **(fit_kwargs or {}),
         )
     baseline = min(comparison, key=lambda name: comparison[name]["rank"])
@@ -893,7 +902,8 @@ def _prune_losers(
         if name in comparison
         and not _untrusted(comparison[name])
         and _clustered_dse(comparison, name) > 0
-        and comparison[name]["elpd_diff"] > dse_multiplier * _clustered_dse(comparison, name)
+        and comparison[name]["elpd_diff"]
+        > dse_multiplier * _clustered_dse(comparison, name)
     ]
     if not to_prune:
         return []
@@ -1022,7 +1032,9 @@ class Admission:
 
     def __post_init__(self) -> None:
         if self.admitted and self.reason:
-            raise ValueError(f"an admitted candidate has no rejection reason; got {self.reason!r}")
+            raise ValueError(
+                f"an admitted candidate has no rejection reason; got {self.reason!r}"
+            )
         if not self.admitted and not self.reason:
             raise ValueError("a rejected candidate needs a rejection reason")
 
@@ -1185,7 +1197,12 @@ def prefit_candidates(
                 if hypothesis_file.exists()
                 else ""
             )
-            if _cheap_gate_rejection(candidate_file, hypothesis, staging, name, responses_path) is None:
+            if (
+                _cheap_gate_rejection(
+                    candidate_file, hypothesis, staging, name, responses_path
+                )
+                is None
+            ):
                 ready.append(name)
         if ready:
             print(
@@ -1322,7 +1339,9 @@ def _admit_candidate_with_reason(
     # trials, not mixing).
     problems = convergence_problems_of(fitted)
     if problems:
-        already_tried = _smaller_steps_already_tried(model_name, models_dir, fit_kwargs, fitted)
+        already_tried = _smaller_steps_already_tried(
+            model_name, models_dir, fit_kwargs, fitted
+        )
         staged.unlink(missing_ok=True)
         return reject(
             f"MCMC did not converge ({'; '.join(problems)})"

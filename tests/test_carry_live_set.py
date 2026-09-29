@@ -85,9 +85,14 @@ def _finished_experiment(tmp_path, *, cognitive, zoo, pruned, best="winner"):
                 "posteriors": {n: (1.0 if n == best else 0.0) for n in zoo},
                 "elpd_loo": {n: -100.0 for n in zoo},
                 "comparison": {
-                    n: {"rank": i, "elpd_loo": -100.0, "elpd_diff": float(i),
-                        "dse": 1.0, "weight": 1.0 if n == best else 0.0,
-                        "loo_unreliable": False}
+                    n: {
+                        "rank": i,
+                        "elpd_loo": -100.0,
+                        "elpd_diff": float(i),
+                        "dse": 1.0,
+                        "weight": 1.0 if n == best else 0.0,
+                        "loo_unreliable": False,
+                    }
                     for i, n in enumerate([best] + [m for m in zoo if m != best])
                 },
             }
@@ -116,8 +121,7 @@ def test_next_experiment_starts_from_the_live_set_with_its_ledger_and_a_uniform_
         pruned=["carried_old", "loser"],
     )
 
-    _export_inner_loop_models(
-        exp1, loop, best_model="winner")
+    _export_inner_loop_models(exp1, loop, best_model="winner")
     update_registry_from_interpretation(exp1)
     exp2 = tmp_path / "experiment2"
     assert carry_forward_cognitive_models(exp1, exp2)
@@ -133,7 +137,9 @@ def test_next_experiment_starts_from_the_live_set_with_its_ledger_and_a_uniform_
         encoding="utf-8"
     ) == LEDGER_TEXT
     # The design prior is uniform over exactly the carried set.
-    registry = yaml.safe_load((exp1 / "model_registry.yaml").read_text(encoding="utf-8"))
+    registry = yaml.safe_load(
+        (exp1 / "model_registry.yaml").read_text(encoding="utf-8")
+    )
     assert registry["theories"] == pytest.approx(
         {"seed_a": 0.25, "seed_b": 0.25, "winner": 0.25, "rival": 0.25}
     )
@@ -149,8 +155,7 @@ def test_export_removes_a_starting_model_the_loop_dropped_as_unfittable(tmp_path
         zoo=["seed_a", "winner"],
         pruned=[],
     )
-    _export_inner_loop_models(
-        exp1, loop, best_model="winner")
+    _export_inner_loop_models(exp1, loop, best_model="winner")
     assert _manifest_names(exp1) == ["seed_a", "winner"]
     assert not (exp1 / "cognitive_models" / "seed_b.py").exists()
 
@@ -163,8 +168,7 @@ def test_export_is_idempotent(tmp_path):
         pruned=["carried_old"],
     )
     for _ in range(2):
-        _export_inner_loop_models(
-            exp1, loop, best_model="winner")
+        _export_inner_loop_models(exp1, loop, best_model="winner")
     assert _manifest_names(exp1) == ["seed_a", "winner"]
     assert (exp1 / "cognitive_models" / LEDGER_FILENAME).exists()
 
@@ -174,8 +178,7 @@ def test_export_refuses_a_best_model_outside_the_zoo(tmp_path):
         tmp_path, cognitive=["seed_a"], zoo=["seed_a", "winner"], pruned=[]
     )
     with pytest.raises(ValueError, match="not in the inner-loop zoo"):
-        _export_inner_loop_models(
-            exp1, loop, best_model="ghost")
+        _export_inner_loop_models(exp1, loop, best_model="ghost")
 
 
 def test_carry_forward_without_a_ledger_copies_the_model_set_only(tmp_path):
@@ -203,8 +206,12 @@ def test_wrapper_names_the_run_starting_models_and_labels_the_ledger(
     cog_dir.mkdir(parents=True)
     # The starting models experiment 1 recorded (run_starting_models).
     (exp_dir.parent / "starting_models.json").write_text(
-        json.dumps({"starting_models": ["falk_konold_dp", "motif_stack"],
-                    "starting_models_prunable": True}),
+        json.dumps(
+            {
+                "starting_models": ["falk_konold_dp", "motif_stack"],
+                "starting_models_prunable": True,
+            }
+        ),
         encoding="utf-8",
     )
     # Two real project seeds plus a model carried from experiment 1.

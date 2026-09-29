@@ -19,7 +19,9 @@ def _seed(exp_dir: Path, names) -> Path:
     models_dir = exp_dir / "cognitive_models"
     models_dir.mkdir(parents=True)
     for name in names:
-        shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / f"{name}.py", models_dir / f"{name}.py")
+        shutil.copyfile(
+            PYMC_MODEL_FIXTURES_DIR / f"{name}.py", models_dir / f"{name}.py"
+        )
     manifest = "models:\n" + "".join(
         f"  - name: {n}\n    rationale: People use mechanism {n}.\n" for n in names
     )

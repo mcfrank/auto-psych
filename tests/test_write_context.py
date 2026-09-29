@@ -32,6 +32,8 @@ def test_context_includes_previous_experiment_paths(tmp_path):
     prev.mkdir()
     exp = tmp_path / "experiment2"
     exp.mkdir()
-    path = write_context(exp, "3_implement", "subjective_randomness", 2, prev_exp_dir=prev)
+    path = write_context(
+        exp, "3_implement", "subjective_randomness", 2, prev_exp_dir=prev
+    )
     text = path.read_text(encoding="utf-8")
     assert str(prev / "model_registry.yaml") in text

@@ -15,7 +15,13 @@ from src.pipelines.outer_loop.collect import check_response_variation
 
 def _rows(chose_left_values):
     return [
-        {"participant_id": i, "trial_index": 0, "sequence_a": "HT", "sequence_b": "TH", "chose_left": v}
+        {
+            "participant_id": i,
+            "trial_index": 0,
+            "sequence_a": "HT",
+            "sequence_b": "TH",
+            "chose_left": v,
+        }
         for i, v in enumerate(chose_left_values)
     ]
 
@@ -128,9 +134,15 @@ def test_poll_prolific_returns_when_target_met(tmp_path, monkeypatch):
     from src.pipelines.outer_loop import collect
     import src.runtime.prolific as prol
 
-    monkeypatch.setattr(prol, "get_submission_counts", lambda s: ({"COMPLETED": 5}, None))
+    monkeypatch.setattr(
+        prol, "get_submission_counts", lambda s: ({"COMPLETED": 5}, None)
+    )
     completed = collect._poll_prolific_until_target(
-        "study", target_places=5, out_dir=tmp_path, max_wait_sec=10_000, poll_interval_sec=0
+        "study",
+        target_places=5,
+        out_dir=tmp_path,
+        max_wait_sec=10_000,
+        poll_interval_sec=0,
     )
     assert completed == 5
 
@@ -179,7 +191,9 @@ def test_malformed_experiment_config_raises(tmp_path):
     from src.pipelines.outer_loop import orchestrator
 
     exp_dir = _make_exp_dir_no_api(tmp_path)
-    (exp_dir / "experiment" / "config.json").write_text("{not valid json", encoding="utf-8")
+    (exp_dir / "experiment" / "config.json").write_text(
+        "{not valid json", encoding="utf-8"
+    )
     with pytest.raises(RuntimeError, match="[Mm]alformed"):
         orchestrator.run_collect_programmatic(
             exp_dir,

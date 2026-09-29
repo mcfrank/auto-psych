@@ -98,7 +98,9 @@ def test_the_motif_stack_seed_is_the_viterbi_model():
     (a softmax rewrite briefly replaced it and was reverted 2026-09-27)."""
     from src.models.pymc_inference import model_sampler_settings
 
-    assert model_sampler_settings("motif_stack", LIVE_SEED_DIR) == {"target_accept": 0.9}
+    assert model_sampler_settings("motif_stack", LIVE_SEED_DIR) == {
+        "target_accept": 0.9
+    }
 
 
 # ── the reader ──────────────────────────────────────────────────────

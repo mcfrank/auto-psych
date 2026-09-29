@@ -20,8 +20,13 @@ from tests.paths import REPO_ROOT
 
 REGISTRY = REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families"
 POOL = (
-    REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects"
-    / "subjective_randomness" / "seed_models"
+    REPO_ROOT
+    / "src"
+    / "pipelines"
+    / "outer_loop"
+    / "projects"
+    / "subjective_randomness"
+    / "seed_models"
 )
 VENDORED = {
     "falk_konold_dp": (
@@ -35,8 +40,12 @@ VENDORED = {
     "local_representativeness": (
         ("clean_sequence", "periodicity_score", "multiscale_local_imbalance"),
         (
-            "p_alts_a", "p_alts_b", "periodicity_a", "periodicity_b",
-            "multiscale_imbalance_a", "multiscale_imbalance_b",
+            "p_alts_a",
+            "p_alts_b",
+            "periodicity_a",
+            "periodicity_b",
+            "multiscale_imbalance_a",
+            "multiscale_imbalance_b",
         ),
     ),
 }
@@ -148,7 +157,9 @@ def test_motif_stack_needs_no_hook():
 
 
 def test_seeding_can_be_pointed_at_the_pool(tmp_path):
-    from src.pipelines.outer_loop.orchestrator import seed_experiment_models_from_project
+    from src.pipelines.outer_loop.orchestrator import (
+        seed_experiment_models_from_project,
+    )
 
     pool = tmp_path / "seed_models"
     pool.mkdir()
@@ -163,7 +174,9 @@ def test_seeding_can_be_pointed_at_the_pool(tmp_path):
     assert seed_experiment_models_from_project(
         exp_dir, "subjective_randomness", seed_dir=pool
     )
-    seeded = (exp_dir / "cognitive_models" / "motif_stack.py").read_text(encoding="utf-8")
+    seeded = (exp_dir / "cognitive_models" / "motif_stack.py").read_text(
+        encoding="utf-8"
+    )
     assert seeded == "# the pool copy\n", "seeded from the default pool, not seed_dir"
 
 
@@ -179,7 +192,8 @@ def test_seed_exclusion_reads_the_same_pool_that_seeding_uses(tmp_path):
     intact.mkdir()
     (intact / "models_manifest.yaml").write_text(
         "models:\n  - name: motif_stack\n    rationale: r\n"
-        "  - name: falk_konold_dp\n    rationale: r\n", encoding="utf-8"
+        "  - name: falk_konold_dp\n    rationale: r\n",
+        encoding="utf-8",
     )
 
     assert seed_exclusion("falk_konold_dp", scrubbed) == ()

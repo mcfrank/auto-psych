@@ -86,8 +86,12 @@ def test_a_run_that_timed_out_stays_timed_out_even_if_it_left_a_fit(tmp_path):
     assert request.nc_path().exists()
     with pytest.raises(pi.FitTimeLimitExceeded):
         pi.fit_model(
-            request.name, request.models_dir, request.responses_path,
-            cache_dir=request.cache_dir, target_accept=0.8, time_limit_sec=3,
+            request.name,
+            request.models_dir,
+            request.responses_path,
+            cache_dir=request.cache_dir,
+            target_accept=0.8,
+            time_limit_sec=3,
         )
 
 
@@ -102,7 +106,9 @@ def test_the_models_own_failure_is_reported_by_name(tmp_path):
 def test_a_process_that_dies_without_reporting_is_an_infrastructure_failure(tmp_path):
     with pytest.raises(pi.FitInfrastructureFailure, match="exited with code 3"):
         pi.sample_fits_time_limited(
-            [_request(tmp_path)], time_limit_sec=60, _target=stand_ins.die_without_reporting
+            [_request(tmp_path)],
+            time_limit_sec=60,
+            _target=stand_ins.die_without_reporting,
         )
 
 
@@ -161,20 +167,32 @@ def _limited_fit_model(monkeypatch, *, outcomes, near_miss):
 
     monkeypatch.setattr(pi, "sample_fits_time_limited", fake_sample)
     monkeypatch.setattr(pi, "_fit_once", fake_fit_once)
-    monkeypatch.setattr(pi, "convergence_problems_of", lambda f: ["R-hat 1.1"] if f["target_accept"] < 0.95 else [])
     monkeypatch.setattr(
-        pi, "convergence_diagnostics_of",
+        pi,
+        "convergence_problems_of",
+        lambda f: ["R-hat 1.1"] if f["target_accept"] < 0.95 else [],
+    )
+    monkeypatch.setattr(
+        pi,
+        "convergence_diagnostics_of",
         lambda f: pi.ConvergenceDiagnostics(0, 4000, 1.1 if near_miss else 2.5, 50),
     )
     return runs
 
 
-def test_the_limit_applies_to_the_first_fit_and_to_a_near_miss_refit(tmp_path, monkeypatch):
+def test_the_limit_applies_to_the_first_fit_and_to_a_near_miss_refit(
+    tmp_path, monkeypatch
+):
     request = _request(tmp_path)
     runs = _limited_fit_model(monkeypatch, outcomes=[None, None], near_miss=True)
     fitted = pi.fit_model(
-        "m", request.models_dir, request.responses_path, cache_dir=request.cache_dir,
-        target_accept=0.8, chains=4, time_limit_sec=900,
+        "m",
+        request.models_dir,
+        request.responses_path,
+        cache_dir=request.cache_dir,
+        target_accept=0.8,
+        chains=4,
+        time_limit_sec=900,
     )
     assert runs == [(0.8, 900), (0.95, 900)]
     assert fitted["target_accept"] == 0.95
@@ -186,8 +204,13 @@ def test_a_timed_out_refit_raises_the_time_limit(tmp_path, monkeypatch):
     _limited_fit_model(monkeypatch, outcomes=[None, timeout], near_miss=True)
     with pytest.raises(pi.FitTimeLimitExceeded):
         pi.fit_model(
-            "m", request.models_dir, request.responses_path, cache_dir=request.cache_dir,
-            target_accept=0.8, chains=4, time_limit_sec=900,
+            "m",
+            request.models_dir,
+            request.responses_path,
+            cache_dir=request.cache_dir,
+            target_accept=0.8,
+            chains=4,
+            time_limit_sec=900,
         )
 
 
@@ -197,8 +220,13 @@ def test_a_cached_fit_is_loaded_without_a_child_process(tmp_path, monkeypatch):
     request.cache_dir.mkdir()
     request.nc_path().write_text("fit")
     fitted = pi.fit_model(
-        "m", request.models_dir, request.responses_path, cache_dir=request.cache_dir,
-        target_accept=0.8, chains=4, time_limit_sec=900,
+        "m",
+        request.models_dir,
+        request.responses_path,
+        cache_dir=request.cache_dir,
+        target_accept=0.8,
+        chains=4,
+        time_limit_sec=900,
     )
     assert runs == [] and fitted["target_accept"] == 0.8
 
@@ -215,18 +243,28 @@ def test_a_time_limited_fit_is_the_fit_an_unlimited_one_makes(tmp_path):
     responses = PYMC_MODEL_FIXTURES_DIR / "responses.csv"
     settings = {"draws": 200, "tune": 200, "chains": 2, "cores": 2}
     limited = pi.fit_model(
-        "representativeness", PYMC_MODEL_FIXTURES_DIR, responses,
-        cache_dir=tmp_path / "limited", time_limit_sec=600, **settings,
+        "representativeness",
+        PYMC_MODEL_FIXTURES_DIR,
+        responses,
+        cache_dir=tmp_path / "limited",
+        time_limit_sec=600,
+        **settings,
     )
     unlimited = pi.fit_model(
-        "representativeness", PYMC_MODEL_FIXTURES_DIR, responses,
-        cache_dir=tmp_path / "unlimited", **settings,
+        "representativeness",
+        PYMC_MODEL_FIXTURES_DIR,
+        responses,
+        cache_dir=tmp_path / "unlimited",
+        **settings,
     )
     assert limited.fingerprint == unlimited.fingerprint
     assert limited.elpd_loo() == unlimited.elpd_loo()
     in_memory = pi.fit_model(
-        "representativeness", PYMC_MODEL_FIXTURES_DIR, responses,
-        time_limit_sec=600, **settings,
+        "representativeness",
+        PYMC_MODEL_FIXTURES_DIR,
+        responses,
+        time_limit_sec=600,
+        **settings,
     )
     assert in_memory.elpd_loo() == unlimited.elpd_loo()
 
@@ -238,9 +276,15 @@ def test_a_real_fit_over_its_limit_is_stopped(tmp_path):
     start = time.monotonic()
     with pytest.raises(pi.FitTimeLimitExceeded):
         pi.fit_model(
-            "representativeness", PYMC_MODEL_FIXTURES_DIR,
-            PYMC_MODEL_FIXTURES_DIR / "responses.csv", cache_dir=tmp_path,
-            draws=10**6, tune=1000, chains=2, cores=2, time_limit_sec=20,
+            "representativeness",
+            PYMC_MODEL_FIXTURES_DIR,
+            PYMC_MODEL_FIXTURES_DIR / "responses.csv",
+            cache_dir=tmp_path,
+            draws=10**6,
+            tune=1000,
+            chains=2,
+            cores=2,
+            time_limit_sec=20,
         )
     assert time.monotonic() - start < 60
     assert not list(tmp_path.glob("*.nc")) and not list(tmp_path.glob(".*partial"))

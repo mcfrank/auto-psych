@@ -211,7 +211,8 @@ def compare_table(
             "elpd_diff": float(row["elpd_diff"]),
             "dse": float(row["dse"]),
             "dse_clustered": (
-                0.0 if name == best
+                0.0
+                if name == best
                 else cluster_dse(pointwise[best], pointwise[name], clusters)
             ),
             "weight": float(row["weight"]),

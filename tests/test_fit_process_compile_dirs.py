@@ -25,7 +25,9 @@ from src.models import pymc_inference as pi
 from tests import fit_process_stand_ins as stand_ins
 from tests.test_fit_time_limit import _request
 
-SLURM = Path(__file__).resolve().parents[1] / "scripts" / "subjective_randomness" / "slurm"
+SLURM = (
+    Path(__file__).resolve().parents[1] / "scripts" / "subjective_randomness" / "slurm"
+)
 LIVE = Path(__file__).resolve().parents[1] / "scripts" / "outer_loop_live"
 
 
@@ -53,13 +55,13 @@ def test_concurrent_time_limited_fits_compile_in_directories_of_their_own(
 ):
     requests = [_request(tmp_path, name) for name in ("a", "b", "c")]
     outcomes = pi.sample_fits_time_limited(
-        requests, time_limit_sec=120, workers=3,
+        requests,
+        time_limit_sec=120,
+        workers=3,
         _target=stand_ins.take_the_compile_lock_and_write_the_fit,
     )
     assert outcomes == [None, None, None]
-    compiledirs = {
-        (r.cache_dir / f"{r.name}.compiledir").read_text() for r in requests
-    }
+    compiledirs = {(r.cache_dir / f"{r.name}.compiledir").read_text() for r in requests}
     assert len(compiledirs) == 3
     for compiledir in compiledirs:
         assert Path(compiledir).is_relative_to(tmp_path / "slots")
@@ -70,16 +72,25 @@ def test_a_fit_process_reuses_the_compile_directory_of_the_one_before_it(
 ):
     requests = [_request(tmp_path, name) for name in ("a", "b")]
     pi.sample_fits_time_limited(
-        requests, time_limit_sec=120, workers=1,
+        requests,
+        time_limit_sec=120,
+        workers=1,
         _target=stand_ins.take_the_compile_lock_and_write_the_fit,
     )
-    first, second = ((r.cache_dir / f"{r.name}.compiledir").read_text() for r in requests)
+    first, second = (
+        (r.cache_dir / f"{r.name}.compiledir").read_text() for r in requests
+    )
     assert first == second
 
 
-def test_fit_pool_workers_compile_in_directories_of_their_own(tmp_path, shared_compiledir_locked):
-    with pi._fit_process_caches() as cache_root, pi._compile_dirs(2) as compile_dirs, \
-            pi._fit_executor(2, cache_root, compile_dirs) as pool:
+def test_fit_pool_workers_compile_in_directories_of_their_own(
+    tmp_path, shared_compiledir_locked
+):
+    with (
+        pi._fit_process_caches() as cache_root,
+        pi._compile_dirs(2) as compile_dirs,
+        pi._fit_executor(2, cache_root, compile_dirs) as pool,
+    ):
         futures = [
             pool.submit(stand_ins.take_the_compile_lock_and_name_the_compile_dir)
             for _ in range(4)
@@ -102,9 +113,12 @@ def test_compile_slots_are_not_shared_while_held(tmp_path, monkeypatch):
 
 
 def test_the_compile_dir_flag_keeps_the_other_flags():
-    assert pi._flags_with_base_compiledir(
-        "floatX=float64, base_compiledir=/shared,optimizer=fast_run", "/own"
-    ) == "floatX=float64,optimizer=fast_run,base_compiledir=/own"
+    assert (
+        pi._flags_with_base_compiledir(
+            "floatX=float64, base_compiledir=/shared,optimizer=fast_run", "/own"
+        )
+        == "floatX=float64,optimizer=fast_run,base_compiledir=/own"
+    )
     assert pi._flags_with_base_compiledir("", "/own") == "base_compiledir=/own"
     with pytest.raises(RuntimeError, match="compiledir"):
         pi._flags_with_base_compiledir("compiledir=/pinned", "/own")
@@ -121,5 +135,9 @@ def test_the_compile_dir_flag_keeps_the_other_flags():
 def test_each_job_compiles_in_a_directory_of_its_own(script):
     """The harness process itself compiles too; jobs on one node must not share."""
     text = script.read_text(encoding="utf-8")
-    compiledir_lines = [line for line in text.splitlines() if re.search(r"pytensor", line) and "SLURM_JOB_ID" in line]
+    compiledir_lines = [
+        line
+        for line in text.splitlines()
+        if re.search(r"pytensor", line) and "SLURM_JOB_ID" in line
+    ]
     assert compiledir_lines, f"{script.name}: the PyTensor compile dir is not per job"

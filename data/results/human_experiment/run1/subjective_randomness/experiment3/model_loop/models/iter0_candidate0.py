@@ -7,26 +7,29 @@ import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
+
 def compute_features(sequence_a: str, sequence_b: str) -> dict:
     """Return run-level features needed to compute the accumulated quadratic run penalty."""
+
     def get_runs(seq):
         seq = seq.strip().upper()
-        if not seq: 
+        if not seq:
             return []
-        return [len(m.group(0)) for m in re.finditer(r'(H+|T+)', seq)]
-    
+        return [len(m.group(0)) for m in re.finditer(r"(H+|T+)", seq)]
+
     def run_sq(runs):
         return sum(r**2 for r in runs)
-        
+
     runs_a = get_runs(sequence_a)
     runs_b = get_runs(sequence_b)
-    
+
     return {
         "run_sq_a": float(run_sq(runs_a)),
         "run_sq_b": float(run_sq(runs_b)),
         "n_runs_a": float(len(runs_a)),
-        "n_runs_b": float(len(runs_b))
+        "n_runs_b": float(len(runs_b)),
     }
+
 
 with pm.Model() as model:
     # Stimulus inputs (precomputed and our custom run features)
@@ -60,9 +63,13 @@ with pm.Model() as model:
     # Note: sum(L_i) is exactly the total sequence length (n_a).
     n_a_f = pt.cast(n_a, "float64")
     n_b_f = pt.cast(n_b, "float64")
-    
-    run_penalty_a = run_sq_a - 2.0 * ideal_run_len * n_a_f + pt.square(ideal_run_len) * n_runs_a
-    run_penalty_b = run_sq_b - 2.0 * ideal_run_len * n_b_f + pt.square(ideal_run_len) * n_runs_b
+
+    run_penalty_a = (
+        run_sq_a - 2.0 * ideal_run_len * n_a_f + pt.square(ideal_run_len) * n_runs_a
+    )
+    run_penalty_b = (
+        run_sq_b - 2.0 * ideal_run_len * n_b_f + pt.square(ideal_run_len) * n_runs_b
+    )
 
     # Head proportion penalty is linear (absolute difference)
     p_penalty_a = pt.abs(p_a - ideal_p)

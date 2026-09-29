@@ -50,8 +50,10 @@ def req(d: dict, key: str, where: str):
 
 def main() -> None:
     args = [a for a in sys.argv[1:] if not a.startswith("-")]
-    check_only = "--check" in sys.argv[1:]      # validate + cost + env, do NOT render
-    render_only = "--render-only" in sys.argv[1:]  # render prolific_config into THIS repo, nothing else
+    check_only = "--check" in sys.argv[1:]  # validate + cost + env, do NOT render
+    render_only = (
+        "--render-only" in sys.argv[1:]
+    )  # render prolific_config into THIS repo, nothing else
     if not args:
         die("usage: _pilot_config.py <pilot.yaml> [--check | --render-only]")
     cfg_path = Path(args[0])
@@ -84,7 +86,9 @@ def main() -> None:
             "`coding_agent: claude` needs `claude_auth: subscription` "
             "(CLAUDE_CODE_OAUTH_TOKEN) or `claude_auth: api` (ANTHROPIC_API_KEY)"
         )
-    prolific_mode = str(cfg.get("prolific_mode") or "test")  # safe default: test, not live
+    prolific_mode = str(
+        cfg.get("prolific_mode") or "test"
+    )  # safe default: test, not live
     if prolific_mode not in VALID_PROLIFIC_MODES:
         die(f"`prolific_mode` must be one of {sorted(VALID_PROLIFIC_MODES)}")
     confirm_live = bool(cfg.get("confirm_live_recruitment", False))
@@ -132,9 +136,11 @@ def main() -> None:
         return
 
     # --- cost summary (use the loader so it matches what the pipeline will see)
-    eff = load_prolific_config(project) if not check_only else {
-        **load_prolific_config(project), **rendered
-    }
+    eff = (
+        load_prolific_config(project)
+        if not check_only
+        else {**load_prolific_config(project), **rendered}
+    )
     reward = compute_reward_cents(eff)  # cents/participant
     minutes = float(eff.get("estimated_completion_time") or 5)
     # Validate the eligibility config now so a bad min_approval_rate fails here,
@@ -163,25 +169,56 @@ def main() -> None:
     print(f"  run label         : {run_label}", file=w)
     print(f"  study name        : {eff.get('name')}", file=w)
     print(f"  task length       : {minutes:g} min", file=w)
-    print(f"  reward            : ${reward/100:,.2f}/participant  (~${reward/minutes*60/100:,.2f}/hr)", file=w)
-    print(f"  eligibility       : US residents, English-fluent, approval >= {min_approval}%", file=w)
-    print(f"  experiments       : {experiments}  (design=exhaustive; coding agent={coding_agent})", file=w)
+    print(
+        f"  reward            : ${reward / 100:,.2f}/participant  (~${reward / minutes * 60 / 100:,.2f}/hr)",
+        file=w,
+    )
+    print(
+        f"  eligibility       : US residents, English-fluent, approval >= {min_approval}%",
+        file=w,
+    )
+    print(
+        f"  experiments       : {experiments}  (design=exhaustive; coding agent={coding_agent})",
+        file=w,
+    )
     if prolific_mode == "test":
-        print("  prolific mode     : TEST — creates a DRAFT study (NOT published); preview it in "
-              "Prolific with a made-up PROLIFIC_PID, then it stops (no collect/model).", file=w)
+        print(
+            "  prolific mode     : TEST — creates a DRAFT study (NOT published); preview it in "
+            "Prolific with a made-up PROLIFIC_PID, then it stops (no collect/model).",
+            file=w,
+        )
     elif prolific_mode == "live":
         print(f"  prolific mode     : LIVE — recruits + PAYS real participants", file=w)
         print(f"  participants (N)  : {participants} per experiment", file=w)
-        print(f"  Prolific / exp.   : ${per_study/100:,.2f} reward + ~${per_fee/100:,.2f} fee = ~${per_total/100:,.2f}", file=w)
-        print(f"  PROLIFIC TOTAL    : ~${grand/100:,.2f}" + (f"  ({experiments} x {participants})" if experiments > 1 else ""), file=w)
-        print(f"  (Prolific fee est ~{int(PROLIFIC_SERVICE_FEE*100)}%; confirm the current rate in your account.)", file=w)
+        print(
+            f"  Prolific / exp.   : ${per_study / 100:,.2f} reward + ~${per_fee / 100:,.2f} fee = ~${per_total / 100:,.2f}",
+            file=w,
+        )
+        print(
+            f"  PROLIFIC TOTAL    : ~${grand / 100:,.2f}"
+            + (f"  ({experiments} x {participants})" if experiments > 1 else ""),
+            file=w,
+        )
+        print(
+            f"  (Prolific fee est ~{int(PROLIFIC_SERVICE_FEE * 100)}%; confirm the current rate in your account.)",
+            file=w,
+        )
     else:
-        print(f"  prolific mode     : none — deploys the experiment, creates NO study", file=w)
+        print(
+            f"  prolific mode     : none — deploys the experiment, creates NO study",
+            file=w,
+        )
     # Every mode runs coding agents (the page, and in live mode the critiques
     # and model proposals). The repo has no record of a live run's agent spend
     # to estimate from, so say what the numbers above leave out.
-    print(f"  AI agent costs NOT included above: the coding agents ({coding_agent}) bill", file=w)
-    print("    your language-model account separately; each experiment records its", file=w)
+    print(
+        f"  AI agent costs NOT included above: the coding agents ({coding_agent}) bill",
+        file=w,
+    )
+    print(
+        "    your language-model account separately; each experiment records its",
+        file=w,
+    )
     print("    spend afterwards in experiment<N>/token_usage_summary.json.", file=w)
 
     me, err = get_me()

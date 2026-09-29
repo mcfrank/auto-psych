@@ -29,7 +29,9 @@ DEFAULT_COMPLETION_ACTION = "AUTOMATICALLY_APPROVE"
 
 
 def completion_redirect_url(code: str) -> str:
-    return "https://app.prolific.com/submissions/complete?cc=" + urllib.parse.quote(code)
+    return "https://app.prolific.com/submissions/complete?cc=" + urllib.parse.quote(
+        code
+    )
 
 
 # Data-quality eligibility defaults applied to every real-recruitment study so
@@ -54,7 +56,10 @@ def verify_eligibility_choice_ids(filters: list[dict[str, Any]]) -> None:
     the silent fallback we want to avoid.
     """
     expected = {
-        "current-country-of-residence": (UNITED_STATES_RESIDENCE_CHOICE_ID, "United States"),
+        "current-country-of-residence": (
+            UNITED_STATES_RESIDENCE_CHOICE_ID,
+            "United States",
+        ),
         "fluent-languages": (ENGLISH_FLUENT_LANGUAGE_CHOICE_ID, "English"),
     }
     by_id = {f.get("filter_id"): f for f in filters}
@@ -198,8 +203,12 @@ def build_prolific_plan(
 
     cfg = load_recruitment_config(project_id, n_participants)
     completion_code = str(cfg.get("completion_code") or "AUTO_PSYCH_COMPLETE")
-    redirect = str(cfg.get("prolific_redirect_url") or completion_redirect_url(completion_code))
-    completion_action = str(cfg.get("completion_code_action") or DEFAULT_COMPLETION_ACTION)
+    redirect = str(
+        cfg.get("prolific_redirect_url") or completion_redirect_url(completion_code)
+    )
+    completion_action = str(
+        cfg.get("completion_code_action") or DEFAULT_COMPLETION_ACTION
+    )
     if completion_action not in _COMPLETION_ACTIONS:
         raise ValueError(
             f"completion_code_action must be one of {sorted(_COMPLETION_ACTIONS)}, "
@@ -208,7 +217,8 @@ def build_prolific_plan(
     payload: dict[str, Any] = {
         "name": cfg.get("name") or f"Auto-psych {manifest.experiment_id}",
         "internal_name": f"auto-psych {manifest.deployment_id}",
-        "description": cfg.get("description") or "Psychology experiment (auto-psych pipeline).",
+        "description": cfg.get("description")
+        or "Psychology experiment (auto-psych pipeline).",
         "external_study_url": external_study_url(manifest.experiment_url),
         "prolific_id_option": "url_parameters",
         # Prolific's current API: an array of completion codes, each with a type
@@ -264,7 +274,9 @@ def verify_live_eligibility() -> None:
     verify_eligibility_choice_ids(filters)
 
 
-def create_draft_study(project_id: str, manifest: DeploymentManifest, n_participants: int, mode: str) -> ProlificStudyPlan:
+def create_draft_study(
+    project_id: str, manifest: DeploymentManifest, n_participants: int, mode: str
+) -> ProlificStudyPlan:
     """Create a DRAFT Prolific study. It is never published here — the caller
     publishes only for live mode. Test mode creates the same draft (no test
     participant) so you can preview it in Prolific with a made-up PROLIFIC_PID.

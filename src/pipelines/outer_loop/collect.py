@@ -38,6 +38,7 @@ def _unique_batch_id() -> str:
     stamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S_%f")
     return f"{stamp}_{uuid.uuid4().hex[:6]}"
 
+
 MAX_PARALLEL_PARTICIPANTS = 3
 _PROLIFIC_POLL_INTERVAL_SEC = 30
 # Stop waiting on a Prolific study after this long so a stalled/under-recruited
@@ -101,7 +102,9 @@ def _poll_prolific_until_target(
     return completed
 
 
-def _pause_unfilled_study(study_id: str, completed: int, target_places: int, out_dir: Path) -> None:
+def _pause_unfilled_study(
+    study_id: str, completed: int, target_places: int, out_dir: Path
+) -> None:
     """Stop an under-filled study from recruiting once collection has given up.
 
     The pipeline models the partial data and moves on, so anyone recruited
@@ -173,9 +176,15 @@ def check_response_variation(rows: list[dict[str, Any]]) -> tuple[bool, str]:
         try:
             numeric = float(raw)
         except (TypeError, ValueError):
-            return False, f"collected row has invalid chose_left={raw!r}; expected binary 0 or 1"
+            return (
+                False,
+                f"collected row has invalid chose_left={raw!r}; expected binary 0 or 1",
+            )
         if not math.isfinite(numeric) or numeric not in (0.0, 1.0):
-            return False, f"collected row has invalid chose_left={raw!r}; expected binary 0 or 1"
+            return (
+                False,
+                f"collected row has invalid chose_left={raw!r}; expected binary 0 or 1",
+            )
         values.append(int(numeric))
     if not values:
         return False, "collected rows have no parseable chose_left values"
@@ -507,11 +516,17 @@ def _this_runs_rows(
     return filtered
 
 
-def _results_url(base_url: str, config: dict[str, Any], project_id: str, run_id: int | str) -> str:
+def _results_url(
+    base_url: str, config: dict[str, Any], project_id: str, run_id: int | str
+) -> str:
     if config.get("collection_session_id"):
-        query = urllib.parse.urlencode({"collection_session_id": str(config["collection_session_id"])})
+        query = urllib.parse.urlencode(
+            {"collection_session_id": str(config["collection_session_id"])}
+        )
     else:
-        query = urllib.parse.urlencode({"run_id": str(run_id), "project_id": str(project_id)})
+        query = urllib.parse.urlencode(
+            {"run_id": str(run_id), "project_id": str(project_id)}
+        )
     return f"{base_url.rstrip('/')}/results?{query}"
 
 

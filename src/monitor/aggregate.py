@@ -87,8 +87,8 @@ def participant_stat(doc_id: str, data: dict[str, Any]) -> ParticipantStat:
     n_right = n_valid - n_left
     p_left = (n_left / n_valid) if n_valid else None
 
-    degenerate = (
-        n_valid >= DEGENERATE_PARTICIPANT_MIN_TRIALS and (n_left == 0 or n_right == 0)
+    degenerate = n_valid >= DEGENERATE_PARTICIPANT_MIN_TRIALS and (
+        n_left == 0 or n_right == 0
     )
 
     submitted_at = _iso(data.get("created_at")) or _iso(data.get("submitted_at_client"))

@@ -36,7 +36,9 @@ def test_a_task_the_user_cancelled_is_not_resumed(tmp_path):
 
 
 def test_a_clean_array_needs_no_retry(tmp_path):
-    plan = retry_plan("1_1|COMPLETED\n1_2|COMPLETED\n", work_root=tmp_path, gt_models=GTS)
+    plan = retry_plan(
+        "1_1|COMPLETED\n1_2|COMPLETED\n", work_root=tmp_path, gt_models=GTS
+    )
     assert plan == {"same_memory": [], "more_memory": []}
 
 
@@ -44,7 +46,9 @@ def test_missing_cells_are_every_expected_cell_without_a_result(tmp_path):
     (tmp_path / "run1" / "motif_stack").mkdir(parents=True)
     (tmp_path / "run1" / "motif_stack" / "holdout.json").write_text(json.dumps({}))
     (tmp_path / "run2" / "motif_stack").mkdir(parents=True)  # started, no result
-    assert missing_cells(tmp_path, n_repeats=2, gt_models=["falk_konold_dp", "motif_stack"]) == [
+    assert missing_cells(
+        tmp_path, n_repeats=2, gt_models=["falk_konold_dp", "motif_stack"]
+    ) == [
         "run1/falk_konold_dp",
         "run2/falk_konold_dp",
         "run2/motif_stack",

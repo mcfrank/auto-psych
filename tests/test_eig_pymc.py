@@ -27,6 +27,7 @@ def _design(*args, **kwargs):
     (tests/test_eig_replicated_responses.py)."""
     return eig_mod.design_exhaustive(*args, n_responses=1, **kwargs)
 
+
 # A model with a participant-level random effect: it needs a `participant_id`
 # pm.Data column that stimulus feature rows (n_a/h_a/...) never carry. It fits
 # fine on responses.csv (which has participant_id) but cannot be prior-predicted
@@ -63,9 +64,12 @@ def _seed(tmp_path):
     models_dir = tmp_path / "cognitive_models"
     models_dir.mkdir(parents=True)
     for name in ("bayesian_fair_coin", "representativeness"):
-        shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / f"{name}.py", models_dir / f"{name}.py")
+        shutil.copyfile(
+            PYMC_MODEL_FIXTURES_DIR / f"{name}.py", models_dir / f"{name}.py"
+        )
     shutil.copyfile(
-        PYMC_MODEL_FIXTURES_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
+        PYMC_MODEL_FIXTURES_DIR / "models_manifest.yaml",
+        models_dir / "models_manifest.yaml",
     )
     return models_dir
 
@@ -73,9 +77,7 @@ def _seed(tmp_path):
 def _seed_with_participant_model(tmp_path):
     """Seed set + one carried-forward model that requires a participant_id column."""
     models_dir = _seed(tmp_path)
-    (models_dir / "participant_re.py").write_text(
-        _PARTICIPANT_MODEL, encoding="utf-8"
-    )
+    (models_dir / "participant_re.py").write_text(_PARTICIPANT_MODEL, encoding="utf-8")
     manifest = yaml.safe_load(
         (models_dir / "models_manifest.yaml").read_text(encoding="utf-8")
     )
@@ -117,9 +119,7 @@ def test_eig_registry_rejects_negative_weights(tmp_path):
         eig_mod._load_model_weights(registry)
 
 
-def test_design_drops_model_that_cannot_bind_to_stimulus(
-    tmp_path, monkeypatch, capsys
-):
+def test_design_drops_model_that_cannot_bind_to_stimulus(tmp_path, monkeypatch, capsys):
     """A model needing a non-stimulus column (participant_id) is screened out of
     the EIG set — loudly — instead of crashing the whole design; the selection
     runs over the remaining, stimulus-predictable models. The per-draw
@@ -209,9 +209,7 @@ def test_design_raises_when_no_model_can_bind(tmp_path):
     a meaningless design."""
     models_dir = tmp_path / "cognitive_models"
     models_dir.mkdir(parents=True)
-    (models_dir / "participant_re.py").write_text(
-        _PARTICIPANT_MODEL, encoding="utf-8"
-    )
+    (models_dir / "participant_re.py").write_text(_PARTICIPANT_MODEL, encoding="utf-8")
     (models_dir / "models_manifest.yaml").write_text(
         yaml.safe_dump(
             {"models": [{"name": "participant_re", "rationale": "p."}]},
@@ -221,9 +219,7 @@ def test_design_raises_when_no_model_can_bind(tmp_path):
     )
 
     with pytest.raises(ValueError, match="no models|cannot be evaluated|stimulus"):
-        _design(
-            models_dir, lengths=(3,), n_select=2
-        )
+        _design(models_dir, lengths=(3,), n_select=2)
 
 
 def test_exhaustive_design_selects_joint_eig_set(tmp_path):
@@ -248,8 +244,14 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     assert len(stimuli) == 5
     keys = set()
     for rank, item in enumerate(stimuli, start=1):
-        assert set("HT") >= set(item["sequence_a"]) and len(item["sequence_a"]) in (3, 4)
-        assert set("HT") >= set(item["sequence_b"]) and len(item["sequence_b"]) in (3, 4)
+        assert set("HT") >= set(item["sequence_a"]) and len(item["sequence_a"]) in (
+            3,
+            4,
+        )
+        assert set("HT") >= set(item["sequence_b"]) and len(item["sequence_b"]) in (
+            3,
+            4,
+        )
         assert len(item["sequence_a"]) == len(item["sequence_b"])
         assert isinstance(item["eig"], float) and item["eig"] >= 0.0
         assert item["selection_rank"] == rank
@@ -264,8 +266,12 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     eig_mod.main(
         eig_mod.Args(
             n_responses=1,
-            models_dir=models_dir, out=out2,
-            lengths=(3, 4), select=5, n_samples=25, n_scenarios=300,
+            models_dir=models_dir,
+            out=out2,
+            lengths=(3, 4),
+            select=5,
+            n_samples=25,
+            n_scenarios=300,
         )
     )
     assert json.loads(out2.read_text(encoding="utf-8")) == stimuli
@@ -276,20 +282,18 @@ def test_exhaustive_design_pure_random_no_eig(tmp_path):
     pool with NO EIG computation (no model scoring), each marked source='random'
     with eig=None. This is the 64-random ablation."""
     models_dir = _seed(tmp_path)
-    stimuli = _design(
-        models_dir, lengths=(3, 4), n_select=0, n_random=6, seed=1
-    )
+    stimuli = _design(models_dir, lengths=(3, 4), n_select=0, n_random=6, seed=1)
     assert len(stimuli) == 6
     assert all(s["source"] == "random" for s in stimuli)
     assert all(s["eig"] is None for s in stimuli)
     keys = {(s["sequence_a"], s["sequence_b"]) for s in stimuli}
     assert len(keys) == 6  # distinct
     for s in stimuli:
-        assert len(s["sequence_a"]) == len(s["sequence_b"]) and len(s["sequence_a"]) in (3, 4)
+        assert len(s["sequence_a"]) == len(s["sequence_b"]) and len(
+            s["sequence_a"]
+        ) in (3, 4)
     # deterministic given the seed
-    again = _design(
-        models_dir, lengths=(3, 4), n_select=0, n_random=6, seed=1
-    )
+    again = _design(models_dir, lengths=(3, 4), n_select=0, n_random=6, seed=1)
     assert {(s["sequence_a"], s["sequence_b"]) for s in again} == keys
 
 
@@ -299,8 +303,13 @@ def test_exhaustive_design_eig_plus_random_split(tmp_path):
     32-EIG + 32-random default."""
     models_dir = _seed(tmp_path)
     stimuli = _design(
-        models_dir, lengths=(3, 4),
-        n_select=3, n_random=4, n_samples=25, n_scenarios=300, seed=1,
+        models_dir,
+        lengths=(3, 4),
+        n_select=3,
+        n_random=4,
+        n_samples=25,
+        n_scenarios=300,
+        seed=1,
     )
     assert len(stimuli) == 7
     eig_picks = [s for s in stimuli if s["source"] == "eig"]
@@ -378,7 +387,8 @@ def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
     # The models were actually fitted: the cache holds a posterior for each
     # (two, when a fit this short fails the convergence gate and is refit).
     assert {nc.name.split(".")[0] for nc in cache.glob("*.nc")} == {
-        "bayesian_fair_coin", "representativeness"
+        "bayesian_fair_coin",
+        "representativeness",
     }
     # Round-trips through JSON like the design stage requires.
     json.dumps(stimuli)
@@ -398,9 +408,7 @@ def test_exhaustive_design_posterior_mode_missing_responses_fails_loudly(tmp_pat
 def test_missing_manifest_raises(tmp_path):
     (tmp_path / "cognitive_models").mkdir(parents=True)
     with pytest.raises(FileNotFoundError):
-        _design(
-            tmp_path / "cognitive_models", lengths=(3,), n_select=2
-        )
+        _design(tmp_path / "cognitive_models", lengths=(3,), n_select=2)
 
 
 # ── screening: which drops are legitimate ───────────────────────────
@@ -472,8 +480,12 @@ def test_design_records_the_screened_out_models_as_an_artifact(tmp_path, monkeyp
     out_path = tmp_path / "screened_out.json"
 
     _design(
-        models_dir, lengths=(3,), n_select=1,
-        n_samples=5, n_scenarios=20, screened_out_path=out_path,
+        models_dir,
+        lengths=(3,),
+        n_select=1,
+        n_samples=5,
+        n_scenarios=20,
+        screened_out_path=out_path,
     )
 
     import json
@@ -494,7 +506,9 @@ def _undefined_on_long_pairs(names, d, rows, *, n_samples=200, seed=42):
     from src.models.pymc_inference import InvalidPredictions
 
     (name,) = names  # the design predicts one model at a time
-    draws = np.full((n_samples, len(rows)), 0.8 if name == "bayesian_fair_coin" else 0.2)
+    draws = np.full(
+        (n_samples, len(rows)), 0.8 if name == "bayesian_fair_coin" else 0.2
+    )
     if name == "representativeness":
         draws[:, [i for i, r in enumerate(rows) if len(r["sequence_a"]) == 3]] = np.nan
         raise InvalidPredictions("values must be finite and in [0, 1].", draws)
@@ -513,8 +527,12 @@ def test_design_screens_out_a_model_with_an_undefined_p_left_and_records_why(
     out_path = tmp_path / "screened_out.json"
 
     stimuli = _design(
-        models_dir, lengths=(2, 3), n_select=2,
-        n_samples=5, n_scenarios=20, screened_out_path=out_path,
+        models_dir,
+        lengths=(2, 3),
+        n_select=2,
+        n_samples=5,
+        n_scenarios=20,
+        screened_out_path=out_path,
     )
 
     assert len(stimuli) == 2
@@ -541,7 +559,9 @@ def test_design_fails_loudly_when_no_model_has_a_defined_p_left(tmp_path, monkey
         _design(models_dir, lengths=(3,), n_select=2, n_samples=5, n_scenarios=20)
 
 
-def test_posterior_design_screens_out_a_model_with_an_undefined_p_left(tmp_path, monkeypatch):
+def test_posterior_design_screens_out_a_model_with_an_undefined_p_left(
+    tmp_path, monkeypatch
+):
     import src.models.data_binding as data_binding
     import src.models.pymc_inference as pymc_inference
     from src.models.pymc_inference import InvalidPredictions
@@ -560,11 +580,19 @@ def test_posterior_design_screens_out_a_model_with_an_undefined_p_left(tmp_path,
     monkeypatch.setattr(pymc_inference, "fit_model", lambda name, *a, **k: Fitted(name))
     monkeypatch.setattr(pymc_inference, "model_sampler_settings", lambda n, d: {})
     monkeypatch.setattr(data_binding, "make_stim_data", lambda model, rows: {})
-    rows = [{"sequence_a": "HT", "sequence_b": "HH"}, {"sequence_a": "TT", "sequence_b": "TH"}]
+    rows = [
+        {"sequence_a": "HT", "sequence_b": "HH"},
+        {"sequence_a": "TT", "sequence_b": "TH"},
+    ]
 
     draws, screened = eig_mod._posterior_p_left_draws(
-        ["good", "bad"], tmp_path, rows, responses_csv=tmp_path / "r.csv",
-        fit_cache_dir=None, max_draws=10, seed=0,
+        ["good", "bad"],
+        tmp_path,
+        rows,
+        responses_csv=tmp_path / "r.csv",
+        fit_cache_dir=None,
+        max_draws=10,
+        seed=0,
     )
 
     assert list(draws) == ["good"]

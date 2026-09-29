@@ -318,7 +318,11 @@ def run_pymc_inner_loop(
         (results_dir / NOVELTY_POOL_FILENAME).write_text(
             json.dumps(novelty_pool), encoding="utf-8"
         )
-    n_lenses = len(candidate_hints) if candidate_hints is not None else len(DEFAULT_CANDIDATE_HINTS)
+    n_lenses = (
+        len(candidate_hints)
+        if candidate_hints is not None
+        else len(DEFAULT_CANDIDATE_HINTS)
+    )
     if max_iterations > 0 and n_lenses < 1:
         raise ValueError(
             "The lens battery is empty — pass at least one exploration lens "
@@ -469,7 +473,10 @@ def run_pymc_inner_loop(
                     )
                     slot.previous_name = fallback
                     wrote_file = False
-                    outcome = {"outcome": "spawn_failed", "detail": "agent process failed"}
+                    outcome = {
+                        "outcome": "spawn_failed",
+                        "detail": "agent process failed",
+                    }
                 else:
                     name = _resolve_candidate_name(
                         previous_dir,
@@ -498,7 +505,9 @@ def run_pymc_inner_loop(
                     outcome = {
                         "outcome": "rejected",
                         "detail": (
-                            "rejected after file written" if wrote_file else _NO_FILE_DETAIL
+                            "rejected after file written"
+                            if wrote_file
+                            else _NO_FILE_DETAIL
                         ),
                     }
 
@@ -556,7 +565,9 @@ def run_pymc_inner_loop(
                 """
                 if cache_dir is None:
                     return  # nowhere to hand the fits over; admission fits one at a time
-                claimed: List[str] = sorted(reserved_names(models_dir, ledger, starting_models))
+                claimed: List[str] = sorted(
+                    reserved_names(models_dir, ledger, starting_models)
+                )
                 candidates = []
                 for slot in wave:
                     candidate_file = slot.directory / "candidate.py"
@@ -572,7 +583,10 @@ def run_pymc_inner_loop(
                     claimed.append(name)
                     candidates.append((candidate_file, name))
                 prefit_candidates(
-                    candidates, responses_path, cache_dir=cache_dir, fit_kwargs=fit_kwargs
+                    candidates,
+                    responses_path,
+                    cache_dir=cache_dir,
+                    fit_kwargs=fit_kwargs,
                 )
 
             # Each wave spawns its attempts concurrently, fits their candidates
@@ -585,12 +599,16 @@ def run_pymc_inner_loop(
             pending = list(slots)
             while pending:
                 if workers > 1 and len(pending) > 1:
-                    with ThreadPoolExecutor(max_workers=min(workers, len(pending))) as pool:
+                    with ThreadPoolExecutor(
+                        max_workers=min(workers, len(pending))
+                    ) as pool:
                         spawn_ok = list(pool.map(spawn, pending))
                 else:
                     spawn_ok = [spawn(slot) for slot in pending]
                 prefit(pending)
-                pending = [slot for slot, ok in zip(pending, spawn_ok) if settle(slot, ok)]
+                pending = [
+                    slot for slot, ok in zip(pending, spawn_ok) if settle(slot, ok)
+                ]
 
             round_results = [slot.result for slot in slots if slot.result is not None]
             if len(round_results) != len(slots):

@@ -17,7 +17,11 @@ from src.pipelines.inner_loop import model_zoo, pymc_orchestrator
 from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME, HypothesisLedger
 from src.pipelines.inner_loop.model_zoo import _cap_live_set
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
-from tests.inner_loop_fixtures import canned_posterior, write_responses, write_seed_models
+from tests.inner_loop_fixtures import (
+    canned_posterior,
+    write_responses,
+    write_seed_models,
+)
 from tests.test_pymc_inner_loop_history import _patch_candidates, _patch_scoring
 
 
@@ -27,17 +31,21 @@ def test_pruning_runs_once_after_the_last_round(tmp_path, monkeypatch):
         [
             canned_posterior("model_a", ["model_b"]),
             canned_posterior("model_a", ["model_b", "iter0_candidate0"]),
-            canned_posterior("model_a", ["model_b", "iter0_candidate0", "iter1_candidate0"]),
+            canned_posterior(
+                "model_a", ["model_b", "iter0_candidate0", "iter1_candidate0"]
+            ),
         ],
     )
     _patch_candidates(monkeypatch)
     calls = []
     monkeypatch.setattr(
-        pymc_orchestrator, "_prune_losers",
+        pymc_orchestrator,
+        "_prune_losers",
         lambda *a, **k: calls.append(("prune", k["ledger_context"])) or [],
     )
     monkeypatch.setattr(
-        pymc_orchestrator, "_cap_live_set",
+        pymc_orchestrator,
+        "_cap_live_set",
         lambda *a, **k: calls.append(("cap", k["ledger_context"])) or [],
     )
     run_pymc_inner_loop(
@@ -67,23 +75,38 @@ def _zoo(tmp_path, names):
 
 
 def _row(rank, **flags):
-    return {"rank": rank, "elpd_loo": -100.0 - 10 * rank, "elpd_diff": 10.0 * rank,
-            "dse": 3.0, **flags}
+    return {
+        "rank": rank,
+        "elpd_loo": -100.0 - 10 * rank,
+        "elpd_diff": 10.0 * rank,
+        "dse": 3.0,
+        **flags,
+    }
 
 
-def test_the_cap_retires_untrusted_models_first_then_the_lowest_elpd(tmp_path, monkeypatch):
+def test_the_cap_retires_untrusted_models_first_then_the_lowest_elpd(
+    tmp_path, monkeypatch
+):
     models_dir = _zoo(tmp_path, ["seed", "a1", "a2", "a3", "a4"])
     comparison = {
-        "seed": _row(0), "a1": _row(1), "a2": _row(2),
-        "a3": _row(3, not_converged=True), "a4": _row(4),
+        "seed": _row(0),
+        "a1": _row(1),
+        "a2": _row(2),
+        "a3": _row(3, not_converged=True),
+        "a4": _row(4),
     }
     monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: comparison)
     monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
     ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
 
     retired = _cap_live_set(
-        models_dir, tmp_path / "r.csv", cache_dir=None,
-        fit_kwargs={}, cap=3, ledger=ledger, ledger_context="experiment1 end of experiment",
+        models_dir,
+        tmp_path / "r.csv",
+        cache_dir=None,
+        fit_kwargs={},
+        cap=3,
+        ledger=ledger,
+        ledger_context="experiment1 end of experiment",
     )
 
     assert retired == ["a3", "a4"]
@@ -96,28 +119,46 @@ def test_the_cap_retires_untrusted_models_first_then_the_lowest_elpd(tmp_path, m
 def test_a_set_within_the_cap_is_untouched(tmp_path, monkeypatch):
     models_dir = _zoo(tmp_path, ["seed", "a1"])
     monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: 1 / 0)
-    assert _cap_live_set(
-        models_dir, tmp_path / "r.csv", cache_dir=None,
-        fit_kwargs={}, cap=8, ledger=None, ledger_context="",
-    ) == []
+    assert (
+        _cap_live_set(
+            models_dir,
+            tmp_path / "r.csv",
+            cache_dir=None,
+            fit_kwargs={},
+            cap=8,
+            ledger=None,
+            ledger_context="",
+        )
+        == []
+    )
 
 
-def test_a_cap_retirement_can_be_ranked_on_the_next_refinement_menu(tmp_path, monkeypatch):
+def test_a_cap_retirement_can_be_ranked_on_the_next_refinement_menu(
+    tmp_path, monkeypatch
+):
     """The refinement menu ranks every ``pruned`` ledger entry by its margin
     (``parse_prune_margin``); a cap retirement is one, so its detail must lead
     with that margin — the menu raised on the next experiment otherwise."""
     models_dir = _zoo(tmp_path, ["seed", "a1", "a2", "a3", "a4"])
     comparison = {
-        "seed": _row(0), "a1": _row(1), "a2": _row(2),
-        "a3": _row(3, not_converged=True), "a4": _row(4),
+        "seed": _row(0),
+        "a1": _row(1),
+        "a2": _row(2),
+        "a3": _row(3, not_converged=True),
+        "a4": _row(4),
     }
     monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: comparison)
     monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
     ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
 
     _cap_live_set(
-        models_dir, tmp_path / "r.csv", cache_dir=None,
-        fit_kwargs={}, cap=3, ledger=ledger, ledger_context="experiment1 end of experiment",
+        models_dir,
+        tmp_path / "r.csv",
+        cache_dir=None,
+        fit_kwargs={},
+        cap=3,
+        ledger=ledger,
+        ledger_context="experiment1 end of experiment",
     )
 
     details = {e.name: e.detail for e in ledger.pruned(live_names=["seed", "a1", "a2"])}

@@ -40,7 +40,12 @@ from src.pipelines.outer_loop.deployment.manifest import (
 )
 from src.pipelines.outer_loop.deployment.prolific import ProlificStudyPlan
 from tests.paths import REPO_ROOT
-from tests.test_live_study_relaunch_guard import PROJECT, _live_args, live_run_dir, stages_run  # noqa: F401
+from tests.test_live_study_relaunch_guard import (
+    PROJECT,
+    _live_args,
+    live_run_dir,
+    stages_run,
+)  # noqa: F401
 
 LAUNCHERS = ("run_pilot.sh", "submit_parallel.sh")
 
@@ -48,7 +53,10 @@ LAUNCHERS = ("run_pilot.sh", "submit_parallel.sh")
 def _git(repo, *args):
     return subprocess.run(
         ["git", "-c", "user.name=t", "-c", "user.email=t@example.invalid", *args],
-        cwd=repo, check=True, capture_output=True, text=True,
+        cwd=repo,
+        check=True,
+        capture_output=True,
+        text=True,
     ).stdout.strip()
 
 
@@ -105,7 +113,9 @@ def test_a_copy_with_neither_git_nor_a_record_refuses_to_deploy(tmp_path):
 def test_a_malformed_record_is_refused(tmp_path):
     copy = tmp_path / "copy"
     copy.mkdir()
-    (copy / CODE_PROVENANCE_FILENAME).write_text('{"git_commit": "abc"}', encoding="utf-8")
+    (copy / CODE_PROVENANCE_FILENAME).write_text(
+        '{"git_commit": "abc"}', encoding="utf-8"
+    )
     with pytest.raises(ValueError, match="git_dirty"):
         code_provenance(copy)
 
@@ -128,7 +138,9 @@ def test_recording_refuses_a_checkout_that_is_not_a_git_checkout(tmp_path):
 
 @pytest.mark.parametrize("launcher", LAUNCHERS)
 def test_each_launcher_records_provenance_right_after_copying(launcher):
-    text = (REPO_ROOT / "scripts" / "outer_loop_live" / launcher).read_text(encoding="utf-8")
+    text = (REPO_ROOT / "scripts" / "outer_loop_live" / launcher).read_text(
+        encoding="utf-8"
+    )
     copy_at = text.index("rsync -a --delete")
     record_at = text.index("src.pipelines.outer_loop.deployment.record_provenance")
     submit_at = text.index("sbatch --parsable")
@@ -164,7 +176,8 @@ def mocked_services(tmp_path, monkeypatch):
     def create_draft(project_id, manifest, n_participants, mode):
         calls.append("create draft")
         return ProlificStudyPlan(
-            payload={"name": "study"}, completion_code="CODE",
+            payload={"name": "study"},
+            completion_code="CODE",
             redirect_url="https://app.prolific.com/submissions/complete?cc=CODE",
             study_id="draft-1",
         )
@@ -200,16 +213,26 @@ def mocked_services(tmp_path, monkeypatch):
 def _experiment(tmp_path):
     exp_dir = tmp_path / "experiment1"
     (exp_dir / "experiment").mkdir(parents=True)
-    (exp_dir / "experiment" / "index.html").write_text("<html></html>", encoding="utf-8")
+    (exp_dir / "experiment" / "index.html").write_text(
+        "<html></html>", encoding="utf-8"
+    )
     return exp_dir
 
 
 def _firebase_deploy(exp_dir, repo, prolific_mode):
     return run_deployment(
-        exp_dir=exp_dir, project_id=PROJECT, run_id=1, deploy_target="firebase",
-        prolific_mode=prolific_mode, agent_backend="claude", collection_owner="tester",
-        firebase_project="auto-psych-test", firebase_region="us-central1",
-        n_participants=2, repo_root=repo, run_label="run1",
+        exp_dir=exp_dir,
+        project_id=PROJECT,
+        run_id=1,
+        deploy_target="firebase",
+        prolific_mode=prolific_mode,
+        agent_backend="claude",
+        collection_owner="tester",
+        firebase_project="auto-psych-test",
+        firebase_region="us-central1",
+        n_participants=2,
+        repo_root=repo,
+        run_label="run1",
     )
 
 
@@ -222,7 +245,11 @@ def test_a_live_deploy_puts_the_page_up_before_creating_and_publishing_the_study
     _firebase_deploy(exp_dir, repo, "live")
 
     assert calls == [
-        "check eligibility", "firebase deploy", "register session", "create draft", "publish",
+        "check eligibility",
+        "firebase deploy",
+        "register session",
+        "create draft",
+        "publish",
     ]
     manifest = json.loads(manifest_path(exp_dir).read_text())
     assert manifest["prolific_study_id"] == "draft-1"
@@ -236,7 +263,9 @@ def test_a_live_deploy_puts_the_page_up_before_creating_and_publishing_the_study
     assert config["prolific_redirect_url"].endswith("cc=CODE")
 
 
-def test_a_test_deploy_creates_an_unpublished_draft_after_the_page(tmp_path, mocked_services):
+def test_a_test_deploy_creates_an_unpublished_draft_after_the_page(
+    tmp_path, mocked_services
+):
     calls, repo = mocked_services
     exp_dir = _experiment(tmp_path)
     _firebase_deploy(exp_dir, repo, "test")
@@ -293,7 +322,9 @@ def test_verify_live_eligibility_reads_prolifics_filters(monkeypatch):
 
 
 def test_prolific_mode_none_deploys_and_stops_before_collection(
-    live_run_dir, stages_run, monkeypatch  # noqa: F811
+    live_run_dir,
+    stages_run,
+    monkeypatch,  # noqa: F811
 ):
     def implement(**kwargs):
         stages_run.append("3_implement")
@@ -301,18 +332,23 @@ def test_prolific_mode_none_deploys_and_stops_before_collection(
 
     monkeypatch.setattr(outer_run, "spawn_cc_agent", implement)
     outer_run.main(
-        _live_args(prolific_mode="none", confirm_live_recruitment=False, experiment=None,
-                   experiments="2")
+        _live_args(
+            prolific_mode="none",
+            confirm_live_recruitment=False,
+            experiment=None,
+            experiments="2",
+        )
     )
     assert stages_run == ["2_design", "3_implement", "deploy"]
 
 
 def test_a_resume_with_prolific_mode_none_still_collects(live_run_dir, stages_run):  # noqa: F811
     outer_run.main(
-        _live_args(prolific_mode="none", confirm_live_recruitment=False, agent="4_collect")
+        _live_args(
+            prolific_mode="none", confirm_live_recruitment=False, agent="4_collect"
+        )
     )
     assert stages_run == ["4_collect"]
-
 
 
 def test_the_pilot_preset_ships_in_test_mode():
@@ -320,7 +356,9 @@ def test_the_pilot_preset_ships_in_test_mode():
     import yaml
 
     preset = yaml.safe_load(
-        (REPO_ROOT / "scripts" / "outer_loop_live" / "pilot.yaml").read_text(encoding="utf-8")
+        (REPO_ROOT / "scripts" / "outer_loop_live" / "pilot.yaml").read_text(
+            encoding="utf-8"
+        )
     )
     assert preset["prolific_mode"] == "test"
     assert not preset.get("confirm_live_recruitment")
