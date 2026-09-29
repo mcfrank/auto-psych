@@ -326,7 +326,10 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   `data/outer_loop`; set `AUTO_PSYCH_OUTPUT_DIR` elsewhere), and collection
   refuses to write the raw file there (`require_outside_agent_trees`).
   `pymc_model_families/` (and
-  the live pool `seed_models/`) all carry `compute_features` hooks. The verifier
+  the live pool `seed_models/`) all carry `compute_features` hooks, and so do
+  the impossible ground truths in `src/subjective_randomness/impossible_models/`
+  (added 2026-09-28: without them every impossible cell stopped at data
+  generation). The verifier
   (`scripts/subjective_randomness/slurm/verify_holdout_run.sh`) checks that
   every agent-facing CSV in a finished run carries only raw columns. The
   agents' prompts say so too: `prompts/pymc_theory.md` and
@@ -453,6 +456,12 @@ used by the active loops (per `README.md`).
   retries skip setup and run the staged scripts; every cell records the code
   it started on and refuses to resume on other code. `verify_holdout_run.sh`
   judges cells by `holdout.json` / `MISSING_CELLS.txt`, not by task logs.
+- **The impossible-model sweep is the literature sweep's control.** Its
+  submitter chains the same retry job and `MISSING_CELLS.txt` summary
+  (`holdout_retry.sbatch` resubmits through `RETRY_SUBMIT_SCRIPT`), and
+  `configs/impossible_holdout_recovery.yaml` equals
+  `holdout_recovery_faithful.yaml` except `gt_models`/`gt_models_dir`
+  (`tests/test_impossible_config_matches_faithful.py`).
 - **Live runs recruit real participants and spend real money.** They are double-
   gated: the config needs `confirm_live_recruitment: true` **and** `run.py`
   enforces `--confirm-live-recruitment`; the launchers print a cost summary and

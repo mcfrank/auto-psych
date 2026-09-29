@@ -32,3 +32,40 @@ with pm.Model() as model:
         "p_left", pm.math.sigmoid(beta * (score_a - score_b) + side_bias)
     )
     pm.Bernoulli("response", p=p_left, observed=chose_left)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Self-contained feature computation
+# ─────────────────────────────────────────────────────────────────────────────
+# Data rows carry only the raw H/T sequences, so the model derives the columns
+# its `pm.Data` containers read through the `compute_features(sequence_a,
+# sequence_b)` hook, as the literature models in `pymc_model_families/` do.
+# The values are the old featurizer's (`src/subjective_randomness/features.py`,
+# `sequence_features` / `sequence_features_float`), which fed these containers
+# before the raw-only pipeline; `clean_sequence` is copied from it verbatim.
+# `tests/test_impossible_models_raw.py` pins both.
+
+
+def clean_sequence(seq: str) -> str:
+    """Uppercase an H/T sequence and reject empty input.
+
+    An empty sequence is never a legitimate trial — it means upstream breakage
+    (a stimulus without ``sequence_a``, a truncated responses.csv) — so every
+    helper below raises rather than emitting a zero-filled feature row that
+    reads like a real observation. The model families' ``clean_sequence``
+    (``model_families/common.py``) makes the same call and additionally rejects
+    non-H/T symbols; this module keeps its own copy so it stays importable
+    without the model-family package.
+    """
+    s = seq.strip().upper()
+    if not s:
+        raise ValueError("Sequence must not be empty")
+    return s
+
+
+def compute_features(sequence_a: str, sequence_b: str) -> dict:
+    """`h_{a,b}`: the head count of each sequence."""
+    return {
+        f"h_{suffix}": sum(1 for c in clean_sequence(seq) if c == "H")
+        for seq, suffix in ((sequence_a, "a"), (sequence_b, "b"))
+    }

@@ -156,10 +156,11 @@ completes; it says nothing about whether the answer is right.
   over an **older set of hidden models** (`bayesian_diagnosticity`,
   `encoding_compressibility`, `prototype_similarity`, `window_typicality`), not
   the current four. There is no committed summary for the current set.
-- The impossible-control config (`configs/impossible_holdout_recovery.yaml`)
-  runs 2 rounds × 3 proposals. The standard holdout config
-  (`holdout_recovery_faithful.yaml`) runs 5 × 6. The two sweeps are therefore
-  not like-for-like; the main README says both use 5 × 6.
+- *(Fixed on 28 September 2026.)* The impossible-control config
+  (`configs/impossible_holdout_recovery.yaml`) ran 2 rounds × 3 proposals, a
+  32-stimulus design, a 15-minute agent limit and a different MCMC step-size
+  setting. It is now the standard config (`holdout_recovery_faithful.yaml`)
+  in everything but the hidden models, and a test keeps it so.
 - `slurm/run_test_retest.sh` pins old hidden-model names and would abort at
   setup. Use `run_faithful_test_retest.sh`. The comments in
   `run_faithful_test_retest.sh` also give outdated settings (2×3 rounds,
@@ -167,5 +168,10 @@ completes; it says nothing about whether the answer is right.
 - `slurm/README.md` describes the evaluation set as ~130k pairs including
   different-length pairs. The code uses same-length pairs only (about 43k at
   lengths 1–8).
-- The impossible rules declare precomputed feature inputs rather than raw
-  sequences. I did not check how they are fed at data-generation time.
+- *(Fixed on 28 September 2026.)* The impossible rules declared precomputed
+  feature inputs and had no `compute_features`, so every cell of the
+  2026-09-28 impossible sweep stopped at data generation
+  (`MissingStimulusColumns: Rows missing columns ['h_a', 'h_b']`). Each now
+  computes its feature from the raw sequences, exactly as the old featurizer
+  did. The impossible sweep also retries failed cells and lists missing ones,
+  like the standard sweep.

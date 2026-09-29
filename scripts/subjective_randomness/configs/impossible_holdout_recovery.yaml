@@ -2,8 +2,15 @@
 # deliberately weird theory of subjective randomness (e.g. "more heads = more
 # random") that humans could not plausibly use. The agentic loop is seeded with
 # the normal seed models and tries — and is expected to fail — to recover it, so
-# the held-out correlation should stay low. Mirrors holdout_recovery.yaml; the
-# only structural difference is gt_models_dir + explicit {beta, side_bias} params.
+# the held-out correlation should stay low.
+#
+# This is the CONTROL for holdout_recovery_faithful.yaml: everything below
+# gt_models is that config's, verbatim (the budget, design, agent, evaluation
+# pool and MCMC settings); only gt_models_dir and gt_models differ.
+# tests/test_impossible_config_matches_faithful.py fails on any other
+# difference. Until 2026-09-28 this config ran 2 rounds x 3 candidates, a
+# 32-stimulus design (no design block), a 900 s agent timeout and PyMC's
+# default target_accept, so the two sweeps were not comparable.
 project_id: subjective_randomness
 # The GT/baseline registry: the model set with pure-Python family twins for
 # data generation and for the fixed-param baselines. The impossible ground
@@ -12,15 +19,16 @@ seed_models_dir: src/subjective_randomness/pymc_model_families
 
 # Impossible ground-truth models live OUTSIDE the seed pool (this directory has
 # no models_manifest.yaml) so the agents never see them. Each is a PyMC file
-# whose only free parameters are beta + side_bias.
+# whose only free parameters are beta + side_bias, and which computes its
+# features from the raw sequences (compute_features).
 gt_models_dir: src/subjective_randomness/impossible_models
 
 # name -> fixed generating params. Params MUST name exactly the model's free
 # RVs ({beta, side_bias}); there is no model_families fallback for these. beta=4
 # keeps p_left graded (not saturated) and side_bias=0 keeps it symmetric. The
-# four features (head count, max-run length, imbalance) all vary on the eval
-# pool below, so the ground-truth p_left is non-constant and the correlation is
-# well defined.
+# features (head count, max-run length, imbalance) all vary on the eval pool,
+# so the ground-truth p_left is non-constant and the correlation is well
+# defined.
 gt_models:
   more_heads_more_random: { beta: 4.0, side_bias: 0.0 }
   fewer_heads_more_random: { beta: 4.0, side_bias: 0.0 }
@@ -28,25 +36,40 @@ gt_models:
   more_imbalance_more_random: { beta: 4.0, side_bias: 0.0 }
 
 n_experiments: 3
-n_participants: 40 # match the live human experiment (full_run.yaml: 40/experiment)
+n_participants: 40  # match the live human experiment (full_run.yaml: 40/experiment)
 seed: 7
 
 inner_loop:
-  max_iterations: 2
-  candidate_count: 3
+  # Scaled in September 2026 (loop-improvement plan P45): 2 -> 5 candidate
+  # rounds per experiment and 3 -> 6 candidates per round, so an experiment
+  # sees 30 proposals instead of 6. Slot roles at 6 (model_zoo.slot_roles):
+  # three exploratory slots walking the twelve-lens battery (a round never
+  # repeats a lens), two that refine the incumbent, one that refines a model
+  # of the agent's choosing. A round's six agents run concurrently (one
+  # worker per slot); the critique agent runs before them because its
+  # critiques.md is inlined into every candidate brief.
+  max_iterations: 5
+  candidate_count: 6
+  # Test statistics the critique agent proposes per round (the inner-loop
+  # default; explicit so a sweep's setting is self-documenting and can be
+  # overridden with --n-critique-proposals / N_CRITIQUE_PROPOSALS).
+  n_critique_proposals: 8
+
+# Per-experiment design: 64 stimuli chosen by max joint-EIG, as in the live
+# experiments (user decision 2026-09-26). n_random > 0 adds stimuli sampled
+# uniformly from the same pair pool (coverage of the flat middle); ablations:
+# {n_eig: 32, n_random: 32} = the earlier split; {n_eig: 0, n_random: 64} =
+# pure random. Override at the CLI with --design-n-eig/--design-n-random.
+design:
+  n_eig: 64
+  n_random: 0
 
 agent:
-  timeout_sec: 900
+  timeout_sec: 1800  # 30 min: Opus often ran out at 15 while checking a finished candidate
   backend: opencode # null -> CODING_AGENT env var, then "claude"
   model: google/gemini-3.1-pro-preview
 
-# Held-out evaluation pool. exhaustive=true measures the recovery correlation
-# over EVERY distinct unordered pair across all sequences of the listed lengths,
-# cross-length pairs included (510 sequences up to length 8 -> C(510, 2) =
-# 129,795 pairs), so n_pairs/seed are unused. predict_max_draws thins the
-# posterior to 500 samples for the held-out prediction, keeping the
-# (draws × n_stim) array bounded (~0.5 GB at 130k pairs); the posterior mean is
-# essentially unchanged.
+# Held-out evaluation stimuli (see holdout_recovery.yaml for the rationale).
 eval_pool:
   exhaustive: true
   lengths: [1, 2, 3, 4, 5, 6, 7, 8]
@@ -54,6 +77,30 @@ eval_pool:
   min_remaining: 100
 
 fit:
-  draws: 1000  # per chain; 2000 until 2026-09-27 (see holdout_recovery_faithful.yaml)
+  # 1000 draws per chain (4,000 in all) since 2026-09-27, down from 2000, so
+  # that a cell finishes in 12 hours: a third fewer NUTS iterations per chain
+  # (tune + draws 3,000 -> 2,000) and half the stored trace and pointwise
+  # log-likelihood. Nothing downstream needs more: the critique draws 1000
+  # posterior-predictive replicates, the evaluation thins to <= 500 draws, the
+  # novelty gate uses the posterior mean and PSIS-LOO works with 4,000 draws.
+  # The convergence gate's bulk ESS >= 100 is a count per fit, so with half
+  # the draws a borderline fit fails it more often.
+  draws: 1000
   tune: 1000
   chains: 4
+  # Tune stays 1000. Before that: 2000/1000 draws (the 4000/3000 bump only
+  # doubled fit time with no reliability benefit — Phase-2 exclusion is what
+  # fixes reliability), at the
+  # known-good target_accept=0.8, the run-economy choice benchmarked for this
+  # sweep as a whole. A model's declared target_accept is a floor on it
+  # (motif_stack declares 0.9), and a fit that fails the convergence gate as
+  # a near miss is refit once at 0.95 (pymc_inference.fit_model).
+  target_accept: 0.8
+  # No max_treedepth cap (PyMC's default 10 applies). A treedepth-6 cap lived
+  # here 2026-08-09..13 as a cost workaround: motif_stack is weakly identified
+  # on adversarial data (its stick-broken mirror/complement shares), and with
+  # its old per-trial Viterbi graph an uncapped stiff fit ran to full depth and
+  # hung for hours. The unique-sequence dedup (83041a6) cut its gradient ~19x,
+  # so a worst-case full-depth fit is now ~20 min — cheaper than the cap's
+  # hidden cost of truncated trajectories (higher autocorrelation, hence
+  # noisier ELPD, exactly on the weakly identified share parameters).

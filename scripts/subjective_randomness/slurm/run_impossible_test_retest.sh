@@ -19,8 +19,11 @@
 #     each repeat r using --seed BASE_SEED+r so the synthetic data differs.
 #   * GT_MODELS pinned to the impossible models; the setup job validates this
 #     list against the config's gt_models and aborts (afterok) if they drift.
-#   * full-strength config (configs/impossible_holdout_recovery.yaml:
-#     n_experiments=3, inner loop 2x3, draws=1000/tune=1000/chains=4).
+#   * full-strength config (configs/impossible_holdout_recovery.yaml), which
+#     is the literature sweep's holdout_recovery_faithful.yaml in everything
+#     but its ground truths (n_experiments=3, inner loop 5x6, 64-stimulus
+#     design, 1800 s agent timeout, draws=1000/tune=1000/chains=4,
+#     target_accept 0.8); a test pins the two together.
 #   * the impossible recipe (models dir + config) is kept OFF the coding agent's
 #     repo copy so it cannot read the answer; the parent loads the ground truth
 #     from a pristine scratch snapshot instead (see the array sbatch header).

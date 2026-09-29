@@ -11,5 +11,7 @@ seeded from the project's seed-model manifest, so these models can never enter
 the agents' seed pool. Each model's only free parameters are ``beta`` (inverse
 temperature) and ``side_bias``; the impossible structure is a deterministic
 function of stimulus features with no free shape parameters, so the generating
-params are exactly ``{beta, side_bias}``.
+params are exactly ``{beta, side_bias}``. Like the literature models, each
+computes its features from the raw sequences in a ``compute_features`` hook
+(the values the old featurizer gave; ``tests/test_impossible_models_raw.py``).
 """
