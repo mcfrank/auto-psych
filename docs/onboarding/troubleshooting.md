@@ -23,7 +23,7 @@ relaunch of an experiment with a live study is refused (see
 | ``pilot config error: missing required `prolific.participants` `` (or `project`, `run_label`) | incomplete config | add it |
 | `pilot config error: Prolific token check FAILED: GET /users/me/ 401 …` | wrong or expired token | make a new token in Prolific's settings |
 | `min_approval_rate must be a percentage between 0 and 100` / `Prolific reward config is non-positive …` | bad `prolific:` values | fix the config |
-| `Aborted — nothing was deployed or published.` | you did not type `yes` | — (note that `start_full_run.sh` has already deleted the selected runs' old directories by this point) |
+| `Aborted — nothing was deployed or published.` / `Aborted — nothing deleted, nothing launched.` | you did not type `yes` | — nothing was changed |
 
 ## Early in the job
 

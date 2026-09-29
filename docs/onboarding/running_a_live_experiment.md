@@ -96,11 +96,21 @@ label you choose.
   places are taken (§ 0 F), so it recruits no one else, and Prolific moves it
   to `AWAITING REVIEW` / `COMPLETED` by itself as before.
 
+**E. `start_full_run.sh` now asks before it deletes.**
+
+- It used to delete the selected runs' directories (`$WORK_ROOT/run<i>`,
+  `$WORK_ROOT/runs/run<i>`) *before* the typed-`yes` prompt, so answering
+  "no" still destroyed earlier results.
+- Now the prompt lists exactly the directories that exist and will be
+  deleted, and nothing is deleted (or rendered) unless you type `yes`
+  (`Aborted — nothing deleted, nothing launched.` otherwise). `CONFIRM=yes`
+  still skips the prompt, deletion included. Collect earlier results first
+  (§ 11), or use `RUNS=` to pick other indices.
+
 ### Surprises that cost money or data if you don't know them
 
 | # | What | Consequence | What to do |
 |---|---|---|---|
-| E | `start_full_run.sh` **deletes the output and run-copy directories of the runs it is about to launch** (`$WORK_ROOT/run<i>`, `$WORK_ROOT/runs/run<i>`) *before* it asks you to type `yes`. | Answering "no" still deletes earlier `run1`…`runK` results. | Collect earlier results first (§ 11), or use `RUNS=` to pick other indices. |
 | F | When calling `run.py` directly (not via the launchers), **the number of Prolific places comes from the project's `prolific_config.yaml`, not from `--n-participants`**. The committed file says 40 places, 5 minutes, $12/h. `--n-participants` only sets the design's N and the waiting target. | E.g. `--n-participants 5` recruits and pays 40 people, and the pipeline moves on after 5. | Use the launchers. They write that file from your config, so the two numbers agree. |
 | G | The cost summary covers **Prolific only**. Language-model spending is recorded afterwards (`token_usage_summary.json`) but not estimated beforehand. | — | Check your opencode/Gemini or Anthropic billing separately. |
 | H | Payment is **automatic on completion** (`AUTOMATICALLY_APPROVE`). Set `completion_code_action: MANUALLY_REVIEW` under `prolific:` to review first. | Low-effort submissions are paid. | Deliberate choice: data quality is handled in analysis, not by withholding pay. |
@@ -400,9 +410,10 @@ export REPO=$HOME/auto-psych
 CONFIG=$REPO/scripts/outer_loop_live/hero_run.yaml K=3 bash $REPO/scripts/outer_loop_live/start_full_run.sh
 ```
 
-- It validates the config and prints the cost **per run**. It then writes the
-  study settings into the project's `prolific_config.yaml` in your checkout,
-  **deletes `run1…runK`'s previous directories** (§ 0 E), and asks for `yes`.
+- It validates the config and prints the cost **per run**, lists the earlier
+  `run1…runK` directories it will **delete**, and asks for `yes` (§ 0 E). Only
+  then does it write the study settings into the project's
+  `prolific_config.yaml` in your checkout and delete those directories.
 - Each run `i` gets its own copy of the repository, its own output tree
   `$WORK_ROOT/run<i>/data/`, its own Firebase site and URL
   (`https://auto-psych-2c5da-run<i>.web.app/e<N>-run<i>/`), its own Prolific
