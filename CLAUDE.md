@@ -70,7 +70,15 @@ makes `--resume` (run into an existing `experimentN/` dir) and `--agent <stage>`
 (run one stage) safe.
 
 - `2_design` — **programmatic, no agent.** `eig.design_exhaustive` enumerates the
-  H/T pair space and greedily selects the max-joint-EIG stimulus set → `design/stimuli.json`.
+  H/T pair space (every same-length pair, lengths 2–8) and greedily selects the
+  max-joint-EIG stimulus set (64 by default) → `design/stimuli.json`. The EIG
+  counts every participant's response: a stimulus yields k ~ Binomial(n, p_left)
+  with `n_responses` = the experiment's participant count (required at every
+  entry point). Experiment 1 uses prior-predictive draws; experiments ≥2 fit
+  the models on all data so far (the previous experiment's cumulative
+  `model_loop/responses.csv`) at the model's declared `target_accept`, else
+  `DESIGN_TWIN_TARGET_ACCEPT` (0.9). The holdout harness derives every seed
+  from (cell seed, ground truth, experiment, purpose) (`derive_seed`).
 - `3_implement` — the one true coding-agent stage: writes a jsPsych experiment;
   skipped in `simulated_participants_nobrowser` mode. Optional Firebase/Prolific
   deploy phase follows when `--deploy-target != none`.
@@ -95,9 +103,14 @@ optional CriticAL critique → spawn candidate agents in parallel (exploratory
 slots steered by a rotating exploration "lens", refinement slots by a named
 target — see **Slot roles**) → admit sequentially.
 
-- **Novelty gate** (`_admit_candidate` in `model_zoo.py`): a candidate is admitted only with a
-  loadable `candidate.py` (module-level `model: pm.Model`) + `hypothesis.md` +
-  `model_name.txt`, passing logp/real-fit/finite-ELPD gates, AND with posterior-
+- **Admission and the novelty gate** (`_admit_candidate` in `model_zoo.py`): a
+  candidate is admitted only with a loadable `candidate.py` (module-level
+  `model: pm.Model`) that passes the code gate (`import_gate.py`: an import
+  allowlist, and no `open`/`np.load`/`eval`/`__import__`/dunder escapes — the
+  code runs in the harness process) + `hypothesis.md` (`model_name.txt` is
+  optional; a slot name is the fallback), passing logp/real-fit/finite-ELPD
+  gates and the **convergence gate** (no divergences, R-hat ≤ 1.01, bulk ESS ≥
+  400; a model's declared `target_accept` is a floor on the loop's), AND with posterior-
   mean `p_left` ≥ `novelty_rmse_threshold` (0.002) RMSE from every admitted
   model **on the loop's novelty pool** — 512 same-length H/T pairs at lengths
   4–8 that the loop generates from its own seed (`novelty_pool_rows`) and
@@ -149,12 +162,15 @@ target — see **Slot roles**) → admit sequentially.
   motivated the plan ran two rounds of three). A round's agents run
   concurrently, one worker per slot (`candidate_parallelism`, default
   `candidate_count`); retry and repair attempts spawn concurrently too.
-- **Pruning** (`_prune_losers` in `model_zoo.py`): non-protected, PSIS-LOO-reliable models
-  statistically distinguishable from the best (`elpd_diff > dse_multiplier·dse`)
-  move to `models/pruned/`. There is no stacking-weight floor — pruning is on
-  `elpd_diff` vs `dse` alone (iteration 3 removed the weight floor because
-  stacking weights are ensemble coefficients, not plausibility). The survivors
-  are the uncertainty set — everything still within the margin of the best.
+- **Pruning** (`_prune_losers` in `model_zoo.py`) runs **once, at the end of each
+  experiment**: non-protected models with a trusted fit (reliable PSIS-LOO and
+  converged) that are statistically distinguishable from the best
+  (`elpd_diff > dse_multiplier·dse`) move to `models/pruned/`. Then
+  `_cap_live_set` keeps at most `MAX_LIVE_MODELS` (8) live models: untrusted
+  fits retire first, then the lowest by ELPD-LOO; seeds never. There is no
+  stacking-weight floor (stacking weights are ensemble coefficients, not
+  plausibility). A pruned mechanism may come back with a substantive change:
+  the ledger forbids only unchanged copies and near-duplicates.
 - **Ledger** (`src/pipelines/inner_loop/hypothesis_ledger.py`):
   `model_loop/attempted_hypotheses.jsonl` records every candidate slot
   (admitted / rejected, with the reason) and every prune (with the margin),
@@ -203,11 +219,24 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 
 ### Supporting modules
 
-- **Screening a model out of a design is narrow and recorded.**
-  `eig._screen_usable_models` may omit a model only when the columns it cannot
-  bind are response-row bookkeeping (`NON_STIMULUS_COLUMNS`: `participant_id`,
-  `trial_index`) — a participant-level random effect, say. Missing stimulus
-  columns raise instead: that means the design rows lack columns the model
+- **Agent isolation** (`src/runtime/agent_sandbox.py`, holdout agent trees):
+  loop agents run stock and in bubblewrap — their tree read-only, only their
+  own candidate/critique dir, the run's notes, a scratch dir at /tmp and a
+  private home writable, no `SLURM_*` variables. Agent trees contain only
+  `src/` and the run tree (`agent_tree.exclude`: no docs, tests, scripts,
+  research library, project literature or `.secrets`). Before agents start,
+  `scan_gt_name.sh --before-agents` stops a cell whose tree names its held-out
+  ground truth; after a run it only warns (`gt_name_mentions.txt`), and
+  `agent_activity_report.py` lists the URLs agents looked at and any paths
+  outside their directory. Inner-loop agents are told the task from the
+  project's `task_description.md`.
+
+- **Screening a model out of a design is recorded.**
+  `eig._screen_usable_models` omits a model whose only unbindable columns are
+  response-row bookkeeping (`NON_STIMULUS_COLUMNS`: `participant_id`,
+  `trial_index`) — a participant-level random effect, say — and also one whose
+  probe raises any other non-code error (recorded with the error); broken model
+  code raises. Missing stimulus columns raise too: that means the design rows lack columns the model
   needs, and dropping the model would renormalize EIG over whichever ones
   happen to bind. `make_stim_data` signals this with `MissingStimulusColumns`,
   which carries `.missing` as data so callers classify structurally rather than
@@ -306,6 +335,11 @@ used by the active loops (per `README.md`).
 
 ## Cluster & live runs
 
+- Holdout sweeps resume their own failed cells: after each array a retry job
+  (`holdout_retry.sbatch`, via `cell_status.py`) resubmits timeouts, crashes
+  and out-of-memory tasks (the latter with 128 GB) with `--resume`, up to
+  `MAX_RETRY_ROUNDS` (2); the summary job lists any expected cell still
+  without a result in `MISSING_CELLS.txt`.
 - **Live runs recruit real participants and spend real money.** They are double-
   gated: the config needs `confirm_live_recruitment: true` **and** `run.py`
   enforces `--confirm-live-recruitment`; the launchers print a cost summary and
