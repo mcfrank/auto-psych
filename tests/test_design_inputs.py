@@ -11,6 +11,7 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pytest
 
 from src.pipelines.outer_loop import eig as eig_mod
@@ -77,3 +78,38 @@ def test_design_fits_use_the_models_own_target_accept_else_0_9(tmp_path, monkeyp
         fit_cache_dir=None, max_draws=10, seed=0,
     )
     assert requested == {"careful": 0.97, "plain": 0.9}
+
+
+def test_a_saturated_selection_is_filled_by_single_response_eig(tmp_path, monkeypatch):
+    """The 40-response selection stops at its noise floor; the remaining slots
+    are filled by single-response EIG, conditioned on the picks so far, and
+    every stimulus says which objective chose it."""
+    import src.models.eig_selection as eig_selection
+    import src.models.pymc_inference as pymc_inference
+    from src.models.eig_selection import JointEIGSelection
+
+    calls = []
+
+    def fake_select(draws, n_select, **kwargs):
+        calls.append({"n_select": n_select, **kwargs})
+        if kwargs["n_responses"] == 40:
+            return JointEIGSelection([3, 7], [1.0, 1.5], 10, stopped_at_noise_floor=True)
+        return JointEIGSelection([1, 2, 5], [0.4, 0.6, 0.7], 10)
+
+    monkeypatch.setattr(eig_selection, "select_n_joint_eig", fake_select)
+    monkeypatch.setattr(
+        pymc_inference, "prior_predict_p_left_draws",
+        lambda names, d, rows, **k: {n: np.full((4, len(rows)), 0.5) for n in names},
+    )
+    monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
+    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, row: (names, []))
+
+    stimuli = eig_mod.design_exhaustive(
+        tmp_path, lengths=(2, 3), n_select=5, n_responses=40, seed=9
+    )
+
+    assert calls[0]["stop_below_noise"] is True and calls[0]["n_responses"] == 40
+    assert calls[1]["n_select"] == 3 and calls[1]["n_responses"] == 1
+    assert list(calls[1]["preselected"]) == [3, 7]
+    assert [s["source"] for s in stimuli] == ["eig"] * 2 + ["eig_single_response_fill"] * 3
+    assert [s["selection_rank"] for s in stimuli] == [1, 2, 3, 4, 5]
