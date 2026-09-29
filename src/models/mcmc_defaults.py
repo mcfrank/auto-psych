@@ -31,12 +31,17 @@ DESIGN_TWIN_CHAINS = 2
 # tiny steps) and PyMC's 0.8 (user decision, 2026-09-26).
 DESIGN_TWIN_TARGET_ACCEPT = 0.9
 
-# Convergence gate (admission, export, pruning): a fit is converged when it has
-# no divergent transitions, R-hat <= MAX_R_HAT and bulk ESS >= MIN_BULK_ESS on
-# every free parameter -- the thresholds of Vehtari et al. (2021), "Rank-
-# normalization, folding, and localization: an improved R-hat".
-MAX_R_HAT = 1.01
-MIN_BULK_ESS = 400
+# Convergence gate (admission, export, pruning): a fit is converged when at
+# most MAX_DIVERGENCE_FRACTION of its transitions diverged and R-hat <= MAX_R_HAT
+# and bulk ESS >= MIN_BULK_ESS on every free parameter. User decision
+# 2026-09-26: the strict gate of Vehtari et al. (2021) — R-hat 1.01, ESS 400, no
+# divergences — rejected most seed models at the sweep's target_accept.
+MAX_R_HAT = 1.05
+MIN_BULK_ESS = 100
+MAX_DIVERGENCE_FRACTION = 0.001
+# A fit that fails the gate is refit once at this target_accept (smaller NUTS
+# steps), and that fit is the model's fit from then on.
+ESCALATED_TARGET_ACCEPT = 0.95
 
 # The candidate agent's self-check (src/pipelines/inner_loop/check_candidate.py):
 # a smoke fit that proves the model loads, samples and scores — never a

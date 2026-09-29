@@ -5,10 +5,12 @@ non-converged fit could be admitted, prune rivals and be exported as the
 discovered model. PSIS-LOO reliability (Pareto k) does not catch this: it
 measures whether single trials dominate the fit, not whether the chains mixed.
 
-A fit is converged when it has no divergent transitions, R-hat <= 1.01 and bulk
-ESS >= 400 on every free parameter (Vehtari et al., 2021). A model file's
-declared target_accept is a floor on the loop's, so a candidate rejected for
-divergences can be fixed by declaring a higher one.
+A fit is converged when at most 0.1% of its transitions diverged and R-hat <=
+1.05 and bulk ESS >= 100 on every free parameter (user decision 2026-09-26: the
+stricter 1.01 / 400 / zero-divergence gate rejected most seeds at the sweep's
+target_accept). A fit that fails is refit once at target_accept 0.95, and that
+fit is used everywhere. A model file's declared target_accept is a floor on
+the loop's.
 """
 
 from __future__ import annotations
@@ -40,12 +42,19 @@ def test_well_mixed_chains_pass():
     assert convergence_problems(_idata(_iid(rng)), ["theta"]) == []
 
 
-def test_divergent_transitions_fail():
+def test_more_than_a_tenth_of_a_percent_divergent_transitions_fail():
     rng = np.random.default_rng(0)
     diverging = np.zeros((4, 1000), dtype=bool)
-    diverging[1, :3] = True
+    diverging[1, :10] = True  # 0.25% of 4000
     problems = convergence_problems(_idata(_iid(rng), diverging=diverging), ["theta"])
-    assert any("3 divergent" in p for p in problems)
+    assert any("10 divergent" in p for p in problems)
+
+
+def test_a_few_divergent_transitions_are_tolerated():
+    rng = np.random.default_rng(0)
+    diverging = np.zeros((4, 1000), dtype=bool)
+    diverging[1, :3] = True  # 0.075% of 4000
+    assert convergence_problems(_idata(_iid(rng), diverging=diverging), ["theta"]) == []
 
 
 def test_chains_that_disagree_fail_on_r_hat():
@@ -107,3 +116,48 @@ def test_a_non_converged_model_is_never_exported():
     comparison = {"best_but_bad": _row(0, not_converged=True), "second": _row(1)}
     posterior = {"posteriors": {"best_but_bad": 0.6, "second": 0.4}}
     assert _best_exportable_model(posterior, comparison) == "second"
+
+
+def _escalation(monkeypatch, *, converges_at):
+    """fit_model with the sampling stubbed: record each target_accept tried."""
+    tried = []
+
+    def fake_fit_once(name, models_dir, responses_path, settings, cache_dir):
+        tried.append(settings["target_accept"])
+        return {"target_accept": settings["target_accept"]}
+
+    monkeypatch.setattr(pi, "_fit_once", fake_fit_once)
+    monkeypatch.setattr(
+        pi, "convergence_problems_of",
+        lambda fitted: [] if fitted["target_accept"] >= converges_at else ["R-hat 1.2"],
+    )
+    monkeypatch.setattr(pi, "model_sampler_settings", lambda name, d: {})
+    return tried
+
+
+def test_a_fit_that_fails_the_gate_is_refit_once_at_0_95(tmp_path, monkeypatch):
+    tried = _escalation(monkeypatch, converges_at=0.95)
+    fitted = pi.fit_model("m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4)
+    assert tried == [0.8, 0.95]
+    assert fitted["target_accept"] == 0.95
+
+
+def test_a_converged_fit_is_not_refit(tmp_path, monkeypatch):
+    tried = _escalation(monkeypatch, converges_at=0.8)
+    pi.fit_model("m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4)
+    assert tried == [0.8]
+
+
+def test_the_refit_is_not_repeated_if_it_also_fails(tmp_path, monkeypatch):
+    tried = _escalation(monkeypatch, converges_at=1.1)
+    fitted = pi.fit_model("m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4)
+    assert tried == [0.8, 0.95]
+    assert fitted["target_accept"] == 0.95  # the gate then rejects it
+
+
+def test_a_single_chain_smoke_fit_is_never_refit(tmp_path, monkeypatch):
+    """With one chain R-hat is undefined; the candidate self-check's smoke fit
+    would always 'fail'."""
+    tried = _escalation(monkeypatch, converges_at=1.1)
+    pi.fit_model("m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=1)
+    assert tried == [0.8]

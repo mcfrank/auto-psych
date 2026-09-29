@@ -109,8 +109,10 @@ target — see **Slot roles**) → admit sequentially.
   allowlist, and no `open`/`np.load`/`eval`/`__import__`/dunder escapes — the
   code runs in the harness process) + `hypothesis.md` (`model_name.txt` is
   optional; a slot name is the fallback), passing logp/real-fit/finite-ELPD
-  gates and the **convergence gate** (no divergences, R-hat ≤ 1.01, bulk ESS ≥
-  400; a model's declared `target_accept` is a floor on the loop's), AND with posterior-
+  gates and the **convergence gate** (≤0.1% divergent transitions, R-hat ≤
+  1.05, bulk ESS ≥ 100; `fit_model` refits a failing fit once at
+  `target_accept` 0.95 and uses that fit everywhere; a model's declared
+  `target_accept` is a floor on the loop's), AND with posterior-
   mean `p_left` ≥ `novelty_rmse_threshold` (0.002) RMSE from every admitted
   model **on the loop's novelty pool** — 512 same-length H/T pairs at lengths
   4–8 that the loop generates from its own seed (`novelty_pool_rows`) and
