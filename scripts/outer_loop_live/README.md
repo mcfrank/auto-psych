@@ -145,7 +145,9 @@ CONFIG=scripts/outer_loop_live/hero_run.yaml K=3 \
 Same gates as the pilot path: the config is validated (Prolific token, cost
 summary, `confirm_live_recruitment`) before anything launches, and you confirm
 interactively (`CONFIRM=yes` skips). `RUNS="2 3"` relaunches only those run
-indices. All modeling knobs come from the yaml's `modeling:` block — including
+indices; relaunching an index deletes that run's earlier `$WORK_ROOT/run<i>`
+and `$WORK_ROOT/runs/run<i>`, which the prompt lists — nothing is deleted
+unless you type `yes`. All modeling knobs come from the yaml's `modeling:` block — including
 the hero-run exploration knobs (`hints_file`, `novelty_rmse_threshold`,
 `prune_dse_multiplier`, `candidate_parallelism`), which
 map onto the same-named `run.py` flags.
