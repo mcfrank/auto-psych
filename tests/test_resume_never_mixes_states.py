@@ -254,7 +254,7 @@ def test_a_cell_killed_between_export_and_registry_redoes_its_model_loop(tmp_pat
     run_root = tmp_path / "run"
     exp_dir = _complete_experiment_on_disk(run_root, 1, with_model_loop=False)
     started_with = read_manifest_names(exp_dir / "cognitive_models")
-    stub = _stub_inner_loop("encoding_compressibility")
+    stub = _stub_inner_loop("falk_konold_dp")
     seen = []
 
     def exporting_loop(exp_dir, **kwargs):
@@ -268,7 +268,7 @@ def test_a_cell_killed_between_export_and_registry_redoes_its_model_loop(tmp_pat
         (notes / f"attempt{len(seen)}.md").write_text("notes\n", encoding="utf-8")
         # The export: a new model joins the carried set.
         models = exp_dir / "cognitive_models"
-        shutil.copyfile(models / "encoding_compressibility.py", models / "new_model.py")
+        shutil.copyfile(models / "falk_konold_dp.py", models / "new_model.py")
         names = read_manifest_names(models) + ["new_model"]
         (models / "models_manifest.yaml").write_text(
             yaml.safe_dump({"models": [{"name": n, "rationale": n} for n in names]}),
@@ -286,7 +286,7 @@ def test_a_cell_killed_between_export_and_registry_redoes_its_model_loop(tmp_pat
         raise Crash("killed before the export record")
 
     run = dict(
-        gt_model="prototype_similarity",
+        gt_model="local_representativeness",
         gt_params={"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
         run_root=run_root, seed_models_dir=SEED_MODELS_DIR, n_experiments=1,
         n_participants=2, inner_loop_iterations=0, candidate_count=0, fit_kwargs={},

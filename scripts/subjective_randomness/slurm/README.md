@@ -278,7 +278,7 @@ into `data/results`. A single run can also be re-scored directly:
 
 ```bash
 uv run python scripts/subjective_randomness/reanalyze_holdout_exhaustive.py \
-  --result $SCRATCH/auto-psych/holdout_test_retest_v2/run1/window_typicality/holdout.json
+  --result $SCRATCH/auto-psych/holdout_test_retest_v2/run1/motif_stack/holdout.json
 ```
 
 ### Automating it: re-score each study as it finishes

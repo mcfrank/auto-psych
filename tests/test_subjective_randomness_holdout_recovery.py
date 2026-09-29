@@ -58,8 +58,7 @@ from tests.paths import REPO_ROOT
 
 # The recovery GT/baseline registry: the models with pure-Python family twins,
 # and the single source of truth for the active seed set (the live project
-# seed_models dir mirrors this manifest). It also keeps superseded models on
-# disk, so a superseded ground truth can be generated without being in the pool.
+# seed_models dir mirrors this manifest).
 SEED_MODELS_DIR = REPO_ROOT / "src/subjective_randomness/pymc_model_families"
 
 DESIGN_STIMULI = [
@@ -139,9 +138,9 @@ def _write_cumulative_responses(exp_dir):
 
 def _stub_inner_loop(history_best):
     # ``history_best`` must be a model present in the experiment's seeded
-    # cognitive_models: one of the live pool's faithful seeds (e.g.
-    # local_representativeness) when the real project seeding runs, or a
-    # superseded name when the test builds its own fixture manifest (e.g.
+    # cognitive_models: one of the live pool's faithful seeds other than the
+    # held-out one (e.g. falk_konold_dp) when the real project seeding runs, or
+    # a name from the test's own fixture manifest (e.g.
     # _complete_experiment_on_disk).
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
             backend=None, agent_model=None, cache_dir=None, project_id=None,
@@ -210,7 +209,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     monkeypatch.setattr(
         holdout_recovery, "generate_responses", _stub_generate_responses(collect_calls)
     )
-    inner_stub = _stub_inner_loop("local_representativeness")
+    inner_stub = _stub_inner_loop("falk_konold_dp")
 
     def capturing_inner_loop(exp_dir, **kwargs):
         inner_loop_kwargs.append(kwargs)
@@ -241,7 +240,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     config = {
         "project_id": "subjective_randomness",
         "seed_models_dir": str(SEED_MODELS_DIR),
-        "gt_models": ["prototype_similarity"],
+        "gt_models": ["local_representativeness"],
         "n_experiments": 2,
         "n_participants": 3,
         "seed": 5,
@@ -281,29 +280,28 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert gt_run["starting_models_prunable"] is True
     assert result["inner_loop"]["starting_models_prunable"] is True
     assert not [
-        p for p in (tmp_path / "runs").rglob("*") if "prototype_similarity" in p.name
+        p for p in (tmp_path / "runs").rglob("*") if "local_representativeness" in p.name
     ]
 
     # The GT-params-bearing trajectory.json is written to summary_root (kept
     # OUTSIDE the agent's run tree), not into the run tree where the agent could
     # read the true parameters.
-    assert (tmp_path / "summaries" / "prototype_similarity" / "trajectory.json").exists()
+    assert (tmp_path / "summaries" / "local_representativeness" / "trajectory.json").exists()
     assert not (run_root / "trajectory.json").exists()
 
-    # The held-out model never enters experiment 1's seed set. The GT here is
-    # the superseded prototype_similarity, which the 2026-08 consolidation
-    # dropped from the active set, so it is out-of-pool by construction and
-    # nothing is excluded.
+    # The held-out model never enters experiment 1's seed set: the GT here,
+    # local_representativeness, is one of the live pool's seeds, and seeding
+    # withholds it.
     exp1_models = run_root / "experiment1" / "cognitive_models"
-    assert not (exp1_models / "prototype_similarity.py").exists()
+    assert not (exp1_models / "local_representativeness.py").exists()
     seeded = yaml.safe_load(
         (exp1_models / "models_manifest.yaml").read_text(encoding="utf-8")
     )
     seeded_names = {m["name"] for m in seeded["models"]}
-    assert "prototype_similarity" not in seeded_names
-    # Manifest read after the full run: exactly the four faithful seeds — the
-    # stub best model is one of them, so the export adds nothing.
-    assert seeded_names == FAITHFUL_MODEL_NAMES
+    assert "local_representativeness" not in seeded_names
+    # Manifest read after the full run: exactly the other three faithful seeds
+    # — the stub best model is one of them, so the export adds nothing.
+    assert seeded_names == FAITHFUL_MODEL_NAMES - {"local_representativeness"}
 
     # The design stage is programmatic (no agent): experiment 1 designs from
     # the prior (no previous experiment) and experiment 2 from experiment 1's
@@ -323,12 +321,12 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # Collection always samples from the held-out ground truth. Every seed is
     # derived from (cell seed, ground truth, experiment, purpose), so no two
     # experiments, repeats or ground truths share one.
-    assert [c["model_name"] for c in collect_calls] == ["prototype_similarity"] * 2
+    assert [c["model_name"] for c in collect_calls] == ["local_representativeness"] * 2
     assert [c["seed"] for c in collect_calls] == [
-        derive_seed(5, "prototype_similarity", exp, "responses") for exp in (1, 2)
+        derive_seed(5, "local_representativeness", exp, "responses") for exp in (1, 2)
     ]
     assert [c[5] for c in design_calls] == [
-        derive_seed(5, "prototype_similarity", exp, "design") for exp in (1, 2)
+        derive_seed(5, "local_representativeness", exp, "design") for exp in (1, 2)
     ]
     # Each experiment's participants are different people: ids never repeat
     # across the pooled experiments (3 participants per experiment).
@@ -338,13 +336,13 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # and (with identical stub predictions) perfect correlation.
     assert len(result["gt_runs"]) == 1
     gt_run = result["gt_runs"][0]
-    assert gt_run["gt_model"] == "prototype_similarity"
+    assert gt_run["gt_model"] == "local_representativeness"
     trajectory = gt_run["trajectory"]
     assert [row["global_step"] for row in trajectory] == [0, 1, 2, 3]
     assert [row["experiment"] for row in trajectory] == [1, 1, 2, 2]
     assert [row["iteration"] for row in trajectory] == [None, 0, None, 0]
     assert all(
-        row["best_model"] == "local_representativeness" for row in trajectory
+        row["best_model"] == "falk_konold_dp" for row in trajectory
     )
     assert all(row["pearson_r"] == pytest.approx(1.0) for row in trajectory)
     assert all(row["rmse"] == pytest.approx(0.0) for row in trajectory)
@@ -352,10 +350,11 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert all(row["pearson_r_bma"] == pytest.approx(1.0) for row in trajectory)
     assert all(row["rmse_bma"] == pytest.approx(0.0) for row in trajectory)
     # The fitted-seed baseline (one flat number, seeds fit on all data) recovers
-    # it too, since every stub prediction is identical. The GT is the
-    # superseded prototype_similarity, no longer in the registry, so no seed
-    # is excluded and the baseline covers the whole faithful set.
-    assert set(gt_run["fitted_baseline"]["per_model"]) == FAITHFUL_MODEL_NAMES
+    # it too, since every stub prediction is identical. The baseline covers
+    # the seeds the cell started with: the faithful set without the GT.
+    assert set(gt_run["fitted_baseline"]["per_model"]) == (
+        FAITHFUL_MODEL_NAMES - {"local_representativeness"}
+    )
     # The fitted-seed baseline at the end of every experiment, on its data;
     # the final one is fitted_baseline.
     by_experiment = gt_run["fitted_baseline_by_experiment"]
@@ -368,13 +367,16 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # Evaluation refits go through the shared MCMC cache. The BMA fits every
     # posterior-weighted model (the stub posterior holds the winner best model
     # plus motif_stack — both seeds), and the fitted-seed baseline fits the
-    # registry models, so together they cover exactly the faithful set.
+    # other registry models, so together they cover the faithful set without
+    # the GT.
     assert all(c["cache_dir"] == tmp_path / "cache" for c in fit_calls)
-    assert {c["name"] for c in fit_calls} == FAITHFUL_MODEL_NAMES
+    assert {c["name"] for c in fit_calls} == FAITHFUL_MODEL_NAMES - {"local_representativeness"}
 
     # The no-learning baseline averages the other seed models (default params)
     # against the GT; with identical stub predictions every correlation is 1.
-    assert set(gt_run["baseline"]["per_model"]) == FAITHFUL_MODEL_NAMES
+    assert set(gt_run["baseline"]["per_model"]) == (
+        FAITHFUL_MODEL_NAMES - {"local_representativeness"}
+    )
     assert gt_run["baseline"]["mean_r"] == pytest.approx(1.0)
 
     # The eval set is recorded, sized, and leakage-audited.
@@ -406,7 +408,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert usage_summary["n_calls"] == 2
     assert usage_summary["total_tokens"] == 220
     assert usage_summary["by_source"]["inner:candidate"]["n_calls"] == 2
-    assert "local_representativeness" in gt_run["experiments"][1]["manifest_models"]
+    assert "falk_konold_dp" in gt_run["experiments"][1]["manifest_models"]
 
 
 
@@ -427,7 +429,7 @@ def test_holdout_recovery_records_whether_the_incumbent_ever_changes(
     monkeypatch.setattr(
         holdout_recovery,
         "run_inner_model_loop_programmatic",
-        _stub_inner_loop("local_representativeness"),
+        _stub_inner_loop("falk_konold_dp"),
     )
     monkeypatch.setattr(
         holdout_eval,
@@ -448,7 +450,7 @@ def test_holdout_recovery_records_whether_the_incumbent_ever_changes(
     config = {
         "project_id": "subjective_randomness",
         "seed_models_dir": str(SEED_MODELS_DIR),
-        "gt_models": ["prototype_similarity"],
+        "gt_models": ["local_representativeness"],
         "n_experiments": 2,
         "n_participants": 3,
         "seed": 5,
@@ -474,16 +476,16 @@ def test_holdout_recovery_records_whether_the_incumbent_ever_changes(
     # The stub's seed step scores the winner and motif_stack: that is the set
     # the cell started with, and everything else would count as discovered.
     assert gt_run["incumbent"] == {
-        "starting_models": ["local_representativeness", "motif_stack"],
+        "starting_models": ["falk_konold_dp", "motif_stack"],
         "n_steps": 4,
         "n_incumbent_changes": 0,
         "n_steps_discovered_incumbent": 0,
-        "final_incumbent": "local_representativeness",
+        "final_incumbent": "falk_konold_dp",
         "changes": [],
     }
     # The record persists in the cell's trajectory.json and the tidy CSV.
     on_disk = json.loads(
-        (tmp_path / "summaries" / "prototype_similarity" / "trajectory.json")
+        (tmp_path / "summaries" / "local_representativeness" / "trajectory.json")
         .read_text(encoding="utf-8")
     )
     assert on_disk["incumbent"] == gt_run["incumbent"]
@@ -517,11 +519,11 @@ def test_run_holdout_experiments_strips_generating_model_from_agent_facing_csv(
     monkeypatch.setattr(
         holdout_recovery,
         "run_inner_model_loop_programmatic",
-        _stub_inner_loop("local_representativeness"),
+        _stub_inner_loop("falk_konold_dp"),
     )
 
     run_holdout_experiments(
-        "prototype_similarity",
+        "local_representativeness",
         {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
         tmp_path / "run",
         seed_models_dir=SEED_MODELS_DIR,
@@ -541,7 +543,7 @@ def test_run_holdout_experiments_strips_generating_model_from_agent_facing_csv(
     assert {"participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"} \
         <= set(reader.fieldnames)
     assert len(rows) == 2 * len(DESIGN_STIMULI)
-    assert "prototype_similarity" not in responses.read_text(encoding="utf-8")
+    assert "local_representativeness" not in responses.read_text(encoding="utf-8")
 
 
 def test_resumed_run_refuses_responses_csv_that_names_its_generator(
@@ -555,7 +557,7 @@ def test_resumed_run_refuses_responses_csv_that_names_its_generator(
     _complete_experiment_on_disk(run_root, 1, with_model_loop=False)
     (exp_dir / "data" / "responses.csv").write_text(
         "participant_id,trial_index,sequence_a,sequence_b,chose_left,generating_model\n"
-        "0,0,HTHTHT,HHHHHH,1,prototype_similarity\n",
+        "0,0,HTHTHT,HHHHHH,1,local_representativeness\n",
         encoding="utf-8",
     )
     monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
@@ -568,7 +570,7 @@ def test_resumed_run_refuses_responses_csv_that_names_its_generator(
 
     with pytest.raises(RuntimeError, match="generating_model"):
         run_holdout_experiments(
-            "prototype_similarity",
+            "local_representativeness",
             {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
             run_root,
             seed_models_dir=SEED_MODELS_DIR,
@@ -614,7 +616,7 @@ def test_run_holdout_experiments_raises_on_invalid_design_output(tmp_path, monke
 
     with pytest.raises(RuntimeError, match="2_design"):
         run_holdout_experiments(
-            "prototype_similarity",
+            "local_representativeness",
             {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
             tmp_path / "run",
             seed_models_dir=SEED_MODELS_DIR,
@@ -635,18 +637,18 @@ def _complete_experiment_on_disk(run_root, exp_num, *, with_model_loop=True):
     exp_dir = run_root / f"experiment{exp_num}"
     models_dir = exp_dir / "cognitive_models"
     models_dir.mkdir(parents=True)
-    for name in ("bayesian_diagnosticity", "encoding_compressibility"):
+    for name in ("motif_stack", "falk_konold_dp"):
         shutil.copyfile(SEED_MODELS_DIR / f"{name}.py", models_dir / f"{name}.py")
     (models_dir / "models_manifest.yaml").write_text(
         yaml.safe_dump(
             {
                 "models": [
                     {
-                        "name": "bayesian_diagnosticity",
+                        "name": "motif_stack",
                         "rationale": "Fair-coin diagnosticity hypothesis.",
                     },
                     {
-                        "name": "encoding_compressibility",
+                        "name": "falk_konold_dp",
                         "rationale": "Compressibility-penalty hypothesis.",
                     },
                 ]
@@ -658,7 +660,7 @@ def _complete_experiment_on_disk(run_root, exp_num, *, with_model_loop=True):
     if exp_num == 1:
         # What experiment 1's model loop records when it first runs.
         (run_root / "starting_models.json").write_text(
-            json.dumps({"starting_models": ["bayesian_diagnosticity", "encoding_compressibility"],
+            json.dumps({"starting_models": ["motif_stack", "falk_konold_dp"],
                         "starting_models_prunable": True}),
             encoding="utf-8",
         )
@@ -678,11 +680,11 @@ def _complete_experiment_on_disk(run_root, exp_num, *, with_model_loop=True):
         loop_dir = exp_dir / "model_loop"
         (loop_dir / "models").mkdir(parents=True)
         (loop_dir / "model_posterior.json").write_text(
-            json.dumps({"posteriors": {"encoding_compressibility": 1.0},
-                        "elpd_loo": {"encoding_compressibility": -1.0},
+            json.dumps({"posteriors": {"falk_konold_dp": 1.0},
+                        "elpd_loo": {"falk_konold_dp": -1.0},
                         "n_trials": 1,
                         # The registry updater requires the az.compare block.
-                        "comparison": {"encoding_compressibility": {
+                        "comparison": {"falk_konold_dp": {
                             "rank": 0, "elpd_loo": -1.0, "elpd_diff": 0.0,
                             "dse": 0.0, "weight": 1.0,
                             "loo_unreliable": False}}}),
@@ -691,11 +693,11 @@ def _complete_experiment_on_disk(run_root, exp_num, *, with_model_loop=True):
         (loop_dir / "report.md").write_text("# done\n", encoding="utf-8")
         (loop_dir / "responses.csv").write_text("chose_left\n1\n", encoding="utf-8")
         (loop_dir / "history.json").write_text(
-            json.dumps([_history_step(0, None, "encoding_compressibility")]),
+            json.dumps([_history_step(0, None, "falk_konold_dp")]),
             encoding="utf-8",
         )
         shutil.copyfile(
-            models_dir / "encoding_compressibility.py",
+            models_dir / "falk_konold_dp.py",
             models_dir / "inner_loop_model.py",
         )
         # The stage ends with the registry and its export record.
@@ -708,7 +710,7 @@ def test_run_holdout_experiments_refuses_existing_dir_without_resume(tmp_path):
     (run_root / "experiment1").mkdir(parents=True)
     with pytest.raises(FileExistsError, match="resume"):
         run_holdout_experiments(
-            "prototype_similarity",
+            "local_representativeness",
             {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
             run_root,
             seed_models_dir=SEED_MODELS_DIR,
@@ -732,14 +734,14 @@ def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
     _complete_experiment_on_disk(run_root, 1)
     exp2_models = run_root / "experiment2" / "cognitive_models"
     exp2_models.mkdir(parents=True)
-    for name in ("bayesian_diagnosticity", "encoding_compressibility"):
+    for name in ("motif_stack", "falk_konold_dp"):
         shutil.copyfile(SEED_MODELS_DIR / f"{name}.py", exp2_models / f"{name}.py")
     (exp2_models / "models_manifest.yaml").write_text(
         yaml.safe_dump(
             {"models": [
-                {"name": "bayesian_diagnosticity",
+                {"name": "motif_stack",
                  "rationale": "Fair-coin diagnosticity hypothesis."},
-                {"name": "encoding_compressibility",
+                {"name": "falk_konold_dp",
                  "rationale": "Compressibility-penalty hypothesis."},
             ]},
             sort_keys=False,
@@ -757,7 +759,7 @@ def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
     monkeypatch.setattr(
         holdout_recovery, "generate_responses", _stub_generate_responses(collect_calls)
     )
-    inner_stub = _stub_inner_loop("encoding_compressibility")
+    inner_stub = _stub_inner_loop("falk_konold_dp")
 
     def counting_inner_loop(exp_dir, **kwargs):
         loop_calls.append(exp_dir.name)
@@ -768,7 +770,7 @@ def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
     )
 
     run_holdout_experiments(
-        "prototype_similarity",
+        "local_representativeness",
         {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
         run_root,
         seed_models_dir=SEED_MODELS_DIR,
@@ -783,7 +785,7 @@ def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
 
     assert [c[:3] for c in design_calls] == [("experiment2", 2, "experiment1")]
     assert [c["seed"] for c in collect_calls] == [  # exp2 only
-        derive_seed(5, "prototype_similarity", 2, "responses")
+        derive_seed(5, "local_representativeness", 2, "responses")
     ]
     assert loop_calls == ["experiment2"]
 
@@ -801,7 +803,7 @@ def test_run_holdout_experiments_resume_wipes_partial_model_loop(
     stale.parent.mkdir(parents=True)
     stale.write_text("# stale partial candidate\n", encoding="utf-8")
 
-    inner_stub = _stub_inner_loop("encoding_compressibility")
+    inner_stub = _stub_inner_loop("falk_konold_dp")
     seen = {}
 
     def checking_inner_loop(exp_dir, **kwargs):
@@ -817,7 +819,7 @@ def test_run_holdout_experiments_resume_wipes_partial_model_loop(
     )
 
     run_holdout_experiments(
-        "prototype_similarity",
+        "local_representativeness",
         {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
         run_root,
         seed_models_dir=SEED_MODELS_DIR,
@@ -835,7 +837,7 @@ def test_run_holdout_experiments_resume_wipes_partial_model_loop(
 
 def test_from_config_resume_skips_completed_gt_runs(tmp_path, monkeypatch):
     completed = {
-        "gt_model": "prototype_similarity",
+        "gt_model": "local_representativeness",
         "params": {"theta_alt": 0.65},
         "run_root": "x",
         "n_eval_stimuli": 10,
@@ -865,7 +867,7 @@ def test_from_config_resume_skips_completed_gt_runs(tmp_path, monkeypatch):
 
     config = {
         "seed_models_dir": str(SEED_MODELS_DIR),
-        "gt_models": ["prototype_similarity"],
+        "gt_models": ["local_representativeness"],
         "n_experiments": 1,
     }
     result = run_holdout_recovery_from_config(
@@ -878,7 +880,7 @@ def test_from_config_resume_rejects_stale_trajectory_experiment_count(
     tmp_path, monkeypatch
 ):
     stale = {
-        "gt_model": "prototype_similarity",
+        "gt_model": "local_representativeness",
         "trajectory": [],
         "experiments": [{"experiment": 1, "manifest_models": []}],
     }
@@ -894,7 +896,7 @@ def test_from_config_resume_rejects_stale_trajectory_experiment_count(
 
     config = {
         "seed_models_dir": str(SEED_MODELS_DIR),
-        "gt_models": ["prototype_similarity"],
+        "gt_models": ["local_representativeness"],
         "n_experiments": 2,  # config asks for more experiments than recorded
     }
     with pytest.raises(ValueError, match="trajectory.json"):
@@ -1043,7 +1045,7 @@ def test_evaluate_trajectory_scores_every_history_step(tmp_path, monkeypatch):
 
     rows = evaluate_trajectory(
         run_root,
-        "prototype_similarity",
+        "local_representativeness",
         {"theta_alt": 0.65},
         EVAL_STIMULI,
         seed_models_dir=SEED_MODELS_DIR,
@@ -1123,7 +1125,7 @@ def test_evaluate_trajectory_computes_bayesian_model_average(tmp_path, monkeypat
 
     rows = evaluate_trajectory(
         run_root,
-        "prototype_similarity",
+        "local_representativeness",
         {"theta_alt": 0.65},
         EVAL_STIMULI,
         seed_models_dir=SEED_MODELS_DIR,
@@ -1205,7 +1207,7 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
 
     rows = evaluate_trajectory(
         run_root,
-        "prototype_similarity",
+        "local_representativeness",
         {"theta_alt": 0.65},
         eval_stimuli,
         seed_models_dir=SEED_MODELS_DIR,
@@ -1273,7 +1275,7 @@ def _stub_baseline_fits(monkeypatch, predictions, elpd, untrusted=()):
 
 def _fitted_baseline(run_root, n_experiments=2):
     return fitted_seed_baseline_correlation(
-        run_root, "prototype_similarity", {"theta_alt": 0.65}, EVAL_STIMULI,
+        run_root, "local_representativeness", {"theta_alt": 0.65}, EVAL_STIMULI,
         seed_models_dir=SEED_MODELS_DIR, n_experiments=n_experiments,
         other_seed_models=["seed_x", "seed_y"], cache_dir=None, fit_kwargs={},
     )
@@ -1414,7 +1416,7 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
     # Regenerating metrics for a finished run reads its on-disk history and
     # eval_stimuli, recomputes both trajectories through the cache, and returns
     # a *copy* (the input result is left untouched).
-    run_root = tmp_path / "runs" / "prototype_similarity"
+    run_root = tmp_path / "runs" / "local_representativeness"
     _write_loop_artifacts(run_root, 1, [_history_step(0, None, "model_a")])
     (run_root / "eval_stimuli.json").write_text(
         json.dumps(EVAL_STIMULI), encoding="utf-8"
@@ -1455,7 +1457,7 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
         "seed_models_dir": str(SEED_MODELS_DIR),
         "gt_runs": [
             {
-                "gt_model": "prototype_similarity",
+                "gt_model": "local_representativeness",
                 "params": {"theta_alt": 0.65},
                 "run_root": str(run_root),
                 "trajectory": [{"placeholder": True}],
@@ -1475,7 +1477,7 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
     assert enriched["gt_runs"][0]["fitted_baseline"]["mean_r"] == pytest.approx(1.0)
     # The no-learning baseline is attached (other seeds vs. GT, all stubbed equal).
     baseline = enriched["gt_runs"][0]["baseline"]
-    assert set(baseline["per_model"]) == FAITHFUL_MODEL_NAMES
+    assert set(baseline["per_model"]) == FAITHFUL_MODEL_NAMES - {"local_representativeness"}
     assert baseline["mean_r"] == pytest.approx(1.0)
     # The original result is not mutated.
     assert result["gt_runs"][0]["trajectory"] == [{"placeholder": True}]
@@ -1486,7 +1488,7 @@ def test_reevaluate_trajectories_records_the_incumbent_trajectory(tmp_path, monk
     record as a live run: per-step flags on every trajectory row and the
     per-cell summary, with the starting set read from experiment 1's seed
     step. Here the loop's discovered ``model_b`` takes over in experiment 2."""
-    run_root = tmp_path / "runs" / "prototype_similarity"
+    run_root = tmp_path / "runs" / "local_representativeness"
     _write_loop_artifacts(
         run_root, 1,
         [{**_history_step(0, None, "model_a"), "posteriors": {"model_a": 0.7, "seed_x": 0.3}},
@@ -1525,7 +1527,7 @@ def test_reevaluate_trajectories_records_the_incumbent_trajectory(tmp_path, monk
         "fit_kwargs": {},
         "seed_models_dir": str(SEED_MODELS_DIR),
         "gt_runs": [{
-            "gt_model": "prototype_similarity",
+            "gt_model": "local_representativeness",
             "params": {"theta_alt": 0.65},
             "run_root": str(run_root),
             "trajectory": [{"placeholder": True}],
@@ -1557,7 +1559,7 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
     # space regardless of the (sampled vs exhaustive) pool its original run used.
     # gt_models_dir is also threaded through, so an impossible ground truth whose
     # generator lives outside the seed pool can be re-scored too.
-    run_root = tmp_path / "runs" / "prototype_similarity"
+    run_root = tmp_path / "runs" / "local_representativeness"
     _write_loop_artifacts(run_root, 1, [_history_step(0, None, "model_a")])
     # One length-2 pair appears in training, so it is excluded from the pool.
     _write_training_responses(run_root, 1, [{"sequence_a": "HH", "sequence_b": "HT"}])
@@ -1569,7 +1571,7 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
     seen_gt_dirs = []
 
     def fake_p_left(model_name, models_dir, stimuli, params, **kw):
-        if model_name == "prototype_similarity":  # the ground truth
+        if model_name == "local_representativeness":  # the ground truth
             seen_gt_dirs.append(Path(models_dir))
         return np.linspace(0.1, 0.9, len(stimuli))
 
@@ -1605,7 +1607,7 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
                       "exhaustive": False},
         "gt_runs": [
             {
-                "gt_model": "prototype_similarity",
+                "gt_model": "local_representativeness",
                 "params": {"theta_alt": 0.65},
                 "run_root": str(run_root),
                 "n_eval_stimuli": len(EVAL_STIMULI),
@@ -1657,7 +1659,7 @@ def test_evaluate_trajectory_fails_loudly_without_history(tmp_path, monkeypatch)
     with pytest.raises(FileNotFoundError, match="history.json"):
         evaluate_trajectory(
             run_root,
-            "prototype_similarity",
+            "local_representativeness",
             {},
             EVAL_STIMULI,
             seed_models_dir=SEED_MODELS_DIR,
@@ -1678,14 +1680,14 @@ def _make_model_dirs(run_root, exp_num, files):
 
 
 def test_leakage_check_flags_identical_file(tmp_path):
-    gt_source = (SEED_MODELS_DIR / "prototype_similarity.py").read_text(
+    gt_source = (SEED_MODELS_DIR / "local_representativeness.py").read_text(
         encoding="utf-8"
     )
     run_root = tmp_path / "run"
     _make_model_dirs(run_root, 1, {"sneaky_copy.py": gt_source})
 
     result = leakage_check(
-        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_identical"] is True
@@ -1700,7 +1702,7 @@ def test_leakage_check_flags_distinctive_param_mentions(tmp_path):
     )
 
     result = leakage_check(
-        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_mention"] is True
@@ -1709,10 +1711,10 @@ def test_leakage_check_flags_distinctive_param_mentions(tmp_path):
 
 def test_leakage_check_flags_gt_named_file(tmp_path):
     run_root = tmp_path / "run"
-    _make_model_dirs(run_root, 1, {"prototype_similarity.py": "# innocuous body\n"})
+    _make_model_dirs(run_root, 1, {"local_representativeness.py": "# innocuous body\n"})
 
     result = leakage_check(
-        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_gt_named"] is True
@@ -1725,7 +1727,7 @@ def test_leakage_check_clean_run_unflagged(tmp_path):
     _make_model_dirs(run_root, 1, {"candidate.py": "# beta and side_bias only\n"})
 
     result = leakage_check(
-        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_identical"] is False
@@ -1767,7 +1769,7 @@ def test_from_config_rejects_registry_dir_without_manifest(tmp_path):
     (tmp_path / "other_seeds").mkdir()
     config = {
         "seed_models_dir": str(tmp_path / "other_seeds"),
-        "gt_models": ["prototype_similarity"],
+        "gt_models": ["local_representativeness"],
     }
     with pytest.raises(FileNotFoundError, match="models_manifest"):
         run_holdout_recovery_from_config(
@@ -1778,14 +1780,14 @@ def test_from_config_rejects_registry_dir_without_manifest(tmp_path):
 def test_from_config_rejects_unknown_gt_model_override(tmp_path):
     config = {
         "seed_models_dir": str(SEED_MODELS_DIR),
-        "gt_models": ["prototype_similarity"],
+        "gt_models": ["local_representativeness"],
     }
     with pytest.raises(ValueError, match="not among the configured"):
         run_holdout_recovery_from_config(
             config,
             tmp_path / "config.yaml",
             tmp_path / "runs",
-            gt_model_override="encoding_compressibility",
+            gt_model_override="falk_konold_dp",
         )
 
 
@@ -1803,7 +1805,7 @@ def test_from_config_rejects_zero_overrides(tmp_path, monkeypatch):
 
     config = {
         "seed_models_dir": str(SEED_MODELS_DIR),
-        "gt_models": ["prototype_similarity"],
+        "gt_models": ["local_representativeness"],
     }
     with pytest.raises(ValueError, match="n_experiments"):
         run_holdout_recovery_from_config(
@@ -1824,7 +1826,7 @@ def test_trajectory_tidy_rows_one_row_per_step():
     result = {
         "gt_runs": [
             {
-                "gt_model": "prototype_similarity",
+                "gt_model": "local_representativeness",
                 "trajectory": [
                     {"experiment": 1, "step": 0, "iteration": None,
                      "global_step": 0, "best_model": "a", "pearson_r": 0.5,
@@ -1851,7 +1853,7 @@ def test_trajectory_tidy_rows_one_row_per_step():
     rows = trajectory_tidy_rows(result)
     assert len(rows) == 2
     assert all(set(TRAJECTORY_COLUMNS) <= set(row) for row in rows)
-    assert rows[0]["gt_model"] == "prototype_similarity"
+    assert rows[0]["gt_model"] == "local_representativeness"
     assert rows[1]["pearson_r"] is None
 
 
@@ -1864,7 +1866,7 @@ def test_plot_holdout_trajectories_writes_png(tmp_path):
     result = {
         "gt_runs": [
             {
-                "gt_model": "prototype_similarity",
+                "gt_model": "local_representativeness",
                 "baseline": {"mean_r": 0.55, "per_model": {"a": 0.5, "b": 0.6}},
                 "fitted_baseline": {"mean_r": 0.8, "mean_rmse": 0.07,
                                     "per_model": {}, "n_responses": 100},
@@ -1881,7 +1883,7 @@ def test_plot_holdout_trajectories_writes_png(tmp_path):
                 ],
             },
             {
-                "gt_model": "encoding_compressibility",
+                "gt_model": "falk_konold_dp",
                 # No baseline keys: the plot must tolerate their absence.
                 "trajectory": [
                     {"experiment": 1, "step": 0, "iteration": None,
@@ -1923,7 +1925,7 @@ def _stubbed_config_run(tmp_path, monkeypatch, config, **run_kwargs):
     monkeypatch.setattr(
         holdout_recovery, "generate_responses", _stub_generate_responses([])
     )
-    inner_stub = _stub_inner_loop("local_representativeness")
+    inner_stub = _stub_inner_loop("falk_konold_dp")
 
     def capturing_inner_loop(exp_dir, **kwargs):
         inner_loop_kwargs.append(kwargs)
@@ -1961,7 +1963,7 @@ def _knob_config(inner_loop):
     return {
         "project_id": "subjective_randomness",
         "seed_models_dir": str(SEED_MODELS_DIR),
-        "gt_models": ["prototype_similarity"],
+        "gt_models": ["local_representativeness"],
         "n_experiments": 1,
         "n_participants": 3,
         "seed": 5,
@@ -2070,7 +2072,7 @@ def test_holdout_cli_defaults_and_overrides():
             "--out", "h.json",
             "--tidy-csv", "h.csv",
             "--figure", "h.png",
-            "--gt-model", "prototype_similarity",
+            "--gt-model", "local_representativeness",
             "--n-experiments", "2",
             "--n-participants", "10",
             "--inner-loop-iterations", "1",
@@ -2089,7 +2091,7 @@ def test_holdout_cli_defaults_and_overrides():
     assert full.resume is True
     assert full.novelty_rmse_threshold == 0.005
     assert full.n_critique_proposals == 5
-    assert full.gt_model == "prototype_similarity"
+    assert full.gt_model == "local_representativeness"
     assert full.n_experiments == 2
     assert full.inner_loop_iterations == 1
     assert full.inner_loop_candidates == 2
@@ -2307,7 +2309,7 @@ def test_leakage_check_flags_a_generating_model_column_in_any_agent_facing_csv(t
     _make_agent_csv(run_root, 1, "sequence_a,chose_left", sub="model_loop")
 
     result = leakage_check(
-        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_csv_generating_model"] is True
@@ -2321,7 +2323,7 @@ def test_leakage_check_leaves_a_stripped_csv_unflagged(tmp_path):
     _make_agent_csv(run_root, 1, "sequence_a,chose_left,participant_id")
 
     result = leakage_check(
-        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_csv_generating_model"] is False
@@ -2338,19 +2340,19 @@ def test_leakage_check_flags_the_held_out_name_in_a_checkout_manifest(tmp_path):
     listed = checkout / "seed_models"
     listed.mkdir(parents=True)
     (listed / "models_manifest.yaml").write_text(
-        "models:\n  - name: prototype_similarity\n    rationale: similarity to a prototype\n"
-        "  - name: window_typicality\n    rationale: finite window\n",
+        "models:\n  - name: local_representativeness\n    rationale: similarity to a prototype\n"
+        "  - name: finite_experience_occurrence\n    rationale: finite window\n",
         encoding="utf-8",
     )
     scrubbed = checkout / "pymc_model_families"
     scrubbed.mkdir(parents=True)
     (scrubbed / "models_manifest.yaml").write_text(
-        "models:\n  - name: window_typicality\n    rationale: finite window\n",
+        "models:\n  - name: finite_experience_occurrence\n    rationale: finite window\n",
         encoding="utf-8",
     )
 
     result = leakage_check(
-        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1, checkout_root=checkout,
     )
     assert result["any_manifest_gt_named"] is True
@@ -2364,7 +2366,7 @@ def test_leakage_check_without_a_checkout_root_reports_the_manifest_channel_unch
     _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
 
     result = leakage_check(
-        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_manifest_gt_named"] is None
@@ -2388,7 +2390,7 @@ def test_leakage_check_records_the_featurizer_columns_each_model_reads(tmp_path)
     )
 
     result = leakage_check(
-        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     by_name = {Path(f["path"]).name: f for f in result["files"]}
@@ -2407,18 +2409,18 @@ def test_leakage_check_manifest_scan_ignores_the_loops_own_output_manifests(tmp_
     _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
     checkout = tmp_path / "checkout"
     (run_root / "experiment1" / "cognitive_models" / "models_manifest.yaml").write_text(
-        "models:\n  - name: prototype_similarity\n    rationale: an agent's own model\n",
+        "models:\n  - name: local_representativeness\n    rationale: an agent's own model\n",
         encoding="utf-8",
     )
     seeds = checkout / "seed_models"
     seeds.mkdir(parents=True)
     (seeds / "models_manifest.yaml").write_text(
-        "models:\n  - name: window_typicality\n    rationale: finite window\n",
+        "models:\n  - name: finite_experience_occurrence\n    rationale: finite window\n",
         encoding="utf-8",
     )
 
     result = leakage_check(
-        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1, checkout_root=checkout,
     )
     assert result["any_manifest_gt_named"] is False
@@ -2438,20 +2440,20 @@ def test_leakage_check_flags_gt_in_opposite_feature_regime_manifest(tmp_path):
     seeds = checkout / "seed_models"
     seeds.mkdir(parents=True)
     (seeds / "models_manifest.yaml").write_text(
-        "models:\n  - name: prototype_similarity\n    rationale: similarity to a prototype\n"
-        "  - name: window_typicality\n    rationale: finite window\n",
+        "models:\n  - name: local_representativeness\n    rationale: similarity to a prototype\n"
+        "  - name: finite_experience_occurrence\n    rationale: finite window\n",
         encoding="utf-8",
     )
     families = checkout / "pymc_model_families"
     families.mkdir(parents=True)
     (families / "models_manifest.yaml").write_text(
-        "models:\n  - name: prototype_similarity\n    rationale: similarity to a prototype\n"
-        "  - name: window_typicality\n    rationale: finite window\n",
+        "models:\n  - name: local_representativeness\n    rationale: similarity to a prototype\n"
+        "  - name: finite_experience_occurrence\n    rationale: finite window\n",
         encoding="utf-8",
     )
 
     result = leakage_check(
-        run_root, "prototype_similarity", seed_models_dir=SEED_MODELS_DIR,
+        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1, checkout_root=checkout,
     )
     assert result["any_manifest_gt_named"] is True
@@ -2473,11 +2475,11 @@ def test_agent_csv_has_only_raw_columns(tmp_path, monkeypatch):
     monkeypatch.setattr(
         holdout_recovery,
         "run_inner_model_loop_programmatic",
-        _stub_inner_loop("local_representativeness"),
+        _stub_inner_loop("falk_konold_dp"),
     )
 
     run_holdout_experiments(
-        "prototype_similarity",
+        "local_representativeness",
         {"theta_alt": 0.65, "alt_weight": 0.55, "beta": 4.0, "side_bias": 0.0},
         tmp_path / "run",
         seed_models_dir=SEED_MODELS_DIR,
@@ -2727,7 +2729,7 @@ def test_pairs_where_a_model_is_undefined_are_excluded_and_logged(tmp_path, monk
     log = tmp_path / "eval_exclusions.jsonl"
 
     [row] = evaluate_trajectory(
-        run_root, "prototype_similarity", {"theta_alt": 0.65}, EVAL_STIMULI,
+        run_root, "local_representativeness", {"theta_alt": 0.65}, EVAL_STIMULI,
         seed_models_dir=SEED_MODELS_DIR, n_experiments=1, cache_dir=None,
         fit_kwargs={}, exclusions_log=log,
     )
@@ -2769,7 +2771,7 @@ def test_an_excluded_step_is_announced_in_the_cells_log(tmp_path, monkeypatch, c
 
     monkeypatch.setattr(holdout_eval, "fit_model", lambda *a, **k: Fitted())
     evaluate_trajectory(
-        run_root, "prototype_similarity", {"theta_alt": 0.65}, EVAL_STIMULI,
+        run_root, "local_representativeness", {"theta_alt": 0.65}, EVAL_STIMULI,
         seed_models_dir=SEED_MODELS_DIR, n_experiments=1, cache_dir=None, fit_kwargs={},
     )
     out = capsys.readouterr().out
@@ -2803,7 +2805,7 @@ def test_the_fitted_seed_baseline_excludes_and_logs_a_seeds_undefined_pairs(
     )
     log = tmp_path / "eval_exclusions.jsonl"
     out = fitted_seed_baseline_correlation(
-        run_root, "prototype_similarity", {"theta_alt": 0.65}, EVAL_STIMULI,
+        run_root, "local_representativeness", {"theta_alt": 0.65}, EVAL_STIMULI,
         seed_models_dir=SEED_MODELS_DIR, n_experiments=2,
         other_seed_models=["seed_x", "seed_y"], cache_dir=None, fit_kwargs={},
         exclusions_log=log,
