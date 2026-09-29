@@ -681,42 +681,117 @@ def _prune_losers(
     ]
     if not to_prune:
         return []
+    details = {}
+    for name in to_prune:
+        row = comparison[name]
+        details[name] = prune_margin_detail(
+            elpd_diff=row["elpd_diff"], dse=row["dse"], baseline=baseline
+        )
+        print(
+            f"  [prune] {name}: elpd_diff {row['elpd_diff']:.1f} > "
+            f"{dse_multiplier}·dse ({row['dse']:.1f}) — {details[name]}; moved to "
+            "models/pruned/.",
+            flush=True,
+        )
+    _retire(models_dir, details, ledger=ledger, ledger_context=ledger_context)
+    return to_prune
 
+
+# The live set carried into the next experiment is at most this many models,
+# seeds included (user decision 2026-09-26): pruning alone could let it grow
+# without bound, since a model within the margin of the best is never pruned.
+MAX_LIVE_MODELS = 8
+
+
+def _cap_live_set(
+    models_dir: Path,
+    responses_path: Path,
+    *,
+    protected: set[str],
+    cache_dir: Optional[Path],
+    fit_kwargs: Optional[Dict[str, Any]],
+    cap: int = MAX_LIVE_MODELS,
+    ledger: Optional[HypothesisLedger] = None,
+    ledger_context: str = "",
+) -> List[str]:
+    """Retire non-protected models until at most ``cap`` remain; return them.
+
+    Models that cannot be trusted (an unreliable PSIS-LOO or a non-converged
+    fit; they can never be exported) retire first, then the lowest by ELPD-LOO.
+    Protected seeds are never retired. Retired models go where pruned ones do:
+    ``models/pruned/``, and the ledger as ``pruned`` with the reason.
+    """
+    names = _manifest_names(models_dir)
+    excess = len(names) - cap
+    if excess <= 0:
+        return []
+    comparison = compare_table(
+        responses_path, models_dir, cache_dir=cache_dir, **(fit_kwargs or {})
+    )
+    retirable = [name for name in names if name not in protected]
+    # Untrusted first, then worst rank first.
+    order = sorted(
+        retirable,
+        key=lambda name: (not _untrusted(comparison[name]), -comparison[name]["rank"]),
+    )
+    to_retire = order[:excess]
+    if len(to_retire) < excess:
+        print(
+            f"  [warn] live set cap {cap}: {len(names)} models, but only "
+            f"{len(retirable)} are not protected seeds; keeping "
+            f"{len(names) - len(to_retire)}.",
+            file=sys.stderr,
+            flush=True,
+        )
+    details = {}
+    for name in to_retire:
+        row = comparison[name]
+        if _untrusted(row):
+            why = "its fit cannot be trusted (unreliable PSIS-LOO or no convergence)"
+        else:
+            why = (
+                f"ELPD-LOO rank {row['rank'] + 1} of {len(names)}, "
+                f"{row['elpd_diff']:.1f} nats behind the best"
+            )
+        details[name] = f"retired to keep the live set at {cap} models: {why}"
+        print(f"  [cap] {name}: {details[name]}; moved to models/pruned/.", flush=True)
+    _retire(models_dir, details, ledger=ledger, ledger_context=ledger_context)
+    return to_retire
+
+
+def _retire(
+    models_dir: Path,
+    details: Dict[str, str],
+    *,
+    ledger: Optional[HypothesisLedger],
+    ledger_context: str,
+) -> None:
+    """Move models out of the live set: files to ``models/pruned/`` (an audit
+    trail, not a deletion), fits evicted, ledger ``pruned`` with each
+    model's reason, manifest rewritten without them."""
     hypotheses = {
         e["name"]: (e.get("rationale") or "") for e in _manifest_entries(models_dir)
     }
     pruned_dir = models_dir / "pruned"
     pruned_dir.mkdir(exist_ok=True)
-    for name in to_prune:
-        row = comparison[name]
+    for name, detail in details.items():
         for suffix in (".py", ".hypothesis.md"):
             src = models_dir / f"{name}{suffix}"
             if src.exists():
                 shutil.move(str(src), str(pruned_dir / f"{name}{suffix}"))
         evict_fit_cache(name)
-        margin = prune_margin_detail(
-            elpd_diff=row["elpd_diff"], dse=row["dse"], baseline=baseline
-        )
-        print(
-            f"  [prune] {name}: elpd_diff {row['elpd_diff']:.1f} > "
-            f"{dse_multiplier}·dse ({row['dse']:.1f}) — {margin}; moved to "
-            "models/pruned/.",
-            flush=True,
-        )
         _record(
             ledger,
             name=name,
             outcome="pruned",
-            detail=margin,
+            detail=detail,
             hypothesis=hypotheses.get(name, ""),
             context=ledger_context,
         )
-    remaining = set(names) - set(to_prune)
     _write_manifest(
         models_dir,
-        [e for e in _manifest_entries(models_dir) if e["name"] in remaining],
+        [e for e in _manifest_entries(models_dir) if e["name"] not in details],
     )
-    return to_prune
 
 
 @dataclass(frozen=True)

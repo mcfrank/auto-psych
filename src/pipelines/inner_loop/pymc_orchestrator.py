@@ -66,6 +66,7 @@ from src.pipelines.inner_loop.model_zoo import (
     _is_all_no_file_round,
     _lens_index,
     _manifest_names,
+    _cap_live_set,
     _prune_losers,
     _record,
     _resolve_candidate_name,
@@ -85,6 +86,7 @@ from src.pipelines.inner_loop.scoring import (
     DEFAULT_COMPLEXITY_PRIOR_CONST,
     _compare,
     _export,
+    _record_end_of_experiment_retirements,
     _record_history_step,
     _resolve_protected_names,
     _score,
@@ -572,20 +574,6 @@ def run_pymc_inner_loop(
         posterior = _score(
             responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
         )
-        pruned = _prune_losers(
-            models_dir,
-            responses_path,
-            protected=protected,
-            cache_dir=cache_dir,
-            fit_kwargs=fit_kwargs,
-            dse_multiplier=prune_dse_multiplier,
-            ledger=ledger,
-            ledger_context=round_context,
-        )
-        if pruned:
-            posterior = _score(
-                responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
-            )
         comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
         _record_history_step(
             history,
@@ -593,7 +581,7 @@ def run_pymc_inner_loop(
             posterior,
             comparison,
             iteration=iteration,
-            pruned=pruned,
+            pruned=[],
             critique=critique_status,
         )
 
@@ -604,6 +592,37 @@ def run_pymc_inner_loop(
             f"abandoned after {1 + MAX_EMPTY_ROUND_RETRIES} attempts each). "
             f"This is a systemic failure, not a transient hiccup."
         )
+
+    # Pruning happens once, at the end of the experiment (user decision
+    # 2026-09-26): it used to run after every round against the max of a
+    # growing zoo. Then the live set is capped. Neither can change the best
+    # model (the best is never pruned, and the cap retires from the bottom).
+    end_context = f"{ledger_context} end of experiment".strip()
+    retired = _prune_losers(
+        models_dir,
+        responses_path,
+        protected=protected,
+        cache_dir=cache_dir,
+        fit_kwargs=fit_kwargs,
+        dse_multiplier=prune_dse_multiplier,
+        ledger=ledger,
+        ledger_context=end_context,
+    )
+    retired += _cap_live_set(
+        models_dir,
+        responses_path,
+        protected=protected,
+        cache_dir=cache_dir,
+        fit_kwargs=fit_kwargs,
+        ledger=ledger,
+        ledger_context=end_context,
+    )
+    if retired:
+        posterior = _score(
+            responses_path, models_dir, complexity_prior_const, cache_dir, fit_kwargs
+        )
+        comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
+        _record_end_of_experiment_retirements(history, results_dir, retired)
 
     result = _export(results_dir, models_dir, posterior, comparison)
     result["history"] = history
