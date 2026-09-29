@@ -372,7 +372,7 @@ Entry: `run_design_programmatic` (orchestrator.py:422) →
 ### 3.1 Candidate pair space
 
 `enumerate_all_pairs(lengths, same_length_only=True)`
-(stimulus_design.py:114, called at eig.py:253):
+(stimulus_design.py:86, called at eig.py:253):
 
 - All `2^L` H/T strings for each L in 2..8, pooled in order (L ascending,
   then `itertools.product("HT", repeat=L)` order).
@@ -748,7 +748,7 @@ receive `problem_definition.md`, which is also excluded from the agent tree.
 2. The run's starting models (passed as `starting_models`, else the seeded
    names) become names no candidate may take (`reserved_names`); they are
    not protected.
-3. `HypothesisLedger.create` (hypothesis_ledger.py:102) copies
+3. `HypothesisLedger.create` (hypothesis_ledger.py:101) copies
    `cognitive_models/attempted_hypotheses.jsonl` if present, and otherwise
    starts empty.
 4. `_drop_unfittable_models` (model_zoo.py:284) runs `model_logp_is_finite`
@@ -900,7 +900,7 @@ experiment means every carried model is refit on it.
 ### 5.4 Scoring
 
 - **ELPD-LOO:** `FittedModel.loo_diagnostics` → `loo_diagnostics`
-  (loo_reliability.py:92) → `az.loo(idata, pointwise=True)` on the per-trial
+  (loo_reliability.py:91) → `az.loo(idata, pointwise=True)` on the per-trial
   Bernoulli log-likelihood. It is computed once per fit.
 - **Softmax "posterior"** (`model_posterior`, posterior.py:231):
   `score_m = elpd_m + c · lines_m`, with `c = DEFAULT_COMPLEXITY_PRIOR_CONST = −0.05`
@@ -1138,7 +1138,7 @@ or carried model stays in the zoo, likewise unselectable and unprunable.
 **Novelty gate** (`_min_prediction_rmse`, model_zoo.py:475):
 
 - Pool: `novelty_pool_rows()` = `generate_candidate_pool(512, lengths=(4,5,6,7,8), seed=20260919)`
-  (model_zoo.py:582-603, stimulus_design.py:45). That is 512 distinct
+  (model_zoo.py:582-603, stimulus_design.py:17). That is 512 distinct
   same-length unordered pairs, sampled round-robin over lengths (103, 103,
   102, 102, 102). The sample is identical in every cell. It is deliberately
   not the eval pool, and it does not include length 2–3 pairs, which the
