@@ -232,6 +232,75 @@ def load_manifest(path: Path) -> DeploymentManifest:
     return DeploymentManifest.from_dict(json.loads(path.read_text(encoding="utf-8")))
 
 
+PUBLISH_ANOTHER_STUDY_FLAG = "--publish-another-prolific-study"
+
+
+class LiveStudyAlreadyRecorded(RuntimeError):
+    """The experiment already has a live Prolific study; redoing its design,
+    implementation or deployment would publish a second one."""
+
+
+def recorded_live_study(exp_dir: Path) -> DeploymentManifest | None:
+    """The experiment's deployment manifest if it records a live Prolific study.
+
+    A live study id is recorded before the study is published, so a recorded id
+    whose publish was never confirmed may still be live on Prolific (the publish
+    call can succeed there and fail here). Test-mode drafts are never published
+    and do not count.
+    """
+    path = manifest_path(exp_dir)
+    if not path.exists():
+        return None
+    manifest = load_manifest(path)
+    if manifest.prolific_mode == "live" and manifest.prolific_study_id:
+        return manifest
+    return None
+
+
+def refuse_second_live_study(exp_dir: Path, *, refused: str) -> None:
+    """Raise if ``exp_dir`` already has a live Prolific study.
+
+    ``refused`` names what the caller was about to do. The message gives the
+    two ways on: finish the experiment from its existing study, or — after
+    stopping that study — deliberately publish another one.
+    """
+    manifest = recorded_live_study(exp_dir)
+    if manifest is None:
+        return
+    study_id = manifest.prolific_study_id
+    published = (
+        "published"
+        if manifest.metadata.get("prolific_published")
+        else "created, and may have been published (the run never recorded the outcome)"
+    )
+    raise LiveStudyAlreadyRecorded(
+        f"{exp_dir.name} already has a live Prolific study {study_id} ({published}; "
+        f"recorded in {manifest_path(exp_dir)}). Refusing to {refused}: that would "
+        "deploy over the experiment participants are taking and create and publish "
+        "a second Prolific study, recruiting and paying a second group.\n"
+        "To finish this experiment from the study it already has, re-run only the "
+        "stages after deployment: RESUME_AGENTS=4_collect:5_model_loop with "
+        f"EXPERIMENT={manifest.run_id} for run_live.sbatch (run.py: --resume "
+        "--agent 4_collect, then --agent 5_model_loop). Launch any later "
+        "experiments of the sequence afterwards with EXPERIMENTS=<next>-<last>.\n"
+        f"If you really want a new study for this experiment, first stop or pause "
+        f"{study_id} in the Prolific dashboard, then pass {PUBLISH_ANOTHER_STUDY_FLAG} "
+        "(PUBLISH_ANOTHER_PROLIFIC_STUDY=1 for run_live.sbatch)."
+    )
+
+
+def archive_superseded_manifest(exp_dir: Path) -> Path:
+    """Move the current manifest aside so a deliberate second study does not
+    erase the record of the first."""
+    current = manifest_path(exp_dir)
+    stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
+    archived = current.with_name(f"deployment_manifest.superseded-{stamp}.json")
+    if archived.exists():
+        raise FileExistsError(f"{archived} already exists; not overwriting it")
+    current.rename(archived)
+    return archived
+
+
 def write_client_config(exp_dir: Path, manifest: DeploymentManifest, existing: dict[str, Any] | None = None) -> Path:
     config_path = exp_dir / "experiment" / "config.json"
     merged = dict(existing or {})

@@ -38,6 +38,7 @@ from src.models.mcmc_defaults import (
 )
 from src.pipelines.inner_loop.run import load_hints_file
 from src.pipelines.outer_loop.deployment import write_smoke_experiment
+from src.pipelines.outer_loop.deployment.manifest import refuse_second_live_study
 from src.pipelines.outer_loop.model_loop_runner import (
     init_registry,
     run_inner_model_loop_programmatic,
@@ -256,6 +257,7 @@ def _run_experiment(
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
+    publish_another_prolific_study: bool = False,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
     exp_dir_path = experiment_dir(project_id, exp_num)
@@ -266,6 +268,18 @@ def _run_experiment(
         )
         print("Use --resume to run into an existing directory.", file=sys.stderr)
         sys.exit(1)
+    # A relaunch (run_live.sbatch always passes --resume) must not redo the
+    # stages that built and deployed an experiment that already has a live
+    # Prolific study: that would publish a second study and pay a second group.
+    redeploys = deploy_only or any(
+        key in ("2_design", "3_implement")
+        for key in ([agent_filter] if agent_filter else AGENT_KEYS)
+    )
+    if redeploys and not publish_another_prolific_study:
+        refuse_second_live_study(
+            exp_dir_path,
+            refused="design, implement or deploy this experiment again",
+        )
     ensure_experiment_dirs(exp_dir_path)
     init_registry(exp_dir_path)
 
@@ -305,6 +319,7 @@ def _run_experiment(
             novelty_rmse_threshold=novelty_rmse_threshold,
             prune_dse_multiplier=prune_dse_multiplier,
             candidate_parallelism=candidate_parallelism,
+            publish_another_prolific_study=publish_another_prolific_study,
         )
     finally:
         write_usage_report(
@@ -344,6 +359,7 @@ def _run_experiment_stages(
     novelty_rmse_threshold: Optional[float],
     prune_dse_multiplier: Optional[float],
     candidate_parallelism: Optional[int],
+    publish_another_prolific_study: bool,
 ) -> None:
     """The body of one experiment, from smoke prep through the agent stages."""
     if prepare_smoke_experiment:
@@ -375,6 +391,7 @@ def _run_experiment_stages(
             firebase_region=firebase_region,
             backend=backend,
             run_label=run_label,
+            publish_another_prolific_study=publish_another_prolific_study,
         )
         print(
             f"\nExperiment {exp_num} deployment complete. Outputs: {exp_dir_path}",
@@ -492,6 +509,7 @@ def _run_experiment_stages(
                 firebase_region=firebase_region,
                 backend=backend,
                 run_label=run_label,
+                publish_another_prolific_study=publish_another_prolific_study,
             )
             if prolific_mode == "test":
                 # Test mode creates a DRAFT study (not published) and deploys the
@@ -610,6 +628,12 @@ class Args:
     """Required alongside --prolific-mode live: going live recruits and PAYS
     real participants, so it must be a second, explicit act (mirrors
     smoke_firebase_deploy's --confirm-production)."""
+    publish_another_prolific_study: bool = False
+    """Allow redesigning, reimplementing and redeploying an experiment whose
+    deployment manifest already records a live Prolific study, which creates
+    and publishes a SECOND study for it. Without this, such a relaunch is
+    refused (finish the experiment with --agent 4_collect / 5_model_loop
+    instead). Stop or pause the earlier study in Prolific first."""
 
 
 def main(args: Args) -> None:
@@ -731,6 +755,7 @@ def main(args: Args) -> None:
             novelty_rmse_threshold=args.novelty_rmse_threshold,
             prune_dse_multiplier=args.prune_dse_multiplier,
             candidate_parallelism=args.candidate_parallelism,
+            publish_another_prolific_study=args.publish_another_prolific_study,
         )
 
     print("\nAll experiments complete.", flush=True)

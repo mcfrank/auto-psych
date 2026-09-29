@@ -125,6 +125,12 @@ EXTRA=()
 # Money gate: run.py refuses --prolific-mode live without this flag; the config
 # bridge only exports it when the yaml sets `confirm_live_recruitment: true`.
 [[ -n "${CONFIRM_LIVE_RECRUITMENT:-}" ]] && EXTRA+=(--confirm-live-recruitment)
+# Relaunch gate: run.py refuses to redesign/reimplement/redeploy an experiment
+# whose deployment manifest records a live Prolific study (that would publish a
+# second study and pay a second group). Recover with RESUME_AGENTS instead; set
+# PUBLISH_ANOTHER_PROLIFIC_STUDY=1 only after stopping the earlier study, when
+# you really want a new one.
+[[ -n "${PUBLISH_ANOTHER_PROLIFIC_STUDY:-}" ]] && EXTRA+=(--publish-another-prolific-study)
 
 echo "[run] label=$RUN_LABEL worktree=$RUN_WORKTREE out=$AUTO_PSYCH_OUTPUT_DIR $EXP_DESC N=$N_PARTICIPANTS"
 

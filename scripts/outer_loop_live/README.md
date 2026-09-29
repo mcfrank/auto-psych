@@ -111,6 +111,16 @@ launch without it, and `run.py` independently enforces the same gate
 (`--confirm-live-recruitment`). This makes going live a second, deliberate act
 on top of the yaml mode flag; `test`/`none` modes need no confirmation.
 
+**Relaunch gate.** An experiment whose `deployment/deployment_manifest.json`
+records a live Prolific study is never redesigned, reimplemented or redeployed:
+`run.py` refuses with `LiveStudyAlreadyRecorded` before any stage runs, since
+the job's `--resume` would otherwise publish a second study and pay a second
+group. Finish such an experiment with `RESUME_AGENTS=4_collect:5_model_loop`
+(the stages after the deploy). Only if you really want a new study for it:
+stop the old one in Prolific, then set `PUBLISH_ANOTHER_PROLIFIC_STUDY=1`
+(`--publish-another-prolific-study`); the old manifest is kept as
+`deployment_manifest.superseded-<time>.json`.
+
 **To stop a pilot:** stop/pause the study **in the Prolific dashboard** (that is
 what halts recruiting and charges) — `scancel` only stops the pipeline job, not
 an already-published study.

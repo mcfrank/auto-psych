@@ -433,6 +433,15 @@ used by the active loops (per `README.md`).
   require typing `yes`. See `scripts/outer_loop_live/README.md`. `scancel` kills
   the pipeline job but **not** an already-published Prolific study — stop that in
   the Prolific dashboard.
+- **One live study per experiment.** The live job always passes `--resume`, so
+  a relaunch used to redesign, redeploy and publish a second study. Now an
+  experiment whose `deployment/deployment_manifest.json` records a live
+  `prolific_study_id` (published or not confirmed) refuses `2_design`,
+  `3_implement` and the deploy (`refuse_second_live_study` in
+  `deployment/manifest.py`, checked in `run.py` and `run_deployment`), raising
+  `LiveStudyAlreadyRecorded` with the recovery: `RESUME_AGENTS=4_collect:5_model_loop`,
+  or the deliberate `--publish-another-prolific-study`
+  (`PUBLISH_ANOTHER_PROLIFIC_STUDY=1`), which archives the old manifest.
 - Secrets live in repo-root `.secrets` (see `.secrets.example`): `PROLIFIC_API_TOKEN`,
   `FIREBASE_TOKEN` (`firebase login:ci`), `AUTO_PSYCH_RESULTS_TOKEN` (guards the
   `/submit` & `/results` Cloud Functions — deploy/collect fail loudly without it),

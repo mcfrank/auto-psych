@@ -54,11 +54,35 @@ label you choose.
   `_env.sh` does. `run_pilot.sh` and `start_full_run.sh` source it on the
   login node, so a missing module stops the launch before any job starts.
 
+### Money-safety hazards (fixed 28 September 2026)
+
+**C. Relaunching no longer publishes a second Prolific study.**
+
+- The job always passes `--resume`, so relaunching a run (after a crash, or
+  by reusing its label) used to re-run every stage: a new design, a new
+  deploy over the page participants were taking, and a second *published*
+  study that recruited and paid a second group.
+- Now `run.py` reads the experiment's `deployment/deployment_manifest.json`.
+  If it records a live study (`prolific_mode: live` and a
+  `prolific_study_id`), `2_design`, `3_implement` and the deploy are refused
+  with `LiveStudyAlreadyRecorded: experiment<N> already has a live Prolific
+  study …`, before any stage runs. A study whose publish the run never
+  confirmed counts too: the publish may have gone through on Prolific's side.
+  Test-mode drafts do not count.
+- Recover with `RESUME_AGENTS=4_collect:5_model_loop` (§ 10); launch later
+  experiments of the sequence afterwards with `EXPERIMENTS=<next>-<last>`.
+- If you really want a new study for that experiment, stop or pause the old
+  one in Prolific first, then set `PUBLISH_ANOTHER_PROLIFIC_STUDY=1`
+  (`run.py --publish-another-prolific-study`). The old manifest is kept as
+  `deployment/deployment_manifest.superseded-<time>.json`.
+- A relaunch of a multi-experiment run now stops at the first experiment that
+  has a live study, so never relaunch the whole range; use a new `run_label`
+  for a genuinely new run.
+
 ### Surprises that cost money or data if you don't know them
 
 | # | What | Consequence | What to do |
 |---|---|---|---|
-| C | **Reusing a run label, or relaunching after a crash, re-runs every stage**, including creating and publishing a *new* Prolific study. The job always passes `--resume`, and nothing records "this experiment was already deployed". This holds for multi-experiment runs too: relaunching a 2-experiment run that died in experiment 2 redoes experiment 1. | Paying twice. | Use a new `run_label` for every launch. Recover a stalled run only with `RESUME_AGENTS` (§ 10). |
 | D | **After 2 hours the pipeline stops waiting**, even if fewer participants have finished. It models whatever data exist, **but the Prolific study stays open**. Nothing in the code pauses or stops a study. | Late participants are recruited and paid but not used by that experiment. | Watch the study. Stop it in the Prolific dashboard when the pipeline moves on (§ 8). |
 | E | `start_full_run.sh` **deletes the output and run-copy directories of the runs it is about to launch** (`$WORK_ROOT/run<i>`, `$WORK_ROOT/runs/run<i>`) *before* it asks you to type `yes`. | Answering "no" still deletes earlier `run1`…`runK` results. | Collect earlier results first (§ 11), or use `RUNS=` to pick other indices. |
 | F | When calling `run.py` directly (not via the launchers), **the number of Prolific places comes from the project's `prolific_config.yaml`, not from `--n-participants`**. The committed file says 40 places, 5 minutes, $12/h. `--n-participants` only sets the design's N and the waiting target. | E.g. `--n-participants 5` recruits and pays 40 people, and the pipeline moves on after 5. | Use the launchers. They write that file from your config, so the two numbers agree. |
@@ -163,7 +187,7 @@ Copy one instead of editing it in place, for example
 | key | meaning |
 |---|---|
 | `project` | `subjective_randomness` |
-| `run_label` | names the run: URL path `/e<N>-<label>/`, output dir `$WORK_ROOT/<label>/`, session ids. **New label for every launch** (§ 0 C). Ignored by `start_full_run.sh`, which uses `run1`…`runK`. |
+| `run_label` | names the run: URL path `/e<N>-<label>/`, output dir `$WORK_ROOT/<label>/`, session ids. **New label for every new run**; relaunching a label whose experiment has a live study is refused (§ 0 C). Ignored by `start_full_run.sh`, which uses `run1`…`runK`. |
 | `experiments` | how many experiments in sequence. Each is its own deploy and its own Prolific study. |
 | `coding_agent` | `opencode` (default) or `claude` |
 | `prolific_mode` | `test`: create a **draft** study (not published), deploy, and stop. `live`: publish, recruit, pay, run everything. `none`: deploy only, no study. |
@@ -477,7 +501,8 @@ port forward, not on a login node.
 `run_live.sbatch` accepts `RESUME_AGENTS`: stages separated by `:`, e.g.
 `4_collect:5_model_loop`. With it, the job re-runs **only** those stages of an
 existing experiment. The deploy is tied to `3_implement`, so leaving that out
-never redeploys or recruits.
+never redeploys or recruits. A plain relaunch of an experiment that already
+has a live study is refused (§ 0 C); this is the way to finish it.
 
 Example: modelling experiment 1 of the pilot `pilot4` again, whose model stage
 crashed on problem A (§ 0, fixed on 28 September 2026):
@@ -504,8 +529,9 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
 - Re-running `4_collect` waits for the study's target again (immediately
   satisfied if it was already reached) and downloads everything again.
 - To go on to the next experiment afterwards, launch that experiment
-  alone with `EXPERIMENT=2` (all stages, new study). Never relaunch the
-  whole range.
+  alone with `EXPERIMENT=2` (all stages, new study), or the rest of the
+  sequence with `EXPERIMENTS=2-<last>`. Relaunching the whole range stops at
+  experiment 1 with `LiveStudyAlreadyRecorded` (§ 0 C).
 - `N_PARTICIPANTS` sets the design's N in a new experiment, so keep it equal
   to the config's `participants`.
 

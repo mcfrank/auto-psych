@@ -728,6 +728,7 @@ def run_deployment_programmatic(
     firebase_region: str,
     backend: Optional[str],
     run_label: Optional[str] = None,
+    publish_another_prolific_study: bool = False,
 ) -> Path:
     """Run the deployment phase between implement and collect."""
     from src.pipelines.outer_loop.deployment import run_deployment
@@ -745,6 +746,7 @@ def run_deployment_programmatic(
         n_participants=n_participants,
         repo_root=REPO_ROOT,
         run_label=run_label,
+        publish_another_prolific_study=publish_another_prolific_study,
     )
     print(f"  [deploy] Wrote deployment manifest: {manifest_path}", flush=True)
     return manifest_path

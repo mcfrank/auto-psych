@@ -7,7 +7,8 @@ means something needs a decision, not a retry.
 
 First rule for any failure during a live run: **check the Prolific dashboard.**
 If a study is published and the pipeline has stopped, pause or stop the study
-first, then debug. Never simply relaunch; that deploys and pays again (see
+first, then debug. Recover with `RESUME_AGENTS`, not a plain relaunch: a
+relaunch of an experiment with a live study is refused (see
 [running_a_live_experiment.md § 0 C and § 10](running_a_live_experiment.md)).
 
 ## When launching (`run_pilot.sh`, `start_full_run.sh`)
@@ -31,6 +32,7 @@ first, then debug. Never simply relaunch; that deploys and pays again (see
 | a line ending in `_env.sh: No such file or directory` at the top of a job log | the job was submitted from a directory other than `scripts/outer_loop_live` without `OUTER_LIVE_SLURM_DIR` | `export OUTER_LIVE_SLURM_DIR=$REPO/scripts/outer_loop_live` before `sbatch` |
 | `Error: --prolific-mode live recruits and PAYS real participants. Pass --confirm-live-recruitment …` | `run.py`'s own gate, e.g. calling `run_live.sbatch` by hand | export `CONFIRM_LIVE_RECRUITMENT=1`, or use `PROLIFIC_MODE=none` for a recovery (runbook § 10) |
 | `Error: experiment directory already exists: … Use --resume …` | calling `run.py` directly into an existing output | new `AUTO_PSYCH_OUTPUT_DIR` or label. Do not add `--resume` to a live run without reading runbook § 0 C. |
+| `LiveStudyAlreadyRecorded: experiment<N> already has a live Prolific study … Refusing to …` | a relaunch (or `--agent 2_design` / `3_implement`, or `--deploy-only`) of an experiment whose deployment manifest records a live study (runbook § 0 C) | nothing ran and no study was created. Finish the experiment with `RESUME_AGENTS=4_collect:5_model_loop`, then run later experiments with `EXPERIMENTS=<next>-<last>`. Only if you want a second study: stop the first in Prolific, then set `PUBLISH_ANOTHER_PROLIFIC_STUDY=1` |
 | `[error] Model-set validation failed: … (experiment 1 requires project seed models in …)` | starting models missing or unloadable | check `projects/subjective_randomness/seed_models/` in the run copy |
 | `Cannot carry the model set forward: … does not exist (did experiment 'experimentN' complete?)` | experiment N+1 launched before N finished | finish or recover experiment N first |
 | `FATAL: bwrap not on PATH after ml load system bubblewrap` | `_env.sh` could not load the `system bubblewrap` module (runbook § 0 B) | check `ml spider bubblewrap`; if the module is gone or broken, report it to srcc-support@stanford.edu |

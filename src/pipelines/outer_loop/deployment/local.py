@@ -15,7 +15,14 @@ from .firebase import (
     write_firebase_config,
     write_functions_env,
 )
-from .manifest import build_manifest, write_client_config, write_manifest
+from .manifest import (
+    archive_superseded_manifest,
+    build_manifest,
+    recorded_live_study,
+    refuse_second_live_study,
+    write_client_config,
+    write_manifest,
+)
 from .prolific import build_prolific_plan, create_draft_study, publish_study
 
 
@@ -33,9 +40,16 @@ def run_deployment(
     n_participants: int,
     repo_root: Path,
     run_label: str | None = None,
+    publish_another_prolific_study: bool = False,
 ) -> Path:
     if deploy_target == "none":
         raise ValueError("run_deployment should not be called with deploy_target='none'")
+    if publish_another_prolific_study:
+        if recorded_live_study(exp_dir) is not None:
+            archived = archive_superseded_manifest(exp_dir)
+            print(f"  [deploy] Kept the earlier live study's manifest at {archived}", flush=True)
+    else:
+        refuse_second_live_study(exp_dir, refused="deploy this experiment again")
 
     resolved_project = firebase_project or firebase_project_from_rc(repo_root)
     if deploy_target == "firebase" and not resolved_project:
