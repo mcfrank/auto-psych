@@ -536,7 +536,9 @@ def _write_candidate_context(
                 "experiment or a previous one — that are no longer in the model set,",
                 "with what happened to each (pruned after losing by a stated margin, or",
                 "rejected at admission, most often as a near-duplicate of a model still",
-                "in the set). Do not re-propose any of them under a new name.",
+                "in the set). Do not re-propose any of them unchanged or as a",
+                "near-duplicate; a pruned mechanism may come back only with a",
+                "substantive change.",
             ]
     if critique_path is not None:
         lines += [

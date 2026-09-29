@@ -9,7 +9,7 @@ a new name, wasting candidate slots.
 The ledger is the loop's memory: one JSON line per event, appended the moment
 it happens so a crashed run still leaves the record, started from the ledger
 the previous experiment carried in ``cognitive_models/``, and rendered into
-every candidate brief as the "already tried — do not re-propose" section
+every candidate brief as the "tried before" section
 (``render_markdown``).  See ``docs/consolidation_decision_record.md`` §
 "History of specific choices" for the empirical evidence that motivated this
 module. Events:
@@ -141,12 +141,20 @@ class HypothesisLedger:
         Ordered by each name's first appearance in the ledger. A live model's
         history (admitted, perhaps later pruned and re-admitted under the same
         name) is the zoo's business; the brief shows the live set separately.
+
+        Entries with no hypothesis (an abandoned round, recorded as
+        ``__round__``; a failed agent process) are left out: there is nothing
+        for a later agent to avoid or revisit.
         """
         live = set(live_names)
         latest: dict = {}
         for entry in self.entries():
             latest[entry.name] = entry
-        return [entry for name, entry in latest.items() if name not in live]
+        return [
+            entry
+            for name, entry in latest.items()
+            if name not in live and entry.hypothesis.strip()
+        ]
 
     def pruned(self, live_names: Iterable[str]) -> List[LedgerEntry]:
         """The retired entries whose latest outcome is ``pruned``, in ledger order.
@@ -159,9 +167,15 @@ class HypothesisLedger:
         return [entry for entry in self.retired(live_names) if entry.outcome == "pruned"]
 
     def render_markdown(self, live_names: Iterable[str]) -> str:
-        """The candidate brief's "already tried — do not re-propose" section."""
+        """The candidate brief's "tried before" section.
+
+        Pruning is not proof that a mechanism is wrong (a model loses by a
+        margin on the data of its time), so a pruned model may be revisited
+        with a substantive change; only unchanged copies and near-duplicates
+        of live models are ruled out.
+        """
         retired = self.retired(live_names)
-        header = "# Already tried — do not re-propose\n\n"
+        header = "# Tried before\n\n"
         if not retired:
             return header + (
                 "No earlier hypothesis has been retired yet: every hypothesis "
@@ -175,14 +189,18 @@ class HypothesisLedger:
         )
         lines = [
             header
-            + f"{count} no longer in the model set. Do not propose any of them again, under "
-            "any name: a genuinely new hypothesis differs in *mechanism*, not in "
-            "parameterisation or wording. A *pruned* entry is a mechanism the data "
-            "ruled out, with its margin behind the model that beat it; a "
-            "*rejected* entry is a candidate that never entered the set — most "
-            "often a near-duplicate of a model still in the set, meaning that "
-            "region of hypothesis space is already covered. Pruned models stay "
-            "readable under `models/pruned/`.\n",
+            + f"{count} no longer in the model set. Read them before you propose:\n"
+            "\n"
+            "- A *pruned* entry entered the set and later lost to the best model "
+            "by the stated margin, on the data available then. Its mechanism may "
+            "be partly right: a model that changes it substantively is welcome, "
+            "but do not re-propose it unchanged or merely re-parameterised, under "
+            "any name. Pruned models stay readable under `models/pruned/`.\n"
+            "- A *rejected* entry never entered the set. If it was a near-duplicate "
+            "of a model still in the set, that region is already covered: do not "
+            "re-propose it. If it failed on its code or its fit (see its "
+            "outcome), the idea itself was never tested and a correct "
+            "implementation may be worth trying.\n",
         ]
         # One heading per retired model, its outcome detail and its hypothesis
         # as paragraphs of their own. A markdown table would force each
