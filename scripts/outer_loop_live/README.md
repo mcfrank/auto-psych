@@ -106,7 +106,8 @@ cd ~/auto-psych
 bash scripts/outer_loop_live/run_pilot.sh            # CONFIG=other.yaml to use a different file
 ```
 
-It prints a **cost summary** (per experiment and grand total) and the live URL,
+It prints a **cost summary** (Prolific reward + fee, per experiment and in
+total; AI agent costs are not included, and the summary says so) and the live URL,
 asks you to type **`yes`** (this recruits real humans and spends real money),
 then submits the job and tells you how to monitor and how to stop. `CONFIRM=yes`
 skips the prompt.

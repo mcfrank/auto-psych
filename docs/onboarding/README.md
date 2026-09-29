@@ -70,6 +70,12 @@ run a complete experiment**. Both problems were fixed on 28 September 2026:
   failed at the experiment-building stage, before anything was deployed or
   paid for.
 
+Five money-safety hazards were fixed the same day: a relaunch is refused
+instead of publishing a second study, a collection that gives up pauses its
+study, `start_full_run.sh` deletes nothing before you type `yes`,
+`--n-participants` is the one participant count, and the cost summary says it
+leaves out AI agent costs.
+
 The details, a no-cost rehearsal that exercises the whole path, and a list of
 smaller surprises that are still open are in
 [running_a_live_experiment.md § 0](running_a_live_experiment.md#0-read-this-first-known-problems-as-of-28-september-2026).

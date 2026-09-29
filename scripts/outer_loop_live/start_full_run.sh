@@ -53,7 +53,7 @@ for i in "${_runs[@]}"; do
 done
 cat <<EOF
 
-  => launching run(s): ${_runs[*]}  (${#_runs[@]} parallel; total cost ≈ ${#_runs[@]} x the per-run estimate shown)
+  => launching run(s): ${_runs[*]}  (${#_runs[@]} parallel; Prolific cost ≈ ${#_runs[@]} x the per-run estimate shown; AI agent costs not included)
      config=$CONFIG  mode=$PROLIFIC_MODE  experiments=$N_EXPERIMENTS  N=$N_PARTICIPANTS/exp
      walltime=$WALLTIME  qos=${QOS:-<default normal>}
 
