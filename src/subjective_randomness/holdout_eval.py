@@ -160,6 +160,30 @@ def _participant_ids_in(responses_path: Path) -> Optional[List[int]]:
     return ids or None
 
 
+def seeded_models_dir(run_root: Path) -> Path:
+    """Experiment 1's zoo: the seed files the cell actually started from.
+
+    The seed baselines score "the models the loop starts with", so they load
+    each seed's code from here, not from the recovery registry
+    (``seed_models_dir``): since 2026-09-27 the pool's ``motif_stack`` seed is
+    the softmax rewrite, while the registry's ``motif_stack`` is the Viterbi
+    ground truth. A seed's file stays here for the whole run (seeds are never
+    pruned or retired; a seed dropped as unfittable loses only its manifest
+    entry), and an archived run re-scored later keeps the seeds it ran with.
+    """
+    return Path(run_root) / "experiment1" / "model_loop" / "models"
+
+
+def _require_seeded(names: Sequence[str], models_dir: Path) -> None:
+    missing = sorted(name for name in names if not (Path(models_dir) / f"{name}.py").exists())
+    if missing:
+        raise FileNotFoundError(
+            f"Seed model file(s) {missing} are not in {models_dir}, experiment 1's "
+            "zoo; the seed baselines score the seeds the cell was seeded with, "
+            "and this run did not start from them."
+        )
+
+
 def _eval_prediction(
     fitted: Any,
     base_rows: Sequence[Mapping[str, Any]],
@@ -215,7 +239,7 @@ def _eval_prediction(
 
 def _fitted_seed_baseline(
     seed_models: Sequence[str],
-    seed_models_dir: Path,
+    models_dir: Path,
     responses_path: Path,
     eval_rows: Sequence[Mapping[str, Any]],
     gt_p: np.ndarray,
@@ -225,7 +249,8 @@ def _fitted_seed_baseline(
     fit_kwargs: Mapping[str, Any],
     predict_max_draws: Optional[int] = None,
 ) -> Dict[str, Any]:
-    """Fit each canonical seed model on ``responses_path`` and correlate with GT.
+    """Fit each seed model (its file in ``models_dir``) on ``responses_path``
+    and correlate with GT.
 
     Predicts held-out ``p_left`` for each seed model and correlates with the
     ground truth: the recovery from *fitting the existing starting models*,
@@ -241,7 +266,7 @@ def _fitted_seed_baseline(
     for name in seed_models:
         fitted = fit_model(
             name,
-            seed_models_dir,
+            models_dir,
             responses_path,
             cache_dir=cache_dir,
             **dict(fit_kwargs),
@@ -470,6 +495,7 @@ def seed_baseline_correlation(
     eval_stimuli: Sequence[Mapping[str, str]],
     *,
     seed_models_dir: Path,
+    seeded_models_dir: Path,
     gt_models_dir: Optional[Path] = None,
     gt_family_dir: Optional[Path] = None,
 ) -> Dict[str, Any]:
@@ -484,10 +510,14 @@ def seed_baseline_correlation(
     seed model yields a defined correlation.
 
     ``gt_models_dir`` is where the ground-truth model lives (default:
-    ``seed_models_dir``); the *other* seed models always come from
-    ``seed_models_dir``. For an impossible ground truth these differ, and since
-    the impossible model is not among the project seeds nothing is excluded —
-    every seed model is scored against it.
+    ``seed_models_dir``). The *other* seed models are the registry's names
+    (``seed_models_dir``) with their families' default parameters, but their
+    code is the files the cell was seeded with (``seeded_models_dir``, see
+    ``seeded_models_dir()``): the seed pool's ``motif_stack`` is the softmax
+    rewrite of the registry's Viterbi ``motif_stack``, with the same
+    parameters and defaults. For an impossible ground truth, which is not
+    among the project seeds, nothing is excluded — every seed model is scored
+    against it.
     """
     seed_models_dir = Path(seed_models_dir)
     gt_models_dir = (
@@ -496,11 +526,12 @@ def seed_baseline_correlation(
     gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
     defaults = resolve_generating_params(None, seed_models_dir, gt_family_dir)
 
+    others = {name: params for name, params in defaults.items() if name != gt_model}
+    _require_seeded(list(others), seeded_models_dir)
+
     per_model: Dict[str, Optional[float]] = {}
-    for name, params in defaults.items():
-        if name == gt_model:
-            continue
-        pred = p_left_fixed_params(name, seed_models_dir, eval_stimuli, params)
+    for name, params in others.items():
+        pred = p_left_fixed_params(name, seeded_models_dir, eval_stimuli, params)
         per_model[name] = pearson_r(gt_p.tolist(), pred.tolist())
 
     defined = [r for r in per_model.values() if r is not None]
@@ -561,7 +592,11 @@ def fitted_seed_baseline_correlation(
 
     Fits each non-GT seed model once on every experiment's responses (each
     counted once), predicts held-out ``p_left``, and correlates with the
-    ground truth. Reports the ELPD-best trusted seed as the baseline (see
+    ground truth. Each seed's code is the file the cell was seeded with
+    (``seeded_models_dir(run_root)``), so the fit is the loop's own seed fit
+    on the final data (a cache hit when the run shared ``cache_dir``);
+    ``seed_models_dir`` (the registry) supplies only the ground truth's
+    default location. Reports the ELPD-best trusted seed as the baseline (see
     ``_fitted_seed_baseline``), the mean over seeds as a reference, the
     per-model breakdown and the response count. It isolates the value of
     agent-discovered structure: same data, same fitting machinery, same
@@ -577,9 +612,11 @@ def fitted_seed_baseline_correlation(
     participant_ids = _participant_ids_in(responses_path)
     n_responses = _n_rows(responses_path)
 
+    seeded_dir = seeded_models_dir(run_root)
+    _require_seeded(other_seed_models, seeded_dir)
     baseline = _fitted_seed_baseline(
         other_seed_models,
-        Path(seed_models_dir),
+        seeded_dir,
         responses_path,
         eval_rows,
         gt_p,
@@ -685,6 +722,7 @@ def reevaluate_trajectories(
             gt_run["params"],
             eval_stimuli,
             seed_models_dir=seed_models_dir,
+            seeded_models_dir=seeded_models_dir(run_root),
             gt_models_dir=gt_models_dir,
         )
         fitted_baseline = fitted_seed_baseline_correlation(

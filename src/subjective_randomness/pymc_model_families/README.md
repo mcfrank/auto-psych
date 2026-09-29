@@ -16,6 +16,10 @@ live seed pool
 edit the manifest here and run
 `scripts/subjective_randomness/sync_seed_models.py` to copy the model files
 across (the pool manifest keeps its own header but must list the same models).
+One exception, `SEED_SOURCES` in the sync script (2026-09-27): the pool's
+`motif_stack` seed is a copy of `motif_stack_softmax.py`, not of the Viterbi
+`motif_stack.py`, which stays the ground truth; it keeps the name so that
+holding motif_stack out withholds it.
 `tests/test_model_manifest.py` and
 `tests/test_subjective_randomness_seed_recovery.py` fail if the two diverge, or
 if a manifest name has no pure-Python twin. (They diverged once, between the

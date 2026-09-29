@@ -142,9 +142,16 @@ def test_seeds_are_self_contained_and_mirrored(model):
 
 
 def test_motif_stack_needs_no_hook():
-    raw = (REGISTRY / "motif_stack.py").read_text(encoding="utf-8")
-    assert "def prepare_observed" in raw and "def compute_features" not in raw
-    assert raw == (POOL / "motif_stack.py").read_text(encoding="utf-8")
+    # The pool's motif_stack seed is the registry's softmax rewrite (the
+    # documented exception to the mirror, sync_seed_models.SEED_SOURCES).
+    for raw in (
+        (REGISTRY / "motif_stack.py").read_text(encoding="utf-8"),
+        (POOL / "motif_stack.py").read_text(encoding="utf-8"),
+    ):
+        assert "def prepare_observed" in raw and "def compute_features" not in raw
+    assert (POOL / "motif_stack.py").read_text(encoding="utf-8") == (
+        REGISTRY / "motif_stack_softmax.py"
+    ).read_text(encoding="utf-8")
 
 
 def test_seeding_can_be_pointed_at_the_pool(tmp_path):

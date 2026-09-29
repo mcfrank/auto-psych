@@ -372,7 +372,14 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   `sequence_stats.py`, recovery harnesses). Coupling to the pipeline is
   deliberately thin (two cross-imports). `pymc_model_families/` is the frozen
   recovery registry; the project's `seed_models/` manifest mirrors it (a test
-  asserts they agree).
+  asserts they agree), with one exception: the `motif_stack` **seed** is a
+  copy of the registry's `motif_stack_softmax.py` (sums instead of the
+  Viterbi maxes; cheaper to fit, no declared `target_accept`), while the
+  registry's Viterbi `motif_stack` stays the **ground truth**
+  (`SEED_SOURCES` in `scripts/subjective_randomness/sync_seed_models.py`).
+  The seed keeps the name so that holding motif_stack out withholds it and
+  the name scan still works. The seed baselines load the seeds' code from
+  the run tree (`holdout_eval.seeded_models_dir`), not from the registry.
 
 ### Inspecting results
 

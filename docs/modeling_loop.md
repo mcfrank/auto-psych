@@ -238,7 +238,19 @@ the harness process sees unscrubbed. `seed_exclusion` (holdout_data.py:35)
 withholds the GT by manifest name, so the three other literature models are
 seeded. The pool manifest mirrors the registry manifest in
 `pymc_model_families/models_manifest.yaml`, and a test
-(`tests/test_model_manifest.py:76`) asserts the model files are byte-identical.
+(`tests/test_model_manifest.py`) asserts the model files are byte-identical,
+with one documented exception (`SEED_SOURCES` in
+`scripts/subjective_randomness/sync_seed_models.py`, since 2026-09-27): the
+pool's `motif_stack.py` is a copy of the registry's `motif_stack_softmax.py`.
+That model replaces both of Griffiths et al.'s maxes (the Viterbi path and
+the best production method) with sums (the forward recursion and a mixture
+over methods). It has the same parameters and default values, declares no
+`SAMPLER_SETTINGS`, and fits more cheaply than the Viterbi model, which stays
+the registry's `motif_stack` and the ground truth that generates data. The
+seed keeps the name `motif_stack` because withholding works by name: when
+motif_stack is the ground truth, the array deletes the pool's `motif_stack.py`
+and scrubs its manifest entry, `seed_exclusion` withholds it, and the name
+scan finds nothing (`tests/test_motif_stack_seed_holdout.py`).
 
 The same three models are the **protected** set: they are never pruned or
 retired by the cap and are always carried forward (`_protected_seed_names`,
@@ -712,7 +724,7 @@ declared `target_accept` is a **floor** on the caller's (pymc_inference.py:449-4
 | --- | --- | --- |
 | draws / tune | 1000 / 1000 (draws were 2000 until 2026-09-27) | config `fit` (defaults would be 4000/3000, mcmc_defaults.py:13-14) |
 | chains | 4 | config, and sbatch `--chains ${CHAINS:-4}` |
-| target_accept | 0.8; 0.9 for `motif_stack` (it declares 0.9, which is a floor over the config's 0.8); 0.95 on an escalated refit | config; `SAMPLER_SETTINGS`; `ESCALATED_TARGET_ACCEPT` |
+| target_accept | 0.8 (the `motif_stack` seed, the softmax model, declares nothing; the registry's Viterbi `motif_stack`, fitted only as a candidate copy or by analyses, declares 0.9, a floor over the config's 0.8); 0.95 on an escalated refit | config; `SAMPLER_SETTINGS`; `ESCALATED_TARGET_ACCEPT` |
 | max_treedepth | 10 | `_FIT_DEFAULTS` |
 | cores | 4 | `PRODUCTION_CORES` |
 | random_seed | 42 | `_FIT_DEFAULTS`: the same seed for every fit in every cell |
@@ -1217,13 +1229,17 @@ This runs in the harness after the three experiments
 ### 7.3 Baselines
 
 - **`baseline` (fixed-parameter seeds, no learning):**
-  `seed_baseline_correlation` (holdout_eval.py:467). Each registry model other
-  than the GT, at its own `DEFAULT_PARAMS`, gives a fixed `p_left` on the eval
-  pool and a Pearson r with q. Output: `per_model` r and `mean_r`. No RMSE is
-  computed.
+  `seed_baseline_correlation` (holdout_eval.py). Each registry model other
+  than the GT, at its family's `DEFAULT_PARAMS`, gives a fixed `p_left` on the
+  eval pool and a Pearson r with q. The model code is the file the cell was
+  seeded with, in experiment 1's zoo (`seeded_models_dir(run_root)` =
+  `experiment1/model_loop/models/`), not the registry's: the `motif_stack`
+  seed is the softmax model (same parameters and defaults). Output:
+  `per_model` r and `mean_r`. No RMSE is computed.
 - **`fitted_baseline` (fitted seeds, no agents):**
-  `fitted_seed_baseline_correlation` (holdout_eval.py:546). The three non-GT
-  registry models (from `pymc_model_families/`) are fit with the loop's
+  `fitted_seed_baseline_correlation` (holdout_eval.py). The three non-GT
+  seeds, from the files the cell was seeded with (experiment 1's zoo, as
+  above), are fit with the loop's
   `fit_kwargs` on the final experiment's `model_loop/responses.csv`, which
   holds every experiment's responses once (`_all_responses_so_far`,
   holdout_eval.py:515, checks its row count against the experiments'

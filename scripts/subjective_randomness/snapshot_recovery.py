@@ -2,7 +2,8 @@
 
 A holdout cell is only scored when it finishes. This scores a cell mid-run:
 the incumbent of its latest experiment with an inner-loop step, and the
-fitted-seed baseline (every seed model other than the ground truth), all fit on
+fitted-seed baseline (every seed model other than the ground truth, from the
+files the cell was seeded with), all fit on
 that experiment's inner-loop responses, which accumulate every experiment's
 data so far. Held-out RMSE / Pearson r against the ground truth are computed on
 the exhaustive pool minus the pairs trained on so far, as the harness does at
@@ -47,6 +48,7 @@ from src.subjective_randomness.holdout_eval import (  # noqa: E402
     _participant_ids_in,
     _resolve_model_dir,
     build_eval_stimuli,
+    seeded_models_dir,
 )
 from src.subjective_randomness.recover import pearson_r  # noqa: E402
 
@@ -142,8 +144,10 @@ def main(args: Args) -> None:
             "name": incumbent,
             **score(incumbent, _resolve_model_dir(loop_dir / "models", incumbent)),
         },
+        # The seed files the cell was seeded with, not the registry's: the
+        # pool's motif_stack is the softmax rewrite of the Viterbi ground truth.
         "seeds": {
-            name: score(name, args.gt_models_dir)
+            name: score(name, seeded_models_dir(tree))
             for name in seed_model_names(args.gt_models_dir)
             if name != gt_model
         },
