@@ -92,6 +92,14 @@ AGENT_DIR="$AGENT_TREES_ROOT/$(printf '%s' "$RUN_DIR" | sha256sum | cut -c1-16)"
 RUN_REPO="$AGENT_DIR/repo"
 [[ "$AGENT_DIR" != *"$GT"* ]] || { echo "ERROR: the agent directory names the held-out model: $AGENT_DIR (set AGENT_TREES_ROOT elsewhere)" >&2; exit 1; }
 mkdir -p "$RUN_DIR" "$RUN_REPO"
+# One job per cell: the retry job and the sweep watcher can both resubmit a
+# failed cell, and two jobs in one cell would corrupt it. A duplicate exits
+# here, before touching anything; the lock goes when this job exits.
+if ! bash "$SLURM_DIR/cell_lock.sh" "$RUN_DIR/.cell_lock" "${SLURM_JOB_ID:-local}"; then
+  echo "[task $TASK] $RUN_DIR is being worked on by another job; exiting without touching it."
+  exit 0
+fi
+trap 'rm -f "$RUN_DIR/.cell_lock"' EXIT
 if [[ -e "$RUN_DIR/repo" && ! -L "$RUN_DIR/repo" ]]; then
   echo "ERROR: $RUN_DIR/repo is a real directory, from a task started before the agent tree moved out of the cell directory. Resume it with the script it started under, or use a new WORK_ROOT." >&2
   exit 1
