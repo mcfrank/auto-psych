@@ -343,6 +343,94 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert "local_representativeness" in gt_run["experiments"][1]["manifest_models"]
 
 
+
+def test_holdout_recovery_records_whether_the_incumbent_ever_changes(
+    tmp_path, monkeypatch
+):
+    """The primary metric of the loop-improvement plan is a first-class output
+    of every cell: per scoring step, whether the exported best model changed
+    from the previous step and whether it is a discovered model (not one the
+    cell started with); per cell, how many incumbent changes there were and
+    at how many steps a discovered model was the incumbent. With the stub
+    inner loop the incumbent is a seed at every step, so the record must say
+    so: four steps, zero changes, zero discovered-incumbent steps."""
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
+    monkeypatch.setattr(
+        holdout_recovery, "generate_responses", _stub_generate_responses([])
+    )
+    monkeypatch.setattr(
+        holdout_recovery,
+        "run_inner_model_loop_programmatic",
+        _stub_inner_loop("local_representativeness"),
+    )
+    monkeypatch.setattr(
+        holdout_eval,
+        "p_left_fixed_params",
+        lambda model_name, models_dir, stimuli, params, **kw: np.linspace(
+            0.1, 0.9, len(stimuli)
+        ),
+    )
+    monkeypatch.setattr(
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
+    )
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(
+        holdout_eval,
+        "fit_model",
+        lambda name, models_dir, responses_path, **kw: CannedPredictionFit(),
+    )
+    config = {
+        "project_id": "subjective_randomness",
+        "seed_models_dir": str(SEED_MODELS_DIR),
+        "gt_models": ["prototype_similarity"],
+        "n_experiments": 2,
+        "n_participants": 3,
+        "seed": 5,
+        "inner_loop": {"max_iterations": 1, "candidate_count": 1},
+        "agent": {"timeout_sec": 60, "backend": None, "model": "fireworks-ai/test-model"},
+        "eval_pool": {"n_pairs": 40, "lengths": [6], "seed": 11,
+                      "min_remaining": 5, "exhaustive": False},
+        "fit": {"draws": 10, "tune": 10, "chains": 1},
+    }
+
+    result = run_holdout_recovery_from_config(
+        config,
+        tmp_path / "config.yaml",
+        tmp_path / "runs",
+        cache_dir=tmp_path / "cache",
+        summary_root=tmp_path / "summaries",
+    )
+
+    gt_run = result["gt_runs"][0]
+    trajectory = gt_run["trajectory"]
+    assert [row["incumbent_changed"] for row in trajectory] == [False] * 4
+    assert [row["incumbent_is_discovered"] for row in trajectory] == [False] * 4
+    # The stub's seed step scores the winner and motif_stack: that is the set
+    # the cell started with, and everything else would count as discovered.
+    assert gt_run["incumbent"] == {
+        "starting_models": ["local_representativeness", "motif_stack"],
+        "n_steps": 4,
+        "n_incumbent_changes": 0,
+        "n_steps_discovered_incumbent": 0,
+        "final_incumbent": "local_representativeness",
+        "changes": [],
+    }
+    # The record persists in the cell's trajectory.json and the tidy CSV.
+    on_disk = json.loads(
+        (tmp_path / "summaries" / "prototype_similarity" / "trajectory.json")
+        .read_text(encoding="utf-8")
+    )
+    assert on_disk["incumbent"] == gt_run["incumbent"]
+    from src.subjective_randomness.tidy import write_tidy_csv
+
+    tidy_path = tmp_path / "holdout.csv"
+    write_tidy_csv(trajectory_tidy_rows(result), tidy_path, columns=TRAJECTORY_COLUMNS)
+    header = tidy_path.read_text(encoding="utf-8").splitlines()[0].split(",")
+    assert header[-2:] == ["incumbent_changed", "incumbent_is_discovered"]
+    # Appended, never inserted: downstream readers index the older columns by position.
+    assert header[5] == "best_model" and header[6] == "pearson_r"
+
+
 # ── what the agents may read ────────────────────────────────────────
 
 
@@ -1174,6 +1262,69 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
     assert result["gt_runs"][0]["trajectory"] == [{"placeholder": True}]
 
 
+def test_reevaluate_trajectories_records_the_incumbent_trajectory(tmp_path, monkeypatch):
+    """An offline re-analysis of a finished run carries the same incumbent
+    record as a live run: per-step flags on every trajectory row and the
+    per-cell summary, with the starting set read from experiment 1's seed
+    step. Here the loop's discovered ``model_b`` takes over in experiment 2."""
+    run_root = tmp_path / "runs" / "prototype_similarity"
+    _write_loop_artifacts(
+        run_root, 1,
+        [{**_history_step(0, None, "model_a"), "posteriors": {"model_a": 0.7, "seed_x": 0.3}},
+         _history_step(1, 0, "model_a")],
+    )
+    _write_loop_artifacts(run_root, 2, [_history_step(0, None, "model_b")])
+    (run_root / "eval_stimuli.json").write_text(
+        json.dumps(EVAL_STIMULI), encoding="utf-8"
+    )
+    gt_p = np.array([0.2, 0.5, 0.9])
+    monkeypatch.setattr(
+        holdout_eval, "p_left_fixed_params",
+        lambda model_name, models_dir, stimuli, params, **kw: gt_p,
+    )
+    monkeypatch.setattr(holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)})
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
+
+    class Fitted:
+        model = None
+
+        def predict_p_left(self, stim_data):
+            return gt_p
+
+    monkeypatch.setattr(
+        holdout_eval, "fit_model",
+        lambda name, models_dir, responses_path, **kw: Fitted(),
+    )
+    result = {
+        "n_experiments": 2,
+        "fit_kwargs": {},
+        "seed_models_dir": str(SEED_MODELS_DIR),
+        "gt_runs": [{
+            "gt_model": "prototype_similarity",
+            "params": {"theta_alt": 0.65},
+            "run_root": str(run_root),
+            "trajectory": [{"placeholder": True}],
+        }],
+    }
+
+    enriched = reevaluate_trajectories(result, seed_models_dir=SEED_MODELS_DIR, cache_dir=None)
+
+    gt_run = enriched["gt_runs"][0]
+    assert [r["incumbent_changed"] for r in gt_run["trajectory"]] == [False, False, True]
+    assert [r["incumbent_is_discovered"] for r in gt_run["trajectory"]] == [False, False, True]
+    assert gt_run["incumbent"] == {
+        "starting_models": ["model_a", "seed_x"],
+        "n_steps": 3,
+        "n_incumbent_changes": 1,
+        "n_steps_discovered_incumbent": 1,
+        "final_incumbent": "model_b",
+        "changes": [{"global_step": 2, "experiment": 2, "step": 0,
+                     "from": "model_a", "to": "model_b"}],
+    }
+    # Every trajectory row carries every tidy column, new ones included.
+    assert all(set(TRAJECTORY_COLUMNS) - {"gt_model"} <= set(r) for r in gt_run["trajectory"])
+
+
 def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeypatch):
     # With an eval_pool_override the reevaluation IGNORES the run's on-disk
     # eval_stimuli.json and rebuilds the held-out pool exhaustively from the
@@ -1450,14 +1601,16 @@ def test_trajectory_tidy_rows_one_row_per_step():
                      "calib_slope": 1.0, "calib_intercept": 0.0,
                      "pearson_r_bma": 0.6, "rmse_bma": 0.08,
                      "kl_regret_bma": 0.005, "bias_bma": 0.01,
-                     "calib_slope_bma": 0.99, "calib_intercept_bma": 0.01},
+                     "calib_slope_bma": 0.99, "calib_intercept_bma": 0.01,
+                     "incumbent_changed": False, "incumbent_is_discovered": False},
                     {"experiment": 1, "step": 1, "iteration": 0,
                      "global_step": 1, "best_model": "b", "pearson_r": None,
                      "rmse": 0.2, "kl_regret": 0.05, "bias": -0.01,
                      "calib_slope": 0.8, "calib_intercept": 0.1,
                      "pearson_r_bma": None, "rmse_bma": 0.2,
                      "kl_regret_bma": 0.04, "bias_bma": -0.005,
-                     "calib_slope_bma": 0.85, "calib_intercept_bma": 0.08},
+                     "calib_slope_bma": 0.85, "calib_intercept_bma": 0.08,
+                     "incumbent_changed": True, "incumbent_is_discovered": True},
                 ],
             }
         ]

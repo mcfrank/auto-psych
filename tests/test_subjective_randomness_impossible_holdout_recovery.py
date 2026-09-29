@@ -106,16 +106,16 @@ def _stub_inner_loop(history_best):
         for path in cognitive_dir.glob("*.py"):
             shutil.copyfile(path, models_dir / path.name)
 
-        posteriors = {history_best: 0.8, "bayesian_diagnosticity": 0.2}
-        elpd = {history_best: -10.0, "bayesian_diagnosticity": -12.0}
+        posteriors = {history_best: 0.8, "motif_stack": 0.2}
+        elpd = {history_best: -10.0, "motif_stack": -12.0}
         # Mirror the real export: az.compare's stacking weights, which the
         # registry updater requires (it refuses a posterior file without them).
         comparison = {
             history_best: {"rank": 0, "elpd_loo": -10.0, "elpd_diff": 0.0,
                            "dse": 0.0, "weight": 0.7, "loo_unreliable": False},
-            "bayesian_diagnosticity": {"rank": 1, "elpd_loo": -12.0,
-                                       "elpd_diff": 2.0, "dse": 1.5,
-                                       "weight": 0.3, "loo_unreliable": False},
+            "motif_stack": {"rank": 1, "elpd_loo": -12.0,
+                            "elpd_diff": 2.0, "dse": 1.5,
+                            "weight": 0.3, "loo_unreliable": False},
         }
         history = [
             {"step": 0, "iteration": None, "best_model": history_best,
