@@ -34,9 +34,9 @@ prolific:
   participants: 10                 # per experiment (-> total_available_places)
   reward_per_hour: 1200            # cents/hour ($12/hr). OR set a flat `reward:` in cents instead.
   # reward: 200                    # flat cents/participant (overrides reward_per_hour if set)
-  estimated_completion_time: 5     # minutes; grounded in lit (~5 s/trial x 32 + consent/instructions/debrief
-                                   # ~= 4 min; Reimers et al. 2018: 120 trials in ~10 min). 5 = small fair-pay buffer.
-                                   # At reward_per_hour 1200 this pays ~$1.00/participant. Keep in sync with task length.
+  estimated_completion_time: 7     # minutes; grounded in lit (~5 s/trial x 64 + consent/instructions/debrief
+                                   # ~= 6.5 min; Reimers et al. 2018: 120 trials in ~10 min). 7 = small fair-pay buffer.
+                                   # At reward_per_hour 1200 this pays ~$1.40/participant. Keep in sync with task length.
   name: "Which sequence is more random?"
   description: >-
     In this study, you will see a series of coin flip results and be asked to judge which is more random.

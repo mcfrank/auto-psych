@@ -425,7 +425,7 @@ def run_design_programmatic(
     *,
     exp_num: int = 1,
     prev_exp_dir: Optional[Path] = None,
-    k: int = 32,
+    k: int = 64,
     n_random: int = 0,
     lengths: Sequence[int] = (2, 3, 4, 5, 6, 7, 8),
     n_responses: int,
