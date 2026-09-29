@@ -27,7 +27,11 @@ from src.models.model_manifest import (
     read_manifest_entries,
     read_manifest_names,
 )
-from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS, write_responses_csv
+from src.pipelines.outer_loop.columns import (
+    RAW_RESPONSE_COLUMNS,
+    raw_response_rows,
+    write_responses_csv,
+)
 from src.pipelines.outer_loop.orchestrator_validators import _ZOO_NAME_RE
 from src.runtime.config import REPO_ROOT
 
@@ -37,14 +41,17 @@ from src.runtime.config import REPO_ROOT
 
 
 def _pooled_response_rows(exp_dir: Path) -> list[dict[str, str]]:
-    """Concatenate response rows from experiment 1 through ``exp_dir``."""
+    """Concatenate response rows from experiment 1 through ``exp_dir``, keeping
+    only the raw columns (a run collected before collection dropped the others
+    still has them in its ``data/responses.csv``)."""
     project_dir = exp_dir.parent
     current_num = int(exp_dir.name.removeprefix("experiment"))
     rows: list[dict] = []
     for exp_num in range(1, current_num + 1):
         path = project_dir / f"experiment{exp_num}" / "data" / "responses.csv"
         if path.exists():
-            rows.extend(csv.DictReader(path.open(encoding="utf-8")))
+            with path.open(encoding="utf-8") as f:
+                rows.extend(raw_response_rows(csv.DictReader(f)))
     return rows
 
 

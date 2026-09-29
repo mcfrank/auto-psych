@@ -62,11 +62,10 @@ When these pages were written, the live path **could not run a complete
 experiment**. Two problems were confirmed by reading the code, and the first was
 also reproduced:
 
-- **The model-fitting stage stops at its first round of new models.** The
-  collected `responses.csv` has extra columns, and the stage refuses any column
-  beyond the five it expects. This affects live and simulated runs of
-  `src/pipelines/outer_loop/run.py`, and it happens after participants have
-  already been paid.
+- **Fixed on 28 September 2026: the model-fitting stage stopped at its first
+  round of new models.** The collected `responses.csv` had extra columns
+  (Prolific IDs among them), and the stage refuses any column beyond the five
+  it expects. Collection now keeps only those five where agents can read them.
 - **The live launchers never load `bubblewrap`.** The coding agents need it to
   run, so the job fails at the experiment-building stage. This one fails
   before anything is deployed or paid for.

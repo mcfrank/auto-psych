@@ -224,8 +224,9 @@ published, paid, full pipeline. `none`: no study.
 `firebase`: real deploy. `none`: no deploy.
 
 **Prolific ID / PID.** A participant's 24-character Prolific identifier. In
-`responses.csv` it is the `participant_id_str` column. Identifying: see the
-privacy rule in the runbook.
+the collected file (`raw_collected/experiment<N>_responses.csv`) it is the
+`participant_id_str` column; `data/responses.csv` does not carry it.
+Identifying: see the privacy rule in the runbook.
 
 **Hero run, full run, pilot** (code terms). Names of the three preset live
 configs: small single run (`pilot.yaml`); 3 parallel runs × 3 experiments

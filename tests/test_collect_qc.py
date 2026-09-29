@@ -15,7 +15,7 @@ from src.pipelines.outer_loop.collect import check_response_variation
 
 def _rows(chose_left_values):
     return [
-        {"participant_id": i, "sequence_a": "HT", "sequence_b": "TH", "chose_left": v}
+        {"participant_id": i, "trial_index": 0, "sequence_a": "HT", "sequence_b": "TH", "chose_left": v}
         for i, v in enumerate(chose_left_values)
     ]
 
