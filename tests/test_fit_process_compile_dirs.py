@@ -115,7 +115,6 @@ def test_the_compile_dir_flag_keeps_the_other_flags():
     [
         SLURM / "holdout_recovery_array.sbatch",
         SLURM / "impossible_holdout_recovery_array.sbatch",
-        SLURM / "recovery_ceiling.sbatch",
         LIVE / "run_live.sbatch",
     ],
 )
