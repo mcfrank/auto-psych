@@ -594,8 +594,8 @@ class Args:
     Hochberg FDR-adjusted q is reported alongside it). None ⇒ inner-loop default
     of 0.05; lower = stricter."""
     hints_file: Optional[Path] = None
-    """YAML list of exploration hints cycled across a round's candidates
-    (None ⇒ the inner loop's built-in lens battery)."""
+    """YAML list of exploration hints cycled across a round's exploratory
+    slots (None ⇒ the inner loop's built-in lens battery)."""
     novelty_rmse_threshold: Optional[float] = None
     """Reject a candidate whose p_left is within this RMSE of an admitted
     model's (None ⇒ inner-loop default 0.02; 0 disables the gate)."""

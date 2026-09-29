@@ -23,6 +23,8 @@ seed: 7
 
 inner_loop:
   max_iterations: 2
+  # Slot roles at 3 (model_zoo.slot_roles): one exploratory slot, one that
+  # refines the incumbent, one that refines a model of the agent's choosing.
   candidate_count: 3
   # Novelty gate: reject a candidate whose posterior-mean p_left is within
   # this RMSE of an admitted model's on the loop's novelty pool (not the

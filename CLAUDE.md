@@ -91,8 +91,9 @@ selection and export; `candidate_agent.py` writes candidate briefs and spawns
 agents. The model zoo lives at `model_loop/models/`; the project's seeds are
 `protected_names` (never pruned — the outer loop passes them explicitly, so a
 model carried from an earlier experiment *can* lose and leave). Each round:
-optional CriticAL critique → spawn candidate agents in parallel (each steered by
-a rotating exploration "lens") → admit sequentially.
+optional CriticAL critique → spawn candidate agents in parallel (exploratory
+slots steered by a rotating exploration "lens", refinement slots by a named
+target — see **Slot roles**) → admit sequentially.
 
 - **Novelty gate** (`_admit_candidate` in `model_zoo.py`): a candidate is admitted only with a
   loadable `candidate.py` (module-level `model: pm.Model`) + `hypothesis.md` +
@@ -122,6 +123,28 @@ a rotating exploration "lens") → admit sequentially.
   retry (`MAX_EMPTY_ROUND_RETRIES`) stays as the outer guard. `CONTEXT.md`
   documents a self-check command (`check_candidate.py`; `CANDIDATE_CHECK_*`
   in `mcmc_defaults.py`) that runs the admission gates with a smoke fit.
+- **Slot roles — breadth and depth** (`slot_roles` in `model_zoo.py`): a
+  round's `candidate_count` slots have roles. With four or more, `C - 3`
+  exploratory slots walk the twelve-lens battery (`DEFAULT_CANDIDATE_HINTS`;
+  only exploratory slots advance the walk, so `_lens_offset` counts them),
+  two slots **refine the incumbent** (the latest history step's
+  `best_model`, named in the brief with its hypothesis, standing and source
+  path) and one **refines a non-incumbent model of the agent's choosing**
+  from `refinement_menu.md` — the live non-incumbent models ranked by
+  standing and the ledger's pruned models ranked by margin
+  (`parse_prune_margin` reads the margin `_prune_losers` wrote), each with
+  its full hypothesis and source (`models/<name>.py` or
+  `models/pruned/<name>.py`), framed as a menu. Below four slots the
+  refinement slots go one at a time: at 3 one of each, at 2 exploratory +
+  incumbent, at 1 exploratory only. Refinement briefs lift the anti-grafting
+  and no-composition clauses (exploratory briefs keep them and the "do not
+  re-propose" list). The role is the slot's *assignment*, recorded in the
+  ledger context (`… candidate 1 refine incumbent <name>`, `… candidate 2
+  refine chosen`); which model the agent refined is stated in its
+  `hypothesis.md` in prose and **never parsed** — no target file, no regex,
+  no ledger field, no novelty-gate exemption. Motivation: 0 of 27 incumbent
+  changes in the September 2026 sweep, with three breadth mechanisms and no
+  depth mechanism.
 - **Pruning** (`_prune_losers` in `model_zoo.py`): non-protected, PSIS-LOO-reliable models
   statistically distinguishable from the best (`elpd_diff > dse_multiplier·dse`)
   move to `models/pruned/`. There is no stacking-weight floor — pruning is on

@@ -109,11 +109,19 @@ Starting from `run_pymc_inner_loop` in `pymc_orchestrator.py`:
    entry carries its critique status).
 
 4. **Candidate round** (repeated `max_iterations` times):
-   - Write `CANDIDATE_BRIEF.md` with the exploration lens, existing hypotheses
-     (as an `elpd_diff ± dse` race, not softmax), attempted hypotheses (from
-     the ledger), critique results, and `CONTEXT.md` with the raw column names.
-   - Spawn `candidate_count` agents in parallel (each gets a distinct lens via
-     `_lens_index`). Each writes `candidate.py`, `hypothesis.md`, `model_name.txt`.
+   - Allocate slot roles (`slot_roles`): exploratory slots, two
+     incumbent-refinement slots and one agent-chosen refinement slot (fewer
+     below four slots).
+   - Write `CANDIDATE_BRIEF.md` — an exploratory slot's lens, or the
+     refinement target (the incumbent, named; or "choose from
+     `refinement_menu.md`") — existing hypotheses (as an `elpd_diff ± dse`
+     race, not softmax), attempted hypotheses from the ledger (exploratory
+     slots) or the refinement menu of live and pruned models with full
+     hypotheses (refinement slots), critique results, and `CONTEXT.md` with
+     the raw column names.
+   - Spawn `candidate_count` agents in parallel (each exploratory slot gets a
+     distinct lens via `_lens_index`). Each writes `candidate.py`,
+     `hypothesis.md`, `model_name.txt`.
    - **Admit sequentially**: `_admit_candidate` checks the import gate
      (`import_gate.py` — AST-based allowlist), loads the model, verifies logp is
      finite, runs a real MCMC fit, checks ELPD-LOO is finite, and checks novelty
