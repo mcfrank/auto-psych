@@ -4,9 +4,10 @@ Without this gate, near-duplicates of the incumbents enter the zoo under fresh
 names (run2's two winners were 0.029 RMSE apart in prediction space), splitting
 posterior mass and wasting candidate slots. At admission — after the fit gate,
 so every prediction reuses the cached fit — the candidate's posterior-mean
-``p_left`` on the observed stimuli is compared to every admitted model's; a
-minimum RMSE below ``novelty_rmse_threshold`` (default 0.02, ``0`` disables)
-rejects the candidate, loudly naming its nearest neighbour.
+``p_left`` on the loop's novelty pool (``test_novelty_pool.py`` covers where
+the pool comes from) is compared to every admitted model's; a minimum RMSE
+below ``novelty_rmse_threshold`` (default 0.002, ``0`` disables) rejects the
+candidate, loudly naming its nearest neighbour.
 """
 
 from __future__ import annotations
@@ -52,6 +53,13 @@ def _responses(tmp_path):
     return path
 
 
+# Two bare stimulus rows: the fakes above return one p_left per row.
+_POOL = [
+    {"sequence_a": "HHTT", "sequence_b": "HTHT"},
+    {"sequence_a": "HHHTT", "sequence_b": "HTHTT"},
+]
+
+
 def test_min_prediction_rmse_finds_nearest_admitted_model(tmp_path, monkeypatch):
     models_dir = _models_dir(tmp_path, ["seed_a", "seed_b"])
     responses = _responses(tmp_path)
@@ -68,9 +76,15 @@ def test_min_prediction_rmse_finds_nearest_admitted_model(tmp_path, monkeypatch)
     monkeypatch.setattr(
         model_zoo, "make_stim_data", lambda model, rows: {"rows": len(rows)}
     )
+    monkeypatch.setattr(model_zoo, "pm_data_inputs", lambda model: ["chose_left"])
     # candidate_x must be present in the manifest set for other names to skip it.
     name, rmse = _min_prediction_rmse(
-        "candidate_x", models_dir, responses, cache_dir=None, fit_kwargs=None
+        "candidate_x",
+        models_dir,
+        responses,
+        pool_rows=_POOL,
+        cache_dir=None,
+        fit_kwargs=None,
     )
     assert name == "seed_a"
     assert rmse == pytest.approx(np.sqrt(np.mean([0.0, 0.02**2])), abs=1e-9)
@@ -85,8 +99,14 @@ def test_min_prediction_rmse_with_no_other_models(tmp_path, monkeypatch):
     monkeypatch.setattr(
         model_zoo, "make_stim_data", lambda model, rows: {}
     )
+    monkeypatch.setattr(model_zoo, "pm_data_inputs", lambda model: ["chose_left"])
     name, rmse = _min_prediction_rmse(
-        "candidate_x", models_dir, responses, cache_dir=None, fit_kwargs=None
+        "candidate_x",
+        models_dir,
+        responses,
+        pool_rows=_POOL,
+        cache_dir=None,
+        fit_kwargs=None,
     )
     assert name is None
     assert rmse == float("inf")
@@ -118,7 +138,7 @@ def test_admission_rejects_near_duplicate(tmp_path, monkeypatch, capsys):
     monkeypatch.setattr(
         model_zoo,
         "_min_prediction_rmse",
-        lambda *a, **k: ("seed_a", 0.01),
+        lambda *a, **k: ("seed_a", DEFAULT_NOVELTY_RMSE_THRESHOLD / 2),
     )
     admitted = _admit_candidate(
         _candidate(tmp_path), models_dir, "near_dup", responses

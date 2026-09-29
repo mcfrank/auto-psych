@@ -54,6 +54,7 @@ from src.pipelines.inner_loop.model_zoo import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     DEFAULT_PRUNE_DSE_MULTIPLIER,
     MAX_EMPTY_ROUND_RETRIES,
+    NOVELTY_POOL_FILENAME,
     AllCandidatesNoFileError,
     _NO_FILE_DETAIL,
     _admit_candidate_with_reason,
@@ -66,6 +67,7 @@ from src.pipelines.inner_loop.model_zoo import (
     _record,
     _resolve_candidate_name,
     _seed_model_set,
+    novelty_pool_rows,
 )
 
 from src.pipelines.inner_loop.critique_round import (
@@ -210,7 +212,10 @@ def run_pymc_inner_loop(
         every candidate in a round works a distinct lens.
     novelty_rmse_threshold
         Reject a candidate whose posterior-mean ``p_left`` is within this RMSE
-        of an admitted model's on the observed stimuli (``0`` disables).
+        of an admitted model's on the loop's novelty pool — a broad stimulus
+        pool the loop generates from its own seed (``novelty_pool_rows``) and
+        records as ``novelty_pool.json``, not the training stimuli (``0``
+        disables).
     prune_dse_multiplier
         After each scoring pass, drop non-protected models that are
         statistically distinguishable from the best
@@ -257,6 +262,15 @@ def run_pymc_inner_loop(
         ledger=ledger,
         ledger_context=ledger_context,
     )
+    # The novelty pool: generated once from the loop's own seed and recorded in
+    # the run tree, so every candidate this run gates is compared on the same
+    # stimuli and what the gate saw is auditable. None when the gate is off.
+    novelty_pool: Optional[List[Dict[str, str]]] = None
+    if novelty_rmse_threshold > 0:
+        novelty_pool = novelty_pool_rows()
+        (results_dir / NOVELTY_POOL_FILENAME).write_text(
+            json.dumps(novelty_pool), encoding="utf-8"
+        )
     n_lenses = len(candidate_hints) if candidate_hints is not None else len(DEFAULT_CANDIDATE_HINTS)
     if max_iterations > 0 and n_lenses < 1:
         raise ValueError(
@@ -396,6 +410,7 @@ def run_pymc_inner_loop(
                         cache_dir=cache_dir,
                         fit_kwargs=fit_kwargs,
                         novelty_rmse_threshold=novelty_rmse_threshold,
+                        novelty_pool=novelty_pool,
                         ledger=ledger,
                         ledger_context=slot.ledger_context,
                     )

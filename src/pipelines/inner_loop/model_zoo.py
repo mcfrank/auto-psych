@@ -14,14 +14,14 @@ import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 import yaml
 
 from src.models.model_manifest import manifest_path, read_manifest_entries
-from src.models.data_binding import make_stim_data
-from src.models.model_loading import load_pymc_model
+from src.models.data_binding import MissingStimulusColumns, make_stim_data
+from src.models.model_loading import load_pymc_model, pm_data_inputs
 from src.models.pymc_inference import (
     evict_fit_cache,
     fit_model,
@@ -333,39 +333,118 @@ def _drop_nonfinite_elpd_models(
     _write_manifest(models_dir, keep)
 
 
+class NoveltyPoolUnbindable(ValueError):
+    """A *candidate* binds columns a bare stimulus row never carries.
+
+    ``_min_prediction_rmse`` raises this for the candidate only, and the
+    admission gate turns it into a recorded rejection: such a model cannot be
+    evaluated on any stimulus pool (the held-out evaluation included). An
+    *admitted* model that cannot bind the pool is a set-level inconsistency
+    and raises a plain ``RuntimeError`` instead.
+    """
+
+    def __init__(self, model_name: str, missing: Sequence[str]):
+        self.model_name = model_name
+        self.missing = tuple(missing)
+        super().__init__(
+            f"model {model_name!r} binds {list(self.missing)}, which a bare "
+            "stimulus row never carries, so it cannot be compared on the novelty pool"
+        )
+
+
+def _participant_ids_in(responses_path: Path) -> Optional[List[int]]:
+    """Distinct participant ids in the responses, sorted; ``None`` without the column."""
+    with Path(responses_path).open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        if "participant_id" not in (reader.fieldnames or []):
+            return None
+        ids = sorted({int(row["participant_id"]) for row in reader})
+    return ids or None
+
+
+def _pool_prediction(
+    fitted: Any,
+    pool_rows: Sequence[Mapping[str, str]],
+    *,
+    model_name: str,
+    participant_ids: Optional[Sequence[int]],
+) -> np.ndarray:
+    """Posterior-mean ``p_left`` of one fitted model on the pool, population-level.
+
+    The observed-response container is filled with dummies (``p_left`` never
+    reads it), as the recovery evaluation does with its pool. A model without
+    a participant random effect predicts the rows directly. One that indexes
+    ``participant_id`` has only per-participant ``p_left``, so each pool row
+    is predicted as every participant the model was fit on and averaged — one
+    participant at a time, so the draws x rows array stays one pass wide.
+    """
+    rows = [{**row, "chose_left": 0} for row in pool_rows]
+    if "participant_id" not in pm_data_inputs(fitted.model):
+        stim_data = make_stim_data(fitted.model, rows)
+        return np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
+    if not participant_ids:
+        raise ValueError(
+            f"Model {model_name!r} indexes a participant_id random effect but the "
+            "training responses carry no participant_id to marginalize over."
+        )
+    total = np.zeros(len(rows), dtype="float64")
+    for pid in participant_ids:
+        as_participant = [{**row, "participant_id": pid} for row in rows]
+        stim_data = make_stim_data(fitted.model, as_participant)
+        total += np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
+    return total / len(participant_ids)
+
+
 def _min_prediction_rmse(
     model_name: str,
     models_dir: Path,
     responses_path: Path,
     *,
+    pool_rows: Sequence[Mapping[str, str]],
     cache_dir: Optional[Path] = None,
     fit_kwargs: Optional[Dict[str, Any]] = None,
 ) -> Tuple[Optional[str], float]:
-    """Min RMSE between ``model_name``'s p_left and each admitted model's.
+    """Min RMSE between ``model_name``'s p_left and each admitted model's on ``pool_rows``.
 
-    Predictions are posterior means on the observed stimuli, computed from the
-    cached fits (this runs after the admission fit-gate and after scoring has
-    fit every admitted model, so no new MCMC happens here). Returns the
-    nearest model's name and the RMSE — ``(None, inf)`` when the set holds no
-    other model.
+    Predictions are posterior means on the novelty pool (``novelty_pool_rows``;
+    the constants below say why it is not the training stimuli), computed from
+    the cached fits on ``responses_path`` — this runs after the admission
+    fit-gate and after scoring has fit every admitted model, so no new MCMC
+    happens here. Returns the nearest model's name and the RMSE —
+    ``(None, inf)`` when the set holds no other model. Raises
+    ``NoveltyPoolUnbindable`` when the candidate cannot bind bare stimulus rows.
     """
-    with Path(responses_path).open(encoding="utf-8") as f:
-        rows = list(csv.DictReader(f))
+    pool_rows = list(pool_rows)
+    if not pool_rows:
+        raise ValueError("The novelty pool is empty.")
+    participant_ids = _participant_ids_in(responses_path)
 
     def posterior_mean_p_left(name: str) -> np.ndarray:
         fitted = fit_model(
             name, models_dir, responses_path, cache_dir=cache_dir, **(fit_kwargs or {})
         )
-        stim_data = make_stim_data(fitted.model, rows)
-        return np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
+        return _pool_prediction(
+            fitted, pool_rows, model_name=name, participant_ids=participant_ids
+        )
 
-    candidate_p = posterior_mean_p_left(model_name)
+    try:
+        candidate_p = posterior_mean_p_left(model_name)
+    except MissingStimulusColumns as e:
+        raise NoveltyPoolUnbindable(model_name, e.missing) from e
     nearest: Optional[str] = None
     nearest_rmse = float("inf")
     for name in _manifest_names(models_dir):
         if name == model_name:
             continue
-        rmse = float(np.sqrt(np.mean((candidate_p - posterior_mean_p_left(name)) ** 2)))
+        try:
+            other_p = posterior_mean_p_left(name)
+        except MissingStimulusColumns as e:
+            raise RuntimeError(
+                f"Admitted model {name!r} cannot bind the novelty pool (missing "
+                f"{list(e.missing)}); every model in the set must be evaluable "
+                "on bare stimulus rows."
+            ) from e
+        rmse = float(np.sqrt(np.mean((candidate_p - other_p) ** 2)))
         if rmse < nearest_rmse:
             nearest, nearest_rmse = name, rmse
     return nearest, nearest_rmse
@@ -381,10 +460,47 @@ def _min_prediction_rmse(
 DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
 
 # Novelty gate: a candidate whose posterior-mean p_left is within this RMSE of
-# an admitted model's (on the observed stimuli) is a re-skinned duplicate, not
-# a new hypothesis — reject it at admission. See the decision record for how
-# this threshold was calibrated. Set to 0 to disable.
-DEFAULT_NOVELTY_RMSE_THRESHOLD = 0.02
+# an admitted model's — measured on the loop's novelty pool below, not on the
+# training stimuli — is a re-skinned duplicate, not a new hypothesis; reject
+# it at admission. Calibration (the September 2026 sweep, measured on the 64
+# training stimuli at the old 0.02): the 23 archived rejection margins were
+# bimodal — about five re-skins at ~0 (0.0000 x2, 0.0001, 0.0002, 0.0004; two
+# predicted identically) and about eighteen spread evenly from 0.006 to 0.019,
+# distinct mechanisms that happened to agree on the training points. 0.002
+# sits in the gap. See the decision record. Set to 0 to disable.
+DEFAULT_NOVELTY_RMSE_THRESHOLD = 0.002
+
+# The novelty pool: the stimuli on which a candidate's predictions are compared
+# to every admitted model's. The loop generates it from its own seed over the
+# design's pair universe (same-length H/T pairs at lengths 4–8), so two
+# mechanisms are compared across the stimulus space rather than on the few
+# dozen training stimuli the design happened to select. It is deliberately NOT
+# the recovery harness's eval pool (``holdout_eval.build_eval_stimuli``, seeded
+# from the holdout config's ``eval_pool``): the loop must not select models on
+# the stimuli it is later scored against. The orchestrator writes the pool to
+# the run tree as ``novelty_pool.json`` so what the gate saw is auditable.
+NOVELTY_POOL_SEED = 20260919
+NOVELTY_POOL_N_PAIRS = 512
+NOVELTY_POOL_LENGTHS = (4, 5, 6, 7, 8)
+NOVELTY_POOL_FILENAME = "novelty_pool.json"
+
+
+def novelty_pool_rows(
+    *,
+    seed: int = NOVELTY_POOL_SEED,
+    n_pairs: int = NOVELTY_POOL_N_PAIRS,
+    lengths: Sequence[int] = NOVELTY_POOL_LENGTHS,
+) -> List[Dict[str, str]]:
+    """The loop's own stimulus pool for the novelty gate (see the constants above).
+
+    Raw ``sequence_a``/``sequence_b`` rows: each model computes its own
+    features from them, exactly as it does for the responses CSV.
+    """
+    # Lazy, like the design stage's import of the same module (``eig.py``):
+    # the pipeline's coupling to the research library stays thin and explicit.
+    from src.subjective_randomness.stimulus_design import generate_candidate_pool
+
+    return generate_candidate_pool(n_pairs, lengths=tuple(lengths), seed=seed)
 
 
 def _prune_losers(
@@ -528,6 +644,7 @@ def _admit_candidate(
     cache_dir: Optional[Path] = None,
     fit_kwargs: Optional[Dict[str, Any]] = None,
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
+    novelty_pool: Optional[Sequence[Mapping[str, str]]] = None,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
 ) -> bool:
@@ -540,6 +657,7 @@ def _admit_candidate(
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
         novelty_rmse_threshold=novelty_rmse_threshold,
+        novelty_pool=novelty_pool,
         ledger=ledger,
         ledger_context=ledger_context,
     ).admitted
@@ -554,6 +672,7 @@ def _admit_candidate_with_reason(
     cache_dir: Optional[Path] = None,
     fit_kwargs: Optional[Dict[str, Any]] = None,
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
+    novelty_pool: Optional[Sequence[Mapping[str, str]]] = None,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
 ) -> Admission:
@@ -586,6 +705,11 @@ def _admit_candidate_with_reason(
     run — so admission ends with a real fit (its result is cached and reused by
     scoring, adding no extra MCMC), containing any sampling failure to this one
     candidate.
+
+    The novelty gate compares the candidate's posterior-mean ``p_left`` with
+    every admitted model's on ``novelty_pool`` (``None`` ⇒ the loop's default
+    pool, ``novelty_pool_rows()``; the orchestrator passes the pool it recorded
+    in the run tree so every candidate of a run is gated on the same stimuli).
     """
     hypothesis_file = candidate_file.parent / "hypothesis.md"
     hypothesis = (
@@ -682,22 +806,36 @@ def _admit_candidate_with_reason(
 
     # Novelty gate: a candidate that predicts like an existing model is a
     # re-skinned duplicate under a new name — it would split posterior mass
-    # with its twin in every later comparison. Uses the cached fits from the
-    # gates above and prior scoring, so this adds no MCMC.
+    # with its twin in every later comparison, and being statistically tied
+    # with it, pruning would never remove it. Measured on the novelty pool, not
+    # the training stimuli. Uses the cached fits from the gates above and prior
+    # scoring, so this adds no MCMC.
     if novelty_rmse_threshold > 0:
-        nearest, rmse = _min_prediction_rmse(
-            model_name,
-            models_dir,
-            responses_path,
-            cache_dir=cache_dir,
-            fit_kwargs=fit_kwargs,
-        )
+        pool = list(novelty_pool) if novelty_pool is not None else novelty_pool_rows()
+        try:
+            nearest, rmse = _min_prediction_rmse(
+                model_name,
+                models_dir,
+                responses_path,
+                pool_rows=pool,
+                cache_dir=cache_dir,
+                fit_kwargs=fit_kwargs,
+            )
+        except NoveltyPoolUnbindable as e:
+            staged.unlink(missing_ok=True)
+            return reject(
+                f"model binds {list(e.missing)} — response-row bookkeeping a bare "
+                "stimulus never carries — so it cannot be evaluated on a stimulus "
+                "pool (the novelty gate now, the held-out evaluation later); "
+                "compute everything from sequence_a and sequence_b."
+            )
         if nearest is not None and rmse < novelty_rmse_threshold:
             staged.unlink(missing_ok=True)
             return reject(
                 f"predicts like existing model {nearest!r} (p_left RMSE "
-                f"{rmse:.4f} < {novelty_rmse_threshold}) — a near-duplicate of "
-                f"{nearest}, not a new hypothesis."
+                f"{rmse:.5f} < {novelty_rmse_threshold} on the {len(pool)}-stimulus "
+                f"novelty pool) — a near-duplicate of {nearest}, not a new "
+                "hypothesis."
             )
 
     shutil.copyfile(hypothesis_file, models_dir / f"{model_name}.hypothesis.md")

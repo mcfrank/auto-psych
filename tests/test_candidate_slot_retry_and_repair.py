@@ -301,7 +301,7 @@ def test_rejected_candidate_is_repaired_once_with_the_reason_in_its_prompt(
     assert repair_dir == results_dir / "iter_0" / "candidate_0_repair_1"
     note = repair_docs["attempt_note"]
     assert "predicts like existing model 'model_a'" in note
-    assert "p_left RMSE 0.0010 < 0.02" in note
+    assert "p_left RMSE 0.00100 < 0.002" in note
     assert str(results_dir / "iter_0" / "candidate_0") in note
     assert (repair_dir / "ATTEMPT_NOTE.md").read_text(encoding="utf-8") == note
     # The repair is not told not to re-propose the very model it is repairing.

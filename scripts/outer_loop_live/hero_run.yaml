@@ -51,6 +51,6 @@ modeling:
   # these match the inner-loop defaults). hints_file: uncomment to override the
   # built-in lens battery with a custom YAML list.
   # hints_file: scripts/outer_loop_live/hero_hints.yaml
-  novelty_rmse_threshold: 0.02     # reject near-duplicate candidates (p_left RMSE)
+  novelty_rmse_threshold: 0.002    # reject near-duplicate candidates (p_left RMSE on the loop's novelty pool)
   prune_dse_multiplier: 2.0        # prune non-seed models beyond 2*dse of the best
   candidate_parallelism: 7         # spawn a round's candidate agents concurrently

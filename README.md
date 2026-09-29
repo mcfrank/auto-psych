@@ -32,8 +32,9 @@ Active development is organized around two explicit loops:
   prompt; every attempt is in the ledger, and the agent can run a documented
   self-check (a smoke fit) before it finishes.
   Candidates are admitted only if they fit by MCMC, achieve finite ELPD-LOO,
-  and are **genuinely novel** (a candidate predicting within 0.02 RMSE of an
-  existing model's `p_left` is rejected as a duplicate). After each scoring
+  and are **genuinely novel** (a candidate predicting within 0.002 RMSE of an
+  existing model's `p_left` on a broad, loop-generated stimulus pool — not the
+  training stimuli — is rejected as a duplicate). After each scoring
   pass, agent models that are statistically distinguishable losers with
   negligible stacking weight are pruned (the seeded set never is). The winner
   is recorded in `cognitive_models/` under its own name, and az.compare's
