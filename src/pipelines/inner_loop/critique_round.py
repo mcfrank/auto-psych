@@ -21,9 +21,12 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
+
+import pandas as pd
 
 from src.pipelines.inner_loop.task_description import read_task_description
+from src.critique.ppc import check_test_statistic
 from src.pipelines.inner_loop.import_gate import check_forbidden_imports
 from src.pipelines.inner_loop.model_zoo import _manifest_entries
 from src.runtime.coding_agent import AgentPermissionDenied
@@ -43,7 +46,7 @@ CRITIQUE_N_PROPOSALS = 8
 # p-value is ≤ this (no multiple-comparisons correction). Override per-run with
 # --critique-alpha.
 CRITIQUE_SIGNIFICANCE_ALPHA = 0.05
-CRITIQUE_PPC_REPLICATES = 200
+CRITIQUE_PPC_REPLICATES = 1000
 # A critique agent that writes no usable test statistic is re-spawned this many
 # times (with a prompt that says the previous attempt wrote nothing). After
 # that the round proceeds with no critique, recorded as such.
@@ -193,7 +196,13 @@ def _write_critique_context(
     return text
 
 
-def _build_critique_prompt(critique_dir: Path, context_text: str, *, attempt: int = 0) -> str:
+def _build_critique_prompt(
+    critique_dir: Path,
+    context_text: str,
+    *,
+    attempt: int = 0,
+    broken: Optional[Dict[str, str]] = None,
+) -> str:
     """The critique agent's full prompt: the critique brief + the inlined context.
 
     The context is a delimited section of the prompt, exactly as the candidate
@@ -201,7 +210,8 @@ def _build_critique_prompt(critique_dir: Path, context_text: str, *, attempt: in
     the agent had to read first; when that read was denied the agent wrote no
     statistics and exited, and nobody noticed because a fallback battery
     filled in. ``attempt`` > 0 marks a retry after an attempt that wrote no
-    usable statistic, and says so.
+    usable statistic, and says so, with each set-aside statistic's error
+    (``broken``: file stem -> error) so the agent can fix it.
     """
     if not context_text:
         raise ValueError("the critique context is empty; nothing to inline into the prompt")
@@ -237,7 +247,14 @@ def _build_critique_prompt(critique_dir: Path, context_text: str, *, attempt: in
             f"attempt ended without a single usable test statistic in "
             f"`{test_stats_dir}/`. If that happens again the round proceeds with "
             f"no critique at all, so write the statistic files first, before "
-            f"anything else.",
+            f"anything else."
+            + (
+                "\n\nThese statistics were set aside because they failed when run "
+                "once on the observed data:\n"
+                + "\n".join(f"- {name}: {error}" for name, error in sorted(broken.items()))
+                if broken
+                else ""
+            ),
         )
     return "\n\n".join(sections) + "\n"
 
@@ -297,13 +314,17 @@ def _spawn_critique_agent(
     # to it); the prompt names critique_dir explicitly.
     cwd = agent_root if agent_root is not None else REPO_ROOT
     test_stats_dir = critique_dir / "test_stats"
+    observed_df = pd.read_csv(responses_path)
     n_attempts = 1 + MAX_CRITIQUE_RETRIES
     usable: List[Path] = []
+    broken: Dict[str, str] = {}
     attempts_made = 0
     for attempt in range(n_attempts):
         attempts_made = attempt + 1
         success, _ = run_coding_agent(
-            _build_critique_prompt(critique_dir, context_text, attempt=attempt),
+            _build_critique_prompt(
+                critique_dir, context_text, attempt=attempt, broken=broken
+            ),
             cwd=cwd,
             log_path=critique_dir / _critique_log_name(attempt),
             allowed_dirs=[critique_dir, models_dir, responses_path.parent],
@@ -316,7 +337,7 @@ def _spawn_critique_agent(
             memory_dir=notes_dir,  # notes shared with later agents of this run only
             sandbox=True,  # sees only its own tree, scratch (/tmp) and a private home
         )
-        usable = _usable_test_statistics(test_stats_dir)
+        usable, broken = _usable_test_statistics(test_stats_dir, observed_df)
         if usable:
             break
         print(
@@ -360,15 +381,33 @@ def _spawn_critique_agent(
 
 
 def _format_critiques_md(result: Dict[str, Any]) -> str:
-    """Render a human/agent-readable critique summary from a PPC result dict."""
-    sig = [r for r in result.get("results", []) if r.get("significant")]
+    """Render a human/agent-readable critique summary from a PPC result dict.
+
+    Counts only the statistics that could be evaluated: a critique where every
+    statistic errored used to read "the incumbent fits these checks".
+    """
+    results = result.get("results", [])
+    sig = [r for r in results if r.get("significant")]
+    n_total = len(results)
+    n_evaluated = sum(1 for r in results if not r.get("error"))
+    if n_evaluated == 0:
+        return (
+            f"# Critique of `{result.get('model')}`\n\n"
+            f"0 of {n_total} test statistics could be evaluated, so there is no "
+            "critique this round.\n"
+        )
+    not_evaluated = (
+        f" ({n_total - n_evaluated} of {n_total} could not be evaluated)"
+        if n_evaluated < n_total
+        else ""
+    )
     lines = [
         f"# Critique of `{result.get('model')}`",
         "",
-        f"{result.get('n_significant', 0)} of {result.get('n_test_statistics', 0)} test "
+        f"{result.get('n_significant', 0)} of {n_evaluated} evaluated test "
         f"statistics show a significant discrepancy (p ≤ "
         f"{result.get('significance_alpha')}), over {result.get('n_replicates')} "
-        "posterior-predictive replicates.",
+        f"posterior-predictive replicates{not_evaluated}.",
         "",
     ]
     if sig:
@@ -389,20 +428,28 @@ def _format_critiques_md(result: Dict[str, Any]) -> str:
                 f"z={r['z_score']:.2f}, p={r['p_value']:.3g}, q={q_str}){fdr_mark}"
             )
     else:
-        lines.append("No statistic showed a significant discrepancy — the incumbent fits these checks.")
+        lines.append("No evaluated statistic showed a significant discrepancy.")
     return "\n".join(lines) + "\n"
 
 
-def _usable_test_statistics(test_stats_dir: Path) -> List[Path]:
-    """The agent's statistic files that pass the import gate, sorted.
+def _usable_test_statistics(
+    test_stats_dir: Path, observed_df: Any
+) -> Tuple[List[Path], Dict[str, str]]:
+    """The agent's statistic files that pass the import gate and run, sorted.
 
-    A file importing outside the candidate allowlist is deleted (loudly): it
-    could reach the project's feature code, which the critique must not see.
-    An absent directory simply has no statistics.
+    Returns ``(usable, broken)``, ``broken`` mapping each rejected file's stem
+    to the reason. A file importing outside the candidate allowlist is deleted
+    (loudly): it could reach the project's feature code, which the critique
+    must not see. A file that fails when run once on the observed data (a
+    raise, a timeout, a non-finite value) is moved to ``broken_statistics/``
+    beside ``test_stats/``, kept for audit. An absent directory simply has no
+    statistics.
     """
     if not test_stats_dir.is_dir():
-        return []
+        return [], {}
     usable: List[Path] = []
+    broken: Dict[str, str] = {}
+    broken_dir = test_stats_dir.parent / "broken_statistics"
     for stat_file in sorted(test_stats_dir.glob("*.py")):
         forbidden = check_forbidden_imports(stat_file.read_text(encoding="utf-8"))
         if forbidden:
@@ -411,10 +458,18 @@ def _usable_test_statistics(test_stats_dir: Path) -> List[Path]:
                 f"{', '.join(forbidden)}",
                 flush=True,
             )
+            broken[stat_file.stem] = f"forbidden import {', '.join(forbidden)}"
             stat_file.unlink()
             continue
+        error = check_test_statistic(stat_file, observed_df)
+        if error:
+            print(f"  [critique] setting aside {stat_file.name}: {error}", flush=True)
+            broken[stat_file.stem] = error
+            broken_dir.mkdir(exist_ok=True)
+            stat_file.replace(broken_dir / stat_file.name)
+            continue
         usable.append(stat_file)
-    return usable
+    return usable, broken
 
 
 def _persist_critique_results(
@@ -446,7 +501,8 @@ def _persist_critique_results(
     from src.critique.ppc import run_ppc_for_model
 
     test_stats_dir = critique_dir / "test_stats"
-    if not _usable_test_statistics(test_stats_dir):
+    usable, _ = _usable_test_statistics(test_stats_dir, pd.read_csv(responses_path))
+    if not usable:
         raise ValueError(
             f"no usable test statistic in {test_stats_dir}; the critique agent "
             "must write at least one before the PPC harness can run"

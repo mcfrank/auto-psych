@@ -199,6 +199,26 @@ def _compile_test_statistic(code: str) -> Callable[[Any], Any]:
     return fn
 
 
+def check_test_statistic(path: Path, observed_df: Any) -> Optional[str]:
+    """Run a statistic file once on the observed data, as the check will.
+
+    Returns the error (a raise, a timeout, a non-finite value), or ``None``
+    when the statistic gives a finite number. The critique runs this on every
+    statistic before the posterior-predictive check, so a broken statistic is
+    reported back to the critique agent instead of silently yielding NaN.
+    """
+    try:
+        statistic = load_test_statistic_file(path)
+        fn = _compile_test_statistic(statistic.code)
+        with _time_limit(_TEST_STAT_TIMEOUT_SEC):
+            value = float(fn(observed_df.copy()))
+    except Exception as exc:  # an agent-authored statistic that does not run
+        return f"{type(exc).__name__}: {exc}"
+    if not math.isfinite(value):
+        return f"non-finite value on the observed data ({value})"
+    return None
+
+
 # ─────────────────────────────────────────────
 # Posterior-predictive evaluation
 # ─────────────────────────────────────────────
