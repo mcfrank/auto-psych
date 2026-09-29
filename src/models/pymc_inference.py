@@ -637,6 +637,36 @@ def _cache_key(
     )
 
 
+def fit_fingerprint(
+    name: str, models_dir: Path, responses_path: Path, settings: Dict[str, Any]
+) -> str:
+    """The on-disk cache fingerprint of one fit.
+
+    Built from the model source, the responses-file bytes and the *resolved*
+    sampler settings -- the SAME inputs as the in-process ``_cache_key``, which
+    resolves through the same ``resolve_fit_settings``. Keeping the two keyed
+    identically means the on-disk ``.nc`` and the in-process cache can never
+    disagree about which fit corresponds to a (model, data, sampler) triple, so
+    the seeded critique always reuses exactly the fit the model comparison
+    scored, and a fit sampled under different draws/chains is never silently
+    reused for a request that asked for different settings. Public so an
+    offline reader of a finished run's cache (the LOO design-effect analysis)
+    can locate the fit the loop scored without re-deriving the formula.
+    """
+    return hashlib.sha256(
+        (
+            _sha256_file(Path(models_dir) / f"{name}.py")
+            + _sha256_file(Path(responses_path))
+            + _sampler_signature(settings)
+        ).encode("utf-8")
+    ).hexdigest()[:16]
+
+
+def cached_fit_path(cache_dir: Path, name: str, fingerprint: str) -> Path:
+    """Where ``fit_model`` persists (and reads back) the fit with this fingerprint."""
+    return Path(cache_dir) / f"{name}.{fingerprint}.nc"
+
+
 def fit_model(
     name: str,
     models_dir: Path,
@@ -684,27 +714,13 @@ def fit_model(
         },
     )
 
-    # Fingerprint from the model source + the responses-file bytes + the resolved
-    # sampler settings -- the SAME inputs as the in-process ``_cache_key``, which
-    # resolves through the same ``resolve_fit_settings``. Keeping the two keyed
-    # identically means the on-disk ``.nc`` and the in-process cache can never
-    # disagree about which fit corresponds to a (model, data, sampler) triple, so
-    # the seeded critique always reuses exactly the fit the model comparison
-    # scored, and a fit sampled under different draws/chains is never silently
-    # reused for a request that asked for different settings.
-    fp = hashlib.sha256(
-        (
-            _sha256_file(models_dir / f"{name}.py")
-            + _sha256_file(responses_path)
-            + _sampler_signature(settings)
-        ).encode("utf-8")
-    ).hexdigest()[:16]
+    fp = fit_fingerprint(name, models_dir, responses_path, settings)
 
     nc_path = None
     if cache_dir is not None:
         cache_dir = Path(cache_dir)
         cache_dir.mkdir(parents=True, exist_ok=True)
-        nc_path = cache_dir / f"{name}.{fp}.nc"
+        nc_path = cached_fit_path(cache_dir, name, fp)
 
     if nc_path is not None and nc_path.exists():
         idata = az.from_netcdf(str(nc_path))
