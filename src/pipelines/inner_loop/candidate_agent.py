@@ -30,11 +30,13 @@ from src.runtime.config import REPO_ROOT
 _PKG_DIR = Path(__file__).resolve().parent
 _THEORY_PROMPT = _PKG_DIR / "prompts" / "pymc_theory.md"
 
-# Exploration lenses, one per candidate per round. Each is a distinct way to
-# search the hypothesis space; together they push rounds toward genuine novelty
-# rather than conservative revision of the incumbent. Every lens still demands
-# exactly ONE mechanism per model. Override per run with the `candidate_hints`
-# parameter / `--hints-file` knob. See the decision record for the rationale.
+# Exploration lenses, one per exploratory slot per round. Each is a distinct
+# way to search the hypothesis space; together they push rounds toward genuine
+# novelty rather than conservative revision of the incumbent. Every lens still
+# demands exactly ONE mechanism per model. Twelve lenses so a six-candidate
+# round (three exploratory slots) walks four rounds without repeating one.
+# Override per run with the `candidate_hints` parameter / `--hints-file` knob.
+# See the decision record for the rationale.
 DEFAULT_CANDIDATE_HINTS = [
     "Refine one existing hypothesis within its single mechanism — e.g. a "
     "different functional form, prior, or normalization. Do NOT graft cues "
@@ -57,6 +59,27 @@ DEFAULT_CANDIDATE_HINTS = [
     "Propose something simpler or higher-variance than anything in the set — "
     "if it is wrong, the model comparison will say so loudly, and that is "
     "informative.",
+    "Propose a mechanism in which the two sequences are not judged one at a "
+    "time: the comparison itself does the work — a contrast effect, anchoring "
+    "on whichever sequence is read first, or a shared reference point both are "
+    "judged against — so the same sequence would be judged differently beside "
+    "a different partner.",
+    "Propose a mechanism driven by the single most salient local feature — the "
+    "longest run, the most lopsided window, or the presence of one specific "
+    "motif — a maximum over sub-sequences rather than a sum or average over the "
+    "whole sequence, so one striking stretch decides the judgment.",
+    "Propose a mechanism at the level of the decision rule rather than the "
+    "evidence: a lapse rate, a bias toward one response side, an indifference "
+    "band within which the choice is a coin flip, or probability matching — "
+    "with the evidence itself kept as simple as the simplest current model.",
+    "Propose a mechanism in which people track a running tally as they read "
+    "the sequence — the cumulative lead of heads over tails, or how far and how "
+    "often it drifts from balance before correcting — so the path to the final "
+    "count matters, not the count.",
+    "Propose an exemplar account: people carry a few remembered examples of "
+    "what random and designed sequences look like and judge a new sequence by "
+    "its similarity to the nearest ones — define the prototypes and the "
+    "similarity explicitly, as the single mechanism.",
 ]
 
 
