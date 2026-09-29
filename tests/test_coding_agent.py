@@ -2,7 +2,7 @@
 
 import pytest
 
-from src.runtime.coding_agent import build_command, select_backend
+from src.runtime.coding_agent import build_command, select_backend, select_model
 
 
 def test_select_backend_defaults_to_opencode(monkeypatch):
@@ -24,6 +24,35 @@ def test_select_backend_rejects_unknown(monkeypatch):
     monkeypatch.delenv("CODING_AGENT", raising=False)
     with pytest.raises(ValueError):
         select_backend("gemini")
+
+
+def test_select_model_defaults_to_the_backends_model(monkeypatch):
+    monkeypatch.delenv("CODING_AGENT_MODEL", raising=False)
+    assert select_model("opencode", None) == "google/gemini-3.1-pro-preview"
+
+
+def test_select_model_env_fallback(monkeypatch):
+    monkeypatch.setenv("CODING_AGENT_MODEL", "google/gemini-3.7-flash")
+    assert select_model("opencode", None) == "google/gemini-3.7-flash"
+
+
+def test_select_model_explicit_overrides_env(monkeypatch):
+    monkeypatch.setenv("CODING_AGENT_MODEL", "google/gemini-3.7-flash")
+    assert select_model("opencode", "google/other") == "google/other"
+
+
+def test_build_command_uses_the_env_model(monkeypatch, tmp_path):
+    monkeypatch.setenv("CODING_AGENT_MODEL", "google/gemini-3.7-flash")
+    cmd = build_command("opencode", prompt="x", allowed_dirs=[], model=None)
+    assert "google/gemini-3.7-flash" in cmd
+
+
+def test_the_pilot_launcher_passes_the_agent_model_to_the_job():
+    from tests.paths import REPO_ROOT
+
+    live = REPO_ROOT / "scripts" / "outer_loop_live"
+    assert '"CODING_AGENT_MODEL": agent_model' in (live / "_pilot_config.py").read_text()
+    assert 'add CODING_AGENT_MODEL "${CODING_AGENT_MODEL:-}"' in (live / "run_pilot.sh").read_text()
 
 
 def test_build_command_claude_uses_add_dir_and_stream_json(tmp_path):
