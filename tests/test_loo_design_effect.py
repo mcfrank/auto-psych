@@ -505,3 +505,72 @@ def test_cli_selects_cells_and_fails_on_an_unknown_label(tmp_path):
         main(Args(sweep=sweep, out_dir=tmp_path / "out", work_dir=tmp_path / "work", cells="run9/nowhere"))
     with pytest.raises(FileNotFoundError):
         main(Args(sweep=tmp_path / "missing", out_dir=tmp_path / "out", work_dir=tmp_path / "work"))
+
+
+def _row(name, *, rank_trial, rank_grouped, ratio_cluster, ratio_grouped, protected=False):
+    return {
+        "name": name, "protected": protected, "rank_trial": rank_trial,
+        "rank_grouped": rank_grouped, "ratio_cluster": ratio_cluster,
+        "ratio_grouped": ratio_grouped, "prune_trial": False, "prune_cluster": False,
+        "prune_grouped": False, "prune_grouped_ignoring_reliability": False,
+        "unreliable_grouped": False,
+    }
+
+
+def test_summary_ratio_excludes_the_best_model_of_each_unit():
+    """A unit's best model has dse 0 by construction, so its ratio is not a
+    design effect. When the leave-one-stimulus-out best differs from the
+    trial-level best (a statistical tie), that row's grouped ratio is
+    undefined and must not enter the distribution as a 0."""
+    from src.subjective_randomness.loo_design_effect import summarise_cell
+
+    experiments = [{
+        "steps": [{
+            "iteration": 0,
+            "archived_pruned": [],
+            "rows": [
+                _row("a", rank_trial=0, rank_grouped=1, ratio_cluster=None, ratio_grouped=1.5),
+                _row("b", rank_trial=1, rank_grouped=0, ratio_cluster=2.0, ratio_grouped=0.0),
+                _row("c", rank_trial=2, rank_grouped=2, ratio_cluster=3.0, ratio_grouped=2.5),
+            ],
+        }],
+    }]
+    summary = summarise_cell(experiments)
+    assert summary["ratio_cluster"]["n"] == 2 and summary["ratio_cluster"]["min"] == 2.0
+    assert summary["ratio_grouped"]["n"] == 1 and summary["ratio_grouped"]["median"] == 2.5
+
+
+def test_a_near_constant_stimulus_group_is_snapped_so_its_loo_term_is_exact():
+    """Forty clipped trials summed per draw leave floating-point noise (~1e-14)
+    on a group whose log-likelihood is really constant. arviz gives an exactly
+    constant column a finite, exact LOO term but returned NaN weights for such
+    a near-constant one on a real fit (run1/local_representativeness,
+    misweighted_bayesian_markov: spread 4e-14 over 8000 draws; the failure is
+    inside arviz's tail fit and is not reproduced synthetically here), so
+    groups within the exact-trial tolerance are snapped to their mean and
+    PSIS-LOO on the snapped array carries the exact term."""
+    import arviz as az
+    import xarray as xr
+
+    from src.models.loo_reliability import EXACT_TRIAL_LOGLIK_SPREAD
+    from src.subjective_randomness.loo_design_effect import snap_exact_groups
+
+    rng = np.random.default_rng(3)
+    grouped = -10.0 + rng.normal(0.0, 0.05, size=(2, 200, 5))
+    grouped[:, :, 2] = -27.7 + rng.uniform(-2e-14, 2e-14, size=(2, 200))
+    snapped = snap_exact_groups(grouped)
+    assert np.ptp(snapped[:, :, 2]) == 0.0
+    assert snapped[:, :, 2].mean() == pytest.approx(grouped[:, :, 2].mean())
+    others = [0, 1, 3, 4]
+    np.testing.assert_array_equal(snapped[:, :, others], grouped[:, :, others])
+    # A column with genuine spread above the tolerance is untouched.
+    assert np.ptp(grouped[:, :, 0]) > EXACT_TRIAL_LOGLIK_SPREAD
+
+    coords = {"chain": np.arange(2), "draw": np.arange(200), "stimulus": np.arange(5)}
+    post = xr.Dataset({"theta": (("chain", "draw"), rng.normal(size=(2, 200)))}, coords=coords)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")
+        fixed = az.loo(az.InferenceData(posterior=post, log_likelihood=xr.Dataset(
+            {"response": (("chain", "draw", "stimulus"), snapped)}, coords=coords)), pointwise=True)
+    assert np.isfinite(float(fixed.elpd_loo))
+    assert float(fixed.loo_i[2]) == pytest.approx(-27.7, abs=1e-9)

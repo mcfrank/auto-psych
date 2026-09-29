@@ -127,6 +127,30 @@ def grouped_log_likelihood(log_lik: np.ndarray, groups: np.ndarray) -> np.ndarra
     return np.asarray(log_lik, dtype="float64") @ one_hot
 
 
+def snap_exact_groups(grouped: np.ndarray) -> np.ndarray:
+    """Make every group whose log-likelihood is constant across draws up to
+    floating-point noise exactly constant (its mean over draws).
+
+    A stimulus whose trials are all clipped (``p_left`` saturated) has a
+    log-likelihood that does not vary with the posterior; summing forty such
+    trials per draw leaves ~1e-14 of noise. arviz gives an exactly constant
+    column a finite, exact LOO term (equal importance weights) but returns
+    NaN weights for a near-constant one — seen on
+    run1/local_representativeness, ``misweighted_bayesian_markov`` — so the
+    groups within the exact-trial tolerance (``EXACT_TRIAL_LOGLIK_SPREAD``,
+    the same rule ``loo_reliability`` uses to exempt exact trials) are snapped
+    before PSIS. Trial-level values are never touched.
+    """
+    from src.models.loo_reliability import EXACT_TRIAL_LOGLIK_SPREAD
+
+    grouped = np.array(grouped, dtype="float64", copy=True)
+    flat = grouped.reshape(-1, grouped.shape[-1])
+    spread = flat.max(axis=0) - flat.min(axis=0)
+    exact = spread <= EXACT_TRIAL_LOGLIK_SPREAD
+    flat[:, exact] = flat[:, exact].mean(axis=0, keepdims=True)
+    return flat.reshape(grouped.shape)
+
+
 def elpd_difference(best_i: np.ndarray, other_i: np.ndarray) -> tuple:
     """``(elpd_diff, dse)`` of ``other`` behind ``best`` from their pointwise
     ELPDs, exactly as ``az.compare`` computes them (``sqrt(n · var)``, ddof 0)."""
@@ -228,7 +252,7 @@ def load_fit_units(nc_path: Path, groups: np.ndarray, *, name: str) -> FitUnits:
             f"{nc_path}: the fit has {trial_arr.shape[-1]} trials but the "
             f"responses file has {groups.shape[0]} rows."
         )
-    grouped_arr = grouped_log_likelihood(trial_arr.values, groups)
+    grouped_arr = snap_exact_groups(grouped_log_likelihood(trial_arr.values, groups))
     grouped = xr.Dataset(
         {variable: (("chain", "draw", "stimulus"), grouped_arr)},
         coords={
@@ -438,7 +462,8 @@ def step_record(
                 "dse_grouped": g["dse"],
                 "unreliable_grouped": g["unreliable"],
                 "frac_bad_k_grouped": g["frac_bad_k"],
-                "ratio_grouped": ratio(g["dse"], t["dse"]),
+                # A unit's best model has dse 0 by construction: no ratio there.
+                "ratio_grouped": None if name == best_grouped else ratio(g["dse"], t["dse"]),
                 "prune_grouped": name in pruned["grouped"],
                 "prune_grouped_ignoring_reliability": name
                 in pruned["grouped_ignoring_reliability"],
@@ -597,13 +622,12 @@ def summarise_cell(experiments: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
         for row in step["rows"]
         if not row["protected"]
     ]
-    non_best = [
-        row
-        for experiment in experiments
-        for step in experiment["steps"]
-        for row in step["rows"]
-        if row["rank_trial"] != 0
-    ]
+    rows = [row for experiment in experiments for step in experiment["steps"] for row in step["rows"]]
+    # A unit's best model has dse 0 by construction, so its ratio is not a
+    # design effect; each unit's distribution is over the other rows.
+    non_best_trial = [row for row in rows if row["rank_trial"] != 0]
+    non_best_grouped = [row for row in rows if row["rank_trial"] != 0 and row["rank_grouped"] != 0]
+    decisions_grouped = [row for row in decisions if row["rank_grouped"] != 0]
     archived_pruned = sum(
         len(step["archived_pruned"]) for experiment in experiments for step in experiment["steps"]
     )
@@ -630,10 +654,10 @@ def summarise_cell(experiments: Sequence[Mapping[str, Any]]) -> Dict[str, Any]:
             if row["prune_trial"] != row["prune_grouped_ignoring_reliability"]
         ),
         "n_grouped_unreliable_decisions": count("unreliable_grouped"),
-        "ratio_cluster": _quantiles(row["ratio_cluster"] for row in non_best),
-        "ratio_grouped": _quantiles(row["ratio_grouped"] for row in non_best),
+        "ratio_cluster": _quantiles(row["ratio_cluster"] for row in non_best_trial),
+        "ratio_grouped": _quantiles(row["ratio_grouped"] for row in non_best_grouped),
         "ratio_cluster_decisions": _quantiles(row["ratio_cluster"] for row in decisions),
-        "ratio_grouped_decisions": _quantiles(row["ratio_grouped"] for row in decisions),
+        "ratio_grouped_decisions": _quantiles(row["ratio_grouped"] for row in decisions_grouped),
     }
 
 
