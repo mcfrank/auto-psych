@@ -218,9 +218,11 @@ def _resolve_candidate_name(
     ``iterN_candidateM`` (which collided across runs and carries no meaning). A
     missing or invalid name falls back to the auto name with a loud log — a bad
     name never sinks an otherwise good candidate. A name already in the model
-    set (or in ``taken``: names claimed earlier in the same wave, when the
-    concurrent fits predict names) is uniquified with a numeric suffix.
-    ``announce=False`` keeps the prediction quiet; admission says it.
+    set, or in ``taken`` (``reserved_names``: the run's starting models and
+    every model pruned, retired or dropped so far; and names claimed earlier
+    in the same wave, when the concurrent fits predict names), is uniquified
+    with a numeric suffix. ``announce=False`` keeps the prediction quiet;
+    admission says it.
     """
     say = print if announce else (lambda *a, **k: None)
     name_path = Path(candidate_dir) / "model_name.txt"
@@ -249,12 +251,47 @@ def _resolve_candidate_name(
             suffix += 1
         unique = f"{raw}_{suffix}"
         say(
-            f"  [name] {raw!r} is already in the model set — admitting as "
-            f"{unique!r}",
+            f"  [name] {raw!r} is taken (a live model, a starting model, or one "
+            f"pruned or retired earlier in the run) — admitting as {unique!r}",
             flush=True,
         )
         return unique
     return raw
+
+
+def name_clash_note(candidate_dir: Path, name: str) -> str:
+    """The ledger note of a candidate admitted under another name than the
+    valid one it asked for (``_resolve_candidate_name`` renamed it), else ""."""
+    name_path = Path(candidate_dir) / "model_name.txt"
+    if not name_path.exists():
+        return ""
+    raw = name_path.read_text(encoding="utf-8").strip()
+    if raw == name or not name.startswith(f"{raw}_"):
+        return ""
+    return (
+        f"asked for the name {raw!r}, which was taken (a live model, a starting "
+        f"model, or one pruned or retired earlier in the run); admitted as {name!r}"
+    )
+
+
+def reserved_names(
+    models_dir: Path, ledger: HypothesisLedger, starting_models: Iterable[str]
+) -> set[str]:
+    """Names a new candidate may not take besides the live set's.
+
+    The run's starting models (a candidate named like one — the held-out
+    ground truth's name, say — must not pass for it), and every model pruned,
+    retired by the cap or dropped earlier in the run (the ledger, which each
+    experiment inherits, and this experiment's ``models/pruned/``). A reused
+    name made the ledger, the refinement menu and the held-out evaluation
+    (which resolves a name to one file) conflate two models (first audit D3).
+    """
+    names = set(starting_models)
+    names |= {e.name for e in ledger.entries() if e.outcome in ("pruned", "dropped")}
+    pruned_dir = Path(models_dir) / "pruned"
+    if pruned_dir.is_dir():
+        names |= {path.stem for path in pruned_dir.glob("*.py")}
+    return names
 
 
 def _seed_model_set(seed_models_dir: Path, models_dir: Path) -> List[Dict[str, str]]:
@@ -1160,6 +1197,7 @@ def _admit_candidate_with_reason(
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
     fit_time_limit_sec: Optional[float] = CANDIDATE_FIT_TIME_LIMIT_SEC,
+    name_note: str = "",
 ) -> Admission:
     """Validate a candidate and, if valid, admit it to the model set.
 
@@ -1202,6 +1240,9 @@ def _admit_candidate_with_reason(
     every admitted model's on ``novelty_pool`` (``None`` ⇒ the loop's default
     pool, ``novelty_pool_rows()``; the orchestrator passes the pool it recorded
     in the run tree so every candidate of a run is gated on the same stimuli).
+
+    ``name_note`` (``name_clash_note``) is the admitted entry's ledger detail:
+    it records a candidate renamed because the name it asked for was taken.
     """
     hypothesis_file = candidate_file.parent / "hypothesis.md"
     hypothesis = (
@@ -1363,7 +1404,7 @@ def _admit_candidate_with_reason(
         ledger,
         name=model_name,
         outcome="admitted",
-        detail="",
+        detail=name_note,
         hypothesis=hypothesis,
         context=ledger_context,
     )

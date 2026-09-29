@@ -12,6 +12,7 @@ name here so existing ``from ...orchestrator import X`` keeps working.
 from __future__ import annotations
 
 import csv
+import json
 import re
 import shutil
 import sys
@@ -83,6 +84,43 @@ def agent_notes_dir(exp_dir: Path) -> Path:
     filesystem can still find another run's notes.
     """
     return exp_dir.parent / "agent_notes"
+
+
+# The run's starting models, recorded beside its experiment directories when
+# experiment 1's model loop first runs (``run_starting_models``).
+STARTING_MODELS_FILENAME = "starting_models.json"
+
+
+def run_starting_models(exp_dir: Path, project_id: str) -> set[str]:
+    """The models this run started from: the pruning-protected baselines.
+
+    Recorded once, when experiment 1's model loop first runs, as the project
+    seeds in experiment 1's ``cognitive_models/`` (``_protected_seed_names``;
+    a seed held out of the run is absent), in
+    ``<run>/starting_models.json``; read back by every later experiment and by
+    a resumed experiment 1. Protection used to be recomputed every experiment
+    from the project's full seed manifest intersected with the carried set,
+    so a candidate that chose a seed's name — the held-out ground truth's,
+    say — was carried as a protected, never-pruned starting model (second
+    audit B10). A later experiment of a run with no record raises: it started
+    on code that kept none, and its starting set cannot be told from names.
+    """
+    record = Path(exp_dir).parent / STARTING_MODELS_FILENAME
+    if record.exists():
+        names = json.loads(record.read_text(encoding="utf-8"))
+        if not isinstance(names, list) or not all(isinstance(n, str) for n in names):
+            raise ValueError(f"{record} must hold a JSON list of model names; got {names!r}")
+        return set(names)
+    if _experiment_number(exp_dir) != 1:
+        raise FileNotFoundError(
+            f"{record} does not exist. It records the run's starting models when "
+            "experiment 1's model loop first runs; this run started on code that "
+            "kept no record. Write the names experiment 1 started from (the seed "
+            "step of experiment1/model_loop/history.json) there as a JSON list."
+        )
+    names = _protected_seed_names(project_id, Path(exp_dir) / "cognitive_models")
+    record.write_text(json.dumps(sorted(names), indent=2) + "\n", encoding="utf-8")
+    return names
 
 
 def _protected_seed_names(project_id: str, models_dir: Path) -> set[str]:
@@ -302,7 +340,9 @@ def run_inner_model_loop_programmatic(
     write_task_description(project_id or exp_dir.parent.name, loop_dir)
 
     seed_models_dir = exp_dir / "cognitive_models"
-    protected = _protected_seed_names(project_id or exp_dir.parent.name, seed_models_dir)
+    # Protected, and names no candidate may take: the run's starting models
+    # (the loop protects those still in the carried set).
+    protected = run_starting_models(exp_dir, project_id or exp_dir.parent.name)
     # None ⇒ inherit run_pymc_inner_loop's default Occam line-count prior.
     extra = (
         {}

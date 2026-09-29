@@ -181,6 +181,8 @@ def test_brief_lens_matches_ledger_lens(tmp_path, monkeypatch):
 
 def _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir):
     exp_dir.mkdir(parents=True)
+    # The run's starting models, recorded when its experiment 1 began.
+    (exp_dir.parent / "starting_models.json").write_text('["falk_konold_dp"]', encoding="utf-8")
     (exp_dir / "cognitive_models").mkdir()
     (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
         yaml.safe_dump(
