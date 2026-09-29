@@ -20,10 +20,15 @@ from __future__ import annotations
 
 import hashlib
 import math
+import multiprocessing
+import os
 import sys
+import tempfile
+import traceback
+from concurrent.futures import CancelledError, ProcessPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence, Union
 
 import numpy as np
 
@@ -826,12 +831,300 @@ def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
         )
 
 
+# ---------------------------------------------------------------------------
+# Parallel fitting
+# ---------------------------------------------------------------------------
+
+# Thread-count variables a fit worker pins to 1. One fit already runs one
+# process per chain; a BLAS pool per chain on top of that would oversubscribe
+# the allocation as soon as fits run side by side.
+_SINGLE_THREAD_ENV = ("OMP_NUM_THREADS", "OPENBLAS_NUM_THREADS", "MKL_NUM_THREADS")
+
+
+def allocated_cpus() -> int:
+    """CPUs this process may run on: the Slurm allocation on a compute node.
+
+    ``os.cpu_count()`` reports the whole node; the scheduler affinity mask is
+    what ``--cpus-per-task`` actually granted.
+    """
+    return len(os.sched_getaffinity(0))
+
+
+def _fit_cpus(settings: Dict[str, Any]) -> int:
+    """CPUs one fit occupies: PyMC runs ``min(cores, chains)`` chain processes."""
+    return max(1, min(int(settings["cores"]), int(settings["chains"])))
+
+
+def default_fit_workers(cpus: int, per_fit_cpus: Sequence[int]) -> int:
+    """Concurrent fits that keep ``workers x cores-per-fit`` within ``cpus``.
+
+    The widest fit sets the budget, so a batch that mixes 2- and 4-chain fits
+    is sized for the 4-chain ones. Never below 1: a single fit that on its own
+    exceeds the allocation still runs, as it always has.
+    """
+    if not per_fit_cpus:
+        raise ValueError("default_fit_workers: no fits to size the pool for.")
+    return max(1, int(cpus) // max(int(c) for c in per_fit_cpus))
+
+
+class FitWorkerFailure(RuntimeError):
+    """A fit that failed inside a pool worker, re-raised in the parent.
+
+    Its one argument is ``"<OriginalType>: <message>"``. The original exception
+    is not sent across the process boundary: an exception whose constructor
+    takes extra arguments -- PyMC's ``ParallelSamplingError`` takes the chain
+    number -- cannot be unpickled by the parent, and an exception the pool
+    cannot deliver breaks the whole pool (``BrokenProcessPool``) instead of
+    reporting one model's failure. The original traceback goes to the
+    worker's stderr, which is the run log.
+    """
+
+
+def _fit_model_in_worker(
+    name: str,
+    models_dir: Path,
+    responses_path: Path,
+    cache_dir: Path,
+    fit_kwargs: Dict[str, Any],
+) -> str:
+    """Fit one model inside a pool worker and hand back its cache fingerprint.
+
+    The fit itself is :func:`fit_model` with ``cache_dir`` set, so the worker's
+    only product is the ``.nc`` it persists; a ``FittedModel`` holds a compiled
+    PyMC graph and never crosses a process boundary. Thread counts are pinned
+    to one before sampling (``threadpoolctl`` -- a dependency of PyMC -- for
+    the BLAS already loaded in this process, the environment for the chain
+    processes PyMC starts next).
+
+    PyMC's chain processes are forked from this worker. A spawned child's
+    default start method is spawn, under which PyMC pickles the step method
+    for its chains, and the model lives in a module ``load_pymc_model``
+    executed from a file, which a fresh interpreter cannot import ("The model
+    could not be unpickled"). Forking is what the sequential path does from
+    the main process, and this worker has no threads for a fork to break.
+    """
+    multiprocessing.set_start_method("fork", force=True)
+    for var in _SINGLE_THREAD_ENV:
+        os.environ[var] = "1"
+    from threadpoolctl import threadpool_limits
+
+    try:
+        with threadpool_limits(limits=1):
+            fitted = fit_model(
+                name, models_dir, responses_path, cache_dir=cache_dir, **fit_kwargs
+            )
+    except Exception as e:  # noqa: BLE001 — every failure must reach the parent by name
+        traceback.print_exc(file=sys.stderr)
+        raise FitWorkerFailure(f"{type(e).__name__}: {e}") from None
+    return fitted.fingerprint
+
+
+def _fit_executor(workers: int) -> ProcessPoolExecutor:
+    """The pool the fits run in: fresh (spawned) interpreters, not forks.
+
+    A worker forks PyMC's chain processes itself, so it must not be a daemon
+    (``multiprocessing.Pool`` workers are; ``ProcessPoolExecutor``'s are not).
+    Spawning rather than forking keeps the parent's threads, compiled graphs
+    and cached InferenceData out of the children. A spawned child re-imports
+    the entry script as ``__mp_main__``, so every entry point that reaches a
+    fit needs the usual ``if __name__ == "__main__":`` guard (all of the
+    repo's do; an ad-hoc script without one re-runs itself in each worker).
+    """
+    return ProcessPoolExecutor(
+        max_workers=workers, mp_context=multiprocessing.get_context("spawn")
+    )
+
+
+def _sample_models_in_pool(
+    names: Sequence[str],
+    models_dir: Path,
+    responses_path: Path,
+    cache_dir: Path,
+    fit_kwargs: Dict[str, Any],
+    *,
+    workers: int,
+    stop_on_failure: bool,
+) -> Dict[str, Optional[BaseException]]:
+    """Sample ``names`` concurrently, each into ``cache_dir``; report per name.
+
+    Returns ``{name: None}`` for a model whose fit is now on disk and
+    ``{name: exception}`` for one whose worker raised. With ``stop_on_failure``
+    the fits not yet started when the first failure lands are cancelled and
+    reported as ``CancelledError``; running ones finish and stay cached.
+
+    Two things are the harness's fault rather than a model's and raise here:
+    a worker that returned without leaving its ``.nc`` behind, and one whose
+    fingerprint is not the one the parent computes for the same inputs (the
+    parent would load the wrong fit, or none).
+    """
+    names = list(names)
+    models_dir = Path(models_dir)
+    responses_path = Path(responses_path)
+    cache_dir = Path(cache_dir)
+    expected = {
+        name: fit_fingerprint(
+            name, models_dir, responses_path,
+            resolve_fit_settings(name, models_dir, fit_kwargs),
+        )
+        for name in names
+    }
+    outcomes: Dict[str, Optional[BaseException]] = {}
+    with _fit_executor(min(workers, len(names))) as pool:
+        futures = {
+            pool.submit(
+                _fit_model_in_worker,
+                name, models_dir, responses_path, cache_dir, dict(fit_kwargs),
+            ): name
+            for name in names
+        }
+        for future in as_completed(futures):
+            name = futures[future]
+            try:
+                fingerprint = future.result()
+            except CancelledError as e:
+                outcomes[name] = e
+                continue
+            except Exception as e:  # noqa: BLE001 — the worker's failure, reported by name
+                outcomes[name] = e
+                if stop_on_failure:
+                    for other in futures:
+                        if other.cancel():
+                            outcomes[futures[other]] = CancelledError(
+                                f"fit of {futures[other]!r} cancelled after "
+                                f"{name!r} failed"
+                            )
+                continue
+            if fingerprint != expected[name]:
+                raise RuntimeError(
+                    f"fit worker for {name!r} returned fingerprint {fingerprint} "
+                    f"but the parent expects {expected[name]} for the same model, "
+                    "data and sampler settings."
+                )
+            if not cached_fit_path(cache_dir, name, fingerprint).exists():
+                raise RuntimeError(
+                    f"fit worker for {name!r} returned but wrote no fit at "
+                    f"{cached_fit_path(cache_dir, name, fingerprint)}."
+                )
+            outcomes[name] = None
+    return outcomes
+
+
+def _fit_outcomes(
+    model_names: Sequence[str],
+    models_dir: Path,
+    responses_path: Path,
+    *,
+    cache_dir: Optional[Path],
+    fit_workers: Optional[int],
+    fit_kwargs: Dict[str, Any],
+    stop_on_failure: bool,
+) -> Dict[str, Union[FittedModel, BaseException]]:
+    """Fit every model, concurrently where it pays, and report each outcome.
+
+    Cache hits (in-process, then on disk) are served in this process. The
+    models that actually need MCMC are sampled in a process pool when there
+    are at least two of them and the worker budget allows more than one at a
+    time; the children persist their fits and the parent loads them, so the
+    result is the same ``FittedModel`` a sequential fit would have produced
+    (and the same cache file). Without a ``cache_dir`` the pool hands its
+    fits over through a temporary directory that is removed once loaded.
+
+    Every successful fit lands in the in-process cache. A failed fit is
+    returned as its exception under the model's name; with ``stop_on_failure``
+    nothing further is sampled after the first one.
+    """
+    if fit_workers is not None and fit_workers < 1:
+        raise ValueError(f"fit_workers must be >= 1, got {fit_workers}.")
+    models_dir = Path(models_dir)
+    responses_path = Path(responses_path)
+    outcomes: Dict[str, Union[FittedModel, BaseException]] = {}
+    pending: List[str] = []
+    settings: Dict[str, Dict[str, Any]] = {}
+    for name in model_names:
+        # Keying a fit executes the model file (for its SAMPLER_SETTINGS); a
+        # file that raises is that model's failure, reported like a failed fit.
+        try:
+            key = _cache_key(name, models_dir, responses_path, fit_kwargs)
+            settings[name] = resolve_fit_settings(name, models_dir, fit_kwargs)
+        except Exception as e:  # noqa: BLE001 — reported by name; the caller decides
+            outcomes[name] = e
+            if stop_on_failure:
+                return outcomes
+            continue
+        cached = _FIT_CACHE.get(key)
+        if cached is not None:
+            _warn_sampling_diagnostics(name, cached.idata)
+            outcomes[name] = cached
+        else:
+            pending.append(name)
+
+    to_sample = [
+        name
+        for name in pending
+        if cache_dir is None
+        or not cached_fit_path(
+            cache_dir, name,
+            fit_fingerprint(name, models_dir, responses_path, settings[name]),
+        ).exists()
+    ]
+    workers = 1
+    if len(to_sample) >= 2:
+        workers = (
+            fit_workers
+            if fit_workers is not None
+            else default_fit_workers(
+                allocated_cpus(), [_fit_cpus(settings[name]) for name in to_sample]
+            )
+        )
+
+    def fit_in_process(name: str, load_dir: Optional[Path]) -> None:
+        try:
+            fitted = fit_model(
+                name, models_dir, responses_path, cache_dir=load_dir, **fit_kwargs
+            )
+        except Exception as e:  # noqa: BLE001 — reported by name; the caller decides
+            outcomes[name] = e
+            return
+        _FIT_CACHE[_cache_key(name, models_dir, responses_path, fit_kwargs)] = fitted
+        outcomes[name] = fitted
+
+    if workers < 2:
+        for name in pending:
+            fit_in_process(name, cache_dir)
+            if stop_on_failure and isinstance(outcomes[name], BaseException):
+                break
+        return outcomes
+
+    with tempfile.TemporaryDirectory(prefix="pymc_fits_") as transport:
+        pool_dir = Path(cache_dir) if cache_dir is not None else Path(transport)
+        pool_dir.mkdir(parents=True, exist_ok=True)
+        print(
+            f"  [fit] sampling {len(to_sample)} models with {min(workers, len(to_sample))} "
+            f"concurrent fits (allocated CPUs: {allocated_cpus()}; "
+            f"widest fit: {max(_fit_cpus(settings[n]) for n in to_sample)} cores)",
+            flush=True,
+        )
+        sampled = _sample_models_in_pool(
+            to_sample, models_dir, responses_path, pool_dir, fit_kwargs,
+            workers=workers, stop_on_failure=stop_on_failure,
+        )
+        for name, failure in sampled.items():
+            if failure is not None:
+                outcomes[name] = failure
+        for name in pending:
+            if name in outcomes:
+                continue
+            fit_in_process(name, pool_dir)
+    return outcomes
+
+
 def fit_models_cached(
     model_names: List[str],
     models_dir: Path,
     responses_path: Path,
     *,
     cache_dir: Optional[Path] = None,
+    fit_workers: Optional[int] = None,
     **fit_kwargs: Any,
 ) -> Dict[str, FittedModel]:
     """Fit each model in `model_names`, reusing cached fits keyed by
@@ -839,23 +1132,65 @@ def fit_models_cached(
     call to `pm.sample` is expensive, so identical (model, data, sampler) triples
     are reused within a process. If `cache_dir` is given, also persists/reads .nc
     files (keyed by the same triple).
+
+    Models that need MCMC are fit concurrently (see :func:`_fit_outcomes`).
+    ``fit_workers`` caps the concurrent fits; by default
+    ``workers x cores-per-fit`` fills but never exceeds the CPUs this process
+    is allocated (:func:`default_fit_workers`). It is not a sampler setting,
+    so it takes no part in any cache key. The failed fit is raised; fits the
+    pool cancelled because of it are not reported.
     """
-    models_dir = Path(models_dir)
-    responses_path = Path(responses_path)
-    out: Dict[str, FittedModel] = {}
-    for name in model_names:
-        key = _cache_key(name, models_dir, responses_path, fit_kwargs)
-        cached = _FIT_CACHE.get(key)
-        if cached is not None:
-            _warn_sampling_diagnostics(name, cached.idata)
-            out[name] = cached
-            continue
-        fitted = fit_model(
-            name, models_dir, responses_path, cache_dir=cache_dir, **fit_kwargs
-        )
-        _FIT_CACHE[key] = fitted
-        out[name] = fitted
-    return out
+    outcomes = _fit_outcomes(
+        model_names, models_dir, responses_path,
+        cache_dir=cache_dir, fit_workers=fit_workers, fit_kwargs=fit_kwargs,
+        stop_on_failure=True,
+    )
+    failures = [o for o in outcomes.values() if isinstance(o, BaseException)]
+    if failures:
+        # The failure that stopped the batch, not one of the cancellations it
+        # caused (a cancelled fit's name may sort before the failed one's).
+        causes = [f for f in failures if not isinstance(f, CancelledError)]
+        raise (causes or failures)[0]
+    missing = [name for name in model_names if name not in outcomes]
+    if missing:
+        raise RuntimeError(f"No fit and no failure was recorded for {missing}.")
+    return {name: outcomes[name] for name in model_names}  # type: ignore[misc]
+
+
+def fit_models_to_cache(
+    model_names: List[str],
+    models_dir: Path,
+    responses_path: Path,
+    *,
+    cache_dir: Optional[Path] = None,
+    fit_workers: Optional[int] = None,
+    **fit_kwargs: Any,
+) -> Dict[str, str]:
+    """Fit every model that can be fit; report the ones that cannot, by name.
+
+    The tolerant sibling of :func:`fit_models_cached` for callers that screen
+    a model set — the inner loop's start-of-experiment ELPD screen — and must
+    keep going when one model fails: every fit that succeeds is in the cache
+    afterwards, and the return value maps each model that failed to
+    ``"<ExceptionType>: <message>"``. An empty dict means every model fit.
+    """
+    outcomes = _fit_outcomes(
+        model_names, models_dir, responses_path,
+        cache_dir=cache_dir, fit_workers=fit_workers, fit_kwargs=fit_kwargs,
+        stop_on_failure=False,
+    )
+    return {
+        name: _describe_failure(outcome)
+        for name, outcome in outcomes.items()
+        if isinstance(outcome, BaseException)
+    }
+
+
+def _describe_failure(failure: BaseException) -> str:
+    """``"<Type>: <message>"``; a worker failure already carries its original type."""
+    if isinstance(failure, FitWorkerFailure):
+        return str(failure)
+    return f"{type(failure).__name__}: {failure}"
 
 
 def clear_fit_cache() -> None:
