@@ -23,6 +23,7 @@ from src.models.model_manifest import manifest_path, read_manifest_entries
 from src.models.data_binding import MissingStimulusColumns, make_stim_data
 from src.models.model_loading import load_pymc_model, pm_data_inputs
 from src.models.pymc_inference import (
+    convergence_problems_of,
     evict_fit_cache,
     fit_model,
     fit_models_to_cache,
@@ -602,6 +603,11 @@ def novelty_pool_rows(
     return generate_candidate_pool(n_pairs, lengths=tuple(lengths), seed=seed)
 
 
+def _untrusted(row: Dict[str, Any]) -> bool:
+    """An unreliable PSIS-LOO or a fit that failed the convergence gate."""
+    return bool(row.get("loo_unreliable") or row.get("not_converged"))
+
+
 def _prune_losers(
     models_dir: Path,
     responses_path: Path,
@@ -646,21 +652,20 @@ def _prune_losers(
     # warnings routinely, and one flaky bystander must not switch pruning off
     # wholesale (the active set would then only ever grow).
     baseline = min(comparison, key=lambda name: comparison[name]["rank"])
-    if comparison[baseline].get("loo_unreliable"):
+    if _untrusted(comparison[baseline]):
         print(
             f"  [warn] Skipping model pruning: baseline model {baseline!r} "
-            "(rank 0) has an unreliable LOO estimate, so every elpd_diff "
-            "against it is untrustworthy.",
+            "(rank 0) has an unreliable LOO estimate or a non-converged fit, so "
+            "every elpd_diff against it is untrustworthy.",
             file=sys.stderr,
             flush=True,
         )
         return []
-    unreliable = sorted(
-        name for name, row in comparison.items() if row.get("loo_unreliable")
-    )
+    unreliable = sorted(name for name, row in comparison.items() if _untrusted(row))
     if unreliable:
         print(
-            "  [warn] Not pruning models with unreliable LOO estimates: "
+            "  [warn] Not pruning models with unreliable LOO estimates or "
+            "non-converged fits: "
             + ", ".join(unreliable),
             file=sys.stderr,
             flush=True,
@@ -670,7 +675,7 @@ def _prune_losers(
         for name in names
         if name not in protected
         and name in comparison
-        and not comparison[name].get("loo_unreliable")
+        and not _untrusted(comparison[name])
         and comparison[name]["dse"] > 0
         and comparison[name]["elpd_diff"] > dse_multiplier * comparison[name]["dse"]
     ]
@@ -862,7 +867,7 @@ def _admit_candidate_with_reason(
     # (cached, so scoring reuses this exact fit) to contain such a failure here
     # instead of letting it abort the round's scoring pass.
     try:
-        fit_model(
+        fitted = fit_model(
             model_name,
             models_dir,
             responses_path,
@@ -874,6 +879,20 @@ def _admit_candidate_with_reason(
         return reject(
             f"MCMC sampling failed ({type(e).__name__}: {e}); dropping it so it "
             "cannot abort scoring."
+        )
+
+    # Convergence gate: a fit with divergences, poor R-hat or low ESS has an
+    # untrustworthy ELPD and p_left, and could otherwise prune rivals and be
+    # exported. PSIS-LOO reliability does not catch it (it measures influential
+    # trials, not mixing).
+    problems = convergence_problems_of(fitted)
+    if problems:
+        staged.unlink(missing_ok=True)
+        return reject(
+            f"MCMC did not converge ({'; '.join(problems)}). Reparameterise the "
+            "model (e.g. non-centred parameters, tighter priors, no hard "
+            "thresholds in the likelihood), or declare smaller NUTS steps with a "
+            "module-level SAMPLER_SETTINGS = {\"target_accept\": 0.95}."
         )
 
     # ELPD-LOO gate: a model can sample cleanly yet still assign ~0 probability to

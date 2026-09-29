@@ -33,6 +33,8 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 import numpy as np
 
 from src.models.mcmc_defaults import (
+    MAX_R_HAT,
+    MIN_BULK_ESS,
     PRODUCTION_CHAINS,
     PRODUCTION_CORES,
     PRODUCTION_DRAWS,
@@ -421,7 +423,8 @@ def resolve_fit_settings(
 
     Precedence, highest first:
 
-    1. an explicit caller value (anything in ``explicit`` that is not ``None``);
+    1. an explicit caller value (anything in ``explicit`` that is not ``None``),
+       except that a declared ``target_accept`` is a floor on the caller's;
     2. the model file's own ``SAMPLER_SETTINGS`` declaration;
     3. :data:`_FIT_DEFAULTS` (the centralized production config).
 
@@ -441,7 +444,15 @@ def resolve_fit_settings(
             f"Unknown sampler setting(s) {unknown} requested for model {name!r}. "
             f"Valid settings: {sorted(_FIT_DEFAULTS)}."
         )
-    return {**_FIT_DEFAULTS, **model_sampler_settings(name, models_dir), **given}
+    declared = model_sampler_settings(name, models_dir)
+    settings = {**_FIT_DEFAULTS, **declared, **given}
+    # A model's declared target_accept is a floor: the loop passes one
+    # explicitly, which used to override a model that needs smaller steps
+    # (a model declaring 0.9 ran at the sweep's 0.8), and declaring a higher value
+    # is how a candidate rejected for divergences fixes itself.
+    if "target_accept" in declared:
+        settings["target_accept"] = max(settings["target_accept"], declared["target_accept"])
+    return settings
 
 
 def _sampler_signature(fit_kwargs: Dict[str, Any]) -> str:
@@ -781,7 +792,48 @@ def _max_rhat(idata: Any) -> float:
     """
     az = _import_arviz()
     rhat = az.rhat(idata)
-    return max((float(rhat[v].max()) for v in rhat.data_vars), default=float("nan"))
+    values = [float(rhat[v].max()) for v in rhat.data_vars]
+    # A NaN anywhere means "unverified": Python's max() over NaNs depends on
+    # their order, so it could have hidden one.
+    if not values or any(math.isnan(v) for v in values):
+        return float("nan")
+    return max(values)
+
+
+def convergence_problems(idata: Any, var_names: Sequence[str]) -> List[str]:
+    """Why a fit has not converged, one line per problem; empty when it has.
+
+    Checks the free parameters ``var_names`` for divergent transitions (a trace
+    that records none cannot be checked, which is itself a problem), R-hat
+    above ``MAX_R_HAT`` (undefined R-hat, e.g. one chain, counts) and bulk ESS
+    below ``MIN_BULK_ESS``.
+    """
+    az = _import_arviz()
+    problems: List[str] = []
+    n_div = _divergence_count(idata)
+    if n_div is None:
+        problems.append("the trace records no divergence statistic, so sampling could not be checked")
+    elif n_div > 0:
+        problems.append(f"{n_div} divergent transitions")
+    if var_names:
+        posterior = idata.posterior[list(var_names)]
+        rhat = az.rhat(posterior)
+        worst_rhat = [float(rhat[v].max()) for v in rhat.data_vars]
+        if any(math.isnan(v) for v in worst_rhat):
+            problems.append("R-hat is undefined (a single chain?)")
+        elif max(worst_rhat) > MAX_R_HAT:
+            problems.append(f"max R-hat {max(worst_rhat):.3f} > {MAX_R_HAT}")
+        ess = az.ess(posterior, method="bulk")
+        lowest_ess = min(float(ess[v].min()) for v in ess.data_vars)
+        if not lowest_ess >= MIN_BULK_ESS:
+            problems.append(f"min bulk ESS {lowest_ess:.0f} < {MIN_BULK_ESS}")
+    return problems
+
+
+def convergence_problems_of(fitted: "FittedModel") -> List[str]:
+    """``convergence_problems`` over a fitted model's free parameters."""
+    free = [rv.name for rv in fitted.model.free_RVs]
+    return convergence_problems(fitted.idata, free)
 
 
 def _warn_sampling_diagnostics(name: str, idata: Any) -> None:

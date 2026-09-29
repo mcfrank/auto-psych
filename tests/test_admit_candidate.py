@@ -49,6 +49,8 @@ def _stub_fittable(monkeypatch, ok=True, reason=""):
     )
     # Admission ends with a real MCMC fit-gate; stub it to succeed so these
     # bookkeeping tests don't sample (the stub candidate isn't a real PyMC model).
+    # The stub fit is not a real trace: pass the convergence gate.
+    monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # Admission also gates on a finite ELPD-LOO (reuses the fit); stub it finite.
     monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
@@ -65,6 +67,8 @@ def _stub_fit_raises(monkeypatch):
     def _boom(*a, **k):
         raise RuntimeError("NUTS diverged")
 
+    # The stub fit is not a real trace: pass the convergence gate.
+    monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(model_zoo, "fit_model", _boom)
 
 
