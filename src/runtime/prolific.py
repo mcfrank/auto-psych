@@ -137,20 +137,32 @@ def create_study(payload: Dict[str, Any]) -> Tuple[Optional[str], Optional[str]]
         return (None, str(e))
 
 
-def publish_study(study_id: str) -> Tuple[bool, Optional[str]]:
-    """POST /studies/{id}/transition/ to publish. Returns (success, error_message)."""
+def _transition_study(study_id: str, action: str) -> Tuple[bool, Optional[str]]:
+    """POST /studies/{id}/transition/ with ``action``. Returns (success, error_message)."""
     try:
         r = requests.post(
             f"{_BASE}/studies/{study_id}/transition/",
             headers=_headers(),
-            json={"action": "PUBLISH"},
+            json={"action": action},
             timeout=30,
         )
         if r.status_code != 200:
-            return (False, f"POST transition PUBLISH {r.status_code}: {r.text[:500]}")
+            return (False, f"POST transition {action} {r.status_code}: {r.text[:500]}")
         return (True, None)
     except requests.RequestException as e:
         return (False, str(e))
+
+
+def publish_study(study_id: str) -> Tuple[bool, Optional[str]]:
+    """Publish a draft study. Returns (success, error_message)."""
+    return _transition_study(study_id, "PUBLISH")
+
+
+def pause_study(study_id: str) -> Tuple[bool, Optional[str]]:
+    """Pause an active study: it stops recruiting, participants already in it can
+    still finish, and a START transition (or the dashboard) resumes it. Returns
+    (success, error_message)."""
+    return _transition_study(study_id, "PAUSE")
 
 
 def get_study(study_id: str) -> Tuple[Optional[Dict[str, Any]], Optional[str]]:

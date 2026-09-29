@@ -6,7 +6,8 @@ the previous experiment (there is no theorist agent) → the exhaustive joint-EI
 selection designs the stimuli programmatically (no design agent) → a coding
 agent implements a jsPsych experiment → it is **deployed to Firebase
 Hosting** + Cloud Functions → a **Prolific study** is created and published →
-the run polls for human submissions (≤ 2 h/experiment), fetches results from
+the run polls for human submissions (≤ 2 h/experiment; a study still short of
+its target then is **paused** through the Prolific API), fetches results from
 the token-guarded `/results` endpoint, and runs the inner model loop (where all
 new models are conjectured).
 

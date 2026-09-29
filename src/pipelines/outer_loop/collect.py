@@ -42,8 +42,11 @@ MAX_PARALLEL_PARTICIPANTS = 3
 _PROLIFIC_POLL_INTERVAL_SEC = 30
 # Stop waiting on a Prolific study after this long so a stalled/under-recruited
 # study (participants return or time out and the target is never met) can't hang
-# the pipeline forever. On timeout we fetch whatever results exist.
+# the pipeline forever. On timeout the study is paused and we fetch whatever
+# results exist.
 _PROLIFIC_MAX_WAIT_SEC = 2 * 60 * 60  # 2 hours
+# Prolific study statuses in which nobody new is being recruited.
+_NOT_RECRUITING_STATUSES = {"PAUSED", "AWAITING REVIEW", "COMPLETED"}
 
 
 def _poll_prolific_until_target(
@@ -96,6 +99,59 @@ def _poll_prolific_until_target(
             break
         time.sleep(poll_interval_sec)
     return completed
+
+
+def _pause_unfilled_study(study_id: str, completed: int, target_places: int, out_dir: Path) -> None:
+    """Stop an under-filled study from recruiting once collection has given up.
+
+    The pipeline models the partial data and moves on, so anyone recruited
+    later is paid for data no experiment uses. PAUSE rather than STOP: a
+    paused study can be resumed (START, or the dashboard) if the researchers
+    decide they want the remaining places after all, while STOP ends it for
+    good. A study that cannot be paused raises — it would go on spending.
+    """
+    from src.runtime.prolific import get_study, pause_study
+
+    study, err = get_study(study_id)
+    if err:
+        raise RuntimeError(
+            f"Collection gave up at {completed}/{target_places} completed submissions, "
+            f"and the status of Prolific study {study_id} could not be read to pause it: "
+            f"{err}. PAUSE OR STOP IT NOW in the Prolific dashboard — it may still be "
+            "recruiting and paying participants whose data this run will not use."
+        )
+    status = study.get("status")
+    if status in _NOT_RECRUITING_STATUSES:
+        message = (
+            f"Collection gave up at {completed}/{target_places} completed submissions; "
+            f"Prolific study {study_id} is already {status}, so it is left as it is."
+        )
+    elif status == "ACTIVE":
+        ok, err = pause_study(study_id)
+        if not ok:
+            raise RuntimeError(
+                f"Could not pause Prolific study {study_id} after collection gave up at "
+                f"{completed}/{target_places} completed submissions: {err}. PAUSE OR STOP "
+                "IT NOW in the Prolific dashboard — it is still recruiting and paying "
+                "participants whose data this run will not use."
+            )
+        message = (
+            f"PAUSED Prolific study {study_id}: collection gave up at "
+            f"{completed}/{target_places} completed submissions, and the run models "
+            "the partial data. Participants already in the study can still finish "
+            "(and are paid). Resume it in the Prolific dashboard only if you want "
+            "the remaining places; this run will not use them."
+        )
+    else:
+        raise RuntimeError(
+            f"Collection gave up at {completed}/{target_places} completed submissions, "
+            f"but Prolific study {study_id} is in state {status!r}, which this run does "
+            "not know how to pause. Check it in the Prolific dashboard and pause or "
+            "stop it there."
+        )
+    banner = "!" * 72
+    print(f"\n{banner}\n  [collect] {message}\n{banner}\n", flush=True)
+    agent_log(out_dir, f"Collect (live): {message}")
 
 
 def check_response_variation(rows: list[dict[str, Any]]) -> tuple[bool, str]:
@@ -215,7 +271,9 @@ def _collect_live(
         agent_log(out_dir, f"Collect (live): error - {msg}")
         raise RuntimeError(msg)
 
-    _poll_prolific_until_target(study_id, int(target_places), out_dir)
+    completed = _poll_prolific_until_target(study_id, int(target_places), out_dir)
+    if completed < int(target_places):
+        _pause_unfilled_study(study_id, completed, int(target_places), out_dir)
 
     agent_log(out_dir, "Collect (live): fetching results from Firebase")
     url = _results_url(results_api_url, config, project_id, run_id)

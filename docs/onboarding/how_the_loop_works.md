@@ -148,7 +148,8 @@ in the runbook).
 ## Step 3: collecting responses (`4_collect`, no AI)
 
 - **Live mode.** The pipeline checks Prolific every 30 seconds until the target
-  number of participants have finished, **or 2 hours have passed**. It then
+  number of participants have finished, **or 2 hours have passed**; in the
+  second case it pauses the study so nobody else is recruited. It then
   downloads all submissions from `/results`. `data/responses.csv` gets the
   five raw columns only; the full download, Prolific IDs included, is kept in
   `raw_collected/experiment<N>_responses.csv` beside the experiment

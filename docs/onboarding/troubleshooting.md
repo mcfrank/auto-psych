@@ -59,7 +59,9 @@ relaunch of an experiment with a live study is refused (see
 
 | message / symptom | cause | what to do |
 |---|---|---|
-| log stays at `Prolific poll: … completed=k target=N` | recruitment slow | normal for up to 2 h, then it moves on with partial data **and leaves the study open** |
+| log stays at `Prolific poll: … completed=k target=N` | recruitment slow | normal for up to 2 h, then it **pauses the study** and moves on with partial data (runbook § 0 D) |
+| `PAUSED Prolific study <id>: collection gave up at k/N …` | the 2-hour limit passed before N participants finished | expected. Resume the study in the dashboard only if you want the rest; this run will not use them |
+| `Could not pause Prolific study <id> after collection gave up …` / `… could not be read to pause it …` / `… is in state '…', which this run does not know how to pause` | Prolific API error or an unusual study state | **pause or stop the study in the dashboard now**. Then recover with `RESUME_AGENTS=4_collect:5_model_loop` (it waits up to 2 h again before modelling what exists) |
 | ``live collection needs `prolific_study_id` in the experiment config …`` | `--mode live` without a Prolific study (e.g. `--prolific-mode none` on a fresh experiment) | live collection needs a study |
 | `mode='live' requires a deployed experiment to collect from …` | no `results_api_url` in `experiment/config.json` | the deploy did not complete |
 | `AUTO_PSYCH_RESULTS_TOKEN is not set — cannot fetch the token-guarded /results endpoint.` | token missing in the collecting environment | add it; recover with `RESUME_AGENTS=4_collect:5_model_loop` |
