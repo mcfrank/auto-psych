@@ -12,9 +12,10 @@ each on the observed responses and on many datasets sampled from the fitted
 model, and report only the statistics where the observed value is a significant
 discrepancy from the model's predictions.
 
-Read `CRITIQUE_CONTEXT.md` first — it names the incumbent model, its hypothesis,
-its code file, the responses CSV, the exact DataFrame columns your statistics
-receive, and the harness command to run.
+The critique context — the `CRITIQUE_CONTEXT.md` section at the end of this
+prompt — names the incumbent model, its hypothesis, its code file, the responses
+CSV, the exact DataFrame columns your statistics receive, and where to write
+your statistics. You do not need to open any file to get it.
 
 ## Step 1 — Understand the incumbent and the data
 
@@ -23,10 +24,11 @@ responses CSV. Ask: which behavioural patterns would this model, given its singl
 mechanism, plausibly get **wrong**? Those are what your test statistics should
 target.
 
-## Step 2 — Propose test statistics (commit before you run anything)
+## Step 2 — Propose test statistics (commit from reasoning, not from p-values)
 
-Propose the number of test statistics named in `CRITIQUE_CONTEXT.md`. Each one is
-a Python file `test_stats/<snake_case_name>.py` of exactly this form:
+Propose the number of test statistics named in the critique context. Each one
+is a Python file `test_stats/<snake_case_name>.py` (under the working directory
+the context names — use the absolute path) of exactly this form:
 
 ```python
 # name: short_descriptive_snake_case_name
@@ -49,68 +51,37 @@ Rules for good statistics:
   mean cannot.
 - Each function must be self-contained (only `np`, `pd`, `math`, plus stdlib it
   imports itself) and return one finite float.
-- **Commit to the statistics before running the harness** — choose them from
-  reasoning about the model and data, not by fishing for a low p-value.
+- **Commit to the statistics from reasoning about the model and data** — not
+  by fishing for a low p-value. Your statistics are scored after you finish.
+- Make each `# description:` say what a discrepancy would *mean*: the direction
+  (does the model under- or over-produce the quantity?) is read off
+  `t_observed` vs `null_mean` by the next round, so the description must make
+  that reading unambiguous.
 
-## Step 3 — Run the posterior-predictive harness
+## What happens next (not your job)
 
-Run the command given in `CRITIQUE_CONTEXT.md` (it is
-`python3 -m src.critique.ppc ...`). It computes each statistic on the observed
-data and on the model's posterior-predictive replicates, then writes
-`ppc_results.json` with, per statistic: `t_observed`, `null_mean`, `null_std`,
-`z_score`, the two-sided empirical `p_value`, and a Benjamini–Hochberg
-FDR-adjusted `p_value_fdr` (q). A statistic is a **significant discrepancy**
-when `significant` is `true` (raw `p_value` ≤ the alpha in the context). Because
-several statistics are screened per round, a discrepancy that also survives the
-FDR (`significant_fdr` is `true`, i.e. `q ≤ alpha`) is stronger evidence —
-report both values so the next round can prioritise it.
+The pipeline runs the posterior-predictive harness (`python3 -m
+src.critique.ppc ...`, the command in the context) over your `test_stats/`
+directory. It computes each statistic on the observed data and on the model's
+posterior-predictive replicates and writes `ppc_results.json` with, per
+statistic: `t_observed`, `null_mean`, `null_std`, `z_score`, the two-sided
+empirical `p_value`, and a Benjamini–Hochberg FDR-adjusted `p_value_fdr` (q).
+A statistic is a **significant discrepancy** when its raw `p_value` ≤ the alpha
+in the context; one that also survives the FDR (`q ≤ alpha`) is stronger
+evidence. The pipeline then derives `critiques.md` — the significant
+discrepancies, with their direction — for the next round of candidate agents.
 
-Do not hand-edit `ppc_results.json`; it is the harness's output.
-
-## Step 4 — Write `critiques.md`
-
-For **each significant** statistic (and only those), write a 2–4 sentence
-critique that:
-
-1. says what the statistic measures,
-2. states the **direction** of the discrepancy — does the model **under-** or
-   **over-**estimate the quantity relative to the humans (compare `t_observed` to
-   `null_mean`)?, and
-3. names which assumption in the incumbent's single mechanism is likely
-   inadequate, and what a next model could change to close the gap. Treat this as
-   evidence of mismatch, not a null-hypothesis rejection claim.
-
-Use this structure:
-
-```markdown
-# Critique of `<incumbent>`
-
-<one line: N significant discrepancies at p ≤ <alpha> over <k> test statistics,
-of which M also survive the FDR (q ≤ <alpha>).>
-
-## <statistic name> — observed <t_observed>, model <null_mean> (z=<z_score>, p=<p_value>, q=<p_value_fdr>)
-
-<2–4 sentences: what it measures, the direction of the discrepancy, and which
-assumption to revise.>
-
-## ...
-
-## Recommendations for the next model
-
-<2–4 bullets: the single-mechanism changes most likely to close the largest
-discrepancies above. Each must stay one mechanism — never a blend of cues.>
-```
-
-If **no** statistic is significant, still write `critiques.md`: state that the
-incumbent reproduced every proposed statistic (list how many were tested), and
-suggest one genuinely new behavioural regime worth probing next round.
+Do **not** run the harness yourself, and do not write `ppc_results.json` or
+`critiques.md`: the pipeline overwrites both. A statistic file is your only
+output.
 
 ## Self-check
 
 Before stopping, confirm:
 
-- [ ] `test_stats/` has the requested number of `.py` files, each defining
-      `test_statistic(df)` with `# name:` / `# description:` headers.
-- [ ] `ppc_results.json` exists (you ran the harness, did not write it by hand).
-- [ ] `critiques.md` exists, is non-empty, and only claims significance for
-      statistics whose `p_value` ≤ the configured alpha.
+- [ ] `test_stats/` (absolute path from the context) has the requested number
+      of `.py` files, each defining `test_statistic(df)` with `# name:` /
+      `# description:` headers and importing only what the rules above allow.
+- [ ] Each statistic returns one finite float on the observed columns named in
+      the context (mentally trace it; do not run MCMC).
+- [ ] No two statistics probe the same discrepancy.

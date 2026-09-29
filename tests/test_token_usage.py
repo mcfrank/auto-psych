@@ -556,7 +556,7 @@ def test_critique_agent_labels_usage(tmp_path, monkeypatch):
         critique_round, "_seed_critique_fit_cache", lambda *a, **k: None
     )
     monkeypatch.setattr(
-        critique_round, "_write_critique_context", lambda *a, **k: None
+        critique_round, "_write_critique_context", lambda *a, **k: "ctx"
     )
     monkeypatch.setattr(
         critique_round, "_persist_critique_results", lambda *a, **k: None

@@ -8,12 +8,20 @@ both agent spawns are stubbed — these tests cover only the orchestration:
 
 * a critique round runs before candidates each iteration,
 * the candidate context points at the round's ``critiques.md``,
-* ``enable_critique=False`` skips the critique entirely.
+* ``enable_critique=False`` skips the critique entirely,
+* a critique agent that writes no usable test statistic is re-spawned once;
+  if the retry also writes none, the round proceeds with **no** critique (no
+  pipeline-written fallback battery — that hid a dead critique subsystem
+  through a full sweep) and ``history.json`` records the absence,
+* every round's critique status (statistics proposed / significant, or "no
+  critique", or disabled) is recorded in ``history.json``.
 """
 
 from __future__ import annotations
 
+import json
 
+import src.critique.ppc as ppc
 import src.pipelines.inner_loop.critique_round as critique_round
 import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
@@ -75,7 +83,10 @@ def _patch_critique_agent(monkeypatch, spawn_log):
             f"# Critique of {incumbent}\n\nIt under-predicts variance.\n",
             encoding="utf-8",
         )
-        return True
+        return {
+            "status": "critiqued", "incumbent": incumbent, "attempts": 1,
+            "n_statistics": 1, "n_significant": 1, "n_significant_fdr": 0,
+        }
 
     monkeypatch.setattr(
         critique_round, "_spawn_critique_agent", fake_spawn_critique
@@ -162,3 +173,159 @@ def test_enable_critique_false_skips_the_critique(tmp_path, monkeypatch):
     assert critique_incumbents == []
     assert not (results_dir / "iter_0" / "critique").exists()
     assert candidate_saw_critique == [False]
+    history = json.loads((results_dir / "history.json").read_text(encoding="utf-8"))
+    assert history[1]["critique"] == {"status": "disabled"}
+
+
+# ─────────────────────────────────────────────
+# Retry-then-skip, and the recorded per-round status
+# ─────────────────────────────────────────────
+
+
+def _patch_critique_agent_process(monkeypatch, on_run):
+    """Stub the coding-agent subprocess under the real critique round.
+
+    ``on_run(critique_dir)`` plays the agent: it may write test statistics
+    into ``critique_dir/test_stats``. Returns the list of calls (prompt + log
+    path) so a test can count attempts and inspect the prompt. The fit-cache
+    seeding is stubbed (it would run MCMC).
+    """
+    import src.runtime.coding_agent as coding_agent
+
+    monkeypatch.setattr(critique_round, "_seed_critique_fit_cache", lambda *a, **k: None)
+    calls: list = []
+
+    def fake_run(
+        prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
+        model=None,
+    ):
+        calls.append({"prompt": prompt, "log_path": log_path})
+        on_run(log_path.parent)
+        return True, ""
+
+    monkeypatch.setattr(coding_agent, "run_coding_agent", fake_run)
+    return calls
+
+
+_PPC_RESULT = {
+    "model": "model_a",
+    "n_test_statistics": 2,
+    "n_replicates": 10,
+    "significance_alpha": 0.05,
+    "n_significant": 1,
+    "n_significant_fdr": 0,
+    "results": [
+        {"name": "alternation_gap", "description": "alternation proportion of A",
+         "t_observed": 0.55, "null_mean": 0.50, "null_std": 0.02, "z_score": 2.5,
+         "p_value": 0.012, "p_value_fdr": 0.024, "significant": True,
+         "significant_fdr": False, "error": None},
+        {"name": "max_run", "description": "max run length",
+         "t_observed": 2.1, "null_mean": 2.0, "null_std": 0.3, "z_score": 0.5,
+         "p_value": 0.6, "p_value_fdr": 0.6, "significant": False,
+         "significant_fdr": False, "error": None},
+    ],
+}
+
+
+def _write_one_statistic(critique_dir):
+    stats_dir = critique_dir / "test_stats"
+    stats_dir.mkdir(parents=True, exist_ok=True)
+    (stats_dir / "alternation_gap.py").write_text(
+        "# name: alternation_gap\n# description: alternation proportion of A\n"
+        "def test_statistic(df):\n    return 0.0\n",
+        encoding="utf-8",
+    )
+
+
+def test_critique_agent_writing_no_statistics_is_retried_once_then_round_has_no_critique(
+    tmp_path, monkeypatch
+):
+    """Zero statistics ⇒ one retry; still zero ⇒ no critiques.md, the PPC
+    harness never runs (there is no fallback battery any more), the candidates
+    run without a critique, and history.json says so."""
+    _patch_scoring(
+        monkeypatch,
+        [
+            canned_posterior("model_a", ["model_b"]),
+            canned_posterior("iter0_candidate0", ["model_a", "model_b"]),
+        ],
+    )
+    candidate_saw_critique: list = []
+    _patch_candidates(monkeypatch, candidate_saw_critique)
+    calls = _patch_critique_agent_process(monkeypatch, on_run=lambda critique_dir: None)
+    ppc_calls: list = []
+    monkeypatch.setattr(ppc, "run_ppc_for_model", lambda *a, **k: ppc_calls.append(a))
+
+    results_dir = tmp_path / "results"
+    run_pymc_inner_loop(
+        write_responses(tmp_path),
+        results_dir,
+        seed_models_dir=write_seed_models(tmp_path),
+        max_iterations=1,
+        candidate_count=1,
+        enable_critique=True,
+    )
+
+    critique_dir = results_dir / "iter_0" / "critique"
+    assert [c["log_path"] for c in calls] == [
+        critique_dir / "agent.jsonl",
+        critique_dir / "agent.retry_1.jsonl",
+    ]
+    assert "second attempt" in calls[1]["prompt"]
+    assert "second attempt" not in calls[0]["prompt"]
+    assert ppc_calls == []
+    assert not (critique_dir / "critiques.md").exists()
+    assert not (critique_dir / "ppc_results.json").exists()
+    assert candidate_saw_critique == [False]
+
+    history = json.loads((results_dir / "history.json").read_text(encoding="utf-8"))
+    assert "critique" not in history[0]  # the seed scoring step precedes any round
+    status = history[1]["critique"]
+    assert status["status"] == "no_critique"
+    assert status["incumbent"] == "model_a"
+    assert status["attempts"] == 2
+    assert "no usable test statistic" in status["reason"]
+
+
+def test_history_records_the_critique_statistics_per_round(tmp_path, monkeypatch):
+    """A critique agent that writes statistics is not retried; the PPC results
+    are summarised into the round's history entry, and the agent's prompt
+    carried the critique context inline (it never had to read the file)."""
+    _patch_scoring(
+        monkeypatch,
+        [
+            canned_posterior("model_a", ["model_b"]),
+            canned_posterior("iter0_candidate0", ["model_a", "model_b"]),
+        ],
+    )
+    candidate_saw_critique: list = []
+    _patch_candidates(monkeypatch, candidate_saw_critique)
+    calls = _patch_critique_agent_process(monkeypatch, on_run=_write_one_statistic)
+    monkeypatch.setattr(ppc, "run_ppc_for_model", lambda *a, **k: dict(_PPC_RESULT))
+
+    results_dir = tmp_path / "results"
+    run_pymc_inner_loop(
+        write_responses(tmp_path),
+        results_dir,
+        seed_models_dir=write_seed_models(tmp_path),
+        max_iterations=1,
+        candidate_count=1,
+        enable_critique=True,
+    )
+
+    critique_dir = results_dir / "iter_0" / "critique"
+    assert len(calls) == 1
+    context_on_disk = (critique_dir / "CRITIQUE_CONTEXT.md").read_text(encoding="utf-8")
+    assert context_on_disk in calls[0]["prompt"]
+    assert (critique_dir / "critiques.md").exists()
+    assert candidate_saw_critique == [True]
+
+    history = json.loads((results_dir / "history.json").read_text(encoding="utf-8"))
+    assert history[1]["critique"] == {
+        "status": "critiqued",
+        "incumbent": "model_a",
+        "attempts": 1,
+        "n_statistics": 2,
+        "n_significant": 1,
+        "n_significant_fdr": 0,
+    }
