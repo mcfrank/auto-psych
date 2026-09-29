@@ -13,6 +13,14 @@
 # P32-P33 measure one Claude Fable 5.1 smoke cell and report what a full Fable
 # sweep would cost (est. 2-2.5x Gemini) and whether it writes files reliably.
 #
+# P34-P48 are the loop-improvement campaign (docs/loop_improvement_plan_2026_09.md,
+# the plan now in force): fix the opencode permission denial that ate 29% of
+# candidate slots and killed every critique round (P34-P38), prove it on a smoke
+# cell (P39-P40), recalibrate the novelty gate and add a refinement lens so a
+# partially-correct mechanism can be improved instead of pruned (P41-P43),
+# parallelise fitting and scale the inner loop to 5x6 (P44-P46), then sweep and
+# report (P47-P48). Executed by Claude Fable 5.1 at the user's request.
+#
 # Usage (login node; bash only, no Python):
 #   bash scripts/consolidation/consolidate.sh
 #
@@ -71,7 +79,7 @@ if [[ -f "$WORK_ROOT/consolidation.env" ]]; then
   echo ">>> resubmitting existing work root $WORK_ROOT"
 else
   # ----- preflight: every frozen input must be exactly what the plan froze ----
-  [[ -f docs/consolidation_plan_2026_09.md ]] || fail "docs/consolidation_plan_2026_09.md not found"
+  [[ -f docs/loop_improvement_plan_2026_09.md ]] || fail "docs/loop_improvement_plan_2026_09.md not found"
   if [[ -n "$(git status --porcelain --untracked-files=no)" && -z "${ALLOW_DIRTY:-}" ]]; then
     git status --short --untracked-files=no >&2
     fail "uncommitted changes to tracked files; commit them (the agent merges HEAD) or set ALLOW_DIRTY=1"

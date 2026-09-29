@@ -1,7 +1,9 @@
 """Pure parts of the consolidation driver.
 
-The consolidation plan (``docs/consolidation_plan_2026_09.md``) is executed as
-thirty-four phases, P0..P33, one Claude Code session each. State lives on disk
+The campaign is executed one Claude Code session per phase: P0..P33 were the
+consolidation (``docs/consolidation_plan_2026_09.md``, complete) and P34..P48
+are the loop-improvement plan (``docs/loop_improvement_plan_2026_09.md``, the
+plan now in force — see ``PLAN_REL``). State lives on disk
 under ``<work_root>/progress/`` as marker files the agent writes and the
 driver validates:
 
@@ -25,7 +27,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Mapping, Optional, Sequence
 
-PLAN_REL = Path("docs/consolidation_plan_2026_09.md")
+# The plan in force. P0-P33 (the consolidation) are history, recorded in
+# docs/consolidation_plan_2026_09.md; P34+ (the loop-improvement campaign) are
+# specified in the file below, which is what every session is given.
+PLAN_REL = Path("docs/loop_improvement_plan_2026_09.md")
 BRANCH = "consolidate/2026-09"
 PROGRESS_DIRNAME = "progress"
 BASELINE_FAILING_NAME = "baseline_failing_tests.txt"
@@ -177,6 +182,56 @@ PHASES: tuple[Phase, ...] = (
     Phase(
         "P33", "Fable 5.1 cost and reliability report",
         waits_for="fable_smoke_jobs.json", requires_files=("FABLE_SMOKE_REPORT.md",),
+    ),
+    # Loop-improvement campaign (2026-09-19, at the user's request). Specified
+    # in docs/loop_improvement_plan_2026_09.md, which PLAN_REL now points at:
+    # reading the archived sweep showed the loop has never once beaten its own
+    # starting seed (0 incumbent changes in 27 scoring steps), with 29% of
+    # candidate slots lost to an opencode permission denial and the CriticAL
+    # critique dead in every round.
+    Phase("P34", "Agent write access is unconditional"),
+    Phase("P35", "The critique round produces real statistics or none at all"),
+    Phase("P36", "No candidate slot is lost silently"),
+    Phase("P37", "The ledger stores hypotheses in full"),
+    Phase("P38", "Record whether the incumbent ever changes"),
+    Phase(
+        "P39", "Submit the Phase-A smoke cell",
+        allows_sbatch=True, jobs_file="phase_a_smoke_jobs.json",
+        required_labels=("smoke",), max_rounds=3,
+    ),
+    Phase(
+        "P40", "Phase-A verdict",
+        waits_for="phase_a_smoke_jobs.json",
+        requires_files=("PHASE_A_VERDICT.md",),
+    ),
+    Phase("P41", "A novelty gate that measures novelty"),
+    Phase("P42", "Give the loop a depth mechanism"),
+    Phase(
+        "P43", "Measure the LOO design effect",
+        requires_files=("LOO_DESIGN_EFFECT.md",),
+    ),
+    Phase("P44", "Fit models in parallel"),
+    Phase(
+        "P45", "Scale the inner loop, and submit the scale smoke",
+        allows_sbatch=True, jobs_file="scale_smoke_jobs.json",
+        required_labels=("smoke",), max_rounds=3,
+    ),
+    Phase(
+        "P46", "Scale verdict, then launch the recovery sweep",
+        waits_for="scale_smoke_jobs.json", allows_sbatch=True,
+        jobs_file="sweep3_jobs.json", required_labels=("raw",),
+        requires_files=("SCALE_VERDICT.md",),
+    ),
+    Phase(
+        "P47", "Submit the evaluation",
+        waits_for="sweep3_jobs.json", allows_sbatch=True,
+        jobs_file="analysis3_jobs.json", required_labels=("analysis",),
+        max_rounds=2,
+    ),
+    Phase(
+        "P48", "Results",
+        waits_for="analysis3_jobs.json",
+        requires_files=("RESULTS_LOOP_IMPROVEMENT.md",),
     ),
 )
 

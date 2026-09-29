@@ -41,15 +41,16 @@ SHA = "0123456789abcdef0123456789abcdef01234567"
 # --- phase table --------------------------------------------------------------
 
 
-def test_phases_run_p0_to_p33_in_order_and_only_submitting_phases_may_sbatch():
-    assert [p.id for p in PHASES] == [f"P{k}" for k in range(34)]
+def test_phases_run_p0_to_p48_in_order_and_only_submitting_phases_may_sbatch():
+    assert [p.id for p in PHASES] == [f"P{k}" for k in range(49)]
     assert [p.id for p in PHASES if p.allows_sbatch] == [
         "P7", "P12", "P14", "P15", "P18", "P20", "P21", "P26", "P30", "P32",
+        "P39", "P45", "P46", "P47",
     ]
     assert phase_by_id("P3").title
     assert phase_by_id("P11").title.startswith("Simplify")
     with pytest.raises(KeyError):
-        phase_by_id("P34")
+        phase_by_id("P49")
 
 
 def test_each_waiting_phase_waits_for_a_jobs_file_an_earlier_phase_writes():
