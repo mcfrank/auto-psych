@@ -9,7 +9,7 @@ orchestration loop itself.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Iterable, List, Optional
 
 from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
 from src.pipelines.inner_loop.import_gate import CANDIDATE_IMPORT_ALLOWLIST
@@ -157,13 +157,15 @@ def _write_candidate_context(
     ledger: Optional[HypothesisLedger] = None,
     comparison: Optional[Dict[str, Dict[str, Any]]] = None,
     lens_index: Optional[int] = None,
+    attempt_note: Optional[str] = None,
+    omit_from_attempted: Iterable[str] = (),
 ) -> Dict[str, Optional[str]]:
     """Write the candidate's context documents and return their text.
 
     The files (CONTEXT.md, CANDIDATE_BRIEF.md, existing_hypotheses.md,
-    attempted_hypotheses.md, critiques.md) stay on disk for audit/
-    reproducibility, but the returned strings are what actually reach the
-    agent — they are injected verbatim into its prompt (see
+    attempted_hypotheses.md, critiques.md, ATTEMPT_NOTE.md) stay on disk for
+    audit/reproducibility, but the returned strings are what actually reach
+    the agent — they are injected verbatim into its prompt (see
     ``_build_candidate_prompt``), so steering content is never optional
     reading. ``lens_index`` selects the exploration lens for this candidate's
     brief (see ``_lens_index``); when ``None`` falls back to
@@ -171,6 +173,13 @@ def _write_candidate_context(
     ``attempted_hypotheses.md`` lists every hypothesis tried earlier (this
     experiment or a previous one) that is no longer in the model set, with
     what happened to it.
+
+    ``attempt_note`` is the note a retry or repair attempt of this slot opens
+    with (see ``_retry_note`` / ``_repair_note``); ``None`` for a slot's first
+    attempt. ``omit_from_attempted`` names whose ledger history is this slot's
+    *own* earlier attempt: a repair must not be told not to re-propose the very
+    model it is repairing, so those names are left out of
+    ``attempted_hypotheses.md``.
     """
     candidate_dir.mkdir(parents=True, exist_ok=True)
     with responses_path.open(encoding="utf-8") as f:
@@ -271,10 +280,15 @@ def _write_candidate_context(
     )
     attempted_text: Optional[str] = None
     if ledger is not None:
-        attempted_text = ledger.render_markdown(live_names=_manifest_names(models_dir))
+        # A name passed as "live" is simply left out of the retired list.
+        attempted_text = ledger.render_markdown(
+            live_names=[*_manifest_names(models_dir), *omit_from_attempted]
+        )
         (candidate_dir / "attempted_hypotheses.md").write_text(
             attempted_text, encoding="utf-8"
         )
+    if attempt_note is not None:
+        (candidate_dir / "ATTEMPT_NOTE.md").write_text(attempt_note, encoding="utf-8")
     critiques_text: Optional[str] = None
     if critique_path is not None and critique_path.exists():
         critiques_text = critique_path.read_text(encoding="utf-8")
@@ -305,7 +319,36 @@ def _write_candidate_context(
         "existing_hypotheses": hypotheses_text,
         "attempted": attempted_text,
         "critiques": critiques_text,
+        "attempt_note": attempt_note,
     }
+
+
+def _retry_note(previous_dir: Path) -> str:
+    """The note a slot's retry opens with after an attempt that wrote no ``candidate.py``."""
+    return (
+        "NOTE: this is the second attempt at this candidate slot. The first "
+        f"attempt, in `{previous_dir}`, ended without writing `candidate.py`. If "
+        "that happens again the slot is lost for this round, so write "
+        "`hypothesis.md`, `model_name.txt` and `candidate.py` to the paths above "
+        "before anything else.\n"
+    )
+
+
+def _repair_note(previous_dir: Path, reason: str) -> str:
+    """The note a slot's repair opens with: the rejection reason, verbatim."""
+    if not reason.strip():
+        raise ValueError("a repair attempt needs the rejection reason; got an empty one")
+    return (
+        "NOTE: this is a repair attempt. Your previous attempt at this candidate "
+        f"slot, in `{previous_dir}`, was rejected at admission for this reason:\n\n"
+        f"    {reason}\n\n"
+        "Its `hypothesis.md`, `model_name.txt` and `candidate.py` have been copied "
+        "into your working directory as a starting point. Fix what the reason "
+        "describes — a different mechanism if the model predicts like an existing "
+        "one, corrected code if it does not load, fit or score — and write all "
+        "three files again to the paths above. A second rejection is final: there "
+        "is no further attempt at this slot.\n"
+    )
 
 
 def _build_candidate_prompt(
@@ -315,7 +358,9 @@ def _build_candidate_prompt(
 
     Every context document is inlined as a delimited section so the agent
     cannot skip the round brief, the current hypotheses, or the critique. The
-    same documents exist as files in the working directory for reference.
+    same documents exist as files in the working directory for reference. A
+    retry or repair attempt's note (``docs["attempt_note"]``) goes right after
+    the output instructions, before any other document.
     """
     sections = [
         f"{_THEORY_PROMPT.read_text(encoding='utf-8')}",
@@ -345,6 +390,8 @@ def _build_candidate_prompt(
         f"## CANDIDATE_BRIEF.md\n\n{docs['brief']}",
         f"## existing_hypotheses.md\n\n{docs['existing_hypotheses']}",
     ]
+    if docs.get("attempt_note"):
+        sections.insert(3, docs["attempt_note"])
     if docs.get("attempted"):
         sections.append(f"## attempted_hypotheses.md\n\n{docs['attempted']}")
     if docs.get("critiques"):

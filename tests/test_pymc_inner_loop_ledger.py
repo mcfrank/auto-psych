@@ -141,10 +141,13 @@ def test_ledger_inherits_records_every_slot_and_reaches_the_next_brief(
     )
 
     rows = _ledger_rows(results_dir / LEDGER_FILENAME)
+    # Round 1's rejected candidate gets one repair attempt (its agent proposes
+    # idea_two again, which is rejected again — final); both are in the ledger.
     assert [(r["name"], r["outcome"]) for r in rows] == [
         ("old_idea", "pruned"),
         ("idea_one", "admitted"),
         ("idea_one", "pruned"),
+        ("idea_two", "rejected"),
         ("idea_two", "rejected"),
     ]
     assert rows[0] == INHERITED
@@ -153,6 +156,8 @@ def test_ledger_inherits_records_every_slot_and_reaches_the_next_brief(
     assert rows[3]["hypothesis"].startswith("People use heuristic idea_two")
     assert rows[1]["context"] == "experiment2 round 0 candidate 0 lens 0"
     assert rows[2]["context"] == "experiment2 round 0"
+    assert rows[3]["context"] == "experiment2 round 1 candidate 0 lens 1"
+    assert rows[4]["context"] == "experiment2 round 1 candidate 0 lens 1 repair 1"
 
     # Round 0's brief carries the inherited entry; round 1's also carries the
     # model pruned in round 0, with its margin — under the do-not-re-propose

@@ -81,7 +81,7 @@ def test_candidate_agents_spawn_concurrently(tmp_path, monkeypatch):
 
 def test_admission_order_is_sequential_and_deterministic(tmp_path, monkeypatch):
     admitted = []
-    real_admit = pymc_orchestrator._admit_candidate
+    real_admit = pymc_orchestrator._admit_candidate_with_reason
 
     def recording_admit(candidate_file, models_dir, model_name, *a, **k):
         admitted.append(model_name)
@@ -92,7 +92,9 @@ def test_admission_order_is_sequential_and_deterministic(tmp_path, monkeypatch):
         (candidate_dir / "hypothesis.md").write_text("People use H.\n", encoding="utf-8")
         return True
 
-    monkeypatch.setattr(pymc_orchestrator, "_admit_candidate", recording_admit)
+    monkeypatch.setattr(
+        pymc_orchestrator, "_admit_candidate_with_reason", recording_admit
+    )
     _run(tmp_path, monkeypatch, spawn)
     assert admitted == ["iter0_candidate0", "iter0_candidate1", "iter0_candidate2"]
 
