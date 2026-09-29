@@ -22,11 +22,14 @@ import hashlib
 import math
 import multiprocessing
 import os
+import signal
 import sys
 import tempfile
+import time
 import traceback
 from concurrent.futures import CancelledError, ProcessPoolExecutor, as_completed
 from concurrent.futures.process import BrokenProcessPool
+from multiprocessing import connection as mp_connection
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Union
@@ -38,6 +41,9 @@ from src.models.mcmc_defaults import (
     MAX_DIVERGENCE_FRACTION,
     MAX_R_HAT,
     MIN_BULK_ESS,
+    NEAR_MISS_MAX_DIVERGENCE_FRACTION,
+    NEAR_MISS_MAX_R_HAT,
+    NEAR_MISS_MIN_BULK_ESS,
     PRODUCTION_CHAINS,
     PRODUCTION_CORES,
     PRODUCTION_DRAWS,
@@ -733,6 +739,7 @@ def fit_model(
     random_seed: Optional[int] = None,
     target_accept: Optional[float] = None,
     max_treedepth: Optional[int] = None,
+    time_limit_sec: Optional[float] = None,
 ) -> FittedModel:
     """Load the named PyMC model, fit it on `responses_path`, return a FittedModel.
 
@@ -746,10 +753,20 @@ def fit_model(
     If `cache_dir` is given and `<cache_dir>/<name>.<fingerprint>.nc` exists,
     load idata from disk instead of refitting.
 
-    A fit that fails the convergence gate (:func:`convergence_problems`) is
-    refit once at ``ESCALATED_TARGET_ACCEPT`` (user decision 2026-09-26), and
-    that fit is returned — to every caller, since both fits are cached. A
-    single-chain fit is never refit: its R-hat is undefined.
+    A fit that fails the convergence gate (:func:`convergence_problems`) as a
+    near miss (:func:`is_near_miss`) is refit once at
+    ``ESCALATED_TARGET_ACCEPT`` (user decisions 2026-09-26, 2026-09-27), and
+    that fit is returned — to every caller, since both fits are cached. A fit
+    far from converging is returned as it is, and fails the gate with its own
+    numbers. A single-chain fit is never refit: its R-hat is undefined.
+
+    ``time_limit_sec`` (candidate admission: ``CANDIDATE_FIT_TIME_LIMIT_SEC``)
+    runs each sampling run — the first fit and a refit — in its own process
+    session and stops it, chains and all, when it is still sampling at the
+    limit, raising :class:`FitTimeLimitExceeded`. A model's own failure then
+    arrives as :class:`FitWorkerFailure`. Cached fits load as usual, and a
+    time-limited fit that failed is remembered for the rest of the process
+    (:func:`sample_fits_time_limited`), so asking again does not re-sample it.
     """
     models_dir = Path(models_dir)
     responses_path = Path(responses_path)
@@ -767,20 +784,47 @@ def fit_model(
         },
     )
 
-    fitted = _fit_once(name, models_dir, responses_path, settings, cache_dir)
-    if (
-        settings["chains"] >= 2
-        and settings["target_accept"] < ESCALATED_TARGET_ACCEPT
-        and convergence_problems_of(fitted)
-    ):
-        print(
-            f"  [fit] {name} did not converge at target_accept "
-            f"{settings['target_accept']}; refitting at {ESCALATED_TARGET_ACCEPT}.",
-            flush=True,
-        )
+    fitted = _fit_once_within(name, models_dir, responses_path, settings, cache_dir, time_limit_sec)
+    if _refit_decision(name, fitted, settings):
         escalated = {**settings, "target_accept": ESCALATED_TARGET_ACCEPT}
-        fitted = _fit_once(name, models_dir, responses_path, escalated, cache_dir)
+        fitted = _fit_once_within(
+            name, models_dir, responses_path, escalated, cache_dir, time_limit_sec
+        )
     return fitted
+
+
+def _fit_once_within(
+    name: str,
+    models_dir: Path,
+    responses_path: Path,
+    settings: Dict[str, Any],
+    cache_dir: Optional[Path],
+    time_limit_sec: Optional[float],
+) -> FittedModel:
+    """``_fit_once``, with any sampling it needs stopped at ``time_limit_sec``.
+
+    The sampling runs in a child process that persists the fit, which is then
+    loaded here like any cached fit. Without a ``cache_dir`` the child writes
+    to a temporary directory and the fit is loaded into memory before the
+    directory goes.
+    """
+    if time_limit_sec is None:
+        return _fit_once(name, models_dir, responses_path, settings, cache_dir)
+    if cache_dir is not None:
+        request = TimeLimitedFit(name, models_dir, responses_path, settings, Path(cache_dir))
+        if not request.nc_path().exists():
+            _raise_failure(sample_fits_time_limited([request], time_limit_sec=time_limit_sec)[0])
+        return _fit_once(name, models_dir, responses_path, settings, cache_dir)
+    with tempfile.TemporaryDirectory(prefix="pymc_fit_") as transport:
+        request = TimeLimitedFit(name, models_dir, responses_path, settings, Path(transport))
+        _raise_failure(sample_fits_time_limited([request], time_limit_sec=time_limit_sec)[0])
+        with _import_arviz().rc_context(rc={"data.load": "eager"}):
+            return _fit_once(name, models_dir, responses_path, settings, Path(transport))
+
+
+def _raise_failure(outcome: Optional[BaseException]) -> None:
+    if outcome is not None:
+        raise outcome
 
 
 def _fit_once(
@@ -889,6 +933,47 @@ def _max_rhat(idata: Any) -> float:
     return max(values)
 
 
+@dataclass(frozen=True)
+class ConvergenceDiagnostics:
+    """The numbers the convergence gate and the near-miss rule judge a fit by.
+
+    ``n_divergent`` is None when the trace records no divergence statistic;
+    ``max_r_hat`` is NaN when R-hat is undefined (a single chain) and
+    ``min_bulk_ess`` NaN when no free parameter was checked.
+    """
+
+    n_divergent: Optional[int]
+    n_draws: int
+    max_r_hat: float
+    min_bulk_ess: float
+
+    @property
+    def divergent_fraction(self) -> float:
+        if self.n_divergent is None:
+            return float("nan")
+        return self.n_divergent / self.n_draws
+
+
+def convergence_diagnostics(idata: Any, var_names: Sequence[str]) -> ConvergenceDiagnostics:
+    """Divergences, worst R-hat and lowest bulk ESS over the free parameters ``var_names``."""
+    az = _import_arviz()
+    n_draws = int(idata.posterior.sizes["chain"] * idata.posterior.sizes["draw"])
+    max_r_hat = min_bulk_ess = float("nan")
+    if var_names:
+        posterior = idata.posterior[list(var_names)]
+        rhat = az.rhat(posterior)
+        worst_rhat = [float(rhat[v].max()) for v in rhat.data_vars]
+        max_r_hat = float("nan") if any(math.isnan(v) for v in worst_rhat) else max(worst_rhat)
+        ess = az.ess(posterior, method="bulk")
+        min_bulk_ess = min(float(ess[v].min()) for v in ess.data_vars)
+    return ConvergenceDiagnostics(
+        n_divergent=_divergence_count(idata),
+        n_draws=n_draws,
+        max_r_hat=max_r_hat,
+        min_bulk_ess=min_bulk_ess,
+    )
+
+
 def convergence_problems(idata: Any, var_names: Sequence[str]) -> List[str]:
     """Why a fit has not converged, one line per problem; empty when it has.
 
@@ -898,27 +983,19 @@ def convergence_problems(idata: Any, var_names: Sequence[str]) -> List[str]:
     (undefined R-hat, e.g. one chain, counts) and bulk ESS below
     ``MIN_BULK_ESS``.
     """
-    az = _import_arviz()
+    diag = convergence_diagnostics(idata, var_names)
     problems: List[str] = []
-    n_div = _divergence_count(idata)
-    if n_div is None:
+    if diag.n_divergent is None:
         problems.append("the trace records no divergence statistic, so sampling could not be checked")
-    else:
-        n_draws = int(idata.posterior.sizes["chain"] * idata.posterior.sizes["draw"])
-        if n_div > MAX_DIVERGENCE_FRACTION * n_draws:
-            problems.append(f"{n_div} divergent transitions of {n_draws}")
+    elif diag.n_divergent > MAX_DIVERGENCE_FRACTION * diag.n_draws:
+        problems.append(f"{diag.n_divergent} divergent transitions of {diag.n_draws}")
     if var_names:
-        posterior = idata.posterior[list(var_names)]
-        rhat = az.rhat(posterior)
-        worst_rhat = [float(rhat[v].max()) for v in rhat.data_vars]
-        if any(math.isnan(v) for v in worst_rhat):
+        if math.isnan(diag.max_r_hat):
             problems.append("R-hat is undefined (a single chain?)")
-        elif max(worst_rhat) > MAX_R_HAT:
-            problems.append(f"max R-hat {max(worst_rhat):.3f} > {MAX_R_HAT}")
-        ess = az.ess(posterior, method="bulk")
-        lowest_ess = min(float(ess[v].min()) for v in ess.data_vars)
-        if not lowest_ess >= MIN_BULK_ESS:
-            problems.append(f"min bulk ESS {lowest_ess:.0f} < {MIN_BULK_ESS}")
+        elif diag.max_r_hat > MAX_R_HAT:
+            problems.append(f"max R-hat {diag.max_r_hat:.3f} > {MAX_R_HAT}")
+        if not diag.min_bulk_ess >= MIN_BULK_ESS:
+            problems.append(f"min bulk ESS {diag.min_bulk_ess:.0f} < {MIN_BULK_ESS}")
     return problems
 
 
@@ -926,6 +1003,50 @@ def convergence_problems_of(fitted: "FittedModel") -> List[str]:
     """``convergence_problems`` over a fitted model's free parameters."""
     free = [rv.name for rv in fitted.model.free_RVs]
     return convergence_problems(fitted.idata, free)
+
+
+def is_near_miss(diag: ConvergenceDiagnostics) -> bool:
+    """Whether a fit that failed the convergence gate is close enough for a
+    refit with smaller NUTS steps to plausibly pass it (thresholds and their
+    rationale in ``src/models/mcmc_defaults.py``). Without a divergence
+    statistic or an R-hat there is nothing to judge: not a near miss."""
+    return (
+        diag.n_divergent is not None
+        and diag.divergent_fraction <= NEAR_MISS_MAX_DIVERGENCE_FRACTION
+        and diag.max_r_hat <= NEAR_MISS_MAX_R_HAT
+        and diag.min_bulk_ess >= NEAR_MISS_MIN_BULK_ESS
+    )
+
+
+def convergence_diagnostics_of(fitted: "FittedModel") -> ConvergenceDiagnostics:
+    """``convergence_diagnostics`` over a fitted model's free parameters."""
+    return convergence_diagnostics(fitted.idata, [rv.name for rv in fitted.model.free_RVs])
+
+
+def _refit_decision(name: str, fitted: "FittedModel", settings: Dict[str, Any]) -> bool:
+    """True when ``fit_model`` refits ``fitted`` at ``ESCALATED_TARGET_ACCEPT``:
+    a multi-chain fit below that target_accept that failed the convergence
+    gate as a near miss. Says why out loud either way when the fit failed."""
+    if settings["chains"] < 2 or settings["target_accept"] >= ESCALATED_TARGET_ACCEPT:
+        return False
+    problems = convergence_problems_of(fitted)
+    if not problems:
+        return False
+    if is_near_miss(convergence_diagnostics_of(fitted)):
+        print(
+            f"  [fit] {name} did not converge at target_accept "
+            f"{settings['target_accept']} ({'; '.join(problems)}), a near miss; "
+            f"refitting at {ESCALATED_TARGET_ACCEPT}.",
+            flush=True,
+        )
+        return True
+    print(
+        f"  [fit] {name} did not converge at target_accept "
+        f"{settings['target_accept']} ({'; '.join(problems)}), too far from "
+        "converging for smaller steps to help; not refitting.",
+        flush=True,
+    )
+    return False
 
 
 def _warn_sampling_diagnostics(name: str, idata: Any) -> None:
@@ -1038,6 +1159,210 @@ class FitWorkerFailure(RuntimeError):
     reporting one model's failure. The original traceback goes to the
     worker's stderr, which is the run log.
     """
+
+
+class FitTimeLimitExceeded(RuntimeError):
+    """A time-limited fit still sampling at its limit, and stopped there."""
+
+    def __init__(self, name: str, limit_sec: float, target_accept: float) -> None:
+        super().__init__(
+            f"the fit of {name!r} (target_accept {target_accept:g}) was still sampling "
+            f"after the {limit_sec / 60:g}-minute limit and was stopped"
+        )
+        self.name = name
+        self.limit_sec = limit_sec
+        self.target_accept = target_accept
+
+
+@dataclass(frozen=True)
+class TimeLimitedFit:
+    """One sampling run for :func:`sample_fits_time_limited`: the model
+    ``models_dir/<name>.py`` fit on ``responses_path`` at the resolved
+    ``settings``, persisted in ``cache_dir``."""
+
+    name: str
+    models_dir: Path
+    responses_path: Path
+    settings: Dict[str, Any]
+    cache_dir: Path
+
+    def fingerprint(self) -> str:
+        return fit_fingerprint(self.name, self.models_dir, self.responses_path, self.settings)
+
+    def nc_path(self) -> Path:
+        return cached_fit_path(self.cache_dir, self.name, self.fingerprint())
+
+
+# Failures of time-limited sampling runs, by (model name, fit fingerprint):
+# a run that failed or ran out of time is not sampled again in this process.
+_FAILED_TIME_LIMITED_FITS: Dict[tuple, BaseException] = {}
+
+
+def _sample_in_own_session(
+    name: str,
+    models_dir: Path,
+    responses_path: Path,
+    settings: Dict[str, Any],
+    cache_dir: Path,
+    sender: Any,
+) -> None:
+    """Child process of :func:`sample_fits_time_limited`: sample one fit into
+    ``cache_dir`` and report ``("ok" | "model" | "infrastructure", detail)``.
+
+    It starts a new session first, so that its process group — this process
+    and the chain processes PyMC forks from it (forked, as in
+    ``_fit_model_in_worker``) — can be stopped as one. Thread counts are
+    pinned to one per process, as in the fit pool.
+    """
+    os.setsid()
+    multiprocessing.set_start_method("fork", force=True)
+    for var in _SINGLE_THREAD_ENV:
+        os.environ[var] = "1"
+    from threadpoolctl import threadpool_limits
+
+    try:
+        with threadpool_limits(limits=1):
+            _fit_once(name, Path(models_dir), Path(responses_path), settings, Path(cache_dir))
+    except INFRASTRUCTURE_ERRORS as e:
+        traceback.print_exc(file=sys.stderr)
+        sender.send(("infrastructure", f"{type(e).__name__}: {e}"))
+        return
+    except Exception as e:  # noqa: BLE001 — every failure must reach the parent by name
+        traceback.print_exc(file=sys.stderr)
+        sender.send(("model", f"{type(e).__name__}: {e}"))
+        return
+    sender.send(("ok", ""))
+
+
+def _stop_fit_process(process: Any, request: TimeLimitedFit) -> None:
+    """Kill a fit's process group (the fit and its chains) and remove the
+    temporary file of a write it cut short (``write_fit_file``)."""
+    try:
+        if os.getpgid(process.pid) == process.pid:
+            os.killpg(process.pid, signal.SIGKILL)
+        else:  # killed before it could start its session: no chains yet
+            process.kill()
+    except ProcessLookupError:
+        pass
+    process.join()
+    for partial in Path(request.cache_dir).glob(f".{request.name}.*.nc.{process.pid}.partial"):
+        partial.unlink(missing_ok=True)
+
+
+def _fit_process_outcome(
+    process: Any, receiver: Any, request: TimeLimitedFit
+) -> Optional[BaseException]:
+    """What a finished fit process reported: None when its fit is on disk, a
+    ``FitWorkerFailure`` for the model's own failure. Anything else raises."""
+    process.join()
+    try:
+        message = receiver.recv() if receiver.poll() else None
+    except EOFError:  # the process closed its end without sending
+        message = None
+    if message is None or process.exitcode != 0:
+        raise FitInfrastructureFailure(
+            f"the fit process of {request.name!r} exited with code {process.exitcode} "
+            "without reporting an outcome (killed, e.g. out of memory?); that is not "
+            "the model's failure."
+        )
+    kind, detail = message
+    if kind == "infrastructure":
+        raise FitInfrastructureFailure(f"the fit of {request.name!r} failed: {detail}")
+    if kind == "model":
+        return FitWorkerFailure(detail)
+    if not request.nc_path().exists():
+        raise FitInfrastructureFailure(
+            f"the fit process of {request.name!r} reported success but wrote no fit "
+            f"at {request.nc_path()}."
+        )
+    return None
+
+
+def sample_fits_time_limited(
+    requests: Sequence[TimeLimitedFit],
+    *,
+    time_limit_sec: float,
+    workers: int = 1,
+    _target: Any = None,
+) -> List[Optional[BaseException]]:
+    """Sample each request in its own process, ``workers`` at a time, each
+    stopped at ``time_limit_sec`` of wall-clock time; report per request.
+
+    Returns, in request order, None for a fit now on disk, a
+    ``FitWorkerFailure`` for a model whose sampling raised, and a
+    ``FitTimeLimitExceeded`` for one still sampling at the limit — whose
+    process group (the fit and its chain processes) is killed, so the
+    sampling really stops, and whose half-written file, if any, is removed.
+    Failures are remembered by (name, fingerprint) and returned again without
+    sampling. An infrastructure failure (a process that died without
+    reporting, an ``OSError``/``MemoryError`` inside one) raises, after every
+    other running fit is stopped.
+
+    ``workers`` should keep ``workers x chains`` within the allocated CPUs
+    (``default_fit_workers``): the limit is wall-clock time, so an
+    oversubscribed machine would stop fits that would finish on their own
+    cores. ``_target`` replaces the child's entry point (tests only).
+    """
+    if time_limit_sec <= 0:
+        raise ValueError(f"time_limit_sec must be > 0, got {time_limit_sec}.")
+    if workers < 1:
+        raise ValueError(f"workers must be >= 1, got {workers}.")
+    outcomes: List[Optional[BaseException]] = [None] * len(requests)
+    queue: List[int] = []
+    for i, request in enumerate(requests):
+        known = _FAILED_TIME_LIMITED_FITS.get((request.name, request.fingerprint()))
+        if known is not None:
+            outcomes[i] = known
+        elif not request.nc_path().exists():
+            queue.append(i)
+    context = multiprocessing.get_context("spawn")
+    running: Dict[Any, tuple] = {}  # sentinel -> (index, process, receiver, deadline)
+    try:
+        while queue or running:
+            while queue and len(running) < workers:
+                i = queue.pop(0)
+                request = requests[i]
+                Path(request.cache_dir).mkdir(parents=True, exist_ok=True)
+                receiver, sender = context.Pipe(duplex=False)
+                process = context.Process(
+                    target=_target or _sample_in_own_session,
+                    args=(
+                        request.name, request.models_dir, request.responses_path,
+                        request.settings, request.cache_dir, sender,
+                    ),
+                    name=f"fit-{request.name}",
+                )
+                process.start()
+                sender.close()
+                running[process.sentinel] = (i, process, receiver, time.monotonic() + time_limit_sec)
+            next_deadline = min(entry[3] for entry in running.values())
+            finished = mp_connection.wait(
+                list(running), timeout=max(0.0, next_deadline - time.monotonic())
+            )
+            for sentinel in finished:
+                i, process, receiver, _ = running.pop(sentinel)
+                outcomes[i] = _fit_process_outcome(process, receiver, requests[i])
+            now = time.monotonic()
+            for sentinel, (i, process, receiver, deadline) in list(running.items()):
+                if now >= deadline:
+                    del running[sentinel]
+                    _stop_fit_process(process, requests[i])
+                    request = requests[i]
+                    print(
+                        f"  [fit] {request.name}: still sampling after the "
+                        f"{time_limit_sec / 60:g}-minute limit; stopped.",
+                        flush=True,
+                    )
+                    outcomes[i] = FitTimeLimitExceeded(
+                        request.name, time_limit_sec, float(request.settings["target_accept"])
+                    )
+    finally:
+        for i, process, _, _ in running.values():
+            _stop_fit_process(process, requests[i])
+    for request, outcome in zip(requests, outcomes):
+        if outcome is not None:
+            _FAILED_TIME_LIMITED_FITS[(request.name, request.fingerprint())] = outcome
+    return outcomes
 
 
 def _fit_model_in_worker(
@@ -1378,8 +1703,10 @@ def _describe_failure(failure: BaseException) -> str:
 
 
 def clear_fit_cache() -> None:
-    """Clear the in-process fit cache. Useful for tests."""
+    """Clear the in-process fit cache (and remembered time-limited failures).
+    Useful for tests."""
     _FIT_CACHE.clear()
+    _FAILED_TIME_LIMITED_FITS.clear()
 
 
 def evict_fit_cache(model_name: str) -> int:

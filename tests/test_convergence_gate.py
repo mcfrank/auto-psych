@@ -99,6 +99,7 @@ def test_a_non_converged_candidate_is_rejected_with_the_numbers_and_the_fix(tmp_
     monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: ["12 divergent transitions"])
+    monkeypatch.setattr(model_zoo, "convergence_diagnostics_of", lambda fitted: NEAR_MISS)
     verdict = model_zoo._admit_candidate_with_reason(
         cand / "candidate.py", models_dir, "iter0_candidate0", tmp_path / "r.csv",
         fit_kwargs={"target_accept": 0.8},  # the faithful sweep's setting
@@ -111,6 +112,16 @@ def test_a_non_converged_candidate_is_rejected_with_the_numbers_and_the_fix(tmp_
     assert "raising target_accept will not help" in verdict.reason
     assert "SAMPLER_SETTINGS" not in verdict.reason
     assert "non-centred" in verdict.reason and "weakly identified" in verdict.reason
+
+    # A fit far from converging was not refit; the reason says why.
+    monkeypatch.setattr(model_zoo, "convergence_diagnostics_of", lambda fitted: HOPELESS)
+    verdict = model_zoo._admit_candidate_with_reason(
+        cand / "candidate.py", models_dir, "iter0_candidate1", tmp_path / "r.csv",
+        fit_kwargs={"target_accept": 0.8},
+    )
+    assert "too far from converging for smaller NUTS steps to help" in verdict.reason
+    assert "R-hat <= 1.2" in verdict.reason and "even at" not in verdict.reason
+    assert "raising target_accept will not help" in verdict.reason
 
 
 def test_the_brief_does_not_offer_smaller_steps_as_a_convergence_fix(tmp_path):
@@ -138,7 +149,12 @@ def test_a_non_converged_model_is_never_exported():
     assert _best_exportable_model(posterior, comparison) == "second"
 
 
-def _escalation(monkeypatch, *, converges_at):
+# A failed fit that smaller steps can plausibly fix, and one they cannot.
+NEAR_MISS = pi.ConvergenceDiagnostics(n_divergent=25, n_draws=4000, max_r_hat=1.06, min_bulk_ess=80)
+HOPELESS = pi.ConvergenceDiagnostics(n_divergent=1000, n_draws=4000, max_r_hat=2.5, min_bulk_ess=5)
+
+
+def _escalation(monkeypatch, *, converges_at, diagnostics=NEAR_MISS):
     """fit_model with the sampling stubbed: record each target_accept tried."""
     tried = []
 
@@ -151,15 +167,43 @@ def _escalation(monkeypatch, *, converges_at):
         pi, "convergence_problems_of",
         lambda fitted: [] if fitted["target_accept"] >= converges_at else ["R-hat 1.2"],
     )
+    monkeypatch.setattr(pi, "convergence_diagnostics_of", lambda fitted: diagnostics)
     monkeypatch.setattr(pi, "model_sampler_settings", lambda name, d: {})
     return tried
 
 
-def test_a_fit_that_fails_the_gate_is_refit_once_at_0_95(tmp_path, monkeypatch):
+def test_a_near_miss_is_refit_once_at_0_95(tmp_path, monkeypatch):
     tried = _escalation(monkeypatch, converges_at=0.95)
     fitted = pi.fit_model("m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4)
     assert tried == [0.8, 0.95]
     assert fitted["target_accept"] == 0.95
+
+
+def test_a_fit_far_from_converging_is_not_refit(tmp_path, monkeypatch, capsys):
+    """A chain stuck in another mode (R-hat 2.5, ESS 5) is a geometry problem:
+    the refit at 0.95 used to double the cost of the same rejection."""
+    tried = _escalation(monkeypatch, converges_at=0.95, diagnostics=HOPELESS)
+    fitted = pi.fit_model("m", tmp_path, tmp_path / "r.csv", target_accept=0.8, chains=4)
+    assert tried == [0.8]
+    assert fitted["target_accept"] == 0.8  # returned as is; the gate rejects it
+    assert "not refitting" in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(
+    "diagnostics, near",
+    [
+        (NEAR_MISS, True),
+        (pi.ConvergenceDiagnostics(80, 4000, 1.2, 20), True),  # every threshold met exactly
+        (pi.ConvergenceDiagnostics(81, 4000, 1.05, 400), False),  # > 2% divergent
+        (pi.ConvergenceDiagnostics(0, 4000, 1.21, 400), False),  # R-hat above 1.2
+        (pi.ConvergenceDiagnostics(0, 4000, 1.03, 19), False),  # bulk ESS below 20
+        (pi.ConvergenceDiagnostics(None, 4000, 1.03, 400), False),  # no divergence statistic
+        (pi.ConvergenceDiagnostics(0, 4000, float("nan"), 400), False),  # R-hat undefined
+        (HOPELESS, False),
+    ],
+)
+def test_a_near_miss_is_close_on_every_diagnostic(diagnostics, near):
+    assert pi.is_near_miss(diagnostics) is near
 
 
 def test_a_converged_fit_is_not_refit(tmp_path, monkeypatch):

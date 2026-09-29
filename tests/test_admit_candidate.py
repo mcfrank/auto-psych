@@ -197,3 +197,53 @@ def test_admit_rejects_candidate_whose_fit_raises(tmp_path, monkeypatch):
     # Both the staged model file and its hypothesis sidecar must be cleaned up.
     assert not (models_dir / "iter0_candidate0.py").exists()
     assert not (models_dir / "iter0_candidate0.hypothesis.md").exists()
+
+
+def test_a_candidate_too_slow_to_fit_is_rejected_with_the_limit(tmp_path, monkeypatch):
+    """The admission fit is time-limited; a candidate still sampling at the
+    limit is rejected, and the reason (which a repair sees verbatim) names the
+    limit and says how to make the model cheaper."""
+    from src.models.mcmc_defaults import CANDIDATE_FIT_TIME_LIMIT_SEC
+    from src.models.pymc_inference import FitTimeLimitExceeded
+
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())
+    _stub_fittable(monkeypatch)
+    limits = []
+
+    def too_slow(name, *a, time_limit_sec=None, **k):
+        limits.append(time_limit_sec)
+        raise FitTimeLimitExceeded(name, time_limit_sec, 0.8)
+
+    monkeypatch.setattr(model_zoo, "fit_model", too_slow)
+    models_dir = _models_dir_with_seed(tmp_path)
+    cand_dir = _candidate_dir(tmp_path, hypothesis="People do Y.")
+
+    verdict = model_zoo._admit_candidate_with_reason(
+        cand_dir / "candidate.py", models_dir, "slow_model", tmp_path / "responses.csv"
+    )
+
+    assert limits == [CANDIDATE_FIT_TIME_LIMIT_SEC]
+    assert not verdict.admitted
+    assert verdict.reason.startswith("too slow to fit")
+    assert f"{CANDIDATE_FIT_TIME_LIMIT_SEC / 60:g}-minute limit" in verdict.reason
+    assert "vectorise the likelihood" in verdict.reason
+    assert not (models_dir / "slow_model.py").exists()
+
+
+def test_a_fit_failure_from_the_fit_process_keeps_its_original_type(tmp_path, monkeypatch):
+    from src.models.pymc_inference import FitWorkerFailure
+
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())
+    _stub_fittable(monkeypatch)
+
+    def fails(*a, **k):
+        raise FitWorkerFailure("ValueError: NUTS diverged")
+
+    monkeypatch.setattr(model_zoo, "fit_model", fails)
+    models_dir = _models_dir_with_seed(tmp_path)
+    cand_dir = _candidate_dir(tmp_path, hypothesis="People do Y.")
+
+    verdict = model_zoo._admit_candidate_with_reason(
+        cand_dir / "candidate.py", models_dir, "bad_model", tmp_path / "responses.csv"
+    )
+    assert verdict.reason.startswith("MCMC sampling failed (ValueError: NUTS diverged)")
