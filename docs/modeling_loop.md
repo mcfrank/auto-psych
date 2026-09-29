@@ -470,15 +470,34 @@ T = 1,000 scenarios and `rng = np.random.default_rng(seed)`:
    `d_t ~ Uniform{0..D_{m_t}−1}` (eig_selection.py:141-143).
 2. Keep `logL[m][t, d] = Σ_{i∈S} [ k_{t,i} log p[m][d,i] + (n − k_{t,i}) log(1 − p[m][d,i]) ]`
    for every model and draw. It starts at 0.
-3. Scenario t's posterior over models: `w_t(m) ∝ π(m) · mean_d exp(logL[m][t,d] − c_t)`.
-   `c_t` is a per-scenario max, which cancels on normalisation
-   (`posterior_entropy`, eig_selection.py:172). `H_t(S)` is its entropy in bits.
-4. In-sample joint EIG: `Î(S) = H(π) − (1/T) Σ_t H_t(S)`.
+3. Scenario t's posterior over models: `w_t(m) ∝ π(m) · mean_d exp(logL[m][t,d] − c_t)`,
+   where for the scenario's own model `m_t` the mean runs over every draw
+   **except the generating draw `d_t`** (D_m − 1 draws; `leave_one_out`,
+   since 2026-09-27). `c_t` is the per-scenario max over the averaged draws,
+   which cancels on normalisation (`posterior`, eig_selection.py). `H_t(S)` is
+   its entropy in bits.
+4. Joint EIG: `Î(S) = H(π) − (1/T) Σ_t H_t(S)`.
 
-The scenario's own draw `d_t` is one of the D_m draws in the likelihood
-average, so the trajectory is an in-sample estimate. `estimate_joint_eig` with
-a fresh seed would give an out-of-sample estimate, but the pipeline does not
-call it. The ceiling on `Î(S)` is log2 K for K usable models (1.585 bits for
+**Leaving the generating draw out** (first audit, C5). Until 2026-09-27 the
+average included `d_t`. That draw explains its own simulated responses better
+than an independent draw would, so the true model's likelihood was inflated,
+each scenario's posterior overconfident and `Î`, the noise-floor stop and the
+recorded `joint_eig_bits` too high: with two identical models (independent
+draws of one distribution) the posterior of the generating model averaged
+> 0.75 where it should be 0.5 (`tests/test_eig_leave_one_out.py`). Without
+the draw the inner average is independent of the scenario, so the estimate
+is consistent — but still a nested Monte Carlo estimate with a finite inner
+average, which biases it upward when the responses identify individual draws
+(for identical models it stays above 0 on such designs, though below the old
+estimate); it is not unbiased. It costs nothing: the draw's entry is zeroed in
+the likelihood factor the scoring matmul already multiplies (and the row
+divided by D_m − 1). A model needs at least two draws (a point hypothesis is
+two identical draws). `leave_one_out=False` (eig CLI `--no-leave-one-out`)
+restores the old estimator.
+
+The trajectory is measured on the scenarios the set was selected on, so it is
+optimistic for the chosen set; `estimate_joint_eig` with a fresh seed would
+score it on other scenarios, but the pipeline does not call it. The ceiling on `Î(S)` is log2 K for K usable models (1.585 bits for
 the three seeds of experiment 1).
 
 ### 3.6 Greedy joint selection with a noise-floor stop (`select_n_joint_eig`, eig_selection.py:302)

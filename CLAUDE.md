@@ -90,6 +90,12 @@ makes `--resume` (run into an existing `experimentN/` dir) and `--agent <stage>`
   submodular), validated against exact float64 greedy on two experiment-2
   designs (`scripts/subjective_randomness/validate_lazy_eig.py`: within exact
   greedy's own scenario-to-scenario spread) — ~3 min instead of 11-13 h.
+  Each Monte Carlo scenario's likelihood average **leaves out the draw that
+  generated it** (`DESIGN_LEAVE_ONE_OUT`, first audit C5): including it
+  rewarded the true model for memorising its draw and inflated the joint EIG,
+  the noise-floor stop and `joint_eig_bits` (by ~0.02-0.1 bits on the two
+  validation designs). Same cost; the estimate is consistent but not
+  unbiased (finite draw average); a model needs ≥ 2 draws.
 - `3_implement` — the one true coding-agent stage: writes a jsPsych experiment;
   skipped in `simulated_participants_nobrowser` mode. Optional Firebase/Prolific
   deploy phase follows when `--deploy-target != none`.

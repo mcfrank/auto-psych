@@ -16,6 +16,13 @@ import pytest
 from src.models.eig_selection import estimate_joint_eig, select_n_joint_eig
 
 
+def _point_models(**p_left):
+    """Models without parameter uncertainty, each as two identical draws: a
+    scenario's likelihood average leaves out its generating draw, and the copy
+    keeps the point model's likelihood exact."""
+    return {name: np.repeat(np.array([row]), 2, axis=0) for name, row in p_left.items()}
+
+
 def _exact_binomial_mi(p_by_model, n):
     """I(M; K) in bits for one stimulus, K ~ Binomial(n, p_m), uniform prior."""
     prior = 1.0 / len(p_by_model)
@@ -31,13 +38,13 @@ def _exact_binomial_mi(p_by_model, n):
 
 @pytest.mark.parametrize("n", [1, 5, 40])
 def test_estimate_matches_the_exact_binomial_mutual_information(n):
-    p = {"a": np.array([[0.45]]), "b": np.array([[0.60]])}
+    p = _point_models(a=[0.45], b=[0.60])
     estimate = estimate_joint_eig(p, [0], n_scenarios=40_000, seed=3, n_responses=n)
     assert estimate == pytest.approx(_exact_binomial_mi([0.45, 0.60], n), abs=0.01)
 
 
 def test_forty_responses_carry_far_more_information_than_one():
-    p = {"a": np.array([[0.45]]), "b": np.array([[0.60]])}
+    p = _point_models(a=[0.45], b=[0.60])
     one = estimate_joint_eig(p, [0], n_scenarios=20_000, seed=3, n_responses=1)
     forty = estimate_joint_eig(p, [0], n_scenarios=20_000, seed=3, n_responses=40)
     assert one < 0.05 < 0.4 < forty
@@ -45,10 +52,7 @@ def test_forty_responses_carry_far_more_information_than_one():
 
 def test_greedy_gain_matches_the_exact_value_for_the_first_pick():
     """The first greedy step's joint EIG is one stimulus's binomial MI."""
-    p = {
-        "a": np.array([[0.45, 0.50, 0.30]]),
-        "b": np.array([[0.60, 0.50, 0.32]]),
-    }
+    p = _point_models(a=[0.45, 0.50, 0.30], b=[0.60, 0.50, 0.32])
     sel = select_n_joint_eig(p, 1, n_scenarios=40_000, seed=5, n_responses=40)
     assert sel.indices == [0]
     assert sel.joint_eig_bits[0] == pytest.approx(

@@ -250,6 +250,16 @@ DESIGN_LAZY_SEARCH = True
 DESIGN_LAZY_BATCH_SIZE = 512
 DESIGN_REFRESH_EVERY = 16
 DESIGN_SCORING_DTYPE = "float32"
+# Each Monte Carlo scenario's likelihood average leaves out the draw that
+# generated the scenario (src/models/eig_selection.py; first audit, C5): an
+# average that includes it rewards the true model for memorising its own draw.
+# Measured on the two experiment-2 designs of the validation above (lazy
+# float32, seeds 42 and 43, 2026-09-27): the same run time (167 s vs 167 s;
+# 205 s vs 196-203 s), recorded joint_eig_bits lower by 0.06-0.10 and
+# 0.02-0.03 bits (the inflation removed), and sets whose joint EIG on 50,000
+# fresh scenarios, scored without the generating draw, is within the
+# selection's own seed-to-seed spread (0.000 to -0.005 bits of 2.0 and 2.7).
+DESIGN_LEAVE_ONE_OUT = True
 
 
 def select_design_picks(
@@ -263,6 +273,7 @@ def select_design_picks(
     lazy: bool = DESIGN_LAZY_SEARCH,
     dtype: str = DESIGN_SCORING_DTYPE,
     n_threads: Optional[int] = None,
+    leave_one_out: bool = DESIGN_LEAVE_ONE_OUT,
 ) -> List[Tuple[int, float, str]]:
     """The design's ``n_select`` picks as ``(pool index, joint EIG bits, source)``.
 
@@ -273,7 +284,8 @@ def select_design_picks(
     objective chose a pick (``"eig"`` or ``"eig_single_response_fill"``), and
     its joint EIG is in that objective's units. ``n_threads`` (``None`` ⇒ the
     CPUs this process is allocated) score candidates concurrently; the picks
-    do not depend on it.
+    do not depend on it. ``leave_one_out``: the estimator (see
+    ``DESIGN_LEAVE_ONE_OUT``).
     """
     from src.models.eig_selection import select_n_joint_eig  # type: ignore
     from src.models.pymc_inference import allocated_cpus  # type: ignore
@@ -285,6 +297,7 @@ def select_design_picks(
         refresh_every=DESIGN_REFRESH_EVERY,
         dtype=dtype,
         n_threads=n_threads if n_threads is not None else allocated_cpus(),
+        leave_one_out=leave_one_out,
     )
     print(
         f"  [design] joint-EIG search: {'lazy batched' if lazy else 'exact'} greedy"
@@ -294,7 +307,9 @@ def select_design_picks(
             if lazy
             else ""
         )
-        + f", {dtype} scoring on {search['n_threads']} thread(s).",
+        + f", {dtype} scoring on {search['n_threads']} thread(s), "
+        + ("generating draw left out of each scenario's likelihood average."
+           if leave_one_out else "generating draw included in each likelihood average."),
         flush=True,
     )
     selection = select_n_joint_eig(
@@ -351,6 +366,7 @@ def design_exhaustive(
     lazy: bool = DESIGN_LAZY_SEARCH,
     scoring_dtype: str = DESIGN_SCORING_DTYPE,
     n_threads: Optional[int] = None,
+    leave_one_out: bool = DESIGN_LEAVE_ONE_OUT,
 ) -> List[Dict[str, Any]]:
     """Select the max-joint-EIG stimulus set from the FULL pair universe.
 
@@ -371,9 +387,10 @@ def design_exhaustive(
     experiment's participant count): the joint EIG scores the count of "left"
     choices, Binomial(n_responses, p_left), not a single response.
 
-    ``lazy``, ``scoring_dtype`` and ``n_threads`` set the greedy search
-    (:func:`select_design_picks`); by default ``DESIGN_LAZY_SEARCH`` and
-    ``DESIGN_SCORING_DTYPE`` on every allocated CPU.
+    ``lazy``, ``scoring_dtype``, ``n_threads`` and ``leave_one_out`` set the
+    greedy search (:func:`select_design_picks`); by default
+    ``DESIGN_LAZY_SEARCH``, ``DESIGN_SCORING_DTYPE`` and
+    ``DESIGN_LEAVE_ONE_OUT`` on every allocated CPU.
 
     Returns stimuli in selection (greedy) order, each with:
       - "eig": the stimulus's marginal EIG (bits);
@@ -473,6 +490,7 @@ def design_exhaustive(
             lazy=lazy,
             dtype=scoring_dtype,
             n_threads=n_threads,
+            leave_one_out=leave_one_out,
         )
         means = {m: arr.mean(axis=0) for m, arr in draws.items()}
         for rank, (idx, joint_bits, source) in enumerate(picks, start=1):
@@ -552,6 +570,10 @@ class Args:
     see src/models/eig_selection.py)."""
     scoring_dtype: Literal["float32", "float64"] = DESIGN_SCORING_DTYPE
     """Precision of candidate scoring."""
+    leave_one_out: bool = DESIGN_LEAVE_ONE_OUT
+    """Leave each scenario's generating draw out of its likelihood average
+    (--no-leave-one-out: the estimator used before 2026-09-27, which
+    includes it)."""
 
 
 def _write_output(stimuli: List[Dict[str, Any]], out: Optional[Path]) -> None:
@@ -584,6 +606,7 @@ def main(args: Args) -> None:
         n_responses=args.n_responses,
         lazy=args.lazy,
         scoring_dtype=args.scoring_dtype,
+        leave_one_out=args.leave_one_out,
     )
     _write_output(selected, args.out)
 

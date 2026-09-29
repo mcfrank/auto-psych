@@ -32,12 +32,14 @@ def _graded_pool(n_stim: int = 2000):
     """Two models with no parameter uncertainty that disagree by a different,
     well-separated margin on every stimulus: responses are independent given
     the model, so gains only shrink as picks accumulate (diminishing returns),
-    and the best remaining stimulus is always the most discriminating one."""
+    and the best remaining stimulus is always the most discriminating one.
+    Each is two identical draws: a scenario's likelihood average leaves out
+    the draw that generated it, and the copy keeps the point model exact."""
     margin = np.linspace(0.0, 0.4, n_stim)
     order = np.random.default_rng(1).permutation(n_stim)  # best ones scattered
     return {
-        "a": (0.5 + margin[order])[None, :],
-        "b": (0.5 - margin[order])[None, :],
+        "a": np.repeat((0.5 + margin[order])[None, :], 2, axis=0),
+        "b": np.repeat((0.5 - margin[order])[None, :], 2, axis=0),
     }
 
 
