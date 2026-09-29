@@ -718,5 +718,6 @@ def _spawn_candidate_agent(
         backend=backend,
         model=agent_model,
         usage_label="inner:candidate",
+        stock=True,  # a subject of the experiment: none of the user's Claude setup
     )
     return success

@@ -305,6 +305,7 @@ def _spawn_critique_agent(
             backend=backend,
             model=agent_model,
             usage_label="inner:critique",
+            stock=True,  # a subject of the experiment: none of the user's Claude setup
         )
         usable = _usable_test_statistics(test_stats_dir)
         if usable:

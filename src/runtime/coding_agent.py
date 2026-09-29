@@ -152,7 +152,7 @@ def _link_opencode_credentials(inherited_data_home: Path, private_data_home: Pat
 
 
 def child_environment(
-    *, backend: str, cwd: Path, log_path: Path, env: Optional[dict]
+    *, backend: str, cwd: Path, log_path: Path, env: Optional[dict], stock: bool = False
 ) -> Dict[str, str]:
     """The environment the agent subprocess runs with.
 
@@ -165,6 +165,8 @@ def child_environment(
     """
     child = dict(os.environ if env is None else env)
     child["PWD"] = str(Path(cwd).resolve())
+    if backend == "claude" and stock:
+        child.update(STOCK_CLAUDE_ENV)
     if backend == "opencode":
         inherited = Path(child.get("XDG_DATA_HOME") or Path.home() / ".local" / "share")
         private = agent_data_home(log_path)
@@ -264,6 +266,23 @@ def prompt_via_stdin(backend: str, prompt: str) -> bool:
     return False
 
 
+# A *stock* Claude agent runs with none of the user's personal configuration:
+# no ~/.claude settings or CLAUDE.md, no plugins, no MCP servers (the user's
+# claude.ai Gmail, Drive and Calendar connectors included), and nothing written
+# back to ~/.claude. The loop's candidate and critique agents are subjects of
+# the experiment and run this way; the user's own agents (campaign driver,
+# review panel) do not. --bare would also drop all of it, but it refuses OAuth,
+# which would move the agents off the subscription onto per-token API billing.
+STOCK_CLAUDE_ARGS = (
+    "--setting-sources", "project,local",  # skips user settings and ~/.claude/CLAUDE.md
+    "--strict-mcp-config",                 # no MCP servers unless --mcp-config names them
+    "--no-session-persistence",            # no session transcripts in ~/.claude/projects
+)
+# Auto-memory has no flag; this variable removes it. With it on, every agent of
+# a cell (they share a working directory) would share one memory directory.
+STOCK_CLAUDE_ENV = {"CLAUDE_CODE_DISABLE_AUTO_MEMORY": "1"}
+
+
 def build_command(
     backend: str,
     *,
@@ -271,6 +290,7 @@ def build_command(
     allowed_dirs: list[Path],
     model: Optional[str],
     extra_args: Sequence[str] = (),
+    stock: bool = False,
 ) -> list[str]:
     """Build the CLI argv for the given backend.
 
@@ -283,7 +303,10 @@ def build_command(
     directories in the cwd's ``opencode.json``.
     ``extra_args`` are backend CLI flags appended verbatim before the prompt
     (e.g. Claude's ``--max-turns`` / ``--max-budget-usd`` / ``--disallowedTools``
-    for a long-running supervisor session).
+    for a long-running supervisor session). ``stock`` runs Claude without the
+    user's personal configuration (see ``STOCK_CLAUDE_ARGS``); codex and
+    opencode have no user-level instruction files here, so it adds nothing to
+    their command lines.
     """
     if backend not in _DEFAULT_MODEL:
         raise ValueError(f"unknown coding-agent backend: {backend!r}")
@@ -298,6 +321,8 @@ def build_command(
         ]
         for d in allowed_dirs:
             cmd += ["--add-dir", str(d)]
+        if stock:
+            cmd += STOCK_CLAUDE_ARGS
         cmd += ["--model", model, *extra_args, "-p"]
         if not prompt_via_stdin(backend, prompt):
             cmd.append(prompt)
@@ -559,8 +584,12 @@ def run_coding_agent(
     on_summary: Optional[Callable[[str], None]] = print,
     usage_label: str = "coding_agent",
     extra_args: Sequence[str] = (),
+    stock: bool = False,
 ) -> tuple[bool, str]:
     """Spawn the selected coding agent, stream output to ``log_path``.
+
+    ``stock=True`` runs a Claude agent with none of the user's personal
+    configuration (``STOCK_CLAUDE_ARGS``, ``STOCK_CLAUDE_ENV``).
 
     Returns ``(success, result_text)``. For Claude, success and the final
     result come from the terminal ``result`` stream-json event; for opencode
@@ -591,9 +620,12 @@ def run_coding_agent(
         allowed_dirs=list(allowed_dirs or []),
         model=model,
         extra_args=extra_args,
+        stock=stock,
     )
     log_path.parent.mkdir(parents=True, exist_ok=True)
-    child_env = child_environment(backend=backend, cwd=cwd, log_path=log_path, env=env)
+    child_env = child_environment(
+        backend=backend, cwd=cwd, log_path=log_path, env=env, stock=stock
+    )
     if backend == "opencode":
         granted = ensure_opencode_external_grants(cwd, list(allowed_dirs or []))
         if granted and on_summary:

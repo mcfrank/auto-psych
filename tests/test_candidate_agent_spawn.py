@@ -31,8 +31,9 @@ def _spawn(tmp_path, monkeypatch):
 
     def fake_run_coding_agent(
         prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None,
+        model=None, stock=False,
     ):
+        captured["stock"] = stock
         captured["prompt"] = prompt
         captured["cwd"] = cwd
         captured["allowed_dirs"] = list(allowed_dirs)
@@ -81,3 +82,10 @@ def test_candidate_agent_is_granted_data_and_model_dirs(tmp_path, monkeypatch):
     assert candidate_dir in allowed
     assert responses_path.parent in allowed
     assert models_dir in allowed
+
+
+def test_candidate_agent_is_a_stock_agent(tmp_path, monkeypatch):
+    """A candidate agent is a subject of the experiment, so it runs as the stock
+    CLI: none of the user's CLAUDE.md, plugins, MCP connectors or memory."""
+    captured, *_ = _spawn(tmp_path, monkeypatch)
+    assert captured["stock"] is True
