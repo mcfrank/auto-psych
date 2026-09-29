@@ -38,6 +38,7 @@ _SOURCE_FILE_ATTR = "_auto_psych_source_file"
 # Lazy heavy-library imports
 # ---------------------------------------------------------------------------
 
+
 def _import_pymc() -> Any:
     """Lazy-import ``pymc``; avoids the cost when only cache utilities are used."""
     import pymc as pm
@@ -55,6 +56,7 @@ def _import_arviz() -> Any:
 # ---------------------------------------------------------------------------
 # Module execution
 # ---------------------------------------------------------------------------
+
 
 def _exec_model_module(py_path: Path, *, mod_prefix: str) -> Any:
     """Import a model `.py` as a standalone module and return the module object.
@@ -92,6 +94,7 @@ def _exec_model_module(py_path: Path, *, mod_prefix: str) -> Any:
 # ---------------------------------------------------------------------------
 # Model loading
 # ---------------------------------------------------------------------------
+
 
 def load_pymc_model(name: str, models_dir: Path) -> Any:
     """Import ``models_dir/<name>.py`` and return its module-level ``pm.Model``.
@@ -154,6 +157,7 @@ def model_source_file(model: Any) -> Optional[Path]:
 # ---------------------------------------------------------------------------
 # Model introspection
 # ---------------------------------------------------------------------------
+
 
 def pm_data_inputs(model: Any) -> List[str]:
     """Return the names of every `pm.Data` container in the model."""

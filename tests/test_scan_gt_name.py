@@ -19,7 +19,8 @@ SCAN = here() / "scripts" / "subjective_randomness" / "slurm" / "scan_gt_name.sh
 def _scan(mode, gt, directory, out):
     return subprocess.run(
         ["bash", str(SCAN), mode, gt, str(directory), str(out)],
-        capture_output=True, text=True,
+        capture_output=True,
+        text=True,
     )
 
 

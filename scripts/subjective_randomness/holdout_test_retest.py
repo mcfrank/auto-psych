@@ -111,15 +111,21 @@ def exclusion_report(csv_paths: list[Path], runs_root: Path) -> dict:
         result_path = csv_path.with_name("holdout.json")
         pool_sizes, seed_rows = {}, []
         if result_path.exists():
-            for gt_run in json.loads(result_path.read_text(encoding="utf-8"))["gt_runs"]:
+            for gt_run in json.loads(result_path.read_text(encoding="utf-8"))[
+                "gt_runs"
+            ]:
                 pool_sizes[gt_run["gt_model"]] = gt_run["n_eval_stimuli"]
                 for name, entry in gt_run["fitted_baseline"]["per_model"].items():
                     if entry.get("n_eval_excluded", 0) > 0:
-                        seed_rows.append({
-                            "cell": cell, "gt_model": gt_run["gt_model"], "seed": name,
-                            "n_eval_excluded": entry["n_eval_excluded"],
-                            "n_eval_stimuli": gt_run["n_eval_stimuli"],
-                        })
+                        seed_rows.append(
+                            {
+                                "cell": cell,
+                                "gt_model": gt_run["gt_model"],
+                                "seed": name,
+                                "n_eval_excluded": entry["n_eval_excluded"],
+                                "n_eval_stimuli": gt_run["n_eval_stimuli"],
+                            }
+                        )
         seeds += seed_rows
         with csv_path.open(newline="", encoding="utf-8") as fh:
             reader = csv.DictReader(fh)
@@ -129,25 +135,37 @@ def exclusion_report(csv_paths: list[Path], runs_root: Path) -> dict:
             for row in reader:
                 n = int(row["n_eval_excluded"])
                 if n > 0:
-                    steps.append({
-                        "cell": cell, "gt_model": row["gt_model"],
-                        "experiment": int(row["experiment"]), "step": int(row["step"]),
-                        "global_step": int(row["global_step"]),
-                        "best_model": row["best_model"], "n_eval_excluded": n,
-                        "n_eval_stimuli": pool_sizes.get(row["gt_model"]),
-                        "models": row["eval_excluded_models"],
-                    })
-    return {"steps": steps, "fitted_seed_baseline": seeds, "cells_without_record": unrecorded}
+                    steps.append(
+                        {
+                            "cell": cell,
+                            "gt_model": row["gt_model"],
+                            "experiment": int(row["experiment"]),
+                            "step": int(row["step"]),
+                            "global_step": int(row["global_step"]),
+                            "best_model": row["best_model"],
+                            "n_eval_excluded": n,
+                            "n_eval_stimuli": pool_sizes.get(row["gt_model"]),
+                            "models": row["eval_excluded_models"],
+                        }
+                    )
+    return {
+        "steps": steps,
+        "fitted_seed_baseline": seeds,
+        "cells_without_record": unrecorded,
+    }
 
 
 def print_exclusions(exclusions: dict) -> None:
     """The exclusion report, one line per affected step or seed."""
+
     def of(entry: dict) -> str:
         pool = entry["n_eval_stimuli"]
         return f"{entry['n_eval_excluded']} of {pool if pool is not None else '?'} held-out pairs"
 
     if not exclusions["steps"] and not exclusions["fitted_seed_baseline"]:
-        print("  eval exclusions: none (every step and fitted seed scored on its whole pool)")
+        print(
+            "  eval exclusions: none (every step and fitted seed scored on its whole pool)"
+        )
     for entry in exclusions["steps"]:
         print(
             f"  eval exclusions: {entry['cell']} experiment {entry['experiment']} step "
@@ -171,7 +189,11 @@ _FITTED_FIELDS = {"pearson_r": "elpd_best_r", "rmse": "elpd_best_rmse"}
 
 
 def _finite(value) -> bool:
-    return isinstance(value, (int, float)) and not isinstance(value, bool) and np.isfinite(value)
+    return (
+        isinstance(value, (int, float))
+        and not isinstance(value, bool)
+        and np.isfinite(value)
+    )
 
 
 def loop_vs_fitted_baseline(results: dict[str, dict]) -> list[dict]:
@@ -192,22 +214,32 @@ def loop_vs_fitted_baseline(results: dict[str, dict]) -> list[dict]:
         for gt_run in result["gt_runs"]:
             ends: dict[int, dict] = {}
             for row in gt_run["trajectory"]:
-                if row["experiment"] not in ends or row["step"] >= ends[row["experiment"]]["step"]:
+                if (
+                    row["experiment"] not in ends
+                    or row["step"] >= ends[row["experiment"]]["step"]
+                ):
                     ends[row["experiment"]] = row
             final_experiment = max(ends) if ends else 0
             by_experiment = {
-                int(e["experiment"]): e for e in gt_run.get("fitted_baseline_by_experiment") or []
+                int(e["experiment"]): e
+                for e in gt_run.get("fitted_baseline_by_experiment") or []
             }
             for experiment, end in sorted(ends.items()):
                 baseline = by_experiment.get(experiment)
-                if baseline is None and not by_experiment and experiment == final_experiment:
+                if (
+                    baseline is None
+                    and not by_experiment
+                    and experiment == final_experiment
+                ):
                     baseline = gt_run.get("fitted_baseline")
                 for metric, field in _FITTED_FIELDS.items():
                     entry = by_key[(gt_run["gt_model"], experiment, metric)]
                     loop_value = end.get(metric)
                     base_value = (baseline or {}).get(field)
                     if not _finite(loop_value):
-                        entry["excluded"][cell] = f"loop {metric} undefined at the end of the experiment"
+                        entry["excluded"][cell] = (
+                            f"loop {metric} undefined at the end of the experiment"
+                        )
                     elif baseline is None:
                         entry["excluded"][cell] = (
                             "no fitted-seed baseline for this experiment (scored before "
@@ -215,7 +247,8 @@ def loop_vs_fitted_baseline(results: dict[str, dict]) -> list[dict]:
                         )
                     elif not _finite(base_value):
                         entry["excluded"][cell] = (
-                            baseline.get("elpd_best_reason") or f"fitted-seed {field} undefined"
+                            baseline.get("elpd_best_reason")
+                            or f"fitted-seed {field} undefined"
                         )
                     else:
                         entry["cells"][cell] = (float(loop_value), float(base_value))
@@ -223,15 +256,19 @@ def loop_vs_fitted_baseline(results: dict[str, dict]) -> list[dict]:
         pairs = list(entry["cells"].values())
         loop = np.array([p[0] for p in pairs])
         base = np.array([p[1] for p in pairs])
-        rows.append({
-            "gt_model": gt_model, "experiment": experiment, "metric": metric,
-            "n_cells": len(pairs),
-            "loop_mean": float(loop.mean()) if pairs else None,
-            "fitted_baseline_mean": float(base.mean()) if pairs else None,
-            "mean_difference": float((loop - base).mean()) if pairs else None,
-            "cells": sorted(entry["cells"]),
-            "excluded": dict(sorted(entry["excluded"].items())),
-        })
+        rows.append(
+            {
+                "gt_model": gt_model,
+                "experiment": experiment,
+                "metric": metric,
+                "n_cells": len(pairs),
+                "loop_mean": float(loop.mean()) if pairs else None,
+                "fitted_baseline_mean": float(base.mean()) if pairs else None,
+                "mean_difference": float((loop - base).mean()) if pairs else None,
+                "cells": sorted(entry["cells"]),
+                "excluded": dict(sorted(entry["excluded"].items())),
+            }
+        )
     return rows
 
 
@@ -337,21 +374,31 @@ def main(args: Args) -> None:
 
     found_runs = sorted(found_runs_set)
     # Expected cells without a tidy CSV (unfinished or never started).
-    missing_runs = sorted(
-        label for label in (*survey.partial, *survey.missing, *survey.complete)
-        if not (runs_root / label / args.tidy_name).exists()
-    ) if survey is not None else []
+    missing_runs = (
+        sorted(
+            label
+            for label in (*survey.partial, *survey.missing, *survey.complete)
+            if not (runs_root / label / args.tidy_name).exists()
+        )
+        if survey is not None
+        else []
+    )
 
     gt_models = sorted(per_gt)
     # Complete matrix (gt_models x runs) of the chosen metric, runs present in all.
     complete_runs = [
-        r for r in found_runs
+        r
+        for r in found_runs
         if all(per_gt[gt].get(r, {}).get("metric") is not None for gt in gt_models)
     ]
-    matrix = np.array(
-        [[per_gt[gt][r]["metric"] for r in complete_runs] for gt in gt_models],
-        dtype=float,
-    ) if (gt_models and complete_runs) else np.empty((0, 0))
+    matrix = (
+        np.array(
+            [[per_gt[gt][r]["metric"] for r in complete_runs] for gt in gt_models],
+            dtype=float,
+        )
+        if (gt_models and complete_runs)
+        else np.empty((0, 0))
+    )
 
     per_gt_summary = {}
     for gt in gt_models:
@@ -364,12 +411,20 @@ def main(args: Args) -> None:
             Counter(winners).most_common(1)[0] if winners else (None, 0)
         )
         mean = float(vals.mean()) if vals.size else None
-        sd = float(vals.std(ddof=1)) if vals.size > 1 else (0.0 if vals.size == 1 else None)
+        sd = (
+            float(vals.std(ddof=1))
+            if vals.size > 1
+            else (0.0 if vals.size == 1 else None)
+        )
         per_gt_summary[gt] = {
             "n_runs": int(vals.size),
             "mean": mean,
             "sd": sd,
-            "cv": (float(sd / mean) if (mean not in (None, 0.0) and sd is not None) else None),
+            "cv": (
+                float(sd / mean)
+                if (mean not in (None, 0.0) and sd is not None)
+                else None
+            ),
             "min": float(vals.min()) if vals.size else None,
             "max": float(vals.max()) if vals.size else None,
             "values": [round(v, 6) for v in vals.tolist()],
@@ -386,7 +441,11 @@ def main(args: Args) -> None:
                 dtype=float,
             )
             mean_v = float(vals.mean()) if vals.size else None
-            sd_v = float(vals.std(ddof=1)) if vals.size > 1 else (0.0 if vals.size == 1 else None)
+            sd_v = (
+                float(vals.std(ddof=1))
+                if vals.size > 1
+                else (0.0 if vals.size == 1 else None)
+            )
             em_per_gt[gt] = {
                 "n_runs": int(vals.size),
                 "mean": mean_v,
@@ -431,7 +490,9 @@ def main(args: Args) -> None:
         print(f"  cells missing {args.tidy_name}: {', '.join(missing_runs)}")
     for row in summary["loop_vs_fitted_baseline"]:
         if row["n_cells"] == 0:
-            print(f"  {row['gt_model']} exp{row['experiment']} {row['metric']}: no cell has both")
+            print(
+                f"  {row['gt_model']} exp{row['experiment']} {row['metric']}: no cell has both"
+            )
             continue
         print(
             f"  {row['gt_model']} end of exp{row['experiment']} {row['metric']}: loop "
@@ -441,8 +502,10 @@ def main(args: Args) -> None:
         )
     icc = summary["icc_2_1"]
     mpc = summary["mean_pairwise_corr"]
-    print(f"  ICC(2,1) = {'n/a' if icc is None else f'{icc:.3f}'}   "
-          f"mean pairwise r = {'n/a' if mpc is None else f'{mpc:.3f}'}")
+    print(
+        f"  ICC(2,1) = {'n/a' if icc is None else f'{icc:.3f}'}   "
+        f"mean pairwise r = {'n/a' if mpc is None else f'{mpc:.3f}'}"
+    )
     for gt, s in per_gt_summary.items():
         mean = s["mean"]
         sd = s["sd"]
@@ -474,16 +537,28 @@ def main(args: Args) -> None:
         with csv_path.open("w", newline="", encoding="utf-8") as fh:
             writer = csv.writer(fh)
             writer.writerow(
-                ["gt_model", "run", args.metric, *EXTRA_METRICS,
-                 "pearson_r_bma", "best_model", "global_step"]
+                [
+                    "gt_model",
+                    "run",
+                    args.metric,
+                    *EXTRA_METRICS,
+                    "pearson_r_bma",
+                    "best_model",
+                    "global_step",
+                ]
             )
             for gt in gt_models:
                 for run_name, v in sorted(per_gt[gt].items()):
                     writer.writerow(
-                        [gt, run_name, v["metric"],
-                         *(v.get(em) for em in EXTRA_METRICS),
-                         v["pearson_r_bma"],
-                         v["best_model"], v["global_step"]]
+                        [
+                            gt,
+                            run_name,
+                            v["metric"],
+                            *(v.get(em) for em in EXTRA_METRICS),
+                            v["pearson_r_bma"],
+                            v["best_model"],
+                            v["global_step"],
+                        ]
                     )
         print(f"Wrote per-run CSV to {csv_path}")
 

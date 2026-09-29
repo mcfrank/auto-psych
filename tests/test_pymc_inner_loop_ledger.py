@@ -66,7 +66,8 @@ def _patch_scoring(monkeypatch):
                 "rank": rank,
                 "elpd_loo": -10.0 - (30.0 if far else 1.0 * rank),
                 "elpd_diff": 0.0 if n == "model_a" else (30.0 if far else 1.0),
-                "dse": 0.0 if n == "model_a" else 5.0, "dse_clustered": 0.0 if n == "model_a" else 5.0,
+                "dse": 0.0 if n == "model_a" else 5.0,
+                "dse_clustered": 0.0 if n == "model_a" else 5.0,
                 "weight": 1.0 if n == "model_a" else 0.0,
                 "loo_unreliable": False,
             }
@@ -78,9 +79,7 @@ def _patch_scoring(monkeypatch):
     # _prune_losers looks up compare_table in model_zoo's namespace:
     monkeypatch.setattr(model_zoo, "compare_table", fake_compare)
     # Functions looked up in model_zoo's namespace:
-    monkeypatch.setattr(
-        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
-    )
+    monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     # The stub fit is not a real trace: pass the convergence gate.
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
@@ -89,9 +88,7 @@ def _patch_scoring(monkeypatch):
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})
     monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
     monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
-    monkeypatch.setattr(
-        model_zoo, "load_pymc_model", lambda name, models_dir: object()
-    )
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
 
 
 def _patch_candidates(monkeypatch, names_by_round, briefs, hypothesis_by_round=None):
@@ -136,7 +133,9 @@ def test_ledger_inherits_records_every_slot_and_reaches_the_next_brief(
     monkeypatch.setattr(
         model_zoo,
         "_min_prediction_rmse",
-        lambda name, *a, **k: ("model_a", 0.001) if name == "idea_two" else (None, float("inf")),
+        lambda name, *a, **k: (
+            ("model_a", 0.001) if name == "idea_two" else (None, float("inf"))
+        ),
     )
     results_dir = tmp_path / "model_loop"
 
@@ -234,7 +233,9 @@ def test_a_long_hypothesis_reaches_the_ledger_and_the_next_brief_intact(
     long_hypothesis = "\n\n".join(paragraphs) + "\n"
     assert len(long_hypothesis) > 2000
     _patch_candidates(
-        monkeypatch, {0: "idea_one", 1: "idea_two"}, briefs,
+        monkeypatch,
+        {0: "idea_one", 1: "idea_two"},
+        briefs,
         hypothesis_by_round={0: long_hypothesis},
     )
     monkeypatch.setattr(
@@ -259,6 +260,7 @@ def test_a_long_hypothesis_reaches_the_ledger_and_the_next_brief_intact(
     assert "…" not in "".join(stored)
     # The next experiment inherits this ledger; its brief lists idea_one in full.
     from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
+
     next_brief = HypothesisLedger(results_dir / LEDGER_FILENAME).render_markdown(
         live_names={"model_a", "model_b"}
     )

@@ -43,7 +43,12 @@ from typing import Dict, List, Mapping, Sequence, Tuple
 
 SYSTEM_DIRS = ("/usr", "/etc", "/share/software")
 # On merged-/usr systems (Sherlock's el7 included) these are links into /usr.
-SYSTEM_LINKS = {"/bin": "usr/bin", "/sbin": "usr/sbin", "/lib": "usr/lib", "/lib64": "usr/lib64"}
+SYSTEM_LINKS = {
+    "/bin": "usr/bin",
+    "/sbin": "usr/sbin",
+    "/lib": "usr/lib",
+    "/lib64": "usr/lib64",
+}
 SCRATCH_NAME = "scratch"  # mounted at /tmp
 HOME_NAME = ".home"  # mounted at $HOME
 HOME_REMOVAL_ATTEMPTS = 6  # about 30 s in all
@@ -56,25 +61,67 @@ HOME_REMOVAL_BACKOFF_SECS = 2.0
 # agent must not hold what it has no use for. It gets:
 # - the system basics, locale and XDG directories;
 AGENT_ENV_NAMES = frozenset(
-    {"PATH", "HOME", "USER", "LOGNAME", "SHELL", "TERM", "LANG", "LANGUAGE", "TZ",
-     "PWD", "TMPDIR"}
+    {
+        "PATH",
+        "HOME",
+        "USER",
+        "LOGNAME",
+        "SHELL",
+        "TERM",
+        "LANG",
+        "LANGUAGE",
+        "TZ",
+        "PWD",
+        "TMPDIR",
+    }
     # - the compiler toolchain PyTensor compiles models with (the gcc module's
     #   CC/CXX and its libstdc++ on LD_LIBRARY_PATH) and the thread caps;
-    | {"CC", "CXX", "LD_LIBRARY_PATH", "LIBRARY_PATH", "CPATH", "C_INCLUDE_PATH",
-       "CPLUS_INCLUDE_PATH", "PKG_CONFIG_PATH", "OMP_NUM_THREADS",
-       "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "PYTENSOR_FLAGS",
-       "PYTHONPYCACHEPREFIX"}
+    | {
+        "CC",
+        "CXX",
+        "LD_LIBRARY_PATH",
+        "LIBRARY_PATH",
+        "CPATH",
+        "C_INCLUDE_PATH",
+        "CPLUS_INCLUDE_PATH",
+        "PKG_CONFIG_PATH",
+        "OMP_NUM_THREADS",
+        "MKL_NUM_THREADS",
+        "OPENBLAS_NUM_THREADS",
+        "PYTENSOR_FLAGS",
+        "PYTHONPYCACHEPREFIX",
+    }
     # - network settings, and node's (codex is a node script);
-    | {"SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE",
-       "NODE_EXTRA_CA_CERTS", "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY",
-       "http_proxy", "https_proxy", "no_proxy", "NODE_PATH", "NODE_OPTIONS"}
+    | {
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
+        "REQUESTS_CA_BUNDLE",
+        "CURL_CA_BUNDLE",
+        "NODE_EXTRA_CA_CERTS",
+        "HTTP_PROXY",
+        "HTTPS_PROXY",
+        "NO_PROXY",
+        "http_proxy",
+        "https_proxy",
+        "no_proxy",
+        "NODE_PATH",
+        "NODE_OPTIONS",
+    }
 )
 AGENT_ENV_PREFIXES = ("LC_", "XDG_")
 # - and its own backend's login and configuration: (names, prefixes).
 BACKEND_ENV = {
     "opencode": (
-        frozenset({"GOOGLE_API_KEY", "GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY",
-                   "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPENROUTER_API_KEY"}),
+        frozenset(
+            {
+                "GOOGLE_API_KEY",
+                "GEMINI_API_KEY",
+                "GOOGLE_GENERATIVE_AI_API_KEY",
+                "ANTHROPIC_API_KEY",
+                "OPENAI_API_KEY",
+                "OPENROUTER_API_KEY",
+            }
+        ),
         ("OPENCODE_",),
     ),
     "claude": (frozenset({"DISABLE_AUTOUPDATER"}), ("CLAUDE_CODE_", "ANTHROPIC_")),
@@ -150,8 +197,11 @@ def claude_login_environment(env: Dict[str, str], mode: str | None) -> None:
     if not env.get(credential):
         raise RuntimeError(
             f"A sandboxed Claude agent billed by {mode!r} needs {credential}"
-            + (": run `claude setup-token` once and add the token to .secrets."
-               if mode == "subscription" else " in .secrets.")
+            + (
+                ": run `claude setup-token` once and add the token to .secrets."
+                if mode == "subscription"
+                else " in .secrets."
+            )
         )
     for key in list(env):
         if mode == "subscription" and key.startswith("ANTHROPIC_"):
@@ -176,7 +226,8 @@ def agent_environment(env: Mapping[str, str], backend: str) -> Dict[str, str]:
     return {
         key: value
         for key, value in env.items()
-        if key in AGENT_ENV_NAMES or key in names
+        if key in AGENT_ENV_NAMES
+        or key in names
         or key.startswith(AGENT_ENV_PREFIXES + prefixes)
     }
 

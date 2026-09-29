@@ -20,7 +20,9 @@ from src.subjective_randomness.reporting import (
 )
 
 
-def _gt_run(gt_model: str, traj_rows, *, baseline, fitted_baseline, fitted_experiment_1=None):
+def _gt_run(
+    gt_model: str, traj_rows, *, baseline, fitted_baseline, fitted_experiment_1=None
+):
     run = {
         "gt_model": gt_model,
         "trajectory": list(traj_rows),
@@ -44,14 +46,35 @@ RUN_A = {
         _gt_run(
             "m",
             [
-                {"global_step": 0, "step": 0, "experiment": 1,
-                 "pearson_r": 0.8, "rmse": 0.2, "pearson_r_bma": 0.7, "rmse_bma": 0.3},
-                {"global_step": 1, "step": 1, "experiment": 1,
-                 "pearson_r": 0.9, "rmse": 0.1, "pearson_r_bma": 0.8, "rmse_bma": 0.2},
+                {
+                    "global_step": 0,
+                    "step": 0,
+                    "experiment": 1,
+                    "pearson_r": 0.8,
+                    "rmse": 0.2,
+                    "pearson_r_bma": 0.7,
+                    "rmse_bma": 0.3,
+                },
+                {
+                    "global_step": 1,
+                    "step": 1,
+                    "experiment": 1,
+                    "pearson_r": 0.9,
+                    "rmse": 0.1,
+                    "pearson_r_bma": 0.8,
+                    "rmse_bma": 0.2,
+                },
                 # New outer experiment starts here (step 0, experiment 2). This
                 # run's correlation is undefined (None) and must be skipped.
-                {"global_step": 2, "step": 0, "experiment": 2,
-                 "pearson_r": None, "rmse": 0.05, "pearson_r_bma": None, "rmse_bma": 0.05},
+                {
+                    "global_step": 2,
+                    "step": 0,
+                    "experiment": 2,
+                    "pearson_r": None,
+                    "rmse": 0.05,
+                    "pearson_r_bma": None,
+                    "rmse_bma": 0.05,
+                },
             ],
             baseline={"mean_r": 0.5, "per_model": {"s1": 0.45, "s2": 0.55}},
             fitted_baseline={
@@ -62,7 +85,9 @@ RUN_A = {
                     "s2": {"pearson_r": 0.70, "rmse": 0.30},
                 },
                 # The ELPD-best seed is s1, though s2 is closer to the GT.
-                "elpd_best_model": "s1", "elpd_best_r": 0.55, "elpd_best_rmse": 0.35,
+                "elpd_best_model": "s1",
+                "elpd_best_r": 0.55,
+                "elpd_best_rmse": 0.35,
             },
             fitted_experiment_1={"elpd_best_r": 0.5, "elpd_best_rmse": 0.4},
         )
@@ -73,12 +98,33 @@ RUN_B = {
         _gt_run(
             "m",
             [
-                {"global_step": 0, "step": 0, "experiment": 1,
-                 "pearson_r": 0.6, "rmse": 0.4, "pearson_r_bma": 0.5, "rmse_bma": 0.5},
-                {"global_step": 1, "step": 1, "experiment": 1,
-                 "pearson_r": 1.0, "rmse": 0.0, "pearson_r_bma": 0.9, "rmse_bma": 0.1},
-                {"global_step": 2, "step": 0, "experiment": 2,
-                 "pearson_r": 0.5, "rmse": 0.05, "pearson_r_bma": 0.5, "rmse_bma": 0.05},
+                {
+                    "global_step": 0,
+                    "step": 0,
+                    "experiment": 1,
+                    "pearson_r": 0.6,
+                    "rmse": 0.4,
+                    "pearson_r_bma": 0.5,
+                    "rmse_bma": 0.5,
+                },
+                {
+                    "global_step": 1,
+                    "step": 1,
+                    "experiment": 1,
+                    "pearson_r": 1.0,
+                    "rmse": 0.0,
+                    "pearson_r_bma": 0.9,
+                    "rmse_bma": 0.1,
+                },
+                {
+                    "global_step": 2,
+                    "step": 0,
+                    "experiment": 2,
+                    "pearson_r": 0.5,
+                    "rmse": 0.05,
+                    "pearson_r_bma": 0.5,
+                    "rmse_bma": 0.05,
+                },
             ],
             baseline={"mean_r": 0.3, "per_model": {"s1": 0.35, "s2": 0.45}},
             fitted_baseline={
@@ -88,7 +134,9 @@ RUN_B = {
                     "s1": {"pearson_r": 0.50, "rmse": 0.45},
                     "s2": {"pearson_r": 0.65, "rmse": 0.40},
                 },
-                "elpd_best_model": "s2", "elpd_best_r": 0.65, "elpd_best_rmse": 0.40,
+                "elpd_best_model": "s2",
+                "elpd_best_r": 0.65,
+                "elpd_best_rmse": 0.40,
             },
             fitted_experiment_1={"elpd_best_r": 0.6, "elpd_best_rmse": 0.45},
         )
@@ -97,7 +145,9 @@ RUN_B = {
 
 
 def test_aggregate_means_and_std_per_step():
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="pearson_r", error="std")
+    agg = aggregate_holdout_trajectories(
+        [RUN_A, RUN_B], metric="pearson_r", error="std"
+    )
     assert agg["metric"] == "pearson_r"
     assert [m["gt_model"] for m in agg["gt_models"]] == ["m"]
     panel = agg["gt_models"][0]
@@ -107,7 +157,9 @@ def test_aggregate_means_and_std_per_step():
     # Aligned by experiment: experiment 1's seed step and end, experiment 2's
     # end (its only step).
     assert [(p["x"], p["experiment"], p["label"]) for p in best] == [
-        (0, 1, "seed"), (1, 1, "end"), (2, 2, "end")
+        (0, 1, "seed"),
+        (1, 1, "end"),
+        (2, 2, "end"),
     ]
     assert best[0]["mean"] == pytest.approx(0.7)
     assert best[0]["err"] == pytest.approx(0.1414213562, abs=1e-6)  # stdev([0.8, 0.6])
@@ -123,7 +175,9 @@ def test_aggregate_means_and_std_per_step():
 
 
 def test_aggregate_sem_halves_the_std_for_two_runs():
-    agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="pearson_r", error="sem")
+    agg = aggregate_holdout_trajectories(
+        [RUN_A, RUN_B], metric="pearson_r", error="sem"
+    )
     best0 = agg["gt_models"][0]["best"][0]
     # SEM = stdev / sqrt(n) = 0.14142 / sqrt(2) = 0.1
     assert best0["err"] == pytest.approx(0.1, abs=1e-6)
@@ -139,14 +193,31 @@ def test_aggregate_drops_nan_and_inf_like_none():
             _gt_run(
                 "m",
                 [
-                    {"global_step": 0, "step": 0, "experiment": 1,
-                     "pearson_r": 0.8, "rmse": 0.2, "pearson_r_bma": 0.8, "rmse_bma": 0.2},
-                    {"global_step": 1, "step": 1, "experiment": 1,
-                     "pearson_r": nan, "rmse": inf, "pearson_r_bma": nan, "rmse_bma": inf},
+                    {
+                        "global_step": 0,
+                        "step": 0,
+                        "experiment": 1,
+                        "pearson_r": 0.8,
+                        "rmse": 0.2,
+                        "pearson_r_bma": 0.8,
+                        "rmse_bma": 0.2,
+                    },
+                    {
+                        "global_step": 1,
+                        "step": 1,
+                        "experiment": 1,
+                        "pearson_r": nan,
+                        "rmse": inf,
+                        "pearson_r_bma": nan,
+                        "rmse_bma": inf,
+                    },
                 ],
                 baseline={"mean_r": 0.3, "per_model": {"s1": nan, "s2": 0.45}},
-                fitted_baseline={"per_model": {"s1": {"pearson_r": 0.5, "rmse": 0.3}},
-                                 "elpd_best_r": 0.5, "elpd_best_rmse": 0.3},
+                fitted_baseline={
+                    "per_model": {"s1": {"pearson_r": 0.5, "rmse": 0.3}},
+                    "elpd_best_r": 0.5,
+                    "elpd_best_rmse": 0.3,
+                },
             )
         ]
     }
@@ -155,18 +226,37 @@ def test_aggregate_drops_nan_and_inf_like_none():
             _gt_run(
                 "m",
                 [
-                    {"global_step": 0, "step": 0, "experiment": 1,
-                     "pearson_r": 0.6, "rmse": 0.4, "pearson_r_bma": 0.6, "rmse_bma": 0.4},
-                    {"global_step": 1, "step": 1, "experiment": 1,
-                     "pearson_r": 0.9, "rmse": 0.1, "pearson_r_bma": 0.9, "rmse_bma": 0.1},
+                    {
+                        "global_step": 0,
+                        "step": 0,
+                        "experiment": 1,
+                        "pearson_r": 0.6,
+                        "rmse": 0.4,
+                        "pearson_r_bma": 0.6,
+                        "rmse_bma": 0.4,
+                    },
+                    {
+                        "global_step": 1,
+                        "step": 1,
+                        "experiment": 1,
+                        "pearson_r": 0.9,
+                        "rmse": 0.1,
+                        "pearson_r_bma": 0.9,
+                        "rmse_bma": 0.1,
+                    },
                 ],
                 baseline={"mean_r": 0.3, "per_model": {"s1": 0.35, "s2": 0.45}},
-                fitted_baseline={"per_model": {"s1": {"pearson_r": 0.5, "rmse": 0.3}},
-                                 "elpd_best_r": 0.5, "elpd_best_rmse": 0.3},
+                fitted_baseline={
+                    "per_model": {"s1": {"pearson_r": 0.5, "rmse": 0.3}},
+                    "elpd_best_r": 0.5,
+                    "elpd_best_rmse": 0.3,
+                },
             )
         ]
     }
-    agg = aggregate_holdout_trajectories([run_bad, run_ok], metric="pearson_r", error="std")
+    agg = aggregate_holdout_trajectories(
+        [run_bad, run_ok], metric="pearson_r", error="std"
+    )
     best = {p["x"]: p for p in agg["gt_models"][0]["best"]}
     # Step 0 averages both finite values; step 1 keeps only the finite run.
     assert best[0]["mean"] == pytest.approx(0.7) and best[0]["n"] == 2
@@ -273,18 +363,36 @@ def test_round_labels_only_on_the_leftmost_panel():
             _gt_run(
                 name,
                 [
-                    {"global_step": 0, "step": 0, "experiment": 1,
-                     "pearson_r": 0.8, "rmse": 0.2, "pearson_r_bma": 0.7, "rmse_bma": 0.3},
-                    {"global_step": 1, "step": 0, "experiment": 2,
-                     "pearson_r": 0.9, "rmse": 0.1, "pearson_r_bma": 0.8, "rmse_bma": 0.2},
+                    {
+                        "global_step": 0,
+                        "step": 0,
+                        "experiment": 1,
+                        "pearson_r": 0.8,
+                        "rmse": 0.2,
+                        "pearson_r_bma": 0.7,
+                        "rmse_bma": 0.3,
+                    },
+                    {
+                        "global_step": 1,
+                        "step": 0,
+                        "experiment": 2,
+                        "pearson_r": 0.9,
+                        "rmse": 0.1,
+                        "pearson_r_bma": 0.8,
+                        "rmse_bma": 0.2,
+                    },
                 ],
                 baseline={"mean_r": 0.5, "per_model": {"s1": 0.45}},
-                fitted_baseline={"per_model": {"s1": {"pearson_r": 0.55, "rmse": 0.35}}},
+                fitted_baseline={
+                    "per_model": {"s1": {"pearson_r": 0.55, "rmse": 0.35}}
+                },
             )
             for name in ("aaa", "zzz")
         ]
     }
-    rounds = holdout_combined_frames(aggregate_holdout_trajectories([two_gt], metric="rmse"))["rounds"]
+    rounds = holdout_combined_frames(
+        aggregate_holdout_trajectories([two_gt], metric="rmse")
+    )["rounds"]
     assert set(rounds["gt_model"]) == {"aaa"}  # leftmost facet only
     assert list(rounds["round"]) == [1, 2]
 

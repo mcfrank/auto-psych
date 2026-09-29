@@ -111,9 +111,7 @@ def generate_llm_participant_rows(
                 # a missing key to "" would show the participant a blank option
                 # and record an empty sequence as if it were a real trial.
                 missing = [
-                    key
-                    for key in ("sequence_a", "sequence_b")
-                    if not stimulus.get(key)
+                    key for key in ("sequence_a", "sequence_b") if not stimulus.get(key)
                 ]
                 if missing:
                     raise ValueError(
@@ -187,9 +185,15 @@ def generate_llm_participant_rows(
             progress(participant_id, len(rows_p))
         return rows_p, unparseable, errors
 
-    results: list[tuple[list[dict[str, Any]], int, int] | None] = [None] * n_participants
+    results: list[tuple[list[dict[str, Any]], int, int] | None] = [
+        None
+    ] * n_participants
     model_limit = getattr(participant_model, "max_concurrency", max_workers)
-    if isinstance(model_limit, bool) or not isinstance(model_limit, int) or model_limit < 1:
+    if (
+        isinstance(model_limit, bool)
+        or not isinstance(model_limit, int)
+        or model_limit < 1
+    ):
         raise ValueError(
             f"participant model max_concurrency must be a positive integer, got "
             f"{model_limit!r}"
@@ -250,12 +254,17 @@ def _generate_from_pymc_models(
     def _raw_row(left: str, right: str) -> dict[str, Any]:
         return {"sequence_a": left, "sequence_b": right, "chose_left": 0}
 
-    def _p_left(model_name: str, stim_idx: int, left: str, right: str, swap: bool) -> float:
+    def _p_left(
+        model_name: str, stim_idx: int, left: str, right: str, swap: bool
+    ) -> float:
         key = (model_name, stim_idx, swap)
         if key not in p_left_cache:
             preds = prior_predict_p_left(
-                [model_name], models_dir, _raw_row(left, right),
-                n_samples=n_samples, seed=seed,
+                [model_name],
+                models_dir,
+                _raw_row(left, right),
+                n_samples=n_samples,
+                seed=seed,
             )
             p_left_cache[key] = preds[model_name]
         return p_left_cache[key]

@@ -106,17 +106,25 @@ def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
             f"candidate.py is not a loadable PyMC model: {e}"
         ) from e
 
-    fittable, reason = model_logp_is_finite(CANDIDATE_MODULE, candidate_dir, responses_path)
+    fittable, reason = model_logp_is_finite(
+        CANDIDATE_MODULE, candidate_dir, responses_path
+    )
     if not fittable:
         raise CandidateCheckFailed(f"model cannot be fit — {reason}")
 
-    violation = model_contract_violation(CANDIDATE_MODULE, candidate_dir, responses_path)
+    violation = model_contract_violation(
+        CANDIDATE_MODULE, candidate_dir, responses_path
+    )
     if violation is not None:
         raise CandidateCheckFailed(f"model breaks the data contract — {violation}")
 
     try:
         fit_model(
-            CANDIDATE_MODULE, candidate_dir, responses_path, cache_dir=None, **CHECK_FIT_KWARGS
+            CANDIDATE_MODULE,
+            candidate_dir,
+            responses_path,
+            cache_dir=None,
+            **CHECK_FIT_KWARGS,
         )
     except Exception as e:  # noqa: BLE001 — any sampling failure is the reason
         raise CandidateCheckFailed(
@@ -126,7 +134,11 @@ def run_candidate_check(candidate_dir: Path, responses_path: Path) -> str:
     # Same sampler settings ⇒ same in-process cache key ⇒ no second fit.
     try:
         elpd = log_likelihood(
-            CANDIDATE_MODULE, responses_path, candidate_dir, cache_dir=None, **CHECK_FIT_KWARGS
+            CANDIDATE_MODULE,
+            responses_path,
+            candidate_dir,
+            cache_dir=None,
+            **CHECK_FIT_KWARGS,
         )
     except Exception as e:  # noqa: BLE001 — any LOO failure is the reason
         raise CandidateCheckFailed(

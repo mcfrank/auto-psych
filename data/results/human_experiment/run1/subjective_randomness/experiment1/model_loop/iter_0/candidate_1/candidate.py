@@ -6,8 +6,10 @@ import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
+
 def compute_features(sequence_a: str, sequence_b: str) -> dict:
     """Return new numeric feature columns for one stimulus pair."""
+
     def clumpiness(seq):
         seq = seq.strip().upper()
         if not seq:
@@ -15,21 +17,22 @@ def compute_features(sequence_a: str, sequence_b: str) -> dict:
         runs = []
         current_run = 1
         for i in range(1, len(seq)):
-            if seq[i] == seq[i-1]:
+            if seq[i] == seq[i - 1]:
                 current_run += 1
             else:
                 runs.append(current_run)
                 current_run = 1
         runs.append(current_run)
-        
+
         # Proportion of items that belong to runs of length 2 or 3
         clump_items = sum(r for r in runs if r in (2, 3))
         return float(clump_items / len(seq))
-        
+
     return {
         "clumpiness_a": clumpiness(sequence_a),
-        "clumpiness_b": clumpiness(sequence_b)
+        "clumpiness_b": clumpiness(sequence_b),
     }
+
 
 with pm.Model() as model:
     # Stimulus inputs

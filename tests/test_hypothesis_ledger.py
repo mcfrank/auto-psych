@@ -23,7 +23,11 @@ from src.pipelines.inner_loop.hypothesis_ledger import (
 
 def _entry(name, outcome, detail="", hypothesis="People do X.", context="round 0"):
     return LedgerEntry(
-        name=name, outcome=outcome, detail=detail, hypothesis=hypothesis, context=context
+        name=name,
+        outcome=outcome,
+        detail=detail,
+        hypothesis=hypothesis,
+        context=context,
     )
 
 
@@ -65,7 +69,9 @@ def test_create_overwrites_a_stale_ledger_at_the_target(tmp_path):
 
 def test_entries_round_trip_every_field(tmp_path):
     ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
-    entry = _entry("m", "rejected", detail="near-duplicate of a", context="round 2 candidate 1")
+    entry = _entry(
+        "m", "rejected", detail="near-duplicate of a", context="round 2 candidate 1"
+    )
     ledger.append(entry)
     assert ledger.entries() == [entry]
     assert json.loads(ledger.path.read_text(encoding="utf-8"))["name"] == "m"
@@ -106,8 +112,13 @@ def test_retired_is_the_latest_outcome_per_name_not_in_the_live_set(tmp_path):
 def test_render_lists_retired_hypotheses_under_the_do_not_re_propose_heading(tmp_path):
     ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
     ledger.append(
-        _entry("runs", "pruned", detail="20.0 nats behind seed (4.0× dse)",
-               hypothesis="People dislike long runs.", context="experiment1 round 0")
+        _entry(
+            "runs",
+            "pruned",
+            detail="20.0 nats behind seed (4.0× dse)",
+            hypothesis="People dislike long runs.",
+            context="experiment1 round 0",
+        )
     )
     ledger.append(_entry("live", "admitted"))
 
@@ -133,8 +144,13 @@ def test_render_leaves_out_an_entry_that_recorded_no_hypothesis(tmp_path):
     """A slot whose agent wrote nothing has no hypothesis: nothing to list."""
     ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
     ledger.append(
-        _entry("empty", "rejected", detail="no candidate.py written", hypothesis="",
-               context="experiment1 round 1 candidate 2 lens 2")
+        _entry(
+            "empty",
+            "rejected",
+            detail="no candidate.py written",
+            hypothesis="",
+            context="experiment1 round 1 candidate 2 lens 2",
+        )
     )
     text = ledger.render_markdown(live_names=set())
     assert "empty" not in text
@@ -149,8 +165,13 @@ def test_render_round_trips_a_long_hypothesis_intact(tmp_path):
     )
     assert len(hypothesis) > 2000
     ledger.append(
-        _entry("big", "rejected", detail="predicts like existing model seed (rmse 0.001)",
-               hypothesis=hypothesis, context="experiment1 round 2 candidate 1 lens 1")
+        _entry(
+            "big",
+            "rejected",
+            detail="predicts like existing model seed (rmse 0.001)",
+            hypothesis=hypothesis,
+            context="experiment1 round 2 candidate 1 lens 1",
+        )
     )
 
     [entry] = ledger.entries()
@@ -183,7 +204,9 @@ def test_a_ledger_written_before_full_hypotheses_still_parses(tmp_path):
 
     [entry] = ledger.entries()
     assert entry.name == "old" and entry.hypothesis.endswith("…")
-    assert "### old — pruned (experiment1 round 0)" in ledger.render_markdown(live_names=set())
+    assert "### old — pruned (experiment1 round 0)" in ledger.render_markdown(
+        live_names=set()
+    )
 
 
 def test_render_with_nothing_retired_says_so(tmp_path):

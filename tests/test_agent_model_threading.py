@@ -33,7 +33,9 @@ def _capture_run_coding_agent(monkeypatch, target_module):
 
 def test_spawn_cc_agent_threads_model(tmp_path, monkeypatch):
     captured = _capture_run_coding_agent(monkeypatch, orch)
-    ok, _ = orch.spawn_cc_agent(agent_key="3_implement", exp_dir=tmp_path, model=AGENT_MODEL)
+    ok, _ = orch.spawn_cc_agent(
+        agent_key="3_implement", exp_dir=tmp_path, model=AGENT_MODEL
+    )
     assert ok
     assert captured["model"] == AGENT_MODEL
 

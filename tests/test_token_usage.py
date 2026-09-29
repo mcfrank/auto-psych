@@ -308,16 +308,15 @@ def test_opencode_locked_db_retries_exhaust(tmp_path, monkeypatch, _no_retry_bac
 
     assert not success
     assert "database is locked" in result
-    assert (
-        count_file.read_text().strip()
-        == str(1 + coding_agent.OPENCODE_LOCK_RETRIES)
-    )
+    assert count_file.read_text().strip() == str(1 + coding_agent.OPENCODE_LOCK_RETRIES)
     records = token_usage.records_since(marker)
     assert len(records) == 1
     assert records[0].usage_missing
 
 
-def test_opencode_other_failure_is_not_retried(tmp_path, monkeypatch, _no_retry_backoff):
+def test_opencode_other_failure_is_not_retried(
+    tmp_path, monkeypatch, _no_retry_backoff
+):
     from src.runtime.coding_agent import run_coding_agent
 
     bin_dir = tmp_path / "bin"
@@ -401,13 +400,9 @@ def test_start_usage_log_appends_across_starts(tmp_path):
     """Re-pointing the sink at the same file appends rather than truncating."""
     sink = tmp_path / "usage.jsonl"
     token_usage.start_usage_log(sink)
-    token_usage.record_usage(
-        source="a", backend="opencode", model="m", input_tokens=1
-    )
+    token_usage.record_usage(source="a", backend="opencode", model="m", input_tokens=1)
     token_usage.start_usage_log(sink)
-    token_usage.record_usage(
-        source="b", backend="opencode", model="m", input_tokens=2
-    )
+    token_usage.record_usage(source="b", backend="opencode", model="m", input_tokens=2)
     assert len(sink.read_text().splitlines()) == 2
 
 
@@ -626,7 +621,9 @@ def test_run_experiment_persists_usage_log(tmp_path, monkeypatch):
     exp_dir = tmp_path / "experiment1"
     monkeypatch.setattr(run_mod, "experiment_dir", lambda p, n: exp_dir)
     monkeypatch.setattr(
-        run_mod, "ensure_experiment_dirs", lambda d: d.mkdir(parents=True, exist_ok=True)
+        run_mod,
+        "ensure_experiment_dirs",
+        lambda d: d.mkdir(parents=True, exist_ok=True),
     )
     monkeypatch.setattr(run_mod, "init_registry", lambda d: None)
     monkeypatch.setattr(

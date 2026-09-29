@@ -20,9 +20,7 @@ def write_seed_models(tmp_path: Path, names=("model_a", "model_b")) -> Path:
     for name in names:
         (seed_dir / f"{name}.py").write_text(f"# stub {name}\n", encoding="utf-8")
     (seed_dir / "models_manifest.yaml").write_text(
-        yaml.safe_dump(
-            {"models": [{"name": name} for name in names]}, sort_keys=False
-        ),
+        yaml.safe_dump({"models": [{"name": name} for name in names]}, sort_keys=False),
         encoding="utf-8",
     )
     return seed_dir
@@ -46,8 +44,9 @@ def write_responses(tmp_path: Path) -> Path:
 def write_task_description_beside(responses: Path) -> Path:
     """The task description inner-loop agents are told, beside ``responses``."""
     path = Path(responses).parent / "task_description.md"
-    path.write_text("# The task\n\nPick the sequence that looks more random.\n",
-                    encoding="utf-8")
+    path.write_text(
+        "# The task\n\nPick the sequence that looks more random.\n", encoding="utf-8"
+    )
     return path
 
 

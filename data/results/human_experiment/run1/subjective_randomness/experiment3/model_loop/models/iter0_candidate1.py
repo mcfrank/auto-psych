@@ -7,7 +7,7 @@ import pymc as pm
 import pytensor.tensor as pt
 
 with pm.Model() as model:
-    # Stimulus inputs 
+    # Stimulus inputs
     max_run_norm_a = pm.Data("max_run_norm_a", np.zeros(1, dtype="float64"))
     max_run_norm_b = pm.Data("max_run_norm_b", np.zeros(1, dtype="float64"))
 

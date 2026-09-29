@@ -56,7 +56,8 @@ def _patch_scoring(monkeypatch):
                 "rank": rank,
                 "elpd_loo": -10.0 - 1.0 * rank,
                 "elpd_diff": 0.0 if n == "model_a" else 1.0,
-                "dse": 0.0 if n == "model_a" else 5.0, "dse_clustered": 0.0 if n == "model_a" else 5.0,
+                "dse": 0.0 if n == "model_a" else 5.0,
+                "dse_clustered": 0.0 if n == "model_a" else 5.0,
                 "weight": 1.0 if n == "model_a" else 0.0,
                 "loo_unreliable": False,
             }
@@ -65,9 +66,7 @@ def _patch_scoring(monkeypatch):
     monkeypatch.setattr(scoring, "model_posterior", fake_model_posterior)
     monkeypatch.setattr(scoring, "compare_table", fake_compare)
     monkeypatch.setattr(model_zoo, "compare_table", fake_compare)
-    monkeypatch.setattr(
-        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
-    )
+    monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     # The stub fit is not a real trace: pass the convergence gate.
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
@@ -76,9 +75,7 @@ def _patch_scoring(monkeypatch):
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})
     monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
     monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
-    monkeypatch.setattr(
-        model_zoo, "load_pymc_model", lambda name, models_dir: object()
-    )
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
     monkeypatch.setattr(
         model_zoo,
         "_min_prediction_rmse",
@@ -87,9 +84,7 @@ def _patch_scoring(monkeypatch):
 
 
 def _ledger_rows(path):
-    return [
-        json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()
-    ]
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines()]
 
 
 # ── Unit tests for _is_all_no_file_round ────────────────────────────────
@@ -141,12 +136,8 @@ def test_round_fails_then_succeeds_on_retry(tmp_path, monkeypatch):
         round_dir_name = candidate_dir.parent.name
         is_retry_dir = "_retry_" in round_dir_name
         if is_retry_dir:
-            (candidate_dir / "candidate.py").write_text(
-                "# ok\n", encoding="utf-8"
-            )
-            (candidate_dir / "hypothesis.md").write_text(
-                "test hyp\n", encoding="utf-8"
-            )
+            (candidate_dir / "candidate.py").write_text("# ok\n", encoding="utf-8")
+            (candidate_dir / "hypothesis.md").write_text("test hyp\n", encoding="utf-8")
             (candidate_dir / "model_name.txt").write_text(
                 "good_model\n", encoding="utf-8"
             )
@@ -181,12 +172,8 @@ def test_round_fails_twice_is_abandoned_loop_continues(tmp_path, monkeypatch):
     def fake_spawn(candidate_dir, docs, **kwargs):
         round_dir_name = candidate_dir.parent.name
         if round_dir_name == "iter_1":
-            (candidate_dir / "candidate.py").write_text(
-                "# ok\n", encoding="utf-8"
-            )
-            (candidate_dir / "hypothesis.md").write_text(
-                "test hyp\n", encoding="utf-8"
-            )
+            (candidate_dir / "candidate.py").write_text("# ok\n", encoding="utf-8")
+            (candidate_dir / "hypothesis.md").write_text("test hyp\n", encoding="utf-8")
             (candidate_dir / "model_name.txt").write_text(
                 "round1_model\n", encoding="utf-8"
             )
@@ -250,9 +237,7 @@ def test_ledger_records_retry_and_abandonment_with_context(tmp_path, monkeypatch
         round_dir_name = candidate_dir.parent.name
         is_round_1_first_attempt = round_dir_name == "iter_1"
         if is_round_1_first_attempt:
-            (candidate_dir / "candidate.py").write_text(
-                "# ok\n", encoding="utf-8"
-            )
+            (candidate_dir / "candidate.py").write_text("# ok\n", encoding="utf-8")
             (candidate_dir / "hypothesis.md").write_text(
                 "a hypothesis\n", encoding="utf-8"
             )

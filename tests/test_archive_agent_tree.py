@@ -18,7 +18,9 @@ from pathlib import Path
 
 import pytest
 
-SLURM_DIR = Path(__file__).resolve().parents[1] / "scripts" / "subjective_randomness" / "slurm"
+SLURM_DIR = (
+    Path(__file__).resolve().parents[1] / "scripts" / "subjective_randomness" / "slurm"
+)
 SCRIPT = SLURM_DIR / "archive_agent_tree.sh"
 
 
@@ -39,7 +41,10 @@ def _run(run_dir: Path, agent_dir: Path, path_prefix: Path | None = None):
         env["PATH"] = f"{path_prefix}:{env['PATH']}"
     return subprocess.run(
         ["bash", str(SCRIPT), "7", str(run_dir), str(agent_dir)],
-        capture_output=True, text=True, env=env, check=False,
+        capture_output=True,
+        text=True,
+        env=env,
+        check=False,
     )
 
 
@@ -47,7 +52,9 @@ def _fake_tar(tmp_path: Path, body: str) -> Path:
     bin_dir = tmp_path / "bin"
     bin_dir.mkdir()
     fake = bin_dir / "tar"
-    fake.write_text(f"#!/bin/bash\nREAL_TAR={shutil.which('tar')}\n" + body, encoding="utf-8")
+    fake.write_text(
+        f"#!/bin/bash\nREAL_TAR={shutil.which('tar')}\n" + body, encoding="utf-8"
+    )
     fake.chmod(0o755)
     return bin_dir
 
@@ -96,9 +103,13 @@ def test_an_existing_archive_is_never_overwritten(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "array", ["holdout_recovery_array.sbatch", "impossible_holdout_recovery_array.sbatch"]
+    "array",
+    ["holdout_recovery_array.sbatch", "impossible_holdout_recovery_array.sbatch"],
 )
 def test_both_arrays_archive_through_the_verified_helper(array):
     text = (SLURM_DIR / array).read_text(encoding="utf-8")
-    assert 'bash "$SLURM_DIR/archive_agent_tree.sh" "$TASK" "$RUN_DIR" "$AGENT_DIR"' in text
+    assert (
+        'bash "$SLURM_DIR/archive_agent_tree.sh" "$TASK" "$RUN_DIR" "$AGENT_DIR"'
+        in text
+    )
     assert "tar czf" not in text and 'rm -rf "$AGENT_DIR"' not in text

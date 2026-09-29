@@ -195,9 +195,7 @@ def main(args: Args) -> None:
         if value is not None
     }
 
-    agent_root = (
-        resolve_path(args.agent_root) if args.agent_root is not None else None
-    )
+    agent_root = resolve_path(args.agent_root) if args.agent_root is not None else None
 
     result = run_holdout_recovery_from_config(
         load_config(config_path),

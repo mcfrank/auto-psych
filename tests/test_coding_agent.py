@@ -51,8 +51,13 @@ def test_the_pilot_launcher_passes_the_agent_model_to_the_job():
     from tests.paths import REPO_ROOT
 
     live = REPO_ROOT / "scripts" / "outer_loop_live"
-    assert '"CODING_AGENT_MODEL": agent_model' in (live / "_pilot_config.py").read_text()
-    assert 'add CODING_AGENT_MODEL "${CODING_AGENT_MODEL:-}"' in (live / "run_pilot.sh").read_text()
+    assert (
+        '"CODING_AGENT_MODEL": agent_model' in (live / "_pilot_config.py").read_text()
+    )
+    assert (
+        'add CODING_AGENT_MODEL "${CODING_AGENT_MODEL:-}"'
+        in (live / "run_pilot.sh").read_text()
+    )
 
 
 def test_build_command_claude_uses_add_dir_and_stream_json(tmp_path):
@@ -105,7 +110,10 @@ def test_build_command_rejects_unknown_backend():
 
 def test_build_command_claude_extra_args_precede_the_prompt():
     cmd = build_command(
-        "claude", prompt="p", allowed_dirs=[], model=None,
+        "claude",
+        prompt="p",
+        allowed_dirs=[],
+        model=None,
         extra_args=["--max-turns", "50", "--disallowedTools", "Bash(scancel:*)"],
     )
     assert cmd[-1] == "p" and cmd[-2] == "-p"
@@ -116,7 +124,11 @@ def test_build_command_claude_extra_args_precede_the_prompt():
 
 def test_build_command_opencode_extra_args_precede_the_prompt():
     cmd = build_command(
-        "opencode", prompt="p", allowed_dirs=[], model=None, extra_args=["--dir", "/x"],
+        "opencode",
+        prompt="p",
+        allowed_dirs=[],
+        model=None,
+        extra_args=["--dir", "/x"],
     )
     assert cmd[-1] == "p" and "--dir" in cmd and cmd.index("--dir") < len(cmd) - 1
 
@@ -140,23 +152,64 @@ def test_long_prompt_goes_to_stdin_for_claude_and_opencode():
     from src.runtime.coding_agent import STDIN_PROMPT_THRESHOLD, prompt_via_stdin
 
     short, long = "p", "x" * (STDIN_PROMPT_THRESHOLD + 1)
-    assert build_command("claude", prompt=short, allowed_dirs=[], model=None)[-2:] == ["-p", short]
+    assert build_command("claude", prompt=short, allowed_dirs=[], model=None)[-2:] == [
+        "-p",
+        short,
+    ]
     assert build_command("claude", prompt=long, allowed_dirs=[], model=None)[-1] == "-p"
     assert prompt_via_stdin("claude", long) and not prompt_via_stdin("claude", short)
-    assert build_command("opencode", prompt=short, allowed_dirs=[], model=None)[-1] == short
-    assert long not in build_command("opencode", prompt=long, allowed_dirs=[], model=None)
-    assert prompt_via_stdin("opencode", long) and not prompt_via_stdin("opencode", short)
+    assert (
+        build_command("opencode", prompt=short, allowed_dirs=[], model=None)[-1]
+        == short
+    )
+    assert long not in build_command(
+        "opencode", prompt=long, allowed_dirs=[], model=None
+    )
+    assert prompt_via_stdin("opencode", long) and not prompt_via_stdin(
+        "opencode", short
+    )
 
 
 def test_codex_stream_reads_last_message_and_sums_usage():
     from src.runtime.coding_agent import _CodexStream
 
     stream = _CodexStream()
-    stream.feed({"type": "item.completed", "item": {"type": "agent_message", "text": "first"}})
-    stream.feed({"type": "item.completed", "item": {"type": "command_execution", "command": "ls"}})
-    stream.feed({"type": "turn.completed", "usage": {"input_tokens": 1000, "cached_input_tokens": 600, "output_tokens": 50, "reasoning_output_tokens": 20}})
-    stream.feed({"type": "item.completed", "item": {"type": "agent_message", "text": "final answer"}})
-    stream.feed({"type": "turn.completed", "usage": {"input_tokens": 500, "cached_input_tokens": 0, "output_tokens": 10}})
+    stream.feed(
+        {"type": "item.completed", "item": {"type": "agent_message", "text": "first"}}
+    )
+    stream.feed(
+        {
+            "type": "item.completed",
+            "item": {"type": "command_execution", "command": "ls"},
+        }
+    )
+    stream.feed(
+        {
+            "type": "turn.completed",
+            "usage": {
+                "input_tokens": 1000,
+                "cached_input_tokens": 600,
+                "output_tokens": 50,
+                "reasoning_output_tokens": 20,
+            },
+        }
+    )
+    stream.feed(
+        {
+            "type": "item.completed",
+            "item": {"type": "agent_message", "text": "final answer"},
+        }
+    )
+    stream.feed(
+        {
+            "type": "turn.completed",
+            "usage": {
+                "input_tokens": 500,
+                "cached_input_tokens": 0,
+                "output_tokens": 10,
+            },
+        }
+    )
     assert stream.result_text() == "final answer"
     usage = stream.usage_fields()
     assert usage["input_tokens"] == 900 and usage["cache_read_tokens"] == 600
@@ -167,27 +220,33 @@ def test_claude_stream_captures_cache_tokens():
     from src.runtime.coding_agent import _ClaudeStream
 
     stream = _ClaudeStream()
-    stream.feed({
-        "type": "assistant",
-        "message": {"usage": {
-            "input_tokens": 100,
-            "cache_creation_input_tokens": 5000,
-            "cache_read_input_tokens": 3000,
-            "output_tokens": 50,
-        }},
-    })
-    stream.feed({
-        "type": "result",
-        "subtype": "success",
-        "result": "done",
-        "total_cost_usd": 0.42,
-        "usage": {
-            "input_tokens": 100,
-            "cache_creation_input_tokens": 5000,
-            "cache_read_input_tokens": 3000,
-            "output_tokens": 50,
-        },
-    })
+    stream.feed(
+        {
+            "type": "assistant",
+            "message": {
+                "usage": {
+                    "input_tokens": 100,
+                    "cache_creation_input_tokens": 5000,
+                    "cache_read_input_tokens": 3000,
+                    "output_tokens": 50,
+                }
+            },
+        }
+    )
+    stream.feed(
+        {
+            "type": "result",
+            "subtype": "success",
+            "result": "done",
+            "total_cost_usd": 0.42,
+            "usage": {
+                "input_tokens": 100,
+                "cache_creation_input_tokens": 5000,
+                "cache_read_input_tokens": 3000,
+                "output_tokens": 50,
+            },
+        }
+    )
     assert stream.success
     usage = stream.usage_fields()
     assert usage["input_tokens"] == 100
@@ -206,7 +265,8 @@ def test_claude_stream_captures_cache_tokens():
 # would move the agents off the subscription onto per-token API billing.
 
 STOCK_CLAUDE_FLAGS = (
-    "--setting-sources", "project,local",
+    "--setting-sources",
+    "project,local",
     "--strict-mcp-config",
     "--no-session-persistence",
 )
@@ -215,10 +275,12 @@ STOCK_CLAUDE_FLAGS = (
 def test_stock_claude_agent_loads_no_user_configuration():
     cmd = build_command("claude", prompt="p", allowed_dirs=[], model=None, stock=True)
     joined = " ".join(cmd)
-    assert "--setting-sources project,local" in joined  # no ~/.claude settings or CLAUDE.md
-    assert "--strict-mcp-config" in cmd                 # no MCP servers or connectors
-    assert "--no-session-persistence" in cmd            # nothing written to ~/.claude
-    assert "--bare" not in cmd                          # keeps subscription auth
+    assert (
+        "--setting-sources project,local" in joined
+    )  # no ~/.claude settings or CLAUDE.md
+    assert "--strict-mcp-config" in cmd  # no MCP servers or connectors
+    assert "--no-session-persistence" in cmd  # nothing written to ~/.claude
+    assert "--bare" not in cmd  # keeps subscription auth
     assert cmd[-1] == "p" and cmd[-2] == "-p"
 
 
@@ -232,7 +294,11 @@ def test_stock_claude_agent_has_auto_memory_off(tmp_path):
     from src.runtime.coding_agent import child_environment
 
     stock = child_environment(
-        backend="claude", cwd=tmp_path, log_path=tmp_path / "a.jsonl", env={}, stock=True
+        backend="claude",
+        cwd=tmp_path,
+        log_path=tmp_path / "a.jsonl",
+        env={},
+        stock=True,
     )
     user = child_environment(
         backend="claude", cwd=tmp_path, log_path=tmp_path / "a.jsonl", env={}
@@ -260,8 +326,12 @@ def test_stock_claude_agent_with_a_notes_dir_keeps_its_memory_there(tmp_path):
     assert settings == {"autoMemoryDirectory": str(notes)}
     assert cmd[-1] == "p" and cmd[-2] == "-p"
     env = child_environment(
-        backend="claude", cwd=tmp_path, log_path=tmp_path / "a.jsonl", env={},
-        stock=True, memory_dir=notes,
+        backend="claude",
+        cwd=tmp_path,
+        log_path=tmp_path / "a.jsonl",
+        env={},
+        stock=True,
+        memory_dir=notes,
     )
     assert "CLAUDE_CODE_DISABLE_AUTO_MEMORY" not in env
 
@@ -286,12 +356,22 @@ def test_a_sandboxed_run_wraps_the_cli_in_the_agents_sandbox(tmp_path, monkeypat
         raise Stop
 
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
-    agent_dir, zoo, notes = tmp_path / "candidate_0", tmp_path / "models", tmp_path / "notes"
+    agent_dir, zoo, notes = (
+        tmp_path / "candidate_0",
+        tmp_path / "models",
+        tmp_path / "notes",
+    )
     with pytest.raises(Stop):
         coding_agent.run_coding_agent(
-            "p", cwd=tmp_path, log_path=agent_dir / "agent.jsonl", backend="opencode",
-            allowed_dirs=[agent_dir, zoo], writable_dirs=[agent_dir], memory_dir=notes,
-            sandbox=True, on_summary=None,
+            "p",
+            cwd=tmp_path,
+            log_path=agent_dir / "agent.jsonl",
+            backend="opencode",
+            allowed_dirs=[agent_dir, zoo],
+            writable_dirs=[agent_dir],
+            memory_dir=notes,
+            sandbox=True,
+            on_summary=None,
         )
     assert seen["cmd"][0] == "opencode"
     assert seen["backend"] == "opencode"
@@ -305,12 +385,19 @@ def test_a_sandboxed_run_must_say_what_it_may_write(tmp_path):
 
     with pytest.raises(ValueError, match="writable_dirs"):
         run_coding_agent(
-            "p", cwd=tmp_path, log_path=tmp_path / "agent.jsonl", backend="opencode",
-            allowed_dirs=[tmp_path], sandbox=True, on_summary=None,
+            "p",
+            cwd=tmp_path,
+            log_path=tmp_path / "agent.jsonl",
+            backend="opencode",
+            allowed_dirs=[tmp_path],
+            sandbox=True,
+            on_summary=None,
         )
 
 
-def test_a_sandboxed_agents_private_home_is_removed_when_it_exits(tmp_path, monkeypatch):
+def test_a_sandboxed_agents_private_home_is_removed_when_it_exits(
+    tmp_path, monkeypatch
+):
     """CLI state (codex installs ~200 files of stock skills and plugins per
     agent) goes; the agent's scratch dir, with its scripts, stays."""
     import src.runtime.coding_agent as coding_agent
@@ -320,14 +407,22 @@ def test_a_sandboxed_agents_private_home_is_removed_when_it_exits(tmp_path, monk
     def fake_sandbox_command(cmd, *, agent_dir, env, **kwargs):
         (agent_dir / ".home" / ".codex").mkdir(parents=True)
         (agent_dir / "scratch").mkdir(parents=True)
-        (agent_dir / "scratch" / "explore.py").write_text("print(1)\n", encoding="utf-8")
+        (agent_dir / "scratch" / "explore.py").write_text(
+            "print(1)\n", encoding="utf-8"
+        )
         return ["true"], dict(env)
 
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
     coding_agent.run_coding_agent(
-        "p", cwd=tmp_path, log_path=agent_dir / "agent.jsonl", backend="opencode",
-        allowed_dirs=[agent_dir], writable_dirs=[agent_dir], sandbox=True,
-        on_summary=None, timeout_secs=30,
+        "p",
+        cwd=tmp_path,
+        log_path=agent_dir / "agent.jsonl",
+        backend="opencode",
+        allowed_dirs=[agent_dir],
+        writable_dirs=[agent_dir],
+        sandbox=True,
+        on_summary=None,
+        timeout_secs=30,
     )
     assert not (agent_dir / ".home").exists()
     assert (agent_dir / "scratch" / "explore.py").exists()

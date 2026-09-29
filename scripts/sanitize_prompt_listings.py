@@ -32,11 +32,11 @@ from pyprojroot import here
 # sync with the characters actually present (the script asserts the output is
 # pure ASCII, so an unmapped character fails loudly rather than slipping through).
 SUBSTITUTIONS: dict[str, str] = {
-    "—": "--",   # — EM DASH
-    "–": "-",    # – EN DASH
+    "—": "--",  # — EM DASH
+    "–": "-",  # – EN DASH
     "…": "...",  # … HORIZONTAL ELLIPSIS
-    "≤": "<=",   # ≤ LESS-THAN OR EQUAL TO
-    "→": "->",   # → RIGHTWARDS ARROW
+    "≤": "<=",  # ≤ LESS-THAN OR EQUAL TO
+    "→": "->",  # → RIGHTWARDS ARROW
 }
 
 # Directory holding the prompt files included by appendix.tex.

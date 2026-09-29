@@ -85,22 +85,30 @@ def _stub_design(calls, stimuli=DESIGN_STIMULI):
         )
         design_dir = Path(exp_dir) / "design"
         design_dir.mkdir(parents=True, exist_ok=True)
-        (design_dir / "stimuli.json").write_text(
-            json.dumps(stimuli), encoding="utf-8"
-        )
+        (design_dir / "stimuli.json").write_text(json.dumps(stimuli), encoding="utf-8")
 
     return design
 
 
 def _stub_generate_responses(calls):
     def generate(
-        model_name, models_dir, stimuli, params, n_participants, *, seed=0,
+        model_name,
+        models_dir,
+        stimuli,
+        params,
+        n_participants,
+        *,
+        seed=0,
         participant_id_offset,
     ):
-        calls.append({
-            "model_name": model_name, "seed": seed, "params": dict(params),
-            "participant_id_offset": participant_id_offset,
-        })
+        calls.append(
+            {
+                "model_name": model_name,
+                "seed": seed,
+                "params": dict(params),
+                "participant_id_offset": participant_id_offset,
+            }
+        )
         rows = []
         for participant in range(n_participants):
             for trial_index, stim in enumerate(stimuli):
@@ -126,9 +134,11 @@ def _write_cumulative_responses(exp_dir):
     exp_num = int(exp_dir.name.removeprefix("experiment"))
     header, rows = None, []
     for k in range(1, exp_num + 1):
-        lines = (exp_dir.parent / f"experiment{k}" / "data" / "responses.csv").read_text(
-            encoding="utf-8"
-        ).splitlines()
+        lines = (
+            (exp_dir.parent / f"experiment{k}" / "data" / "responses.csv")
+            .read_text(encoding="utf-8")
+            .splitlines()
+        )
         header = lines[0]
         rows += lines[1:]
     (exp_dir / "model_loop" / "responses.csv").write_text(
@@ -142,9 +152,19 @@ def _stub_inner_loop(history_best):
     # held-out one (e.g. falk_konold_dp) when the real project seeding runs, or
     # a name from the test's own fixture manifest (e.g.
     # _complete_experiment_on_disk).
-    def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
-            backend=None, agent_model=None, cache_dir=None, project_id=None,
-            agent_timeout_sec=900, **kwargs):
+    def run(
+        exp_dir,
+        *,
+        max_iterations,
+        candidate_count,
+        fit_kwargs=None,
+        backend=None,
+        agent_model=None,
+        cache_dir=None,
+        project_id=None,
+        agent_timeout_sec=900,
+        **kwargs,
+    ):
         # Mirror the real wrapper: record the run's starting models first.
         run_starting_models(exp_dir, project_id or "subjective_randomness")
         # Mirror the real inner loop: every candidate-agent run records its
@@ -168,22 +188,49 @@ def _stub_inner_loop(history_best):
         # Mirror the real export: az.compare's stacking weights, which the
         # registry updater requires (it refuses a posterior file without them).
         comparison = {
-            history_best: {"rank": 0, "elpd_loo": -10.0, "elpd_diff": 0.0,
-                           "dse": 0.0, "weight": 0.7, "loo_unreliable": False},
-            "motif_stack": {"rank": 1, "elpd_loo": -12.0,
-                          "elpd_diff": 2.0, "dse": 1.5,
-                          "weight": 0.3, "loo_unreliable": False},
+            history_best: {
+                "rank": 0,
+                "elpd_loo": -10.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 0.7,
+                "loo_unreliable": False,
+            },
+            "motif_stack": {
+                "rank": 1,
+                "elpd_loo": -12.0,
+                "elpd_diff": 2.0,
+                "dse": 1.5,
+                "weight": 0.3,
+                "loo_unreliable": False,
+            },
         }
         history = [
-            {"step": 0, "iteration": None, "best_model": history_best,
-             "posteriors": posteriors, "elpd_loo": elpd},
-            {"step": 1, "iteration": 0, "best_model": history_best,
-             "posteriors": posteriors, "elpd_loo": elpd},
+            {
+                "step": 0,
+                "iteration": None,
+                "best_model": history_best,
+                "posteriors": posteriors,
+                "elpd_loo": elpd,
+            },
+            {
+                "step": 1,
+                "iteration": 0,
+                "best_model": history_best,
+                "posteriors": posteriors,
+                "elpd_loo": elpd,
+            },
         ]
         (loop_dir / "history.json").write_text(json.dumps(history), encoding="utf-8")
         (loop_dir / "model_posterior.json").write_text(
-            json.dumps({"posteriors": posteriors, "elpd_loo": elpd,
-                        "n_trials": 4, "comparison": comparison}),
+            json.dumps(
+                {
+                    "posteriors": posteriors,
+                    "elpd_loo": elpd,
+                    "n_trials": 4,
+                    "comparison": comparison,
+                }
+            ),
             encoding="utf-8",
         )
         (loop_dir / "report.md").write_text("# stub report\n", encoding="utf-8")
@@ -197,7 +244,9 @@ def _stub_inner_loop(history_best):
     return run
 
 
-def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monkeypatch):
+def test_holdout_recovery_from_config_end_to_end_with_stub_agents(
+    tmp_path, monkeypatch
+):
     design_calls = []
     collect_calls = []
     fit_calls = []
@@ -252,8 +301,13 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         },
         # Explicitly sampled (exhaustive is now the default): the stub test only
         # needs a small pool.
-        "eval_pool": {"n_pairs": 40, "lengths": [6], "seed": 11,
-                      "min_remaining": 5, "exhaustive": False},
+        "eval_pool": {
+            "n_pairs": 40,
+            "lengths": [6],
+            "seed": 11,
+            "min_remaining": 5,
+            "exhaustive": False,
+        },
         "fit": {"draws": 10, "tune": 10, "chains": 1},
     }
 
@@ -280,13 +334,17 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert gt_run["starting_models_prunable"] is True
     assert result["inner_loop"]["starting_models_prunable"] is True
     assert not [
-        p for p in (tmp_path / "runs").rglob("*") if "local_representativeness" in p.name
+        p
+        for p in (tmp_path / "runs").rglob("*")
+        if "local_representativeness" in p.name
     ]
 
     # The GT-params-bearing trajectory.json is written to summary_root (kept
     # OUTSIDE the agent's run tree), not into the run tree where the agent could
     # read the true parameters.
-    assert (tmp_path / "summaries" / "local_representativeness" / "trajectory.json").exists()
+    assert (
+        tmp_path / "summaries" / "local_representativeness" / "trajectory.json"
+    ).exists()
     assert not (run_root / "trajectory.json").exists()
 
     # The held-out model never enters experiment 1's seed set: the GT here,
@@ -341,9 +399,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert [row["global_step"] for row in trajectory] == [0, 1, 2, 3]
     assert [row["experiment"] for row in trajectory] == [1, 1, 2, 2]
     assert [row["iteration"] for row in trajectory] == [None, 0, None, 0]
-    assert all(
-        row["best_model"] == "falk_konold_dp" for row in trajectory
-    )
+    assert all(row["best_model"] == "falk_konold_dp" for row in trajectory)
     assert all(row["pearson_r"] == pytest.approx(1.0) for row in trajectory)
     assert all(row["rmse"] == pytest.approx(0.0) for row in trajectory)
     # The Bayesian model average (identical stub predictions) also recovers it.
@@ -370,7 +426,9 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # other registry models, so together they cover the faithful set without
     # the GT.
     assert all(c["cache_dir"] == tmp_path / "cache" for c in fit_calls)
-    assert {c["name"] for c in fit_calls} == FAITHFUL_MODEL_NAMES - {"local_representativeness"}
+    assert {c["name"] for c in fit_calls} == FAITHFUL_MODEL_NAMES - {
+        "local_representativeness"
+    }
 
     # The no-learning baseline averages the other seed models (default params)
     # against the GT; with identical stub predictions every correlation is 1.
@@ -398,9 +456,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     # The run persists its LLM token spend: one JSONL record per agent run
     # (the two stub inner-loop rounds here) plus a summary of the whole
     # recovery run.
-    usage_lines = (
-        (tmp_path / "runs" / "token_usage.jsonl").read_text().splitlines()
-    )
+    usage_lines = (tmp_path / "runs" / "token_usage.jsonl").read_text().splitlines()
     assert len(usage_lines) == 2
     usage_summary = json.loads(
         (tmp_path / "runs" / "token_usage_summary.json").read_text()
@@ -409,7 +465,6 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     assert usage_summary["total_tokens"] == 220
     assert usage_summary["by_source"]["inner:candidate"]["n_calls"] == 2
     assert "falk_konold_dp" in gt_run["experiments"][1]["manifest_models"]
-
 
 
 def test_holdout_recovery_records_whether_the_incumbent_ever_changes(
@@ -455,9 +510,18 @@ def test_holdout_recovery_records_whether_the_incumbent_ever_changes(
         "n_participants": 3,
         "seed": 5,
         "inner_loop": {"max_iterations": 1, "candidate_count": 1},
-        "agent": {"timeout_sec": 60, "backend": None, "model": "fireworks-ai/test-model"},
-        "eval_pool": {"n_pairs": 40, "lengths": [6], "seed": 11,
-                      "min_remaining": 5, "exhaustive": False},
+        "agent": {
+            "timeout_sec": 60,
+            "backend": None,
+            "model": "fireworks-ai/test-model",
+        },
+        "eval_pool": {
+            "n_pairs": 40,
+            "lengths": [6],
+            "seed": 11,
+            "min_remaining": 5,
+            "exhaustive": False,
+        },
         "fit": {"draws": 10, "tune": 10, "chains": 1},
     }
 
@@ -485,8 +549,9 @@ def test_holdout_recovery_records_whether_the_incumbent_ever_changes(
     }
     # The record persists in the cell's trajectory.json and the tidy CSV.
     on_disk = json.loads(
-        (tmp_path / "summaries" / "local_representativeness" / "trajectory.json")
-        .read_text(encoding="utf-8")
+        (
+            tmp_path / "summaries" / "local_representativeness" / "trajectory.json"
+        ).read_text(encoding="utf-8")
     )
     assert on_disk["incumbent"] == gt_run["incumbent"]
     from src.subjective_randomness.tidy import write_tidy_csv
@@ -495,7 +560,10 @@ def test_holdout_recovery_records_whether_the_incumbent_ever_changes(
     write_tidy_csv(trajectory_tidy_rows(result), tidy_path, columns=TRAJECTORY_COLUMNS)
     header = tidy_path.read_text(encoding="utf-8").splitlines()[0].split(",")
     assert header[-4:] == [
-        "incumbent_changed", "incumbent_is_discovered", "n_eval_excluded", "eval_excluded_models",
+        "incumbent_changed",
+        "incumbent_is_discovered",
+        "n_eval_excluded",
+        "eval_excluded_models",
     ]
     # Appended, never inserted: downstream readers index the older columns by position.
     assert header[5] == "best_model" and header[6] == "pearson_r"
@@ -540,8 +608,13 @@ def test_run_holdout_experiments_strips_generating_model_from_agent_facing_csv(
         reader = csv.DictReader(f)
         rows = list(reader)
     assert "generating_model" not in reader.fieldnames
-    assert {"participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"} \
-        <= set(reader.fieldnames)
+    assert {
+        "participant_id",
+        "trial_index",
+        "sequence_a",
+        "sequence_b",
+        "chose_left",
+    } <= set(reader.fieldnames)
     assert len(rows) == 2 * len(DESIGN_STIMULI)
     assert "local_representativeness" not in responses.read_text(encoding="utf-8")
 
@@ -660,8 +733,12 @@ def _complete_experiment_on_disk(run_root, exp_num, *, with_model_loop=True):
     if exp_num == 1:
         # What experiment 1's model loop records when it first runs.
         (run_root / "starting_models.json").write_text(
-            json.dumps({"starting_models": ["motif_stack", "falk_konold_dp"],
-                        "starting_models_prunable": True}),
+            json.dumps(
+                {
+                    "starting_models": ["motif_stack", "falk_konold_dp"],
+                    "starting_models_prunable": True,
+                }
+            ),
             encoding="utf-8",
         )
     design_dir = exp_dir / "design"
@@ -680,14 +757,24 @@ def _complete_experiment_on_disk(run_root, exp_num, *, with_model_loop=True):
         loop_dir = exp_dir / "model_loop"
         (loop_dir / "models").mkdir(parents=True)
         (loop_dir / "model_posterior.json").write_text(
-            json.dumps({"posteriors": {"falk_konold_dp": 1.0},
-                        "elpd_loo": {"falk_konold_dp": -1.0},
-                        "n_trials": 1,
-                        # The registry updater requires the az.compare block.
-                        "comparison": {"falk_konold_dp": {
-                            "rank": 0, "elpd_loo": -1.0, "elpd_diff": 0.0,
-                            "dse": 0.0, "weight": 1.0,
-                            "loo_unreliable": False}}}),
+            json.dumps(
+                {
+                    "posteriors": {"falk_konold_dp": 1.0},
+                    "elpd_loo": {"falk_konold_dp": -1.0},
+                    "n_trials": 1,
+                    # The registry updater requires the az.compare block.
+                    "comparison": {
+                        "falk_konold_dp": {
+                            "rank": 0,
+                            "elpd_loo": -1.0,
+                            "elpd_diff": 0.0,
+                            "dse": 0.0,
+                            "weight": 1.0,
+                            "loo_unreliable": False,
+                        }
+                    },
+                }
+            ),
             encoding="utf-8",
         )
         (loop_dir / "report.md").write_text("# done\n", encoding="utf-8")
@@ -738,12 +825,18 @@ def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
         shutil.copyfile(SEED_MODELS_DIR / f"{name}.py", exp2_models / f"{name}.py")
     (exp2_models / "models_manifest.yaml").write_text(
         yaml.safe_dump(
-            {"models": [
-                {"name": "motif_stack",
-                 "rationale": "Fair-coin diagnosticity hypothesis."},
-                {"name": "falk_konold_dp",
-                 "rationale": "Compressibility-penalty hypothesis."},
-            ]},
+            {
+                "models": [
+                    {
+                        "name": "motif_stack",
+                        "rationale": "Fair-coin diagnosticity hypothesis.",
+                    },
+                    {
+                        "name": "falk_konold_dp",
+                        "rationale": "Compressibility-penalty hypothesis.",
+                    },
+                ]
+            },
             sort_keys=False,
         ),
         encoding="utf-8",
@@ -790,9 +883,7 @@ def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
     assert loop_calls == ["experiment2"]
 
 
-def test_run_holdout_experiments_resume_wipes_partial_model_loop(
-    tmp_path, monkeypatch
-):
+def test_run_holdout_experiments_resume_wipes_partial_model_loop(tmp_path, monkeypatch):
     # A crashed inner loop leaves a partial model_loop whose manifest would be
     # reset on rerun, orphaning stale candidates; resume must wipe it (it is
     # fully regenerable — MCMC fits live in the shared cache) and rerun fresh.
@@ -842,11 +933,23 @@ def test_from_config_resume_skips_completed_gt_runs(tmp_path, monkeypatch):
         "run_root": "x",
         "n_eval_stimuli": 10,
         "n_eval_dropped": 0,
-        "trajectory": [{"experiment": 1, "step": 0, "iteration": None,
-                        "global_step": 0, "best_model": "a", "pearson_r": 0.9,
-                        "rmse": 0.1}],
-        "leakage": {"files": [], "any_identical": False, "any_mention": False,
-                    "any_gt_named": False},
+        "trajectory": [
+            {
+                "experiment": 1,
+                "step": 0,
+                "iteration": None,
+                "global_step": 0,
+                "best_model": "a",
+                "pearson_r": 0.9,
+                "rmse": 0.1,
+            }
+        ],
+        "leakage": {
+            "files": [],
+            "any_identical": False,
+            "any_mention": False,
+            "any_gt_named": False,
+        },
         "experiments": [{"experiment": 1, "manifest_models": ["a"]}],
         "starting_models_prunable": True,
     }
@@ -859,8 +962,12 @@ def test_from_config_resume_skips_completed_gt_runs(tmp_path, monkeypatch):
     def tripwire(*args, **kwargs):
         raise AssertionError("completed GT run must not re-run any work")
 
-    for seam in ("run_design_programmatic", "seed_experiment_models_from_project",
-                 "generate_responses", "run_inner_model_loop_programmatic"):
+    for seam in (
+        "run_design_programmatic",
+        "seed_experiment_models_from_project",
+        "generate_responses",
+        "run_inner_model_loop_programmatic",
+    ):
         monkeypatch.setattr(holdout_recovery, seam, tripwire)
     for seam in ("p_left_fixed_params", "fit_model"):
         monkeypatch.setattr(holdout_eval, seam, tripwire)
@@ -890,7 +997,8 @@ def test_from_config_resume_rejects_stale_trajectory_experiment_count(
     run_root.mkdir(parents=True)
     (run_root / "trajectory.json").write_text(json.dumps(stale), encoding="utf-8")
     monkeypatch.setattr(
-        holdout_recovery, "run_design_programmatic",
+        holdout_recovery,
+        "run_design_programmatic",
         lambda *a, **kw: (_ for _ in ()).throw(AssertionError("must not run")),
     )
 
@@ -944,7 +1052,11 @@ def test_build_eval_stimuli_raises_when_too_few_remain(tmp_path):
 
     with pytest.raises(ValueError, match="min_remaining"):
         build_eval_stimuli(
-            run_root, n_experiments=1, n_pairs=5, lengths=(6,), seed=11,
+            run_root,
+            n_experiments=1,
+            n_pairs=5,
+            lengths=(6,),
+            seed=11,
             min_remaining=5,
         )
 
@@ -971,7 +1083,9 @@ def _write_seeded_zoo(run_root, names=None):
     baselines load them from there); fit_model is stubbed, so they are empty."""
     models_dir = run_root / "experiment1" / "model_loop" / "models"
     models_dir.mkdir(parents=True, exist_ok=True)
-    for name in names if names is not None else holdout_data.seed_model_names(SEED_MODELS_DIR):
+    for name in (
+        names if names is not None else holdout_data.seed_model_names(SEED_MODELS_DIR)
+    ):
         (models_dir / f"{name}.py").write_text("", encoding="utf-8")
     return models_dir
 
@@ -1003,7 +1117,8 @@ def _history_step(step, iteration, best):
 def test_evaluate_trajectory_scores_every_history_step(tmp_path, monkeypatch):
     run_root = tmp_path / "run"
     _write_loop_artifacts(
-        run_root, 1,
+        run_root,
+        1,
         [_history_step(0, None, "model_a"), _history_step(1, 0, "model_b")],
     )
     _write_loop_artifacts(run_root, 2, [_history_step(0, None, "model_b")])
@@ -1137,7 +1252,9 @@ def test_evaluate_trajectory_computes_bayesian_model_average(tmp_path, monkeypat
     row = rows[0]
     # Best line is the single argmax-posterior model.
     assert row["best_model"] == "model_a"
-    assert row["pearson_r"] == pytest.approx(pearson_r(gt_p.tolist(), predictions["model_a"].tolist()))
+    assert row["pearson_r"] == pytest.approx(
+        pearson_r(gt_p.tolist(), predictions["model_a"].tolist())
+    )
     # BMA line is the posterior-weighted average over nonzero-weight models.
     bma = 0.75 * predictions["model_a"] + 0.25 * predictions["model_b"]
     assert row["pearson_r_bma"] == pytest.approx(pearson_r(gt_p.tolist(), bma.tolist()))
@@ -1170,11 +1287,10 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
     ]
     gt_p = np.array([0.3, 0.7])
 
+    monkeypatch.setattr(holdout_eval, "p_left_fixed_params", lambda *a, **k: gt_p)
     monkeypatch.setattr(
-        holdout_eval, "p_left_fixed_params", lambda *a, **k: gt_p
-    )
-    monkeypatch.setattr(
-        holdout_eval, "pm_data_inputs",
+        holdout_eval,
+        "pm_data_inputs",
         lambda model: ["participant_id", "chose_left"],
     )
     # Pass rows straight through so the fake model can read participant_id.
@@ -1182,8 +1298,10 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
 
     # p_left per (participant, stimulus): participant offsets shift the curve.
     table = {
-        (0, "HTHTHT"): 0.2, (0, "HHHTTT"): 0.8,
-        (1, "HTHTHT"): 0.4, (1, "HHHTTT"): 0.6,
+        (0, "HTHTHT"): 0.2,
+        (0, "HHHTTT"): 0.8,
+        (1, "HTHTHT"): 0.4,
+        (1, "HHHTTT"): 0.6,
     }
 
     class Fitted:
@@ -1201,7 +1319,8 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
             )
 
     monkeypatch.setattr(
-        holdout_eval, "fit_model",
+        holdout_eval,
+        "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
 
@@ -1247,7 +1366,9 @@ def _stub_baseline_fits(monkeypatch, predictions, elpd, untrusted=()):
     gt_p = np.array([0.2, 0.5, 0.9])
     fit_responses = []
     monkeypatch.setattr(holdout_eval, "p_left_fixed_params", lambda *a, **k: gt_p)
-    monkeypatch.setattr(holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)})
+    monkeypatch.setattr(
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
+    )
     monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
@@ -1260,7 +1381,9 @@ def _stub_baseline_fits(monkeypatch, predictions, elpd, untrusted=()):
             return predictions[self.name]
 
         def loo_diagnostics(self):
-            return SimpleNamespace(elpd_loo=elpd[self.name], unreliable=self.name in untrusted)
+            return SimpleNamespace(
+                elpd_loo=elpd[self.name], unreliable=self.name in untrusted
+            )
 
         def convergence_problems(self):
             return []
@@ -1275,9 +1398,15 @@ def _stub_baseline_fits(monkeypatch, predictions, elpd, untrusted=()):
 
 def _fitted_baseline(run_root, n_experiments=2):
     return fitted_seed_baseline_correlation(
-        run_root, "local_representativeness", {"theta_alt": 0.65}, EVAL_STIMULI,
-        seed_models_dir=SEED_MODELS_DIR, n_experiments=n_experiments,
-        other_seed_models=["seed_x", "seed_y"], cache_dir=None, fit_kwargs={},
+        run_root,
+        "local_representativeness",
+        {"theta_alt": 0.65},
+        EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=n_experiments,
+        other_seed_models=["seed_x", "seed_y"],
+        cache_dir=None,
+        fit_kwargs={},
     )
 
 
@@ -1322,11 +1451,14 @@ def test_the_fitted_seed_baseline_fits_the_seed_files_the_cell_was_seeded_with(
     assert fit_dirs == [run_root / "experiment1" / "model_loop" / "models"] * 2
 
 
-def test_a_seed_the_cell_was_not_seeded_with_fails_the_fitted_baseline(tmp_path, monkeypatch):
+def test_a_seed_the_cell_was_not_seeded_with_fails_the_fitted_baseline(
+    tmp_path, monkeypatch
+):
     run_root = _baseline_run(tmp_path)
     (run_root / "experiment1" / "model_loop" / "models" / "seed_y.py").unlink()
     _stub_baseline_fits(
-        monkeypatch, {"seed_x": np.zeros(3), "seed_y": np.zeros(3)},
+        monkeypatch,
+        {"seed_x": np.zeros(3), "seed_y": np.zeros(3)},
         elpd={"seed_x": -1.0, "seed_y": -1.0},
     )
     with pytest.raises(FileNotFoundError, match="seed_y"):
@@ -1355,18 +1487,22 @@ def test_an_untrusted_seed_cannot_be_the_baseline(tmp_path, monkeypatch):
     _stub_baseline_fits(
         monkeypatch,
         {"seed_x": np.array([0.2, 0.5, 0.9]), "seed_y": np.array([0.9, 0.6, 0.2])},
-        elpd={"seed_x": -10.0, "seed_y": -5.0}, untrusted={"seed_y"},
+        elpd={"seed_x": -10.0, "seed_y": -5.0},
+        untrusted={"seed_y"},
     )
     assert _fitted_baseline(run_root)["elpd_best_model"] == "seed_x"
 
 
-def test_final_responses_that_do_not_hold_every_experiment_fail_loudly(tmp_path, monkeypatch):
+def test_final_responses_that_do_not_hold_every_experiment_fail_loudly(
+    tmp_path, monkeypatch
+):
     run_root = _baseline_run(tmp_path)
     (run_root / "experiment2" / "model_loop" / "responses.csv").write_text(
         "chose_left\n1\n", encoding="utf-8"
     )
     _stub_baseline_fits(
-        monkeypatch, {"seed_x": np.zeros(3), "seed_y": np.zeros(3)},
+        monkeypatch,
+        {"seed_x": np.zeros(3), "seed_y": np.zeros(3)},
         elpd={"seed_x": -1.0, "seed_y": -1.0},
     )
     with pytest.raises(ValueError, match="every experiment"):
@@ -1393,13 +1529,18 @@ def test_seed_baseline_correlation_averages_other_seed_models(tmp_path, monkeypa
         holdout_eval,
         "resolve_generating_params",
         lambda spec, seed_models_dir, gt_family_dir=None: {
-            "gt": {"a": 1.0}, "other_a": {"a": 1.0}, "other_b": {"a": 1.0}
+            "gt": {"a": 1.0},
+            "other_a": {"a": 1.0},
+            "other_b": {"a": 1.0},
         },
     )
     seeded = _write_seeded_zoo(tmp_path / "run", ["other_a", "other_b"])
 
     out = seed_baseline_correlation(
-        "gt", {"a": 1.0}, EVAL_STIMULI, seed_models_dir=SEED_MODELS_DIR,
+        "gt",
+        {"a": 1.0},
+        EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR,
         seeded_models_dir=seeded,
     )
 
@@ -1412,7 +1553,9 @@ def test_seed_baseline_correlation_averages_other_seed_models(tmp_path, monkeypa
     assert out["mean_r"] == pytest.approx(0.0)
 
 
-def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, monkeypatch):
+def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(
+    tmp_path, monkeypatch
+):
     # Regenerating metrics for a finished run reads its on-disk history and
     # eval_stimuli, recomputes both trajectories through the cache, and returns
     # a *copy* (the input result is left untouched).
@@ -1447,7 +1590,8 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
             return gt_p
 
     monkeypatch.setattr(
-        holdout_eval, "fit_model",
+        holdout_eval,
+        "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
 
@@ -1477,22 +1621,32 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
     assert enriched["gt_runs"][0]["fitted_baseline"]["mean_r"] == pytest.approx(1.0)
     # The no-learning baseline is attached (other seeds vs. GT, all stubbed equal).
     baseline = enriched["gt_runs"][0]["baseline"]
-    assert set(baseline["per_model"]) == FAITHFUL_MODEL_NAMES - {"local_representativeness"}
+    assert set(baseline["per_model"]) == FAITHFUL_MODEL_NAMES - {
+        "local_representativeness"
+    }
     assert baseline["mean_r"] == pytest.approx(1.0)
     # The original result is not mutated.
     assert result["gt_runs"][0]["trajectory"] == [{"placeholder": True}]
 
 
-def test_reevaluate_trajectories_records_the_incumbent_trajectory(tmp_path, monkeypatch):
+def test_reevaluate_trajectories_records_the_incumbent_trajectory(
+    tmp_path, monkeypatch
+):
     """An offline re-analysis of a finished run carries the same incumbent
     record as a live run: per-step flags on every trajectory row and the
     per-cell summary, with the starting set read from experiment 1's seed
     step. Here the loop's discovered ``model_b`` takes over in experiment 2."""
     run_root = tmp_path / "runs" / "local_representativeness"
     _write_loop_artifacts(
-        run_root, 1,
-        [{**_history_step(0, None, "model_a"), "posteriors": {"model_a": 0.7, "seed_x": 0.3}},
-         _history_step(1, 0, "model_a")],
+        run_root,
+        1,
+        [
+            {
+                **_history_step(0, None, "model_a"),
+                "posteriors": {"model_a": 0.7, "seed_x": 0.3},
+            },
+            _history_step(1, 0, "model_a"),
+        ],
     )
     _write_loop_artifacts(run_root, 2, [_history_step(0, None, "model_b")])
     (run_root / "eval_stimuli.json").write_text(
@@ -1500,10 +1654,13 @@ def test_reevaluate_trajectories_records_the_incumbent_trajectory(tmp_path, monk
     )
     gt_p = np.array([0.2, 0.5, 0.9])
     monkeypatch.setattr(
-        holdout_eval, "p_left_fixed_params",
+        holdout_eval,
+        "p_left_fixed_params",
         lambda model_name, models_dir, stimuli, params, **kw: gt_p,
     )
-    monkeypatch.setattr(holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)})
+    monkeypatch.setattr(
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
+    )
     monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
@@ -1519,37 +1676,59 @@ def test_reevaluate_trajectories_records_the_incumbent_trajectory(tmp_path, monk
             return gt_p
 
     monkeypatch.setattr(
-        holdout_eval, "fit_model",
+        holdout_eval,
+        "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
     result = {
         "n_experiments": 2,
         "fit_kwargs": {},
         "seed_models_dir": str(SEED_MODELS_DIR),
-        "gt_runs": [{
-            "gt_model": "local_representativeness",
-            "params": {"theta_alt": 0.65},
-            "run_root": str(run_root),
-            "trajectory": [{"placeholder": True}],
-        }],
+        "gt_runs": [
+            {
+                "gt_model": "local_representativeness",
+                "params": {"theta_alt": 0.65},
+                "run_root": str(run_root),
+                "trajectory": [{"placeholder": True}],
+            }
+        ],
     }
 
-    enriched = reevaluate_trajectories(result, seed_models_dir=SEED_MODELS_DIR, cache_dir=None)
+    enriched = reevaluate_trajectories(
+        result, seed_models_dir=SEED_MODELS_DIR, cache_dir=None
+    )
 
     gt_run = enriched["gt_runs"][0]
-    assert [r["incumbent_changed"] for r in gt_run["trajectory"]] == [False, False, True]
-    assert [r["incumbent_is_discovered"] for r in gt_run["trajectory"]] == [False, False, True]
+    assert [r["incumbent_changed"] for r in gt_run["trajectory"]] == [
+        False,
+        False,
+        True,
+    ]
+    assert [r["incumbent_is_discovered"] for r in gt_run["trajectory"]] == [
+        False,
+        False,
+        True,
+    ]
     assert gt_run["incumbent"] == {
         "starting_models": ["model_a", "seed_x"],
         "n_steps": 3,
         "n_incumbent_changes": 1,
         "n_steps_discovered_incumbent": 1,
         "final_incumbent": "model_b",
-        "changes": [{"global_step": 2, "experiment": 2, "step": 0,
-                     "from": "model_a", "to": "model_b"}],
+        "changes": [
+            {
+                "global_step": 2,
+                "experiment": 2,
+                "step": 0,
+                "from": "model_a",
+                "to": "model_b",
+            }
+        ],
     }
     # Every trajectory row carries every tidy column, new ones included.
-    assert all(set(TRAJECTORY_COLUMNS) - {"gt_model"} <= set(r) for r in gt_run["trajectory"])
+    assert all(
+        set(TRAJECTORY_COLUMNS) - {"gt_model"} <= set(r) for r in gt_run["trajectory"]
+    )
 
 
 def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeypatch):
@@ -1594,7 +1773,8 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
             return np.linspace(0.1, 0.9, stim_data["n"])
 
     monkeypatch.setattr(
-        holdout_eval, "fit_model",
+        holdout_eval,
+        "fit_model",
         lambda name, models_dir, responses_path, **kw: Fitted(),
     )
 
@@ -1603,8 +1783,12 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
         "n_experiments": 1,
         "fit_kwargs": {},
         "seed_models_dir": str(SEED_MODELS_DIR),
-        "eval_pool": {"n_pairs": 500, "lengths": [6, 8], "seed": 11,
-                      "exhaustive": False},
+        "eval_pool": {
+            "n_pairs": 500,
+            "lengths": [6, 8],
+            "seed": 11,
+            "exhaustive": False,
+        },
         "gt_runs": [
             {
                 "gt_model": "local_representativeness",
@@ -1687,7 +1871,9 @@ def test_leakage_check_flags_identical_file(tmp_path):
     _make_model_dirs(run_root, 1, {"sneaky_copy.py": gt_source})
 
     result = leakage_check(
-        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
+        run_root,
+        "local_representativeness",
+        seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_identical"] is True
@@ -1697,12 +1883,12 @@ def test_leakage_check_flags_identical_file(tmp_path):
 
 def test_leakage_check_flags_distinctive_param_mentions(tmp_path):
     run_root = tmp_path / "run"
-    _make_model_dirs(
-        run_root, 1, {"candidate.py": "# uses theta_alt as a parameter\n"}
-    )
+    _make_model_dirs(run_root, 1, {"candidate.py": "# uses theta_alt as a parameter\n"})
 
     result = leakage_check(
-        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
+        run_root,
+        "local_representativeness",
+        seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_mention"] is True
@@ -1714,7 +1900,9 @@ def test_leakage_check_flags_gt_named_file(tmp_path):
     _make_model_dirs(run_root, 1, {"local_representativeness.py": "# innocuous body\n"})
 
     result = leakage_check(
-        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
+        run_root,
+        "local_representativeness",
+        seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_gt_named"] is True
@@ -1727,7 +1915,9 @@ def test_leakage_check_clean_run_unflagged(tmp_path):
     _make_model_dirs(run_root, 1, {"candidate.py": "# beta and side_bias only\n"})
 
     result = leakage_check(
-        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
+        run_root,
+        "local_representativeness",
+        seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_identical"] is False
@@ -1752,8 +1942,12 @@ def test_leakage_check_flags_hardcoded_gt_param_value(tmp_path):
     _make_model_dirs(run_root, 1, {"candidate.py": "p = _viterbi(seq, 0.5493)\n"})
 
     result = leakage_check(
-        run_root, "secret_gt", seed_models_dir=SEED_MODELS_DIR, n_experiments=1,
-        gt_models_dir=gt_dir, gt_family_dir=fam_dir,
+        run_root,
+        "secret_gt",
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        gt_models_dir=gt_dir,
+        gt_family_dir=fam_dir,
     )
     assert result["any_value_mention"] is True
     assert result["any_identical"] is False
@@ -1809,12 +2003,16 @@ def test_from_config_rejects_zero_overrides(tmp_path, monkeypatch):
     }
     with pytest.raises(ValueError, match="n_experiments"):
         run_holdout_recovery_from_config(
-            config, tmp_path / "config.yaml", tmp_path / "runs",
+            config,
+            tmp_path / "config.yaml",
+            tmp_path / "runs",
             n_experiments_override=0,
         )
     with pytest.raises(ValueError, match="n_participants"):
         run_holdout_recovery_from_config(
-            config, tmp_path / "config.yaml", tmp_path / "runs",
+            config,
+            tmp_path / "config.yaml",
+            tmp_path / "runs",
             n_participants_override=0,
         )
 
@@ -1828,24 +2026,52 @@ def test_trajectory_tidy_rows_one_row_per_step():
             {
                 "gt_model": "local_representativeness",
                 "trajectory": [
-                    {"experiment": 1, "step": 0, "iteration": None,
-                     "global_step": 0, "best_model": "a", "pearson_r": 0.5,
-                     "rmse": 0.1, "kl_regret": 0.01, "bias": 0.02,
-                     "calib_slope": 1.0, "calib_intercept": 0.0,
-                     "pearson_r_bma": 0.6, "rmse_bma": 0.08,
-                     "kl_regret_bma": 0.005, "bias_bma": 0.01,
-                     "calib_slope_bma": 0.99, "calib_intercept_bma": 0.01,
-                     "incumbent_changed": False, "incumbent_is_discovered": False,
-                     "n_eval_excluded": 0, "eval_excluded_models": []},
-                    {"experiment": 1, "step": 1, "iteration": 0,
-                     "global_step": 1, "best_model": "b", "pearson_r": None,
-                     "rmse": 0.2, "kl_regret": 0.05, "bias": -0.01,
-                     "calib_slope": 0.8, "calib_intercept": 0.1,
-                     "pearson_r_bma": None, "rmse_bma": 0.2,
-                     "kl_regret_bma": 0.04, "bias_bma": -0.005,
-                     "calib_slope_bma": 0.85, "calib_intercept_bma": 0.08,
-                     "incumbent_changed": True, "incumbent_is_discovered": True,
-                     "n_eval_excluded": 2, "eval_excluded_models": ["b"]},
+                    {
+                        "experiment": 1,
+                        "step": 0,
+                        "iteration": None,
+                        "global_step": 0,
+                        "best_model": "a",
+                        "pearson_r": 0.5,
+                        "rmse": 0.1,
+                        "kl_regret": 0.01,
+                        "bias": 0.02,
+                        "calib_slope": 1.0,
+                        "calib_intercept": 0.0,
+                        "pearson_r_bma": 0.6,
+                        "rmse_bma": 0.08,
+                        "kl_regret_bma": 0.005,
+                        "bias_bma": 0.01,
+                        "calib_slope_bma": 0.99,
+                        "calib_intercept_bma": 0.01,
+                        "incumbent_changed": False,
+                        "incumbent_is_discovered": False,
+                        "n_eval_excluded": 0,
+                        "eval_excluded_models": [],
+                    },
+                    {
+                        "experiment": 1,
+                        "step": 1,
+                        "iteration": 0,
+                        "global_step": 1,
+                        "best_model": "b",
+                        "pearson_r": None,
+                        "rmse": 0.2,
+                        "kl_regret": 0.05,
+                        "bias": -0.01,
+                        "calib_slope": 0.8,
+                        "calib_intercept": 0.1,
+                        "pearson_r_bma": None,
+                        "rmse_bma": 0.2,
+                        "kl_regret_bma": 0.04,
+                        "bias_bma": -0.005,
+                        "calib_slope_bma": 0.85,
+                        "calib_intercept_bma": 0.08,
+                        "incumbent_changed": True,
+                        "incumbent_is_discovered": True,
+                        "n_eval_excluded": 2,
+                        "eval_excluded_models": ["b"],
+                    },
                 ],
             }
         ]
@@ -1868,27 +2094,63 @@ def test_plot_holdout_trajectories_writes_png(tmp_path):
             {
                 "gt_model": "local_representativeness",
                 "baseline": {"mean_r": 0.55, "per_model": {"a": 0.5, "b": 0.6}},
-                "fitted_baseline": {"mean_r": 0.8, "mean_rmse": 0.07,
-                                    "per_model": {}, "n_responses": 100},
+                "fitted_baseline": {
+                    "mean_r": 0.8,
+                    "mean_rmse": 0.07,
+                    "per_model": {},
+                    "n_responses": 100,
+                },
                 "trajectory": [
-                    {"experiment": 1, "step": 0, "iteration": None,
-                     "global_step": 0, "best_model": "a", "pearson_r": 0.4,
-                     "rmse": 0.2, "pearson_r_bma": 0.5, "rmse_bma": 0.18},
-                    {"experiment": 2, "step": 0, "iteration": None,
-                     "global_step": 1, "best_model": "a", "pearson_r": None,
-                     "rmse": 0.3, "pearson_r_bma": None, "rmse_bma": 0.3},
-                    {"experiment": 2, "step": 1, "iteration": 0,
-                     "global_step": 2, "best_model": "b", "pearson_r": 0.9,
-                     "rmse": 0.05, "pearson_r_bma": 0.95, "rmse_bma": 0.03},
+                    {
+                        "experiment": 1,
+                        "step": 0,
+                        "iteration": None,
+                        "global_step": 0,
+                        "best_model": "a",
+                        "pearson_r": 0.4,
+                        "rmse": 0.2,
+                        "pearson_r_bma": 0.5,
+                        "rmse_bma": 0.18,
+                    },
+                    {
+                        "experiment": 2,
+                        "step": 0,
+                        "iteration": None,
+                        "global_step": 1,
+                        "best_model": "a",
+                        "pearson_r": None,
+                        "rmse": 0.3,
+                        "pearson_r_bma": None,
+                        "rmse_bma": 0.3,
+                    },
+                    {
+                        "experiment": 2,
+                        "step": 1,
+                        "iteration": 0,
+                        "global_step": 2,
+                        "best_model": "b",
+                        "pearson_r": 0.9,
+                        "rmse": 0.05,
+                        "pearson_r_bma": 0.95,
+                        "rmse_bma": 0.03,
+                    },
                 ],
             },
             {
                 "gt_model": "falk_konold_dp",
                 # No baseline keys: the plot must tolerate their absence.
                 "trajectory": [
-                    {"experiment": 1, "step": 0, "iteration": None,
-                     "global_step": 0, "best_model": "c", "pearson_r": 0.7,
-                     "rmse": 0.1, "pearson_r_bma": 0.72, "rmse_bma": 0.09},
+                    {
+                        "experiment": 1,
+                        "step": 0,
+                        "iteration": None,
+                        "global_step": 0,
+                        "best_model": "c",
+                        "pearson_r": 0.7,
+                        "rmse": 0.1,
+                        "pearson_r_bma": 0.72,
+                        "rmse_bma": 0.09,
+                    },
                 ],
             },
         ]
@@ -1969,8 +2231,13 @@ def _knob_config(inner_loop):
         "seed": 5,
         "inner_loop": inner_loop,
         "agent": {"timeout_sec": 60, "backend": None, "model": "test/model"},
-        "eval_pool": {"n_pairs": 40, "lengths": [6], "seed": 11,
-                      "min_remaining": 5, "exhaustive": False},
+        "eval_pool": {
+            "n_pairs": 40,
+            "lengths": [6],
+            "seed": 11,
+            "min_remaining": 5,
+            "exhaustive": False,
+        },
         "fit": {"draws": 10, "tune": 10, "chains": 1},
     }
 
@@ -1984,7 +2251,11 @@ def test_novelty_rmse_threshold_threads_from_config_to_the_inner_loop(
         tmp_path,
         monkeypatch,
         _knob_config(
-            {"max_iterations": 1, "candidate_count": 1, "novelty_rmse_threshold": 0.0123}
+            {
+                "max_iterations": 1,
+                "candidate_count": 1,
+                "novelty_rmse_threshold": 0.0123,
+            }
         ),
     )
     assert [k["novelty_rmse_threshold"] for k in inner_loop_kwargs] == [0.0123]
@@ -2002,7 +2273,9 @@ def test_novelty_rmse_threshold_defaults_to_the_inner_loop_default(
     assert [k["novelty_rmse_threshold"] for k in inner_loop_kwargs] == [
         DEFAULT_NOVELTY_RMSE_THRESHOLD
     ]
-    assert result["inner_loop"]["novelty_rmse_threshold"] == DEFAULT_NOVELTY_RMSE_THRESHOLD
+    assert (
+        result["inner_loop"]["novelty_rmse_threshold"] == DEFAULT_NOVELTY_RMSE_THRESHOLD
+    )
 
 
 def test_novelty_rmse_threshold_cli_override_beats_the_config(tmp_path, monkeypatch):
@@ -2010,7 +2283,11 @@ def test_novelty_rmse_threshold_cli_override_beats_the_config(tmp_path, monkeypa
         tmp_path,
         monkeypatch,
         _knob_config(
-            {"max_iterations": 1, "candidate_count": 1, "novelty_rmse_threshold": 0.0123}
+            {
+                "max_iterations": 1,
+                "candidate_count": 1,
+                "novelty_rmse_threshold": 0.0123,
+            }
         ),
         inner_loop_overrides={"novelty_rmse_threshold": 0.5},
     )
@@ -2024,7 +2301,11 @@ def test_negative_novelty_rmse_threshold_is_rejected(tmp_path, monkeypatch):
             tmp_path,
             monkeypatch,
             _knob_config(
-                {"max_iterations": 1, "candidate_count": 1, "novelty_rmse_threshold": -0.1}
+                {
+                    "max_iterations": 1,
+                    "candidate_count": 1,
+                    "novelty_rmse_threshold": -0.1,
+                }
             ),
         )
 
@@ -2068,23 +2349,40 @@ def test_holdout_cli_defaults_and_overrides():
     full = tyro.cli(
         args_cls,
         args=[
-            "--config", "c.yaml",
-            "--out", "h.json",
-            "--tidy-csv", "h.csv",
-            "--figure", "h.png",
-            "--gt-model", "local_representativeness",
-            "--n-experiments", "2",
-            "--n-participants", "10",
-            "--inner-loop-iterations", "1",
-            "--inner-loop-candidates", "2",
-            "--draws", "100",
-            "--tune", "100",
-            "--chains", "2",
-            "--seed", "3",
-            "--agent-timeout-sec", "300",
-            "--backend", "claude",
-            "--novelty-rmse-threshold", "0.005",
-            "--n-critique-proposals", "5",
+            "--config",
+            "c.yaml",
+            "--out",
+            "h.json",
+            "--tidy-csv",
+            "h.csv",
+            "--figure",
+            "h.png",
+            "--gt-model",
+            "local_representativeness",
+            "--n-experiments",
+            "2",
+            "--n-participants",
+            "10",
+            "--inner-loop-iterations",
+            "1",
+            "--inner-loop-candidates",
+            "2",
+            "--draws",
+            "100",
+            "--tune",
+            "100",
+            "--chains",
+            "2",
+            "--seed",
+            "3",
+            "--agent-timeout-sec",
+            "300",
+            "--backend",
+            "claude",
+            "--novelty-rmse-threshold",
+            "0.005",
+            "--n-critique-proposals",
+            "5",
             "--resume",
         ],
     )
@@ -2118,9 +2416,12 @@ def test_holdout_cli_forwards_novelty_threshold_as_an_inner_loop_override(
     args = tyro.cli(
         mod.Args,
         args=[
-            "--config", str(tmp_path / "c.yaml"),
-            "--out", str(tmp_path / "h.json"),
-            "--novelty-rmse-threshold", "0.004",
+            "--config",
+            str(tmp_path / "c.yaml"),
+            "--out",
+            str(tmp_path / "h.json"),
+            "--novelty-rmse-threshold",
+            "0.004",
         ],
     )
     mod.main(args)
@@ -2156,12 +2457,18 @@ def test_plot_holdout_cli_defaults_derive_from_result_path():
     full = tyro.cli(
         args_cls,
         args=[
-            "--result", "x/holdout.json",
-            "--figure", "x/holdout.png",
-            "--tidy-csv", "x/holdout.csv",
-            "--out", "x/holdout.json",
-            "--cache-dir", "x/mcmc_cache",
-            "--seed-models-dir", "seeds",
+            "--result",
+            "x/holdout.json",
+            "--figure",
+            "x/holdout.png",
+            "--tidy-csv",
+            "x/holdout.csv",
+            "--out",
+            "x/holdout.json",
+            "--cache-dir",
+            "x/mcmc_cache",
+            "--seed-models-dir",
+            "seeds",
         ],
     )
     assert full.figure == Path("x/holdout.png")
@@ -2296,11 +2603,15 @@ def _make_agent_csv(run_root, exp_num, header, *, name="responses.csv", sub="dat
     csv_dir = run_root / f"experiment{exp_num}" / sub
     csv_dir.mkdir(parents=True, exist_ok=True)
     path = csv_dir / name
-    path.write_text(f"{header}\n" + "0," * (header.count(",")) + "0\n", encoding="utf-8")
+    path.write_text(
+        f"{header}\n" + "0," * (header.count(",")) + "0\n", encoding="utf-8"
+    )
     return path
 
 
-def test_leakage_check_flags_a_generating_model_column_in_any_agent_facing_csv(tmp_path):
+def test_leakage_check_flags_a_generating_model_column_in_any_agent_facing_csv(
+    tmp_path,
+):
     """The held-out model's NAME is the leak iteration 2 closed at the writer;
     the audit must catch it coming back, in the design CSV or the pooled one."""
     run_root = tmp_path / "run"
@@ -2309,7 +2620,9 @@ def test_leakage_check_flags_a_generating_model_column_in_any_agent_facing_csv(t
     _make_agent_csv(run_root, 1, "sequence_a,chose_left", sub="model_loop")
 
     result = leakage_check(
-        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
+        run_root,
+        "local_representativeness",
+        seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_csv_generating_model"] is True
@@ -2323,7 +2636,9 @@ def test_leakage_check_leaves_a_stripped_csv_unflagged(tmp_path):
     _make_agent_csv(run_root, 1, "sequence_a,chose_left,participant_id")
 
     result = leakage_check(
-        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
+        run_root,
+        "local_representativeness",
+        seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_csv_generating_model"] is False
@@ -2352,8 +2667,11 @@ def test_leakage_check_flags_the_held_out_name_in_a_checkout_manifest(tmp_path):
     )
 
     result = leakage_check(
-        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
-        n_experiments=1, checkout_root=checkout,
+        run_root,
+        "local_representativeness",
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        checkout_root=checkout,
     )
     assert result["any_manifest_gt_named"] is True
     assert result["manifest_gt_named_files"] == ["seed_models/models_manifest.yaml"]
@@ -2366,7 +2684,9 @@ def test_leakage_check_without_a_checkout_root_reports_the_manifest_channel_unch
     _make_model_dirs(run_root, 1, {"candidate.py": "# clean\n"})
 
     result = leakage_check(
-        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
+        run_root,
+        "local_representativeness",
+        seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     assert result["any_manifest_gt_named"] is None
@@ -2390,7 +2710,9 @@ def test_leakage_check_records_the_featurizer_columns_each_model_reads(tmp_path)
     )
 
     result = leakage_check(
-        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
+        run_root,
+        "local_representativeness",
+        seed_models_dir=SEED_MODELS_DIR,
         n_experiments=1,
     )
     by_name = {Path(f["path"]).name: f for f in result["files"]}
@@ -2420,8 +2742,11 @@ def test_leakage_check_manifest_scan_ignores_the_loops_own_output_manifests(tmp_
     )
 
     result = leakage_check(
-        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
-        n_experiments=1, checkout_root=checkout,
+        run_root,
+        "local_representativeness",
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        checkout_root=checkout,
     )
     assert result["any_manifest_gt_named"] is False
     assert result["manifest_gt_named_files"] == []
@@ -2453,13 +2778,18 @@ def test_leakage_check_flags_gt_in_opposite_feature_regime_manifest(tmp_path):
     )
 
     result = leakage_check(
-        run_root, "local_representativeness", seed_models_dir=SEED_MODELS_DIR,
-        n_experiments=1, checkout_root=checkout,
+        run_root,
+        "local_representativeness",
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        checkout_root=checkout,
     )
     assert result["any_manifest_gt_named"] is True
     assert len(result["manifest_gt_named_files"]) == 2
     assert "seed_models/models_manifest.yaml" in result["manifest_gt_named_files"]
-    assert "pymc_model_families/models_manifest.yaml" in result["manifest_gt_named_files"]
+    assert (
+        "pymc_model_families/models_manifest.yaml" in result["manifest_gt_named_files"]
+    )
 
 
 # ── raw-only responses ────────────────────────────────────────
@@ -2502,8 +2832,13 @@ def test_agent_csv_has_only_raw_columns(tmp_path, monkeypatch):
 def test_strip_to_raw_columns_keeps_only_the_raw_five():
     rows = [
         {
-            "sequence_a": "HTHT", "sequence_b": "HHTT", "participant_id": 0,
-            "trial_index": 3, "chose_left": 1, "p_alts_a": 1.0, "occ_n20_b": 0.5,
+            "sequence_a": "HTHT",
+            "sequence_b": "HHTT",
+            "participant_id": 0,
+            "trial_index": 3,
+            "chose_left": 1,
+            "p_alts_a": 1.0,
+            "occ_n20_b": 0.5,
         }
     ]
     (stripped,) = holdout_data.strip_to_raw_columns(rows)
@@ -2526,9 +2861,15 @@ def test_trajectory_tidy_rows_accepts_legacy_rows_without_new_metrics():
     values; the missing keys simply won't be in the resulting row dicts.
     """
     legacy_entry = {
-        "experiment": 1, "step": 0, "iteration": None, "global_step": 0,
-        "best_model": "a", "pearson_r": 0.5, "rmse": 0.1,
-        "pearson_r_bma": 0.6, "rmse_bma": 0.08,
+        "experiment": 1,
+        "step": 0,
+        "iteration": None,
+        "global_step": 0,
+        "best_model": "a",
+        "pearson_r": 0.5,
+        "rmse": 0.1,
+        "pearson_r_bma": 0.6,
+        "rmse_bma": 0.08,
     }
     result = {"gt_runs": [{"gt_model": "gt", "trajectory": [legacy_entry]}]}
     rows = trajectory_tidy_rows(result)
@@ -2637,9 +2978,7 @@ def test_n_critique_proposals_threads_from_config_to_the_inner_loop(
     assert result["inner_loop"]["n_critique_proposals"] == 5
 
 
-def test_n_critique_proposals_defaults_to_the_inner_loop_default(
-    tmp_path, monkeypatch
-):
+def test_n_critique_proposals_defaults_to_the_inner_loop_default(tmp_path, monkeypatch):
     result, inner_loop_kwargs = _stubbed_config_run(
         tmp_path,
         monkeypatch,
@@ -2692,16 +3031,21 @@ def test_holdout_cli_forwards_n_critique_proposals_as_an_inner_loop_override(
     args = tyro.cli(
         mod.Args,
         args=[
-            "--config", str(tmp_path / "c.yaml"),
-            "--out", str(tmp_path / "h.json"),
-            "--n-critique-proposals", "6",
+            "--config",
+            str(tmp_path / "c.yaml"),
+            "--out",
+            str(tmp_path / "h.json"),
+            "--n-critique-proposals",
+            "6",
         ],
     )
     mod.main(args)
     assert captured["inner_loop_overrides"] == {"n_critique_proposals": 6}
 
 
-def test_pairs_where_a_model_is_undefined_are_excluded_and_logged(tmp_path, monkeypatch):
+def test_pairs_where_a_model_is_undefined_are_excluded_and_logged(
+    tmp_path, monkeypatch
+):
     """A model can produce p_left that is not a probability on held-out pairs
     unlike any it was trained on (a Opus 5.5 cell lost 15 hours to one at its
     final evaluation). Those pairs are dropped from that step's metrics — the
@@ -2715,7 +3059,9 @@ def test_pairs_where_a_model_is_undefined_are_excluded_and_logged(tmp_path, monk
     _write_loop_artifacts(run_root, 1, [_history_step(0, None, "model_b")])
     gt_p = np.array([0.2, 0.5, 0.9])
     monkeypatch.setattr(holdout_eval, "p_left_fixed_params", lambda *a, **k: gt_p)
-    monkeypatch.setattr(holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)})
+    monkeypatch.setattr(
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
+    )
     monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
@@ -2723,15 +3069,23 @@ def test_pairs_where_a_model_is_undefined_are_excluded_and_logged(tmp_path, monk
 
         def predict_p_left(self, stim_data):
             draws = np.array([[0.2, np.nan, 0.9], [0.2, 0.4, 0.9]])
-            raise InvalidPredictions("p_left values must be finite and in [0, 1]", draws)
+            raise InvalidPredictions(
+                "p_left values must be finite and in [0, 1]", draws
+            )
 
     monkeypatch.setattr(holdout_eval, "fit_model", lambda *a, **k: Fitted())
     log = tmp_path / "eval_exclusions.jsonl"
 
     [row] = evaluate_trajectory(
-        run_root, "local_representativeness", {"theta_alt": 0.65}, EVAL_STIMULI,
-        seed_models_dir=SEED_MODELS_DIR, n_experiments=1, cache_dir=None,
-        fit_kwargs={}, exclusions_log=log,
+        run_root,
+        "local_representativeness",
+        {"theta_alt": 0.65},
+        EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        cache_dir=None,
+        fit_kwargs={},
+        exclusions_log=log,
     )
 
     assert row["n_eval_excluded"] == 1
@@ -2759,8 +3113,12 @@ def test_an_excluded_step_is_announced_in_the_cells_log(tmp_path, monkeypatch, c
 
     run_root = tmp_path / "run"
     _write_loop_artifacts(run_root, 1, [_history_step(0, None, "model_b")])
-    monkeypatch.setattr(holdout_eval, "p_left_fixed_params", lambda *a, **k: np.array([0.2, 0.5, 0.9]))
-    monkeypatch.setattr(holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)})
+    monkeypatch.setattr(
+        holdout_eval, "p_left_fixed_params", lambda *a, **k: np.array([0.2, 0.5, 0.9])
+    )
+    monkeypatch.setattr(
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
+    )
     monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
@@ -2771,8 +3129,14 @@ def test_an_excluded_step_is_announced_in_the_cells_log(tmp_path, monkeypatch, c
 
     monkeypatch.setattr(holdout_eval, "fit_model", lambda *a, **k: Fitted())
     evaluate_trajectory(
-        run_root, "local_representativeness", {"theta_alt": 0.65}, EVAL_STIMULI,
-        seed_models_dir=SEED_MODELS_DIR, n_experiments=1, cache_dir=None, fit_kwargs={},
+        run_root,
+        "local_representativeness",
+        {"theta_alt": 0.65},
+        EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=1,
+        cache_dir=None,
+        fit_kwargs={},
     )
     out = capsys.readouterr().out
     assert "WARNING: experiment 1 step 0: 1 of 3 held-out pairs excluded" in out
@@ -2805,9 +3169,15 @@ def test_the_fitted_seed_baseline_excludes_and_logs_a_seeds_undefined_pairs(
     )
     log = tmp_path / "eval_exclusions.jsonl"
     out = fitted_seed_baseline_correlation(
-        run_root, "local_representativeness", {"theta_alt": 0.65}, EVAL_STIMULI,
-        seed_models_dir=SEED_MODELS_DIR, n_experiments=2,
-        other_seed_models=["seed_x", "seed_y"], cache_dir=None, fit_kwargs={},
+        run_root,
+        "local_representativeness",
+        {"theta_alt": 0.65},
+        EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR,
+        n_experiments=2,
+        other_seed_models=["seed_x", "seed_y"],
+        cache_dir=None,
+        fit_kwargs={},
         exclusions_log=log,
     )
     seed_x = out["per_model"]["seed_x"]
@@ -2817,40 +3187,78 @@ def test_the_fitted_seed_baseline_excludes_and_logs_a_seeds_undefined_pairs(
     [entry] = [json.loads(line) for line in log.read_text().splitlines()]
     assert entry["scored"] == "fitted_seed_baseline" and entry["model"] == "seed_x"
     assert entry["pairs"] == [EVAL_STIMULI[1]] and entry["n_pool"] == 3
-    assert "WARNING: fitted-seed baseline, seed 'seed_x': 1 of 3" in capsys.readouterr().out
+    assert (
+        "WARNING: fitted-seed baseline, seed 'seed_x': 1 of 3"
+        in capsys.readouterr().out
+    )
 
 
-def test_a_seed_undefined_on_every_pair_fails_the_fitted_baseline(tmp_path, monkeypatch):
+def test_a_seed_undefined_on_every_pair_fails_the_fitted_baseline(
+    tmp_path, monkeypatch
+):
     run_root = _baseline_run(tmp_path)
     _stub_baseline_fits(
-        monkeypatch, {"seed_x": np.full(3, np.nan), "seed_y": np.zeros(3) + 0.5},
+        monkeypatch,
+        {"seed_x": np.full(3, np.nan), "seed_y": np.zeros(3) + 0.5},
         elpd={"seed_x": -1.0, "seed_y": -1.0},
     )
     with pytest.raises(RuntimeError, match="every held-out pair"):
         _fitted_baseline(run_root)
 
 
-def test_the_sweep_summary_lists_every_cell_and_step_with_excluded_pairs(tmp_path, capsys):
+def test_the_sweep_summary_lists_every_cell_and_step_with_excluded_pairs(
+    tmp_path, capsys
+):
     from tests.paths import load_script_module
 
-    retest = load_script_module(REPO_ROOT / "scripts" / "subjective_randomness" / "holdout_test_retest.py")
-    columns = ["gt_model", "experiment", "step", "global_step", "best_model", "pearson_r",
-               "n_eval_excluded", "eval_excluded_models"]
+    retest = load_script_module(
+        REPO_ROOT / "scripts" / "subjective_randomness" / "holdout_test_retest.py"
+    )
+    columns = [
+        "gt_model",
+        "experiment",
+        "step",
+        "global_step",
+        "best_model",
+        "pearson_r",
+        "n_eval_excluded",
+        "eval_excluded_models",
+    ]
     cells = {
-        "run1/gt_a": [["gt_a", 1, 0, 0, "m", 0.5, 0, ""], ["gt_a", 2, 1, 1, "m", 0.6, 7, "odd_model"]],
+        "run1/gt_a": [
+            ["gt_a", 1, 0, 0, "m", 0.5, 0, ""],
+            ["gt_a", 2, 1, 1, "m", 0.6, 7, "odd_model"],
+        ],
         "run2/gt_a": [["gt_a", 1, 0, 0, "m", 0.4, 0, ""]],
     }
     for cell, rows in cells.items():
         (tmp_path / cell).mkdir(parents=True)
-        with (tmp_path / cell / "holdout.csv").open("w", newline="", encoding="utf-8") as f:
+        with (tmp_path / cell / "holdout.csv").open(
+            "w", newline="", encoding="utf-8"
+        ) as f:
             writer = csv.writer(f)
             writer.writerow(columns)
             writer.writerows(rows)
         seed_excluded = 3 if cell == "run2/gt_a" else 0
-        (tmp_path / cell / "holdout.json").write_text(json.dumps({"gt_runs": [{
-            "gt_model": "gt_a", "n_eval_stimuli": 900, "trajectory": [],
-            "fitted_baseline": {"per_model": {"seed_x": {"n_eval_excluded": seed_excluded}}},
-        }]}), encoding="utf-8")
+        (tmp_path / cell / "holdout.json").write_text(
+            json.dumps(
+                {
+                    "gt_runs": [
+                        {
+                            "gt_model": "gt_a",
+                            "n_eval_stimuli": 900,
+                            "trajectory": [],
+                            "fitted_baseline": {
+                                "per_model": {
+                                    "seed_x": {"n_eval_excluded": seed_excluded}
+                                }
+                            },
+                        }
+                    ]
+                }
+            ),
+            encoding="utf-8",
+        )
     # A cell whose CSV predates the exclusion columns.
     (tmp_path / "run3" / "gt_a").mkdir(parents=True)
     (tmp_path / "run3" / "gt_a" / "holdout.csv").write_text(
@@ -2860,15 +3268,31 @@ def test_the_sweep_summary_lists_every_cell_and_step_with_excluded_pairs(tmp_pat
 
     retest.main(retest.Args(runs_root=tmp_path, out=tmp_path / "test_retest.json"))
 
-    exclusions = json.loads((tmp_path / "test_retest.json").read_text())["eval_exclusions"]
-    assert exclusions["steps"] == [{
-        "cell": "run1/gt_a", "gt_model": "gt_a", "experiment": 2, "step": 1, "global_step": 1,
-        "best_model": "m", "n_eval_excluded": 7, "n_eval_stimuli": 900, "models": "odd_model",
-    }]
-    assert exclusions["fitted_seed_baseline"] == [{
-        "cell": "run2/gt_a", "gt_model": "gt_a", "seed": "seed_x",
-        "n_eval_excluded": 3, "n_eval_stimuli": 900,
-    }]
+    exclusions = json.loads((tmp_path / "test_retest.json").read_text())[
+        "eval_exclusions"
+    ]
+    assert exclusions["steps"] == [
+        {
+            "cell": "run1/gt_a",
+            "gt_model": "gt_a",
+            "experiment": 2,
+            "step": 1,
+            "global_step": 1,
+            "best_model": "m",
+            "n_eval_excluded": 7,
+            "n_eval_stimuli": 900,
+            "models": "odd_model",
+        }
+    ]
+    assert exclusions["fitted_seed_baseline"] == [
+        {
+            "cell": "run2/gt_a",
+            "gt_model": "gt_a",
+            "seed": "seed_x",
+            "n_eval_excluded": 3,
+            "n_eval_stimuli": 900,
+        }
+    ]
     assert exclusions["cells_without_record"] == ["run3/gt_a"]
     out = capsys.readouterr().out
     assert "run1/gt_a experiment 2 step 1: 7 of 900 held-out pairs excluded" in out

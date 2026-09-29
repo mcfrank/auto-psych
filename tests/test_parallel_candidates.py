@@ -26,9 +26,8 @@ def _patch_loop_internals(monkeypatch):
         "elpd_loo": {"model_a": -10.0},
         "n_trials": 2,
     }
-    monkeypatch.setattr(
-        scoring, "model_posterior", lambda *a, **k: posterior
-    )
+    monkeypatch.setattr(scoring, "model_posterior", lambda *a, **k: posterior)
+
     # A rank table naming every live model: a six-slot round's refinement
     # briefs describe the incumbent's standing from it (model_a is rank 0).
     def fake_compare(responses_path, models_dir, **kwargs):
@@ -39,7 +38,8 @@ def _patch_loop_internals(monkeypatch):
                 "rank": i,
                 "elpd_loo": -10.0 - i,
                 "elpd_diff": 0.0 if i == 0 else 1.0,
-                "dse": 0.0 if i == 0 else 5.0, "dse_clustered": 0.0 if i == 0 else 5.0,
+                "dse": 0.0 if i == 0 else 5.0,
+                "dse_clustered": 0.0 if i == 0 else 5.0,
                 "weight": 1.0 if i == 0 else 0.0,
                 "loo_unreliable": False,
             }
@@ -51,9 +51,7 @@ def _patch_loop_internals(monkeypatch):
     monkeypatch.setattr(model_zoo, "compare_table", fake_compare)
     # Functions looked up in model_zoo's namespace (called by _admit_candidate,
     # _drop_unfittable_models, etc. which now live in model_zoo):
-    monkeypatch.setattr(
-        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
-    )
+    monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     # The stub fit is not a real trace: pass the convergence gate.
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
@@ -66,9 +64,7 @@ def _patch_loop_internals(monkeypatch):
         "_min_prediction_rmse",
         lambda *a, **k: (None, float("inf")),
     )
-    monkeypatch.setattr(
-        model_zoo, "load_pymc_model", lambda name, models_dir: object()
-    )
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
 
 
 def _run(tmp_path, monkeypatch, spawn, *, candidate_count=3, **kwargs):
@@ -95,7 +91,9 @@ def test_candidate_agents_spawn_concurrently(tmp_path, monkeypatch):
     def blocking_spawn(candidate_dir, docs, **kwargs):
         barrier.wait()
         (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
-        (candidate_dir / "hypothesis.md").write_text("People use H.\n", encoding="utf-8")
+        (candidate_dir / "hypothesis.md").write_text(
+            "People use H.\n", encoding="utf-8"
+        )
         return True
 
     result = _run(tmp_path, monkeypatch, blocking_spawn)
@@ -112,7 +110,9 @@ def test_admission_order_is_sequential_and_deterministic(tmp_path, monkeypatch):
 
     def spawn(candidate_dir, docs, **kwargs):
         (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
-        (candidate_dir / "hypothesis.md").write_text("People use H.\n", encoding="utf-8")
+        (candidate_dir / "hypothesis.md").write_text(
+            "People use H.\n", encoding="utf-8"
+        )
         return True
 
     monkeypatch.setattr(
@@ -131,7 +131,9 @@ def test_parallelism_one_runs_agents_sequentially(tmp_path, monkeypatch):
             active["now"] += 1
             active["max"] = max(active["max"], active["now"])
         (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
-        (candidate_dir / "hypothesis.md").write_text("People use H.\n", encoding="utf-8")
+        (candidate_dir / "hypothesis.md").write_text(
+            "People use H.\n", encoding="utf-8"
+        )
         with lock:
             active["now"] -= 1
         return True
@@ -181,5 +183,7 @@ def test_parallelism_cap_bounds_a_six_slot_round(tmp_path, monkeypatch):
             active["now"] -= 1
         return True
 
-    _run(tmp_path, monkeypatch, capped_spawn, candidate_count=6, candidate_parallelism=3)
+    _run(
+        tmp_path, monkeypatch, capped_spawn, candidate_count=6, candidate_parallelism=3
+    )
     assert active["max"] == 3

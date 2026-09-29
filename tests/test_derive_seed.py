@@ -18,7 +18,12 @@ def test_no_two_cells_experiments_or_purposes_share_a_seed():
         derive_seed(cell_seed, gt, exp, purpose)
         for cell_seed, gt, exp, purpose in itertools.product(
             range(100, 106),
-            ["motif_stack", "falk_konold_dp", "finite_experience_occurrence", "local_representativeness"],
+            [
+                "motif_stack",
+                "falk_konold_dp",
+                "finite_experience_occurrence",
+                "local_representativeness",
+            ],
             (1, 2, 3),
             ("design", "responses"),
         )

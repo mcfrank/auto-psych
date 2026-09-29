@@ -43,7 +43,13 @@ def _write_same_length_responses(tmp_path: Path) -> Path:
     with raw.open("w", newline="", encoding="utf-8") as f:
         w = csv.DictWriter(
             f,
-            fieldnames=["participant_id", "trial_index", "sequence_a", "sequence_b", "chose_left"],
+            fieldnames=[
+                "participant_id",
+                "trial_index",
+                "sequence_a",
+                "sequence_b",
+                "chose_left",
+            ],
         )
         w.writeheader()
         for i, (a, b, y) in enumerate(
@@ -131,10 +137,14 @@ def test_caller_value_beats_the_model_declaration(tmp_path, monkeypatch):
 
 def test_unset_caller_argument_resolves_rather_than_pinning_the_default():
     """``None`` means "unset"; only then does the model declaration apply."""
-    resolved = pi.resolve_fit_settings("motif_stack", SEED_MODELS_DIR, {"target_accept": None})
+    resolved = pi.resolve_fit_settings(
+        "motif_stack", SEED_MODELS_DIR, {"target_accept": None}
+    )
     assert resolved["target_accept"] == 0.9
 
-    pinned = pi.resolve_fit_settings("motif_stack", SEED_MODELS_DIR, {"target_accept": 0.99})
+    pinned = pi.resolve_fit_settings(
+        "motif_stack", SEED_MODELS_DIR, {"target_accept": 0.99}
+    )
     assert pinned["target_accept"] == 0.99
 
 

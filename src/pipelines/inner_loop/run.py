@@ -69,9 +69,7 @@ def load_hints_file(path: Path) -> List[str]:
     if not isinstance(data, list) or not all(
         isinstance(h, str) and h.strip() for h in data
     ):
-        raise ValueError(
-            f"Hints file must be a YAML list of non-empty strings: {path}"
-        )
+        raise ValueError(f"Hints file must be a YAML list of non-empty strings: {path}")
     return [h.strip() for h in data]
 
 

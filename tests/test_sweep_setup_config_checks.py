@@ -27,13 +27,17 @@ SLURM_DIR = REPO_ROOT / "scripts" / "subjective_randomness" / "slurm"
 
 def _default(script: Path, name: str) -> str:
     """The ``${NAME:-default}`` a script falls back on for ``name``."""
-    [value] = set(re.findall(r"\$\{" + name + r":-([^}]*)\}", script.read_text(encoding="utf-8")))
+    [value] = set(
+        re.findall(r"\$\{" + name + r":-([^}]*)\}", script.read_text(encoding="utf-8"))
+    )
     return value
 
 
 def _consistency_check(setup: Path) -> str:
     """The setup job's inline Python check: the heredoc that reads SEED_MODELS_REL."""
-    blocks = re.findall(r"<<'PY'\n(.*?)\nPY\n", setup.read_text(encoding="utf-8"), re.DOTALL)
+    blocks = re.findall(
+        r"<<'PY'\n(.*?)\nPY\n", setup.read_text(encoding="utf-8"), re.DOTALL
+    )
     [check] = [block for block in blocks if "SEED_MODELS_REL" in block]
     return check
 
@@ -42,7 +46,9 @@ def _run_check(setup: Path, env: dict[str, str]) -> subprocess.CompletedProcess:
     return subprocess.run(
         [sys.executable, "-c", _consistency_check(setup)],
         env={"PATH": os.environ["PATH"], **env},
-        capture_output=True, text=True, timeout=60,
+        capture_output=True,
+        text=True,
+        timeout=60,
     )
 
 
@@ -72,7 +78,10 @@ def _impossible_env(seed_models_rel: str) -> dict[str, str]:
 
 @pytest.mark.parametrize(
     "setup_name, env_for",
-    [("holdout_setup.sbatch", _literature_env), ("impossible_holdout_setup.sbatch", _impossible_env)],
+    [
+        ("holdout_setup.sbatch", _literature_env),
+        ("impossible_holdout_setup.sbatch", _impossible_env),
+    ],
 )
 def test_the_setup_check_accepts_the_committed_config(setup_name, env_for):
     setup = SLURM_DIR / setup_name
@@ -83,10 +92,18 @@ def test_the_setup_check_accepts_the_committed_config(setup_name, env_for):
 
 @pytest.mark.parametrize(
     "setup_name, env_for",
-    [("holdout_setup.sbatch", _literature_env), ("impossible_holdout_setup.sbatch", _impossible_env)],
+    [
+        ("holdout_setup.sbatch", _literature_env),
+        ("impossible_holdout_setup.sbatch", _impossible_env),
+    ],
 )
-def test_the_setup_check_rejects_a_seed_path_other_than_the_configs(setup_name, env_for):
+def test_the_setup_check_rejects_a_seed_path_other_than_the_configs(
+    setup_name, env_for
+):
     setup = SLURM_DIR / setup_name
-    result = _run_check(setup, env_for("src/pipelines/outer_loop/projects/subjective_randomness/elsewhere"))
+    result = _run_check(
+        setup,
+        env_for("src/pipelines/outer_loop/projects/subjective_randomness/elsewhere"),
+    )
     assert result.returncode != 0
     assert "SEED_MODELS_REL env" in result.stderr

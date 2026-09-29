@@ -98,9 +98,7 @@ class HypothesisLedger:
         self.path = Path(path)
 
     @classmethod
-    def create(
-        cls, path: Path, *, inherit_from: Optional[Path]
-    ) -> "HypothesisLedger":
+    def create(cls, path: Path, *, inherit_from: Optional[Path]) -> "HypothesisLedger":
         """Start a fresh ledger at ``path``, seeded from ``inherit_from`` if it exists.
 
         ``path`` is overwritten: the loop that owns it re-seeds its zoo on every
@@ -163,7 +161,9 @@ class HypothesisLedger:
         experiment that pruned it). The other retired entries — rejected
         candidates that never entered, dropped seeds — are not targets.
         """
-        return [entry for entry in self.retired(live_names) if entry.outcome == "pruned"]
+        return [
+            entry for entry in self.retired(live_names) if entry.outcome == "pruned"
+        ]
 
     def render_markdown(self, live_names: Iterable[str]) -> str:
         """The candidate brief's "tried before" section.
@@ -206,7 +206,9 @@ class HypothesisLedger:
         # hypothesis onto a single line; a multi-sentence hypothesis survives
         # this layout intact.
         for entry in retired:
-            outcome = f"{entry.outcome} ({entry.context})" if entry.context else entry.outcome
+            outcome = (
+                f"{entry.outcome} ({entry.context})" if entry.context else entry.outcome
+            )
             lines.append(f"### {entry.name} — {outcome}\n")
             if entry.detail:
                 lines.append(f"**Outcome:** {entry.detail}\n")

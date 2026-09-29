@@ -29,7 +29,9 @@ def test_finds_firebase_sessions_newest_first(tmp_path: Path):
     sessions = find_monitored_sessions(root)
     assert [s.collection_session_id for s in sessions] == ["session_b", "session_a"]
     assert sessions[0].target_participants == 30
-    assert sessions[0].prolific_study_id is None or isinstance(sessions[0].prolific_study_id, str)
+    assert sessions[0].prolific_study_id is None or isinstance(
+        sessions[0].prolific_study_id, str
+    )
 
 
 def test_excludes_dry_run_deployments(tmp_path: Path):

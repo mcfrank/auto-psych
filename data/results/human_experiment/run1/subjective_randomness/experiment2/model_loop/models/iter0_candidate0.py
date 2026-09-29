@@ -26,7 +26,7 @@ with pm.Model() as model:
 
     # Base typicality per event
     base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
-    
+
     # Power-law scaling parameter for diminishing returns on sequence length
     length_scaling = pm.Beta("length_scaling", alpha=2.0, beta=2.0)
 

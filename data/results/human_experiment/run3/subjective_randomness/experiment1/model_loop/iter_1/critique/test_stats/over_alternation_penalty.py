@@ -3,9 +3,11 @@
 import numpy as np
 import pandas as pd
 
+
 def test_statistic(df):
-    mask = (df['p_alts_a'] > 0.6) & (df['p_alts_b'] > 0.6)
-    if mask.sum() < 5: return np.nan
+    mask = (df["p_alts_a"] > 0.6) & (df["p_alts_b"] > 0.6)
+    if mask.sum() < 5:
+        return np.nan
     subset = df[mask]
-    corr = subset['chose_left'].corr(subset['p_alts_a'] - subset['p_alts_b'])
+    corr = subset["chose_left"].corr(subset["p_alts_a"] - subset["p_alts_b"])
     return float(corr) if not pd.isna(corr) else 0.0

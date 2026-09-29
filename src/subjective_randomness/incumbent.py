@@ -43,7 +43,9 @@ from typing import Any, Collection, Dict, FrozenSet, List, Mapping, Optional, Se
 
 INCUMBENT_COLUMNS = ("incumbent_changed", "incumbent_is_discovered")
 
-_HISTORY_MEMBER_RE = re.compile(r"^(?P<run>.*?)experiment(?P<num>\d+)/model_loop/history\.json$")
+_HISTORY_MEMBER_RE = re.compile(
+    r"^(?P<run>.*?)experiment(?P<num>\d+)/model_loop/history\.json$"
+)
 
 
 # ─────────────────────────────────────────────
@@ -200,9 +202,7 @@ def incumbent_summary_for_histories(
     )
 
 
-def _ordered_by_experiment(
-    found: Mapping[int, Any], *, where: str
-) -> List[Any]:
+def _ordered_by_experiment(found: Mapping[int, Any], *, where: str) -> List[Any]:
     """``found`` values in experiment order, requiring experiments 1..N with no gap."""
     if not found:
         raise FileNotFoundError(f"No experiment*/model_loop/history.json in {where}.")

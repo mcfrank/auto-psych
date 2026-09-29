@@ -41,8 +41,9 @@ Each model is a Python function. The stimulus is a tuple `(choices_json_str, tar
 def model_name(stimulus, response_options):
     """Brief docstring."""
     import json, random, itertools, math
-    choices = json.loads(stimulus[0])   # list of 4 ints, e.g. [5, 5, 12, 12]
-    target = int(float(stimulus[1]))    # int, e.g. 24
+
+    choices = json.loads(stimulus[0])  # list of 4 ints, e.g. [5, 5, 12, 12]
+    target = int(float(stimulus[1]))  # int, e.g. 24
     # response_options == ["left", "right"]
     # "left" = participant solved correctly, "right" = participant failed
 
@@ -67,17 +68,22 @@ def model_name(stimulus, response_options):
 ```python
 def _successors(nums):
     import itertools
+
     result = []
     nums = list(nums)
     for i, j in itertools.combinations(range(len(nums)), 2):
         a, b = nums[i], nums[j]
         rest = [nums[k] for k in range(len(nums)) if k != i and k != j]
-        ops = [(a + b, f"{a}+{b}={a+b}"), (a * b, f"{a}*{b}={a*b}"),
-               (b - a, f"{b}-{a}={b-a}"), (a - b, f"{a}-{b}={a-b}")]
+        ops = [
+            (a + b, f"{a}+{b}={a + b}"),
+            (a * b, f"{a}*{b}={a * b}"),
+            (b - a, f"{b}-{a}={b - a}"),
+            (a - b, f"{a}-{b}={a - b}"),
+        ]
         if b != 0 and a % b == 0:
-            ops.append((a // b, f"{a}/{b}={a//b}"))
+            ops.append((a // b, f"{a}/{b}={a // b}"))
         if a != 0 and b % a == 0:
-            ops.append((b // a, f"{b}/{a}={b//a}"))
+            ops.append((b // a, f"{b}/{a}={b // a}"))
         for r, op in ops:
             if isinstance(r, int) and r >= 0:
                 result.append((sorted(rest + [r]), op))

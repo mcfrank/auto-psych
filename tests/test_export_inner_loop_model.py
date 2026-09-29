@@ -34,7 +34,11 @@ def _setup(tmp_path, cognitive_names, zoo_entries):
     cog_dir.mkdir(parents=True)
     (cog_dir / "models_manifest.yaml").write_text(
         yaml.safe_dump(
-            {"models": [{"name": n, "rationale": f"mechanism {n}"} for n in cognitive_names]},
+            {
+                "models": [
+                    {"name": n, "rationale": f"mechanism {n}"} for n in cognitive_names
+                ]
+            },
             sort_keys=False,
         ),
         encoding="utf-8",
@@ -68,11 +72,15 @@ def test_new_descriptive_winner_is_exported_with_its_hypothesis(tmp_path):
         cognitive_names=["seed_a"],
         zoo_entries=[
             {"name": "seed_a", "rationale": "mechanism seed_a"},
-            {"name": "recency_weighted_runs", "rationale": "People weight recent runs."},
+            {
+                "name": "recency_weighted_runs",
+                "rationale": "People weight recent runs.",
+            },
         ],
     )
     path = _export_inner_loop_models(
-        exp_dir, loop_dir, best_model="recency_weighted_runs")
+        exp_dir, loop_dir, best_model="recency_weighted_runs"
+    )
     assert path == exp_dir / "cognitive_models" / "recency_weighted_runs.py"
     assert path.exists()
     manifest = yaml.safe_load(
@@ -95,8 +103,7 @@ def test_winning_seed_is_not_duplicated(tmp_path):
             {"name": "seed_b", "rationale": "mechanism seed_b"},
         ],
     )
-    _export_inner_loop_models(
-        exp_dir, loop_dir, best_model="seed_a")
+    _export_inner_loop_models(exp_dir, loop_dir, best_model="seed_a")
     # No inner_loop_model copy, no duplicate manifest entry.
     assert _manifest_names(exp_dir) == ["seed_a", "seed_b"]
     assert not (exp_dir / "cognitive_models" / "inner_loop_model.py").exists()
@@ -111,8 +118,7 @@ def test_fallback_named_winner_exports_as_inner_loop_model(tmp_path):
             {"name": "iter0_candidate2", "rationale": "An unnamed hypothesis."},
         ],
     )
-    path = _export_inner_loop_models(
-        exp_dir, loop_dir, best_model="iter0_candidate2")
+    path = _export_inner_loop_models(exp_dir, loop_dir, best_model="iter0_candidate2")
     # Zoo names must never enter the carried manifest (the validator rejects
     # them), so the fallback maps to the legacy stable export name.
     assert path == exp_dir / "cognitive_models" / "inner_loop_model.py"
@@ -127,8 +133,7 @@ def test_export_missing_zoo_rationale_raises(tmp_path):
         zoo_entries=[{"name": "seed_a", "rationale": "mechanism seed_a"}],
     )
     with pytest.raises(ValueError, match="no_such_model"):
-        _export_inner_loop_models(
-            exp_dir, loop_dir, best_model="no_such_model")
+        _export_inner_loop_models(exp_dir, loop_dir, best_model="no_such_model")
 
 
 def _write_loop_outputs(exp_dir, best):

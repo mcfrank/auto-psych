@@ -38,15 +38,20 @@ def test_inner_model_loop_exports_best_pymc_model(tmp_path, monkeypatch):
     models_dir = exp_dir / "cognitive_models"
     models_dir.mkdir(parents=True)
     for name in ("bayesian_fair_coin", "representativeness"):
-        shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / f"{name}.py", models_dir / f"{name}.py")
+        shutil.copyfile(
+            PYMC_MODEL_FIXTURES_DIR / f"{name}.py", models_dir / f"{name}.py"
+        )
     shutil.copyfile(
-        PYMC_MODEL_FIXTURES_DIR / "models_manifest.yaml", models_dir / "models_manifest.yaml"
+        PYMC_MODEL_FIXTURES_DIR / "models_manifest.yaml",
+        models_dir / "models_manifest.yaml",
     )
 
     # Raw responses; each fixture model computes its own features.
     data_dir = exp_dir / "data"
     data_dir.mkdir(parents=True)
-    shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / "responses.csv", data_dir / "responses.csv")
+    shutil.copyfile(
+        PYMC_MODEL_FIXTURES_DIR / "responses.csv", data_dir / "responses.csv"
+    )
 
     loop_dir = run_inner_model_loop_programmatic(
         exp_dir,

@@ -115,7 +115,9 @@ def parse_reset_time(text: str, now: datetime) -> Optional[datetime]:
         hour = int(hour) % 12 + (12 if meridiem.lower() == "pm" else 0)
         tz = ZoneInfo(zone) if zone else now.tzinfo
         local_now = now.astimezone(tz)
-        reset = local_now.replace(hour=hour, minute=int(minute or 0), second=0, microsecond=0)
+        reset = local_now.replace(
+            hour=hour, minute=int(minute or 0), second=0, microsecond=0
+        )
         if reset <= local_now - RESET_JUST_PASSED:
             reset += timedelta(days=1)
         return reset
@@ -137,7 +139,9 @@ def detect_usage_limit(
     for message in messages:
         if message and (LIMIT_RE.search(message) or RATE_LIMIT_RE.search(message)):
             now = now or datetime.now().astimezone()
-            return UsageLimit(message=message.strip(), reset_at=parse_reset_time(message, now))
+            return UsageLimit(
+                message=message.strip(), reset_at=parse_reset_time(message, now)
+            )
     return None
 
 

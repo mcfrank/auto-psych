@@ -70,7 +70,13 @@ def _stub_generate_responses(calls):
     """Records ``models_dir`` so the test can assert the GT dir is threaded in."""
 
     def generate(
-        model_name, models_dir, stimuli, params, n_participants, *, seed=0,
+        model_name,
+        models_dir,
+        stimuli,
+        params,
+        n_participants,
+        *,
+        seed=0,
         participant_id_offset,
     ):
         calls.append(
@@ -101,9 +107,11 @@ def _write_cumulative_responses(exp_dir):
     exp_num = int(exp_dir.name.removeprefix("experiment"))
     header, rows = None, []
     for k in range(1, exp_num + 1):
-        lines = (exp_dir.parent / f"experiment{k}" / "data" / "responses.csv").read_text(
-            encoding="utf-8"
-        ).splitlines()
+        lines = (
+            (exp_dir.parent / f"experiment{k}" / "data" / "responses.csv")
+            .read_text(encoding="utf-8")
+            .splitlines()
+        )
         header = lines[0]
         rows += lines[1:]
     (exp_dir / "model_loop" / "responses.csv").write_text(
@@ -116,9 +124,19 @@ def _stub_inner_loop(history_best):
     # cognitive_models — one of the live pool's faithful seeds, since these
     # tests seed from the real project assets (the impossible GT lives in a
     # separate directory).
-    def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
-            backend=None, agent_model=None, cache_dir=None, project_id=None,
-            agent_timeout_sec=900, **kwargs):
+    def run(
+        exp_dir,
+        *,
+        max_iterations,
+        candidate_count,
+        fit_kwargs=None,
+        backend=None,
+        agent_model=None,
+        cache_dir=None,
+        project_id=None,
+        agent_timeout_sec=900,
+        **kwargs,
+    ):
         # Mirror the real wrapper: record the run's starting models first.
         from src.pipelines.outer_loop.model_loop_runner import run_starting_models
 
@@ -135,22 +153,49 @@ def _stub_inner_loop(history_best):
         # Mirror the real export: az.compare's stacking weights, which the
         # registry updater requires (it refuses a posterior file without them).
         comparison = {
-            history_best: {"rank": 0, "elpd_loo": -10.0, "elpd_diff": 0.0,
-                           "dse": 0.0, "weight": 0.7, "loo_unreliable": False},
-            "motif_stack": {"rank": 1, "elpd_loo": -12.0,
-                            "elpd_diff": 2.0, "dse": 1.5,
-                            "weight": 0.3, "loo_unreliable": False},
+            history_best: {
+                "rank": 0,
+                "elpd_loo": -10.0,
+                "elpd_diff": 0.0,
+                "dse": 0.0,
+                "weight": 0.7,
+                "loo_unreliable": False,
+            },
+            "motif_stack": {
+                "rank": 1,
+                "elpd_loo": -12.0,
+                "elpd_diff": 2.0,
+                "dse": 1.5,
+                "weight": 0.3,
+                "loo_unreliable": False,
+            },
         }
         history = [
-            {"step": 0, "iteration": None, "best_model": history_best,
-             "posteriors": posteriors, "elpd_loo": elpd},
-            {"step": 1, "iteration": 0, "best_model": history_best,
-             "posteriors": posteriors, "elpd_loo": elpd},
+            {
+                "step": 0,
+                "iteration": None,
+                "best_model": history_best,
+                "posteriors": posteriors,
+                "elpd_loo": elpd,
+            },
+            {
+                "step": 1,
+                "iteration": 0,
+                "best_model": history_best,
+                "posteriors": posteriors,
+                "elpd_loo": elpd,
+            },
         ]
         (loop_dir / "history.json").write_text(json.dumps(history), encoding="utf-8")
         (loop_dir / "model_posterior.json").write_text(
-            json.dumps({"posteriors": posteriors, "elpd_loo": elpd,
-                        "n_trials": 4, "comparison": comparison}),
+            json.dumps(
+                {
+                    "posteriors": posteriors,
+                    "elpd_loo": elpd,
+                    "n_trials": 4,
+                    "comparison": comparison,
+                }
+            ),
             encoding="utf-8",
         )
         (loop_dir / "report.md").write_text("# stub report\n", encoding="utf-8")
@@ -197,7 +242,9 @@ def test_impossible_holdout_recovery_from_config_end_to_end_with_stub_agents(
     monkeypatch.setattr(
         holdout_eval,
         "fit_model",
-        lambda name, models_dir, responses_path, *, cache_dir=None, **kw: CannedPredictionFit(),
+        lambda name, models_dir, responses_path, *, cache_dir=None, **kw: (
+            CannedPredictionFit()
+        ),
     )
 
     config = {
@@ -407,9 +454,7 @@ def test_build_eval_stimuli_exhaustive_enumerates_all_pairs(tmp_path):
     assert len(info["stimuli"]) == 34
     assert info["n_dropped"] == 0
     assert all(len(s["sequence_a"]) in (2, 3) for s in info["stimuli"])
-    assert all(
-        len(s["sequence_a"]) == len(s["sequence_b"]) for s in info["stimuli"]
-    )
+    assert all(len(s["sequence_a"]) == len(s["sequence_b"]) for s in info["stimuli"])
 
 
 def test_impossible_holdout_exhaustive_eval_thins_posterior(tmp_path, monkeypatch):

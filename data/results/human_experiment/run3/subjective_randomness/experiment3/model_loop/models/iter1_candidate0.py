@@ -6,9 +6,11 @@ import pytensor.tensor as pt
 
 BIAS_HEAD_PROB = 0.85
 
+
 def _logsumexp2(a, b):
     m = pt.maximum(a, b)
     return m + pt.log(pt.exp(a - m) + pt.exp(b - m))
+
 
 def _log_motif(n, rep_motifs, alt_motifs, log_delta, log_c, log_alpha):
     n_f = pt.cast(n, "float64")
@@ -16,6 +18,7 @@ def _log_motif(n, rep_motifs, alt_motifs, log_delta, log_c, log_alpha):
     n2 = pt.cast(alt_motifs, "float64")
     stays = n_f - n1 - n2  # within-motif continuations; >= 0 by construction
     return stays * log_delta + (n1 + n2) * log_c + (n1 + 2.0 * n2) * log_alpha
+
 
 def _log_biased(n, h):
     n_f = pt.cast(n, "float64")
@@ -25,46 +28,51 @@ def _log_biased(n, h):
     tail_heavy = h_f * np.log(1.0 - BIAS_HEAD_PROB) + tails_f * np.log(BIAS_HEAD_PROB)
     return _logsumexp2(np.log(0.5) + head_heavy, np.log(0.5) + tail_heavy)
 
+
 def _log_balanced(n, h, gamma):
     n_f = pt.cast(n, "float64")
     h_f = pt.cast(h, "float64")
-    
+
     # log P(h | balanced) = -gamma * |h - n/2| - log_Z
     max_len = 50
     k = pt.arange(max_len + 1, dtype="float64")
     k_exp = pt.expand_dims(k, 1)
     n_f_exp = pt.expand_dims(n_f, 0)
-    
+
     mask = pt.cast(k_exp <= n_f_exp, "float64")
     unnormalized = pt.exp(-gamma * pt.abs(k_exp - n_f_exp / 2.0)) * mask
     Z = pt.sum(unnormalized, axis=0)
-    
+
     log_p_h = -gamma * pt.abs(h_f - n_f / 2.0) - pt.log(Z)
-    
+
     # log (1 / (n choose h))
-    log_choose = pt.gammaln(n_f + 1.0) - pt.gammaln(h_f + 1.0) - pt.gammaln(n_f - h_f + 1.0)
-    
+    log_choose = (
+        pt.gammaln(n_f + 1.0) - pt.gammaln(h_f + 1.0) - pt.gammaln(n_f - h_f + 1.0)
+    )
+
     return log_p_h - log_choose
 
-def _randomness(n, h, rep_motifs, alt_motifs, log_delta, log_c, log_alpha, weights, gamma):
+
+def _randomness(
+    n, h, rep_motifs, alt_motifs, log_delta, log_c, log_alpha, weights, gamma
+):
     log_fair = pt.cast(n, "float64") * np.log(0.5)
-    
+
     log_m = _log_motif(n, rep_motifs, alt_motifs, log_delta, log_c, log_alpha)
     log_bi = _log_biased(n, h)
     log_bal = _log_balanced(n, h, gamma)
-    
+
     log_w_m = pt.log(weights[0])
     log_w_bi = pt.log(weights[1])
     log_w_bal = pt.log(weights[2])
-    
-    components = pt.stack([
-        log_w_m + log_m,
-        log_w_bi + log_bi,
-        log_w_bal + log_bal
-    ], axis=0)
-    
+
+    components = pt.stack(
+        [log_w_m + log_m, log_w_bi + log_bi, log_w_bal + log_bal], axis=0
+    )
+
     log_regular = pt.logsumexp(components, axis=0)
     return log_fair - log_regular
+
 
 with pm.Model() as model:
     n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
@@ -89,10 +97,26 @@ with pm.Model() as model:
     log_c = pt.log(1.0 - delta) - pt.log(2.0 * alpha + 2.0 * alpha**2)
 
     score_a = _randomness(
-        n_a, h_a, rep_motifs_a, alt_motifs_a, log_delta, log_c, log_alpha, weights, gamma
+        n_a,
+        h_a,
+        rep_motifs_a,
+        alt_motifs_a,
+        log_delta,
+        log_c,
+        log_alpha,
+        weights,
+        gamma,
     )
     score_b = _randomness(
-        n_b, h_b, rep_motifs_b, alt_motifs_b, log_delta, log_c, log_alpha, weights, gamma
+        n_b,
+        h_b,
+        rep_motifs_b,
+        alt_motifs_b,
+        log_delta,
+        log_c,
+        log_alpha,
+        weights,
+        gamma,
     )
 
     p_left = pm.Deterministic(

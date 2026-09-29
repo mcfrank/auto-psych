@@ -113,7 +113,9 @@ def test_summary_counts_changes_and_discovered_incumbent_steps():
         _step(3, "new_model", experiment=2, step=1, iteration=0),
         _step(4, "seed_a", experiment=3, step=0),
     ]
-    summary = summarise_incumbents(annotate_incumbents(steps, {"seed_a", "seed_b"}), {"seed_b", "seed_a"})
+    summary = summarise_incumbents(
+        annotate_incumbents(steps, {"seed_a", "seed_b"}), {"seed_b", "seed_a"}
+    )
     assert summary == {
         "starting_models": ["seed_a", "seed_b"],
         "n_steps": 5,
@@ -121,15 +123,30 @@ def test_summary_counts_changes_and_discovered_incumbent_steps():
         "n_steps_discovered_incumbent": 2,
         "final_incumbent": "seed_a",
         "changes": [
-            {"global_step": 2, "experiment": 2, "step": 0, "from": "seed_a", "to": "new_model"},
-            {"global_step": 4, "experiment": 3, "step": 0, "from": "new_model", "to": "seed_a"},
+            {
+                "global_step": 2,
+                "experiment": 2,
+                "step": 0,
+                "from": "seed_a",
+                "to": "new_model",
+            },
+            {
+                "global_step": 4,
+                "experiment": 3,
+                "step": 0,
+                "from": "new_model",
+                "to": "seed_a",
+            },
         ],
     }
 
 
 def test_summary_of_the_baseline_shape_is_all_zeros():
     # The archived motif_stack cells: one seed at every one of nine steps.
-    steps = [_step(i, "local_representativeness", experiment=1 + i // 3, step=i % 3) for i in range(9)]
+    steps = [
+        _step(i, "local_representativeness", experiment=1 + i // 3, step=i % 3)
+        for i in range(9)
+    ]
     summary = summarise_incumbents(
         annotate_incumbents(steps, {"local_representativeness", "falk_konold_dp"}),
         {"local_representativeness", "falk_konold_dp"},
@@ -183,9 +200,27 @@ def test_steps_from_histories_numbers_experiments_and_global_steps():
     ]
     steps = steps_from_histories(histories)
     assert steps == [
-        {"experiment": 1, "step": 0, "iteration": None, "global_step": 0, "best_model": "a"},
-        {"experiment": 1, "step": 1, "iteration": 0, "global_step": 1, "best_model": "b"},
-        {"experiment": 2, "step": 0, "iteration": None, "global_step": 2, "best_model": "b"},
+        {
+            "experiment": 1,
+            "step": 0,
+            "iteration": None,
+            "global_step": 0,
+            "best_model": "a",
+        },
+        {
+            "experiment": 1,
+            "step": 1,
+            "iteration": 0,
+            "global_step": 1,
+            "best_model": "b",
+        },
+        {
+            "experiment": 2,
+            "step": 0,
+            "iteration": None,
+            "global_step": 2,
+            "best_model": "b",
+        },
     ]
 
 
@@ -196,7 +231,10 @@ def test_steps_from_histories_rejects_an_empty_history():
 
 def test_incumbent_summary_for_histories_uses_the_first_seed_step_as_the_starting_set():
     histories = [
-        [_history_entry(0, None, "a", posteriors={"a": 0.5, "b": 0.5}), _history_entry(1, 0, "a")],
+        [
+            _history_entry(0, None, "a", posteriors={"a": 0.5, "b": 0.5}),
+            _history_entry(1, 0, "a"),
+        ],
         [_history_entry(0, None, "a"), _history_entry(1, 0, "new")],
     ]
     summary = incumbent_summary_for_histories(histories)
@@ -245,27 +283,50 @@ def _archive(tmp_path: Path, members: dict) -> Path:
 
 
 def test_histories_from_archive_reads_the_cell_histories_in_order(tmp_path):
-    tar_path = _archive(tmp_path, {
-        "_runs/gt/experiment2/model_loop/history.json": [_history_entry(0, None, "b")],
-        "_runs/gt/experiment1/model_loop/history.json": [_history_entry(0, None, "a")],
-        "_runs/gt/experiment1/cognitive_models/models_manifest.yaml": {},
-        "_runs/gt/experiment1/model_loop/iter_0/candidate_0/history.json": [{"decoy": True}],
-    })
+    tar_path = _archive(
+        tmp_path,
+        {
+            "_runs/gt/experiment2/model_loop/history.json": [
+                _history_entry(0, None, "b")
+            ],
+            "_runs/gt/experiment1/model_loop/history.json": [
+                _history_entry(0, None, "a")
+            ],
+            "_runs/gt/experiment1/cognitive_models/models_manifest.yaml": {},
+            "_runs/gt/experiment1/model_loop/iter_0/candidate_0/history.json": [
+                {"decoy": True}
+            ],
+        },
+    )
     histories = histories_from_archive(tar_path)
     assert [h[0]["best_model"] for h in histories] == ["a", "b"]
 
 
 def test_histories_from_archive_rejects_ambiguous_or_gapped_archives(tmp_path):
-    two_cells = _archive(tmp_path / "two", {
-        "_runs/gt1/experiment1/model_loop/history.json": [_history_entry(0, None, "a")],
-        "_runs/gt2/experiment1/model_loop/history.json": [_history_entry(0, None, "a")],
-    })
+    two_cells = _archive(
+        tmp_path / "two",
+        {
+            "_runs/gt1/experiment1/model_loop/history.json": [
+                _history_entry(0, None, "a")
+            ],
+            "_runs/gt2/experiment1/model_loop/history.json": [
+                _history_entry(0, None, "a")
+            ],
+        },
+    )
     with pytest.raises(ValueError, match="more than one run"):
         histories_from_archive(two_cells)
-    gapped = _archive(tmp_path / "gap", {
-        "_runs/gt/experiment1/model_loop/history.json": [_history_entry(0, None, "a")],
-        "_runs/gt/experiment3/model_loop/history.json": [_history_entry(0, None, "a")],
-    })
+    gapped = _archive(
+        tmp_path / "gap",
+        {
+            "_runs/gt/experiment1/model_loop/history.json": [
+                _history_entry(0, None, "a")
+            ],
+            "_runs/gt/experiment3/model_loop/history.json": [
+                _history_entry(0, None, "a")
+            ],
+        },
+    )
     with pytest.raises(FileNotFoundError, match="experiment2"):
         histories_from_archive(gapped)
     empty = _archive(tmp_path / "empty", {"_runs/gt/nothing.json": {}})

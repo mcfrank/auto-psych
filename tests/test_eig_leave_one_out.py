@@ -87,7 +87,9 @@ def test_the_generating_draw_is_the_only_draw_left_out():
     rng = np.random.default_rng(5)
     p = {m: rng.uniform(0.1, 0.9, size=(6, 5)) for m in ("a", "b", "c")}
     prior = np.full(3, 1 / 3)
-    state = eig_selection._ScenarioState(p, prior, 50, np.random.default_rng(2), 7, True)
+    state = eig_selection._ScenarioState(
+        p, prior, 50, np.random.default_rng(2), 7, True
+    )
     for j in range(5):
         state.observe(j)
     posterior = state.posterior()
@@ -110,7 +112,9 @@ def test_selection_scores_candidates_with_the_generating_draw_left_out():
     rng = np.random.default_rng(7)
     p = {m: rng.uniform(0.05, 0.95, size=(30, 40)) for m in ("a", "b")}
     for dtype in ("float64", "float32"):
-        state = eig_selection._ScenarioState(p, np.full(2, 0.5), 300, np.random.default_rng(9), 5)
+        state = eig_selection._ScenarioState(
+            p, np.full(2, 0.5), 300, np.random.default_rng(9), 5
+        )
         state.observe(3)
         h_now = state.posterior_entropy()
         scored = state.next_entropy(np.array([11]), np.dtype(dtype))[:, 0]
@@ -118,7 +122,9 @@ def test_selection_scores_candidates_with_the_generating_draw_left_out():
         # observing and re-computing would give on average.
         draws = []
         for seed in range(200):
-            trial = eig_selection._ScenarioState(p, np.full(2, 0.5), 300, np.random.default_rng(9), 5)
+            trial = eig_selection._ScenarioState(
+                p, np.full(2, 0.5), 300, np.random.default_rng(9), 5
+            )
             trial.observe(3)
             trial.rng = np.random.default_rng(1000 + seed)
             trial.observe(11)
@@ -144,6 +150,7 @@ def test_leaving_the_draw_out_is_the_default():
     assert estimate_joint_eig(p, range(8), **kwargs) == estimate_joint_eig(
         p, range(8), leave_one_out=True, **kwargs
     )
-    assert select_n_joint_eig(p, 3, **kwargs).joint_eig_bits == select_n_joint_eig(
-        p, 3, leave_one_out=True, **kwargs
-    ).joint_eig_bits
+    assert (
+        select_n_joint_eig(p, 3, **kwargs).joint_eig_bits
+        == select_n_joint_eig(p, 3, leave_one_out=True, **kwargs).joint_eig_bits
+    )

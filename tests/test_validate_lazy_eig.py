@@ -10,7 +10,9 @@ import pytest
 
 from tests.paths import SCRIPTS_DIR, load_script_module
 
-validate = load_script_module(SCRIPTS_DIR / "subjective_randomness" / "validate_lazy_eig.py")
+validate = load_script_module(
+    SCRIPTS_DIR / "subjective_randomness" / "validate_lazy_eig.py"
+)
 
 
 def _cell(tmp_path):
@@ -28,7 +30,9 @@ def _cell(tmp_path):
 def test_inputs_are_copied_out_of_the_cell(tmp_path):
     cell = _cell(tmp_path)
     staged = validate.stage_inputs(cell, tmp_path / "work", 2)
-    assert (staged / "experiment2" / "cognitive_models" / "m.py").read_text() == "x = 1\n"
+    assert (
+        staged / "experiment2" / "cognitive_models" / "m.py"
+    ).read_text() == "x = 1\n"
     assert (staged / "experiment1" / "model_loop" / "responses.csv").exists()
     assert (staged / "experiment2" / "design" / "stimuli.json").exists()
 
@@ -40,8 +44,13 @@ def test_a_work_dir_inside_the_cell_is_refused(tmp_path):
 
 
 def test_the_sweeps_pairs_map_back_to_pool_indices():
-    pool = [{"sequence_a": "HH", "sequence_b": "HT"}, {"sequence_a": "HT", "sequence_b": "TH"}]
-    assert validate.pool_index_of(pool, [{"sequence_a": "HT", "sequence_b": "TH"}]) == [1]
+    pool = [
+        {"sequence_a": "HH", "sequence_b": "HT"},
+        {"sequence_a": "HT", "sequence_b": "TH"},
+    ]
+    assert validate.pool_index_of(pool, [{"sequence_a": "HT", "sequence_b": "TH"}]) == [
+        1
+    ]
     with pytest.raises(ValueError):
         validate.pool_index_of(pool, [{"sequence_a": "TT", "sequence_b": "HT"}])
 

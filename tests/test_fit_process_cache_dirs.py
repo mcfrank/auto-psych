@@ -37,10 +37,14 @@ def shared_cache(tmp_path, monkeypatch):
     pi.clear_fit_cache()
 
 
-def test_time_limited_fit_processes_import_arviz_in_caches_of_their_own(tmp_path, shared_cache):
+def test_time_limited_fit_processes_import_arviz_in_caches_of_their_own(
+    tmp_path, shared_cache
+):
     requests = [_request(tmp_path, name) for name in ("a", "b", "c")]
     outcomes = pi.sample_fits_time_limited(
-        requests, time_limit_sec=120, workers=3,
+        requests,
+        time_limit_sec=120,
+        workers=3,
         _target=stand_ins.import_arviz_and_write_the_fit,
     )
     assert outcomes == [None, None, None]
@@ -49,9 +53,14 @@ def test_time_limited_fit_processes_import_arviz_in_caches_of_their_own(tmp_path
 
 
 def test_fit_pool_workers_import_arviz_in_caches_of_their_own(tmp_path, shared_cache):
-    with pi._fit_process_caches() as cache_root, pi._compile_dirs(2) as compile_dirs, \
-            pi._fit_executor(2, cache_root, compile_dirs) as pool:
-        futures = [pool.submit(stand_ins.import_arviz_and_name_the_cache_dir) for _ in range(4)]
+    with (
+        pi._fit_process_caches() as cache_root,
+        pi._compile_dirs(2) as compile_dirs,
+        pi._fit_executor(2, cache_root, compile_dirs) as pool,
+    ):
+        futures = [
+            pool.submit(stand_ins.import_arviz_and_name_the_cache_dir) for _ in range(4)
+        ]
         cache_dirs = {future.result() for future in futures}
     assert str(shared_cache) not in cache_dirs
     assert (shared_cache / "arviz" / "daily_warning").read_text() == STALE_DATE

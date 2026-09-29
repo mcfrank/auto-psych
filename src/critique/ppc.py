@@ -149,9 +149,7 @@ def load_test_statistic_file(path: Path) -> TestStatistic:
     path = Path(path)
     code = path.read_text(encoding="utf-8")
     if "def test_statistic" not in code:
-        raise ValueError(
-            f"{path} must define a function named 'test_statistic(df)'"
-        )
+        raise ValueError(f"{path} must define a function named 'test_statistic(df)'")
     name_match = _NAME_RE.search(code)
     desc_match = _DESC_RE.search(code)
     name = name_match.group(1).strip() if name_match else path.stem
@@ -214,7 +212,9 @@ def _compile_test_statistic(code: str) -> Callable[[Any], Any]:
     return fn
 
 
-def check_test_statistic(path: Path, observed_df: Any, *, n_replicates: int = 0) -> Optional[str]:
+def check_test_statistic(
+    path: Path, observed_df: Any, *, n_replicates: int = 0
+) -> Optional[str]:
     """Run a statistic file once on the observed data, as the check will.
 
     Returns the error (a raise, a timeout, a non-finite value, or a call slow
@@ -281,7 +281,9 @@ def evaluate_test_statistic(
                 with _time_limit(_TEST_STAT_CALL_TIMEOUT_SEC):
                     values.append(float(fn(df.copy())))
             except Exception as exc:  # say which call failed
-                raise _StatisticCallFailed(f"{type(exc).__name__}: {exc} (on {label})") from exc
+                raise _StatisticCallFailed(
+                    f"{type(exc).__name__}: {exc} (on {label})"
+                ) from exc
             spent = time.monotonic() - started
             if spent > _TEST_STAT_BUDGET_SEC and len(values) < len(frames):
                 raise TimeoutError(
@@ -295,7 +297,9 @@ def evaluate_test_statistic(
             t_observed=float("nan"),
             t_null=[],
             p_value=float("nan"),
-            error=str(exc) if isinstance(exc, _StatisticCallFailed) else f"{type(exc).__name__}: {exc}",
+            error=str(exc)
+            if isinstance(exc, _StatisticCallFailed)
+            else f"{type(exc).__name__}: {exc}",
         )
     t_obs, t_null = values[0], values[1:]
 
@@ -435,7 +439,9 @@ def _benjamini_hochberg(pvals: List[float]) -> List[float]:
     from the correction's m. Each returned q is clipped to ``[0, 1]`` and made
     monotone non-decreasing in p under the standard step-up.
     """
-    finite = [i for i, p in enumerate(pvals) if isinstance(p, float) and math.isfinite(p)]
+    finite = [
+        i for i, p in enumerate(pvals) if isinstance(p, float) and math.isfinite(p)
+    ]
     m = len(finite)
     q = [float("nan")] * len(pvals)
     if m == 0:
@@ -453,9 +459,7 @@ def _result_to_dict(res: TestStatisticResult, alpha: float) -> Dict[str, Any]:
     """JSON-serialisable summary of a result (the full null vector is omitted)."""
     t_null = np.asarray(res.t_null, dtype=float) if res.t_null else np.array([])
     significant = (
-        res.error is None
-        and not math.isnan(res.p_value)
-        and res.p_value <= alpha
+        res.error is None and not math.isnan(res.p_value) and res.p_value <= alpha
     )
     return {
         "name": res.test_statistic.name,

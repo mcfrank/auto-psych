@@ -17,7 +17,9 @@ import pytest
 from src.models import loo_reliability as lr
 
 
-def _idata(n_obs=200, n_chains=4, n_draws=250, seed=0, n_exact=0, n_heavy=0, heavy_k=1.5):
+def _idata(
+    n_obs=200, n_chains=4, n_draws=250, seed=0, n_exact=0, n_heavy=0, heavy_k=1.5
+):
     """Log-likelihood draws: well-behaved, plus ``n_exact`` constant trials and
     ``n_heavy`` trials with Pareto-tailed importance weights (GPD shape ≈ heavy_k)."""
     import arviz as az

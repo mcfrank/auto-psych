@@ -17,7 +17,9 @@ def rendered_settings(tmp_path, monkeypatch):
     the loader's defaults (a study is never built without a rendered file)."""
     import src.runtime.prolific as prolific_client
 
-    monkeypatch.setattr(prolific_client, "project_assets_dir", lambda pid: tmp_path / pid)
+    monkeypatch.setattr(
+        prolific_client, "project_assets_dir", lambda pid: tmp_path / pid
+    )
     project_dir = tmp_path / "project_with_default_settings"
     project_dir.mkdir()
     (project_dir / "prolific_config.yaml").write_text("{}\n", encoding="utf-8")

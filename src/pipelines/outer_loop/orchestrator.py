@@ -87,7 +87,9 @@ def raw_collected_responses_path(exp_dir: Path) -> Path:
     Every agent can also read its working tree, the repository, so the file
     may not be written inside it (``require_outside_agent_trees``).
     """
-    return Path(exp_dir).parent / "raw_collected" / f"{Path(exp_dir).name}_responses.csv"
+    return (
+        Path(exp_dir).parent / "raw_collected" / f"{Path(exp_dir).name}_responses.csv"
+    )
 
 
 def require_outside_agent_trees(path: Path, what: str) -> None:
@@ -674,9 +676,13 @@ def run_collect_programmatic(
         try:
             loaded = json.loads(config_path.read_text(encoding="utf-8"))
         except json.JSONDecodeError as exc:
-            raise RuntimeError(f"Malformed experiment config at {config_path}: {exc}") from exc
+            raise RuntimeError(
+                f"Malformed experiment config at {config_path}: {exc}"
+            ) from exc
         if not isinstance(loaded, dict):
-            raise RuntimeError(f"Experiment config at {config_path} must be a JSON object")
+            raise RuntimeError(
+                f"Experiment config at {config_path} must be a JSON object"
+            )
         config = loaded
 
     run_match = re.search(r"experiment(\d+)$", exp_dir.name)
@@ -707,7 +713,9 @@ def run_collect_programmatic(
     else:
         rows = None
 
-    has_results_api = bool(config.get("results_api_url") or config.get("experiment_url"))
+    has_results_api = bool(
+        config.get("results_api_url") or config.get("experiment_url")
+    )
     if mode == "live" and not has_results_api:
         raise RuntimeError(
             "mode='live' requires a deployed experiment to collect from, but the "
@@ -814,7 +822,10 @@ def run_collect_programmatic(
             w = csv.DictWriter(f, fieldnames=fieldnames, restval="")
             w.writeheader()
             w.writerows(rows)
-        print(f"  [collect] Kept every collected column in {raw_collected_path}", flush=True)
+        print(
+            f"  [collect] Kept every collected column in {raw_collected_path}",
+            flush=True,
+        )
         # Agents read data/responses.csv (and the loop's pooled copy of it):
         # the raw columns only.
         write_responses_csv(raw_response_rows(rows), csv_path)
@@ -859,5 +870,3 @@ def run_deployment_programmatic(
     )
     print(f"  [deploy] Wrote deployment manifest: {manifest_path}", flush=True)
     return manifest_path
-
-

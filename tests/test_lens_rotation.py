@@ -35,6 +35,7 @@ from tests.inner_loop_fixtures import write_responses, write_seed_models
 
 # ── (a) Pure schedule ──────────────────────────────────────────────────
 
+
 def test_lens_index_formula():
     assert _lens_index(0, 0, 3, 0, 7) == 0
     assert _lens_index(0, 0, 3, 1, 7) == 1
@@ -79,42 +80,33 @@ def test_lens_offset_rejects_zero():
 
 # ── (b) Lens text in CANDIDATE_BRIEF.md matches ledger ────────────────
 
+
 def _patch_loop_internals(monkeypatch):
     posterior = {
         "posteriors": {"model_a": 1.0},
         "elpd_loo": {"model_a": -10.0},
         "n_trials": 2,
     }
-    monkeypatch.setattr(
-        scoring, "model_posterior", lambda *a, **k: posterior
-    )
+    monkeypatch.setattr(scoring, "model_posterior", lambda *a, **k: posterior)
     monkeypatch.setattr(scoring, "compare_table", lambda *a, **k: {})
     # _prune_losers looks up compare_table in model_zoo's namespace:
     monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: {})
     # Functions looked up in model_zoo's namespace:
-    monkeypatch.setattr(
-        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
-    )
+    monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     # The stub fit is not a real trace: pass the convergence gate.
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # The experiment-start screen samples the whole set in one batch; no MCMC here.
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})
-    monkeypatch.setattr(
-        model_zoo, "log_likelihood", lambda *a, **k: -100.0
-    )
+    monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
     monkeypatch.setattr(
         model_zoo,
         "_min_prediction_rmse",
         lambda *a, **k: (None, float("inf")),
     )
-    monkeypatch.setattr(
-        model_zoo, "load_pymc_model", lambda n, d: object()
-    )
-    monkeypatch.setattr(
-        model_zoo, "evict_fit_cache", lambda name: None
-    )
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())
+    monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
 
 
 def test_brief_lens_matches_ledger_lens(tmp_path, monkeypatch):
@@ -128,9 +120,7 @@ def test_brief_lens_matches_ledger_lens(tmp_path, monkeypatch):
         rnd = int(candidate_dir.parent.name.split("_")[1])
         idx = int(candidate_dir.name.split("_")[1])
         briefs[(rnd, idx)] = docs["brief"]
-        (candidate_dir / "candidate.py").write_text(
-            "# candidate\n", encoding="utf-8"
-        )
+        (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
         (candidate_dir / "hypothesis.md").write_text(
             "People use H.\n", encoding="utf-8"
         )
@@ -139,9 +129,7 @@ def test_brief_lens_matches_ledger_lens(tmp_path, monkeypatch):
         )
         return True
 
-    monkeypatch.setattr(
-        pymc_orchestrator, "_spawn_candidate_agent", fake_spawn
-    )
+    monkeypatch.setattr(pymc_orchestrator, "_spawn_candidate_agent", fake_spawn)
     run_pymc_inner_loop(
         responses_path=write_responses(tmp_path),
         results_dir=tmp_path / "model_loop",
@@ -174,11 +162,15 @@ def test_brief_lens_matches_ledger_lens(tmp_path, monkeypatch):
     }
     assert contexts["idea_0_0"] == "experiment2 round 0 candidate 0 lens 6"
     assert contexts["idea_1_0"] == f"experiment2 round 1 candidate 0 lens {7 % n}"
-    assert contexts["idea_0_1"] == "experiment2 round 0 candidate 1 refine incumbent model_a"
+    assert (
+        contexts["idea_0_1"]
+        == "experiment2 round 0 candidate 1 refine incumbent model_a"
+    )
     assert contexts["idea_1_2"] == "experiment2 round 1 candidate 2 refine chosen"
 
 
 # ── (c) Outer loop threads lens_offset from experiment number ──────────
+
 
 def _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir):
     exp_dir.mkdir(parents=True)
@@ -189,9 +181,7 @@ def _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir):
     )
     (exp_dir / "cognitive_models").mkdir()
     (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
-        yaml.safe_dump(
-            {"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}
-        ),
+        yaml.safe_dump({"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}),
         encoding="utf-8",
     )
     captured = {}
@@ -200,9 +190,7 @@ def _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir):
         captured.update(inner_kwargs)
         return {"best_model": "stub_best"}
 
-    monkeypatch.setattr(
-        mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
-    )
+    monkeypatch.setattr(mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])
     monkeypatch.setattr(mlr, "write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(
         mlr,
@@ -216,9 +204,7 @@ def _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir):
     return captured
 
 
-def test_outer_loop_sets_lens_offset_from_experiment_number(
-    tmp_path, monkeypatch
-):
+def test_outer_loop_sets_lens_offset_from_experiment_number(tmp_path, monkeypatch):
     exp_dir = tmp_path / "subjective_randomness" / "experiment3"
     captured = _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir)
     mlr.run_inner_model_loop_programmatic(
@@ -232,9 +218,7 @@ def test_outer_loop_sets_lens_offset_from_experiment_number(
     assert captured["lens_offset"] == 4
 
 
-def test_outer_loop_refuses_experiment_dir_without_a_number(
-    tmp_path, monkeypatch
-):
+def test_outer_loop_refuses_experiment_dir_without_a_number(tmp_path, monkeypatch):
     exp_dir = tmp_path / "subjective_randomness" / "pilot"
     _outer_wrapper_capture(tmp_path, monkeypatch, exp_dir)
     with pytest.raises(ValueError, match="experiment<k>"):
@@ -247,6 +231,7 @@ def test_outer_loop_refuses_experiment_dir_without_a_number(
 
 
 # ── (d) Empty lens battery raises ─────────────────────────────────────
+
 
 def test_run_pymc_inner_loop_empty_lens_battery_raises(tmp_path, monkeypatch):
     _patch_loop_internals(monkeypatch)

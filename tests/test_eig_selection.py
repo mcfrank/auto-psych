@@ -75,9 +75,7 @@ def test_lazy_greedy_tracks_exact_greedy():
     # is that lazy matches the first pick (always a full pass) and lands near
     # exact greedy's achieved joint EIG, not that the index sets are identical.
     rng = np.random.default_rng(8)
-    draws = {
-        name: rng.uniform(0.05, 0.95, size=(4, 30)) for name in ("A", "B", "C")
-    }
+    draws = {name: rng.uniform(0.05, 0.95, size=(4, 30)) for name in ("A", "B", "C")}
     kwargs = dict(n_scenarios=4000, seed=13)
     lazy = select_n_joint_eig(
         draws, 5, lazy=True, lazy_batch_size=4, refresh_every=3, **kwargs
@@ -111,13 +109,17 @@ def test_select_n_joint_eig_validates_inputs():
         select_n_joint_eig({}, 1, n_scenarios=100, seed=0)
     with pytest.raises(ValueError):
         select_n_joint_eig(
-            {"A": np.array([[0.8]]), "B": np.array([[0.2, 0.6]])}, 1,
-            n_scenarios=100, seed=0,
+            {"A": np.array([[0.8]]), "B": np.array([[0.2, 0.6]])},
+            1,
+            n_scenarios=100,
+            seed=0,
         )  # mismatched n_stim
     with pytest.raises(ValueError):
         select_n_joint_eig(
-            {"A": np.array([[1.4]]), "B": np.array([[0.2]])}, 1,
-            n_scenarios=100, seed=0,
+            {"A": np.array([[1.4]]), "B": np.array([[0.2]])},
+            1,
+            n_scenarios=100,
+            seed=0,
         )  # p outside [0, 1]
 
 
@@ -134,9 +136,11 @@ def test_select_n_joint_eig_end_to_end_on_pymc_models():
     for _ in range(12):
         n_a, n_b = int(rng.integers(4, 9)), int(rng.integers(4, 9))
         rows.append(
-            {"sequence_a": _random_sequence(rng, n_a),
-             "sequence_b": _random_sequence(rng, n_b),
-             "chose_left": 0}
+            {
+                "sequence_a": _random_sequence(rng, n_a),
+                "sequence_b": _random_sequence(rng, n_b),
+                "chose_left": 0,
+            }
         )
     names = ["bayesian_fair_coin", "representativeness"]
     clear_model_cache()

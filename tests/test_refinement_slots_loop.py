@@ -78,7 +78,8 @@ def _patch_scoring(monkeypatch, *, losers=()):
                 "rank": rank,
                 "elpd_loo": -10.0 - (30.0 if far else 1.0 * rank),
                 "elpd_diff": 0.0 if n == "model_a" else (30.0 if far else 1.0),
-                "dse": 0.0 if n == "model_a" else 5.0, "dse_clustered": 0.0 if n == "model_a" else 5.0,
+                "dse": 0.0 if n == "model_a" else 5.0,
+                "dse_clustered": 0.0 if n == "model_a" else 5.0,
                 "weight": 1.0 if n == "model_a" else 0.0,
                 "loo_unreliable": False,
             }
@@ -140,7 +141,9 @@ def test_three_slot_round_is_one_exploratory_one_incumbent_one_chosen(
         idx = int(candidate_dir.name.split("_")[1])
         docs_by_slot[(rnd, idx)] = docs
         if (rnd, idx) == (0, 0):
-            _write_candidate(candidate_dir, name="runs_idea", hypothesis=LONG_HYPOTHESIS)
+            _write_candidate(
+                candidate_dir, name="runs_idea", hypothesis=LONG_HYPOTHESIS
+            )
         else:
             _write_candidate(
                 candidate_dir,
@@ -207,19 +210,29 @@ def test_three_slot_round_is_one_exploratory_one_incumbent_one_chosen(
     # The same file is on disk for audit, and the prompt inlines it.
     menu_file = results_dir / "iter_1" / "candidate_2" / "refinement_menu.md"
     assert menu_file.read_text(encoding="utf-8") == menu1
-    assert not (results_dir / "iter_1" / "candidate_2" / "attempted_hypotheses.md").exists()
+    assert not (
+        results_dir / "iter_1" / "candidate_2" / "attempted_hypotheses.md"
+    ).exists()
     assert (results_dir / "iter_1" / "candidate_0" / "attempted_hypotheses.md").exists()
     assert not (results_dir / "iter_1" / "candidate_0" / "refinement_menu.md").exists()
 
     # ── The ledger records the slot's assignment (not the agent's choice).
     contexts = {
-        r["name"]: r["context"] for r in _ledger_rows(results_dir) if r["outcome"] == "admitted"
+        r["name"]: r["context"]
+        for r in _ledger_rows(results_dir)
+        if r["outcome"] == "admitted"
     }
     assert contexts["runs_idea"] == "experiment1 round 0 candidate 0 lens 0"
-    assert contexts["idea_0_1"] == "experiment1 round 0 candidate 1 refine incumbent model_a"
+    assert (
+        contexts["idea_0_1"]
+        == "experiment1 round 0 candidate 1 refine incumbent model_a"
+    )
     assert contexts["idea_0_2"] == "experiment1 round 0 candidate 2 refine chosen"
     assert contexts["idea_1_0"] == "experiment1 round 1 candidate 0 lens 1"
-    assert contexts["idea_1_1"] == "experiment1 round 1 candidate 1 refine incumbent model_a"
+    assert (
+        contexts["idea_1_1"]
+        == "experiment1 round 1 candidate 1 refine incumbent model_a"
+    )
     assert contexts["idea_1_2"] == "experiment1 round 1 candidate 2 refine chosen"
 
 
@@ -260,7 +273,9 @@ def test_six_slot_round_has_three_exploratory_lenses_that_never_repeat(
     for idx in (3, 4):
         assert "Refine the incumbent" in briefs[idx] and "`model_a`" in briefs[idx]
     assert "of your choosing" in briefs[5]
-    contexts = [r["context"] for r in _ledger_rows(results_dir) if r["outcome"] == "admitted"]
+    contexts = [
+        r["context"] for r in _ledger_rows(results_dir) if r["outcome"] == "admitted"
+    ]
     assert contexts == [
         "experiment1 round 0 candidate 0 lens 0",
         "experiment1 round 0 candidate 1 lens 1",
@@ -279,7 +294,9 @@ def test_refinement_slot_retry_and_repair_keep_their_role(tmp_path, monkeypatch)
     monkeypatch.setattr(
         model_zoo,
         "_min_prediction_rmse",
-        lambda name, *a, **k: ("model_a", 0.0001) if name == "same_as_a" else (None, float("inf")),
+        lambda name, *a, **k: (
+            ("model_a", 0.0001) if name == "same_as_a" else (None, float("inf"))
+        ),
     )
     seed_dir = _write_seed_models(tmp_path)
     responses = write_responses(tmp_path)
@@ -311,9 +328,21 @@ def test_refinement_slot_retry_and_repair_keep_their_role(tmp_path, monkeypatch)
         assert "Refine the incumbent" in briefs[attempt], attempt
     slot_1 = [r for r in _ledger_rows(results_dir) if "candidate 1" in r["context"]]
     assert [(r["name"], r["outcome"], r["context"]) for r in slot_1] == [
-        ("iter0_candidate1", "rejected", "experiment1 round 0 candidate 1 refine incumbent model_a"),
-        ("same_as_a", "rejected", "experiment1 round 0 candidate 1 refine incumbent model_a retry 1"),
-        ("a_refined", "admitted", "experiment1 round 0 candidate 1 refine incumbent model_a repair 1"),
+        (
+            "iter0_candidate1",
+            "rejected",
+            "experiment1 round 0 candidate 1 refine incumbent model_a",
+        ),
+        (
+            "same_as_a",
+            "rejected",
+            "experiment1 round 0 candidate 1 refine incumbent model_a retry 1",
+        ),
+        (
+            "a_refined",
+            "admitted",
+            "experiment1 round 0 candidate 1 refine incumbent model_a repair 1",
+        ),
     ]
     assert _manifest_names(results_dir / "models") == [
         "model_a",

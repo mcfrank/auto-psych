@@ -45,10 +45,13 @@ def test_an_unknown_mode_fails():
         require_claude_auth("claude", "free", env=dict(HARNESS_ENV))
 
 
-@pytest.mark.parametrize("mode, credential", [
-    ("subscription", "CLAUDE_CODE_OAUTH_TOKEN"),
-    ("api", "ANTHROPIC_API_KEY"),
-])
+@pytest.mark.parametrize(
+    "mode, credential",
+    [
+        ("subscription", "CLAUDE_CODE_OAUTH_TOKEN"),
+        ("api", "ANTHROPIC_API_KEY"),
+    ],
+)
 def test_a_mode_without_its_credential_fails(mode, credential):
     env = {k: v for k, v in HARNESS_ENV.items() if k != credential}
     with pytest.raises(RuntimeError, match=credential):
@@ -79,14 +82,22 @@ def test_other_backends_need_no_mode():
 def _agent_env(tmp_path, monkeypatch, harness_env):
     _fake_bwrap(monkeypatch, "claude")
     _, env = sandbox_command(
-        ["claude"], backend="claude", cwd=tmp_path, writable_dirs=[],
-        agent_dir=tmp_path, env={**harness_env, "HOME": str(tmp_path)},
+        ["claude"],
+        backend="claude",
+        cwd=tmp_path,
+        writable_dirs=[],
+        agent_dir=tmp_path,
+        env={**harness_env, "HOME": str(tmp_path)},
     )
     return env
 
 
-def test_a_subscription_agent_gets_the_token_and_no_anthropic_variable(tmp_path, monkeypatch):
-    env = _agent_env(tmp_path, monkeypatch, {**HARNESS_ENV, "CLAUDE_AUTH": "subscription"})
+def test_a_subscription_agent_gets_the_token_and_no_anthropic_variable(
+    tmp_path, monkeypatch
+):
+    env = _agent_env(
+        tmp_path, monkeypatch, {**HARNESS_ENV, "CLAUDE_AUTH": "subscription"}
+    )
     assert env["CLAUDE_CODE_OAUTH_TOKEN"] == TOKEN
     assert not [k for k in env if k.startswith("ANTHROPIC_")]
 
@@ -113,13 +124,23 @@ def test_the_mode_is_recorded_with_the_agents_token_usage(tmp_path, monkeypatch)
     import src.runtime.coding_agent as coding_agent
 
     def fake_sandbox_command(cmd, *, env, **kwargs):
-        return [sys.executable, "-c", "print('{\"type\": \"result\", \"subtype\": \"success\", \"result\": \"ok\"}')"], dict(env)
+        return [
+            sys.executable,
+            "-c",
+            'print(\'{"type": "result", "subtype": "success", "result": "ok"}\')',
+        ], dict(env)
 
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
     token_usage.reset_usage_log()
     coding_agent.run_coding_agent(
-        "p", cwd=tmp_path, log_path=tmp_path / "agent" / "agent.jsonl", backend="claude",
-        allowed_dirs=[], writable_dirs=[tmp_path / "agent"], sandbox=True, on_summary=None,
+        "p",
+        cwd=tmp_path,
+        log_path=tmp_path / "agent" / "agent.jsonl",
+        backend="claude",
+        allowed_dirs=[],
+        writable_dirs=[tmp_path / "agent"],
+        sandbox=True,
+        on_summary=None,
         env={**HARNESS_ENV, "CLAUDE_AUTH": "subscription"},
     )
     summary = token_usage.summarize(token_usage.records_since(0))
@@ -144,25 +165,43 @@ def test_holdout_entry_points_take_claude_auth(script, monkeypatch):
     args_type = module.Args
     args = tyro.cli(
         args_type,
-        args=["--config", "c.yaml", "--out", "o.json", "--backend", "claude",
-              "--claude-auth", "api"],
+        args=[
+            "--config",
+            "c.yaml",
+            "--out",
+            "o.json",
+            "--backend",
+            "claude",
+            "--claude-auth",
+            "api",
+        ],
     )
     assert args.claude_auth == "api"
 
 
-def test_a_holdout_run_with_claude_and_no_mode_stops_before_anything_runs(tmp_path, monkeypatch):
+def test_a_holdout_run_with_claude_and_no_mode_stops_before_anything_runs(
+    tmp_path, monkeypatch
+):
     from src.subjective_randomness.config import load_config
-    from src.subjective_randomness.holdout_recovery import run_holdout_recovery_from_config
+    from src.subjective_randomness.holdout_recovery import (
+        run_holdout_recovery_from_config,
+    )
 
     monkeypatch.delenv("CLAUDE_AUTH", raising=False)
     config_path = (
-        REPO_ROOT / "scripts" / "subjective_randomness" / "configs"
+        REPO_ROOT
+        / "scripts"
+        / "subjective_randomness"
+        / "configs"
         / "holdout_recovery_faithful.yaml"
     )
     results_root = tmp_path / "results"
     with pytest.raises(RuntimeError, match="claude_auth"):
         run_holdout_recovery_from_config(
-            load_config(config_path), config_path, results_root, backend_override="claude",
+            load_config(config_path),
+            config_path,
+            results_root,
+            backend_override="claude",
         )
     assert not results_root.exists()
 
@@ -170,12 +209,17 @@ def test_a_holdout_run_with_claude_and_no_mode_stops_before_anything_runs(tmp_pa
 def test_a_holdout_config_states_the_mode(tmp_path, monkeypatch):
     """agent.claude_auth reaches the check (which then wants its credential)."""
     from src.subjective_randomness.config import load_config
-    from src.subjective_randomness.holdout_recovery import run_holdout_recovery_from_config
+    from src.subjective_randomness.holdout_recovery import (
+        run_holdout_recovery_from_config,
+    )
 
     monkeypatch.delenv("CLAUDE_AUTH", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
     config_path = (
-        REPO_ROOT / "scripts" / "subjective_randomness" / "configs"
+        REPO_ROOT
+        / "scripts"
+        / "subjective_randomness"
+        / "configs"
         / "holdout_recovery_faithful.yaml"
     )
     config = load_config(config_path)
@@ -191,8 +235,16 @@ def test_the_live_entry_point_stops_a_claude_run_without_a_mode(monkeypatch):
     monkeypatch.setenv("CODING_AGENT", "opencode")  # main exports its backend here
     args = tyro.cli(
         run.Args,
-        args=["--project", "subjective_randomness", "--experiment", "1",
-              "--agent", "2_design", "--coding-agent", "claude"],
+        args=[
+            "--project",
+            "subjective_randomness",
+            "--experiment",
+            "1",
+            "--agent",
+            "2_design",
+            "--coding-agent",
+            "claude",
+        ],
     )
     with pytest.raises(RuntimeError, match="claude_auth"):
         run.main(args)

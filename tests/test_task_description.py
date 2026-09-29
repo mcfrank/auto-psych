@@ -24,7 +24,9 @@ def _loop(tmp_path, with_task=True):
         "models:\n  - name: seed_a\n    rationale: mechanism seed_a\n", encoding="utf-8"
     )
     responses = tmp_path / "responses.csv"
-    responses.write_text("sequence_a,sequence_b,chose_left\nHT,HH,1\n", encoding="utf-8")
+    responses.write_text(
+        "sequence_a,sequence_b,chose_left\nHT,HH,1\n", encoding="utf-8"
+    )
     if with_task:
         (tmp_path / "task_description.md").write_text(TASK, encoding="utf-8")
     return models_dir, responses
@@ -33,8 +35,13 @@ def _loop(tmp_path, with_task=True):
 def test_the_candidate_context_carries_the_task(tmp_path):
     models_dir, responses = _loop(tmp_path)
     docs = _write_candidate_context(
-        tmp_path / "iter_0" / "candidate_0", responses, models_dir,
-        iteration=0, candidate_idx=0, candidate_count=3, current_posterior=None,
+        tmp_path / "iter_0" / "candidate_0",
+        responses,
+        models_dir,
+        iteration=0,
+        candidate_idx=0,
+        candidate_count=3,
+        current_posterior=None,
     )
     assert "Participants pick the sequence that looks more random." in docs["context"]
 
@@ -42,8 +49,14 @@ def test_the_candidate_context_carries_the_task(tmp_path):
 def test_the_critique_context_carries_the_task(tmp_path):
     models_dir, responses = _loop(tmp_path)
     text = _write_critique_context(
-        tmp_path / "critique", "seed_a", models_dir, responses, tmp_path / "cache",
-        n_proposals=8, significance_alpha=0.05, n_replicates=10,
+        tmp_path / "critique",
+        "seed_a",
+        models_dir,
+        responses,
+        tmp_path / "cache",
+        n_proposals=8,
+        significance_alpha=0.05,
+        n_replicates=10,
     )
     assert "Participants pick the sequence that looks more random." in text
 
@@ -52,8 +65,13 @@ def test_a_missing_task_description_fails_loudly(tmp_path):
     models_dir, responses = _loop(tmp_path, with_task=False)
     with pytest.raises(FileNotFoundError, match="task_description.md"):
         _write_candidate_context(
-            tmp_path / "iter_0" / "candidate_0", responses, models_dir,
-            iteration=0, candidate_idx=0, candidate_count=3, current_posterior=None,
+            tmp_path / "iter_0" / "candidate_0",
+            responses,
+            models_dir,
+            iteration=0,
+            candidate_idx=0,
+            candidate_count=3,
+            current_posterior=None,
         )
 
 
@@ -71,7 +89,21 @@ def test_a_project_without_one_fails_loudly(tmp_path):
 def test_the_shipped_description_names_no_ground_truth_or_mechanism():
     from src.pipelines.outer_loop.orchestrator import outer_project_dir
 
-    text = (outer_project_dir("subjective_randomness") / "task_description.md").read_text()
-    for word in ("motif", "stack", "falk", "konold", "occurrence", "representativ",
-                 "griffiths", "symmetr", "mirror", "alternat", "run length", "streak"):
+    text = (
+        outer_project_dir("subjective_randomness") / "task_description.md"
+    ).read_text()
+    for word in (
+        "motif",
+        "stack",
+        "falk",
+        "konold",
+        "occurrence",
+        "representativ",
+        "griffiths",
+        "symmetr",
+        "mirror",
+        "alternat",
+        "run length",
+        "streak",
+    ):
         assert word not in text.lower(), word

@@ -26,7 +26,7 @@ with pm.Model() as model:
 
     # Base typicality per event
     base_typ = pm.Normal("base_typ", mu=0.0, sigma=5.0)
-    
+
     # Memory decay parameter for the leaky accumulator
     # A decay of 1 means perfect memory (linear accumulation), 0 means no memory (only last event matters)
     decay = pm.Beta("decay", alpha=2.0, beta=2.0)
@@ -50,8 +50,12 @@ with pm.Model() as model:
     # Sum of geometric series: 1 + decay + decay^2 + ... + decay^(n-1) = (1 - decay^n) / (1 - decay)
     # We clip decay to 0.999 to avoid division by zero
     safe_decay = pt.clip(decay, 1e-6, 0.999)
-    eff_len_a = (1.0 - pt.power(safe_decay, pt.cast(n_a, "float64"))) / (1.0 - safe_decay)
-    eff_len_b = (1.0 - pt.power(safe_decay, pt.cast(n_b, "float64"))) / (1.0 - safe_decay)
+    eff_len_a = (1.0 - pt.power(safe_decay, pt.cast(n_a, "float64"))) / (
+        1.0 - safe_decay
+    )
+    eff_len_b = (1.0 - pt.power(safe_decay, pt.cast(n_b, "float64"))) / (
+        1.0 - safe_decay
+    )
 
     # Total randomness score with leaky accumulation
     rand_a = eff_len_a * typ_a

@@ -27,7 +27,11 @@ import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
 import src.pipelines.inner_loop.scoring as scoring
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
-from tests.inner_loop_fixtures import canned_posterior, write_responses, write_seed_models
+from tests.inner_loop_fixtures import (
+    canned_posterior,
+    write_responses,
+    write_seed_models,
+)
 
 
 def _patch_scoring(monkeypatch, posteriors_per_call):
@@ -43,13 +47,9 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
     # _prune_losers looks up compare_table in model_zoo's namespace:
     monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: {})
     # Functions looked up in model_zoo's namespace:
-    monkeypatch.setattr(
-        model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
-    )
+    monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
     monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
-    monkeypatch.setattr(
-        model_zoo, "load_pymc_model", lambda name, models_dir: object()
-    )
+    monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
     # Candidate admission now ends with a real MCMC fit-gate; stub it so the fake
     # stub candidates (not real PyMC models) are admitted without sampling.
     # The stub fit is not a real trace: pass the convergence gate.
@@ -61,7 +61,8 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
     monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -100.0)
     # Novelty gate is covered by test_novelty_gate.py; neutralize it here.
     monkeypatch.setattr(
-        model_zoo, "_min_prediction_rmse",
+        model_zoo,
+        "_min_prediction_rmse",
         lambda *a, **k: (None, float("inf")),
     )
 
@@ -69,7 +70,9 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
 def _patch_candidates(monkeypatch, captured_critique_paths):
     def fake_spawn(candidate_dir, docs, **kwargs):
         (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
-        (candidate_dir / "hypothesis.md").write_text("People use H.\n", encoding="utf-8")
+        (candidate_dir / "hypothesis.md").write_text(
+            "People use H.\n", encoding="utf-8"
+        )
         # Record whether the critique was injected into the candidate's docs
         # (it is inlined into the prompt, not merely pointed at).
         captured_critique_paths.append(bool(docs.get("critiques")))
@@ -89,13 +92,15 @@ def _patch_critique_agent(monkeypatch, spawn_log):
             encoding="utf-8",
         )
         return {
-            "status": "critiqued", "incumbent": incumbent, "attempts": 1,
-            "n_statistics": 1, "n_significant": 1, "n_significant_fdr": 0,
+            "status": "critiqued",
+            "incumbent": incumbent,
+            "attempts": 1,
+            "n_statistics": 1,
+            "n_significant": 1,
+            "n_significant_fdr": 0,
         }
 
-    monkeypatch.setattr(
-        critique_round, "_spawn_critique_agent", fake_spawn_critique
-    )
+    monkeypatch.setattr(critique_round, "_spawn_critique_agent", fake_spawn_critique)
 
 
 def test_critique_default_significance_alpha():
@@ -107,9 +112,11 @@ def test_critique_default_significance_alpha():
     from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 
     assert CRITIQUE_SIGNIFICANCE_ALPHA == 0.05
-    default = inspect.signature(run_pymc_inner_loop).parameters[
-        "critique_significance_alpha"
-    ].default
+    default = (
+        inspect.signature(run_pymc_inner_loop)
+        .parameters["critique_significance_alpha"]
+        .default
+    )
     assert default == 0.05
 
 
@@ -197,12 +204,25 @@ def _patch_critique_agent_process(monkeypatch, on_run):
     """
     import src.runtime.coding_agent as coding_agent
 
-    monkeypatch.setattr(critique_round, "_seed_critique_fit_cache", lambda *a, **k: None)
+    monkeypatch.setattr(
+        critique_round, "_seed_critique_fit_cache", lambda *a, **k: None
+    )
     calls: list = []
 
     def fake_run(
-        prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False, memory_dir=None, sandbox=False, writable_dirs=None,
+        prompt,
+        *,
+        cwd,
+        log_path,
+        allowed_dirs,
+        timeout_secs,
+        backend,
+        usage_label,
+        model=None,
+        stock=False,
+        memory_dir=None,
+        sandbox=False,
+        writable_dirs=None,
     ):
         calls.append({"prompt": prompt, "log_path": log_path})
         on_run(log_path.parent)
@@ -220,14 +240,32 @@ _PPC_RESULT = {
     "n_significant": 1,
     "n_significant_fdr": 0,
     "results": [
-        {"name": "alternation_gap", "description": "alternation proportion of A",
-         "t_observed": 0.55, "null_mean": 0.50, "null_std": 0.02, "z_score": 2.5,
-         "p_value": 0.012, "p_value_fdr": 0.024, "significant": True,
-         "significant_fdr": False, "error": None},
-        {"name": "max_run", "description": "max run length",
-         "t_observed": 2.1, "null_mean": 2.0, "null_std": 0.3, "z_score": 0.5,
-         "p_value": 0.6, "p_value_fdr": 0.6, "significant": False,
-         "significant_fdr": False, "error": None},
+        {
+            "name": "alternation_gap",
+            "description": "alternation proportion of A",
+            "t_observed": 0.55,
+            "null_mean": 0.50,
+            "null_std": 0.02,
+            "z_score": 2.5,
+            "p_value": 0.012,
+            "p_value_fdr": 0.024,
+            "significant": True,
+            "significant_fdr": False,
+            "error": None,
+        },
+        {
+            "name": "max_run",
+            "description": "max run length",
+            "t_observed": 2.1,
+            "null_mean": 2.0,
+            "null_std": 0.3,
+            "z_score": 0.5,
+            "p_value": 0.6,
+            "p_value_fdr": 0.6,
+            "significant": False,
+            "significant_fdr": False,
+            "error": None,
+        },
     ],
 }
 

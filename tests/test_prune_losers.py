@@ -43,13 +43,9 @@ def _models_dir(tmp_path, names):
 
 
 def _stub_comparison(monkeypatch, rows):
-    monkeypatch.setattr(
-        model_zoo, "compare_table", lambda *a, **k: rows
-    )
+    monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: rows)
     evicted = []
-    monkeypatch.setattr(
-        model_zoo, "evict_fit_cache", lambda name: evicted.append(name)
-    )
+    monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: evicted.append(name))
     return evicted
 
 
@@ -240,7 +236,9 @@ def test_empty_comparison_prunes_nothing(tmp_path, monkeypatch):
     assert (models_dir / "dead_end.py").exists()
 
 
-def test_an_unreliable_baseline_with_one_trusted_model_prunes_nothing(tmp_path, monkeypatch, capsys):
+def test_an_unreliable_baseline_with_one_trusted_model_prunes_nothing(
+    tmp_path, monkeypatch, capsys
+):
     """Pruning compares trusted models with the best of them; with the rank-0
     model unreliable, one trusted model has nothing to be compared with."""
     models_dir = _models_dir(tmp_path, ["seed_a", "dead_end"])
@@ -265,12 +263,16 @@ def test_an_unreliable_baseline_with_one_trusted_model_prunes_nothing(tmp_path, 
 
 
 @pytest.mark.parametrize("flag", ["loo_unreliable", "not_converged"])
-def test_an_untrusted_rank_0_model_does_not_stall_pruning(tmp_path, monkeypatch, capsys, flag):
+def test_an_untrusted_rank_0_model_does_not_stall_pruning(
+    tmp_path, monkeypatch, capsys, flag
+):
     """Second audit B8: an untrusted rank-0 model used to switch pruning off
     for the whole experiment (the live-set cap then retired it, without
     pruning being rerun). Now the comparison is recomputed over the trusted
     models and the losers are pruned against the best of them."""
-    models_dir = _models_dir(tmp_path, ["seed_a", "flaky_top", "leader", "dead_end", "close"])
+    models_dir = _models_dir(
+        tmp_path, ["seed_a", "flaky_top", "leader", "dead_end", "close"]
+    )
     full = {
         "flaky_top": {**_row(0, 0.0, 0.0, 0.6), flag: True},
         "leader": _row(1, 3.0, 5.0, 0.3),
@@ -293,11 +295,16 @@ def test_an_untrusted_rank_0_model_does_not_stall_pruning(tmp_path, monkeypatch,
 
     monkeypatch.setattr(model_zoo, "compare_table", compare_table)
     monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
-    ledger = model_zoo.HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
+    ledger = model_zoo.HypothesisLedger.create(
+        tmp_path / "ledger.jsonl", inherit_from=None
+    )
 
     pruned = _prune_losers(
-        models_dir, tmp_path / "responses.csv",
-        cache_dir=None, fit_kwargs=None, ledger=ledger,
+        models_dir,
+        tmp_path / "responses.csv",
+        cache_dir=None,
+        fit_kwargs=None,
+        ledger=ledger,
     )
 
     # seed_a, a starting model, is pruned like any other (17 > 2·3).

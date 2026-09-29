@@ -32,13 +32,9 @@ def test_programmatic_wrapper_threads_hero_knobs(tmp_path, monkeypatch):
         captured.update(inner_kwargs)
         return {"best_model": "stub_best"}
 
-    monkeypatch.setattr(
-        mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}]
-    )
+    monkeypatch.setattr(mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])
     monkeypatch.setattr(mlr, "write_responses_csv", lambda rows, out: out)
-    monkeypatch.setattr(
-        mlr, "_export_inner_loop_models", lambda e, l, *, best_model: e
-    )
+    monkeypatch.setattr(mlr, "_export_inner_loop_models", lambda e, l, *, best_model: e)
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
         fake_inner_loop,
@@ -64,13 +60,20 @@ def test_inner_cli_parses_hero_knobs():
     args = tyro.cli(
         InnerArgs,
         args=[
-            "--responses", "r.csv",
-            "--seed-models", "seeds",
-            "--results", "out",
-            "--novelty-rmse-threshold", "0.05",
-            "--prune-dse-multiplier", "2.5",
-            "--candidate-parallelism", "8",
-            "--hints-file", "hints.yaml",
+            "--responses",
+            "r.csv",
+            "--seed-models",
+            "seeds",
+            "--results",
+            "out",
+            "--novelty-rmse-threshold",
+            "0.05",
+            "--prune-dse-multiplier",
+            "2.5",
+            "--candidate-parallelism",
+            "8",
+            "--hints-file",
+            "hints.yaml",
         ],
     )
     assert args.novelty_rmse_threshold == 0.05

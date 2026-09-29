@@ -29,4 +29,3 @@ def resolve_path(path_value: str | Path, config_path: Path | None = None) -> Pat
 def load_config(path: Path) -> Dict[str, Any]:
     """Parse a YAML config file and return its contents as a dict."""
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
-

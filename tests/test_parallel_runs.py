@@ -21,7 +21,10 @@ def test_output_dir_respects_env_override(monkeypatch, tmp_path):
     monkeypatch.setenv("AUTO_PSYCH_OUTPUT_DIR", str(job_dir))
     assert outer_data_dir() == job_dir
     # Experiment dirs (and therefore pooling) live under the per-job root.
-    assert experiment_dir("subjective_randomness", 1) == job_dir / "subjective_randomness" / "experiment1"
+    assert (
+        experiment_dir("subjective_randomness", 1)
+        == job_dir / "subjective_randomness" / "experiment1"
+    )
 
 
 def test_parallel_jobs_get_isolated_experiment_dirs(monkeypatch, tmp_path):
