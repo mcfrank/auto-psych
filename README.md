@@ -105,7 +105,6 @@ dataclass — `--help` lists every knob with its documented default.
 
 | Command | What it does |
 |---|---|
-| `python scripts/subjective_randomness/model_recovery.py` | Closed-ended recovery: confusion matrix over the frozen registry models (no agents). |
 | `python scripts/subjective_randomness/holdout_recovery.py` | Full agentic loop vs. a held-out registry ground truth; per-step recovery trajectory. |
 | `python scripts/subjective_randomness/impossible_holdout_recovery.py` | Same, with deliberately-weird "impossible" ground truths outside every model family. |
 | `python scripts/subjective_randomness/reanalyze_holdout_exhaustive.py` | Re-evaluate finished holdout runs on the exhaustive stimulus pool (no agents, cached fits). |

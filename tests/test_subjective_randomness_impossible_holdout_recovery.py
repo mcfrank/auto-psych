@@ -33,7 +33,7 @@ from src.subjective_randomness.leakage_audit import (
     _distinctive_param_names,
     leakage_check,
 )
-from src.subjective_randomness.model_recovery import p_left_fixed_params
+from src.subjective_randomness.holdout_data import p_left_fixed_params
 from tests.model_registry import FAITHFUL_MODEL_NAMES
 from tests.recovery_fixtures import CannedPredictionFit
 from tests.paths import REPO_ROOT

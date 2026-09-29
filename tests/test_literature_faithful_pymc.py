@@ -26,10 +26,8 @@ from src.models.theorist.loader import get_model_names_from_manifest
 from src.models.model_loading import load_pymc_model, observed_response_data
 from src.models.pymc_inference import prior_predict_p_left
 from src.subjective_randomness.features import featurize_stimulus
-from src.subjective_randomness.model_recovery import (
-    p_left_fixed_params,
-    p_left_model_family,
-)
+from src.subjective_randomness.holdout_data import p_left_fixed_params
+from tests.recovery_fixtures import p_left_model_family
 
 MODEL_DIR = (
     Path(__file__).resolve().parent.parent
@@ -67,8 +65,7 @@ def test_new_models_load_and_prior_predict(model_name):
     model = load_pymc_model(model_name, MODEL_DIR)
     assert observed_response_data(model) == "chose_left"
 
-    # The raw sequences travel with the numeric features, as every production
-    # caller builds them (cf. `model_recovery.feature_rows`): motif_stack derives
+    # The raw sequences travel with the numeric features: motif_stack derives
     # its pm.Data containers from the sequences via a `prepare_observed` hook.
     row = {
         "sequence_a": "HHTHTTHT",

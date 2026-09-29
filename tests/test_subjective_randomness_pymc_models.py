@@ -158,7 +158,7 @@ def _stimulus_row(sequence_a: str, sequence_b: str) -> dict:
     The raw H/T sequences travel alongside the numeric features because models
     may declare a `compute_features` featurizer or a `prepare_observed` hook,
     both of which derive their inputs from the sequences rather than from the
-    fixed feature columns (cf. `model_recovery.feature_rows`).
+    fixed feature columns.
     """
     return {
         "sequence_a": sequence_a,

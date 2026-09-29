@@ -35,10 +35,8 @@ from src.subjective_randomness.model_families import motif_stack_tempered as tem
 from src.subjective_randomness.pymc_model_families import (
     motif_stack_tempered as tempered_adapter,
 )
-from src.subjective_randomness.model_recovery import (
-    p_left_fixed_params,
-    p_left_model_family,
-)
+from src.subjective_randomness.holdout_data import p_left_fixed_params
+from tests.recovery_fixtures import p_left_model_family
 
 MODEL_DIR = (
     Path(__file__).resolve().parent.parent

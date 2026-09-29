@@ -7,8 +7,8 @@ Bernoulli response likelihood expected by `src.models.pymc_inference`.
 
 This directory is the **recovery registry**, and its `models_manifest.yaml` is
 the single source of truth for which models are active. The recovery harnesses
-(`model_recovery.py`, `holdout_recovery.py`, and the impossible variant) point
-their `seed_models_dir` here, because ground-truth generation and
+(`holdout_recovery.py` and the impossible variant) point their
+`seed_models_dir` here, because ground-truth generation and
 fixed-parameter baselines need the pure-Python family twins. The outer loop's
 live seed pool
 (`src/pipelines/outer_loop/projects/subjective_randomness/seed_models/`) is a
@@ -20,8 +20,8 @@ across (the pool manifest keeps its own header but must list the same models).
 `tests/test_subjective_randomness_seed_recovery.py` fail if the two diverge, or
 if a manifest name has no pure-Python twin. (They diverged once, between the
 hero-run promotion of 2026-07 and the reconciliation of 2026-08, which left
-`model_recovery.default_generating_params` raising `ModuleNotFoundError` for
-every pool model; the retired winners are archived under the seed pool's
+the recovery harness's twin lookup raising `ModuleNotFoundError` for every
+pool model; the retired winners are archived under the seed pool's
 `archive_hero_run_2026_07/`.)
 
 The 2026-08 seed-model fidelity review **replaced** the original four models

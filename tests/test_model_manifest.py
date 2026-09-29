@@ -51,7 +51,7 @@ LIVE_SEED_DIR = (
 def test_every_manifest_model_has_a_pure_python_twin(models_dir):
     """Each active model resolves to ``model_families.<name>.DEFAULT_PARAMS``.
 
-    Recovery needs the twin: ``model_recovery.default_generating_params``
+    Recovery needs the twin: ``holdout_data.resolve_generating_params``
     imports it by name to fix the generating parameters, and the twin is what
     the PyMC adapter is validated against. A manifest name without a twin is a
     ``ModuleNotFoundError`` waiting for the next recovery run.
