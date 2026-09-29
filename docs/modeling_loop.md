@@ -254,9 +254,14 @@ deletes the pool's `motif_stack.py` and scrubs its manifest entry,
 (`tests/test_motif_stack_seed_holdout.py`).
 
 The same three models are the **protected** set: they are never pruned or
-retired by the cap and are always carried forward (`_protected_seed_names`,
-model_loop_runner.py:81). The protected set is the pool manifest intersected
-with the experiment's `cognitive_models/`.
+retired by the cap and are always carried forward. The set is recorded once,
+when experiment 1's model loop first runs, as the pool manifest intersected
+with experiment 1's `cognitive_models/` (`run_starting_models`,
+model_loop_runner.py), in `<run_root>/starting_models.json`; later experiments
+(and a resumed experiment 1) read it back, and a later experiment without it
+raises. Until 2026-09-28 it was recomputed every experiment from the names in
+`cognitive_models/`, so a candidate that named itself after the held-out
+model became a protected seed from the next experiment on (second audit B10).
 
 ### 1.5 What agents can see: the sandbox
 
@@ -716,7 +721,7 @@ receive `problem_definition.md`, which is also excluded from the agent tree.
 1. `_seed_model_set` (model_zoo.py:235) copies `cognitive_models/` (the carried
    or seeded set) into the zoo `model_loop/models/`.
 2. `_resolve_protected_names` (scoring.py:32) sets the protected set to the
-   project seeds present, which is the three non-GT seeds.
+   recorded starting models present, which is the three non-GT seeds.
 3. `HypothesisLedger.create` (hypothesis_ledger.py:102) copies
    `cognitive_models/attempted_hypotheses.jsonl` if present, and otherwise
    starts empty.
@@ -1048,7 +1053,7 @@ the candidate (`reject` records it in the ledger with the reason):
 
 | # | Gate | Detail |
 | --- | --- | --- |
-| – | name | `model_name.txt` must match `[a-z][a-z0-9_]{2,40}`, must not look like `iterN_candidateM`, and must not be `inner_loop_model`/`best_model`. Otherwise the fallback `iter{i}_candidate{j}` is used, which is **not a rejection**. A name already in the zoo gets `_2`, `_3`, … |
+| – | name | `model_name.txt` must match `[a-z][a-z0-9_]{2,40}`, must not look like `iterN_candidateM`, and must not be `inner_loop_model`/`best_model`. Otherwise the fallback `iter{i}_candidate{j}` is used, which is **not a rejection**. A name that is taken gets `_2`, `_3`, …: a name in the zoo, a starting model's name (carried or not), or the name of any model pruned, retired by the cap or dropped earlier in the run (the inherited ledger and `models/pruned/`; `reserved_names`). Before 2026-09-28 only the zoo counted, so a new model could reuse a pruned model's name (first audit D3). A renamed admission's ledger `detail` says which name it asked for |
 | 1 | `candidate.py` exists | "no candidate.py written" |
 | 2 | `hypothesis.md` exists and is non-empty | |
 | 3 | code gate | AST walk, `import_gate.py`: imports only from numpy, pymc, pytensor, arviz, scipy, math, itertools, functools, collections, re, typing, dataclasses, statistics, operator; relative imports and unparseable source are forbidden; no use of the names `open`, `__import__`, `exec`, `eval`, `compile`, `globals`, `vars`, `locals`, `getattr`, `setattr`, `delattr`, `breakpoint`, `input`, `__builtins__`, `__loader__`, `__spec__`; no attribute (nor `from … import` name, nor dotted import component) in `FORBIDDEN_ATTRIBUTES`: module names that allowed modules re-export (`.sys`, `.os`, `.builtins`, `.io`, `.npyio`, …), file readers and writers (`.open`, `.read`, `.load`, `.DataSource`, `.read_*`, `.to_csv`, `.save`, …), `attrgetter`/`methodcaller`, and introspection routes (`__dict__`, `__traceback__`, frame attributes, …); no `str.format` whose fields look up attributes (`"{0.sys}".format(...)`). The same gate screens critique statistics, which run with `pd` injected. The harness also clears `sys.argv`/`sys.orig_argv` once parsed (`forget_command_line`), since they name the GT |

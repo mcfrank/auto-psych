@@ -71,8 +71,10 @@ from src.pipelines.inner_loop.model_zoo import (
     _record,
     _resolve_candidate_name,
     _seed_model_set,
+    name_clash_note,
     novelty_pool_rows,
     prefit_candidates,
+    reserved_names,
     slot_roles,
 )
 
@@ -202,13 +204,15 @@ def run_pymc_inner_loop(
         beside the manifest (the ledger a previous experiment carried) seeds
         this run's ledger.
     protected_names
-        Models that are never pruned — the project's seed models, the
+        Models that are never pruned — the run's starting models, the
         baselines a run reports against. ``None`` protects every model in
         ``seed_models_dir`` (the right default when that directory *is* the
-        seed set). The outer loop passes the project seeds explicitly so that a
-        model carried from a previous experiment can lose and leave the set.
-        Names not in the seed set are ignored (a seed held out of this run);
-        a non-empty set with no member in the seed set raises.
+        seed set). The outer loop passes the starting models it recorded at
+        experiment 1 (``run_starting_models``) so that a model carried from a
+        previous experiment can lose and leave the set. Names not in the seed
+        set are ignored (a starting model no longer carried); a non-empty set
+        with no member in the seed set raises. Every one of these names is
+        also one no candidate may take (``reserved_names``).
     ledger_context
         Prefix for the ledger's ``context`` field (e.g. ``"experiment2"``).
     max_iterations
@@ -277,7 +281,12 @@ def run_pymc_inner_loop(
 
     seeded_entries = _seed_model_set(Path(seed_models_dir), models_dir)
     seeded_names = {e.get("name") for e in seeded_entries if e.get("name")}
-    protected = _resolve_protected_names(protected_names, seeded_names)
+    # Every starting model, carried or not, is a name no candidate may take
+    # (with those pruned or retired so far; see reserved_names).
+    starting_models = set(protected_names) if protected_names is not None else None
+    protected = _resolve_protected_names(starting_models, seeded_names)
+    if starting_models is None:
+        starting_models = set(protected)
     # The loop's memory: every hypothesis tried, continuing the ledger the
     # previous experiment carried beside its model set.
     ledger = HypothesisLedger.create(
@@ -462,7 +471,12 @@ def run_pymc_inner_loop(
                     wrote_file = False
                     outcome = {"outcome": "spawn_failed", "detail": "agent process failed"}
                 else:
-                    name = _resolve_candidate_name(previous_dir, models_dir, fallback=fallback)
+                    name = _resolve_candidate_name(
+                        previous_dir,
+                        models_dir,
+                        fallback=fallback,
+                        taken=reserved_names(models_dir, ledger, starting_models),
+                    )
                     admission = _admit_candidate_with_reason(
                         previous_dir / "candidate.py",
                         models_dir,
@@ -474,6 +488,7 @@ def run_pymc_inner_loop(
                         novelty_pool=novelty_pool,
                         ledger=ledger,
                         ledger_context=slot.ledger_context,
+                        name_note=name_clash_note(previous_dir, name),
                     )
                     slot.previous_name = name
                     if admission.admitted:
@@ -541,7 +556,7 @@ def run_pymc_inner_loop(
                 """
                 if cache_dir is None:
                     return  # nowhere to hand the fits over; admission fits one at a time
-                claimed: List[str] = []
+                claimed: List[str] = sorted(reserved_names(models_dir, ledger, starting_models))
                 candidates = []
                 for slot in wave:
                     candidate_file = slot.directory / "candidate.py"

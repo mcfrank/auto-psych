@@ -196,14 +196,19 @@ def test_carry_forward_without_a_ledger_copies_the_model_set_only(tmp_path):
 def test_wrapper_protects_only_the_project_seeds_and_labels_the_ledger(
     tmp_path, monkeypatch
 ):
-    """The outer loop tells the inner loop which models are the project's
-    seeds (never pruned, always carried); a model carried from an earlier
-    experiment is not protected, and the ledger is labelled by experiment."""
+    """The outer loop tells the inner loop which models are the run's
+    starting models (never pruned, always carried); a model carried from an
+    earlier experiment is not protected, and the ledger is labelled by
+    experiment."""
     from src.pipelines.outer_loop import model_loop_runner as mlr
 
     exp_dir = tmp_path / "holdout" / "some_gt" / "experiment2"
     cog_dir = exp_dir / "cognitive_models"
     cog_dir.mkdir(parents=True)
+    # The starting models experiment 1 recorded (run_starting_models).
+    (exp_dir.parent / "starting_models.json").write_text(
+        '["falk_konold_dp", "motif_stack"]', encoding="utf-8"
+    )
     # Two real project seeds plus a model carried from experiment 1.
     _write_manifest(cog_dir, ["falk_konold_dp", "motif_stack", "carried_from_exp1"])
     captured = {}

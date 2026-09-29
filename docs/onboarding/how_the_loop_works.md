@@ -43,7 +43,11 @@ models*). Each is a quantitative version of a published account:
 | `local_representativeness` | Kahneman & Tversky (1972): sequences whose local windows look balanced and irregular look more random |
 
 The starting models are **protected**: they are never removed, however badly
-they fit. That keeps the literature baselines in every comparison.
+they fit. That keeps the literature baselines in every comparison. The run
+records which models it started from (`starting_models.json`, beside the
+experiment folders), and only those are protected. A proposal cannot take the
+name of a starting model, or of any model removed earlier in the run; it is
+renamed (`name_2`), and the record of attempts says so.
 
 > The main `README.md` says the starting models are "the best models discovered
 > by three earlier human replicate runs", and `scripts/outer_loop_live/hero_run.yaml`

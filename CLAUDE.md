@@ -113,9 +113,17 @@ contracts (e.g. jsPsych button-only + `chose_left` data column).
 `pymc_orchestrator.py` orchestrates; `model_zoo.py` manages seeding, admission,
 pruning and the novelty gate; `scoring.py` handles ELPD-LOO scoring, best-model
 selection and export; `candidate_agent.py` writes candidate briefs and spawns
-agents. The model zoo lives at `model_loop/models/`; the project's seeds are
-`protected_names` (never pruned — the outer loop passes them explicitly, so a
-model carried from an earlier experiment *can* lose and leave). Each round:
+agents. The model zoo lives at `model_loop/models/`; the run's starting
+models are `protected_names` (never pruned — the outer loop passes them
+explicitly, so a model carried from an earlier experiment *can* lose and
+leave). They are recorded once, when experiment 1's model loop first runs, in
+`<run>/starting_models.json` (`run_starting_models` in `model_loop_runner.py`),
+not recomputed from names: a candidate that chose a seed's name (the held-out
+ground truth's, say) used to be carried as a protected seed. A later
+experiment of a run without the record raises. No candidate may take a
+starting model's name, nor that of a model pruned, retired or dropped earlier
+in the run (`reserved_names` in `model_zoo.py`): it is renamed `<name>_2` like
+any clash, and the admitted ledger entry's detail records the rename. Each round:
 optional CriticAL critique → spawn candidate agents in parallel (exploratory
 slots steered by a rotating exploration "lens", refinement slots by a named
 target — see **Slot roles**) → admit sequentially.
