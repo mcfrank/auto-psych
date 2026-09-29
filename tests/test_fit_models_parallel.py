@@ -720,26 +720,55 @@ def test_real_pool_reports_a_failure_the_parent_could_not_unpickle(tmp_path):
     assert failures["fine_stub"].startswith("TypeError: ")  # the stub has no `model`
 
 
+def _refit_on_disk(name, models_dir, responses, cache_dir, loop, *, refit_seed=None):
+    """What a worker whose first fit was a near miss leaves: both fits on disk,
+    the refit's fingerprint returned. ``refit_seed`` overrides the refit's seed."""
+    settings = pi.resolve_fit_settings(name, models_dir, loop)
+    first = pi.fit_fingerprint(name, models_dir, responses, settings)
+    refit = pi.refit_settings(settings, first)
+    if refit_seed is not None:
+        refit["random_seed"] = refit_seed
+    refit_fingerprint = pi.fit_fingerprint(name, models_dir, responses, refit)
+    for fingerprint in (first, refit_fingerprint):
+        pi.cached_fit_path(cache_dir, name, fingerprint).touch()
+    return pi.FittedModel(name=name, model=object(), idata=object(), fingerprint=refit_fingerprint)
+
+
+def test_pool_driver_refuses_a_refit_sampled_at_the_first_fits_seed(tmp_path, monkeypatch):
+    """The old refit (0.95 at the first fit's seed) is not a fit the parent's
+    fit_model would load."""
+    models_dir, responses = _stub_models(tmp_path, ["a"])
+    _thread_executor(monkeypatch)
+    loop = {"target_accept": 0.8}
+    monkeypatch.setattr(
+        pi, "fit_model",
+        lambda name, m, r, *, cache_dir, **kw: _refit_on_disk(
+            name, models_dir, responses, cache_dir, loop, refit_seed=42
+        ),
+    )
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    with pytest.raises(RuntimeError, match="expects one of"):
+        pi._sample_models_in_pool(
+            ["a"], models_dir, responses, cache_dir, loop, workers=1, stop_on_failure=True,
+        )
+
+
 def test_pool_driver_accepts_a_worker_that_refit_at_the_escalated_target_accept(
     tmp_path, monkeypatch
 ):
-    """A fit that fails the convergence gate is refit at 0.95 inside the
-    worker (``fit_model``), which then returns the refit's fingerprint. Both
-    fits are on disk, and the parent's ``fit_model`` loads them the same way,
-    so the pool must accept it rather than call it a harness fault."""
+    """A fit that fails the convergence gate is refit at 0.95, with a seed of
+    its own, inside the worker (``fit_model``), which then returns the refit's
+    fingerprint. Both fits are on disk, and the parent's ``fit_model`` loads
+    them the same way, so the pool must accept it rather than call it a
+    harness fault."""
     models_dir, responses = _stub_models(tmp_path, ["a", "b"])
     _thread_executor(monkeypatch)
     monkeypatch.setenv("OMP_NUM_THREADS", "8")
     loop = {"target_accept": 0.8}
-    escalated = {"target_accept": pi.ESCALATED_TARGET_ACCEPT}
 
     def refitting_fit(name, models_dir_, responses_, *, cache_dir, **kw):
-        for kwargs in (loop, escalated):
-            nc = Path(cache_dir) / _nc_name(name, models_dir, responses, kwargs)
-            nc.touch()
-        return pi.FittedModel(
-            name=name, model=object(), idata=object(), fingerprint=nc.name.split(".")[1]
-        )
+        return _refit_on_disk(name, models_dir, responses, cache_dir, loop)
 
     monkeypatch.setattr(pi, "fit_model", refitting_fit)
     cache_dir = tmp_path / "cache"

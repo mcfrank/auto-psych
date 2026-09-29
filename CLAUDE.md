@@ -125,9 +125,10 @@ target — see **Slot roles**) → admit sequentially.
   optional; a slot name is the fallback), passing logp/real-fit/finite-ELPD
   gates and the **convergence gate** (≤0.1% divergent transitions, R-hat ≤
   1.05, bulk ESS ≥ 100; `fit_model` refits a failing fit once at
-  `target_accept` 0.95 only when it is a near miss — ≤2% divergent, R-hat ≤
-  1.2, bulk ESS ≥ 20, `NEAR_MISS_*` in `mcmc_defaults.py` — and uses
-  that fit everywhere, while a fit far from converging is returned as is; a
+  `target_accept` 0.95, with a random seed of its own derived from the first
+  fit's seed and fingerprint (`refit_settings`), only when it is a near miss
+  — ≤2% divergent, R-hat ≤ 1.2, bulk ESS ≥ 20, `NEAR_MISS_*` in
+  `mcmc_defaults.py` — and uses that fit everywhere, while a fit far from converging is returned as is; a
   model's declared `target_accept` is a floor on the loop's — so the rejection
   and the brief advise reparameterising, never smaller steps), within the
   **admission time limit** (each sampling run of a candidate's fit is killed,

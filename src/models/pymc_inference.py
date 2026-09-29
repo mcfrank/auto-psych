@@ -786,11 +786,38 @@ def fit_model(
 
     fitted = _fit_once_within(name, models_dir, responses_path, settings, cache_dir, time_limit_sec)
     if _refit_decision(name, fitted, settings):
-        escalated = {**settings, "target_accept": ESCALATED_TARGET_ACCEPT}
         fitted = _fit_once_within(
-            name, models_dir, responses_path, escalated, cache_dir, time_limit_sec
+            name, models_dir, responses_path, refit_settings(settings, fitted.fingerprint),
+            cache_dir, time_limit_sec,
         )
     return fitted
+
+
+def refit_settings(settings: Dict[str, Any], first_fingerprint: str) -> Dict[str, Any]:
+    """The settings of a near miss's refit: ``ESCALATED_TARGET_ACCEPT`` and a
+    random seed of its own.
+
+    The refit used to reuse the first fit's ``random_seed`` (42, for every fit
+    in every cell), so it started its chains from the same draws. Its seed is
+    now derived from the first fit's seed and fingerprint (model source, data
+    and settings; ``refit_random_seed``): different from the first fit's,
+    different for every model and data set, and the same on every resume.
+    ``random_seed`` is a sampler setting, so it is part of the refit's cache
+    fingerprint.
+    """
+    return {
+        **settings,
+        "target_accept": ESCALATED_TARGET_ACCEPT,
+        "random_seed": refit_random_seed(settings["random_seed"], first_fingerprint),
+    }
+
+
+def refit_random_seed(base_seed: int, first_fingerprint: str) -> int:
+    """A refit's random seed, from everything that identifies its first fit
+    (the style of the harness's ``derive_seed``); never the first fit's own."""
+    digest = hashlib.sha256(f"{base_seed}|{first_fingerprint}|refit".encode("utf-8")).digest()
+    seed = int.from_bytes(digest[:4], "big") % 2**31
+    return seed if seed != base_seed else (seed + 1) % 2**31
 
 
 def _fit_once_within(
@@ -1412,7 +1439,7 @@ def fit_time_limited_concurrently(
             refits.append(
                 TimeLimitedFit(
                     request.name, request.models_dir, request.responses_path,
-                    {**request.settings, "target_accept": ESCALATED_TARGET_ACCEPT}, cache_dir,
+                    refit_settings(request.settings, fitted.fingerprint), cache_dir,
                 )
             )
     if refits:
@@ -1507,16 +1534,17 @@ def _sample_models_in_pool(
     models_dir = Path(models_dir)
     responses_path = Path(responses_path)
     cache_dir = Path(cache_dir)
-    # A worker whose first fit fails the convergence gate returns the fit it
-    # redid at ESCALATED_TARGET_ACCEPT (fit_model); both are on disk.
+    # A worker whose first fit fails the convergence gate as a near miss
+    # returns the refit (fit_model: ESCALATED_TARGET_ACCEPT and a seed of its
+    # own, refit_settings); both are on disk.
     expected = {}
     for name in names:
         settings = resolve_fit_settings(name, models_dir, fit_kwargs)
-        escalated = {**settings, "target_accept": ESCALATED_TARGET_ACCEPT}
-        expected[name] = {
-            fit_fingerprint(name, models_dir, responses_path, s)
-            for s in (settings, escalated)
-        }
+        first = fit_fingerprint(name, models_dir, responses_path, settings)
+        refit = fit_fingerprint(
+            name, models_dir, responses_path, refit_settings(settings, first)
+        )
+        expected[name] = {first, refit}
     outcomes: Dict[str, Optional[BaseException]] = {}
     with _fit_executor(min(workers, len(names))) as pool:
         futures = {

@@ -405,7 +405,7 @@ enumeration orientation) under parameter draw d.
   config's `fit` block does not reach the design. Other settings: `cores` 4
   (2 chain processes), `random_seed` 42, max_treedepth 10. A fit that fails
   the convergence gate (§5.3) as a near miss is refit once at target_accept
-  0.95 and that fit is used; a fit far from converging is used as it is. Either
+  0.95, with its own random seed, and that fit is used; a fit far from converging is used as it is. Either
   way a model that fails is still scored (the design does not check the gate
   itself). The posterior is thinned by
   `_thin_posterior(max_draws=200)` (pymc_inference.py:466) to 100 evenly
@@ -727,7 +727,7 @@ declared `target_accept` is a **floor** on the caller's (pymc_inference.py:449-4
 | target_accept | 0.8 (the `motif_stack` seed, the softmax model, declares nothing; the registry's Viterbi `motif_stack`, fitted only as a candidate copy or by analyses, declares 0.9, a floor over the config's 0.8); 0.95 on an escalated refit | config; `SAMPLER_SETTINGS`; `ESCALATED_TARGET_ACCEPT` |
 | max_treedepth | 10 | `_FIT_DEFAULTS` |
 | cores | 4 | `PRODUCTION_CORES` |
-| random_seed | 42 | `_FIT_DEFAULTS`: the same seed for every fit in every cell |
+| random_seed | 42 for a first fit, the same in every cell; a near-miss refit samples with its own seed, derived from 42 and the first fit's fingerprint (`refit_random_seed`, since 2026-09-27) | `_FIT_DEFAULTS`; `refit_settings` |
 | log-likelihood | stored (`idata_kwargs={"log_likelihood": True}`) | needed for LOO |
 
 That gives 4,000 posterior draws per fit (8,000 before 2026-09-27). The
@@ -751,7 +751,12 @@ its `target_accept` is below 0.95, and it fails the gate **as a near miss**
 transitions diverged, max R-hat ≤ `NEAR_MISS_MAX_R_HAT = 1.2` and min bulk ESS
 ≥ `NEAR_MISS_MIN_BULK_ESS = 20`; a trace without a divergence statistic or an
 R-hat is never a near miss), `fit_model` refits once at `target_accept = 0.95`
-and returns that fit whether or not it passes. A fit further off (a chain stuck
+and returns that fit whether or not it passes. The refit samples with a random
+seed of its own (`refit_settings`, `refit_random_seed`): a hash of the first
+fit's seed and its fingerprint (model source, data, settings), so it differs
+from the first fit's 42, differs between models and data sets, is the same on
+every resume, and is part of the refit's cache fingerprint. Until 2026-09-27
+the refit reused 42, starting its chains from the first fit's draws. A fit further off (a chain stuck
 in another mode: R-hat ~1.5–2.5, ESS ~5, a quarter of all transitions
 divergent) is returned as it is and fails the gate with its own numbers; the
 log says which (`[fit] … a near miss; refitting` / `… too far from converging
@@ -788,7 +793,7 @@ concurrent fits. Each worker pins BLAS to 1 thread, calls `fit_model` (so it
 can escalate), writes the `.nc` (to a temporary name, then `os.replace`, so a
 killed write leaves no truncated file), and returns the fit's fingerprint; the parent
 checks it against the fingerprints it expects (at the loop's settings, or at
-the 0.95 refit's) and loads the file.
+the refit's: 0.95 and the refit's own seed) and loads the file.
 
 Candidate fits are concurrent too, but outside that pool: after a wave of
 candidate agents finishes and before its sequential admission,

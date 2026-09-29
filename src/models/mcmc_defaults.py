@@ -40,8 +40,8 @@ MAX_R_HAT = 1.05
 MIN_BULK_ESS = 100
 MAX_DIVERGENCE_FRACTION = 0.001
 # A fit that fails the gate but is a near miss (below) is refit once at this
-# target_accept (smaller NUTS steps), and that fit is the model's fit from then
-# on.
+# target_accept (smaller NUTS steps), with a random seed of its own
+# (pymc_inference.refit_settings), and that fit is the model's fit from then on.
 ESCALATED_TARGET_ACCEPT = 0.95
 
 # A near miss: a failed fit that smaller steps can plausibly fix — at most
