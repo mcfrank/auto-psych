@@ -240,7 +240,10 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 - **Agent isolation** (`src/runtime/agent_sandbox.py`, holdout agent trees):
   loop agents run stock and in bubblewrap — their tree read-only, only their
   own candidate/critique dir, the run's notes, a scratch dir at /tmp and a
-  private home writable, no `SLURM_*` variables. Agent trees contain only
+  private home writable, and an allowlisted environment
+  (`agent_environment`: system basics, the compiler toolchain, network
+  settings and the backend's own login — no other `.secrets` key, no
+  `SLURM_*`, no sweep variables). Agent trees contain only
   `src/` and the run tree (`agent_tree.exclude`: no docs, tests, scripts,
   research library, project literature or `.secrets`). Before agents start,
   `scan_gt_name.sh --before-agents` stops a cell whose tree names its held-out
