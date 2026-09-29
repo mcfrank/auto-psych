@@ -146,8 +146,9 @@ target — see **Slot roles**) → admit sequentially.
   the holdout config (`inner_loop.novelty_rmse_threshold`, CLI
   `--novelty-rmse-threshold`, sbatch `NOVELTY_RMSE_THRESHOLD`).
 - **Slot retry and repair** (`_Slot` in `pymc_orchestrator.py`): a round is
-  spawn → settle waves. A slot whose agent wrote no `candidate.py` (or whose
-  agent process failed) is re-spawned once in `candidate_<i>_retry_1/`; a
+  spawn → prefit (concurrent candidate fits) → settle waves. A slot whose
+  agent wrote no `candidate.py` (or whose agent process failed) is
+  re-spawned once in `candidate_<i>_retry_1/`; a
   candidate that `_admit_candidate_with_reason` rejects is re-spawned once in
   `candidate_<i>_repair_1/` with the rejection reason verbatim in its prompt
   (`_repair_note`) and the rejected files copied in — a repair is always
@@ -300,8 +301,12 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   loads. `fit_models_to_cache` is the tolerant sibling (a model's own
   failures reported by name) that the experiment-start ELPD screen
   (`model_zoo._drop_nonfinite_elpd_models`) uses to sample the whole set in
-  one batch. The candidate real-fit gate in `_admit_candidate_with_reason`
-  still fits one candidate at a time. **An infrastructure failure is never a
+  one batch. A wave's candidates are fitted concurrently before their
+  sequential admission (`model_zoo.prefit_candidates` →
+  `fit_time_limited_concurrently`: every candidate past the cheap gates, under
+  its predicted admission name, each run in its own time-limited child, as
+  many at once as the CPUs hold); admission then loads those fits (or their
+  remembered failure/timeout), so its verdicts are sequential admission's. **An infrastructure failure is never a
   model's**: a broken pool (one worker killed breaks every pending fit), an
   unreadable `.nc`, `OSError`/`MemoryError` (`INFRASTRUCTURE_ERRORS`,
   `FitInfrastructureFailure`) raise everywhere — never a drop, a rejection or

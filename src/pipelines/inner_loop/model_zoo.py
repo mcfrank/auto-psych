@@ -12,6 +12,7 @@ import math
 import re
 import shutil
 import sys
+import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
@@ -39,6 +40,7 @@ from src.models.pymc_inference import (
     evict_fit_cache,
     fit_model,
     fit_models_to_cache,
+    fit_time_limited_concurrently,
     is_near_miss,
     model_logp_is_finite,
     resolve_fit_settings,
@@ -201,7 +203,12 @@ _RESERVED_MODEL_NAMES = frozenset({"inner_loop_model", "best_model"})
 
 
 def _resolve_candidate_name(
-    candidate_dir: Path, models_dir: Path, *, fallback: str
+    candidate_dir: Path,
+    models_dir: Path,
+    *,
+    fallback: str,
+    taken: Iterable[str] = (),
+    announce: bool = True,
 ) -> str:
     """The admitted name for a candidate: the agent's slug or the auto fallback.
 
@@ -210,11 +217,14 @@ def _resolve_candidate_name(
     ``iterN_candidateM`` (which collided across runs and carries no meaning). A
     missing or invalid name falls back to the auto name with a loud log — a bad
     name never sinks an otherwise good candidate. A name already in the model
-    set is uniquified with a numeric suffix.
+    set (or in ``taken``: names claimed earlier in the same wave, when the
+    concurrent fits predict names) is uniquified with a numeric suffix.
+    ``announce=False`` keeps the prediction quiet; admission says it.
     """
+    say = print if announce else (lambda *a, **k: None)
     name_path = Path(candidate_dir) / "model_name.txt"
     if not name_path.exists():
-        print(
+        say(
             f"  [name] {name_path} not written — admitting as {fallback!r}",
             flush=True,
         )
@@ -225,19 +235,19 @@ def _resolve_candidate_name(
         or _ZOO_NAME_RE.fullmatch(raw)
         or raw in _RESERVED_MODEL_NAMES
     ):
-        print(
+        say(
             f"  [name] invalid model name {raw!r} (need a short snake_case slug, "
             f"not a reserved or auto-generated name) — admitting as {fallback!r}",
             flush=True,
         )
         return fallback
-    existing = set(_manifest_names(models_dir))
+    existing = set(_manifest_names(models_dir)) | set(taken)
     if raw in existing:
         suffix = 2
         while f"{raw}_{suffix}" in existing:
             suffix += 1
         unique = f"{raw}_{suffix}"
-        print(
+        say(
             f"  [name] {raw!r} is already in the model set — admitting as "
             f"{unique!r}",
             flush=True,
@@ -995,6 +1005,103 @@ def _too_slow_reason(exc: FitTimeLimitExceeded) -> str:
     )
 
 
+def _cheap_gate_rejection(
+    candidate_file: Path,
+    hypothesis: str,
+    models_dir: Path,
+    model_name: str,
+    responses_path: Path,
+) -> Optional[str]:
+    """Admission's gates before the fit, in order: the files, the code gate, a
+    loadable model and a finite logp. Stages the candidate as
+    ``models_dir/<model_name>.py`` and returns None when it passes them; else
+    removes the staged file and returns the rejection reason.
+
+    Shared by admission and by ``prefit_candidates`` (which stages into a
+    scratch directory), so both send exactly the same candidates to sampling.
+    """
+    if not candidate_file.exists():
+        return "no candidate.py written"
+    if not hypothesis:
+        return (
+            "no hypothesis.md — every model must state one cognitive hypothesis "
+            "before it can be admitted"
+        )
+
+    source = candidate_file.read_text(encoding="utf-8")
+    forbidden = check_forbidden_imports(source)
+    if forbidden:
+        return (
+            f"forbidden import: {', '.join(forbidden)} — candidates may only "
+            f"import from {sorted(CANDIDATE_IMPORT_ALLOWLIST)}"
+        )
+
+    staged = models_dir / f"{model_name}.py"
+    shutil.copyfile(candidate_file, staged)
+    try:
+        load_pymc_model(model_name, models_dir)
+    except Exception as e:
+        staged.unlink(missing_ok=True)
+        return f"candidate.py is not a loadable PyMC model: {e}"
+
+    fittable, reason = model_logp_is_finite(model_name, models_dir, responses_path)
+    if not fittable:
+        staged.unlink(missing_ok=True)
+        return f"model cannot be fit — {reason}"
+    return None
+
+
+def prefit_candidates(
+    candidates: Sequence[Tuple[Path, str]],
+    responses_path: Path,
+    *,
+    cache_dir: Path,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+    time_limit_sec: float = CANDIDATE_FIT_TIME_LIMIT_SEC,
+) -> List[str]:
+    """Fit a wave's candidates concurrently, ahead of their sequential admission.
+
+    ``candidates`` are ``(candidate.py, the name it will be admitted under)``.
+    Every candidate that passes the cheap gates (``_cheap_gate_rejection``,
+    staged in a scratch directory, never in the zoo) has its admission fit
+    sampled — the first fit and, for a near miss, the refit — in
+    ``fit_time_limited_concurrently`` with the admission time limit, into
+    ``cache_dir``. Nothing is admitted, rejected or recorded here: admission
+    then runs every gate in slot order as before and finds each fit in the
+    cache (or its remembered failure or timeout), so its verdicts are those
+    of sequential admission. A fit is keyed by the model's source, the data and
+    the sampler settings, and filed under the name; a candidate admitted under
+    a different name than predicted (two same-named candidates in one wave, the
+    first rejected) is simply fitted at admission. Returns the names sampled.
+    """
+    with tempfile.TemporaryDirectory(prefix="prefit_") as scratch:
+        staging = Path(scratch)
+        ready: List[str] = []
+        for candidate_file, name in candidates:
+            hypothesis_file = candidate_file.parent / "hypothesis.md"
+            hypothesis = (
+                hypothesis_file.read_text(encoding="utf-8").strip()
+                if hypothesis_file.exists()
+                else ""
+            )
+            if _cheap_gate_rejection(candidate_file, hypothesis, staging, name, responses_path) is None:
+                ready.append(name)
+        if ready:
+            print(
+                f"  [prefit] fitting {len(ready)} candidate(s) concurrently: {ready}",
+                flush=True,
+            )
+            fit_time_limited_concurrently(
+                ready,
+                staging,
+                responses_path,
+                cache_dir=cache_dir,
+                fit_kwargs=fit_kwargs,
+                time_limit_sec=time_limit_sec,
+            )
+    return ready
+
+
 def _admit_candidate_with_reason(
     candidate_file: Path,
     models_dir: Path,
@@ -1042,7 +1149,9 @@ def _admit_candidate_with_reason(
     Each sampling run of the admission fit is stopped at
     ``fit_time_limit_sec`` (``CANDIDATE_FIT_TIME_LIMIT_SEC``); a candidate
     still sampling then is rejected as too slow to fit, with the limit in the
-    reason.
+    reason. In the loop these fits are usually in the cache already: the
+    orchestrator fits a wave's candidates concurrently first
+    (``prefit_candidates``), and this function loads them.
 
     The novelty gate compares the candidate's posterior-mean ``p_left`` with
     every admitted model's on ``novelty_pool`` (``None`` ⇒ the loop's default
@@ -1068,34 +1177,12 @@ def _admit_candidate_with_reason(
         )
         return Admission(admitted=False, reason=reason)
 
-    if not candidate_file.exists():
-        return reject("no candidate.py written")
-    if not hypothesis:
-        return reject(
-            "no hypothesis.md — every model must state one cognitive hypothesis "
-            "before it can be admitted"
-        )
-
-    source = candidate_file.read_text(encoding="utf-8")
-    forbidden = check_forbidden_imports(source)
-    if forbidden:
-        return reject(
-            f"forbidden import: {', '.join(forbidden)} — candidates may only "
-            f"import from {sorted(CANDIDATE_IMPORT_ALLOWLIST)}"
-        )
-
+    cheap_rejection = _cheap_gate_rejection(
+        candidate_file, hypothesis, models_dir, model_name, responses_path
+    )
+    if cheap_rejection:
+        return reject(cheap_rejection)
     staged = models_dir / f"{model_name}.py"
-    shutil.copyfile(candidate_file, staged)
-    try:
-        load_pymc_model(model_name, models_dir)
-    except Exception as e:
-        staged.unlink(missing_ok=True)
-        return reject(f"candidate.py is not a loadable PyMC model: {e}")
-
-    fittable, reason = model_logp_is_finite(model_name, models_dir, responses_path)
-    if not fittable:
-        staged.unlink(missing_ok=True)
-        return reject(f"model cannot be fit — {reason}")
 
     # Real-fit gate: the logp check above only covers the initial point, so a
     # candidate can pass it yet diverge/NaN once NUTS jitters off it. Fit it now

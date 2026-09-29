@@ -729,8 +729,24 @@ concurrent fits. Each worker pins BLAS to 1 thread, calls `fit_model` (so it
 can escalate), writes the `.nc` (to a temporary name, then `os.replace`, so a
 killed write leaves no truncated file), and returns the fit's fingerprint; the parent
 checks it against the fingerprints it expects (at the loop's settings, or at
-the 0.95 refit's) and loads the file. Candidate admission fits run one at a
-time.
+the 0.95 refit's) and loads the file.
+
+Candidate fits are concurrent too, but outside that pool: after a wave of
+candidate agents finishes and before its sequential admission,
+`prefit_candidates` (model_zoo.py) takes every candidate of the wave that passes
+the cheap gates (§5.9 gates 1–5, the same `_cheap_gate_rejection` admission
+runs, staged in a scratch directory rather than the zoo), under the name
+admission will give it (`_resolve_candidate_name`, predicted in slot order), and
+`fit_time_limited_concurrently` samples their first fits, then the near-miss
+refits, each in its own time-limited child process, `allocated_cpus() //
+min(cores, chains)` = 4 at a time (never more: the limit is wall-clock time, so
+oversubscribing would stop fits that would finish on their own cores).
+Nothing is admitted or recorded there. Admission then runs every gate in slot
+order as before and finds each fit in the cache, or its remembered failure or
+timeout, so its verdicts are those of sequential admission. A candidate whose
+predicted name turns out wrong (two same-named candidates in one wave, the
+first rejected) is fitted at admission. Without a `cache_dir` there is no
+prefit and admission fits one candidate at a time.
 
 **Caching.** The in-process key is `(name, sha256(model.py), sha256(csv), sampler signature)`
 of the requested settings. The on-disk file is `<cache_dir>/<name>.<fp>.nc`,
@@ -822,9 +838,10 @@ For `iteration` in 0..4 (pymc_orchestrator.py:324-585):
 5. **Spawn.** All pending slots run concurrently (`ThreadPoolExecutor`, 6
    workers, `candidate_parallelism=None` → `candidate_count`). Each is
    `run_coding_agent` with cwd = the agent tree, a 1800 s timeout, sandboxed.
-   Admission then happens **sequentially in slot order** (`settle`,
-   pymc_orchestrator.py:429), so a later slot's novelty gate compares against
-   earlier slots admitted in the same round.
+   The wave's candidates are then fitted concurrently (`prefit`,
+   `prefit_candidates`, §5.3), and admission happens **sequentially in slot
+   order** (`settle`), loading those fits, so a later slot's novelty gate
+   compares against earlier slots admitted in the same round.
 6. **Retry and repair per slot** (`settle`):
    - If the agent process failed (non-zero exit or **timeout**) but a
      `candidate.py` exists in its directory, that candidate goes through
@@ -840,7 +857,8 @@ For `iteration` in 0..4 (pymc_orchestrator.py:324-585):
      verbatim (`_repair_note`), and the rejected `candidate.py`,
      `hypothesis.md` and `model_name.txt` are copied in. A repair is final.
    - The maximum is 3 attempts per slot (original, retry, repair). Retries and
-     repairs spawn together as the next wave.
+     repairs spawn together as the next wave, whose candidates are fitted
+     concurrently in the same way before they are settled.
 7. **Empty-round guard.** If no slot was admitted and every slot's result is
    "no candidate.py written" or a failed spawn with no file, the whole round is
    rerun once in `iter_<i>_retry_1/` (`MAX_EMPTY_ROUND_RETRIES = 1`). If that
