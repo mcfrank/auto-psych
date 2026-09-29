@@ -9,24 +9,37 @@
 # a crash or a node failure gets another attempt from the cell's last finished
 # stage; a task that ran out of memory is resubmitted with 128 GB (16 CPUs x
 # 8 GB, the normal partition's ceiling). A task the user cancelled is left
-# alone. Each resubmission chains its own retry job, up to MAX_RETRY_ROUNDS.
+# alone, and so is a task whose cell already has its holdout.json (Slurm can
+# mark a task that finished as OUT_OF_MEMORY or TIMEOUT). Each resubmission
+# chains its own retry job, up to MAX_RETRY_ROUNDS.
 # Cells used to die this way and then silently vanish from every report.
+#
+# Retries run on the code the sweep's setup job staged, never on the live
+# checkout: this script, _env.sh and the submit script are the staged copies
+# in harness_repo, and the resubmission skips the setup job.
 set -euo pipefail
-SLURM_DIR="${HOLDOUT_SLURM_DIR:?HOLDOUT_SLURM_DIR is not set}"
+: "${WORK_ROOT:?WORK_ROOT is not set}"
+HARNESS_REPO="${HARNESS_REPO:-$WORK_ROOT/harness_repo}"
+SLURM_DIR="$HARNESS_REPO/scripts/subjective_randomness/slurm"
+[[ -f "$SLURM_DIR/_env.sh" ]] || { echo "ERROR: no staged scripts at $SLURM_DIR (the setup job did not stage this sweep)" >&2; exit 1; }
 source "$SLURM_DIR/_env.sh"
 : "${RETRY_ARRAY_ID:?RETRY_ARRAY_ID is not set}"
 round=$(( ${RETRY_ROUND:-0} + 1 ))
 
-plan=$(sacct -j "$RETRY_ARRAY_ID" -X -n -P -o JobID,State | "$VENV_PY" "$SLURM_DIR/cell_status.py" retry-plan)
+plan=$(sacct -j "$RETRY_ARRAY_ID" -X -n -P -o JobID,State \
+  | "$VENV_PY" "$SLURM_DIR/cell_status.py" retry-plan --work-root "$WORK_ROOT" --gt-models "$GT_MODELS")
 same=$(printf '%s' "$plan" | "$VENV_PY" -c 'import json,sys; print(",".join(map(str, json.load(sys.stdin)["same_memory"])))')
 more=$(printf '%s' "$plan" | "$VENV_PY" -c 'import json,sys; print(",".join(map(str, json.load(sys.stdin)["more_memory"])))')
 echo "[retry] array $RETRY_ARRAY_ID, round $round: resume [$same], resume with 128 GB [$more]"
 
+# ARRAY_MEM is set explicitly for both groups: the environment this job
+# inherited may carry an earlier round's value.
 if [[ -n "$same" ]]; then
-  RETRY_ROUND=$round ARRAY_TASKS="$same" bash "$SLURM_DIR/submit_holdout_test_retest.sh"
+  RETRY_ROUND=$round ARRAY_TASKS="$same" ARRAY_MEM="" \
+    bash "$SLURM_DIR/submit_holdout_test_retest.sh"
 fi
 if [[ -n "$more" ]]; then
-  RETRY_ROUND=$round ARRAY_TASKS="$more" SBATCH_MEM_PER_NODE=128G \
+  RETRY_ROUND=$round ARRAY_TASKS="$more" ARRAY_MEM=128G \
     bash "$SLURM_DIR/submit_holdout_test_retest.sh"
 fi
 [[ -n "$same$more" ]] || echo "[retry] nothing to resume"

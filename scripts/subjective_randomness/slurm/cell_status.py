@@ -1,7 +1,8 @@
 """Which holdout cells to resume after an array, and which are missing.
 
     # Tasks of a finished array to resume, from sacct:
-    sacct -j <array_id> -X -n -P -o JobID,State | python cell_status.py retry-plan
+    sacct -j <array_id> -X -n -P -o JobID,State \
+      | python cell_status.py retry-plan --work-root W --gt-models "a b c d"
     # Expected cells with no holdout.json:
     python cell_status.py missing --work-root W --n-repeats 5 --gt-models "a b c d"
 
@@ -26,11 +27,21 @@ RETRY_STATES = {"FAILED", "TIMEOUT", "NODE_FAIL", "PREEMPTED", "BOOT_FAIL"}
 OUT_OF_MEMORY = "OUT_OF_MEMORY"
 
 
-def retry_plan(sacct_output: str) -> Dict[str, List[int]]:
+def task_cell(task: int, gt_models: Sequence[str]) -> str:
+    """The ``run<r>/<gt>`` cell of array task ``task`` (as the array maps it)."""
+    repeat = (task - 1) // len(gt_models) + 1
+    return f"run{repeat}/{gt_models[(task - 1) % len(gt_models)]}"
+
+
+def retry_plan(
+    sacct_output: str, *, work_root: Path, gt_models: Sequence[str]
+) -> Dict[str, List[int]]:
     """Task ids to resume, from ``sacct -X -n -P -o JobID,State`` output.
 
     ``more_memory`` holds the tasks that ran out of memory; ``same_memory``
-    the other failures.
+    the other failures. A task whose cell already has its ``holdout.json`` is
+    finished whatever Slurm says (a task that finished can be marked
+    ``OUT_OF_MEMORY`` or time out in its final clean-up) and is not resumed.
     """
     plan: Dict[str, List[int]] = {"same_memory": [], "more_memory": []}
     for line in sacct_output.splitlines():
@@ -40,6 +51,8 @@ def retry_plan(sacct_output: str) -> Dict[str, List[int]]:
         if "_" not in job_id or "[" in job_id:
             continue  # not a single array task
         task = int(job_id.rsplit("_", 1)[1])
+        if (Path(work_root) / task_cell(task, gt_models) / "holdout.json").exists():
+            continue
         state = state.split()[0]
         if state == OUT_OF_MEMORY:
             plan["more_memory"].append(task)
@@ -62,6 +75,10 @@ def missing_cells(work_root: Path, *, n_repeats: int, gt_models: Sequence[str]) 
 class RetryPlan:
     """Read sacct output on stdin; print the plan as JSON."""
 
+    work_root: Path
+    gt_models: str
+    """Space-separated, in array order (as GT_MODELS)."""
+
 
 @dataclass
 class Missing:
@@ -75,7 +92,9 @@ class Missing:
 
 def main(command: Union[RetryPlan, Missing]) -> None:
     if isinstance(command, RetryPlan):
-        print(json.dumps(retry_plan(sys.stdin.read())))
+        print(json.dumps(retry_plan(
+            sys.stdin.read(), work_root=command.work_root, gt_models=command.gt_models.split()
+        )))
     else:
         for cell in missing_cells(
             command.work_root, n_repeats=command.n_repeats, gt_models=command.gt_models.split()

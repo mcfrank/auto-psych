@@ -346,9 +346,14 @@ used by the active loops (per `README.md`).
 
 - Holdout sweeps resume their own failed cells: after each array a retry job
   (`holdout_retry.sbatch`, via `cell_status.py`) resubmits timeouts, crashes
-  and out-of-memory tasks (the latter with 128 GB) with `--resume`, up to
-  `MAX_RETRY_ROUNDS` (2); the summary job lists any expected cell still
-  without a result in `MISSING_CELLS.txt`.
+  and out-of-memory tasks (the latter with `--mem=128G` on their array only)
+  with `--resume`, capped at `%MAX_PARALLEL`, up to `MAX_RETRY_ROUNDS` (2);
+  the summary job lists any expected cell still without a result in
+  `MISSING_CELLS.txt`. A sweep runs on **one code**: the setup job stages
+  `harness_repo` and `agent_src` once and records `$WORK_ROOT/code_commit`;
+  retries skip setup and run the staged scripts; every cell records the code
+  it started on and refuses to resume on other code. `verify_holdout_run.sh`
+  judges cells by `holdout.json` / `MISSING_CELLS.txt`, not by task logs.
 - **Live runs recruit real participants and spend real money.** They are double-
   gated: the config needs `confirm_live_recruitment: true` **and** `run.py`
   enforces `--confirm-live-recruitment`; the launchers print a cost summary and

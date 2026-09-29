@@ -35,32 +35,68 @@ say "## Checks"
 n_cells=$(ls -d "$W"/run*/*/ 2>/dev/null | wc -l)
 say "- cells present: $n_cells"
 
-# 1. Every task must have reached its final line.
-n_done=0; n_logs=0
+# 1. Every cell must have its result. Cells are judged by their results
+#    (holdout.json, and the summary job's MISSING_CELLS.txt), not by logs: a
+#    cell that failed and was resumed by a retry leaves the failed attempt's
+#    log behind, which used to FAIL every sweep that needed a retry.
+n_result=0; unfinished=()
+for C in "$W"/run*/*/; do
+  [[ -d "$C" ]] || continue
+  C="${C%/}"
+  if [[ -f "$C/holdout.json" ]]; then n_result=$((n_result + 1))
+  else unfinished+=("$(basename "$(dirname "$C")")/$(basename "$C")"); fi
+done
+MISSING_FILE="$W/MISSING_CELLS.txt"
+if [[ -s "$MISSING_FILE" ]]; then
+  say "- [FAIL] $(wc -l < "$MISSING_FILE" | tr -d ' ') expected cell(s) have no result (MISSING_CELLS.txt):"
+  head -5 "$MISSING_FILE" | sed 's/^/      /' | tee -a "$V"
+  fails=$((fails + 1))
+elif [[ "${#unfinished[@]}" -gt 0 ]]; then
+  say "- [FAIL] ${#unfinished[@]} cell(s) have no holdout.json: ${unfinished[*]}"
+  fails=$((fails + 1))
+elif [[ "$n_result" == "0" ]]; then
+  say "- [FAIL] no cell has a result"
+  fails=$((fails + 1))
+else say "- [ok]   all $n_result cell(s) have a result"; fi
+
+# The task logs checks 2 and 3 read: every attempt that finished, and every
+# attempt whose cell has no result. A failed attempt of a cell that a later
+# attempt finished is superseded (its log is listed, not judged). The cell is
+# the directory in the task's "[task T] repeat=R gt=G seed=S -> <dir>" line.
+judged_logs=(); superseded=()
 for L in "$W"/slurm_logs/holdout_recovery_*.out; do
   [[ -f "$L" ]] || continue
-  n_logs=$((n_logs + 1))
-  grep -q "\[task .*\] done ->" "$L" && n_done=$((n_done + 1))
+  if ! grep -q "\[task .*\] done ->" "$L"; then
+    cell=$(sed -n 's/^\[task [0-9]*\] repeat=.* -> \(.*\)$/\1/p' "$L" | head -1)
+    if [[ -n "$cell" && -f "$cell/holdout.json" ]]; then superseded+=("$L"); continue; fi
+  fi
+  judged_logs+=("$L")
 done
-if [[ "$n_logs" -gt 0 && "$n_done" == "$n_logs" ]]; then say "- [ok]   all $n_logs task(s) finished"
-else say "- [FAIL] $n_done of $n_logs task(s) finished"; fails=$((fails + 1)); fi
+if [[ "${#superseded[@]}" -gt 0 ]]; then
+  say "- [info] ${#superseded[@]} failed attempt(s) of cells a later attempt finished (their logs are not judged):"
+  printf '%s\n' "${superseded[@]}" | head -5 | sed 's/^/      /' | tee -a "$V"
+fi
+_judged_grep() {  # grep -h over the judged logs; nothing when there are none
+  [[ "${#judged_logs[@]}" -gt 0 ]] || return 0
+  grep -h "$@" "${judged_logs[@]}" 2>/dev/null
+}
 
 # 2. THE check for this arm: a raw seed that cannot bind to raw rows is
 #    [drop]ped, not fatal, so the run would quietly proceed with fewer models.
-n_drop=$(grep -h "\[drop\]" "$W"/slurm_logs/holdout_recovery_*.out 2>/dev/null | wc -l)
+n_drop=$(_judged_grep "\[drop\]" | wc -l)
 if [[ "$n_drop" == "0" ]]; then say "- [ok]   no model dropped (every raw seed bound to raw rows)"
 else
   say "- [FAIL] $n_drop dropped model(s) — a seed could not bind:"
-  grep -h "\[drop\]" "$W"/slurm_logs/holdout_recovery_*.out 2>/dev/null | sort -u | head -5 | sed 's/^/      /' | tee -a "$V"
+  _judged_grep "\[drop\]" | sort -u | head -5 | sed 's/^/      /' | tee -a "$V"
   fails=$((fails + 1))
 fi
 
 # 3. No traceback, and specifically no feature-column collision.
-n_err=$(grep -hE "Traceback|collides with" "$W"/slurm_logs/holdout_recovery_*.out 2>/dev/null | wc -l | tr -d ' ')
+n_err=$(_judged_grep -E "Traceback|collides with" | wc -l | tr -d ' ')
 if [[ "${n_err:-0}" -eq 0 ]]; then say "- [ok]   no traceback or column collision"
 else
   say "- [FAIL] ${n_err} error line(s):"
-  grep -hE "Traceback|collides with" "$W"/slurm_logs/holdout_recovery_*.out 2>/dev/null | head -3 | sed 's/^/      /' | tee -a "$V"
+  _judged_grep -E "Traceback|collides with" | head -3 | sed 's/^/      /' | tee -a "$V"
   fails=$((fails + 1))
 fi
 
@@ -553,8 +589,14 @@ for CFG in "$W"/run*/*/config.yaml; do
   say "- config: \`$CFG\`"
   grep -E "raw_features|pool_models_dir|seed_models_dir" "$CFG" 2>/dev/null | sed 's/^/  /' | tee -a "$V"
 done
-CODE_SHA=$(cd "$W"/run*/*/repo 2>/dev/null && git rev-parse HEAD 2>/dev/null || echo "unknown")
-say "- code SHA: $CODE_SHA"
+# The code the sweep staged, and any cell recorded on other code (the array
+# refuses to resume one, so this should never list anything).
+say "- code: $(cat "$W/code_commit" 2>/dev/null || echo "unknown (no code_commit)")"
+for CC in "$W"/run*/*/code_commit; do
+  [[ -f "$CC" ]] || continue
+  [[ "$(cat "$CC")" == "$(cat "$W/code_commit" 2>/dev/null)" ]] \
+    || say "      cell on other code: $(dirname "$CC") ($(cat "$CC"))"
+done
 HARNESS_ROOT="$W/harness_repo"
 if [[ -d "$HARNESS_ROOT" ]]; then say "- harness-root: \`$HARNESS_ROOT\`"
 else say "- harness-root: not found (pre-P10 run or cleaned up)"; fi
