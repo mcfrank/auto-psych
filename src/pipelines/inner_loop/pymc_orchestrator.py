@@ -294,6 +294,7 @@ def run_pymc_inner_loop(
         fit_kwargs=fit_kwargs,
         ledger=ledger,
         ledger_context=ledger_context,
+        protected=protected,
     )
     # The novelty pool: generated once from the loop's own seed and recorded in
     # the run tree, so every candidate this run gates is compared on the same

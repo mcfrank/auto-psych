@@ -626,7 +626,10 @@ receive `problem_definition.md`, which is also excluded from the agent tree.
    recorded in the ledger as `dropped`. The step raises only if nothing survives.
 5. `_drop_nonfinite_elpd_models` (model_zoo.py:325) is the experiment's first
    MCMC pass. `fit_models_to_cache` fits the whole set concurrently. Models
-   whose fit fails or whose ELPD-LOO is non-finite are dropped (`dropped`).
+   whose fit fails or whose ELPD-LOO is non-finite are dropped (`dropped`),
+   except a protected seed: that raises. Only the model's own failure drops
+   it; an infrastructure failure (a broken fit pool, an unreadable `.nc`,
+   `OSError`, `MemoryError`) raises and fails the cell, to be resumed.
    Models that fail the convergence gate are **not** dropped here.
 6. If the threshold is > 0, `novelty_pool_rows()` generates the novelty pool
    and writes `model_loop/novelty_pool.json` (§5.9).
@@ -681,7 +684,8 @@ fit and cache hit; those warnings are advisory.
 sampling (at least 2 of them) run in a spawned `ProcessPoolExecutor` with
 `allocated_cpus() // min(cores, chains)` workers. That is 16 // 4 = 4
 concurrent fits. Each worker pins BLAS to 1 thread, calls `fit_model` (so it
-can escalate), writes the `.nc`, and returns the fit's fingerprint; the parent
+can escalate), writes the `.nc` (to a temporary name, then `os.replace`, so a
+killed write leaves no truncated file), and returns the fit's fingerprint; the parent
 checks it against the fingerprints it expects (at the loop's settings, or at
 the 0.95 refit's) and loads the file. Candidate admission fits run one at a
 time.
@@ -1259,9 +1263,6 @@ Bugs and behaviour worth a decision (read from the code, not observed in a run):
   used fewer pairs.
 - **The fitted-seed baseline does not mask undefined predictions**, unlike
   the trajectory: a seed with an invalid `p_left` on some held-out pair raises.
-- **A resubmission re-stages `harness_repo`.** Every retry resubmits
-  `holdout_setup.sbatch`, which rsyncs `$REPO` into `harness_repo` again, so a
-  resumed cell runs whatever code `$REPO` holds at that time.
 
 Things I did not verify at runtime (read from code only): arviz's `good_k`
 value at 8,000 draws (assumed 0.7), `az.compare`'s default weight method

@@ -14,7 +14,7 @@ import shutil
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Tuple
+from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 
 import numpy as np
 import yaml
@@ -23,6 +23,7 @@ from src.models.model_manifest import manifest_path, read_manifest_entries
 from src.models.data_binding import MissingStimulusColumns, make_stim_data
 from src.models.model_loading import load_pymc_model, pm_data_inputs
 from src.models.pymc_inference import (
+    INFRASTRUCTURE_ERRORS,
     convergence_problems_of,
     evict_fit_cache,
     fit_model,
@@ -330,6 +331,7 @@ def _drop_nonfinite_elpd_models(
     fit_kwargs: Optional[Dict[str, Any]] = None,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
+    protected: Iterable[str] = (),
 ) -> None:
     """Remove from the manifest any model whose ELPD-LOO is non-finite on the data.
 
@@ -349,11 +351,24 @@ def _drop_nonfinite_elpd_models(
     persisted to ``cache_dir``) and everything downstream (the ELPD calls below,
     scoring, the critique) reuses those fits. A model whose fit fails is dropped
     on that report; it is not fit a second time.
+
+    Only a failure that is the model's own drops it. An infrastructure failure
+    (a broken fit pool, an unreadable cache file, out of memory:
+    ``INFRASTRUCTURE_ERRORS``) raises out of here instead of being recorded as
+    "MCMC fit failed". A ``protected`` model (a project seed, the baseline the
+    run reports against) is never dropped: whatever would drop it raises.
     """
     fit_kwargs = fit_kwargs or {}
     entries = _manifest_entries(models_dir)
+    protected = set(protected)
 
     def drop(entry: Dict[str, str], message: str, detail: str) -> None:
+        if entry["name"] in protected:
+            raise RuntimeError(
+                f"Protected seed model {entry['name']!r}: {message}. A protected "
+                "seed is never dropped from the set; fix the cause (or the seed) "
+                "and resume."
+            )
         print(f"  [drop] model {entry['name']!r}: {message}; dropping.", flush=True)
         _record(
             ledger,
@@ -385,6 +400,8 @@ def _drop_nonfinite_elpd_models(
             elpd = log_likelihood(
                 name, responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs
             )
+        except INFRASTRUCTURE_ERRORS:
+            raise
         except Exception as e:  # noqa: BLE001 — any fit/LOO failure means unscorable
             drop(
                 entry,
@@ -966,6 +983,10 @@ def _admit_candidate_with_reason(
             cache_dir=cache_dir,
             **(fit_kwargs or {}),
         )
+    except INFRASTRUCTURE_ERRORS:
+        # Not the candidate's failure: it must not reach the ledger as one.
+        staged.unlink(missing_ok=True)
+        raise
     except Exception as e:
         staged.unlink(missing_ok=True)
         return reject(
@@ -1000,6 +1021,9 @@ def _admit_candidate_with_reason(
             cache_dir=cache_dir,
             **(fit_kwargs or {}),
         )
+    except INFRASTRUCTURE_ERRORS:
+        staged.unlink(missing_ok=True)
+        raise
     except Exception as e:
         staged.unlink(missing_ok=True)
         return reject(

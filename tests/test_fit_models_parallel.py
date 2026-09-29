@@ -751,3 +751,99 @@ def test_pool_driver_accepts_a_worker_that_refit_at_the_escalated_target_accept(
     )
 
     assert outcomes == {"a": None, "b": None}
+
+
+# ---------------------------------------------------------------------------
+# Infrastructure failures are not model failures
+# ---------------------------------------------------------------------------
+#
+# One pool worker killed (an out-of-memory kill) raises BrokenProcessPool for
+# every pending fit, and the start-of-experiment screen used to drop every one
+# of those models — protected seeds included — as "MCMC fit failed".
+
+
+def test_a_broken_pool_raises_instead_of_failing_every_pending_model(tmp_path, monkeypatch):
+    from concurrent.futures.process import BrokenProcessPool
+
+    models_dir, responses = _stub_models(tmp_path, ["a", "b", "c"])
+    _thread_executor(monkeypatch)
+
+    def dies(name, *args):
+        raise BrokenProcessPool("A process in the process pool was terminated abruptly")
+
+    monkeypatch.setattr(pi, "_fit_model_in_worker", dies)
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+
+    with pytest.raises(pi.FitInfrastructureFailure, match="not the model's"):
+        pi._sample_models_in_pool(
+            ["a", "b", "c"], models_dir, responses, cache_dir, {},
+            workers=2, stop_on_failure=False,
+        )
+
+
+def test_an_infrastructure_error_inside_a_worker_raises(tmp_path, monkeypatch):
+    models_dir, responses = _stub_models(tmp_path, ["a", "b"])
+    _thread_executor(monkeypatch)
+
+    def fake_fit(name, *a, **k):
+        raise MemoryError("Unable to allocate 3.1 GiB")
+
+    monkeypatch.setattr(pi, "fit_model", fake_fit)
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+
+    with pytest.raises(pi.FitInfrastructureFailure, match="MemoryError"):
+        pi._sample_models_in_pool(
+            ["a", "b"], models_dir, responses, cache_dir, {},
+            workers=2, stop_on_failure=False,
+        )
+
+
+def test_the_tolerant_batch_raises_an_in_process_infrastructure_error(tmp_path, monkeypatch):
+    models_dir, responses = _stub_models(tmp_path, ["good", "bad"])
+    monkeypatch.setattr(pi, "_sample_models_in_pool", _never_pool)
+
+    def fake_fit(name, *a, **k):
+        if name == "bad":
+            raise OSError(116, "Stale file handle")
+        return pi.FittedModel(name=name, model=object(), idata=object(), fingerprint=name)
+
+    monkeypatch.setattr(pi, "fit_model", fake_fit)
+
+    with pytest.raises(OSError, match="Stale file handle"):
+        pi.fit_models_to_cache(["good", "bad"], models_dir, responses, fit_workers=1)
+
+
+def test_an_unreadable_cached_fit_is_an_infrastructure_failure(tmp_path, monkeypatch):
+    """A truncated .nc (a write cut short) used to be read back as the model's
+    failure on --resume."""
+    models_dir, responses = _stub_models(tmp_path, ["a"])
+    monkeypatch.setattr(pi, "load_pymc_model", lambda name, directory: object())
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+    (cache_dir / _nc_name("a", models_dir, responses, {})).write_bytes(b"\x89HDF\r\n truncated")
+
+    with pytest.raises(pi.FitInfrastructureFailure, match="cannot be read"):
+        pi.fit_model("a", models_dir, responses, cache_dir=cache_dir)
+
+
+class _Idata:
+    def __init__(self, fail: bool):
+        self.fail = fail
+
+    def to_netcdf(self, path):
+        Path(path).write_bytes(b"half a fit")
+        if self.fail:
+            raise MemoryError("killed mid-write")
+
+
+def test_a_fit_file_appears_only_once_it_is_complete(tmp_path):
+    nc = tmp_path / "a.0123abcd.nc"
+    with pytest.raises(MemoryError):
+        pi.write_fit_file(_Idata(fail=True), nc)
+    assert list(tmp_path.iterdir()) == []  # neither the fit nor a partial file
+
+    pi.write_fit_file(_Idata(fail=False), nc)
+    assert [p.name for p in tmp_path.iterdir()] == [nc.name]
+    assert nc.read_bytes() == b"half a fit"
