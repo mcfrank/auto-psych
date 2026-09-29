@@ -1,1 +1,0 @@
-People judge sequence randomness based purely on outcome frequencies, paradoxically perceiving greater proportion imbalance as more random, with the psychophysical scaling of this imbalance governed by a free power-law exponent.

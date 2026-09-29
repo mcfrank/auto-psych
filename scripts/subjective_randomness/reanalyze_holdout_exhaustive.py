@@ -17,9 +17,9 @@ without re-running any agents or resampling MCMC:
 
 The ground-truth generator is located automatically: a normal seed model is read
 from ``--seed-models-dir`` (the recovery registry, which keeps every model a
-holdout run may have held out — including the ones the 2026-08 consolidation
-superseded — whereas the agent's sandbox copy had the GT deleted); an impossible
-ground truth is read from ``src/subjective_randomness/impossible_models``.
+literature holdout run holds out, whereas the agent's sandbox copy had the GT
+deleted); an impossible ground truth is read from
+``src/subjective_randomness/impossible_models``.
 Override with ``--gt-models-dir`` if needed.
 
 By default the enriched JSON / CSV / figures overwrite the run's ``holdout.json``
@@ -28,7 +28,7 @@ exhaustive-pool numbers up unchanged.
 
 Usage:
     uv run python scripts/subjective_randomness/reanalyze_holdout_exhaustive.py \\
-        --result $SCRATCH/auto-psych/holdout_test_retest/run1/window_typicality/holdout.json
+        --result $SCRATCH/auto-psych/holdout_test_retest/run1/motif_stack/holdout.json
 """
 
 from __future__ import annotations
@@ -86,8 +86,7 @@ class Args:
     seed_models_dir: Optional[Path] = None
     """Seed-model directory holding the seed generators AND a normal ground
     truth (default: the recovery registry, which — unlike the agent's sandbox
-    copy, and unlike the live seed pool since the 2026-08 consolidation — still
-    contains every held-out model, superseded ones included)."""
+    copy — contains every held-out literature model)."""
     gt_models_dir: Optional[Path] = None
     """Directory holding the ground-truth generator. Default: auto — the seed
     dir for a normal GT, the impossible-models dir for an impossible GT."""

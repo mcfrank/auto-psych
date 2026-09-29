@@ -28,7 +28,6 @@ FIXTURES_DIR = TESTS_DIR / "fixtures"
 PYMC_MODEL_FIXTURES_DIR = FIXTURES_DIR / "pymc_models"
 
 SCRIPTS_DIR = REPO_ROOT / "scripts"
-ANALYSIS_SCRIPTS_DIR = SCRIPTS_DIR / "analysis"
 
 
 @lru_cache(maxsize=None)

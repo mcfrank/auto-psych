@@ -21,51 +21,11 @@ MODEL_DIR = (
 )
 
 EXPECTED_INPUTS = {
-    "prototype_similarity": {
-        "imbalance_a",
-        "imbalance_b",
-        "p_alts_a",
-        "p_alts_b",
-        "chose_left",
-    },
-    "encoding_compressibility": {
-        "max_run_norm_a",
-        "max_run_norm_b",
-        "periodicity_a",
-        "periodicity_b",
-        "imbalance_a",
-        "imbalance_b",
-        "chose_left",
-    },
-    "bayesian_diagnosticity": {
-        "n_a",
-        "h_a",
-        "rep_motifs_a",
-        "alt_motifs_a",
-        "n_b",
-        "h_b",
-        "rep_motifs_b",
-        "alt_motifs_b",
-        "chose_left",
-    },
-    "window_typicality": {
-        "n_a",
-        "n_b",
-        "max_run_a",
-        "max_run_b",
-        "chose_left",
-    },
     "falk_konold_dp": {
         "rep_motifs_a",
         "alt_motifs_a",
         "rep_motifs_b",
         "alt_motifs_b",
-        "chose_left",
-    },
-    "motif_hmm": {
-        "n_a",
-        "n_b",
-        *{f"sym{i}_{side}" for i in range(1, 9) for side in ("a", "b")},
         "chose_left",
     },
     # motif_stack does not read trial-aligned feature columns: it declares a
@@ -106,8 +66,7 @@ def test_subjective_randomness_manifest_lists_loadable_pymc_models():
     # theorist loader silently drops an entry whose `.py` is missing, which
     # would shrink the model set without a trace. *Which* models these are is
     # pinned once, in test_literature_faithful_pymc.py; here the manifest is
-    # the reference. The superseded originals remain in EXPECTED_INPUTS below
-    # because their files must stay loadable for archival refits.
+    # the reference.
     manifest = yaml.safe_load((MODEL_DIR / "models_manifest.yaml").read_text())
     assert get_model_names_from_manifest(manifest, MODEL_DIR) == faithful_model_names()
 
@@ -158,7 +117,7 @@ def _stimulus_row(sequence_a: str, sequence_b: str) -> dict:
     The raw H/T sequences travel alongside the numeric features because models
     may declare a `compute_features` featurizer or a `prepare_observed` hook,
     both of which derive their inputs from the sequences rather than from the
-    fixed feature columns (cf. `model_recovery.feature_rows`).
+    fixed feature columns.
     """
     return {
         "sequence_a": sequence_a,

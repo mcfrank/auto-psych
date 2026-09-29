@@ -7,7 +7,8 @@
 # use. The agentic loop is seeded with the FULL normal seed set and is *expected
 # to fail* to recover them — so the held-out correlation should stay low. Five
 # repeats per ground truth let us see how *stably* it fails (test-retest of the
-# null result), exactly mirroring run_test_retest.sh for the standard holdout.
+# null result), exactly mirroring run_faithful_test_retest.sh for the
+# literature holdout.
 #
 # This is a thin, pinned wrapper around submit_impossible_holdout_test_retest.sh.
 # It exists so the parameters for *this* run are explicit and reproducible, and

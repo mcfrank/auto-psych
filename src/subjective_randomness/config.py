@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import importlib
 from pathlib import Path
 from typing import Any, Dict
 
@@ -31,7 +30,3 @@ def load_config(path: Path) -> Dict[str, Any]:
     """Parse a YAML config file and return its contents as a dict."""
     return yaml.safe_load(path.read_text(encoding="utf-8")) or {}
 
-
-def load_model(module_path: str) -> Any:
-    """Import a Python module by dotted path and return the module object."""
-    return importlib.import_module(module_path)

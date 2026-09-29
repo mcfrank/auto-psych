@@ -375,8 +375,11 @@ def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
     for rank, item in enumerate(stimuli, start=1):
         assert isinstance(item["eig"], float) and item["eig"] >= 0.0
         assert item["selection_rank"] == rank
-    # The models were actually fitted (cache holds one posterior per model).
-    assert len(list(cache.glob("*.nc"))) == 2
+    # The models were actually fitted: the cache holds a posterior for each
+    # (two, when a fit this short fails the convergence gate and is refit).
+    assert {nc.name.split(".")[0] for nc in cache.glob("*.nc")} == {
+        "bayesian_fair_coin", "representativeness"
+    }
     # Round-trips through JSON like the design stage requires.
     json.dumps(stimuli)
 

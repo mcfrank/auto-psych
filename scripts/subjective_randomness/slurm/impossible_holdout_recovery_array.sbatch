@@ -2,8 +2,8 @@
 #SBATCH --job-name=impossible_holdout_recovery
 #SBATCH --partition=normal
 #SBATCH --time=1-00:00:00
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32GB
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64GB
 #SBATCH --output=%x_%A_%a.out
 #SBATCH --error=%x_%A_%a.out
 #

@@ -19,7 +19,7 @@ import pytest
 from src.models import pymc_inference as pi
 from src.models.eig_selection import estimate_joint_eig, select_n_joint_eig
 from src.models.model_loading import clear_model_cache
-from tests.paths import ANALYSIS_SCRIPTS_DIR, PYMC_MODEL_FIXTURES_DIR, load_script_module
+from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 
 def test_estimate_joint_eig_matches_closed_form_single_stimulus():
@@ -119,48 +119,6 @@ def test_select_n_joint_eig_validates_inputs():
             {"A": np.array([[1.4]]), "B": np.array([[0.2]])}, 1,
             n_scenarios=100, seed=0,
         )  # p outside [0, 1]
-
-
-@pytest.mark.slow
-def test_selection_benchmark_end_to_end(tmp_path):
-    """The selection-scaling benchmark runs on the fixture models."""
-    import json
-
-    mod = load_script_module(ANALYSIS_SCRIPTS_DIR / "benchmark_joint_eig_selection.py")
-
-    result = mod.run_benchmark(
-        models_dir=PYMC_MODEL_FIXTURES_DIR,
-        pool_sizes=(20, 40),
-        exhaustive=False,
-        lengths=(4, 5),
-        n_select=3,
-        n_scenarios=300,
-        n_samples=25,
-        seed=9,
-        out_dir=tmp_path,
-    )
-
-    stages = {(r.stage, r.n_pool) for r in result.records}
-    assert stages == {
-        (stage, n)
-        for stage in ("featurize", "score", "select_exact", "select_lazy")
-        for n in (20, 40)
-    }
-    assert all(r.seconds > 0 for r in result.records)
-    for sel in result.selections.values():
-        assert len(sel["exact_indices"]) == 3
-        assert 0.0 <= sel["exact_joint_eig_bits"] <= 1.0 + 1e-9
-        # Random-baseline joint EIG (mean over random k-sets): the optimized
-        # set must not lose to the average random set (small MC tolerance).
-        baseline = sel["random_joint_eig_bits"]
-        assert set(baseline) == {"mean", "min", "max"}
-        assert baseline["min"] <= baseline["mean"] <= baseline["max"]
-        assert sel["exact_joint_eig_bits"] >= baseline["mean"] - 0.05
-
-    summary = json.loads((tmp_path / "joint_eig_selection_summary.json").read_text())
-    assert summary["n_select"] == 3
-    assert (tmp_path / "joint_eig_selection_timings.csv").exists()
-    assert (tmp_path / "joint_eig_selection.png").exists()
 
 
 @pytest.mark.slow

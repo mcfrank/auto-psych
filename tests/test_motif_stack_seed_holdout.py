@@ -1,5 +1,5 @@
 """Holding motif_stack out withholds the motif_stack seed, and nothing
-resembling either motif-stack model reaches the agents.
+resembling the motif-stack model reaches the agents.
 
 The seed pool's ``motif_stack.py`` is the registry's Viterbi model, byte for
 byte (on 2026-09-27 it was briefly the softmax rewrite
@@ -8,8 +8,7 @@ two of the three ground truths' data). Everything that withholds the held-out
 ground truth works by name: the array deletes ``<gt>.py`` and every ``*<gt>*``
 file from the agent tree and scrubs ``<gt>`` from the manifests, the harness
 withholds the seed whose manifest name is the ground truth, and the name scan
-stops a cell whose tree names it. The content checks below also cover the
-softmax rewrite, a near-copy of the ground truth.
+stops a cell whose tree names it.
 
 The array tests run the real ``holdout_recovery_array.sbatch`` against a staged
 harness whose ``_env.sh`` and harness CLI are stubs, keep the agent tree
@@ -38,9 +37,8 @@ SLURM_DIR = REPO_ROOT / "scripts" / "subjective_randomness" / "slurm"
 REGISTRY_DIR = REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families"
 FAMILY_DIR = REPO_ROOT / "src" / "subjective_randomness" / "model_families"
 POOL_REL = "src/pipelines/outer_loop/projects/subjective_randomness/seed_models"
-SOFTMAX = (REGISTRY_DIR / "motif_stack_softmax.py").read_bytes()
 VITERBI = (REGISTRY_DIR / "motif_stack.py").read_bytes()
-# Code both motif-stack files share and no other seed has: the automaton's
+# Code of the motif-stack model that no other seed has: the automaton's
 # transition matrices, its memory-method flags, its regular likelihood.
 MOTIF_STACK_CODE = ["def _matrices(", "def _memory_flags(", "def _log_p_regular("]
 
@@ -136,10 +134,10 @@ def test_holding_out_the_motif_model_leaves_nothing_resembling_it_in_the_agent_t
         assert "motif_stack" not in manifest.read_text(encoding="utf-8"), manifest
         assert not [n for n in read_manifest_names(manifest.parent) if "motif" in n]
 
-    # By content: neither motif-stack file under any name, and none of their code.
+    # By content: the motif-stack file under no name, and none of its code.
     for path in files:
         data = path.read_bytes()
-        assert data not in (SOFTMAX, VITERBI), path
+        assert data != VITERBI, path
         text = data.decode("utf-8", errors="replace")
         assert not [code for code in MOTIF_STACK_CODE if code in text], path
 

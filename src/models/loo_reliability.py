@@ -11,8 +11,7 @@ Bernoulli choice models fit here that verdict is wrong in two ways:
    1 - 1e-6)``) produces on an extreme stimulus — has importance weights that
    are all equal. There is no tail for PSIS to fit, so arviz reports k = inf,
    but the LOO term for that trial is exact: importance sampling with constant
-   weights is the plain estimate. See
-   ``docs/consolidation_decision_record.md`` for the holdout-sweep evidence.
+   weights is the plain estimate.
 2. **One trial in thousands.** PSIS's estimate at a genuinely high-k trial is
    optimistic by at most that trial's (lpd_i − elpd_i), a few nats for a
    Bernoulli likelihood. A handful of such trials cannot move a total ELPD

@@ -20,17 +20,13 @@ EXCLUDE_FILE = (
 
 FORBIDDEN_PATHS = [
     "src/subjective_randomness/features.py",
-    "src/subjective_randomness/sequence_stats.py",
     "src/subjective_randomness/stimulus_design.py",
-    "src/subjective_randomness/model_recovery.py",
-    "src/subjective_randomness/pymc_recover.py",
     "src/subjective_randomness/model_families",
-    # Alternative implementations of the ground truths (motif_stack_softmax.py
-    # describes a held-out motif_stack in full); only opencode honoured the
-    # read deny-list that used to cover it.
+    # The ground truths' implementations; only opencode honoured the read
+    # deny-list that used to cover it.
     "src/subjective_randomness/pymc_model_families",
     # The rest of the research library is harness-only, and several of its
-    # modules name the ground truths (incumbent.py, exhaustive_search.py, ...).
+    # modules name the ground truths (incumbent.py, ...).
     "src/subjective_randomness",
     # Docs, tests, scripts and analyses name and describe the ground truths
     # (40 files named motif_stack); agents need only src/ and their run tree.

@@ -1,1 +1,0 @@
-People judge sequence randomness based purely on the maximum run length heuristic. They assess the length of the longest continuous streak of identical outcomes in each sequence, perceiving the sequence with the shorter maximum streak as more random.

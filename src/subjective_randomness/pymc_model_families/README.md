@@ -7,8 +7,8 @@ Bernoulli response likelihood expected by `src.models.pymc_inference`.
 
 This directory is the **recovery registry**, and its `models_manifest.yaml` is
 the single source of truth for which models are active. The recovery harnesses
-(`model_recovery.py`, `holdout_recovery.py`, and the impossible variant) point
-their `seed_models_dir` here, because ground-truth generation and
+(`holdout_recovery.py` and the impossible variant) point their
+`seed_models_dir` here, because ground-truth generation and
 fixed-parameter baselines need the pure-Python family twins. The outer loop's
 live seed pool
 (`src/pipelines/outer_loop/projects/subjective_randomness/seed_models/`) is a
@@ -20,8 +20,8 @@ across (the pool manifest keeps its own header but must list the same models).
 `tests/test_subjective_randomness_seed_recovery.py` fail if the two diverge, or
 if a manifest name has no pure-Python twin. (They diverged once, between the
 hero-run promotion of 2026-07 and the reconciliation of 2026-08, which left
-`model_recovery.default_generating_params` raising `ModuleNotFoundError` for
-every pool model; the retired winners are archived under the seed pool's
+the recovery harness's twin lookup raising `ModuleNotFoundError` for every
+pool model; the retired winners are archived under the seed pool's
 `archive_hero_run_2026_07/`.)
 
 The 2026-08 seed-model fidelity review **replaced** the original four models
@@ -36,11 +36,9 @@ paper-derived test vectors in `tests/test_literature_model_families.py`):
 | `local_representativeness` | `prototype_similarity` | Explicit quantitative operationalization of Kahneman & Tversky (1972) |
 
 Only manifest-listed models are active — for recovery, the fitted and
-no-learning baselines, the outer loop's seed pool, and the EIG design defaults
-(`stimulus_design.default_model_family_names` reads this manifest directly).
-The superseded originals' `.py` files and twins remain on disk solely so
-pre-consolidation run artifacts can be refit; do not add them back to the
-manifest. A newly discovered model earns its place here only through the
+no-learning baselines, and the outer loop's seed pool.
+The superseded originals were removed in September 2026 (git history keeps
+them). A newly discovered model earns its place here only through the
 standard recovery/holdout comparison — and needs a pure-Python twin in
 `../model_families/` before it can be added.
 
@@ -49,6 +47,6 @@ computes its own features via its `compute_features` hook):
 
 ```bash
 uv run python -m src.model_comparison.posterior \
-  --responses data/subjective_randomness/responses.csv \
+  --responses path/to/responses.csv \
   --models-dir src/subjective_randomness/pymc_model_families
 ```

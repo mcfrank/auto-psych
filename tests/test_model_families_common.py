@@ -17,14 +17,14 @@ import math
 import pytest
 
 from src.subjective_randomness.model_families import (
-    bayesian_diagnosticity,
     common,
-    encoding_compressibility,
-    prototype_similarity,
-    window_typicality,
+    falk_konold_dp,
+    finite_experience_occurrence,
+    local_representativeness,
+    motif_stack,
 )
 
-FAMILIES = (window_typicality, encoding_compressibility, prototype_similarity, bayesian_diagnosticity)
+FAMILIES = (falk_konold_dp, finite_experience_occurrence, local_representativeness, motif_stack)
 
 
 def _all_sequences(max_length: int) -> list[str]:

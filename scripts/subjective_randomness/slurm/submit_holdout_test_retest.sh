@@ -26,8 +26,8 @@ export RETRY_SUBMIT_SCRIPT="submit_holdout_test_retest.sh"
 export N_REPEATS="${N_REPEATS:-5}"
 # Must match the config's gt_models keys (the setup job validates this).
 # Default: the literature-faithful registry models — the active seed set since
-# the 2026-08 consolidation. Override GT_MODELS + CONFIG together to run the
-# superseded pre-consolidation set (configs/holdout_recovery.yaml).
+# the 2026-08 consolidation. Override GT_MODELS + CONFIG together to run
+# another set.
 export GT_MODELS="${GT_MODELS:-falk_konold_dp motif_stack finite_experience_occurrence local_representativeness}"
 export CONFIG="${CONFIG:-scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml}"
 # The GT/baseline registry (config seed_models_dir; the setup job validates the
@@ -83,8 +83,7 @@ is_retry=""
 # Inner-loop ablation knob: INNER_LOOP_ITERATIONS=0 makes every array task pass
 # --inner-loop-iterations 0, so the inner model loop only fits/scores the
 # theorist's models (no candidate-conjecturing or critique agents are spawned).
-# The array sbatch turns it into the CLI flag; run_no_inner_loop_test_retest.sh
-# pins it to 0.
+# The array sbatch turns it into the CLI flag.
 [[ -n "${INNER_LOOP_ITERATIONS:-}" ]] && export INNER_LOOP_ITERATIONS
 # Agent backend/model override: lets a smoke or sweep use a different coding
 # agent (e.g. AGENT_BACKEND=claude AGENT_MODEL=claude-fable-5-1).

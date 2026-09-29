@@ -451,7 +451,7 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   `--dangerously-skip-permissions --add-dir`; `opencode` uses `opencode run`
   (no `--add-dir`). Token usage is always recorded.
 - `src/subjective_randomness/incumbent.py` — the **incumbent record**, the
-  loop-improvement plan's primary metric: per scoring step of a holdout cell,
+  primary metric for improving the loop: per scoring step of a holdout cell,
   did the exported `best_model` change from the previous step, and is it a
   *discovered* model (not scored at experiment 1's seed step, i.e. not one of
   the project seeds the cell started with). The harness writes the two flags
@@ -464,8 +464,8 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   of the September 2026 sweep.
 
 - **Sweep summaries compare like with like** (`src/subjective_randomness/sweep_cells.py`,
-  `reporting.aggregate_holdout_trajectories`). Every summary (recovery report,
-  test-retest, incumbent report, ceiling, combined figures) lists the expected
+  `reporting.aggregate_holdout_trajectories`). Every summary (test-retest,
+  incumbent report) lists the expected
   cells that are partial (no `holdout.json`) or missing; trajectories are
   pooled by position within an experiment (seed step, rounds every cell ran,
   end), never by `global_step` (abandoned rounds write no step); and at each
@@ -487,8 +487,8 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   rendered by the live launchers). Adding a project = adding an
   asset directory. This lives under `src/`, not the run-output `projects/` tree.
 - `src/subjective_randomness/` = a **standalone research library** for the
-  subjective-randomness domain (model families, `stimulus_design.py`,
-  `sequence_stats.py`, recovery harnesses). Coupling to the pipeline is
+  subjective-randomness domain (model families, the pair pools in
+  `stimulus_design.py`, recovery harnesses). Coupling to the pipeline is
   deliberately thin (two cross-imports). `pymc_model_families/` is the frozen
   recovery registry; the project's `seed_models/` manifest mirrors it (a test
   asserts they agree, byte for byte: the `motif_stack` seed is the Viterbi
@@ -507,11 +507,6 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 - `src/monitor/` — live dashboard for an in-progress human study (Firestore +
   Prolific), discovered from `deployment_manifest.json` files. Its first job is
   catching degenerate data (participants answering one side every trial).
-
-### Legacy / not part of the live loops
-
-`src/experiments/` and `src/validation/` are from the old pipeline and are not
-used by the active loops (per `README.md`).
 
 ## Cluster & live runs
 

@@ -25,4 +25,4 @@ def test_project_asset_helpers_use_the_declared_asset_root():
 def test_all_checked_in_project_assets_live_under_one_root():
     assert problem_definition_path("think_aloud_game24").is_file()
     assert (project_prompts_dir("think_aloud_game24") / "1_theory.md").is_file()
-    assert (references_dir("number_game") / "bigelow2016inferring.pdf").is_file()
+    assert (references_dir("subjective_randomness") / "falk_konold_1997.pdf").is_file()

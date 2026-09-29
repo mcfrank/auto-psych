@@ -28,8 +28,8 @@ usage).
 - **Posterior predictive check / CriticAL.** Compare a statistic of the real
   data with its distribution in data simulated from the fitted model.
   BH-FDR q-values are reported beside the p-values; flags use p ≤ 0.05.
-- **Model posterior.** Softmax of ELPD-LOO minus 0.05 per code line;
-  overconfident, reported only. **Stacking weights**: reported only.
+- **Model posterior.** Softmax of ELPD-LOO (no complexity penalty by
+  default); overconfident, reported only. **Stacking weights**: reported only.
 - **BMA** (`_bma` metrics). The posterior-weighted average of all models'
   predictions.
 

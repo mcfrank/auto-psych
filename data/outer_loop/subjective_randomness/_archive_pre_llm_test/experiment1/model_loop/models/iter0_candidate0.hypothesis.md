@@ -1,1 +1,0 @@
-People judge a sequence as more random the higher its proportion of alternations, evaluating randomness via a linear monotonic preference rather than calculating distance to a subjective ideal alternation rate.
