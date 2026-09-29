@@ -62,8 +62,13 @@ TRAJECTORY_COLUMNS = [
     "calib_slope_bma",
     "calib_intercept_bma",
     # The incumbent record (src/subjective_randomness/incumbent.py), appended
-    # last: downstream readers index the older columns by position.
+    # after the metrics: downstream readers index the older columns by position.
     *INCUMBENT_COLUMNS,
+    # Held-out pairs left out of this step's metrics because a model's p_left
+    # is undefined on them (evaluate_trajectory), and those models ("; "-joined).
+    # The step's metrics then cover fewer pairs than the no-learning baseline.
+    "n_eval_excluded",
+    "eval_excluded_models",
 ]
 
 
@@ -237,6 +242,34 @@ def _eval_prediction(
     return preds.reshape(len(participant_ids), n_stim).mean(axis=0)
 
 
+def _report_exclusions(
+    what: str,
+    valid: np.ndarray,
+    models: Sequence[str],
+    eval_stimuli: Optional[Sequence[Mapping[str, str]]],
+    exclusions_log: Optional[Path],
+    record: Mapping[str, Any],
+) -> None:
+    """Say, in the cell's log, that ``what``'s metrics cover fewer held-out
+    pairs than the pool, and append the pairs to ``exclusions_log``."""
+    n_excluded, n_pool = int((~valid).sum()), int(valid.size)
+    print(
+        f"  [eval] WARNING: {what}: {n_excluded} of {n_pool} held-out pairs excluded "
+        f"(p_left undefined for {sorted(models)}); its metrics cover "
+        f"{n_pool - n_excluded} pairs, fewer than the no-learning baseline's {n_pool}.",
+        flush=True,
+    )
+    if exclusions_log is not None:
+        if eval_stimuli is None:
+            raise ValueError("Logging excluded pairs needs the eval stimuli.")
+        pairs = [dict(eval_stimuli[i]) for i in np.flatnonzero(~valid)]
+        with Path(exclusions_log).open("a", encoding="utf-8") as f:
+            f.write(json.dumps({
+                **record, "models": sorted(models),
+                "n_excluded": n_excluded, "n_pool": n_pool, "pairs": pairs,
+            }) + "\n")
+
+
 def _fitted_seed_baseline(
     seed_models: Sequence[str],
     models_dir: Path,
@@ -248,6 +281,8 @@ def _fitted_seed_baseline(
     cache_dir: Optional[Path],
     fit_kwargs: Mapping[str, Any],
     predict_max_draws: Optional[int] = None,
+    eval_stimuli: Optional[Sequence[Mapping[str, str]]] = None,
+    exclusions_log: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Fit each seed model (its file in ``models_dir``) on ``responses_path``
     and correlate with GT.
@@ -261,6 +296,12 @@ def _fitted_seed_baseline(
     (``elpd_best_model`` / ``elpd_best_r`` / ``elpd_best_rmse``; ``None`` with
     ``elpd_best_reason`` when no seed can be trusted). The mean over seeds is
     kept as a reference field.
+
+    A held-out pair where a seed's ``p_left`` is undefined (NaN or outside
+    [0, 1]) is left out of that seed's metrics, as the trajectory leaves it out
+    of a step's (user decision 2026-09-27, audit B6): ``per_model[name]
+    ["n_eval_excluded"]`` counts them, a warning is printed, and
+    ``exclusions_log`` gets one line per such seed with the pairs.
     """
     per_model: Dict[str, Dict[str, Any]] = {}
     for name in seed_models:
@@ -273,14 +314,26 @@ def _fitted_seed_baseline(
         )
         pred = _eval_prediction(
             fitted, eval_rows, participant_ids=participant_ids,
-            max_draws=predict_max_draws,
+            max_draws=predict_max_draws, mask_invalid=True,
         )
+        valid = np.isfinite(pred)
+        if not valid.any():
+            raise RuntimeError(
+                f"Seed {name!r} has an undefined p_left on every held-out pair; "
+                "the fitted-seed baseline cannot score it."
+            )
+        if not valid.all():
+            _report_exclusions(
+                f"fitted-seed baseline, seed {name!r}", valid, [name], eval_stimuli,
+                exclusions_log, {"scored": "fitted_seed_baseline", "model": name},
+            )
         loo = fitted.loo_diagnostics()
         per_model[name] = {
-            "pearson_r": pearson_r(gt_p.tolist(), pred.tolist()),
-            "rmse": float(np.sqrt(np.mean((gt_p - pred) ** 2))),
+            "pearson_r": pearson_r(gt_p[valid].tolist(), pred[valid].tolist()),
+            "rmse": float(np.sqrt(np.mean((gt_p[valid] - pred[valid]) ** 2))),
             "elpd_loo": float(loo.elpd_loo),
             "trusted": not loo.unreliable and not fitted.convergence_problems(),
+            "n_eval_excluded": int((~valid).sum()),
         }
     rs = [v["pearson_r"] for v in per_model.values() if v["pearson_r"] is not None]
     rmses = [v["rmse"] for v in per_model.values()]
@@ -440,21 +493,12 @@ def evaluate_trajectory(
                 name for name, pred in predictions.items() if not np.isfinite(pred).all()
             )
             if not valid.all():
-                excluded = [dict(eval_stimuli[i]) for i in np.flatnonzero(~valid)]
-                print(
-                    f"  [eval] experiment {exp_num} step {entry['step']}: "
-                    f"{len(excluded)} held-out pair(s) excluded — p_left undefined "
-                    f"for {undefined_models}",
-                    flush=True,
+                _report_exclusions(
+                    f"experiment {exp_num} step {entry['step']}", valid,
+                    undefined_models, eval_stimuli, exclusions_log,
+                    {"scored": "trajectory", "experiment": exp_num,
+                     "step": entry["step"], "best_model": best},
                 )
-                if exclusions_log is not None:
-                    with Path(exclusions_log).open("a", encoding="utf-8") as f:
-                        f.write(json.dumps({
-                            "experiment": exp_num, "step": entry["step"],
-                            "best_model": best, "models": undefined_models,
-                            "n_excluded": len(excluded), "n_pool": int(valid.size),
-                            "pairs": excluded,
-                        }) + "\n")
             gt_p_valid, best_pred, bma_pred = gt_p[valid], best_pred[valid], bma_pred[valid]
 
             gt_list = gt_p_valid.tolist()
@@ -587,6 +631,7 @@ def fitted_seed_baseline_correlation(
     fit_kwargs: Mapping[str, Any],
     gt_models_dir: Optional[Path] = None,
     predict_max_draws: Optional[int] = None,
+    exclusions_log: Optional[Path] = None,
 ) -> Dict[str, Any]:
     """Fitted-seed baseline: other seed models fit on *all* collected data.
 
@@ -624,6 +669,8 @@ def fitted_seed_baseline_correlation(
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
         predict_max_draws=predict_max_draws,
+        eval_stimuli=eval_stimuli,
+        exclusions_log=exclusions_log,
     )
     if baseline["pearson_r"] is None:
         raise ValueError(

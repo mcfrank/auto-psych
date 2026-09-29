@@ -1212,9 +1212,17 @@ This runs in the harness after the three experiments
     pymc_inference.py:485). A pair is excluded from the step's metrics if the
     best model's or the BMA's prediction is NaN there (so a NaN from any
     positive-weight model excludes it). The row records `n_eval_excluded` and
-    `eval_excluded_models`; each affected step appends one JSON line (with
-    the pairs) to `RUN_DIR/eval_exclusions.jsonl`. The step raises if every
-    pair is excluded. Any other prediction error raises.
+    `eval_excluded_models` (both also columns of `holdout.csv`), the cell's
+    log gets a line `[eval] WARNING: experiment E step S: N of M held-out
+    pairs excluded (p_left undefined for [...]); its metrics cover M − N
+    pairs, fewer than the no-learning baseline's M`, and each affected step
+    appends one JSON line (`"scored": "trajectory"`, with the pairs) to
+    `RUN_DIR/eval_exclusions.jsonl`, which the evaluation starts afresh. The
+    step raises if every pair is excluded. Any other prediction error raises.
+    The user accepted on 2026-09-27 that such a step's metrics cover fewer
+    pairs than the baselines', provided it is stated wherever it happens
+    (audit B6): here, in `holdout.csv`, and in the sweep summary
+    (`test_retest.json` / the analysis log, below).
   - **BMA:** each model with `posteriors > 0` at that step, weighted by its
     softmax posterior renormalised over those models (`_bma_prediction`). If
     no model has positive weight, the best model's prediction is used. The
@@ -1250,7 +1258,12 @@ This runs in the harness after the three experiments
   holdout_eval.py:515, checks its row count against the experiments'
   `data/responses.csv`: 7,680). The files and data match the loop's
   experiment-3 fits of the protected seeds, so these are normally cache hits.
-  Each predicts the eval pool (≤500 draws, no masking of undefined values).
+  Each predicts the eval pool (≤500 draws). A pair where a seed's `p_left`
+  is undefined is left out of that seed's metrics (since 2026-09-27; it used
+  to raise): `per_model[name]["n_eval_excluded"]` counts them, the log gets a
+  `[eval] WARNING: fitted-seed baseline, seed '<name>': N of M …` line, and
+  `eval_exclusions.jsonl` a `"scored": "fitted_seed_baseline"` line with the
+  pairs; a seed undefined on every pair raises.
   Output: `per_model` {`pearson_r`, `rmse`, `elpd_loo`, `trusted`} (trusted =
   PSIS-reliable and converged); `elpd_best_model`, `elpd_best_r`,
   `elpd_best_rmse` — the trusted seed with the highest ELPD-LOO, chosen on the
@@ -1297,9 +1310,9 @@ scans and the activity report of §1.2 are separate, sbatch-level checks.
 | File | Written by | Contents |
 | --- | --- | --- |
 | `$WORK_ROOT/run<r>/<gt>/trajectory.json` | `_run_holdout_recovery_resolved` (holdout_recovery.py:709) | one `gt_run`: `gt_model`, `params` (the true params, hence outside the agent tree), `run_root`, `n_eval_stimuli`, `n_eval_dropped`, `trajectory[]` (rows include `n_eval_excluded`, `eval_excluded_models`), `incumbent`, `baseline`, `fitted_baseline`, `leakage`, `experiments[{experiment, manifest_models}]`. Its presence makes `--resume` skip the cell. |
-| `$WORK_ROOT/run<r>/<gt>/eval_exclusions.jsonl` | `evaluate_trajectory` | one line per step with excluded held-out pairs (only if any) |
+| `$WORK_ROOT/run<r>/<gt>/eval_exclusions.jsonl` | `evaluate_trajectory`, `_fitted_seed_baseline` | one line per step (`"scored": "trajectory"`) or fitted seed (`"scored": "fitted_seed_baseline"`) with excluded held-out pairs (only if any) |
 | `$WORK_ROOT/run<r>/<gt>/holdout.json` | script `main` | `project_id`, `seed_models_dir`, `n_experiments`, `n_participants`, `inner_loop{max_iterations, candidate_count, novelty_rmse_threshold, n_critique_proposals}`, `fit_kwargs`, `seed`, `eval_pool`, `metrics_version: 2`, `gt_runs[ … ]` |
-| `holdout.csv` | `trajectory_tidy_rows` | one row per step: `TRAJECTORY_COLUMNS` + incumbent flags (not the exclusion fields) |
+| `holdout.csv` | `trajectory_tidy_rows` | one row per step: `TRAJECTORY_COLUMNS` (the metrics, the incumbent flags, then `n_eval_excluded` and `eval_excluded_models`, "; "-joined) |
 | `holdout.png` | `plot_holdout_trajectories` | trajectory figure |
 | `_runs/token_usage.jsonl` + report | `start_usage_log` / `write_usage_report` | agent token spend |
 | `run<r>/<gt>/gt_name_mentions.txt`, `agent_activity.md` | sbatch, after the run | §1.2 |
@@ -1399,12 +1412,11 @@ Bugs and behaviour worth a decision (read from the code, not observed in a run):
 - **Fill `joint_eig_bits` are in different units** from the 40-response
   picks' (§3.6), in the same `stimuli.json` column, distinguished only by
   `source`.
-- **holdout.csv omits the evaluation exclusions.** `n_eval_excluded` and
-  `eval_excluded_models` are in `trajectory.json`/`holdout.json` but not in
-  `TRAJECTORY_COLUMNS`, so a tidy-CSV reader cannot see that a step's metrics
-  used fewer pairs.
-- **The fitted-seed baseline does not mask undefined predictions**, unlike
-  the trajectory: a seed with an invalid `p_left` on some held-out pair raises.
+- **Metrics on different pair sets.** A step with excluded pairs, and a
+  fitted seed with excluded pairs, are scored on fewer pairs than the
+  no-learning baseline and the recovery ceiling (user decision 2026-09-27).
+  It is stated in the cell's log, `holdout.csv`, `eval_exclusions.jsonl` and
+  the sweep summary, not corrected for.
 
 Things I did not verify at runtime (read from code only): `az.compare`'s default weight method
 (stacking), whether `pm.sample_prior_predictive(draws=1)` of `p_left` under

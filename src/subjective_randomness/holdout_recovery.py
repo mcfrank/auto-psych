@@ -681,8 +681,12 @@ def _run_holdout_recovery_resolved(
 
         other_seeds = sorted(all_seed_models - {gt_model})
         # Held-out pairs where a model's p_left is undefined are excluded from
-        # that step's metrics and listed here, beside trajectory.json.
+        # that step's (or that fitted seed's) metrics and listed here, beside
+        # trajectory.json. Started afresh, so a retried evaluation does not
+        # list its pairs twice.
         summary_dir.mkdir(parents=True, exist_ok=True)
+        exclusions_log = summary_dir / "eval_exclusions.jsonl"
+        exclusions_log.unlink(missing_ok=True)
         trajectory = evaluate_trajectory(
             run_root,
             gt_model,
@@ -694,7 +698,7 @@ def _run_holdout_recovery_resolved(
             fit_kwargs=fit_kwargs,
             gt_models_dir=gt_models_dir,
             predict_max_draws=eval_pool["predict_max_draws"],
-            exclusions_log=summary_dir / "eval_exclusions.jsonl",
+            exclusions_log=exclusions_log,
         )
         # The incumbent record: per step, did the exported best model change
         # and is it a discovered model; per cell, the counts. "Discovered"
@@ -739,6 +743,7 @@ def _run_holdout_recovery_resolved(
             fit_kwargs=fit_kwargs,
             gt_models_dir=gt_models_dir,
             predict_max_draws=eval_pool["predict_max_draws"],
+            exclusions_log=exclusions_log,
         )
 
         gt_run = {
@@ -842,9 +847,13 @@ def run_impossible_holdout_recovery_from_config(
 
 
 def trajectory_tidy_rows(result: Mapping[str, Any]) -> List[Dict[str, Any]]:
-    """One row per (held-out model, trajectory step), ready for a tidy CSV."""
+    """One row per (held-out model, trajectory step), ready for a tidy CSV
+    (the models a step's excluded pairs are undefined for, "; "-joined)."""
     rows: List[Dict[str, Any]] = []
     for gt_run in result["gt_runs"]:
         for entry in gt_run["trajectory"]:
-            rows.append({"gt_model": gt_run["gt_model"], **entry})
+            row = {"gt_model": gt_run["gt_model"], **entry}
+            if isinstance(row.get("eval_excluded_models"), list):
+                row["eval_excluded_models"] = "; ".join(row["eval_excluded_models"])
+            rows.append(row)
     return rows
