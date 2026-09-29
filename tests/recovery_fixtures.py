@@ -15,6 +15,7 @@ Each was duplicated verbatim in two test modules before it lived here.
 from __future__ import annotations
 
 import numpy as np
+from types import SimpleNamespace
 
 # The canned posterior: two chains x two draws for each parameter the
 # subjective-randomness families expose.
@@ -61,3 +62,9 @@ class CannedPredictionFit:
 
     def predict_p_left(self, stim_data):
         return np.linspace(0.1, 0.9, stim_data["n"])
+
+    def loo_diagnostics(self):
+        return SimpleNamespace(elpd_loo=-1.0, unreliable=False)
+
+    def convergence_problems(self):
+        return []

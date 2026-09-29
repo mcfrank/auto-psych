@@ -63,6 +63,8 @@ RUN_A = {
                     "s1": {"pearson_r": 0.55, "rmse": 0.35},
                     "s2": {"pearson_r": 0.70, "rmse": 0.30},
                 },
+                # The ELPD-best seed is s1, though s2 is closer to the GT.
+                "elpd_best_model": "s1", "elpd_best_r": 0.55, "elpd_best_rmse": 0.35,
             },
         )
     ]
@@ -87,6 +89,7 @@ RUN_B = {
                     "s1": {"pearson_r": 0.50, "rmse": 0.45},
                     "s2": {"pearson_r": 0.65, "rmse": 0.40},
                 },
+                "elpd_best_model": "s2", "elpd_best_r": 0.65, "elpd_best_rmse": 0.40,
             },
         )
     ]
@@ -166,21 +169,22 @@ def test_aggregate_drops_nan_and_inf_like_none():
     assert baseline["mean"] == pytest.approx(0.45)  # best of {NaN, 0.45} and {0.45}
 
 
-def test_aggregate_baselines_use_best_seed_not_mean():
-    # The baseline is the BEST sibling seed per run, then pooled across runs.
-    # RMSE: best = the min-RMSE sibling. fitted per run = [0.30, 0.40] -> 0.35.
+def test_aggregate_baselines_use_the_elpd_best_seed_not_the_oracle_best():
+    # The fitted baseline is each run's ELPD-best seed (chosen on training
+    # data), pooled across runs — not the seed closest to the GT on the eval
+    # pool. RMSE: fitted per run = [0.35 (s1), 0.40 (s2)] -> 0.375.
     agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse", error="std")
     baselines = agg["gt_models"][0]["baselines"]
-    assert baselines["fitted_baseline"]["mean"] == pytest.approx(0.35)
+    assert baselines["fitted_baseline"]["mean"] == pytest.approx(0.375)
     assert baselines["fitted_baseline"]["n"] == 2
     # The default-param baseline only stores Pearson r, so it has no RMSE.
     assert baselines["baseline"] is None
 
-    # Pearson r: best = the max-r sibling. fitted per run = [0.70, 0.65] -> 0.675;
-    # default per run = [0.55, 0.45] -> 0.5.
+    # Pearson r: fitted per run = [0.55, 0.65] -> 0.6; the default-params
+    # baseline (no ELPD) is still the max-r sibling: [0.55, 0.45] -> 0.5.
     agg_r = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="pearson_r")
     br = agg_r["gt_models"][0]["baselines"]
-    assert br["fitted_baseline"]["mean"] == pytest.approx(0.675)
+    assert br["fitted_baseline"]["mean"] == pytest.approx(0.6)
     assert br["baseline"]["mean"] == pytest.approx(0.5)
 
 
@@ -207,8 +211,8 @@ def test_combined_frames_carry_error_band_bounds_for_plotnine():
     assert step0["ymax"] == pytest.approx(0.3 + 0.1414213562, abs=1e-6)
 
     baselines = frames["baselines"]
-    fitted = baselines[baselines["series"] == "best other seed model"].iloc[0]
-    assert fitted["mean"] == pytest.approx(0.35)  # min-RMSE sibling per run: [0.30, 0.40]
+    fitted = baselines[baselines["series"] == "ELPD-best other seed model"].iloc[0]
+    assert fitted["mean"] == pytest.approx(0.375)  # ELPD-best seed per run: [0.35, 0.40]
 
     boundaries = frames["boundaries"]
     assert list(boundaries["boundary"]) == [2]
@@ -218,9 +222,9 @@ def test_combined_frames_carry_error_band_bounds_for_plotnine():
 
 def test_combined_frames_relabel_the_fitted_baseline():
     agg = aggregate_holdout_trajectories([RUN_A, RUN_B], metric="rmse", error="std")
-    # Default (holdout): the fitted-seed baseline is the best *other* seed model.
+    # Default (holdout): the fitted-seed baseline is the ELPD-best *other* seed model.
     default = set(holdout_combined_frames(agg)["baselines"]["series"])
-    assert "best other seed model" in default
+    assert "ELPD-best other seed model" in default
     assert "best seed model" not in default
     # Impossible callers hold out no seed, so it is just "best seed model".
     relabeled = set(
@@ -229,7 +233,7 @@ def test_combined_frames_relabel_the_fitted_baseline():
         ]["series"]
     )
     assert "best seed model" in relabeled
-    assert "best other seed model" not in relabeled
+    assert "ELPD-best other seed model" not in relabeled
 
 
 def test_combined_frames_label_experiment_rounds():
