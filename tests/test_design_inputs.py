@@ -114,3 +114,41 @@ def test_a_saturated_selection_is_filled_by_single_response_eig(tmp_path, monkey
     assert list(calls[1]["preselected"]) == [3, 7]
     assert [s["source"] for s in stimuli] == ["eig"] * 2 + ["eig_single_response_fill"] * 3
     assert [s["selection_rank"] for s in stimuli] == [1, 2, 3, 4, 5]
+
+
+def test_the_design_search_settings_reach_both_selections(tmp_path, monkeypatch):
+    """The lazy/exact search, the scoring precision and the thread count are
+    passed to the noise-floor selection and to the fill alike; the threads
+    default to the CPUs the process is allocated."""
+    import src.models.eig_selection as eig_selection
+    import src.models.pymc_inference as pymc_inference
+    from src.models.eig_selection import JointEIGSelection
+
+    calls = []
+
+    def fake_select(draws, n_select, **kwargs):
+        calls.append(kwargs)
+        if kwargs["n_responses"] == 40:
+            return JointEIGSelection([3], [1.0], 10, stopped_at_noise_floor=True)
+        return JointEIGSelection([1], [0.4], 10)
+
+    monkeypatch.setattr(eig_selection, "select_n_joint_eig", fake_select)
+    monkeypatch.setattr(pymc_inference, "allocated_cpus", lambda: 7)
+    monkeypatch.setattr(
+        pymc_inference, "prior_predict_p_left_draws",
+        lambda names, d, rows, **k: {n: np.full((4, len(rows)), 0.5) for n in names},
+    )
+    monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
+    monkeypatch.setattr(eig_mod, "_screen_usable_models", lambda names, d, row: (names, []))
+
+    eig_mod.design_exhaustive(
+        tmp_path, lengths=(2, 3), n_select=2, n_responses=40, seed=9,
+        lazy=True, scoring_dtype="float32",
+    )
+
+    assert len(calls) == 2
+    for call in calls:
+        assert call["lazy"] is True and call["dtype"] == "float32"
+        assert call["n_threads"] == 7
+        assert call["lazy_batch_size"] == eig_mod.DESIGN_LAZY_BATCH_SIZE
+        assert call["refresh_every"] == eig_mod.DESIGN_REFRESH_EVERY

@@ -26,7 +26,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
 
 import tyro
 from pyprojroot import here
@@ -231,6 +231,94 @@ def _posterior_p_left_draws(
     return _screen_invalid_predictions(posterior_draws, model_names, rows, "posterior-predictive")
 
 
+# How the design searches for the max-joint-EIG set (src/models/eig_selection.py):
+# exact greedy (a full pass over the pool per pick) or lazy batched greedy
+# (re-scoring only the best-ranked candidates between full passes every
+# DESIGN_REFRESH_EVERY picks), in float64 or float32.
+DESIGN_LAZY_SEARCH = False
+DESIGN_LAZY_BATCH_SIZE = 512
+DESIGN_REFRESH_EVERY = 16
+DESIGN_SCORING_DTYPE = "float64"
+
+
+def select_design_picks(
+    draws: Dict[str, Any],
+    n_select: int,
+    *,
+    model_weights: Optional[Dict[str, float]],
+    n_scenarios: int,
+    seed: int,
+    n_responses: int,
+    lazy: bool = DESIGN_LAZY_SEARCH,
+    dtype: str = DESIGN_SCORING_DTYPE,
+    n_threads: Optional[int] = None,
+) -> List[Tuple[int, float, str]]:
+    """The design's ``n_select`` picks as ``(pool index, joint EIG bits, source)``.
+
+    With all ``n_responses`` answers counted, a few picks can identify the
+    model; after that every gain is Monte Carlo noise, so selection stops at
+    its noise floor and single-response EIG, conditioned on the picks so far,
+    fills the remaining slots (user decision 2026-09-26). ``source`` says which
+    objective chose a pick (``"eig"`` or ``"eig_single_response_fill"``), and
+    its joint EIG is in that objective's units. ``n_threads`` (``None`` ⇒ the
+    CPUs this process is allocated) score candidates concurrently; the picks
+    do not depend on it.
+    """
+    from src.models.eig_selection import select_n_joint_eig  # type: ignore
+    from src.models.pymc_inference import allocated_cpus  # type: ignore
+
+    search = dict(
+        n_scenarios=n_scenarios,
+        lazy=lazy,
+        lazy_batch_size=DESIGN_LAZY_BATCH_SIZE,
+        refresh_every=DESIGN_REFRESH_EVERY,
+        dtype=dtype,
+        n_threads=n_threads if n_threads is not None else allocated_cpus(),
+    )
+    print(
+        f"  [design] joint-EIG search: {'lazy batched' if lazy else 'exact'} greedy"
+        + (
+            f" (batches of {DESIGN_LAZY_BATCH_SIZE}, full pass every "
+            f"{DESIGN_REFRESH_EVERY} picks)"
+            if lazy
+            else ""
+        )
+        + f", {dtype} scoring on {search['n_threads']} thread(s).",
+        flush=True,
+    )
+    selection = select_n_joint_eig(
+        draws,
+        n_select,
+        model_weights=model_weights,
+        seed=seed,
+        n_responses=n_responses,
+        stop_below_noise=True,
+        **search,
+    )
+    picks = [(idx, bits, "eig") for idx, bits in zip(selection.indices, selection.joint_eig_bits)]
+    if len(selection.indices) < n_select:
+        fill = select_n_joint_eig(
+            draws,
+            n_select - len(selection.indices),
+            model_weights=model_weights,
+            seed=seed + 1,
+            n_responses=1,
+            preselected=selection.indices,
+            **search,
+        )
+        picks += [
+            (idx, bits, "eig_single_response_fill")
+            for idx, bits in zip(fill.indices, fill.joint_eig_bits)
+        ]
+        print(
+            f"  [design] {n_responses}-response EIG reached its noise floor after "
+            f"{len(selection.indices)} pick(s); {len(fill.indices)} filled by "
+            "single-response EIG.",
+            flush=True,
+        )
+    return picks
+
+
 def design_exhaustive(
     models_dir: Path,
     registry_path: Optional[Path] = None,
@@ -249,6 +337,9 @@ def design_exhaustive(
     fit_tune: Optional[int] = None,
     fit_chains: Optional[int] = None,
     n_responses: int,
+    lazy: bool = DESIGN_LAZY_SEARCH,
+    scoring_dtype: str = DESIGN_SCORING_DTYPE,
+    n_threads: Optional[int] = None,
 ) -> List[Dict[str, Any]]:
     """Select the max-joint-EIG stimulus set from the FULL pair universe.
 
@@ -269,12 +360,15 @@ def design_exhaustive(
     experiment's participant count): the joint EIG scores the count of "left"
     choices, Binomial(n_responses, p_left), not a single response.
 
+    ``lazy``, ``scoring_dtype`` and ``n_threads`` set the greedy search
+    (:func:`select_design_picks`); by default ``DESIGN_LAZY_SEARCH`` and
+    ``DESIGN_SCORING_DTYPE`` on every allocated CPU.
+
     Returns stimuli in selection (greedy) order, each with:
       - "eig": the stimulus's marginal EIG (bits);
       - "selection_rank": 1-based greedy pick order;
       - "joint_eig_bits": in-sample joint EIG of the set up to this stimulus.
     """
-    from src.models.eig_selection import select_n_joint_eig  # type: ignore
     from src.models.pymc_inference import (  # type: ignore
         eig_from_prior_means,
         prior_predict_p_left_draws,
@@ -358,42 +452,17 @@ def design_exhaustive(
                 f"No model in {models_dir} has a defined p_left on the design pool "
                 f"({[e['model'] for e in invalid]} screened out); cannot compute EIG."
             )
-        # With all n_responses answers counted, a few picks can identify the
-        # model; after that every gain is Monte Carlo noise, so selection stops
-        # at its noise floor and single-response EIG, conditioned on the picks
-        # so far, fills the remaining slots (user decision 2026-09-26). Each
-        # stimulus's "source" says which objective chose it, and its
-        # joint_eig_bits are in that objective's units.
-        selection = select_n_joint_eig(
+        picks = select_design_picks(
             draws,
             n_select,
             model_weights=model_weights or None,
             n_scenarios=n_scenarios,
             seed=seed,
             n_responses=n_responses,
-            stop_below_noise=True,
+            lazy=lazy,
+            dtype=scoring_dtype,
+            n_threads=n_threads,
         )
-        picks = [(idx, bits, "eig") for idx, bits in zip(selection.indices, selection.joint_eig_bits)]
-        if len(selection.indices) < n_select:
-            fill = select_n_joint_eig(
-                draws,
-                n_select - len(selection.indices),
-                model_weights=model_weights or None,
-                n_scenarios=n_scenarios,
-                seed=seed + 1,
-                n_responses=1,
-                preselected=selection.indices,
-            )
-            picks += [
-                (idx, bits, "eig_single_response_fill")
-                for idx, bits in zip(fill.indices, fill.joint_eig_bits)
-            ]
-            print(
-                f"  [design] {n_responses}-response EIG reached its noise floor after "
-                f"{len(selection.indices)} pick(s); {len(fill.indices)} filled by "
-                "single-response EIG.",
-                flush=True,
-            )
         means = {m: arr.mean(axis=0) for m, arr in draws.items()}
         for rank, (idx, joint_bits, source) in enumerate(picks, start=1):
             preds = {m: float(means[m][idx]) for m in means}
@@ -467,6 +536,11 @@ class Args:
     the prior."""
     fit_cache: Optional[Path] = None
     """Cache dir for the design-time MCMC fits (with --responses)."""
+    lazy: bool = DESIGN_LAZY_SEARCH
+    """Lazy batched greedy search instead of exact greedy (an approximation;
+    see src/models/eig_selection.py)."""
+    scoring_dtype: Literal["float32", "float64"] = DESIGN_SCORING_DTYPE
+    """Precision of candidate scoring."""
 
 
 def _write_output(stimuli: List[Dict[str, Any]], out: Optional[Path]) -> None:
@@ -497,6 +571,8 @@ def main(args: Args) -> None:
         responses_csv=args.responses,
         fit_cache_dir=args.fit_cache,
         n_responses=args.n_responses,
+        lazy=args.lazy,
+        scoring_dtype=args.scoring_dtype,
     )
     _write_output(selected, args.out)
 

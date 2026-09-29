@@ -65,16 +65,18 @@ def test_greedy_prefers_independent_probe_over_correlated_duplicate():
 
 def test_lazy_greedy_tracks_exact_greedy():
     # Joint EIG with per-draw likelihoods is not submodular (synergy exists —
-    # see the correlated-pair test), so CELF's stale rankings may legitimately
-    # diverge from exact greedy after a few picks. The contract is that lazy
-    # matches the first pick and lands near exact greedy's achieved joint EIG,
-    # not that the index sets are identical.
+    # see the correlated-pair test), so lazy selection's stale stored gains may
+    # legitimately diverge from exact greedy between full passes. The contract
+    # is that lazy matches the first pick (always a full pass) and lands near
+    # exact greedy's achieved joint EIG, not that the index sets are identical.
     rng = np.random.default_rng(8)
     draws = {
         name: rng.uniform(0.05, 0.95, size=(4, 30)) for name in ("A", "B", "C")
     }
     kwargs = dict(n_scenarios=4000, seed=13)
-    lazy = select_n_joint_eig(draws, 5, lazy=True, **kwargs)
+    lazy = select_n_joint_eig(
+        draws, 5, lazy=True, lazy_batch_size=4, refresh_every=3, **kwargs
+    )
     full = select_n_joint_eig(draws, 5, lazy=False, **kwargs)
     assert lazy.indices[0] == full.indices[0]
     eig_lazy = estimate_joint_eig(draws, lazy.indices, n_scenarios=20000, seed=555)
