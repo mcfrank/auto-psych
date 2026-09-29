@@ -18,7 +18,7 @@ one row with five columns (`src/pipelines/outer_loop/columns.py`):
 | column | meaning |
 |---|---|
 | `sequence_a`, `sequence_b` | the two sequences **as shown**: `sequence_a` is the one on the left (the web page randomly decides, per trial, which of the designed pair goes left) |
-| `participant_id` | an integer index, 0…N−1 |
+| `participant_id` | an integer, unique across the run's experiments (a new person gets the next number) |
 | `trial_index` | trial number within the participant |
 | `chose_left` | 1 if the participant clicked the left sequence (`sequence_a`), else 0 |
 

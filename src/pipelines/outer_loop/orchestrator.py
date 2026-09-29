@@ -84,6 +84,72 @@ def raw_collected_responses_path(exp_dir: Path) -> Path:
     return Path(exp_dir).parent / "raw_collected" / f"{Path(exp_dir).name}_responses.csv"
 
 
+def _earlier_experiment_dirs(exp_dir: Path) -> List[Path]:
+    """The run's experiment directories numbered below ``exp_dir``'s."""
+    match = re.fullmatch(r"experiment(\d+)", Path(exp_dir).name)
+    if match is None:
+        raise ValueError(f"Not an experiment directory: {exp_dir}")
+    return [
+        Path(exp_dir).parent / f"experiment{k}"
+        for k in range(1, int(match.group(1)))
+        if (Path(exp_dir).parent / f"experiment{k}").is_dir()
+    ]
+
+
+def run_unique_participant_ids(
+    rows: List[Dict[str, Any]], exp_dir: Path
+) -> List[Dict[str, Any]]:
+    """``rows`` with a ``participant_id`` unique across the run's experiments.
+
+    Collection numbers participants from 0 in every experiment, and the loop
+    pools every experiment's responses, so two different people used to share
+    an id (and a participant random effect). A participant is identified by
+    ``participant_id_str`` (the Prolific ID, on live and Firebase rows) when
+    the rows carry it, else by the collection's own ``participant_id``. One
+    seen in an earlier experiment of the run (its raw collected file) keeps
+    that experiment's id; a new one gets the next id after every id the
+    earlier experiments' ``data/responses.csv`` use, in order of first
+    appearance. The Prolific IDs, and so the mapping, stay in the raw
+    collected files, which no agent is given.
+    """
+    known: Dict[str, int] = {}
+    next_id = 0
+    for earlier in _earlier_experiment_dirs(exp_dir):
+        responses = earlier / "data" / "responses.csv"
+        if responses.exists():
+            with responses.open(encoding="utf-8", newline="") as f:
+                ids = [int(row["participant_id"]) for row in csv.DictReader(f)]
+            next_id = max([next_id, *(i + 1 for i in ids)])
+        raw = raw_collected_responses_path(earlier)
+        if raw.exists():
+            with raw.open(encoding="utf-8", newline="") as f:
+                for row in csv.DictReader(f):
+                    if row.get("participant_id_str"):
+                        known[row["participant_id_str"]] = int(row["participant_id"])
+
+    assigned: Dict[Any, int] = {}
+    renumbered: List[Dict[str, Any]] = []
+    for row in rows:
+        if "participant_id_str" in row:
+            if not row["participant_id_str"]:
+                raise ValueError(
+                    f"A collected row has an empty participant_id_str: {row}. "
+                    "It cannot be attributed to a participant."
+                )
+            key: Any = ("str", row["participant_id_str"])
+            if key not in assigned and row["participant_id_str"] in known:
+                assigned[key] = known[row["participant_id_str"]]
+        elif "participant_id" in row:
+            key = ("index", str(row["participant_id"]))
+        else:
+            raise ValueError(f"A collected row has no participant id: {row}")
+        if key not in assigned:
+            assigned[key] = next_id
+            next_id += 1
+        renumbered.append({**row, "participant_id": assigned[key]})
+    return renumbered
+
+
 def project_seed_models_dir(project_id: str) -> Path:
     """Return the optional project seed-model directory."""
     return outer_project_dir(project_id) / "seed_models"
@@ -687,6 +753,7 @@ def run_collect_programmatic(
 
     csv_path = data_dir / "responses.csv"
     if rows:
+        rows = run_unique_participant_ids(rows, exp_dir)
         # The researchers' copy keeps every column collection returned. Use the
         # UNION of keys across all rows (not just rows[0]), preserving
         # first-seen order. Live/Firebase rows can be heterogeneous (a row missing

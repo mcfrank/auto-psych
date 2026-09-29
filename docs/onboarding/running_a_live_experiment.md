@@ -36,11 +36,18 @@ label you choose.
   collector in § 11 does not copy it.
 - Pooling also keeps only the raw columns, so a run collected before the fix
   can be modelled again (§ 10).
-- `participant_id` is `/results`' anonymous index (0, 1, … in the order the
-  submissions are stored), not a Prolific ID. It starts again at 0 in every
-  experiment, so pooled data from several experiments give different people
-  the same number (not changed; it matters only to a model with
-  per-participant effects).
+- `participant_id` is an anonymous integer, not a Prolific ID. Since
+  28 September 2026 it is unique across a run's experiments: `4_collect`
+  numbers new people after every id the earlier experiments used, and someone
+  who took part in an earlier experiment of the run keeps that experiment's
+  number (`run_unique_participant_ids` in `orchestrator.py`). Before, it was
+  `/results`' index, which starts again at 0 in every experiment, so pooled
+  data gave different people the same number. The Prolific ID ↔ number
+  mapping is only in the `raw_collected/` files.
+- The browser-simulated Firebase collection (`_collect_from_firebase`) stops
+  with an error when `/results` returns rows but none from this collection's
+  participants (or rows without `participant_id_str`); it used to keep every
+  row, mixing in other collections' data.
 
 **B. Fixed on 28 September 2026: the live launchers did not load `bubblewrap`.**
 

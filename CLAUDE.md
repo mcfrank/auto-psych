@@ -465,6 +465,14 @@ used by the active loops (per `README.md`).
   `LiveStudyAlreadyRecorded` with the recovery: `RESUME_AGENTS=4_collect:5_model_loop`,
   or the deliberate `--publish-another-prolific-study`
   (`PUBLISH_ANOTHER_PROLIFIC_STUDY=1`), which archives the old manifest.
+- **Participant ids are unique across a run's experiments.** `4_collect`
+  (`run_unique_participant_ids` in `orchestrator.py`) numbers new people after
+  every id the earlier experiments used and gives someone seen in an earlier
+  experiment (same `participant_id_str`, read from the earlier `raw_collected/`
+  files) their earlier id; `/results` numbers from 0 each time, which gave
+  different people one id in the pooled data. The Firebase browser collector
+  raises when `/results` has no row of its own participants (it used to keep
+  every row).
 - Secrets live in repo-root `.secrets` (see `.secrets.example`): `PROLIFIC_API_TOKEN`,
   `FIREBASE_TOKEN` (`firebase login:ci`), `AUTO_PSYCH_RESULTS_TOKEN` (guards the
   `/submit` & `/results` Cloud Functions — deploy/collect fail loudly without it),
