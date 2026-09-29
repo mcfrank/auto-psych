@@ -37,7 +37,8 @@ usage).
 
 - **Stages** `2_design`, `3_implement`, `4_collect`, `5_model_loop`; no stage 1.
 - **Seed models** = the four **starting models** (`seed_models/`,
-  `starting_models.json`); protected.
+  `starting_models.json`). Removable like any model since 28 September 2026;
+  earlier runs kept them always ("protected").
 - **Registry** (`model_registry.yaml`): the model prior for the next design,
   equal weights.
 - **Candidate**: an agent's proposed model. **Slot**: one agent's place in a
@@ -73,4 +74,7 @@ usage).
 
 - **Run label**, **run copy**, **deployment manifest**, **Prolific modes**:
   see the [runbook](running_a_live_experiment.md) § 3 and § 10.
+- **`code_provenance.json`**: the commit a run copy came from, written by
+  the launcher; the deploy copies it into the manifest.
+- **`claude_auth`**: how Claude agents are billed, `subscription` or `api`.
 - **Prolific ID** (`participant_id_str`): 24 hex characters; identifying.

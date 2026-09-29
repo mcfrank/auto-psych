@@ -6,27 +6,6 @@ Firebase**; those steps are described from the code. Placeholders: `$REPO` is
 your checkout, `$WORK_ROOT` is where live runs write (default
 `$SCRATCH/auto-psych/outer_loop_live`), `<label>` is a run label you choose.
 
-## 0. Blocking problem (read first)
-
-**As of 28 September 2026 a launch through `run_pilot.sh` or
-`start_full_run.sh` cannot deploy.** Found by reading the code, not by
-running it:
-
-- The launchers run each job from a copy of your checkout made with
-  `rsync --exclude '.git'` (`$WORK_ROOT/runs/<label>/repo`).
-- Early in the deploy, before any Prolific or Firebase call, the pipeline records the git commit (`git_metadata` in
-  `src/pipelines/outer_loop/deployment/manifest.py`) and raises
-  ``RuntimeError: `git rev-parse HEAD` failed in … cannot record deployment
-  provenance`` when the directory is not a git checkout (a deliberate
-  fail-loud rule added in August 2026).
-- So the job stops after the design and the agent-built page, **before** any
-  Prolific study or Firebase deploy: no money is spent, but no study runs.
-  Rehearsal R4 below would hit it; R1 and R3 run from your checkout and do not.
-
-It needs a code change (for example, the launchers could record the commit
-themselves, or keep `.git` in the run copy). Get that done and R4 passing
-before anything else on this page.
-
 ## 1. Accounts and credentials
 
 You need a Sherlock account, a funded Prolific researcher account, access to
@@ -42,11 +21,15 @@ the job.
 |---|---|
 | `PROLIFIC_API_TOKEN` | creating, publishing, polling and pausing studies |
 | `FIREBASE_TOKEN` | `firebase deploy` from a compute node (make it with `firebase login:ci` on a machine with a browser) |
-| `AUTO_PSYCH_RESULTS_TOKEN` | shared secret protecting `/results`; make one with `openssl rand -hex 32` and keep it the same for every deploy and collection. **Missing from `.secrets.example`.** |
-| `GOOGLE_API_KEY` | the Gemini login of the default agents (opencode). `.secrets.example` says a live run does not need it; with the default agents it does, unless opencode is logged in some other way on your account (not checked). |
+| `AUTO_PSYCH_RESULTS_TOKEN` | shared secret protecting `/results`; make one with `openssl rand -hex 32` and keep it the same for every deploy and collection |
+| `GOOGLE_API_KEY` | the Gemini login of the default agents (opencode), unless opencode is logged in some other way on your account (not checked) |
 
-With `coding_agent: claude`, the agents use your logged-in Claude Code
-instead. The agents never see the Prolific, Firebase or results tokens.
+With `coding_agent: claude`, state how the agents are billed with
+`claude_auth` in the config: `subscription` needs `CLAUDE_CODE_OAUTH_TOKEN`
+(from `claude setup-token`), `api` needs `ANTHROPIC_API_KEY`. There is no
+default; the run stops before any agent starts without the mode or its key,
+and each agent gets only that one credential. The agents never see the
+Prolific, Firebase or results tokens.
 
 ## 2. One-time setup
 
@@ -58,8 +41,7 @@ sbatch $OUTER_LIVE_SLURM_DIR/setup.sbatch          # 40 min, 4 CPUs; builds $WOR
 
 The log (`outer_live_setup_<jobid>.out`, in the directory you submitted from)
 must end with `[setup] live import chain OK` and `[setup] done.`. Without
-`OUTER_LIVE_SLURM_DIR` the job cannot find `_env.sh`, so the command in
-`scripts/outer_loop_live/README.md` fails as written.
+`OUTER_LIVE_SLURM_DIR` the job cannot find `_env.sh`.
 
 `_env.sh` runs `set -euo pipefail`: `source` it only in a sub-shell (type
 `bash` first), or a later failing command closes your login shell.
@@ -84,9 +66,9 @@ Keys (read by `_pilot_config.py`):
 |---|---|
 | `run_label` | names the page URL (`/e<N>-<label>/`), the output directory `$WORK_ROOT/<label>/` and the sessions. **New label for every new run.** Ignored by `start_full_run.sh`, which uses `run1`…`runK`. |
 | `experiments` | how many in sequence; each is its own deploy and its own study |
-| `coding_agent` | `opencode` (default) or `claude` |
-| `prolific_mode` | `test`: draft study, not published, then stop. `live`: publish, recruit, pay, model. `none`: deploy, no study (through the launchers the job then stops at collection with an error). Missing key ⇒ `test`. |
-| `confirm_live_recruitment` | must be `true` for `live`. The presets say `live` without it, so they are refused until you choose. |
+| `coding_agent`, `claude_auth` | `opencode` (default) or `claude`; with `claude`, `subscription` or `api` (required) |
+| `prolific_mode` | `test` (the pilot preset): deploy, create a draft study, not published, then stop. `live`: publish, recruit, pay, model. `none`: deploy the page, no study, then stop. Missing key ⇒ `test`. |
+| `confirm_live_recruitment` | must be `true` for `live`. `full_run.yaml` and `hero_run.yaml` say `live` without it, so they are refused until you choose. |
 | `walltime`, `qos` | Slurm limit; `qos: long` above 2 days |
 | `prolific.participants` | per experiment: the places recruited, the collection target **and** the design's N |
 | `prolific.reward_per_hour` (cents) or `reward` (cents flat), `estimated_completion_time` (min) | pay |
@@ -103,9 +85,10 @@ top and are not estimated; each experiment records its spend in
 `token_usage_summary.json`.
 
 **Time.** Per experiment: a few minutes of design, up to three 15-minute
-attempts at the page, the deploy, **up to 2 hours of recruiting**, then the
+attempts at the page, the deploy, **up to 3 hours of recruiting**, then the
 model stage (length unknown; `full_run.yaml`'s comment says 12–15 hours for 3
-experiments). Set `walltime` generously.
+experiments; a proposal's fit may now take up to 30 minutes, and agents that
+hit a usage limit wait for it to reset). Set `walltime` generously.
 
 ## 4. Safety gates
 
@@ -115,9 +98,10 @@ experiments). Set `walltime` generously.
 | cost summary, config check, Prolific token check, typed `yes` | typos and accidental launches (`CONFIRM=yes` skips the prompt: not for live runs) |
 | preflight in `run_pilot.sh`: venv, `FIREBASE_TOKEN`, `PROLIFIC_API_TOKEN`, consent text; `_env.sh` stops without `bwrap` | failing hours into a job (the results token is checked later, before anything is deployed) |
 | `--n-participants` is the only count; a rendered `prolific_config.yaml` with a different `total_available_places`, or none at all, stops `run.py` | recruiting a different number than the design assumed |
-| results token checked before anything; session registration and a page-is-live check before the study is **published** (the draft is created and recorded before the Firebase deploy) | recruiting onto a broken or unprotected page |
+| results token (and, for `live`, Prolific's eligibility settings) checked first; the page is deployed, its session registered and checked live **before** the draft study is created, recorded and (live only) published | recruiting onto a broken or unprotected page; a failed deploy leaving a study behind |
+| the deploy records the commit the code came from (from git, or from the record the launcher writes into the run copy) and refuses without one | a study that cannot be traced to its code |
 | relaunch guard: an experiment whose `deployment/deployment_manifest.json` records a live study refuses `2_design`, `3_implement` and the deploy (`LiveStudyAlreadyRecorded`) | a second paid study for the same experiment |
-| 2-hour give-up pauses an `ACTIVE` study | recruiting people whose data no experiment uses |
+| 3-hour give-up pauses an `ACTIVE` study | recruiting people whose data no experiment uses |
 | raw download outside the repository (`run.py` refuses otherwise) | agents reading Prolific IDs |
 | collection stops on an empty download or all-identical answers | modelling broken data |
 
@@ -200,8 +184,10 @@ sites.
 
 **R4. Prolific test mode.** In your config: `prolific_mode: test` and a fresh
 `run_label`; run `CONFIG=$REPO/my_pilot.yaml bash scripts/outer_loop_live/run_pilot.sh`
-and type `yes`. It designs, builds, deploys and creates an **unpublished
-draft**, then stops (experiment 1 only). Preview it from the Prolific
+and type `yes`. It designs, builds, deploys and then creates an **unpublished
+draft**, then stops (experiment 1 only). This is the first rehearsal through
+the launcher's run copy: check that `deployment_manifest.json` has a
+`git_commit` and `metadata.code_provenance` naming your checkout. Preview it from the Prolific
 dashboard, or open the URL with `?PROLIFIC_PID=test123`. Delete the draft
 afterwards.
 
@@ -238,8 +224,10 @@ Each run gets its own copy of the code, output tree, Hosting site
 (`https://auto-psych-2c5da-run<i>.web.app/e<N>-run<i>/`), studies, and log
 (`$WORK_ROOT/slurm_logs/outer_live_run<i>_<jobid>.out`).
 
-Each launch copies your **current working tree** (no commit check); the
-deployment manifest records `git_commit` and `git_dirty`.
+Each launch copies your **current working tree** (no commit needed) and
+records, in the copy's `code_provenance.json`, the commit it came from and
+whether the tree had uncommitted or untracked changes. The deployment
+manifest copies them (`git_commit`, `git_dirty`, `metadata.code_provenance`).
 
 ## 7. Monitoring
 
@@ -298,17 +286,17 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
 - `PROLIFIC_MODE=none` is safe: collection in `--mode live` reads the study
   id from `experiment/config.json`. Keep `N_PARTICIPANTS` equal to the
   config's `participants`.
-- Rerunning `4_collect` waits for the target again (up to 2 hours) and
+- Rerunning `4_collect` waits for the target again (up to 3 hours) and
   downloads everything again.
-- `5_model_loop` always restarts cleanly from the model set and agent notes
-  it first started with; it counts as done only when
-  `model_loop/export_complete.json` agrees with `cognitive_models/` and the
-  registry.
+- `5_model_loop` always restarts cleanly from the model set it first
+  started with.
 - The run copy is a snapshot: to use fixed code, rsync it in first (as in R2).
   The rsync replaces the study settings `run_pilot.sh` rendered into the copy
-  (deletes them, or copies whatever your checkout has); render them again with
+  and deletes its commit record. Render the settings again with
   `"$VENV_PY" $WORK_ROOT/runs/$LABEL/repo/scripts/outer_loop_live/_pilot_config.py <your.yaml> --render-only`
-  before any run with a Prolific mode other than `none`.
+  before any run with a Prolific mode other than `none`, and, before any
+  deploy, record the commit again from your checkout:
+  `cd $REPO && "$VENV_PY" -m src.pipelines.outer_loop.deployment.record_provenance --checkout $REPO --copy $WORK_ROOT/runs/$LABEL/repo`.
 - To run the remaining experiments, submit the same command without
   `RESUME_AGENTS`, with `EXPERIMENTS=<next>-<last>`, `PROLIFIC_MODE=live`
   and `CONFIRM_LIVE_RECRUITMENT=1`; for a parallel run `run<i>` also
@@ -336,9 +324,8 @@ protocol allows).
 `data/subjective_randomness/` tree into the repository and **removes every
 Prolific ID**: it drops ID columns from every CSV, redacts every 24-character
 hex token in text files, and fails if any survives. It skips `.nc` fits and
-the run copies, and writes `SUMMARY.md`. It does copy `raw_collected/`, with
-the ID column dropped (checked on a toy tree); the code's docstring says that
-folder is not copied.
+the run copies, and writes `SUMMARY.md`. It copies `raw_collected/` too, with
+the ID column dropped.
 
 ```bash
 cd $REPO
@@ -371,11 +358,4 @@ clear files already there). The default
 
 | where | says | code does |
 |---|---|---|
-| `scripts/outer_loop_live/README.md` | `sbatch scripts/outer_loop_live/setup.sbatch` from the repo root | fails; export `OUTER_LIVE_SLURM_DIR` (§ 2) |
-| `.secrets.example` | three keys; `GOOGLE_API_KEY` not needed live | `AUTO_PSYCH_RESULTS_TOKEN` is required; `GOOGLE_API_KEY` is the default agents' login |
-| `run.py --help` | novelty threshold default 0.02; pruning "after each scoring pass" | 0.002; pruning once, at the end of each experiment |
-| `hero_run.yaml`, main `README.md` | 7 candidates = one per angle; starting models = best of earlier human runs | 4 explore, 2 improve the best, 1 improves another; four literature models |
-| `pilot.yaml` comment | default `prolific_mode: test` | ships with `live` and no confirmation (refused until you choose) |
-| `prolific_config.yaml.example` | `total_available_places: 1`, `--mode test_prolific` | render from your config instead; a different count stops `run.py`; that mode does not exist |
-| `pilot.yaml` comment | a flat `reward` overrides `reward_per_hour` | `reward_per_hour` wins whenever it is set; delete it to pay a flat `reward` |
 | `_env.sh` | Python 3.12 | the repository pins 3.11; `setup.sbatch` installs pinned `pymc==5.28.5`, `arviz<1` instead (not tested here) |

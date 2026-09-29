@@ -26,8 +26,9 @@ are in `src/pipelines/outer_loop/projects/subjective_randomness/`.
 
 - **Experiment 1** copies the four starting models from `seed_models/`
   (`seed_experiment_models_from_project` in `orchestrator.py`). The run records
-  them in `starting_models.json`, beside the experiment folders; those are
-  the protected models.
+  them in `starting_models.json`, beside the experiment folders, with
+  `starting_models_prunable: true`. No proposal may take their names, but
+  they can be removed like any model (step 4).
 - **Later experiments** copy the previous experiment's `cognitive_models/`
   (`carry_forward_cognitive_models`), only if that experiment's model stage
   finished (its `model_loop/export_complete.json` validates).
@@ -69,22 +70,25 @@ checks it; with `--validate` a failure goes back to the agent up to
 
 With `--deploy-target firebase` (`run_deployment` in
 `src/pipelines/outer_loop/deployment/local.py`), in this order: the results
-token is checked; the deployment record is built (it records the git commit,
-and **stops if the code is not in a git checkout**, which is the case for
-the launchers' run copies; see the runbook); a **draft** Prolific study is
+token is checked, and in `live` mode Prolific's eligibility settings; the
+deployment record (`deployment/deployment_manifest.json`) is built with the
+commit the code came from (from git, or from the `code_provenance.json` the
+launcher wrote into its run copy; it stops without either); the IRB consent page from
+`templates/consent.txt` is put in front of the experiment; the site and
+functions (`/submit`, and the token-protected `/results` and
+`/register_session`) are deployed; the collection session is registered; the
+page is fetched to check it is live. Only then is a **draft** Prolific study
 created (US, English-fluent, approval ≥ 98%, desktop, automatic payment on
-completion) and its id written to `deployment/deployment_manifest.json`; the
-IRB consent page from `templates/consent.txt` is put in front of the
-experiment; the site and functions (`/submit`, and the token-protected
-`/results` and `/register_session`) are deployed; the collection session is
-registered; the page is fetched to check it is live; and, in `live` mode
-only, the study is published.
+completion) and its id recorded, and, in `live` mode only, published. A
+failed deploy therefore leaves no study. `test` mode stops after the draft,
+`none` mode after the deploy.
 
 ## Step 3: collect (`4_collect`, no agent)
 
 `run_collect_programmatic` (`orchestrator.py`), `_collect_live` (`collect.py`).
-In live mode it checks Prolific every 30 s until N people have finished or 2
-hours have passed; in the second case it pauses the study. It downloads from
+In live mode it checks Prolific every 30 s until N people have finished or 3
+hours have passed (`_PROLIFIC_MAX_WAIT_SEC`); in the second case it pauses
+the study. It downloads from
 `/results`, numbers participants uniquely across the run, and writes the five
 raw columns to `data/responses.csv`. The full download, Prolific IDs
 included, goes to `<project>/raw_collected/experiment<N>_responses.csv`,
@@ -109,8 +113,10 @@ Code: `src/pipelines/inner_loop/` (`pymc_orchestrator.py` runs it,
    `target_accept` 0.99; the live configs use 2,000–3,000 draws). Models are
    ranked by ELPD-LOO; the best is the top-ranked one with a reliable
    estimate (`_best_exportable_model`; reliability in
-   `src/models/loo_reliability.py`). A starting model that cannot be fitted,
-   or breaks the data contract, stops the run.
+   `src/models/loo_reliability.py`). A model that cannot be fitted is
+   dropped and logged, starting models included; a starting model that
+   breaks the data contract, or a machine failure, stops the run. Each fit
+   process compiles in its own directory.
 3. **Rounds** (`--inner-loop-iterations`, default 2). Each round:
    - **Critique.** An agent writes up to 8 test statistics; each is computed
      on the data and on 1,000 datasets simulated from the best model
@@ -125,26 +131,31 @@ Code: `src/pipelines/inner_loop/` (`pymc_orchestrator.py` runs it,
      of each; with 2: explore and improve-the-best; with 1: explore.
    - **Admission** (`_admit_candidate_with_reason`), in order: code check
      (`import_gate.py`); loadable with finite log-probability; data contract
-     (`src/models/model_contract.py`); fit within 15 minutes; converged; finite
+     (`src/models/model_contract.py`); each sampling run of the fit within 30
+     minutes (`CANDIDATE_FIT_TIME_LIMIT_SEC`); converged; finite
      ELPD-LOO; RMSE ≥ 0.002 from every admitted model on
      `model_loop/novelty_pool.json`. Candidates are fitted concurrently, then
      admitted one by one. A candidate's own broken code is a rejection; a
      machine or pipeline failure stops the run.
    - An empty slot is rerun once; a rejected proposal gets one repair
      attempt. Every attempt goes into `model_loop/attempted_hypotheses.jsonl`.
-4. **End of experiment.** `_prune_losers`: non-starting models with a
-   trustworthy score that trail the best trustworthy model by more than
-   2 × the clustered standard error (`src/models/clustered_se.py`) move to
-   `model_loop/models/pruned/`. `_cap_live_set` keeps at most 8
-   (untrustworthy scores go first, then the lowest). The survivors, the
-   starting models and the attempts log are exported to `cognitive_models/`
-   (`_export_inner_loop_models` in `model_loop_runner.py`). Then
+4. **End of experiment.** `_prune_losers`: models with a trustworthy score,
+   starting models included, that trail the best trustworthy model by more
+   than 2 × the clustered standard error (`src/models/clustered_se.py`) move
+   to `model_loop/models/pruned/`. `_cap_live_set` keeps at most 8
+   (untrustworthy scores go first, then the lowest); neither removes the
+   best trustworthy model. The survivors and the attempts log are exported
+   to `cognitive_models/` (`_export_inner_loop_models` in
+   `model_loop_runner.py`). Then
    `finish_model_loop_stage` writes `model_registry.yaml` (equal weights) and
    `model_loop/export_complete.json`.
 
 Agents are opencode with `google/gemini-3.1-pro-preview` (default) or Claude
-Code (`--coding-agent claude`, `claude-sonnet-4-6`), each with a 15-minute
-limit, run in a bubblewrap sandbox (`src/runtime/agent_sandbox.py`).
+Code (`--coding-agent claude`, `claude-sonnet-4-6`, billed as stated by
+`--claude-auth subscription|api`), each with a 15-minute limit, run in a
+bubblewrap sandbox (`src/runtime/agent_sandbox.py`). A call that hits the
+account's usage limit is rerun after the reset, waiting up to 12 hours
+(`src/runtime/usage_limits.py`).
 
 ## What a finished experiment contains
 

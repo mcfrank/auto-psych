@@ -14,8 +14,12 @@ never with a plain relaunch.
 | `PREFLIGHT FAILED: FIREBASE_TOKEN missing …` / `PROLIFIC_API_TOKEN missing` | key absent, or `REPO` points at another checkout | add it; `export REPO=<your checkout>` |
 | ``pilot config error: `prolific_mode: live` recruits and PAYS … `` | live without `confirm_live_recruitment: true` | add it only if you mean to pay people |
 | `…/_env.sh: No such file or directory` (top of a job log) | `sbatch` without `OUTER_LIVE_SLURM_DIR` | export it, resubmit |
-| ``RuntimeError: `git rev-parse HEAD` failed in … cannot record deployment provenance`` | the launchers' run copy has no `.git` ([runbook § 0](running_a_live_experiment.md#0-blocking-problem-read-first)) | needs a code change; nothing was created |
-| ``live collection needs `prolific_study_id` …`` | `prolific_mode: none` through the launchers, or a fresh experiment resumed with `PROLIFIC_MODE=none` | live collection needs a study |
+| `… has no code_provenance.json; cannot record deployment provenance` | a hand-made run copy, or code rsynced into one | record the commit (runbook § 9); nothing was created |
+| ``live collection needs `prolific_study_id` …`` | a fresh experiment resumed with `PROLIFIC_MODE=none` | live collection needs a study |
+| `Claude agents need a stated billing mode …` / `… is not set` | no `claude_auth`, or no key for it | runbook § 1 |
+| `[USAGE LIMIT] … Waiting N min` | the agents' account hit its usage or rate limit | normal: the agent reruns after the reset |
+| `AgentUsageLimitExceeded` / `AgentLoginFailed` | a limit outlasting 12 h; a login that cannot pay | fix the account; `RESUME_AGENTS=5_model_loop` |
+| `… is a bare list of names: this run started on code that protected its starting models …` | continuing a run started before 28 September 2026 | finish it on its own code, or start a new run |
 | `FATAL: bwrap not on PATH …` | the `system bubblewrap` module did not load | `ml spider bubblewrap`; if the module is broken, that is a cluster problem (below) |
 | `Error: --prolific-mode live … Pass --confirm-live-recruitment` | `run.py` or `run_live.sbatch` called by hand | `CONFIRM_LIVE_RECRUITMENT=1`, or `PROLIFIC_MODE=none` for a recovery |
 | `No Prolific study settings at …` / `… sets total_available_places: …, but this run was started with --n-participants …` | study settings not rendered, or a different count | render with `_pilot_config.py <config> --render-only` in the checkout the job runs from; keep one count |
@@ -24,14 +28,16 @@ never with a plain relaunch.
 | `[error] Experiment N's model loop is not complete (…)` | the previous experiment's model stage did not finish | rerun it (`RESUME_AGENTS=5_model_loop` for that experiment) |
 | `[error] 3_implement still invalid after 3 attempt(s): …` | the agent could not make a valid page | read `experiment<N>/logs/3_implement.jsonl`; nothing was deployed |
 | `AUTO_PSYCH_RESULTS_TOKEN is not set …` | missing key | at deploy time nothing was created; at collection time the study is already running: add it, recover with `RESUME_AGENTS=4_collect:5_model_loop` |
-| `Firebase deploy failed …` / `… the experiment page is NOT live …` | expired `FIREBASE_TOKEN`, permissions, outage, hosting not published | nothing was published, but a **draft** study exists and is recorded: delete it in Prolific, fix the cause, then relaunch with `PUBLISH_ANOTHER_PROLIFIC_STUDY=1` (a plain relaunch is refused) |
-| `Failed to create Prolific study: …` / `Failed to publish …` | often insufficient funds | a draft may exist: check and delete it |
-| log stays at `Prolific poll: … completed=k target=N` | slow recruitment | normal for up to 2 h, then the study is paused |
-| `PAUSED Prolific study <id>: collection gave up at k/N …` | 2 hours passed | expected; the partial data are modelled |
+| `Firebase deploy failed …` / `… the experiment page is NOT live …` | expired `FIREBASE_TOKEN`, permissions, outage, hosting not published | no study was created: fix the cause and relaunch |
+| `Failed to create Prolific study: …` | often insufficient funds | the page is live, no study exists: fix, relaunch |
+| `Failed to publish …` | often insufficient funds | a draft is recorded: check it in Prolific; recover with `RESUME_AGENTS` or `PUBLISH_ANOTHER_PROLIFIC_STUDY=1` after deleting it |
+| log stays at `Prolific poll: … completed=k target=N` | slow recruitment | normal for up to 3 h, then the study is paused |
+| `PAUSED Prolific study <id>: collection gave up at k/N …` | 3 hours passed | expected; the partial data are modelled |
 | `Could not pause Prolific study …` (or it `… is in state '…'`) | API error or unusual state | **pause it in the dashboard now**, then recover |
 | `live results fetch failed …` | wrong token or network | data are safe in Firestore; fix, recover with `RESUME_AGENTS=4_collect:5_model_loop` |
 | `Collected data failed the quality check: all N responses are identical …` | broken buttons or bots | inspect the page and the dashboard; nothing was modelled |
-| proposal rejected with a reason | a failed admission check | expected, unless every proposal fails every round |
+| proposal rejected with a reason (e.g. `too slow to fit … 30-minute limit`) | a failed admission check | expected, unless every proposal fails every round |
+| `filelock … Timeout … .lock` (PyTensor) | processes sharing a compile directory | each job and fit has its own; do not set `compiledir=` in `PYTENSOR_FLAGS` |
 | `"no_critique"` in `history.json` | the critic produced no usable statistic | the round still ran; see `iter_<i>/critique/` |
 | `OUT_OF_MEMORY` in `sacct`, or the time limit | large pooled fits, many rounds | raise `--mem` or `walltime`; recover with `RESUME_AGENTS` |
 

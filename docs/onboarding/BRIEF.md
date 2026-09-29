@@ -41,8 +41,13 @@ Each item says what changed and why. Code pointers are in
    (Bayesian diagnosticity, Griffiths et al. 2018), `finite_experience_occurrence`
    (window typicality, Hahn & Warren 2009) and `local_representativeness`
    (prototype similarity, Kahneman & Tversky 1972). Beating them therefore
-   means more. They are **protected**: never removed, so the literature
-   stays in every comparison. The paper's discovered winners are not among them.
+   means more. The paper's discovered winners are not among them. Since 28
+   September 2026 they are treated like any other model: removed when the
+   data clearly favour another (item 8). Before that they were **protected**
+   (never removed); the Gemini simulations still running were started that
+   way, so their results must not be pooled with later ones. Each run records
+   which rule it used. The literature stays in every comparison through the
+   baseline in item 10.
 
 2. **No theorist or design agent in the outer loop; stimuli are chosen by
    the program.** It lists all 43,434 pairs of distinct same-length sequences,
@@ -88,7 +93,7 @@ Each item says what changed and why. Code pointers are in
    - honour the data contract: its likelihood is Bernoulli on the observed
      choices with exactly its `p_left`, so it cannot be scored on one quantity
      and used for design and evaluation through another;
-   - fit within 15 minutes;
+   - fit within 30 minutes per sampling run;
    - converge: chains agree (R-hat ≤ 1.05), enough effective draws
      (ESS ≥ 100), ≤ 0.1% divergent transitions; a near miss is refitted once;
    - differ from every model already there: root-mean-square difference in
@@ -107,11 +112,13 @@ Each item says what changed and why. Code pointers are in
    it exported a starting model that was far behind.
 
 8. **What is kept and carried over.** The paper carried only the winner. Now,
-   at the end of each experiment, a non-starting model is removed when it
-   trails the best by more than two standard errors of the ELPD difference.
+   at the end of each experiment, any model (starting models included) is
+   removed when it trails the best model with a trustworthy score by more
+   than two standard errors of the ELPD difference.
    That standard error treats all answers to the same pair as one cluster;
    they are correlated, and the per-answer version is about half as large as
-   it should be. At most 8 models are kept, and *all* survivors carry over.
+   it should be. The best model is never removed. At most 8 models are kept,
+   and *all* survivors carry over.
    The registry gives each equal prior weight in the next design. *Why:*
    rivals that the data could not yet separate were dropped (19 at 40
    experiment boundaries), and the next design should target exactly them.
@@ -123,11 +130,16 @@ Each item says what changed and why. Code pointers are in
    and they get no credentials except their own language-model login.
    Prolific IDs are kept in a separate file that no agent is given.
    Participant numbers are unique across a run's experiments. A crashed stage
-   restarts cleanly. For live runs:
+   restarts cleanly. An agent that hits the account's usage or rate limit
+   waits for the reset (up to 12 hours) and runs again, instead of counting
+   as a failed proposal. Claude agents are billed by subscription or by API,
+   stated for each run and never guessed. For live runs:
    - `live` mode needs two separate confirmations and a typed `yes`;
    - one number sets both the design's N and the places recruited;
    - a relaunch cannot publish a second study for the same experiment;
-   - a collection that gives up after 2 hours pauses its study;
+   - the page is deployed before the study is created, so a failed deploy
+     leaves no study behind;
+   - a collection that gives up after 3 hours pauses its study;
    - the cost summary covers Prolific only and says so.
 
 10. **Simulated recovery checks and controls.** The paper's checks remain,
@@ -138,17 +150,18 @@ Each item says what changed and why. Code pointers are in
       see the hidden model.
     - **Scoring.** The loop's best model is compared with the hidden one on
       about 43,000 pairs not used in training. It must beat the remaining
-      starting models refitted to the same data; otherwise discovery added
-      nothing.
+      starting models refitted to the same data at the end of each
+      experiment (removed or not); otherwise discovery added nothing.
     - **Impossible controls** (the paper's "alien" rules) use exactly the
       same settings; recovering them well would mean the loop fits anything.
     - **No-inner-loop variants** (the paper's ablation) still exist.
 
 ## 3. Where things stand (28 September 2026)
 
-**Tested.** The fast test suite passed on 28 September (1,968 tests; one
-file of 8 tests was left out because it needs a library missing from this
-environment). Every live-path fix was tested with Prolific and HTTP mocked.
+**Tested.** The fast test suite passed on 28 September (2,052 tests; one
+file of 18 tests was left out because it needs a library missing from this
+environment). Every live-path fix was tested with Prolific, Firebase and HTTP
+mocked.
 
 **Simulation results: partial.** The only numbers so far come from a sweep
 with Claude Opus 5.5 as the agents' model, scored mid-run on 28 September.
@@ -165,16 +178,10 @@ model, on held-out pairs:
 So far the loop beats the refitted literature models in all four cells, but
 there is one repeat per hidden model and only one cell has finished (final
 r 0.999, RMSE 0.020). The Gemini sweep and the impossible controls had no
-finished cells when this was written: **results pending.**
+finished cells when this was written: **results pending.** All of these ran
+with protected starting models (item 1).
 
 **Known limitations.**
-- **Blocking: the launchers cannot deploy yet.** They run each job from a
-  copy of the code without its `.git` folder, and the deploy refuses to go on
-  when it cannot record the git commit. A launched run should therefore stop
-  with ``cannot record deployment provenance`` after the agent builds the
-  page, before any Prolific study or Firebase deploy (read from the code,
-  not run). This needs a code change before the first live launch; see
-  [runbook § 0](running_a_live_experiment.md#0-blocking-problem-read-first).
 - **No live run on this code.** Nothing has yet been run against Prolific or
   Firebase since the fixes. Do the no-cost rehearsal first.
 - **The live settings are not the simulated ones.** `full_run.yaml` runs 2
@@ -183,7 +190,7 @@ finished cells when this was written: **results pending.**
   Decide which you want before launching; the simulations only speak to their
   own settings.
 - A study keeps recruiting if the job crashes or you `scancel` it; only the
-  normal 2-hour give-up pauses it.
+  normal 3-hour give-up pauses it.
 - People who finish after a pause or after the download are paid (payment is
   automatic) but not modelled.
 - Language-model costs are not estimated, and the length of the model stage
@@ -194,22 +201,25 @@ finished cells when this was written: **results pending.**
   re-run.
 
 **Open questions.** Does the loop now change its best model? Do the impossible
-controls fail as they should? How long and how costly is a live experiment?
+controls fail as they should? Does removing starting models change what the
+loop finds? How long and how costly is a live experiment?
 
 ## 4. What you need to do for a live experiment
 
 Each step is in the [runbook](running_a_live_experiment.md).
 
-0. Have the blocking deploy problem above fixed in the code first.
 1. Confirm the IRB protocol covers the consent text in `templates/consent.txt`,
    64 trials, about 7 minutes and your pay.
 2. Put the four credentials in `$REPO/.secrets`: `PROLIFIC_API_TOKEN`,
-   `FIREBASE_TOKEN`, `AUTO_PSYCH_RESULTS_TOKEN`, `GOOGLE_API_KEY`.
+   `FIREBASE_TOKEN`, `AUTO_PSYCH_RESULTS_TOKEN`, `GOOGLE_API_KEY` (with
+   Claude agents: `claude_auth` in the config and its credential instead of
+   the last).
 3. Build the environment once with `setup.sbatch`.
 4. Copy `pilot.yaml`, set a new `run_label`, participants, pay and modelling
    settings.
 5. Do the no-cost rehearsals, including the simulated end-to-end run.
-6. Launch with `run_pilot.sh`, read the summary, type `yes`.
+6. Launch with `run_pilot.sh`, read the summary, type `yes`. The launcher
+   records your checkout's commit in the run's copy of the code.
 7. Watch the live dashboard and the Prolific dashboard.
 8. To stop: the Prolific study first, then `scancel`. To recover:
    `RESUME_AGENTS`, never a plain relaunch.

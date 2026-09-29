@@ -133,14 +133,20 @@ contracts (e.g. jsPsych button-only + `chose_left` data column).
 `pymc_orchestrator.py` orchestrates; `model_zoo.py` manages seeding, admission,
 pruning and the novelty gate; `scoring.py` handles ELPD-LOO scoring, best-model
 selection and export; `candidate_agent.py` writes candidate briefs and spawns
-agents. The model zoo lives at `model_loop/models/`; the run's starting
-models are `protected_names` (never pruned — the outer loop passes them
-explicitly, so a model carried from an earlier experiment *can* lose and
-leave). They are recorded once, when experiment 1's model loop first runs, in
-`<run>/starting_models.json` (`run_starting_models` in `model_loop_runner.py`),
-not recomputed from names: a candidate that chose a seed's name (the held-out
-ground truth's, say) used to be carried as a protected seed. A later
-experiment of a run without the record raises. No candidate may take a
+agents. The model zoo lives at `model_loop/models/`. **The run's starting
+models are not protected** (user decision 2026-09-28): they are pruned,
+retired by the cap and dropped when unfittable exactly like agent-proposed
+models, and once gone they leave the carried set and the next design's
+prior and appear in the ledger and on the refinement menu. They are recorded
+once, when experiment 1's model loop first runs, in
+`<run>/starting_models.json` (`run_starting_models` in `model_loop_runner.py`,
+`{"starting_models": [...], "starting_models_prunable": true}`), not
+recomputed from names; the outer loop passes them to the inner loop as
+`starting_models`, whose only remaining use is reserving their names. A
+record in the earlier bare-list form means a run that started with protected
+starting models, and it refuses to continue (the two conditions must not
+mix; the Gemini sweeps running on 2026-09-28 are the "protected" condition);
+a later experiment of a run without a record raises. No candidate may take a
 starting model's name, nor that of a model pruned, retired or dropped earlier
 in the run (`reserved_names` in `model_zoo.py`): it is renamed `<name>_2` like
 any clash, and the admitted ledger entry's detail records the rename. Each round:
@@ -163,7 +169,8 @@ target — see **Slot roles**) → admit sequentially.
   points the likelihood's probability of each response equals
   Bernoulli(chose_left; p_left) within 1e-5; no `pm.Potential` on the
   responses — also run on every starting model at experiment start, where a
-  protected seed that breaks it raises, and by `check_candidate`), the
+  starting model that breaks it raises (a broken project file, not a model
+  failing to fit), and by `check_candidate`), the
   real-fit/finite-ELPD gates and the **convergence gate** (≤0.1% divergent transitions, R-hat ≤
   1.05, bulk ESS ≥ 100; `fit_model` refits a failing fit once at
   `target_accept` 0.95, with a random seed of its own derived from the first
@@ -173,9 +180,9 @@ target — see **Slot roles**) → admit sequentially.
   model's declared `target_accept` is a floor on the loop's — so the rejection
   and the brief advise reparameterising, never smaller steps), within the
   **admission time limit** (each sampling run of a candidate's fit is killed,
-  chains and all, after `CANDIDATE_FIT_TIME_LIMIT_SEC` = 15 min, and the
-  candidate is rejected as too slow to fit; seeds and carried models are never
-  limited), AND with posterior-
+  chains and all, after `CANDIDATE_FIT_TIME_LIMIT_SEC` = 30 min (was 15;
+  user decision 2026-09-28), and the candidate is rejected as too slow to
+  fit; starting and carried models are never limited), AND with posterior-
   mean `p_left` ≥ `novelty_rmse_threshold` (0.002) RMSE from every admitted
   model **on the loop's novelty pool** — 512 same-length H/T pairs at lengths
   4–8 that the loop generates from its own seed (`novelty_pool_rows`) and
@@ -250,8 +257,8 @@ target — see **Slot roles**) → admit sequentially.
   concurrently, one worker per slot (`candidate_parallelism`, default
   `candidate_count`); retry and repair attempts spawn concurrently too.
 - **Pruning** (`_prune_losers` in `model_zoo.py`) runs **once, at the end of each
-  experiment**: non-protected models with a trusted fit (reliable PSIS-LOO and
-  converged) that are statistically distinguishable from the best *trusted*
+  experiment**: models with a trusted fit (reliable PSIS-LOO and converged),
+  the run's starting models included, that are statistically distinguishable from the best *trusted*
   model (when the rank-0 model is untrusted the comparison is recomputed over
   the trusted models; it used to switch pruning off for the experiment)
   (`elpd_diff > dse_multiplier·dse_clustered`, the stimulus-clustered SE of
@@ -259,7 +266,9 @@ target — see **Slot roles**) → admit sequentially.
   responses to one pair as independent and is ~2x too small) move to
   `models/pruned/`. Then
   `_cap_live_set` keeps at most `MAX_LIVE_MODELS` (8) live models: untrusted
-  fits retire first, then the lowest by ELPD-LOO; seeds never. There is no
+  fits retire first, then the lowest by ELPD-LOO, starting models included
+  (`cap >= 1` is enforced). Neither can remove the best trusted model (its
+  margin is 0, and the cap retires it last), so the set is never emptied. There is no
   stacking-weight floor (stacking weights are ensemble coefficients, not
   plausibility). A pruned mechanism may come back with a substantive change:
   the ledger forbids only unchanged copies and near-duplicates.
@@ -286,10 +295,10 @@ target — see **Slot roles**) → admit sequentially.
   `excluded_unreliable`) and the critique incumbent, so what the recovery
   harness scores, what the critic critiques and what is carried agree. The
   outer loop (`_export_inner_loop_models` in `model_loop_runner.py`) then makes `cognitive_models/` the
-  **live set**: the protected seeds plus every zoo survivor (not only the
-  winner — a rival within 2·dse is carried and left to the next design), with
-  a carried model the loop pruned removed, and the ledger copied beside the
-  manifest. Before this, only the winner crossed the boundary: 19 unresolved
+  **live set**: every zoo survivor (not only the winner — a rival within
+  2·dse is carried and left to the next design; a starting model only if it
+  survived), with a carried model the loop pruned, retired or dropped
+  removed, and the ledger copied beside the manifest. Before this, only the winner crossed the boundary: 19 unresolved
   rivals were dropped at 40 boundaries in the iteration-2 recovery sweep.
   "Reliable" is `src/models/loo_reliability.py`'s verdict (a tolerated
   proportion of high-Pareto-k trials, with constant-log-likelihood trials
@@ -399,7 +408,8 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   model's**: a broken pool (one worker killed breaks every pending fit), an
   unreadable `.nc`, `OSError`/`MemoryError` (`INFRASTRUCTURE_ERRORS`,
   `FitInfrastructureFailure`) raise everywhere — never a drop, a rejection or
-  a ledger line. The screen never drops a protected seed (it raises), and
+  a ledger line. The screen drops a starting model like any other (it used
+  to raise for a protected seed), and
   `.nc` files are written to a temporary name and `os.replace`d into place
   (`write_fit_file`). Every fit process (pool worker or time-limited child)
   gets an `XDG_CACHE_HOME` of its own under a temporary root the parent
@@ -462,8 +472,12 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   position the loop and every baseline are averaged over the same cells. The
   harness scores the fitted-seed baseline at the end of every experiment on
   that experiment's cumulative data (`fitted_baseline_by_experiment`; the
-  loop's own seed fits, so cache hits); `fitted_baseline` stays the final
-  data's.
+  loop's own seed fits, so cache hits while a seed is live, a fresh fit once
+  it was pruned — the baseline covers every starting model either way);
+  `fitted_baseline` stays the final data's. `holdout.json` records
+  `starting_models_prunable` per run and in its `inner_loop` block (from the
+  run's `starting_models.json`; results of both conditions are never
+  summarised together).
 
 ### Projects vs. the research library — two different things
 
@@ -481,7 +495,8 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   model that is also the ground truth; a softmax seed was tried and reverted
   on 2026-09-27 because it failed the convergence gate on two of the three
   ground truths' data). The seed baselines load the seeds' code from the run
-  tree (`holdout_eval.seeded_models_dir`), not from the registry, so a run
+  tree (`holdout_eval.seeded_models_dir`, or its `pruned/` for a seed
+  experiment 1 pruned: `_seed_file_dir`), not from the registry, so a run
   is re-scored with the seeds it ran with.
 
 ### Inspecting results
@@ -522,8 +537,9 @@ used by the active loops (per `README.md`).
   require typing `yes`. See `scripts/outer_loop_live/README.md`. `scancel` kills
   the pipeline job but **not** an already-published Prolific study — stop that in
   the Prolific dashboard.
-- **A collection that gives up pauses its study.** After the 2-hour poll
-  (`_PROLIFIC_MAX_WAIT_SEC` in `collect.py`) ends short of its target,
+- **A collection that gives up pauses its study.** After the 3-hour poll
+  (`_PROLIFIC_MAX_WAIT_SEC` in `collect.py`, the only place it is set; was 2
+  hours until the user's 2026-09-28 decision) ends short of its target,
   `_pause_unfilled_study` pauses an `ACTIVE` study (`pause_study` in
   `src/runtime/prolific.py`; PAUSE is reversible, STOP is not) and raises if it
   cannot; the partial data are then modelled as before. A study that reached
@@ -542,6 +558,26 @@ used by the active loops (per `README.md`).
   `LiveStudyAlreadyRecorded` with the recovery: `RESUME_AGENTS=4_collect:5_model_loop`,
   or the deliberate `--publish-another-prolific-study`
   (`PUBLISH_ANOTHER_PROLIFIC_STUDY=1`), which archives the old manifest.
+- **The page is deployed before the study exists.** A Firebase deploy
+  (`run_deployment` in `deployment/local.py`) checks the results token and,
+  for `live`, Prolific's eligibility IDs (`verify_live_eligibility`), deploys
+  the page, registers its session, and only then creates the draft, records
+  its id at once and (live only) publishes it. The draft used to be created
+  first, so a failed deploy left a recorded study that the guard above
+  refused to relaunch past; now a failed deploy records no study. The page
+  needs only the locally built completion redirect (Prolific passes
+  `STUDY_ID` in the URL). A `--mode live` run with `--prolific-mode none`
+  deploys experiment 1 and stops (there is no study to collect from); a
+  resume with `--agent` still collects from a recorded study.
+- **Deploy provenance from the launchers' copies.** The launchers run each
+  job from an rsync copy without `.git`; right after copying they record the
+  checkout's commit and dirtiness (untracked files included) into the copy
+  as `code_provenance.json` (`python -m
+  src.pipelines.outer_loop.deployment.record_provenance`). The deploy
+  (`code_provenance` in `deployment/manifest.py`) reads git in a checkout,
+  that record in a copy, and raises with neither; the manifest gets
+  `git_commit`, `git_dirty` and `metadata.code_provenance`. Rsyncing fixed
+  code into a copy deletes the record: record it again.
 - **Participant ids are unique across a run's experiments.** `4_collect`
   (`run_unique_participant_ids` in `orchestrator.py`) numbers new people after
   every id the earlier experiments used and gives someone seen in an earlier
@@ -552,8 +588,9 @@ used by the active loops (per `README.md`).
   every row).
 - Secrets live in repo-root `.secrets` (see `.secrets.example`): `PROLIFIC_API_TOKEN`,
   `FIREBASE_TOKEN` (`firebase login:ci`), `AUTO_PSYCH_RESULTS_TOKEN` (guards the
-  `/submit` & `/results` Cloud Functions — deploy/collect fail loudly without it),
-  `GOOGLE_API_KEY` (simulated/Gemini paths only), and for Claude agents
+  `/results` & `/register_session` Cloud Functions — deploy/collect fail loudly without it),
+  `GOOGLE_API_KEY` (the default opencode/Gemini agents' login, and the
+  simulated/Gemini paths), and for Claude agents
   `CLAUDE_CODE_OAUTH_TOKEN` (subscription) and/or `ANTHROPIC_API_KEY` (API).
 - **Claude billing is stated per run, never guessed.** With the `claude`
   backend a run needs `agent.claude_auth` / `--claude-auth` / `CLAUDE_AUTH`

@@ -1,6 +1,6 @@
 # ============================================================================
-#  Config for the HERO run: the scaled-up discovery run seeded with the four
-#  best models from the three human replicates (see seed_models manifest).
+#  Config for the HERO run: the scaled-up discovery run, starting from the
+#  project's four literature models (see the seed_models manifest).
 #  This is the PER-RUN config; start_full_run.sh launches K parallel copies.
 #
 #  Launch:  CONFIG=scripts/outer_loop_live/hero_run.yaml \
@@ -8,8 +8,9 @@
 #           (K=<n> to change the number of parallel runs.)
 #
 #  Differences from full_run.yaml: deeper inner-loop search (4 rounds x 7
-#  candidates, one exploration lens each), novelty gate + pruning at their
-#  defaults made explicit, and concurrent candidate agents.
+#  candidates: 4 explore, each with its own lens, 2 refine the best model, 1
+#  refines another of its choice), novelty gate + pruning at their defaults
+#  made explicit, and concurrent candidate agents.
 # ============================================================================
 
 # --- what to run -----------------------------------------------------------

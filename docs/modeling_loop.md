@@ -80,7 +80,7 @@ loop's critique agent and candidate agents.
 | Agent timeout | 1800 s per agent attempt | config `agent.timeout_sec` |
 | Production MCMC | 1000 draws (2000 until 2026-09-27), 1000 tune, 4 chains, target_accept 0.8 (a model's declared value is a floor), max_treedepth 10, seed 42 | config `fit` + `_FIT_DEFAULTS` (pymc_inference.py:350), `resolve_fit_settings` (pymc_inference.py:421) |
 | Convergence gate | ≤ 0.1% divergent transitions, R-hat ≤ 1.05, bulk ESS ≥ 100; one refit at target_accept 0.95 when a failed fit is a near miss (≤ 2% divergent, R-hat ≤ 1.2, bulk ESS ≥ 20) | `mcmc_defaults.py` (`MAX_*`, `NEAR_MISS_*`) |
-| Candidate fit time limit | 15 min of wall-clock time per sampling run of a candidate's admission fit (first fit, near-miss refit); seeds and carried models are not limited | `CANDIDATE_FIT_TIME_LIMIT_SEC` (mcmc_defaults.py) |
+| Candidate fit time limit | 30 min (was 15 until 2026-09-28) of wall-clock time per sampling run of a candidate's admission fit (first fit, near-miss refit); starting and carried models are not limited | `CANDIDATE_FIT_TIME_LIMIT_SEC` (mcmc_defaults.py) |
 | Eval pool | exhaustive same-length pairs, lengths 1..8, minus trained pairs; ≤500 posterior draws per prediction | config `eval_pool` |
 
 ---
@@ -255,15 +255,26 @@ deletes the pool's `motif_stack.py` and scrubs its manifest entry,
 `seed_exclusion` withholds it, and the name scan finds nothing
 (`tests/test_motif_stack_seed_holdout.py`).
 
-The same three models are the **protected** set: they are never pruned or
-retired by the cap and are always carried forward. The set is recorded once,
-when experiment 1's model loop first runs, as the pool manifest intersected
-with experiment 1's `cognitive_models/` (`run_starting_models`,
-model_loop_runner.py), in `<run_root>/starting_models.json`; later experiments
-(and a resumed experiment 1) read it back, and a later experiment without it
-raises. Until 2026-09-28 it was recomputed every experiment from the names in
+The same three models are the run's **starting models**. Since 2026-09-28
+(user decision) they are **not protected**: they are pruned, retired by the
+cap, and dropped when unfittable exactly like agent-proposed models, and a
+pruned or retired one leaves the carried set and the next design's prior
+and appears in the ledger and on the refinement menu. (Before, they were
+never pruned or retired and always carried forward; the Gemini sweeps
+running on 2026-09-28 are that "protected" condition.) What remains is the
+name reservation: no candidate may take a starting model's name. The set is
+recorded once, when experiment 1's model loop first runs, as the pool
+manifest intersected with experiment 1's `cognitive_models/`
+(`run_starting_models`, model_loop_runner.py), in
+`<run_root>/starting_models.json` as `{"starting_models": [...],
+"starting_models_prunable": true}`; later experiments (and a resumed
+experiment 1) read it back. A later experiment without it raises, and so
+does a record in the earlier bare-list form (a run started under the
+protected rule must not continue under this one). `holdout.json` copies the
+flag (`starting_models_prunable`, per run and in its `inner_loop` block).
+Until 2026-09-28 the set was recomputed every experiment from the names in
 `cognitive_models/`, so a candidate that named itself after the held-out
-model became a protected seed from the next experiment on (second audit B10).
+model became a starting model from the next experiment on (second audit B10).
 
 ### 1.5 What agents can see: the sandbox
 
@@ -734,8 +745,9 @@ receive `problem_definition.md`, which is also excluded from the agent tree.
 
 1. `_seed_model_set` (model_zoo.py:235) copies `cognitive_models/` (the carried
    or seeded set) into the zoo `model_loop/models/`.
-2. `_resolve_protected_names` (scoring.py:32) sets the protected set to the
-   recorded starting models present, which is the three non-GT seeds.
+2. The run's starting models (passed as `starting_models`, else the seeded
+   names) become names no candidate may take (`reserved_names`); they are
+   not protected.
 3. `HypothesisLedger.create` (hypothesis_ledger.py:102) copies
    `cognitive_models/attempted_hypotheses.jsonl` if present, and otherwise
    starts empty.
@@ -743,13 +755,15 @@ receive `problem_definition.md`, which is also excluded from the agent tree.
    (pymc_inference.py:83). This checks that responses bind, and that the
    initial-point logp and its gradient are finite. It then runs
    `model_contract_violation` (model_contract.py; the data contract, §5.9
-   gate 5a). Failures are dropped and recorded in the ledger as `dropped`,
-   except a protected seed that breaks the contract: that raises. The step
-   raises if nothing survives.
+   gate 5a). Failures are dropped and recorded in the ledger as `dropped`
+   (starting models included), except a starting model that breaks the
+   contract: that is a broken project file, and raises. The step raises if
+   nothing survives.
 5. `_drop_nonfinite_elpd_models` (model_zoo.py:325) is the experiment's first
    MCMC pass. `fit_models_to_cache` fits the whole set concurrently. Models
    whose fit fails or whose ELPD-LOO is non-finite are dropped (`dropped`),
-   except a protected seed: that raises. Only the model's own failure drops
+   starting models included (until 2026-09-28 a protected seed raised
+   here). Only the model's own failure drops
    it; an infrastructure failure (a broken fit pool, an unreadable `.nc`,
    `OSError`, `MemoryError`) raises and fails the cell, to be resumed.
    Models that fail the convergence gate are **not** dropped here.
@@ -816,7 +830,8 @@ near miss and loads the second, so every caller gets the escalated fit. A
 one-chain fit (the candidate self-check) is never refit.
 
 **Time limit** (`fit_model(time_limit_sec=…)`, `sample_fits_time_limited`).
-Candidate admission passes `CANDIDATE_FIT_TIME_LIMIT_SEC = 900`. Each sampling
+Candidate admission passes `CANDIDATE_FIT_TIME_LIMIT_SEC = 1800` (30
+minutes; 900 until 2026-09-28). Each sampling
 run that is not already in the cache — the first fit and a near-miss refit,
 each with its own limit — then runs in a spawned child process that starts
 its own session; the chain processes PyMC forks from it share that process
@@ -955,7 +970,7 @@ For `iteration` in 0..4 (pymc_orchestrator.py:324-585):
    | Section | Explore slot | Refine-incumbent slot | Refine-chosen slot |
    | --- | --- | --- | --- |
    | `ATTEMPT_NOTE.md` (retry/repair only) | yes | yes | yes |
-   | `CONTEXT.md`: the task description (§5.1), responses path and columns, the note that no feature columns exist so `compute_features`/`prepare_observed` is required (a CSV with any column beyond the raw five raises instead, since 2026-09-27), the import allowlist and the ban on file reads and interpreter escapes, the 3-step instruction, the `check_candidate` command with a note that admission also requires convergence (almost no divergent transitions, R-hat ≤ 1.05, bulk ESS ≥ 100), the 15-minute limit on each sampling run of the admission fit, that a narrowly failing fit is already refit once at target_accept 0.95 (and one far from converging not at all) so smaller steps are not a fix, and which reparameterisations are (non-centred, priors that constrain every parameter, no parameters that trade off, no hard thresholds), a description of the other docs | yes | yes | yes |
+   | `CONTEXT.md`: the task description (§5.1), responses path and columns, the note that no feature columns exist so `compute_features`/`prepare_observed` is required (a CSV with any column beyond the raw five raises instead, since 2026-09-27), the import allowlist and the ban on file reads and interpreter escapes, the 3-step instruction, the `check_candidate` command with a note that admission also requires convergence (almost no divergent transitions, R-hat ≤ 1.05, bulk ESS ≥ 100), the 30-minute limit on each sampling run of the admission fit, that a narrowly failing fit is already refit once at target_accept 0.95 (and one far from converging not at all) so smaller steps are not a fix, and which reparameterisations are (non-centred, priors that constrain every parameter, no parameters that trade off, no hard thresholds), a description of the other docs | yes | yes | yes |
    | `CANDIDATE_BRIEF.md` | the lens text + the one-hypothesis rule (+ critique note) | names the incumbent, its standing, hypothesis and source; lifts the anti-grafting/anti-composition rules; asks for one stated change (+ critique note) | "refine a model of your choosing" from the menu; same lifted rules (+ critique note) |
    | `existing_hypotheses.md`: every zoo model's manifest rationale, ranked by `az.compare` with "rank r, Δ ± dse nats behind (x× dse: tied/lost), ELPD" (trial-level `dse`) and a PSIS-reliability note | yes | yes | yes |
    | `attempted_hypotheses.md` ("Tried before"): the ledger's retired entries with a hypothesis (§5.10) | yes | no | no |
@@ -1108,7 +1123,7 @@ the candidate (`reject` records it in the ledger with the reason):
 | 4 | loadable | `load_pymc_model`: a module-level `model: pm.Model`, with hooks attached |
 | 5 | finite logp and gradient at the initial point on the pooled responses | `model_logp_is_finite`. A code error raised in the candidate's own file (a `NameError` in its `compute_features`) is a rejection with the error; the same error raised by the harness, or an infrastructure error, still raises (`is_model_failure`). Before 2026-09-28 every `NameError`/`AttributeError` raised, ending the cell, in admission and in the concurrent prefit |
 | 5a | data contract | `model_contract_violation` (model_contract.py), no sampling: binds the pooled responses and evaluates the graph at the initial point and at 3 points jittered by U(-1, 1) on the unconstrained scale (fixed seed). The observed data must equal the CSV's `chose_left` in row order (a model fitted to `1 - chose_left`, or to reordered rows, which misaligns pointwise LOO and so `dse`/pruning, is rejected); there must be exactly one observed variable and no `pm.Potential` that depends on the responses; `p_left` must exist and have one entry per trial; the observed variable's log-likelihood must be one term per trial, and at every test point where it is finite exp(log-likelihood) must equal Bernoulli(chose_left; p_left) within 1e-5 on the probability scale (`CONTRACT_PROBABILITY_TOLERANCE`: float64 paths agree to ~1e-15 and clip guards move it by their width; a 1% lapse after `p_left` moves it by ~0.004). Reason: "model breaks the data contract — …". Also run on every starting model at experiment start and by the self-check. Added 2026-09-28 (second audit B13, first audit D5) |
-| 6 | real fit | full production `fit_model` (§5.3), cached, with the escalation refit if the first fit is a near miss, each sampling run limited to 15 min: "too slow to fit: … was still sampling after the 15-minute limit and was stopped. Every sampling run of a candidate's admission fit has a 15-minute limit. Make the model cheaper to evaluate …" (vectorise over trials, features once per unique sequence, fewer weakly identified parameters). A sampling error reads "MCMC sampling failed (<Type>: <message>)" |
+| 6 | real fit | full production `fit_model` (§5.3), cached, with the escalation refit if the first fit is a near miss, each sampling run limited to 30 min: "too slow to fit: … was still sampling after the 30-minute limit and was stopped. Every sampling run of a candidate's admission fit has a 30-minute limit. Make the model cheaper to evaluate …" (vectorise over trials, features once per unique sequence, fewer weakly identified parameters). A sampling error reads "MCMC sampling failed (<Type>: <message>)" |
 | 7 | convergence | the returned fit passes the gate (§5.3). For a multi-chain fit the rejection reason says either that the fit, a near miss, already ran at target_accept ≥ 0.95, or that it was too far from converging for smaller steps to help (and gives the near-miss thresholds); either way raising target_accept will not help. It suggests changing the geometry: non-centred parameterisations, tighter priors on weakly constrained parameters, fewer weakly identified parameters, no hard thresholds (it used to suggest declaring `SAMPLER_SETTINGS = {"target_accept": 0.95}`, which the refit had already done) |
 | 8 | finite ELPD-LOO | from that fit |
 | 9 | novelty | see below; skipped if threshold = 0 |
@@ -1188,23 +1203,25 @@ so the menu ranks it the same way.
    best trusted model` line says so). Until 2026-09-28 an untrusted rank-0
    model switched pruning off for the whole experiment (second audit B8), and
    the cap below then usually retired that very model.
-3. A model m is pruned if it is not protected, is in the table, is
-   trusted, has `dse_clustered > 0`, and has
-   `elpd_diff_m > 2.0 · dse_clustered_m`.
+3. A model m is pruned if it is in the table, is trusted, has
+   `dse_clustered > 0`, and has `elpd_diff_m > 2.0 · dse_clustered_m`. A
+   starting model is pruned by the same rule (since 2026-09-28; it used to
+   be exempt). The baseline itself has `elpd_diff = 0`, so the best trusted
+   model is never pruned and pruning never empties the set.
 4. Pruned files (`.py`, `.hypothesis.md`) move to `models/pruned/`. The
    in-process fit cache entry is evicted, a ledger `pruned` line with the
    margin is written, and the manifest is rewritten (`_retire`, model_zoo.py:776).
 
 **`_cap_live_set`** (model_zoo.py:720), right after: if the zoo manifest
-(seeds included) holds more than 8 models, it retires the excess among
-non-protected models, untrusted ones first, then the worst `az.compare` rank
-first. Retired models go to `models/pruned/` with a ledger `pruned` line (see
-§5.10 for its detail). If there are too few non-protected models to reach 8,
-it retires what it can and warns.
+holds more than 8 models, it retires the excess, starting models included,
+untrusted ones first, then the worst `az.compare` rank first. Retired models
+go to `models/pruned/` with a ledger `pruned` line (see §5.10 for its
+detail). A cap below 1 raises, so the best trusted model, retired last of
+all, always stays.
 
-There is no stacking-weight criterion. Protected seeds stay however far behind
-they are. Untrusted models are never pruned but are the first retired by the
-cap. Neither step can remove the best exportable model.
+There is no stacking-weight criterion. Untrusted models are never pruned but
+are the first retired by the cap. Neither step can remove the best trusted
+model.
 
 ### 5.12 `history.json`
 
@@ -1240,9 +1257,9 @@ from the scoring after any end-of-experiment retirement.
 `_export_inner_loop_models` (model_loop_runner.py:102) rewrites
 `experiment{k}/cognitive_models/` as the **live set**:
 
-- It keeps every previous entry that is protected or still in the zoo, in its
-  original order, and deletes the files of carried non-protected models the
-  loop pruned, retired or dropped.
+- It keeps every previous entry still in the zoo, in its original order, and
+  deletes the files of carried models the loop pruned, retired or dropped
+  (starting models included).
 - It appends every zoo survivor that is not already present, in zoo order,
   under its own name. A survivor with an auto name (`iterN_candidateM`) is
   exported as `inner_loop_model`, `inner_loop_model_2`, …, with the best model
@@ -1252,9 +1269,8 @@ from the scoring after any end-of-experiment retirement.
 - It checks that every exported model can bind a raw row.
 - It copies `attempted_hypotheses.jsonl` beside the manifest.
 
-The carried set is the three protected seeds plus every non-protected
-survivor of the prune and the cap, so at most 8 models (the cap counts the
-zoo). Untrusted survivors are included. The export builds the new set in
+The carried set is every survivor of the prune and the cap (a starting
+model only if it survived), so at most 8 models. Untrusted survivors are included. The export builds the new set in
 `.cognitive_models.partial/` and renames it over `cognitive_models/`. Then
 `finish_model_loop_stage` writes the uniform registry (§2) and, last,
 `model_loop/export_complete.json` (the exported names and the sha256 of the
@@ -1368,7 +1384,8 @@ This runs in the harness after the three experiments
   than the GT, at its family's `DEFAULT_PARAMS`, gives a fixed `p_left` on the
   eval pool and a Pearson r with q. The model code is the file the cell was
   seeded with, in experiment 1's zoo (`seeded_models_dir(run_root)` =
-  `experiment1/model_loop/models/`), not the registry's, so a run is
+  `experiment1/model_loop/models/`, or its `pruned/` for a seed experiment 1
+  pruned), not the registry's, so a run is
   scored with the seeds it ran with (the two agree unless the pool has
   changed since). Output:
   `per_model` r and `mean_r`. No RMSE is computed.
@@ -1380,7 +1397,10 @@ This runs in the harness after the three experiments
   holds every experiment's responses once (`_all_responses_so_far`,
   holdout_eval.py:515, checks its row count against the experiments'
   `data/responses.csv`: 7,680). The files and data match the loop's
-  experiment-3 fits of the protected seeds, so these are normally cache hits.
+  experiment-3 fits of the seeds while they are live, so these are then
+  cache hits; a seed the loop pruned is fitted afresh. A seed experiment 1
+  pruned is loaded from experiment 1's `models/pruned/` (`_seed_file_dir`);
+  no candidate may take its name, so that file is the seed's own.
   Each predicts the eval pool (≤500 draws). A pair where a seed's `p_left`
   is undefined is left out of that seed's metrics (since 2026-09-27; it used
   to raise): `per_model[name]["n_eval_excluded"]` counts them, the log gets a

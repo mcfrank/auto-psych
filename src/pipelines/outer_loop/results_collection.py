@@ -23,7 +23,8 @@ This module copies only the result trees of the *real* runs (pilots and
 * the raw Prolific worker id is the ``participant_id_str`` column of the
   responses.csv of runs collected before 28 September 2026 — that column is
   dropped (the anonymized integer ``participant_id`` index is kept). Later
-  runs keep it only in ``<project>/raw_collected/``, which is not copied;
+  runs keep it only in ``<project>/raw_collected/``, which is copied like the
+  rest of the tree with that column dropped;
 * Prolific worker/study ids also appear as bare 24-hex tokens in logs,
   deployment manifests, configs and agent transcripts — every such token is
   redacted in all copied text files; and
