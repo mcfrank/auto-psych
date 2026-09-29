@@ -13,6 +13,7 @@ import numpy as np
 import pytest
 
 import src.subjective_randomness.model_recovery as model_recovery
+from src.pipelines.inner_loop import pymc_orchestrator
 from src.subjective_randomness.model_recovery import (
     confusion_tidy_rows,
     default_generating_params,
@@ -451,10 +452,23 @@ def test_confusion_tidy_rows_one_row_per_cell():
 
 
 @pytest.mark.slow
-def test_run_closed_ended_recovery_assembles_confusion(tmp_path):
+def test_run_closed_ended_recovery_assembles_confusion(tmp_path, monkeypatch):
     # Recover a single generating model against the closed seed set. Uses tiny
     # MCMC settings — this pins the wiring (generate -> fit closed set -> confusion),
     # not the statistical recovery quality (which the real experiment measures).
+    # Fits this short cannot pass the convergence gate (or give stable Pareto-k),
+    # so no model would be exportable: keep the real comparison but neutralize
+    # both trust flags, as the pipeline smoke tests do; the gates themselves have
+    # their own deterministic tests (tests/test_convergence_gate.py).
+    real_compare = pymc_orchestrator._compare
+
+    def comparison_for_wiring_test(*args, **kwargs):
+        return {
+            name: {**row, "loo_unreliable": False, "not_converged": False}
+            for name, row in real_compare(*args, **kwargs).items()
+        }
+
+    monkeypatch.setattr(pymc_orchestrator, "_compare", comparison_for_wiring_test)
     result = run_closed_ended_recovery(
         STIMULI * 4,  # a few stimuli so LOO has something to chew on
         SEED_MODELS_DIR,
