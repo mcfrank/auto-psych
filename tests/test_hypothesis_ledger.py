@@ -113,7 +113,7 @@ def test_render_lists_retired_hypotheses_under_the_do_not_re_propose_heading(tmp
 
     text = ledger.render_markdown(live_names={"live"})
 
-    assert text.startswith("# Already tried")
+    assert text.startswith("# Tried before")
     assert "do not re-propose" in text.lower()
     # One heading per retired model, with the outcome's detail and the
     # hypothesis as paragraphs of their own — not a table, whose cells would
@@ -129,16 +129,15 @@ def test_render_lists_retired_hypotheses_under_the_do_not_re_propose_heading(tmp
     assert "live" not in text.split("###", 1)[1]
 
 
-def test_render_marks_an_entry_that_recorded_no_hypothesis(tmp_path):
-    """A slot whose agent wrote nothing has no hypothesis text; say so rather than leave a bare label."""
+def test_render_leaves_out_an_entry_that_recorded_no_hypothesis(tmp_path):
+    """A slot whose agent wrote nothing has no hypothesis: nothing to list."""
     ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
     ledger.append(
         _entry("empty", "rejected", detail="no candidate.py written", hypothesis="",
                context="experiment1 round 1 candidate 2 lens 2")
     )
     text = ledger.render_markdown(live_names=set())
-    assert "**Outcome:** no candidate.py written\n" in text
-    assert "**Hypothesis:** *(none recorded)*\n" in text
+    assert "empty" not in text
 
 
 def test_render_round_trips_a_long_hypothesis_intact(tmp_path):
@@ -202,3 +201,33 @@ def test_collapse_whitespace_joins_lines_and_never_truncates():
     long = " ".join(f"Sentence {i} of a long hypothesis." for i in range(80))
     assert len(long) > 2000
     assert collapse_whitespace(long) == long
+
+
+def test_entries_without_a_hypothesis_are_not_listed_as_tried_hypotheses(tmp_path):
+    """An abandoned round (recorded as "__round__") and a failed agent process
+    carry no hypothesis: there is nothing for later agents to avoid, and the
+    brief used to show them as retired hypotheses."""
+    ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
+    ledger.append(_entry("__round__", "round_abandoned", hypothesis=""))
+    ledger.append(_entry("iter0_candidate1", "rejected", hypothesis=""))
+    ledger.append(_entry("runs", "pruned", hypothesis="People dislike long runs."))
+
+    assert [e.name for e in ledger.retired(live_names=set())] == ["runs"]
+    assert "__round__" not in ledger.render_markdown(live_names=set())
+
+
+def test_a_pruned_mechanism_may_be_revisited_with_a_substantive_change(tmp_path):
+    """Pruning is not proof a mechanism is wrong: the brief says a pruned model
+    lost by its margin, and only forbids an unchanged copy."""
+    ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
+    ledger.append(_entry("runs", "pruned", detail="20.0 nats behind seed"))
+    text = ledger.render_markdown(live_names=set()).lower()
+    assert "may be partly right" in text
+    assert "unchanged" in text
+
+
+def test_a_candidate_rejected_for_a_coding_failure_is_marked_untested(tmp_path):
+    ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
+    ledger.append(_entry("idea", "rejected", detail="log-probability is not finite"))
+    text = ledger.render_markdown(live_names=set()).lower()
+    assert "never tested" in text

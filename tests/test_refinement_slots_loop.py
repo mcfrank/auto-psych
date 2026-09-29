@@ -165,7 +165,8 @@ def test_three_slot_round_is_one_exploratory_one_incumbent_one_chosen(
         assert DEFAULT_CANDIDATE_HINTS[lens] in brief
         assert "blended mega-model is not a hypothesis" in brief
         assert docs_by_slot[(rnd, 0)]["menu"] is None
-        assert "do not re-propose" in docs_by_slot[(rnd, 0)]["attempted"].lower()
+        # An exploratory slot carries the ledger's "tried before" section.
+        assert docs_by_slot[(rnd, 0)]["attempted"].startswith("# Tried before")
 
     # ── Slot 1: refine the incumbent, named explicitly, with its hypothesis.
     for rnd in (0, 1):
