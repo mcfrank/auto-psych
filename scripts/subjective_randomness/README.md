@@ -240,6 +240,18 @@ Details worth knowing:
   `--novelty-rmse-threshold` to the script, or export `NOVELTY_RMSE_THRESHOLD`
   to the sbatch array to A/B it; `0` disables the gate. The value used is
   recorded under `inner_loop` in the result JSON.
+- **Inner-loop scale.** `inner_loop.max_iterations` (candidate rounds per
+  experiment) and `inner_loop.candidate_count` (slots per round) are 5 and 6
+  in both holdout configs since September 2026 (30 proposals per experiment;
+  the earlier sweeps ran 2 x 3). `inner_loop.n_critique_proposals` (default
+  8) is how many test statistics the critique agent proposes per round. All
+  three can be overridden per run (`--inner-loop-iterations`,
+  `--inner-loop-candidates`, `--n-critique-proposals`; sbatch env
+  `INNER_LOOP_ITERATIONS`, `INNER_LOOP_CANDIDATES`, `N_CRITIQUE_PROPOSALS`)
+  and every value used is recorded under `inner_loop` in the result JSON.
+  A round's candidate agents run concurrently (one worker per slot); the
+  critique agent runs before them because its critique is inlined into the
+  candidate briefs.
 - **Per-step history.** The inner loop now writes `model_loop/history.json`
   (best model + posterior after the seed fit and after every candidate round;
   `best_model` is selected exactly as the export is — ELPD-LOO rank among

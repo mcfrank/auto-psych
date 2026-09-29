@@ -144,7 +144,11 @@ target — see **Slot roles**) → admit sequentially.
   `hypothesis.md` in prose and **never parsed** — no target file, no regex,
   no ledger field, no novelty-gate exemption. Motivation: 0 of 27 incumbent
   changes in the September 2026 sweep, with three breadth mechanisms and no
-  depth mechanism.
+  depth mechanism. The holdout configs run **five rounds of six** per
+  experiment (`max_iterations: 5`, `candidate_count: 6`; the sweep that
+  motivated the plan ran two rounds of three). A round's agents run
+  concurrently, one worker per slot (`candidate_parallelism`, default
+  `candidate_count`); retry and repair attempts spawn concurrently too.
 - **Pruning** (`_prune_losers` in `model_zoo.py`): non-protected, PSIS-LOO-reliable models
   statistically distinguishable from the best (`elpd_diff > dse_multiplier·dse`)
   move to `models/pruned/`. There is no stacking-weight floor — pruning is on
@@ -250,6 +254,12 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   schema, reduced to the marginal choice rate, which hid a critique subsystem
   that had never produced a statistic through an entire sweep.
   `verify_holdout_run.sh` warns when no round of an experiment was critiqued.
+  The critique agent runs **before** the round's candidate agents, not
+  alongside them: its `critiques.md` is inlined into every candidate brief,
+  so running it concurrently would hand the candidates a stale critique (of
+  the previous incumbent) or none — measured cost 1–4 min of agent time per
+  round. `inner_loop.n_critique_proposals` (default 8) is a holdout-config
+  knob (CLI `--n-critique-proposals`, sbatch `N_CRITIQUE_PROPOSALS`).
 - `src/runtime/coding_agent.py` — backend-agnostic agent launcher.
   `run_coding_agent(...)` is the single call site; `select_backend` resolves
   explicit arg → `CODING_AGENT` env → `opencode` default. `claude` uses
