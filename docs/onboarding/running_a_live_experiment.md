@@ -128,11 +128,22 @@ label you choose.
   `"$VENV_PY" scripts/outer_loop_live/_pilot_config.py <your.yaml> --render-only`
   in the checkout the job runs from.
 
+**G. The cost summary says what it leaves out.**
+
+- The launchers' summary (`_pilot_config.py`) now labels its figure
+  `PROLIFIC TOTAL` and, in every mode, prints `AI agent costs NOT included
+  above: the coding agents (<agent>) bill your language-model account
+  separately …`. `start_full_run.sh`'s confirmation says the same.
+- There is still no estimate of the agents' cost: the repository holds no
+  record of a live run's agent spend (only two old simulation summaries from
+  a different pipeline layout), so no number is given. Each experiment
+  records its spend afterwards in `experiment<N>/token_usage_summary.json`;
+  check your opencode/Gemini or Anthropic billing.
+
 ### Surprises that cost money or data if you don't know them
 
 | # | What | Consequence | What to do |
 |---|---|---|---|
-| G | The cost summary covers **Prolific only**. Language-model spending is recorded afterwards (`token_usage_summary.json`) but not estimated beforehand. | — | Check your opencode/Gemini or Anthropic billing separately. |
 | H | Payment is **automatic on completion** (`AUTOMATICALLY_APPROVE`). Set `completion_code_action: MANUALLY_REVIEW` under `prolific:` to review first. | Low-effort submissions are paid. | Deliberate choice: data quality is handled in analysis, not by withholding pay. |
 
 ### Documentation that disagrees with the code
@@ -144,7 +155,6 @@ label you choose.
 | `.secrets.example` | Lists three keys | Also needs `AUTO_PSYCH_RESULTS_TOKEN`. The deploy stops without it, before anything is staged or any study is created. |
 | `scripts/outer_loop_live/README.md` | `.firebaserc` "already present" | Only `.firebaserc.example` is in the repository. Harmless: the launchers always pass `--firebase-project`. |
 | `pilot.yaml` comment | Default is `prolific_mode: test` | The file ships with `prolific_mode: live` and no `confirm_live_recruitment`. The launcher refuses it until you choose (safe, but confusing). |
-| `start_full_run.sh` header | "~$480" for the full run | With the current `full_run.yaml` (7 min, $12/h, 40 × 3 × 3) the estimate is **≈ $670** (§ 3). |
 | `scripts/outer_loop_live/README.md`, isolation table | Parallel runs share one site, one path each | Each parallel run now deploys to **its own Firebase Hosting site**, `https://<firebase_project>-run<i>.web.app/e<N>-run<i>/`. A pilot uses the project's default site. |
 | `hero_run.yaml`, main `README.md` | "7 candidates, one exploration lens each"; starting models are "the best models from three human replicates" | With 7 per round: 4 explore, 2 improve-the-best, 1 improve-another. The starting models are four literature models. |
 | `run.py --help` | Novelty threshold default "0.02" | The actual default is **0.002** (`DEFAULT_NOVELTY_RMSE_THRESHOLD` in `model_zoo.py`). |
@@ -261,7 +271,7 @@ in your Prolific account**; the 33% is hard-coded in `_pilot_config.py`.
 | `pilot.yaml` (10 people, 7 min, $12/h, 2 experiments) | $1.40 | $14.00 + $4.62 = $18.62 | **$37.24** |
 | `full_run.yaml` / `hero_run.yaml` (40 people, 3 experiments) | $1.40 | $56.00 + $18.48 = $74.48 | $223.44 per run, **≈ $670 for K = 3** |
 
-Language-model costs come on top (§ 0 G).
+Language-model (AI agent) costs come on top and are not estimated (§ 0 G).
 
 **Time.** Each experiment takes a few minutes of design, up to three
 15-minute attempts at building the page, the deploy, **up to 2 hours of

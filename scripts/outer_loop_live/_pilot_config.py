@@ -163,12 +163,17 @@ def main() -> None:
     elif prolific_mode == "live":
         print(f"  prolific mode     : LIVE — recruits + PAYS real participants", file=w)
         print(f"  participants (N)  : {participants} per experiment", file=w)
-        print(f"  cost / experiment : ${per_study/100:,.2f} reward + ~${per_fee/100:,.2f} fee = ~${per_total/100:,.2f}", file=w)
-        label = "EST. GRAND TOTAL " if experiments > 1 else "ESTIMATED TOTAL  "
-        print(f"  {label} : ~${grand/100:,.2f}" + (f"  ({experiments} x {participants})" if experiments > 1 else ""), file=w)
+        print(f"  Prolific / exp.   : ${per_study/100:,.2f} reward + ~${per_fee/100:,.2f} fee = ~${per_total/100:,.2f}", file=w)
+        print(f"  PROLIFIC TOTAL    : ~${grand/100:,.2f}" + (f"  ({experiments} x {participants})" if experiments > 1 else ""), file=w)
         print(f"  (Prolific fee est ~{int(PROLIFIC_SERVICE_FEE*100)}%; confirm the current rate in your account.)", file=w)
     else:
         print(f"  prolific mode     : none — deploys the experiment, creates NO study", file=w)
+    # Every mode runs coding agents (the page, and in live mode the critiques
+    # and model proposals). The repo has no record of a live run's agent spend
+    # to estimate from, so say what the numbers above leave out.
+    print(f"  AI agent costs NOT included above: the coding agents ({coding_agent}) bill", file=w)
+    print("    your language-model account separately; each experiment records its", file=w)
+    print("    spend afterwards in experiment<N>/token_usage_summary.json.", file=w)
 
     me, err = get_me()
     if err or not me:
