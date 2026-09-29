@@ -16,6 +16,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pandas as pd
 import pytest
 
 import src.critique.ppc as ppc
@@ -47,6 +48,17 @@ _RESULT = {
          "significant_fdr": False, "error": None},
     ],
 }
+
+_OBSERVED = pd.DataFrame(
+    {"sequence_a": ["HT", "HH"], "sequence_b": ["TH", "TT"], "chose_left": [1, 0]}
+)
+
+def _observed_csv(tmp_path: Path) -> Path:
+    """The observed responses on disk: every statistic is test-run on them."""
+    path = tmp_path / "r.csv"
+    _OBSERVED.to_csv(path, index=False)
+    return path
+
 
 _STAT_FILE = (
     "# name: alternation_gap\n"
@@ -148,7 +160,7 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(coding_agent, "run_coding_agent", fake_run)
     crit = tmp_path / "critique"
     critique_round._spawn_critique_agent(
-        crit, "incumbent", models_dir=tmp_path, responses_path=tmp_path / "r.csv",
+        crit, "incumbent", models_dir=tmp_path, responses_path=_observed_csv(tmp_path),
         cache_dir=None, fit_kwargs={}, n_proposals=8, significance_alpha=0.05,
         n_replicates=10, agent_timeout_sec=10, backend="opencode",
         notes_dir=tmp_path / "agent_notes",
@@ -177,12 +189,50 @@ def test_usable_test_statistics_removes_forbidden_imports_and_keeps_the_rest(tmp
         "# name: leaky\n# description: d\nfrom src.subjective_randomness import features\n"
         "def test_statistic(df):\n    return 0.0\n",
     )
-    assert _usable_test_statistics(stats_dir) == [good]
+    usable, broken = _usable_test_statistics(stats_dir, _OBSERVED)
+    assert usable == [good]
+    assert "leaky" in broken and "forbidden import" in broken["leaky"]
     assert sorted(p.name for p in stats_dir.glob("*.py")) == ["good.py"]
 
 
 def test_usable_test_statistics_is_empty_without_a_directory(tmp_path: Path):
-    assert _usable_test_statistics(tmp_path / "missing") == []
+    assert _usable_test_statistics(tmp_path / "missing", _OBSERVED) == ([], {})
+
+
+def test_a_statistic_that_fails_on_the_observed_data_is_set_aside_with_its_error(tmp_path: Path):
+    """Every statistic is run once on the observed data before the check: one
+    that raises or returns a non-finite value is moved to broken_statistics/
+    (kept for audit), with its error, and never reaches the check."""
+    stats_dir = tmp_path / "critique" / "test_stats"
+    good = _write_stat(stats_dir, "good")
+    _write_stat(stats_dir, "raises",
+                "def test_statistic(df):\n    return df['no_such_column'].mean()\n")
+    _write_stat(stats_dir, "nan", "def test_statistic(df):\n    return float('nan')\n")
+    usable, broken = _usable_test_statistics(stats_dir, _OBSERVED)
+    assert usable == [good]
+    assert "KeyError" in broken["raises"]
+    assert "non-finite" in broken["nan"]
+    assert sorted(p.name for p in (tmp_path / "critique" / "broken_statistics").glob("*.py")) == [
+        "nan.py", "raises.py",
+    ]
+
+
+def test_the_retry_prompt_carries_the_broken_statistics_errors(tmp_path: Path):
+    crit = tmp_path / "critique"
+    prompt = _build_critique_prompt(
+        crit, "ctx", attempt=1, broken={"raises": "KeyError: 'no_such_column'"}
+    )
+    assert "raises: KeyError: 'no_such_column'" in prompt
+
+
+def test_a_critique_where_nothing_ran_does_not_say_the_model_fits():
+    result = {**_RESULT, "n_significant": 0, "results": [
+        {**r, "significant": False, "error": "ValueError: boom", "p_value": float("nan")}
+        for r in _RESULT["results"]
+    ]}
+    md = _format_critiques_md(result)
+    assert "fits" not in md
+    assert "0 of 2" in md and "could be evaluated" in md
 
 
 def test_persist_raises_when_the_agent_wrote_no_statistics(tmp_path: Path, monkeypatch):
@@ -194,7 +244,7 @@ def test_persist_raises_when_the_agent_wrote_no_statistics(tmp_path: Path, monke
     (crit / "test_stats").mkdir(parents=True)
     with pytest.raises(ValueError, match="no usable test statistic"):
         _persist_critique_results(
-            crit, "m", models_dir=tmp_path, responses_path=tmp_path / "r.csv",
+            crit, "m", models_dir=tmp_path, responses_path=_observed_csv(tmp_path),
             fit_cache_dir=tmp_path, fit_kwargs={}, n_replicates=10,
             significance_alpha=0.05,
         )
@@ -210,7 +260,7 @@ def test_persist_writes_results_and_critiques(tmp_path: Path, monkeypatch):
 
     result = _persist_critique_results(
         crit, "bayesian_fair_coin", models_dir=tmp_path,
-        responses_path=tmp_path / "r.csv", fit_cache_dir=tmp_path,
+        responses_path=_observed_csv(tmp_path), fit_cache_dir=tmp_path,
         fit_kwargs={}, n_replicates=200, significance_alpha=0.05,
     )
 
@@ -228,7 +278,7 @@ def test_persist_writes_results_and_critiques(tmp_path: Path, monkeypatch):
 
 def _spawn(tmp_path: Path, **overrides):
     kwargs = dict(
-        models_dir=tmp_path, responses_path=tmp_path / "r.csv", cache_dir=None,
+        models_dir=tmp_path, responses_path=_observed_csv(tmp_path), cache_dir=None,
         fit_kwargs={}, n_proposals=8, significance_alpha=0.05, n_replicates=10,
         agent_timeout_sec=10, backend="opencode",
     )
