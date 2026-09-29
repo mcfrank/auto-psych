@@ -265,12 +265,25 @@ from src.recovery_improvement.session_limit import (  # noqa: E402
 LIMIT_MSG = "You've hit your session limit · resets 12am (America/Los_Angeles)"
 
 
+def _begin_instant(begin: str) -> datetime:
+    """The instant a ``retry_begin_time`` string names.
+
+    ``retry_begin_time`` renders host-local wall-clock time on purpose: that is
+    what ``sbatch --begin`` interprets. So its *text* differs by machine (Pacific
+    on the cluster, UTC on a CI runner) while the instant it names does not.
+    Compare instants, or the test only passes in one timezone.
+    """
+    return datetime.fromisoformat(begin).astimezone()
+
+
 def test_session_limit_message_is_detected_with_its_reset_time():
     now = datetime(2026, 9, 7, 20, 2, tzinfo=ZoneInfo("America/Los_Angeles"))
     limit = detect_session_limit(LIMIT_MSG, now=now)
     assert limit is not None
     assert limit.reset_at == datetime(2026, 9, 8, 0, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
-    assert retry_begin_time(limit, now=now) == "2026-09-08T00:05:00"
+    assert _begin_instant(retry_begin_time(limit, now=now)) == datetime(
+        2026, 9, 8, 0, 5, tzinfo=ZoneInfo("America/Los_Angeles")
+    )
 
 
 def test_session_limit_pm_time_already_past_rolls_to_tomorrow():
@@ -283,7 +296,9 @@ def test_session_limit_without_a_time_falls_back_to_an_hour():
     now = datetime(2026, 9, 8, 16, 0, tzinfo=ZoneInfo("America/Los_Angeles"))
     limit = detect_session_limit("You've reached your limit for now.", now=now)
     assert limit is not None and limit.reset_at is None
-    assert retry_begin_time(limit, now=now) == "2026-09-08T17:00:00"
+    assert _begin_instant(retry_begin_time(limit, now=now)) == datetime(
+        2026, 9, 8, 17, 0, tzinfo=ZoneInfo("America/Los_Angeles")
+    )
 
 
 def test_ordinary_result_text_is_not_a_limit():

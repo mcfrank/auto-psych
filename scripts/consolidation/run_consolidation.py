@@ -8,8 +8,8 @@ requeues itself — never sleeps — when
 
 * the subscription's session limit is hit (``--begin`` at the reset),
 * the remaining walltime cannot fit another session, or
-* P7 has submitted the smoke chains and P8 must wait for them
-  (``--dependency=afterany:<ids>``).
+* a phase submitted Slurm jobs (P7/P12 smoke, P14 sweep, P15 evaluation) and the
+  next phase must wait for them (``--dependency=afterany:<ids>``).
 
 Usage (inside the sbatch job)::
 
@@ -21,7 +21,6 @@ exits without spawning anything.
 
 from __future__ import annotations
 
-import json
 import os
 import subprocess
 import sys
@@ -37,23 +36,24 @@ sys.path.insert(0, str(here()))
 
 from src.consolidation.driver import (  # noqa: E402
     BRANCH,
-    MAX_SMOKE_ROUNDS,
     PLAN_REL,
     PROGRESS_DIRNAME,
-    SMOKE_JOBS_NAME,
     Blocked,
     Phase,
     compose_prompt,
     disallowed_tools,
+    jobs_file_owner,
     jobs_still_queued,
     load_env,
     needs_walltime_requeue,
+    newly_reopened,
     next_phase,
-    parse_smoke_jobs,
+    parse_jobs_file,
+    phase_round,
     render_inputs,
     requeue_command,
+    retry_markers,
     seconds_left,
-    smoke_round,
     validate_done_marker,
 )
 from src.recovery_improvement.session_limit import (  # noqa: E402
@@ -67,7 +67,9 @@ from src.runtime.coding_agent import run_coding_agent  # noqa: E402
 
 INPUT_KEYS = (
     "SOURCE_REPO", "MAIN_SHA", "ITER3_REPO", "ITER3_SHA", "ITER4_SHA", "ITER5_SHA",
-    "ARMC_SHA", "LEAKAGE_PATCH", "LEAKAGE_PATCH_SHA256", "ARMC_RUN_ROOT", "ITER3_SWEEP",
+    "ARMC_SHA", "LEAKAGE_PATCH", "LEAKAGE_PATCH_SHA256", "ARMC_RUN_ROOT",
+    "ITER3_SWEEP", "ITER2_SWEEP", "BASELINE_SWEEP",
+    "SWEEP_ARMS", "SWEEP_N_REPEATS", "SWEEP_BASE_SEED", "SWEEP_MAX_PARALLEL",
 )
 WALLTIME_MARGIN_SEC = 900
 MAX_LIMIT_WAITS = 12
@@ -123,11 +125,8 @@ class Driver:
 
     # --- Slurm ------------------------------------------------------------------
 
-    def _job_id(self) -> Optional[str]:
-        return os.environ.get("SLURM_JOB_ID")
-
     def _seconds_left(self) -> Optional[int]:
-        job_id = self._job_id()
+        job_id = os.environ.get("SLURM_JOB_ID")
         if not job_id:
             return None
         proc = subprocess.run(
@@ -175,6 +174,20 @@ class Driver:
         print(f"[driver] requeued as job {job_id}: {why}")
         return job_id
 
+    def _wait_for(self, jobs_file: str) -> bool:
+        """Requeue ``afterany`` the ids in ``jobs_file`` that are still queued.
+        Returns True if a requeue was submitted (the caller must exit)."""
+        owner = jobs_file_owner(jobs_file)
+        job_ids = parse_jobs_file(self.progress / jobs_file, owner.required_labels)
+        queued = self._still_queued(job_ids)
+        if not queued:
+            return False
+        self.requeue(
+            dependency="afterany:" + ":".join(sorted(queued)),
+            why=f"waiting for {jobs_file} jobs {sorted(queued)}",
+        )
+        return True
+
     # --- one phase ----------------------------------------------------------------
 
     def brief(self, phase: Phase, *, resume_note: str = "", repair_feedback: str = "") -> str:
@@ -201,13 +214,24 @@ class Driver:
             return ""
         dirty = git(self.repo, "status", "--porcelain")
         commits = git(self.repo, "log", "--oneline", "-12")
+        retries = sorted(self.progress.glob(f"{phase.id}.retry*"))
+        retry_text = ""
+        if retries:
+            reasons = "\n".join(
+                f"  - {r.name}: {r.read_text(encoding='utf-8').strip()[:200]}" for r in retries
+            )
+            retry_text = (
+                f"- this phase was RE-OPENED by a later phase (round {phase_round(self.progress, phase.id)}); "
+                f"its retry markers say why:\n{reasons}\n"
+            )
         return (
             f"## RESUMING PHASE {phase.id} (session {len(transcripts) + 1})\n\n"
-            "A previous session of you worked on this phase and was cut off (session "
-            "limit or walltime) before writing the phase marker. Its work is still in "
-            "the clone — do not start over. Read what exists, then finish the phase.\n\n"
+            "A previous session of you worked on this phase and either was cut off "
+            "(session limit or walltime) or the phase was re-opened. Its work is still "
+            "in the clone — do not start over. Read what exists, then finish the phase.\n\n"
             f"- previous transcripts: {', '.join(str(t) for t in transcripts)} "
             "(stream-json; grep the `text` fields)\n"
+            f"{retry_text}"
             f"- `git status --porcelain`:\n```\n{dirty or '(clean)'}\n```\n"
             f"- recent commits:\n```\n{commits}\n```\n"
         )
@@ -227,7 +251,13 @@ class Driver:
             prompt,
             cwd=self.repo,
             log_path=log_path,
-            allowed_dirs=[self.work_root, Path(self.env["ARMC_RUN_ROOT"])],
+            allowed_dirs=[
+                self.work_root,
+                Path(self.env["ARMC_RUN_ROOT"]),
+                Path(self.env["ITER2_SWEEP"]),
+                Path(self.env["ITER3_SWEEP"]),
+                Path(self.env["BASELINE_SWEEP"]),
+            ],
             model=self.env["MODEL"],
             timeout_secs=int(self.env["TIMEOUT_SEC"]),
             backend="claude",
@@ -271,14 +301,33 @@ class Driver:
             work_root=self.work_root,
         )
 
+    def _reopened_earlier(self, phase: Phase, markers_before: set[str]) -> Optional[str]:
+        """If the session re-opened an earlier phase (wrote its retry marker),
+        drop any done marker this phase may have written and say which."""
+        reopened = newly_reopened(phase.id, markers_before, retry_markers(self.progress))
+        if reopened is None:
+            return None
+        stale = self.progress / f"{phase.id}.done"
+        if stale.exists():
+            stale.unlink()
+        append_status(
+            self.work_root,
+            f"{phase.id} re-opened {reopened} (round {phase_round(self.progress, reopened)}); "
+            f"{phase.id} will run again after it",
+        )
+        return reopened
+
     def run_phase(self, phase: Phase) -> str:
-        """``"done"``, ``"requeued"`` or ``"blocked"``."""
+        """``"done"``, ``"requeued"``, ``"reopened"`` or ``"blocked"``."""
+        markers_before = retry_markers(self.progress)
         prompt = self.brief(phase, resume_note=self._resume_note(phase))
         _, result = self._run_session(phase, prompt, "main")
         if self._handle_limits(result):
             return "requeued"
         if (self.progress / f"{phase.id}.blocked").exists():
             return "blocked"
+        if self._reopened_earlier(phase, markers_before):
+            return "reopened"
         problems = self._problems(phase)
         if problems:
             feedback = (
@@ -292,6 +341,8 @@ class Driver:
                 return "requeued"
             if (self.progress / f"{phase.id}.blocked").exists():
                 return "blocked"
+            if self._reopened_earlier(phase, markers_before):
+                return "reopened"
             problems = self._problems(phase)
         if problems:
             (self.progress / f"{phase.id}.blocked").write_text(
@@ -314,23 +365,16 @@ class Driver:
                 print(f"[driver] {exc}", file=sys.stderr)
                 return EXIT_BLOCKED
             if phase is None:
-                append_status(self.work_root, "ALL PHASES DONE — see HANDOFF.md")
-                print(f"[driver] all phases done; handoff at {self.work_root / 'HANDOFF.md'}")
+                append_status(self.work_root, "ALL PHASES DONE — see RESULTS.md")
+                print(f"[driver] all phases done; results at {self.work_root / 'RESULTS.md'}")
                 return 0
 
-            if phase.waits_for_smoke:
-                job_ids = parse_smoke_jobs(self.progress / SMOKE_JOBS_NAME)
-                queued = self._still_queued(job_ids)
-                if queued:
-                    self.requeue(
-                        dependency="afterany:" + ":".join(sorted(queued)),
-                        why=f"waiting for smoke jobs {sorted(queued)}",
-                    )
-                    return 0
-            if phase.allows_sbatch and smoke_round(self.progress) > MAX_SMOKE_ROUNDS:
+            if phase.waits_for and self._wait_for(phase.waits_for):
+                return 0
+            if phase.max_rounds is not None and phase_round(self.progress, phase.id) > phase.max_rounds:
                 (self.progress / f"{phase.id}.blocked").write_text(
-                    f"driver: smoke round {smoke_round(self.progress)} exceeds the limit of "
-                    f"{MAX_SMOKE_ROUNDS}; the smoke keeps failing — read VERDICT.md\n",
+                    f"driver: round {phase_round(self.progress, phase.id)} of {phase.id} exceeds "
+                    f"its limit of {phase.max_rounds}; read the retry markers and the last verdict\n",
                     encoding="utf-8",
                 )
                 continue
@@ -346,13 +390,13 @@ class Driver:
             outcome = self.run_phase(phase)
             if outcome == "requeued":
                 return 0
-            if outcome == "blocked":
-                continue  # next_phase raises Blocked with the reason
-            if phase.allows_sbatch:
-                job_ids = parse_smoke_jobs(self.progress / SMOKE_JOBS_NAME)
+            if outcome in ("blocked", "reopened"):
+                continue  # blocked: next_phase raises with the reason; reopened: it returns the earlier phase
+            if phase.jobs_file:
+                job_ids = parse_jobs_file(self.progress / phase.jobs_file, phase.required_labels)
                 self.requeue(
                     dependency="afterany:" + ":".join(job_ids),
-                    why=f"smoke chains submitted: {job_ids}",
+                    why=f"{phase.id} submitted jobs {job_ids}",
                 )
                 return 0
 
