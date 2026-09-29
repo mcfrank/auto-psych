@@ -201,7 +201,6 @@ elif [[ "$n_screen" -gt 0 ]]; then say "- [ok]   all $n_screen screened_out.json
 #    appear in the agent's repo copy (whether live or archived).
 _TREE_FORBIDDEN_ANCHORED=(
   "src/subjective_randomness/features.py"
-  "src/subjective_randomness/sequence_stats.py"
   "src/subjective_randomness/stimulus_design.py"
 )
 # CLAUDE.md / AGENTS.md: agent CLIs load them into every session, and the

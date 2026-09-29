@@ -16,8 +16,7 @@
 # local_representativeness <- prototype_similarity). The superseded model
 # files and their pure-Python twins remain on disk (in the registry) so old
 # run artifacts can still be refit, but only the models listed here are
-# active — for recovery, fitted/no-learning baselines, and EIG stimulus design
-# defaults alike (see stimulus_design.default_model_family_names).
+# active — for recovery and the fitted/no-learning baselines alike.
 models:
   - name: falk_konold_dp
     rationale: |

@@ -487,8 +487,8 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   rendered by the live launchers). Adding a project = adding an
   asset directory. This lives under `src/`, not the run-output `projects/` tree.
 - `src/subjective_randomness/` = a **standalone research library** for the
-  subjective-randomness domain (model families, `stimulus_design.py`,
-  `sequence_stats.py`, recovery harnesses). Coupling to the pipeline is
+  subjective-randomness domain (model families, the pair pools in
+  `stimulus_design.py`, recovery harnesses). Coupling to the pipeline is
   deliberately thin (two cross-imports). `pymc_model_families/` is the frozen
   recovery registry; the project's `seed_models/` manifest mirrors it (a test
   asserts they agree, byte for byte: the `motif_stack` seed is the Viterbi
