@@ -489,7 +489,9 @@ def _write_candidate_context(
         f"allowlist: {allowlist_str}. Any other import (including the project's "
         "feature library, pandas, or any `src.*` module) causes immediate "
         "rejection at admission. Every helper your model needs must be written "
-        "in the file itself — self-contained code only.",
+        "in the file itself — self-contained code only. It may not read files "
+        "or reach the interpreter either (`open`, `np.load`, `eval`, "
+        "`__import__` and the like are rejected).",
         "",
         "Work in three steps:",
         "1. Write `hypothesis.md` — one cognitive hypothesis, in plain English.",

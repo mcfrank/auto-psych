@@ -49,6 +49,8 @@ FORBIDDEN_PATHS = [
     "src/pipelines/outer_loop/projects/subjective_randomness/references",
     "src/pipelines/outer_loop/projects/subjective_randomness/instruction_literature.md",
     "src/pipelines/outer_loop/projects/subjective_randomness/problem_definition.md",
+    # Archived seed pools (one holds a motif-generator likelihood).
+    "src/pipelines/outer_loop/projects/subjective_randomness/seed_models/archive_hero_run_2026_07",
 ]
 
 GROUND_TRUTHS = [

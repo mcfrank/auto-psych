@@ -67,7 +67,9 @@ def sandbox_command(
             "Sandboxed agents need bubblewrap on PATH (on Sherlock: "
             "`ml load system bubblewrap`)."
         )
-    env = dict(env)
+    # No Slurm variable is any use to an agent, and SLURM_ARRAY_TASK_ID maps to
+    # the held-out ground truth through the default ground-truth order.
+    env = {key: value for key, value in env.items() if not key.startswith("SLURM_")}
     user_home = Path(env.get("HOME") or Path.home())
     agent_dir = Path(agent_dir)
     scratch = agent_dir / SCRATCH_NAME
