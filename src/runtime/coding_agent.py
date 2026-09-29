@@ -68,8 +68,8 @@ _DEFAULT_MODEL = {
 # agent's whole task. Other failures are NOT retried.
 # Linux caps one argv string at 128 KiB (MAX_ARG_STRLEN). Prompts above this
 # are delivered on stdin instead; codex always reads its prompt from stdin
-# (its `-` argument), claude only when the prompt is long. opencode has no
-# stdin prompt, so a long prompt there is an error, not a silent truncation.
+# (its `-` argument), claude and opencode only when the prompt is long
+# (`opencode run` with no message argument reads piped stdin as its message).
 STDIN_PROMPT_THRESHOLD = 100_000
 
 OPENCODE_LOCK_RETRIES = 3
@@ -282,15 +282,7 @@ def prompt_via_stdin(backend: str, prompt: str) -> bool:
     """Whether ``prompt`` is delivered on stdin rather than as an argument."""
     if backend == "codex":
         return True
-    if backend == "claude":
-        return len(prompt.encode("utf-8")) > STDIN_PROMPT_THRESHOLD
-    if len(prompt.encode("utf-8")) > STDIN_PROMPT_THRESHOLD:
-        raise ValueError(
-            f"{backend} takes its prompt as an argument, and this one is "
-            f"{len(prompt.encode('utf-8'))} bytes — over the {STDIN_PROMPT_THRESHOLD}-byte "
-            "argv limit; shorten it"
-        )
-    return False
+    return len(prompt.encode("utf-8")) > STDIN_PROMPT_THRESHOLD
 
 
 # A *stock* Claude agent runs with none of the user's personal configuration:
@@ -326,7 +318,8 @@ def build_command(
 
     The prompt is the final element so callers can locate it — or, when
     :func:`prompt_via_stdin` says so, the final element is codex's ``-``
-    marker / absent for claude, and the caller writes the prompt to stdin.
+    marker / absent for claude and opencode, and the caller writes the prompt
+    to stdin.
     opencode has no ``--add-dir`` equivalent (it operates on the working
     directory), so ``allowed_dirs`` reaches the command line only for Claude
     Code; :func:`run_coding_agent` honours it for opencode by granting the
@@ -362,8 +355,10 @@ def build_command(
             cmd.append(prompt)
         return cmd
     if backend == "opencode":
-        prompt_via_stdin(backend, prompt)  # raises if too long for argv
-        return ["opencode", "run", "--format", "json", "-m", model, *extra_args, prompt]
+        cmd = ["opencode", "run", "--format", "json", "-m", model, *extra_args]
+        if not prompt_via_stdin(backend, prompt):
+            cmd.append(prompt)
+        return cmd
     if backend == "codex":
         # `codex exec` never prompts; the sandbox flag is its only permission
         # knob. --skip-git-repo-check lets it run outside a repository. The

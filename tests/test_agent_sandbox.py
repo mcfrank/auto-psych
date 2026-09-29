@@ -207,6 +207,47 @@ def test_removing_the_private_home_keeps_scratch(tmp_path):
     assert (agent_dir / "scratch" / "explore.py").exists()
 
 
+def test_removing_the_private_home_waits_out_a_busy_mount_point(tmp_path, monkeypatch):
+    """On Sherlock's 3.10 kernel a file that is still a mount point in the
+    exiting sandbox's namespace cannot be deleted (EBUSY) until the kernel
+    finishes tearing the namespace down. A real Opus cell died on exactly that
+    (the claude binary's mount point); a moment later the file was deletable."""
+    import errno
+
+    from src.runtime.agent_sandbox import remove_private_home
+
+    agent_dir = tmp_path / "candidate_0"
+    (agent_dir / ".home").mkdir(parents=True)
+    real_rmtree, calls = shutil.rmtree, []
+
+    def busy_twice(path):
+        calls.append(path)
+        if len(calls) <= 2:
+            raise OSError(errno.EBUSY, "Device or resource busy")
+        real_rmtree(path)
+
+    monkeypatch.setattr(agent_sandbox.shutil, "rmtree", busy_twice)
+    monkeypatch.setattr(agent_sandbox.time, "sleep", lambda s: None)
+    remove_private_home(agent_dir)
+    assert not (agent_dir / ".home").exists() and len(calls) == 3
+
+
+def test_a_mount_point_that_stays_busy_fails_loudly(tmp_path, monkeypatch):
+    import errno
+
+    from src.runtime.agent_sandbox import remove_private_home
+
+    (tmp_path / ".home").mkdir()
+
+    def always_busy(path):
+        raise OSError(errno.EBUSY, "Device or resource busy")
+
+    monkeypatch.setattr(agent_sandbox.shutil, "rmtree", always_busy)
+    monkeypatch.setattr(agent_sandbox.time, "sleep", lambda s: None)
+    with pytest.raises(OSError):
+        remove_private_home(tmp_path)
+
+
 @needs_bwrap
 def test_removing_a_codex_agents_home_never_touches_the_real_login(tmp_path):
     """The login is mounted into the private home; only the mount point, an

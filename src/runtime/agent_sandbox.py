@@ -25,10 +25,12 @@ caps network namespaces at 0 anyway.
 
 from __future__ import annotations
 
+import errno
 import json
 import os
 import shutil
 import sys
+import time
 from pathlib import Path
 from typing import Dict, List, Mapping, Sequence, Tuple
 
@@ -37,6 +39,8 @@ SYSTEM_DIRS = ("/usr", "/etc", "/share/software")
 SYSTEM_LINKS = {"/bin": "usr/bin", "/sbin": "usr/sbin", "/lib": "usr/lib", "/lib64": "usr/lib64"}
 SCRATCH_NAME = "scratch"  # mounted at /tmp
 HOME_NAME = ".home"  # mounted at $HOME
+HOME_REMOVAL_ATTEMPTS = 6  # about 30 s in all
+HOME_REMOVAL_BACKOFF_SECS = 2.0
 
 
 def sandbox_command(
@@ -128,8 +132,20 @@ def remove_private_home(agent_dir: Path) -> None:
     one — a test runs a real sandbox to check exactly that.
     """
     home = Path(agent_dir) / HOME_NAME
-    if home.exists():
-        shutil.rmtree(home)
+    # A login or CLI binary mounted into the home leaves a mount point there. On
+    # Sherlock's 3.10 kernel it cannot be deleted (EBUSY) until the kernel has
+    # finished tearing down the exited sandbox's namespace, a moment after the
+    # process is gone; a real cell died on that. Wait it out, then fail loudly.
+    for attempt in range(HOME_REMOVAL_ATTEMPTS):
+        if not home.exists():
+            return
+        try:
+            shutil.rmtree(home)
+            return
+        except OSError as error:
+            if error.errno != errno.EBUSY or attempt == HOME_REMOVAL_ATTEMPTS - 1:
+                raise
+            time.sleep(HOME_REMOVAL_BACKOFF_SECS * (attempt + 1))
 
 
 def _outermost(paths: Sequence[Path]) -> List[Path]:
