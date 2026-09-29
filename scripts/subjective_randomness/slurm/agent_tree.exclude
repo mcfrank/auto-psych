@@ -78,3 +78,8 @@ preprocess.py
 /src/pipelines/outer_loop/projects/*/references/
 /src/pipelines/outer_loop/projects/*/instruction_literature.md
 /src/pipelines/outer_loop/projects/*/problem_definition.md
+
+# Archived seed pools: the 2026-07 hero-run seeds include a motif/DP-style
+# likelihood with the motif_stack ground truth's parameter names (the jank
+# audit, C2). Nothing the agents run reads them.
+/src/pipelines/outer_loop/projects/*/seed_models/archive_*/

@@ -381,6 +381,12 @@ echo "[task $TASK] done -> $RUN_DIR/holdout.json"
 # this only warns (listing the files in $RUN_DIR/gt_name_mentions.txt, which the
 # analysis job reports); it never fails a finished cell.
 bash "$SLURM_DIR/scan_gt_name.sh" --after-run "$GT" "$RUN_REPO/_runs" "$RUN_DIR/gt_name_mentions.txt"
+# What the agents looked at (URLs; paths outside their own directory), for a
+# person to skim. Warn-only. Inside the sandbox $HOME is each agent's private
+# home, and the Python install is mounted read-only under it.
+"$VENV_PY" "$SLURM_DIR/agent_activity_report.py" --agent-dir "$AGENT_DIR" \
+  --out "$RUN_DIR/agent_activity.md" --expected "$HOME" "$(dirname "$(dirname "$VENV_PY")")" \
+  || echo "[task $TASK] WARNING: the agent activity report failed (warn-only; the cell is unaffected)"
 
 # --- reclaim inodes: archive + remove this task's repo copy on success -------
 # Reached only when the run above exits 0 (set -e), i.e. this GT is complete:

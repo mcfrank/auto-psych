@@ -33,12 +33,30 @@ CANDIDATE_IMPORT_ALLOWLIST = frozenset(
 )
 
 
-def check_forbidden_imports(source: str) -> List[str]:
-    """Return top-level module names of imports not in the allowlist.
+# Names and attributes agent code may not use. The code runs inside the harness
+# process, which can see the ground truth's files and its own command line; the
+# import allowlist alone let file reads (open, np.load), dynamic imports and
+# interpreter escapes through, and a model needs none of them.
+FORBIDDEN_NAMES = frozenset(
+    {"open", "__import__", "exec", "eval", "compile", "globals", "vars",
+     "breakpoint", "input", "__builtins__"}
+)
+FORBIDDEN_ATTRIBUTES = frozenset(
+    {"load", "loadtxt", "genfromtxt", "fromfile", "memmap",
+     "__globals__", "__builtins__", "__subclasses__", "__code__", "__getattribute__"}
+)
 
-    Walks the full AST (including nested function bodies) so an import hidden
-    inside ``def compute_features`` is still caught. Relative imports (``from .
-    import ...``) are always forbidden — agent code has no package context.
+
+def check_forbidden_imports(source: str) -> List[str]:
+    """Return why ``source`` may not run: forbidden imports and forbidden uses.
+
+    Imports outside the allowlist are reported by module name; uses of
+    ``FORBIDDEN_NAMES`` (a bare ``open``, ``eval``, ...) and
+    ``FORBIDDEN_ATTRIBUTES`` (``np.load``, ``__subclasses__``, ...) as
+    "use of X". Walks the full AST (including nested function bodies) so an
+    import hidden inside ``def compute_features`` is still caught. Relative
+    imports (``from . import ...``) are always forbidden — agent code has no
+    package context.
     """
     try:
         tree = ast.parse(source)
@@ -59,4 +77,8 @@ def check_forbidden_imports(source: str) -> List[str]:
                 top = node.module.split(".")[0]
                 if top not in CANDIDATE_IMPORT_ALLOWLIST:
                     forbidden.append(node.module)
+        elif isinstance(node, ast.Name) and node.id in FORBIDDEN_NAMES:
+            forbidden.append(f"use of {node.id}")
+        elif isinstance(node, ast.Attribute) and node.attr in FORBIDDEN_ATTRIBUTES:
+            forbidden.append(f"use of .{node.attr}")
     return sorted(set(forbidden))

@@ -310,3 +310,15 @@ def test_a_sandboxed_opencode_agent_is_kept_in_by_the_sandbox_not_its_own_prompt
     assert json.loads(env["OPENCODE_PERMISSION"]) == {
         "bash": "allow", "external_directory": "allow",
     }
+
+
+def test_the_agents_environment_carries_no_slurm_variables(tmp_path, monkeypatch):
+    """SLURM_ARRAY_TASK_ID maps to the held-out ground truth through the default
+    ground-truth order; no Slurm variable is any use to an agent."""
+    _fake_bwrap(monkeypatch)
+    _, env = sandbox_command(
+        ["bash"], backend="opencode", cwd=tmp_path, writable_dirs=[], agent_dir=tmp_path,
+        env={"SLURM_ARRAY_TASK_ID": "2", "SLURM_JOB_ID": "1", "PATH": "/usr/bin"},
+    )
+    assert not any(key.startswith("SLURM_") for key in env)
+    assert env["PATH"] == "/usr/bin"

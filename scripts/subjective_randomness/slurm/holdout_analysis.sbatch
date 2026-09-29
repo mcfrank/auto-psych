@@ -31,6 +31,23 @@ else
   echo "[analysis] no agent wrote a held-out ground-truth name"
 fi
 
+# Cells whose agents touched paths outside their own directory (listed in each
+# cell's agent_activity.md, with the URLs they looked at). Warn-only.
+outside="$WORK_ROOT/OUTSIDE_PATH_WARNINGS.txt"
+: > "$outside"
+for report in "$WORK_ROOT"/run*/*/agent_activity.md; do
+  [[ -f "$report" ]] || continue
+  if ! grep -A2 "^## Paths outside" "$report" | grep -q "^(none)"; then
+    echo "$(dirname "$report" | sed "s|^$WORK_ROOT/||"): see $report" >> "$outside"
+  fi
+done
+if [[ -s "$outside" ]]; then
+  echo "[analysis] WARNING: agents touched paths outside their own directory in these cells:"
+  cat "$outside"
+else
+  rm -f "$outside"
+fi
+
 # Every expected cell without a result, so a failed cell cannot silently drop
 # out of the summary (survivorship). A later retry's summary may fill some in.
 missing="$WORK_ROOT/MISSING_CELLS.txt"
