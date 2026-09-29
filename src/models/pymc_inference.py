@@ -1059,20 +1059,24 @@ def _sample_models_in_pool(
 
     Two things are the harness's fault rather than a model's and raise here:
     a worker that returned without leaving its ``.nc`` behind, and one whose
-    fingerprint is not the one the parent computes for the same inputs (the
-    parent would load the wrong fit, or none).
+    fingerprint is not one the parent computes for the same inputs, at the
+    loop's target_accept or the refit's (the parent would load the wrong fit,
+    or none).
     """
     names = list(names)
     models_dir = Path(models_dir)
     responses_path = Path(responses_path)
     cache_dir = Path(cache_dir)
-    expected = {
-        name: fit_fingerprint(
-            name, models_dir, responses_path,
-            resolve_fit_settings(name, models_dir, fit_kwargs),
-        )
-        for name in names
-    }
+    # A worker whose first fit fails the convergence gate returns the fit it
+    # redid at ESCALATED_TARGET_ACCEPT (fit_model); both are on disk.
+    expected = {}
+    for name in names:
+        settings = resolve_fit_settings(name, models_dir, fit_kwargs)
+        escalated = {**settings, "target_accept": ESCALATED_TARGET_ACCEPT}
+        expected[name] = {
+            fit_fingerprint(name, models_dir, responses_path, s)
+            for s in (settings, escalated)
+        }
     outcomes: Dict[str, Optional[BaseException]] = {}
     with _fit_executor(min(workers, len(names))) as pool:
         futures = {
@@ -1099,11 +1103,11 @@ def _sample_models_in_pool(
                                 f"{name!r} failed"
                             )
                 continue
-            if fingerprint != expected[name]:
+            if fingerprint not in expected[name]:
                 raise RuntimeError(
                     f"fit worker for {name!r} returned fingerprint {fingerprint} "
-                    f"but the parent expects {expected[name]} for the same model, "
-                    "data and sampler settings."
+                    f"but the parent expects one of {sorted(expected[name])} for "
+                    "the same model, data and sampler settings (or their refit)."
                 )
             if not cached_fit_path(cache_dir, name, fingerprint).exists():
                 raise RuntimeError(

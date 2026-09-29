@@ -718,3 +718,36 @@ def test_real_pool_reports_a_failure_the_parent_could_not_unpickle(tmp_path):
 
     assert failures["awkward"] == "ChainFailed: chain 0 diverged while binding"
     assert failures["fine_stub"].startswith("TypeError: ")  # the stub has no `model`
+
+
+def test_pool_driver_accepts_a_worker_that_refit_at_the_escalated_target_accept(
+    tmp_path, monkeypatch
+):
+    """A fit that fails the convergence gate is refit at 0.95 inside the
+    worker (``fit_model``), which then returns the refit's fingerprint. Both
+    fits are on disk, and the parent's ``fit_model`` loads them the same way,
+    so the pool must accept it rather than call it a harness fault."""
+    models_dir, responses = _stub_models(tmp_path, ["a", "b"])
+    _thread_executor(monkeypatch)
+    monkeypatch.setenv("OMP_NUM_THREADS", "8")
+    loop = {"target_accept": 0.8}
+    escalated = {"target_accept": pi.ESCALATED_TARGET_ACCEPT}
+
+    def refitting_fit(name, models_dir_, responses_, *, cache_dir, **kw):
+        for kwargs in (loop, escalated):
+            nc = Path(cache_dir) / _nc_name(name, models_dir, responses, kwargs)
+            nc.touch()
+        return pi.FittedModel(
+            name=name, model=object(), idata=object(), fingerprint=nc.name.split(".")[1]
+        )
+
+    monkeypatch.setattr(pi, "fit_model", refitting_fit)
+    cache_dir = tmp_path / "cache"
+    cache_dir.mkdir()
+
+    outcomes = pi._sample_models_in_pool(
+        ["a", "b"], models_dir, responses, cache_dir, loop,
+        workers=2, stop_on_failure=True,
+    )
+
+    assert outcomes == {"a": None, "b": None}

@@ -757,17 +757,20 @@ def _cap_live_set(
             file=sys.stderr,
             flush=True,
         )
+    # The detail leads with the margin, like a prune's: the refinement menu
+    # ranks every pruned entry by it (parse_prune_margin).
+    best = min(comparison, key=lambda name: comparison[name]["rank"])
     details = {}
     for name in to_retire:
         row = comparison[name]
         if _untrusted(row):
             why = "its fit cannot be trusted (unreliable PSIS-LOO or no convergence)"
         else:
-            why = (
-                f"ELPD-LOO rank {row['rank'] + 1} of {len(names)}, "
-                f"{row['elpd_diff']:.1f} nats behind the best"
-            )
-        details[name] = f"retired to keep the live set at {cap} models: {why}"
+            why = f"ELPD-LOO rank {row['rank'] + 1} of {len(names)}"
+        details[name] = (
+            f"{row['elpd_diff']:.1f} nats behind {best}; retired to keep the live "
+            f"set at {cap} models: {why}"
+        )
         print(f"  [cap] {name}: {details[name]}; moved to models/pruned/.", flush=True)
     _retire(models_dir, details, ledger=ledger, ledger_context=ledger_context)
     return to_retire
