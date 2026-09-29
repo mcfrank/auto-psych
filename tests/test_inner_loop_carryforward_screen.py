@@ -195,3 +195,61 @@ def test_a_model_whose_batch_fit_failed_is_dropped_without_a_second_fit(
     (entry,) = ledger.entries()
     assert entry.name == "diverges" and entry.outcome == "dropped"
     assert "bad initial energy" in entry.detail
+
+
+# ---------------------------------------------------------------------------
+# Infrastructure failures and protected seeds are never drops
+# ---------------------------------------------------------------------------
+
+
+def test_a_protected_seed_whose_fit_failed_raises_instead_of_being_dropped(
+    tmp_path, monkeypatch
+):
+    models_dir = _models_dir(tmp_path, ["seed", "carried"])
+    monkeypatch.setattr(
+        model_zoo,
+        "fit_models_to_cache",
+        lambda names, *a, **k: {"seed": "RuntimeError: bad initial energy"},
+    )
+    monkeypatch.setattr(model_zoo, "log_likelihood", lambda m, *a, **k: -100.0)
+    ledger = model_zoo.HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
+
+    with pytest.raises(RuntimeError, match="Protected seed model 'seed'"):
+        pymc_orchestrator._drop_nonfinite_elpd_models(
+            models_dir, tmp_path / "responses.csv", ledger=ledger, protected={"seed"}
+        )
+
+    assert _manifest_names(models_dir) == ["seed", "carried"]
+    assert ledger.entries() == []
+
+
+def test_a_protected_seed_with_a_nonfinite_elpd_raises(tmp_path, monkeypatch):
+    models_dir = _models_dir(tmp_path, ["seed", "carried"])
+    monkeypatch.setattr(model_zoo, "log_likelihood", lambda m, *a, **k: math.nan)
+
+    with pytest.raises(RuntimeError, match="Protected seed model 'seed'"):
+        pymc_orchestrator._drop_nonfinite_elpd_models(
+            models_dir, tmp_path / "responses.csv", protected={"seed"}
+        )
+
+
+def test_an_infrastructure_error_while_scoring_raises_instead_of_dropping(
+    tmp_path, monkeypatch
+):
+    models_dir = _models_dir(tmp_path, ["a", "b"])
+
+    def elpd(name, *a, **k):
+        if name == "b":
+            raise OSError(122, "Disk quota exceeded")
+        return -10.0
+
+    monkeypatch.setattr(model_zoo, "log_likelihood", elpd)
+    ledger = model_zoo.HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
+
+    with pytest.raises(OSError, match="Disk quota"):
+        pymc_orchestrator._drop_nonfinite_elpd_models(
+            models_dir, tmp_path / "responses.csv", ledger=ledger
+        )
+
+    assert _manifest_names(models_dir) == ["a", "b"]
+    assert ledger.entries() == []

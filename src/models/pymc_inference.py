@@ -26,6 +26,7 @@ import sys
 import tempfile
 import traceback
 from concurrent.futures import CancelledError, ProcessPoolExecutor, as_completed
+from concurrent.futures.process import BrokenProcessPool
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Sequence, Union
@@ -789,7 +790,15 @@ def _fit_once(
         nc_path = cached_fit_path(cache_dir, name, fp)
 
     if nc_path is not None and nc_path.exists():
-        idata = az.from_netcdf(str(nc_path))
+        try:
+            idata = az.from_netcdf(str(nc_path))
+        except Exception as e:  # noqa: BLE001 — any unreadable cache file is the harness's fault
+            raise FitInfrastructureFailure(
+                f"the cached fit {nc_path} cannot be read ({type(e).__name__}: {e}). "
+                "It is corrupt (a write cut short before fits were written "
+                f"atomically?), not a property of the model {name!r}; delete it "
+                "to refit."
+            ) from e
         _warn_sampling_diagnostics(name, idata)
         return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
 
@@ -811,9 +820,26 @@ def _fit_once(
     _warn_sampling_diagnostics(name, idata)
 
     if nc_path is not None:
-        idata.to_netcdf(str(nc_path))
+        write_fit_file(idata, nc_path)
 
     return FittedModel(name=name, model=model, idata=idata, fingerprint=fp)
+
+
+def write_fit_file(idata: Any, nc_path: Path) -> None:
+    """Persist ``idata`` at ``nc_path`` atomically.
+
+    The fit is written to a temporary file beside ``nc_path`` and renamed into
+    place, so a process killed mid-write (an out-of-memory kill, a time limit)
+    leaves no ``.nc`` at all rather than a truncated one that every later run
+    would find in the cache. The temporary name does not end in ``.nc``.
+    """
+    nc_path = Path(nc_path)
+    partial = nc_path.with_name(f".{nc_path.name}.{os.getpid()}.partial")
+    try:
+        idata.to_netcdf(str(partial))
+        os.replace(partial, nc_path)
+    finally:
+        partial.unlink(missing_ok=True)
 
 
 # ---------------------------------------------------------------------------
@@ -972,6 +998,22 @@ def default_fit_workers(cpus: int, per_fit_cpus: Sequence[int]) -> int:
     return max(1, int(cpus) // max(int(c) for c in per_fit_cpus))
 
 
+class FitInfrastructureFailure(RuntimeError):
+    """A fit that failed for a reason that is not the model's.
+
+    A pool worker that died (one out-of-memory kill breaks the whole pool, so
+    every pending fit fails with it), a fit file that cannot be read or
+    written, the machine out of memory. Always raised, never reported as the
+    model's failure: the start-of-experiment screen used to turn each one into
+    a dropped model — protected seeds included — and a ledger line "MCMC fit
+    failed", which later agents then read as a property of the model.
+    """
+
+
+# Failures of the machinery rather than of a model; see FitInfrastructureFailure.
+INFRASTRUCTURE_ERRORS = (OSError, MemoryError, BrokenProcessPool, FitInfrastructureFailure)
+
+
 class FitWorkerFailure(RuntimeError):
     """A fit that failed inside a pool worker, re-raised in the parent.
 
@@ -1018,6 +1060,9 @@ def _fit_model_in_worker(
             fitted = fit_model(
                 name, models_dir, responses_path, cache_dir=cache_dir, **fit_kwargs
             )
+    except INFRASTRUCTURE_ERRORS as e:
+        traceback.print_exc(file=sys.stderr)
+        raise FitInfrastructureFailure(f"{type(e).__name__}: {e}") from None
     except Exception as e:  # noqa: BLE001 — every failure must reach the parent by name
         traceback.print_exc(file=sys.stderr)
         raise FitWorkerFailure(f"{type(e).__name__}: {e}") from None
@@ -1057,11 +1102,14 @@ def _sample_models_in_pool(
     the fits not yet started when the first failure lands are cancelled and
     reported as ``CancelledError``; running ones finish and stay cached.
 
-    Two things are the harness's fault rather than a model's and raise here:
-    a worker that returned without leaving its ``.nc`` behind, and one whose
-    fingerprint is not one the parent computes for the same inputs, at the
-    loop's target_accept or the refit's (the parent would load the wrong fit,
-    or none).
+    Only a model's own failure (``FitWorkerFailure``) is reported by name.
+    Everything else is the harness's fault rather than a model's and raises
+    ``FitInfrastructureFailure`` here: a broken pool (a worker killed, e.g.
+    out of memory, fails every pending fit), an infrastructure error inside a
+    worker, a worker that returned without leaving its ``.nc`` behind, and
+    one whose fingerprint is not one the parent computes for the same inputs,
+    at the loop's target_accept or the refit's (the parent would load the
+    wrong fit, or none).
     """
     names = list(names)
     models_dir = Path(models_dir)
@@ -1093,7 +1141,7 @@ def _sample_models_in_pool(
             except CancelledError as e:
                 outcomes[name] = e
                 continue
-            except Exception as e:  # noqa: BLE001 — the worker's failure, reported by name
+            except FitWorkerFailure as e:  # the model's failure, reported by name
                 outcomes[name] = e
                 if stop_on_failure:
                     for other in futures:
@@ -1103,6 +1151,12 @@ def _sample_models_in_pool(
                                 f"{name!r} failed"
                             )
                 continue
+            except Exception as e:
+                raise FitInfrastructureFailure(
+                    f"the fit of {name!r} failed for a reason that is not the "
+                    f"model's ({type(e).__name__}: {e}); no model of this batch "
+                    "is reported as failed because of it."
+                ) from e
             if fingerprint not in expected[name]:
                 raise RuntimeError(
                     f"fit worker for {name!r} returned fingerprint {fingerprint} "
@@ -1140,7 +1194,9 @@ def _fit_outcomes(
 
     Every successful fit lands in the in-process cache. A failed fit is
     returned as its exception under the model's name; with ``stop_on_failure``
-    nothing further is sampled after the first one.
+    nothing further is sampled after the first one. A failure that is not the
+    model's (``INFRASTRUCTURE_ERRORS``: a broken pool, an unreadable cache
+    file, out of memory) raises instead, whatever the caller.
     """
     if fit_workers is not None and fit_workers < 1:
         raise ValueError(f"fit_workers must be >= 1, got {fit_workers}.")
@@ -1155,6 +1211,8 @@ def _fit_outcomes(
         try:
             key = _cache_key(name, models_dir, responses_path, fit_kwargs)
             settings[name] = resolve_fit_settings(name, models_dir, fit_kwargs)
+        except INFRASTRUCTURE_ERRORS:
+            raise
         except Exception as e:  # noqa: BLE001 — reported by name; the caller decides
             outcomes[name] = e
             if stop_on_failure:
@@ -1191,6 +1249,8 @@ def _fit_outcomes(
             fitted = fit_model(
                 name, models_dir, responses_path, cache_dir=load_dir, **fit_kwargs
             )
+        except INFRASTRUCTURE_ERRORS:
+            raise
         except Exception as e:  # noqa: BLE001 — reported by name; the caller decides
             outcomes[name] = e
             return
@@ -1282,6 +1342,8 @@ def fit_models_to_cache(
     keep going when one model fails: every fit that succeeds is in the cache
     afterwards, and the return value maps each model that failed to
     ``"<ExceptionType>: <message>"``. An empty dict means every model fit.
+    Only a model's own failure is reported; an infrastructure failure
+    (``FitInfrastructureFailure``, ``INFRASTRUCTURE_ERRORS``) raises.
     """
     outcomes = _fit_outcomes(
         model_names, models_dir, responses_path,

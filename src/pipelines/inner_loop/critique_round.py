@@ -110,7 +110,7 @@ def _seed_critique_fit_cache(
     content-addressed name the harness expects) so the agent's separate harness
     process loads it instead of refitting with MCMC.
     """
-    from src.models.pymc_inference import fit_models_cached
+    from src.models.pymc_inference import fit_models_cached, write_fit_file
 
     fit_cache_dir.mkdir(parents=True, exist_ok=True)
     fitted = fit_models_cached(
@@ -122,7 +122,7 @@ def _seed_critique_fit_cache(
     )[incumbent]
     nc_path = fit_cache_dir / f"{incumbent}.{fitted.fingerprint}.nc"
     if not nc_path.exists():
-        fitted.idata.to_netcdf(str(nc_path))
+        write_fit_file(fitted.idata, nc_path)
 
 
 def _write_critique_context(
