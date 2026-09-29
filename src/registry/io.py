@@ -4,6 +4,7 @@ Schema: { "theories": { "model_name": float }, "reserved_for_new": float }
 """
 
 import math
+import os
 from numbers import Real
 from pathlib import Path
 from typing import Any, Dict
@@ -106,7 +107,11 @@ def write_registry(
             reserved_for_new, context="model registry"
         ),
     }
-    path.write_text(yaml.dump(data, default_flow_style=False), encoding="utf-8")
+    # Through a temporary file: a half-written registry would steer the next
+    # design (it reads a missing or empty one as a uniform prior).
+    partial = path.with_name(f".{path.name}.partial")
+    partial.write_text(yaml.dump(data, default_flow_style=False), encoding="utf-8")
+    os.replace(partial, path)
 
 
 def get_model_weights(registry_path: Path) -> Dict[str, float]:

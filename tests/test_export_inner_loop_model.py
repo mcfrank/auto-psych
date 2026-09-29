@@ -18,7 +18,10 @@ import json
 import pytest
 import yaml
 
-from src.pipelines.outer_loop.model_loop_runner import _export_inner_loop_models
+from src.pipelines.outer_loop.model_loop_runner import (
+    _export_inner_loop_models,
+    finish_model_loop_stage,
+)
 from src.pipelines.outer_loop.orchestrator_validators import _validate_model_loop
 
 MODEL_SRC = "import pymc as pm\nwith pm.Model() as model:\n    pass\n"
@@ -157,6 +160,8 @@ def test_validate_model_loop_accepts_best_in_model_set(tmp_path):
         zoo_entries=[{"name": "seed_a", "rationale": "mechanism seed_a"}],
     )
     _write_loop_outputs(exp_dir, best="seed_a")
+    assert not _validate_model_loop(exp_dir)[0]  # the stage has not finished
+    finish_model_loop_stage(exp_dir)  # the registry, then the export record
     ok, msg = _validate_model_loop(exp_dir)
     assert ok, msg
 
@@ -187,6 +192,7 @@ def test_validate_model_loop_uses_recorded_reliable_best_not_argmax(tmp_path):
         encoding="utf-8",
     )
     (loop_dir / "report.md").write_text("# report\n", encoding="utf-8")
+    finish_model_loop_stage(exp_dir)
     ok, msg = _validate_model_loop(exp_dir)
     assert ok, msg
 

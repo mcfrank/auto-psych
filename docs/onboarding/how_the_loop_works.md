@@ -313,7 +313,12 @@ After the last round, within the same `5_model_loop` stage:
   data cannot yet separate from the winner is kept, and the next design is
   aimed at separating them.
 - `model_registry.yaml` then gives every surviving model **equal prior
-  weight** for the next design.
+  weight** for the next design. Last, `model_loop/export_complete.json`
+  records what was exported; only then is the experiment's model stage done.
+  A stage that was interrupted starts again from the model set and the agent
+  notes it first started from (`cognitive_models_input/`,
+  `agent_notes_at_start/`), so a restart never builds on a half-written export
+  or on notes about candidates that no longer exist.
 
 Code: `_prune_losers`, `_cap_live_set` (`model_zoo.py`);
 `_export_inner_loop_models`, `update_registry_from_interpretation`

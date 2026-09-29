@@ -9,11 +9,14 @@ refuses becomes the feedback handed back to the agent.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import re
 import sys
 from pathlib import Path
+from typing import Optional
 
+from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME
 from src.models.model_manifest import (
     manifest_path,
     read_manifest_entries,
@@ -25,6 +28,17 @@ from src.runtime.config import REPO_ROOT
 # exported under the stable `inner_loop_model` name, so a carried/validated model
 # set must never contain a raw zoo name. Shared with orchestrator._export_*.
 _ZOO_NAME_RE = re.compile(r"iter\d+_candidate\d+")
+
+# Written last by ``model_loop_runner.finish_model_loop_stage``, in
+# model_loop/: the model set the stage exported and its ledger's hash. The
+# model-loop stage is complete only when it exists and agrees with
+# cognitive_models/ and the registry.
+EXPORT_RECORD_FILENAME = "export_complete.json"
+
+def ledger_sha256(models_dir: Path) -> Optional[str]:
+    """The sha256 of ``models_dir``'s ledger of attempted hypotheses, or None."""
+    path = Path(models_dir) / LEDGER_FILENAME
+    return hashlib.sha256(path.read_bytes()).hexdigest() if path.is_file() else None
 
 
 def validate_cc_output(agent_key: str, exp_dir: Path) -> tuple[bool, str]:
@@ -312,5 +326,45 @@ def _validate_model_loop(exp_dir: Path) -> tuple[bool, str]:
             False,
             f"best model {required!r} is not in cognitive_models (manifest + .py "
             f"file required — was the inner-loop export skipped?)",
+        )
+    return _validate_export_record(exp_dir, report)
+
+
+def _validate_export_record(exp_dir: Path, report: Path) -> tuple[bool, str]:
+    """The export and the registry are complete and agree with the stage's record."""
+    record_path = exp_dir / "model_loop" / EXPORT_RECORD_FILENAME
+    if not record_path.exists():
+        return (
+            False,
+            f"model_loop/{EXPORT_RECORD_FILENAME} not found: the stage did not finish "
+            "(export and registry are written before it)",
+        )
+    try:
+        record = json.loads(record_path.read_text(encoding="utf-8"))
+        exported = list(record["models"])
+        ledger_hash = record["ledger_sha256"]
+    except Exception as e:
+        return False, f"Invalid model_loop/{EXPORT_RECORD_FILENAME}: {e}"
+    models_dir = exp_dir / "cognitive_models"
+    names = read_manifest_names(models_dir)
+    if names != exported:
+        return False, (
+            f"cognitive_models lists {names} but the stage exported {exported}"
+        )
+    missing = [name for name in names if not (models_dir / f"{name}.py").exists()]
+    if missing:
+        return False, f"cognitive_models has no file for {missing}"
+    if ledger_sha256(models_dir) != ledger_hash:
+        return False, "cognitive_models' ledger is not the one the stage exported"
+    try:
+        from src.registry.io import get_model_weights
+
+        weights = get_model_weights(exp_dir / "model_registry.yaml")
+    except Exception as e:
+        return False, f"Invalid model_registry.yaml: {e}"
+    if set(weights) != set(exported):
+        return False, (
+            f"model_registry.yaml covers {sorted(weights)} but the stage exported "
+            f"{sorted(exported)}"
         )
     return True, f"Model loop valid ({len(report.read_text())} char report)"

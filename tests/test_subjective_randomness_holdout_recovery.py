@@ -25,6 +25,10 @@ import src.subjective_randomness.holdout_eval as holdout_eval
 import src.subjective_randomness.holdout_recovery as holdout_recovery
 from src.pipelines.inner_loop import pymc_orchestrator
 from src.pipelines.inner_loop.critique_round import CRITIQUE_N_PROPOSALS
+from src.pipelines.outer_loop.model_loop_runner import (
+    begin_model_loop_stage,
+    finish_model_loop_stage,
+)
 from src.runtime import token_usage
 from src.subjective_randomness.holdout_data import (
     strip_generating_model,
@@ -673,6 +677,8 @@ def _complete_experiment_on_disk(run_root, exp_num, *, with_model_loop=True):
             models_dir / "encoding_compressibility.py",
             models_dir / "inner_loop_model.py",
         )
+        # The stage ends with the registry and its export record.
+        finish_model_loop_stage(exp_dir)
     return exp_dir
 
 
@@ -769,6 +775,7 @@ def test_run_holdout_experiments_resume_wipes_partial_model_loop(
     # fully regenerable — MCMC fits live in the shared cache) and rerun fresh.
     run_root = tmp_path / "run"
     exp_dir = _complete_experiment_on_disk(run_root, 1, with_model_loop=False)
+    begin_model_loop_stage(exp_dir)  # the crashed attempt had started the stage
     stale = exp_dir / "model_loop" / "models" / "iter0_candidate0.py"
     stale.parent.mkdir(parents=True)
     stale.write_text("# stale partial candidate\n", encoding="utf-8")

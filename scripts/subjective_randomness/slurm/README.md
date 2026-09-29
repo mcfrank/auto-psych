@@ -79,7 +79,9 @@ Watch: `squeue --me`. A full 3-model repeat takes hours; the array requests
 
 Each task runs with `--resume`: a resubmitted task continues its cell from the
 last finished stage, and a task whose cell already has `holdout.json` exits at
-once. After each array a retry job resumes the tasks that failed, timed out or
+once. A model-loop stage is finished only with its export record; an
+unfinished one restarts from the model set and agent notes it first started
+from (see `scripts/subjective_randomness/README.md`). After each array a retry job resumes the tasks that failed, timed out or
 hit a node failure, and resubmits the out-of-memory ones with `--mem=128G`
 (that group's array only), keeping the `%MAX_PARALLEL` cap, up to
 `MAX_RETRY_ROUNDS` (2); the impossible-model sweep uses the same retry job.

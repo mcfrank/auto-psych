@@ -110,7 +110,8 @@ def stages_run(monkeypatch):
     monkeypatch.setattr(outer_run, "run_deployment_programmatic", recorder("deploy"))
     monkeypatch.setattr(outer_run, "run_collect_programmatic", recorder("4_collect"))
     monkeypatch.setattr(outer_run, "run_inner_model_loop_programmatic", recorder("5_model_loop"))
-    monkeypatch.setattr(outer_run, "update_registry_from_interpretation", recorder("registry"))
+    monkeypatch.setattr(outer_run, "begin_model_loop_stage", lambda *a, **k: None)
+    monkeypatch.setattr(outer_run, "finish_model_loop_stage", recorder("registry"))
     return ran
 
 

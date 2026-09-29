@@ -34,8 +34,12 @@ from src.pipelines.outer_loop.columns import (
     raw_response_rows,
     write_responses_csv,
 )
-from src.pipelines.outer_loop.model_loop_runner import agent_notes_dir
+from src.pipelines.outer_loop.model_loop_runner import (
+    agent_notes_dir,
+    experiment_input_models_dir,
+)
 
+from src.runtime.atomic_files import replace_directory, write_text_atomically
 from src.runtime.coding_agent import run_coding_agent
 from src.runtime.config import PROJECT_ASSETS_DIR, REPO_ROOT
 
@@ -233,19 +237,23 @@ def seed_experiment_models_from_project(
             f"Excluding {sorted(exclude)} empties the seed set from {seed_manifest}"
         )
 
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    for entry in kept:
-        name = entry["name"]
-        src = seed_dir / f"{name}.py"
-        if not src.exists():
-            raise FileNotFoundError(f"Seed model {name!r} has no file at {src}")
-        shutil.copyfile(src, dest_dir / f"{name}.py")
-    if exclude:
-        dest_manifest.write_text(
-            yaml.safe_dump({"models": kept}, sort_keys=False), encoding="utf-8"
-        )
-    else:
-        shutil.copyfile(seed_manifest, dest_manifest)
+    def build(staging: Path) -> None:
+        for entry in kept:
+            name = entry["name"]
+            src = seed_dir / f"{name}.py"
+            if not src.exists():
+                raise FileNotFoundError(f"Seed model {name!r} has no file at {src}")
+            shutil.copyfile(src, staging / f"{name}.py")
+        if exclude:
+            manifest_path(staging).write_text(
+                yaml.safe_dump({"models": kept}, sort_keys=False), encoding="utf-8"
+            )
+        else:
+            shutil.copyfile(seed_manifest, manifest_path(staging))
+
+    # Built beside the destination and renamed into place, so a crash leaves
+    # no set (seeding reruns) rather than files without a manifest.
+    replace_directory(dest_dir, build)
     return True
 
 
@@ -260,7 +268,9 @@ def carry_forward_cognitive_models(prev_exp_dir: Path, exp_dir: Path) -> bool:
 
     Mirrors ``seed_experiment_models_from_project``: returns True on copy and
     False when the destination already has a manifest (so ``--resume`` never
-    overwrites an existing model set). A missing or empty previous manifest, or
+    overwrites an existing model set). The set is written all at once
+    (``replace_directory``), so a manifest means the files and the ledger are
+    there too. A missing or empty previous manifest, or
     a manifest entry without its ``.py`` file, raises — a later experiment must
     never start from a silently truncated model set.
     """
@@ -281,20 +291,27 @@ def carry_forward_cognitive_models(prev_exp_dir: Path, exp_dir: Path) -> bool:
     if not entries:
         raise ValueError(f"Previous manifest has no models: {prev_manifest}")
 
-    dest_dir.mkdir(parents=True, exist_ok=True)
-    for entry in entries:
-        name = entry["name"]
-        src = prev_dir / f"{name}.py"
-        if not src.exists():
-            raise FileNotFoundError(
-                f"Carried model {name!r} has no file at {src}; the previous "
-                f"experiment's model set is incomplete."
-            )
-        shutil.copyfile(src, dest_dir / f"{name}.py")
-    shutil.copyfile(prev_manifest, dest_manifest)
-    prev_ledger = prev_dir / LEDGER_FILENAME
-    if prev_ledger.exists():
-        shutil.copyfile(prev_ledger, dest_dir / LEDGER_FILENAME)
+    def build(staging: Path) -> None:
+        for entry in entries:
+            name = entry["name"]
+            src = prev_dir / f"{name}.py"
+            if not src.exists():
+                raise FileNotFoundError(
+                    f"Carried model {name!r} has no file at {src}; the previous "
+                    f"experiment's model set is incomplete."
+                )
+            shutil.copyfile(src, staging / f"{name}.py")
+        shutil.copyfile(prev_manifest, manifest_path(staging))
+        prev_ledger = prev_dir / LEDGER_FILENAME
+        if prev_ledger.exists():
+            shutil.copyfile(prev_ledger, staging / LEDGER_FILENAME)
+
+    # The files, manifest and ledger are built beside the destination and
+    # renamed into place together. They used to be copied in place, the
+    # manifest before the ledger, so a crash in between left a valid-looking
+    # set whose manifest made the copy count as done: the ledger was lost for
+    # good (second audit B14).
+    replace_directory(dest_dir, build)
     return True
 
 
@@ -563,7 +580,9 @@ def run_design_programmatic(
         )
     from src.pipelines.outer_loop import eig as eig_mod
 
-    models_dir = exp_dir / "cognitive_models"
+    # The set this experiment started from: once its model loop has started,
+    # cognitive_models/ may already hold the loop's export.
+    models_dir = experiment_input_models_dir(exp_dir)
     if exp_num <= 1 or prev_exp_dir is None:
         stimuli = eig_mod.design_exhaustive(
             models_dir,
@@ -593,10 +612,7 @@ def run_design_programmatic(
         basis = f"posterior after experiments 1..{exp_num - 1} (model weights + parameter posteriors)"
 
     design_dir = exp_dir / "design"
-    design_dir.mkdir(parents=True, exist_ok=True)
-    (design_dir / "stimuli.json").write_text(
-        json.dumps(stimuli, indent=2), encoding="utf-8"
-    )
+    write_text_atomically(design_dir / "stimuli.json", json.dumps(stimuli, indent=2))
     print(
         f"  [design] Exhaustive: enumerated all H/T pairs over lengths {tuple(lengths)}, "
         f"selected {len(stimuli)} jointly-informative pairs ({basis}) -> "

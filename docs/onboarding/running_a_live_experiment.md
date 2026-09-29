@@ -587,11 +587,21 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
   $OUTER_LIVE_SLURM_DIR/run_live.sbatch
 ```
 
-- I did not check how the model stage treats the half-finished `model_loop/`
-  left by the crashed attempt. The conservative choice is to move it aside
-  first: `mv …/experiment1/model_loop …/experiment1/model_loop.failed`.
-  `cognitive_models/` is only rewritten at the very end of the stage, so a
-  crash leaves it as it was.
+- Since 28 September 2026 the model stage restarts itself cleanly. Its first
+  attempt records the model set it started from
+  (`experiment1/cognitive_models_input/`) and the run's agent notes
+  (`experiment1/agent_notes_at_start/`); a rerun puts both back, discards the
+  notes the crashed attempt wrote, empties `model_loop/` and redoes the stage.
+  The stage counts as done only when `model_loop/export_complete.json` exists
+  and agrees with `cognitive_models/` and `model_registry.yaml`.
+- A stage that crashed on older code has a `model_loop/` but no
+  `cognitive_models_input/`, and the rerun refuses to guess whether
+  `cognitive_models/` was already overwritten. Before the export (the very end
+  of the stage) it was not: move the old loop aside,
+  `mv …/experiment1/model_loop …/experiment1/model_loop.failed`, and rerun. If
+  the crash came after the export, put back the set the experiment started
+  from first (experiment 1: delete `cognitive_models/` to re-seed; later:
+  delete it to carry the previous experiment's set again).
 - `PROLIFIC_MODE=none` is safe here. It does not need the live confirmation
   flag, and live collection still works: `--mode live` reads the study id from
   `experiment/config.json`.
@@ -601,6 +611,12 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
   alone with `EXPERIMENT=2` (all stages, new study), or the rest of the
   sequence with `EXPERIMENTS=2-<last>`. Relaunching the whole range stops at
   experiment 1 with `LiveStudyAlreadyRecorded` (§ 0 C).
+- The next experiment starts only if the previous one's model stage is
+  complete (its `export_complete.json`). An experiment whose model stage
+  finished on code before 28 September 2026 has none; after checking its
+  `cognitive_models/`, record it with
+  `python -c "from src.pipelines.outer_loop.model_loop_runner import finish_model_loop_stage; finish_model_loop_stage('<…>/experiment1')"`
+  (it rewrites the uniform registry and the record, then validates).
 - `N_PARTICIPANTS` is the number recruited, the design's N and the waiting
   target (§ 0 F), so keep it equal to the config's `participants`. A run copy
   rendered before 28 September 2026 still has `total_available_places` in its

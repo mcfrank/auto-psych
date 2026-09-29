@@ -8,6 +8,7 @@ the raw columns below.
 from __future__ import annotations
 
 import csv
+import os
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
@@ -48,8 +49,12 @@ def write_responses_csv(
     out_path = Path(out_path)
     out_path.parent.mkdir(parents=True, exist_ok=True)
     fieldnames = list(rows[0].keys())
-    with out_path.open("w", encoding="utf-8", newline="") as f:
+    # Through a temporary file: a truncated CSV with a header and one row
+    # passes the collect validator, so a resume would skip the stage.
+    partial = out_path.with_name(f".{out_path.name}.partial")
+    with partial.open("w", encoding="utf-8", newline="") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(rows)
+    os.replace(partial, out_path)
     return out_path
