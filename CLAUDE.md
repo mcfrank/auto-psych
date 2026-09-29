@@ -165,7 +165,10 @@ target — see **Slot roles**) → admit sequentially.
 - **Pruning** (`_prune_losers` in `model_zoo.py`) runs **once, at the end of each
   experiment**: non-protected models with a trusted fit (reliable PSIS-LOO and
   converged) that are statistically distinguishable from the best
-  (`elpd_diff > dse_multiplier·dse`) move to `models/pruned/`. Then
+  (`elpd_diff > dse_multiplier·dse_clustered`, the stimulus-clustered SE of
+  `src/models/clustered_se.py`: the trial-level `dse` treats the correlated
+  responses to one pair as independent and is ~2x too small) move to
+  `models/pruned/`. Then
   `_cap_live_set` keeps at most `MAX_LIVE_MODELS` (8) live models: untrusted
   fits retire first, then the lowest by ELPD-LOO; seeds never. There is no
   stacking-weight floor (stacking weights are ensemble coefficients, not

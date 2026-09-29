@@ -66,7 +66,7 @@ def _patch_scoring(monkeypatch):
                 "rank": rank,
                 "elpd_loo": -10.0 - (30.0 if far else 1.0 * rank),
                 "elpd_diff": 0.0 if n == "model_a" else (30.0 if far else 1.0),
-                "dse": 0.0 if n == "model_a" else 5.0,
+                "dse": 0.0 if n == "model_a" else 5.0, "dse_clustered": 0.0 if n == "model_a" else 5.0,
                 "weight": 1.0 if n == "model_a" else 0.0,
                 "loo_unreliable": False,
             }

@@ -71,6 +71,12 @@ def _fake_idata(
     return az.InferenceData(posterior=post_ds, log_likelihood=ll_ds)
 
 
+# 25 trials over 5 stimuli: compare_table clusters the ELPD difference by stimulus.
+_RESPONSES = "sequence_a,sequence_b,chose_left,x\n" + "".join(
+    f"{'HT' * (1 + i % 5)},{'HH' * (1 + i % 5)},1,0\n" for i in range(25)
+)
+
+
 def _patch_fits(monkeypatch, idata_by_name):
     """Make ``fit_models_cached`` hand back real FittedModel objects (no MCMC)."""
     from src.models import pymc_inference as pi
@@ -98,7 +104,7 @@ def _patch_fits(monkeypatch, idata_by_name):
 def test_compare_table_reports_elpd_diff_and_dse(tmp_path, monkeypatch):
     models_dir = _seed_models(tmp_path, ["good", "bad"])
     responses = tmp_path / "responses.csv"
-    responses.write_text("chose_left,x\n" + "1,0\n" * 25, encoding="utf-8")
+    responses.write_text(_RESPONSES, encoding="utf-8")
 
     # "good" assigns higher per-obs log-likelihood than "bad".
     idata = {
@@ -131,7 +137,7 @@ def test_compare_table_does_not_flag_exact_loo_points_as_unreliable(
     genuine winners from export and zeroing their design prior."""
     models_dir = _seed_models(tmp_path, ["saturating", "smooth"])
     responses = tmp_path / "responses.csv"
-    responses.write_text("chose_left,x\n" + "1,0\n" * 25, encoding="utf-8")
+    responses.write_text(_RESPONSES, encoding="utf-8")
 
     idata = {
         # 5 of 25 trials saturated: arviz's own loo(...).warning is True here.
@@ -158,7 +164,7 @@ def test_compare_table_flags_genuinely_heavy_tailed_loo(tmp_path, monkeypatch):
     row must say so, with the proportion recorded for audit."""
     models_dir = _seed_models(tmp_path, ["heavy", "smooth"])
     responses = tmp_path / "responses.csv"
-    responses.write_text("chose_left,x\n" + "1,0\n" * 25, encoding="utf-8")
+    responses.write_text(_RESPONSES, encoding="utf-8")
 
     idata = {
         # 5 of 25 trials (20 %) with Pareto-tailed weights, far above tolerance.

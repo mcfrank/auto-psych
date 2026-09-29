@@ -39,7 +39,7 @@ def _patch_loop_internals(monkeypatch):
                 "rank": i,
                 "elpd_loo": -10.0 - i,
                 "elpd_diff": 0.0 if i == 0 else 1.0,
-                "dse": 0.0 if i == 0 else 5.0,
+                "dse": 0.0 if i == 0 else 5.0, "dse_clustered": 0.0 if i == 0 else 5.0,
                 "weight": 1.0 if i == 0 else 0.0,
                 "loo_unreliable": False,
             }

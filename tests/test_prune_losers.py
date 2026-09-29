@@ -59,6 +59,10 @@ def _row(rank, elpd_diff, dse, weight):
         "elpd_loo": -10.0 - elpd_diff,
         "elpd_diff": elpd_diff,
         "dse": dse,
+        # These tests exercise the pruning rule itself; the clustered SE (what
+        # pruning uses) is set equal to dse. tests/test_clustered_se.py covers
+        # the difference between the two.
+        "dse_clustered": dse,
         "weight": weight,
         "loo_unreliable": False,
     }

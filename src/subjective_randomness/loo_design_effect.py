@@ -47,6 +47,8 @@ Nothing here changes pruning. The recommendation is the memo's, for the user.
 
 from __future__ import annotations
 
+from src.models.clustered_se import cluster_dse  # noqa: F401  (re-exported; one formula)
+
 import csv
 import json
 import re
@@ -156,14 +158,6 @@ def elpd_difference(best_i: np.ndarray, other_i: np.ndarray) -> tuple:
     ELPDs, exactly as ``az.compare`` computes them (``sqrt(n · var)``, ddof 0)."""
     diff = np.asarray(best_i, dtype="float64") - np.asarray(other_i, dtype="float64")
     return float(diff.sum()), float(np.sqrt(diff.shape[0] * np.var(diff)))
-
-
-def cluster_dse(best_i: np.ndarray, other_i: np.ndarray, groups: np.ndarray) -> float:
-    """The standard error of the same ELPD difference with each group (stimulus)
-    as one observation: ``sqrt(G · var(sum_g diff_i))``."""
-    diff = np.asarray(best_i, dtype="float64") - np.asarray(other_i, dtype="float64")
-    sums = np.bincount(np.asarray(groups), weights=diff)
-    return float(np.sqrt(sums.shape[0] * np.var(sums)))
 
 
 def comparison_models(step: Mapping[str, Any]) -> List[str]:

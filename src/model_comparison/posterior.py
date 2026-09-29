@@ -35,6 +35,8 @@ Output JSON:
 from __future__ import annotations
 
 import csv
+
+import numpy as np
 import json
 import math
 import os
@@ -135,6 +137,11 @@ def compare_table(
       only meaningfully distinguishable when ``elpd_diff`` is large relative to
       ``dse`` (a rough rule of thumb is ``elpd_diff > 2 * dse``).
     - ``weight``: Akaike-style stacking weight from ``az.compare``.
+    - ``dse_clustered``: the standard error of ``elpd_diff`` with each
+      stimulus (unordered pair) as one observation
+      (``src.models.clustered_se``); 0 for the best. Pruning uses it: the
+      trial-level ``dse`` treats the 40 correlated responses to a pair as
+      independent and is about half as large.
     - ``loo_unreliable``: True when this model's PSIS-LOO estimate is
       untrustworthy — more than a tolerated proportion of its trials have a
       high Pareto k, trials whose LOO term is exact excluded (see
@@ -155,6 +162,7 @@ def compare_table(
     Returns a plain dict keyed by model name (JSON-serialisable).
     """
     import arviz as az  # type: ignore
+    from src.models.clustered_se import cluster_dse, stimulus_clusters  # type: ignore
     from src.models.loo_reliability import describe_unreliable  # type: ignore
     from src.models.model_manifest import read_loadable_model_names  # type: ignore
     from src.models.pymc_inference import convergence_problems_of, fit_models_cached  # type: ignore
@@ -176,6 +184,10 @@ def compare_table(
     diagnostics = {name: fits[name].loo_diagnostics() for name in model_names}
 
     cmp = az.compare({name: d.loo for name, d in diagnostics.items()}, ic="loo")
+    best = cmp.index[0]
+    with responses_path.open(encoding="utf-8", newline="") as f:
+        clusters = stimulus_clusters(list(csv.DictReader(f)))
+    pointwise = {name: np.asarray(d.loo.loo_i) for name, d in diagnostics.items()}
 
     out: Dict[str, Dict[str, float]] = {}
     for rank, (name, row) in enumerate(cmp.iterrows()):
@@ -185,6 +197,10 @@ def compare_table(
             "elpd_loo": float(row["elpd_loo"]),
             "elpd_diff": float(row["elpd_diff"]),
             "dse": float(row["dse"]),
+            "dse_clustered": (
+                0.0 if name == best
+                else cluster_dse(pointwise[best], pointwise[name], clusters)
+            ),
             "weight": float(row["weight"]),
             "loo_unreliable": diag.unreliable,
             "n_bad_k": diag.n_bad_k,
