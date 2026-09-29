@@ -149,7 +149,10 @@ in the runbook).
 
 - **Live mode.** The pipeline checks Prolific every 30 seconds until the target
   number of participants have finished, **or 2 hours have passed**. It then
-  downloads all submissions from `/results` into `data/responses.csv`.
+  downloads all submissions from `/results`. `data/responses.csv` gets the
+  five raw columns only; the full download, Prolific IDs included, is kept in
+  `raw_collected/experiment<N>_responses.csv` beside the experiment
+  directories, which no agent is given.
 - **Simulated modes.** Responses are simulated from the current models' priors
   (`--mode simulated_participants`, the default), or produced by asking a
   language model to act as each participant
@@ -321,7 +324,8 @@ For each experiment, under `<output dir>/<project>/experimentN/`:
 | `model_loop/best_model.py` | the winning model's code |
 | `model_loop/iter_<i>/` | every proposal (code, hypothesis, agent transcript) and every critique |
 | `design/stimuli.json` | the stimuli and their information gain |
-| `data/responses.csv` | the collected responses (**contains Prolific IDs in live runs**; see the privacy rules in the runbook) |
+| `data/responses.csv` | the collected responses, five raw columns (runs collected before 28 September 2026 also contain Prolific IDs) |
+| `../raw_collected/experiment<N>_responses.csv` | everything collection returned (**contains Prolific IDs in live runs**; see the privacy rules in the runbook) |
 | `token_usage_summary.json` | language-model token use and cost for the experiment |
 
 The answer to "what did the loop discover?" is the best model of the last

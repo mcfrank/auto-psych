@@ -294,7 +294,12 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   the five `RAW_RESPONSE_COLUMNS` (`sequence_a`, `sequence_b`, `participant_id`,
   `trial_index`, `chose_left`, defined in `src/pipelines/outer_loop/columns.py`).
   Every model computes its own features via a `compute_features(sequence_a,
-  sequence_b)` or `prepare_observed(rows)` hook. `pymc_model_families/` (and
+  sequence_b)` or `prepare_observed(rows)` hook. Collection keeps only these
+  in `data/responses.csv` (`raw_response_rows`) and the full collected rows
+  (`/results` adds `participant_id_str`, the Prolific ID) in
+  `<project>/raw_collected/`, beside the experiment dirs, which no agent is
+  given (`raw_collected_responses_path`); pooling keeps only them too.
+  `pymc_model_families/` (and
   the live pool `seed_models/`) all carry `compute_features` hooks. The verifier
   (`scripts/subjective_randomness/slurm/verify_holdout_run.sh`) checks that
   every agent-facing CSV in a finished run carries only raw columns. The

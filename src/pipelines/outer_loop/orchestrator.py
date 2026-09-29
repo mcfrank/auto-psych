@@ -29,7 +29,11 @@ from src.models.model_manifest import (
     read_manifest_names,
 )
 from src.models.project.ground_truth import get_ground_truth_models
-from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS, write_responses_csv
+from src.pipelines.outer_loop.columns import (
+    RAW_RESPONSE_COLUMNS,
+    raw_response_rows,
+    write_responses_csv,
+)
 from src.pipelines.outer_loop.model_loop_runner import agent_notes_dir
 
 from src.runtime.coding_agent import run_coding_agent
@@ -66,6 +70,18 @@ def outer_data_dir() -> Path:
 def experiment_dir(project_id: str, exp_num: int) -> Path:
     """Return the output directory for a numbered experiment within a project."""
     return outer_data_dir() / project_id / f"experiment{exp_num}"
+
+
+def raw_collected_responses_path(exp_dir: Path) -> Path:
+    """The researchers' copy of an experiment's collected responses, with every
+    column collection returned (``/results`` carries the Prolific ID as
+    ``participant_id_str``).
+
+    It sits beside the experiment directories, which no agent is given:
+    ``3_implement`` gets ``experiment<N>/``, the loop agents ``model_loop/``
+    and the model zoo. ``data/responses.csv`` keeps only the raw columns.
+    """
+    return Path(exp_dir).parent / "raw_collected" / f"{Path(exp_dir).name}_responses.csv"
 
 
 def project_seed_models_dir(project_id: str) -> Path:
@@ -671,7 +687,8 @@ def run_collect_programmatic(
 
     csv_path = data_dir / "responses.csv"
     if rows:
-        # Use the UNION of keys across all rows (not just rows[0]), preserving
+        # The researchers' copy keeps every column collection returned. Use the
+        # UNION of keys across all rows (not just rows[0]), preserving
         # first-seen order. Live/Firebase rows can be heterogeneous (a row missing
         # or carrying an extra column), and DictWriter raises ValueError on an
         # unexpected key; restval="" fills columns a row lacks.
@@ -682,15 +699,18 @@ def run_collect_programmatic(
                 if key not in seen:
                     seen.add(key)
                     fieldnames.append(key)
-        with open(csv_path, "w", newline="", encoding="utf-8") as f:
+        raw_collected_path = raw_collected_responses_path(exp_dir)
+        raw_collected_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(raw_collected_path, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=fieldnames, restval="")
             w.writeheader()
             w.writerows(rows)
+        print(f"  [collect] Kept every collected column in {raw_collected_path}", flush=True)
+        # Agents read data/responses.csv (and the loop's pooled copy of it):
+        # the raw columns only.
+        write_responses_csv(raw_response_rows(rows), csv_path)
     else:
-        csv_path.write_text(
-            "participant_id,trial_index,sequence_a,sequence_b,chose_left,chose_right,model\n",
-            encoding="utf-8",
-        )
+        csv_path.write_text(",".join(RAW_RESPONSE_COLUMNS) + "\n", encoding="utf-8")
 
     print(f"  [collect] Wrote {len(rows)} rows to {csv_path}", flush=True)
     return csv_path

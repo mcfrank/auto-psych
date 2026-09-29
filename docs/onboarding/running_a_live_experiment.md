@@ -18,34 +18,29 @@ label you choose.
 
 ### Problems that stop a run
 
-**A. The model stage crashes on collected data.** Confirmed by reproducing the
-failing step in isolation.
+**A. Fixed on 28 September 2026: the model stage crashed on collected data.**
 
 - The `/results` endpoint (`functions/index.js`) returns eight columns:
   `participant_id, participant_id_str, trial_index, sequence_a, sequence_b,
-  chose_left, chose_right, model`. The simulated collectors add `chose_right`
-  and `model` too.
-- `4_collect` writes these to `data/responses.csv` unchanged.
-  `_pooled_response_rows` then copies them into `model_loop/responses.csv`
-  (`src/pipelines/outer_loop/model_loop_runner.py`).
-- The candidate brief refuses any column beyond the five raw ones
-  (`_write_candidate_context` in `src/pipelines/inner_loop/candidate_agent.py`),
-  with the error:
-
-  ```
-  ValueError: .../model_loop/responses.csv has column(s) ['participant_id_str', 'chose_right', 'model'] beyond the raw ones [...]
-  ```
-
-- So `5_model_loop` stops at the first round of new models. In a live run that
-  is **after the participants have been paid**. The data themselves are safe
-  on disk and can be re-modelled once this is fixed (see § 10).
-- **Privacy side effect.** `participant_id_str` is the participant's Prolific ID.
-  As things stand, it is copied into the file the critique agent is pointed to,
-  and that agent sends what it reads to an outside language-model provider.
-  The fix must *drop* the extra columns (keep only the five raw ones), not
-  merely tolerate them.
-- The holdout simulations are not affected: they strip the extra columns
-  themselves (`src/subjective_randomness/holdout_data.py`).
+  chose_left, chose_right, model`; `participant_id_str` is the Prolific ID.
+  `4_collect` used to write them all to `data/responses.csv`, pooling copied
+  them into `model_loop/responses.csv`, and the first round of new models
+  stopped with `ValueError: … beyond the raw ones` — after the participants
+  were paid. The critique agent, pointed at the same file, could read the
+  Prolific IDs and send them to an outside language-model provider.
+- Now `4_collect` writes only the five raw columns (`sequence_a, sequence_b,
+  participant_id, trial_index, chose_left`) to `data/responses.csv`. Every
+  collected column is kept for you in
+  `$AUTO_PSYCH_OUTPUT_DIR/<project>/raw_collected/experiment<N>_responses.csv`,
+  beside the experiment directories. No agent is given that directory, and the
+  collector in § 11 does not copy it.
+- Pooling also keeps only the raw columns, so a run collected before the fix
+  can be modelled again (§ 10).
+- `participant_id` is `/results`' anonymous index (0, 1, … in the order the
+  submissions are stored), not a Prolific ID. It starts again at 0 in every
+  experiment, so pooled data from several experiments give different people
+  the same number (not changed; it matters only to a model with
+  per-participant effects).
 
 **B. The live launchers do not load `bubblewrap`.** Found by reading the code;
 not run.
@@ -273,7 +268,7 @@ Check `metadata.prolific_payload`: `reward` (cents), `total_available_places`,
 
 ### R2. Simulated end-to-end run: no Firebase, no Prolific, costs language-model tokens only
 
-**This is the rehearsal that would have caught problem A.** It runs the full
+**This is the rehearsal that would have caught problem A** (§ 0). It runs the full
 loop with simulated participants, through the same job script as a live run.
 There is no ready-made launcher, so make a simulated copy of the live job
 script and a run copy of the repository, the same way `run_pilot.sh` does:
@@ -486,7 +481,8 @@ port forward, not on a login node.
 existing experiment. The deploy is tied to `3_implement`, so leaving that out
 never redeploys or recruits.
 
-Example: modelling experiment 1 of the pilot `pilot4` again after problem A is fixed:
+Example: modelling experiment 1 of the pilot `pilot4` again, whose model stage
+crashed on problem A (§ 0, fixed on 28 September 2026):
 
 ```bash
 export REPO=$HOME/auto-psych OUTER_LIVE_SLURM_DIR=$HOME/auto-psych/scripts/outer_loop_live
@@ -523,7 +519,8 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
 Prolific ID** on the way:
 
 - it drops the `participant_id_str` column (and other ID-like columns) from
-  every CSV;
+  every CSV (runs collected since 28 September 2026 no longer have it in
+  `data/responses.csv`; it is in `raw_collected/`, which is not copied);
 - it redacts every 24-character hexadecimal token (Prolific's ID format) in
   every text file: logs, manifests, transcripts;
 - it re-scans the copy and **fails** if any ID survived.
@@ -563,7 +560,8 @@ A Prolific ID (24 hexadecimal characters) identifies a person on Prolific. Treat
 it as identifying data:
 
 - **Never commit, publish, paste or send** a file that contains one:
-  `data/responses.csv`, `experiment/config.json`, `deployment_manifest.json`,
+  `raw_collected/*.csv`, `data/responses.csv` of runs collected before
+  28 September 2026, `experiment/config.json`, `deployment_manifest.json`,
   logs, the dashboard. That includes sending it to a chatbot or coding agent.
   Share and commit only the output of the collector in § 11.
 - The live dashboard shows IDs. Keep it on `127.0.0.1`; `--host 0.0.0.0` prints
@@ -571,7 +569,9 @@ it as identifying data:
 - `python -m src.viewer.freeze` (the public results snapshot) copies response
   previews and agent transcripts verbatim. Freeze only scrubbed runs, and read
   what it lists before deploying it.
-- Until problem A is fixed, the IDs also sit in `model_loop/responses.csv`,
-  which the agents read. See § 0.
+- The collected IDs are kept only in `raw_collected/`, beside the experiment
+  directories, where no agent is given access (§ 0 A). In runs collected
+  before 28 September 2026 they also sit in `data/responses.csv` and
+  `model_loop/responses.csv`, which agents read.
 - Sherlock is approved for Low and Moderate Risk data only. If you are unsure
   how your IRB classifies these data, ask before collecting.

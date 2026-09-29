@@ -69,7 +69,8 @@ first, then debug. Never simply relaunch; that deploys and pays again (see
 
 | message / symptom | cause | what to do |
 |---|---|---|
-| `ValueError: …/model_loop/responses.csv has column(s) ['participant_id_str', 'chose_right', 'model'] beyond the raw ones …` | known bug (runbook § 0 A) | needs a code fix (keep only the five raw columns when pooling); then recover with `RESUME_AGENTS=5_model_loop` |
+| `ValueError: …/model_loop/responses.csv has column(s) ['participant_id_str', 'chose_right', 'model'] beyond the raw ones …` | code from before 28 September 2026 (runbook § 0 A, fixed) | copy the current code into the run copy; pooling now keeps only the five raw columns. Recover with `RESUME_AGENTS=5_model_loop` (§ 10) |
+| `response row … lacks raw column(s) [...]` | a collected row, or a `data/responses.csv`, is missing one of the five raw columns | inspect the collected file in `raw_collected/`; the collector or `/results` changed |
 | `No response rows found for inner loop under …` | no `data/responses.csv` in any experiment so far | collection did not finish |
 | a proposal rejected with a reason (in `attempted_hypotheses.jsonl` and the round's directory) | expected: failed code check, no convergence, too slow (15 min), or near-duplicate | nothing, unless *every* proposal is rejected every round |
 | `history.json` shows `"no_critique"` for a round | critique agent wrote no usable statistic twice, or none produced a p-value | the round still ran; look at `iter_<i>/critique/` |

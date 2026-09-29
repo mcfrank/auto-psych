@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import csv
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Dict, Iterable, List, Mapping, Sequence
 
 RAW_RESPONSE_COLUMNS = (
     "sequence_a",
@@ -18,6 +18,25 @@ RAW_RESPONSE_COLUMNS = (
     "trial_index",
     "chose_left",
 )
+
+
+def raw_response_rows(rows: Iterable[Mapping[str, Any]]) -> List[Dict[str, Any]]:
+    """Copy ``rows`` keeping only :data:`RAW_RESPONSE_COLUMNS`, in that order.
+
+    Everything agents can read carries only these. Collection returns more:
+    ``/results`` adds ``participant_id_str`` (the Prolific ID), ``chose_right``
+    and ``model``, and the simulated collectors ``chose_right`` and ``model``
+    (the generating model). Fails loudly if a row lacks a raw column.
+    """
+    raw_rows = []
+    for index, row in enumerate(rows):
+        missing = [column for column in RAW_RESPONSE_COLUMNS if column not in row]
+        if missing:
+            raise ValueError(
+                f"response row {index} lacks raw column(s) {missing}; got {sorted(row)}"
+            )
+        raw_rows.append({column: row[column] for column in RAW_RESPONSE_COLUMNS})
+    return raw_rows
 
 
 def write_responses_csv(
