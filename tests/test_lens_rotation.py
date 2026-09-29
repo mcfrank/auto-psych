@@ -54,7 +54,7 @@ def test_lens_schedule_covers_the_battery_across_experiments():
     assert max(fired.values()) - min(fired.values()) <= 1
     assert _lens_offset(2, max_iterations=2, candidate_count=3) == 6
     assert _lens_index(6, 0, 3, 0, n) == 6
-    assert _lens_index(6, 0, 3, 1, n) == 0
+    assert _lens_index(6, 0, 3, 1, n) == 7 % n
 
 
 def test_empty_lens_battery_raises():
@@ -157,8 +157,8 @@ def test_brief_lens_matches_ledger_lens(tmp_path, monkeypatch):
         if r["outcome"] == "admitted"
     }
     assert contexts["idea_0_0"] == "experiment2 round 0 candidate 0 lens 6"
-    assert contexts["idea_0_1"] == "experiment2 round 0 candidate 1 lens 0"
-    assert contexts["idea_1_2"] == "experiment2 round 1 candidate 2 lens 4"
+    assert contexts["idea_0_1"] == f"experiment2 round 0 candidate 1 lens {7 % n}"
+    assert contexts["idea_1_2"] == f"experiment2 round 1 candidate 2 lens {11 % n}"
 
 
 # ── (c) Outer loop threads lens_offset from experiment number ──────────
