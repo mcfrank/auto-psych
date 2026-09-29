@@ -149,8 +149,8 @@ uv run python -m src.pipelines.outer_loop.run --project subjective_randomness --
   `/results` Cloud Function and refuses to fall back to synthetic data if no
   deployment is configured. Live deploys and collection both need
   `AUTO_PSYCH_RESULTS_TOKEN` in the environment (the shared secret for
-  `/results` and `/register_session`; see `docs/deployment_handoff.md`). The
-  deploy puts the page up and registers its session before it creates the
+  `/results`; see `docs/deployment_handoff.md`). The
+  deploy puts the page up and checks the functions hold the token before it creates the
   Prolific draft (and, live only, publishes it), so a failed deploy leaves no
   study; it records the commit the code came from — from git, or from the
   `code_provenance.json` the live launchers write into their run copies — and

@@ -11,8 +11,8 @@
 2. **Deploy first, then the Prolific draft.** The draft used to be created
    and recorded before the Firebase deploy, so a failed deploy left a
    recorded live study that the "never publish a second study" guard then
-   refused to relaunch past. Now the page is deployed and its session
-   registered first; only then is the draft created, recorded at once, and
+   refused to relaunch past. Now the page and functions are deployed and
+   verified live first; only then is the draft created, recorded at once, and
    (live mode only) published. A failed deploy leaves no study on record.
 3. **``prolific_mode: none`` through the launchers** deploys and stops before
    collection (there is no study to collect from), as test mode does.
@@ -158,7 +158,7 @@ def mocked_services(tmp_path, monkeypatch):
         local, "run_firebase_deploy", lambda *a, **k: calls.append("firebase deploy")
     )
     monkeypatch.setattr(
-        local, "register_collection_session", lambda m: calls.append("register session")
+        local, "verify_functions_live", lambda m: calls.append("verify functions")
     )
 
     def create_draft(project_id, manifest, n_participants, mode):
@@ -222,7 +222,7 @@ def test_a_live_deploy_puts_the_page_up_before_creating_and_publishing_the_study
     _firebase_deploy(exp_dir, repo, "live")
 
     assert calls == [
-        "check eligibility", "firebase deploy", "register session", "create draft", "publish",
+        "check eligibility", "firebase deploy", "verify functions", "create draft", "publish",
     ]
     manifest = json.loads(manifest_path(exp_dir).read_text())
     assert manifest["prolific_study_id"] == "draft-1"
@@ -240,7 +240,7 @@ def test_a_test_deploy_creates_an_unpublished_draft_after_the_page(tmp_path, moc
     calls, repo = mocked_services
     exp_dir = _experiment(tmp_path)
     _firebase_deploy(exp_dir, repo, "test")
-    assert calls == ["firebase deploy", "register session", "create draft"]
+    assert calls == ["firebase deploy", "verify functions", "create draft"]
 
 
 def test_a_failed_firebase_deploy_leaves_no_study_and_a_plain_relaunch_works(
@@ -264,7 +264,7 @@ def test_a_failed_firebase_deploy_leaves_no_study_and_a_plain_relaunch_works(
         local, "run_firebase_deploy", lambda *a, **k: calls.append("firebase deploy")
     )
     _firebase_deploy(exp_dir, repo, "live")
-    assert calls[-3:] == ["register session", "create draft", "publish"]
+    assert calls[-3:] == ["verify functions", "create draft", "publish"]
 
 
 def test_live_eligibility_is_checked_before_anything_is_deployed(

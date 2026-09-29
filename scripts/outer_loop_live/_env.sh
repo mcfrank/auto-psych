@@ -38,6 +38,28 @@ command -v bwrap >/dev/null || { echo "FATAL: bwrap not on PATH after ml load sy
 # uv drives the Python env.
 ml load system uv 2>/dev/null || ml load uv 2>/dev/null || true
 
+# node-wrapper: the module's node finds gcc's libstdc++ only through
+# LD_LIBRARY_PATH, and `firebase deploy` reads functions/index.js in a child
+# node started with only HOME, PATH and NODE_ENV. That child died on el7's
+# /lib64/libstdc++ and firebase-tools still exited 0, so no functions deploy
+# from Sherlock replaced anything. The wrapper, first on PATH (which the child
+# keeps), restores the modules' LD_LIBRARY_PATH. After every module load, so
+# no module's bin shadows it; written to a temporary name and renamed, since
+# concurrent jobs share $WORK_ROOT/bin.
+if command -v node >/dev/null; then
+  mkdir -p "$WORK_ROOT/bin"
+  _node_real="$(PATH="${PATH//$WORK_ROOT\/bin:/}" command -v node)"
+  _node_tmp="$(mktemp "$WORK_ROOT/bin/.node.XXXXXX")"
+  printf '#!/bin/bash\n# node-wrapper written by _env.sh\nexport LD_LIBRARY_PATH=%q"${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"\nexec %q "$@"\n' \
+    "${LD_LIBRARY_PATH:-}" "$_node_real" > "$_node_tmp"
+  chmod 755 "$_node_tmp" && mv -f "$_node_tmp" "$WORK_ROOT/bin/node"
+  unset _node_real _node_tmp
+  # Always first: a second source reloads the modules in front of it.
+  _path=":$PATH:"; _path="${_path//:$WORK_ROOT\/bin:/:}"; _path="${_path#:}"
+  export PATH="$WORK_ROOT/bin:${_path%:}"
+  unset _path
+fi
+
 # --- python version --------------------------------------------------------
 # Pin a STABLE Python with full el7 (glibc 2.17 / manylinux2014) wheel coverage.
 # uv otherwise grabs the newest, for which few binary packages ship el7 wheels

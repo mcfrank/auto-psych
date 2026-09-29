@@ -1,19 +1,17 @@
 /**
  * Firebase Cloud Functions for auto-psych deployment V1.
  *
- * POST /register_session (admin token) marks a collection session as active.
- * POST /submit stores participant trial data under a REGISTERED session.
+ * POST /submit stores participant trial data under a collection session.
  * GET /results (admin token) exports collection-session responses as CSV.
  *
  * Auth model: the deployment pipeline holds a shared secret (RESULTS_TOKEN,
- * provisioned via functions/.env at deploy time). /results and
- * /register_session require it in the `x-results-token` header — without it,
- * anyone who loads the public experiment page (which necessarily carries the
- * collection_session_id) could read every participant's data. /submit stays
- * public (participants' browsers call it) but only accepts sessions the
- * pipeline registered, so drive-by posts cannot fabricate data under made-up
- * sessions; the legacy project_id/run_id write path is gone for the same
- * reason.
+ * provisioned via functions/.env at deploy time). /results requires it in the
+ * `x-results-token` header — without it, anyone who loads the public
+ * experiment page (which necessarily carries the collection_session_id) could
+ * read every participant's data. /submit stays public (participants' browsers
+ * call it). It used to accept only sessions registered through a third,
+ * token-guarded function, but the page carries its session id, so that check
+ * stopped only posts under made-up sessions, which /results never reads.
  */
 const crypto = require("crypto");
 const functions = require("firebase-functions/v1");
@@ -122,47 +120,6 @@ function responsesToCsv(docs) {
   return lines.join("\n");
 }
 
-exports.register_session = https.onRequest(async (req, res) => {
-  if (req.method !== "POST") {
-    res.status(405).send("Method Not Allowed");
-    return;
-  }
-  if (!requireAdminToken(req, res)) {
-    return;
-  }
-
-  let body;
-  try {
-    body = parseBody(req);
-  } catch {
-    res.status(400).send("Invalid JSON");
-    return;
-  }
-  const sessionId = String(body.collection_session_id || "");
-  if (!sessionId) {
-    res.status(400).send("Missing collection_session_id");
-    return;
-  }
-
-  try {
-    await db.collection("collection_sessions").doc(sessionId).set(
-      {
-        collection_session_id: sessionId,
-        project_id: body.project_id || null,
-        run_id: body.run_id || null,
-        deployment_id: body.deployment_id || null,
-        revoked: false,
-        registered_at: admin.firestore.FieldValue.serverTimestamp(),
-      },
-      { merge: true },
-    );
-    res.status(200).send("OK");
-  } catch (err) {
-    console.error(err);
-    res.status(500).send("Write failed");
-  }
-});
-
 exports.submit = https.onRequest(async (req, res) => {
   if (req.method === "OPTIONS") {
     res.set("Access-Control-Allow-Origin", "*");
@@ -217,14 +174,6 @@ exports.submit = https.onRequest(async (req, res) => {
   };
 
   try {
-    // Only sessions the deployment pipeline registered accept data — a
-    // drive-by POST with a fabricated session id must not create rows.
-    const session = await sessionRef.get();
-    if (!session.exists || session.get("revoked") === true) {
-      res.status(403).send("Unknown or revoked collection session");
-      return;
-    }
-
     await sessionRef.collection("responses").doc(participantId).set(record, { merge: true });
     await db.collection("participants").doc(participantId).set(
       {
