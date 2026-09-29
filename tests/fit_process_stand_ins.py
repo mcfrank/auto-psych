@@ -65,3 +65,26 @@ def import_arviz_and_name_the_cache_dir() -> str:
     import arviz  # noqa: F401
 
     return os.environ["XDG_CACHE_HOME"]
+
+
+def take_the_compile_lock_and_write_the_fit(name, models_dir, responses_path, settings, cache_dir, sender):
+    """Take PyTensor's compile lock as a compile does (2 s patience), note the
+    compile directory, then persist a stand-in fit and report success."""
+    from pytensor import config
+    from pytensor.compile.compilelock import lock_ctx
+
+    with lock_ctx(timeout=2):
+        (Path(cache_dir) / f"{name}.compiledir").write_text(str(config.compiledir))
+        time.sleep(0.5)
+    write_the_fit(name, models_dir, responses_path, settings, cache_dir, sender)
+
+
+def take_the_compile_lock_and_name_the_compile_dir() -> str:
+    """For a fit-pool worker: take PyTensor's compile lock (2 s patience) and
+    return the compile directory it belongs to."""
+    from pytensor import config
+    from pytensor.compile.compilelock import lock_ctx
+
+    with lock_ctx(timeout=2):
+        time.sleep(0.5)
+    return str(config.compiledir)

@@ -405,7 +405,12 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   gets an `XDG_CACHE_HOME` of its own under a temporary root the parent
   removes (`_fit_process_caches`): arviz writes a once-a-day marker there on
   import through a fixed-name temporary file, and fit processes started
-  together after midnight collided on it (11 of 24 cells, 2026-09-28).
+  together after midnight collided on it (11 of 24 cells, 2026-09-28). Each
+  also compiles in a PyTensor compile directory no other running process uses
+  (`_compile_dirs`: a numbered slot under the harness process's own root,
+  reused by the next fit process), and the job scripts give each job its own
+  `base_compiledir` (`$L_SCRATCH/pytensor/job_$SLURM_JOB_ID`): every process
+  on a node shared one compile lock, and a cell died waiting 120 s for it.
 - `src/model_comparison/{posterior,likelihood}.py` — ELPD-LOO softmax posterior
   (`model_posterior`, documented as overconfident) + `az.compare` PSIS-LOO table.
 - `src/critique/ppc.py` — CriticAL posterior-predictive check: agent-written

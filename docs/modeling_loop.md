@@ -854,6 +854,21 @@ predicted name turns out wrong (two same-named candidates in one wave, the
 first rejected) is fitted at admission. Without a `cache_dir` there is no
 prefit and admission fits one candidate at a time.
 
+**Compile directories.** PyTensor compiles each model's C code under one file
+lock per compile directory and gives up after 120 s. Every fit process (pool
+worker or time-limited child) therefore compiles in a directory no other
+running process uses: a numbered slot under a root of the harness process's own
+(`fit-compiledirs-<host>-<pid>-…` in its `base_compiledir`, removed at exit;
+`_compile_dirs`), held while the process runs and handed to the next fit
+process after it, so compiled code is reused within the cell (a cold compile
+costs about 50 s a fit, a warm one a few). The job scripts put the harness's
+own `base_compiledir` under `$L_SCRATCH/pytensor/job_<SLURM_JOB_ID>`:
+`$L_SCRATCH` is per user and node, and when every cell on a node shared one
+directory a cell died on `Timeout: The file lock '…/compiledir_…/.lock' could
+not be acquired` (2026-09-28). The design's scoring threads do numpy only and
+compile nothing; PyMC's chain processes are forked from their fit process and
+share its slot.
+
 **Caching.** The in-process key is `(name, sha256(model.py), sha256(csv), sampler signature)`
 of the requested settings. The on-disk file is `<cache_dir>/<name>.<fp>.nc`,
 where `fp` is the first 16 hex characters of sha256(model sha ‖ csv sha ‖

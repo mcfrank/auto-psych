@@ -327,7 +327,7 @@ def _thread_executor(monkeypatch):
     from concurrent.futures import ThreadPoolExecutor
 
     monkeypatch.setattr(
-        pi, "_fit_executor", lambda workers, cache_root: ThreadPoolExecutor(max_workers=workers)
+        pi, "_fit_executor", lambda workers, cache_root, compile_dirs: ThreadPoolExecutor(max_workers=workers)
     )
 
 

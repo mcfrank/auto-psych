@@ -49,7 +49,8 @@ def test_time_limited_fit_processes_import_arviz_in_caches_of_their_own(tmp_path
 
 
 def test_fit_pool_workers_import_arviz_in_caches_of_their_own(tmp_path, shared_cache):
-    with pi._fit_process_caches() as cache_root, pi._fit_executor(2, cache_root) as pool:
+    with pi._fit_process_caches() as cache_root, pi._compile_dirs(2) as compile_dirs, \
+            pi._fit_executor(2, cache_root, compile_dirs) as pool:
         futures = [pool.submit(stand_ins.import_arviz_and_name_the_cache_dir) for _ in range(4)]
         cache_dirs = {future.result() for future in futures}
     assert str(shared_cache) not in cache_dirs
