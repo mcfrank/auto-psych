@@ -462,24 +462,49 @@ def _collect_from_firebase(
     for row in csv.DictReader(io.StringIO(body)):
         rows.append(dict(row))
 
-    if rows and "participant_id_str" in rows[0]:
-        allowed = set(participant_ids)
-        filtered = [row for row in rows if row.get("participant_id_str") in allowed]
-        if filtered:
-            participant_index = {
-                participant_id: idx
-                for idx, participant_id in enumerate(participant_ids)
-            }
-            for row in filtered:
-                row["participant_id"] = participant_index.get(
-                    row.get("participant_id_str"), 0
-                )
-            rows = filtered
-            log_status(
-                f"Filtered to {len(rows)} rows from this run's {len(participant_ids)} participants."
-            )
+    rows = _this_runs_rows(rows, participant_ids, url)
     log_status(f"Done. Got {len(rows)} response rows from Firestore.")
     return rows
+
+
+def _this_runs_rows(
+    rows: list[dict[str, Any]], participant_ids: list[str], url: str
+) -> list[dict[str, Any]]:
+    """The ``/results`` rows of this collection's participants, numbered by
+    ``participant_ids`` order.
+
+    ``/results`` answers per session (or project and run), which earlier
+    collections of the same run share. Raises when no row belongs to this
+    collection's participants, or when the rows carry no
+    ``participant_id_str`` to tell: every row used to be kept then, mixing
+    other collections' data into this experiment.
+    """
+    if not rows:
+        return rows
+    if "participant_id_str" not in rows[0]:
+        raise RuntimeError(
+            f"/results ({url}) returned {len(rows)} rows without a participant_id_str "
+            "column, so they cannot be attributed to this collection's participants. "
+            "Refusing to keep rows that may belong to other collections; redeploy "
+            "the results function."
+        )
+    index = {participant_id: idx for idx, participant_id in enumerate(participant_ids)}
+    filtered = [row for row in rows if row.get("participant_id_str") in index]
+    if not filtered:
+        others = sorted({str(row.get("participant_id_str")) for row in rows})
+        raise RuntimeError(
+            f"/results ({url}) returned {len(rows)} rows, none from this collection's "
+            f"{len(participant_ids)} participants (ids in participant_ids.txt; the rows "
+            f"are from {len(others)} other participant(s), e.g. {others[:3]}). "
+            "Refusing to model other collections' data as this experiment's."
+        )
+    for row in filtered:
+        row["participant_id"] = index[row["participant_id_str"]]
+    log_status(
+        f"Filtered to {len(filtered)} rows from this run's {len(participant_ids)} "
+        f"participants ({len(rows) - len(filtered)} rows of other collections dropped)."
+    )
+    return filtered
 
 
 def _results_url(base_url: str, config: dict[str, Any], project_id: str, run_id: int | str) -> str:

@@ -68,6 +68,8 @@ relaunch of an experiment with a live study is refused (see
 | `live results fetch failed for …: HTTPError … refusing to report zero responses` | wrong token (403) or network | data are safe in Firestore; fix, then recover as above |
 | `Participant collection returned no data (0 rows).` | nothing reached `/submit` | open the page yourself; check the browser console; check the monitor |
 | `Collected data failed the quality check: all N responses are identical …` | everyone pressed the same side: broken button mapping, or a bot farm | inspect the page and the monitor. The data were **not** written for modelling. |
+| `/results (…) returned N rows, none from this collection's M participants …` / `… without a participant_id_str column …` | browser-simulated Firebase collection (not a Prolific run): the session's rows belong to other collections, or the deployed results function is old | check `collection_session_id` / `project_id`+`run_id` in `experiment/config.json` and redeploy; before 28 September 2026 every row was kept |
+| `A collected row has an empty participant_id_str …` | a `/results` row without its participant | inspect the collected rows; the results function changed |
 | `CERTIFICATE_VERIFY_FAILED` | Python cannot find the system certificates | `_env.sh` sets `SSL_CERT_FILE` / `REQUESTS_CA_BUNDLE`; make sure it was sourced |
 
 ## Model stage (`5_model_loop`)
