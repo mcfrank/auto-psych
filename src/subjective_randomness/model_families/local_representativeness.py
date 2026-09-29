@@ -39,10 +39,11 @@ MODEL_NAME = "local_representativeness"
 
 DEFAULT_PARAMS: Dict[str, float] = {
     "theta_alt": 0.65,
-    # Higher than prototype_similarity's default: under strict local balance a
-    # perfectly alternating sequence is flawless on the balance term, so only
-    # the alternation/irregularity term can carry K&T's own example that
-    # HTHTHTHT "fail[s] to reflect the randomness of the process" (p. 434).
+    # Higher than the superseded prototype_similarity's default (0.55): under
+    # strict local balance a perfectly alternating sequence is flawless on the
+    # balance term, so only the alternation/irregularity term can carry K&T's
+    # own example that HTHTHTHT "fail[s] to reflect the randomness of the
+    # process" (p. 434).
     "alt_weight": 0.75,
     "periodic_share": 0.45,
     "beta": 4.0,

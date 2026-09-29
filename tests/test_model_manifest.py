@@ -94,13 +94,10 @@ def test_live_seed_pool_is_byte_identical_to_the_registry():
 
 
 def test_the_motif_stack_seed_is_the_viterbi_model():
-    """The seed is the registry's Viterbi motif_stack with its declared 0.9,
-    not the softmax rewrite it briefly was (reverted 2026-09-27)."""
+    """The seed is the registry's Viterbi motif_stack with its declared 0.9
+    (a softmax rewrite briefly replaced it and was reverted 2026-09-27)."""
     from src.models.pymc_inference import model_sampler_settings
 
-    assert (LIVE_SEED_DIR / "motif_stack.py").read_bytes() != (
-        REGISTRY_DIR / "motif_stack_softmax.py"
-    ).read_bytes()
     assert model_sampler_settings("motif_stack", LIVE_SEED_DIR) == {"target_accept": 0.9}
 
 

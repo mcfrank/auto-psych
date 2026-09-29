@@ -28,9 +28,8 @@ loop pruned a seed there), not from the registry, so a run is re-scored with
 the seeds it ran with. Since 2026-09-28 the loop prunes starting models like
 any other model; `holdout.json` records `starting_models_prunable` (absent in
 cells run before, which never pruned them), and results of the two
-conditions must not be pooled. A ground truth the registry keeps only on disk (a
-model the 2026-08 consolidation superseded, or an impossible theory) is absent
-from the pool already, and nothing is excluded.
+conditions must not be pooled. A ground truth outside the registry manifest (an
+impossible theory) is absent from the pool already, and nothing is excluded.
 
 The real pipeline does the work: the programmatic exhaustive design chooses
 each experiment's stimuli by joint EIG, the model set is carried forward
@@ -63,7 +62,7 @@ hours. Scope a smoke run first:
 uv run python scripts/subjective_randomness/holdout_recovery.py \
   --config scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml \
   --out /tmp/holdout_smoke/holdout.json \
-  --gt-model bayesian_diagnosticity \
+  --gt-model motif_stack \
   --n-experiments 1 --n-participants 5 --inner-loop-iterations 0 \
   --draws 150 --tune 150 --chains 2
 ```
@@ -192,224 +191,30 @@ Details worth knowing:
 
 ## Model Families
 
-All three model families use the same forced-choice observation model. For a
-trial with left sequence `A` and right sequence `B`, each model computes a
-sequence-level score `S(seq; theta)` and then predicts:
+The registry holds the four literature-faithful models of the 2026-08
+consolidation. Each has a PyMC adapter in
+`src/subjective_randomness/pymc_model_families/` and a pure-Python twin in
+`src/subjective_randomness/model_families/`, checked against paper-derived
+test vectors in `tests/test_literature_model_families.py`; the manifest's
+`rationale` entries state each mechanism.
+
+| Model | Faithful to |
+| --- | --- |
+| `falk_konold_dp` | Falk & Konold (1997) Difficulty Predictor, minimal parse |
+| `motif_stack` | Griffiths et al. (2018) four-motif stack automaton |
+| `finite_experience_occurrence` | Hahn & Warren (2009) occurrence probability in finite experience |
+| `local_representativeness` | Explicit quantitative operationalization of Kahneman & Tversky (1972) |
+
+All four share one forced-choice observation model. For a trial with left
+sequence `A` and right sequence `B`, each model computes a sequence-level
+score `S(seq; theta)` and predicts:
 
 ```text
 P(choose left | A, B, theta) =
   sigmoid(beta * (S(A; theta) - S(B; theta)) + side_bias)
 ```
 
-where:
-
-```text
-sigmoid(x) = 1 / (1 + exp(-x))
-```
-
-`beta` is choice sensitivity. Higher `beta` means more deterministic choices.
-`side_bias` is a left/right response bias. Positive values favor the left
-sequence, independent of its content.
-
-### 1. Bayesian Diagnosticity
-
-Source: `src/subjective_randomness/model_families/bayesian_diagnosticity.py`
-
-This is the unified "randomness as statistical inference" account (Griffiths &
-Tenenbaum 2001/2003; Griffiths et al. 2018), merging what used to be two separate
-Bayesian seeds (`bayesian_diagnosticity` and `statistical_inference`). A sequence
-looks random when it is better evidence for a fair coin than for a *regular*
-(non-random) generator.
-
-The model computes:
-
-```text
-S(seq) =
-  log P(seq | fair)
-  - log P(seq | regular)
-```
-
-The score is **not** length-normalized: evidence accumulating with sequence
-length is a property of the Bayesian account.
-
-The fair generator is an iid fair coin:
-
-```text
-P(seq | fair) = (1/2)^n
-```
-
-The regular hypothesis is a mixture (weight `bias_share`) of a motif-complexity
-process and a biased coin:
-
-```text
-P(seq | regular) =
-    (1 - bias_share) * P(seq | motif)
-  + bias_share       * P(seq | biased)
-```
-
-implemented in log space with `logsumexp`.
-
-The motif-complexity process (Griffiths et al. 2018, §6.1) is evaluated at the
-canonical minimal-description parse, with `n1` repetition motifs and `n2`
-alternation motifs:
-
-```text
-log P(seq | motif) =
-  (n - n1 - n2) * log(delta)
-  + (n1 + n2)   * log(C)
-  + (n1 + 2*n2) * log(alpha)
-C = (1 - delta) / (2*alpha + 2*alpha^2)
-```
-
-`delta` is motif persistence and `alpha` penalizes motif complexity. This single
-process subsumes the old "alternating" and "streaky" Markov alternatives (long
-runs = high persistence, regular alternation = alternation motifs) and carries
-Falk & Konold's Difficulty Predictor DP = n1 + 2*n2 in the `alpha` exponent.
-
-The biased generator is a symmetric mixture of mostly-heads and mostly-tails
-coins, capturing the H/T imbalance the motif process is blind to:
-
-```text
-P(seq | biased) =
-  0.5 * P(seq | P(H)=0.85)
-  + 0.5 * P(seq | P(H)=0.15)
-```
-
-Main parameters:
-
-```text
-delta       : motif persistence (probability of continuing a motif)
-alpha       : motif complexity penalty
-bias_share  : weight on the biased-coin alternative within the regular mixture
-beta        : choice sensitivity
-side_bias   : left/right response bias
-```
-
-Psychological interpretation: people judge randomness by asking whether the
-sequence is diagnostic of a fair random process rather than a structured one —
-either a complexity-penalized motif/regularity process or a biased coin.
-
-### 2. Prototype Similarity
-
-Source: `src/subjective_randomness/model_families/prototype_similarity.py`
-
-This model treats subjective randomness as similarity to an internal prototype:
-random-looking sequences should be close to 50/50 heads/tails and close to an
-ideal alternation rate.
-
-Features:
-
-```text
-balance_distance(seq) =
-  2 * |prop_H(seq) - 0.5|
-
-alternation_rate(seq) =
-  n_switches(seq) / (len(seq) - 1)
-
-alternation_distance(seq) =
-  |alternation_rate(seq) - theta_alt|
-```
-
-The sequence score is:
-
-```text
-S(seq) =
-  - [
-      (1 - alt_weight) * balance_distance(seq)
-      + alt_weight     * alternation_distance(seq)
-    ]
-```
-
-Main parameters:
-
-```text
-theta_alt   : ideal alternation rate for a random-looking sequence
-alt_weight  : relative weight on alternation distance vs. H/T balance
-beta        : choice sensitivity
-side_bias   : left/right response bias
-```
-
-Psychological interpretation: people compare a sequence to a mental prototype
-of randomness. `theta_alt` allows the prototype to prefer overalternation
-relative to a true fair coin, while still penalizing perfectly alternating
-sequences if they exceed the ideal.
-
-### 3. Encoding Compressibility
-
-Source: `src/subjective_randomness/model_families/encoding_compressibility.py`
-
-This model says that sequences look non-random when they have a short, simple
-description. Examples like `HHHHHHHH`, `HTHTHTHT`, and `HHHHTTTT` are easy to
-encode, so they receive lower randomness scores.
-
-Features:
-
-```text
-max_run_norm(seq) =
-  (max_run_length(seq) - 1) / (len(seq) - 1)
-```
-
-This is near `0` for fully alternating sequences and `1` for a solid run.
-
-```text
-periodicity_score(seq) =
-  max over periods p <= len(seq)/2 of template_match(seq, p),
-  rescaled so weak periodicity is near 0 and obvious repetition is near 1
-```
-
-This penalizes simple repeating templates such as `HTHTHTHT`.
-
-```text
-imbalance(seq) =
-  2 * |prop_H(seq) - 0.5|
-```
-
-The model uses a stick-breaking parameterization for feature weights:
-
-```text
-w_longrun  = longrun_weight
-w_periodic = (1 - longrun_weight) * periodic_share
-w_imbalance =
-  (1 - longrun_weight) * (1 - periodic_share)
-```
-
-The sequence score is negative compressibility:
-
-```text
-S(seq) =
-  - [
-      w_longrun  * max_run_norm(seq)
-      + w_periodic * periodicity_score(seq)
-      + w_imbalance * imbalance(seq)
-    ]
-```
-
-Main parameters:
-
-```text
-longrun_weight : weight on long-run compressibility
-periodic_share : share of remaining weight assigned to periodic patterns
-beta           : choice sensitivity
-side_bias      : left/right response bias
-```
-
-Psychological interpretation: people judge a sequence as random when it is hard to summarize with a simple rule. This model can penalize both long streaks and perfect alternation, because both are compressible.
-
-### 4. Window Typicality
-
-Source: `src/subjective_randomness/model_families/window_typicality.py`
-
-The Hahn & Warren (2009) finite-window account: people experience sequences
-through a limited memory window of length `window`, and a sequence looks random
-when its longest run is typical of a fair coin seen through that window. The
-expected longest run over an effective length `min(n, window)` is `log2(...)`;
-runs longer than expected look streaky and non-random, while runs shorter than
-expected (over-alternation) are penalized by the smaller `over_alt_penalty`:
-
-```text
-e(seq)  = log2(min(n, window))
-S(seq)  = -( softplus(max_run - e)
-             + over_alt_penalty * softplus(e - max_run) )
-```
-
-Parameters: `window`, `over_alt_penalty`, `beta`, `side_bias`.
+`beta` is choice sensitivity (higher means more deterministic choices) and
+`side_bias` a left/right response bias (positive values favor the left
+sequence, independent of its content). `motif_stack` and
+`finite_experience_occurrence` are defined only for same-length pairs.

@@ -37,9 +37,8 @@ paper-derived test vectors in `tests/test_literature_model_families.py`):
 
 Only manifest-listed models are active — for recovery, the fitted and
 no-learning baselines, and the outer loop's seed pool.
-The superseded originals' `.py` files and twins remain on disk solely so
-pre-consolidation run artifacts can be refit; do not add them back to the
-manifest. A newly discovered model earns its place here only through the
+The superseded originals were removed in September 2026 (git history keeps
+them). A newly discovered model earns its place here only through the
 standard recovery/holdout comparison — and needs a pure-Python twin in
 `../model_families/` before it can be added.
 

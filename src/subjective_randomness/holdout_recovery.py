@@ -396,9 +396,7 @@ def run_holdout_recovery_from_config(
                           family twins used to generate ground-truth data and
                           fixed-param baselines. Experiment 1's agent seed pool
                           always comes from ``project_seed_models_dir(project_id)``,
-                          which mirrors the registry manifest but also keeps
-                          superseded models on disk (so a superseded GT can be
-                          generated without ever entering the pool).
+                          which mirrors the registry manifest.
         gt_models         null | [names] | {name: params|null}; null params ->
                           the family's DEFAULT_PARAMS
         n_experiments, n_participants, seed

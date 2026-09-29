@@ -101,43 +101,6 @@ class TestFalkKonoldDP:
         )
 
 
-class TestMotifHMM:
-    def test_hand_computed_probability_of_hh(self):
-        from src.subjective_randomness.model_families import motif_hmm
-
-        # Worked by hand from Eq. 9 at delta = alpha = 0.5:
-        # P(HH) = (1/3)*(0.75/1.5) + (1/6)*(0.5/1.75) = 3/14.
-        p = math.exp(motif_hmm.log_p_regular("HH", delta=0.5, alpha=0.5))
-        assert p == pytest.approx(3.0 / 14.0, abs=1e-12)
-
-    def test_forward_marginal_matches_brute_force_path_sum(self):
-        from src.subjective_randomness.model_families import motif_hmm
-
-        for delta, alpha in [(0.5, 0.366), (0.55, 0.21), (0.9, 0.05)]:
-            for seq in ["H", "HT", "HHTH", "HTHTH", "TTTTT"]:
-                brute = _brute_force_p_regular(seq, delta, alpha)
-                forward = math.exp(motif_hmm.log_p_regular(seq, delta, alpha))
-                assert forward == pytest.approx(brute, rel=1e-12), (seq, delta, alpha)
-
-    def test_motif_process_is_a_proper_distribution_per_length(self):
-        from src.subjective_randomness.model_families import motif_hmm
-
-        # With row-normalised transitions and deterministic emissions, the
-        # process defines a proper distribution over sequences of each length.
-        total = sum(
-            math.exp(motif_hmm.log_p_regular("".join(bits), delta=0.55, alpha=0.21))
-            for bits in itertools.product("HT", repeat=6)
-        )
-        assert total == pytest.approx(1.0, abs=1e-12)
-
-    def test_streaks_and_perfect_alternation_look_regular(self):
-        from src.subjective_randomness.model_families import motif_hmm
-
-        irregular = motif_hmm.score_sequence("HHTHTTHT")
-        assert motif_hmm.score_sequence("HHHHHHHH") < irregular
-        assert motif_hmm.score_sequence("HTHTHTHT") < irregular
-
-
 class TestMotifStack:
     def test_paper_pattern_grammars_make_sequences_more_regular(self):
         from src.subjective_randomness.model_families import motif_stack

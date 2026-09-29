@@ -264,8 +264,7 @@ _IMPOSSIBLE = REPO_ROOT / "src/subjective_randomness/impossible_models"
 
 def _model_files():
     """The project's starting models, the ground truths of the faithful sweep
-    (the registry manifest's models; the registry's superseded files are
-    kept only to refit old runs) and the impossible ground truths."""
+    (the registry manifest's models) and the impossible ground truths."""
     for directory in (_PROJECT_SEEDS, _REGISTRY):
         for entry in read_manifest_entries(directory):
             name = entry["name"]
