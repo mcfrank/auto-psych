@@ -247,6 +247,8 @@ def main() -> None:
         "DRAWS": mdl.get("draws", ""),
         "TUNE": mdl.get("tune", ""),
         "CHAINS": mdl.get("chains", ""),
+        "TARGET_ACCEPT": mdl.get("target_accept", ""),
+        "AGENT_TIMEOUT_SEC": mdl.get("agent_timeout_sec", ""),
         # Hero-run exploration knobs ("" ⇒ inner-loop defaults).
         "HINTS_FILE": mdl.get("hints_file", ""),
         "NOVELTY_RMSE_THRESHOLD": mdl.get("novelty_rmse_threshold", ""),

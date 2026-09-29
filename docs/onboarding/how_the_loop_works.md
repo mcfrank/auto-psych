@@ -110,7 +110,8 @@ Code: `src/pipelines/inner_loop/` (`pymc_orchestrator.py` runs it,
    `model_loop/responses.csv`.
 2. **Fit and score.** Every model is fitted by MCMC (defaults in
    `src/models/mcmc_defaults.py`: 4 chains, 4,000 draws, 3,000 tuning steps,
-   `target_accept` 0.99; the live configs use 2,000–3,000 draws). Models are
+   `target_accept` 0.99; the simulations and `full_run.yaml` fit at
+   `target_accept` 0.8, with 1,000 and 3,000 draws respectively). Models are
    ranked by ELPD-LOO; the best is the top-ranked one with a reliable
    estimate (`_best_exportable_model`; reliability in
    `src/models/loo_reliability.py`). A model that cannot be fitted is

@@ -37,8 +37,12 @@ prolific:
 
 # --- modeling / inner loop -------------------------------------------------
 modeling:
-  inner_loop_iterations: 2         # candidate-improvement rounds per experiment
-  inner_loop_candidates: 3         # candidate models proposed per round
-  draws: 3000
-  tune: 2000
+  # As the recovery sweep that validates the loop (holdout_recovery_faithful.yaml;
+  # tests/test_live_run_settings.py keeps them in step), except more draws.
+  inner_loop_iterations: 5         # candidate-improvement rounds per experiment
+  inner_loop_candidates: 6         # candidate models proposed per round
+  draws: 3000                      # per chain; the sweep uses 1000 (one live run, no repeats)
+  tune: 2000                       # the sweep uses 1000
   chains: 4
+  target_accept: 0.8               # near misses are refit at 0.95
+  agent_timeout_sec: 1800          # per critique/candidate agent

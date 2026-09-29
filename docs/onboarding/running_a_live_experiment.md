@@ -53,7 +53,7 @@ Copy a preset, never edit it in place: `cp $REPO/scripts/outer_loop_live/pilot.y
 | preset | launcher | settings |
 |---|---|---|
 | `pilot.yaml` | `run_pilot.sh` (one run) | 2 experiments × 10 people; 2 rounds × 3 proposals; 2,000 draws |
-| `full_run.yaml` | `start_full_run.sh` (K parallel runs, default 3) | 3 × 40; 2 × 3; 3,000 draws |
+| `full_run.yaml` | `start_full_run.sh` (K parallel runs, default 3) | 3 × 40; 5 × 6, as the simulations (only the draws differ: 3,000); **use this one** |
 | `hero_run.yaml` | `CONFIG=… start_full_run.sh` | 3 × 40; 4 × 7; 3,000 draws |
 
 None of these matches the simulated checks (5 rounds × 6, 30-minute agents;
@@ -74,7 +74,8 @@ Keys (read by `_pilot_config.py`):
 | `prolific.reward_per_hour` (cents) or `reward` (cents flat), `estimated_completion_time` (min) | pay |
 | `prolific.name`, `description`, `completion_code`, `min_approval_rate` | study settings; use a distinct completion code per series |
 | `prolific.completion_code_action` | `AUTOMATICALLY_APPROVE` (default) or `MANUALLY_REVIEW` |
-| `modeling.inner_loop_iterations`, `inner_loop_candidates`, `draws`, `tune`, `chains` | rounds, proposals per round, MCMC (keep `chains` ≤ 4: the job has 4 CPUs, 64 GB) |
+| `modeling.inner_loop_iterations`, `inner_loop_candidates`, `draws`, `tune`, `chains` | rounds, proposals per round, MCMC (the job has 16 CPUs and 64 GB: four 4-chain fits at once) |
+| `modeling.target_accept`, `agent_timeout_sec` | NUTS target acceptance (unset: the model's own, else 0.99) and seconds per critique/proposal agent (unset: 900); `full_run.yaml` sets 0.8 and 1800, as the simulations |
 | `modeling.novelty_rmse_threshold`, `prune_dse_multiplier`, `candidate_parallelism`, `hints_file` | optional; defaults 0.002, 2.0, all at once, the built-in twelve angles |
 
 **Cost** (printed by the launcher): pay per person = cents/hour × minutes / 60,
@@ -86,9 +87,11 @@ top and are not estimated; each experiment records its spend in
 
 **Time.** Per experiment: a few minutes of design, up to three 15-minute
 attempts at the page, the deploy, **up to 3 hours of recruiting**, then the
-model stage (length unknown; `full_run.yaml`'s comment says 12–15 hours for 3
-experiments; a proposal's fit may now take up to 30 minutes, and agents that
-hit a usage limit wait for it to reset). Set `walltime` generously.
+model stage (with `full_run.yaml`'s 5 × 6 rounds, roughly 5–8 hours an
+experiment, judging by the simulations; a proposal's fit may take up to 30
+minutes, and agents that hit a usage limit wait for it to reset). Three
+experiments come to roughly a day or a day and a half; `full_run.yaml`'s
+`walltime` is 47 hours.
 
 ## 4. Safety gates
 
