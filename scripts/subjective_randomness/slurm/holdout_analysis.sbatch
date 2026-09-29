@@ -31,6 +31,19 @@ else
   echo "[analysis] no agent wrote a held-out ground-truth name"
 fi
 
+# Every expected cell without a result, so a failed cell cannot silently drop
+# out of the summary (survivorship). A later retry's summary may fill some in.
+missing="$WORK_ROOT/MISSING_CELLS.txt"
+"$VENV_PY" "$SLURM_DIR/cell_status.py" missing --work-root "$WORK_ROOT" \
+  --n-repeats "$N_REPEATS" --gt-models "$GT_MODELS" > "$missing"
+if [[ -s "$missing" ]]; then
+  echo "[analysis] WARNING: $(wc -l < "$missing") expected cell(s) have no result (listed in $missing):"
+  cat "$missing"
+else
+  rm -f "$missing"
+  echo "[analysis] every expected cell has a result"
+fi
+
 "$VENV_PY" scripts/subjective_randomness/holdout_test_retest.py \
   --runs-root "$WORK_ROOT" \
   --out    "$WORK_ROOT/test_retest.json" \

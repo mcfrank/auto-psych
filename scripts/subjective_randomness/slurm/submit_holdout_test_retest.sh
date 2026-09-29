@@ -89,6 +89,19 @@ array_id=$(sbatch --parsable --dependency=afterok:"$setup_id" --export=ALL \
   holdout_recovery_array.sbatch)
 echo "submitted array job:    $array_id (1-$TOTAL%$MAX_PARALLEL  =  $N_REPEATS repeats x $N_GTS GTs)"
 
+# Resume the array's failed tasks (timeouts, crashes, out-of-memory) once it
+# finishes, up to MAX_RETRY_ROUNDS rounds (holdout_retry.sbatch). RETRY_ROUND
+# counts the rounds already done; the retry job resubmits through this script.
+MAX_RETRY_ROUNDS="${MAX_RETRY_ROUNDS:-2}"
+export MAX_RETRY_ROUNDS
+if (( ${RETRY_ROUND:-0} < MAX_RETRY_ROUNDS )); then
+  retry_id=$(sbatch --parsable --dependency=afterany:"$array_id" \
+    --export=ALL,RETRY_ARRAY_ID="$array_id",RETRY_ROUND="${RETRY_ROUND:-0}" \
+    --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
+    holdout_retry.sbatch)
+  echo "submitted retry job:    $retry_id (round $(( ${RETRY_ROUND:-0} + 1 )) of $MAX_RETRY_ROUNDS)"
+fi
+
 # afterany: summarise once every task has finished, regardless of per-task
 # success — the analysis uses whatever repeats produced a tidy CSV (agent runs
 # are flaky over many hours). Use afterok to instead require all tasks to pass.
