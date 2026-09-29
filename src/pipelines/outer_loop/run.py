@@ -52,6 +52,7 @@ from src.pipelines.outer_loop.orchestrator import (
     get_ground_truth_models,
     outer_data_dir,
     outer_project_dir,
+    require_outside_agent_trees,
     run_collect_programmatic,
     run_deployment_programmatic,
     run_design_programmatic,
@@ -686,6 +687,15 @@ def main(args: Args) -> None:
     # deployed or published).
     if args.prolific_mode != "none":
         load_recruitment_config(project_id, args.n_participants)
+
+    # Collection keeps every collected column (Prolific IDs included) in
+    # raw_collected/, which no agent may read. Refuse an output tree inside
+    # the agents' working tree before anything is designed, deployed or paid.
+    if args.agent in (None, "4_collect") and not args.deploy_only:
+        require_outside_agent_trees(
+            outer_data_dir() / project_id / "raw_collected",
+            "The researchers' raw collected data",
+        )
 
     participant_model = (
         (args.hf_model or DEFAULT_OPEN_MODEL)

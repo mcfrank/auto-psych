@@ -70,6 +70,7 @@ relaunch of an experiment with a live study is refused (see
 | `Collected data failed the quality check: all N responses are identical …` | everyone pressed the same side: broken button mapping, or a bot farm | inspect the page and the monitor. The data were **not** written for modelling. |
 | `/results (…) returned N rows, none from this collection's M participants …` / `… without a participant_id_str column …` | browser-simulated Firebase collection (not a Prolific run): the session's rows belong to other collections, or the deployed results function is old | check `collection_session_id` / `project_id`+`run_id` in `experiment/config.json` and redeploy; before 28 September 2026 every row was kept |
 | `A collected row has an empty participant_id_str …` | a `/results` row without its participant | inspect the collected rows; the results function changed |
+| `The researchers' raw collected data would be written to …, inside …, the working tree every agent of this run can read …` | `run.py` run by hand without `AUTO_PSYCH_OUTPUT_DIR` (the default output tree is inside the repository) | set `AUTO_PSYCH_OUTPUT_DIR` to a directory outside the repository and rerun; nothing was run |
 | `CERTIFICATE_VERIFY_FAILED` | Python cannot find the system certificates | `_env.sh` sets `SSL_CERT_FILE` / `REQUESTS_CA_BUNDLE`; make sure it was sourced |
 
 ## Model stage (`5_model_loop`)

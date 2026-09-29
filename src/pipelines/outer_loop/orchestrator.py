@@ -80,8 +80,31 @@ def raw_collected_responses_path(exp_dir: Path) -> Path:
     It sits beside the experiment directories, which no agent is given:
     ``3_implement`` gets ``experiment<N>/``, the loop agents ``model_loop/``
     and the model zoo. ``data/responses.csv`` keeps only the raw columns.
+    Every agent can also read its working tree, the repository, so the file
+    may not be written inside it (``require_outside_agent_trees``).
     """
     return Path(exp_dir).parent / "raw_collected" / f"{Path(exp_dir).name}_responses.csv"
+
+
+def require_outside_agent_trees(path: Path, what: str) -> None:
+    """Raise unless ``path`` lies outside the tree every agent of a run can read.
+
+    ``run.py``'s agents run in a sandbox that mounts their working tree, the
+    repository (``REPO_ROOT``), read-only: an output directory inside it (the
+    default, ``REPO_ROOT/data/outer_loop``) is readable by every agent. The
+    researchers' raw collected file holds the Prolific IDs (in simulations,
+    the generating model's name), so it must be written elsewhere.
+    """
+    resolved = Path(path).resolve()
+    root = Path(REPO_ROOT).resolve()
+    if resolved == root or root in resolved.parents:
+        raise RuntimeError(
+            f"{what} would be written to {path}, inside {root}, the working tree "
+            "every agent of this run can read. It holds the Prolific IDs (in "
+            "simulations, the generating model's name). Set AUTO_PSYCH_OUTPUT_DIR "
+            "to a directory outside the repository (the live launchers use "
+            "$WORK_ROOT/<run label>/data)."
+        )
 
 
 def _earlier_experiment_dirs(exp_dir: Path) -> List[Path]:
@@ -767,6 +790,9 @@ def run_collect_programmatic(
                     seen.add(key)
                     fieldnames.append(key)
         raw_collected_path = raw_collected_responses_path(exp_dir)
+        require_outside_agent_trees(
+            raw_collected_path.parent, "The researchers' raw collected data"
+        )
         raw_collected_path.parent.mkdir(parents=True, exist_ok=True)
         with open(raw_collected_path, "w", newline="", encoding="utf-8") as f:
             w = csv.DictWriter(f, fieldnames=fieldnames, restval="")

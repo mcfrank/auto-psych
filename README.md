@@ -199,8 +199,16 @@ Project *assets* (problem definition, ground-truth models, featurizer) live unde
 written under:
 
 ```text
-data/outer_loop/<project>/experiment<N>/
+$AUTO_PSYCH_OUTPUT_DIR/<project>/experiment<N>/     (default: data/outer_loop/<project>/…)
 ```
+
+**Set `AUTO_PSYCH_OUTPUT_DIR` to a directory outside the repository for any run
+that collects data** (every stage, or `--agent 4_collect`). Collection keeps
+every collected column — Prolific IDs, or in simulations the generating model's
+name — in `<output>/<project>/raw_collected/`, and every agent can read the
+repository (its working tree). `run.py` refuses to start such a run with the
+default, in-repository output tree, before any stage runs. The live launchers
+already use `$WORK_ROOT/<label>/data`.
 
 The inner loop writes:
 
