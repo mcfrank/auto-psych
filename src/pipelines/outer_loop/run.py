@@ -125,6 +125,7 @@ def _run_agent(
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
+    agent_timeout_sec: int = 900,
 ) -> None:
     """Run one agent. Raises SystemExit if --validate and output stays invalid.
 
@@ -167,6 +168,7 @@ def _run_agent(
             novelty_rmse_threshold=novelty_rmse_threshold,
             prune_dse_multiplier=prune_dse_multiplier,
             candidate_parallelism=candidate_parallelism,
+            agent_timeout_sec=agent_timeout_sec,
         )
         finish_model_loop_stage(exp_dir)
     else:
@@ -265,6 +267,7 @@ def _run_experiment(
     novelty_rmse_threshold: Optional[float] = None,
     prune_dse_multiplier: Optional[float] = None,
     candidate_parallelism: Optional[int] = None,
+    agent_timeout_sec: int = 900,
     publish_another_prolific_study: bool = False,
 ) -> None:
     """Run all (or one) agents for a single experiment."""
@@ -327,6 +330,7 @@ def _run_experiment(
             novelty_rmse_threshold=novelty_rmse_threshold,
             prune_dse_multiplier=prune_dse_multiplier,
             candidate_parallelism=candidate_parallelism,
+            agent_timeout_sec=agent_timeout_sec,
             publish_another_prolific_study=publish_another_prolific_study,
         )
     finally:
@@ -365,6 +369,7 @@ def _run_experiment_stages(
     novelty_rmse_threshold: Optional[float],
     prune_dse_multiplier: Optional[float],
     candidate_parallelism: Optional[int],
+    agent_timeout_sec: int,
     publish_another_prolific_study: bool,
 ) -> None:
     """The body of one experiment, from smoke prep through the agent stages."""
@@ -515,6 +520,7 @@ def _run_experiment_stages(
             novelty_rmse_threshold=novelty_rmse_threshold,
             prune_dse_multiplier=prune_dse_multiplier,
             candidate_parallelism=candidate_parallelism,
+            agent_timeout_sec=agent_timeout_sec,
         )
         if agent_key == "3_implement" and deploy_target != "none":
             print(f"\n{'=' * 60}", flush=True)
@@ -645,6 +651,11 @@ class Args:
     """MCMC tuning (warmup) steps per chain for inner-loop model fits."""
     chains: int = PRODUCTION_CHAINS
     """MCMC chains for inner-loop model fits."""
+    target_accept: Optional[float] = None
+    """NUTS target acceptance rate for inner-loop model fits (None ⇒ the
+    model's declared value, else the production default 0.99; the recovery
+    sweep fits at 0.8, and a fit that fails the convergence gate as a near
+    miss is refit at 0.95 either way)."""
     critique: bool = True
     """Run a CriticAL posterior-predictive critique of the incumbent before each
     inner-loop candidate round (the critique feeds the candidate agents)."""
@@ -669,6 +680,9 @@ class Args:
     candidate_parallelism: Optional[int] = None
     """Concurrent candidate agents per inner-loop round (None ⇒ all of a
     round's candidates at once; 1 = sequential)."""
+    agent_timeout_sec: int = 900
+    """Seconds each inner-loop agent (critique and candidates) may run. The
+    recovery sweep gives them 1800 (holdout_recovery_faithful.yaml)."""
     confirm_live_recruitment: bool = False
     """Required alongside --prolific-mode live: going live recruits and PAYS
     real participants, so it must be a second, explicit act (mirrors
@@ -753,6 +767,8 @@ def main(args: Args) -> None:
     require_claude_auth(backend, args.claude_auth)
 
     fit_kwargs = {"draws": args.draws, "tune": args.tune, "chains": args.chains}
+    if args.target_accept is not None:
+        fit_kwargs["target_accept"] = args.target_accept
 
     # Load exploration hints once; a broken hints file must fail before any
     # experiment work starts, not mid-run at the first candidate round.
@@ -769,7 +785,9 @@ def main(args: Args) -> None:
         flush=True,
     )
     print(
-        f"Inner-loop MCMC: draws={args.draws} tune={args.tune} chains={args.chains}",
+        f"Inner-loop MCMC: draws={args.draws} tune={args.tune} chains={args.chains} "
+        f"target_accept={args.target_accept if args.target_accept is not None else 'model/default'}; "
+        f"agent timeout {args.agent_timeout_sec} s",
         flush=True,
     )
     print(f"Outputs: {outer_data_dir() / project_id}", flush=True)
@@ -835,6 +853,7 @@ def main(args: Args) -> None:
             novelty_rmse_threshold=args.novelty_rmse_threshold,
             prune_dse_multiplier=args.prune_dse_multiplier,
             candidate_parallelism=args.candidate_parallelism,
+            agent_timeout_sec=args.agent_timeout_sec,
             publish_another_prolific_study=args.publish_another_prolific_study,
         )
 
