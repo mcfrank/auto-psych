@@ -26,7 +26,9 @@ never with a plain relaunch.
 | `The researchers' raw collected data would be written to …` | `run.py` by hand with the output tree inside the repository | set `AUTO_PSYCH_OUTPUT_DIR` outside it |
 | `LiveStudyAlreadyRecorded: experiment<N> already has a live Prolific study …` | relaunch of an experiment with a live study | nothing ran. `RESUME_AGENTS=4_collect:5_model_loop`; a second study only after stopping the first, with `PUBLISH_ANOTHER_PROLIFIC_STUDY=1` |
 | `[error] Experiment N's model loop is not complete (…)` | the previous experiment's model stage did not finish | rerun it (`RESUME_AGENTS=5_model_loop` for that experiment) |
-| `[error] 3_implement still invalid after 3 attempt(s): …` | the agent could not make a valid page | read `experiment<N>/logs/3_implement.jsonl`; nothing was deployed |
+| `[error] 3_implement still invalid after 3 attempt(s): …` | the agent could not make a valid page | read `experiment<N>/logs/3_implement.jsonl` and `logs/.xdg_data/opencode/log/opencode.log`; nothing was deployed |
+| `opencode.log`: `You exceeded your current quota … free_tier_requests, limit: …` | the Gemini key is on the free tier (limit 0 for pro; 5/min, 20/day for flash) | a key from a billing-enabled project (runbook § 1); nothing was deployed |
+| `curl: (35) … same issuer/serial …` / `HTTP 000` on a login node | el7's `curl` cannot talk to the site | not the site: check with Python (runbook § 5, R3) or a browser |
 | `AUTO_PSYCH_RESULTS_TOKEN is not set …` | missing key | at deploy time nothing was created; at collection time the study is already running: add it, recover with `RESUME_AGENTS=4_collect:5_model_loop` |
 | `Firebase deploy failed …` / `… the experiment page is NOT live …` | expired `FIREBASE_TOKEN`, permissions, outage, hosting not published | no study was created: fix the cause and relaunch |
 | `The functions deploy exited 0 but firebase-tools could not read functions/index.js …` | the deploy ran without `_env.sh`'s `node` wrapper first on `PATH` | no study was created: run from a shell or job that sourced `_env.sh` and relaunch |
