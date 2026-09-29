@@ -1125,11 +1125,16 @@ so the menu ranks it the same way.
 
 **`_prune_losers`** (model_zoo.py:625), once, after the last round:
 
-1. `compare_table` on the zoo. The baseline is rank 0, the raw-ELPD best,
-   whether or not it can be trusted.
-2. If the baseline is untrusted (`loo_unreliable` or `not_converged`),
-   **nothing is pruned**.
-3. Otherwise a model m is pruned if it is not protected, is in the table, is
+1. `compare_table` on the zoo. Fewer than two trusted models (reliable
+   PSIS-LOO and converged): nothing is pruned.
+2. If the rank-0 model is untrusted (`loo_unreliable` or `not_converged`),
+   `compare_table` is recomputed over the trusted models only
+   (`names=`), so every `elpd_diff` and `dse_clustered` is against the best
+   **trusted** model, which is the baseline (a `[warn] … pruning against the
+   best trusted model` line says so). Until 2026-09-28 an untrusted rank-0
+   model switched pruning off for the whole experiment (second audit B8), and
+   the cap below then usually retired that very model.
+3. A model m is pruned if it is not protected, is in the table, is
    trusted, has `dse_clustered > 0`, and has
    `elpd_diff_m > 2.0 · dse_clustered_m`.
 4. Pruned files (`.py`, `.hypothesis.md`) move to `models/pruned/`. The

@@ -207,7 +207,9 @@ target — see **Slot roles**) → admit sequentially.
   `candidate_count`); retry and repair attempts spawn concurrently too.
 - **Pruning** (`_prune_losers` in `model_zoo.py`) runs **once, at the end of each
   experiment**: non-protected models with a trusted fit (reliable PSIS-LOO and
-  converged) that are statistically distinguishable from the best
+  converged) that are statistically distinguishable from the best *trusted*
+  model (when the rank-0 model is untrusted the comparison is recomputed over
+  the trusted models; it used to switch pruning off for the experiment)
   (`elpd_diff > dse_multiplier·dse_clustered`, the stimulus-clustered SE of
   `src/models/clustered_se.py`: the trial-level `dse` treats the correlated
   responses to one pair as independent and is ~2x too small) move to

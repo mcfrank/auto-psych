@@ -267,9 +267,9 @@ def test_empty_comparison_prunes_nothing(tmp_path, monkeypatch):
     assert (models_dir / "dead_end.py").exists()
 
 
-def test_unreliable_baseline_blocks_all_pruning(tmp_path, monkeypatch, capsys):
-    """Every elpd_diff is measured against the rank-0 model; if ITS LOO is
-    unreliable, no difference is trustworthy and nothing may be pruned."""
+def test_an_unreliable_baseline_with_one_trusted_model_prunes_nothing(tmp_path, monkeypatch, capsys):
+    """Pruning compares trusted models with the best of them; with the rank-0
+    model unreliable, one trusted model has nothing to be compared with."""
     models_dir = _models_dir(tmp_path, ["seed_a", "dead_end"])
     rows = {
         "seed_a": _row(0, 0.0, 0.0, 0.995),
@@ -290,6 +290,50 @@ def test_unreliable_baseline_blocks_all_pruning(tmp_path, monkeypatch, capsys):
     assert (models_dir / "dead_end.py").exists()
     assert evicted == []
     assert "unreliable" in capsys.readouterr().err.lower()
+
+
+@pytest.mark.parametrize("flag", ["loo_unreliable", "not_converged"])
+def test_an_untrusted_rank_0_model_does_not_stall_pruning(tmp_path, monkeypatch, capsys, flag):
+    """Second audit B8: an untrusted rank-0 model used to switch pruning off
+    for the whole experiment (the live-set cap then retired it, without
+    pruning being rerun). Now the comparison is recomputed over the trusted
+    models and the losers are pruned against the best of them."""
+    models_dir = _models_dir(tmp_path, ["seed_a", "flaky_top", "leader", "dead_end", "close"])
+    full = {
+        "flaky_top": {**_row(0, 0.0, 0.0, 0.6), flag: True},
+        "leader": _row(1, 3.0, 5.0, 0.3),
+        "seed_a": _row(2, 20.0, 3.0, 0.05),
+        "close": _row(3, 5.0, 4.0, 0.03),
+        "dead_end": _row(4, 25.0, 4.0, 0.02),
+    }
+    # Against the best trusted model, `leader`.
+    trusted_only = {
+        "leader": _row(0, 0.0, 0.0, 0.8),
+        "close": _row(1, 2.0, 4.0, 0.1),
+        "seed_a": _row(2, 17.0, 3.0, 0.05),
+        "dead_end": _row(3, 22.0, 4.0, 0.05),
+    }
+    calls = []
+
+    def compare_table(responses_path, models_dir, *, cache_dir=None, names=None, **kw):
+        calls.append(None if names is None else sorted(names))
+        return full if names is None else trusted_only
+
+    monkeypatch.setattr(model_zoo, "compare_table", compare_table)
+    monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
+    ledger = model_zoo.HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
+
+    pruned = _prune_losers(
+        models_dir, tmp_path / "responses.csv", protected={"seed_a"},
+        cache_dir=None, fit_kwargs=None, ledger=ledger,
+    )
+
+    assert pruned == ["dead_end"]
+    assert calls == [None, ["close", "dead_end", "leader", "seed_a"]]
+    assert (models_dir / "flaky_top.py").exists()  # untrusted: never pruned
+    (entry,) = ledger.entries()
+    assert entry.detail.startswith("22.0 nats behind leader")
+    assert "pruning against the best trusted model, 'leader'" in capsys.readouterr().err
 
 
 def test_unreliable_argmax_exports_best_reliable_model(tmp_path):
@@ -492,3 +536,11 @@ def test_zero_multiplier_disables_pruning(tmp_path, monkeypatch):
         dse_multiplier=0.0,
     )
     assert pruned == []
+
+
+def test_compare_table_restricted_to_unknown_models_raises(tmp_path):
+    from src.model_comparison.posterior import compare_table
+
+    models_dir = _models_dir(tmp_path, ["seed_a", "leader"])
+    with pytest.raises(ValueError, match="not among the loadable models"):
+        compare_table(tmp_path / "responses.csv", models_dir, names=["ghost"])

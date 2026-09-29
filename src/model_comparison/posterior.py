@@ -44,7 +44,7 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Sequence
 
 import tyro
 from pyprojroot import here
@@ -122,9 +122,14 @@ def compare_table(
     models_dir: Path,
     *,
     cache_dir: Optional[Path] = None,
+    names: Optional[Sequence[str]] = None,
     **fit_kwargs: Any,
 ) -> Dict[str, Dict[str, float]]:
     """Distinguishability diagnostic via ``arviz.compare`` (PSIS-LOO).
+
+    ``names`` restricts the comparison to those manifest models (every
+    ``elpd_diff`` and ``dse`` is then against the best of them); ``None``
+    compares every manifest model.
 
     Fits each manifest model (reusing the in-process / on-disk fit cache, so this
     adds no MCMC when called after ``model_posterior``), then runs
@@ -173,6 +178,14 @@ def compare_table(
     model_names = read_loadable_model_names(models_dir)
     if not model_names:
         raise ValueError(f"No loadable models found in {models_dir}")
+    if names is not None:
+        unknown = sorted(set(names) - set(model_names))
+        if unknown or not names:
+            raise ValueError(
+                f"compare_table: {unknown or 'no names'} not among the loadable "
+                f"models of {models_dir} ({model_names})."
+            )
+        model_names = [name for name in model_names if name in set(names)]
 
     fits = fit_models_cached(
         model_names,
