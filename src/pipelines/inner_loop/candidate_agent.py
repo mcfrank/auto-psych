@@ -11,6 +11,12 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
+from src.models.mcmc_defaults import (
+    CANDIDATE_CHECK_CHAINS,
+    CANDIDATE_CHECK_DRAWS,
+    CANDIDATE_CHECK_TUNE,
+)
+from src.pipelines.inner_loop.check_candidate import check_candidate_command
 from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
 from src.pipelines.inner_loop.import_gate import CANDIDATE_IMPORT_ALLOWLIST
 from src.pipelines.inner_loop.model_zoo import (
@@ -247,6 +253,20 @@ def _write_candidate_context(
         "   becomes the model's identifier everywhere downstream).",
         "3. Write `candidate.py` — a module-level PyMC model implementing only that",
         "   hypothesis.",
+        "",
+        "**Check your model before you finish.** Run this from the repository "
+        "checkout (your shell's working directory). It runs the admission gates "
+        "you can act on — the import allowlist, a loadable module-level "
+        "`model: pm.Model`, a finite log-probability on the real responses, a "
+        f"short MCMC fit ({CANDIDATE_CHECK_DRAWS} draws, {CANDIDATE_CHECK_TUNE} "
+        f"tune, {CANDIDATE_CHECK_CHAINS} chain: a smoke test, not a full "
+        "production fit) and a finite ELPD-LOO — and prints `OK` or the exact "
+        "reason admission would reject the file. Fix anything it reports. It "
+        "does not check novelty against the other models.",
+        "",
+        "```bash",
+        check_candidate_command(candidate_dir, responses_path),
+        "```",
         "",
         "`existing_hypotheses.md` lists the hypotheses already in the model set and",
         "how well each fits. Read it so you propose a *distinct* or *refined*",
