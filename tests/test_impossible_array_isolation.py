@@ -41,7 +41,8 @@ def _staged_sweep(tmp_path: Path) -> Path:
     work = tmp_path / "work"
     staged = work / "harness_repo" / "scripts" / "subjective_randomness"
     (staged / "slurm").mkdir(parents=True)
-    for name in ("cell_lock.sh", "agent_tree.exclude", "scan_gt_name.sh", "agent_activity_report.py"):
+    for name in ("cell_lock.sh", "agent_tree.exclude", "scan_gt_name.sh", "agent_activity_report.py",
+                 "archive_agent_tree.sh"):
         shutil.copy(SLURM_DIR / name, staged / "slurm" / name)
     (staged / "slurm" / "_env.sh").write_text(
         f'export VENV_PY="{sys.executable}"\nexport REPO="{tmp_path / "checkout"}"\n',

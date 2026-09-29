@@ -237,17 +237,9 @@ bash "$SLURM_DIR/scan_gt_name.sh" --after-run "$GT" "$RUN_REPO/_runs" "$RUN_DIR/
 
 # --- reclaim inodes: archive + remove this task's agent tree on success -------
 if [[ -z "${KEEP_REPO_COPY:-}" ]]; then
-  if [[ -e "$RUN_DIR/agent_runs.tar.gz" ]]; then
-    echo "[task $TASK] WARNING: $RUN_DIR/agent_runs.tar.gz already exists; not overwriting it, and keeping the agent tree $AGENT_DIR"
-  else
-    if [[ -d "$RUN_REPO/_runs" ]]; then
-      tar czf "$RUN_DIR/agent_runs.tar.gz" -C "$RUN_REPO" _runs \
-        && echo "[task $TASK] archived agent _runs -> $RUN_DIR/agent_runs.tar.gz"
-    fi
-    rm -rf "$AGENT_DIR"
-    rm -f "$RUN_DIR/repo"
-    echo "[task $TASK] removed the agent tree to reclaim inodes: $AGENT_DIR"
-  fi
+  # Removes the tree only once the archive reads back; never overwrites an
+  # existing archive (archive_agent_tree.sh).
+  bash "$SLURM_DIR/archive_agent_tree.sh" "$TASK" "$RUN_DIR" "$AGENT_DIR"
 else
   echo "[task $TASK] KEEP_REPO_COPY set — leaving repo copy in place: $RUN_REPO"
 fi
