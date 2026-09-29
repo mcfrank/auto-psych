@@ -847,3 +847,14 @@ def test_a_fit_file_appears_only_once_it_is_complete(tmp_path):
     pi.write_fit_file(_Idata(fail=False), nc)
     assert [p.name for p in tmp_path.iterdir()] == [nc.name]
     assert nc.read_bytes() == b"half a fit"
+
+
+
+def test_predictions_that_are_not_probabilities_raise_with_the_affected_stimuli():
+    import numpy as np
+
+    raw = np.array([[[0.2, np.nan, 0.5], [0.3, 0.4, 1.5]]])  # (chain, draw, stimulus)
+    with pytest.raises(pi.InvalidPredictions) as info:
+        pi._validated_p_left_draws(raw, context="Model 'm' prior-predictive p_left")
+    assert info.value.invalid_stimuli().tolist() == [False, True, True]
+    assert info.value.draws.shape == (2, 3)

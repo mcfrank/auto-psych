@@ -554,3 +554,101 @@ def test_every_project_seed_model_binds_the_novelty_pool():
         model = real_load_pymc_model(name, seed_dir)
         stim_data = real_make_stim_data(model, rows)
         assert stim_data, name
+
+
+# ── An undefined p_left on the pool: reject the candidate, never crash ──
+#
+# A model can break on pairs unlike any it was trained on (the recovery
+# evaluation met one, commit 4de536c). The gate used to let the resulting
+# InvalidPredictions escape, ending the cell; and one *admitted* model like
+# that crashed every later candidate's admission.
+
+
+class _UndefinedOn(_FakeFitted):
+    """``p_left`` is ``predict(row)``, except NaN on the rows ``bad`` selects:
+    ``predict_p_left`` raises ``InvalidPredictions`` as the real one does."""
+
+    def __init__(self, predict, bad):
+        super().__init__(predict)
+        self._bad = bad
+
+    def predict_p_left(self, stim_data, **kwargs):
+        from src.models.pymc_inference import InvalidPredictions
+
+        rows = stim_data["rows"]
+        draws = np.tile([self._predict(row) for row in rows], (4, 1)).astype(float)
+        draws[:, [i for i, row in enumerate(rows) if self._bad(row)]] = np.nan
+        raise InvalidPredictions("values must be finite and in [0, 1].", draws)
+
+
+def _long(row):
+    return len(row["sequence_a"]) == 8
+
+
+def test_a_candidate_undefined_on_the_pool_is_rejected_with_the_reason(
+    tmp_path, monkeypatch, capsys
+):
+    models_dir = _models_dir(tmp_path, ["seed_a"])
+    responses = _write_responses(tmp_path)
+    _stub_admission_gates(monkeypatch)
+    _stub_prediction_plumbing(
+        monkeypatch,
+        {"seed_a": _FakeFitted(lambda row: 0.5), "blows_up": _UndefinedOn(lambda row: 0.9, _long)},
+    )
+    ledger = model_zoo.HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
+
+    admission = model_zoo._admit_candidate_with_reason(
+        _candidate(tmp_path), models_dir, "blows_up", responses, ledger=ledger
+    )
+
+    assert not admission.admitted
+    n_long = sum(_long(row) for row in novelty_pool_rows())
+    assert f"undefined (NaN or outside [0, 1]) on {n_long} of the" in admission.reason
+    assert " vs " in admission.reason  # names example pairs
+    assert not (models_dir / "blows_up.py").exists()
+    (entry,) = ledger.entries()
+    assert entry.outcome == "rejected" and "undefined" in entry.detail
+
+
+def test_an_admitted_model_undefined_on_some_pool_stimuli_is_compared_on_the_rest(
+    tmp_path, monkeypatch, capsys
+):
+    models_dir = _models_dir(tmp_path, ["partly_nan"])
+    responses = _write_responses(tmp_path)
+    _stub_prediction_plumbing(
+        monkeypatch,
+        {
+            # Agrees with the candidate wherever it is defined.
+            "partly_nan": _UndefinedOn(lambda row: 0.7, _long),
+            "candidate_x": _FakeFitted(lambda row: 0.7),
+        },
+    )
+
+    nearest, rmse = _min_prediction_rmse(
+        "candidate_x", models_dir, responses, pool_rows=novelty_pool_rows()
+    )
+
+    assert (nearest, rmse) == ("partly_nan", pytest.approx(0.0))
+    assert "comparing on the rest" in capsys.readouterr().out
+
+
+def test_an_admitted_model_undefined_everywhere_is_left_out_of_the_comparison(
+    tmp_path, monkeypatch, capsys
+):
+    models_dir = _models_dir(tmp_path, ["all_nan", "seed_a"])
+    responses = _write_responses(tmp_path)
+    _stub_prediction_plumbing(
+        monkeypatch,
+        {
+            "all_nan": _UndefinedOn(lambda row: 0.7, lambda row: True),
+            "seed_a": _FakeFitted(lambda row: 0.5),
+            "candidate_x": _FakeFitted(lambda row: 0.6),
+        },
+    )
+
+    nearest, rmse = _min_prediction_rmse(
+        "candidate_x", models_dir, responses, pool_rows=novelty_pool_rows()
+    )
+
+    assert (nearest, rmse) == ("seed_a", pytest.approx(0.1))
+    assert "left out of the comparison" in capsys.readouterr().out

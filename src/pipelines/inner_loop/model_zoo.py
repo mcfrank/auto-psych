@@ -24,6 +24,7 @@ from src.models.data_binding import MissingStimulusColumns, make_stim_data
 from src.models.model_loading import load_pymc_model, pm_data_inputs
 from src.models.pymc_inference import (
     INFRASTRUCTURE_ERRORS,
+    InvalidPredictions,
     convergence_problems_of,
     evict_fit_cache,
     fit_model,
@@ -446,6 +447,36 @@ class NoveltyPoolUnbindable(ValueError):
         )
 
 
+class NoveltyPoolUndefined(ValueError):
+    """A *candidate* whose posterior-mean ``p_left`` is undefined (NaN or
+    outside [0, 1]) on some novelty-pool stimuli.
+
+    The admission gate turns it into a recorded rejection naming those
+    stimuli: such a model would also break the next experiment's design and
+    the held-out evaluation, both of which predict on pairs unlike the
+    training stimuli. It used to propagate out of the inner loop and end the
+    cell.
+    """
+
+    def __init__(self, model_name: str, examples: Sequence[str], n_invalid: int, n_pool: int):
+        self.model_name = model_name
+        self.examples = list(examples)
+        self.n_invalid = n_invalid
+        self.n_pool = n_pool
+        super().__init__(
+            f"model {model_name!r} has an undefined p_left on {n_invalid} of the "
+            f"{n_pool} novelty-pool stimuli"
+        )
+
+
+def _pair_labels(pool_rows: Sequence[Mapping[str, str]], mask: np.ndarray) -> List[str]:
+    """``"<sequence_a> vs <sequence_b>"`` for the pool rows ``mask`` selects."""
+    return [
+        f"{pool_rows[i]['sequence_a']} vs {pool_rows[i]['sequence_b']}"
+        for i in np.flatnonzero(mask)
+    ]
+
+
 def _participant_ids_in(responses_path: Path) -> Optional[List[int]]:
     """Distinct participant ids in the responses, sorted; ``None`` without the column."""
     with Path(responses_path).open(encoding="utf-8", newline="") as f:
@@ -471,11 +502,20 @@ def _pool_prediction(
     ``participant_id`` has only per-participant ``p_left``, so each pool row
     is predicted as every participant the model was fit on and averaged — one
     participant at a time, so the draws x rows array stays one pass wide.
+
+    A stimulus where any draw of ``p_left`` is not a probability comes back
+    NaN (as in the recovery evaluation); the caller decides what that means.
     """
     rows = [{**row, "chose_left": 0} for row in pool_rows]
+
+    def predict(stim_data: Dict[str, np.ndarray]) -> np.ndarray:
+        try:
+            return np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
+        except InvalidPredictions as exc:
+            return exc.draws.mean(axis=0)
+
     if "participant_id" not in pm_data_inputs(fitted.model):
-        stim_data = make_stim_data(fitted.model, rows)
-        return np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
+        return predict(make_stim_data(fitted.model, rows))
     if not participant_ids:
         raise ValueError(
             f"Model {model_name!r} indexes a participant_id random effect but the "
@@ -484,8 +524,7 @@ def _pool_prediction(
     total = np.zeros(len(rows), dtype="float64")
     for pid in participant_ids:
         as_participant = [{**row, "participant_id": pid} for row in rows]
-        stim_data = make_stim_data(fitted.model, as_participant)
-        total += np.asarray(fitted.predict_p_left(stim_data), dtype="float64")
+        total += predict(make_stim_data(fitted.model, as_participant))
     return total / len(participant_ids)
 
 
@@ -506,7 +545,11 @@ def _min_prediction_rmse(
     fit-gate and after scoring has fit every admitted model, so no new MCMC
     happens here. Returns the nearest model's name and the RMSE —
     ``(None, inf)`` when the set holds no other model. Raises
-    ``NoveltyPoolUnbindable`` when the candidate cannot bind bare stimulus rows.
+    ``NoveltyPoolUnbindable`` when the candidate cannot bind bare stimulus rows
+    and ``NoveltyPoolUndefined`` when its ``p_left`` is undefined on some pool
+    stimuli. An admitted model whose ``p_left`` is undefined on some stimuli
+    is compared on the rest (said out loud), and skipped when it is undefined
+    on all of them; before, it crashed every later candidate's admission.
     """
     pool_rows = list(pool_rows)
     if not pool_rows:
@@ -525,6 +568,11 @@ def _min_prediction_rmse(
         candidate_p = posterior_mean_p_left(model_name)
     except MissingStimulusColumns as e:
         raise NoveltyPoolUnbindable(model_name, e.missing) from e
+    undefined = ~np.isfinite(candidate_p)
+    if undefined.any():
+        raise NoveltyPoolUndefined(
+            model_name, _pair_labels(pool_rows, undefined)[:5], int(undefined.sum()), len(pool_rows)
+        )
     nearest: Optional[str] = None
     nearest_rmse = float("inf")
     for name in _manifest_names(models_dir):
@@ -538,7 +586,21 @@ def _min_prediction_rmse(
                 f"{list(e.missing)}); every model in the set must be evaluable "
                 "on bare stimulus rows."
             ) from e
-        rmse = float(np.sqrt(np.mean((candidate_p - other_p) ** 2)))
+        defined = np.isfinite(other_p)
+        if not defined.all():
+            print(
+                f"  [novelty] admitted model {name!r} has an undefined p_left on "
+                f"{int((~defined).sum())} of the {len(pool_rows)} novelty-pool "
+                + (
+                    "stimuli; comparing on the rest."
+                    if defined.any()
+                    else "stimuli (all of them); it is left out of the comparison."
+                ),
+                flush=True,
+            )
+            if not defined.any():
+                continue
+        rmse = float(np.sqrt(np.mean((candidate_p[defined] - other_p[defined]) ** 2)))
         if rmse < nearest_rmse:
             nearest, nearest_rmse = name, rmse
     return nearest, nearest_rmse
@@ -1061,6 +1123,16 @@ def _admit_candidate_with_reason(
                 "stimulus never carries — so it cannot be evaluated on a stimulus "
                 "pool (the novelty gate now, the held-out evaluation later); "
                 "compute everything from sequence_a and sequence_b."
+            )
+        except NoveltyPoolUndefined as e:
+            staged.unlink(missing_ok=True)
+            return reject(
+                f"p_left is undefined (NaN or outside [0, 1]) on {e.n_invalid} of "
+                f"the {e.n_pool} novelty-pool stimuli (e.g. {', '.join(e.examples)}). "
+                "p_left must be a probability for every same-length pair, "
+                "including pairs unlike the training stimuli: guard the "
+                "computation (no log(0), no division by zero, no overflow; keep "
+                "p_left inside [0, 1])."
             )
         if nearest is not None and rmse < novelty_rmse_threshold:
             staged.unlink(missing_ok=True)

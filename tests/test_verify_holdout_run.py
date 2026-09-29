@@ -76,7 +76,10 @@ _NO_CRITIQUE = {
 
 
 def _build_clean_raw_tree(
-    work_root: Path, history: str | None = None, history2: str | None = None
+    work_root: Path,
+    history: str | None = None,
+    history2: str | None = None,
+    screened_out: str = "[]",
 ):
     """A valid raw run tree: all CSVs have only raw columns, no drops, no
     featurizer imports. ``history`` / ``history2`` are experiment 1's and 2's
@@ -116,7 +119,7 @@ def _build_clean_raw_tree(
     # screened_out.json
     design_dir = tar_staging / "experiment1" / "design"
     design_dir.mkdir(parents=True)
-    (design_dir / "screened_out.json").write_text("[]", encoding="utf-8")
+    (design_dir / "screened_out.json").write_text(screened_out, encoding="utf-8")
     if history is not None:
         (exp1_ml / "history.json").write_text(history, encoding="utf-8")
     if history2 is not None:
@@ -424,3 +427,23 @@ class TestVerifyJudgesCellsByTheirResults:
         result = _run_verifier(work_root)
         assert result.returncode != 0, result.stdout
         assert "(MISSING_CELLS.txt)" in result.stdout and "run3/gt" in result.stdout
+
+
+class TestVerifyScreenedOutModels:
+    """A model screened out of a design because it cannot bind a stimulus row
+    fails the run; one screened out because its p_left is undefined on some
+    pairs was recorded and the design went on without it: a warning."""
+
+    def test_a_model_with_an_undefined_p_left_is_a_warning(self, tmp_path):
+        entry = {"model": "m", "missing": [], "reason": "undefined", "invalid_pairs": 3}
+        work_root = _build_clean_raw_tree(tmp_path / "undefined", screened_out=json.dumps([entry]))
+        result = _run_verifier(work_root)
+        assert result.returncode == 0, result.stdout
+        assert "[WARN] 1 model(s) screened out of a design" in result.stdout
+
+    def test_a_model_that_cannot_bind_fails(self, tmp_path):
+        entry = {"model": "m", "missing": ["participant_id"], "reason": "needs participant_id"}
+        work_root = _build_clean_raw_tree(tmp_path / "unbound", screened_out=json.dumps([entry]))
+        result = _run_verifier(work_root)
+        assert result.returncode != 0, result.stdout
+        assert "[FAIL] 1 of 1 screened_out.json(s) are non-empty" in result.stdout

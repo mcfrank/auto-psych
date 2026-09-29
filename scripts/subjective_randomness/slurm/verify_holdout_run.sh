@@ -166,24 +166,36 @@ if [[ "$n_ctx" == "0" ]]; then say "- [info] no candidate CONTEXT.md found (may 
 elif [[ "$bad_ctx" == "0" ]]; then say "- [ok]   all $n_ctx candidate CONTEXT.md(s) list only raw columns"
 else say "- [FAIL] $bad_ctx of $n_ctx candidate CONTEXT.md(s) list engineered columns"; fails=$((fails + 1)); fi
 
-# 7. Every design/screened_out.json must be empty ([]).
-bad_screen=0; n_screen=0
+# 7. Every design/screened_out.json must be empty ([]), except for models
+#    screened out because their p_left is undefined (NaN or outside [0, 1]) on
+#    some design-pool pairs (entries with "invalid_pairs"): those are recorded
+#    and the design went on without them, so they are a warning, not a
+#    failure. Any other entry (a model that cannot bind a stimulus row) fails.
+bad_screen=0; n_screen=0; n_undefined=0
+_classify_screen() {  # stdin: one screened_out.json; $1: label
+  local counts total undefined
+  counts=$(python3 -c 'import json,sys; d=json.load(sys.stdin); print(len(d), sum("invalid_pairs" in e for e in d))' 2>/dev/null) \
+    || { bad_screen=$((bad_screen + 1)); say "      unreadable: $1"; return; }
+  read -r total undefined <<< "$counts"
+  n_undefined=$((n_undefined + undefined))
+  if [[ "$total" -gt "$undefined" ]]; then bad_screen=$((bad_screen + 1)); say "      non-empty: $1"; fi
+  if [[ "$undefined" -gt 0 ]]; then say "      undefined p_left, screened out of a design: $1"; fi
+}
 for SO in "$W"/run*/*/repo/_runs/*/experiment*/design/screened_out.json; do
   [[ -f "$SO" ]] || continue
   n_screen=$((n_screen + 1))
-  [[ "$(cat "$SO" | tr -d '[:space:]')" == "[]" ]] \
-    || { bad_screen=$((bad_screen + 1)); say "      non-empty: $SO"; }
+  _classify_screen "$SO" < "$SO"
 done
 for TAR in "$W"/run*/*/agent_runs.tar.gz; do
   [[ -f "$TAR" ]] || continue
   while IFS= read -r MEMBER; do
     n_screen=$((n_screen + 1))
-    [[ "$(tar xzOf "$TAR" "$MEMBER" 2>/dev/null | tr -d '[:space:]')" == "[]" ]] \
-      || { bad_screen=$((bad_screen + 1)); say "      non-empty: $TAR :: $MEMBER"; }
+    _classify_screen "$TAR :: $MEMBER" < <(tar xzOf "$TAR" "$MEMBER" 2>/dev/null)
   done < <(tar tzf "$TAR" 2>/dev/null | grep -E "design/screened_out\.json$")
 done
-if [[ "$n_screen" -gt 0 && "$bad_screen" == "0" ]]; then say "- [ok]   all $n_screen screened_out.json(s) are empty"
-elif [[ "$bad_screen" -gt 0 ]]; then say "- [FAIL] $bad_screen of $n_screen screened_out.json(s) are non-empty"; fails=$((fails + 1)); fi
+if [[ "$bad_screen" -gt 0 ]]; then say "- [FAIL] $bad_screen of $n_screen screened_out.json(s) are non-empty"; fails=$((fails + 1))
+elif [[ "$n_undefined" -gt 0 ]]; then say "- [WARN] $n_undefined model(s) screened out of a design because their p_left is undefined on some pairs (a warning, not a failure)"
+elif [[ "$n_screen" -gt 0 ]]; then say "- [ok]   all $n_screen screened_out.json(s) are empty"; fi
 
 # 8. Agent-tree isolation: forbidden paths from agent_tree.exclude must not
 #    appear in the agent's repo copy (whether live or archived).

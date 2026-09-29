@@ -345,8 +345,16 @@ first pool pair (`HH` vs `HT`) with only `sequence_a`, `sequence_b` and
   (eig.py:115-119).
 - No usable model: raise.
 
+After the predictive draws (§3.3), a model whose `p_left` is undefined (NaN
+or outside [0, 1]) on any pool pair (`InvalidPredictions`, prior or
+posterior) is also left out of this design, printed as `[screen] EIG: …`
+and recorded with `invalid_pairs` (the number of affected pairs) and a
+reason naming up to five of them. If no model is left, the design raises.
+Such a model used to crash the design, identically on every retry.
+
 `design/screened_out.json` is always written as a list of
-`{model, missing, reason}`; it is empty when nothing was dropped. The model
+`{model, missing, reason}` (plus `invalid_pairs` for an undefined `p_left`);
+it is empty when nothing was dropped. The model
 prior is renormalised over the surviving models (§3.4).
 
 ### 3.3 Predictive draws: which distribution, how many
@@ -922,6 +930,10 @@ or carried model stays in the zoo, likewise unselectable and unprunable.
   data, averaged over all 8,000 draws (no thinning). A model that binds
   `participant_id` is averaged over the training participant ids. A candidate
   that needs other non-stimulus columns (e.g. `trial_index`) is rejected.
+  A candidate whose `p_left` is undefined (NaN or outside [0, 1]) on any pool
+  stimulus is rejected, with the count and example pairs in the reason. A zoo
+  model undefined on some pool stimuli is compared on the rest (a
+  `[novelty]` line says so) and is left out when undefined on all of them.
 - `RMSE(c, m) = sqrt(mean_j (p̄_c,j − p̄_m,j)²)`. The candidate is rejected if
   `min_m RMSE(c, m) < 0.002`, and the reason names the nearest model.
 

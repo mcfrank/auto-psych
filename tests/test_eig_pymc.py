@@ -13,6 +13,7 @@ from __future__ import annotations
 
 import shutil
 
+import numpy as np
 import pytest
 import yaml
 
@@ -128,15 +129,13 @@ def test_design_drops_model_that_cannot_bind_to_stimulus(
 
     models_dir = _seed_with_participant_model(tmp_path)
 
-    seen: dict = {}
+    seen: dict = {"names": []}
+    # Distinct constant means -> a known EIG: 1 - H_b(0.8) = 0.278072 bits.
+    means = {"bayesian_fair_coin": 0.8, "representativeness": 0.2}
 
     def fake_draws(model_names, models_dir, rows, *, n_samples=200, seed=42):
-        seen["names"] = list(model_names)
-        # Distinct constant means -> a known EIG: 1 - H_b(0.8) = 0.278072 bits.
-        return {
-            m: np.full((n_samples, len(rows)), p)
-            for m, p in zip(model_names, (0.8, 0.2))
-        }
+        seen["names"] += list(model_names)
+        return {m: np.full((n_samples, len(rows)), means[m]) for m in model_names}
 
     monkeypatch.setattr(
         "src.models.pymc_inference.prior_predict_p_left_draws", fake_draws
@@ -461,8 +460,7 @@ def test_design_records_the_screened_out_models_as_an_artifact(tmp_path, monkeyp
     monkeypatch.setattr(
         "src.models.pymc_inference.prior_predict_p_left_draws",
         lambda names, d, rows, *, n_samples=200, seed=42: {
-            m: np.full((n_samples, len(rows)), p)
-            for m, p in zip(names, (0.8, 0.2, 0.5))
+            m: np.full((n_samples, len(rows)), 0.5) for m in names
         },
     )
     out_path = tmp_path / "screened_out.json"
@@ -477,3 +475,93 @@ def test_design_records_the_screened_out_models_as_an_artifact(tmp_path, monkeyp
     recorded = json.loads(out_path.read_text(encoding="utf-8"))
     assert [d["model"] for d in recorded] == ["participant_re"]
     assert recorded[0]["missing"] == ["participant_id"]
+
+
+# ── a model whose p_left is undefined on the design pool ──────────────
+#
+# A carried model can break on pairs unlike any it was trained on; one such
+# model used to crash the design, identically on every retry. It is screened
+# out of this design and recorded in screened_out.json with the reason.
+
+
+def _undefined_on_long_pairs(names, d, rows, *, n_samples=200, seed=42):
+    from src.models.pymc_inference import InvalidPredictions
+
+    (name,) = names  # the design predicts one model at a time
+    draws = np.full((n_samples, len(rows)), 0.8 if name == "bayesian_fair_coin" else 0.2)
+    if name == "representativeness":
+        draws[:, [i for i, r in enumerate(rows) if len(r["sequence_a"]) == 3]] = np.nan
+        raise InvalidPredictions("values must be finite and in [0, 1].", draws)
+    return {name: draws}
+
+
+def test_design_screens_out_a_model_with_an_undefined_p_left_and_records_why(
+    tmp_path, monkeypatch, capsys
+):
+    import json
+
+    models_dir = _seed_with_participant_model(tmp_path)
+    monkeypatch.setattr(
+        "src.models.pymc_inference.prior_predict_p_left_draws", _undefined_on_long_pairs
+    )
+    out_path = tmp_path / "screened_out.json"
+
+    stimuli = _design(
+        models_dir, lengths=(2, 3), n_select=2,
+        n_samples=5, n_scenarios=20, screened_out_path=out_path,
+    )
+
+    assert len(stimuli) == 2
+    recorded = {d["model"]: d for d in json.loads(out_path.read_text(encoding="utf-8"))}
+    assert set(recorded) == {"participant_re", "representativeness"}
+    bad = recorded["representativeness"]
+    assert bad["invalid_pairs"] == 28  # every length-3 pair of the pool
+    assert "prior-predictive p_left is undefined" in bad["reason"]
+    assert "[screen] EIG: model 'representativeness'" in capsys.readouterr().out
+
+
+def test_design_fails_loudly_when_no_model_has_a_defined_p_left(tmp_path, monkeypatch):
+    from src.models.pymc_inference import InvalidPredictions
+
+    models_dir = _seed_with_participant_model(tmp_path)
+
+    def all_undefined(names, d, rows, *, n_samples=200, seed=42):
+        raise InvalidPredictions("bad", np.full((n_samples, len(rows)), np.nan))
+
+    monkeypatch.setattr(
+        "src.models.pymc_inference.prior_predict_p_left_draws", all_undefined
+    )
+    with pytest.raises(ValueError, match="defined p_left"):
+        _design(models_dir, lengths=(3,), n_select=2, n_samples=5, n_scenarios=20)
+
+
+def test_posterior_design_screens_out_a_model_with_an_undefined_p_left(tmp_path, monkeypatch):
+    import src.models.data_binding as data_binding
+    import src.models.pymc_inference as pymc_inference
+    from src.models.pymc_inference import InvalidPredictions
+
+    class Fitted:
+        model = None
+
+        def __init__(self, name):
+            self.name = name
+
+        def predict_p_left_draws(self, stim_data, *, seed, max_draws):
+            if self.name == "bad":
+                raise InvalidPredictions("bad", np.array([[np.nan, 0.5]]))
+            return np.full((1, 2), 0.5)
+
+    monkeypatch.setattr(pymc_inference, "fit_model", lambda name, *a, **k: Fitted(name))
+    monkeypatch.setattr(pymc_inference, "model_sampler_settings", lambda n, d: {})
+    monkeypatch.setattr(data_binding, "make_stim_data", lambda model, rows: {})
+    rows = [{"sequence_a": "HT", "sequence_b": "HH"}, {"sequence_a": "TT", "sequence_b": "TH"}]
+
+    draws, screened = eig_mod._posterior_p_left_draws(
+        ["good", "bad"], tmp_path, rows, responses_csv=tmp_path / "r.csv",
+        fit_cache_dir=None, max_draws=10, seed=0,
+    )
+
+    assert list(draws) == ["good"]
+    (entry,) = screened
+    assert entry["model"] == "bad" and entry["invalid_pairs"] == 1
+    assert "HT vs HH" in entry["reason"]

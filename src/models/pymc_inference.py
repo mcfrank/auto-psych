@@ -219,7 +219,7 @@ def prior_predict_p_left_draws(
                 var_names=[var_name],
                 random_seed=seed,
             )
-        arr = validate_probability_array(
+        arr = _validated_p_left_draws(
             ppc.prior[var_name].values,
             context=f"Model {name!r} prior-predictive {var_name}",
         )  # shape: (chain, draw, n_rows)
@@ -484,14 +484,32 @@ def _thin_posterior(idata: Any, max_draws: int) -> Any:
 
 
 class InvalidPredictions(ValueError):
-    """Posterior-predictive p_left that is not a probability (NaN, or outside
-    [0, 1]). ``draws`` holds the (draw, stimulus) predictions with every
-    invalid value set to NaN, so the recovery evaluation can exclude exactly
-    those stimuli — and log them — while every other caller fails loudly."""
+    """Predictive p_left that is not a probability (NaN, or outside [0, 1]).
+    ``draws`` holds the (draw, stimulus) predictions with every invalid value
+    set to NaN, so a caller can tell exactly which stimuli are affected: the
+    recovery evaluation excludes and logs them, the design screens the model
+    out (``design/screened_out.json``), the novelty gate rejects a candidate
+    with the reason. Every other caller fails loudly."""
 
     def __init__(self, message: str, draws: np.ndarray) -> None:
         super().__init__(message)
         self.draws = draws
+
+    def invalid_stimuli(self) -> np.ndarray:
+        """Boolean mask over stimuli: True where any draw is not a probability."""
+        return np.isnan(self.draws).any(axis=0)
+
+
+def _validated_p_left_draws(raw: Any, *, context: str) -> np.ndarray:
+    """``raw`` (..., n_stim) as floats; ``InvalidPredictions`` if any value is
+    not a probability."""
+    try:
+        return validate_probability_array(raw, context=context)
+    except ValueError as exc:
+        raw = np.asarray(raw, dtype=float)
+        bad = ~np.isfinite(raw) | (raw < 0) | (raw > 1)
+        masked = np.where(bad, np.nan, raw).reshape(-1, raw.shape[-1])
+        raise InvalidPredictions(str(exc), masked) from exc
 
 
 @dataclass
@@ -539,15 +557,10 @@ class FittedModel:
                 random_seed=seed,
                 progressbar=False,
             )
-        raw = pp.posterior_predictive[var_name].values
-        try:
-            arr = validate_probability_array(
-                raw, context=f"Model {self.name!r} posterior-predictive {var_name}"
-            )  # (chain, draw, n_stim)
-        except ValueError as exc:
-            bad = ~np.isfinite(raw) | (raw < 0) | (raw > 1)
-            masked = np.where(bad, np.nan, raw).reshape(-1, raw.shape[-1])
-            raise InvalidPredictions(str(exc), masked) from exc
+        arr = _validated_p_left_draws(
+            pp.posterior_predictive[var_name].values,
+            context=f"Model {self.name!r} posterior-predictive {var_name}",
+        )  # (chain, draw, n_stim)
         draws = arr.reshape(-1, arr.shape[-1])
         # Count trials from the observed-response container, which is per-trial by
         # construction, rather than from an arbitrary first entry of ``stim_data``.
