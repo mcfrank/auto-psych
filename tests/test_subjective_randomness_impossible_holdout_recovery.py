@@ -15,6 +15,7 @@ from __future__ import annotations
 import json
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -94,6 +95,23 @@ def _stub_generate_responses(calls):
     return generate
 
 
+def _write_cumulative_responses(exp_dir):
+    """What the real inner loop writes to model_loop/responses.csv: every
+    experiment's collected responses so far, each once."""
+    exp_dir = Path(exp_dir)
+    exp_num = int(exp_dir.name.removeprefix("experiment"))
+    header, rows = None, []
+    for k in range(1, exp_num + 1):
+        lines = (exp_dir.parent / f"experiment{k}" / "data" / "responses.csv").read_text(
+            encoding="utf-8"
+        ).splitlines()
+        header = lines[0]
+        rows += lines[1:]
+    (exp_dir / "model_loop" / "responses.csv").write_text(
+        "\n".join([header, *rows]) + "\n", encoding="utf-8"
+    )
+
+
 def _stub_inner_loop(history_best):
     # ``history_best`` must be a model present in the experiment's seeded
     # cognitive_models — one of the live pool's faithful seeds, since these
@@ -133,7 +151,7 @@ def _stub_inner_loop(history_best):
             encoding="utf-8",
         )
         (loop_dir / "report.md").write_text("# stub report\n", encoding="utf-8")
-        (loop_dir / "responses.csv").write_text("chose_left\n1\n", encoding="utf-8")
+        _write_cumulative_responses(loop_dir.parent)
 
         # Mirror _export_inner_loop_models' semantics: ``history_best`` is
         # already in cognitive_models (a pool model that won), so nothing is
@@ -400,6 +418,12 @@ def test_impossible_holdout_exhaustive_eval_thins_posterior(tmp_path, monkeypatc
         def predict_p_left(self, stim_data, *, max_draws=None):
             predict_max_draws_seen.append(max_draws)
             return np.linspace(0.1, 0.9, stim_data["n"])
+
+        def loo_diagnostics(self):
+            return SimpleNamespace(elpd_loo=-1.0, unreliable=False)
+
+        def convergence_problems(self):
+            return []
 
     monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
     monkeypatch.setattr(

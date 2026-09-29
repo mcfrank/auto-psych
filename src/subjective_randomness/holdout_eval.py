@@ -220,11 +220,16 @@ def _fitted_seed_baseline(
     """Fit each canonical seed model on ``responses_path`` and correlate with GT.
 
     Predicts held-out ``p_left`` for each seed model and correlates with the
-    ground truth. Returns the mean Pearson r / RMSE over the seed models and the
-    per-model breakdown — the recovery from *fitting the existing starting
-    models*, with no agent-discovered structure.
+    ground truth: the recovery from *fitting the existing starting models*,
+    with no agent-discovered structure. Per model it records Pearson r, RMSE,
+    ELPD-LOO and whether the fit can be trusted (reliable PSIS-LOO and a
+    converged fit). The headline baseline is the ELPD-best trusted seed —
+    chosen on the training data, as the loop chooses its own winner
+    (``elpd_best_model`` / ``elpd_best_r`` / ``elpd_best_rmse``; ``None`` with
+    ``elpd_best_reason`` when no seed can be trusted). The mean over seeds is
+    kept as a reference field.
     """
-    per_model: Dict[str, Dict[str, Optional[float]]] = {}
+    per_model: Dict[str, Dict[str, Any]] = {}
     for name in seed_models:
         fitted = fit_model(
             name,
@@ -237,16 +242,27 @@ def _fitted_seed_baseline(
             fitted, eval_rows, participant_ids=participant_ids,
             max_draws=predict_max_draws,
         )
+        loo = fitted.loo_diagnostics()
         per_model[name] = {
             "pearson_r": pearson_r(gt_p.tolist(), pred.tolist()),
             "rmse": float(np.sqrt(np.mean((gt_p - pred) ** 2))),
+            "elpd_loo": float(loo.elpd_loo),
+            "trusted": not loo.unreliable and not fitted.convergence_problems(),
         }
     rs = [v["pearson_r"] for v in per_model.values() if v["pearson_r"] is not None]
     rmses = [v["rmse"] for v in per_model.values()]
+    trusted = [name for name, v in per_model.items() if v["trusted"]]
+    best = max(trusted, key=lambda name: per_model[name]["elpd_loo"]) if trusted else None
     return {
         "pearson_r": float(np.mean(rs)) if rs else None,
         "rmse": float(np.mean(rmses)) if rmses else None,
         "per_model": per_model,
+        "elpd_best_model": best,
+        "elpd_best_r": per_model[best]["pearson_r"] if best else None,
+        "elpd_best_rmse": per_model[best]["rmse"] if best else None,
+        "elpd_best_reason": (
+            None if best else "no seed's fit can be trusted (unreliable PSIS-LOO or no convergence)"
+        ),
     }
 
 
@@ -449,40 +465,35 @@ def seed_baseline_correlation(
     return {"mean_r": float(np.mean(defined)), "per_model": per_model}
 
 
-def _pool_experiment_responses(run_root: Path, n_experiments: int) -> Path:
-    """Concatenate every experiment's inner-loop responses into one CSV.
+def _all_responses_so_far(run_root: Path, n_experiments: int) -> Path:
+    """The final experiment's cumulative inner-loop responses: every experiment once.
 
-    All experiments draw from the same ground-truth process (differing only in
-    stimuli), so their featurized responses share a schema and pool cleanly.
-    Written deterministically to ``run_root/pooled_responses.csv`` so the fit it
-    feeds is cache-stable across re-runs. Fails loudly on a missing file or a
-    column-schema mismatch.
+    Each experiment's ``model_loop/responses.csv`` already holds experiments
+    1..k, so the last one is the full training set (concatenating them used to
+    count experiment 1 once per experiment). Checked against the experiments'
+    own ``data/responses.csv`` row counts; a mismatch raises.
     """
     run_root = Path(run_root)
-    fieldnames: Optional[Sequence[str]] = None
-    pooled: List[Dict[str, str]] = []
+    final = run_root / f"experiment{n_experiments}" / "model_loop" / "responses.csv"
+    if not final.exists():
+        raise FileNotFoundError(f"Missing the final experiment's responses: {final}")
+    expected = 0
     for exp_num in range(1, n_experiments + 1):
-        path = run_root / f"experiment{exp_num}" / "model_loop" / "responses.csv"
-        if not path.exists():
-            raise FileNotFoundError(
-                f"Missing inner-loop responses for experiment {exp_num}: {path}"
-            )
-        with path.open(encoding="utf-8", newline="") as f:
-            reader = csv.DictReader(f)
-            if fieldnames is None:
-                fieldnames = reader.fieldnames
-            elif reader.fieldnames != fieldnames:
-                raise ValueError(
-                    f"Response-column mismatch pooling experiment {exp_num}: "
-                    f"{reader.fieldnames} != {fieldnames}"
-                )
-            pooled.extend(reader)
-    out_path = run_root / "pooled_responses.csv"
-    with out_path.open("w", encoding="utf-8", newline="") as f:
-        writer = csv.DictWriter(f, fieldnames=list(fieldnames or []))
-        writer.writeheader()
-        writer.writerows(pooled)
-    return out_path
+        data = run_root / f"experiment{exp_num}" / "data" / "responses.csv"
+        if not data.exists():
+            raise FileNotFoundError(f"Missing responses for experiment {exp_num}: {data}")
+        expected += _n_rows(data)
+    if _n_rows(final) != expected:
+        raise ValueError(
+            f"{final} has {_n_rows(final)} rows but the experiments collected "
+            f"{expected}: it must hold every experiment's responses exactly once."
+        )
+    return final
+
+
+def _n_rows(csv_path: Path) -> int:
+    with Path(csv_path).open(encoding="utf-8") as f:
+        return sum(1 for _ in f) - 1
 
 
 def fitted_seed_baseline_correlation(
@@ -501,12 +512,13 @@ def fitted_seed_baseline_correlation(
 ) -> Dict[str, Any]:
     """Fitted-seed baseline: other seed models fit on *all* collected data.
 
-    Pools every experiment's responses, fits each non-GT seed model once on the
-    pool, predicts held-out ``p_left``, and correlates with the ground truth.
-    Returns the mean Pearson r / RMSE over the seed models, the per-model
-    breakdown, and the pooled response count — one flat number per ground truth.
-    It isolates the value of agent-discovered structure: same data, same fitting
-    machinery, only the starting model forms.
+    Fits each non-GT seed model once on every experiment's responses (each
+    counted once), predicts held-out ``p_left``, and correlates with the
+    ground truth. Reports the ELPD-best trusted seed as the baseline (see
+    ``_fitted_seed_baseline``), the mean over seeds as a reference, the
+    per-model breakdown and the response count. It isolates the value of
+    agent-discovered structure: same data, same fitting machinery, same
+    selection rule, only the starting model forms.
     """
     run_root = Path(run_root)
     gt_models_dir = (
@@ -514,14 +526,14 @@ def fitted_seed_baseline_correlation(
     )
     gt_p = p_left_fixed_params(gt_model, gt_models_dir, eval_stimuli, gt_params)
     eval_rows = _raw_eval_rows(eval_stimuli)
-    pooled_path = _pool_experiment_responses(run_root, n_experiments)
-    participant_ids = _participant_ids_in(pooled_path)
-    n_responses = sum(1 for _ in pooled_path.open(encoding="utf-8")) - 1
+    responses_path = _all_responses_so_far(run_root, n_experiments)
+    participant_ids = _participant_ids_in(responses_path)
+    n_responses = _n_rows(responses_path)
 
     baseline = _fitted_seed_baseline(
         other_seed_models,
         Path(seed_models_dir),
-        pooled_path,
+        responses_path,
         eval_rows,
         gt_p,
         participant_ids=participant_ids,

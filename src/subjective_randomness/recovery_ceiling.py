@@ -107,20 +107,19 @@ def training_responses(run_root: Path, n_experiments: int) -> Path:
     """The CSV the loop's final models were fit on.
 
     The inner loop pools every experiment's responses, so the last experiment's
-    ``model_loop/responses.csv`` is the full training set. Falls back to the
-    evaluator's ``pooled_responses.csv``. Raises if neither exists — a ceiling
-    computed on different data than the loop saw would not be a ceiling.
+    ``model_loop/responses.csv`` is the full training set. Raises if there is
+    none — a ceiling computed on different data than the loop saw would not be
+    a ceiling. (The evaluator's old ``pooled_responses.csv`` concatenated the
+    cumulative files, counting experiment 1 once per experiment; it is never
+    used.)
     """
     for exp_num in range(n_experiments, 0, -1):
         candidate = run_root / f"experiment{exp_num}" / "model_loop" / "responses.csv"
         if candidate.is_file():
             return candidate
-    pooled = run_root / "pooled_responses.csv"
-    if pooled.is_file():
-        return pooled
     raise FileNotFoundError(
         f"No training responses under {run_root} "
-        f"(looked for experiment*/model_loop/responses.csv and pooled_responses.csv)"
+        f"(looked for experiment*/model_loop/responses.csv)"
     )
 
 

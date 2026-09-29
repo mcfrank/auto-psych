@@ -573,6 +573,11 @@ class FittedModel:
             self._loo_diagnostics = loo_diagnostics(self.idata)
         return self._loo_diagnostics
 
+    def convergence_problems(self) -> List[str]:
+        """Why this fit has not converged (empty when it has); see
+        :func:`convergence_problems`."""
+        return convergence_problems_of(self)
+
     def elpd_loo(self) -> float:
         """Expected log pointwise predictive density (PSIS-LOO).
 

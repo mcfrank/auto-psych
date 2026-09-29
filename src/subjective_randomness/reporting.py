@@ -22,6 +22,7 @@ text into a key-results file alongside the figures):
 from __future__ import annotations
 
 import math
+import sys
 from collections import defaultdict
 from pathlib import Path
 from statistics import mean as _mean
@@ -382,6 +383,7 @@ _HOLDOUT_METRIC_SPECS = {
         "best_key": "pearson_r",
         "bma_key": "pearson_r_bma",
         "baseline_field": "mean_r",
+        "fitted_baseline_field": "elpd_best_r",
         "ylabel": "Pearson r vs. ground-truth p_left (held-out stimuli)",
         "suptitle": (
             "Holdout recovery — best model vs. Bayesian model average "
@@ -400,6 +402,7 @@ _HOLDOUT_METRIC_SPECS = {
         "best_key": "rmse",
         "bma_key": "rmse_bma",
         "baseline_field": "mean_rmse",
+        "fitted_baseline_field": "elpd_best_rmse",
         "ylabel": "RMSE vs. ground-truth p_left (held-out stimuli)",
         "suptitle": (
             "Holdout recovery — RMSE of best model vs. Bayesian model average "
@@ -473,10 +476,15 @@ def plot_holdout_trajectories(
         # Two flat seed-model baselines (constant across steps): the other seed
         # models with default params, and those seed models fit on all the data.
         for run_key, baseline_color, baseline_style, baseline_label in (
-            ("fitted_baseline", SEED_FIT_COLOR, ":", "seed models (fit to all data)"),
+            ("fitted_baseline", SEED_FIT_COLOR, ":", "ELPD-best seed model (fit to all data)"),
             ("baseline", BASELINE_COLOR, "-.", "seed models (default params)"),
         ):
-            baseline_value = (gt_run.get(run_key) or {}).get(spec["baseline_field"])
+            field = (
+                spec["fitted_baseline_field"]
+                if run_key == "fitted_baseline"
+                else spec["baseline_field"]
+            )
+            baseline_value = (gt_run.get(run_key) or {}).get(field)
             if baseline_value is not None:
                 plotted_values.append(baseline_value)
                 ax.axhline(
@@ -557,21 +565,36 @@ def _summarize(values: List[float], error: str) -> Mapping[str, Any]:
 def _best_seed_value(
     baseline: Mapping[str, Any], run_key: str, spec: Mapping[str, Any]
 ) -> Any:
-    """The best (not mean) recovery among the non-held-out seed models, or None.
+    """A cell's seed-model baseline value for the combined figure, or None.
 
-    Each held-out result stores every sibling seed model's recovery under
-    ``per_model``. The fit-to-all-data baseline stores a ``{metric: value}``
-    dict per model; the default-params baseline stores only a bare Pearson r
-    per model (so it has no RMSE). "Best" is the max for a higher-is-better
-    metric (Pearson r) and the min for RMSE.
+    The fit-to-all-data baseline is the ELPD-best seed — chosen on the
+    training data, as the loop chooses its winner (``elpd_best_*``). It used to
+    be the seed with the best held-out value against the ground truth, which
+    only an oracle could choose. A result scored before ``elpd_best_*`` existed
+    has no such baseline; that is said on stderr, not papered over.
+
+    The default-params baseline stores only a bare Pearson r per model (so it
+    has no RMSE) and no ELPD; for it "best" is still the max r, an explicitly
+    optimistic reference.
     """
     per_model = baseline.get("per_model")
     if not per_model:
         return None
     metric_key = spec["best_key"]
     if run_key == "fitted_baseline":
-        values = [entry.get(metric_key) for entry in per_model.values()]
-    elif metric_key == "pearson_r":  # default-params baseline: bare Pearson r
+        field = spec["fitted_baseline_field"]
+        if field not in baseline:
+            print(
+                f"  [warn] a result has no ELPD-best seed ({field!r} missing: scored "
+                "before it existed); its fitted-seed baseline is left out. "
+                "Re-score it to include it.",
+                file=sys.stderr,
+                flush=True,
+            )
+            return None
+        value = baseline[field]
+        return value if _is_finite(value) else None
+    if metric_key == "pearson_r":  # default-params baseline: bare Pearson r
         values = list(per_model.values())
     else:
         return None  # default-params baseline has no RMSE
@@ -678,7 +701,7 @@ _DEFAULT_PARAMS_LABEL = "best seed (default params)"
 # ground truth is itself a seed model, so the baseline is the best of the *other*
 # seed models. Impossible recovery holds out no seed (the ground truth lies
 # outside the seed family), so its caller passes "best seed model" instead.
-DEFAULT_FITTED_BASELINE_LABEL = "best other seed model"
+DEFAULT_FITTED_BASELINE_LABEL = "ELPD-best other seed model"
 
 # The x axis counts inner-loop scoring steps in the full pipeline. The
 # no-inner-loop ablation has a single step per experiment, so its callers pass

@@ -58,7 +58,7 @@ def test_discover_cells_finds_every_cell_and_raises_on_an_empty_root(tmp_path):
         discover_cells(tmp_path / "absent")
 
 
-def test_training_responses_prefers_the_last_experiment_then_pooled(tmp_path):
+def test_training_responses_is_the_last_experiments_cumulative_file(tmp_path):
     run_root = tmp_path / "_runs" / "gt"
     for exp in (1, 2):
         (run_root / f"experiment{exp}" / "model_loop").mkdir(parents=True)
@@ -68,10 +68,11 @@ def test_training_responses_prefers_the_last_experiment_then_pooled(tmp_path):
 
     bare = tmp_path / "bare"
     bare.mkdir()
+    # pooled_responses.csv concatenated cumulative files (experiment 1 counted
+    # once per experiment); it is never a training set.
+    (bare / "pooled_responses.csv").write_text("a\n")
     with pytest.raises(FileNotFoundError, match="No training responses"):
         training_responses(bare, 3)
-    (bare / "pooled_responses.csv").write_text("a\n")
-    assert training_responses(bare, 3).name == "pooled_responses.csv"
 
 
 def test_final_step_reader_handles_missing_and_empty_csv(tmp_path):

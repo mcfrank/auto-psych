@@ -11,6 +11,7 @@ import csv
 import json
 import os
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -79,6 +80,12 @@ def _patch_oracle_seams(monkeypatch, gt_p, predictions):
     monkeypatch.setattr(oracle_mod, "pm_data_inputs", lambda model: [])
 
     class Fitted:
+        def loo_diagnostics(self):
+            return SimpleNamespace(elpd_loo=-1.0, unreliable=False)
+
+        def convergence_problems(self):
+            return []
+
         model = None
         def __init__(self, name):
             self.name = name
