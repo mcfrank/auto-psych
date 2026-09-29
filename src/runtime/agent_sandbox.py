@@ -15,7 +15,9 @@ wraps the CLI's argv in a bubblewrap mount namespace that contains only:
   /share/software, where Sherlock's modules live), the Python venv the harness
   runs with and its base interpreter, and the agent's own CLI;
 - the agent's login and nothing else of the user's configuration: Claude
-  through the long-lived CLAUDE_CODE_OAUTH_TOKEN, codex through a private
+  through the long-lived CLAUDE_CODE_OAUTH_TOKEN (``subscription``) or
+  ANTHROPIC_API_KEY (``api``) — whichever the run's ``CLAUDE_AUTH`` names, and
+  never both (``claude_login_environment``) — codex through a private
   CODEX_HOME holding only auth.json, opencode through the provider key in its
   environment;
 - an allowlisted environment (``agent_environment``): the system basics, the
@@ -80,6 +82,84 @@ BACKEND_ENV = {
 }
 
 
+# How Claude agents are billed. The mode is stated per run (config key
+# agent.claude_auth, CLI flag --claude-auth, or CLAUDE_AUTH in the job
+# scripts) and reaches this module as CLAUDE_AUTH in the harness's
+# environment; there is no default, because the credential decides who pays:
+# the CLI prefers ANTHROPIC_API_KEY over the subscription's OAuth token, so a
+# stray key in .secrets used to move a subscription run onto API billing.
+CLAUDE_AUTH_ENV = "CLAUDE_AUTH"
+CLAUDE_AUTH_CREDENTIAL = {
+    "subscription": "CLAUDE_CODE_OAUTH_TOKEN",  # `claude setup-token`
+    "api": "ANTHROPIC_API_KEY",
+}
+
+
+def _claude_auth_mode(mode: str | None) -> str:
+    if mode is None or mode == "":
+        raise RuntimeError(
+            "Claude agents need a stated billing mode: set agent.claude_auth in the "
+            "config, pass --claude-auth, or export CLAUDE_AUTH for the job scripts "
+            f"(one of {sorted(CLAUDE_AUTH_CREDENTIAL)})."
+        )
+    if mode not in CLAUDE_AUTH_CREDENTIAL:
+        raise ValueError(
+            f"unknown Claude billing mode {mode!r} (expected one of "
+            f"{sorted(CLAUDE_AUTH_CREDENTIAL)})."
+        )
+    return mode
+
+
+def require_claude_auth(
+    backend: str, mode: str | None, env: Dict[str, str] | None = None
+) -> str | None:
+    """Check, before any agent starts, that a ``claude`` run states how its
+    agents are billed and holds that mode's credential; return the mode.
+
+    ``mode`` is the run's setting (CLI flag, then config), else ``env``'s
+    ``CLAUDE_AUTH``. The mode is written back to ``env`` (default: this
+    process's environment), where the sandbox reads it for every agent. A
+    backend other than ``claude`` needs no mode and returns None.
+    """
+    env = os.environ if env is None else env
+    if backend != "claude":
+        if mode is not None:
+            _claude_auth_mode(mode)
+        return None
+    mode = _claude_auth_mode(mode or env.get(CLAUDE_AUTH_ENV))
+    credential = CLAUDE_AUTH_CREDENTIAL[mode]
+    if not env.get(credential):
+        raise RuntimeError(
+            f"Claude agents are billed by {mode!r} but {credential} is not set; add it "
+            "to .secrets (the job scripts export every key there)."
+        )
+    env[CLAUDE_AUTH_ENV] = mode
+    return mode
+
+
+def claude_login_environment(env: Dict[str, str], mode: str | None) -> None:
+    """Give a Claude agent's environment ``mode``'s credential and no other.
+
+    ``subscription``: CLAUDE_CODE_OAUTH_TOKEN and no ``ANTHROPIC_*`` variable
+    (an API key or base URL would take over the login); ``api``:
+    ANTHROPIC_API_KEY and no OAuth token. Raises when the mode is missing or
+    its credential is not in ``env``.
+    """
+    mode = _claude_auth_mode(mode)
+    credential = CLAUDE_AUTH_CREDENTIAL[mode]
+    if not env.get(credential):
+        raise RuntimeError(
+            f"A sandboxed Claude agent billed by {mode!r} needs {credential}"
+            + (": run `claude setup-token` once and add the token to .secrets."
+               if mode == "subscription" else " in .secrets.")
+        )
+    for key in list(env):
+        if mode == "subscription" and key.startswith("ANTHROPIC_"):
+            del env[key]
+        if mode == "api" and key == CLAUDE_AUTH_CREDENTIAL["subscription"]:
+            del env[key]
+
+
 def agent_environment(env: Mapping[str, str], backend: str) -> Dict[str, str]:
     """The allowlisted part of ``env`` a sandboxed ``backend`` agent runs with.
 
@@ -124,6 +204,7 @@ def sandbox_command(
             "Sandboxed agents need bubblewrap on PATH (on Sherlock: "
             "`ml load system bubblewrap`)."
         )
+    claude_auth = env.get(CLAUDE_AUTH_ENV)
     env = agent_environment(env, backend)
     user_home = Path(env.get("HOME") or Path.home())
     agent_dir = Path(agent_dir)
@@ -158,7 +239,7 @@ def sandbox_command(
     executable, cli_mount = _cli_install(cmd[0], backend)
     if cli_mount is not None:
         args += ["--ro-bind", str(cli_mount), str(cli_mount)]
-    args += _login(backend, env, user_home, private_home)
+    args += _login(backend, env, user_home, private_home, claude_auth)
 
     env["TMPDIR"] = "/tmp"
     # Caches go to the private home, removed when the agent exits, so scratch/
@@ -270,19 +351,19 @@ def _cli_install(name: str, backend: str) -> Tuple[str, Path | None]:
 
 
 def _login(
-    backend: str, env: Dict[str, str], user_home: Path, private_home: Path
+    backend: str,
+    env: Dict[str, str],
+    user_home: Path,
+    private_home: Path,
+    claude_auth: str | None = None,
 ) -> List[str]:
     """Mount (or require) the backend's credentials; adjust ``env`` in place."""
     if backend == "claude":
         # The login in ~/.claude/.credentials.json is an OAuth token the CLI
         # refreshes by rewriting the file, which a sandbox mount cannot promise
         # to allow; `claude setup-token` issues a long-lived subscription token
-        # that needs no file and no refresh.
-        if not env.get("CLAUDE_CODE_OAUTH_TOKEN"):
-            raise RuntimeError(
-                "A sandboxed Claude agent needs CLAUDE_CODE_OAUTH_TOKEN: run "
-                "`claude setup-token` once and add the token to .secrets."
-            )
+        # that needs no file and no refresh. An API key needs nothing either.
+        claude_login_environment(env, claude_auth)
         return []
     if backend == "codex":
         # ~/.codex also holds every past session transcript and the user's

@@ -414,6 +414,7 @@ env "${UNSET_ARGS[@]}" "$AGENT_DIR/venv/bin/python" scripts/subjective_randomnes
   --gt-family-dir "$GT_FAMILY_SRC" \
   --seed "$SEED" \
   --backend "${AGENT_BACKEND:-opencode}" \
+  ${CLAUDE_AUTH:+--claude-auth "$CLAUDE_AUTH"} \
   ${AGENT_MODEL:+--agent-model "$AGENT_MODEL"} \
   --chains "${CHAINS:-4}" \
   --out      "$RUN_DIR/holdout.json" \

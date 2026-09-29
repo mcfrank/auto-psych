@@ -553,7 +553,17 @@ used by the active loops (per `README.md`).
 - Secrets live in repo-root `.secrets` (see `.secrets.example`): `PROLIFIC_API_TOKEN`,
   `FIREBASE_TOKEN` (`firebase login:ci`), `AUTO_PSYCH_RESULTS_TOKEN` (guards the
   `/submit` & `/results` Cloud Functions — deploy/collect fail loudly without it),
-  `GOOGLE_API_KEY` (simulated/Gemini paths only).
+  `GOOGLE_API_KEY` (simulated/Gemini paths only), and for Claude agents
+  `CLAUDE_CODE_OAUTH_TOKEN` (subscription) and/or `ANTHROPIC_API_KEY` (API).
+- **Claude billing is stated per run, never guessed.** With the `claude`
+  backend a run needs `agent.claude_auth` / `--claude-auth` / `CLAUDE_AUTH`
+  (`subscription` or `api`; job scripts pass `CLAUDE_AUTH` to the flag) and
+  that mode's credential, checked before any agent starts
+  (`require_claude_auth` in `src/runtime/agent_sandbox.py`). Each sandboxed
+  agent gets only that credential: in `subscription` mode no `ANTHROPIC_*`
+  variable (the CLI prefers an API key over the OAuth token), in `api` mode no
+  OAuth token. The mode is recorded on every token-usage record and in
+  `holdout.json` (`agent.claude_auth`).
 - On Sherlock: never run heavy work on the login node (submit via Slurm), keep
   job I/O on `$SCRATCH`, and note Playwright browser simulation does **not** run
   on the compute nodes (glibc 2.17) — use `--mode simulated_participants_nobrowser`.

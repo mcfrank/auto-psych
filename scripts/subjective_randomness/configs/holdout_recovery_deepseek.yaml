@@ -28,6 +28,7 @@ inner_loop:
 agent:
   timeout_sec: 900
   backend: opencode # null -> CODING_AGENT env var, then "claude"
+  claude_auth: null  # required with the claude backend: subscription | api (--claude-auth, CLAUDE_AUTH)
   model: fireworks-ai/accounts/fireworks/models/deepseek-v4-flash-0731
 
 # Held-out evaluation stimuli (see holdout_recovery.yaml for the rationale).

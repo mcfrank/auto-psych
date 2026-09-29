@@ -49,6 +49,7 @@ design:
 agent:
   timeout_sec: 1800  # 30 min: Opus often ran out at 15 while checking a finished candidate
   backend: opencode # null -> CODING_AGENT env var, then "claude"
+  claude_auth: null  # required with the claude backend: subscription | api (--claude-auth, CLAUDE_AUTH)
   model: google/gemini-3.1-pro-preview
 
 # Held-out evaluation stimuli (see holdout_recovery.yaml for the rationale).

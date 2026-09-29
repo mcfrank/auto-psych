@@ -45,9 +45,19 @@ and the npm registry directly.
 
 ## Prerequisites (one-time)
 
-1. **Coding-agent auth** — Claude Code is already authenticated under `~/.claude`
-   (visible from compute nodes via NFS `$HOME`). Nothing to do unless the login
-   expires (`claude` then re-prompts on a login shell).
+1. **Coding-agent auth** — with `coding_agent: claude`, say how its agents are
+   billed; there is no default, and a run without it (or without the mode's
+   credential in `.secrets`) stops before any agent starts. Every loop agent
+   runs in a sandbox that cannot use the `~/.claude` login.
+   - Subscription: `claude_auth: subscription` in `pilot.yaml` (or
+     `CLAUDE_AUTH=subscription`) and `CLAUDE_CODE_OAUTH_TOKEN` in `.secrets`
+     (run `claude setup-token` once).
+   - API, per token: `claude_auth: api` (or `CLAUDE_AUTH=api`) and
+     `ANTHROPIC_API_KEY` in `.secrets`.
+
+   The job passes it on as `--claude-auth`. Each agent gets only its mode's
+   credential, never both; the mode is recorded in each experiment's
+   `token_usage_summary.json` (`claude_auth`).
 
 2. **Secrets** — put these in the repo-root `.secrets` (see `.secrets.example`):
    - `PROLIFIC_API_TOKEN` — Prolific → account settings → API tokens.

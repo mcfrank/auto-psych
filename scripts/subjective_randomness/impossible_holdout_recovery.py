@@ -90,6 +90,11 @@ class Args:
     """Override the per-agent timeout in seconds."""
     backend: Optional[Literal["claude", "opencode", "codex"]] = None
     """Override the coding-agent backend (default: config, then CODING_AGENT env)."""
+    claude_auth: Optional[Literal["subscription", "api"]] = None
+    """How ``claude`` agents are billed: ``subscription`` (CLAUDE_CODE_OAUTH_TOKEN)
+    or ``api`` (ANTHROPIC_API_KEY). Overrides the config's agent.claude_auth;
+    without either, CLAUDE_AUTH. Required with the claude backend: the run
+    stops before any agent starts when it is missing or its credential is."""
     agent_model: Optional[str] = None
     """Override the coding-agent model id (default: the config's agent.model)."""
     agent_root: Optional[Path] = None
@@ -144,6 +149,7 @@ def main(args: Args) -> None:
         seed_override=args.seed,
         cache_dir=cache_dir,
         backend_override=args.backend,
+        claude_auth_override=args.claude_auth,
         agent_model_override=args.agent_model,
         agent_timeout_override=args.agent_timeout_sec,
         resume=args.resume,

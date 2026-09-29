@@ -28,6 +28,7 @@
 #   RUN_WORKTREE           per-run repo copy (its own public/, functions/, opencode.json)
 #   AUTO_PSYCH_OUTPUT_DIR  this run's data tree (avoids experiment{N}/ collisions)
 #   CODING_AGENT (opencode)  PROJECT (subjective_randomness)  EXPERIMENT (1)
+#   CLAUDE_AUTH            with CODING_AGENT=claude, required: subscription or api
 #   N_PARTICIPANTS (1)  FIREBASE_PROJECT
 
 set -euo pipefail
@@ -155,6 +156,7 @@ if [[ -n "${RESUME_AGENTS:-}" ]]; then
       --run-label "$RUN_LABEL" \
       --n-participants "$N_PARTICIPANTS" \
       --coding-agent "$CODING_AGENT" \
+      ${CLAUDE_AUTH:+--claude-auth "$CLAUDE_AUTH"} \
       --validate \
       --resume \
       --agent "$AK" \
@@ -171,6 +173,7 @@ else
     --run-label "$RUN_LABEL" \
     --n-participants "$N_PARTICIPANTS" \
     --coding-agent "$CODING_AGENT" \
+    ${CLAUDE_AUTH:+--claude-auth "$CLAUDE_AUTH"} \
     --validate \
     --resume \
     ${EXTRA[@]+"${EXTRA[@]}"}

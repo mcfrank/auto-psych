@@ -63,6 +63,7 @@ from src.pipelines.outer_loop.orchestrator import (
 )
 from src.pipelines.outer_loop.orchestrator_validators import validate_cc_output
 from src.pipelines.outer_loop.participants import DEFAULT_OPEN_MODEL
+from src.runtime.agent_sandbox import require_claude_auth
 from src.runtime.coding_agent import select_backend
 from src.runtime.token_usage import (
     format_summary,
@@ -593,6 +594,11 @@ class Args:
     coding_agent: Optional[Literal["claude", "opencode"]] = None
     """Coding-agent backend for outer and inner loops. Defaults to the CODING_AGENT
     env var, then 'opencode'. Pass 'claude' for Claude Code."""
+    claude_auth: Optional[Literal["subscription", "api"]] = None
+    """How ``claude`` agents are billed: ``subscription`` (CLAUDE_CODE_OAUTH_TOKEN)
+    or ``api`` (ANTHROPIC_API_KEY); without it, CLAUDE_AUTH. Required with the
+    claude backend: the run stops before any agent starts when it is missing
+    or its credential is."""
     participant_backend: Literal["closed", "open"] = "closed"
     """Participant model backend for simulated_participants_nobrowser."""
     closed_model: Optional[str] = None
@@ -721,6 +727,9 @@ def main(args: Args) -> None:
     # (which spawns its own agents) inherits the same choice.
     backend = select_backend(args.coding_agent)
     os.environ["CODING_AGENT"] = backend
+    # A claude run states how its agents are billed (exported as CLAUDE_AUTH
+    # for the sandbox), before any agent starts.
+    require_claude_auth(backend, args.claude_auth)
 
     fit_kwargs = {"draws": args.draws, "tune": args.tune, "chains": args.chains}
 

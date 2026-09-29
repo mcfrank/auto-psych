@@ -60,7 +60,12 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Sequence
 
 from src.runtime import token_usage
-from src.runtime.agent_sandbox import HOME_NAME, remove_private_home, sandbox_command
+from src.runtime.agent_sandbox import (
+    CLAUDE_AUTH_ENV,
+    HOME_NAME,
+    remove_private_home,
+    sandbox_command,
+)
 from src.runtime.config import (
     AGENT_USAGE_LIMIT_FALLBACK_WAIT_SEC,
     AGENT_USAGE_LIMIT_MAX_WAIT_SEC,
@@ -752,6 +757,8 @@ def run_coding_agent(
             )
 
     stdin_text = prompt if prompt_via_stdin(backend, prompt) else None
+    # How a Claude agent is billed (agent_sandbox.require_claude_auth), for the record.
+    claude_auth = child_env.get(CLAUDE_AUTH_ENV) if backend == "claude" else None
     own_dirs = [*writable_dirs, log_path.parent] if sandbox and wait_out_usage_limits else []
     kept = [log_path, log_path.parent / HOME_NAME, agent_data_home(log_path)]
     kept += [memory_dir] if memory_dir else []
@@ -788,7 +795,7 @@ def run_coding_agent(
             give_up = login_failure is not None or waited_sec + delay > AGENT_USAGE_LIMIT_MAX_WAIT_SEC
             token_usage.record_usage(
                 source=usage_label, backend=backend, model=model, **usage,
-                usage_limit=login_failure or limit.message,
+                claude_auth=claude_auth, usage_limit=login_failure or limit.message,
                 usage_limit_wait_sec=0.0 if give_up else delay,
             )
             if sandbox:
@@ -813,7 +820,7 @@ def run_coding_agent(
             run_cmd, run_env = launch()
 
     token_usage.record_usage(
-        source=usage_label, backend=backend, model=model, **usage
+        source=usage_label, backend=backend, model=model, **usage, claude_auth=claude_auth
     )
     if usage.get("usage_missing") and on_summary:
         on_summary(

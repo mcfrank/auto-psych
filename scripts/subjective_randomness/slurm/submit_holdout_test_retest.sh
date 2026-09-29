@@ -90,6 +90,15 @@ is_retry=""
 # agent (e.g. AGENT_BACKEND=claude AGENT_MODEL=claude-fable-5-1).
 [[ -n "${AGENT_BACKEND:-}" ]] && export AGENT_BACKEND
 [[ -n "${AGENT_MODEL:-}"   ]] && export AGENT_MODEL
+# How claude agents are billed: CLAUDE_AUTH=subscription (CLAUDE_CODE_OAUTH_TOKEN)
+# or CLAUDE_AUTH=api (ANTHROPIC_API_KEY), passed to --claude-auth. No default:
+# with AGENT_BACKEND=claude a sweep that does not say is refused here, before
+# anything is queued (and again by the harness, before any agent starts).
+[[ -n "${CLAUDE_AUTH:-}" ]] && export CLAUDE_AUTH
+if [[ "${AGENT_BACKEND:-}" == "claude" && -z "${CLAUDE_AUTH:-}" ]]; then
+  echo "ERROR: AGENT_BACKEND=claude needs CLAUDE_AUTH=subscription or CLAUDE_AUTH=api" >&2
+  exit 1
+fi
 
 # Keep Slurm logs off $HOME (15 GB, NFS). Mirror _env.sh's WORK_ROOT default.
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:-$GROUP_SCRATCH}/auto-psych/holdout_test_retest}"
