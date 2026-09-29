@@ -25,6 +25,7 @@ from src.models.model_loading import load_pymc_model, pm_data_inputs
 from src.models.pymc_inference import (
     evict_fit_cache,
     fit_model,
+    fit_models_to_cache,
     model_logp_is_finite,
 )
 from src.model_comparison.likelihood import log_likelihood
@@ -338,48 +339,67 @@ def _drop_nonfinite_elpd_models(
     experiment's *different* responses (e.g. it now assigns ~0 probability to a
     newly observed outcome). Such a model slips past the logp gate and crashes
     ``model_posterior`` (which refuses to softmax a non-finite ELPD), aborting the
-    whole run. Compute each model's ELPD-LOO now (reusing cached fits — no extra
-    MCMC) and drop the non-finite ones with a loud warning. Fails loudly only if
-    **no** model survives.
+    whole run. Compute each model's ELPD-LOO now and drop the non-finite ones
+    with a loud warning. Fails loudly only if **no** model survives.
+
+    This is also the experiment's first MCMC pass: every model in the set meets
+    this experiment's responses here for the first time, so the whole set is
+    sampled in one batch (``fit_models_to_cache`` — concurrent fits, each
+    persisted to ``cache_dir``) and everything downstream (the ELPD calls below,
+    scoring, the critique) reuses those fits. A model whose fit fails is dropped
+    on that report; it is not fit a second time.
     """
     fit_kwargs = fit_kwargs or {}
+    entries = _manifest_entries(models_dir)
+
+    def drop(entry: Dict[str, str], message: str, detail: str) -> None:
+        print(f"  [drop] model {entry['name']!r}: {message}; dropping.", flush=True)
+        _record(
+            ledger,
+            name=entry["name"],
+            outcome="dropped",
+            detail=detail,
+            hypothesis=entry.get("rationale") or "",
+            context=ledger_context,
+        )
+
+    fit_failures = fit_models_to_cache(
+        [entry["name"] for entry in entries],
+        models_dir,
+        responses_path,
+        cache_dir=cache_dir,
+        **fit_kwargs,
+    )
     keep: List[Dict[str, str]] = []
-    for entry in _manifest_entries(models_dir):
+    for entry in entries:
         name = entry["name"]
+        if name in fit_failures:
+            drop(
+                entry,
+                f"MCMC fit failed ({fit_failures[name]}) — cannot score it",
+                f"MCMC fit failed ({fit_failures[name]})",
+            )
+            continue
         try:
             elpd = log_likelihood(
                 name, responses_path, models_dir, cache_dir=cache_dir, **fit_kwargs
             )
         except Exception as e:  # noqa: BLE001 — any fit/LOO failure means unscorable
-            print(
-                f"  [drop] model {name!r}: ELPD-LOO computation failed "
-                f"({type(e).__name__}: {e}) — cannot score it; dropping.",
-                flush=True,
-            )
-            _record(
-                ledger,
-                name=name,
-                outcome="dropped",
-                detail=f"ELPD-LOO computation failed ({type(e).__name__}: {e})",
-                hypothesis=entry.get("rationale") or "",
-                context=ledger_context,
+            drop(
+                entry,
+                f"ELPD-LOO computation failed ({type(e).__name__}: {e}) — cannot "
+                "score it",
+                f"ELPD-LOO computation failed ({type(e).__name__}: {e})",
             )
             continue
         if math.isfinite(elpd):
             keep.append(entry)
         else:
-            print(
-                f"  [drop] model {name!r}: non-finite ELPD-LOO ({elpd}) on the data "
-                "— would corrupt the posterior; dropping.",
-                flush=True,
-            )
-            _record(
-                ledger,
-                name=name,
-                outcome="dropped",
-                detail=f"non-finite ELPD-LOO ({elpd}) on this experiment's data",
-                hypothesis=entry.get("rationale") or "",
-                context=ledger_context,
+            drop(
+                entry,
+                f"non-finite ELPD-LOO ({elpd}) on the data — would corrupt the "
+                "posterior",
+                f"non-finite ELPD-LOO ({elpd}) on this experiment's data",
             )
     if not keep:
         raise ValueError(
