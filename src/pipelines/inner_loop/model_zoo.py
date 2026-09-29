@@ -32,7 +32,7 @@ from src.model_comparison.posterior import compare_table
 from src.pipelines.inner_loop.hypothesis_ledger import (
     HypothesisLedger,
     LedgerEntry,
-    one_line,
+    collapse_whitespace,
 )
 from src.pipelines.inner_loop.import_gate import (
     CANDIDATE_IMPORT_ALLOWLIST,
@@ -216,8 +216,8 @@ def _record(
         LedgerEntry(
             name=name,
             outcome=outcome,
-            detail=one_line(detail),
-            hypothesis=one_line(hypothesis),
+            detail=collapse_whitespace(detail),
+            hypothesis=collapse_whitespace(hypothesis),
             context=context,
         )
     )

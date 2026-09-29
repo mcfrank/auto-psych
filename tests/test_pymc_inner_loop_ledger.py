@@ -89,18 +89,23 @@ def _patch_scoring(monkeypatch):
     )
 
 
-def _patch_candidates(monkeypatch, names_by_round, briefs):
-    """Round r's single agent proposes ``names_by_round[r]``; briefs are captured."""
+def _patch_candidates(monkeypatch, names_by_round, briefs, hypothesis_by_round=None):
+    """Round r's single agent proposes ``names_by_round[r]``; briefs are captured.
+
+    ``hypothesis_by_round`` overrides the one-sentence default hypothesis text
+    for the rounds it names.
+    """
+    hypothesis_by_round = hypothesis_by_round or {}
 
     def fake_spawn(candidate_dir, docs, **kwargs):
         round_idx = int(candidate_dir.parent.name.split("_")[1])
         name = names_by_round[round_idx]
         briefs.append(docs)
         (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
-        (candidate_dir / "hypothesis.md").write_text(
-            f"People use heuristic {name}. It is a single mechanism.\n",
-            encoding="utf-8",
+        hypothesis = hypothesis_by_round.get(
+            round_idx, f"People use heuristic {name}. It is a single mechanism.\n"
         )
+        (candidate_dir / "hypothesis.md").write_text(hypothesis, encoding="utf-8")
         (candidate_dir / "model_name.txt").write_text(name + "\n", encoding="utf-8")
         return True
 
@@ -219,3 +224,51 @@ def test_every_seeded_model_is_protected_when_no_protected_names_are_given(
 
     assert _manifest_names(results_dir / "models") == ["model_a", "model_b", "carried_c"]
     assert _ledger_rows(results_dir / LEDGER_FILENAME) == []
+
+
+def test_a_long_hypothesis_reaches_the_ledger_and_the_next_brief_intact(
+    tmp_path, monkeypatch
+):
+    """A hypothesis written by an agent is never truncated by the pipeline.
+
+    The ledger used to cut every hypothesis to 240 characters at write time,
+    so the full text was gone — not merely hidden — before it reached the
+    JSONL line, and the brief's table could only show one line per model.
+    """
+    seed_dir = write_seed_models(tmp_path)
+    responses = write_responses(tmp_path)
+    _patch_scoring(monkeypatch)
+    briefs = []
+    paragraphs = [
+        f"Paragraph {i}: the mechanism also predicts a further consequence "
+        f"for sequences whose run structure is unusual in way number {i}."
+        for i in range(24)
+    ]
+    long_hypothesis = "\n\n".join(paragraphs) + "\n"
+    assert len(long_hypothesis) > 2000
+    _patch_candidates(
+        monkeypatch, {0: "idea_one", 1: "idea_two"}, briefs,
+        hypothesis_by_round={0: long_hypothesis},
+    )
+    monkeypatch.setattr(
+        model_zoo, "_min_prediction_rmse", lambda *a, **k: (None, float("inf"))
+    )
+    results_dir = tmp_path / "model_loop"
+
+    run_pymc_inner_loop(
+        responses,
+        results_dir,
+        seed_models_dir=seed_dir,
+        max_iterations=2,
+        candidate_count=1,
+        enable_critique=False,
+        ledger_context="experiment2",
+    )
+
+    expected = " ".join(long_hypothesis.split())
+    rows = _ledger_rows(results_dir / LEDGER_FILENAME)
+    stored = [r["hypothesis"] for r in rows if r["name"] == "idea_one"]
+    assert stored == [expected, expected]  # admitted, then pruned
+    assert "…" not in "".join(stored)
+    # idea_one was pruned after round 0, so round 1's brief lists it — in full.
+    assert expected in briefs[1]["attempted"]

@@ -123,7 +123,11 @@ a rotating exploration "lens") → admit sequentially.
   re-propose": the retired hypotheses, i.e. those no longer in the set).
   Without it, pruned hypotheses vanished from `existing_hypotheses.md` and were
   re-proposed (in the weakest recovery cell 11 of 13 re-proposals had already
-  been pruned there).
+  been pruned there). Hypotheses are stored in full — whitespace collapsed,
+  never truncated — and rendered one heading per retired model rather than as
+  a table, so a multi-sentence hypothesis reaches the next round's brief
+  intact. `LedgerEntry` must not gain fields: `from_json` requires an exact
+  key-set match, so a new field makes every inherited ledger unreadable.
 - **Export**: the exported winner (`_best_exportable_model` in `scoring.py`) is the best model
   by **ELPD-LOO rank** (`az.compare`'s `rank`) among those whose PSIS-LOO is
   *reliable* — never the softmax posterior argmax: the posterior is rounded to

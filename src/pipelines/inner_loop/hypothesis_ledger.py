@@ -23,9 +23,11 @@ module. Events:
 - ``dropped`` — a seeded/carried model could not be fit or scored on this
   experiment's data.
 
-Every line carries the model name, a one-line hypothesis, a human-readable
-``detail`` (the margin, the nearest neighbour, the error) and a ``context``
-string locating the event (experiment, round, candidate slot, lens).
+Every line carries the model name, the hypothesis in full (whitespace
+collapsed, never truncated — the next round's agents choose what to refine
+from these texts), a human-readable ``detail`` (the margin, the nearest
+neighbour, the error) and a ``context`` string locating the event (experiment,
+round, candidate slot, lens).
 """
 
 from __future__ import annotations
@@ -39,16 +41,16 @@ from typing import Iterable, List, Optional
 LEDGER_FILENAME = "attempted_hypotheses.jsonl"
 OUTCOMES = ("admitted", "rejected", "pruned", "dropped", "round_abandoned")
 
-# Hypotheses are 1–3 sentences; the brief shows one line per retired model.
-ONE_LINE_LIMIT = 240
 
+def collapse_whitespace(text: str) -> str:
+    """Collapse runs of whitespace (including newlines) in ``text`` to single spaces.
 
-def one_line(text: str, *, limit: int = ONE_LINE_LIMIT) -> str:
-    """Collapse ``text`` to a single line of at most ``limit`` characters."""
-    collapsed = " ".join(text.split())
-    if len(collapsed) <= limit:
-        return collapsed
-    return collapsed[: limit - 1].rstrip() + "…"
+    This is the only normalisation the ledger applies to an agent's hypothesis:
+    the full text is stored, however long. The ledger used to cut hypotheses to
+    240 characters here, which destroyed the text before it reached the file —
+    not merely hid it — and the brief could not show a multi-sentence hypothesis.
+    """
+    return " ".join(text.split())
 
 
 @dataclass(frozen=True)
@@ -156,30 +158,31 @@ class HypothesisLedger:
                 "tried so far is still in the model set (see "
                 "`existing_hypotheses.md`).\n"
             )
+        count = (
+            "1 hypothesis proposed earlier in this project is"
+            if len(retired) == 1
+            else f"{len(retired)} hypotheses proposed earlier in this project are"
+        )
         lines = [
             header
-            + f"{len(retired)} hypotheses proposed earlier in this project are no "
-            "longer in the model set. Do not propose any of them again, under any "
-            "name: a genuinely new hypothesis differs in *mechanism*, not in "
-            "parameterisation or wording. A *pruned* row is a mechanism the data "
+            + f"{count} no longer in the model set. Do not propose any of them again, under "
+            "any name: a genuinely new hypothesis differs in *mechanism*, not in "
+            "parameterisation or wording. A *pruned* entry is a mechanism the data "
             "ruled out, with its margin behind the model that beat it; a "
-            "*rejected* row is a candidate that never entered the set — most often "
-            "a near-duplicate of a model still in the set, meaning that region of "
-            "hypothesis space is already covered. Pruned models stay readable under "
-            "`models/pruned/`.\n",
-            "| model | outcome | hypothesis |",
-            "| --- | --- | --- |",
+            "*rejected* entry is a candidate that never entered the set — most "
+            "often a near-duplicate of a model still in the set, meaning that "
+            "region of hypothesis space is already covered. Pruned models stay "
+            "readable under `models/pruned/`.\n",
         ]
+        # One heading per retired model, its outcome detail and its hypothesis
+        # as paragraphs of their own. A markdown table would force each
+        # hypothesis onto a single line; a multi-sentence hypothesis survives
+        # this layout intact.
         for entry in retired:
             outcome = f"{entry.outcome} ({entry.context})" if entry.context else entry.outcome
+            lines.append(f"### {entry.name} — {outcome}\n")
             if entry.detail:
-                outcome += f": {entry.detail}"
-            lines.append(
-                f"| {entry.name} | {_cell(outcome)} | {_cell(entry.hypothesis)} |"
-            )
-        return "\n".join(lines) + "\n"
-
-
-def _cell(text: str) -> str:
-    """One markdown table cell: single line, no pipes."""
-    return one_line(text).replace("|", "/")
+                lines.append(f"**Outcome:** {entry.detail}\n")
+            hypothesis = entry.hypothesis or "*(none recorded)*"
+            lines.append(f"**Hypothesis:** {hypothesis}\n")
+        return "\n".join(lines)
