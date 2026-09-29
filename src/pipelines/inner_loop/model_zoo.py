@@ -12,6 +12,7 @@ import math
 import re
 import shutil
 import sys
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
@@ -499,6 +500,25 @@ def _prune_losers(
     return to_prune
 
 
+@dataclass(frozen=True)
+class Admission:
+    """The verdict on one candidate: admitted, or rejected with the reason.
+
+    ``reason`` is the rejection message exactly as the ledger records it — a
+    repair attempt injects it verbatim into the agent's prompt (see the
+    orchestrator) — and empty when the candidate was admitted.
+    """
+
+    admitted: bool
+    reason: str = ""
+
+    def __post_init__(self) -> None:
+        if self.admitted and self.reason:
+            raise ValueError(f"an admitted candidate has no rejection reason; got {self.reason!r}")
+        if not self.admitted and not self.reason:
+            raise ValueError("a rejected candidate needs a rejection reason")
+
+
 def _admit_candidate(
     candidate_file: Path,
     models_dir: Path,
@@ -511,11 +531,39 @@ def _admit_candidate(
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
 ) -> bool:
+    """``_admit_candidate_with_reason`` for callers that only need the verdict."""
+    return _admit_candidate_with_reason(
+        candidate_file,
+        models_dir,
+        model_name,
+        responses_path,
+        cache_dir=cache_dir,
+        fit_kwargs=fit_kwargs,
+        novelty_rmse_threshold=novelty_rmse_threshold,
+        ledger=ledger,
+        ledger_context=ledger_context,
+    ).admitted
+
+
+def _admit_candidate_with_reason(
+    candidate_file: Path,
+    models_dir: Path,
+    model_name: str,
+    responses_path: Path,
+    *,
+    cache_dir: Optional[Path] = None,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+    novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
+    ledger: Optional[HypothesisLedger] = None,
+    ledger_context: str = "",
+) -> Admission:
     """Validate a candidate and, if valid, admit it to the model set.
 
     Every outcome — admitted, or rejected for any of the reasons below — is
     recorded in ``ledger`` (when given) with the candidate's hypothesis, so the
-    next round's briefs can list what was already tried.
+    next round's briefs can list what was already tried. The returned
+    ``Admission`` carries the rejection reason so the orchestrator can hand it
+    to the slot's one repair attempt.
 
     A candidate is admitted only when it ships **both**:
 
@@ -528,8 +576,9 @@ def _admit_candidate(
     The hypothesis text becomes the model's manifest rationale and is copied to
     ``models/<name>.hypothesis.md`` so every model in the set carries the
     hypothesis it tests. Candidates missing either file, or whose logp is
-    non-finite on the data, or whose MCMC sampling raises, are skipped (returns
-    False, with a loud message) so one bad agent output does not abort the round.
+    non-finite on the data, or whose MCMC sampling raises, are skipped (a
+    rejected ``Admission``, with a loud message) so one bad agent output does
+    not abort the round.
 
     The finite-logp check only inspects the initial point, so a candidate can
     pass it yet NaN once NUTS jitters off that point. Such a candidate, if merely
@@ -545,7 +594,7 @@ def _admit_candidate(
         else ""
     )
 
-    def reject(reason: str) -> bool:
+    def reject(reason: str) -> Admission:
         print(f"  [reject] {model_name}: {reason}", flush=True)
         _record(
             ledger,
@@ -555,7 +604,7 @@ def _admit_candidate(
             hypothesis=hypothesis,
             context=ledger_context,
         )
-        return False
+        return Admission(admitted=False, reason=reason)
 
     if not candidate_file.exists():
         return reject("no candidate.py written")
@@ -678,4 +727,4 @@ def _admit_candidate(
     else:
         entries.append({"name": model_name, "rationale": hypothesis})
     _write_manifest(models_dir, entries)
-    return True
+    return Admission(admitted=True)

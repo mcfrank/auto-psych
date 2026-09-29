@@ -19,7 +19,10 @@ Layout under ``results_dir``::
             models_manifest.yaml
             pruned/             # models that lost (audit trail, still readable)
         attempted_hypotheses.jsonl  # ledger: every candidate/prune event
-        iter_0/candidate_0/     # per-candidate agent working dirs
+        iter_0/candidate_0/     # per-candidate agent working dirs; a slot's
+                                # retry (after an empty attempt) works in
+                                # candidate_0_retry_1/, its repair (after a
+                                # rejection) in candidate_0_repair_1/
         model_posterior.json    # ELPD-LOO posterior over models/
         history.json            # best model + posterior after every scoring step,
                                 # with each round's critique status
@@ -30,7 +33,9 @@ Layout under ``results_dir``::
 from __future__ import annotations
 
 import json
+import shutil
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Optional
 
@@ -40,6 +45,8 @@ from src.pipelines.inner_loop.hypothesis_ledger import (
 )
 from src.pipelines.inner_loop.candidate_agent import (
     DEFAULT_CANDIDATE_HINTS,
+    _repair_note,
+    _retry_note,
     _spawn_candidate_agent,
     _write_candidate_context,
 )
@@ -49,7 +56,7 @@ from src.pipelines.inner_loop.model_zoo import (
     MAX_EMPTY_ROUND_RETRIES,
     AllCandidatesNoFileError,
     _NO_FILE_DETAIL,
-    _admit_candidate,
+    _admit_candidate_with_reason,
     _drop_nonfinite_elpd_models,
     _drop_unfittable_models,
     _is_all_no_file_round,
@@ -76,6 +83,50 @@ from src.pipelines.inner_loop.scoring import (
     _resolve_protected_names,
     _score,
 )
+
+
+# ─────────────────────────────────────────────
+# Candidate slots
+# ─────────────────────────────────────────────
+
+# The files a rejected attempt hands to its repair as a starting point.
+_CANDIDATE_FILES = ("candidate.py", "hypothesis.md", "model_name.txt")
+
+
+@dataclass
+class _Slot:
+    """One candidate slot of a round, across its (at most three) agent attempts.
+
+    A slot's first attempt works in ``candidate_<i>/``. An attempt that writes
+    no ``candidate.py`` (or whose agent process fails) is followed by one
+    retry in ``candidate_<i>_retry_1/``; an attempt whose candidate is
+    rejected at admission is followed by one repair in
+    ``candidate_<i>_repair_1/``, with the rejection reason in its prompt and
+    the rejected files copied in. A repair that writes nothing, or is rejected
+    again, is final — so every slot ends admitted or with a recorded reason the
+    agent had a chance to act on. In the 2026-09 sweep 29% of slots ended as
+    "no candidate.py written" and no rejected candidate ever saw its reason.
+    """
+
+    idx: int
+    lens: int
+    directory: Path = field(init=False)
+    docs: Dict[str, Optional[str]] = field(init=False)
+    ledger_context: str = field(init=False)
+    # The ledger name of this slot's previous attempt, left out of the next
+    # attempt's "already tried — do not re-propose" list.
+    previous_name: Optional[str] = None
+    retried: bool = False
+    repaired: bool = False
+    result: Optional[Dict[str, str]] = None
+
+
+def _copy_rejected_attempt(previous_dir: Path, repair_dir: Path) -> None:
+    """Copy a rejected attempt's candidate files into its repair directory."""
+    for filename in _CANDIDATE_FILES:
+        source = previous_dir / filename
+        if source.exists():
+            shutil.copyfile(source, repair_dir / filename)
 
 
 # ─────────────────────────────────────────────
@@ -261,33 +312,53 @@ def run_pymc_inner_loop(
                     flush=True,
                 )
 
-            candidate_dirs = []
-            for idx in range(candidate_count):
-                candidate_dir = attempt_dir / f"candidate_{idx}"
-                lens = _lens_index(
-                    lens_offset, iteration, candidate_count, idx, n_lenses
-                )
-                docs = _write_candidate_context(
-                    candidate_dir,
+            def prepare(
+                slot: _Slot,
+                directory: Path,
+                *,
+                attempt_note: Optional[str] = None,
+                context_suffix: str = "",
+            ) -> None:
+                """Write the context documents for the slot's next attempt."""
+                slot.directory = directory
+                slot.docs = _write_candidate_context(
+                    directory,
                     responses_path,
                     models_dir,
                     iteration,
-                    idx,
+                    slot.idx,
                     candidate_count,
                     posterior,
                     critique_path=critique_path,
                     hints=candidate_hints,
                     ledger=ledger,
                     comparison=comparison,
-                    lens_index=lens,
+                    lens_index=slot.lens,
+                    attempt_note=attempt_note,
+                    omit_from_attempted=(
+                        [slot.previous_name] if slot.previous_name else ()
+                    ),
                 )
-                candidate_dirs.append((idx, candidate_dir, docs, lens))
+                slot.ledger_context = (
+                    f"{round_context} candidate {slot.idx} lens {slot.lens}"
+                    f"{context_suffix}"
+                )
 
-            def spawn(item) -> bool:
-                _, candidate_dir, docs, _lens = item
+            slots: List[_Slot] = []
+            for idx in range(candidate_count):
+                slot = _Slot(
+                    idx=idx,
+                    lens=_lens_index(
+                        lens_offset, iteration, candidate_count, idx, n_lenses
+                    ),
+                )
+                prepare(slot, attempt_dir / f"candidate_{idx}")
+                slots.append(slot)
+
+            def spawn(slot: _Slot) -> bool:
                 return _spawn_candidate_agent(
-                    candidate_dir,
-                    docs,
+                    slot.directory,
+                    slot.docs,
                     models_dir=models_dir,
                     responses_path=responses_path,
                     agent_timeout_sec=agent_timeout_sec,
@@ -296,43 +367,115 @@ def run_pymc_inner_loop(
                     agent_root=agent_root,
                 )
 
-            workers = min(candidate_parallelism or candidate_count, candidate_count)
-            if workers > 1:
-                with ThreadPoolExecutor(max_workers=workers) as pool:
-                    spawn_ok = list(pool.map(spawn, candidate_dirs))
-            else:
-                spawn_ok = [spawn(item) for item in candidate_dirs]
-
-            round_results = []
-            for (idx, candidate_dir, _, lens), ok in zip(candidate_dirs, spawn_ok):
-                if not ok:
-                    round_results.append(
-                        {"outcome": "spawn_failed", "detail": "agent process failed"}
+            def settle(slot: _Slot, spawned_ok: bool) -> bool:
+                """Admit the slot's attempt; True when the slot gets another attempt."""
+                previous_dir = slot.directory
+                fallback = f"iter{iteration}_candidate{slot.idx}"
+                this_attempt_is_a_repair = slot.repaired
+                if not spawned_ok:
+                    # The agent process failed (timeout, non-zero exit): nothing
+                    # it left behind is admitted. Recorded like every attempt.
+                    _record(
+                        ledger,
+                        name=fallback,
+                        outcome="rejected",
+                        detail="agent process failed — nothing admitted",
+                        hypothesis="",
+                        context=slot.ledger_context,
                     )
-                    continue
-                admitted_ok = _admit_candidate(
-                    candidate_dir / "candidate.py",
-                    models_dir,
-                    model_name=_resolve_candidate_name(
-                        candidate_dir,
-                        models_dir,
-                        fallback=f"iter{iteration}_candidate{idx}",
-                    ),
-                    responses_path=responses_path,
-                    cache_dir=cache_dir,
-                    fit_kwargs=fit_kwargs,
-                    novelty_rmse_threshold=novelty_rmse_threshold,
-                    ledger=ledger,
-                    ledger_context=f"{round_context} candidate {idx} lens {lens}",
-                )
-                if admitted_ok:
-                    round_results.append({"outcome": "admitted", "detail": ""})
+                    slot.previous_name = fallback
+                    wrote_file = False
+                    outcome = {"outcome": "spawn_failed", "detail": "agent process failed"}
                 else:
-                    detail = _NO_FILE_DETAIL
-                    if (candidate_dir / "candidate.py").exists():
-                        detail = "rejected after file written"
-                    round_results.append({"outcome": "rejected", "detail": detail})
+                    name = _resolve_candidate_name(previous_dir, models_dir, fallback=fallback)
+                    admission = _admit_candidate_with_reason(
+                        previous_dir / "candidate.py",
+                        models_dir,
+                        model_name=name,
+                        responses_path=responses_path,
+                        cache_dir=cache_dir,
+                        fit_kwargs=fit_kwargs,
+                        novelty_rmse_threshold=novelty_rmse_threshold,
+                        ledger=ledger,
+                        ledger_context=slot.ledger_context,
+                    )
+                    slot.previous_name = name
+                    if admission.admitted:
+                        slot.result = {"outcome": "admitted", "detail": ""}
+                        return False
+                    wrote_file = (previous_dir / "candidate.py").exists()
+                    outcome = {
+                        "outcome": "rejected",
+                        "detail": (
+                            "rejected after file written" if wrote_file else _NO_FILE_DETAIL
+                        ),
+                    }
 
+                if this_attempt_is_a_repair:
+                    # The slot did write a candidate (that is what got repaired),
+                    # so whatever the repair did, this is not an unfilled slot for
+                    # the all-slots-empty round guard. A repair is always final.
+                    slot.result = {
+                        "outcome": "rejected",
+                        "detail": f"final after repair: {outcome['detail']}",
+                    }
+                    return False
+                slot.result = outcome
+
+                if not wrote_file:
+                    # An empty attempt gets one retry.
+                    if slot.retried:
+                        return False
+                    slot.retried = True
+                    print(
+                        f"  [retry] {slot.ledger_context}: no candidate.py written "
+                        f"— re-spawning the slot once",
+                        flush=True,
+                    )
+                    prepare(
+                        slot,
+                        attempt_dir / f"candidate_{slot.idx}_retry_1",
+                        attempt_note=_retry_note(previous_dir),
+                        context_suffix=" retry 1",
+                    )
+                    return True
+
+                # A rejected candidate gets one repair, with the reason verbatim.
+                slot.repaired = True
+                print(
+                    f"  [repair] {slot.ledger_context}: re-spawning the slot once "
+                    f"with the rejection reason",
+                    flush=True,
+                )
+                prepare(
+                    slot,
+                    attempt_dir / f"candidate_{slot.idx}_repair_1",
+                    attempt_note=_repair_note(previous_dir, admission.reason),
+                    context_suffix=" repair 1",
+                )
+                _copy_rejected_attempt(previous_dir, slot.directory)
+                return True
+
+            # Each wave spawns its attempts concurrently, then settles them
+            # sequentially in slot order (admission mutates the manifest and runs
+            # the novelty gate, so order keeps runs deterministic). A settled
+            # slot that earned a retry or repair joins the next wave.
+            workers = min(candidate_parallelism or candidate_count, candidate_count)
+            pending = list(slots)
+            while pending:
+                if workers > 1 and len(pending) > 1:
+                    with ThreadPoolExecutor(max_workers=min(workers, len(pending))) as pool:
+                        spawn_ok = list(pool.map(spawn, pending))
+                else:
+                    spawn_ok = [spawn(slot) for slot in pending]
+                pending = [slot for slot, ok in zip(pending, spawn_ok) if settle(slot, ok)]
+
+            round_results = [slot.result for slot in slots if slot.result is not None]
+            if len(round_results) != len(slots):
+                raise RuntimeError(
+                    f"{round_context}: {len(slots) - len(round_results)} slot(s) ended "
+                    "without a recorded result — every slot must settle."
+                )
             if not _is_all_no_file_round(round_results):
                 break
 
