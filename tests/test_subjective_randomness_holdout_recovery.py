@@ -933,12 +933,24 @@ EVAL_STIMULI = [
 ]
 
 
+def _write_seeded_zoo(run_root, names=None):
+    """Experiment 1's zoo holds the seed files the cell started from (the seed
+    baselines load them from there); fit_model is stubbed, so they are empty."""
+    models_dir = run_root / "experiment1" / "model_loop" / "models"
+    models_dir.mkdir(parents=True, exist_ok=True)
+    for name in names if names is not None else holdout_data.seed_model_names(SEED_MODELS_DIR):
+        (models_dir / f"{name}.py").write_text("", encoding="utf-8")
+    return models_dir
+
+
 def _write_loop_artifacts(run_root, exp_num, history):
     """One response per experiment; the inner loop's file is cumulative (call
     in experiment order)."""
     exp_dir = run_root / f"experiment{exp_num}"
     loop_dir = exp_dir / "model_loop"
     (loop_dir / "models").mkdir(parents=True, exist_ok=True)
+    if exp_num == 1:
+        _write_seeded_zoo(run_root)
     (exp_dir / "data").mkdir(exist_ok=True)
     (exp_dir / "data" / "responses.csv").write_text("chose_left\n1\n", encoding="utf-8")
     (loop_dir / "history.json").write_text(json.dumps(history), encoding="utf-8")
@@ -1194,6 +1206,7 @@ def _baseline_run(tmp_path, data_rows=(2, 1)):
         (exp_dir / "model_loop" / "responses.csv").write_text(
             "chose_left\n" + "1\n" * total, encoding="utf-8"
         )
+    _write_seeded_zoo(run_root, ["seed_x", "seed_y"])
     return run_root
 
 
@@ -1253,6 +1266,40 @@ def test_fitted_seed_baseline_fits_every_experiments_data_once(tmp_path, monkeyp
     assert out["mean_r"] == pytest.approx(0.0)
 
 
+def test_the_fitted_seed_baseline_fits_the_seed_files_the_cell_was_seeded_with(
+    tmp_path, monkeypatch
+):
+    """Not the registry's: the pool's motif_stack seed is the softmax rewrite,
+    the registry's motif_stack the Viterbi ground truth."""
+    run_root = _baseline_run(tmp_path)
+    fit_dirs = []
+    _stub_baseline_fits(
+        monkeypatch,
+        {"seed_x": np.array([0.2, 0.5, 0.9]), "seed_y": np.array([0.9, 0.6, 0.2])},
+        elpd={"seed_x": -10.0, "seed_y": -5.0},
+    )
+    real_fit = holdout_eval.fit_model
+
+    def recording_fit(name, models_dir, responses_path, **kw):
+        fit_dirs.append(Path(models_dir))
+        return real_fit(name, models_dir, responses_path, **kw)
+
+    monkeypatch.setattr(holdout_eval, "fit_model", recording_fit)
+    _fitted_baseline(run_root)
+    assert fit_dirs == [run_root / "experiment1" / "model_loop" / "models"] * 2
+
+
+def test_a_seed_the_cell_was_not_seeded_with_fails_the_fitted_baseline(tmp_path, monkeypatch):
+    run_root = _baseline_run(tmp_path)
+    (run_root / "experiment1" / "model_loop" / "models" / "seed_y.py").unlink()
+    _stub_baseline_fits(
+        monkeypatch, {"seed_x": np.zeros(3), "seed_y": np.zeros(3)},
+        elpd={"seed_x": -1.0, "seed_y": -1.0},
+    )
+    with pytest.raises(FileNotFoundError, match="seed_y"):
+        _fitted_baseline(run_root)
+
+
 def test_the_baseline_is_the_elpd_best_seed_not_the_oracle_best(tmp_path, monkeypatch):
     """The headline baseline is the seed the loop itself would pick — the best
     by ELPD-LOO on the training data — not the one closest to the ground truth
@@ -1293,7 +1340,7 @@ def test_final_responses_that_do_not_hold_every_experiment_fail_loudly(tmp_path,
         _fitted_baseline(run_root)
 
 
-def test_seed_baseline_correlation_averages_other_seed_models(monkeypatch):
+def test_seed_baseline_correlation_averages_other_seed_models(tmp_path, monkeypatch):
     # The no-learning baseline averages the correlation of every seed model
     # *except* the ground truth (each with its default params) against the GT.
     gt_p = np.array([0.2, 0.5, 0.9])
@@ -1302,11 +1349,13 @@ def test_seed_baseline_correlation_averages_other_seed_models(monkeypatch):
         "other_a": np.array([0.2, 0.5, 0.9]),  # perfectly correlated -> r = 1
         "other_b": np.array([0.9, 0.6, 0.2]),  # 1.1 - gt_p, exact anti -> r = -1
     }
-    monkeypatch.setattr(
-        holdout_eval,
-        "p_left_fixed_params",
-        lambda model_name, models_dir, stimuli, params, **kw: preds[model_name],
-    )
+    seen_dirs = {}
+
+    def fake_p_left(model_name, models_dir, stimuli, params, **kw):
+        seen_dirs[model_name] = Path(models_dir)
+        return preds[model_name]
+
+    monkeypatch.setattr(holdout_eval, "p_left_fixed_params", fake_p_left)
     monkeypatch.setattr(
         holdout_eval,
         "resolve_generating_params",
@@ -1314,11 +1363,16 @@ def test_seed_baseline_correlation_averages_other_seed_models(monkeypatch):
             "gt": {"a": 1.0}, "other_a": {"a": 1.0}, "other_b": {"a": 1.0}
         },
     )
+    seeded = _write_seeded_zoo(tmp_path / "run", ["other_a", "other_b"])
 
     out = seed_baseline_correlation(
-        "gt", {"a": 1.0}, EVAL_STIMULI, seed_models_dir=SEED_MODELS_DIR
+        "gt", {"a": 1.0}, EVAL_STIMULI, seed_models_dir=SEED_MODELS_DIR,
+        seeded_models_dir=seeded,
     )
 
+    # The ground truth comes from the registry, the other seeds' code from the
+    # files the cell was seeded with.
+    assert seen_dirs == {"gt": SEED_MODELS_DIR, "other_a": seeded, "other_b": seeded}
     assert set(out["per_model"]) == {"other_a", "other_b"}  # GT excluded
     assert out["per_model"]["other_a"] == pytest.approx(1.0)
     assert out["per_model"]["other_b"] == pytest.approx(-1.0)

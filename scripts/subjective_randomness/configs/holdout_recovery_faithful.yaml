@@ -75,7 +75,8 @@ fit:
   # fixes reliability), at the
   # known-good target_accept=0.8, the run-economy choice benchmarked for this
   # sweep as a whole. A model's declared target_accept is a floor on it
-  # (motif_stack declares 0.9), and a fit that fails the convergence gate as
+  # (the Viterbi motif_stack declares 0.9; the motif_stack seed, its softmax
+  # rewrite, declares nothing), and a fit that fails the convergence gate as
   # a near miss is refit once at 0.95 (pymc_inference.fit_model).
   target_accept: 0.8
   # No max_treedepth cap (PyMC's default 10 applies). A treedepth-6 cap lived

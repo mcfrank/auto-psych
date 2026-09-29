@@ -73,6 +73,7 @@ from src.subjective_randomness.holdout_eval import (
     evaluate_trajectory,
     fitted_seed_baseline_correlation,
     seed_baseline_correlation,
+    seeded_models_dir,
 )
 from src.subjective_randomness.incumbent import (
     annotate_incumbents,
@@ -204,6 +205,10 @@ def run_holdout_experiments(
     seed_exclude = seed_exclusion(
         gt_model, pool_models_dir or project_seed_models_dir(project_id)
     )
+    _require_gt_not_seeded_under_another_name(
+        gt_model, gt_models_dir, pool_models_dir or project_seed_models_dir(project_id),
+        seed_exclude,
+    )
     exp_dirs: List[Path] = []
 
     for exp_num in range(1, n_experiments + 1):
@@ -324,6 +329,32 @@ def derive_seed(*parts: Any) -> int:
     """
     digest = hashlib.sha256("|".join(str(part) for part in parts).encode()).digest()
     return int.from_bytes(digest[:4], "big") % 2**31
+
+
+def _require_gt_not_seeded_under_another_name(
+    gt_model: str, gt_models_dir: Path, pool_dir: Path, excluded: Iterable[str]
+) -> None:
+    """Withholding the ground truth works by name, so a pool seed that is the
+    ground truth's file under another name would be seeded and shown to the
+    agents. The pool's ``motif_stack`` seed is a copy of the registry's
+    ``motif_stack_softmax.py``: holding out ``motif_stack_softmax`` itself would
+    do exactly that, so it raises here instead."""
+    gt_path = Path(gt_models_dir) / f"{gt_model}.py"
+    if not gt_path.exists():
+        return
+    gt_source = gt_path.read_bytes()
+    copies = sorted(
+        name for name in seed_model_names(pool_dir)
+        if name not in set(excluded)
+        and (Path(pool_dir) / f"{name}.py").exists()
+        and (Path(pool_dir) / f"{name}.py").read_bytes() == gt_source
+    )
+    if copies:
+        raise ValueError(
+            f"The seed pool {pool_dir} carries the held-out ground truth "
+            f"{gt_model!r} under another name ({copies}), which would be seeded "
+            "and shown to the agents; hold out that seed's own name instead."
+        )
 
 
 def _manifest_model_names(exp_dir: Path) -> List[str]:
@@ -692,6 +723,7 @@ def _run_holdout_recovery_resolved(
             gt_params,
             eval_info["stimuli"],
             seed_models_dir=seed_models_dir,
+            seeded_models_dir=seeded_models_dir(run_root),
             gt_models_dir=gt_models_dir,
             gt_family_dir=gt_family_dir,
         )

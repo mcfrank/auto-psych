@@ -1,32 +1,37 @@
-"""PyMC adapter for the softmax (marginalising) four-motif stack automaton.
+"""PyMC adapter for a marginalising four-motif stack automaton.
 
-This is :mod:`.motif_stack` with both of its maxes replaced by their
-temperature-1 softmax (log-sum-exp) counterparts, so ``log P(x | regular)`` is
-the exact marginal likelihood rather than the max over the single best hidden
-path and production method:
+A sequence seems random to the extent that a fair coin explains it better than
+a "regular" generator: randomness = ``log P(x | fair) - log P(x | regular)``.
+The regular generator is Griffiths et al. (2018)'s four-motif stack automaton:
+a row-normalised six-state motif process, augmented with three memory-based
+production methods (mirror symmetry, complement symmetry and duplication of the
+first half) besides ordinary motif continuation.
 
-* the Viterbi max-product recursion becomes the forward sum-product recursion —
-  ``pt.sum`` over the previous state instead of ``pt.max``;
-* the ``pt.max`` over the four production methods becomes ``pt.logsumexp`` over
-  them, i.e. the mixture ``sum_M P(M) P(x | M)`` in the log domain.
+``log P(x | regular)`` here is the exact marginal likelihood of that automaton:
 
-Everything else — the unique-sequence table, the per-trial gather indices, the
-same-length restriction enforced in Python by ``prepare_observed``, and the
-``p_left`` / observed-Bernoulli per-trial structure — is identical to the
-Viterbi adapter, so this file agrees with its own pure-Python twin
-(``model_families.motif_stack_softmax``) to floating-point noise.
+* the forward (sum-product) recursion sums over the hidden-state paths;
+* the production methods are mixed, ``sum_M P(M) P(x | M)`` over the methods
+  ``x`` can have been produced by (a log-sum-exp in the log domain).
 
-Why it exists
--------------
-The Viterbi likelihood has non-differentiable ridges wherever the argmax (over
-paths or over methods) switches; that geometry is why the Viterbi adapter lowers
-``target_accept`` and still takes long NUTS trajectories.  The marginal
-likelihood is smooth in the parameters everywhere, so this variant is a
-candidate for being materially cheaper to sample.  It therefore does NOT declare
-its own ``SAMPLER_SETTINGS``: it inherits the production ``target_accept`` rather
-than the Viterbi model's lowered-``0.9`` workaround, which the smoothing should
-make unnecessary (verified empirically by
-``scripts/subjective_randomness/compare_motif_stack_fit_difficulty.py``).
+Griffiths et al. define the regular hypothesis with two maxes instead — the
+single most probable hidden path (Viterbi) and the single most probable
+production method.  A max puts non-differentiable ridges into the likelihood
+wherever its argmax switches; the sums here are smooth in the parameters, so
+NUTS samples this model at the loop's default ``target_accept`` and the model
+declares no ``SAMPLER_SETTINGS``.
+
+Comparisons are restricted to equal-length sequences (the construction has no
+length-specific normaliser); ``prepare_observed`` rejects a cross-length pair.
+
+Computational layout
+--------------------
+The forward recursion depends only on the observed symbols, so it is evaluated
+once per DISTINCT sequence rather than once per trial row.  ``prepare_observed``
+builds a unique-sequence table (length, per-position emission masks and the
+three memory-method flags) plus per-trial gather indices ``idx_a`` / ``idx_b``;
+the graph scores the table and gathers per trial.  ``p_left`` remains a
+per-trial ``pm.Deterministic`` and the observed Bernoulli remains per-trial, so
+ELPD-LOO stays pointwise per trial.
 """
 
 import numpy as np
@@ -148,14 +153,14 @@ def prepare_observed(rows) -> dict:
         missing = [key for key in ("sequence_a", "sequence_b") if key not in row]
         if missing:
             raise ValueError(
-                f"motif_stack_softmax needs the raw H/T sequence columns {missing} "
-                f"to build its unique-sequence table; row {i} has {sorted(row)}."
+                f"This model needs the raw H/T sequence columns {missing} to "
+                f"build its unique-sequence table; row {i} has {sorted(row)}."
             )
         seq_a = _clean_sequence(row["sequence_a"])
         seq_b = _clean_sequence(row["sequence_b"])
         if len(seq_a) != len(seq_b):
             raise ValueError(
-                "motif_stack_softmax requires same-length alternatives on every "
+                "This model requires same-length alternatives on every "
                 f"trial: row {i} pairs a length-{len(seq_a)} sequence with a "
                 f"length-{len(seq_b)} one ({seq_a!r} vs {seq_b!r})."
             )
@@ -211,8 +216,8 @@ def _matrices(delta, alpha):
 def _forward_log_probabilities(seq_len, emission_mask, init, transition):
     """Log forward probabilities for the full sequence and its first half.
 
-    The sum-product counterpart of the Viterbi adapter's recursion: ``pt.sum``
-    over the previous state where the Viterbi version takes ``pt.max``, so each
+    The sum-product form of the Viterbi (max-product) recursion: ``pt.sum``
+    over the previous state where Viterbi takes ``pt.max``, so each
     entry is the marginal probability of the observed prefix rather than the best
     path's joint probability. Operates on the unique-sequence batch:
     ``emission_mask`` is ``(MAX_SEQ_LEN, U, N_STATES)`` and the returned tensors

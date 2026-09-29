@@ -377,6 +377,8 @@ def test_smoke_fit_and_posterior_prediction(tmp_path):
 
 
 def test_seed_model_copy_is_byte_identical():
-    registry = (MODEL_DIR / "motif_stack.py").read_bytes()
+    """The seed pool's motif_stack is the softmax rewrite of this Viterbi
+    model (sync_seed_models.SEED_SOURCES), byte for byte."""
+    registry = (MODEL_DIR / "motif_stack_softmax.py").read_bytes()
     staged = (SEED_MODELS_DIR / "motif_stack.py").read_bytes()
     assert registry == staged
