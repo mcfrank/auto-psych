@@ -172,3 +172,62 @@ def test_a_sandboxed_codex_agent_gets_a_private_codex_home_with_only_its_login(
     joined = " ".join(cmd)
     assert f"--bind {user_home}/.codex/auth.json {codex_home}/auth.json" in joined
     assert f"{user_home}/.codex " not in joined + " "  # never the whole directory
+
+
+# ── The private home is removed when the agent exits; scratch is kept ─
+
+
+def test_removing_the_private_home_keeps_scratch(tmp_path):
+    from src.runtime.agent_sandbox import remove_private_home
+
+    agent_dir = tmp_path / "candidate_0"
+    (agent_dir / ".home" / ".codex" / "skills").mkdir(parents=True)
+    (agent_dir / "scratch").mkdir()
+    (agent_dir / "scratch" / "explore.py").write_text("print(1)\n", encoding="utf-8")
+    remove_private_home(agent_dir)
+    assert not (agent_dir / ".home").exists()
+    assert (agent_dir / "scratch" / "explore.py").exists()
+
+
+@needs_bwrap
+def test_removing_a_codex_agents_home_never_touches_the_real_login(tmp_path):
+    """The login is mounted into the private home; only the mount point, an
+    empty file on the host, may be deleted."""
+    from src.runtime.agent_sandbox import remove_private_home
+
+    user_home = tmp_path / "home"
+    (user_home / ".codex").mkdir(parents=True)
+    login = user_home / ".codex" / "auth.json"
+    login.write_text('{"tokens": "real"}', encoding="utf-8")
+    tree, agent_dir, _ = _layout(tmp_path)
+    cmd, env = sandbox_command(
+        ["bash", "-c", 'cat "$CODEX_HOME/auth.json"'], backend="codex", cwd=tree,
+        writable_dirs=[agent_dir], agent_dir=agent_dir,
+        env={**os.environ, "HOME": str(user_home)},
+    )
+    result = subprocess.run(cmd, env=env, cwd=tree, capture_output=True, text=True, timeout=60)
+    assert result.stdout == '{"tokens": "real"}', result.stderr  # the agent had its login
+    remove_private_home(agent_dir)
+    assert login.read_text(encoding="utf-8") == '{"tokens": "real"}'
+    assert not (agent_dir / ".home").exists()
+
+
+def test_a_sandboxed_opencode_agent_is_kept_in_by_the_sandbox_not_its_own_prompt(
+    tmp_path, monkeypatch
+):
+    """opencode's own external-directory guard answers a path outside the tree
+    with a permission prompt, and `opencode run` auto-rejects it by ending the
+    whole session: the agent stops working. Inside the sandbox the guard is
+    redundant, so it is switched off (merged over opencode.json, which keeps
+    its other rules); the agent then gets bwrap's plain "No such file" and
+    carries on. Verified with a real Gemini agent."""
+    import json
+
+    _fake_bwrap(monkeypatch)
+    _, env = sandbox_command(
+        ["bash"], backend="opencode", cwd=tmp_path, writable_dirs=[],
+        agent_dir=tmp_path, env={"OPENCODE_PERMISSION": json.dumps({"bash": "allow"})},
+    )
+    assert json.loads(env["OPENCODE_PERMISSION"]) == {
+        "bash": "allow", "external_directory": "allow",
+    }

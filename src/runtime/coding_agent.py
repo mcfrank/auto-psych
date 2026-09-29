@@ -52,7 +52,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Sequence
 
 from src.runtime import token_usage
-from src.runtime.agent_sandbox import sandbox_command
+from src.runtime.agent_sandbox import remove_private_home, sandbox_command
 
 DEFAULT_BACKEND = "opencode"
 _DEFAULT_MODEL = {
@@ -90,28 +90,48 @@ _GRANTS_LOCK = threading.Lock()
 
 
 class AgentPermissionDenied(RuntimeError):
-    """The coding agent was refused a permission it needed.
+    """The coding agent was refused access to its own directories.
 
     ``opencode run`` is non-interactive: it auto-rejects every permission it
     would have asked for, after which the agent simply cannot touch the path.
-    That is a systemic misconfiguration of the launch (a session rooted in the
+    Refused its own working tree or an allowed directory, it cannot do its job:
+    that is a systemic misconfiguration of the launch (a session rooted in the
     wrong directory, a missing grant), never bad luck for one candidate, so the
     launcher raises it instead of letting the caller record an empty slot.
     """
 
 
-def check_for_permission_denials(log_path: Path) -> None:
-    """Raise :class:`AgentPermissionDenied` if the agent's log records a denial.
+# "! permission requested: external_directory (<dir>/*); auto-rejecting"
+_EXTERNAL_DIRECTORY_DENIAL = re.compile(r"external_directory \((.+?)/?\*?\); auto-rejecting")
 
-    Scans every line of ``log_path`` for :data:`PERMISSION_DENIAL_SIGNATURE`;
-    the offending lines (ANSI colour stripped) and the log path go into the
-    message so the denied path is visible without opening the log.
+
+def check_for_permission_denials(log_path: Path, own_dirs: Sequence[Path]) -> list[str]:
+    """Check the agent's log for refused permissions; return the refused outside dirs.
+
+    A refusal of a directory outside ``own_dirs`` (the agent's working tree and
+    allowed directories) is the agent reaching somewhere it may not go and being
+    stopped: it is returned, for the caller to report, and the agent carries on.
+    Any other refusal — of its own directories, or of a permission that is not
+    a directory — means the launch is misconfigured and raises
+    :class:`AgentPermissionDenied`, with the offending lines (ANSI colour
+    stripped) and the log path in the message.
     """
+    own = [Path(d).resolve() for d in own_dirs]
     text = Path(log_path).read_text(encoding="utf-8", errors="replace")
-    denials = [line for line in text.splitlines() if PERMISSION_DENIAL_SIGNATURE in line]
+    refused_outside: list[str] = []
+    denials: list[str] = []
+    for line in text.splitlines():
+        if PERMISSION_DENIAL_SIGNATURE not in line:
+            continue
+        line = _ANSI_ESCAPE.sub("", line).strip()
+        match = _EXTERNAL_DIRECTORY_DENIAL.search(line)
+        if match and not any(Path(match.group(1)).resolve().is_relative_to(d) for d in own):
+            refused_outside.append(match.group(1))
+        else:
+            denials.append(line)
     if not denials:
-        return
-    shown = "\n".join(f"  {_ANSI_ESCAPE.sub('', line).strip()}" for line in denials[:5])
+        return refused_outside
+    shown = "\n".join(f"  {line}" for line in denials[:5])
     raise AgentPermissionDenied(
         f"the coding agent was denied {len(denials)} permission request(s); this "
         f"is a misconfigured launch (wrong session directory or missing grant), "
@@ -708,9 +728,20 @@ def run_coding_agent(
             f"token usage; this run's spend is uncounted"
         )
 
-    # A denied permission is a misconfigured launch: raise, whatever else the
-    # run did (including timing out after the denial).
-    check_for_permission_denials(log_path)
+    if sandbox:
+        remove_private_home(log_path.parent)
+
+    # A refusal of the agent's own directories is a misconfigured launch: raise,
+    # whatever else the run did (including timing out after it). A refusal of a
+    # directory outside them is the agent being kept in: report it, carry on.
+    refused_outside = check_for_permission_denials(
+        log_path, own_dirs=[cwd, *(allowed_dirs or [])]
+    )
+    if refused_outside and on_summary:
+        on_summary(
+            f"  [oc] refused access outside the agent's directories (agent carried on): "
+            + ", ".join(refused_outside)
+        )
 
     if timed_out:
         return False, f"coding agent ({backend}) timed out after {timeout_secs}s"
