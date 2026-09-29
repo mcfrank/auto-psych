@@ -948,6 +948,22 @@ For `iteration` in 0..4 (pymc_orchestrator.py:324-585):
    `prefit_candidates`, §5.3), and admission happens **sequentially in slot
    order** (`settle`), loading those fits, so a later slot's novelty gate
    compares against earlier slots admitted in the same round.
+   An agent call that ends on the account's **usage or rate limit** (Claude's
+   "You've hit your session limit · resets 2:20pm (America/Los_Angeles)", the
+   API's `API Error: 429`/`529`, a Gemini `RESOURCE_EXHAUSTED` error event,
+   codex's "usage limit … try again in …"; `src/runtime/usage_limits.py`) never
+   reaches `settle`: `run_coding_agent` puts the agent's own directories back
+   as they were before the call (so nothing half-written can pass for a
+   candidate), logs `[USAGE LIMIT] … Waiting N min`, waits until 2 min after
+   the stated reset (10 min when none is stated) and runs the agent again. No
+   retry or repair is used, no ledger line is written, no round is abandoned.
+   If the limit would not lift within `AGENT_USAGE_LIMIT_MAX_WAIT_SEC` (12 h;
+   `src/runtime/config.py`) it raises `AgentUsageLimitExceeded`, and an
+   exhausted API credit balance or a rejected key raises `AgentLoginFailed` at
+   once; both end the cell for the retry job to resume (the critique round
+   re-raises them too). Every limited call is a `token_usage.jsonl` record with
+   `usage_limit` and `usage_limit_wait_sec`; `token_usage_summary.json` totals
+   them (`n_usage_limit_hits`, `usage_limit_wait_sec`).
 6. **Retry and repair per slot** (`settle`):
    - If the agent process failed (non-zero exit or **timeout**) but a
      `candidate.py` exists in its directory, that candidate goes through

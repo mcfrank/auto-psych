@@ -34,6 +34,7 @@ from src.critique.ppc import (
 from src.pipelines.inner_loop.import_gate import check_forbidden_imports
 from src.pipelines.inner_loop.model_zoo import _manifest_entries
 from src.runtime.coding_agent import AgentPermissionDenied
+from src.runtime.usage_limits import AgentInfrastructureError
 from src.runtime.config import REPO_ROOT
 
 _PKG_DIR = Path(__file__).resolve().parent
@@ -613,8 +614,9 @@ def _run_critique_round(
     no path and a ``"no_critique"`` status carrying the reason — the agent
     wrote no usable statistic in any attempt, or the critique crashed (a
     critique failure must not abort a long inner-loop run, but it is recorded,
-    never swallowed). A permission denial is re-raised: that is a misconfigured
-    launch every later agent would hit too.
+    never swallowed). A permission denial or an agent infrastructure error (a
+    usage limit that did not lift, a login that cannot pay) is re-raised:
+    every later agent would hit it too.
     """
     # Lazy import to avoid circular dependency (pymc_orchestrator imports us).
     from src.pipelines.inner_loop.scoring import _best_exportable_model
@@ -639,9 +641,10 @@ def _run_critique_round(
             agent_root=agent_root,
             notes_dir=notes_dir,
         )
-    except AgentPermissionDenied:
-        # A misconfigured launch, not a critique failure: every later agent
-        # would be denied the same way. Let it kill the run.
+    except (AgentPermissionDenied, AgentInfrastructureError):
+        # A misconfigured launch, or an account out of its usage limit, not a
+        # critique failure: every later agent would fail the same way. Let it
+        # kill the run.
         raise
     except Exception as e:  # a critique failure must not kill a long inner-loop run
         reason = f"{type(e).__name__}: {e}"

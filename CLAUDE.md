@@ -209,7 +209,16 @@ target — see **Slot roles**) → admit sequentially.
   `candidate_<i>_repair_1/` with the rejection reason verbatim in its prompt
   (`_repair_note`) and the rejected files copied in — a repair is always
   final and never counts as an unfilled slot. Every attempt is a ledger line
-  (`… retry 1` / `… repair 1` in its context). The all-slots-empty round
+  (`… retry 1` / `… repair 1` in its context). An agent call that ends on the account's
+  usage or rate limit (`src/runtime/usage_limits.py`: Claude's session limit,
+  API 429/529, Gemini quota errors, codex usage limits — read only from the
+  CLI's own channels) is none of these: `run_coding_agent` restores the
+  agent's own directories, waits until the stated reset (logged `[USAGE
+  LIMIT]`) and runs it again, recording the wait in `token_usage.jsonl`; past
+  `AGENT_USAGE_LIMIT_MAX_WAIT_SEC` (12 h, `src/runtime/config.py`) it raises
+  `AgentUsageLimitExceeded`, and a login that cannot pay raises
+  `AgentLoginFailed` (the 2026-09-28 Opus sweep read hundreds of session-limit
+  replies as empty slots and abandoned every round of a cell). The all-slots-empty round
   retry (`MAX_EMPTY_ROUND_RETRIES`) stays as the outer guard. `CONTEXT.md`
   documents a self-check command (`check_candidate.py`; `CANDIDATE_CHECK_*`
   in `mcmc_defaults.py`) that runs the admission gates with a smoke fit.

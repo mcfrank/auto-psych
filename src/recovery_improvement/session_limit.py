@@ -15,33 +15,13 @@ import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Optional
-from zoneinfo import ZoneInfo
 
-# Claude: "You've hit your session limit · resets 12am (America/Los_Angeles)";
-# other CLIs phrase it as a usage/rate/weekly limit. Matched only near the
-# start of the result text so a note that merely *discusses* limits does not
-# trip it.
-_LIMIT_RE = re.compile(
-    r"(?:(?:hit|reached|exceeded) (?:your |the )?(?:session |usage |weekly |rate |plan )?limit"
-    r"|(?:usage|rate|session|weekly|plan) limit (?:reached|exceeded|hit)"
-    r"|usage_limit)",
-    re.IGNORECASE,
-)
-_LIMIT_WINDOW = 200
-# "resets 12am (America/Los_Angeles)", "resets 3:30pm", "resets at 9 pm",
-# "try again at 3:00 PM"
-_CLOCK_RE = re.compile(
-    r"(?:resets?|try again|available again|retry)\s+(?:at\s+)?(\d{1,2})(?::(\d{2}))?\s*(am|pm)\b"
-    r"(?:\s*\(([^)]+)\))?",
-    re.IGNORECASE,
-)
-# "resets in 2 hours", "try again in 4h 30m", "resets in 45 minutes",
-# "available again in 1 hour and 5 minutes"
-_RELATIVE_RE = re.compile(
-    r"(?:resets?|try again|available again|retry)\s+(?:in|after)\s+"
-    r"(?:(\d+)\s*(?:h\b|hr|hour)s?)?\s*(?:and\s*)?(?:(\d+)\s*(?:m\b|min|minute)s?)?",
-    re.IGNORECASE,
-)
+from src.runtime.usage_limits import LIMIT_RE, LIMIT_WINDOW, parse_reset_time
+
+# Limit messages and their reset times are parsed as the loop's agent launcher
+# parses them (src/runtime/usage_limits.py). Only the first LIMIT_WINDOW
+# characters of the result text are read, so a note that merely *discusses*
+# limits does not trip it.
 
 # Claude Code exits 0 with this as its result text when the configured model is
 # not available to the login. Matched near the start of the text, like the limit
@@ -57,7 +37,7 @@ def detect_unusable_model(result_text: str) -> Optional[str]:
     Distinct from a session limit: waiting will not help, and neither will a
     repair round, so callers must fail immediately and say what to change.
     """
-    match = _UNUSABLE_MODEL_RE.search((result_text or "")[:_LIMIT_WINDOW])
+    match = _UNUSABLE_MODEL_RE.search((result_text or "")[:LIMIT_WINDOW])
     return match.group(1) if match else None
 
 
@@ -82,29 +62,9 @@ class SessionLimitHit(RuntimeError):
         self.limit = limit
 
 
-def parse_reset_time(text: str, now: datetime) -> Optional[datetime]:
-    """The reset instant named in a limit message, or None. ``now`` must be aware."""
-    match = _CLOCK_RE.search(text)
-    if match:
-        hour, minute, meridiem, zone = match.groups()
-        hour = int(hour) % 12 + (12 if meridiem.lower() == "pm" else 0)
-        tz = ZoneInfo(zone) if zone else now.tzinfo
-        local_now = now.astimezone(tz)
-        reset = local_now.replace(hour=hour, minute=int(minute or 0), second=0, microsecond=0)
-        if reset <= local_now:
-            reset += timedelta(days=1)
-        return reset
-    match = _RELATIVE_RE.search(text)
-    if match and (match.group(1) or match.group(2)):
-        hours = int(match.group(1) or 0)
-        minutes = int(match.group(2) or 0)
-        return now + timedelta(hours=hours, minutes=minutes)
-    return None
-
-
 def detect_session_limit(result_text: str, now: Optional[datetime] = None) -> Optional[SessionLimit]:
     """A :class:`SessionLimit` if ``result_text`` is a limit message, else None."""
-    if not _LIMIT_RE.search((result_text or "")[:_LIMIT_WINDOW]):
+    if not LIMIT_RE.search((result_text or "")[:LIMIT_WINDOW]):
         return None
     now = now or datetime.now().astimezone()
     return SessionLimit(message=result_text.strip(), reset_at=parse_reset_time(result_text, now))

@@ -181,6 +181,7 @@ def make_run_agent(campaign: Campaign, iteration: int) -> RunAgent:
             backend="claude",
             usage_label=f"recovery_improvement:iter{iteration}",
             extra_args=extra_args,
+            wait_out_usage_limits=False,  # the iteration requeues its job instead
         )
 
     return run

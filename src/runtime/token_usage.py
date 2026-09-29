@@ -50,6 +50,12 @@ class UsageRecord:
     """Backend-reported cost, when available."""
     usage_missing: bool = False
     """True when the backend reported no usage — the spend is unknown, not zero."""
+    usage_limit: Optional[str] = None
+    """The CLI's message when the call ended on a usage or rate limit."""
+    usage_limit_wait_sec: float = 0.0
+    """How long the launcher then waited before running the agent again."""
+    claude_auth: Optional[str] = None
+    """How a Claude agent was billed: ``subscription`` or ``api``."""
     timestamp: str = field(
         default_factory=lambda: datetime.now(timezone.utc).isoformat()
     )
@@ -136,6 +142,8 @@ def summarize(records: List[UsageRecord]) -> Dict:
             "cache_write_tokens": sum(r.cache_write_tokens for r in recs),
             "total_tokens": sum(r.total_tokens for r in recs),
             "cost_usd": sum(known_costs) if known_costs else None,
+            "n_usage_limit_hits": sum(r.usage_limit is not None for r in recs),
+            "usage_limit_wait_sec": sum(r.usage_limit_wait_sec for r in recs),
         }
 
     summary = _totals(records)
@@ -143,6 +151,7 @@ def summarize(records: List[UsageRecord]) -> Dict:
     for source in sorted({r.source for r in records}):
         by_source[source] = _totals([r for r in records if r.source == source])
     summary["by_source"] = by_source
+    summary["claude_auth"] = sorted({r.claude_auth for r in records if r.claude_auth})
     return summary
 
 
@@ -181,6 +190,13 @@ def format_summary(summary: Dict, heading: str) -> str:
         f"cache_read={summary['cache_read_tokens']:,} "
         f"cache_write={summary['cache_write_tokens']:,}",
     ]
+    if summary["n_usage_limit_hits"]:
+        lines.append(
+            f"  [tokens]   usage limits: {summary['n_usage_limit_hits']} call(s) ended "
+            f"on one; waited {summary['usage_limit_wait_sec'] / 3600:.2f} h in all"
+        )
+    if summary["claude_auth"]:
+        lines.append(f"  [tokens]   claude billing: {', '.join(summary['claude_auth'])}")
     for source, totals in summary["by_source"].items():
         lines.append(
             f"  [tokens]   {source}: {totals['total_tokens']:,} tokens "

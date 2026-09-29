@@ -37,6 +37,11 @@ sweep ended as "no candidate.py written" that way). The launcher therefore
 * scans the agent's log afterwards and raises
   :class:`AgentPermissionDenied` on any auto-rejected permission — a denial is
   a misconfigured launch, never one unlucky candidate.
+
+A run that ends on the account's usage or rate limit
+(:mod:`src.runtime.usage_limits`) is not the agent's failure either: the
+launcher puts the agent's own directories back as they were, waits until the
+limit lifts and runs the agent again (:func:`run_coding_agent`).
 """
 
 from __future__ import annotations
@@ -44,15 +49,32 @@ from __future__ import annotations
 import json
 import os
 import re
+import shutil
 import signal
 import subprocess
+import tempfile
 import threading
 import time
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Sequence
 
 from src.runtime import token_usage
-from src.runtime.agent_sandbox import remove_private_home, sandbox_command
+from src.runtime.agent_sandbox import HOME_NAME, remove_private_home, sandbox_command
+from src.runtime.config import (
+    AGENT_USAGE_LIMIT_FALLBACK_WAIT_SEC,
+    AGENT_USAGE_LIMIT_MAX_WAIT_SEC,
+    AGENT_USAGE_LIMIT_RESET_MARGIN_SEC,
+)
+from src.runtime.usage_limits import (
+    LIMIT_WINDOW,
+    AgentLoginFailed,
+    AgentUsageLimitExceeded,
+    UsageLimit,
+    detect_login_failure,
+    detect_usage_limit,
+    seconds_until_retry,
+)
 
 DEFAULT_BACKEND = "opencode"
 _DEFAULT_MODEL = {
@@ -525,6 +547,7 @@ class _CodexStream:
         }
         self._saw_usage = False
         self.error: Optional[str] = None
+        self.errors: list[str] = []
 
     def feed(self, event: dict) -> None:
         t = event.get("type")
@@ -547,6 +570,12 @@ class _CodexStream:
                 )
         elif t == "error":
             self.error = str(event.get("message", ""))
+            self.errors.append(self.error)
+        elif t == "turn.failed":
+            error = event.get("error")
+            self.errors.append(
+                str(error.get("message", "")) if isinstance(error, dict) else str(error)
+            )
 
     def result_text(self) -> str:
         return self._messages[-1].strip() if self._messages else ""
@@ -576,11 +605,14 @@ class _OpencodeStream:
         }
         self._cost = 0.0
         self._saw_usage = False
+        self.errors: list[str] = []
 
     def feed(self, event: dict) -> None:
         t = event.get("type")
         part = event.get("part", {})
-        if t == "text":
+        if t == "error":
+            self.errors.append(json.dumps(event.get("error", event)))
+        elif t == "text":
             text = str(part.get("text", ""))
             if text.strip():
                 self._texts.append(text)
@@ -626,6 +658,7 @@ def run_coding_agent(
     memory_dir: Optional[Path] = None,
     sandbox: bool = False,
     writable_dirs: Optional[list[Path]] = None,
+    wait_out_usage_limits: bool = True,
 ) -> tuple[bool, str]:
     """Spawn the selected coding agent, stream output to ``log_path``.
 
@@ -647,10 +680,24 @@ def run_coding_agent(
     contending for opencode's shared sqlite store) is retried up to
     ``OPENCODE_LOCK_RETRIES`` times with backoff; any other failure is final.
 
+    A run that ends on the account's usage or rate limit (see
+    :mod:`src.runtime.usage_limits`) is, with ``wait_out_usage_limits``, not
+    returned: the agent's own directories (its ``writable_dirs`` and its log's
+    directory, less the log, its notes and CLI state) are put back as they were
+    before the call — a sandboxed agent can write nowhere else, so nothing it
+    left half-done can pass for its output — the launcher waits until the
+    stated reset (``AGENT_USAGE_LIMIT_*`` in :mod:`src.runtime.config`) and
+    runs the agent again. It raises :class:`AgentUsageLimitExceeded` when the
+    limit would not lift within ``AGENT_USAGE_LIMIT_MAX_WAIT_SEC`` of waiting,
+    and :class:`AgentLoginFailed` at once when the login cannot pay for calls.
+    Callers that handle limits themselves (the review tools, which requeue
+    their job) pass ``wait_out_usage_limits=False``.
+
     Whatever usage the stream reported is recorded to
     :mod:`src.runtime.token_usage` under ``usage_label`` — also on timeout or
-    failure, since those tokens were spent all the same. One logical call
-    records exactly one usage entry, from the attempt that ran.
+    failure, since those tokens were spent all the same: one entry for the
+    run, and one for every run that ended on a usage limit (with the limit's
+    message and the wait that followed).
 
     The child runs with ``PWD`` pinned to ``cwd`` and, for opencode, a private
     ``XDG_DATA_HOME`` and grants for every ``allowed_dirs`` entry outside the
@@ -674,13 +721,18 @@ def run_coding_agent(
         backend=backend, cwd=cwd, log_path=log_path, env=env, stock=stock,
         memory_dir=memory_dir,
     )
-    if sandbox:
-        if writable_dirs is None:
-            raise ValueError(
-                "A sandboxed agent needs writable_dirs: the directories it may "
-                "write (the rest of its tree is read-only)."
-            )
-        cmd, child_env = sandbox_command(
+    if sandbox and writable_dirs is None:
+        raise ValueError(
+            "A sandboxed agent needs writable_dirs: the directories it may "
+            "write (the rest of its tree is read-only)."
+        )
+
+    def launch() -> tuple[list[str], Dict[str, str]]:
+        """The command and environment of one run (the sandbox is set up
+        afresh for each: a run's private home is removed after it)."""
+        if not sandbox:
+            return cmd, child_env
+        return sandbox_command(
             cmd,
             backend=backend,
             cwd=cwd,
@@ -689,6 +741,8 @@ def run_coding_agent(
             agent_dir=log_path.parent,
             env=child_env,
         )
+
+    run_cmd, run_env = launch()
     if backend == "opencode":
         granted = ensure_opencode_external_grants(cwd, list(allowed_dirs or []))
         if granted and on_summary:
@@ -698,39 +752,66 @@ def run_coding_agent(
             )
 
     stdin_text = prompt if prompt_via_stdin(backend, prompt) else None
-    for attempt in range(1 + OPENCODE_LOCK_RETRIES):
-        outcome = _run_agent_once(
-            cmd,
-            backend=backend,
-            cwd=cwd,
-            log_path=log_path,
-            timeout_secs=timeout_secs,
-            env=child_env,
-            on_summary=on_summary,
-            log_mode="w" if attempt == 0 else "a",
-            stdin_text=stdin_text,
-        )
-        stream, captured, timed_out, returncode = outcome
-        raw_output = "".join(captured)
-        lock_hit = (
-            backend == "opencode"
-            and not timed_out
-            and returncode != 0
-            and _OPENCODE_LOCK_SIGNATURE in raw_output
-        )
-        if lock_hit and attempt < OPENCODE_LOCK_RETRIES:
-            delay = OPENCODE_LOCK_BACKOFF_SECS * (attempt + 1)
-            message = (
-                f"  [oc] opencode session store locked (attempt {attempt + 1}); "
-                f"retrying in {delay:.0f}s"
+    own_dirs = [*writable_dirs, log_path.parent] if sandbox and wait_out_usage_limits else []
+    kept = [log_path, log_path.parent / HOME_NAME, agent_data_home(log_path)]
+    kept += [memory_dir] if memory_dir else []
+    waited_sec = 0.0
+    with _OwnDirsSnapshot(own_dirs, kept=kept) as snapshot:
+        log_mode = "w"
+        while True:
+            stream, raw_output, timed_out, returncode = _run_agent_with_lock_retries(
+                run_cmd,
+                backend=backend,
+                cwd=cwd,
+                log_path=log_path,
+                timeout_secs=timeout_secs,
+                env=run_env,
+                on_summary=on_summary,
+                log_mode=log_mode,
+                stdin_text=stdin_text,
             )
-            if on_summary:
-                on_summary(message)
-            time.sleep(delay)
-            continue
-        break
+            log_mode = "a"
+            usage = stream.usage_fields()
+            messages = [] if timed_out else _cli_messages(backend, stream, raw_output)
+            limit = detect_usage_limit(messages) if wait_out_usage_limits else None
+            login_failure = detect_login_failure(messages) if wait_out_usage_limits else None
+            if limit is None and login_failure is None:
+                break
+            delay = 0.0
+            if login_failure is None:
+                delay = seconds_until_retry(
+                    limit,
+                    datetime.now().astimezone(),
+                    margin_sec=AGENT_USAGE_LIMIT_RESET_MARGIN_SEC,
+                    fallback_sec=AGENT_USAGE_LIMIT_FALLBACK_WAIT_SEC,
+                )
+            give_up = login_failure is not None or waited_sec + delay > AGENT_USAGE_LIMIT_MAX_WAIT_SEC
+            token_usage.record_usage(
+                source=usage_label, backend=backend, model=model, **usage,
+                usage_limit=login_failure or limit.message,
+                usage_limit_wait_sec=0.0 if give_up else delay,
+            )
+            if sandbox:
+                remove_private_home(log_path.parent)
+            snapshot.restore()
+            if login_failure is not None:
+                raise AgentLoginFailed(
+                    f"the {backend} agent's login cannot make calls: {login_failure!r} "
+                    f"(see {log_path}); fix the login or its billing and resume."
+                )
+            if give_up:
+                raise AgentUsageLimitExceeded(
+                    f"the {backend} agent's usage limit did not lift within "
+                    f"{AGENT_USAGE_LIMIT_MAX_WAIT_SEC / 3600:g} h of waiting (waited "
+                    f"{waited_sec / 3600:.2f} h; the next wait would be "
+                    f"{delay / 3600:.2f} h): {limit.message!r}. This is the account's "
+                    f"limit, not the agent's failure; resume the run once it lifts."
+                )
+            _announce_usage_limit_wait(limit, delay, usage_label, log_path, on_summary)
+            _wait(delay)
+            waited_sec += delay
+            run_cmd, run_env = launch()
 
-    usage = stream.usage_fields()
     token_usage.record_usage(
         source=usage_label, backend=backend, model=model, **usage
     )
@@ -769,6 +850,151 @@ def run_coding_agent(
     success = returncode == 0
     final_result = stream.result_text() or raw_output.strip()
     return success, final_result
+
+
+def _run_agent_with_lock_retries(
+    cmd: list[str], *, backend: str, log_mode: str, on_summary: Optional[Callable[[str], None]],
+    **run_kwargs: Any,
+) -> tuple[Any, str, bool, Optional[int]]:
+    """One run of the agent, retried while opencode's session store is locked.
+
+    Returns ``(stream, raw_output, timed_out, returncode)`` of the last try.
+    """
+    for attempt in range(1 + OPENCODE_LOCK_RETRIES):
+        stream, captured, timed_out, returncode = _run_agent_once(
+            cmd,
+            backend=backend,
+            on_summary=on_summary,
+            log_mode=log_mode if attempt == 0 else "a",
+            **run_kwargs,
+        )
+        raw_output = "".join(captured)
+        lock_hit = (
+            backend == "opencode"
+            and not timed_out
+            and returncode != 0
+            and _OPENCODE_LOCK_SIGNATURE in raw_output
+        )
+        if lock_hit and attempt < OPENCODE_LOCK_RETRIES:
+            delay = OPENCODE_LOCK_BACKOFF_SECS * (attempt + 1)
+            message = (
+                f"  [oc] opencode session store locked (attempt {attempt + 1}); "
+                f"retrying in {delay:.0f}s"
+            )
+            if on_summary:
+                on_summary(message)
+            time.sleep(delay)
+            continue
+        break
+    return stream, raw_output, timed_out, returncode
+
+
+def _cli_messages(backend: str, stream: Any, raw_output: str) -> list[str]:
+    """What the CLI itself said, as opposed to the agent's work: the lines it
+    printed outside its JSON stream, and Claude's result text (its start, as a
+    limit message is the whole text) or opencode's and codex's error events."""
+    messages = [line for line in raw_output.splitlines() if not _is_json_object(line)]
+    if backend == "claude":
+        messages.append(stream.final_result[:LIMIT_WINDOW])
+    else:
+        messages.extend(stream.errors)
+    return messages
+
+
+def _is_json_object(line: str) -> bool:
+    try:
+        return isinstance(json.loads(line), dict)
+    except json.JSONDecodeError:
+        return False
+
+
+def _announce_usage_limit_wait(
+    limit: UsageLimit,
+    delay_sec: float,
+    usage_label: str,
+    log_path: Path,
+    on_summary: Optional[Callable[[str], None]],
+) -> None:
+    """Say, in the run log and the agent's log, that the agent waits on a limit."""
+    until = limit.reset_at.isoformat() if limit.reset_at else "no reset time stated"
+    message = (
+        f"  [USAGE LIMIT] {usage_label}: the agent CLI hit its usage limit "
+        f"({limit.message[:160]!r}; reset: {until}); its output was discarded. "
+        f"Waiting {delay_sec / 60:.1f} min, then running the agent again ({log_path})."
+    )
+    print(message, flush=True)
+    if on_summary and on_summary is not print:
+        on_summary(message)
+    with open(log_path, "a", encoding="utf-8") as log_file:
+        log_file.write(f"\n--- usage limit; waiting {delay_sec:.0f}s: {limit.message} ---\n")
+
+
+def _wait(seconds: float) -> None:
+    """Sleep out a usage limit (replaced in tests)."""
+    time.sleep(seconds)
+
+
+class _OwnDirsSnapshot:
+    """The agent's own directories as they were before it ran, to put back
+    after a run that ended on a usage limit. ``kept`` paths inside them (its
+    log, its CLI state, the run's notes) are neither saved nor put back."""
+
+    def __init__(self, dirs: Sequence[Path], *, kept: Sequence[Path]) -> None:
+        self._dirs = _outermost_dirs([Path(d).resolve() for d in dirs])
+        self._kept = {Path(k).resolve() for k in kept}
+        self._saved: Optional[tempfile.TemporaryDirectory] = None
+
+    def __enter__(self) -> "_OwnDirsSnapshot":
+        if self._dirs:
+            self._saved = tempfile.TemporaryDirectory(prefix="agent-dirs-before-")
+            for i, directory in enumerate(self._dirs):
+                if directory.exists():
+                    shutil.copytree(
+                        directory, Path(self._saved.name) / str(i),
+                        symlinks=True, ignore=self._ignore,
+                    )
+        return self
+
+    def __exit__(self, *exc_info: Any) -> None:
+        if self._saved is not None:
+            self._saved.cleanup()
+
+    def _ignore(self, directory: str, names: list[str]) -> list[str]:
+        return [name for name in names if (Path(directory) / name) in self._kept]
+
+    def restore(self) -> None:
+        for i, directory in enumerate(self._dirs):
+            saved = Path(self._saved.name) / str(i)
+            directory.mkdir(parents=True, exist_ok=True)
+            self._put_back(directory, saved)
+
+    def _put_back(self, live: Path, saved: Path) -> None:
+        for entry in list(live.iterdir()):
+            if entry in self._kept:
+                continue
+            if entry.is_dir() and not entry.is_symlink():
+                if any(k.is_relative_to(entry) for k in self._kept):
+                    self._put_back(entry, saved / entry.name)
+                    continue
+                shutil.rmtree(entry)
+            else:
+                entry.unlink()
+        if not saved.is_dir():
+            return
+        for entry in saved.iterdir():
+            target = live / entry.name
+            if target.exists() or target.is_symlink():
+                continue  # a kept path, or a directory holding one (put back above)
+            if entry.is_dir() and not entry.is_symlink():
+                shutil.copytree(entry, target, symlinks=True)
+            else:
+                shutil.copy2(entry, target, follow_symlinks=False)
+
+
+def _outermost_dirs(paths: Sequence[Path]) -> list[Path]:
+    """The paths, minus any that lie inside another one."""
+    unique = list(dict.fromkeys(paths))
+    return [p for p in unique if not any(p != o and p.is_relative_to(o) for o in unique)]
 
 
 def _run_agent_once(
