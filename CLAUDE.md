@@ -110,8 +110,11 @@ target — see **Slot roles**) → admit sequentially.
 - **Admission and the novelty gate** (`_admit_candidate` in `model_zoo.py`): a
   candidate is admitted only with a loadable `candidate.py` (module-level
   `model: pm.Model`) that passes the code gate (`import_gate.py`: an import
-  allowlist, and no `open`/`np.load`/`eval`/`__import__`/dunder escapes — the
-  code runs in the harness process) + `hypothesis.md` (`model_name.txt` is
+  allowlist, and no `open`/`np.load`/`eval`/`__import__`/`getattr`/dunder
+  escapes, no forbidden module reached as an attribute (`typing.sys`,
+  `dataclasses.builtins`), no file reader (`np.DataSource`, `pd.read_*`) and
+  no attribute lookup inside `str.format` — the code runs in the harness
+  process, which clears its own argv once parsed) + `hypothesis.md` (`model_name.txt` is
   optional; a slot name is the fallback), passing logp/real-fit/finite-ELPD
   gates and the **convergence gate** (≤0.1% divergent transitions, R-hat ≤
   1.05, bulk ESS ≥ 100; `fit_model` refits a failing fit once at
