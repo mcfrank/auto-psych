@@ -237,8 +237,9 @@ def _posterior_p_left_draws(
 # DESIGN_LAZY_BATCH_SIZE — in float32. Exact greedy (a full pass per pick, in
 # float64) took 11-13 h per later-experiment design; this takes ~3 min on 16
 # CPUs. Validated on two experiment-2 designs of the September 2026 sweep
-# (scripts/subjective_randomness/validate_lazy_eig.py, 2026-09-27): float32
-# picked the same sets as float64, and lazy greedy's out-of-sample joint EIG
+# (scripts/subjective_randomness/validate_lazy_eig.py, 2026-09-27): exact
+# greedy in float32 picked sets with the same joint EIG as in float64 (59-64 of
+# 64 pairs shared, the rest near-ties), and lazy greedy's out-of-sample joint EIG
 # was within Monte Carlo noise of exact greedy's (design 1, over three
 # scenario seeds each: 2.078 vs 2.080 bits; design 2: 0.0006 bits lower, of
 # 2.69), while exact greedy itself moved by up to 0.008 bits between scenario

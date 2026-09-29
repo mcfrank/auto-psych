@@ -529,7 +529,9 @@ worth of scoring instead of 64, and its out-of-sample joint EIG was within
 Monte Carlo noise of exact greedy's (design 1, three scenario seeds each:
 2.078 vs 2.080 bits; design 2: 0.0006 bits lower, of 2.69), while exact
 greedy itself moved by up to 0.008 bits between scenario seeds. float32 scoring
-gains are within 1e-6 bits of float64 and picked the same sets. One full pass
+gains are within 1e-6 bits of float64, and exact greedy's sets in float32 had
+the same joint EIG as in float64 (59-64 of 64 pairs shared; the others
+near-ties). One full pass
 over 43,434 pairs at 40 responses and 8 models: 607 s single-threaded in
 float64 (the old setting), 20 s in float32 on 16 threads. BLAS is held to one
 thread per chunk (a scoped `threadpoolctl` limit), and chunk boundaries do not
