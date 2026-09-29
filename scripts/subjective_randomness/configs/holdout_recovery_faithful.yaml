@@ -22,8 +22,20 @@ n_participants: 40  # match the live human experiment (full_run.yaml: 40/experim
 seed: 7
 
 inner_loop:
-  max_iterations: 2
-  candidate_count: 3
+  # Scaled in September 2026 (loop-improvement plan P45): 2 -> 5 candidate
+  # rounds per experiment and 3 -> 6 candidates per round, so an experiment
+  # sees 30 proposals instead of 6. Slot roles at 6 (model_zoo.slot_roles):
+  # three exploratory slots walking the twelve-lens battery (a round never
+  # repeats a lens), two that refine the incumbent, one that refines a model
+  # of the agent's choosing. A round's six agents run concurrently (one
+  # worker per slot); the critique agent runs before them because its
+  # critiques.md is inlined into every candidate brief.
+  max_iterations: 5
+  candidate_count: 6
+  # Test statistics the critique agent proposes per round (the inner-loop
+  # default; explicit so a sweep's setting is self-documenting and can be
+  # overridden with --n-critique-proposals / N_CRITIQUE_PROPOSALS).
+  n_critique_proposals: 8
 
 # Per-experiment design: n_eig stimuli chosen by max joint-EIG (discrimination,
 # concentrated on structured extremes) + n_random sampled uniformly from the same

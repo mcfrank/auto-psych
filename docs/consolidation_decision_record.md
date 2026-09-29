@@ -571,3 +571,64 @@ capped at the worker count; on a batch of comparable fits it approaches
 the worker count. CPU accounting (user+sys over wall) rose from 1.83 to
 2.18 busy CPUs, and a pure-CPU probe confirmed the allocation runs four
 processes at 3.98.
+
+### The inner loop at scale: five rounds of six (`configs/holdout_recovery*.yaml`)
+
+**Decision (P45).** Both holdout configs (`holdout_recovery.yaml`, which the
+plan names, and `holdout_recovery_faithful.yaml`, which the launcher, the
+September 2026 sweep and the Phase-A smoke actually used) now run
+`max_iterations: 5` and `candidate_count: 6` — 30 proposals per experiment
+where the sweep had 6 — with `n_critique_proposals: 8` stated explicitly.
+At six slots `slot_roles` gives three exploratory slots (the twelve-lens
+battery never repeats within a round), two that refine the incumbent and
+one that refines a model of the agent's choosing. `n_critique_proposals` was
+reachable only from the outer-loop CLI, so a config key would have been
+silently ignored; it now threads holdout config → `--n-critique-proposals`
+(sbatch `N_CRITIQUE_PROPOSALS`) → `run_holdout_recovery_from_config`
+(absent → the inner-loop default; below 1 raises) → the inner loop, and the
+result JSON records the value used — the same route as
+`novelty_rmse_threshold`.
+
+**Agent parallelism, confirmed.** `run_pymc_inner_loop` spawns a wave's
+slots on a `ThreadPoolExecutor` of `min(candidate_parallelism or
+candidate_count, candidate_count)` workers; the holdout harness leaves
+`candidate_parallelism` unset, so six slots are six concurrent agents, and
+the retry/repair wave spawns concurrently too. Each agent has its own
+opencode store (P34), so there is no shared sqlite to contend on. Two tests
+pin this: a six-party barrier inside the fake spawn that only opens when all
+six overlap, and `candidate_parallelism=3` on six slots observing exactly
+three at once.
+
+**The critique agent is serial, on purpose.** The plan asked to confirm the
+critique agent is spawned alongside the candidates. It is not, and it should
+not be: `_run_critique_round` produces `critiques.md`, which
+`_write_candidate_context` inlines into every candidate brief of the same
+round — the CriticAL signal steers the proposals it precedes (in the Phase-A
+smoke all four experiment-2 hypotheses addressed the critique's
+recency-streak discrepancy). Running it concurrently would give the
+candidates the previous round's critique, which is stale exactly when the
+incumbent has just changed — the plan's primary metric. The cost is bounded:
+in the Phase-A smoke the critique agent took 240 s and 78 s per round plus
+~15 s for the 200-replicate PPC harness, i.e. at most about an hour over the
+fifteen rounds of a scaled cell against a 24 h wall. Nothing else in the
+round can overlap it (the incumbent it critiques is known only after the
+previous scoring step, and the briefs need its output).
+
+**What the scale smoke measures.** Archived `sweep_rerun` cells (3 slots x 2
+rounds x 3 experiments) took 1 h 45 m to 6 h 28 m under a 24 h wall. From
+the `agent_runs.tar.gz` mtimes of `run2/motif_stack` (1 h 45 m) a
+three-slot round took 5–21 min: 2–6 min of concurrent agent wall, then the
+sequential admission fits and scoring. The slow cells are the ones that
+carry `motif_stack` as a *seed*: its 4-chain production fit took 3,389 s and
+4,822 s in `run1/finite_experience_occurrence`, dominating each
+experiment-start screen (64 and 89 min) — a cost P44's parallel batch now
+hides behind the other seeds but does not shorten. The scale smoke holds
+`motif_stack` out, so it measures the agent-side scaling (six concurrent
+agents, six sequential admission fits per round, fifteen rounds) and not the
+slow-seed cost; P46 should add ~1–1.5 h per experiment for the other three
+ground truths when projecting the sweep. Rough projection for the smoke:
+10–25 min per round x 15 rounds plus seed steps and the exhaustive
+evaluation, 3–7 h. The remaining sequential site, as P44 noted, is the
+candidate real-fit gate (`_admit_candidate_with_reason`), six fits in
+admission order per round; if the smoke does not fit the wall, that is the
+next thing to parallelise.
