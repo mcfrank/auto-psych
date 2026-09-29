@@ -309,6 +309,7 @@ def spawn_cc_agent(
         cwd=REPO_ROOT,
         log_path=log_path,
         allowed_dirs=dirs,
+        writable_dirs=dirs,  # the experiment it builds; the rest is read-only
         timeout_secs=timeout_secs,
         backend=backend,
         model=model,

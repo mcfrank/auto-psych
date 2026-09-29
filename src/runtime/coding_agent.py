@@ -616,6 +616,7 @@ def run_coding_agent(
     stock: bool = False,
     memory_dir: Optional[Path] = None,
     sandbox: bool = False,
+    writable_dirs: Optional[list[Path]] = None,
 ) -> tuple[bool, str]:
     """Spawn the selected coding agent, stream output to ``log_path``.
 
@@ -623,8 +624,9 @@ def run_coding_agent(
     configuration (``STOCK_CLAUDE_ARGS``, ``STOCK_CLAUDE_ENV``);
     ``memory_dir`` gives it an auto-memory there instead of none.
     ``sandbox=True`` runs the CLI inside a bubblewrap filesystem sandbox that
-    holds only its working tree, a scratch dir at /tmp and a private home (see
-    :mod:`src.runtime.agent_sandbox`).
+    holds only its working tree and ``allowed_dirs`` (read-only), the
+    ``writable_dirs`` and ``memory_dir`` (read-write), a scratch dir at /tmp
+    and a private home (see :mod:`src.runtime.agent_sandbox`).
 
     Returns ``(success, result_text)``. For Claude, success and the final
     result come from the terminal ``result`` stream-json event; for opencode
@@ -664,11 +666,17 @@ def run_coding_agent(
         memory_dir=memory_dir,
     )
     if sandbox:
+        if writable_dirs is None:
+            raise ValueError(
+                "A sandboxed agent needs writable_dirs: the directories it may "
+                "write (the rest of its tree is read-only)."
+            )
         cmd, child_env = sandbox_command(
             cmd,
             backend=backend,
             cwd=cwd,
-            writable_dirs=list(allowed_dirs or []),
+            readable_dirs=list(allowed_dirs or []),
+            writable_dirs=[*writable_dirs, *([memory_dir] if memory_dir else [])],
             agent_dir=log_path.parent,
             env=child_env,
         )

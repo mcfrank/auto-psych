@@ -33,6 +33,9 @@ def _layout(tmp_path: Path):
     agent_dir = tree / "_runs" / "cell_1" / "candidate_0"
     agent_dir.mkdir(parents=True)
     (tree / "brief.md").write_text("the brief\n", encoding="utf-8")
+    zoo = tree / "_runs" / "cell_1" / "models"
+    zoo.mkdir()
+    (zoo / "admitted.py").write_text("model = 1\n", encoding="utf-8")
     other = tmp_path / "agent_trees" / "run_b" / "repo"
     other.mkdir(parents=True)
     (other / "notes.md").write_text("PERIWINKLE\n", encoding="utf-8")
@@ -56,11 +59,28 @@ def _run(tmp_path: Path, script: str):
 
 
 @needs_bwrap
-def test_agent_reads_and_writes_its_own_tree(tmp_path):
-    result, tree, _, _ = _run(tmp_path, "cat brief.md && echo made > made.txt")
+def test_agent_reads_its_tree_and_writes_its_own_dir(tmp_path):
+    script = "cat brief.md && echo made > _runs/cell_1/candidate_0/made.txt"
+    result, _, agent_dir, _ = _run(tmp_path, script)
     assert result.returncode == 0, result.stderr
     assert result.stdout == "the brief\n"
-    assert (tree / "made.txt").read_text() == "made\n"
+    assert (agent_dir / "made.txt").read_text() == "made\n"
+
+
+@needs_bwrap
+def test_the_rest_of_its_tree_is_read_only(tmp_path):
+    """A Gemini candidate once emptied an admitted model in the shared zoo with
+    a broken heredoc (`cat << 'EOF' > models/x.py`), and the cell crashed on
+    it at the next admission. The shared tree can be read, not written."""
+    script = (
+        "cat _runs/cell_1/models/admitted.py; "
+        "cat << 'EOF' > _runs/cell_1/models/admitted.py; echo x > planted.txt"
+    )
+    result, tree, _, _ = _run(tmp_path, script)
+    assert result.stdout == "model = 1\n"
+    assert "Read-only file system" in result.stderr
+    assert (tree / "_runs" / "cell_1" / "models" / "admitted.py").read_text() == "model = 1\n"
+    assert not (tree / "planted.txt").exists()
 
 
 @needs_bwrap

@@ -302,6 +302,7 @@ def _spawn_critique_agent(
             cwd=cwd,
             log_path=critique_dir / _critique_log_name(attempt),
             allowed_dirs=[critique_dir, models_dir, responses_path.parent],
+            writable_dirs=[critique_dir],  # the zoo and the data are read-only
             timeout_secs=agent_timeout_sec,
             backend=backend,
             model=agent_model,

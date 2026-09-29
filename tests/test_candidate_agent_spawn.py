@@ -31,11 +31,12 @@ def _spawn(tmp_path, monkeypatch):
 
     def fake_run_coding_agent(
         prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False, memory_dir=None, sandbox=False,
+        model=None, stock=False, memory_dir=None, sandbox=False, writable_dirs=None,
     ):
         captured["stock"] = stock
         captured["memory_dir"] = memory_dir
         captured["sandbox"] = sandbox
+        captured["writable_dirs"] = writable_dirs
         captured["prompt"] = prompt
         captured["cwd"] = cwd
         captured["allowed_dirs"] = list(allowed_dirs)
@@ -102,3 +103,10 @@ def test_candidate_agent_keeps_notes_in_its_runs_notes_dir(tmp_path, monkeypatch
 def test_candidate_agent_runs_in_the_filesystem_sandbox(tmp_path, monkeypatch):
     captured, *_ = _spawn(tmp_path, monkeypatch)
     assert captured["sandbox"] is True
+
+
+def test_candidate_agent_may_write_only_its_own_dir(tmp_path, monkeypatch):
+    """It reads the zoo and the data; a stray write there once emptied an
+    admitted model and crashed the cell."""
+    captured, candidate_dir, *_ = _spawn(tmp_path, monkeypatch)
+    assert captured["writable_dirs"] == [candidate_dir]

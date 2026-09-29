@@ -243,8 +243,8 @@ def test_stock_claude_agent_without_a_notes_dir_has_no_memory_at_all(tmp_path):
 
 
 def test_a_sandboxed_run_wraps_the_cli_in_the_agents_sandbox(tmp_path, monkeypatch):
-    """sandbox=True hands the built command to agent_sandbox, with the agent's
-    own directory (the one holding its log) and its allowed dirs."""
+    """sandbox=True hands the built command to agent_sandbox: the allowed dirs
+    are readable, and only the writable dirs and the notes dir are writable."""
     import src.runtime.coding_agent as coding_agent
 
     class Stop(Exception):
@@ -257,16 +257,28 @@ def test_a_sandboxed_run_wraps_the_cli_in_the_agents_sandbox(tmp_path, monkeypat
         raise Stop
 
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
-    agent_dir = tmp_path / "candidate_0"
+    agent_dir, zoo, notes = tmp_path / "candidate_0", tmp_path / "models", tmp_path / "notes"
     with pytest.raises(Stop):
         coding_agent.run_coding_agent(
             "p", cwd=tmp_path, log_path=agent_dir / "agent.jsonl", backend="opencode",
-            allowed_dirs=[agent_dir], sandbox=True, on_summary=None,
+            allowed_dirs=[agent_dir, zoo], writable_dirs=[agent_dir], memory_dir=notes,
+            sandbox=True, on_summary=None,
         )
     assert seen["cmd"][0] == "opencode"
     assert seen["backend"] == "opencode"
     assert seen["agent_dir"] == agent_dir
-    assert list(seen["writable_dirs"]) == [agent_dir]
+    assert list(seen["readable_dirs"]) == [agent_dir, zoo]
+    assert list(seen["writable_dirs"]) == [agent_dir, notes]
+
+
+def test_a_sandboxed_run_must_say_what_it_may_write(tmp_path):
+    from src.runtime.coding_agent import run_coding_agent
+
+    with pytest.raises(ValueError, match="writable_dirs"):
+        run_coding_agent(
+            "p", cwd=tmp_path, log_path=tmp_path / "agent.jsonl", backend="opencode",
+            allowed_dirs=[tmp_path], sandbox=True, on_summary=None,
+        )
 
 
 def test_a_sandboxed_agents_private_home_is_removed_when_it_exits(tmp_path, monkeypatch):
@@ -285,7 +297,8 @@ def test_a_sandboxed_agents_private_home_is_removed_when_it_exits(tmp_path, monk
     monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
     coding_agent.run_coding_agent(
         "p", cwd=tmp_path, log_path=agent_dir / "agent.jsonl", backend="opencode",
-        allowed_dirs=[agent_dir], sandbox=True, on_summary=None, timeout_secs=30,
+        allowed_dirs=[agent_dir], writable_dirs=[agent_dir], sandbox=True,
+        on_summary=None, timeout_secs=30,
     )
     assert not (agent_dir / ".home").exists()
     assert (agent_dir / "scratch" / "explore.py").exists()
