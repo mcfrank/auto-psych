@@ -172,8 +172,10 @@ In order (sbatch:134-318):
    stops the cell (exit 1) before an agent runs.
 9. Remove from the agents' environment every variable whose value contains the
    GT name, `$WORK_ROOT` or `$REPO`, plus `GT_MODELS` and `CONFIG`
-   (sbatch:350-364). The sandbox additionally drops every `SLURM_*` variable
-   (agent_sandbox.py:70-72), because `SLURM_ARRAY_TASK_ID` maps to the GT.
+   (sbatch:350-364). That is the harness's environment; each sandboxed agent
+   then gets only an allowlist of it (`agent_sandbox.agent_environment`), so
+   no `SLURM_*` variable (`SLURM_ARRAY_TASK_ID` maps to the GT), no retry
+   variable and no `.secrets` key but its own backend's login reaches it.
 
 The harness then runs from `harness_repo` with `--agent-root $RUN_REPO`,
 `--results-root $RUN_REPO/_runs`, `--summary-root $WORK_ROOT/run<r>`,
@@ -254,8 +256,15 @@ Every loop agent (critique and candidates) is launched with `sandbox=True`
 | `/usr`, `/etc`, `/share/software`, the venv and its base interpreter, the CLI install | read-only | system software |
 
 The sandbox uses a private PID namespace (`--unshare-pid`), so the harness's
-`ps` arguments are not visible. The network is shared. The environment has no
-`SLURM_*` variables. Logins: claude needs `CLAUDE_CODE_OAUTH_TOKEN`, codex gets
+`ps` arguments are not visible. The network is shared. The environment is an
+allowlist (`agent_environment`: `AGENT_ENV_NAMES` — system basics, locale,
+XDG, the compiler toolchain PyTensor needs, thread caps, network/TLS settings
+— plus the backend's own login and configuration, `BACKEND_ENV`: provider
+keys and `OPENCODE_*` for opencode, `CLAUDE_CODE_*`/`ANTHROPIC_*` for claude,
+`CODEX_*`/`OPENAI_API_KEY` for codex). Every other `.secrets` key (Prolific,
+Firebase, the results token), every `SLURM_*` variable and the sweep's own
+variables are withheld; `_env.sh` still exports `.secrets` into the harness.
+Logins: claude needs `CLAUDE_CODE_OAUTH_TOKEN`, codex gets
 a private `CODEX_HOME` holding only `auth.json`, and opencode reads its
 provider key from the environment (`_login`, agent_sandbox.py:217). For
 opencode, `external_directory` is set to `allow` because the sandbox itself

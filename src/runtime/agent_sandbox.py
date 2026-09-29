@@ -17,7 +17,11 @@ wraps the CLI's argv in a bubblewrap mount namespace that contains only:
 - the agent's login and nothing else of the user's configuration: Claude
   through the long-lived CLAUDE_CODE_OAUTH_TOKEN, codex through a private
   CODEX_HOME holding only auth.json, opencode through the provider key in its
-  environment.
+  environment;
+- an allowlisted environment (``agent_environment``): the system basics, the
+  toolchain PyTensor compiles with, network settings, and its own backend's
+  login and configuration — not the harness's environment, which carries
+  every key in ``.secrets``.
 
 Nothing else exists inside, and a private PID namespace hides every other
 process. The network is shared: the agent must reach its API, and Sherlock
@@ -43,6 +47,59 @@ HOME_NAME = ".home"  # mounted at $HOME
 HOME_REMOVAL_ATTEMPTS = 6  # about 30 s in all
 HOME_REMOVAL_BACKOFF_SECS = 2.0
 
+# The environment variables a sandboxed agent gets (``agent_environment``). The
+# harness's environment holds every key in .secrets (Prolific, Firebase, the
+# results token, ...), the Slurm task id that maps to the held-out ground truth,
+# and whatever a retry job exported (ARRAY_TASKS); the network is open, so an
+# agent must not hold what it has no use for. It gets:
+# - the system basics, locale and XDG directories;
+AGENT_ENV_NAMES = frozenset(
+    {"PATH", "HOME", "USER", "LOGNAME", "SHELL", "TERM", "LANG", "LANGUAGE", "TZ",
+     "PWD", "TMPDIR"}
+    # - the compiler toolchain PyTensor compiles models with (the gcc module's
+    #   CC/CXX and its libstdc++ on LD_LIBRARY_PATH) and the thread caps;
+    | {"CC", "CXX", "LD_LIBRARY_PATH", "LIBRARY_PATH", "CPATH", "C_INCLUDE_PATH",
+       "CPLUS_INCLUDE_PATH", "PKG_CONFIG_PATH", "OMP_NUM_THREADS",
+       "MKL_NUM_THREADS", "OPENBLAS_NUM_THREADS", "PYTENSOR_FLAGS",
+       "PYTHONPYCACHEPREFIX"}
+    # - network settings, and node's (codex is a node script);
+    | {"SSL_CERT_FILE", "SSL_CERT_DIR", "REQUESTS_CA_BUNDLE", "CURL_CA_BUNDLE",
+       "NODE_EXTRA_CA_CERTS", "HTTP_PROXY", "HTTPS_PROXY", "NO_PROXY",
+       "http_proxy", "https_proxy", "no_proxy", "NODE_PATH", "NODE_OPTIONS"}
+)
+AGENT_ENV_PREFIXES = ("LC_", "XDG_")
+# - and its own backend's login and configuration: (names, prefixes).
+BACKEND_ENV = {
+    "opencode": (
+        frozenset({"GOOGLE_API_KEY", "GEMINI_API_KEY", "GOOGLE_GENERATIVE_AI_API_KEY",
+                   "ANTHROPIC_API_KEY", "OPENAI_API_KEY", "OPENROUTER_API_KEY"}),
+        ("OPENCODE_",),
+    ),
+    "claude": (frozenset({"DISABLE_AUTOUPDATER"}), ("CLAUDE_CODE_", "ANTHROPIC_")),
+    "codex": (frozenset({"OPENAI_API_KEY"}), ("CODEX_",)),
+}
+
+
+def agent_environment(env: Mapping[str, str], backend: str) -> Dict[str, str]:
+    """The allowlisted part of ``env`` a sandboxed ``backend`` agent runs with.
+
+    See ``AGENT_ENV_NAMES`` and ``BACKEND_ENV``. Everything else is withheld:
+    every other ``.secrets`` key, every ``SLURM_*`` variable
+    (``SLURM_ARRAY_TASK_ID`` maps to the held-out ground truth through the
+    default ground-truth order), the sweep's own variables.
+    """
+    if backend not in BACKEND_ENV:
+        raise ValueError(
+            f"No environment allowlist for backend {backend!r}; add it to BACKEND_ENV."
+        )
+    names, prefixes = BACKEND_ENV[backend]
+    return {
+        key: value
+        for key, value in env.items()
+        if key in AGENT_ENV_NAMES or key in names
+        or key.startswith(AGENT_ENV_PREFIXES + prefixes)
+    }
+
 
 def sandbox_command(
     cmd: Sequence[str],
@@ -67,9 +124,7 @@ def sandbox_command(
             "Sandboxed agents need bubblewrap on PATH (on Sherlock: "
             "`ml load system bubblewrap`)."
         )
-    # No Slurm variable is any use to an agent, and SLURM_ARRAY_TASK_ID maps to
-    # the held-out ground truth through the default ground-truth order.
-    env = {key: value for key, value in env.items() if not key.startswith("SLURM_")}
+    env = agent_environment(env, backend)
     user_home = Path(env.get("HOME") or Path.home())
     agent_dir = Path(agent_dir)
     scratch = agent_dir / SCRATCH_NAME

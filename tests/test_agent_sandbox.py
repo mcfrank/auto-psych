@@ -166,11 +166,13 @@ def test_the_venv_python_works_inside(tmp_path):
 # ── Credentials and preconditions (no sandbox needs to run) ───────────
 
 
-def _fake_bwrap(monkeypatch):
+def _fake_bwrap(monkeypatch, *clis):
+    """bwrap (and each named agent CLI) resolve on PATH whether or not they
+    are installed: these tests never start a sandbox."""
     real_which = shutil.which
+    faked = {"bwrap": "/usr/bin/bwrap", **{cli: "/usr/bin/true" for cli in clis}}
     monkeypatch.setattr(
-        agent_sandbox.shutil, "which",
-        lambda name: "/usr/bin/bwrap" if name == "bwrap" else real_which(name),
+        agent_sandbox.shutil, "which", lambda name: faked.get(name) or real_which(name)
     )
 
 
@@ -184,7 +186,7 @@ def test_missing_bubblewrap_fails_loudly(tmp_path, monkeypatch):
 def test_a_sandboxed_claude_agent_needs_the_long_lived_token(tmp_path, monkeypatch):
     """Its credentials file cannot be refreshed from inside the sandbox; the
     token from `claude setup-token` needs no file and no refresh."""
-    _fake_bwrap(monkeypatch)
+    _fake_bwrap(monkeypatch, "claude")
     with pytest.raises(RuntimeError, match="CLAUDE_CODE_OAUTH_TOKEN"):
         sandbox_command(["claude", "-p", "x"], backend="claude", cwd=tmp_path,
                         writable_dirs=[], agent_dir=tmp_path, env={"HOME": str(tmp_path)})
@@ -322,3 +324,46 @@ def test_the_agents_environment_carries_no_slurm_variables(tmp_path, monkeypatch
     )
     assert not any(key.startswith("SLURM_") for key in env)
     assert env["PATH"] == "/usr/bin"
+
+
+# The environment is an allowlist. The harness's holds every .secrets key and
+# the network is open; an agent gets what its backend and the sandbox need.
+_HARNESS_ENV = {
+    "PATH": "/usr/bin",
+    "LANG": "C.UTF-8",
+    "LD_LIBRARY_PATH": "/share/software/gcc/lib64",
+    "GOOGLE_GENERATIVE_AI_API_KEY": "gemini-key",
+    "CLAUDE_CODE_OAUTH_TOKEN": "claude-token",
+    "PROLIFIC_API_TOKEN": "prolific",
+    "FIREBASE_TOKEN": "firebase",
+    "AUTO_PSYCH_RESULTS_TOKEN": "results",
+    "ARRAY_TASKS": "3,7",
+    "GT_MODELS": "a b c",
+    "SCRATCH": "/scratch/users/someone",
+}
+_NEVER = {"PROLIFIC_API_TOKEN", "FIREBASE_TOKEN", "AUTO_PSYCH_RESULTS_TOKEN",
+          "ARRAY_TASKS", "GT_MODELS", "SCRATCH"}
+
+
+@pytest.mark.parametrize("backend, login, not_its_login", [
+    ("opencode", "GOOGLE_GENERATIVE_AI_API_KEY", "CLAUDE_CODE_OAUTH_TOKEN"),
+    ("claude", "CLAUDE_CODE_OAUTH_TOKEN", "GOOGLE_GENERATIVE_AI_API_KEY"),
+])
+def test_an_agent_gets_its_own_login_and_no_other_secret(
+    tmp_path, monkeypatch, backend, login, not_its_login
+):
+    _fake_bwrap(monkeypatch, backend)
+    _, env = sandbox_command(
+        [backend], backend=backend, cwd=tmp_path, writable_dirs=[],
+        agent_dir=tmp_path, env={**_HARNESS_ENV, "HOME": str(tmp_path)},
+    )
+    assert env[login] == _HARNESS_ENV[login]
+    assert not_its_login not in env
+    assert not (_NEVER & set(env)), sorted(_NEVER & set(env))
+    assert env["LD_LIBRARY_PATH"] == _HARNESS_ENV["LD_LIBRARY_PATH"]  # pytensor's compiler
+    assert env["LANG"] == "C.UTF-8"
+
+
+def test_an_unknown_backend_has_no_environment_allowlist():
+    with pytest.raises(ValueError, match="allowlist"):
+        agent_sandbox.agent_environment({"PATH": "/usr/bin"}, "mystery")
