@@ -117,7 +117,8 @@ Starting from `run_pymc_inner_loop` in `pymc_orchestrator.py`:
    - **Admit sequentially**: `_admit_candidate` checks the import gate
      (`import_gate.py` — AST-based allowlist), loads the model, verifies logp is
      finite, runs a real MCMC fit, checks ELPD-LOO is finite, and checks novelty
-     (posterior-mean RMSE ≥ 0.02 from every admitted model). Each outcome is
+     (posterior-mean `p_left` RMSE ≥ 0.002 from every admitted model on the
+     loop's 512-stimulus novelty pool, `novelty_pool.json`). Each outcome is
      recorded in the ledger.
    - **Score** all models again; **prune** non-protected losers
      (`elpd_diff > dse_multiplier × dse` among reliable rows).
@@ -141,7 +142,7 @@ Starting from `run_pymc_inner_loop` in `pymc_orchestrator.py`:
 | Leakage audit (`any_csv_generating_model`, `any_manifest_gt_named`) | `leakage_audit.py` | Held-out label present in any agent-visible artifact |
 | PSIS-LOO reliability (tolerating exempt constant-logp trials) | `loo_reliability.py` | arviz's blanket k>0.7 flag discarding winners on clipped trials |
 | Best-by-ELPD-rank export (not softmax argmax) | `scoring.py` | Exporting a far-behind model that reads 0.0 in the rounded posterior |
-| Novelty RMSE gate (0.02) | `model_zoo.py` | Re-skinned duplicates wasting candidate slots |
+| Novelty RMSE gate (0.002, on a loop-generated pool) | `model_zoo.py` | Re-skinned duplicates wasting candidate slots; distinct mechanisms rejected for agreeing on the 64 training stimuli |
 | Config-time raw-column binding check | `holdout_recovery.py` | A seed model that cannot bind raw rows reaching design and failing there |
 
 ## Module reference

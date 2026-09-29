@@ -97,7 +97,20 @@ a rotating exploration "lens") → admit sequentially.
 - **Novelty gate** (`_admit_candidate` in `model_zoo.py`): a candidate is admitted only with a
   loadable `candidate.py` (module-level `model: pm.Model`) + `hypothesis.md` +
   `model_name.txt`, passing logp/real-fit/finite-ELPD gates, AND with posterior-
-  mean `p_left` ≥ `novelty_rmse_threshold` (0.02) RMSE from every admitted model.
+  mean `p_left` ≥ `novelty_rmse_threshold` (0.002) RMSE from every admitted
+  model **on the loop's novelty pool** — 512 same-length H/T pairs at lengths
+  4–8 that the loop generates from its own seed (`novelty_pool_rows`) and
+  records as `model_loop/novelty_pool.json` — not on the training stimuli.
+  Measured on the 64 training stimuli at 0.02, the September 2026 sweep's 23
+  rejection margins were bimodal: ~5 re-skins at ~0 and ~18 distinct
+  mechanisms spread from 0.006 to the threshold that merely agreed on the
+  training points. The pool is deliberately not the recovery harness's eval
+  pool: the loop must not select models on the stimuli it is scored against.
+  A candidate that binds `participant_id` is marginalised over the training
+  participants; one that binds `trial_index` is rejected with that reason
+  (it cannot be evaluated on any stimulus pool). The threshold is a knob of
+  the holdout config (`inner_loop.novelty_rmse_threshold`, CLI
+  `--novelty-rmse-threshold`, sbatch `NOVELTY_RMSE_THRESHOLD`).
 - **Slot retry and repair** (`_Slot` in `pymc_orchestrator.py`): a round is
   spawn → settle waves. A slot whose agent wrote no `candidate.py` (or whose
   agent process failed) is re-spawned once in `candidate_<i>_retry_1/`; a

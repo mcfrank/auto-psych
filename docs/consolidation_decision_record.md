@@ -196,12 +196,49 @@ same cell; in the weakest cell 11 of 13 re-proposals had already been pruned
 there. The ledger records every event and renders into every candidate brief as
 the "already tried — do not re-propose" section.
 
-### Novelty RMSE threshold 0.02 (`model_zoo.DEFAULT_NOVELTY_RMSE_THRESHOLD`)
+### Novelty RMSE threshold 0.02 (`model_zoo.DEFAULT_NOVELTY_RMSE_THRESHOLD`) — superseded
 
-0.02 sits just below the closest genuinely-distinct pair observed across the
+0.02 sat just below the closest genuinely-distinct pair observed across the
 human replicates (run 2's two winners, RMSE 0.029). Below this, two models'
-posterior-mean predictions are empirically indistinguishable on the observed
-stimuli.
+posterior-mean predictions were taken to be empirically indistinguishable on
+the observed stimuli. Superseded by the entry below (September 2026).
+
+### Novelty gate on a loop-generated pool at 0.002 (`model_zoo.novelty_pool_rows`, `DEFAULT_NOVELTY_RMSE_THRESHOLD`)
+
+The gate compared posterior-mean `p_left` on the 64 training stimuli. The 23
+rejection margins archived across the September 2026 sweep (`sweep_rerun`)
+were bimodal:
+
+```
+0.0000 x2  0.0001  0.0002  0.0004  0.0018  0.0031  0.0036  0.0061  0.0088
+0.0097 x2  0.0114  0.0115  0.0117  0.0130  0.0133  0.0152  0.0166  0.0169
+0.0173  0.0183  0.0191
+```
+
+About five genuine re-skins cluster at ~0 (two predicted *identically*: a
+byte-identical model file shares the cached fit), and about eighteen spread
+evenly from 0.006 up to the threshold — what distinct mechanisms that happen
+to agree on 64 points look like. Two changes:
+
+- **Where.** `_min_prediction_rmse` now compares predictions on a pool the
+  loop generates from its own seed (`NOVELTY_POOL_SEED`, 512 same-length
+  pairs at lengths 4–8, the design's pair universe) and records as
+  `model_loop/novelty_pool.json`. It is deliberately not the recovery
+  harness's eval pool: the loop must not select models on the stimuli it is
+  later scored against. Two mechanisms that agree on the training stimuli but
+  not elsewhere are now told apart.
+- **Threshold.** 0.002 sits in the gap of the distribution above. Removing
+  the gate instead is not an option: a model predicting identically to the
+  incumbent is statistically tied with it (`elpd_diff ≈ 0 < 2·dse`), so
+  pruning never removes it, it is carried forward, refit every scoring pass,
+  and fills the briefs with near-identical entries.
+
+Caveat: the margins above were measured on the training stimuli with the
+full posterior, where the posterior is tightest; on a pool off the training
+data the Monte-Carlo noise in two independent fits' posterior means is
+larger, so the gate predicts on every draw (no thinning) to keep that floor
+well below 0.002. The threshold is a knob (`inner_loop.novelty_rmse_threshold`
+in the holdout config) so it can be A/B'd.
 
 ### Stacking weights are not plausibility (`model_zoo._prune_losers`)
 

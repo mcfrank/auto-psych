@@ -108,7 +108,8 @@ class Args:
     (default: the built-in DEFAULT_CANDIDATE_HINTS lens battery)."""
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD
     """Reject a candidate whose p_left is within this RMSE of an admitted
-    model's on the observed stimuli (0 disables the novelty gate)."""
+    model's on the loop's novelty pool, a broad loop-generated stimulus pool
+    recorded as novelty_pool.json (0 disables the novelty gate)."""
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER
     """Prune non-seed models with elpd_diff > multiplier*dse after each
     scoring pass (0 disables pruning)."""
