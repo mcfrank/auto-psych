@@ -194,15 +194,15 @@ def test_three_slot_round_is_one_exploratory_one_incumbent_one_chosen(
     assert "model_a" not in menu0.split("## Live", 1)[1].split("## Pruned", 1)[0]
     assert "do not re-propose" not in menu0.lower()
     assert "runs_idea" not in menu0  # not yet proposed
-    # Round 1's menu lists the model round 0 pruned — in full, with its
-    # margin and its source under models/pruned/.
+    # Round 1's menu lists the model round 0 admitted — still live, since
+    # pruning waits for the end of the experiment — in full, with its source.
     menu1 = docs_by_slot[(1, 2)]["menu"]
     assert "runs_idea" in menu1
     assert LONG_HYPOTHESIS in menu1
-    assert "30.0 nats behind model_a" in menu1
-    assert str(models_dir / "pruned" / "runs_idea.py") in menu1
-    assert (models_dir / "pruned" / "runs_idea.py").exists()
+    assert str(models_dir / "runs_idea.py") in menu1
     assert "…" not in menu1
+    # It is pruned at the end of the experiment, with its margin.
+    assert (models_dir / "pruned" / "runs_idea.py").exists()
     # The same file is on disk for audit, and the prompt inlines it.
     menu_file = results_dir / "iter_1" / "candidate_2" / "refinement_menu.md"
     assert menu_file.read_text(encoding="utf-8") == menu1

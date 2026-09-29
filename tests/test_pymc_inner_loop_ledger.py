@@ -152,29 +152,31 @@ def test_ledger_inherits_records_every_slot_and_reaches_the_next_brief(
     rows = _ledger_rows(results_dir / LEDGER_FILENAME)
     # Round 1's rejected candidate gets one repair attempt (its agent proposes
     # idea_two again, which is rejected again — final); both are in the ledger.
+    # Pruning happens once, at the end of the experiment: idea_one stays live
+    # through round 1 and is pruned last, with its margin.
     assert [(r["name"], r["outcome"]) for r in rows] == [
         ("old_idea", "pruned"),
         ("idea_one", "admitted"),
+        ("idea_two", "rejected"),
+        ("idea_two", "rejected"),
         ("idea_one", "pruned"),
-        ("idea_two", "rejected"),
-        ("idea_two", "rejected"),
     ]
     assert rows[0] == INHERITED
-    assert "30.0 nats behind model_a" in rows[2]["detail"]
-    assert "near-duplicate of model_a" in rows[3]["detail"]
-    assert rows[3]["hypothesis"].startswith("People use heuristic idea_two")
+    assert "near-duplicate of model_a" in rows[2]["detail"]
+    assert rows[2]["hypothesis"].startswith("People use heuristic idea_two")
+    assert "30.0 nats behind model_a" in rows[4]["detail"]
     assert rows[1]["context"] == "experiment2 round 0 candidate 0 lens 0"
-    assert rows[2]["context"] == "experiment2 round 0"
-    assert rows[3]["context"] == "experiment2 round 1 candidate 0 lens 1"
-    assert rows[4]["context"] == "experiment2 round 1 candidate 0 lens 1 repair 1"
+    assert rows[2]["context"] == "experiment2 round 1 candidate 0 lens 1"
+    assert rows[3]["context"] == "experiment2 round 1 candidate 0 lens 1 repair 1"
+    assert rows[4]["context"] == "experiment2 end of experiment"
 
-    # Round 0's brief carries the inherited entry; round 1's also carries the
-    # model pruned in round 0, with its margin — under the do-not-re-propose
-    # heading — and the text is injected into the agent's prompt.
+    # Every round's brief carries the inherited (previous experiment's) pruned
+    # entry, with its margin, under the "tried before" heading; idea_one is
+    # still live in round 1, so it is not in the tried-before list. The text is
+    # injected into the agent's prompt.
     assert "old_idea" in briefs[0]["attempted"]
-    assert "idea_one" not in briefs[0]["attempted"]
-    assert "idea_one" in briefs[1]["attempted"]
-    assert "30.0 nats behind model_a" in briefs[1]["attempted"]
+    assert "old_idea" in briefs[1]["attempted"]
+    assert "idea_one" not in briefs[1]["attempted"]
     assert "do not re-propose" in briefs[1]["attempted"].lower()
     round1_file = results_dir / "iter_1" / "candidate_0" / "attempted_hypotheses.md"
     assert round1_file.read_text(encoding="utf-8") == briefs[1]["attempted"]
@@ -182,7 +184,7 @@ def test_ledger_inherits_records_every_slot_and_reaches_the_next_brief(
         results_dir / "iter_1" / "candidate_0", briefs[1]
     )
     assert "## attempted_hypotheses.md" in prompt
-    assert "idea_one" in prompt
+    assert "old_idea" in prompt
     # The pruned model is still readable for audit.
     assert (results_dir / "models" / "pruned" / "idea_one.py").exists()
 
@@ -272,7 +274,11 @@ def test_a_long_hypothesis_reaches_the_ledger_and_the_next_brief_intact(
     expected = " ".join(long_hypothesis.split())
     rows = _ledger_rows(results_dir / LEDGER_FILENAME)
     stored = [r["hypothesis"] for r in rows if r["name"] == "idea_one"]
-    assert stored == [expected, expected]  # admitted, then pruned
+    assert stored == [expected, expected]  # admitted, then pruned at the end
     assert "…" not in "".join(stored)
-    # idea_one was pruned after round 0, so round 1's brief lists it — in full.
-    assert expected in briefs[1]["attempted"]
+    # The next experiment inherits this ledger; its brief lists idea_one in full.
+    from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
+    next_brief = HypothesisLedger(results_dir / LEDGER_FILENAME).render_markdown(
+        live_names={"model_a", "model_b"}
+    )
+    assert expected in next_brief

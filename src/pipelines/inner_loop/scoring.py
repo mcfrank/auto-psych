@@ -124,6 +124,20 @@ def _best_exportable_model(
     return best
 
 
+def _record_end_of_experiment_retirements(
+    history: List[Dict[str, Any]], results_dir: Path, retired: List[str]
+) -> None:
+    """Note the end-of-experiment pruning on the last history step.
+
+    Not a step of its own: it cannot change the best model, and an extra step
+    would shift every trajectory's step numbering.
+    """
+    history[-1]["retired_at_experiment_end"] = list(retired)
+    (results_dir / "history.json").write_text(
+        json.dumps(history, indent=2), encoding="utf-8"
+    )
+
+
 def _record_history_step(
     history: List[Dict[str, Any]],
     results_dir: Path,
