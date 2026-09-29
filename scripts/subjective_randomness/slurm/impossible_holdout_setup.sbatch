@@ -95,9 +95,12 @@ cp "$HARNESS_REPO/$CFG_REL" "$IMPOSSIBLE_CONFIG_SRC"
 
 # Validate that the array's GT list matches the config's gt_models, that the
 # seed path matches, and that the snapshot holds every impossible GT file.
+# The seed path is the GT/baseline registry, as in holdout_setup.sbatch: the
+# config's seed_models_dir, which the project's seed_models/ mirrors
+# (tests/test_sweep_setup_config_checks.py runs this check on the real config).
 SRC_CONFIG="$HARNESS_REPO/$CFG_REL" \
 IMPOSSIBLE_MODELS_SRC="$IMPOSSIBLE_MODELS_SRC" \
-SEED_MODELS_REL="${SEED_MODELS_REL:-src/pipelines/outer_loop/projects/subjective_randomness/seed_models}" \
+SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_families}" \
 IMPOSSIBLE_MODELS_REL="$IMPOSSIBLE_MODELS_REL" \
 "$VENV_PY" - <<'PY'
 import os, sys, pathlib, yaml
