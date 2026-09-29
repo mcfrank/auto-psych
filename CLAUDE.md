@@ -210,6 +210,17 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   explicit arg → `CODING_AGENT` env → `opencode` default. `claude` uses
   `--dangerously-skip-permissions --add-dir`; `opencode` uses `opencode run`
   (no `--add-dir`). Token usage is always recorded.
+- `src/subjective_randomness/incumbent.py` — the **incumbent record**, the
+  loop-improvement plan's primary metric: per scoring step of a holdout cell,
+  did the exported `best_model` change from the previous step, and is it a
+  *discovered* model (not scored at experiment 1's seed step, i.e. not one of
+  the project seeds the cell started with). The harness writes the two flags
+  onto every `trajectory.json` row / `holdout.csv` column and a per-cell
+  `incumbent` summary block; `scripts/subjective_randomness/incumbent_report.py`
+  reports it over a finished sweep (archives or kept repo copies), and
+  `verify_holdout_run.sh` warns (never fails) on a cell with zero changes.
+  Baseline: 0 changes over 27 steps in the three complete `motif_stack` cells
+  of the September 2026 sweep.
 
 ### Projects vs. the research library — two different things
 

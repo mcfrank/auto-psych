@@ -295,6 +295,42 @@ P37 changes the write path and the rendering, and nothing else:
   A ledger written before P37 (its hypotheses ending in `…`) parses and
   renders unchanged.
 
+### The incumbent record (`src/subjective_randomness/incumbent.py`)
+
+Reading the three complete `motif_stack` cells of the September 2026 sweep
+(`sweep_rerun` run2/run3/run5) showed the exported best model was
+`local_representativeness` at every one of their 27 scoring steps: the loop's
+output was its own best starting seed, refit on more data, and RMSE drift
+(0.157 → 0.154) hid that. P38 makes "did the incumbent ever change, and was it
+ever a discovered model" a first-class output so every later loop change is
+judged on it:
+
+- Every trajectory row (`trajectory.json`, `holdout.csv`) carries
+  `incumbent_changed` (its `best_model` differs from the previous step's;
+  never at global step 0) and `incumbent_is_discovered` (its `best_model` is
+  not among the models scored at experiment 1's seed step — the project seeds
+  the cell was seeded with, held-out GT excluded). Each cell's `trajectory.json`
+  gains an `incumbent` block: the starting models, step count, number of
+  changes, number of discovered-incumbent steps, the list of changes and the
+  final incumbent. The offline re-analysis (`reevaluate_trajectories`) writes
+  the same record.
+- "Discovered" is read from the run record itself rather than from a manifest
+  so archives and re-analyses need no configuration; the live harness
+  cross-checks that starting set against the seed pool minus the held-out GT
+  and raises on a stray name (it caught a test stub whose seed step named a
+  superseded model).
+- `scripts/subjective_randomness/incumbent_report.py` reports the record over
+  a finished sweep from each cell's `agent_runs.tar.gz` or kept repo copy;
+  `verify_holdout_run.sh` check 12 warns — never fails — on a cell with zero
+  changes, because zero is the true baseline and must not block a run.
+
+Validated against the archive: the three complete `motif_stack` cells report
+0 incumbent changes and 0 discovered-incumbent steps over 27 steps. The two
+`motif_stack` cells whose tasks failed (run1 after 4 steps, run4 after 5) did
+each change incumbent once, to a discovered model; over all 20 cells the sweep
+had 17 changes in 159 steps, and every complete `falk_konold_dp` cell, like
+every complete `motif_stack` cell, never changed.
+
 ### No fallback critique battery; retry once, then no critique (`critique_round.py`)
 
 In the September 2026 20-cell sweep (`sweep_rerun`) the critique agent never
