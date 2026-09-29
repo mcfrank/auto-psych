@@ -97,11 +97,16 @@ Starting from `run_pymc_inner_loop` in `pymc_orchestrator.py`:
    rank among PSIS-LOO-reliable models.
 
 3. **Critique** (if enabled): write `CRITIQUE_CONTEXT.md` with the incumbent's
-   hypothesis and the candidate response columns. Spawn a critique agent to
-   propose `test_statistic(df) -> float` functions. Run the PPC harness
-   (`critique/ppc.py`): score each statistic against posterior-predictive
-   replicates, compute two-sided empirical p with BH-FDR correction. Write
-   `critiques.md` for the next candidate round.
+   hypothesis and the candidate response columns, and inline it into the
+   critique agent's prompt. Spawn the agent to propose
+   `test_statistic(df) -> float` functions; an agent that writes none is
+   re-spawned once. With at least one usable statistic, run the PPC harness
+   (`critique/ppc.py`): score each against posterior-predictive replicates,
+   compute two-sided empirical p with BH-FDR correction, and write
+   `critiques.md` for the next candidate round. With none, the round runs
+   without a critique — no `critiques.md`, no pipeline-written statistics —
+   and the round's `history.json` entry records `"no_critique"` (every round's
+   entry carries its critique status).
 
 4. **Candidate round** (repeated `max_iterations` times):
    - Write `CANDIDATE_BRIEF.md` with the exploration lens, existing hypotheses

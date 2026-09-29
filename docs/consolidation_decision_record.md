@@ -228,6 +228,24 @@ from 1 (four production chains ran sequentially for no stated reason) to 4;
 measured 2026-08-13 on macOS, chains=4, PyMC 5.28.5: cores=4 finished in 38 s
 vs 110 s at cores=1, with no multiprocessing trouble.
 
+### No fallback critique battery; retry once, then no critique (`critique_round.py`)
+
+In the September 2026 20-cell sweep (`sweep_rerun`) the critique agent never
+produced a single test statistic: its first action was to read
+`CRITIQUE_CONTEXT.md`, that read was denied as an external directory (P34),
+and it exited after four log lines. The pipeline then silently wrote a
+"default battery" — one statistic per varying numeric column excluding the
+response and the row bookkeeping, which under the raw-only schema is exactly
+one file, `fallback_mean_response.py`, the marginal choice rate any fitted
+Bernoulli likelihood matches by construction. Every one of the six archived
+rounds reported `0 of 1 test statistics show a significant discrepancy`, so a
+dead subsystem looked alive through the sweep, a ceiling analysis and
+`ANALYSIS_FINAL.md`. P35 inlines the context into the prompt (as the candidate
+agent's documents already were), deletes the fallback, retries an agent that
+wrote nothing once, and otherwise records the round as `no_critique` in
+`history.json`; the verifier warns (not fails — a run is valid without a
+critique) when no round of an experiment was critiqued.
+
 ### PSIS-LOO exact-trial exemption (`loo_reliability.py`)
 
 Measured on the 2026-08/09 holdout sweeps, every non-finite k in the excluded
