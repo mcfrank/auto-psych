@@ -10,9 +10,8 @@ The ledger is the loop's memory: one JSON line per event, appended the moment
 it happens so a crashed run still leaves the record, started from the ledger
 the previous experiment carried in ``cognitive_models/``, and rendered into
 every candidate brief as the "tried before" section
-(``render_markdown``).  See ``docs/consolidation_decision_record.md`` §
-"History of specific choices" for the empirical evidence that motivated this
-module. Events:
+(``render_markdown``). Before it, in the weakest recovery cell 11 of 13
+re-proposals had already been pruned there. Events:
 
 - ``admitted`` — the candidate entered the zoo (its later fate, if any, is a
   later line under the same name);

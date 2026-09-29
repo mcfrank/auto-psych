@@ -415,7 +415,7 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
 def test_holdout_recovery_records_whether_the_incumbent_ever_changes(
     tmp_path, monkeypatch
 ):
-    """The primary metric of the loop-improvement plan is a first-class output
+    """The primary metric for improving the loop is a first-class output
     of every cell: per scoring step, whether the exported best model changed
     from the previous step and whether it is a discovered model (not one the
     cell started with); per cell, how many incumbent changes there were and

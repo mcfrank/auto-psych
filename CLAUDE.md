@@ -451,7 +451,7 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   `--dangerously-skip-permissions --add-dir`; `opencode` uses `opencode run`
   (no `--add-dir`). Token usage is always recorded.
 - `src/subjective_randomness/incumbent.py` — the **incumbent record**, the
-  loop-improvement plan's primary metric: per scoring step of a holdout cell,
+  primary metric for improving the loop: per scoring step of a holdout cell,
   did the exported `best_model` change from the previous step, and is it a
   *discovered* model (not scored at experiment 1's seed step, i.e. not one of
   the project seeds the cell started with). The harness writes the two flags
