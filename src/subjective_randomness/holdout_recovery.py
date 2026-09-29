@@ -219,12 +219,13 @@ def run_holdout_experiments(
             _require_valid("models", exp_dir)
 
         # Design: the SAME programmatic exhaustive EIG selection as the live
-        # pipeline (no design agent). Experiments >= 2 design from the previous
-        # experiment's posterior (models fit on its responses, registry weights).
+        # pipeline (no design agent). Experiments >= 2 design from the posterior
+        # after all data so far (registry weights over the carried models).
         if not (resume and _stage_done("2_design", exp_dir)):
             run_design_programmatic(
                 exp_dir, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir,
                 k=design_n_eig, n_random=design_n_random,
+                n_responses=n_participants,  # every participant answers every stimulus
             )
             _require_valid("2_design", exp_dir)
 
@@ -239,6 +240,9 @@ def run_holdout_experiments(
                 gt_params,
                 n_participants=n_participants,
                 seed=seed + exp_num,
+                # Pooled across experiments, each experiment's participants are
+                # different people.
+                participant_id_offset=(exp_num - 1) * n_participants,
             )
             agent_rows = strip_generating_model(rows)
             write_responses_csv(agent_rows, exp_dir / "data" / "responses.csv")

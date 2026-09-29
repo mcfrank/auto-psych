@@ -11,6 +11,7 @@ from __future__ import annotations
 import yaml
 
 from src.pipelines.inner_loop.candidate_agent import _write_candidate_context
+from tests.inner_loop_fixtures import write_task_description_beside
 
 HEADER = (
     "participant_id,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,"
@@ -27,6 +28,7 @@ def _setup(tmp_path):
     )
     responses = tmp_path / "responses.csv"
     responses.write_text(HEADER + "\n1,0,HTH,HHT,1,0,seed,3,2,0.67,3,2,0.67\n")
+    write_task_description_beside(responses)
     cand_dir = tmp_path / "iter_0" / "candidate_0"
     return responses, models_dir, cand_dir
 

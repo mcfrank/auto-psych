@@ -16,7 +16,8 @@ Usage (CLI):
 
     # --out defaults to stdout if omitted
     # --registry is optional (uniform prior over models if omitted)
-    # --responses PREV/data/responses.csv scores from the posterior predictive
+    # --responses PREV/model_loop/responses.csv (all data so far) scores from
+    # the posterior predictive; --n-responses is the participants per experiment
 """
 
 from __future__ import annotations
@@ -149,16 +150,19 @@ def _posterior_p_left_draws(
     """Per-draw posterior-predictive p_left over ``rows`` for each model.
 
     Fits every model on ``responses_csv`` (design-time MCMC settings from
-    ``src.models.mcmc_defaults`` unless overridden) and predicts p_left draws
-    for the stimulus pool, thinned to ``max_draws`` posterior samples.
+    ``src.models.mcmc_defaults`` unless overridden; target_accept is the
+    model's own declared value, else DESIGN_TWIN_TARGET_ACCEPT) and predicts
+    p_left draws for the stimulus pool, thinned to ``max_draws`` posterior
+    samples.
     """
     from src.models.mcmc_defaults import (  # type: ignore
         DESIGN_TWIN_CHAINS,
         DESIGN_TWIN_DRAWS,
+        DESIGN_TWIN_TARGET_ACCEPT,
         DESIGN_TWIN_TUNE,
     )
     from src.models.data_binding import make_stim_data  # type: ignore
-    from src.models.pymc_inference import fit_model  # type: ignore
+    from src.models.pymc_inference import fit_model, model_sampler_settings  # type: ignore
 
     draws: Dict[str, Any] = {}
     for name in model_names:
@@ -170,6 +174,9 @@ def _posterior_p_left_draws(
             draws=fit_draws if fit_draws is not None else DESIGN_TWIN_DRAWS,
             tune=fit_tune if fit_tune is not None else DESIGN_TWIN_TUNE,
             chains=fit_chains if fit_chains is not None else DESIGN_TWIN_CHAINS,
+            target_accept=model_sampler_settings(name, models_dir).get(
+                "target_accept", DESIGN_TWIN_TARGET_ACCEPT
+            ),
         )
         stim_data = make_stim_data(fitted.model, rows)
         draws[name] = fitted.predict_p_left_draws(
@@ -195,11 +202,12 @@ def design_exhaustive(
     fit_draws: Optional[int] = None,
     fit_tune: Optional[int] = None,
     fit_chains: Optional[int] = None,
+    n_responses: int,
 ) -> List[Dict[str, Any]]:
     """Select the max-joint-EIG stimulus set from the FULL pair universe.
 
-    Enumerates every distinct sequence pair over ``lengths`` (cross-length
-    pairs included), scores all of them in one batched per-draw pass per
+    Enumerates every distinct same-length sequence pair over ``lengths``,
+    scores all of them in one batched per-draw pass per
     model, and greedily selects the ``n_select`` stimuli with maximal joint
     EIG about model identity. No candidates file — the pool is the whole
     space, so nothing an agent could conjecture is outside it.
@@ -209,7 +217,11 @@ def design_exhaustive(
     first fitted on those responses (MCMC, at the design-time settings from
     ``src.models.mcmc_defaults`` unless fit_* override them) and per-draw
     p_left comes from its **posterior** predictive, thinned to ``n_samples``
-    draws — sequential design informed by the previous experiment.
+    draws — sequential design informed by the data so far.
+
+    ``n_responses`` is how many responses each selected stimulus receives (the
+    experiment's participant count): the joint EIG scores the count of "left"
+    choices, Binomial(n_responses, p_left), not a single response.
 
     Returns stimuli in selection (greedy) order, each with:
       - "eig": the stimulus's marginal EIG (bits);
@@ -295,6 +307,7 @@ def design_exhaustive(
             model_weights=model_weights or None,
             n_scenarios=n_scenarios,
             seed=seed,
+            n_responses=n_responses,
         )
         means = {m: arr.mean(axis=0) for m, arr in draws.items()}
         for rank, (idx, joint_bits) in enumerate(
@@ -349,6 +362,8 @@ class Args:
 
     models_dir: Path
     """Path to the cognitive_models/ directory."""
+    n_responses: int
+    """Responses each selected stimulus receives (participants per experiment)."""
     registry: Optional[Path] = None
     """Path to model_registry.yaml (optional; uniform prior if omitted)."""
     out: Optional[Path] = None
@@ -364,8 +379,9 @@ class Args:
     seed: int = 42
     """Seed for predictive draws and selection scenarios."""
     responses: Optional[Path] = None
-    """Previous experiment's responses.csv: fit each model on it and design from
-    the POSTERIOR predictive instead of the prior."""
+    """Responses so far (the previous experiment's model_loop/responses.csv):
+    fit each model on them and design from the POSTERIOR predictive instead of
+    the prior."""
     fit_cache: Optional[Path] = None
     """Cache dir for the design-time MCMC fits (with --responses)."""
 
@@ -397,6 +413,7 @@ def main(args: Args) -> None:
         seed=args.seed,
         responses_csv=args.responses,
         fit_cache_dir=args.fit_cache,
+        n_responses=args.n_responses,
     )
     _write_output(selected, args.out)
 

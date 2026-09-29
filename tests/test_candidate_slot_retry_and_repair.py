@@ -244,6 +244,26 @@ def test_failed_agent_process_is_retried_and_recorded(tmp_path, monkeypatch):
     assert "late_idea" in _manifest_names(results_dir / "models")
 
 
+def test_a_timed_out_agents_candidate_is_admitted_through_the_usual_gates(
+    tmp_path, monkeypatch
+):
+    """An agent killed at its time limit may already have written a complete
+    candidate (Opus often had, while still checking it). What it left is judged
+    by the admission gates like any other file; the slot is not re-spawned."""
+    _patch_scoring(monkeypatch)
+    spawns = []
+
+    def fake_spawn(candidate_dir, docs, **kwargs):
+        spawns.append(candidate_dir.name)
+        _write_candidate(candidate_dir, name=f"idea_{candidate_dir.name}")
+        return candidate_dir.name == "candidate_0"  # candidate_1 "times out"
+
+    results_dir = _run(tmp_path, monkeypatch, fake_spawn, candidate_count=2)
+
+    assert spawns == ["candidate_0", "candidate_1"]
+    assert "idea_candidate_1" in _manifest_names(results_dir / "models")
+
+
 def test_all_slots_empty_after_retries_still_triggers_the_round_retry(
     tmp_path, monkeypatch
 ):

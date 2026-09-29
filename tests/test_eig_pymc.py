@@ -19,6 +19,13 @@ import yaml
 from src.pipelines.outer_loop import eig as eig_mod
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
+
+def _design(*args, **kwargs):
+    """``design_exhaustive`` with one response per stimulus: these tests check
+    the design's mechanics, not the replicated-response objective
+    (tests/test_eig_replicated_responses.py)."""
+    return eig_mod.design_exhaustive(*args, n_responses=1, **kwargs)
+
 # A model with a participant-level random effect: it needs a `participant_id`
 # pm.Data column that stimulus feature rows (n_a/h_a/...) never carry. It fits
 # fine on responses.csv (which has participant_id) but cannot be prior-predicted
@@ -135,7 +142,7 @@ def test_design_drops_model_that_cannot_bind_to_stimulus(
         "src.models.pymc_inference.prior_predict_p_left_draws", fake_draws
     )
 
-    out = eig_mod.design_exhaustive(
+    out = _design(
         models_dir,
         lengths=(3,),
         n_select=2,
@@ -212,7 +219,7 @@ def test_design_raises_when_no_model_can_bind(tmp_path):
     )
 
     with pytest.raises(ValueError, match="no models|cannot be evaluated|stimulus"):
-        eig_mod.design_exhaustive(
+        _design(
             models_dir, lengths=(3,), n_select=2
         )
 
@@ -226,6 +233,7 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     out = tmp_path / "stimuli.json"
     args = eig_mod.Args(
         models_dir=models_dir,
+        n_responses=1,
         out=out,
         lengths=(3, 4),
         select=5,
@@ -253,6 +261,7 @@ def test_exhaustive_design_selects_joint_eig_set(tmp_path):
     out2 = tmp_path / "stimuli2.json"
     eig_mod.main(
         eig_mod.Args(
+            n_responses=1,
             models_dir=models_dir, out=out2,
             lengths=(3, 4), select=5, n_samples=25, n_scenarios=300,
         )
@@ -265,7 +274,7 @@ def test_exhaustive_design_pure_random_no_eig(tmp_path):
     pool with NO EIG computation (no model scoring), each marked source='random'
     with eig=None. This is the 64-random ablation."""
     models_dir = _seed(tmp_path)
-    stimuli = eig_mod.design_exhaustive(
+    stimuli = _design(
         models_dir, lengths=(3, 4), n_select=0, n_random=6, seed=1
     )
     assert len(stimuli) == 6
@@ -276,7 +285,7 @@ def test_exhaustive_design_pure_random_no_eig(tmp_path):
     for s in stimuli:
         assert len(s["sequence_a"]) == len(s["sequence_b"]) and len(s["sequence_a"]) in (3, 4)
     # deterministic given the seed
-    again = eig_mod.design_exhaustive(
+    again = _design(
         models_dir, lengths=(3, 4), n_select=0, n_random=6, seed=1
     )
     assert {(s["sequence_a"], s["sequence_b"]) for s in again} == keys
@@ -287,7 +296,7 @@ def test_exhaustive_design_eig_plus_random_split(tmp_path):
     disjoint, EIG picks first with real eig, random picks tagged. This is the
     32-EIG + 32-random default."""
     models_dir = _seed(tmp_path)
-    stimuli = eig_mod.design_exhaustive(
+    stimuli = _design(
         models_dir, lengths=(3, 4),
         n_select=3, n_random=4, n_samples=25, n_scenarios=300, seed=1,
     )
@@ -318,7 +327,7 @@ def test_exhaustive_design_never_scores_cross_length_pairs(tmp_path, monkeypatch
         "src.models.pymc_inference.prior_predict_p_left_draws", fake_draws
     )
 
-    eig_mod.design_exhaustive(
+    _design(
         models_dir,
         lengths=(3, 4),
         n_select=2,
@@ -347,7 +356,7 @@ def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
     responses = PYMC_MODEL_FIXTURES_DIR / "responses.csv"
     cache = tmp_path / "fit_cache"
 
-    stimuli = eig_mod.design_exhaustive(
+    stimuli = _design(
         models_dir,
         lengths=(3, 4),
         n_select=4,
@@ -373,7 +382,7 @@ def test_exhaustive_design_posterior_mode_scores_from_fitted_models(tmp_path):
 def test_exhaustive_design_posterior_mode_missing_responses_fails_loudly(tmp_path):
     models_dir = _seed(tmp_path)
     with pytest.raises(FileNotFoundError, match="responses"):
-        eig_mod.design_exhaustive(
+        _design(
             models_dir,
             lengths=(3, 4),
             n_select=4,
@@ -384,7 +393,7 @@ def test_exhaustive_design_posterior_mode_missing_responses_fails_loudly(tmp_pat
 def test_missing_manifest_raises(tmp_path):
     (tmp_path / "cognitive_models").mkdir(parents=True)
     with pytest.raises(FileNotFoundError):
-        eig_mod.design_exhaustive(
+        _design(
             tmp_path / "cognitive_models", lengths=(3,), n_select=2
         )
 
@@ -458,7 +467,7 @@ def test_design_records_the_screened_out_models_as_an_artifact(tmp_path, monkeyp
     )
     out_path = tmp_path / "screened_out.json"
 
-    eig_mod.design_exhaustive(
+    _design(
         models_dir, lengths=(3,), n_select=1,
         n_samples=5, n_scenarios=20, screened_out_path=out_path,
     )

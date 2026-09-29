@@ -26,6 +26,10 @@ PRODUCTION_CORES = 4
 DESIGN_TWIN_DRAWS = 500
 DESIGN_TWIN_TUNE = 500
 DESIGN_TWIN_CHAINS = 2
+# Design-time fits use a model's own SAMPLER_SETTINGS target_accept when it
+# declares one, else this: a compromise between the production 0.99 (slow,
+# tiny steps) and PyMC's 0.8 (user decision, 2026-09-26).
+DESIGN_TWIN_TARGET_ACCEPT = 0.9
 
 # The candidate agent's self-check (src/pipelines/inner_loop/check_candidate.py):
 # a smoke fit that proves the model loads, samples and scores — never a

@@ -428,6 +428,7 @@ def run_design_programmatic(
     k: int = 32,
     n_random: int = 0,
     lengths: Sequence[int] = (2, 3, 4, 5, 6, 7, 8),
+    n_responses: int,
 ) -> None:
     """Select the design's stimuli by exhaustive enumeration (no design agent).
 
@@ -437,12 +438,14 @@ def run_design_programmatic(
     writing ``design/stimuli.json``. Each model computes its own features from
     raw stimulus rows via its ``compute_features`` or ``prepare_observed`` hook.
     Experiment 1 scores from the models' prior predictive with uniform model
-    weights; experiments >= 2 fit each model on the previous experiment's
-    responses and score from its posterior predictive, with model weights from
+    weights; experiments >= 2 fit each model on all responses so far (the
+    previous experiment's cumulative ``model_loop/responses.csv``) and score
+    from its posterior predictive, with model weights from
     the previous registry (weights over models absent here fall back to
     uniform, loudly). Works for any PyMC model in the set — no pure-Python
     family twin needed. Only implemented for subjective_randomness (H/T pair
-    enumeration).
+    enumeration). ``n_responses`` is the experiment's participant count: every
+    participant answers every selected stimulus, and the EIG scores them all.
     """
     if project_id != "subjective_randomness":
         raise ValueError(
@@ -460,6 +463,7 @@ def run_design_programmatic(
             n_select=k,
             n_random=n_random,
             random_seed=exp_num,
+            n_responses=n_responses,
         )
         basis = "prior predictive + uniform model weights"
     else:
@@ -471,10 +475,11 @@ def run_design_programmatic(
             n_select=k,
             n_random=n_random,
             random_seed=exp_num,
-            responses_csv=prev_exp_dir / "data" / "responses.csv",
+            responses_csv=prev_exp_dir / "model_loop" / "responses.csv",
             fit_cache_dir=exp_dir / "design" / "_fit_cache",
+            n_responses=n_responses,
         )
-        basis = f"experiment {exp_num - 1} posterior (model weights + parameter posteriors)"
+        basis = f"posterior after experiments 1..{exp_num - 1} (model weights + parameter posteriors)"
 
     design_dir = exp_dir / "design"
     design_dir.mkdir(parents=True, exist_ok=True)

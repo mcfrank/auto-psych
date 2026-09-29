@@ -102,8 +102,9 @@ def test_outer_run_cli_literal_choice_and_bool_flag():
 
 
 def test_eig_cli_defaults_and_required():
-    args = tyro.cli(EigArgs, args=["--models-dir", "m"])
+    args = tyro.cli(EigArgs, args=["--models-dir", "m", "--n-responses", "40"])
     assert args.models_dir == Path("m")
+    assert args.n_responses == 40
     assert args.select == 32
     assert args.lengths == (4, 5, 6, 7, 8)
     assert args.n_samples == 200

@@ -23,6 +23,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
+from src.pipelines.inner_loop.task_description import read_task_description
 from src.pipelines.inner_loop.import_gate import check_forbidden_imports
 from src.pipelines.inner_loop.model_zoo import _manifest_entries
 from src.runtime.coding_agent import AgentPermissionDenied
@@ -157,6 +158,10 @@ def _write_critique_context(
     )
     lines = [
         "# Critique context",
+        "",
+        read_task_description(responses_path),
+        "",
+        "## Your job",
         "",
         f"**Incumbent (best) model:** `{incumbent}`",
         f"**Incumbent model code:** `{incumbent_file}`",

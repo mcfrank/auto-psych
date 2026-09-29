@@ -97,7 +97,9 @@ def test_run_design_programmatic_writes_stimuli_json(tmp_path):
 
     exp_dir = tmp_path / "experiment1"
     _seed_experiment_models(exp_dir)
-    run_design_programmatic(exp_dir, "subjective_randomness", k=4, lengths=(3, 4))
+    run_design_programmatic(
+        exp_dir, "subjective_randomness", k=4, lengths=(3, 4), n_responses=40
+    )
     data = json.loads((exp_dir / "design" / "stimuli.json").read_text(encoding="utf-8"))
     assert isinstance(data, list) and len(data) == 4
     assert all("sequence_a" in s and "sequence_b" in s for s in data)
@@ -128,19 +130,20 @@ def test_run_design_programmatic_posterior_wiring(tmp_path, monkeypatch):
     )
 
     prev = tmp_path / "experiment1"
-    (prev / "data").mkdir(parents=True)
-    (prev / "data" / "responses.csv").write_text("participant_id\n", encoding="utf-8")
+    (prev / "model_loop").mkdir(parents=True)
+    (prev / "model_loop" / "responses.csv").write_text("participant_id\n", encoding="utf-8")
     exp_dir = tmp_path / "experiment2"
     exp_dir.mkdir()
 
     run_design_programmatic(
         exp_dir, "subjective_randomness", exp_num=2, prev_exp_dir=prev,
-        k=1, lengths=(3, 4),
+        k=1, lengths=(3, 4), n_responses=40,
     )
 
     assert calls["models_dir"] == exp_dir / "cognitive_models"
     assert calls["registry_path"] == prev / "model_registry.yaml"
-    assert calls["responses_csv"] == prev / "data" / "responses.csv"
+    # All data so far: the previous experiment's cumulative inner-loop responses.
+    assert calls["responses_csv"] == prev / "model_loop" / "responses.csv"
     assert calls["fit_cache_dir"] == exp_dir / "design" / "_fit_cache"
     assert calls["n_select"] == 1
     data = json.loads((exp_dir / "design" / "stimuli.json").read_text(encoding="utf-8"))

@@ -21,6 +21,7 @@ from typing import Any, Dict, Iterable, List, Optional
 import yaml
 
 from src.pipelines.inner_loop.hypothesis_ledger import LEDGER_FILENAME
+from src.pipelines.inner_loop.task_description import TASK_DESCRIPTION_NAME
 from src.models.model_manifest import (
     manifest_path,
     read_manifest_entries,
@@ -45,6 +46,24 @@ def _pooled_response_rows(exp_dir: Path) -> list[dict[str, str]]:
         if path.exists():
             rows.extend(csv.DictReader(path.open(encoding="utf-8")))
     return rows
+
+
+def write_task_description(project_id: str, loop_dir: Path) -> Path:
+    """Copy the project's task description next to the inner loop's responses.
+
+    Candidate and critique agents are told the task from it
+    (``inner_loop.task_description``). Fails loudly if the project has none.
+    """
+    from src.pipelines.outer_loop.orchestrator import outer_project_dir
+
+    source = outer_project_dir(project_id) / TASK_DESCRIPTION_NAME
+    if not source.exists():
+        raise FileNotFoundError(
+            f"Project {project_id!r} has no {TASK_DESCRIPTION_NAME} at {source}; "
+            "inner-loop agents must be told the task."
+        )
+    Path(loop_dir).mkdir(parents=True, exist_ok=True)
+    return Path(shutil.copyfile(source, Path(loop_dir) / TASK_DESCRIPTION_NAME))
 
 
 def agent_notes_dir(exp_dir: Path) -> Path:
@@ -273,6 +292,7 @@ def run_inner_model_loop_programmatic(
     loop_dir = exp_dir / "model_loop"
     loop_dir.mkdir(parents=True, exist_ok=True)
     responses_path = write_responses_csv(rows, loop_dir / "responses.csv")
+    write_task_description(project_id or exp_dir.parent.name, loop_dir)
 
     seed_models_dir = exp_dir / "cognitive_models"
     protected = _protected_seed_names(project_id or exp_dir.parent.name, seed_models_dir)

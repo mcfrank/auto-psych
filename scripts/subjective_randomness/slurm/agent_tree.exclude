@@ -68,3 +68,13 @@ preprocess.py
 # Every agent could read the Prolific, Firebase, Google and Claude tokens.
 .secrets
 .secrets.example
+
+# Project literature: the source papers of the ground truths (Falk & Konold
+# 1997, Hahn & Warren 2009, Kahneman & Tversky 1972, Griffiths et al.) and notes
+# citing them. PDFs are binary, so the GT-name scan cannot see into them.
+# Inner-loop agents are told the task from task_description.md instead of
+# problem_definition.md, which hints at mechanisms ("motif parses",
+# "occurrence probabilities").
+/src/pipelines/outer_loop/projects/*/references/
+/src/pipelines/outer_loop/projects/*/instruction_literature.md
+/src/pipelines/outer_loop/projects/*/problem_definition.md

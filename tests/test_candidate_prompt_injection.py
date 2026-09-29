@@ -13,6 +13,7 @@ from src.pipelines.inner_loop.candidate_agent import (
     _build_candidate_prompt,
     _write_candidate_context,
 )
+from tests.inner_loop_fixtures import write_task_description_beside
 
 
 def test_prompt_inlines_all_context_documents(tmp_path):
@@ -70,6 +71,7 @@ def test_write_candidate_context_returns_the_written_documents(tmp_path):
     )
     responses = tmp_path / "responses.csv"
     responses.write_text("n_a,h_a,chose_left\n4,2,1\n", encoding="utf-8")
+    write_task_description_beside(responses)
     candidate_dir = tmp_path / "iter_0" / "candidate_0"
 
     docs = _write_candidate_context(

@@ -35,6 +35,7 @@ from src.pipelines.inner_loop.check_candidate import (
     run_candidate_check,
 )
 from tests.paths import PYMC_MODEL_FIXTURES_DIR
+from tests.inner_loop_fixtures import write_task_description_beside
 
 
 def _write_models_dir(tmp_path):
@@ -54,6 +55,7 @@ def test_context_documents_the_check_command(tmp_path):
     models_dir = _write_models_dir(tmp_path)
     responses = tmp_path / "responses.csv"
     responses.write_text("sequence_a,sequence_b,chose_left\nHHT,HTH,1\n", encoding="utf-8")
+    write_task_description_beside(responses)
     candidate_dir = tmp_path / "iter_0" / "candidate_0"
 
     docs = _write_candidate_context(

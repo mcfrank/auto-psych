@@ -429,9 +429,20 @@ def run_pymc_inner_loop(
                 previous_dir = slot.directory
                 fallback = f"iter{iteration}_candidate{slot.idx}"
                 this_attempt_is_a_repair = slot.repaired
-                if not spawned_ok:
-                    # The agent process failed (timeout, non-zero exit): nothing
-                    # it left behind is admitted. Recorded like every attempt.
+                left_a_candidate = (previous_dir / "candidate.py").exists()
+                if not spawned_ok and left_a_candidate:
+                    # The agent process failed (timeout, non-zero exit) after
+                    # writing a candidate — Opus was often still checking one
+                    # when its time ran out. What it left goes through the
+                    # usual admission gates below; a half-written file fails them.
+                    print(
+                        f"  [timeout] {slot.ledger_context}: agent process failed; "
+                        f"admitting the candidate it left through the usual gates",
+                        flush=True,
+                    )
+                if not spawned_ok and not left_a_candidate:
+                    # The agent process failed and wrote nothing. Recorded like
+                    # every attempt.
                     _record(
                         ledger,
                         name=fallback,
