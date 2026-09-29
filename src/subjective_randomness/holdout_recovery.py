@@ -30,6 +30,7 @@ This module contains experiment orchestration and config-driven entry points.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import shutil
 from pathlib import Path
@@ -226,11 +227,12 @@ def run_holdout_experiments(
                 exp_dir, project_id, exp_num=exp_num, prev_exp_dir=prev_exp_dir,
                 k=design_n_eig, n_random=design_n_random,
                 n_responses=n_participants,  # every participant answers every stimulus
+                seed=derive_seed(seed, gt_model, exp_num, "design"),
             )
             _require_valid("2_design", exp_dir)
 
-        # Collect: every response comes from the held-out ground truth. The
-        # per-experiment seed offset gives repeated stimuli fresh Bernoulli draws.
+        # Collect: every response comes from the held-out ground truth, with a
+        # seed of its own per cell and experiment (repeated stimuli get fresh draws).
         if not (resume and _stage_done("4_collect", exp_dir)):
             stimuli = load_stimuli(exp_dir / "design" / "stimuli.json")
             rows = generate_responses(
@@ -239,7 +241,7 @@ def run_holdout_experiments(
                 stimuli,
                 gt_params,
                 n_participants=n_participants,
-                seed=seed + exp_num,
+                seed=derive_seed(seed, gt_model, exp_num, "responses"),
                 # Pooled across experiments, each experiment's participants are
                 # different people.
                 participant_id_offset=(exp_num - 1) * n_participants,
@@ -287,6 +289,18 @@ def run_holdout_experiments(
 # ─────────────────────────────────────────────
 # Config-driven entry point
 # ─────────────────────────────────────────────
+
+
+def derive_seed(*parts: Any) -> int:
+    """A seed for one purpose in one cell, from everything that identifies it.
+
+    Distinct (cell seed, ground truth, experiment, purpose) tuples get
+    unrelated seeds. The response seed used to be ``cell seed + experiment``,
+    so repeat r's experiment 2 reused repeat r+1's experiment 1 seed, and every
+    design used seed 42.
+    """
+    digest = hashlib.sha256("|".join(str(part) for part in parts).encode()).digest()
+    return int.from_bytes(digest[:4], "big") % 2**31
 
 
 def _manifest_model_names(exp_dir: Path) -> List[str]:
