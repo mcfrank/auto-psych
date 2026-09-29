@@ -1,6 +1,5 @@
 /* auto-psych run explorer — clean research-dashboard styling.
-   Stage accent colors mirror scripts/make_loop_diagram.py:
-   agent (LLM) stages = blue, programmatic stages = green. */
+   Stage accent colors: agent (LLM) stages = blue, programmatic stages = green. */
 
 :root {
   --bg: #f6f7f9;
