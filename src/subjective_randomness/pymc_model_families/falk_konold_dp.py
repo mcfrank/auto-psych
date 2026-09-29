@@ -1,8 +1,8 @@
 """PyMC adapter for the Falk & Konold (1997) Difficulty Predictor family.
 
-Randomness = DP = rep_motifs + 2*alt_motifs (the minimal-DP parse computed by
-the featurizer), unnormalised by length; harder-to-encode sequences seem more
-random. The theory has no free cognitive parameters — only the choice rule's
+Randomness = DP = rep_motifs + 2*alt_motifs (the minimal-DP parse, computed
+from the raw sequences by ``compute_features`` below), unnormalised by length;
+harder-to-encode sequences seem more random. The theory has no free cognitive parameters — only the choice rule's
 ``beta`` and ``side_bias`` are inferred. See the pure-Python twin in
 ``model_families/falk_konold_dp.py`` for the full rationale.
 """

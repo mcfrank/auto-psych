@@ -34,8 +34,11 @@ the context names — use the absolute path) of exactly this form:
 # name: short_descriptive_snake_case_name
 # description: One sentence: the scalar this returns, and any conditioning/normalization.
 def test_statistic(df):
-    # df: one row per trial, with the response column and all feature columns
-    # (see CRITIQUE_CONTEXT.md). np, pd and math are already in scope.
+    # df: one row per trial, with the columns CRITIQUE_CONTEXT.md lists: the raw
+    # H/T strings sequence_a / sequence_b, participant_id, trial_index and the
+    # response chose_left. There are no feature columns: compute any stimulus
+    # property from the strings (e.g. df["sequence_a"].str.count("H")).
+    # np, pd and math are already in scope.
     ...
     return value  # a single float
 ```
@@ -44,10 +47,11 @@ Rules for good statistics:
 
 - Each must probe a **different** hypothesized discrepancy — distinct `# name:`,
   no duplicated ideas.
-- Favour **sliced / conditional** statistics that condition on feature columns or
-  on response subsets (e.g. the response rate among a specific kind of stimulus,
-  the slope of the response across a feature, the variance of responses within a
-  stratum). Conditional statistics reveal targeted failures that an aggregate
+- Favour **sliced / conditional** statistics that condition on stimulus
+  properties you compute from `sequence_a` / `sequence_b`, or on response
+  subsets (e.g. the response rate among a specific kind of stimulus, the slope
+  of the response across a stimulus property, the variance of responses within
+  a stratum). Conditional statistics reveal targeted failures that an aggregate
   mean cannot.
 - Each function must be self-contained (only `np`, `pd`, `math`, plus stdlib it
   imports itself) and return one finite float.

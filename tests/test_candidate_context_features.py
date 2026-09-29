@@ -1,9 +1,10 @@
-"""The inner-loop CONTEXT.md must advertise the extensible-feature hook.
+"""The inner-loop CONTEXT.md must advertise the feature hooks.
 
 A candidate agent should learn that (a) only numeric columns can be a pm.Data,
-(b) the raw sequence_a/sequence_b strings are not usable directly, and (c) it can
-define compute_features(sequence_a, sequence_b) to derive new numeric features
-the precomputed columns do not provide.
+(b) the raw sequence_a/sequence_b strings are not usable directly, and (c) it
+must define compute_features(sequence_a, sequence_b) (or prepare_observed) to
+derive the numeric features its hypothesis needs: the responses CSV carries
+only the raw columns.
 """
 
 from __future__ import annotations
@@ -13,10 +14,7 @@ import yaml
 from src.pipelines.inner_loop.candidate_agent import _write_candidate_context
 from tests.inner_loop_fixtures import write_task_description_beside
 
-HEADER = (
-    "participant_id,trial_index,sequence_a,sequence_b,chose_left,chose_right,model,"
-    "n_a,h_a,p_a,n_b,h_b,p_b"
-)
+HEADER = "sequence_a,sequence_b,participant_id,trial_index,chose_left"
 
 
 def _setup(tmp_path):
@@ -27,7 +25,7 @@ def _setup(tmp_path):
         encoding="utf-8",
     )
     responses = tmp_path / "responses.csv"
-    responses.write_text(HEADER + "\n1,0,HTH,HHT,1,0,seed,3,2,0.67,3,2,0.67\n")
+    responses.write_text(HEADER + "\nHTH,HHT,1,0,1\n")
     write_task_description_beside(responses)
     cand_dir = tmp_path / "iter_0" / "candidate_0"
     return responses, models_dir, cand_dir

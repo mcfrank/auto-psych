@@ -34,7 +34,11 @@ def write_responses(tmp_path: Path) -> Path:
     Also writes the task description the outer loop puts beside them.
     """
     responses = tmp_path / "responses.csv"
-    responses.write_text("chose_left,n_a\n1,6\n0,6\n", encoding="utf-8")
+    responses.write_text(
+        "sequence_a,sequence_b,participant_id,trial_index,chose_left\n"
+        "HHTTHT,HTHTHT,1,0,1\nHHTTHT,HTHTHT,2,0,0\n",
+        encoding="utf-8",
+    )
     write_task_description_beside(responses)
     return responses
 

@@ -25,7 +25,10 @@ def _context(tmp_path, idx, hints=None, count=None):
         encoding="utf-8",
     )
     responses = tmp_path / "responses.csv"
-    responses.write_text("n_a,chose_left\n4,1\n", encoding="utf-8")
+    responses.write_text(
+        "sequence_a,sequence_b,participant_id,trial_index,chose_left\nHHTT,HTHT,1,0,1\n",
+        encoding="utf-8",
+    )
     write_task_description_beside(responses)
     kwargs = {} if hints is None else {"hints": hints}
     return _write_candidate_context(
