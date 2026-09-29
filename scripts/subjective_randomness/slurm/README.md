@@ -96,6 +96,15 @@ checkout's code is unchanged. `verify_holdout_run.sh` judges cells by their
 `holdout.json` and `MISSING_CELLS.txt`; a failed attempt that a retry finished
 is listed, not failed.
 
+An agent call that hits the account's usage or rate limit (a Claude
+subscription's session limit, the API's 429/529, a Gemini quota) waits inside
+the task until the stated reset and runs again; the task log shows a
+`[USAGE LIMIT] … Waiting N min` line for each wait, and the cell's
+`token_usage_summary.json` totals them (`n_usage_limit_hits`,
+`usage_limit_wait_sec`). The task holds its allocation while it waits. If the
+limit does not lift within 12 h (`AGENT_USAGE_LIMIT_MAX_WAIT_SEC`) the cell
+fails with `AgentUsageLimitExceeded` and the retry job resumes it.
+
 ## Impossible-theory variant
 
 The same test-retest design, but the ground truths are deliberately weird

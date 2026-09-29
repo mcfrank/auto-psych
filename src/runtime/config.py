@@ -16,6 +16,15 @@ REPO_ROOT = here()
 # Top-level defaults retained for shared support modules.
 DEFAULT_SIMULATED_N_PARTICIPANTS = 5
 DEFAULT_MAX_VALIDATION_RETRIES = 3
+# An agent call that ends on its account's usage or rate limit
+# (src/runtime/usage_limits.py) waits for the limit to lift and runs again,
+# for at most AGENT_USAGE_LIMIT_MAX_WAIT_SEC in all; then the run raises
+# AgentUsageLimitExceeded, and the sweep's retry job resumes the cell later.
+AGENT_USAGE_LIMIT_MAX_WAIT_SEC = 12 * 3600
+# The wait runs until this long after the stated reset time...
+AGENT_USAGE_LIMIT_RESET_MARGIN_SEC = 2 * 60
+# ...or, when the message states none (an API rate limit, say), this long.
+AGENT_USAGE_LIMIT_FALLBACK_WAIT_SEC = 10 * 60
 # Run *outputs* of the agent pipeline (projects/<id>/run<N>/…).
 # Override via PIPELINE_PROJECTS_DIR for Cloud Run (e.g. /app/projects)
 PROJECTS_DIR = Path(os.environ.get("PIPELINE_PROJECTS_DIR", REPO_ROOT / "projects"))

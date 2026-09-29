@@ -95,6 +95,7 @@ def agent_factory(panel: Panel):
                 prompt, cwd=cwd, log_path=log_path, allowed_dirs=allowed, model=member.model,
                 timeout_secs=panel.member_timeout_sec, backend=member.backend,
                 usage_label=f"panel:{panel.name}:{label}", extra_args=extra,
+                wait_out_usage_limits=False,  # the round requeues its job instead
             )
 
         return run

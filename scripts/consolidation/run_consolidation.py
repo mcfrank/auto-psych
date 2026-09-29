@@ -263,6 +263,7 @@ class Driver:
             backend="claude",
             usage_label=f"consolidation:{phase.id}",
             extra_args=extra_args,
+            wait_out_usage_limits=False,  # _handle_limits requeues the job instead
         )
         append_status(
             self.work_root,
