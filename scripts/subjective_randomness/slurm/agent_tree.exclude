@@ -49,3 +49,22 @@ AGENTS.md
 
 # Preprocess (superseded by P9, but exclude by name in case any remain)
 preprocess.py
+
+# Everything but src/ and the agents' own run tree. Docs, tests, scripts and
+# analyses name and describe the ground truths (40 files named motif_stack),
+# the rest of the research library is harness-only and names them too, and a
+# loader comment naming motif_stack reached three agents. The harness runs
+# from its own full copy; the agents' self-test needs only src/.
+/docs/
+/tests/
+/scripts/
+/analysis/
+/diagrams/
+/README.md
+/SUMMARY.md
+/HERO_RUN_DESIDERATA.md
+/src/subjective_randomness/
+.pytest_cache
+# Every agent could read the Prolific, Firebase, Google and Claude tokens.
+.secrets
+.secrets.example

@@ -121,7 +121,7 @@ def load_pymc_model(name: str, models_dir: Path) -> Any:
     # ``prepare_observed(rows) -> dict[str, np.ndarray]`` to build its ``pm.Data``
     # arrays itself. The default convention maps one CSV column per container,
     # which cannot express layouts where the containers are not all trial-aligned
-    # — e.g. motif_stack's unique-sequence table plus per-trial gather indices.
+    # — e.g. a unique-sequence table plus per-trial gather indices.
     # When declared, it REPLACES the column-mapping path entirely.
     prepare_observed = getattr(mod, "prepare_observed", None)
     if prepare_observed is not None and not callable(prepare_observed):

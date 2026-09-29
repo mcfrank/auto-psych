@@ -132,7 +132,12 @@ echo "[task $TASK] repeat=$REPEAT gt=$GT seed=$SEED -> $RUN_DIR"
 # scrubbed tree. node_modules exclusion alone saves ~5.5k inodes per copy.
 AGENT_EXCLUDE="$SLURM_DIR/agent_tree.exclude"
 [[ -f "$AGENT_EXCLUDE" ]] || { echo "ERROR: $AGENT_EXCLUDE not found" >&2; exit 1; }
-rsync -a --exclude-from="$AGENT_EXCLUDE" "$REPO"/ "$RUN_REPO"/
+# --delete-excluded also cleans a tree a resumed task built before an exclusion
+# was added (resumed cells kept docs/, tests/ and .secrets otherwise); the
+# protect filter keeps the agents' results root, whose data/ and *.nc match
+# exclude patterns.
+rsync -a --delete --delete-excluded --filter='P /_runs/***' \
+  --exclude-from="$AGENT_EXCLUDE" "$REPO"/ "$RUN_REPO"/
 
 # pyprojroot.here() sentinel (we excluded .git from the copy).
 touch "$RUN_REPO/.here"
@@ -233,7 +238,7 @@ for models_rel in "$SEED_MODELS_REL" "$POOL_MODELS_REL"; do
     continue
   fi
   [[ -f "$RUN_REPO/$models_rel/models_manifest.yaml" ]] || { echo "ERROR: no manifest at $RUN_REPO/$models_rel" >&2; exit 1; }
-  "$VENV_PY" "$RUN_REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
+  "$VENV_PY" "$REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
     --models-dir "$RUN_REPO/$models_rel" --name "$GT" --missing-ok
   if grep -q "$GT" "$RUN_REPO/$models_rel/models_manifest.yaml"; then
     echo "ERROR: $models_rel/models_manifest.yaml still mentions $GT" >&2; exit 1
@@ -246,7 +251,7 @@ echo "[task $TASK] scrubbed held-out GT entry from both manifests"
 # other regime's manifests also exist and the leakage audit scans all of them.
 while IFS= read -r -d '' mf; do
   if grep -q "$GT" "$mf"; then
-    "$VENV_PY" "$RUN_REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
+    "$VENV_PY" "$REPO/scripts/subjective_randomness/remove_manifest_entry.py" \
       --models-dir "$(dirname "$mf")" --name "$GT" --missing-ok
     if grep -q "$GT" "$mf"; then
       echo "ERROR: $mf still mentions $GT after scrub" >&2; exit 1
@@ -278,11 +283,11 @@ while IFS= read -r -d '' named; do
   echo "[task $TASK] removed GT-named file from agent tree: ${named#$RUN_REPO/}"
 done < <(find "$RUN_REPO" -name "*${GT}*" -type f -not -path "*/_runs/*" -print0)
 
-# Assert the three physical protections actually landed. A blanket grep for
-# "$GT" is useless here — 40-odd benign files name it (this script, the exclude
-# file, the watchdog, docs) — so check the artefacts that carry the *mechanism*:
-# the two model-family directories must be absent from the tree entirely, and
-# no implementation file for the held-out model may remain anywhere.
+# Assert the physical protections actually landed: the two model-family
+# directories must be absent from the tree entirely, and no implementation file
+# for the held-out model may remain anywhere. (The name scan below then checks
+# that no file mentions it at all; docs/, tests/ and scripts/, which did, are
+# no longer copied.)
 for forbidden_dir in src/subjective_randomness/pymc_model_families \
                      src/subjective_randomness/model_families; do
   if [[ -d "$RUN_REPO/$forbidden_dir" ]]; then
@@ -298,6 +303,11 @@ if [[ -n "$leak_files" ]]; then
   exit 1
 fi
 echo "[task $TASK] GT-leak verifier: no ${GT} implementation and no model-family dir in the agent tree"
+# And no file in the tree names the held-out model at all (a loader comment
+# naming motif_stack reached three agents). A hit is our leak, so the cell stops
+# here, before any agent has run.
+bash "$SLURM_DIR/scan_gt_name.sh" --before-agents "$GT" "$RUN_REPO" /dev/null
+echo "[task $TASK] GT-name scan: '$GT' appears nowhere in the agent tree"
 
 # Optional cheap-run overrides (set by SMOKE mode or by hand). Values are
 # numeric, so unquoted word-splitting below is safe.
@@ -366,6 +376,11 @@ env "${UNSET_ARGS[@]}" "$AGENT_DIR/venv/bin/python" scripts/subjective_randomnes
   --resume $EXTRA_FLAGS
 
 echo "[task $TASK] done -> $RUN_DIR/holdout.json"
+
+# Did any agent write the held-out model's name? It may be a coincidence, so
+# this only warns (listing the files in $RUN_DIR/gt_name_mentions.txt, which the
+# analysis job reports); it never fails a finished cell.
+bash "$SLURM_DIR/scan_gt_name.sh" --after-run "$GT" "$RUN_REPO/_runs" "$RUN_DIR/gt_name_mentions.txt"
 
 # --- reclaim inodes: archive + remove this task's repo copy on success -------
 # Reached only when the run above exits 0 (set -e), i.e. this GT is complete:
