@@ -123,10 +123,15 @@ def _oracle_compare(fits, names):
         return az.compare(loos, ic="loo"), loos
 
 
-def build_cell(root: Path, *, archived: bool = True) -> Path:
+def build_cell(root: Path, *, archived: bool = True, carried_seed_step: bool = False) -> Path:
     """One holdout cell (``run1/<gt>/``) with one experiment: seed step over
     alpha+beta, then round 0 admits gamma and prunes it. The cached ``.nc``
-    fits are named by the same fingerprint ``fit_model`` writes."""
+    fits are named by the same fingerprint ``fit_model`` writes.
+
+    With ``carried_seed_step`` the cell has two experiments instead: experiment
+    1 is the seed step alone, and experiment 2 (same responses, so the same
+    cached fits) opens with gamma carried into its seed step — where the loop
+    never prunes, however far behind a model is — and prunes it at round 0."""
     cell = root / "run1" / GT
     staging = cell / "_staging"
     loop = staging / "_runs" / GT / "experiment1" / "model_loop"
@@ -172,29 +177,46 @@ def build_cell(root: Path, *, archived: bool = True) -> Path:
             "pruned": ["gamma"],
         },
     ]
-    (loop / "history.json").write_text(json.dumps(history), encoding="utf-8")
+    margin = (
+        f"{float(gamma['elpd_diff']):.1f} nats behind alpha "
+        f"({float(gamma['elpd_diff']) / float(gamma['dse']):.1f}× dse)"
+    )
+    if carried_seed_step:
+        # Experiment 1: the seed step alone. Experiment 2: gamma is already
+        # in the set at the seed step (all three scored, nothing pruned), then
+        # round 0 prunes it. Same responses bytes, so the same cached fits.
+        carried_seed = {**history[1], "step": 0, "iteration": None,
+                        "elpd_loo": {**history[1]["elpd_loo"],
+                                     "gamma": round(float(round_loos["gamma"].elpd_loo), 4)}}
+        carried_seed.pop("pruned")
+        (loop / "history.json").write_text(json.dumps([history[0]]), encoding="utf-8")
+        (loop / "attempted_hypotheses.jsonl").write_text("", encoding="utf-8")
+        loop2 = staging / "_runs" / GT / "experiment2" / "model_loop"
+        shutil.copytree(loop, loop2)
+        (loop2 / "history.json").write_text(json.dumps([carried_seed, history[1]]), encoding="utf-8")
+        ledger_context = "experiment2 round 0"
+        ledger_path = loop2 / "attempted_hypotheses.jsonl"
+    else:
+        (loop / "history.json").write_text(json.dumps(history), encoding="utf-8")
+        ledger_context = "experiment1 round 0"
+        ledger_path = loop / "attempted_hypotheses.jsonl"
     ledger = [
         {
             "name": "gamma",
             "outcome": "admitted",
             "detail": "",
             "hypothesis": "gamma mechanism",
-            "context": "experiment1 round 0 candidate 1",
+            "context": f"{ledger_context} candidate 1",
         },
         {
             "name": "gamma",
             "outcome": "pruned",
-            "detail": (
-                f"{float(gamma['elpd_diff']):.1f} nats behind alpha "
-                f"({float(gamma['elpd_diff']) / float(gamma['dse']):.1f}× dse)"
-            ),
+            "detail": margin,
             "hypothesis": "gamma mechanism",
-            "context": "experiment1 round 0",
+            "context": ledger_context,
         },
     ]
-    (loop / "attempted_hypotheses.jsonl").write_text(
-        "".join(json.dumps(e) + "\n" for e in ledger), encoding="utf-8"
-    )
+    ledger_path.write_text("".join(json.dumps(e) + "\n" for e in ledger), encoding="utf-8")
     (cell / "holdout.json").write_text(
         json.dumps({"fit_kwargs": FIT_KWARGS, "n_participants": N_PARTICIPANTS}),
         encoding="utf-8",
@@ -261,6 +283,28 @@ def test_analyze_cell_reports_both_units_and_the_flip(tmp_path):
     assert decisions["n_prune_cluster"] == 0
     assert decisions["n_flip_trial_vs_cluster"] == 1
     assert decisions["ratio_cluster"]["median"] == pytest.approx(np.sqrt(N_PARTICIPANTS))
+
+
+def test_a_carried_model_behind_at_a_seed_step_is_reported_but_is_no_decision(tmp_path):
+    """The loop prunes only after a candidate round: a model carried into the
+    next experiment can be far behind at that experiment's seed step and still
+    be scored there. The replication reports the seed-step row (the rule would
+    prune it) without treating the step as a prune decision or as a
+    disagreement with the record."""
+    from src.subjective_randomness.loo_design_effect import analyze_cell
+
+    cell = build_cell(tmp_path / "sweep", carried_seed_step=True)
+    record = analyze_cell(cell, tmp_path / "work")
+
+    first, second = record["experiments"]
+    assert [s["archived_pruned"] for s in first["steps"]] == [[]]
+    seed_step, round_step = second["steps"]
+    assert seed_step["iteration"] is None and seed_step["archived_pruned"] == []
+    gamma_at_seed = next(r for r in seed_step["rows"] if r["name"] == "gamma")
+    assert gamma_at_seed["prune_trial"] is True  # what the rule would do
+    assert round_step["archived_pruned"] == ["gamma"]
+    assert record["summary"]["n_decisions"] == 1  # round 0 of experiment 2 only
+    assert record["summary"]["n_pruned_archived"] == 1
 
 
 def test_analyze_cell_reads_a_kept_repo_copy(tmp_path):

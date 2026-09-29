@@ -464,8 +464,9 @@ def _check_step_against_record(
     where: str,
 ) -> None:
     """The reproduced trial-level comparison must be the loop's own: recorded
-    ELPDs, the archived prune set and the ledger margins all agree, or the
-    cached fits are not the fits the loop scored."""
+    ELPDs agree at every step, and at a round step the archived prune set and
+    the ledger margins agree too — or the cached fits are not the fits the
+    loop scored."""
     by_name = {row["name"]: row for row in record["rows"]}
     for name, recorded in step["elpd_loo"].items():
         recomputed = by_name[name]["elpd_loo_trial"]
@@ -475,26 +476,35 @@ def _check_step_against_record(
                 f"history.json recorded {recorded}; the cached fit is not the fit "
                 "the loop scored."
             )
+    if step["iteration"] is None:
+        # The seed step scores the set as carried and never prunes, however far
+        # behind a carried model is; the rule's verdict there is reported but
+        # is neither a decision nor something the record can disagree with.
+        if record["archived_pruned"]:
+            raise ValueError(
+                f"{where}: a seed step recorded pruned models "
+                f"{record['archived_pruned']}; the loop prunes only after a round."
+            )
+        return
     if record["pruned"]["trial"] != record["archived_pruned"]:
         raise ValueError(
             f"{where}: the loop's rule over the reproduced comparison prunes "
             f"{record['pruned']['trial']} but the run record pruned "
             f"{record['archived_pruned']}."
         )
-    if step["iteration"] is not None:
-        for name in record["archived_pruned"]:
-            key = (int(step["iteration"]), name)
-            if key not in margins:
-                raise ValueError(
-                    f"{where}: history.json pruned {name!r} but the ledger records "
-                    "no prune margin for it."
-                )
-            recomputed = by_name[name]["elpd_diff_trial"]
-            if abs(recomputed - margins[key]) > _MARGIN_MATCH_TOLERANCE:
-                raise ValueError(
-                    f"{where}: recomputed elpd_diff of {name!r} is {recomputed:.2f} "
-                    f"but the ledger recorded {margins[key]} nats."
-                )
+    for name in record["archived_pruned"]:
+        key = (int(step["iteration"]), name)
+        if key not in margins:
+            raise ValueError(
+                f"{where}: history.json pruned {name!r} but the ledger records "
+                "no prune margin for it."
+            )
+        recomputed = by_name[name]["elpd_diff_trial"]
+        if abs(recomputed - margins[key]) > _MARGIN_MATCH_TOLERANCE:
+            raise ValueError(
+                f"{where}: recomputed elpd_diff of {name!r} is {recomputed:.2f} "
+                f"but the ledger recorded {margins[key]} nats."
+            )
 
 
 def _experiment_dirs(run_root: Path, n_experiments: int) -> List[Path]:
