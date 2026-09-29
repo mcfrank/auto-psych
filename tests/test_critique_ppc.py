@@ -219,3 +219,82 @@ def test_run_ppc_for_model_end_to_end_real_mcmc(tmp_path):
     # The data were simulated from this model, so its own PPC reproduces the
     # mean response: the observed value sits inside the replicate distribution.
     assert res["significant"] is False
+
+
+# ─────────────────────────────────────────────
+# Time limits: per call, plus a budget per statistic
+# ─────────────────────────────────────────────
+#
+# One 30 s limit used to cover the observed value and all 1000 replicates
+# together (~30 ms per call), which an ordinary pandas statistic misses on
+# experiment 3's 7,680 rows; its p-value became NaN and nobody was told.
+
+
+def _sleeping_statistic(seconds, *, only_on_call=None):
+    """A statistic that sleeps ``seconds`` per call (or only on the given call)."""
+    sleeps = "True" if only_on_call is None else f"calls[0] == {only_on_call}"
+    return TestStatistic(
+        name="slow",
+        code=(
+            "import time\n"
+            "calls = [0]\n"
+            "def test_statistic(df):\n"
+            "    calls[0] += 1\n"
+            f"    if {sleeps}:\n"
+            f"        time.sleep({seconds})\n"
+            "    return float(df['chose_left'].mean())\n"
+        ),
+    )
+
+
+def test_the_time_limit_applies_to_each_call_not_to_all_of_them(monkeypatch):
+    import src.critique.ppc as ppc
+
+    monkeypatch.setattr(ppc, "_TEST_STAT_CALL_TIMEOUT_SEC", 0.5)
+    monkeypatch.setattr(ppc, "_TEST_STAT_BUDGET_SEC", 60.0)
+    human, models = _frames([1, 0], [[0, 0], [1, 1]] * 5)
+
+    # 11 calls x 0.1 s: over 0.5 s in total, well within 0.5 s per call.
+    res = evaluate_test_statistic(_sleeping_statistic(0.1), human, models)
+
+    assert res.error is None
+    assert len(res.t_null) == 10 and math.isfinite(res.p_value)
+
+
+def test_a_call_over_the_limit_is_reported_with_the_call_it_was(monkeypatch):
+    import src.critique.ppc as ppc
+
+    monkeypatch.setattr(ppc, "_TEST_STAT_CALL_TIMEOUT_SEC", 0.2)
+    human, models = _frames([1, 0], [[0, 0], [1, 1]] * 5)
+
+    res = evaluate_test_statistic(_sleeping_statistic(2, only_on_call=4), human, models)
+
+    assert math.isnan(res.p_value)
+    assert "TimeoutError" in res.error and "replicate 3 of 10" in res.error
+
+
+def test_a_statistic_over_its_budget_is_stopped_and_says_so(monkeypatch):
+    import src.critique.ppc as ppc
+
+    monkeypatch.setattr(ppc, "_TEST_STAT_BUDGET_SEC", 0.25)
+    human, models = _frames([1, 0], [[0, 0], [1, 1]] * 20)
+
+    res = evaluate_test_statistic(_sleeping_statistic(0.05), human, models)
+
+    assert math.isnan(res.p_value)
+    assert "budget" in res.error and "of 41" in res.error
+
+
+def test_the_precheck_sets_aside_a_statistic_too_slow_for_every_replicate(
+    tmp_path, monkeypatch
+):
+    import src.critique.ppc as ppc
+
+    monkeypatch.setattr(ppc, "_TEST_STAT_BUDGET_SEC", 1.0)
+    path = tmp_path / "slow.py"
+    path.write_text(_sleeping_statistic(0.01).code, encoding="utf-8")
+    observed, _ = _frames([1, 0], [])
+
+    assert ppc.check_test_statistic(path, observed, n_replicates=10) is None
+    error = ppc.check_test_statistic(path, observed, n_replicates=1000)
+    assert error is not None and "too slow" in error and "1001 times" in error

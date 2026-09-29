@@ -26,7 +26,11 @@ from typing import Any, Dict, List, Optional, Tuple
 import pandas as pd
 
 from src.pipelines.inner_loop.task_description import read_task_description
-from src.critique.ppc import check_test_statistic
+from src.critique.ppc import (
+    _TEST_STAT_BUDGET_SEC,
+    _TEST_STAT_CALL_TIMEOUT_SEC,
+    check_test_statistic,
+)
 from src.pipelines.inner_loop.import_gate import check_forbidden_imports
 from src.pipelines.inner_loop.model_zoo import _manifest_entries
 from src.runtime.coding_agent import AgentPermissionDenied
@@ -190,6 +194,14 @@ def _write_critique_context(
         f"statistic ({n_replicates} posterior-predictive replicates). A statistic "
         f"is a **significant discrepancy** when its `p_value` ≤ {significance_alpha} "
         "(raw, no multiple-comparisons correction).",
+        "",
+        f"Each statistic is called {n_replicates + 1} times (the observed data, then "
+        f"every replicate). Each call must finish within "
+        f"{_TEST_STAT_CALL_TIMEOUT_SEC:g} s and all of them within "
+        f"{_TEST_STAT_BUDGET_SEC:g} s (about "
+        f"{_TEST_STAT_BUDGET_SEC / (n_replicates + 1):.2g} s per call), so vectorise "
+        "it: no row-wise `apply` and no Python loops over rows. A statistic that "
+        "raises or runs out of time gets no p-value.",
     ]
     text = "\n".join(lines) + "\n"
     (critique_dir / "CRITIQUE_CONTEXT.md").write_text(text, encoding="utf-8")
@@ -286,8 +298,12 @@ def _spawn_critique_agent(
     harness is not run and the round has no critique.
 
     Returns the round's status record: ``{"status": "critiqued", "incumbent",
-    "attempts", "n_statistics", "n_significant", "n_significant_fdr"}`` or
-    ``{"status": "no_critique", "incumbent", "attempts", "reason"}``.
+    "attempts", "n_statistics", "n_evaluated", "n_significant",
+    "n_significant_fdr"}`` or ``{"status": "no_critique", "incumbent",
+    "attempts", "reason"}``. A round in which the check ran but no statistic
+    produced a p-value (each one errored or ran out of time on some replicate)
+    is ``no_critique``, its reason listing each statistic's error: it used to
+    count as critiqued, which kept the verifier's "no critique" warning quiet.
     """
     from src.runtime.coding_agent import run_coding_agent
 
@@ -337,7 +353,9 @@ def _spawn_critique_agent(
             memory_dir=notes_dir,  # notes shared with later agents of this run only
             sandbox=True,  # sees only its own tree, scratch (/tmp) and a private home
         )
-        usable, broken = _usable_test_statistics(test_stats_dir, observed_df)
+        usable, broken = _usable_test_statistics(
+            test_stats_dir, observed_df, n_replicates=n_replicates
+        )
         if usable:
             break
         print(
@@ -370,14 +388,34 @@ def _spawn_critique_agent(
         n_replicates=n_replicates,
         significance_alpha=significance_alpha,
     )
+    n_evaluated = _n_evaluated(result)
+    if n_evaluated == 0:
+        reason = (
+            f"none of the {result['n_test_statistics']} test statistics produced a "
+            "p-value: "
+            + "; ".join(f"{r['name']}: {r['error']}" for r in result["results"])
+        )
+        print(f"  [critique] NO CRITIQUE this round: {reason}", flush=True)
+        return {
+            "status": CRITIQUE_STATUS_NONE,
+            "incumbent": incumbent,
+            "attempts": attempts_made,
+            "reason": reason,
+        }
     return {
         "status": CRITIQUE_STATUS_CRITIQUED,
         "incumbent": incumbent,
         "attempts": attempts_made,
         "n_statistics": int(result["n_test_statistics"]),
+        "n_evaluated": n_evaluated,
         "n_significant": int(result["n_significant"]),
         "n_significant_fdr": int(result["n_significant_fdr"]),
     }
+
+
+def _n_evaluated(result: Dict[str, Any]) -> int:
+    """Statistics of a PPC result that produced a p-value (no error)."""
+    return sum(1 for r in result.get("results", []) if not r.get("error"))
 
 
 def _format_critiques_md(result: Dict[str, Any]) -> str:
@@ -389,13 +427,23 @@ def _format_critiques_md(result: Dict[str, Any]) -> str:
     results = result.get("results", [])
     sig = [r for r in results if r.get("significant")]
     n_total = len(results)
-    n_evaluated = sum(1 for r in results if not r.get("error"))
+    n_evaluated = _n_evaluated(result)
+    failed = [
+        f"- **{r['name']}** — {r['error']}" for r in results if r.get("error")
+    ]
+    failed_section = (
+        ["", "## Could not be evaluated", "", *failed] if failed else []
+    )
     if n_evaluated == 0:
-        return (
-            f"# Critique of `{result.get('model')}`\n\n"
-            f"0 of {n_total} test statistics could be evaluated, so there is no "
-            "critique this round.\n"
-        )
+        return "\n".join(
+            [
+                f"# Critique of `{result.get('model')}`",
+                "",
+                f"0 of {n_total} test statistics could be evaluated, so there is no "
+                "critique this round.",
+                *failed_section,
+            ]
+        ) + "\n"
     not_evaluated = (
         f" ({n_total - n_evaluated} of {n_total} could not be evaluated)"
         if n_evaluated < n_total
@@ -429,11 +477,12 @@ def _format_critiques_md(result: Dict[str, Any]) -> str:
             )
     else:
         lines.append("No evaluated statistic showed a significant discrepancy.")
+    lines.extend(failed_section)
     return "\n".join(lines) + "\n"
 
 
 def _usable_test_statistics(
-    test_stats_dir: Path, observed_df: Any
+    test_stats_dir: Path, observed_df: Any, *, n_replicates: int
 ) -> Tuple[List[Path], Dict[str, str]]:
     """The agent's statistic files that pass the import gate and run, sorted.
 
@@ -441,7 +490,8 @@ def _usable_test_statistics(
     to the reason. A file importing outside the candidate allowlist is deleted
     (loudly): it could reach the project's feature code, which the critique
     must not see. A file that fails when run once on the observed data (a
-    raise, a timeout, a non-finite value) is moved to ``broken_statistics/``
+    raise, a timeout, a non-finite value, or a call too slow for the check's
+    ``1 + n_replicates`` calls to fit its time budget) is moved to ``broken_statistics/``
     beside ``test_stats/``, kept for audit. An absent directory simply has no
     statistics.
     """
@@ -461,7 +511,7 @@ def _usable_test_statistics(
             broken[stat_file.stem] = f"forbidden import {', '.join(forbidden)}"
             stat_file.unlink()
             continue
-        error = check_test_statistic(stat_file, observed_df)
+        error = check_test_statistic(stat_file, observed_df, n_replicates=n_replicates)
         if error:
             print(f"  [critique] setting aside {stat_file.name}: {error}", flush=True)
             broken[stat_file.stem] = error
@@ -501,7 +551,9 @@ def _persist_critique_results(
     from src.critique.ppc import run_ppc_for_model
 
     test_stats_dir = critique_dir / "test_stats"
-    usable, _ = _usable_test_statistics(test_stats_dir, pd.read_csv(responses_path))
+    usable, _ = _usable_test_statistics(
+        test_stats_dir, pd.read_csv(responses_path), n_replicates=n_replicates
+    )
     if not usable:
         raise ValueError(
             f"no usable test statistic in {test_stats_dir}; the critique agent "

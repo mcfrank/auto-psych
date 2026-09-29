@@ -842,8 +842,9 @@ step). Then `_export` (§5.13).
   data are read-only.
 - **Usable statistics** (`_usable_test_statistics`): each `test_stats/*.py`
   file must pass the code gate (§5.9; offending files are deleted) and then
-  run once on the observed data (`check_test_statistic`, ppc.py:202: no raise,
-  within 30 s, a finite value). Files that fail the run are moved to
+  run once on the observed data (`check_test_statistic`: no raise, within
+  5 s, a finite value, and fast enough that `1 + n_replicates` calls at that
+  speed fit the 300 s budget per statistic). Files that fail the run are moved to
   `critique/broken_statistics/`. If none is usable, the agent is re-spawned
   once (`MAX_CRITIQUE_RETRIES = 1`) with a note listing each set-aside
   statistic and its error. If there are still none, the round status is
@@ -858,12 +859,16 @@ step). Then `_export` (§5.13).
     the incumbent's fit (the escalated fit if there was one). It then keeps
     **1000** evenly strided rows (`CRITIQUE_PPC_REPLICATES`), and each
     replicate frame is the observed frame with `chose_left` replaced by one row.
-  - For each statistic: `t_obs`, `t_null[1..1000]` (one 30 s SIGALRM limit
-    covers the observed value and all 1000 replicates together),
+  - For each statistic: `t_obs`, `t_null[1..1000]`. Each call has its own
+    5 s SIGALRM limit (`_TEST_STAT_CALL_TIMEOUT_SEC`) and all of one
+    statistic's calls share a 300 s budget (`_TEST_STAT_BUDGET_SEC`); the
+    context tells the agent both. (One 30 s limit used to cover all 1001
+    calls, ~30 ms per call, which ordinary statistics missed at 7,680 rows.)
     `n_ge = #{t_null ≥ t_obs}`, `n_le = #{t_null ≤ t_obs}`, and
     `p = min(1, 2 · min((n_ge+1)/(n+1), (n_le+1)/(n+1)))` (two-sided with the
     +1 correction). Also `z = (t_obs − mean)/sd`. If the code raises or returns
-    a non-finite value, `error` is set and p is NaN.
+    a non-finite value, or runs out of time, `error` is set (naming the call,
+    e.g. "on replicate 17 of 1000") and p is NaN.
   - **Significant = raw p ≤ 0.05** (`CRITIQUE_SIGNIFICANCE_ALPHA`), with no
     correction. A Benjamini–Hochberg q (`_benjamini_hochberg`, ppc.py:382,
     over the finite p's) and `significant_fdr` are reported alongside.
@@ -872,10 +877,14 @@ step). Then `_export` (§5.13).
   many of the evaluated statistics were significant (and how many could not be
   evaluated; if none could, it says there is no critique), then lists **only**
   the raw-significant statistics with observed value, null mean, z, p, q and a
-  "[survives FDR]" mark. It is inlined into every candidate prompt of that
+  "[survives FDR]" mark, then every statistic that could not be evaluated
+  with its error. It is inlined into every candidate prompt of that
   round, and the context says to prefer discrepancies that survive FDR.
-- **History record:** `{"status": "critiqued", incumbent, attempts, n_statistics, n_significant, n_significant_fdr}`
-  or `{"status": "no_critique", incumbent, [attempts], reason}`.
+- **History record:** `{"status": "critiqued", incumbent, attempts, n_statistics, n_evaluated, n_significant, n_significant_fdr}`
+  or `{"status": "no_critique", incumbent, [attempts], reason}`. A round in
+  which the check ran but **no** statistic produced a p-value is
+  `no_critique`, its reason listing each statistic's error, and the
+  candidates run without a critique.
 
 ### 5.8 The candidate self-test (check_candidate.py)
 
