@@ -433,6 +433,12 @@ used by the active loops (per `README.md`).
   require typing `yes`. See `scripts/outer_loop_live/README.md`. `scancel` kills
   the pipeline job but **not** an already-published Prolific study — stop that in
   the Prolific dashboard.
+- **A collection that gives up pauses its study.** After the 2-hour poll
+  (`_PROLIFIC_MAX_WAIT_SEC` in `collect.py`) ends short of its target,
+  `_pause_unfilled_study` pauses an `ACTIVE` study (`pause_study` in
+  `src/runtime/prolific.py`; PAUSE is reversible, STOP is not) and raises if it
+  cannot; the partial data are then modelled as before. A study that reached
+  its target is left alone (its places are full).
 - **One live study per experiment.** The live job always passes `--resume`, so
   a relaunch used to redesign, redeploy and publish a second study. Now an
   experiment whose `deployment/deployment_manifest.json` records a live

@@ -79,11 +79,27 @@ label you choose.
   has a live study, so never relaunch the whole range; use a new `run_label`
   for a genuinely new run.
 
+**D. A collection that gives up now pauses the study.**
+
+- After 2 hours without enough completed submissions the pipeline models the
+  partial data and moves on. It used to leave the study recruiting, so late
+  participants were paid for data no experiment used.
+- Now `4_collect` reads the study's status and, if it is `ACTIVE`, **pauses**
+  it through the Prolific API, printing `PAUSED Prolific study <id>:
+  collection gave up at k/N …` between lines of `!`. Pausing is reversible
+  (resume in the dashboard); stopping is not. Participants already in the
+  study can still finish and are paid.
+- A study already `PAUSED`, `AWAITING REVIEW` or `COMPLETED` is left alone.
+  If the status cannot be read, the pause fails, or the study is in any other
+  state, the run stops with an error telling you to pause it in the dashboard.
+- A collection that reaches its target changes nothing: all the study's
+  places are taken (§ 0 F), so it recruits no one else, and Prolific moves it
+  to `AWAITING REVIEW` / `COMPLETED` by itself as before.
+
 ### Surprises that cost money or data if you don't know them
 
 | # | What | Consequence | What to do |
 |---|---|---|---|
-| D | **After 2 hours the pipeline stops waiting**, even if fewer participants have finished. It models whatever data exist, **but the Prolific study stays open**. Nothing in the code pauses or stops a study. | Late participants are recruited and paid but not used by that experiment. | Watch the study. Stop it in the Prolific dashboard when the pipeline moves on (§ 8). |
 | E | `start_full_run.sh` **deletes the output and run-copy directories of the runs it is about to launch** (`$WORK_ROOT/run<i>`, `$WORK_ROOT/runs/run<i>`) *before* it asks you to type `yes`. | Answering "no" still deletes earlier `run1`…`runK` results. | Collect earlier results first (§ 11), or use `RUNS=` to pick other indices. |
 | F | When calling `run.py` directly (not via the launchers), **the number of Prolific places comes from the project's `prolific_config.yaml`, not from `--n-participants`**. The committed file says 40 places, 5 minutes, $12/h. `--n-participants` only sets the design's N and the waiting target. | E.g. `--n-participants 5` recruits and pays 40 people, and the pipeline moves on after 5. | Use the launchers. They write that file from your config, so the two numbers agree. |
 | G | The cost summary covers **Prolific only**. Language-model spending is recorded afterwards (`token_usage_summary.json`) but not estimated beforehand. | — | Check your opencode/Gemini or Anthropic billing separately. |
@@ -454,8 +470,9 @@ logs in a loop):
 
 1. **Stop or pause the study in the Prolific dashboard**, every study the run
    has published. This is the only thing that stops recruiting and paying.
-   `scancel` does **not** touch a published study. Nothing in the code pauses
-   or stops a study, including after the 2-hour timeout (§ 0 D).
+   `scancel` does **not** touch a published study. The pipeline pauses a study
+   itself only when collection gives up after 2 hours (§ 0 D); a job you
+   cancel or that crashes pauses nothing.
 2. `scancel <jobid>` stops the pipeline (waiting, modelling, agents).
 3. Delete any leftover `test`-mode draft studies in Prolific.
 
