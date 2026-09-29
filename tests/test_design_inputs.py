@@ -16,6 +16,7 @@ import pytest
 
 from src.pipelines.outer_loop import eig as eig_mod
 from src.pipelines.outer_loop.orchestrator import run_design_programmatic
+from tests.paths import PYMC_MODEL_FIXTURES_DIR
 
 
 @pytest.fixture
@@ -183,3 +184,73 @@ def test_the_design_searches_lazily_in_float32_by_default(tmp_path, monkeypatch)
     assert (call["lazy_batch_size"], call["refresh_every"]) == (512, 16)
     # Each scenario's generating draw is left out of its likelihood average.
     assert call["leave_one_out"] is True
+
+
+def _seed_experiment_models(exp_dir):
+    """Copy the fixture PyMC models into exp_dir/cognitive_models."""
+    import shutil
+
+    models_dir = exp_dir / "cognitive_models"
+    models_dir.mkdir(parents=True)
+    for name in ("bayesian_fair_coin.py", "representativeness.py", "models_manifest.yaml"):
+        shutil.copyfile(PYMC_MODEL_FIXTURES_DIR / name, models_dir / name)
+    return models_dir
+
+
+@pytest.mark.slow
+def test_run_design_programmatic_writes_stimuli_json(tmp_path):
+    """Experiment 1: exhaustive design scores the experiment's ACTUAL PyMC
+    model set from its prior predictive (no pure-Python twins involved)."""
+    import json
+
+    exp_dir = tmp_path / "experiment1"
+    _seed_experiment_models(exp_dir)
+    run_design_programmatic(
+        exp_dir, "subjective_randomness", k=4, lengths=(3, 4), n_responses=40
+    )
+    data = json.loads((exp_dir / "design" / "stimuli.json").read_text(encoding="utf-8"))
+    assert isinstance(data, list) and len(data) == 4
+    assert all("sequence_a" in s and "sequence_b" in s for s in data)
+    assert all("eig" in s and "selection_rank" in s for s in data)
+
+
+def test_run_design_programmatic_posterior_wiring(tmp_path, monkeypatch):
+    """Experiment >= 2: the previous experiment's responses and registry are
+    threaded into design_exhaustive's posterior mode, with the fit cache under
+    this experiment's design dir."""
+    import json
+
+    calls: dict = {}
+
+    def fake_design(models_dir, registry_path=None, **kwargs):
+        calls["models_dir"] = models_dir
+        calls["registry_path"] = registry_path
+        calls.update(kwargs)
+        return [
+            {"sequence_a": "HHH", "sequence_b": "HTH", "eig": 0.5,
+             "selection_rank": 1, "joint_eig_bits": 0.5}
+        ]
+
+    monkeypatch.setattr(
+        "src.pipelines.outer_loop.eig.design_exhaustive", fake_design
+    )
+
+    prev = tmp_path / "experiment1"
+    (prev / "model_loop").mkdir(parents=True)
+    (prev / "model_loop" / "responses.csv").write_text("participant_id\n", encoding="utf-8")
+    exp_dir = tmp_path / "experiment2"
+    exp_dir.mkdir()
+
+    run_design_programmatic(
+        exp_dir, "subjective_randomness", exp_num=2, prev_exp_dir=prev,
+        k=1, lengths=(3, 4), n_responses=40,
+    )
+
+    assert calls["models_dir"] == exp_dir / "cognitive_models"
+    assert calls["registry_path"] == prev / "model_registry.yaml"
+    # All data so far: the previous experiment's cumulative inner-loop responses.
+    assert calls["responses_csv"] == prev / "model_loop" / "responses.csv"
+    assert calls["fit_cache_dir"] == exp_dir / "design" / "_fit_cache"
+    assert calls["n_select"] == 1
+    data = json.loads((exp_dir / "design" / "stimuli.json").read_text(encoding="utf-8"))
+    assert data[0]["eig"] == 0.5

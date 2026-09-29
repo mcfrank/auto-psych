@@ -36,8 +36,7 @@ paper-derived test vectors in `tests/test_literature_model_families.py`):
 | `local_representativeness` | `prototype_similarity` | Explicit quantitative operationalization of Kahneman & Tversky (1972) |
 
 Only manifest-listed models are active — for recovery, the fitted and
-no-learning baselines, the outer loop's seed pool, and the EIG design defaults
-(`stimulus_design.default_model_family_names` reads this manifest directly).
+no-learning baselines, and the outer loop's seed pool.
 The superseded originals' `.py` files and twins remain on disk solely so
 pre-consolidation run artifacts can be refit; do not add them back to the
 manifest. A newly discovered model earns its place here only through the
