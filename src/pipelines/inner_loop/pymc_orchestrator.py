@@ -72,6 +72,7 @@ from src.pipelines.inner_loop.model_zoo import (
     _resolve_candidate_name,
     _seed_model_set,
     novelty_pool_rows,
+    prefit_candidates,
     slot_roles,
 )
 
@@ -253,7 +254,10 @@ def run_pymc_inner_loop(
         Concurrent candidate agents per round (``None`` ⇒ all of the round's
         candidates at once; ``1`` ⇒ sequential). Agents are CLI subprocesses,
         so this is a pure wall-clock lever; admission is always sequential in
-        candidate order, keeping runs deterministic.
+        candidate order, keeping runs deterministic. With a ``cache_dir``, the
+        candidates of a wave are fitted concurrently before admission
+        (``prefit_candidates``, as many at once as the allocated CPUs hold),
+        and admission loads those fits.
     lens_offset
         Starting position in the lens battery. The outer loop
         passes ``_lens_offset(exp_num, ...)`` so experiment k+1 continues the
@@ -528,10 +532,40 @@ def run_pymc_inner_loop(
                 _copy_rejected_attempt(previous_dir, slot.directory)
                 return True
 
-            # Each wave spawns its attempts concurrently, then settles them
-            # sequentially in slot order (admission mutates the manifest and runs
-            # the novelty gate, so order keeps runs deterministic). A settled
-            # slot that earned a retry or repair joins the next wave.
+            def prefit(wave: List[_Slot]) -> None:
+                """Fit the wave's candidates concurrently before admission.
+
+                Names are predicted in slot order as admission will resolve
+                them (a name claimed earlier in the wave is uniquified). The
+                fits land in the cache; admission, below, is unchanged.
+                """
+                if cache_dir is None:
+                    return  # nowhere to hand the fits over; admission fits one at a time
+                claimed: List[str] = []
+                candidates = []
+                for slot in wave:
+                    candidate_file = slot.directory / "candidate.py"
+                    if not candidate_file.exists():
+                        continue
+                    name = _resolve_candidate_name(
+                        slot.directory,
+                        models_dir,
+                        fallback=f"iter{iteration}_candidate{slot.idx}",
+                        taken=claimed,
+                        announce=False,
+                    )
+                    claimed.append(name)
+                    candidates.append((candidate_file, name))
+                prefit_candidates(
+                    candidates, responses_path, cache_dir=cache_dir, fit_kwargs=fit_kwargs
+                )
+
+            # Each wave spawns its attempts concurrently, fits their candidates
+            # concurrently, then settles them sequentially in slot order
+            # (admission mutates the manifest and runs the novelty gate, so
+            # order keeps runs deterministic; the fits it needs are cached by
+            # then). A settled slot that earned a retry or repair joins the
+            # next wave.
             workers = min(candidate_parallelism or candidate_count, candidate_count)
             pending = list(slots)
             while pending:
@@ -540,6 +574,7 @@ def run_pymc_inner_loop(
                         spawn_ok = list(pool.map(spawn, pending))
                 else:
                     spawn_ok = [spawn(slot) for slot in pending]
+                prefit(pending)
                 pending = [slot for slot, ok in zip(pending, spawn_ok) if settle(slot, ok)]
 
             round_results = [slot.result for slot in slots if slot.result is not None]

@@ -1365,6 +1365,57 @@ def sample_fits_time_limited(
     return outcomes
 
 
+def fit_time_limited_concurrently(
+    names: Sequence[str],
+    models_dir: Path,
+    responses_path: Path,
+    *,
+    cache_dir: Path,
+    fit_kwargs: Optional[Dict[str, Any]] = None,
+    time_limit_sec: float,
+    workers: Optional[int] = None,
+) -> None:
+    """Sample, concurrently, what ``fit_model(name, …, time_limit_sec=…)``
+    would sample for each of ``names``, one after another.
+
+    First every first fit (``sample_fits_time_limited``), then every refit the
+    near-miss rule asks for (``_refit_decision`` on the loaded first fit),
+    each run limited to ``time_limit_sec``. Fits land in ``cache_dir`` and
+    failures and timeouts are remembered, so a later ``fit_model`` call with
+    the same settings and limit loads or re-raises exactly what it would have
+    produced by sampling itself. ``workers`` (None ⇒ ``default_fit_workers``
+    over the allocated CPUs) bounds the concurrent fits so that none of them is
+    slowed past its limit by oversubscription. Infrastructure failures raise.
+    """
+    cache_dir = Path(cache_dir)
+    first = [
+        TimeLimitedFit(
+            name, Path(models_dir), Path(responses_path),
+            resolve_fit_settings(name, models_dir, fit_kwargs), cache_dir,
+        )
+        for name in names
+    ]
+    if not first:
+        return
+    if workers is None:
+        workers = default_fit_workers(allocated_cpus(), [_fit_cpus(r.settings) for r in first])
+    outcomes = sample_fits_time_limited(first, time_limit_sec=time_limit_sec, workers=workers)
+    refits = []
+    for request, outcome in zip(first, outcomes):
+        if outcome is not None:
+            continue
+        fitted = _fit_once(request.name, request.models_dir, request.responses_path, request.settings, cache_dir)
+        if _refit_decision(request.name, fitted, request.settings):
+            refits.append(
+                TimeLimitedFit(
+                    request.name, request.models_dir, request.responses_path,
+                    {**request.settings, "target_accept": ESCALATED_TARGET_ACCEPT}, cache_dir,
+                )
+            )
+    if refits:
+        sample_fits_time_limited(refits, time_limit_sec=time_limit_sec, workers=workers)
+
+
 def _fit_model_in_worker(
     name: str,
     models_dir: Path,
