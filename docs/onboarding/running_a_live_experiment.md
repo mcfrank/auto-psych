@@ -14,9 +14,9 @@ label you choose.
 
 ---
 
-## 0. Read this first: known problems as of 27 September 2026
+## 0. Read this first: known problems as of 28 September 2026
 
-### Problems that stop a run
+### Problems that stopped a run (fixed)
 
 **A. Fixed on 28 September 2026: the model stage crashed on collected data.**
 
@@ -42,19 +42,17 @@ label you choose.
   the same number (not changed; it matters only to a model with
   per-participant effects).
 
-**B. The live launchers do not load `bubblewrap`.** Found by reading the code;
-not run.
+**B. Fixed on 28 September 2026: the live launchers did not load `bubblewrap`.**
 
 - Every coding agent (`3_implement`, critique, proposals) runs in a
-  bubblewrap sandbox. It raises `Sandboxed agents need bubblewrap on PATH (on
-  Sherlock: ml load system bubblewrap)` if `bwrap` is missing.
-- `scripts/outer_loop_live/_env.sh` runs `ml purge` and never loads it.
-  `scripts/subjective_randomness/slurm/_env.sh` does, at line 30.
-- `/usr/bin/bwrap` does not exist on Sherlock. Unless your own shell startup
-  puts `bwrap` on the `PATH` in a way that survives `ml purge`, a live job will
-  fail at `3_implement`. That is **before** anything is deployed or paid for.
-- The fix is one line in `scripts/outer_loop_live/_env.sh`:
-  `ml load system bubblewrap`.
+  bubblewrap sandbox, which raises `Sandboxed agents need bubblewrap on PATH`
+  without `bwrap`, and Sherlock has no system `bwrap`.
+  `scripts/outer_loop_live/_env.sh` ran `ml purge` and never loaded it, so a
+  live job would have stopped at `3_implement` (before any deploy or cost).
+- `_env.sh` now runs `ml load system bubblewrap` and stops with
+  `FATAL: bwrap not on PATH` if that does not provide it, as the simulation
+  `_env.sh` does. `run_pilot.sh` and `start_full_run.sh` source it on the
+  login node, so a missing module stops the launch before any job starts.
 
 ### Surprises that cost money or data if you don't know them
 

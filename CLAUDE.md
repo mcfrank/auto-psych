@@ -259,8 +259,9 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
 ### Supporting modules
 
 - **Agent isolation** (`src/runtime/agent_sandbox.py`, holdout agent trees):
-  loop agents run stock and in bubblewrap — their tree read-only, only their
-  own candidate/critique dir, the run's notes, a scratch dir at /tmp and a
+  loop agents run stock and in bubblewrap (every job's `_env.sh`, live and
+  simulation, runs `ml load system bubblewrap` and stops without `bwrap`) —
+  their tree read-only, only their own candidate/critique dir, the run's notes, a scratch dir at /tmp and a
   private home writable, and an allowlisted environment
   (`agent_environment`: system basics, the compiler toolchain, network
   settings and the backend's own login — no other `.secrets` key, no

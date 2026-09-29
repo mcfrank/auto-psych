@@ -58,21 +58,22 @@ the `--agent` flag. There is no stage 1; the numbering is historical.
 
 ## Before you deploy anything: known problems
 
-When these pages were written, the live path **could not run a complete
-experiment**. Two problems were confirmed by reading the code, and the first was
-also reproduced:
+When these pages were written (27 September 2026), the live path **could not
+run a complete experiment**. Both problems were fixed on 28 September 2026:
 
 - **Fixed on 28 September 2026: the model-fitting stage stopped at its first
   round of new models.** The collected `responses.csv` had extra columns
   (Prolific IDs among them), and the stage refuses any column beyond the five
   it expects. Collection now keeps only those five where agents can read them.
-- **The live launchers never load `bubblewrap`.** The coding agents need it to
-  run, so the job fails at the experiment-building stage. This one fails
-  before anything is deployed or paid for.
+- **Fixed on 28 September 2026: the live launchers never loaded
+  `bubblewrap`.** The coding agents need it to run, so the job would have
+  failed at the experiment-building stage, before anything was deployed or
+  paid for.
 
-The details, a no-cost way to catch both, and a list of smaller surprises are in
-[running_a_live_experiment.md § 0](running_a_live_experiment.md#0-read-this-first-known-problems-as-of-27-september-2026).
-Get them fixed and the no-cost rehearsal passing before recruiting anyone.
+The details, a no-cost rehearsal that exercises the whole path, and a list of
+smaller surprises that are still open are in
+[running_a_live_experiment.md § 0](running_a_live_experiment.md#0-read-this-first-known-problems-as-of-28-september-2026).
+Get the no-cost rehearsal passing before recruiting anyone.
 
 ## Reading order
 
