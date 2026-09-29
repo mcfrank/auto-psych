@@ -144,8 +144,8 @@ def main(args: Args) -> None:
             "name": incumbent,
             **score(incumbent, _resolve_model_dir(loop_dir / "models", incumbent)),
         },
-        # The seed files the cell was seeded with, not the registry's: the
-        # pool's motif_stack is the softmax rewrite of the Viterbi ground truth.
+        # The seed files the cell was seeded with, not the registry's, which
+        # may have changed since.
         "seeds": {
             name: score(name, seeded_models_dir(tree))
             for name in seed_model_names(args.gt_models_dir)

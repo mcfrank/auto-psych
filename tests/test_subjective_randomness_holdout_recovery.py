@@ -1271,8 +1271,8 @@ def test_fitted_seed_baseline_fits_every_experiments_data_once(tmp_path, monkeyp
 def test_the_fitted_seed_baseline_fits_the_seed_files_the_cell_was_seeded_with(
     tmp_path, monkeypatch
 ):
-    """Not the registry's: the pool's motif_stack seed is the softmax rewrite,
-    the registry's motif_stack the Viterbi ground truth."""
+    """Not the registry's, which may have changed since the run: re-scoring a
+    run keeps the seeds it ran with."""
     run_root = _baseline_run(tmp_path)
     fit_dirs = []
     _stub_baseline_fits(

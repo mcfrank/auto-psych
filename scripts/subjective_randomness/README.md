@@ -163,11 +163,9 @@ Ground truths come from the recovery registry
 `seed_models_dir`), whose pure-Python family twins provide the fixed generating
 parameters. The **live seed pool** mirrors that registry's
 manifest, so a ground truth drawn from the active set is genuinely held out of
-experiment 1's seed pool. One seed differs from its registry file: the pool's
-`motif_stack` is the softmax (marginalising) rewrite `motif_stack_softmax.py`,
-while the ground truth `motif_stack` is the Viterbi model; the seed baselines
-therefore load each seed from the files the cell was seeded with (experiment
-1's zoo), not from the registry. A ground truth the registry keeps only on disk (a
+experiment 1's seed pool. The seed baselines load each seed from the files
+the cell was seeded with (experiment 1's zoo), not from the registry, so a
+run is re-scored with the seeds it ran with. A ground truth the registry keeps only on disk (a
 model the 2026-08 consolidation superseded, or an impossible theory) is absent
 from the pool already, and nothing is excluded.
 

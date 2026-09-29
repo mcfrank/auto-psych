@@ -170,11 +170,10 @@ def seeded_models_dir(run_root: Path) -> Path:
 
     The seed baselines score "the models the loop starts with", so they load
     each seed's code from here, not from the recovery registry
-    (``seed_models_dir``): since 2026-09-27 the pool's ``motif_stack`` seed is
-    the softmax rewrite, while the registry's ``motif_stack`` is the Viterbi
-    ground truth. A seed's file stays here for the whole run (seeds are never
-    pruned or retired; a seed dropped as unfittable loses only its manifest
-    entry), and an archived run re-scored later keeps the seeds it ran with.
+    (``seed_models_dir``), which may have changed since the run. A seed's
+    file stays here for the whole run (seeds are never pruned or retired; a
+    seed dropped as unfittable loses only its manifest entry), and an archived
+    run re-scored later keeps the seeds it ran with.
     """
     return Path(run_root) / "experiment1" / "model_loop" / "models"
 
@@ -557,11 +556,9 @@ def seed_baseline_correlation(
     ``seed_models_dir``). The *other* seed models are the registry's names
     (``seed_models_dir``) with their families' default parameters, but their
     code is the files the cell was seeded with (``seeded_models_dir``, see
-    ``seeded_models_dir()``): the seed pool's ``motif_stack`` is the softmax
-    rewrite of the registry's Viterbi ``motif_stack``, with the same
-    parameters and defaults. For an impossible ground truth, which is not
-    among the project seeds, nothing is excluded — every seed model is scored
-    against it.
+    ``seeded_models_dir()``), so a run is scored with the seeds it ran with.
+    For an impossible ground truth, which is not among the project seeds,
+    nothing is excluded — every seed model is scored against it.
     """
     seed_models_dir = Path(seed_models_dir)
     gt_models_dir = (

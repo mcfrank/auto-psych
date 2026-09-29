@@ -1,37 +1,34 @@
-"""PyMC adapter for a marginalising four-motif stack automaton.
+"""PyMC adapter for Griffiths et al.'s four-motif stack automaton.
 
-A sequence seems random to the extent that a fair coin explains it better than
-a "regular" generator: randomness = ``log P(x | fair) - log P(x | regular)``.
-The regular generator is Griffiths et al. (2018)'s four-motif stack automaton:
-a row-normalised six-state motif process, augmented with three memory-based
-production methods (mirror symmetry, complement symmetry and duplication of the
-first half) besides ordinary motif continuation.
+The regular hypothesis is the maximum-probability combination of a Viterbi
+hidden-state path and one of four production methods: ordinary motif
+continuation, mirror symmetry, complement symmetry, or duplication.  The
+symmetry indicators are computed exactly from the raw sequences by
+``prepare_observed`` below; the first-half and full sequence Viterbi
+probabilities remain functions of the inferred ``delta`` and ``alpha``
+parameters.
 
-``log P(x | regular)`` here is the exact marginal likelihood of that automaton:
-
-* the forward (sum-product) recursion sums over the hidden-state paths;
-* the production methods are mixed, ``sum_M P(M) P(x | M)`` over the methods
-  ``x`` can have been produced by (a log-sum-exp in the log domain).
-
-Griffiths et al. define the regular hypothesis with two maxes instead — the
-single most probable hidden path (Viterbi) and the single most probable
-production method.  A max puts non-differentiable ridges into the likelihood
-wherever its argmax switches; the sums here are smooth in the parameters, so
-NUTS samples this model at the loop's default ``target_accept`` and the model
-declares no ``SAMPLER_SETTINGS``.
-
-Comparisons are restricted to equal-length sequences (the construction has no
-length-specific normaliser); ``prepare_observed`` rejects a cross-length pair.
+The paper estimated this model on fixed-length sequences.  Because the Viterbi
+construction omits a length-specific normalizer, this adapter rejects
+cross-length comparisons rather than silently treating scores from different
+normalizing constants as commensurable.
 
 Computational layout
 --------------------
-The forward recursion depends only on the observed symbols, so it is evaluated
+The Viterbi recursion depends only on the observed symbols, so it is evaluated
 once per DISTINCT sequence rather than once per trial row.  ``prepare_observed``
-builds a unique-sequence table (length, per-position emission masks and the
+builds a unique-sequence table (length, per-position emission masks, and the
 three memory-method flags) plus per-trial gather indices ``idx_a`` / ``idx_b``;
-the graph scores the table and gathers per trial.  ``p_left`` remains a
-per-trial ``pm.Deterministic`` and the observed Bernoulli remains per-trial, so
-ELPD-LOO stays pointwise per trial.
+the graph scores the table and gathers per trial.  A 30-participant x 32-pair
+design has 960 rows but at most 64 distinct sequences, so this removes ~94% of
+the work (measured 2026-08-13: 6.7 ms per logp+grad evaluation at 960 rows
+versus 0.47 ms at 32).  ``p_left`` remains a per-trial ``pm.Deterministic`` and
+the observed Bernoulli remains per-trial, so ELPD-LOO stays pointwise per trial.
+
+The same-length restriction is enforced in Python by ``prepare_observed``.  It
+used to be a ``pytensor`` ``Assert`` wired into the likelihood, which re-checked
+a property of the *data* on every one of the millions of logp evaluations a fit
+performs, and could only report "an assertion failed" with no offending row.
 """
 
 import numpy as np
@@ -43,6 +40,17 @@ N_STATES = 6
 _EVEN_STATES = np.array([1.0, 0.0, 1.0, 0.0, 1.0, 0.0])
 # State s emits "H" when _EVEN_STATES[s] == 1 (i.e. "HTHTHT"[s] == "H").
 _EMITS = "HTHTHT"
+
+# NUTS geometry for *this* model, resolved by src.models.pymc_inference
+# (an explicit caller value still wins). The likelihood is a max over hidden
+# paths and over production methods, so its log density has ridges where the
+# argmax switches; at the global target_accept=0.99 NUTS answers with a very
+# small step size and long trajectories. Measured 2026-08-13 on 960 synthetic
+# same-length trials: 109 leapfrog steps/iteration at 0.99 (~5.1 h for a
+# production fit) versus 25 steps at 0.9 (~1.3 h) with zero divergences and a
+# mean tree depth of 4.5-6.5, well clear of the depth cap. 0.9 is therefore
+# both cheaper and clean here, where 0.99 buys nothing.
+SAMPLER_SETTINGS = {"target_accept": 0.9}
 
 
 # --- Data preparation (numpy; runs once per fit, not inside the graph) ------
@@ -95,7 +103,8 @@ def _emission_masks(sequences: list[str]) -> np.ndarray:
 
     ``mask[t, u, s]`` is 1.0 when state ``s`` can emit sequence ``u``'s symbol at
     position ``t``. Positions past a sequence's length are padded with symbol
-    "T" (0); those prefix entries are computed but never selected, because
+    "T" (0), matching the zero-padded ``sym1..sym8`` columns this layout
+    replaced: those prefix entries are computed but never selected, because
     ``seq_len`` indexes only positions within the sequence.
     """
     masks = np.zeros((MAX_SEQ_LEN, len(sequences), N_STATES), dtype="float64")
@@ -153,16 +162,18 @@ def prepare_observed(rows) -> dict:
         missing = [key for key in ("sequence_a", "sequence_b") if key not in row]
         if missing:
             raise ValueError(
-                f"This model needs the raw H/T sequence columns {missing} to "
-                f"build its unique-sequence table; row {i} has {sorted(row)}."
+                f"motif_stack needs the raw H/T sequence columns {missing} to build "
+                f"its unique-sequence table; row {i} has {sorted(row)}."
             )
         seq_a = _clean_sequence(row["sequence_a"])
         seq_b = _clean_sequence(row["sequence_b"])
         if len(seq_a) != len(seq_b):
             raise ValueError(
-                "This model requires same-length alternatives on every "
-                f"trial: row {i} pairs a length-{len(seq_a)} sequence with a "
-                f"length-{len(seq_b)} one ({seq_a!r} vs {seq_b!r})."
+                "motif_stack requires same-length alternatives on every trial: "
+                f"row {i} pairs a length-{len(seq_a)} sequence with a "
+                f"length-{len(seq_b)} one ({seq_a!r} vs {seq_b!r}). Its Viterbi "
+                "score omits the length-specific normalizer, so scores for "
+                "different lengths are not commensurable."
             )
         sequences_a.append(seq_a)
         sequences_b.append(seq_b)
@@ -213,22 +224,18 @@ def _matrices(delta, alpha):
     return init_raw / init_raw.sum(), transition
 
 
-def _forward_log_probabilities(seq_len, emission_mask, init, transition):
-    """Log forward probabilities for the full sequence and its first half.
+def _viterbi_log_probabilities(seq_len, emission_mask, init, transition):
+    """Log Viterbi probabilities for the full sequence and its first half.
 
-    The sum-product form of the Viterbi (max-product) recursion: ``pt.sum``
-    over the previous state where Viterbi takes ``pt.max``, so each
-    entry is the marginal probability of the observed prefix rather than the best
-    path's joint probability. Operates on the unique-sequence batch:
-    ``emission_mask`` is ``(MAX_SEQ_LEN, U, N_STATES)`` and the returned tensors
-    are ``(U,)``.
+    Operates on the unique-sequence batch: ``emission_mask`` is
+    ``(MAX_SEQ_LEN, U, N_STATES)`` and the returned tensors are ``(U,)``.
     """
-    forward = init[None, :] * emission_mask[0]
-    prefix_logs = [pt.log(pt.sum(forward, axis=1))]
+    best = init[None, :] * emission_mask[0]
+    prefix_logs = [pt.log(pt.max(best, axis=1))]
     for position in range(1, MAX_SEQ_LEN):
-        path_probabilities = forward[:, :, None] * transition[None, :, :]
-        forward = pt.sum(path_probabilities, axis=1) * emission_mask[position]
-        prefix_logs.append(pt.log(pt.sum(forward, axis=1)))
+        path_probabilities = best[:, :, None] * transition[None, :, :]
+        best = pt.max(path_probabilities, axis=1) * emission_mask[position]
+        prefix_logs.append(pt.log(pt.max(best, axis=1)))
 
     by_length = pt.stack(prefix_logs, axis=1)
     full_index = pt.cast(seq_len - 1, "int64")[:, None]
@@ -248,7 +255,7 @@ def _log_p_regular(
     transition,
     method_weights,
 ):
-    full_log_probability, half_log_probability = _forward_log_probabilities(
+    full_log_probability, half_log_probability = _viterbi_log_probabilities(
         seq_len, emission_mask, init, transition
     )
     impossible = pt.full_like(full_log_probability, -np.inf)
@@ -273,11 +280,7 @@ def _log_p_regular(
         ],
         axis=0,
     )
-    # Mixture over production methods (softmax over M) rather than the Viterbi
-    # argmax. logsumexp handles the -inf entries for methods x cannot have been
-    # produced by; the repetition component is always finite, so no column is
-    # all -inf and the gradient stays defined.
-    return pt.logsumexp(component_logs, axis=0)
+    return pt.max(component_logs, axis=0)
 
 
 # A one-sequence, one-trial placeholder built through the real preparation path,

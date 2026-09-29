@@ -239,18 +239,15 @@ withholds the GT by manifest name, so the three other literature models are
 seeded. The pool manifest mirrors the registry manifest in
 `pymc_model_families/models_manifest.yaml`, and a test
 (`tests/test_model_manifest.py`) asserts the model files are byte-identical,
-with one documented exception (`SEED_SOURCES` in
-`scripts/subjective_randomness/sync_seed_models.py`, since 2026-09-27): the
-pool's `motif_stack.py` is a copy of the registry's `motif_stack_softmax.py`.
-That model replaces both of Griffiths et al.'s maxes (the Viterbi path and
-the best production method) with sums (the forward recursion and a mixture
-over methods). It has the same parameters and default values, declares no
-`SAMPLER_SETTINGS`, and fits more cheaply than the Viterbi model, which stays
-the registry's `motif_stack` and the ground truth that generates data. The
-seed keeps the name `motif_stack` because withholding works by name: when
-motif_stack is the ground truth, the array deletes the pool's `motif_stack.py`
-and scrubs its manifest entry, `seed_exclusion` withholds it, and the name
-scan finds nothing (`tests/test_motif_stack_seed_holdout.py`).
+so the `motif_stack` seed is the Viterbi model that is also the ground truth.
+(On 2026-09-27 the seed was briefly its softmax rewrite,
+`motif_stack_softmax.py`, and reverted the same day: at experiment 3's size
+that model failed the convergence gate on `local_representativeness` and
+`finite_experience_occurrence` data, where the Viterbi seed converged.)
+Withholding works by name: when motif_stack is the ground truth, the array
+deletes the pool's `motif_stack.py` and scrubs its manifest entry,
+`seed_exclusion` withholds it, and the name scan finds nothing
+(`tests/test_motif_stack_seed_holdout.py`).
 
 The same three models are the **protected** set: they are never pruned or
 retired by the cap and are always carried forward (`_protected_seed_names`,
@@ -743,7 +740,7 @@ declared `target_accept` is a **floor** on the caller's (pymc_inference.py:449-4
 | --- | --- | --- |
 | draws / tune | 1000 / 1000 (draws were 2000 until 2026-09-27) | config `fit` (defaults would be 4000/3000, mcmc_defaults.py:13-14) |
 | chains | 4 | config, and sbatch `--chains ${CHAINS:-4}` |
-| target_accept | 0.8 (the `motif_stack` seed, the softmax model, declares nothing; the registry's Viterbi `motif_stack`, fitted only as a candidate copy or by analyses, declares 0.9, a floor over the config's 0.8); 0.95 on an escalated refit | config; `SAMPLER_SETTINGS`; `ESCALATED_TARGET_ACCEPT` |
+| target_accept | 0.8; 0.9 for `motif_stack` (it declares 0.9, which is a floor over the config's 0.8); 0.95 on an escalated refit | config; `SAMPLER_SETTINGS`; `ESCALATED_TARGET_ACCEPT` |
 | max_treedepth | 10 | `_FIT_DEFAULTS` |
 | cores | 4 | `PRODUCTION_CORES` |
 | random_seed | 42 for a first fit, the same in every cell; a near-miss refit samples with its own seed, derived from 42 and the first fit's fingerprint (`refit_random_seed`, since 2026-09-27) | `_FIT_DEFAULTS`; `refit_settings` |
@@ -1265,8 +1262,9 @@ This runs in the harness after the three experiments
   than the GT, at its family's `DEFAULT_PARAMS`, gives a fixed `p_left` on the
   eval pool and a Pearson r with q. The model code is the file the cell was
   seeded with, in experiment 1's zoo (`seeded_models_dir(run_root)` =
-  `experiment1/model_loop/models/`), not the registry's: the `motif_stack`
-  seed is the softmax model (same parameters and defaults). Output:
+  `experiment1/model_loop/models/`), not the registry's, so a run is
+  scored with the seeds it ran with (the two agree unless the pool has
+  changed since). Output:
   `per_model` r and `mean_r`. No RMSE is computed.
 - **`fitted_baseline` (fitted seeds, no agents):**
   `fitted_seed_baseline_correlation` (holdout_eval.py). The three non-GT

@@ -4,9 +4,7 @@ The registry at ``src/subjective_randomness/pymc_model_families/`` is the single
 source of truth for the active seed set. The outer loop's live seed pool at
 ``src/pipelines/outer_loop/projects/subjective_randomness/seed_models/`` is a
 verbatim mirror (it is copied into experiment 1 and shown to coding agents as
-worked examples), with one documented exception, ``SEED_SOURCES``: the pool's
-``motif_stack`` seed is a copy of the registry's ``motif_stack_softmax.py``.
-Edit the registry, then run this to propagate the change;
+worked examples). Edit the registry, then run this to propagate the change;
 ``tests/test_model_manifest.py`` fails loudly if the two ever diverge.
 
 Usage:
@@ -38,23 +36,6 @@ SEED_POOL_DIR = (
     / "seed_models"
 )
 
-# The one seed whose file is not the registry model of the same name (user
-# decision 2026-09-27). The registry's motif_stack.py is Griffiths et al.'s
-# Viterbi (max-path, max-method) automaton and stays the ground truth that
-# generates data; the loop is seeded with its marginalising rewrite, which fits
-# 2-3x more cheaply and needs no declared target_accept, because agents'
-# variants of the Viterbi seed took ~40 min per fit. The seed keeps the name
-# motif_stack: the harness withholds the seed whose name equals the held-out
-# ground truth, and the ground-truth name scan looks for that name, so a seed
-# called motif_stack_softmax would be handed to the agents when motif_stack is
-# the hidden model and would trip the scan.
-SEED_SOURCES = {"motif_stack": "motif_stack_softmax"}
-
-
-def seed_source_name(name: str) -> str:
-    """The registry model whose file the seed pool's ``name`` seed copies."""
-    return SEED_SOURCES.get(name, name)
-
 
 @dataclass
 class Args:
@@ -79,14 +60,13 @@ def sync_seed_models(check: bool) -> int:
             f"{SEED_POOL_DIR / MANIFEST_FILENAME} before syncing bodies."
         )
 
-    # Only the model bodies are a verbatim mirror (of SEED_SOURCES' file for
-    # the one seed it names).
+    # Only the model bodies are a verbatim mirror.
     drifted: list[str] = []
     for name in names:
-        src = REGISTRY_DIR / f"{seed_source_name(name)}.py"
+        src = REGISTRY_DIR / f"{name}.py"
         dst = SEED_POOL_DIR / f"{name}.py"
         if not src.exists():
-            raise FileNotFoundError(f"Registry is missing {src.name}: {src}")
+            raise FileNotFoundError(f"Registry is missing {name}.py: {src}")
         if not dst.exists() or dst.read_bytes() != src.read_bytes():
             drifted.append(f"{name}.py")
             if not check:

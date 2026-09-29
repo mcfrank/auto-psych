@@ -31,7 +31,7 @@ from src.models.model_manifest import (
     read_manifest_names,
     remove_manifest_entry,
 )
-from tests.paths import REPO_ROOT, load_script_module
+from tests.paths import REPO_ROOT
 
 REGISTRY_DIR = REPO_ROOT / "src" / "subjective_randomness" / "pymc_model_families"
 LIVE_SEED_DIR = (
@@ -81,46 +81,27 @@ def test_live_seed_pool_is_byte_identical_to_the_registry():
     examples). Only names were guarded before — the model *bodies* could drift
     silently, exactly the failure that broke every recovery helper in 2026-07.
     Regenerate the pool with ``scripts/subjective_randomness/sync_seed_models.py``.
-
-    The one documented exception is ``SEED_SOURCES``: the pool's
-    ``motif_stack`` is the registry's ``motif_stack_softmax.py``, byte for
-    byte, while the registry's own ``motif_stack.py`` (the Viterbi ground
-    truth) is not in the pool.
     """
-    sync = load_script_module(
-        REPO_ROOT / "scripts" / "subjective_randomness" / "sync_seed_models.py"
-    )
-    assert sync.SEED_SOURCES == {"motif_stack": "motif_stack_softmax"}
-
     registry_names = read_manifest_names(REGISTRY_DIR)
     assert read_manifest_names(LIVE_SEED_DIR) == registry_names
     for name in registry_names:
-        source = sync.seed_source_name(name)
-        registry_src = (REGISTRY_DIR / f"{source}.py").read_bytes()
+        registry_src = (REGISTRY_DIR / f"{name}.py").read_bytes()
         seed_src = (LIVE_SEED_DIR / f"{name}.py").read_bytes()
         assert seed_src == registry_src, (
-            f"seed pool {name}.py has drifted from the registry's {source}.py; "
+            f"seed pool {name}.py has drifted from the registry; "
             f"run scripts/subjective_randomness/sync_seed_models.py to resync"
         )
-    assert (LIVE_SEED_DIR / "motif_stack.py").read_bytes() != (
-        REGISTRY_DIR / "motif_stack.py"
-    ).read_bytes()
 
 
-def test_the_softmax_seed_declares_no_sampler_settings_and_the_viterbi_gt_keeps_its_own():
-    """The softmax seed fits at the loop's target_accept; the Viterbi ground
-    truth (which the seed pool no longer carries) keeps its declared 0.9."""
+def test_the_motif_stack_seed_is_the_viterbi_model():
+    """The seed is the registry's Viterbi motif_stack with its declared 0.9,
+    not the softmax rewrite it briefly was (reverted 2026-09-27)."""
     from src.models.pymc_inference import model_sampler_settings
 
-    assert model_sampler_settings("motif_stack", LIVE_SEED_DIR) == {}
-    assert model_sampler_settings("motif_stack", REGISTRY_DIR) == {"target_accept": 0.9}
-
-
-def test_the_seed_pool_rationale_describes_the_softmax_model():
-    rationale = {
-        entry["name"]: entry["rationale"] for entry in read_manifest_entries(LIVE_SEED_DIR)
-    }["motif_stack"]
-    assert "marginal" in rationale and "max-path/max-method" not in rationale
+    assert (LIVE_SEED_DIR / "motif_stack.py").read_bytes() != (
+        REGISTRY_DIR / "motif_stack_softmax.py"
+    ).read_bytes()
+    assert model_sampler_settings("motif_stack", LIVE_SEED_DIR) == {"target_accept": 0.9}
 
 
 # ── the reader ──────────────────────────────────────────────────────
