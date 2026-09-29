@@ -513,3 +513,61 @@ trials are all clipped has a grouped log-likelihood that is constant across
 draws up to floating-point noise; arviz's PSIS returned NaN weights for that
 near-constant column, so such groups are snapped to a constant before PSIS
 (the exact-trial rule `loo_reliability` already applies).
+
+### Models are fit concurrently (`pymc_inference.fit_models_cached`, `fit_models_to_cache`)
+
+**Decision (P44).** `fit_models_cached` was a sequential `for` loop; each fit
+ran four chains on four cores while the holdout task held eight CPUs, and
+P45 multiplies the proposals per experiment by five. The models that need
+MCMC are now sampled in a `ProcessPoolExecutor` of spawned workers: each
+worker fits one model with `fit_model` (BLAS pinned to one thread through
+`threadpoolctl`, a PyMC dependency, plus the thread-count environment
+variables), persists its `.nc` into the existing content-addressed cache,
+and the parent loads every fit from that cache — so a parallel fit is the
+same `FittedModel`, with the same fingerprint, a sequential fit would have
+produced (the acceptance test samples both ways and compares fingerprints
+and ELPD-LOO). `fit_workers` caps the concurrency; the default is
+`allocated CPUs // cores-per-widest-fit` from the scheduler affinity mask
+(`allocated_cpus`), never below one, so `workers x chains` never exceeds
+the allocation. It is not a sampler setting and takes no part in any cache
+key. `holdout_recovery_array.sbatch` asks for 16 CPUs (four 4-chain fits at
+once) and 64 GB (the September 2026 sweep peaked at 13.8–18.7 GB per task
+fitting one model at a time under 32 GB).
+
+**Where the batch is.** Cache hits made the change invisible on its own:
+the experiment-start ELPD screen (`model_zoo._drop_nonfinite_elpd_models`)
+fit every carried model one at a time, and by the time `compare_table`
+called `fit_models_cached` everything was cached. The screen now samples
+the whole set through `fit_models_to_cache`, the tolerant sibling that
+reports failures by name instead of raising — a model whose fit fails is
+dropped on that report and never fit a second time. The candidate real-fit
+gate in `_admit_candidate_with_reason` still fits one candidate at a time,
+by the admission order's design; it is the remaining sequential site.
+
+**Two things the worker must do**, both found by the real-MCMC acceptance
+test rather than the unit tests. A spawned child's default multiprocessing
+start method is spawn, under which PyMC pickles the step method for its
+chain processes — and the model lives in a module `load_pymc_model`
+executed from a file, which a fresh interpreter cannot import ("The model
+could not be unpickled"). The worker therefore sets the start method to
+fork before sampling, as the sequential path forks from the main process.
+And a worker's exception travels to the parent by pickle: PyMC's
+`ParallelSamplingError` takes a chain number its pickled form does not
+carry, so the parent could not rebuild it and the whole pool broke
+(`BrokenProcessPool`) instead of one model failing. Every worker failure
+is re-raised as `FitWorkerFailure("<Type>: <message>")`, with the original
+traceback printed to the worker's stderr (the run log). A spawned child
+also re-imports the entry script as `__mp_main__`, so every entry point
+that reaches a fit needs the `if __name__ == "__main__":` guard; all of the
+repo's have one.
+
+**Measured.** Four project seed models on 1,280 real rows, 4 CPUs,
+2 chains on 2 cores per fit: sequential 144 s, two workers 127 s (1.14×),
+identical fingerprints and ELPD-LOO. The batch is dominated by one fit
+(`motif_stack`, 107 s of the 144 s; the other three took 10, 9 and 18 s and
+were entirely hidden behind it), so the parallel wall is the slowest fit
+plus pool start-up. A batch's speedup is `sum / max` of its fit times,
+capped at the worker count; on a batch of comparable fits it approaches
+the worker count. CPU accounting (user+sys over wall) rose from 1.83 to
+2.18 busy CPUs, and a pure-CPU probe confirmed the allocation runs four
+processes at 3.98.

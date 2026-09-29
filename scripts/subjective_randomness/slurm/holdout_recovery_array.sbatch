@@ -2,10 +2,20 @@
 #SBATCH --job-name=holdout_recovery
 #SBATCH --partition=normal
 #SBATCH --time=1-00:00:00
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32GB
+#SBATCH --cpus-per-task=16
+#SBATCH --mem=64GB
 #SBATCH --output=%x_%A_%a.out
 #SBATCH --error=%x_%A_%a.out
+#
+# CPUs and memory: the inner loop fits models concurrently (fit_models_cached
+# sizes its process pool so workers x cores-per-fit fills the CPUs Slurm
+# allocates), so 16 cores run four 4-chain fits at once where 8 ran one with
+# half the allocation idle. Memory scales with the concurrent fits: the
+# September 2026 sweep peaked at 13.8-18.7 GB per task (sacct MaxRSS) fitting
+# one model at a time under --mem=32GB, so 64GB leaves the same margin for
+# four. `normal` allows at most 8 GB/core (sh_part), i.e. 128 GB at 16 cores.
+# If a future sweep needs more, `-p hns` (the lab-owned partition) allows up to
+# 256 cores per node, 26 GB/core and 7 days.
 #
 # Stage 2/3: one array task per (repeat, ground-truth model). With R repeats and
 # G ground truths the submit script sizes the array to R*G; task T maps to
