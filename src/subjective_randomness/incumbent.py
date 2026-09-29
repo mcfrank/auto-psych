@@ -266,3 +266,31 @@ def histories_from_archive(tar_path: Path) -> List[List[Dict[str, Any]]]:
                 raise FileNotFoundError(f"Could not read {name} from {tar_path}.")
             histories.append(json.loads(handle.read().decode("utf-8")))
     return histories
+
+
+def cell_histories(cell_dir: Path) -> List[List[Dict[str, Any]]]:
+    """A sweep cell's experiment histories, from wherever the array task left
+    them: ``agent_runs.tar.gz`` (a finished task archives the agent's
+    ``_runs/<gt>/`` tree and deletes the copy) or, with ``KEEP_REPO_COPY=1``,
+    the live tree at ``repo/_runs/<gt>/``. A cell with neither has no run
+    record to report and raises."""
+    cell_dir = Path(cell_dir)
+    archive = cell_dir / "agent_runs.tar.gz"
+    if archive.exists():
+        return histories_from_archive(archive)
+    run_roots = sorted(
+        path.parent.parent.parent
+        for path in cell_dir.glob("repo/_runs/*/experiment1/model_loop/history.json")
+    )
+    if len(run_roots) > 1:
+        raise ValueError(
+            f"{cell_dir} holds more than one run under repo/_runs/ "
+            f"({[r.name for r in run_roots]}); a cell must hold exactly one."
+        )
+    if not run_roots:
+        raise FileNotFoundError(
+            f"{cell_dir} has neither agent_runs.tar.gz nor a kept repo copy with "
+            "repo/_runs/<gt>/experiment1/model_loop/history.json — no run record "
+            "to read the incumbent trajectory from."
+        )
+    return histories_from_run_tree(run_roots[0])

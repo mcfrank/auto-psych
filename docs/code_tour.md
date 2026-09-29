@@ -228,6 +228,7 @@ Starting from `run_pymc_inner_loop` in `pymc_orchestrator.py`:
 | `scripts/subjective_randomness/compare_matched_cells.py` | Paired comparison of matched-seed cells |
 | `scripts/subjective_randomness/oracle_admitted_models.py` | Oracle-best diagnostic (**known broken**: scores 0 steps on archived cells) |
 | `scripts/subjective_randomness/recovery_report.py` | Per-sweep RMSE tables (**known bug**: repeats one lost-incumbent total under every ground truth) |
+| `scripts/subjective_randomness/incumbent_report.py` | Incumbent changes and discovered-incumbent steps per cell over a finished sweep (the loop-improvement plan's primary metric) |
 | `scripts/subjective_randomness/recovery_ceiling.py` | Recovery-ceiling CLI over a finished sweep |
 | `scripts/subjective_randomness/slurm/recovery_ceiling.sbatch` | Ceiling job; runs its end-to-end test as a gate first |
 | `scripts/subjective_randomness/remove_manifest_entry.py` | Remove a model from manifest |
