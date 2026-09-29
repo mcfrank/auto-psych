@@ -34,7 +34,8 @@ $inputs
    relevant tests after each green step and the fast suite before your commit.
 3. Fail loudly; no silent fallbacks or defaults.
 4. Never `git push`, `scancel`, `scontrol`; never poll or sleep-wait for a job.
-   `sbatch` only in P7, and only the submissions the plan lists.
+   `sbatch` only in the phases the plan's §2 names, and only the submissions
+   that phase lists. The driver blocks the tool in every other phase.
 5. Commit everything on `$branch` with clear messages tagged `[$phase_id]`;
    leave `git status --porcelain` empty.
 6. Finish by writing `$progress_dir/$phase_id.done` whose first line is
