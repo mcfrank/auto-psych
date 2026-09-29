@@ -294,7 +294,11 @@ def run_pymc_inner_loop(
         inherit_from=Path(seed_models_dir) / LEDGER_FILENAME,
     )
     _drop_unfittable_models(
-        models_dir, responses_path, ledger=ledger, ledger_context=ledger_context
+        models_dir,
+        responses_path,
+        ledger=ledger,
+        ledger_context=ledger_context,
+        protected=protected,
     )
     fit_kwargs = fit_kwargs or {}
     # A carried-forward model can score a finite ELPD on a prior experiment's data

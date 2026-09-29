@@ -253,7 +253,12 @@ order (`_admit_candidate_with_reason` in `model_zoo.py`):
 
 1. The files exist and the code passes a safety check: only an allowlist of
    imports (numpy, pymc, scipy, …), and no file access or `eval`.
-2. It is a loadable PyMC model with a finite log-probability.
+2. It is a loadable PyMC model with a finite log-probability, and it honours
+   the data contract: it is fitted to exactly the responses (`chose_left`, in
+   row order), and its `p_left` has one value per trial and is the probability
+   its likelihood uses. Otherwise a model could be scored on one thing and
+   used (by the design, the novelty check and the evaluation) through another.
+   This check needs no sampling; the starting models get it too.
 3. It can be fitted within 15 minutes.
 4. The MCMC converged. That means the chains agree (R-hat ≤ 1.05), there are
    enough effectively independent draws (bulk ESS ≥ 100), and ≤ 0.1% of

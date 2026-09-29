@@ -47,6 +47,7 @@ def _stub_fittable(monkeypatch, ok=True, reason=""):
     monkeypatch.setattr(
         model_zoo, "model_logp_is_finite", lambda *a, **k: (ok, reason)
     )
+    monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     # Admission ends with a real MCMC fit-gate; stub it to succeed so these
     # bookkeeping tests don't sample (the stub candidate isn't a real PyMC model).
     # The stub fit is not a real trace: pass the convergence gate.
@@ -181,6 +182,7 @@ def test_admit_rejects_candidate_whose_fit_raises(tmp_path, monkeypatch):
     monkeypatch.setattr(
         model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
     )
+    monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     _stub_fit_raises(monkeypatch)
     models_dir = _models_dir_with_seed(tmp_path)
     cand_dir = _candidate_dir(tmp_path, hypothesis="People use heuristic H.\n")

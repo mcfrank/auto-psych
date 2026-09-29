@@ -162,6 +162,9 @@ class TestAdmitCandidateImportGate:
             "src.pipelines.inner_loop.model_zoo.model_logp_is_finite",
             return_value=(True, ""),
         ), patch(
+            "src.pipelines.inner_loop.model_zoo.model_contract_violation",
+            return_value=None,
+        ), patch(
             "src.pipelines.inner_loop.model_zoo.fit_model"
         ), patch(
             "src.pipelines.inner_loop.model_zoo.convergence_problems_of",

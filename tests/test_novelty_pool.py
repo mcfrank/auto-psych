@@ -121,6 +121,7 @@ def _stub_prediction_plumbing(monkeypatch, fitted_by_name):
 def _stub_admission_gates(monkeypatch):
     monkeypatch.setattr(model_zoo, "load_pymc_model", lambda name, models_dir: object())
     monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
+    monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -10.0)
 
 
@@ -465,6 +466,7 @@ def _patch_scoring(monkeypatch):
     monkeypatch.setattr(scoring, "compare_table", fake_compare)
     monkeypatch.setattr(model_zoo, "compare_table", fake_compare)
     monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
+    monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     # The stub fit is not a real trace: pass the convergence gate.
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())

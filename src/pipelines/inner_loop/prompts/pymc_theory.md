@@ -82,15 +82,20 @@ Inside the `with pm.Model() as model:` block:
 - Put **priors** on every free cognitive parameter (e.g. `pm.HalfNormal`,
   `pm.Beta`, `pm.Normal`). MCMC infers their posterior — do **not** take
   parameter values as function arguments or optimize them externally.
-- Expose the per-trial response probability as a named `pm.Deterministic`
-  (e.g. `p_left`) so downstream code can read predictions.
-- Define a **likelihood** over the response — typically `pm.Bernoulli` (two
-  options) or `pm.Categorical`. The `observed=` argument must be the **exact
-  `pm.Data` tensor** for the observed response (e.g.
+- Expose the per-trial probability of choosing the left sequence as
+  `pm.Deterministic("p_left", ...)`, one value per trial: the design, the
+  novelty check and the evaluation read predictions from it.
+- Define the **likelihood** as one `pm.Bernoulli` over the response whose
+  probability is exactly `p_left` (e.g.
   `y = pm.Data("chose_left", ...); pm.Bernoulli("response", p=p_left, observed=y)`).
-  Do **not** wrap, copy, or derive a new variable from the response container
-  before passing it to `observed=` — the pipeline introspects the graph to
-  identify the response container, and it must be the same node.
+  The `observed=` argument must be the **exact `pm.Data` tensor** for the
+  response. Do **not** wrap, copy, reorder or derive a new variable from it
+  (`1 - y` is not the responses), and apply any lapse, mixture or bias to
+  `p_left` itself, not only inside the likelihood. Admission checks this data
+  contract without sampling — the observed data are `chose_left` in row
+  order, `p_left` has one entry per trial, and the likelihood's probability of
+  each response is Bernoulli(`chose_left`; `p_left`) — and rejects a model that
+  breaks it. No `pm.Potential` may depend on the responses.
 
 **Allowed imports (enforced — candidates that import anything else are rejected
 at admission):** `arviz`, `collections`, `dataclasses`, `functools`,
@@ -150,7 +155,7 @@ or likelihood is NaN or `-inf` is rejected (it would crash MCMC at its
 start-value check). So:
 
 - Keep `p_left` strictly inside `(0, 1)`. A `sigmoid`/`softmax` already does
-  this; if you build a probability another way, clamp it with
+  this; if you build a probability another way, clamp `p_left` itself with
   `pt.clip(p, 1e-6, 1 - 1e-6)`.
 - Use `pt.abs(x)` for absolute value — **not** `pt.sqrt(x ** 2)`, which returns
   NaN in PyTensor for some inputs.
@@ -196,7 +201,7 @@ your instructions — `hypothesis.md` (non-empty), `model_name.txt` (one
 snake_case line) and `candidate.py` — then run the check command documented in
 `CONTEXT.md`. It loads `candidate.py` the way admission does (a module-level
 `model: pm.Model`), binds the real responses, checks the log-probability is
-finite, completes a short MCMC fit and checks ELPD-LOO is finite, printing
+finite and the data contract holds, completes a short MCMC fit and checks ELPD-LOO is finite, printing
 `OK` or the exact reason admission would reject the file. Fix anything it
 reports before you finish. A candidate with no `hypothesis.md` is rejected; a
 missing or invalid `model_name.txt` demotes your model to an auto-generated

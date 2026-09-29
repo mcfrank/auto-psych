@@ -727,8 +727,11 @@ receive `problem_definition.md`, which is also excluded from the agent tree.
    starts empty.
 4. `_drop_unfittable_models` (model_zoo.py:284) runs `model_logp_is_finite`
    (pymc_inference.py:83). This checks that responses bind, and that the
-   initial-point logp and its gradient are finite. Failures are dropped and
-   recorded in the ledger as `dropped`. The step raises only if nothing survives.
+   initial-point logp and its gradient are finite. It then runs
+   `model_contract_violation` (model_contract.py; the data contract, §5.9
+   gate 5a). Failures are dropped and recorded in the ledger as `dropped`,
+   except a protected seed that breaks the contract: that raises. The step
+   raises if nothing survives.
 5. `_drop_nonfinite_elpd_models` (model_zoo.py:325) is the experiment's first
    MCMC pass. `fit_models_to_cache` fits the whole set concurrently. Models
    whose fit fails or whose ELPD-LOO is non-finite are dropped (`dropped`),
@@ -1039,7 +1042,7 @@ step). Then `_export` (§5.13).
 `<harness sys.executable> -m src.pipelines.inner_loop.check_candidate --candidate-dir <dir> --responses <pooled csv>`.
 The interpreter is the venv through the opaque `$AGENT_DIR/venv` link, and the
 command runs from the agent tree's code. It runs, in order: the code gate,
-load, finite logp and gradient, a smoke fit (100 draws, 100 tune, 1 chain,
+load, finite logp and gradient, the data contract (§5.9 gate 5a), a smoke fit (100 draws, 100 tune, 1 chain,
 1 core, no cache dir), and finite ELPD-LOO. It prints `OK` or the rejection
 reason in admission's own wording. It does **not** check `hypothesis.md`,
 convergence (one chain has no R-hat, and the smoke fit is never refit) or
@@ -1059,6 +1062,7 @@ the candidate (`reject` records it in the ledger with the reason):
 | 3 | code gate | AST walk, `import_gate.py`: imports only from numpy, pymc, pytensor, arviz, scipy, math, itertools, functools, collections, re, typing, dataclasses, statistics, operator; relative imports and unparseable source are forbidden; no use of the names `open`, `__import__`, `exec`, `eval`, `compile`, `globals`, `vars`, `locals`, `getattr`, `setattr`, `delattr`, `breakpoint`, `input`, `__builtins__`, `__loader__`, `__spec__`; no attribute (nor `from … import` name, nor dotted import component) in `FORBIDDEN_ATTRIBUTES`: module names that allowed modules re-export (`.sys`, `.os`, `.builtins`, `.io`, `.npyio`, …), file readers and writers (`.open`, `.read`, `.load`, `.DataSource`, `.read_*`, `.to_csv`, `.save`, …), `attrgetter`/`methodcaller`, and introspection routes (`__dict__`, `__traceback__`, frame attributes, …); no `str.format` whose fields look up attributes (`"{0.sys}".format(...)`). The same gate screens critique statistics, which run with `pd` injected. The harness also clears `sys.argv`/`sys.orig_argv` once parsed (`forget_command_line`), since they name the GT |
 | 4 | loadable | `load_pymc_model`: a module-level `model: pm.Model`, with hooks attached |
 | 5 | finite logp and gradient at the initial point on the pooled responses | `model_logp_is_finite`. A code error raised in the candidate's own file (a `NameError` in its `compute_features`) is a rejection with the error; the same error raised by the harness, or an infrastructure error, still raises (`is_model_failure`). Before 2026-09-28 every `NameError`/`AttributeError` raised, ending the cell, in admission and in the concurrent prefit |
+| 5a | data contract | `model_contract_violation` (model_contract.py), no sampling: binds the pooled responses and evaluates the graph at the initial point and at 3 points jittered by U(-1, 1) on the unconstrained scale (fixed seed). The observed data must equal the CSV's `chose_left` in row order (a model fitted to `1 - chose_left`, or to reordered rows, which misaligns pointwise LOO and so `dse`/pruning, is rejected); there must be exactly one observed variable and no `pm.Potential` that depends on the responses; `p_left` must exist and have one entry per trial; the observed variable's log-likelihood must be one term per trial, and at every test point where it is finite exp(log-likelihood) must equal Bernoulli(chose_left; p_left) within 1e-5 on the probability scale (`CONTRACT_PROBABILITY_TOLERANCE`: float64 paths agree to ~1e-15 and clip guards move it by their width; a 1% lapse after `p_left` moves it by ~0.004). Reason: "model breaks the data contract — …". Also run on every starting model at experiment start and by the self-check. Added 2026-09-28 (second audit B13, first audit D5) |
 | 6 | real fit | full production `fit_model` (§5.3), cached, with the escalation refit if the first fit is a near miss, each sampling run limited to 15 min: "too slow to fit: … was still sampling after the 15-minute limit and was stopped. Every sampling run of a candidate's admission fit has a 15-minute limit. Make the model cheaper to evaluate …" (vectorise over trials, features once per unique sequence, fewer weakly identified parameters). A sampling error reads "MCMC sampling failed (<Type>: <message>)" |
 | 7 | convergence | the returned fit passes the gate (§5.3). For a multi-chain fit the rejection reason says either that the fit, a near miss, already ran at target_accept ≥ 0.95, or that it was too far from converging for smaller steps to help (and gives the near-miss thresholds); either way raising target_accept will not help. It suggests changing the geometry: non-centred parameterisations, tighter priors on weakly constrained parameters, fewer weakly identified parameters, no hard thresholds (it used to suggest declaring `SAMPLER_SETTINGS = {"target_accept": 0.95}`, which the refit had already done) |
 | 8 | finite ELPD-LOO | from that fit |

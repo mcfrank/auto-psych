@@ -98,6 +98,7 @@ def test_a_non_converged_candidate_is_rejected_with_the_numbers_and_the_fix(tmp_
     (cand / "hypothesis.md").write_text("People do Y.\n", encoding="utf-8")
     monkeypatch.setattr(model_zoo, "load_pymc_model", lambda n, d: object())
     monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
+    monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: ["12 divergent transitions"])
     monkeypatch.setattr(model_zoo, "convergence_diagnostics_of", lambda fitted: NEAR_MISS)

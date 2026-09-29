@@ -213,6 +213,10 @@ def test_the_novelty_gate_rejects_a_candidate_whose_p_left_cannot_be_predicted(
 ):
     models_dir = _write_models(tmp_path / "models", {"good": _GOOD})
     _stub_fit_and_scoring(monkeypatch)
+    # The data-contract gate now rejects these before any fit
+    # (test_model_contract.py); switched off here so the novelty gate's own
+    # defence is still exercised.
+    monkeypatch.setattr(model_zoo, "model_contract_violation", lambda *a, **k: None)
     ledger = HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
 
     admission = model_zoo._admit_candidate_with_reason(
