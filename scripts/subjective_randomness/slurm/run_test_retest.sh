@@ -16,7 +16,7 @@
 #   * GT_MODELS pinned to the current seed models; the setup job validates this
 #     list against the config's gt_models and aborts (afterok) if they drift.
 #   * full-strength config (scripts/.../configs/holdout_recovery.yaml:
-#     n_experiments=3, inner loop 2x3, draws=2000/tune=1000/chains=4).
+#     n_experiments=3, inner loop 2x3, draws=1000/tune=1000/chains=4).
 #
 # Keep GT_MODELS below in sync with the config's gt_models. This run's set (the
 # superseded pre-consolidation models): bayesian_diagnosticity,

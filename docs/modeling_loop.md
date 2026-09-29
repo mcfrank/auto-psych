@@ -71,7 +71,7 @@ loop's critique agent and candidate agents.
 | Live-set cap | 8 models, seeds included | `MAX_LIVE_MODELS` (model_zoo.py:717) |
 | Agent backend / model | `opencode` / `google/gemini-3.1-pro-preview` | sbatch `--backend ${AGENT_BACKEND:-opencode}` (sbatch:372); config `agent.model` unless `AGENT_MODEL` is set |
 | Agent timeout | 1800 s per agent attempt | config `agent.timeout_sec` |
-| Production MCMC | 2000 draws, 1000 tune, 4 chains, target_accept 0.8 (a model's declared value is a floor), max_treedepth 10, seed 42 | config `fit` + `_FIT_DEFAULTS` (pymc_inference.py:350), `resolve_fit_settings` (pymc_inference.py:421) |
+| Production MCMC | 1000 draws (2000 until 2026-09-27), 1000 tune, 4 chains, target_accept 0.8 (a model's declared value is a floor), max_treedepth 10, seed 42 | config `fit` + `_FIT_DEFAULTS` (pymc_inference.py:350), `resolve_fit_settings` (pymc_inference.py:421) |
 | Convergence gate | ≤ 0.1% divergent transitions, R-hat ≤ 1.05, bulk ESS ≥ 100; one refit at target_accept 0.95 when a failed fit is a near miss (≤ 2% divergent, R-hat ≤ 1.2, bulk ESS ≥ 20) | `mcmc_defaults.py` (`MAX_*`, `NEAR_MISS_*`) |
 | Candidate fit time limit | 15 min of wall-clock time per sampling run of a candidate's admission fit (first fit, near-miss refit); seeds and carried models are not limited | `CANDIDATE_FIT_TIME_LIMIT_SEC` (mcmc_defaults.py) |
 | Eval pool | exhaustive same-length pairs, lengths 1..8, minus trained pairs; ≤500 posterior draws per prediction | config `eval_pool` |
@@ -667,7 +667,7 @@ declared `target_accept` is a **floor** on the caller's (pymc_inference.py:449-4
 
 | Setting | Value in the loop | Source |
 | --- | --- | --- |
-| draws / tune | 2000 / 1000 | config `fit` (defaults would be 4000/3000, mcmc_defaults.py:13-14) |
+| draws / tune | 1000 / 1000 (draws were 2000 until 2026-09-27) | config `fit` (defaults would be 4000/3000, mcmc_defaults.py:13-14) |
 | chains | 4 | config, and sbatch `--chains ${CHAINS:-4}` |
 | target_accept | 0.8; 0.9 for `motif_stack` (it declares 0.9, which is a floor over the config's 0.8); 0.95 on an escalated refit | config; `SAMPLER_SETTINGS`; `ESCALATED_TARGET_ACCEPT` |
 | max_treedepth | 10 | `_FIT_DEFAULTS` |
@@ -675,14 +675,18 @@ declared `target_accept` is a **floor** on the caller's (pymc_inference.py:449-4
 | random_seed | 42 | `_FIT_DEFAULTS`: the same seed for every fit in every cell |
 | log-likelihood | stored (`idata_kwargs={"log_likelihood": True}`) | needed for LOO |
 
-That gives 8,000 posterior draws per fit.
+That gives 4,000 posterior draws per fit (8,000 before 2026-09-27). The
+critique's 1000 posterior-predictive replicates, the evaluation's ≤ 500
+thinned draws and PSIS-LOO (`good_k` = min(1 − 1/log10 S, 0.7) = 0.7 at both
+sizes) need no more; bulk ESS ≥ 100 is a count per fit, so it is now reached
+with half the draws.
 
 **Convergence gate** (`convergence_problems`, pymc_inference.py:853, over the
 model's free RVs). A fit has not converged if any of these holds:
 
 - the trace records no `diverging` statistic;
 - divergent transitions > `MAX_DIVERGENCE_FRACTION = 0.001` of all draws
-  (more than 8 of 8,000);
+  (more than 4 of 4,000);
 - max R-hat > `MAX_R_HAT = 1.05`, or R-hat is undefined (e.g. one chain);
 - min bulk ESS < `MIN_BULK_ESS = 100`.
 
@@ -787,9 +791,9 @@ experiment means every carried model is refit on it.
   (`EXACT_TRIAL_LOGLIK_SPREAD`). A clipped, saturated `p_left` produces this.
   Exact trials are exempt.
 - A trial is *bad* if it is not exact and not `k ≤ good_k`, so an infinite or
-  NaN k counts as bad. `good_k` is arviz's value from `az.loo`. With 8,000
-  draws this should be 0.7, but I read that from arviz's formula rather than
-  checking the installed version.
+  NaN k counts as bad. `good_k` is arviz's value from `az.loo`. With 4,000
+  draws it is 0.7 (arviz 0.x: min(1 − 1/log10 S, 0.7); checked in the
+  installed version on 2026-09-27).
 - The model is *unreliable* if `n_bad / n_points > 0.01`
   (`DEFAULT_BAD_K_TOLERANCE`). The denominator counts all trials, exact ones
   included.
@@ -988,7 +992,7 @@ or carried model stays in the zoo, likewise unselectable and unprunable.
   (seeds, carried models and every model admitted earlier in this experiment,
   including this round's; nothing is pruned before the end of the experiment):
   posterior-mean `p_left` on the pool, from the production fit on the pooled
-  data, averaged over all 8,000 draws (no thinning). A model that binds
+  data, averaged over all 4,000 draws (no thinning). A model that binds
   `participant_id` is averaged over the training participant ids. A candidate
   that needs other non-stimulus columns (e.g. `trial_index`) is rejected.
   A candidate whose `p_left` is undefined (NaN or outside [0, 1]) on any pool
@@ -1338,8 +1342,7 @@ Bugs and behaviour worth a decision (read from the code, not observed in a run):
 - **The fitted-seed baseline does not mask undefined predictions**, unlike
   the trajectory: a seed with an invalid `p_left` on some held-out pair raises.
 
-Things I did not verify at runtime (read from code only): arviz's `good_k`
-value at 8,000 draws (assumed 0.7), `az.compare`'s default weight method
+Things I did not verify at runtime (read from code only): `az.compare`'s default weight method
 (stacking), whether `pm.sample_prior_predictive(draws=1)` of `p_left` under
 `pm.do` is exactly deterministic for every GT (it should be, since all free
 RVs are fixed and `p_left` is a Deterministic of them and the data), how many
