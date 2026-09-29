@@ -17,12 +17,20 @@ from src.models.mcmc_defaults import (
     CANDIDATE_CHECK_TUNE,
 )
 from src.pipelines.inner_loop.check_candidate import check_candidate_command
-from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
+from src.pipelines.inner_loop.hypothesis_ledger import (
+    HypothesisLedger,
+    collapse_whitespace,
+)
 from src.pipelines.inner_loop.import_gate import CANDIDATE_IMPORT_ALLOWLIST
 from src.pipelines.inner_loop.model_zoo import (
     DEFAULT_PRUNE_DSE_MULTIPLIER,
+    SLOT_EXPLORE,
+    SLOT_REFINE_CHOSEN,
+    SLOT_REFINE_INCUMBENT,
+    SLOT_ROLES,
     _manifest_entries,
     _manifest_names,
+    parse_prune_margin,
 )
 from src.pipelines.outer_loop.columns import RAW_RESPONSE_COLUMNS
 from src.runtime.config import REPO_ROOT
@@ -173,6 +181,193 @@ def _write_existing_hypotheses(
     return text
 
 
+def _write_refinement_menu(
+    candidate_dir: Path,
+    models_dir: Path,
+    comparison: Optional[Dict[str, Dict[str, Any]]],
+    ledger: HypothesisLedger,
+    *,
+    incumbent: str,
+) -> str:
+    """Write ``refinement_menu.md``: the models a refinement slot may refine.
+
+    One ranked list of every model in the project other than the incumbent:
+    the live models, best first by their ``az.compare`` standing, then the
+    models the ledger records as pruned (in this experiment or an earlier
+    one), narrowest margin first — each with its hypothesis in full, its
+    standing or prune margin, and its source (``models/<name>.py``, or
+    ``models/pruned/<name>.py`` when this run pruned it; a model pruned in an
+    earlier experiment has no file in this tree and is listed by hypothesis
+    alone, and says so). Framed as a menu, not a blacklist: the retired
+    hypotheses an exploratory slot is told not to re-propose are exactly
+    what a refinement slot exists to draw on. Returns the text (it is also
+    injected into the agent's prompt).
+    """
+    entries = _manifest_entries(models_dir)
+    names = [e["name"] for e in entries]
+    if incumbent not in names:
+        raise ValueError(
+            f"The incumbent {incumbent!r} is not in the model set {names}; the "
+            "refinement menu lists the models other than it."
+        )
+    live = [e for e in entries if e["name"] != incumbent]
+    if comparison:
+        ranked = [e for e in live if e["name"] in comparison]
+        unranked = [e for e in live if e["name"] not in comparison]
+        ranked.sort(key=lambda e: int(comparison[e["name"]]["rank"]))
+        live = ranked + unranked
+    pruned = sorted(
+        ledger.pruned(live_names=names), key=lambda e: parse_prune_margin(e.detail)
+    )
+
+    lines = [
+        "# Refinement menu",
+        "",
+        f"The models you may refine, other than the incumbent `{incumbent}`. Each "
+        "entry is one mechanism: its hypothesis in full as its author stated "
+        "it, how it stands, and where its source is. This is a menu, not a "
+        "list of what is ruled out: a pruned model lost to the best model on "
+        "the data it was scored on, by the stated margin, but its mechanism may "
+        "be partly right — and a model that lost narrowly is the most promising "
+        "target here. Read the source of the model you pick before you write "
+        "anything.",
+        "",
+        "## Live models other than the incumbent (in the set; best first)",
+        "",
+    ]
+    if not live:
+        lines += ["No live model other than the incumbent.", ""]
+    for entry in live:
+        name = entry["name"]
+        if comparison and name in comparison:
+            standing = _describe_standing(comparison[name])
+        else:
+            standing = "no comparison row"
+        hypothesis = (entry.get("rationale") or "").strip() or "(no stated hypothesis)"
+        lines += [
+            f"### {name} — {standing}",
+            "",
+            f"**Hypothesis:** {collapse_whitespace(hypothesis)}",
+            "",
+            f"**Source:** `{models_dir / f'{name}.py'}`",
+            "",
+        ]
+    lines += ["## Pruned models (out of the set; narrowest margin first)", ""]
+    if not pruned:
+        lines += ["No model has been pruned yet in this project.", ""]
+    for entry in pruned:
+        source = models_dir / "pruned" / f"{entry.name}.py"
+        if source.exists():
+            source_line = f"**Source:** `{source}`"
+        else:
+            source_line = (
+                "**Source:** none in this experiment's tree — the model was "
+                "pruned in an earlier experiment, and only its hypothesis above "
+                "is carried."
+            )
+        outcome = f"pruned ({entry.context})" if entry.context else "pruned"
+        lines += [
+            f"### {entry.name} — {outcome}",
+            "",
+            f"**Margin:** {entry.detail}",
+            "",
+            f"**Hypothesis:** {entry.hypothesis or '*(none recorded)*'}",
+            "",
+            source_line,
+            "",
+        ]
+    text = "\n".join(lines)
+    (candidate_dir / "refinement_menu.md").write_text(text, encoding="utf-8")
+    return text
+
+
+# What the round brief says the slot's job is, in CONTEXT.md's heading.
+_ROLE_LABELS = {
+    SLOT_EXPLORE: "exploratory slot",
+    SLOT_REFINE_INCUMBENT: "refinement slot: the incumbent",
+    SLOT_REFINE_CHOSEN: "refinement slot: a model of your choosing",
+}
+
+# The two rules a refinement slot lifts (the exploratory brief keeps both;
+# lens 0 of the battery carries the anti-grafting clause).
+_ONE_HYPOTHESIS_RULE = (
+    "Your candidate must express **exactly one** cognitive hypothesis. Do not "
+    "average, weight, or mix cues or mechanisms from several hypotheses into a "
+    "single model — a blended mega-model is not a hypothesis.\n"
+)
+_REFINEMENT_RULES = (
+    "For this slot the rule against grafting cues from other models onto a "
+    "hypothesis is lifted, and so is the rule against composing mechanisms: "
+    "you may add a component from another model. Two things still hold: make "
+    "**one** deliberate, stated change (a grab-bag of cues added to fit better "
+    "is not a refinement), and change something that matters — the novelty "
+    "gate rejects a candidate whose predictions match a live model's across "
+    "the stimulus space"
+)
+
+
+def _incumbent_brief(
+    models_dir: Path,
+    comparison: Optional[Dict[str, Dict[str, Any]]],
+    incumbent: str,
+    critique_note: str,
+) -> str:
+    """The brief of an incumbent-refinement slot: the incumbent, named."""
+    entries = {e["name"]: e for e in _manifest_entries(models_dir)}
+    if incumbent not in entries:
+        raise ValueError(
+            f"The incumbent {incumbent!r} is not in the model set "
+            f"{sorted(entries)}; a refinement slot cannot name it."
+        )
+    hypothesis = (entries[incumbent].get("rationale") or "").strip()
+    hypothesis = collapse_whitespace(hypothesis) or "(no stated hypothesis)"
+    if comparison and incumbent in comparison:
+        standing = _describe_standing(comparison[incumbent])
+    else:
+        standing = "the best model of the latest scoring step"
+    return (
+        "# Candidate Brief\n\n"
+        f"Refine the incumbent: `{incumbent}` — {standing}. Its hypothesis, as "
+        "its author stated it:\n\n"
+        f"> {hypothesis}\n\n"
+        f"Its source is `{models_dir / f'{incumbent}.py'}`. Read it before you "
+        "write anything.\n\n"
+        "Produce the version of this model you believe would beat it on the "
+        "current data: keep the mechanism that makes it win and change what it "
+        "gets wrong — a different functional form, prior or normalisation of "
+        "its mechanism, a cue it ignores, or a component taken from another "
+        f"model in `refinement_menu.md`. {_REFINEMENT_RULES}, the incumbent's "
+        "included.\n\n"
+        "Say in `hypothesis.md` which model you refined and what you changed: "
+        "that is part of the claim.\n"
+        f"{critique_note}"
+    )
+
+
+def _chosen_brief(incumbent: str, critique_note: str) -> str:
+    """The brief of an agent-chosen refinement slot: pick from the menu."""
+    return (
+        "# Candidate Brief\n\n"
+        "Refine a model of your choosing — any model in `refinement_menu.md`, "
+        "which lists every model in this project other than the incumbent "
+        f"`{incumbent}` (the incumbent has its own refinement slots this "
+        "round). The menu gives the other live models, with their standing "
+        "against the best, and the models pruned earlier, with the margin by "
+        "which each lost and — when this experiment pruned it — its source "
+        "under `models/pruned/`. A pruned model lost on the data it was scored "
+        "on, but its mechanism may be partly right, and this slot exists to "
+        "find out. Choose the model whose mechanism you judge most promising "
+        "and most improvable — a narrow loser over a distant one, unless you "
+        "see exactly what the distant one got wrong — read its source, and "
+        "produce the version of it that could overtake the incumbent.\n\n"
+        f"{_REFINEMENT_RULES}, and a pruned model re-implemented as it was "
+        "would pass the gate only to lose again by the same margin.\n\n"
+        "Say in `hypothesis.md` which model you chose and what you changed: "
+        "that is part of the claim.\n"
+        f"{critique_note}"
+    )
+
+
 def _write_candidate_context(
     candidate_dir: Path,
     responses_path: Path,
@@ -188,20 +383,31 @@ def _write_candidate_context(
     lens_index: Optional[int] = None,
     attempt_note: Optional[str] = None,
     omit_from_attempted: Iterable[str] = (),
+    role: str = SLOT_EXPLORE,
+    incumbent: Optional[str] = None,
 ) -> Dict[str, Optional[str]]:
     """Write the candidate's context documents and return their text.
 
     The files (CONTEXT.md, CANDIDATE_BRIEF.md, existing_hypotheses.md,
-    attempted_hypotheses.md, critiques.md, ATTEMPT_NOTE.md) stay on disk for
-    audit/reproducibility, but the returned strings are what actually reach
-    the agent — they are injected verbatim into its prompt (see
-    ``_build_candidate_prompt``), so steering content is never optional
-    reading. ``lens_index`` selects the exploration lens for this candidate's
-    brief (see ``_lens_index``); when ``None`` falls back to
-    ``candidate_idx % len(hints)``. With a ``ledger``,
-    ``attempted_hypotheses.md`` lists every hypothesis tried earlier (this
-    experiment or a previous one) that is no longer in the model set, with
-    what happened to it.
+    attempted_hypotheses.md or refinement_menu.md, critiques.md,
+    ATTEMPT_NOTE.md) stay on disk for audit/reproducibility, but the returned
+    strings are what actually reach the agent — they are injected verbatim
+    into its prompt (see ``_build_candidate_prompt``), so steering content is
+    never optional reading.
+
+    ``role`` is the slot's role (``model_zoo.slot_roles``). An exploratory
+    slot's brief carries the lens ``lens_index`` selects (``None`` ⇒
+    ``candidate_idx % len(hints)``) and the one-hypothesis-no-blend rule, and
+    — with a ``ledger`` — ``attempted_hypotheses.md``: every hypothesis tried
+    earlier (this experiment or a previous one) that is no longer in the
+    model set, framed as "do not re-propose". A refinement slot
+    (``SLOT_REFINE_INCUMBENT``: refine ``incumbent``, named in the brief;
+    ``SLOT_REFINE_CHOSEN``: refine a non-incumbent model of the agent's
+    choosing) carries no lens, lifts the anti-grafting and anti-composition
+    rules, and gets ``refinement_menu.md`` — the live and pruned models as
+    targets — in place of the retired list; it requires ``incumbent`` and
+    ``ledger``. The role is the slot's assignment: which model the agent
+    refined is stated in its ``hypothesis.md`` and never parsed.
 
     ``attempt_note`` is the note a retry or repair attempt of this slot opens
     with (see ``_retry_note`` / ``_repair_note``); ``None`` for a slot's first
@@ -210,6 +416,13 @@ def _write_candidate_context(
     model it is repairing, so those names are left out of
     ``attempted_hypotheses.md``.
     """
+    if role not in SLOT_ROLES:
+        raise ValueError(f"Unknown slot role {role!r}; expected one of {SLOT_ROLES}.")
+    refining = role != SLOT_EXPLORE
+    if refining and incumbent is None:
+        raise ValueError(f"A {role!r} slot needs the incumbent's name.")
+    if refining and ledger is None:
+        raise ValueError(f"A {role!r} slot's refinement menu needs the ledger.")
     candidate_dir.mkdir(parents=True, exist_ok=True)
     with responses_path.open(encoding="utf-8") as f:
         header = f.readline().strip()
@@ -218,7 +431,8 @@ def _write_candidate_context(
     feature_cols = [c for c in columns if c not in raw_set]
     raw_sequence_cols = [c for c in ("sequence_a", "sequence_b") if c in columns]
     lines = [
-        f"# Inner Loop — round {iteration}, candidate {candidate_idx} of {candidate_count}",
+        f"# Inner Loop — round {iteration}, candidate {candidate_idx} of "
+        f"{candidate_count} ({_ROLE_LABELS[role]})",
         "",
         f"Responses CSV: `{responses_path}`",
         f"Columns in the responses CSV: `{header}`",
@@ -291,19 +505,34 @@ def _write_candidate_context(
         check_candidate_command(candidate_dir, responses_path),
         "```",
         "",
-        "`existing_hypotheses.md` lists the hypotheses already in the model set and",
-        "how well each fits. Read it so you propose a *distinct* or *refined*",
-        "hypothesis — never a blend of several — under a name not already taken.",
     ]
-    if ledger is not None:
+    if refining:
         lines += [
+            "`existing_hypotheses.md` lists the hypotheses already in the model set and",
+            "how well each fits. This is a refinement slot — `CANDIDATE_BRIEF.md` says",
+            "which model you improve — so your model is a better version of one already",
+            "proposed, under a name not already taken.",
             "",
-            "`attempted_hypotheses.md` lists the hypotheses tried earlier — in this",
-            "experiment or a previous one — that are no longer in the model set,",
-            "with what happened to each (pruned after losing by a stated margin, or",
-            "rejected at admission, most often as a near-duplicate of a model still",
-            "in the set). Do not re-propose any of them under a new name.",
+            "`refinement_menu.md` lists the models you may draw on — the live models",
+            "other than the incumbent and the models pruned earlier — with their full",
+            "hypotheses, their standing or the margin by which they lost, and their",
+            "source files. Read the source of the model you refine.",
         ]
+    else:
+        lines += [
+            "`existing_hypotheses.md` lists the hypotheses already in the model set and",
+            "how well each fits. Read it so you propose a *distinct* or *refined*",
+            "hypothesis — never a blend of several — under a name not already taken.",
+        ]
+        if ledger is not None:
+            lines += [
+                "",
+                "`attempted_hypotheses.md` lists the hypotheses tried earlier — in this",
+                "experiment or a previous one — that are no longer in the model set,",
+                "with what happened to each (pruned after losing by a stated margin, or",
+                "rejected at admission, most often as a near-duplicate of a model still",
+                "in the set). Do not re-propose any of them under a new name.",
+            ]
     if critique_path is not None:
         lines += [
             "",
@@ -322,7 +551,12 @@ def _write_candidate_context(
         candidate_dir, models_dir, current_posterior, comparison=comparison
     )
     attempted_text: Optional[str] = None
-    if ledger is not None:
+    menu_text: Optional[str] = None
+    if refining:
+        menu_text = _write_refinement_menu(
+            candidate_dir, models_dir, comparison, ledger, incumbent=incumbent
+        )
+    elif ledger is not None:
         # A name passed as "live" is simply left out of the retired list.
         attempted_text = ledger.render_markdown(
             live_names=[*_manifest_names(models_dir), *omit_from_attempted]
@@ -337,23 +571,26 @@ def _write_candidate_context(
         critiques_text = critique_path.read_text(encoding="utf-8")
         (candidate_dir / "critiques.md").write_text(critiques_text, encoding="utf-8")
 
-    hints = list(hints) if hints is not None else list(DEFAULT_CANDIDATE_HINTS)
-    if lens_index is None:
-        lens_index = candidate_idx % len(hints)
     critique_note = (
         "\nIf `critiques.md` is present, prioritise a hypothesis that addresses one of "
         "the significant discrepancies it reports.\n"
         if critique_path is not None
         else ""
     )
-    brief = (
-        "# Candidate Brief\n\n"
-        f"{hints[lens_index]}\n\n"
-        "Your candidate must express **exactly one** cognitive hypothesis. Do not "
-        "average, weight, or mix cues or mechanisms from several hypotheses into a "
-        "single model — a blended mega-model is not a hypothesis.\n"
-        f"{critique_note}"
-    )
+    if role == SLOT_REFINE_INCUMBENT:
+        brief = _incumbent_brief(models_dir, comparison, incumbent, critique_note)
+    elif role == SLOT_REFINE_CHOSEN:
+        brief = _chosen_brief(incumbent, critique_note)
+    else:
+        hints = list(hints) if hints is not None else list(DEFAULT_CANDIDATE_HINTS)
+        if lens_index is None:
+            lens_index = candidate_idx % len(hints)
+        brief = (
+            "# Candidate Brief\n\n"
+            f"{hints[lens_index]}\n\n"
+            f"{_ONE_HYPOTHESIS_RULE}"
+            f"{critique_note}"
+        )
     (candidate_dir / "CANDIDATE_BRIEF.md").write_text(brief, encoding="utf-8")
 
     return {
@@ -361,6 +598,7 @@ def _write_candidate_context(
         "brief": brief,
         "existing_hypotheses": hypotheses_text,
         "attempted": attempted_text,
+        "menu": menu_text,
         "critiques": critiques_text,
         "attempt_note": attempt_note,
     }
@@ -403,7 +641,9 @@ def _build_candidate_prompt(
     cannot skip the round brief, the current hypotheses, or the critique. The
     same documents exist as files in the working directory for reference. A
     retry or repair attempt's note (``docs["attempt_note"]``) goes right after
-    the output instructions, before any other document.
+    the output instructions, before any other document. An exploratory slot
+    carries ``attempted_hypotheses.md``; a refinement slot carries
+    ``refinement_menu.md`` instead.
     """
     sections = [
         f"{_THEORY_PROMPT.read_text(encoding='utf-8')}",
@@ -437,6 +677,8 @@ def _build_candidate_prompt(
         sections.insert(3, docs["attempt_note"])
     if docs.get("attempted"):
         sections.append(f"## attempted_hypotheses.md\n\n{docs['attempted']}")
+    if docs.get("menu"):
+        sections.append(f"## refinement_menu.md\n\n{docs['menu']}")
     if docs.get("critiques"):
         sections.append(f"## critiques.md\n\n{docs['critiques']}")
     return "\n\n".join(sections) + "\n"

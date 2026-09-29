@@ -14,12 +14,18 @@ Read these files in the current working directory before deciding what to write:
    each stands on the current data by ELPD-LOO rank (`elpd_diff ± dse` against
    the best model). Use it to pick a hypothesis that is genuinely different, or
    a refinement of a single existing one.
-4. `attempted_hypotheses.md` — hypotheses tried earlier that are no longer in
-   the model set, with what happened to each: pruned after losing to the best
-   model by a stated margin, or rejected at admission (most often as a
-   near-duplicate of a model still in the set). Do not propose any of them
-   again under a new name; a mechanism that lost by a wide margin is ruled out,
-   and one already covered by a live model needs no second copy.
+4. `attempted_hypotheses.md` — in an *exploratory* slot: hypotheses tried
+   earlier that are no longer in the model set, with what happened to each:
+   pruned after losing to the best model by a stated margin, or rejected at
+   admission (most often as a near-duplicate of a model still in the set). Do
+   not propose any of them again under a new name; a mechanism that lost by a
+   wide margin is ruled out, and one already covered by a live model needs no
+   second copy.
+5. `refinement_menu.md` — in a *refinement* slot (your brief says which kind
+   of slot this is): the models you may refine — the live models other than
+   the incumbent and the models pruned earlier — each with its full
+   hypothesis, its standing or the margin by which it lost, and its source
+   file. A menu, not a blacklist.
 
 ## Goal
 
@@ -32,7 +38,10 @@ Do **NOT** build a mixture-of-heuristics: no averaging, weighting, or Dirichlet-
 model. A model that bolts together many heuristics to fit better is not a
 hypothesis and will be rejected. Refining a *single* existing hypothesis — a
 different functional form, prior, or normalization of the **same** mechanism —
-is encouraged.
+is encouraged. In a *refinement* slot (`CANDIDATE_BRIEF.md` says so) the rule
+against grafting is lifted: you may extend the model you refine with one
+component from another model, as a single stated change. A model that bolts
+together many heuristics to fit better is not a hypothesis in any slot.
 
 ## Step 1 — `hypothesis.md`
 

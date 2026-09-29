@@ -73,24 +73,80 @@ def _is_all_no_file_round(round_results: list[dict]) -> bool:
     )
 
 
+# ─────────────────────────────────────────────
+# Slot roles and the lens walk
+# ─────────────────────────────────────────────
+
+# A round's candidate slots have roles. Exploratory slots walk the lens
+# battery — breadth: a new mechanism per slot. Refinement slots improve a
+# model already proposed — depth: two refine the incumbent (the best model of
+# the latest scoring step, named in the brief) and one refines a
+# non-incumbent model of the agent's choosing, live or pruned, from a menu.
+# Before this the loop had three breadth mechanisms (the novelty gate, the
+# ledger's "do not re-propose", pruning) and no depth mechanism: in the
+# September 2026 sweep the exported best model never changed from its
+# starting seed (0 of 27 scoring steps), and a partially correct mechanism,
+# once pruned, could not be revived by design. A role is the slot's
+# *assignment*: it shapes the prompt and the ledger context. Which model the
+# agent actually refined is stated in its hypothesis, in prose; nothing in
+# the pipeline parses it or branches on it. See the decision record.
+SLOT_EXPLORE = "explore"
+SLOT_REFINE_INCUMBENT = "refine incumbent"
+SLOT_REFINE_CHOSEN = "refine chosen"
+SLOT_ROLES = (SLOT_EXPLORE, SLOT_REFINE_INCUMBENT, SLOT_REFINE_CHOSEN)
+
+
+def slot_roles(candidate_count: int) -> List[str]:
+    """The role of each of a round's ``candidate_count`` slots, in slot order.
+
+    At four or more slots: ``candidate_count - 3`` exploratory slots, then
+    two incumbent-refinement slots, then one agent-chosen refinement slot.
+    Below four the refinement slots are given up one at a time — the second
+    incumbent slot first, then the chosen slot, then the last incumbent slot
+    — and the exploratory slot never is: ``[explore]`` at one slot,
+    ``[explore, refine incumbent]`` at two, ``[explore, refine incumbent,
+    refine chosen]`` at three. Zero slots is a round that only scores.
+    """
+    if candidate_count < 0:
+        raise ValueError(f"candidate_count cannot be negative; got {candidate_count}.")
+    n_incumbent = 2 if candidate_count >= 4 else min(1, max(candidate_count - 1, 0))
+    n_chosen = 1 if candidate_count >= 3 else 0
+    n_explore = candidate_count - n_incumbent - n_chosen
+    return (
+        [SLOT_EXPLORE] * n_explore
+        + [SLOT_REFINE_INCUMBENT] * n_incumbent
+        + [SLOT_REFINE_CHOSEN] * n_chosen
+    )
+
+
+def exploratory_slots_per_round(candidate_count: int) -> int:
+    """How many of a round's slots walk the lens battery (see ``slot_roles``)."""
+    return slot_roles(candidate_count).count(SLOT_EXPLORE)
+
+
 def _lens_offset(exp_num: int, *, max_iterations: int, candidate_count: int) -> int:
     """The lens-schedule position at which experiment ``exp_num`` starts.
 
-    Experiment k spends ``max_iterations * candidate_count`` candidate slots, so
-    experiment k+1 continues the walk through the lens battery where k stopped.
+    Only exploratory slots walk the battery, so experiment k spends
+    ``max_iterations * exploratory_slots_per_round(candidate_count)`` lenses
+    and experiment k+1 continues the walk where k stopped.
     """
     if exp_num < 1:
         raise ValueError(f"Experiment numbers start at 1; got {exp_num}.")
-    return (exp_num - 1) * max_iterations * candidate_count
+    return (exp_num - 1) * max_iterations * exploratory_slots_per_round(candidate_count)
 
 
 def _lens_index(
-    lens_offset: int, iteration: int, candidate_count: int, candidate_idx: int, n_lenses: int
+    lens_offset: int,
+    iteration: int,
+    exploratory_per_round: int,
+    exploratory_idx: int,
+    n_lenses: int,
 ) -> int:
-    """Which lens candidate ``candidate_idx`` of round ``iteration`` works."""
+    """Which lens the ``exploratory_idx``-th exploratory slot of round ``iteration`` works."""
     if n_lenses < 1:
         raise ValueError("The lens battery is empty.")
-    return (lens_offset + iteration * candidate_count + candidate_idx) % n_lenses
+    return (lens_offset + iteration * exploratory_per_round + exploratory_idx) % n_lenses
 
 
 # ─────────────────────────────────────────────
@@ -450,6 +506,29 @@ def _min_prediction_rmse(
     return nearest, nearest_rmse
 
 
+# The ledger ``detail`` of a prune is the margin behind the model that won,
+# in a fixed form the refinement menu reads back to rank pruned models by how
+# narrowly they lost (``LedgerEntry`` cannot gain a numeric field: its key set
+# is fixed, so an inherited ledger would become unreadable).
+_PRUNE_MARGIN_RE = re.compile(r"^(?P<nats>\d+(?:\.\d+)?) nats behind \S+")
+
+
+def prune_margin_detail(*, elpd_diff: float, dse: float, baseline: str) -> str:
+    """The ledger ``detail`` of a prune: nats behind ``baseline`` and the dse ratio."""
+    return f"{elpd_diff:.1f} nats behind {baseline} ({elpd_diff / dse:.1f}× dse)"
+
+
+def parse_prune_margin(detail: str) -> float:
+    """The nats a pruned model lost by, read back from ``prune_margin_detail``'s text."""
+    match = _PRUNE_MARGIN_RE.match(detail)
+    if match is None:
+        raise ValueError(
+            "Not a prune margin (expected '<nats> nats behind <model> ...'): "
+            f"{detail!r}"
+        )
+    return float(match.group("nats"))
+
+
 # Pruning: after each scoring pass, a non-protected model is dropped when it is
 # statistically distinguishable from the best (elpd_diff > multiplier·dse among
 # PSIS-LOO-reliable rows). The surviving set is the uncertainty set — every
@@ -590,9 +669,8 @@ def _prune_losers(
             if src.exists():
                 shutil.move(str(src), str(pruned_dir / f"{name}{suffix}"))
         evict_fit_cache(name)
-        margin = (
-            f"{row['elpd_diff']:.1f} nats behind {baseline} "
-            f"({row['elpd_diff'] / row['dse']:.1f}× dse)"
+        margin = prune_margin_detail(
+            elpd_diff=row["elpd_diff"], dse=row["dse"], baseline=baseline
         )
         print(
             f"  [prune] {name}: elpd_diff {row['elpd_diff']:.1f} > "

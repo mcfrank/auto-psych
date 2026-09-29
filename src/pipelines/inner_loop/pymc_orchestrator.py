@@ -55,6 +55,9 @@ from src.pipelines.inner_loop.model_zoo import (
     DEFAULT_PRUNE_DSE_MULTIPLIER,
     MAX_EMPTY_ROUND_RETRIES,
     NOVELTY_POOL_FILENAME,
+    SLOT_EXPLORE,
+    SLOT_REFINE_CHOSEN,
+    SLOT_REFINE_INCUMBENT,
     AllCandidatesNoFileError,
     _NO_FILE_DETAIL,
     _admit_candidate_with_reason,
@@ -68,6 +71,7 @@ from src.pipelines.inner_loop.model_zoo import (
     _resolve_candidate_name,
     _seed_model_set,
     novelty_pool_rows,
+    slot_roles,
 )
 
 from src.pipelines.inner_loop.critique_round import (
@@ -108,10 +112,16 @@ class _Slot:
     again, is final — so every slot ends admitted or with a recorded reason the
     agent had a chance to act on. In the 2026-09 sweep 29% of slots ended as
     "no candidate.py written" and no rejected candidate ever saw its reason.
+
+    A slot has a ``role`` (``model_zoo.slot_roles``), fixed across its
+    attempts: an exploratory slot works the lens ``lens``; a refinement slot
+    has no lens and refines the round's incumbent or a model of the agent's
+    choosing.
     """
 
     idx: int
-    lens: int
+    role: str
+    lens: Optional[int] = None
     directory: Path = field(init=False)
     docs: Dict[str, Optional[str]] = field(init=False)
     ledger_context: str = field(init=False)
@@ -121,6 +131,17 @@ class _Slot:
     retried: bool = False
     repaired: bool = False
     result: Optional[Dict[str, str]] = None
+
+
+def _slot_context(slot: _Slot, incumbent: str) -> str:
+    """The ledger-context fragment naming a slot and its assignment."""
+    if slot.role == SLOT_EXPLORE:
+        return f"candidate {slot.idx} lens {slot.lens}"
+    if slot.role == SLOT_REFINE_INCUMBENT:
+        return f"candidate {slot.idx} refine incumbent {incumbent}"
+    if slot.role == SLOT_REFINE_CHOSEN:
+        return f"candidate {slot.idx} refine chosen"
+    raise ValueError(f"Unknown slot role {slot.role!r} for candidate {slot.idx}.")
 
 
 def _copy_rejected_attempt(previous_dir: Path, repair_dir: Path) -> None:
@@ -190,7 +211,12 @@ def run_pymc_inner_loop(
         Number of candidate-generation rounds. ``0`` only fits/compares the seed
         set (no agent is spawned).
     candidate_count
-        Candidate models proposed per round.
+        Candidate slots per round. Slots have roles (``model_zoo.slot_roles``):
+        with four or more, ``candidate_count - 3`` exploratory slots walk the
+        lens battery, two refine the incumbent (named in the brief) and one
+        refines a non-incumbent model of the agent's choosing from a menu of
+        the live and pruned models; at three, one of each; at two, one
+        exploratory and one incumbent slot; at one, exploratory only.
     complexity_prior_const
         Passed through to ``model_posterior`` (negative penalises complex models).
     fit_kwargs
@@ -207,9 +233,9 @@ def run_pymc_inner_loop(
         threshold for a significant discrepancy, and the posterior-predictive replicates
         forming each statistic's null distribution.
     candidate_hints
-        Exploration lenses cycled across a round's candidates (``None`` ⇒
-        ``DEFAULT_CANDIDATE_HINTS``). With ``candidate_count <= len(hints)``
-        every candidate in a round works a distinct lens.
+        Exploration lenses cycled across a round's exploratory slots (``None``
+        ⇒ ``DEFAULT_CANDIDATE_HINTS``). With no more exploratory slots than
+        lenses, every exploratory slot in a round works a distinct lens.
     novelty_rmse_threshold
         Reject a candidate whose posterior-mean ``p_left`` is within this RMSE
         of an admitted model's on the loop's novelty pool — a broad stimulus
@@ -314,6 +340,13 @@ def run_pymc_inner_loop(
 
         round_context = f"{ledger_context} round {iteration}".strip()
         round_results: List[Dict[str, str]] = []
+        # The incumbent the refinement slots work on: the best model of the
+        # latest scoring step, exactly as history.json records it (and as the
+        # critique above critiqued), so the brief, the record and the
+        # critique name the same model.
+        incumbent = history[-1]["best_model"]
+        roles = slot_roles(candidate_count)
+        n_exploratory = roles.count(SLOT_EXPLORE)
 
         for attempt in range(1 + MAX_EMPTY_ROUND_RETRIES):
             if attempt == 0:
@@ -352,20 +385,23 @@ def run_pymc_inner_loop(
                     omit_from_attempted=(
                         [slot.previous_name] if slot.previous_name else ()
                     ),
+                    role=slot.role,
+                    incumbent=incumbent,
                 )
                 slot.ledger_context = (
-                    f"{round_context} candidate {slot.idx} lens {slot.lens}"
-                    f"{context_suffix}"
+                    f"{round_context} {_slot_context(slot, incumbent)}{context_suffix}"
                 )
 
             slots: List[_Slot] = []
-            for idx in range(candidate_count):
-                slot = _Slot(
-                    idx=idx,
-                    lens=_lens_index(
-                        lens_offset, iteration, candidate_count, idx, n_lenses
-                    ),
-                )
+            exploratory_idx = 0
+            for idx, role in enumerate(roles):
+                lens: Optional[int] = None
+                if role == SLOT_EXPLORE:
+                    lens = _lens_index(
+                        lens_offset, iteration, n_exploratory, exploratory_idx, n_lenses
+                    )
+                    exploratory_idx += 1
+                slot = _Slot(idx=idx, role=role, lens=lens)
                 prepare(slot, attempt_dir / f"candidate_{idx}")
                 slots.append(slot)
 

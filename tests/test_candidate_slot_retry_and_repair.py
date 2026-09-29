@@ -156,10 +156,12 @@ def test_empty_slot_is_retried_once_in_its_own_directory(tmp_path, monkeypatch):
         "first_idea",
         "second_idea",
     ]
+    # Slot 1 of a two-slot round is the incumbent-refinement slot; its
+    # context names the incumbent, and the retry keeps it.
     slot_1 = [r for r in _ledger_rows(results_dir) if "candidate 1" in r["context"]]
     assert [(r["outcome"], r["context"]) for r in slot_1] == [
-        ("rejected", "experiment1 round 0 candidate 1 lens 1"),
-        ("admitted", "experiment1 round 0 candidate 1 lens 1 retry 1"),
+        ("rejected", "experiment1 round 0 candidate 1 refine incumbent model_a"),
+        ("admitted", "experiment1 round 0 candidate 1 refine incumbent model_a retry 1"),
     ]
     assert slot_1[0]["detail"] == "no candidate.py written"
     assert slot_1[1]["name"] == "second_idea"
@@ -167,20 +169,22 @@ def test_empty_slot_is_retried_once_in_its_own_directory(tmp_path, monkeypatch):
 
 def test_retry_keeps_the_slot_lens(tmp_path, monkeypatch):
     """The retry works the same exploration lens as the attempt it repeats —
-    it is the same slot, not a new one in the rotation."""
+    it is the same slot, not a new one in the rotation. (Slot 0 is the
+    exploratory slot of a three-slot round; slots 1 and 2 are refinement
+    slots, whose retries keep their role — see test_refinement_slots_loop.)"""
     _patch_scoring(monkeypatch)
     briefs = {}
 
     def fake_spawn(candidate_dir, docs, **kwargs):
         briefs[candidate_dir.name] = docs["brief"]
-        if candidate_dir.name != "candidate_2":
+        if candidate_dir.name != "candidate_0":
             _write_candidate(candidate_dir, name=f"idea_{candidate_dir.name}")
         return True
 
     _run(tmp_path, monkeypatch, fake_spawn, candidate_count=3)
 
-    assert briefs["candidate_2_retry_1"] == briefs["candidate_2"]
-    assert briefs["candidate_2"] != briefs["candidate_1"]
+    assert briefs["candidate_0_retry_1"] == briefs["candidate_0"]
+    assert briefs["candidate_0"] != briefs["candidate_1"]
 
 
 def test_empty_slot_that_stays_empty_is_final(tmp_path, monkeypatch):
@@ -200,11 +204,11 @@ def test_empty_slot_that_stays_empty_is_final(tmp_path, monkeypatch):
     assert spawns == ["candidate_0", "candidate_1", "candidate_1_retry_1"]
     slot_1 = [r for r in _ledger_rows(results_dir) if "candidate 1" in r["context"]]
     assert [(r["outcome"], r["detail"], r["context"]) for r in slot_1] == [
-        ("rejected", "no candidate.py written", "experiment1 round 0 candidate 1 lens 1"),
+        ("rejected", "no candidate.py written", "experiment1 round 0 candidate 1 refine incumbent model_a"),
         (
             "rejected",
             "no candidate.py written",
-            "experiment1 round 0 candidate 1 lens 1 retry 1",
+            "experiment1 round 0 candidate 1 refine incumbent model_a retry 1",
         ),
     ]
     assert _manifest_names(results_dir / "models") == ["model_a", "model_b", "only_idea"]
@@ -231,8 +235,8 @@ def test_failed_agent_process_is_retried_and_recorded(tmp_path, monkeypatch):
     assert spawns == ["candidate_0", "candidate_1", "candidate_1_retry_1"]
     slot_1 = [r for r in _ledger_rows(results_dir) if "candidate 1" in r["context"]]
     assert [(r["outcome"], r["context"]) for r in slot_1] == [
-        ("rejected", "experiment1 round 0 candidate 1 lens 1"),
-        ("admitted", "experiment1 round 0 candidate 1 lens 1 retry 1"),
+        ("rejected", "experiment1 round 0 candidate 1 refine incumbent model_a"),
+        ("admitted", "experiment1 round 0 candidate 1 refine incumbent model_a retry 1"),
     ]
     assert "agent process failed" in slot_1[0]["detail"]
     assert "late_idea" in _manifest_names(results_dir / "models")

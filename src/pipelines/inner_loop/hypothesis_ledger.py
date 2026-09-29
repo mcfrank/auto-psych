@@ -148,6 +148,16 @@ class HypothesisLedger:
             latest[entry.name] = entry
         return [entry for name, entry in latest.items() if name not in live]
 
+    def pruned(self, live_names: Iterable[str]) -> List[LedgerEntry]:
+        """The retired entries whose latest outcome is ``pruned``, in ledger order.
+
+        These are the models that entered the set and lost — the refinement
+        menu's targets (with ``models/pruned/<name>.py`` beside the zoo when
+        this run pruned them). The other retired entries — rejected
+        candidates that never entered, dropped seeds — are not targets.
+        """
+        return [entry for entry in self.retired(live_names) if entry.outcome == "pruned"]
+
     def render_markdown(self, live_names: Iterable[str]) -> str:
         """The candidate brief's "already tried — do not re-propose" section."""
         retired = self.retired(live_names)

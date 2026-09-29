@@ -3,10 +3,12 @@
 The brief's lens was ``hints[candidate_idx % len(hints)]``: with three
 candidates per round only lenses 0-2 ever fired (72 briefs each in the
 iteration-4 recovery sweep, none for lenses 3-6). The lens now walks the
-battery across rounds *and* experiments: slot
-``lens_offset + iteration * candidate_count + idx`` modulo the battery size,
-where the outer loop sets ``lens_offset`` from the experiment number so
-experiment k+1 continues where experiment k stopped.
+battery across rounds *and* experiments, over the round's *exploratory*
+slots (``model_zoo.slot_roles``; refinement slots carry no lens): the
+``exploratory_idx``-th exploratory slot of a round works lens
+``lens_offset + iteration * exploratory_per_round + exploratory_idx`` modulo
+the battery size, where the outer loop sets ``lens_offset`` from the
+experiment number so experiment k+1 continues where experiment k stopped.
 """
 
 from __future__ import annotations
@@ -43,18 +45,22 @@ def test_lens_index_formula():
 
 
 def test_lens_schedule_covers_the_battery_across_experiments():
+    """Six candidates a round (three exploratory slots), two rounds an
+    experiment: two experiments fire every lens of the battery exactly once
+    and the third starts the walk again. Three candidates a round is one
+    exploratory slot, so an experiment of two rounds spends two lenses."""
     n = len(DEFAULT_CANDIDATE_HINTS)
     fired = Counter()
-    for exp_num in (1, 2, 3):
-        offset = _lens_offset(exp_num, max_iterations=2, candidate_count=3)
+    for exp_num in (1, 2):
+        offset = _lens_offset(exp_num, max_iterations=2, candidate_count=6)
         for iteration in range(2):
             for idx in range(3):
                 fired[_lens_index(offset, iteration, 3, idx, n)] += 1
-    assert set(fired) == set(range(n))
-    assert max(fired.values()) - min(fired.values()) <= 1
-    assert _lens_offset(2, max_iterations=2, candidate_count=3) == 6
-    assert _lens_index(6, 0, 3, 0, n) == 6
-    assert _lens_index(6, 0, 3, 1, n) == 7 % n
+    assert fired == Counter({lens: 1 for lens in range(n)})
+    assert _lens_offset(2, max_iterations=2, candidate_count=6) == 6
+    assert _lens_offset(3, max_iterations=2, candidate_count=6) == 12
+    assert _lens_index(12, 0, 3, 0, n) == 12 % n
+    assert _lens_offset(2, max_iterations=2, candidate_count=3) == 2
 
 
 def test_empty_lens_battery_raises():
@@ -107,8 +113,9 @@ def _patch_loop_internals(monkeypatch):
 
 
 def test_brief_lens_matches_ledger_lens(tmp_path, monkeypatch):
-    """The lens text in a candidate's CANDIDATE_BRIEF.md matches the lens
-    index the ledger records for that slot."""
+    """The lens text in an exploratory slot's CANDIDATE_BRIEF.md matches the
+    lens index the ledger records for that slot; at three candidates only
+    slot 0 is exploratory, and the two refinement slots carry no lens."""
     _patch_loop_internals(monkeypatch)
     briefs = {}
 
@@ -143,8 +150,12 @@ def test_brief_lens_matches_ledger_lens(tmp_path, monkeypatch):
     )
 
     n = len(DEFAULT_CANDIDATE_HINTS)
+    assert sorted(briefs) == [(0, 0), (0, 1), (0, 2), (1, 0), (1, 1), (1, 2)]
     for (rnd, idx), brief in briefs.items():
-        expected_lens = (6 + rnd * 3 + idx) % n
+        if idx != 0:
+            assert not any(h in brief for h in DEFAULT_CANDIDATE_HINTS), (rnd, idx)
+            continue
+        expected_lens = (6 + rnd * 1 + idx) % n
         expected_text = DEFAULT_CANDIDATE_HINTS[expected_lens]
         assert expected_text in brief, (rnd, idx, expected_lens)
         others = [h for h in DEFAULT_CANDIDATE_HINTS if h != expected_text]
@@ -157,8 +168,9 @@ def test_brief_lens_matches_ledger_lens(tmp_path, monkeypatch):
         if r["outcome"] == "admitted"
     }
     assert contexts["idea_0_0"] == "experiment2 round 0 candidate 0 lens 6"
-    assert contexts["idea_0_1"] == f"experiment2 round 0 candidate 1 lens {7 % n}"
-    assert contexts["idea_1_2"] == f"experiment2 round 1 candidate 2 lens {11 % n}"
+    assert contexts["idea_1_0"] == f"experiment2 round 1 candidate 0 lens {7 % n}"
+    assert contexts["idea_0_1"] == "experiment2 round 0 candidate 1 refine incumbent model_a"
+    assert contexts["idea_1_2"] == "experiment2 round 1 candidate 2 refine chosen"
 
 
 # ── (c) Outer loop threads lens_offset from experiment number ──────────
@@ -205,7 +217,9 @@ def test_outer_loop_sets_lens_offset_from_experiment_number(
         candidate_count=3,
         project_id="subjective_randomness",
     )
-    assert captured["lens_offset"] == 12
+    # Experiment 3 follows two experiments of two rounds with one exploratory
+    # slot each (three candidates a round): four lenses spent.
+    assert captured["lens_offset"] == 4
 
 
 def test_outer_loop_refuses_experiment_dir_without_a_number(
