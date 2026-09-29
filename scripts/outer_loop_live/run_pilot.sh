@@ -48,7 +48,7 @@ echo
 if (( N_EXPERIMENTS > 1 )); then
   echo "  experiment URLs   : ${EXP_BASE}/e{1..$N_EXPERIMENTS}-${RUN_LABEL}/"
   echo "  NOTE: $N_EXPERIMENTS studies run in SEQUENCE — make sure walltime ($WALLTIME${QOS:+, qos=$QOS})"
-  echo "        covers ~${N_EXPERIMENTS}x (deploy + up to 2h recruiting + modeling)."
+  echo "        covers ~${N_EXPERIMENTS}x (deploy + up to 3h recruiting + modeling)."
 else
   echo "  experiment URL    : ${EXP_BASE}/e1-${RUN_LABEL}/"
 fi
@@ -71,7 +71,8 @@ fi
 # runs must NOT share a working directory (its public/, firebase.generated.json,
 # opencode.json). Give this run its OWN copy of the repo on $SCRATCH. We rsync
 # (not `git worktree`: el7's git is too old for it) so the copy captures your
-# CURRENT working tree — no commit required. Excludes .git/.secrets/data/caches;
+# CURRENT working tree — no commit required (the commit it came from, and
+# whether the tree was dirty, is recorded below). Excludes .git/.secrets/data/caches;
 # code + assets come along, and we render the study config into the copy.
 WT="$WORK_ROOT/runs/$RUN_LABEL/repo"; mkdir -p "$WT"
 rsync -a --delete \
@@ -81,6 +82,11 @@ rsync -a --delete \
   --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
   "$REPO"/ "$WT"/
 touch "$WT/.here"   # pyprojroot sentinel (.git is excluded from the copy)
+# The copy has no .git, so record the checkout's commit (and whether its tree
+# was dirty, untracked files included) into it: the deploy writes it into the
+# deployment manifest, and refuses to deploy without it.
+(cd "$REPO" && "$VENV_PY" -m src.pipelines.outer_loop.deployment.record_provenance \
+  --checkout "$REPO" --copy "$WT") || fail "could not record the checkout's commit in the run copy"
 # Render the study config into the COPY from your current pilot.yaml (leaves your
 # main checkout untouched).
 "$VENV_PY" "$WT/scripts/outer_loop_live/_pilot_config.py" "$CONFIG" --render-only \

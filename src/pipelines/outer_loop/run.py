@@ -544,6 +544,16 @@ def _run_experiment_stages(
                 )
                 print(f"\nExperiment {exp_num} (test) complete. Outputs: {exp_dir_path}", flush=True)
                 return
+            if prolific_mode == "none" and mode == "live":
+                # A live run with no Prolific study: the page is deployed for
+                # you to try, and there is no study to collect from.
+                print(
+                    "\n  [none] Experiment deployed with no Prolific study. Open the "
+                    "experiment URL to try it. Stopping before collection/modeling.",
+                    flush=True,
+                )
+                print(f"\nExperiment {exp_num} (deploy only) complete. Outputs: {exp_dir_path}", flush=True)
+                return
 
     print(f"\nExperiment {exp_num} complete. Outputs: {exp_dir_path}", flush=True)
 
@@ -641,7 +651,8 @@ class Args:
     slots (None ⇒ the inner loop's built-in lens battery)."""
     novelty_rmse_threshold: Optional[float] = None
     """Reject a candidate whose p_left is within this RMSE of an admitted
-    model's (None ⇒ inner-loop default 0.02; 0 disables the gate)."""
+    model's on the loop's novelty pool (None ⇒ inner-loop default 0.002; 0
+    disables the gate)."""
     prune_dse_multiplier: Optional[float] = None
     """At the end of each experiment, prune every model (starting models
     included) with elpd_diff > multiplier*dse_clustered against the best
@@ -761,6 +772,22 @@ def main(args: Args) -> None:
         print(
             f"  [test] prolific_mode=test runs only experiment {exp_ids[0]} (a draft to "
             f"preview); skipping {exp_ids[1:]}.",
+            file=sys.stderr,
+            flush=True,
+        )
+        exp_ids = exp_ids[:1]
+    # Likewise a full live run with no study: it deploys experiment 1's page
+    # and stops (a resume with --agent collects from a study already recorded).
+    deploys_without_a_study = (
+        args.prolific_mode == "none"
+        and args.mode == "live"
+        and args.deploy_target != "none"
+        and args.agent is None
+    )
+    if deploys_without_a_study and len(exp_ids) > 1:
+        print(
+            f"  [none] a live run with prolific_mode=none deploys only experiment "
+            f"{exp_ids[0]} (no study to collect from); skipping {exp_ids[1:]}.",
             file=sys.stderr,
             flush=True,
         )

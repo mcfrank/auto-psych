@@ -1,6 +1,9 @@
-# Prolific settings for test_prolific and (future) live mode.
-# Copy to prolific_config.yaml and set test_participant_email.
-# The test participant email must NOT already be registered on Prolific.
+# Prolific study settings (--prolific-mode test / live). Normally rendered as
+# prolific_config.yaml from the `prolific:` block of a launcher config
+# (scripts/outer_loop_live/_pilot_config.py --render-only); never committed.
+# There is no place count here: --n-participants sets the study's places, the
+# design's N and the collection target (a total_available_places that differs
+# from it stops run.py).
 
 estimated_completion_time: 5   # minutes
 completion_code: AUTO_PSYCH_COMPLETE
@@ -9,8 +12,6 @@ completion_code: AUTO_PSYCH_COMPLETE
 #                                     analytically (the monitor flags degenerate runs).
 #   MANUALLY_REVIEW — hold submissions for you to approve/reject.
 completion_code_action: AUTOMATICALLY_APPROVE
-test_participant_email: "your-test@example.com"   # required for --mode test_prolific
-total_available_places: 1
 reward: 50   # cents
 name: "Auto-psych test"
 description: "Test run (test participant)."

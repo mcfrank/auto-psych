@@ -61,6 +61,10 @@ for i in "${_runs[@]}"; do
     --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
     "$REPO"/ "$WT"/
   touch "$WT/.here"   # pyprojroot sentinel (.git excluded)
+  # The copy has no .git: record the checkout's commit (and whether its tree was
+  # dirty, untracked files included) into it; the deploy refuses without it.
+  (cd "$REPO" && "$VENV_PY" -m src.pipelines.outer_loop.deployment.record_provenance \
+    --checkout "$REPO" --copy "$WT")
   # Each run deploys to its OWN Firebase Hosting site so concurrent deploys don't
   # clobber the shared live site (the bug that 404'd all but the last run). Site
   # IDs must be lowercase and <=30 chars; the deploy creates it if missing.
