@@ -13,8 +13,9 @@ Active development is organized around two explicit loops:
 
 - `src/pipelines/outer_loop`: **experiment loop**. Each experiment starts from
   a model set — seeded from the project's `seed_models/` in experiment 1
-  (currently the best models discovered by three earlier human replicate runs)
-  and carried forward verbatim afterwards; there is no theorist agent. The
+  (four literature models of subjective randomness) and carried forward
+  afterwards (the previous experiment's surviving models); there is no
+  theorist agent. The
   design stage is programmatic (no design agent): it enumerates the full H/T
   pair space and greedily selects (lazy batched greedy, float32, on every
   allocated CPU) the jointly most informative stimulus set by
@@ -40,10 +41,13 @@ Active development is organized around two explicit loops:
   Candidates are admitted only if they fit by MCMC, achieve finite ELPD-LOO,
   and are **genuinely novel** (a candidate predicting within 0.002 RMSE of an
   existing model's `p_left` on a broad, loop-generated stimulus pool — not the
-  training stimuli — is rejected as a duplicate) and whose MCMC converged.
-  At the end of each experiment, agent models that are statistically
-  distinguishable losers are pruned, and the live set is capped at 8 models
-  (the seeded set is never pruned). The live set — the winner and every
+  training stimuli — is rejected as a duplicate), whose MCMC converged, and
+  whose admission fit finishes each sampling run within 30 minutes.
+  At the end of each experiment, models that are statistically
+  distinguishable losers are pruned — the starting models included, since
+  2026-09-28 (earlier runs never pruned them; `starting_models.json` and
+  `holdout.json` record which rule a run used) — and the live set is capped
+  at 8 models. The live set — the winner and every
   model still within the margin of the best — is carried into
   `cognitive_models/`, and the next experiment's design uses a uniform model
   prior over it.
@@ -145,7 +149,13 @@ uv run python -m src.pipelines.outer_loop.run --project subjective_randomness --
   `/results` Cloud Function and refuses to fall back to synthetic data if no
   deployment is configured. Live deploys and collection both need
   `AUTO_PSYCH_RESULTS_TOKEN` in the environment (the shared secret for
-  `/results` and `/register_session`; see `docs/deployment_handoff.md`).
+  `/results` and `/register_session`; see `docs/deployment_handoff.md`). The
+  deploy puts the page up and registers its session before it creates the
+  Prolific draft (and, live only, publishes it), so a failed deploy leaves no
+  study; it records the commit the code came from — from git, or from the
+  `code_provenance.json` the live launchers write into their run copies — and
+  refuses to deploy without one. Collection waits up to 3 hours for the
+  study to fill, then pauses it and models what arrived.
 
 For `simulated_participants_nobrowser`, choose the participant-model backend:
 

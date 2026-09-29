@@ -22,6 +22,11 @@ agents, 1,000 draws × 4 chains at `target_accept` 0.8, Gemini agents. Each
 code "cell" is one hidden model × one repeat; a standard sweep is 4 × 5 = 20
 cells, repeats differing only in their random seed.
 
+**Two conditions.** Sweeps started before 28 September 2026 (the running
+Gemini sweeps included) never removed starting models; later ones can.
+`holdout.json` records `starting_models_prunable` (absent = never removed).
+Compare only like with like.
+
 **Hiding the answer.** The agents work in a trimmed copy of the repository
 without the hidden model, docs or tests, under a random folder name; a scan stops the cell if the hidden name appears anywhere the agents
 can see (`slurm/scan_gt_name.sh`); the data carry only the raw columns.
@@ -41,7 +46,8 @@ models weighted by the reported posterior.
 
 The comparison that matters is with **`fitted_baseline`**: the remaining
 starting models refitted to the same data, taking the best by ELPD-LOO
-(`elpd_best_r`, `elpd_best_rmse`). If the loop does not beat it, the agents
+(`elpd_best_r`, `elpd_best_rmse`). It uses the files the cell started with,
+including those the loop removed. If the loop does not beat it, the agents
 added nothing that refitting the literature could not.
 `fitted_baseline_by_experiment` gives it at the end of every experiment.
 
@@ -66,7 +72,9 @@ first (one cheap cell), then without `SMOKE` for the sweep, and
 `run_impossible_test_retest.sh` for the controls. Each chains setup, the cell
 array (1 day, 16 CPUs / 64 GB; impossible cells 8 CPUs / 32 GB), up to two
 rounds of automatic retries, and a summary. A sweep runs on one version of
-the code, recorded at setup.
+the code, recorded at setup. Claude agents need `CLAUDE_AUTH=subscription`
+or `api` and its key; agents that hit a usage limit wait for its reset (up
+to 12 h), and a proposal's fit may take up to 30 minutes per sampling run.
 
 ## Results so far
 
@@ -79,6 +87,4 @@ committed summaries in `data/results/holdout_test_retest/` are from the
 - `slurm/run_test_retest.sh` pins old model names and aborts; use
   `run_faithful_test_retest.sh` (its comments give outdated settings; the
   config is authoritative).
-- `slurm/README.md` describes the evaluation set as ~130k pairs including
-  different lengths; the code uses same-length pairs only.
 - The live presets do not use these settings (runbook § 3).

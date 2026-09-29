@@ -5,8 +5,8 @@ seeded from the project's `seed_models/` (experiment 1) or carried forward from
 the previous experiment (there is no theorist agent) → the exhaustive joint-EIG
 selection designs the stimuli programmatically (no design agent) → a coding
 agent implements a jsPsych experiment → it is **deployed to Firebase
-Hosting** + Cloud Functions → a **Prolific study** is created and published →
-the run polls for human submissions (≤ 2 h/experiment; a study still short of
+Hosting** + Cloud Functions → only then is a **Prolific study** created and
+published → the run polls for human submissions (≤ 3 h/experiment; a study still short of
 its target then is **paused** through the Prolific API), fetches results from
 the token-guarded `/results` endpoint, and runs the inner model loop (where all
 new models are conjectured).
@@ -22,8 +22,9 @@ and the npm registry directly.
   (participants/reward/length/name), and the modeling settings — all here.
 - `full_run.yaml` / `hero_run.yaml` — per-run configs for the **full-scale
   runs** launched via `start_full_run.sh` (K parallel copies). `hero_run.yaml`
-  is the scaled-up discovery config: 4 inner-loop rounds × 7 candidates (one
-  exploration lens each), the novelty gate + pruning knobs made explicit, and
+  is the scaled-up discovery config: 4 inner-loop rounds × 7 candidates (4
+  explore, each with its own lens; 2 refine the best model; 1 refines another
+  of its choice), the novelty gate + pruning knobs made explicit, and
   concurrent candidate agents.
 - `run_pilot.sh` — **the pilot launcher.** Reads `pilot.yaml`, renders the
   project's `prolific_config.yaml`, prints a cost summary, asks you to confirm,
@@ -74,8 +75,8 @@ and the npm registry directly.
      deployed functions hold it, and every `/results` fetch sends it as a
      header. A Firebase deploy or a live collection **fails loudly** without
      it.
-   - `GOOGLE_API_KEY` — only needed for simulated/Gemini paths; a pure live human
-     run does not use it.
+   - `GOOGLE_API_KEY` — the usual login of the default coding agents (opencode +
+     Gemini), live runs included, and of the simulated/Gemini paths.
 
 3. **Study + run config** — set everything in `scripts/outer_loop_live/pilot.yaml`
    (participants, reward, task length, study name/description, #experiments,
@@ -99,6 +100,7 @@ and the npm registry directly.
 
 ```bash
 cd ~/auto-psych
+export REPO=$PWD OUTER_LIVE_SLURM_DIR=$PWD/scripts/outer_loop_live   # the job finds _env.sh through it
 sbatch scripts/outer_loop_live/setup.sbatch
 # watch: squeue --me   |   then confirm "[setup] live import chain OK" in the log
 ```
@@ -120,7 +122,19 @@ It prints a **cost summary** (Prolific reward + fee, per experiment and in
 total; AI agent costs are not included, and the summary says so) and the live URL,
 asks you to type **`yes`** (this recruits real humans and spends real money),
 then submits the job and tells you how to monitor and how to stop. `CONFIRM=yes`
-skips the prompt.
+skips the prompt. The job runs from an rsync copy of your checkout without
+`.git`, so the launcher records the commit it came from, and whether the tree
+had uncommitted or untracked changes, in the copy's `code_provenance.json`;
+the deploy copies both into `deployment_manifest.json` and refuses to deploy
+from a copy without that record. If you later rsync fixed code into a run
+copy, record it again:
+`python -m src.pipelines.outer_loop.deployment.record_provenance --checkout "$REPO" --copy <run copy>`.
+
+**Deploy order.** The page is deployed and its collection session registered
+first; only then is the Prolific draft created, its id recorded, and (live
+only) the study published. A failed deploy leaves no study behind, so a plain
+relaunch is fine. `prolific_mode: none` deploys the page and stops;
+`test` also creates an unpublished draft, then stops.
 
 **Live-recruitment gate.** `prolific_mode: live` additionally requires
 `confirm_live_recruitment: true` in the config — the config bridge refuses to
@@ -179,7 +193,8 @@ sbatch --export=ALL,RUN_LABEL=pilotA,N_PARTICIPANTS=20 \
   scripts/outer_loop_live/run_live.sbatch
 ```
 
-**Several in parallel** (commit your code first — worktrees check out `HEAD`):
+**Several in parallel** (each run copies your current working tree and records
+its commit):
 
 ```bash
 K=3 N_PARTICIPANTS=20 bash scripts/outer_loop_live/submit_parallel.sh
@@ -198,7 +213,7 @@ Longer than ~2 days of wall-clock? Set `qos: long` in `pilot.yaml` (or add
 | Live experiment URL | hosting path `/e{N}-<label>/` (per `--run-label`) |
 | Participant data | `collection_sessions/<collection_session_id>/responses` — `collection_session_id` embeds the run-label, so `/results` reads only this run's data |
 | Prolific study | each run creates its own study |
-| **Firebase deploy op** (single shared site) | serialized by `AUTO_PSYCH_DEPLOY_LOCK` — only the brief deploy step; agents + the ≤2 h poll stay concurrent |
+| **Firebase deploy op** (single shared site) | serialized by `AUTO_PSYCH_DEPLOY_LOCK` — only the brief deploy step; agents + the ≤3 h poll stay concurrent |
 
 ## Validate without recruiting humans
 

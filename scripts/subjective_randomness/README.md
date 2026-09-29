@@ -164,8 +164,12 @@ Ground truths come from the recovery registry
 parameters. The **live seed pool** mirrors that registry's
 manifest, so a ground truth drawn from the active set is genuinely held out of
 experiment 1's seed pool. The seed baselines load each seed from the files
-the cell was seeded with (experiment 1's zoo), not from the registry, so a
-run is re-scored with the seeds it ran with. A ground truth the registry keeps only on disk (a
+the cell was seeded with (experiment 1's zoo, or its `pruned/` once the
+loop pruned a seed there), not from the registry, so a run is re-scored with
+the seeds it ran with. Since 2026-09-28 the loop prunes starting models like
+any other model; `holdout.json` records `starting_models_prunable` (absent in
+cells run before, which never pruned them), and results of the two
+conditions must not be pooled. A ground truth the registry keeps only on disk (a
 model the 2026-08 consolidation superseded, or an impossible theory) is absent
 from the pool already, and nothing is excluded.
 

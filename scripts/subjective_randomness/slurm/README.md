@@ -100,6 +100,10 @@ Watch: `squeue --me`. A full 3-model repeat takes hours; the array requests
   `holdout.json`) or missing (`cells`), and compares, at the end of every
   experiment, the loop's best model with the fitted-seed baseline fit on that
   experiment's data over the same cells (`loop_vs_fitted_baseline`).
+  Each cell's `holdout.json` records `starting_models_prunable` (true since
+  2026-09-28, when starting models became prunable like any other model;
+  absent in earlier sweeps, which never pruned them). Do not pool sweeps of
+  the two conditions.
 - `test_retest.csv` — one row per (gt_model, run) final-step metric.
 - `test_retest.png` — final r per ground-truth model across repeats.
 
@@ -243,7 +247,7 @@ MCMC. For each `holdout.json` it rebuilds the held-out set as the exhaustive pai
 space (still excluding that run's *trained* pairs), then re-correlates every
 trajectory step and both seed baselines against the ground truth — every per-step
 fit is a hit on the run's own `.nc` cache, so the only real cost is predicting
-held-out `p_left` over the ~130k-pair pool (`predict_max_draws` thins the
+held-out `p_left` over the ~43k same-length pairs (`predict_max_draws` thins the
 posterior to keep that bounded). The impossible runs were already exhaustive, so
 re-scoring them is ~idempotent; the sampled-pool runs are brought onto the same
 pool. The ground-truth generator is located automatically (the seed dir for a
