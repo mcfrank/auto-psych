@@ -30,9 +30,10 @@ import traceback
 from concurrent.futures import CancelledError, ProcessPoolExecutor, as_completed
 from concurrent.futures.process import BrokenProcessPool
 from multiprocessing import connection as mp_connection
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Union
 
 import numpy as np
 
@@ -1228,6 +1229,41 @@ class TimeLimitedFit:
 _FAILED_TIME_LIMITED_FITS: Dict[tuple, BaseException] = {}
 
 
+@contextmanager
+def _fit_process_caches() -> Iterator[str]:
+    """A temporary directory under which every fit process gets a cache
+    directory of its own (``_use_own_cache_dir``), removed afterwards.
+
+    On import, arviz 0.23 writes a once-a-day marker, ``<XDG cache>/arviz/
+    daily_warning``, through a fixed-name ``daily_warning.tmp`` whenever the
+    stored date is not today. Fit processes that import it together after
+    midnight collide on that file (one finds it already moved and raises
+    ``FileNotFoundError``), which ended 11 of 24 cells of a sweep.
+    """
+    with tempfile.TemporaryDirectory(prefix="fit-process-caches-") as root:
+        yield root
+
+
+def _use_own_cache_dir(cache_root: str) -> None:
+    """First step of every fit process: point ``XDG_CACHE_HOME`` at a new
+    directory of its own under ``cache_root``, before anything imports arviz."""
+    if "arviz" in sys.modules:
+        raise RuntimeError(
+            "arviz was imported in this fit process before it got a cache directory "
+            "of its own; arviz's once-a-day marker would be written to the shared one."
+        )
+    own = Path(cache_root) / str(os.getpid())
+    own.mkdir()
+    os.environ["XDG_CACHE_HOME"] = str(own)
+
+
+def _run_with_own_cache_dir(cache_root: str, target: Any, *args: Any) -> None:
+    """Entry point of a time-limited fit process: ``target(*args)`` with a
+    cache directory of its own."""
+    _use_own_cache_dir(cache_root)
+    target(*args)
+
+
 def _sample_in_own_session(
     name: str,
     models_dir: Path,
@@ -1347,48 +1383,50 @@ def sample_fits_time_limited(
             queue.append(i)
     context = multiprocessing.get_context("spawn")
     running: Dict[Any, tuple] = {}  # sentinel -> (index, process, receiver, deadline)
-    try:
-        while queue or running:
-            while queue and len(running) < workers:
-                i = queue.pop(0)
-                request = requests[i]
-                Path(request.cache_dir).mkdir(parents=True, exist_ok=True)
-                receiver, sender = context.Pipe(duplex=False)
-                process = context.Process(
-                    target=_target or _sample_in_own_session,
-                    args=(
-                        request.name, request.models_dir, request.responses_path,
-                        request.settings, request.cache_dir, sender,
-                    ),
-                    name=f"fit-{request.name}",
-                )
-                process.start()
-                sender.close()
-                running[process.sentinel] = (i, process, receiver, time.monotonic() + time_limit_sec)
-            next_deadline = min(entry[3] for entry in running.values())
-            finished = mp_connection.wait(
-                list(running), timeout=max(0.0, next_deadline - time.monotonic())
-            )
-            for sentinel in finished:
-                i, process, receiver, _ = running.pop(sentinel)
-                outcomes[i] = _fit_process_outcome(process, receiver, requests[i])
-            now = time.monotonic()
-            for sentinel, (i, process, receiver, deadline) in list(running.items()):
-                if now >= deadline:
-                    del running[sentinel]
-                    _stop_fit_process(process, requests[i])
+    with _fit_process_caches() as cache_root:
+        try:
+            while queue or running:
+                while queue and len(running) < workers:
+                    i = queue.pop(0)
                     request = requests[i]
-                    print(
-                        f"  [fit] {request.name}: still sampling after the "
-                        f"{time_limit_sec / 60:g}-minute limit; stopped.",
-                        flush=True,
+                    Path(request.cache_dir).mkdir(parents=True, exist_ok=True)
+                    receiver, sender = context.Pipe(duplex=False)
+                    process = context.Process(
+                        target=_run_with_own_cache_dir,
+                        args=(
+                            cache_root, _target or _sample_in_own_session,
+                            request.name, request.models_dir, request.responses_path,
+                            request.settings, request.cache_dir, sender,
+                        ),
+                        name=f"fit-{request.name}",
                     )
-                    outcomes[i] = FitTimeLimitExceeded(
-                        request.name, time_limit_sec, float(request.settings["target_accept"])
-                    )
-    finally:
-        for i, process, _, _ in running.values():
-            _stop_fit_process(process, requests[i])
+                    process.start()
+                    sender.close()
+                    running[process.sentinel] = (i, process, receiver, time.monotonic() + time_limit_sec)
+                next_deadline = min(entry[3] for entry in running.values())
+                finished = mp_connection.wait(
+                    list(running), timeout=max(0.0, next_deadline - time.monotonic())
+                )
+                for sentinel in finished:
+                    i, process, receiver, _ = running.pop(sentinel)
+                    outcomes[i] = _fit_process_outcome(process, receiver, requests[i])
+                now = time.monotonic()
+                for sentinel, (i, process, receiver, deadline) in list(running.items()):
+                    if now >= deadline:
+                        del running[sentinel]
+                        _stop_fit_process(process, requests[i])
+                        request = requests[i]
+                        print(
+                            f"  [fit] {request.name}: still sampling after the "
+                            f"{time_limit_sec / 60:g}-minute limit; stopped.",
+                            flush=True,
+                        )
+                        outcomes[i] = FitTimeLimitExceeded(
+                            request.name, time_limit_sec, float(request.settings["target_accept"])
+                        )
+        finally:
+            for i, process, _, _ in running.values():
+                _stop_fit_process(process, requests[i])
     for request, outcome in zip(requests, outcomes):
         if outcome is not None:
             _FAILED_TIME_LIMITED_FITS[(request.name, request.fingerprint(), time_limit_sec)] = outcome
@@ -1488,8 +1526,9 @@ def _fit_model_in_worker(
     return fitted.fingerprint
 
 
-def _fit_executor(workers: int) -> ProcessPoolExecutor:
-    """The pool the fits run in: fresh (spawned) interpreters, not forks.
+def _fit_executor(workers: int, cache_root: str) -> ProcessPoolExecutor:
+    """The pool the fits run in: fresh (spawned) interpreters, not forks, each
+    with a cache directory of its own under ``cache_root`` (``_fit_process_caches``).
 
     A worker forks PyMC's chain processes itself, so it must not be a daemon
     (``multiprocessing.Pool`` workers are; ``ProcessPoolExecutor``'s are not).
@@ -1500,7 +1539,10 @@ def _fit_executor(workers: int) -> ProcessPoolExecutor:
     repo's do; an ad-hoc script without one re-runs itself in each worker).
     """
     return ProcessPoolExecutor(
-        max_workers=workers, mp_context=multiprocessing.get_context("spawn")
+        max_workers=workers,
+        mp_context=multiprocessing.get_context("spawn"),
+        initializer=_use_own_cache_dir,
+        initargs=(cache_root,),
     )
 
 
@@ -1546,7 +1588,8 @@ def _sample_models_in_pool(
         )
         expected[name] = {first, refit}
     outcomes: Dict[str, Optional[BaseException]] = {}
-    with _fit_executor(min(workers, len(names))) as pool:
+    with _fit_process_caches() as cache_root, \
+            _fit_executor(min(workers, len(names)), cache_root) as pool:
         futures = {
             pool.submit(
                 _fit_model_in_worker,

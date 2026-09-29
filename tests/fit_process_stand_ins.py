@@ -49,3 +49,19 @@ def write_the_fit_and_hang(name, models_dir, responses_path, settings, cache_dir
     fingerprint = fit_fingerprint(name, Path(models_dir), Path(responses_path), settings)
     cached_fit_path(Path(cache_dir), name, fingerprint).write_text("fit")
     time.sleep(600)
+
+
+def import_arviz_and_write_the_fit(name, models_dir, responses_path, settings, cache_dir, sender):
+    """Import arviz (which writes its once-a-day marker under the cache
+    directory), then persist a stand-in fit and report success."""
+    import arviz  # noqa: F401
+
+    write_the_fit(name, models_dir, responses_path, settings, cache_dir, sender)
+
+
+def import_arviz_and_name_the_cache_dir() -> str:
+    """For a fit-pool worker: import arviz, then return the cache directory it
+    wrote its marker under."""
+    import arviz  # noqa: F401
+
+    return os.environ["XDG_CACHE_HOME"]
