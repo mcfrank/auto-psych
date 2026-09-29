@@ -78,75 +78,31 @@ if [[ -z "${GOOGLE_API_KEY:-}${GEMINI_API_KEY:-}" ]]; then
   echo "         opencode+gemini runs will fail. Set it before the array runs." >&2
 fi
 
-# Stage the sweep's code ONCE. Every job after this one (the array, its retries,
-# their analysis) runs on these copies, never on the live checkout: retries used
-# to re-run this setup days later, re-staging whatever $REPO held by then under
-# cells that had started on other code. $WORK_ROOT/code_commit records the
-# staged code's identity (code_commit.sh) and is written last, so a setup that
-# died mid-way stages again. A later setup on the same WORK_ROOT (a manual
-# resubmission, an extra repeat) re-stages nothing and refuses a checkout whose
-# code differs.
-CODE_COMMIT_FILE="$WORK_ROOT/code_commit"
-repo_code=$(bash "$REPO/scripts/subjective_randomness/slurm/code_commit.sh" "$REPO")
+# Stage the sweep's code ONCE (stage_sweep_code.sh: harness_repo, agent_src,
+# $WORK_ROOT/code_commit). Every job after this one runs on those copies; a
+# later setup on the same WORK_ROOT re-stages nothing and refuses a checkout
+# whose code differs.
 HARNESS_REPO="${HARNESS_REPO:-$WORK_ROOT/harness_repo}"
-AGENT_SRC="${AGENT_SRC:-$WORK_ROOT/agent_src}"
+HARNESS_REPO="$HARNESS_REPO" bash "$REPO/scripts/subjective_randomness/slurm/stage_sweep_code.sh"
+
+# Pristine snapshots outside any agent's sandbox, taken from the staged copy
+# (so a re-run of this setup reproduces them exactly).
+# - The GT registry (config seed_models_dir) holds every GT's PyMC generator;
+#   the parent reads the held-out model from this snapshot only.
+# - The pure-Python model_families (DEFAULT_PARAMS + generative form): the
+#   parent reads the held-out GT's family from here by PARSING (never
+#   importing), so the generative source can be scrubbed from the agent's
+#   checkout instead of merely deny-listed.
 SEED_MODELS_REL="${SEED_MODELS_REL:-src/subjective_randomness/pymc_model_families}"
 GT_MODELS_SRC="${GT_MODELS_SRC:-$WORK_ROOT/gt_models_src}"
 GT_FAMILY_REL="${GT_FAMILY_REL:-src/subjective_randomness/model_families}"
 GT_FAMILY_SRC="${GT_FAMILY_SRC:-$WORK_ROOT/gt_family_src}"
-if [[ -f "$CODE_COMMIT_FILE" ]]; then
-  staged_code=$(cat "$CODE_COMMIT_FILE")
-  if [[ "$staged_code" != "$repo_code" ]]; then
-    echo "ERROR: $WORK_ROOT was staged from code $staged_code, but $REPO is now at $repo_code." >&2
-    echo "       Its cells must not resume on other code. Check out $staged_code, or use a new WORK_ROOT." >&2
-    exit 1
-  fi
-  echo "[setup] code already staged for this sweep ($staged_code); not re-staging"
-else
-  if compgen -G "$WORK_ROOT/run*/*/" >/dev/null; then
-    echo "ERROR: $WORK_ROOT has cells but no record of the code they ran on ($CODE_COMMIT_FILE);" >&2
-    echo "       they started before code was staged once per sweep. Resume them with the scripts they started under, or use a new WORK_ROOT." >&2
-    exit 1
-  fi
-
-  # A pristine GT-registry snapshot outside any agent's sandbox. The registry
-  # (config seed_models_dir) holds every GT's PyMC generator; the parent reads
-  # the held-out model from this snapshot only, never from a repo copy.
-  echo "[setup] staging pristine seed/GT models -> $GT_MODELS_SRC"
-  mkdir -p "$GT_MODELS_SRC"
-  rsync -a --delete "$REPO/$SEED_MODELS_REL"/ "$GT_MODELS_SRC"/
-
-  # A full harness repo for the harness process. Each array task creates a
-  # scrubbed agent tree (via agent_tree.exclude) for the coding agents; the
-  # harness runs from this full copy so it can import stimulus_design,
-  # model_families, etc. that the agent tree deliberately excludes. The .here
-  # sentinel is for pyprojroot.
-  echo "[setup] staging harness repo -> $HARNESS_REPO"
-  rsync -a --delete --exclude '.git' --exclude '.venv' --exclude '__pycache__' \
-    --exclude '*.nc' --exclude 'node_modules' \
-    --exclude '.uv_cache' --exclude '.pip_cache' --exclude '.cache' --exclude '.hf' \
-    "$REPO"/ "$HARNESS_REPO"/
-  touch "$HARNESS_REPO/.here"
-
-  # The source every cell's agent tree is built from, already scrubbed with
-  # agent_tree.exclude (the array applies the same list again, per cell).
-  echo "[setup] staging agent source -> $AGENT_SRC"
-  rsync -a --delete --exclude-from="$HARNESS_REPO/scripts/subjective_randomness/slurm/agent_tree.exclude" \
-    "$REPO"/ "$AGENT_SRC"/
-
-  # The pure-Python model_families (DEFAULT_PARAMS + generative form) to a
-  # pristine snapshot. The parent reads the held-out GT's family from here by
-  # PARSING (never importing), so the generative source can be scrubbed from
-  # the agent's checkout instead of merely deny-listed (an agent running its
-  # own Python could otherwise read it).
-  echo "[setup] staging pristine model_families -> $GT_FAMILY_SRC"
-  mkdir -p "$GT_FAMILY_SRC"
-  rsync -a --delete "$REPO/$GT_FAMILY_REL"/ "$GT_FAMILY_SRC"/
-
-  printf '%s\n' "$repo_code" > "$CODE_COMMIT_FILE.tmp"
-  mv "$CODE_COMMIT_FILE.tmp" "$CODE_COMMIT_FILE"
-  echo "[setup] staged code $repo_code"
-fi
+echo "[setup] staging pristine seed/GT models -> $GT_MODELS_SRC"
+mkdir -p "$GT_MODELS_SRC"
+rsync -a --delete "$HARNESS_REPO/$SEED_MODELS_REL"/ "$GT_MODELS_SRC"/
+echo "[setup] staging pristine model_families -> $GT_FAMILY_SRC"
+mkdir -p "$GT_FAMILY_SRC"
+rsync -a --delete "$HARNESS_REPO/$GT_FAMILY_REL"/ "$GT_FAMILY_SRC"/
 
 # Fail fast: syntax-check the scripts the array/analysis jobs run, and import the
 # whole holdout chain so a missing dependency aborts here (afterok) rather than
