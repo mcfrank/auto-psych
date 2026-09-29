@@ -248,12 +248,28 @@ def build_prolific_plan(
     )
 
 
+def verify_live_eligibility() -> None:
+    """Check with Prolific that the hardcoded eligibility choice IDs still mean
+    what the code assumes (US residence, English fluency). Read-only; raises
+    on a failed request or on drift. A live deploy runs it before deploying
+    anything, and again just before creating the study."""
+    from src.runtime.prolific import get_filters
+
+    filters, err = get_filters()
+    if err:
+        raise RuntimeError(
+            f"Could not fetch Prolific filters to verify eligibility choice IDs "
+            f"before recruiting: {err}"
+        )
+    verify_eligibility_choice_ids(filters)
+
+
 def create_draft_study(project_id: str, manifest: DeploymentManifest, n_participants: int, mode: str) -> ProlificStudyPlan:
     """Create a DRAFT Prolific study. It is never published here — the caller
     publishes only for live mode. Test mode creates the same draft (no test
     participant) so you can preview it in Prolific with a made-up PROLIFIC_PID.
     """
-    from src.runtime.prolific import create_study, get_filters
+    from src.runtime.prolific import create_study
 
     plan = build_prolific_plan(
         project_id=project_id,
@@ -264,13 +280,7 @@ def create_draft_study(project_id: str, manifest: DeploymentManifest, n_particip
     # Live studies recruit paid participants gated by hardcoded choice IDs, so
     # confirm those IDs still mean what we think before any study is created.
     if mode == "live":
-        filters, err = get_filters()
-        if err:
-            raise RuntimeError(
-                f"Could not fetch Prolific filters to verify eligibility choice IDs "
-                f"before recruiting: {err}"
-            )
-        verify_eligibility_choice_ids(filters)
+        verify_live_eligibility()
     study_id, err = create_study(plan.payload)
     if err:
         raise RuntimeError(f"Failed to create Prolific study: {err}")

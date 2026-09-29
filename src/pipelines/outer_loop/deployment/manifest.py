@@ -68,6 +68,69 @@ def git_metadata(repo_root: Path) -> dict[str, Any]:
     }
 
 
+# Written by the live launchers into each run copy: the rsync copy they run a
+# job from has no .git, so they record the checkout's git metadata beside the
+# code (``record_code_provenance``) and the deploy reads it back.
+CODE_PROVENANCE_FILENAME = "code_provenance.json"
+
+
+def record_code_provenance(checkout: Path, copy: Path) -> Path:
+    """Record ``checkout``'s commit and dirtiness into its copy ``copy``.
+
+    Run by the launchers right after they rsync the checkout into a run copy
+    (without ``.git``), the way the sweep scripts record ``code_commit``.
+    ``git_dirty`` counts untracked files too (``git status --porcelain``).
+    Raises, like ``git_metadata``, when ``checkout`` is not a git checkout.
+    """
+    checkout = Path(checkout).resolve()
+    record = {
+        **git_metadata(checkout),
+        "source": f"recorded by the launcher from {checkout} at {utc_now()}",
+    }
+    out = Path(copy) / CODE_PROVENANCE_FILENAME
+    out.write_text(json.dumps(record, indent=2) + "\n", encoding="utf-8")
+    return out
+
+
+def code_provenance(repo_root: Path) -> dict[str, Any]:
+    """The commit (and dirtiness) the code in ``repo_root`` came from.
+
+    A git checkout (``repo_root/.git`` exists) is read from git itself. A
+    launcher's run copy has no ``.git``; its provenance is the record the
+    launcher wrote there (``CODE_PROVENANCE_FILENAME``). With neither, the
+    deploy cannot say what code it deploys, so this raises. Returns
+    ``git_commit``, ``git_dirty`` and ``source`` (where they were read).
+    """
+    repo_root = Path(repo_root)
+    if (repo_root / ".git").exists():
+        return {**git_metadata(repo_root), "source": "git checkout"}
+    record_path = repo_root / CODE_PROVENANCE_FILENAME
+    if not record_path.exists():
+        raise RuntimeError(
+            f"{repo_root} is not a git checkout and has no {CODE_PROVENANCE_FILENAME}; "
+            "cannot record deployment provenance. Deploy from the git checkout, or "
+            "from a run copy made by run_pilot.sh / submit_parallel.sh (they record "
+            "the checkout's commit into the copy). To record it by hand: python -m "
+            "src.pipelines.outer_loop.deployment.record_provenance --checkout "
+            "<checkout> --copy <run copy>."
+        )
+    record = json.loads(record_path.read_text(encoding="utf-8"))
+    commit = record.get("git_commit") if isinstance(record, dict) else None
+    dirty = record.get("git_dirty") if isinstance(record, dict) else None
+    if not (isinstance(commit, str) and re.fullmatch(r"[0-9a-f]{40}", commit)) or not isinstance(
+        dirty, bool
+    ):
+        raise ValueError(
+            f"{record_path} must hold a 40-character git_commit and a boolean "
+            f"git_dirty; got {record!r}."
+        )
+    return {
+        "git_commit": commit,
+        "git_dirty": dirty,
+        "source": str(record.get("source") or record_path),
+    }
+
+
 @dataclass
 class DeploymentManifest:
     project_id: str
@@ -154,7 +217,7 @@ def build_manifest(
 
     resolved_run_id = run_id if run_id is not None else experiment_number_from_dir(exp_dir)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-    git = git_metadata(repo_root)
+    git = code_provenance(repo_root)
     short_sha = git["git_commit"][:7]
     experiment_id = f"{project_id}_experiment{resolved_run_id}"
     # The run label (an explicit --run-label, or a unique auto token) makes the
@@ -202,6 +265,7 @@ def build_manifest(
         git_commit=git["git_commit"],
         git_dirty=git["git_dirty"],
         source_experiment_dir=str(exp_dir / "experiment"),
+        metadata={"code_provenance": git["source"]},
     )
     return manifest
 

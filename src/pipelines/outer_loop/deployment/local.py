@@ -1,4 +1,14 @@
-"""Top-level deployment orchestration for dry-run and Firebase targets."""
+"""Top-level deployment orchestration for dry-run and Firebase targets.
+
+Order for a Firebase deploy: the results token and (live mode) Prolific's
+eligibility IDs are checked; the page is staged and deployed and its
+collection session registered; only then is the Prolific draft created, its
+id recorded at once, and, in live mode only, the study published. The draft
+used to be created before the Firebase deploy, so a failed deploy left a
+recorded live study that ``refuse_second_live_study`` then treated as
+published, blocking a plain relaunch. Now a failed deploy records no study,
+and a recorded study id always belongs to a page that was live.
+"""
 
 from __future__ import annotations
 
@@ -23,7 +33,12 @@ from .manifest import (
     write_client_config,
     write_manifest,
 )
-from .prolific import build_prolific_plan, create_draft_study, publish_study
+from .prolific import (
+    build_prolific_plan,
+    create_draft_study,
+    publish_study,
+    verify_live_eligibility,
+)
 
 
 def run_deployment(
@@ -58,6 +73,10 @@ def run_deployment(
         # Fail before any staging or Prolific work if the admin token for the
         # protected endpoints (/results, /register_session) is missing.
         results_token()
+        if prolific_mode == "live":
+            # A read-only check, so a changed eligibility mapping stops the
+            # run before the page is deployed rather than after.
+            verify_live_eligibility()
 
     existing_config = load_experiment_config(exp_dir)
     manifest = build_manifest(
@@ -75,29 +94,25 @@ def run_deployment(
         run_label=run_label,
     )
 
+    plan = None
     if prolific_mode != "none":
-        if deploy_target == "firebase":
-            plan = create_draft_study(project_id, manifest, n_participants, prolific_mode)
-        else:
-            payload_manifest = manifest
-            if not payload_manifest.experiment_url:
-                payload_manifest = replace(
-                    manifest,
-                    experiment_url=f"https://example.invalid/auto-psych/{manifest.deployment_id}",
-                )
-                manifest.metadata["dry_run_experiment_url"] = payload_manifest.experiment_url
-            plan = build_prolific_plan(
-                project_id=project_id,
-                manifest=payload_manifest,
-                n_participants=n_participants,
-                mode=prolific_mode,
+        # The study payload is built here, locally, for the record and for the
+        # page's completion redirect. The study itself is created only after
+        # the page is live (below); a dry run never creates one.
+        payload_manifest = manifest
+        if deploy_target != "firebase" and not payload_manifest.experiment_url:
+            payload_manifest = replace(
+                manifest,
+                experiment_url=f"https://example.invalid/auto-psych/{manifest.deployment_id}",
             )
-        manifest.prolific_study_id = plan.study_id
-        manifest.prolific_completion_code = plan.completion_code
-        manifest.prolific_redirect_url = plan.redirect_url
-        manifest.metadata["prolific_payload"] = plan.payload
-        if plan.test_participant_id:
-            manifest.metadata["prolific_test_participant_id"] = plan.test_participant_id
+            manifest.metadata["dry_run_experiment_url"] = payload_manifest.experiment_url
+        plan = build_prolific_plan(
+            project_id=project_id,
+            manifest=payload_manifest,
+            n_participants=n_participants,
+            mode=prolific_mode,
+        )
+        _record_plan(manifest, plan)
 
     deployment_dir = exp_dir / "deployment"
     # Stage under a per-experiment subdir (e.g. public/e2) so deploying a later
@@ -123,6 +138,13 @@ def run_deployment(
         write_functions_env(repo_root)
         run_firebase_deploy(repo_root, manifest, firebase_config_path)
         register_collection_session(manifest)
+        if plan is not None:
+            # The page is live: create the draft now and record its id at
+            # once (collection and the relaunch guard read it from disk).
+            plan = create_draft_study(project_id, manifest, n_participants, prolific_mode)
+            _record_plan(manifest, plan)
+            write_client_config(exp_dir, manifest, existing=existing_config)
+            write_manifest(exp_dir, manifest)
         # No other Firestore metadata write here: participant data flows
         # through the /submit and /results Cloud Functions (which write/read
         # the responses subcollection directly, with their own admin
@@ -131,10 +153,21 @@ def run_deployment(
         #
         # Publish ONLY for live mode. Test mode leaves the study as a DRAFT you
         # preview yourself; none mode creates no study to publish.
-        if prolific_mode == "live" and manifest.prolific_study_id:
+        if prolific_mode == "live":
             published = publish_study(plan)
             manifest.metadata["prolific_published"] = published.published
             write_client_config(exp_dir, manifest, existing=existing_config)
             stage_experiment(exp_dir, manifest, public_dir)
 
     return write_manifest(exp_dir, manifest)
+
+
+def _record_plan(manifest, plan) -> None:
+    """Copy a Prolific plan's study id, completion code, redirect and payload
+    into the manifest (the study id is ``None`` until the draft exists)."""
+    manifest.prolific_study_id = plan.study_id
+    manifest.prolific_completion_code = plan.completion_code
+    manifest.prolific_redirect_url = plan.redirect_url
+    manifest.metadata["prolific_payload"] = plan.payload
+    if plan.test_participant_id:
+        manifest.metadata["prolific_test_participant_id"] = plan.test_participant_id
