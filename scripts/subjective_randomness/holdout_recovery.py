@@ -13,7 +13,7 @@ cheap smoke run first.
 
 Usage:
     uv run python scripts/subjective_randomness/holdout_recovery.py \\
-        --config scripts/subjective_randomness/configs/holdout_recovery.yaml \\
+        --config scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml \\
         --out data/subjective_randomness/holdout_recovery/holdout.json \\
         --tidy-csv data/subjective_randomness/holdout_recovery/holdout.csv \\
         --figure data/subjective_randomness/holdout_recovery/holdout.png

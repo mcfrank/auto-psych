@@ -65,7 +65,7 @@ The setup job stages the checkout as it is when the setup job *runs* and
 records its commit (with a `-dirty-<hash>` suffix for uncommitted changes).
 Every cell of the sweep, retries included, runs on that staged copy, so later
 edits to the checkout do not reach a running sweep, and a later setup on the
-same `WORK_ROOT` (a manual resubmission, `submit_extra_repeat.sh`) fails if the
+same `WORK_ROOT` (a manual resubmission) fails if the
 checkout's code differs from what was staged.
 
 ## Submit
@@ -79,7 +79,6 @@ Override via env vars:
 ```bash
 N_REPEATS=5 BASE_SEED=100 \
 WORK_ROOT=$SCRATCH/auto-psych/tr_run2 \
-CONFIG=scripts/subjective_randomness/configs/holdout_recovery.yaml \
   bash scripts/subjective_randomness/slurm/submit_holdout_test_retest.sh
 ```
 
@@ -208,35 +207,32 @@ ablation:       seed/carry-forward → design → collect → [fit + score the
 Comparing the ablation against the full run isolates how much of the recovery
 comes from the inner loop's agent-discovered models vs. the outer loop alone.
 
-- `run_no_inner_loop_test_retest.sh` — standard holdout, inner loop removed.
-  Dedicated work root `…/holdout_test_retest_no_inner_loop`.
-- `run_impossible_no_inner_loop_test_retest.sh` — impossible variant, inner loop
-  removed. Dedicated work root `…/impossible_holdout_test_retest_no_inner_loop`.
-
-Both are thin wrappers that pin `INNER_LOOP_ITERATIONS=0` (forwarded by the
-submit scripts to every array task) and otherwise reuse the full pipeline, so
-they inherit every fix, isolation guard, and leak-prevention measure.
+`run_impossible_no_inner_loop_test_retest.sh` is the impossible variant with
+the inner loop removed, in its own work root
+`…/impossible_holdout_test_retest_no_inner_loop`. It is a thin wrapper that
+pins `INNER_LOOP_ITERATIONS=0` (forwarded by the submit script to every array
+task) and otherwise reuses the full pipeline, so it inherits every fix,
+isolation guard, and leak-prevention measure. For the literature sweep, pass
+`INNER_LOOP_ITERATIONS=0` and a `WORK_ROOT` of its own to
+`submit_holdout_test_retest.sh`.
 
 ```bash
 # cheap pre-flight first (one task, tiny MCMC):
-SMOKE=1 bash scripts/subjective_randomness/slurm/run_no_inner_loop_test_retest.sh
 SMOKE=1 bash scripts/subjective_randomness/slurm/run_impossible_no_inner_loop_test_retest.sh
 
-# the real ablation runs:
-bash scripts/subjective_randomness/slurm/run_no_inner_loop_test_retest.sh
+# the real ablation run:
 bash scripts/subjective_randomness/slurm/run_impossible_no_inner_loop_test_retest.sh
 ```
 
-Output lands in each ablation's own `_no_inner_loop` work root, with the same
+Output lands in the ablation's own `_no_inner_loop` work root, with the same
 `run<i>/<gt>/holdout.{json,csv,png}` and `test_retest.{json,csv,png}` layout —
-so the standard and impossible ablations can be analyzed side by side with their
-full-pipeline counterparts.
+so it can be analyzed side by side with its full-pipeline counterpart.
 
 ## Re-scoring everything on one exhaustive eval pool
 
-The studies above are not all scored on the same held-out stimuli: the standard
-holdout config (`holdout_recovery.yaml`) measures recovery on a **sampled** pool
-(500 pairs at lengths 6 & 8) while the impossible config measures it on the
+Older studies are not all scored on the same held-out stimuli: the standard
+holdout sweeps before the exhaustive pool measured recovery on a **sampled**
+pool (500 pairs at lengths 6 & 8) while the impossible config measures it on the
 **exhaustive** pool (every distinct unordered pair over all sequences up to
 length 8). Their RMSE / Pearson-r numbers are therefore not comparable across
 studies.

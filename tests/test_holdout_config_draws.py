@@ -17,7 +17,6 @@ from tests.paths import SCRIPTS_DIR
 
 CONFIGS = [
     "holdout_recovery_faithful.yaml",
-    "holdout_recovery.yaml",
     "impossible_holdout_recovery.yaml",
 ]
 
