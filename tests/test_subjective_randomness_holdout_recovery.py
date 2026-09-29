@@ -1679,6 +1679,121 @@ def test_plot_holdout_trajectories_rejects_unknown_metric(tmp_path):
         plot_holdout_trajectories({"gt_runs": []}, tmp_path / "x.png", metric="mae")
 
 
+# ── The novelty-gate knob ───────────────────────────────────────────
+
+
+def _stubbed_config_run(tmp_path, monkeypatch, config, **run_kwargs):
+    """Run ``run_holdout_recovery_from_config`` with every expensive seam
+    stubbed; returns the result and the kwargs each inner-loop call received."""
+    inner_loop_kwargs = []
+    monkeypatch.setattr(holdout_recovery, "run_design_programmatic", _stub_design([]))
+    monkeypatch.setattr(
+        holdout_recovery, "generate_responses", _stub_generate_responses([])
+    )
+    inner_stub = _stub_inner_loop("local_representativeness")
+
+    def capturing_inner_loop(exp_dir, **kwargs):
+        inner_loop_kwargs.append(kwargs)
+        return inner_stub(exp_dir, **kwargs)
+
+    monkeypatch.setattr(
+        holdout_recovery, "run_inner_model_loop_programmatic", capturing_inner_loop
+    )
+    monkeypatch.setattr(
+        holdout_eval,
+        "p_left_fixed_params",
+        lambda model_name, models_dir, stimuli, params, **kw: np.linspace(
+            0.1, 0.9, len(stimuli)
+        ),
+    )
+    monkeypatch.setattr(
+        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
+    )
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
+    monkeypatch.setattr(
+        holdout_eval, "fit_model", lambda *a, **k: CannedPredictionFit()
+    )
+    result = run_holdout_recovery_from_config(
+        config,
+        tmp_path / "config.yaml",
+        tmp_path / "runs",
+        cache_dir=tmp_path / "cache",
+        summary_root=tmp_path / "summaries",
+        **run_kwargs,
+    )
+    return result, inner_loop_kwargs
+
+
+def _knob_config(inner_loop):
+    return {
+        "project_id": "subjective_randomness",
+        "seed_models_dir": str(SEED_MODELS_DIR),
+        "gt_models": ["prototype_similarity"],
+        "n_experiments": 1,
+        "n_participants": 3,
+        "seed": 5,
+        "inner_loop": inner_loop,
+        "agent": {"timeout_sec": 60, "backend": None, "model": "test/model"},
+        "eval_pool": {"n_pairs": 40, "lengths": [6], "seed": 11,
+                      "min_remaining": 5, "exhaustive": False},
+        "fit": {"draws": 10, "tune": 10, "chains": 1},
+    }
+
+
+def test_novelty_rmse_threshold_threads_from_config_to_the_inner_loop(
+    tmp_path, monkeypatch
+):
+    """The holdout config sets the novelty gate, the inner loop receives it,
+    and the result records the value that was used."""
+    result, inner_loop_kwargs = _stubbed_config_run(
+        tmp_path,
+        monkeypatch,
+        _knob_config(
+            {"max_iterations": 1, "candidate_count": 1, "novelty_rmse_threshold": 0.0123}
+        ),
+    )
+    assert [k["novelty_rmse_threshold"] for k in inner_loop_kwargs] == [0.0123]
+    assert result["inner_loop"]["novelty_rmse_threshold"] == 0.0123
+
+
+def test_novelty_rmse_threshold_defaults_to_the_inner_loop_default(
+    tmp_path, monkeypatch
+):
+    from src.pipelines.inner_loop.model_zoo import DEFAULT_NOVELTY_RMSE_THRESHOLD
+
+    result, inner_loop_kwargs = _stubbed_config_run(
+        tmp_path, monkeypatch, _knob_config({"max_iterations": 1, "candidate_count": 1})
+    )
+    assert [k["novelty_rmse_threshold"] for k in inner_loop_kwargs] == [
+        DEFAULT_NOVELTY_RMSE_THRESHOLD
+    ]
+    assert result["inner_loop"]["novelty_rmse_threshold"] == DEFAULT_NOVELTY_RMSE_THRESHOLD
+
+
+def test_novelty_rmse_threshold_cli_override_beats_the_config(tmp_path, monkeypatch):
+    result, inner_loop_kwargs = _stubbed_config_run(
+        tmp_path,
+        monkeypatch,
+        _knob_config(
+            {"max_iterations": 1, "candidate_count": 1, "novelty_rmse_threshold": 0.0123}
+        ),
+        inner_loop_overrides={"novelty_rmse_threshold": 0.5},
+    )
+    assert [k["novelty_rmse_threshold"] for k in inner_loop_kwargs] == [0.5]
+    assert result["inner_loop"]["novelty_rmse_threshold"] == 0.5
+
+
+def test_negative_novelty_rmse_threshold_is_rejected(tmp_path, monkeypatch):
+    with pytest.raises(ValueError, match="novelty_rmse_threshold"):
+        _stubbed_config_run(
+            tmp_path,
+            monkeypatch,
+            _knob_config(
+                {"max_iterations": 1, "candidate_count": 1, "novelty_rmse_threshold": -0.1}
+            ),
+        )
+
+
 # ── CLI parsing ─────────────────────────────────────────────────────
 
 
@@ -1711,6 +1826,7 @@ def test_holdout_cli_defaults_and_overrides():
     assert default.n_experiments is None
     assert default.draws is None  # falls back to the config's fit settings
     assert default.backend is None
+    assert default.novelty_rmse_threshold is None  # falls back to the config
     assert default.resume is False
 
     full = tyro.cli(
@@ -1731,10 +1847,12 @@ def test_holdout_cli_defaults_and_overrides():
             "--seed", "3",
             "--agent-timeout-sec", "300",
             "--backend", "claude",
+            "--novelty-rmse-threshold", "0.005",
             "--resume",
         ],
     )
     assert full.resume is True
+    assert full.novelty_rmse_threshold == 0.005
     assert full.gt_model == "prototype_similarity"
     assert full.n_experiments == 2
     assert full.inner_loop_iterations == 1
@@ -1743,6 +1861,32 @@ def test_holdout_cli_defaults_and_overrides():
     assert full.agent_timeout_sec == 300
     assert full.backend == "claude"
     assert full.figure == Path("h.png")
+
+
+def test_holdout_cli_forwards_novelty_threshold_as_an_inner_loop_override(
+    tmp_path, monkeypatch
+):
+    import tyro
+
+    mod = _load_cli_script()
+    captured = {}
+
+    def fake_run(config, config_path, results_root, **kwargs):
+        captured.update(kwargs)
+        return {"gt_runs": []}
+
+    monkeypatch.setattr(mod, "run_holdout_recovery_from_config", fake_run)
+    monkeypatch.setattr(mod, "load_config", lambda path: {})
+    args = tyro.cli(
+        mod.Args,
+        args=[
+            "--config", str(tmp_path / "c.yaml"),
+            "--out", str(tmp_path / "h.json"),
+            "--novelty-rmse-threshold", "0.004",
+        ],
+    )
+    mod.main(args)
+    assert captured["inner_loop_overrides"] == {"novelty_rmse_threshold": 0.004}
 
 
 def _load_plot_cli_script():

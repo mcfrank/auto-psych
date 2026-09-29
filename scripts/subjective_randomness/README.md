@@ -231,6 +231,15 @@ Details worth knowing:
   prediction array stays bounded) so seed-holdout and impossible-holdout runs
   are always evaluated on comparable pools; set `eval_pool.exhaustive: false`
   plus `n_pairs` for a sampled pool.
+- **Novelty gate.** A candidate is rejected at admission when its posterior-
+  mean `p_left` is within `inner_loop.novelty_rmse_threshold` (default 0.002)
+  RMSE of an admitted model's, measured on the loop's own novelty pool (512
+  same-length pairs at lengths 4–8, generated from a fixed loop seed and
+  recorded as `model_loop/novelty_pool.json`) — never on the training stimuli
+  and never on the eval pool above. Set the key in the config, pass
+  `--novelty-rmse-threshold` to the script, or export `NOVELTY_RMSE_THRESHOLD`
+  to the sbatch array to A/B it; `0` disables the gate. The value used is
+  recorded under `inner_loop` in the result JSON.
 - **Per-step history.** The inner loop now writes `model_loop/history.json`
   (best model + posterior after the seed fit and after every candidate round;
   `best_model` is selected exactly as the export is — ELPD-LOO rank among
