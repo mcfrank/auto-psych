@@ -248,12 +248,21 @@ best can read 0.000 (its predictions are redundant with the best's) while one
 95 nats behind can read 0.33 (they differ). The weight floor was removed in
 iteration 3 for this reason.
 
-### Seven-lens rotation (`candidate_agent.DEFAULT_CANDIDATE_HINTS`)
+### Twelve-lens rotation (`candidate_agent.DEFAULT_CANDIDATE_HINTS`)
 
 The old three-hint rotation pushed genuine novelty in only one candidate of
 three; the remaining two hints encouraged conservative revision. The seven-lens
-battery assigns each candidate a distinct exploration strategy so the full
-hypothesis space is covered more evenly across rounds.
+battery assigned each candidate a distinct exploration strategy so the full
+hypothesis space is covered more evenly across rounds. P42 extended it to
+twelve — judgment by comparison between the two sequences, a single
+most-salient local feature, a decision-rule mechanism, a running tally read
+along the sequence, an exemplar/prototype account — so a six-candidate round
+(three exploratory slots under the slot roles below) walks four rounds
+without repeating a lens, and two experiments of two rounds cover the
+battery exactly once. Only exploratory slots walk the battery: `_lens_offset`
+advances by `max_iterations × exploratory_slots_per_round(candidate_count)`
+per experiment, and `tests/golden/lens_schedule.json` was regenerated for
+that schedule (a behaviour change, not a refactor).
 
 ### MCMC sampler defaults (`mcmc_defaults.py`)
 
@@ -392,3 +401,67 @@ Measured on the 2026-08/09 holdout sweeps, every non-finite k in the excluded
 winners' fits was a constant-log-likelihood trial (40–720 per model, one per
 participant × stimulus), and not one trial had a finite k above 0.7. Those
 winners were dropped for nothing.
+
+### Refinement slots: a depth mechanism (`model_zoo.slot_roles`, `candidate_agent._write_refinement_menu`)
+
+In the three archived `motif_stack` cells of the September 2026 sweep the
+exported best model was `local_representativeness` at every one of 27
+scoring steps: the loop never beat its own starting seed. Reading the run
+trees: 30 of 31 admitted models were pruned, and the loop's three mechanisms
+— the novelty gate, the ledger's "already tried — do not re-propose", and
+pruning — all push toward *new* mechanisms. Nothing let a partially correct
+one be improved. Lens 0 said "refine one existing hypothesis" without naming
+a target and forbade grafting; the brief forbade composition outright ("a
+blended mega-model is not a hypothesis"); and the ledger forbade
+re-proposing anything retired, so a promising loser such as
+`bayesian_markov_alternative` (pruned at 415.5 nats, 15.7× dse) could not be
+revived by design.
+
+P42 gives each of a round's `candidate_count` slots a role:
+
+- **Allocation.** With four or more slots: `C - 3` exploratory slots (the
+  lens battery, as before), two slots that refine the incumbent, one slot
+  that refines a non-incumbent model of the agent's choosing. Below four the
+  refinement slots are given up one at a time — the second incumbent slot
+  first, then the chosen slot, then the last incumbent slot — never the
+  exploratory slot: `[explore]` at one, `[explore, incumbent]` at two,
+  `[explore, incumbent, chosen]` at three. Exploratory slots come first in
+  slot order so the lens walk is `lens_offset + iteration ×
+  exploratory_per_round + exploratory_idx`.
+- **The incumbent** named in the brief is the latest history step's
+  `best_model` — the same ELPD-rank-among-reliable rule that selects the
+  export and the critique incumbent — with its hypothesis, its `az.compare`
+  standing and its source path.
+- **The rules lifted, for refinement slots only.** The refinement briefs
+  replace the one-hypothesis-no-blend clause with: the rule against grafting
+  cues from other models and the rule against composing mechanisms are
+  lifted; make one deliberate, stated change; change something that matters
+  (the novelty gate still applies, unchanged). Exploratory briefs keep the
+  clause, the lens, and the "do not re-propose" list. The shared theory
+  prompt says the grafting rule is lifted in a refinement slot and that a
+  many-heuristic blend is not a hypothesis in any slot.
+- **The retired list becomes a menu** for refinement slots.
+  `refinement_menu.md` lists the live non-incumbent models ranked by standing
+  and the ledger's pruned models ranked by margin, each with its full
+  hypothesis (P37), its standing or prune margin, and its source
+  (`models/<name>.py`, or `models/pruned/<name>.py` when this run pruned it;
+  a model pruned in an earlier experiment has no file in this tree and the
+  menu says so). Rejected candidates never entered the set and are not
+  targets. The margin is read back from the ledger `detail` that
+  `_prune_losers` writes (`prune_margin_detail` / `parse_prune_margin`, one
+  fixed format since the ledger's first commit) because `LedgerEntry` cannot
+  gain a numeric field: `from_json` requires an exact key set, so a new field
+  would make every inherited ledger unreadable.
+- **No parsing.** The agent states in `hypothesis.md` which model it refined,
+  in prose, because that is part of the claim. Nothing parses it or branches
+  on it: no `refine_target.txt`, no regex, no ledger field, no novelty-gate
+  exemption (P41's pool-based gate at 0.002 makes one unnecessary). The
+  slot's *assignment* is what the ledger context records — `candidate 1
+  refine incumbent <name>`, `candidate 2 refine chosen`, with ` retry 1` /
+  ` repair 1` suffixes as before — and a retry or repair keeps its role.
+  P48 reads which targets were chosen from the hypotheses.
+
+Cost: a three-candidate round now has one exploratory slot instead of three,
+so breadth per round drops until P45 raises `candidate_count` to six (three
+exploratory, two incumbent, one chosen). That trade is the point: the sweep
+measured breadth saturating with zero depth.

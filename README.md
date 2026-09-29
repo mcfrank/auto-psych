@@ -25,8 +25,11 @@ Active development is organized around two explicit loops:
   proposes the test statistics; if it writes none it is retried once, and
   after that the round runs with no critique and `history.json` says so (the
   pipeline never substitutes statistics of its own) — then spawns candidate
-  agents in parallel, each steered by a distinct exploration lens, to write one
-  new single-mechanism PyMC model apiece (self-named via `model_name.txt`).
+  agents in parallel, one per slot (self-named via `model_name.txt`):
+  exploratory slots, each steered by a distinct exploration lens, write one
+  new single-mechanism PyMC model apiece; refinement slots improve a model
+  already proposed — two the incumbent, named in the brief, and one a live or
+  pruned model of the agent's choosing from a menu with full hypotheses.
   A slot whose agent writes nothing is retried once; a candidate rejected at
   admission is repaired once, with the rejection reason in the agent's
   prompt; every attempt is in the ledger, and the agent can run a documented

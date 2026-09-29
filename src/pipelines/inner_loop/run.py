@@ -87,7 +87,9 @@ class Args:
     max_iterations: int = 0
     """Candidate-generation rounds. 0 = fit/compare the seed set only (no agent spawned)."""
     candidate_count: int = 3
-    """Candidate models proposed per round (only used when --max-iterations > 0)."""
+    """Candidate slots per round (only used when --max-iterations > 0). Slots
+    have roles (model_zoo.slot_roles): exploratory, refine-the-incumbent (two
+    at four or more slots) and refine-a-model-of-the-agent's-choosing (one)."""
     complexity_prior: float = DEFAULT_COMPLEXITY_PRIOR_CONST
     """Log-prior per model = CONST * non-comment line count (negative penalises
     complex models). Defaults to a gentle Occam backstop; pass 0.0 to disable."""
@@ -104,8 +106,8 @@ class Args:
     agent_timeout_sec: int = 900
     """Per-candidate coding-agent timeout in seconds."""
     hints_file: Optional[Path] = None
-    """YAML list of exploration hints cycled across a round's candidates
-    (default: the built-in DEFAULT_CANDIDATE_HINTS lens battery)."""
+    """YAML list of exploration hints cycled across a round's exploratory
+    slots (default: the built-in DEFAULT_CANDIDATE_HINTS lens battery)."""
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD
     """Reject a candidate whose p_left is within this RMSE of an admitted
     model's on the loop's novelty pool, a broad loop-generated stimulus pool
