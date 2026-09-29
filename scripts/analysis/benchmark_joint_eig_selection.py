@@ -9,7 +9,7 @@ stages on the same models:
 1. **featurize** — computing feature columns for the pool,
 2. **score** — one batched prior-predictive pass per model (per-draw p_left),
 3. **select_exact** — greedy with full gain re-scoring each step (the default),
-4. **select_lazy** — CELF lazy greedy (approximate under synergy).
+4. **select_lazy** — lazy batched greedy (approximate under synergy).
 
 Both selections are re-estimated on fresh Monte Carlo scenarios so the
 exact-vs-lazy quality gap is measured alongside the speed gap. With
