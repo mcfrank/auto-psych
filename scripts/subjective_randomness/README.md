@@ -300,8 +300,13 @@ Details worth knowing:
   to continue: any ground truth that already has a `trajectory.json` is
   skipped, and within an incomplete run every stage whose output already
   validates is skipped, so work restarts at the first invalid stage.
-  A partial `model_loop/` from a crashed inner loop is wiped and
-  rerun (it is fully regenerable, and its MCMC fits are still in `mcmc_cache/`).
+  An unfinished model-loop stage (no `model_loop/export_complete.json`, the
+  record written after the export and the registry) is redone from scratch:
+  `model_loop/` is wiped (it is fully regenerable, and its MCMC fits are still
+  in `mcmc_cache/`), and `cognitive_models/` and the run's `agent_notes/` are
+  put back to what the stage first started from (`cognitive_models_input/`,
+  `agent_notes_at_start/`), so notes about the abandoned attempt's candidates
+  are discarded.
   If `--resume` finds a `trajectory.json` whose experiment count disagrees with
   the config's `n_experiments`, it fails loudly rather than mixing runs.
 

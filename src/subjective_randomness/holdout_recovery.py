@@ -32,7 +32,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import shutil
 import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional
@@ -42,9 +41,10 @@ from src.pipelines.outer_loop.columns import write_responses_csv
 from src.pipelines.inner_loop.critique_round import CRITIQUE_N_PROPOSALS
 from src.pipelines.inner_loop.model_zoo import DEFAULT_NOVELTY_RMSE_THRESHOLD
 from src.pipelines.outer_loop.model_loop_runner import (
+    begin_model_loop_stage,
+    finish_model_loop_stage,
     init_registry,
     run_inner_model_loop_programmatic,
-    update_registry_from_interpretation,
 )
 from src.pipelines.outer_loop.orchestrator import (
     carry_forward_cognitive_models,
@@ -184,9 +184,13 @@ def run_holdout_experiments(
 
     With ``resume=True`` a stopped run continues: stages whose output already
     validates are skipped, and everything from the first invalid stage on is
-    rerun. A partial ``model_loop/`` is wiped before rerunning (it is fully
-    regenerable — MCMC fits live in the shared cache — and rerunning over it
-    would orphan its admitted candidates from the reseeded manifest).
+    rerun. An unfinished model-loop stage is redone from scratch
+    (``begin_model_loop_stage``): ``model_loop/`` is wiped (it is fully
+    regenerable — MCMC fits live in the shared cache), ``cognitive_models/``
+    and the run's agent notes are put back to what the stage first started
+    from, and the registry is reset. The stage counts as done only with its
+    export record, written after the export and the registry
+    (``finish_model_loop_stage``).
     """
     run_root = Path(run_root)
     seed_models_dir = Path(seed_models_dir)
@@ -277,13 +281,15 @@ def run_holdout_experiments(
         # its generator must never feed the inner loop.
         _require_no_generating_model_column(exp_dir / "data" / "responses.csv")
 
-        # Inner loop: fits + agent-conjectured candidates over pooled responses.
+        # Inner loop: fits + agent-conjectured candidates over pooled responses,
+        # the export of the live set and the next design's registry. Complete
+        # only with its export record (finish_model_loop_stage); otherwise it
+        # restarts from the model set and agent notes it first started from.
         history_path = exp_dir / "model_loop" / "history.json"
         if not (
             resume and _stage_done("5_model_loop", exp_dir) and history_path.exists()
         ):
-            if resume and (exp_dir / "model_loop").exists():
-                shutil.rmtree(exp_dir / "model_loop")
+            begin_model_loop_stage(exp_dir)
             run_inner_model_loop_programmatic(
                 exp_dir,
                 max_iterations=inner_loop_iterations,
@@ -298,8 +304,7 @@ def run_holdout_experiments(
                 novelty_rmse_threshold=novelty_rmse_threshold,
                 n_critique_proposals=n_critique_proposals,
             )
-            update_registry_from_interpretation(exp_dir)
-            _require_valid("5_model_loop", exp_dir)
+            finish_model_loop_stage(exp_dir)
             if not history_path.exists():
                 raise RuntimeError(
                     f"Inner loop wrote no history.json in {exp_dir / 'model_loop'} "

@@ -41,9 +41,10 @@ from src.pipelines.outer_loop.deployment import write_smoke_experiment
 from src.pipelines.outer_loop.deployment.manifest import refuse_second_live_study
 from src.pipelines.outer_loop.deployment.prolific import load_recruitment_config
 from src.pipelines.outer_loop.model_loop_runner import (
+    begin_model_loop_stage,
+    finish_model_loop_stage,
     init_registry,
     run_inner_model_loop_programmatic,
-    update_registry_from_interpretation,
 )
 from src.pipelines.outer_loop.orchestrator import (
     carry_forward_cognitive_models,
@@ -149,6 +150,10 @@ def _run_agent(
         )
         _validate_or_exit(agent_key, exp_dir, validate)
     elif agent_key == "5_model_loop":
+        # Always from scratch: a rerun (--resume, --agent 5_model_loop) restores
+        # the model set and agent notes the stage first started from, and the
+        # stage ends with the registry and its export record.
+        begin_model_loop_stage(exp_dir)
         run_inner_model_loop_programmatic(
             exp_dir,
             max_iterations=inner_loop_iterations,
@@ -162,7 +167,7 @@ def _run_agent(
             prune_dse_multiplier=prune_dse_multiplier,
             candidate_parallelism=candidate_parallelism,
         )
-        _validate_or_exit(agent_key, exp_dir, validate)
+        finish_model_loop_stage(exp_dir)
     else:
         write_context(
             exp_dir=exp_dir,
@@ -412,8 +417,20 @@ def _run_experiment_stages(
                 flush=True,
             )
     else:
-        # carry_forward raises loudly if the previous experiment never
-        # completed (no manifest to carry).
+        # Only a finished model-loop stage is carried: its export and registry
+        # are complete and agree (the validator checks its export record).
+        previous = experiment_dir(project_id, exp_num - 1)
+        ok, msg = validate_cc_output("5_model_loop", previous)
+        if not ok:
+            print(
+                f"  [error] Experiment {exp_num - 1}'s model loop is not complete "
+                f"({msg}); rerun it (--experiment {exp_num - 1} --agent 5_model_loop "
+                "--resume) before starting this one. An experiment finished on code "
+                "that wrote no export record can be marked complete with "
+                "model_loop_runner.finish_model_loop_stage(<its directory>).",
+                file=sys.stderr,
+            )
+            sys.exit(1)
         if carry_forward_cognitive_models(
             experiment_dir(project_id, exp_num - 1), exp_dir_path
         ):
@@ -526,9 +543,6 @@ def _run_experiment_stages(
                 )
                 print(f"\nExperiment {exp_num} (test) complete. Outputs: {exp_dir_path}", flush=True)
                 return
-
-    if "5_model_loop" in keys_to_run:
-        update_registry_from_interpretation(exp_dir_path)
 
     print(f"\nExperiment {exp_num} complete. Outputs: {exp_dir_path}", flush=True)
 

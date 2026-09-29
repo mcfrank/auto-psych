@@ -65,9 +65,13 @@ Per experiment, stages run in order. `AGENT_KEYS = ["2_design", "3_implement",
 agents were removed; the numbering is historical). Before the stages, a
 pseudo-stage establishes the model set: experiment 1 seeds from
 `projects/<id>/seed_models/`; experiments ≥2 `carry_forward_cognitive_models`
-from the previous experiment. Both seed/carry steps are idempotent, which is what
-makes `--resume` (run into an existing `experimentN/` dir) and `--agent <stage>`
-(run one stage) safe.
+from the previous experiment. Both seed/carry steps are idempotent and atomic
+(the files, manifest and ledger are built beside `cognitive_models/` and renamed
+into place, `src/runtime/atomic_files.py`; a crash leaves no set, never a
+manifest without its ledger), which is what makes `--resume` (run into an
+existing `experimentN/` dir) and `--agent <stage>` (run one stage) safe.
+`run.py` carries an experiment's set forward only when that experiment's
+model-loop stage validates (its export record, below).
 
 - `2_design` — **programmatic, no agent.** `eig.design_exhaustive` enumerates the
   H/T pair space (every same-length pair, lengths 2–8) and greedily selects the
@@ -101,7 +105,23 @@ makes `--resume` (run into an existing `experimentN/` dir) and `--agent <stage>`
   deploy phase follows when `--deploy-target != none`.
 - `4_collect` — programmatic: writes `data/responses.csv` (simulated / LLM-as-
   participant / live / ground-truth).
-- `5_model_loop` — drives the inner loop, then writes `model_registry.yaml`.
+- `5_model_loop` — drives the inner loop, exports the live set, writes
+  `model_registry.yaml`, and last `model_loop/export_complete.json` (the
+  exported names and the ledger's hash; `finish_model_loop_stage`). The
+  validator requires that record to agree with `cognitive_models/`, its
+  ledger and the registry, so a stage killed between export and registry is
+  not done. Every (re)start goes through `begin_model_loop_stage`: the first
+  records the stage's input set (`experimentN/cognitive_models_input/`) and
+  the run's `agent_notes/` (`experimentN/agent_notes_at_start/`); a restart
+  puts both back — notes written by the abandoned attempt are **discarded**,
+  not archived (the run tree is readable by later agents) — and every start
+  empties `model_loop/` and resets the registry. `cognitive_models/` is both the
+  loop's input and its export, so without the recorded input a resume used to
+  seed the loop from its own half-written export. A `model_loop/` with content
+  but no recorded input (older code) raises. The design reads the recorded
+  input when it exists (`experiment_input_models_dir`). `responses.csv`,
+  `stimuli.json`, the registry and `starting_models.json` are written through a
+  temporary file and renamed.
 
 Coding stages that fail their validator are re-spawned with the error injected as
 repair feedback (`--max-validation-repairs`); programmatic stages fail terminally.

@@ -33,7 +33,17 @@ from src.pipelines.outer_loop.columns import (
     raw_response_rows,
     write_responses_csv,
 )
-from src.pipelines.outer_loop.orchestrator_validators import _ZOO_NAME_RE
+from src.pipelines.outer_loop.orchestrator_validators import (
+    EXPORT_RECORD_FILENAME,
+    _ZOO_NAME_RE,
+    ledger_sha256,
+    validate_cc_output,
+)
+from src.runtime.atomic_files import (
+    copy_directory_atomically,
+    replace_directory,
+    write_text_atomically,
+)
 from src.runtime.config import REPO_ROOT
 
 # ─────────────────────────────────────────────
@@ -122,7 +132,7 @@ def run_starting_models(exp_dir: Path, project_id: str) -> set[str]:
             "step of experiment1/model_loop/history.json) there as a JSON list."
         )
     names = _protected_seed_names(project_id, Path(exp_dir) / "cognitive_models")
-    record.write_text(json.dumps(sorted(names), indent=2) + "\n", encoding="utf-8")
+    write_text_atomically(record, json.dumps(sorted(names), indent=2) + "\n")
     return names
 
 
@@ -222,7 +232,6 @@ def _export_inner_loop_models(
                 ) from exc
 
     out_dir = exp_dir / "cognitive_models"
-    out_dir.mkdir(parents=True, exist_ok=True)
     protected = set(protected_names)
     previous = read_manifest_entries(out_dir, missing_ok=True)
     kept = [
@@ -232,8 +241,6 @@ def _export_inner_loop_models(
     ]
     removed = [entry["name"] for entry in previous if entry["name"] not in
                {kept_entry["name"] for kept_entry in kept}]
-    for name in removed:
-        (out_dir / f"{name}.py").unlink(missing_ok=True)
 
     existing = {entry["name"] for entry in kept}
     new_names = [entry["name"] for entry in zoo_entries if entry["name"] not in existing]
@@ -250,21 +257,33 @@ def _export_inner_loop_models(
                 suffix += 1
         taken.add(export_name)
         export_names[name] = export_name
-    for name in new_names:
-        shutil.copyfile(zoo_dir / f"{name}.py", out_dir / f"{export_names[name]}.py")
-        kept.append({"name": export_names[name], "rationale": rationales[name]})
-    manifest_path(out_dir).write_text(
-        yaml.safe_dump({"models": kept}, sort_keys=False), encoding="utf-8"
-    )
+    exported = list(kept) + [
+        {"name": export_names[name], "rationale": rationales[name]} for name in new_names
+    ]
     ledger = loop_dir / LEDGER_FILENAME
-    if ledger.exists():
-        shutil.copyfile(ledger, out_dir / LEDGER_FILENAME)
+
+    def build(staging: Path) -> None:
+        for entry in kept:
+            shutil.copyfile(out_dir / f"{entry['name']}.py", staging / f"{entry['name']}.py")
+        for name in new_names:
+            shutil.copyfile(zoo_dir / f"{name}.py", staging / f"{export_names[name]}.py")
+        manifest_path(staging).write_text(
+            yaml.safe_dump({"models": exported}, sort_keys=False), encoding="utf-8"
+        )
+        if ledger.exists():
+            shutil.copyfile(ledger, staging / LEDGER_FILENAME)
+        elif (out_dir / LEDGER_FILENAME).exists():
+            shutil.copyfile(out_dir / LEDGER_FILENAME, staging / LEDGER_FILENAME)
+
+    # Built beside the set and renamed over it: never a manifest that lists
+    # deleted files or misses copied ones.
+    replace_directory(out_dir, build)
 
     best_export = export_names.get(best_model, best_model)
     print(
         f"  [inner-loop] Carried the live set into {out_dir}: best {best_export!r}; "
         f"added {[export_names[n] for n in new_names]}; removed {removed}; "
-        f"set = {[entry['name'] for entry in kept]}",
+        f"set = {[entry['name'] for entry in exported]}",
         flush=True,
     )
     return out_dir / f"{best_export}.py"
@@ -394,6 +413,114 @@ def run_inner_model_loop_programmatic(
         exp_dir, loop_dir, best_model=result["best_model"], protected_names=protected
     )
     return loop_dir
+
+
+# ─────────────────────────────────────────────
+# The model-loop stage: start, restart and completion
+# ─────────────────────────────────────────────
+
+# Beside cognitive_models/: the model set the experiment's model loop started
+# from, recorded when the stage first starts. cognitive_models/ is both the
+# loop's input and its export, so without this record a restarted loop could
+# not tell the carried set from its own half-written export.
+MODEL_LOOP_INPUT_DIRNAME = "cognitive_models_input"
+
+# Beside cognitive_models/: the run's agent notes as they were when this
+# experiment's model loop first started.
+AGENT_NOTES_SNAPSHOT_DIRNAME = "agent_notes_at_start"
+
+
+def experiment_input_models_dir(exp_dir: Path) -> Path:
+    """The model set experiment ``exp_dir`` started from: the recorded input of
+    its model loop once that has started, else ``cognitive_models/``."""
+    recorded = Path(exp_dir) / MODEL_LOOP_INPUT_DIRNAME
+    return recorded if recorded.is_dir() else Path(exp_dir) / "cognitive_models"
+
+
+def begin_model_loop_stage(exp_dir: Path) -> None:
+    """Start (or restart) the model-loop stage from exactly what it started from.
+
+    On the first start, record the stage's input model set
+    (``cognitive_models_input/``) and the run's agent notes
+    (``agent_notes_at_start/``). On a restart — a previous attempt recorded
+    them and did not complete — put both back: ``cognitive_models/`` may hold
+    that attempt's export, and the notes describe candidates that no longer
+    exist, so the notes written after the stage first started are discarded
+    (not archived: anything kept in the run tree is readable by later agents).
+    Either way, ``model_loop/`` is emptied and the registry reset to the
+    placeholder ``init_registry`` writes, so the stage redoes everything from
+    scratch; ``finish_model_loop_stage`` marks it complete.
+
+    Each step is atomic and idempotent, so a crash in here is recovered by the
+    next call. A ``model_loop/`` with content but no recorded input was left by
+    code that kept no record: ``cognitive_models/`` may already be an export,
+    so that raises rather than seeding a loop from it.
+    """
+    exp_dir = Path(exp_dir)
+    models_dir = exp_dir / "cognitive_models"
+    recorded_input = exp_dir / MODEL_LOOP_INPUT_DIRNAME
+    loop_dir = exp_dir / "model_loop"
+    notes = agent_notes_dir(exp_dir)
+    notes_at_start = exp_dir / AGENT_NOTES_SNAPSHOT_DIRNAME
+
+    if recorded_input.is_dir():
+        print(
+            f"  [model-loop] Restart: restoring {models_dir.name}/ and the agent notes "
+            f"to what the stage started from; discarding the unfinished attempt",
+            flush=True,
+        )
+        copy_directory_atomically(recorded_input, models_dir)
+    else:
+        if loop_dir.is_dir() and any(loop_dir.iterdir()):
+            raise RuntimeError(
+                f"{loop_dir} holds an earlier model loop but {recorded_input} does not "
+                "exist: that loop ran on code that did not record its input, so "
+                f"{models_dir} may already hold its export. Put back the set the "
+                "experiment started from (for experiment 1 delete cognitive_models/ "
+                "to re-seed; for a later one delete it to carry the previous "
+                "experiment's set again), delete model_loop/, and resume."
+            )
+        copy_directory_atomically(models_dir, recorded_input)
+
+    if notes_at_start.is_dir():
+        copy_directory_atomically(notes_at_start, notes)
+    elif notes.is_dir():
+        copy_directory_atomically(notes, notes_at_start)
+    else:
+        replace_directory(notes_at_start, lambda staging: None)
+
+    if loop_dir.exists():
+        shutil.rmtree(loop_dir)
+    loop_dir.mkdir(parents=True)
+    (exp_dir / "model_registry.yaml").unlink(missing_ok=True)
+    init_registry(exp_dir)
+
+
+def finish_model_loop_stage(exp_dir: Path) -> None:
+    """Complete the model-loop stage after the loop exported its live set.
+
+    Writes the next design's registry, then the completion record
+    ``model_loop/export_complete.json`` (the exported models and the ledger's
+    hash), last, and validates the stage (``_validate_model_loop`` checks the
+    set, the registry and the ledger against the record). The export and the
+    registry update used to be two unvalidated writes after the loop: a crash
+    between them left a stage that a resume skipped (its validator asked only
+    whether the best model was in the set) with the placeholder registry
+    steering the next design.
+    """
+    exp_dir = Path(exp_dir)
+    update_registry_from_interpretation(exp_dir)
+    models_dir = exp_dir / "cognitive_models"
+    record = {
+        "models": read_manifest_names(models_dir),
+        "ledger_sha256": ledger_sha256(models_dir),
+    }
+    record_path = exp_dir / "model_loop" / EXPORT_RECORD_FILENAME
+    write_text_atomically(record_path, json.dumps(record, indent=2) + "\n")
+    ok, message = validate_cc_output("5_model_loop", exp_dir)
+    if not ok:
+        record_path.unlink()
+        raise RuntimeError(f"5_model_loop output invalid in {exp_dir}: {message}")
 
 
 # ─────────────────────────────────────────────

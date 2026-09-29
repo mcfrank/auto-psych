@@ -39,9 +39,11 @@ holdout_recovery_array.sbatch   (one task = one (repeat, ground truth) cell)
              │   ├─ model set: seed_experiment_models_from_project | carry_forward_cognitive_models
              │   ├─ design:    orchestrator.run_design_programmatic → eig.design_exhaustive
              │   ├─ collect:   holdout_data.generate_responses (GT, fixed params, counterbalanced)
-             │   └─ inner loop: model_loop_runner.run_inner_model_loop_programmatic
+             │   └─ inner loop: model_loop_runner.begin_model_loop_stage (record or restore input + notes)
+             │                  → run_inner_model_loop_programmatic
              │                  → inner_loop.pymc_orchestrator.run_pymc_inner_loop
-             │                  → _export_inner_loop_models, update_registry_from_interpretation
+             │                  → _export_inner_loop_models
+             │                  → finish_model_loop_stage (registry, then export_complete.json)
              ├─ build_eval_stimuli, evaluate_trajectory (logs eval_exclusions.jsonl)
              ├─ annotate_incumbents / summarise_incumbents
              ├─ leakage_check
@@ -321,10 +323,16 @@ and interpreter escapes as well as imports outside the allowlist.
 - **Experiments ≥ 2:** `carry_forward_cognitive_models` (orchestrator.py:147)
   copies the previous experiment's `cognitive_models/*.py`, its manifest and
   `attempted_hypotheses.jsonl`. It raises on a missing file.
+- Both build the set in `.cognitive_models.partial/` and rename it into place
+  (`replace_directory`, `src/runtime/atomic_files.py`), so a crash leaves no
+  set, and the step reruns whole. Until 2026-09-28 they copied in place, the
+  manifest before the ledger: a crash in between left a set that validated,
+  counted as carried, and had lost its ledger (second audit B14).
 - After either path, the `"models"` validator loads every model.
 
 **Registry (the design prior).** After each inner loop,
-`update_registry_from_interpretation` (model_loop_runner.py:364) writes
+`update_registry_from_interpretation` (called by `finish_model_loop_stage`,
+§5.13) writes
 `model_registry.yaml` as `{theories: {name: 1/n for every model in cognitive_models/}, reserved_for_new: 0.0}`.
 Experiment k+1's design reads experiment k's registry. The carried set is
 copied verbatim into experiment k+1's `cognitive_models/`, so the design prior
@@ -1209,9 +1217,36 @@ from the scoring after any end-of-experiment retirement.
 
 The carried set is the three protected seeds plus every non-protected
 survivor of the prune and the cap, so at most 8 models (the cap counts the
-zoo). Untrusted survivors are included. Then
-`update_registry_from_interpretation` writes the uniform registry (§2), and
-the `5_model_loop` validator checks `model_posterior.json` and `report.md`.
+zoo). Untrusted survivors are included. The export builds the new set in
+`.cognitive_models.partial/` and renames it over `cognitive_models/`. Then
+`finish_model_loop_stage` writes the uniform registry (§2) and, last,
+`model_loop/export_complete.json` (the exported names and the sha256 of the
+exported ledger). The `5_model_loop` validator checks `model_posterior.json`,
+`report.md`, the best model in the set, and that the record exists and agrees
+with the manifest, every model's file, the ledger and the registry's model
+names.
+
+**Restarting the stage** (`begin_model_loop_stage`, run before every attempt
+by both the harness and `run.py`). On the first attempt it records the
+stage's input set as `experimentN/cognitive_models_input/` and the run's
+`agent_notes/` as `experimentN/agent_notes_at_start/`. On a later attempt (the
+stage did not validate) it copies both back: `cognitive_models/` may hold the
+abandoned attempt's export, and the notes describe its candidates; notes
+written after the first start are discarded, not archived, because anything in
+the run tree is readable by later agents. Every attempt then empties
+`model_loop/` and resets `model_registry.yaml` to the placeholder. Each step is
+an atomic copy, so a crash inside it is repaired by the next call. A
+`model_loop/` with content and no recorded input was left by code before
+2026-09-28, whose export may already have overwritten the input; that raises
+with instructions. The design reads the recorded input when it exists
+(`experiment_input_models_dir`), so a design rerun after the loop started
+scores the set the experiment started from. Before 2026-09-28 the harness
+wiped only `model_loop/`, so a resume after a crash between the export and
+the registry either skipped the stage (the validator asked only whether the
+best model was in the set, leaving the placeholder registry to steer the next
+design) or reseeded the loop from its own export and its ledger (counting the
+experiment's events twice), and `run.py` reran the loop over the old
+`model_loop/` (first audit R2, second audit B14).
 Experiment k+1 copies this set (§2), re-seeds its zoo from it, and refits
 everything on the larger pooled data. `models/pruned/` is not carried; pruned
 models survive as ledger lines, and their files stay in the pruning
