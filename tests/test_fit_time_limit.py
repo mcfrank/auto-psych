@@ -75,6 +75,22 @@ def test_a_run_that_failed_is_not_sampled_again(tmp_path):
     assert again is first
 
 
+def test_a_run_that_timed_out_stays_timed_out_even_if_it_left_a_fit(tmp_path):
+    """Killed at its limit just after writing its fit: still a timeout, for
+    every later caller (a sequential admission would have seen the timeout)."""
+    request = _request(tmp_path)
+    [outcome] = pi.sample_fits_time_limited(
+        [request], time_limit_sec=3, _target=stand_ins.write_the_fit_and_hang
+    )
+    assert isinstance(outcome, pi.FitTimeLimitExceeded)
+    assert request.nc_path().exists()
+    with pytest.raises(pi.FitTimeLimitExceeded):
+        pi.fit_model(
+            request.name, request.models_dir, request.responses_path,
+            cache_dir=request.cache_dir, target_accept=0.8, time_limit_sec=3,
+        )
+
+
 def test_the_models_own_failure_is_reported_by_name(tmp_path):
     [outcome] = pi.sample_fits_time_limited(
         [_request(tmp_path)], time_limit_sec=60, _target=stand_ins.fail_as_the_model
@@ -127,6 +143,8 @@ def _limited_fit_model(monkeypatch, *, outcomes, near_miss):
 
     def fake_sample(requests, *, time_limit_sec):
         [request] = requests
+        if request.nc_path().exists():
+            return [None]  # on disk: nothing to sample
         runs.append((request.settings["target_accept"], time_limit_sec))
         outcome = outcomes.pop(0)
         if outcome is None:

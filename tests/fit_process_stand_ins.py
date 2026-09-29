@@ -40,3 +40,12 @@ def write_the_fit(name, models_dir, responses_path, settings, cache_dir, sender)
     fingerprint = fit_fingerprint(name, Path(models_dir), Path(responses_path), settings)
     cached_fit_path(Path(cache_dir), name, fingerprint).write_text("fit")
     sender.send(("ok", ""))
+
+
+def write_the_fit_and_hang(name, models_dir, responses_path, settings, cache_dir, sender):
+    """Persist a stand-in fit, then never report."""
+    from src.models.pymc_inference import cached_fit_path, fit_fingerprint
+
+    fingerprint = fit_fingerprint(name, Path(models_dir), Path(responses_path), settings)
+    cached_fit_path(Path(cache_dir), name, fingerprint).write_text("fit")
+    time.sleep(600)
