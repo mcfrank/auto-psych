@@ -283,7 +283,10 @@ Details worth knowing:
 - **Design = exhaustive joint EIG.** Each experiment's design is the same
   programmatic exhaustive selection as the live pipeline: every H/T pair over
   the design lengths is scored under the experiment's actual PyMC model set
-  and the jointly most informative set is picked greedily. No agent is
+  and the jointly most informative set is picked greedily (lazy batched
+  greedy in float32 since 2026-09-27: ~3 min instead of 11-13 h for a later
+  experiment; `validate_lazy_eig.py` compares it with exact greedy on a
+  finished design). No agent is
   involved; the design is deterministic given the models and registry.
 - **Resume after a failure.** The harness stops loudly at the first
   stage whose output doesn't validate. Re-run the same command with `--resume`

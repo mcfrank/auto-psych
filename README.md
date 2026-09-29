@@ -14,7 +14,8 @@ Active development is organized around two explicit loops:
   (currently the best models discovered by three earlier human replicate runs)
   and carried forward verbatim afterwards; there is no theorist agent. The
   design stage is programmatic (no design agent): it enumerates the full H/T
-  pair space and greedily selects the jointly most informative stimulus set by
+  pair space and greedily selects (lazy batched greedy, float32, on every
+  allocated CPU) the jointly most informative stimulus set by
   expected information gain (EIG) under the current model weights (experiments
   ≥2 design from the previous experiment's posterior); an implement agent
   builds the jsPsych experiment; collection gathers responses; then the
@@ -79,7 +80,7 @@ dataclass — `--help` lists every knob with its documented default.
 |---|---|
 | `python -m src.pipelines.outer_loop.run` | The main pipeline: per experiment, seed/carry-forward the model set → `2_design` (programmatic exhaustive EIG selection) → `3_implement` (+ Firebase deploy when `--deploy-target firebase`) → `4_collect` → `5_model_loop`. `--agent <stage>` reruns one stage; `--resume` continues an existing tree. |
 | `python -m src.pipelines.inner_loop.run` | The inner model loop standalone, on an already-featurized responses CSV + a seed-model dir. Exposes all discovery knobs (`--hints-file`, `--novelty-rmse-threshold`, `--prune-*`, `--candidate-parallelism`). |
-| `python -m src.pipelines.outer_loop.eig` | Exhaustive stimulus design against a model dir: enumerates every H/T pair over `--lengths` and greedily selects the max-joint-EIG set of `--select` stimuli (prior-predictive; `--registry` weights the models, `--responses` designs from the posterior). The pipeline's design stage runs this logic; the CLI is also usable directly. |
+| `python -m src.pipelines.outer_loop.eig` | Exhaustive stimulus design against a model dir: enumerates every H/T pair over `--lengths` and greedily selects the max-joint-EIG set of `--select` stimuli (prior-predictive; `--registry` weights the models, `--responses` designs from the posterior; lazy batched greedy in float32 by default, `--no-lazy --scoring-dtype float64` for exact greedy). The pipeline's design stage runs this logic; the CLI is also usable directly. |
 | `python -m src.critique.ppc` | The CriticAL posterior-predictive harness: computes agent-proposed test statistics on observed vs. replicated data (raw p + BH-FDR q). The inner loop runs it over the critique agent's statistics; usable standalone on any fitted model. |
 | `python -m src.model_comparison.posterior` | Fit + ELPD-LOO-compare every model in a manifest dir on a responses CSV. |
 

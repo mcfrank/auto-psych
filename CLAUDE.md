@@ -82,7 +82,14 @@ makes `--resume` (run into an existing `experimentN/` dir) and `--agent <stage>`
   the models on all data so far (the previous experiment's cumulative
   `model_loop/responses.csv`) at the model's declared `target_accept`, else
   `DESIGN_TWIN_TARGET_ACCEPT` (0.9). The holdout harness derives every seed
-  from (cell seed, ground truth, experiment, purpose) (`derive_seed`).
+  from (cell seed, ground truth, experiment, purpose) (`derive_seed`). The
+  greedy search is **lazy batched greedy in float32 on every allocated CPU**
+  (`DESIGN_LAZY_SEARCH`, `DESIGN_SCORING_DTYPE` in `eig.py`): a full pass over
+  the pool every 16 picks, in between only the best-ranked candidates
+  re-scored in batches of 512. It is an approximation (joint EIG is not
+  submodular), validated against exact float64 greedy on two experiment-2
+  designs (`scripts/subjective_randomness/validate_lazy_eig.py`: within exact
+  greedy's own scenario-to-scenario spread) — ~3 min instead of 11-13 h.
 - `3_implement` — the one true coding-agent stage: writes a jsPsych experiment;
   skipped in `simulated_participants_nobrowser` mode. Optional Firebase/Prolific
   deploy phase follows when `--deploy-target != none`.
