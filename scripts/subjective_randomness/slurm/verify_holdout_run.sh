@@ -349,7 +349,94 @@ else
   say "- [skip] candidate admission check (python3 not found)"
 fi
 
-# 11. Recovery, if any cell finished.
+# 11. Critique presence: every round's history.json entry records the critique
+#     status it ran with (P35: "critiqued" with the agent's statistic counts,
+#     "no_critique", or "disabled"). A finished run in which NO round of an
+#     experiment produced a critique is flagged as a WARNING, not a failure —
+#     the loop is designed to proceed without a critique, and a false failure
+#     here has cancelled a gated arm before. The point is visibility: the old
+#     fallback battery made every archived round look critiqued (one
+#     pipeline-written statistic, the marginal choice rate) while the critique
+#     agent had never once produced a statistic.
+_CRITIQUE_CHECKER=$(mktemp /tmp/check_critique_XXXXXX.py)
+cat > "$_CRITIQUE_CHECKER" <<'PYEOF'
+"""Summarise the per-round critique status of one inner-loop history.json.
+
+Prints one line of counts. Exit 0: at least one round was critiqued (or the
+run had no rounds). Exit 1: rounds exist and none produced a critique. Exit 2:
+the rounds predate the status record (nothing to check). Exit 3: a status
+value outside the vocabulary — a pipeline bug, reported as a failure.
+"""
+import json, sys
+
+KNOWN = ("critiqued", "no_critique", "disabled")
+history = json.load(open(sys.argv[1]))
+rounds = [e for e in history if e.get("iteration") is not None]
+counts = {k: 0 for k in KNOWN}
+unrecorded = 0
+unknown = []
+for e in rounds:
+    critique = e.get("critique")
+    if critique is None:
+        unrecorded += 1
+        continue
+    status = critique.get("status")
+    if status in counts:
+        counts[status] += 1
+    else:
+        unknown.append(repr(status))
+print(
+    f"rounds={len(rounds)} " + " ".join(f"{k}={v}" for k, v in counts.items())
+    + f" unrecorded={unrecorded}"
+)
+if unknown:
+    print(f"unknown critique status: {', '.join(unknown)}")
+    sys.exit(3)
+if not rounds or counts["critiqued"] > 0:
+    sys.exit(0)
+if unrecorded == len(rounds):
+    sys.exit(2)
+sys.exit(1)
+PYEOF
+
+if [[ -n "$_PY3" ]]; then
+  n_hist=0; n_nocrit=0; n_unrec=0; n_badcrit=0
+  _check_history_critique() {  # $1 = path to a history.json, $2 = label for the verdict
+    local result rc
+    n_hist=$((n_hist + 1))
+    result=$("$_PY3" "$_CRITIQUE_CHECKER" "$1" 2>&1); rc=$?
+    case "$rc" in
+      0) ;;
+      1) n_nocrit=$((n_nocrit + 1)); say "      no critique in any round: $2 ($result)";;
+      2) n_unrec=$((n_unrec + 1));;
+      *) n_badcrit=$((n_badcrit + 1)); say "      unreadable critique status: $2 ($result)";;
+    esac
+  }
+  for H in "$W"/run*/*/repo/_runs/*/experiment*/model_loop/history.json; do
+    [[ -f "$H" ]] || continue
+    _check_history_critique "$H" "$H"
+  done
+  for TAR in "$W"/run*/*/agent_runs.tar.gz; do
+    [[ -f "$TAR" ]] || continue
+    while IFS= read -r MEMBER; do
+      TMPHIST=$(mktemp /tmp/history_XXXXXX.json)
+      tar xzOf "$TAR" "$MEMBER" > "$TMPHIST" 2>/dev/null || true
+      _check_history_critique "$TMPHIST" "$TAR :: $MEMBER"
+      rm -f "$TMPHIST"
+    done < <(tar tzf "$TAR" 2>/dev/null | grep -E "experiment[0-9]+/model_loop/history\.json$")
+  done
+  rm -f "$_CRITIQUE_CHECKER"
+  if [[ "$n_hist" == "0" ]]; then say "- [info] no inner-loop history.json found for the critique check"
+  elif [[ "$n_badcrit" -gt 0 ]]; then say "- [FAIL] $n_badcrit of $n_hist history.json(s) carry an unreadable critique status"; fails=$((fails + 1))
+  elif [[ "$n_nocrit" -gt 0 ]]; then say "- [WARN] $n_nocrit of $n_hist experiment(s) produced no critique in any round — CriticAL contributed nothing there (a warning, not a failure)"
+  elif [[ "$n_unrec" == "$n_hist" ]]; then say "- [info] critique status not recorded (run predates the per-round record)"
+  else say "- [ok]   critique: every experiment ($n_hist) had a round with agent-written statistics"; fi
+else
+  rm -f "$_CRITIQUE_CHECKER"
+  say "- [skip] critique check (python3 not found)"
+fi
+
+# 12. Recovery, if any cell finished.
 say ""
 say "## Recovery (final-step pearson r per cell)"
 say '```'
@@ -361,7 +448,7 @@ done
 say '```'
 say ""
 
-# 11. Print config, code SHA, feature mode, and harness/agent paths.
+# 13. Print config, code SHA, feature mode, and harness/agent paths.
 say "## Run info"
 for CFG in "$W"/run*/*/config.yaml; do
   [[ -f "$CFG" ]] || continue
