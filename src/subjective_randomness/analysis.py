@@ -1,16 +1,16 @@
 """Summarize and analyze subjective-randomness recovery results.
 
-Two analyses, one per recovery script:
+Two analyses, one per recovery result type:
 
-* `parameter_recovery_summary` — given a Bayesian (PyMC) report from
-  `pymc_recover.py`, report per-parameter recovery quality: bias, RMSE,
+* `parameter_recovery_summary` — given a Bayesian (PyMC) parameter-recovery
+  report, report per-parameter recovery quality: bias, RMSE,
   spread of estimates, and 95% credible-interval coverage of the true value.
 
 * `model_recovery_summary` — given a closed-ended confusion result from
   `model_recovery.py`, report per-generating-model and overall recovery: which
   model wins by posterior and by ELPD-LOO, and how often that is the true model.
 
-Both consume the JSON these scripts already write; this module never runs MCMC.
+Both consume the recovery JSON as written; this module never runs MCMC.
 """
 
 from __future__ import annotations

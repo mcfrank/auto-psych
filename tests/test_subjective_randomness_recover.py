@@ -1,9 +1,6 @@
 """Tests for the ground-truth sampling utilities (`src/subjective_randomness/recover.py`).
 
-These utilities are shared by every Bayesian recovery path: the PyMC
-parameter recovery (`pymc_recover.py`) and the grid-posterior
-stimulus-selection comparison (`adaptive_recovery.py`). Sampled-truth mode
-draws each repeat's ground-truth vector uniformly from the family's
+Sampled-truth mode draws each repeat's ground-truth vector uniformly from the family's
 `PARAM_BOUNDS`, optionally narrowed by a `param_ranges` config entry.
 """
 

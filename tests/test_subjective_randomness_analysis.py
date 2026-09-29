@@ -119,7 +119,7 @@ def test_parameter_recovery_summary_report_without_intervals_has_no_coverage():
     assert beta["ci_coverage_95"] is None
 
 
-# A sampled-truth report (the pymc_recover.py default): each run carries its
+# A sampled-truth report: each run carries its
 # own ground truth, so the summary can correlate truth with estimate.
 SAMPLED_TRUTH_REPORT = {
     "model": "demo",

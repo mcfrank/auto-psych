@@ -1,10 +1,6 @@
 """Ground-truth sampling and recovery summaries for parameter recovery.
 
-Shared by every Bayesian recovery path — the PyMC parameter recovery
-(:mod:`src.subjective_randomness.pymc_recover`) and the grid-posterior
-stimulus-selection comparison
-(:mod:`src.subjective_randomness.adaptive_recovery`). Sampled-truth recovery
-draws each repeat's ground-truth vector uniformly from the model family's
+Sampled-truth recovery draws each repeat's ground-truth vector uniformly from the model family's
 ``PARAM_BOUNDS`` (optionally narrowed by a ``param_ranges`` config entry), so
 recovery is evaluated across the parameter space rather than at one
 hand-picked point.

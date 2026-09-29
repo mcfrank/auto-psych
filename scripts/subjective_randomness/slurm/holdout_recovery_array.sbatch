@@ -326,8 +326,8 @@ done < <(find "$RUN_REPO" -name "models_manifest.yaml" -not -path "*/_runs/*" -p
 # the fact that a cell "recovered" the ground truth by reading it.
 # Remove every file in the agent tree NAMED after the held-out model. Beyond
 # the registry entry the step above deletes, the checkout carries unit tests and
-# analysis scripts for the ground truths (test_motif_stack_softmax.py,
-# compare_motif_stack_predictions.py, ...). A test for a mechanism encodes that
+# analysis scripts for the ground truths (test_motif_stack_seed_holdout.py,
+# ...). A test for a mechanism encodes that
 # mechanism, and opencode's deny-list covers neither tests/ nor scripts/ — so
 # these have been readable in every run to date, under every backend. Keyed on
 # $GT so it generalises to any held-out model; nothing the pipeline runs lives
