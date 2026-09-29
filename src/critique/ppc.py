@@ -51,6 +51,7 @@ import re
 import signal
 import sys
 import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -71,10 +72,24 @@ from src.models.mcmc_defaults import (  # noqa: E402  (needs sys.path above)
     PRODUCTION_TUNE,
 )
 
-# Best-effort wall-clock limit (seconds) for one agent-authored test statistic, so
-# a runaway/infinite statistic cannot hang the in-process critique harness (which
-# runs outside the critique agent's own subprocess timeout). See ``_time_limit``.
-_TEST_STAT_TIMEOUT_SEC = 30.0
+# Time limits for agent-authored test statistics, which run in the harness
+# process (outside the critique agent's own subprocess timeout). A statistic is
+# called once on the observed data and once per posterior-predictive replicate
+# (1000 in the loop), so a limit on the whole batch — 30 s for 1001 calls, as it
+# used to be — is ~30 ms per call, which an ordinary pandas statistic misses on
+# experiment 3's 7,680 rows (a groupby/map took ~32 ms per call, a row-wise
+# apply ~127 ms), and the critique silently lost its statistics exactly when
+# the data were richest. Now:
+# - each call has its own wall-clock limit (a hung statistic stops there;
+#   ``_time_limit``), and
+# - all of one statistic's calls share a budget, so the check of a slow but
+#   finite statistic cannot take hours. The budget allows ~0.3 s per call over
+#   1001 calls, more than twice the row-wise apply above. The pre-check
+#   (``check_test_statistic``) projects one call's time over every call and
+#   sets aside a statistic that would exceed it, with that reason, before the
+#   check runs.
+_TEST_STAT_CALL_TIMEOUT_SEC = 5.0
+_TEST_STAT_BUDGET_SEC = 300.0
 
 
 # ─────────────────────────────────────────────
@@ -199,29 +214,45 @@ def _compile_test_statistic(code: str) -> Callable[[Any], Any]:
     return fn
 
 
-def check_test_statistic(path: Path, observed_df: Any) -> Optional[str]:
+def check_test_statistic(path: Path, observed_df: Any, *, n_replicates: int = 0) -> Optional[str]:
     """Run a statistic file once on the observed data, as the check will.
 
-    Returns the error (a raise, a timeout, a non-finite value), or ``None``
-    when the statistic gives a finite number. The critique runs this on every
-    statistic before the posterior-predictive check, so a broken statistic is
-    reported back to the critique agent instead of silently yielding NaN.
+    Returns the error (a raise, a timeout, a non-finite value, or a call slow
+    enough that the check's ``1 + n_replicates`` calls would exceed the
+    statistic's time budget), or ``None`` when the statistic gives a finite
+    number in time. The critique runs this on every statistic before the
+    posterior-predictive check, so a broken statistic is reported back to the
+    critique agent instead of silently yielding NaN.
     """
     try:
         statistic = load_test_statistic_file(path)
         fn = _compile_test_statistic(statistic.code)
-        with _time_limit(_TEST_STAT_TIMEOUT_SEC):
+        started = time.monotonic()
+        with _time_limit(_TEST_STAT_CALL_TIMEOUT_SEC):
             value = float(fn(observed_df.copy()))
+        elapsed = time.monotonic() - started
     except Exception as exc:  # an agent-authored statistic that does not run
         return f"{type(exc).__name__}: {exc}"
     if not math.isfinite(value):
         return f"non-finite value on the observed data ({value})"
+    projected = elapsed * (1 + n_replicates)
+    if projected > _TEST_STAT_BUDGET_SEC:
+        return (
+            f"too slow: one call took {elapsed:.2f} s on the {len(observed_df)} "
+            f"observed rows, and the check calls it {1 + n_replicates} times "
+            f"(~{projected:.0f} s) — over the {_TEST_STAT_BUDGET_SEC:g} s budget per "
+            "statistic. Vectorise it (no row-wise apply or Python loops over rows)."
+        )
     return None
 
 
 # ─────────────────────────────────────────────
 # Posterior-predictive evaluation
 # ─────────────────────────────────────────────
+
+
+class _StatisticCallFailed(Exception):
+    """One call of a statistic failed; the message names the error and the call."""
 
 
 def evaluate_test_statistic(
@@ -233,22 +264,40 @@ def evaluate_test_statistic(
 
     Returns a :class:`TestStatisticResult` with the observed value, the null
     distribution over replicates, the two-sided empirical p-value, and a z-score.
-    A statistic whose code raises, or which is non-finite anywhere, returns a
-    result with ``error`` set and NaN p-values.
+    A statistic whose code raises, which is non-finite anywhere, or which runs
+    out of time — a call over ``_TEST_STAT_CALL_TIMEOUT_SEC`` or all its calls
+    over ``_TEST_STAT_BUDGET_SEC`` — returns a result with ``error`` set (saying
+    which call) and NaN p-values.
     """
+    frames = [("the observed data", human_df)] + [
+        (f"replicate {i + 1} of {len(model_dfs)}", df) for i, df in enumerate(model_dfs)
+    ]
+    values: List[float] = []
     try:
         fn = _compile_test_statistic(test_statistic.code)
-        with _time_limit(_TEST_STAT_TIMEOUT_SEC):
-            t_obs = float(fn(human_df.copy()))
-            t_null = [float(fn(df.copy())) for df in model_dfs]
+        started = time.monotonic()
+        for label, df in frames:
+            try:
+                with _time_limit(_TEST_STAT_CALL_TIMEOUT_SEC):
+                    values.append(float(fn(df.copy())))
+            except Exception as exc:  # say which call failed
+                raise _StatisticCallFailed(f"{type(exc).__name__}: {exc} (on {label})") from exc
+            spent = time.monotonic() - started
+            if spent > _TEST_STAT_BUDGET_SEC and len(values) < len(frames):
+                raise TimeoutError(
+                    f"its calls exceeded the {_TEST_STAT_BUDGET_SEC:g} s budget per "
+                    f"statistic after {len(values)} of {len(frames)} "
+                    f"(~{spent / len(values):.2f} s per call)"
+                )
     except Exception as exc:  # an agent-authored statistic that does not run
         return TestStatisticResult(
             test_statistic=test_statistic,
             t_observed=float("nan"),
             t_null=[],
             p_value=float("nan"),
-            error=f"{type(exc).__name__}: {exc}",
+            error=str(exc) if isinstance(exc, _StatisticCallFailed) else f"{type(exc).__name__}: {exc}",
         )
+    t_obs, t_null = values[0], values[1:]
 
     t_null_arr = np.asarray(t_null, dtype=float)
     if not np.all(np.isfinite(t_null_arr)) or not math.isfinite(t_obs):

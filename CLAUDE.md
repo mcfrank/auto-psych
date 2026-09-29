@@ -302,7 +302,12 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   The critique agent's context is inlined into its prompt
   (`critique_round._build_critique_prompt`); an agent that writes no usable
   statistic is retried once, then the round runs with **no** critique and the
-  round's `history.json` entry records `"no_critique"`. There is no
+  round's `history.json` entry records `"no_critique"` — as does a round in
+  which no statistic produced a p-value (each errored or ran out of time;
+  the reason lists why). Each call of a statistic has a 5 s limit and all of
+  its 1001 calls a 300 s budget (`_TEST_STAT_CALL_TIMEOUT_SEC`,
+  `_TEST_STAT_BUDGET_SEC`); one 30 s limit over all calls used to time out
+  ordinary statistics at 7,680 rows. There is no
   pipeline-written fallback battery — one existed and, under the raw-only
   schema, reduced to the marginal choice rate, which hid a critique subsystem
   that had never produced a statistic through an entire sweep.

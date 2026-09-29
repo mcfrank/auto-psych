@@ -330,6 +330,7 @@ def test_history_records_the_critique_statistics_per_round(tmp_path, monkeypatch
         "incumbent": "model_a",
         "attempts": 1,
         "n_statistics": 2,
+        "n_evaluated": 2,
         "n_significant": 1,
         "n_significant_fdr": 0,
     }

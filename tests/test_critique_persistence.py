@@ -189,14 +189,14 @@ def test_usable_test_statistics_removes_forbidden_imports_and_keeps_the_rest(tmp
         "# name: leaky\n# description: d\nfrom src.subjective_randomness import features\n"
         "def test_statistic(df):\n    return 0.0\n",
     )
-    usable, broken = _usable_test_statistics(stats_dir, _OBSERVED)
+    usable, broken = _usable_test_statistics(stats_dir, _OBSERVED, n_replicates=10)
     assert usable == [good]
     assert "leaky" in broken and "forbidden import" in broken["leaky"]
     assert sorted(p.name for p in stats_dir.glob("*.py")) == ["good.py"]
 
 
 def test_usable_test_statistics_is_empty_without_a_directory(tmp_path: Path):
-    assert _usable_test_statistics(tmp_path / "missing", _OBSERVED) == ([], {})
+    assert _usable_test_statistics(tmp_path / "missing", _OBSERVED, n_replicates=10) == ([], {})
 
 
 def test_a_statistic_that_fails_on_the_observed_data_is_set_aside_with_its_error(tmp_path: Path):
@@ -208,7 +208,7 @@ def test_a_statistic_that_fails_on_the_observed_data_is_set_aside_with_its_error
     _write_stat(stats_dir, "raises",
                 "def test_statistic(df):\n    return df['no_such_column'].mean()\n")
     _write_stat(stats_dir, "nan", "def test_statistic(df):\n    return float('nan')\n")
-    usable, broken = _usable_test_statistics(stats_dir, _OBSERVED)
+    usable, broken = _usable_test_statistics(stats_dir, _OBSERVED, n_replicates=10)
     assert usable == [good]
     assert "KeyError" in broken["raises"]
     assert "non-finite" in broken["nan"]
@@ -364,6 +364,7 @@ def test_spawn_does_not_retry_when_statistics_were_written(tmp_path: Path, monke
         "incumbent": "incumbent",
         "attempts": 1,
         "n_statistics": 2,
+        "n_evaluated": 2,
         "n_significant": 1,
         "n_significant_fdr": 0,
     }
@@ -459,3 +460,45 @@ def test_run_critique_round_refuses_a_critiqued_status_without_critiques_md(
     monkeypatch.setattr(critique_round, "_spawn_critique_agent", lambda *a, **k: critiqued)
     with pytest.raises(RuntimeError, match="critiques.md"):
         _run_round(tmp_path)
+
+
+# ─────────────────────────────────────────────
+# A check in which no statistic produced a p-value is no critique
+# ─────────────────────────────────────────────
+
+
+_ALL_FAILED = {
+    **_RESULT,
+    "n_significant": 0,
+    "n_significant_fdr": 0,
+    "results": [
+        {**_RESULT["results"][0], "p_value": float("nan"), "significant": False,
+         "error": "TimeoutError: test statistic exceeded 5s (on replicate 17 of 1000)"},
+        {**_RESULT["results"][1], "p_value": float("nan"), "significant": False,
+         "error": "KeyError: 'n_heads' (on the observed data)"},
+    ],
+}
+
+
+def test_a_round_whose_statistics_all_failed_is_recorded_as_no_critique(
+    tmp_path: Path, monkeypatch
+):
+    _patch_agent(monkeypatch, on_run=lambda d: _write_stat(d / "test_stats", "alternation_gap"))
+    monkeypatch.setattr(critique_round, "_persist_critique_results", lambda *a, **k: _ALL_FAILED)
+
+    status = _spawn(tmp_path)
+
+    assert status["status"] == "no_critique"
+    assert "none of the 2 test statistics produced a p-value" in status["reason"]
+    assert "replicate 17 of 1000" in status["reason"] and "n_heads" in status["reason"]
+
+
+def test_critiques_md_lists_every_statistic_that_could_not_be_evaluated():
+    partly = {
+        **_RESULT,
+        "results": [_RESULT["results"][0], _ALL_FAILED["results"][1]],
+    }
+    md = _format_critiques_md(partly)
+    assert "1 of 1 evaluated" in md and "1 of 2 could not be evaluated" in md
+    assert "## Could not be evaluated" in md
+    assert "max_run** — KeyError: 'n_heads' (on the observed data)" in md
