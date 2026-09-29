@@ -23,6 +23,7 @@ import src.subjective_randomness.holdout_data as holdout_data
 import src.subjective_randomness.holdout_eval as holdout_eval
 import src.subjective_randomness.holdout_recovery as holdout_recovery
 from src.pipelines.inner_loop import pymc_orchestrator
+from src.pipelines.inner_loop.critique_round import CRITIQUE_N_PROPOSALS
 from src.runtime import token_usage
 from src.subjective_randomness.holdout_data import (
     strip_generating_model,
@@ -1827,6 +1828,7 @@ def test_holdout_cli_defaults_and_overrides():
     assert default.draws is None  # falls back to the config's fit settings
     assert default.backend is None
     assert default.novelty_rmse_threshold is None  # falls back to the config
+    assert default.n_critique_proposals is None  # falls back to the config
     assert default.resume is False
 
     full = tyro.cli(
@@ -1848,11 +1850,13 @@ def test_holdout_cli_defaults_and_overrides():
             "--agent-timeout-sec", "300",
             "--backend", "claude",
             "--novelty-rmse-threshold", "0.005",
+            "--n-critique-proposals", "5",
             "--resume",
         ],
     )
     assert full.resume is True
     assert full.novelty_rmse_threshold == 0.005
+    assert full.n_critique_proposals == 5
     assert full.gt_model == "prototype_similarity"
     assert full.n_experiments == 2
     assert full.inner_loop_iterations == 1
@@ -2370,3 +2374,87 @@ def test_evaluate_trajectory_regression_pearson_r_and_rmse_unchanged(
     assert row["rmse_bma"] == pytest.approx(
         float(np.sqrt(np.mean((gt_p - bma) ** 2))), rel=1e-10
     )
+
+
+# ── The critique-proposals knob ─────────────────────────────────────
+
+
+def test_n_critique_proposals_threads_from_config_to_the_inner_loop(
+    tmp_path, monkeypatch
+):
+    """The holdout config sets how many test statistics the critique agent
+    proposes per round, the inner loop receives it, and the result records
+    the value that was used."""
+    result, inner_loop_kwargs = _stubbed_config_run(
+        tmp_path,
+        monkeypatch,
+        _knob_config(
+            {"max_iterations": 1, "candidate_count": 1, "n_critique_proposals": 5}
+        ),
+    )
+    assert [k["n_critique_proposals"] for k in inner_loop_kwargs] == [5]
+    assert result["inner_loop"]["n_critique_proposals"] == 5
+
+
+def test_n_critique_proposals_defaults_to_the_inner_loop_default(
+    tmp_path, monkeypatch
+):
+    result, inner_loop_kwargs = _stubbed_config_run(
+        tmp_path,
+        monkeypatch,
+        _knob_config({"max_iterations": 1, "candidate_count": 1}),
+    )
+    assert [k["n_critique_proposals"] for k in inner_loop_kwargs] == [
+        CRITIQUE_N_PROPOSALS
+    ]
+    assert result["inner_loop"]["n_critique_proposals"] == CRITIQUE_N_PROPOSALS
+
+
+def test_n_critique_proposals_cli_override_beats_the_config(tmp_path, monkeypatch):
+    result, inner_loop_kwargs = _stubbed_config_run(
+        tmp_path,
+        monkeypatch,
+        _knob_config(
+            {"max_iterations": 1, "candidate_count": 1, "n_critique_proposals": 5}
+        ),
+        inner_loop_overrides={"n_critique_proposals": 3},
+    )
+    assert [k["n_critique_proposals"] for k in inner_loop_kwargs] == [3]
+    assert result["inner_loop"]["n_critique_proposals"] == 3
+
+
+def test_n_critique_proposals_below_one_is_rejected(tmp_path, monkeypatch):
+    with pytest.raises(ValueError, match="n_critique_proposals"):
+        _stubbed_config_run(
+            tmp_path,
+            monkeypatch,
+            _knob_config(
+                {"max_iterations": 1, "candidate_count": 1, "n_critique_proposals": 0}
+            ),
+        )
+
+
+def test_holdout_cli_forwards_n_critique_proposals_as_an_inner_loop_override(
+    tmp_path, monkeypatch
+):
+    import tyro
+
+    mod = _load_cli_script()
+    captured = {}
+
+    def fake_run(config, config_path, results_root, **kwargs):
+        captured.update(kwargs)
+        return {"gt_runs": []}
+
+    monkeypatch.setattr(mod, "run_holdout_recovery_from_config", fake_run)
+    monkeypatch.setattr(mod, "load_config", lambda path: {})
+    args = tyro.cli(
+        mod.Args,
+        args=[
+            "--config", str(tmp_path / "c.yaml"),
+            "--out", str(tmp_path / "h.json"),
+            "--n-critique-proposals", "6",
+        ],
+    )
+    mod.main(args)
+    assert captured["inner_loop_overrides"] == {"n_critique_proposals": 6}

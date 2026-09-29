@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import threading
 
+import yaml
 
 import src.pipelines.inner_loop.model_zoo as model_zoo
 import src.pipelines.inner_loop.pymc_orchestrator as pymc_orchestrator
@@ -28,9 +29,26 @@ def _patch_loop_internals(monkeypatch):
     monkeypatch.setattr(
         scoring, "model_posterior", lambda *a, **k: posterior
     )
-    monkeypatch.setattr(scoring, "compare_table", lambda *a, **k: {})
+    # A rank table naming every live model: a six-slot round's refinement
+    # briefs describe the incumbent's standing from it (model_a is rank 0).
+    def fake_compare(responses_path, models_dir, **kwargs):
+        data = yaml.safe_load((models_dir / "models_manifest.yaml").read_text())
+        names = [e["name"] for e in data["models"]]
+        return {
+            n: {
+                "rank": i,
+                "elpd_loo": -10.0 - i,
+                "elpd_diff": 0.0 if i == 0 else 1.0,
+                "dse": 0.0 if i == 0 else 5.0,
+                "weight": 1.0 if i == 0 else 0.0,
+                "loo_unreliable": False,
+            }
+            for i, n in enumerate(names)
+        }
+
+    monkeypatch.setattr(scoring, "compare_table", fake_compare)
     # _prune_losers looks up compare_table in model_zoo's namespace:
-    monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: {})
+    monkeypatch.setattr(model_zoo, "compare_table", fake_compare)
     # Functions looked up in model_zoo's namespace (called by _admit_candidate,
     # _drop_unfittable_models, etc. which now live in model_zoo):
     monkeypatch.setattr(
@@ -50,7 +68,7 @@ def _patch_loop_internals(monkeypatch):
     )
 
 
-def _run(tmp_path, monkeypatch, spawn, **kwargs):
+def _run(tmp_path, monkeypatch, spawn, *, candidate_count=3, **kwargs):
     _patch_loop_internals(monkeypatch)
     monkeypatch.setattr(pymc_orchestrator, "_spawn_candidate_agent", spawn)
     return run_pymc_inner_loop(
@@ -58,7 +76,7 @@ def _run(tmp_path, monkeypatch, spawn, **kwargs):
         results_dir=tmp_path / "model_loop",
         seed_models_dir=write_seed_models(tmp_path, ["model_a"]),
         max_iterations=1,
-        candidate_count=3,
+        candidate_count=candidate_count,
         enable_critique=False,
         fit_kwargs={},
         **kwargs,
@@ -117,3 +135,48 @@ def test_parallelism_one_runs_agents_sequentially(tmp_path, monkeypatch):
 
     _run(tmp_path, monkeypatch, counting_spawn, candidate_parallelism=1)
     assert active["max"] == 1
+
+
+def _write_candidate_files(candidate_dir):
+    (candidate_dir / "candidate.py").write_text("# candidate\n", encoding="utf-8")
+    (candidate_dir / "hypothesis.md").write_text("People use H.\n", encoding="utf-8")
+
+
+def test_six_candidate_agents_spawn_concurrently_by_default(tmp_path, monkeypatch):
+    """The scaled round (six slots: three exploratory, two refining the
+    incumbent, one agent-chosen) runs every slot's agent at once. The default
+    parallelism is one worker per slot, so a barrier that opens only when all
+    six spawns overlap must open; a smaller pool would deadlock on it and the
+    barrier's timeout would fail the test loudly."""
+    barrier = threading.Barrier(6, timeout=10)
+
+    def blocking_spawn(candidate_dir, docs, **kwargs):
+        barrier.wait()
+        _write_candidate_files(candidate_dir)
+        return True
+
+    result = _run(tmp_path, monkeypatch, blocking_spawn, candidate_count=6)
+    assert result["best_model"] == "model_a"
+    assert barrier.broken is False
+
+
+def test_parallelism_cap_bounds_a_six_slot_round(tmp_path, monkeypatch):
+    """``candidate_parallelism=3`` on six slots runs exactly three agents at a
+    time: a three-party barrier proves three overlap, and the three-thread
+    pool means the count of concurrently running spawns never exceeds three."""
+    barrier = threading.Barrier(3, timeout=10)
+    active = {"now": 0, "max": 0}
+    lock = threading.Lock()
+
+    def capped_spawn(candidate_dir, docs, **kwargs):
+        with lock:
+            active["now"] += 1
+            active["max"] = max(active["max"], active["now"])
+        barrier.wait()
+        _write_candidate_files(candidate_dir)
+        with lock:
+            active["now"] -= 1
+        return True
+
+    _run(tmp_path, monkeypatch, capped_spawn, candidate_count=6, candidate_parallelism=3)
+    assert active["max"] == 3
