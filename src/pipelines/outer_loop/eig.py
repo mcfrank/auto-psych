@@ -301,6 +301,12 @@ def design_exhaustive(
                 fit_tune=fit_tune,
                 fit_chains=fit_chains,
             )
+        # With all n_responses answers counted, a few picks can identify the
+        # model; after that every gain is Monte Carlo noise, so selection stops
+        # at its noise floor and single-response EIG, conditioned on the picks
+        # so far, fills the remaining slots (user decision 2026-09-26). Each
+        # stimulus's "source" says which objective chose it, and its
+        # joint_eig_bits are in that objective's units.
         selection = select_n_joint_eig(
             draws,
             n_select,
@@ -308,11 +314,31 @@ def design_exhaustive(
             n_scenarios=n_scenarios,
             seed=seed,
             n_responses=n_responses,
+            stop_below_noise=True,
         )
+        picks = [(idx, bits, "eig") for idx, bits in zip(selection.indices, selection.joint_eig_bits)]
+        if len(selection.indices) < n_select:
+            fill = select_n_joint_eig(
+                draws,
+                n_select - len(selection.indices),
+                model_weights=model_weights or None,
+                n_scenarios=n_scenarios,
+                seed=seed + 1,
+                n_responses=1,
+                preselected=selection.indices,
+            )
+            picks += [
+                (idx, bits, "eig_single_response_fill")
+                for idx, bits in zip(fill.indices, fill.joint_eig_bits)
+            ]
+            print(
+                f"  [design] {n_responses}-response EIG reached its noise floor after "
+                f"{len(selection.indices)} pick(s); {len(fill.indices)} filled by "
+                "single-response EIG.",
+                flush=True,
+            )
         means = {m: arr.mean(axis=0) for m, arr in draws.items()}
-        for rank, (idx, joint_bits) in enumerate(
-            zip(selection.indices, selection.joint_eig_bits), start=1
-        ):
+        for rank, (idx, joint_bits, source) in enumerate(picks, start=1):
             preds = {m: float(means[m][idx]) for m in means}
             results.append(
                 {
@@ -320,7 +346,7 @@ def design_exhaustive(
                     "eig": round(eig_from_prior_means(preds, model_weights or None), 6),
                     "selection_rank": rank,
                     "joint_eig_bits": round(joint_bits, 6),
-                    "source": "eig",
+                    "source": source,
                 }
             )
             chosen.add(int(idx))

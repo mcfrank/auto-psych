@@ -50,6 +50,11 @@ from src.registry.io import validate_theory_weights
 # p_left to [1e-6, 1 - 1e-6]; this only guards hand-built arrays at 0 or 1.
 _P_CLIP = 1e-12
 
+# A gain this small is floating-point dust, not information: once the model is
+# identified the remaining gains are ~1e-50 bits, and their "noise" is dust of
+# the same size, so the 2-standard-error rule alone cannot call them noise.
+NEGLIGIBLE_GAIN_BITS = 1e-6
+
 
 def _validated_p(
     p_left_draws: Dict[str, np.ndarray],
@@ -193,6 +198,11 @@ class _ScenarioState:
         outcome k is weighted by its probability under the scenario's true
         p_left, Binomial(k; n, q).
         """
+        return h_current.mean() - self.next_entropy(cols).mean(axis=0)
+
+    def next_entropy(self, cols: np.ndarray) -> np.ndarray:
+        """Each scenario's expected posterior entropy after adding each
+        candidate, shape (T, len(cols)); see ``marginal_gains``."""
         n = self.n_responses
         lhat = self._scaled_likelihoods()
         q = self.generative_p(cols)
@@ -206,7 +216,7 @@ class _ScenarioState:
                 marg.append(lhat[name] @ outcome_lik / n_draws)
             h_k = self._entropy_of(np.stack(marg, axis=1))
             h_next += math.comb(n, k) * q**k * (1.0 - q) ** (n - k) * h_k
-        return h_current.mean() - h_next.mean(axis=0)
+        return h_next
 
     def _entropy_of(self, marg: np.ndarray) -> np.ndarray:
         """Posterior entropy from (T, K, C) marginal likelihoods, shape (T, C).
@@ -248,6 +258,8 @@ class JointEIGSelection:
     indices: List[int]  # selected stimulus indices, in selection order
     joint_eig_bits: List[float]  # in-sample I(M; R_S) after each selection
     n_scenarios: int
+    # True when selection stopped early because the best gain was noise.
+    stopped_at_noise_floor: bool = False
 
 
 def estimate_joint_eig(
@@ -297,6 +309,8 @@ def select_n_joint_eig(
     lazy: bool = False,
     chunk_size: int = 4096,
     n_responses: int = 1,
+    stop_below_noise: bool = False,
+    preselected: Sequence[int] = (),
 ) -> JointEIGSelection:
     """Greedily select ``n_select`` stimuli maximizing joint EIG about M.
 
@@ -311,7 +325,16 @@ def select_n_joint_eig(
     chunk_size: candidates per vectorized pass (memory/perf knob only).
     n_responses: responses each selected stimulus receives (an experiment's
         participant count). Scoring cost grows linearly with it.
+    stop_below_noise: stop (with fewer than ``n_select`` picks) once the best
+        candidate's gain is at most twice the Monte Carlo standard error of that
+        gain across scenarios — the pick would be chosen on noise — or below
+        ``NEGLIGIBLE_GAIN_BITS``. Exact greedy only.
+    preselected: stimuli already chosen (by another objective): their
+        responses are observed first, they are never picked again, and they
+        are not part of the returned ``indices``.
     """
+    if stop_below_noise and lazy:
+        raise ValueError("stop_below_noise needs exact greedy (lazy=False).")
     _validate_n_responses(n_responses)
     p, n_stim = _validated_p(p_left_draws)
     if not 1 <= n_select <= n_stim:
@@ -328,6 +351,8 @@ def select_n_joint_eig(
         p, prior, n_scenarios, np.random.default_rng(seed), n_responses
     )
     h_prior = float(_entropy_bits(prior))
+    for j in preselected:
+        state.observe(int(j))
     h_current = state.posterior_entropy()
 
     def all_gains() -> np.ndarray:
@@ -339,6 +364,8 @@ def select_n_joint_eig(
 
     selected: List[int] = []
     trajectory: List[float] = []
+    taken = [int(j) for j in preselected]
+    stopped = False
     gains = all_gains()
     if lazy:
         heap = [(-gains[j], j) for j in range(n_stim)]
@@ -359,8 +386,14 @@ def select_n_joint_eig(
         else:
             if step > 0:
                 gains = all_gains()
-            gains[selected] = -np.inf
+            gains[selected + taken] = -np.inf
             j = int(np.argmax(gains))
+            if stop_below_noise:
+                per_scenario = h_current - state.next_entropy(np.array([j]))[:, 0]
+                noise = per_scenario.std(ddof=1) / np.sqrt(len(per_scenario))
+                if per_scenario.mean() <= max(2 * noise, NEGLIGIBLE_GAIN_BITS):
+                    stopped = True
+                    break
 
         state.observe(j)
         selected.append(int(j))
@@ -368,5 +401,8 @@ def select_n_joint_eig(
         trajectory.append(h_prior - float(h_current.mean()))
 
     return JointEIGSelection(
-        indices=selected, joint_eig_bits=trajectory, n_scenarios=n_scenarios
+        indices=selected,
+        joint_eig_bits=trajectory,
+        n_scenarios=n_scenarios,
+        stopped_at_noise_floor=stopped,
     )
