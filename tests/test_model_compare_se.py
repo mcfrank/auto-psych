@@ -88,6 +88,11 @@ def _patch_fits(monkeypatch, idata_by_name):
     monkeypatch.setattr(
         "src.models.pymc_inference.fit_models_cached", _fake_fit_models_cached
     )
+    # These traces are built for their log-likelihoods, not as samples:
+    # convergence is covered by test_convergence_gate.py.
+    monkeypatch.setattr(
+        "src.models.pymc_inference.convergence_problems_of", lambda fitted: []
+    )
 
 
 def test_compare_table_reports_elpd_diff_and_dse(tmp_path, monkeypatch):

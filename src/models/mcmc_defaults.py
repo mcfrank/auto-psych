@@ -31,6 +31,13 @@ DESIGN_TWIN_CHAINS = 2
 # tiny steps) and PyMC's 0.8 (user decision, 2026-09-26).
 DESIGN_TWIN_TARGET_ACCEPT = 0.9
 
+# Convergence gate (admission, export, pruning): a fit is converged when it has
+# no divergent transitions, R-hat <= MAX_R_HAT and bulk ESS >= MIN_BULK_ESS on
+# every free parameter -- the thresholds of Vehtari et al. (2021), "Rank-
+# normalization, folding, and localization: an improved R-hat".
+MAX_R_HAT = 1.01
+MIN_BULK_ESS = 400
+
 # The candidate agent's self-check (src/pipelines/inner_loop/check_candidate.py):
 # a smoke fit that proves the model loads, samples and scores — never a
 # production fit. One chain on one core keeps it cheap inside an agent

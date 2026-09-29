@@ -42,6 +42,8 @@ def _patch_scoring(monkeypatch, posteriors_per_call):
     )
     # Candidate admission now ends with a real MCMC fit-gate; stub it so the fake
     # stub candidates (not real PyMC models) are admitted without sampling.
+    # The stub fit is not a real trace: pass the convergence gate.
+    monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # The experiment-start screen samples the whole set in one batch; no MCMC here.
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})

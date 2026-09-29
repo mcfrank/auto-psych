@@ -164,6 +164,9 @@ class TestAdmitCandidateImportGate:
         ), patch(
             "src.pipelines.inner_loop.model_zoo.fit_model"
         ), patch(
+            "src.pipelines.inner_loop.model_zoo.convergence_problems_of",
+            return_value=[],
+        ), patch(
             "src.pipelines.inner_loop.model_zoo.log_likelihood",
             return_value=-10.0,
         ), patch(

@@ -144,6 +144,10 @@ def compare_table(
       export and the registry zeroes its design prior.
     - ``n_bad_k``, ``frac_bad_k``, ``n_exact_loo_points``, ``max_pareto_k``:
       the evidence behind that verdict, recorded for audit.
+    - ``not_converged`` / ``convergence_problems``: whether the MCMC fit failed
+      the convergence gate (divergences, R-hat, bulk ESS; see
+      ``pymc_inference.convergence_problems``), and why. Like an unreliable
+      PSIS-LOO, a non-converged model is never exported or pruned.
 
     Each fit's PSIS-LOO is computed once (``FittedModel.loo_diagnostics``) and
     handed to ``az.compare`` as pointwise ``ELPDData``, so nothing is rescored.
@@ -153,7 +157,7 @@ def compare_table(
     import arviz as az  # type: ignore
     from src.models.loo_reliability import describe_unreliable  # type: ignore
     from src.models.model_manifest import read_loadable_model_names  # type: ignore
-    from src.models.pymc_inference import fit_models_cached  # type: ignore
+    from src.models.pymc_inference import convergence_problems_of, fit_models_cached  # type: ignore
 
     responses_path = Path(responses_path)
     models_dir = Path(models_dir)
@@ -187,7 +191,17 @@ def compare_table(
             "frac_bad_k": diag.frac_bad_k,
             "n_exact_loo_points": diag.n_exact,
             "max_pareto_k": diag.max_pareto_k,
+            "convergence_problems": convergence_problems_of(fits[name]),
         }
+        out[name]["not_converged"] = bool(out[name]["convergence_problems"])
+        if out[name]["not_converged"]:
+            print(
+                f"  [warn] {name} did not converge: "
+                f"{'; '.join(out[name]['convergence_problems'])}. It cannot be "
+                "exported or pruned.",
+                file=sys.stderr,
+                flush=True,
+            )
         if diag.unreliable:
             print(
                 f"  [warn] PSIS-LOO for {describe_unreliable(name, diag)} Any "

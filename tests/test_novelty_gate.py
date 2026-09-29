@@ -93,6 +93,8 @@ def test_min_prediction_rmse_finds_nearest_admitted_model(tmp_path, monkeypatch)
 def test_min_prediction_rmse_with_no_other_models(tmp_path, monkeypatch):
     models_dir = _models_dir(tmp_path, [])
     responses = _responses(tmp_path)
+    # The stub fit is not a real trace: pass the convergence gate.
+    monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(
         model_zoo, "fit_model", lambda *a, **k: _FakeFitted([0.5, 0.5])
     )
@@ -119,6 +121,8 @@ def _stub_admission_gates(monkeypatch):
     monkeypatch.setattr(
         model_zoo, "model_logp_is_finite", lambda *a, **k: (True, "")
     )
+    # The stub fit is not a real trace: pass the convergence gate.
+    monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     monkeypatch.setattr(model_zoo, "log_likelihood", lambda *a, **k: -10.0)
 

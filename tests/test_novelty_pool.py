@@ -109,6 +109,8 @@ def _fake_make_stim_data(model, rows):
 
 
 def _stub_prediction_plumbing(monkeypatch, fitted_by_name):
+    # The stub fit is not a real trace: pass the convergence gate.
+    monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(
         model_zoo, "fit_model", lambda name, *a, **k: fitted_by_name[name]
     )
@@ -324,6 +326,7 @@ def test_hook_reading_participant_id_is_rejected_not_crashed(
     responses = _write_responses(tmp_path, participant_ids=(0, 1))
     _stub_admission_gates(monkeypatch)
     # Only the MCMC is faked; make_stim_data and pm_data_inputs are real.
+    monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(
         model_zoo,
         "fit_model",
@@ -462,6 +465,8 @@ def _patch_scoring(monkeypatch):
     monkeypatch.setattr(scoring, "compare_table", fake_compare)
     monkeypatch.setattr(model_zoo, "compare_table", fake_compare)
     monkeypatch.setattr(model_zoo, "model_logp_is_finite", lambda *a, **k: (True, ""))
+    # The stub fit is not a real trace: pass the convergence gate.
+    monkeypatch.setattr(model_zoo, "convergence_problems_of", lambda fitted: [])
     monkeypatch.setattr(model_zoo, "fit_model", lambda *a, **k: object())
     # The experiment-start screen samples the whole set in one batch; no MCMC here.
     monkeypatch.setattr(model_zoo, "fit_models_to_cache", lambda names, *a, **k: {})

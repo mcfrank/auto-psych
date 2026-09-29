@@ -56,12 +56,18 @@ def _best_model(posterior: Dict[str, Any]) -> str:
     return max(posterior["posteriors"], key=lambda m: posterior["posteriors"][m])
 
 
+def _excluded(row: Dict[str, Any]) -> bool:
+    """A model whose ELPD cannot be trusted: unreliable PSIS-LOO or a fit that
+    failed the convergence gate. Such a model is never exported or pruned."""
+    return bool(row.get("loo_unreliable") or row.get("not_converged"))
+
+
 def _unreliable_names(comparison: Dict[str, Dict[str, Any]]) -> List[str]:
-    """Models whose PSIS-LOO verdict in ``comparison`` is unreliable, sorted."""
+    """Models excluded from export — unreliable PSIS-LOO or not converged — sorted."""
     return sorted(
         name
         for name, row in comparison.items()
-        if isinstance(row, dict) and row.get("loo_unreliable")
+        if isinstance(row, dict) and _excluded(row)
     )
 
 
@@ -94,14 +100,13 @@ def _best_exportable_model(
             f"Model(s) {missing} are in the posterior but have no comparison row; "
             "the posterior and the az.compare table must cover the same model set."
         )
-    reliable = [
-        name for name in posteriors if not comparison[name].get("loo_unreliable")
-    ]
+    reliable = [name for name in posteriors if not _excluded(comparison[name])]
     if not reliable:
         raise RuntimeError(
-            "Cannot export a model: no model has a reliable PSIS-LOO estimate "
-            "(every candidate's ELPD-LOO was flagged unreliable — many high "
-            "Pareto-k points). Improve the fit or data before selecting a model."
+            "Cannot export a model: no model has both a reliable PSIS-LOO estimate "
+            "and a converged fit (every model's ELPD-LOO was flagged unreliable — "
+            "many high Pareto-k points — or its MCMC did not converge). Improve "
+            "the fit or data before selecting a model."
         )
     ranks = {name: int(comparison[name]["rank"]) for name in reliable}
     if len(set(ranks.values())) != len(ranks):
