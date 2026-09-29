@@ -320,7 +320,11 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   in `data/responses.csv` (`raw_response_rows`) and the full collected rows
   (`/results` adds `participant_id_str`, the Prolific ID) in
   `<project>/raw_collected/`, beside the experiment dirs, which no agent is
-  given (`raw_collected_responses_path`); pooling keeps only them too.
+  given (`raw_collected_responses_path`); pooling keeps only them too. Agents
+  can read their working tree, the repository, so `run.py` refuses to start a
+  run that collects when the output tree is inside it (the default
+  `data/outer_loop`; set `AUTO_PSYCH_OUTPUT_DIR` elsewhere), and collection
+  refuses to write the raw file there (`require_outside_agent_trees`).
   `pymc_model_families/` (and
   the live pool `seed_models/`) all carry `compute_features` hooks. The verifier
   (`scripts/subjective_randomness/slurm/verify_holdout_run.sh`) checks that

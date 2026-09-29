@@ -33,7 +33,11 @@ label you choose.
   collected column is kept for you in
   `$AUTO_PSYCH_OUTPUT_DIR/<project>/raw_collected/experiment<N>_responses.csv`,
   beside the experiment directories. No agent is given that directory, and the
-  collector in § 11 does not copy it.
+  collector in § 11 does not copy it. Every agent can read the repository
+  (its working tree), so `run.py` refuses to start a collecting run whose
+  output tree is inside it (the default `data/outer_loop`); the launchers set
+  `AUTO_PSYCH_OUTPUT_DIR=$WORK_ROOT/<label>/data`. If you run `run.py` by
+  hand, set `AUTO_PSYCH_OUTPUT_DIR` outside the repository.
 - Pooling also keeps only the raw columns, so a run collected before the fix
   can be modelled again (§ 10).
 - `participant_id` is an anonymous integer, not a Prolific ID. Since

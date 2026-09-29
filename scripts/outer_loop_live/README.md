@@ -226,7 +226,11 @@ Per run, under `AUTO_PSYCH_OUTPUT_DIR/<project>/experiment<N>/`:
 `config.json`), `deployment/deployment_manifest.json`, `data/responses.csv`,
 `model_loop/` (posterior + report + proposed models), `model_registry.yaml`.
 Slurm logs: `$WORK_ROOT/slurm_logs/`. Browse with
-`python -m src.viewer.server --data-root <AUTO_PSYCH_OUTPUT_DIR>`.
+`python -m src.viewer.server --data-root <AUTO_PSYCH_OUTPUT_DIR>`. Every
+collected column (Prolific IDs included) is kept in
+`AUTO_PSYCH_OUTPUT_DIR/<project>/raw_collected/`, which no agent is given; a
+hand-run `run.py` that collects refuses to start when `AUTO_PSYCH_OUTPUT_DIR`
+is unset or inside the repository (the agents' working tree).
 
 ## Notes / limits
 
