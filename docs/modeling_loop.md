@@ -122,7 +122,11 @@ checkout's code differs. Each cell writes `RUN_DIR/code_commit` when it starts
 and refuses to resume on other code (or, with earlier work and no record, at
 all). A cell that already has `holdout.json` exits at once, so a resubmission
 cannot overwrite its archive or its leak record; an existing
-`agent_runs.tar.gz` is never overwritten.
+`agent_runs.tar.gz` is never overwritten. `archive_agent_tree.sh` (both
+arrays) deletes the agent tree only once the archive is written and lists back
+(`tar tzf`); a failed or unreadable archive keeps the tree, with an `ERROR …
+KEEPING the agent tree` banner in the task log (before 2026-09-28 a failed tar
+was followed by the `rm -rf` all the same).
 
 Directories:
 
@@ -1349,7 +1353,7 @@ scans and the activity report of §1.2 are separate, sbatch-level checks.
 | `holdout.png` | `plot_holdout_trajectories` | trajectory figure |
 | `_runs/token_usage.jsonl` + report | `start_usage_log` / `write_usage_report` | agent token spend |
 | `run<r>/<gt>/gt_name_mentions.txt`, `agent_activity.md` | sbatch, after the run | §1.2 |
-| `run<r>/<gt>/agent_runs.tar.gz` | sbatch, on success | the whole `_runs/` tree. The agent tree is then deleted, unless `KEEP_REPO_COPY=1` |
+| `run<r>/<gt>/agent_runs.tar.gz` | sbatch, on success | the whole `_runs/` tree. The agent tree is then deleted once the archive reads back (kept if it does not), unless `KEEP_REPO_COPY=1` |
 
 ---
 
