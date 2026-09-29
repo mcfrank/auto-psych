@@ -1,12 +1,18 @@
 """The verifier script must catch arm C's bug: a raw run whose agent-facing CSV
 carries engineered columns, and a run with no candidate-facing CSV at all.
 
+It must also make an absent critique visible: a finished run in which no
+round produced a critique is flagged (a warning, not a failure — the loop is
+designed to proceed without one, and a false failure here has cancelled a
+gated arm before).
+
 These tests build synthetic run trees and invoke the verifier via subprocess,
 checking the exit code and output.
 """
 
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import tarfile
@@ -35,7 +41,30 @@ def _make_log(path: Path, *, finished: bool = True):
         path.write_text("started\n", encoding="utf-8")
 
 
-def _build_clean_raw_tree(work_root: Path):
+def _history(*round_statuses):
+    """An inner-loop history.json: the seed step, then one round per status
+    (``None`` = a round recorded before the critique status existed)."""
+    seed = {"step": 0, "iteration": None, "best_model": "seed", "posteriors": {}, "elpd_loo": {}}
+    rounds = []
+    for i, status in enumerate(round_statuses):
+        entry = {"step": i + 1, "iteration": i, "best_model": "seed", "posteriors": {}, "elpd_loo": {}}
+        if status is not None:
+            entry["critique"] = status
+        rounds.append(entry)
+    return json.dumps([seed, *rounds])
+
+
+_CRITIQUED = {
+    "status": "critiqued", "incumbent": "seed", "attempts": 1,
+    "n_statistics": 8, "n_significant": 2, "n_significant_fdr": 1,
+}
+_NO_CRITIQUE = {
+    "status": "no_critique", "incumbent": "seed", "attempts": 2,
+    "reason": "the critique agent wrote no usable test statistic in 2 attempts",
+}
+
+
+def _build_clean_raw_tree(work_root: Path, history: str | None = None):
     """A valid raw run tree: all CSVs have only raw columns, no drops, no featurizer imports."""
     _make_log(work_root / "slurm_logs" / "holdout_recovery_1.out")
 
@@ -72,6 +101,8 @@ def _build_clean_raw_tree(work_root: Path):
     design_dir = tar_staging / "experiment1" / "design"
     design_dir.mkdir(parents=True)
     (design_dir / "screened_out.json").write_text("[]", encoding="utf-8")
+    if history is not None:
+        (exp1_ml / "history.json").write_text(history, encoding="utf-8")
 
     with tarfile.open(tar_path, "w:gz") as tar:
         for p in tar_staging.rglob("*"):
@@ -165,3 +196,48 @@ class TestVerifyRawFeaturesRun:
         # The current verifier prints [warn] for no CSV found, which is not
         # a hard failure yet. After P2 strengthening, it should fail.
         assert "no" in result.stdout.lower() or "warn" in result.stdout.lower() or result.returncode != 0
+
+
+class TestVerifyCritiquePresence:
+    def test_run_with_a_critiqued_round_is_ok(self, tmp_path):
+        work_root = _build_clean_raw_tree(
+            tmp_path / "critiqued", history=_history(_NO_CRITIQUE, _CRITIQUED)
+        )
+        result = _run_verifier(work_root)
+        assert result.returncode == 0, result.stdout
+        assert "[ok]   critique" in result.stdout
+        assert "[WARN]" not in result.stdout
+
+    def test_run_with_no_critique_in_any_round_is_flagged_but_not_failed(self, tmp_path):
+        work_root = _build_clean_raw_tree(
+            tmp_path / "absent", history=_history(_NO_CRITIQUE, _NO_CRITIQUE)
+        )
+        result = _run_verifier(work_root)
+        assert result.returncode == 0, result.stdout
+        assert "[WARN]" in result.stdout
+        assert "no critique" in result.stdout
+        # The flag also lands in the verdict file the run root keeps.
+        assert "no critique" in (work_root / "VERDICT.md").read_text(encoding="utf-8")
+
+    def test_run_with_critique_disabled_is_flagged_the_same_way(self, tmp_path):
+        work_root = _build_clean_raw_tree(
+            tmp_path / "disabled", history=_history({"status": "disabled"})
+        )
+        result = _run_verifier(work_root)
+        assert result.returncode == 0, result.stdout
+        assert "[WARN]" in result.stdout
+
+    def test_run_recorded_before_the_status_existed_is_informational(self, tmp_path):
+        work_root = _build_clean_raw_tree(tmp_path / "old", history=_history(None, None))
+        result = _run_verifier(work_root)
+        assert result.returncode == 0, result.stdout
+        assert "[WARN]" not in result.stdout
+        assert "not recorded" in result.stdout
+
+    def test_unknown_critique_status_fails_loudly(self, tmp_path):
+        work_root = _build_clean_raw_tree(
+            tmp_path / "bogus", history=_history({"status": "maybe"})
+        )
+        result = _run_verifier(work_root)
+        assert result.returncode != 0, result.stdout
+        assert "critique status" in result.stdout
