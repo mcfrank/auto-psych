@@ -509,7 +509,8 @@ def _write_candidate_context(
         "production fit) and a finite ELPD-LOO — and prints `OK` or the exact "
         "reason admission would reject the file. Fix anything it reports. It "
         "does not check novelty against the other models, nor convergence: "
-        "admission's full fit must have no divergent transitions, R-hat <= "
+        "admission's full fit (refit once with smaller steps if needed) must "
+        "have almost no divergent transitions, R-hat <= "
         f"{MAX_R_HAT} and bulk ESS >= {MIN_BULK_ESS}, so prefer smooth, "
         "well-identified parameterisations (a model that needs smaller NUTS "
         "steps can declare `SAMPLER_SETTINGS = {\"target_accept\": 0.95}`).",

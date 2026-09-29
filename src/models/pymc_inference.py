@@ -33,6 +33,8 @@ from typing import Any, Dict, List, Optional, Sequence, Union
 import numpy as np
 
 from src.models.mcmc_defaults import (
+    ESCALATED_TARGET_ACCEPT,
+    MAX_DIVERGENCE_FRACTION,
     MAX_R_HAT,
     MIN_BULK_ESS,
     PRODUCTION_CHAINS,
@@ -713,14 +715,14 @@ def fit_model(
 
     If `cache_dir` is given and `<cache_dir>/<name>.<fingerprint>.nc` exists,
     load idata from disk instead of refitting.
-    """
-    pm = _import_pymc()
-    az = _import_arviz()
 
+    A fit that fails the convergence gate (:func:`convergence_problems`) is
+    refit once at ``ESCALATED_TARGET_ACCEPT`` (user decision 2026-09-26), and
+    that fit is returned — to every caller, since both fits are cached. A
+    single-chain fit is never refit: its R-hat is undefined.
+    """
     models_dir = Path(models_dir)
     responses_path = Path(responses_path)
-    model = load_pymc_model(name, models_dir)
-
     settings = resolve_fit_settings(
         name,
         models_dir,
@@ -735,6 +737,33 @@ def fit_model(
         },
     )
 
+    fitted = _fit_once(name, models_dir, responses_path, settings, cache_dir)
+    if (
+        settings["chains"] >= 2
+        and settings["target_accept"] < ESCALATED_TARGET_ACCEPT
+        and convergence_problems_of(fitted)
+    ):
+        print(
+            f"  [fit] {name} did not converge at target_accept "
+            f"{settings['target_accept']}; refitting at {ESCALATED_TARGET_ACCEPT}.",
+            flush=True,
+        )
+        escalated = {**settings, "target_accept": ESCALATED_TARGET_ACCEPT}
+        fitted = _fit_once(name, models_dir, responses_path, escalated, cache_dir)
+    return fitted
+
+
+def _fit_once(
+    name: str,
+    models_dir: Path,
+    responses_path: Path,
+    settings: Dict[str, Any],
+    cache_dir: Optional[Path],
+) -> FittedModel:
+    """One fit at resolved ``settings``, or its cached result."""
+    pm = _import_pymc()
+    az = _import_arviz()
+    model = load_pymc_model(name, models_dir)
     fp = fit_fingerprint(name, models_dir, responses_path, settings)
 
     nc_path = None
@@ -808,18 +837,21 @@ def _max_rhat(idata: Any) -> float:
 def convergence_problems(idata: Any, var_names: Sequence[str]) -> List[str]:
     """Why a fit has not converged, one line per problem; empty when it has.
 
-    Checks the free parameters ``var_names`` for divergent transitions (a trace
-    that records none cannot be checked, which is itself a problem), R-hat
-    above ``MAX_R_HAT`` (undefined R-hat, e.g. one chain, counts) and bulk ESS
-    below ``MIN_BULK_ESS``.
+    Checks the free parameters ``var_names`` for divergent transitions above
+    ``MAX_DIVERGENCE_FRACTION`` of all draws (a trace that records none cannot
+    be checked, which is itself a problem), R-hat above ``MAX_R_HAT``
+    (undefined R-hat, e.g. one chain, counts) and bulk ESS below
+    ``MIN_BULK_ESS``.
     """
     az = _import_arviz()
     problems: List[str] = []
     n_div = _divergence_count(idata)
     if n_div is None:
         problems.append("the trace records no divergence statistic, so sampling could not be checked")
-    elif n_div > 0:
-        problems.append(f"{n_div} divergent transitions")
+    else:
+        n_draws = int(idata.posterior.sizes["chain"] * idata.posterior.sizes["draw"])
+        if n_div > MAX_DIVERGENCE_FRACTION * n_draws:
+            problems.append(f"{n_div} divergent transitions of {n_draws}")
     if var_names:
         posterior = idata.posterior[list(var_names)]
         rhat = az.rhat(posterior)
