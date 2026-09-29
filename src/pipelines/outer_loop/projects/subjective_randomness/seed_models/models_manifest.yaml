@@ -4,12 +4,6 @@
 # the single source of truth for the active seed set — to change the seed set,
 # edit the registry manifest, then run
 # scripts/subjective_randomness/sync_seed_models.py to copy the model files here.
-# One documented exception (sync_seed_models.SEED_SOURCES, 2026-09-27): the
-# motif_stack seed here is a copy of the registry's motif_stack_softmax.py,
-# the marginalising (sum-over-paths, mixture-over-methods) rewrite of the
-# registry's Viterbi motif_stack, which stays the ground truth. It fits 2-3x
-# more cheaply; it keeps the name motif_stack so that holding motif_stack out
-# withholds it and the ground-truth name scan still works.
 # test_model_manifest.py asserts the model bodies are byte-identical and
 # test_subjective_randomness_seed_recovery.py asserts the manifests agree; the
 # 2026-07 hero-run pool that used to live here (and diverged from the registry
@@ -36,10 +30,8 @@ models:
       Randomness = log-likelihood ratio of a fair coin versus Griffiths et
       al. (2018)'s four-motif stack automaton: a row-normalised six-state
       motif process augmented with mirror symmetry, complement symmetry, and
-      duplication production methods. The regular likelihood is the exact
-      marginal: summed over hidden-state paths (the forward recursion) and
-      mixed over production methods, where the paper takes the single best
-      path and method. Comparisons are restricted to equal-length sequences.
+      duplication production methods, using the paper's max-path/max-method
+      definition. Comparisons are restricted to equal-length sequences.
   - name: finite_experience_occurrence
     rationale: |
       A string seems random to the extent one actually encounters it when

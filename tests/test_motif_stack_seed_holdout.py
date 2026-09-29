@@ -1,17 +1,15 @@
-"""The motif_stack seed is the softmax rewrite, and holding motif_stack out still
-withholds it.
+"""Holding motif_stack out withholds the motif_stack seed, and nothing
+resembling either motif-stack model reaches the agents.
 
-Since 2026-09-27 the seed pool's ``motif_stack.py`` is a copy of the registry's
-``motif_stack_softmax.py`` (it fits 2-3x more cheaply than the Viterbi model),
-while the registry's ``motif_stack.py`` stays the Viterbi ground truth. The
-seed keeps the name ``motif_stack`` because everything that withholds the
-held-out ground truth works by name: the array deletes ``<gt>.py`` and every
-``*<gt>*`` file from the agent tree and scrubs ``<gt>`` from the manifests, the
-harness withholds the seed whose manifest name is the ground truth, and the
-name scan stops a cell whose tree names it. A seed called
-``motif_stack_softmax`` would survive all of that when motif_stack is the
-hidden model — a near-copy of the ground truth handed to the agents — and
-would trip the name scan.
+The seed pool's ``motif_stack.py`` is the registry's Viterbi model, byte for
+byte (on 2026-09-27 it was briefly the softmax rewrite
+``motif_stack_softmax.py``, reverted because it failed the convergence gate on
+two of the three ground truths' data). Everything that withholds the held-out
+ground truth works by name: the array deletes ``<gt>.py`` and every ``*<gt>*``
+file from the agent tree and scrubs ``<gt>`` from the manifests, the harness
+withholds the seed whose manifest name is the ground truth, and the name scan
+stops a cell whose tree names it. The content checks below also cover the
+softmax rewrite, a near-copy of the ground truth.
 
 The array tests run the real ``holdout_recovery_array.sbatch`` against a staged
 harness whose ``_env.sh`` and harness CLI are stubs, keep the agent tree
@@ -146,21 +144,21 @@ def test_holding_out_the_motif_model_leaves_nothing_resembling_it_in_the_agent_t
         assert not [code for code in MOTIF_STACK_CODE if code in text], path
 
 
-def test_with_another_ground_truth_held_out_the_agents_motif_stack_seed_is_the_softmax_model(
+def test_with_another_ground_truth_held_out_the_agents_motif_stack_seed_is_the_viterbi_model(
     tmp_path, staged_sweep
 ):
     tree = _agent_tree(tmp_path, staged_sweep, "falk_konold_dp")
     pool = tree / POOL_REL
     assert "motif_stack" in read_manifest_names(pool)
     assert "falk_konold_dp" not in read_manifest_names(pool)
-    assert (pool / "motif_stack.py").read_bytes() == SOFTMAX
+    assert (pool / "motif_stack.py").read_bytes() == VITERBI
 
 
 @pytest.mark.parametrize(
     "gt, seeded_motif_stack",
-    [("falk_konold_dp", SOFTMAX), ("local_representativeness", SOFTMAX), ("motif_stack", None)],
+    [("falk_konold_dp", VITERBI), ("local_representativeness", VITERBI), ("motif_stack", None)],
 )
-def test_the_harness_seeds_experiment_1_with_the_softmax_motif_stack_unless_it_is_held_out(
+def test_the_harness_seeds_experiment_1_with_the_viterbi_motif_stack_unless_it_is_held_out(
     tmp_path, gt, seeded_motif_stack
 ):
     pool = project_seed_models_dir("subjective_randomness")
@@ -180,16 +178,3 @@ def test_the_harness_seeds_experiment_1_with_the_softmax_motif_stack_unless_it_i
     else:
         assert (seeded / "motif_stack.py").read_bytes() == seeded_motif_stack
 
-
-def test_holding_out_the_softmax_registry_model_is_refused_because_the_pool_seeds_it(tmp_path):
-    """The pool's motif_stack is motif_stack_softmax.py byte for byte, so that
-    ground truth would be seeded (and shown to agents) under the other name."""
-    from src.subjective_randomness.holdout_recovery import run_holdout_experiments
-
-    with pytest.raises(ValueError, match=r"under another name \(\['motif_stack'\]\)"):
-        run_holdout_experiments(
-            "motif_stack_softmax", {}, tmp_path / "cell_1",
-            seed_models_dir=REGISTRY_DIR, n_experiments=1, n_participants=1,
-            inner_loop_iterations=1, candidate_count=1, fit_kwargs={},
-        )
-    assert not (tmp_path / "cell_1").exists()

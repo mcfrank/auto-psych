@@ -3,9 +3,10 @@
 The regular hypothesis is the maximum-probability combination of a Viterbi
 hidden-state path and one of four production methods: ordinary motif
 continuation, mirror symmetry, complement symmetry, or duplication.  The
-symmetry indicators are exact precomputed features; the first-half and full
-sequence Viterbi probabilities remain functions of the inferred ``delta`` and
-``alpha`` parameters.
+symmetry indicators are computed exactly from the raw sequences by
+``prepare_observed`` below; the first-half and full sequence Viterbi
+probabilities remain functions of the inferred ``delta`` and ``alpha``
+parameters.
 
 The paper estimated this model on fixed-length sequences.  Because the Viterbi
 construction omits a length-specific normalizer, this adapter rejects
