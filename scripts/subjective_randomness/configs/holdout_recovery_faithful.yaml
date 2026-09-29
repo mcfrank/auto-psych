@@ -59,15 +59,24 @@ eval_pool:
   min_remaining: 100
 
 fit:
-  draws: 2000
+  # 1000 draws per chain (4,000 in all) since 2026-09-27, down from 2000, so
+  # that a cell finishes in 12 hours: a third fewer NUTS iterations per chain
+  # (tune + draws 3,000 -> 2,000) and half the stored trace and pointwise
+  # log-likelihood. Nothing downstream needs more: the critique draws 1000
+  # posterior-predictive replicates, the evaluation thins to <= 500 draws, the
+  # novelty gate uses the posterior mean and PSIS-LOO works with 4,000 draws.
+  # The convergence gate's bulk ESS >= 100 is a count per fit, so with half
+  # the draws a borderline fit fails it more often.
+  draws: 1000
   tune: 1000
   chains: 4
-  # Original 2000/1000 draws (the 4000/3000 bump only doubled fit time with no
-  # reliability benefit — Phase-2 exclusion is what fixes reliability), at the
+  # Tune stays 1000. Before that: 2000/1000 draws (the 4000/3000 bump only
+  # doubled fit time with no reliability benefit — Phase-2 exclusion is what
+  # fixes reliability), at the
   # known-good target_accept=0.8, the run-economy choice benchmarked for this
   # sweep as a whole. A model's declared target_accept is a floor on it
-  # (motif_stack declares 0.9), and a fit that fails the convergence gate is
-  # refit once at 0.95 (pymc_inference.fit_model).
+  # (motif_stack declares 0.9), and a fit that fails the convergence gate as
+  # a near miss is refit once at 0.95 (pymc_inference.fit_model).
   target_accept: 0.8
   # No max_treedepth cap (PyMC's default 10 applies). A treedepth-6 cap lived
   # here 2026-08-09..13 as a cost workaround: motif_stack is weakly identified

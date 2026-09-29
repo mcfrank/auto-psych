@@ -61,6 +61,6 @@ eval_pool:
   min_remaining: 100
 
 fit:
-  draws: 2000
+  draws: 1000  # per chain; 2000 until 2026-09-27 (see holdout_recovery_faithful.yaml)
   tune: 1000
   chains: 4

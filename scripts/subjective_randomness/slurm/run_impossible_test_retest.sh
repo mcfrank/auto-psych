@@ -20,7 +20,7 @@
 #   * GT_MODELS pinned to the impossible models; the setup job validates this
 #     list against the config's gt_models and aborts (afterok) if they drift.
 #   * full-strength config (configs/impossible_holdout_recovery.yaml:
-#     n_experiments=3, inner loop 2x3, draws=2000/tune=1000/chains=4).
+#     n_experiments=3, inner loop 2x3, draws=1000/tune=1000/chains=4).
 #   * the impossible recipe (models dir + config) is kept OFF the coding agent's
 #     repo copy so it cannot read the answer; the parent loads the ground truth
 #     from a pristine scratch snapshot instead (see the array sbatch header).
