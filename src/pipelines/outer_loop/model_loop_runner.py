@@ -2,7 +2,7 @@
 
 These functions manage the interface between the inner model loop
 (``src.pipelines.inner_loop``) and the outer experiment loop
-(``src.pipelines.outer_loop``): pooling responses, protecting seed models,
+(``src.pipelines.outer_loop``): pooling responses, recording the starting models,
 exporting the live model set, and maintaining the design registry.
 
 Extracted from ``orchestrator.py``; the original module re-exports every public
@@ -17,7 +17,7 @@ import re
 import shutil
 import sys
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional
+from typing import Any, Dict, List, Optional
 
 import yaml
 
@@ -105,44 +105,88 @@ STARTING_MODELS_FILENAME = "starting_models.json"
 
 
 def run_starting_models(exp_dir: Path, project_id: str) -> set[str]:
-    """The models this run started from: the pruning-protected baselines.
+    """The models this run started from: names no candidate may take.
 
     Recorded once, when experiment 1's model loop first runs, as the project
-    seeds in experiment 1's ``cognitive_models/`` (``_protected_seed_names``;
-    a seed held out of the run is absent), in
-    ``<run>/starting_models.json``; read back by every later experiment and by
-    a resumed experiment 1. Protection used to be recomputed every experiment
-    from the project's full seed manifest intersected with the carried set,
-    so a candidate that chose a seed's name — the held-out ground truth's,
-    say — was carried as a protected, never-pruned starting model (second
-    audit B10). A later experiment of a run with no record raises: it started
-    on code that kept none, and its starting set cannot be told from names.
+    seeds in experiment 1's ``cognitive_models/`` (``_project_seed_names``;
+    a seed held out of the run is absent), in ``<run>/starting_models.json``,
+    together with ``starting_models_prunable: true``; read back by every later
+    experiment and by a resumed experiment 1. The starting models are not
+    protected: they are pruned, retired and dropped like any other model
+    (user decision 2026-09-28). The names are still reserved, so a candidate
+    that chose a seed's name (the held-out ground truth's, say) cannot pass
+    for it (second audit B10).
+
+    A record written by the earlier code (a bare JSON list) means the run
+    started with its starting models protected, and continuing it would mix
+    the two conditions, so that raises; so does a later experiment of a run
+    with no record (it started on code that kept none).
     """
-    record = Path(exp_dir).parent / STARTING_MODELS_FILENAME
+    run_root = Path(exp_dir).parent
+    record = run_root / STARTING_MODELS_FILENAME
     if record.exists():
-        names = json.loads(record.read_text(encoding="utf-8"))
-        if not isinstance(names, list) or not all(isinstance(n, str) for n in names):
-            raise ValueError(f"{record} must hold a JSON list of model names; got {names!r}")
-        return set(names)
+        if not starting_models_prunable(run_root):
+            raise ValueError(
+                f"{record} is a bare list of names: this run started on code that "
+                "protected its starting models from pruning, and this code prunes "
+                "them like any other model. Continuing it would mix the two "
+                "conditions. Finish it on the code it started on, or start a new "
+                "run."
+            )
+        return set(_read_starting_models_record(record)["starting_models"])
     if _experiment_number(exp_dir) != 1:
         raise FileNotFoundError(
             f"{record} does not exist. It records the run's starting models when "
             "experiment 1's model loop first runs; this run started on code that "
-            "kept no record. Write the names experiment 1 started from (the seed "
-            "step of experiment1/model_loop/history.json) there as a JSON list."
+            "kept no record, and so protected its starting models from pruning. "
+            "Finish it on that code, or start a new run."
         )
-    names = _protected_seed_names(project_id, Path(exp_dir) / "cognitive_models")
-    write_text_atomically(record, json.dumps(sorted(names), indent=2) + "\n")
+    names = _project_seed_names(project_id, Path(exp_dir) / "cognitive_models")
+    write_text_atomically(
+        record,
+        json.dumps(
+            {"starting_models": sorted(names), "starting_models_prunable": True}, indent=2
+        )
+        + "\n",
+    )
     return names
 
 
-def _protected_seed_names(project_id: str, models_dir: Path) -> set[str]:
+def starting_models_prunable(run_root: Path) -> bool:
+    """Whether run ``run_root`` could prune its starting models: ``True`` for a
+    run recorded by this code, ``False`` for the earlier bare-list record (the
+    "protected" condition). A run without a record raises."""
+    record = Path(run_root) / STARTING_MODELS_FILENAME
+    if not record.exists():
+        raise FileNotFoundError(
+            f"{record} does not exist; the run's starting models were never recorded."
+        )
+    data = _read_starting_models_record(record)
+    return bool(data.get("starting_models_prunable", False))
+
+
+def _read_starting_models_record(record: Path) -> Dict[str, Any]:
+    """The record as ``{"starting_models": [...], ...}``; the earlier bare list
+    becomes ``{"starting_models": [...]}`` with no prunable flag."""
+    data = json.loads(record.read_text(encoding="utf-8"))
+    if isinstance(data, list):
+        data = {"starting_models": data}
+    names = data.get("starting_models") if isinstance(data, dict) else None
+    if not isinstance(names, list) or not all(isinstance(n, str) for n in names):
+        raise ValueError(
+            f"{record} must hold {{\"starting_models\": [names], "
+            f"\"starting_models_prunable\": true}}; got {data!r}"
+        )
+    return data
+
+
+def _project_seed_names(project_id: str, models_dir: Path) -> set[str]:
     """The project's seed models present in ``models_dir``.
 
-    These are the baselines every run reports against: the inner loop never
-    prunes them and the export always carries them. A seed the project lists
-    but this run holds out is simply absent. A project without a seed manifest
-    cannot say which models are baselines, so that raises.
+    These are the models the run starts from (and the fitted starting-model
+    baseline scores). A seed the project lists but this run holds out is
+    simply absent. A project without a seed manifest cannot say which models
+    it starts from, so that raises.
     """
     # Lazy import to avoid a circular dependency with orchestrator.py, which
     # re-exports this module's names and defines project_seed_models_dir.
@@ -152,22 +196,20 @@ def _protected_seed_names(project_id: str, models_dir: Path) -> set[str]:
     if not manifest_path(seed_dir).exists():
         raise FileNotFoundError(
             f"Project {project_id!r} has no seed manifest at {manifest_path(seed_dir)}; "
-            "the inner loop needs it to know which models are protected baselines."
+            "the run needs it to record which models it started from."
         )
     return set(read_manifest_names(seed_dir)) & set(read_manifest_names(models_dir))
 
 
-def _export_inner_loop_models(
-    exp_dir: Path, loop_dir: Path, *, best_model: str, protected_names: Iterable[str]
-) -> Path:
+def _export_inner_loop_models(exp_dir: Path, loop_dir: Path, *, best_model: str) -> Path:
     """Record the inner loop's live set in `cognitive_models/` + manifest.
 
     After the loop, ``cognitive_models/`` — the set the next experiment starts
-    from — is exactly: every protected (project seed) model that was in it, in
-    its original order, followed by every zoo survivor that was not already
-    there, in zoo order. A carried, non-protected model the loop pruned or
-    dropped is removed, file and entry: the carried set is the loop's
-    uncertainty set (the seeds plus every model still within the pruning margin
+    from — is exactly the zoo's survivors: every model already in it that
+    survived, in its original order, followed by every other zoo survivor, in
+    zoo order. A carried model the loop pruned, retired or dropped — a
+    starting model included — is removed, file and entry: the carried set is
+    the loop's uncertainty set (every model still within the pruning margin
     of the best), not an ever-growing archive. Before this change only the
     single best model was exported, so a rival statistically tied with it was
     left behind and re-proposed from scratch by the next experiment's agents.
@@ -232,13 +274,8 @@ def _export_inner_loop_models(
                 ) from exc
 
     out_dir = exp_dir / "cognitive_models"
-    protected = set(protected_names)
     previous = read_manifest_entries(out_dir, missing_ok=True)
-    kept = [
-        entry
-        for entry in previous
-        if entry["name"] in protected or entry["name"] in rationales
-    ]
+    kept = [entry for entry in previous if entry["name"] in rationales]
     removed = [entry["name"] for entry in previous if entry["name"] not in
                {kept_entry["name"] for kept_entry in kept}]
 
@@ -330,9 +367,9 @@ def run_inner_model_loop_programmatic(
     experiment's `cognitive_models/` (the carried set plus its ledger), fits and
     compares them by ELPD-LOO, and exports the surviving live set back into
     `cognitive_models/` (``_export_inner_loop_models``). Each model computes its
-    own features from raw stimulus rows via its hooks. Only the project's seed
-    models are pruning-protected: a model carried from an earlier experiment can
-    lose here and leave the set.
+    own features from raw stimulus rows via its hooks. Every model, the run's
+    starting models included, can lose here and leave the set; the starting
+    models' names stay reserved (no candidate may take one).
 
     `project_id` locates the project assets; it defaults to `exp_dir.parent.name`
     (the standard `data/outer_loop/<project>/experimentN` layout) and must be
@@ -362,9 +399,8 @@ def run_inner_model_loop_programmatic(
     write_task_description(project_id or exp_dir.parent.name, loop_dir)
 
     seed_models_dir = exp_dir / "cognitive_models"
-    # Protected, and names no candidate may take: the run's starting models
-    # (the loop protects those still in the carried set).
-    protected = run_starting_models(exp_dir, project_id or exp_dir.parent.name)
+    # Names no candidate may take: the run's starting models, carried or not.
+    starting_models = run_starting_models(exp_dir, project_id or exp_dir.parent.name)
     # None ⇒ inherit run_pymc_inner_loop's default Occam line-count prior.
     extra = (
         {}
@@ -400,7 +436,7 @@ def run_inner_model_loop_programmatic(
         agent_model=agent_model,
         fit_kwargs=fit_kwargs,
         enable_critique=enable_critique,
-        protected_names=protected,
+        starting_models=starting_models,
         ledger_context=exp_dir.name,
         lens_offset=_lens_offset(
             exp_num,
@@ -409,9 +445,7 @@ def run_inner_model_loop_programmatic(
         ),
         **extra,
     )
-    _export_inner_loop_models(
-        exp_dir, loop_dir, best_model=result["best_model"], protected_names=protected
-    )
+    _export_inner_loop_models(exp_dir, loop_dir, best_model=result["best_model"])
     return loop_dir
 
 
@@ -553,8 +587,8 @@ def update_registry_from_interpretation(exp_dir: Path) -> None:
     iteration-2 recovery sweep every model actually present had weight ~0 or a
     single model had weight 1.0 — a degenerate prior under which all 32
     EIG-selected stimuli had zero EIG (filler pairs). The carried set is, by
-    construction, the protected seeds plus every model still within the pruning
-    margin of the best, so a uniform prior over it asks the design to separate
+    construction, every model still within the pruning margin of the best
+    (starting models included, and only while they are), so a uniform prior over it asks the design to separate
     exactly the hypotheses the data have not yet resolved. The stacking weights
     stay in ``model_posterior.json``'s ``comparison`` block as a report field.
 

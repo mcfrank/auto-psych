@@ -788,7 +788,7 @@ def test_pool_driver_accepts_a_worker_that_refit_at_the_escalated_target_accept(
 #
 # One pool worker killed (an out-of-memory kill) raises BrokenProcessPool for
 # every pending fit, and the start-of-experiment screen used to drop every one
-# of those models — protected seeds included — as "MCMC fit failed".
+# of those models — starting models included — as "MCMC fit failed".
 
 
 def test_a_broken_pool_raises_instead_of_failing_every_pending_model(tmp_path, monkeypatch):

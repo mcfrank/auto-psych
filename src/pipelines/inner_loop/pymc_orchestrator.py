@@ -91,7 +91,6 @@ from src.pipelines.inner_loop.scoring import (
     _export,
     _record_end_of_experiment_retirements,
     _record_history_step,
-    _resolve_protected_names,
     _score,
 )
 
@@ -183,7 +182,7 @@ def run_pymc_inner_loop(
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD,
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER,
     candidate_parallelism: Optional[int] = None,
-    protected_names: Optional[Iterable[str]] = None,
+    starting_models: Optional[Iterable[str]] = None,
     ledger_context: str = "",
     lens_offset: int = 0,
     agent_root: Optional[Path] = None,
@@ -203,16 +202,15 @@ def run_pymc_inner_loop(
         previous experiment's `cognitive_models/`. An ``attempted_hypotheses.jsonl``
         beside the manifest (the ledger a previous experiment carried) seeds
         this run's ledger.
-    protected_names
-        Models that are never pruned — the run's starting models, the
-        baselines a run reports against. ``None`` protects every model in
-        ``seed_models_dir`` (the right default when that directory *is* the
-        seed set). The outer loop passes the starting models it recorded at
-        experiment 1 (``run_starting_models``) so that a model carried from a
-        previous experiment can lose and leave the set. Names not in the seed
-        set are ignored (a starting model no longer carried); a non-empty set
-        with no member in the seed set raises. Every one of these names is
-        also one no candidate may take (``reserved_names``).
+    starting_models
+        The run's starting models: names no candidate may take
+        (``reserved_names``), whether or not they are still in the set. They
+        are not protected — pruned, retired and dropped like any other model
+        (user decision 2026-09-28). ``None`` means the models in
+        ``seed_models_dir`` (right when that directory *is* the seed set); the
+        outer loop passes the names it recorded at experiment 1
+        (``run_starting_models``). A starting model that breaks the data
+        contract still raises (``_drop_unfittable_models``).
     ledger_context
         Prefix for the ledger's ``context`` field (e.g. ``"experiment2"``).
     max_iterations
@@ -251,9 +249,9 @@ def run_pymc_inner_loop(
         records as ``novelty_pool.json``, not the training stimuli (``0``
         disables).
     prune_dse_multiplier
-        After each scoring pass, drop non-protected models that are
-        statistically distinguishable from the best
-        (``elpd_diff > multiplier·dse``); ``0`` disables pruning.
+        At the end of the experiment, drop every model (starting models
+        included) that is statistically distinguishable from the best trusted
+        one (``elpd_diff > multiplier·dse_clustered``); ``0`` disables pruning.
     candidate_parallelism
         Concurrent candidate agents per round (``None`` ⇒ all of the round's
         candidates at once; ``1`` ⇒ sequential). Agents are CLI subprocesses,
@@ -283,10 +281,9 @@ def run_pymc_inner_loop(
     seeded_names = {e.get("name") for e in seeded_entries if e.get("name")}
     # Every starting model, carried or not, is a name no candidate may take
     # (with those pruned or retired so far; see reserved_names).
-    starting_models = set(protected_names) if protected_names is not None else None
-    protected = _resolve_protected_names(starting_models, seeded_names)
-    if starting_models is None:
-        starting_models = set(protected)
+    starting_models = (
+        set(starting_models) if starting_models is not None else set(seeded_names)
+    )
     # The loop's memory: every hypothesis tried, continuing the ledger the
     # previous experiment carried beside its model set.
     ledger = HypothesisLedger.create(
@@ -298,7 +295,7 @@ def run_pymc_inner_loop(
         responses_path,
         ledger=ledger,
         ledger_context=ledger_context,
-        protected=protected,
+        starting_models=starting_models,
     )
     fit_kwargs = fit_kwargs or {}
     # A carried-forward model can score a finite ELPD on a prior experiment's data
@@ -311,7 +308,6 @@ def run_pymc_inner_loop(
         fit_kwargs=fit_kwargs,
         ledger=ledger,
         ledger_context=ledger_context,
-        protected=protected,
     )
     # The novelty pool: generated once from the loop's own seed and recorded in
     # the run tree, so every candidate this run gates is compared on the same
@@ -650,13 +646,15 @@ def run_pymc_inner_loop(
 
     # Pruning happens once, at the end of the experiment (user decision
     # 2026-09-26): it used to run after every round against the max of a
-    # growing zoo. Then the live set is capped. Neither can change the best
-    # model (the best is never pruned, and the cap retires from the bottom).
+    # growing zoo. Then the live set is capped. Both apply to every model,
+    # starting models included (user decision 2026-09-28). Neither can
+    # change the best trusted model or empty the set: pruning measures every
+    # margin against the best trusted model, and the cap retires untrusted
+    # fits first, then from the bottom, keeping at least one model.
     end_context = f"{ledger_context} end of experiment".strip()
     retired = _prune_losers(
         models_dir,
         responses_path,
-        protected=protected,
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
         dse_multiplier=prune_dse_multiplier,
@@ -666,7 +664,6 @@ def run_pymc_inner_loop(
     retired += _cap_live_set(
         models_dir,
         responses_path,
-        protected=protected,
         cache_dir=cache_dir,
         fit_kwargs=fit_kwargs,
         ledger=ledger,

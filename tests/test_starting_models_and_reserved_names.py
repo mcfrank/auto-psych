@@ -1,11 +1,13 @@
-"""Protection comes from being a starting model; retired names stay taken.
+"""The run's starting models are recorded once; retired names stay taken.
 
-- Second audit B10: pruning protection was recomputed every experiment as the
-  project's seed manifest intersected with the carried set, so a candidate
-  that chose a seed's name -- the held-out ground truth's, in a holdout cell
-  -- was carried from then on as a protected, never-pruned starting model.
-  The run's starting models are now recorded when experiment 1's model loop
-  first runs (``<run>/starting_models.json``) and only they are protected.
+- Second audit B10: the starting models were recomputed every experiment as
+  the project's seed manifest intersected with the carried set, so a
+  candidate that chose a seed's name -- the held-out ground truth's, in a
+  holdout cell -- was carried from then on as a starting model. The run's
+  starting models are now recorded when experiment 1's model loop first runs
+  (``<run>/starting_models.json``). Since 2026-09-28 they are not protected
+  from pruning (tests/test_starting_models_prunable.py); their names stay
+  reserved.
 - A candidate may not take a starting model's name (first audit D3 too):
   nor the name of a model pruned, retired or dropped earlier in the run, which
   made the ledger, the refinement menu and the evaluation (one file per name)
@@ -47,8 +49,7 @@ def _capture_the_loop(monkeypatch):
         captured.update(kwargs)
         return {"best_model": "falk_konold_dp"}
 
-    def fake_export(exp_dir, loop_dir, *, best_model, protected_names):
-        captured["export_protected"] = set(protected_names)
+    def fake_export(exp_dir, loop_dir, *, best_model):
         return exp_dir
 
     monkeypatch.setattr(mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])
@@ -75,11 +76,16 @@ def test_experiment_1_records_the_runs_starting_models(tmp_path, monkeypatch):
     _run(run / "experiment1")
 
     recorded = json.loads((run / "starting_models.json").read_text(encoding="utf-8"))
-    assert recorded == ["falk_konold_dp", "local_representativeness"]
-    assert captured["protected_names"] == {"falk_konold_dp", "local_representativeness"}
+    assert recorded == {
+        "starting_models": ["falk_konold_dp", "local_representativeness"],
+        "starting_models_prunable": True,
+    }
+    assert captured["starting_models"] == {"falk_konold_dp", "local_representativeness"}
 
 
-def test_a_candidate_named_after_the_held_out_model_is_not_protected(tmp_path, monkeypatch):
+def test_a_candidate_named_after_the_held_out_model_is_not_a_starting_model(
+    tmp_path, monkeypatch
+):
     run = tmp_path / "run0" / "motif_stack"
     _cognitive_models(run / "experiment1", ["falk_konold_dp", "local_representativeness"])
     captured = _capture_the_loop(monkeypatch)
@@ -91,21 +97,23 @@ def test_a_candidate_named_after_the_held_out_model_is_not_protected(tmp_path, m
 
     _run(run / "experiment2")
 
-    assert captured["protected_names"] == {"falk_konold_dp", "local_representativeness"}
-    assert captured["export_protected"] == {"falk_konold_dp", "local_representativeness"}
+    assert captured["starting_models"] == {"falk_konold_dp", "local_representativeness"}
 
 
 def test_a_resumed_experiment_1_reads_the_record_not_the_exported_set(tmp_path, monkeypatch):
     run = tmp_path / "run0" / "motif_stack"
     (run).mkdir(parents=True)
-    (run / "starting_models.json").write_text('["falk_konold_dp"]', encoding="utf-8")
+    (run / "starting_models.json").write_text(
+        json.dumps({"starting_models": ["falk_konold_dp"], "starting_models_prunable": True}),
+        encoding="utf-8",
+    )
     # The export already ran once and carried a candidate named like a seed.
     _cognitive_models(run / "experiment1", ["falk_konold_dp", "motif_stack"])
     captured = _capture_the_loop(monkeypatch)
 
     _run(run / "experiment1")
 
-    assert captured["protected_names"] == {"falk_konold_dp"}
+    assert captured["starting_models"] == {"falk_konold_dp"}
 
 
 def test_a_later_experiment_without_a_record_raises(tmp_path, monkeypatch):
@@ -154,7 +162,7 @@ def test_the_loop_renames_a_candidate_that_asks_for_a_retired_or_starting_name(
         max_iterations=2,
         candidate_count=1,
         enable_critique=False,
-        protected_names={"model_a", "model_b", "gone_seed"},
+        starting_models={"model_a", "model_b", "gone_seed"},
     )
 
     rows = [

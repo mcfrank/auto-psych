@@ -350,27 +350,29 @@ def _drop_unfittable_models(
     *,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
-    protected: Iterable[str] = (),
+    starting_models: Iterable[str] = (),
 ) -> None:
-    """Remove from the manifest any starting model that cannot be MCMC-fit or
-    breaks the data contract.
+    """Remove from the manifest any model that cannot be MCMC-fit or breaks
+    the data contract.
 
     A seed/theory model whose logp is non-finite on the data (e.g. a
     numerically unsafe construct that NaNs in PyTensor) would otherwise crash
     ``pm.sample`` at its start-value check and abort the whole run. We drop such
     models from the manifest with a loud warning rather than let one bad model
-    kill a long agentic run. Fails loudly only if **no** model survives. Each
-    drop is recorded in the ledger so a carried model that vanishes here is
-    still accounted for.
+    kill a long agentic run — a run's starting model too (they are not
+    protected; user decision 2026-09-28). Fails loudly only if **no** model
+    survives. Each drop is recorded in the ledger so a carried model that
+    vanishes here is still accounted for.
 
     A model that breaks the data contract (``model_contract_violation``: its
     observed data are not the responses' ``chose_left`` in row order, or its
     ``p_left`` is not the per-trial probability its likelihood uses) is
-    dropped the same way, except a ``protected`` one: a starting model the
-    run reports against that is scored on something other than the responses
-    is a broken project, and raises.
+    dropped the same way, except one of the run's ``starting_models``: that is
+    not a model failing to fit but a project asset scored on something other
+    than the responses (and the fitted starting-model baseline, which fits the
+    same file, would be meaningless), so it raises.
     """
-    protected = set(protected)
+    starting_models = set(starting_models)
     keep: List[Dict[str, str]] = []
     for entry in _manifest_entries(models_dir):
         name = entry["name"]
@@ -380,17 +382,17 @@ def _drop_unfittable_models(
             if violation is None:
                 keep.append(entry)
                 continue
-            if name in protected:
+            if name in starting_models:
                 raise RuntimeError(
-                    f"Protected starting model {name!r} breaks the data contract on "
-                    f"{responses_path}: {violation}. A protected seed is never "
-                    "dropped from the set; fix the seed."
+                    f"Starting model {name!r} breaks the data contract on "
+                    f"{responses_path}: {violation}. A project seed must score the "
+                    "responses; fix the seed."
                 )
             reason = f"breaks the data contract — {violation}"
             print(f"  [drop] model {name!r} {reason}", flush=True)
             detail = f"{reason} (on this experiment's data)"
         else:
-            print(f"  [drop] seed model {name!r} cannot be fit — {reason}", flush=True)
+            print(f"  [drop] model {name!r} cannot be fit — {reason}", flush=True)
             detail = f"cannot be fit on this experiment's data — {reason}"
         _record(
             ledger,
@@ -402,8 +404,8 @@ def _drop_unfittable_models(
         )
     if not keep:
         raise ValueError(
-            f"No fittable seed models remain in {models_dir} — every seed model's "
-            "logp was non-finite on the data or broke the data contract."
+            f"No fittable models remain in {models_dir} — every model's logp was "
+            "non-finite on the data or broke the data contract."
         )
     _write_manifest(models_dir, keep)
 
@@ -416,7 +418,6 @@ def _drop_nonfinite_elpd_models(
     fit_kwargs: Optional[Dict[str, Any]] = None,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
-    protected: Iterable[str] = (),
 ) -> None:
     """Remove from the manifest any model whose ELPD-LOO is non-finite on the data.
 
@@ -440,20 +441,13 @@ def _drop_nonfinite_elpd_models(
     Only a failure that is the model's own drops it. An infrastructure failure
     (a broken fit pool, an unreadable cache file, out of memory:
     ``INFRASTRUCTURE_ERRORS``) raises out of here instead of being recorded as
-    "MCMC fit failed". A ``protected`` model (a project seed, the baseline the
-    run reports against) is never dropped: whatever would drop it raises.
+    "MCMC fit failed". A run's starting model is dropped like any other
+    (user decision 2026-09-28; it used to raise).
     """
     fit_kwargs = fit_kwargs or {}
     entries = _manifest_entries(models_dir)
-    protected = set(protected)
 
     def drop(entry: Dict[str, str], message: str, detail: str) -> None:
-        if entry["name"] in protected:
-            raise RuntimeError(
-                f"Protected seed model {entry['name']!r}: {message}. A protected "
-                "seed is never dropped from the set; fix the cause (or the seed) "
-                "and resume."
-            )
         print(f"  [drop] model {entry['name']!r}: {message}; dropping.", flush=True)
         _record(
             ledger,
@@ -736,11 +730,12 @@ def parse_prune_margin(detail: str) -> float:
     return float(match.group("nats"))
 
 
-# Pruning: after each scoring pass, a non-protected model is dropped when it is
-# statistically distinguishable from the best (elpd_diff > multiplier·dse among
-# PSIS-LOO-reliable rows). The surviving set is the uncertainty set — every
-# non-protected survivor is within the margin of the best — which is what the
-# outer loop carries into the next experiment. Stacking weight is deliberately
+# Pruning: at the end of each experiment, a model — any model, the run's
+# starting models included (user decision 2026-09-28) — is dropped when it is
+# statistically distinguishable from the best trusted model
+# (elpd_diff > multiplier·dse_clustered among trusted rows). The surviving set
+# is the uncertainty set — every trusted survivor is within the margin of the
+# best — which is what the outer loop carries into the next experiment. Stacking weight is deliberately
 # NOT a criterion: az.compare's weights are ensemble coefficients, not
 # plausibility. See the decision record for the empirical evidence.
 DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
@@ -812,27 +807,28 @@ def _prune_losers(
     models_dir: Path,
     responses_path: Path,
     *,
-    protected: set[str],
     cache_dir: Optional[Path],
     fit_kwargs: Optional[Dict[str, Any]],
     dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
 ) -> List[str]:
-    """Drop non-protected models that have lost; return their names.
+    """Drop the models that have lost; return their names.
 
     "Lost" means statistically distinguishable from the best trusted model
     (reliable PSIS-LOO and converged) on the current data:
     ``elpd_diff > dse_multiplier·dse_clustered`` against it, among trusted
     rows. When the rank-0 model is untrusted, the comparison is recomputed
     over the trusted models only, so it is against the best of them. The
-    survivors are therefore the uncertainty set — every non-protected model
-    still within the margin of the best — which is what the outer loop carries
-    into the next experiment. ``protected`` names (the project's seed models)
-    are never pruned: they are the baselines the run reports against. Pruned
-    files move to ``models/pruned/`` (an audit trail, not a deletion), the
-    ledger records the margin, and the cached fits are evicted so the
-    in-process memory footprint stops growing with dead models.
+    survivors are therefore the uncertainty set — every trusted model still
+    within the margin of the best — which is what the outer loop carries into
+    the next experiment. The run's starting models are pruned by the same rule
+    (user decision 2026-09-28; they used to be protected). The best trusted
+    model is never pruned (its margin is zero), so pruning never empties the
+    set; untrusted models are never pruned either. Pruned files move to
+    ``models/pruned/`` (an audit trail, not a deletion), the ledger records
+    the margin, and the cached fits are evicted so the in-process memory
+    footprint stops growing with dead models.
 
     Honest framing: within a run, re-scoring a loser is a cache hit, so the
     savings are memory, az.compare size, and a focused existing_hypotheses.md —
@@ -877,7 +873,7 @@ def _prune_losers(
         return []
     top = min(comparison, key=lambda name: comparison[name]["rank"])
     if _untrusted(comparison[top]):
-        # Untrusted rows drop out here; they are never pruned anyway.
+        # Untrusted rows drop out here; they are never pruned.
         comparison = compare_table(
             responses_path, models_dir, cache_dir=cache_dir, names=trusted,
             **(fit_kwargs or {}),
@@ -894,8 +890,7 @@ def _prune_losers(
     to_prune = [
         name
         for name in names
-        if name not in protected
-        and name in comparison
+        if name in comparison
         and not _untrusted(comparison[name])
         and _clustered_dse(comparison, name) > 0
         and comparison[name]["elpd_diff"] > dse_multiplier * _clustered_dse(comparison, name)
@@ -918,8 +913,8 @@ def _prune_losers(
     return to_prune
 
 
-# The live set carried into the next experiment is at most this many models,
-# seeds included (user decision 2026-09-26): pruning alone could let it grow
+# The live set carried into the next experiment is at most this many models
+# (user decision 2026-09-26): pruning alone could let it grow
 # without bound, since a model within the margin of the best is never pruned.
 MAX_LIVE_MODELS = 8
 
@@ -928,20 +923,24 @@ def _cap_live_set(
     models_dir: Path,
     responses_path: Path,
     *,
-    protected: set[str],
     cache_dir: Optional[Path],
     fit_kwargs: Optional[Dict[str, Any]],
     cap: int = MAX_LIVE_MODELS,
     ledger: Optional[HypothesisLedger] = None,
     ledger_context: str = "",
 ) -> List[str]:
-    """Retire non-protected models until at most ``cap`` remain; return them.
+    """Retire models until at most ``cap`` remain; return them.
 
     Models that cannot be trusted (an unreliable PSIS-LOO or a non-converged
     fit; they can never be exported) retire first, then the lowest by ELPD-LOO.
-    Protected seeds are never retired. Retired models go where pruned ones do:
-    ``models/pruned/``, and the ledger as ``pruned`` with the reason.
+    The run's starting models are retired by the same ordering (user decision
+    2026-09-28; they used to be exempt). The best trusted model is retired
+    last of all, so with ``cap >= 1`` it always stays. Retired models go where
+    pruned ones do: ``models/pruned/``, and the ledger as ``pruned`` with the
+    reason.
     """
+    if cap < 1:
+        raise ValueError(f"The live-set cap must keep at least one model; got {cap}.")
     names = _manifest_names(models_dir)
     excess = len(names) - cap
     if excess <= 0:
@@ -949,21 +948,12 @@ def _cap_live_set(
     comparison = compare_table(
         responses_path, models_dir, cache_dir=cache_dir, **(fit_kwargs or {})
     )
-    retirable = [name for name in names if name not in protected]
     # Untrusted first, then worst rank first.
     order = sorted(
-        retirable,
+        names,
         key=lambda name: (not _untrusted(comparison[name]), -comparison[name]["rank"]),
     )
     to_retire = order[:excess]
-    if len(to_retire) < excess:
-        print(
-            f"  [warn] live set cap {cap}: {len(names)} models, but only "
-            f"{len(retirable)} are not protected seeds; keeping "
-            f"{len(names) - len(to_retire)}.",
-            file=sys.stderr,
-            flush=True,
-        )
     # The detail leads with the margin, like a prune's: the refinement menu
     # ranks every pruned entry by it (parse_prune_margin).
     best = min(comparison, key=lambda name: comparison[name]["rank"])

@@ -147,7 +147,7 @@ def main(args: Args) -> None:
         # The seed files the cell was seeded with, not the registry's, which
         # may have changed since.
         "seeds": {
-            name: score(name, seeded_models_dir(tree))
+            name: score(name, _resolve_model_dir(seeded_models_dir(tree), name))
             for name in seed_model_names(args.gt_models_dir)
             if name != gt_model
         },

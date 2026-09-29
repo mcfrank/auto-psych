@@ -83,8 +83,8 @@ def _validate_model_set(exp_dir: Path) -> tuple[bool, str]:
     # hypothesis is rejected: every model must be a specific, testable claim.
     names = [entry["name"] for entry in entries]
 
-    # Only the previous experiment's cognitive_models/ carries forward (its
-    # protected seeds + the zoo survivors the export renamed where needed). The
+    # Only the previous experiment's cognitive_models/ carries forward (the
+    # zoo survivors, renamed by the export where needed). The
     # inner loop's fallback-named candidates (`iterN_candidateM`) export under
     # `inner_loop_model[_k]` and must never appear under their zoo name — reject
     # them so the repair loop makes the agent drop them rather than silently

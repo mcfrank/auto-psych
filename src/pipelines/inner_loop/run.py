@@ -119,8 +119,9 @@ class Args:
     model's on the loop's novelty pool, a broad loop-generated stimulus pool
     recorded as novelty_pool.json (0 disables the novelty gate)."""
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER
-    """Prune non-seed models with elpd_diff > multiplier*dse after each
-    scoring pass (0 disables pruning)."""
+    """At the end of each experiment, prune every model (starting models
+    included) with elpd_diff > multiplier*dse_clustered against the best
+    trusted model (0 disables pruning)."""
     candidate_parallelism: Optional[int] = None
     """Concurrent candidate agents per round (default: all of the round's
     candidates at once; 1 = sequential)."""

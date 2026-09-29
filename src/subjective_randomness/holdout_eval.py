@@ -171,15 +171,29 @@ def seeded_models_dir(run_root: Path) -> Path:
     The seed baselines score "the models the loop starts with", so they load
     each seed's code from here, not from the recovery registry
     (``seed_models_dir``), which may have changed since the run. A seed's
-    file stays here for the whole run (seeds are never pruned or retired; a
-    seed dropped as unfittable loses only its manifest entry), and an archived
-    run re-scored later keeps the seeds it ran with.
+    file stays in this directory for the whole run, or in its ``pruned/``
+    subdirectory once experiment 1 pruned or retired it (starting models are
+    prunable; ``_seed_file_dir``); a seed dropped as unfittable loses only its
+    manifest entry. An archived run re-scored later keeps the seeds it ran
+    with.
     """
     return Path(run_root) / "experiment1" / "model_loop" / "models"
 
 
+def _seed_file_dir(models_dir: Path, name: str) -> Path:
+    """Where seed ``name``'s file is in experiment 1's zoo: the zoo, or its
+    ``pruned/`` when experiment 1 pruned or retired the seed. No candidate may
+    take a starting model's name (``reserved_names``), so ``pruned/<name>.py``
+    is the seed's own file."""
+    return _resolve_model_dir(models_dir, name)
+
+
 def _require_seeded(names: Sequence[str], models_dir: Path) -> None:
-    missing = sorted(name for name in names if not (Path(models_dir) / f"{name}.py").exists())
+    missing = sorted(
+        name
+        for name in names
+        if not (_seed_file_dir(models_dir, name) / f"{name}.py").exists()
+    )
     if missing:
         raise FileNotFoundError(
             f"Seed model file(s) {missing} are not in {models_dir}, experiment 1's "
@@ -357,8 +371,8 @@ def _fitted_seed_baseline(
     exclusions_log: Optional[Path] = None,
     exclusion_record: Optional[Mapping[str, Any]] = None,
 ) -> Dict[str, Any]:
-    """Fit each seed model (its file in ``models_dir``) on ``responses_path``
-    and correlate with GT.
+    """Fit each seed model (its file in ``models_dir``, or its ``pruned/``) on
+    ``responses_path`` and correlate with GT.
 
     Predicts held-out ``p_left`` for each seed model and correlates with the
     ground truth: the recovery from *fitting the existing starting models*,
@@ -380,7 +394,7 @@ def _fitted_seed_baseline(
     for name in seed_models:
         fitted = fit_model(
             name,
-            models_dir,
+            _seed_file_dir(models_dir, name),
             responses_path,
             cache_dir=cache_dir,
             **dict(fit_kwargs),
@@ -652,7 +666,9 @@ def seed_baseline_correlation(
 
     per_model: Dict[str, Optional[float]] = {}
     for name, params in others.items():
-        pred = p_left_fixed_params(name, seeded_models_dir, eval_stimuli, params)
+        pred = p_left_fixed_params(
+            name, _seed_file_dir(seeded_models_dir, name), eval_stimuli, params
+        )
         per_model[name] = pearson_r(gt_p.tolist(), pred.tolist())
 
     defined = [r for r in per_model.values() if r is not None]

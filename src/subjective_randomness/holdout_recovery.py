@@ -45,6 +45,7 @@ from src.pipelines.outer_loop.model_loop_runner import (
     finish_model_loop_stage,
     init_registry,
     run_inner_model_loop_programmatic,
+    starting_models_prunable,
 )
 from src.pipelines.outer_loop.orchestrator import (
     carry_forward_cognitive_models,
@@ -567,6 +568,24 @@ def run_holdout_recovery_from_config(
         write_usage_report(results_root, usage_marker, heading="holdout recovery")
 
 
+def _one_condition(gt_runs: Iterable[Mapping[str, Any]]) -> bool:
+    """Whether this result's runs could prune their starting models; runs of
+    both conditions in one result raise rather than being pooled."""
+    stale = [gt_run["gt_model"] for gt_run in gt_runs if "starting_models_prunable" not in gt_run]
+    if stale:
+        raise ValueError(
+            f"The recorded runs for {stale} predate the starting-models-prunable "
+            "record: they ran on code that protected starting models from pruning."
+        )
+    conditions = {bool(gt_run["starting_models_prunable"]) for gt_run in gt_runs}
+    if len(conditions) != 1:
+        raise ValueError(
+            "The runs of this result disagree on whether starting models were "
+            f"prunable ({sorted(conditions)}); they cannot be summarised together."
+        )
+    return conditions.pop()
+
+
 def _run_holdout_recovery_resolved(
     gt_params_by_model: Dict[str, Dict[str, float]],
     results_root: Path,
@@ -724,7 +743,8 @@ def _run_holdout_recovery_resolved(
             gt_family_dir=gt_family_dir,
         )
         # At the end of every experiment, on that experiment's cumulative data
-        # (the loop's own seed fits: cache hits), so every experiment's steps
+        # (the loop's own seed fits, cache hits, while the seed is in the set;
+        # a fresh fit once the loop has pruned it), so every experiment's steps
         # are compared with the baseline on the data they were fit on.
         fitted_by_experiment = fitted_seed_baseline_by_experiment(
             run_root,
@@ -750,6 +770,9 @@ def _run_holdout_recovery_resolved(
             "n_eval_dropped": eval_info["n_dropped"],
             "trajectory": trajectory,
             "incumbent": summarise_incumbents(trajectory, starting_models),
+            # False for a run that protected its starting models from pruning
+            # (the code before 2026-09-28): the two conditions must not be pooled.
+            "starting_models_prunable": starting_models_prunable(run_root),
             "baseline": baseline,
             "fitted_baseline": fitted_baseline,
             "fitted_baseline_by_experiment": fitted_by_experiment,
@@ -776,6 +799,7 @@ def _run_holdout_recovery_resolved(
             "candidate_count": candidate_count,
             "novelty_rmse_threshold": novelty_rmse_threshold,
             "n_critique_proposals": n_critique_proposals,
+            "starting_models_prunable": _one_condition(gt_runs),
         },
         "fit_kwargs": fit_kwargs,
         "seed": seed,

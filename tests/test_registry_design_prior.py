@@ -8,8 +8,8 @@ read 0.33 because they differed — and they were written over the whole zoo,
 including models never carried into the next experiment. In 15 of the 40
 next-experiment designs of the iteration-2 recovery sweep every model actually
 present had weight ~0, or one had weight 1.0: a degenerate prior under which
-all 32 EIG-selected stimuli had zero EIG. The carried set is the protected
-seeds plus every model still within the pruning margin of the best, so a
+all 32 EIG-selected stimuli had zero EIG. The carried set is every model
+still within the pruning margin of the best (starting models included), so a
 uniform prior over it asks the design to separate exactly the unresolved
 hypotheses. A missing posterior export or an absent/empty carried set fails
 loudly: the registry is only updated after a model loop ran and exported.

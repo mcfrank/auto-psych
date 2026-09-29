@@ -643,8 +643,9 @@ class Args:
     """Reject a candidate whose p_left is within this RMSE of an admitted
     model's (None ⇒ inner-loop default 0.02; 0 disables the gate)."""
     prune_dse_multiplier: Optional[float] = None
-    """Prune non-seed models with elpd_diff > multiplier*dse after each
-    scoring pass (None ⇒ inner-loop default 2.0; 0 disables pruning)."""
+    """At the end of each experiment, prune every model (starting models
+    included) with elpd_diff > multiplier*dse_clustered against the best
+    trusted model (None ⇒ inner-loop default 2.0; 0 disables pruning)."""
     candidate_parallelism: Optional[int] = None
     """Concurrent candidate agents per inner-loop round (None ⇒ all of a
     round's candidates at once; 1 = sequential)."""

@@ -95,7 +95,7 @@ def test_critique_agent_threads_model(tmp_path, monkeypatch):
 def test_programmatic_wrapper_threads_agent_model(tmp_path, monkeypatch):
     exp_dir = tmp_path / "data" / "outer_loop" / "subjective_randomness" / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
-    # A real project seed, so the wrapper can tell which models are protected.
+    # A real project seed, so the wrapper can record the starting models.
     (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
         yaml.safe_dump({"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}),
         encoding="utf-8",
@@ -108,7 +108,7 @@ def test_programmatic_wrapper_threads_agent_model(tmp_path, monkeypatch):
 
     monkeypatch.setattr(mlr, "_pooled_response_rows", lambda e: [{"chose_left": "1"}])
     monkeypatch.setattr(mlr, "write_responses_csv", lambda rows, out: out)
-    monkeypatch.setattr(mlr, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e)
+    monkeypatch.setattr(mlr, "_export_inner_loop_models", lambda e, l, *, best_model: e)
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
         fake_inner_loop,

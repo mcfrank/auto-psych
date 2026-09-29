@@ -5,7 +5,8 @@ model lost there left for good. It now runs once per experiment, after the
 last round (user decision 2026-09-26). After it, the live set carried to the
 next experiment is capped at MAX_LIVE_MODELS: beyond it, the models that
 cannot be trusted (unreliable PSIS-LOO or a non-converged fit) retire first,
-then the lowest by ELPD. Seeds are never retired.
+then the lowest by ELPD. The run's starting models are retired like any
+other (tests/test_starting_models_prunable.py).
 """
 
 from __future__ import annotations
@@ -81,7 +82,7 @@ def test_the_cap_retires_untrusted_models_first_then_the_lowest_elpd(tmp_path, m
     ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
 
     retired = _cap_live_set(
-        models_dir, tmp_path / "r.csv", protected={"seed"}, cache_dir=None,
+        models_dir, tmp_path / "r.csv", cache_dir=None,
         fit_kwargs={}, cap=3, ledger=ledger, ledger_context="experiment1 end of experiment",
     )
 
@@ -92,24 +93,11 @@ def test_the_cap_retires_untrusted_models_first_then_the_lowest_elpd(tmp_path, m
     assert "live set" in details["a4"] and "cannot be trusted" in details["a3"]
 
 
-def test_seeds_are_never_retired_by_the_cap(tmp_path, monkeypatch):
-    models_dir = _zoo(tmp_path, ["s1", "s2", "a1"])
-    comparison = {"a1": _row(0), "s1": _row(1), "s2": _row(2)}
-    monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: comparison)
-    monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
-    retired = _cap_live_set(
-        models_dir, tmp_path / "r.csv", protected={"s1", "s2"}, cache_dir=None,
-        fit_kwargs={}, cap=2, ledger=None, ledger_context="",
-    )
-    assert retired == ["a1"]
-    assert model_zoo._manifest_names(models_dir) == ["s1", "s2"]
-
-
 def test_a_set_within_the_cap_is_untouched(tmp_path, monkeypatch):
     models_dir = _zoo(tmp_path, ["seed", "a1"])
     monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: 1 / 0)
     assert _cap_live_set(
-        models_dir, tmp_path / "r.csv", protected={"seed"}, cache_dir=None,
+        models_dir, tmp_path / "r.csv", cache_dir=None,
         fit_kwargs={}, cap=8, ledger=None, ledger_context="",
     ) == []
 
@@ -128,7 +116,7 @@ def test_a_cap_retirement_can_be_ranked_on_the_next_refinement_menu(tmp_path, mo
     ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
 
     _cap_live_set(
-        models_dir, tmp_path / "r.csv", protected={"seed"}, cache_dir=None,
+        models_dir, tmp_path / "r.csv", cache_dir=None,
         fit_kwargs={}, cap=3, ledger=ledger, ledger_context="experiment1 end of experiment",
     )
 

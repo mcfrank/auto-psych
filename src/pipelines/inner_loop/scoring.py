@@ -29,28 +29,6 @@ from src.pipelines.inner_loop.model_zoo import _manifest_entries
 DEFAULT_COMPLEXITY_PRIOR_CONST = -0.05
 
 
-def _resolve_protected_names(
-    protected_names: Optional[Iterable[str]], seeded_names: set[str]
-) -> set[str]:
-    """The subset of the seeded set that pruning must never touch.
-
-    ``None`` protects the whole seeded set. An explicit set is intersected
-    with the seeded names (a project seed held out of this run is simply
-    absent); an explicit non-empty set that matches nothing is a caller bug
-    and raises rather than silently leaving every model prunable.
-    """
-    if protected_names is None:
-        return set(seeded_names)
-    requested = set(protected_names)
-    protected = requested & set(seeded_names)
-    if requested and not protected:
-        raise ValueError(
-            f"None of the protected model names {sorted(requested)} is in the "
-            f"seeded model set {sorted(seeded_names)}."
-        )
-    return protected
-
-
 def _best_model(posterior: Dict[str, Any]) -> str:
     """The raw softmax-posterior argmax (a report field, not the selection rule)."""
     return max(posterior["posteriors"], key=lambda m: posterior["posteriors"][m])
