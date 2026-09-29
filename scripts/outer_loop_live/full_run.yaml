@@ -27,7 +27,7 @@ qos: ""                            # "" = default normal QoS
 prolific:
   participants: 40                 # per experiment -> total_available_places
   reward_per_hour: 1200            # cents/hour ($12/hr)
-  estimated_completion_time: 5     # minutes -> ~$1.00/participant (matches the ~4-5 min task)
+  estimated_completion_time: 7     # minutes -> ~$1.40/participant (matches the ~6-7 min, 64-trial task)
   name: "Which sequence is more random?"
   description: >-
     In this study, you will see a series of coin flip results and be asked to judge which is more random.

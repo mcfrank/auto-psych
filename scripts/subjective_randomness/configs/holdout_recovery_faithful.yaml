@@ -37,16 +37,14 @@ inner_loop:
   # overridden with --n-critique-proposals / N_CRITIQUE_PROPOSALS).
   n_critique_proposals: 8
 
-# Per-experiment design: n_eig stimuli chosen by max joint-EIG (discrimination,
-# concentrated on structured extremes) + n_random sampled uniformly from the same
-# pair pool (coverage of the flat middle, so the selected model must fit the whole
-# space, not just the discriminating region). The random half is ONE fixed sample
-# per experiment, shown to every participant (needed for cross-participant
-# analysis). Ablations: {n_eig: 64, n_random: 0} = pure EIG; {n_eig: 0,
-# n_random: 64} = pure random. Override at the CLI with --design-n-eig/--design-n-random.
+# Per-experiment design: 64 stimuli chosen by max joint-EIG, as in the live
+# experiments (user decision 2026-09-26). n_random > 0 adds stimuli sampled
+# uniformly from the same pair pool (coverage of the flat middle); ablations:
+# {n_eig: 32, n_random: 32} = the earlier split; {n_eig: 0, n_random: 64} =
+# pure random. Override at the CLI with --design-n-eig/--design-n-random.
 design:
-  n_eig: 32
-  n_random: 32
+  n_eig: 64
+  n_random: 0
 
 agent:
   timeout_sec: 1800  # 30 min: Opus often ran out at 15 while checking a finished candidate

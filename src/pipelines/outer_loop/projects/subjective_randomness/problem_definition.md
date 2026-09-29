@@ -13,16 +13,16 @@ On each trial, the participant sees **two sequences of coin flips** (H and T) an
 
 ## Experiment design constraints
 
-- **Total trials per experiment: 32.** At ~5 s per self-paced trial this is roughly
-  **3 minutes of judgments** (≈4 minutes including consent, instructions, and
+- **Total trials per experiment: 64.** At ~5 s per self-paced trial this is roughly
+  **5–6 minutes of judgments** (≈7 minutes including consent, instructions, and
   debrief). The ~5 s/trial rate is grounded in the closest prior paradigm: Reimers,
   Donkin & Le Pelley (2018) ran a 2AFC short-H/T-string button task of **120 trials
   in ~10 minutes** (≈5 s/trial including instruction reading).
 - **Sequence length: 2 to 8** (inclusive).
 
 The design stage enumerates **every same-length** distinct H/T pair over lengths 2–8 (≈43k
-pairs) and greedily selects the 32 pairs that jointly carry the most information
-about which model is correct — a diverse set spread across distinctions, not 32
+pairs) and greedily selects the 64 pairs that jointly carry the most information
+about which model is correct — a diverse set spread across distinctions, not 64
 near-duplicates of the single highest-EIG contrast.
 
 ## Experiment presentation (reproduce VERBATIM — identical across all experiments)
@@ -53,8 +53,8 @@ paraphrase), **button responses only**, and the data contract above (`chose_left
   >
   > Different people have different impressions of what makes a sequence look
   > random, and there are no right or wrong answers. We are interested in your own
-  > honest impression, so go with your gut. You will complete **32 trials**, which
-  > takes about 4 minutes. Your responses are anonymous.
+  > honest impression, so go with your gut. You will complete **64 trials**, which
+  > takes about 7 minutes. Your responses are anonymous.
 
   > **Wording rationale (not shown to participants).** This instruction is grounded
   > in the subjective-randomness literature, which warns that naming the structural
