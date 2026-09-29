@@ -29,7 +29,32 @@ FORBIDDEN_PATHS = [
     # describes a held-out motif_stack in full); only opencode honoured the
     # read deny-list that used to cover it.
     "src/subjective_randomness/pymc_model_families",
+    # The rest of the research library is harness-only, and several of its
+    # modules name the ground truths (incumbent.py, exhaustive_search.py, ...).
+    "src/subjective_randomness",
+    # Docs, tests, scripts and analyses name and describe the ground truths
+    # (40 files named motif_stack); agents need only src/ and their run tree.
+    "docs",
+    "tests",
+    "scripts",
+    "analysis",
+    "diagrams",
+    "README.md",
+    "SUMMARY.md",
+    "HERO_RUN_DESIDERATA.md",
+    # Every agent could read the Prolific, Firebase, Google and Claude tokens.
+    ".secrets",
 ]
+
+GROUND_TRUTHS = [
+    "motif_stack",
+    "falk_konold_dp",
+    "finite_experience_occurrence",
+    "local_representativeness",
+]
+# The seed pool legitimately names the seeds that are NOT held out; the array
+# sbatch deletes the held-out one (and its manifest entry) per task.
+SEED_POOL = "src/pipelines/outer_loop/projects/subjective_randomness/seed_models"
 
 FORBIDDEN_GLOBS = [
     "scripts/subjective_randomness/configs/holdout_recovery*.yaml",
@@ -61,11 +86,18 @@ SEED_DIRS = [
 
 
 def _build_agent_tree(dest: Path) -> None:
-    """Rsync the repo into dest using the exclude file, as the sbatch does."""
+    """Rsync the repo into dest using the exclude file, as the sbatch does.
+
+    --delete-excluded cleans a tree a resumed task built before an exclusion
+    was added; the protect filter keeps the agents' results root.
+    """
     subprocess.run(
         [
             "rsync",
             "-a",
+            "--delete",
+            "--delete-excluded",
+            "--filter=P /_runs/***",
             "--exclude-from",
             str(EXCLUDE_FILE),
             str(REPO) + "/",
@@ -122,3 +154,46 @@ class TestForbiddenDefsOnlyInSeeds:
             assert in_seed, (
                 f"Feature-computing def {pattern!r} found outside seed dirs: {rel}"
             )
+
+
+class TestNoGroundTruthNamed:
+    """Beyond the seed pool, no file in the agent tree names a ground truth.
+
+    A loader comment ("e.g. motif_stack's unique-sequence table") reached three
+    agents, and a path naming the held-out model once led an agent to build its
+    first model from the name.
+    """
+
+    @pytest.mark.parametrize("gt", GROUND_TRUTHS)
+    def test_ground_truth_named_only_in_the_seed_pool(self, agent_tree, gt):
+        result = subprocess.run(
+            ["grep", "-rIl", "--", gt, str(agent_tree)],
+            capture_output=True, text=True,
+        )
+        hits = [
+            os.path.relpath(line, agent_tree)
+            for line in result.stdout.splitlines()
+            if not os.path.relpath(line, agent_tree).startswith(SEED_POOL)
+        ]
+        assert not hits, f"{gt!r} named in the agent tree: {hits}"
+
+
+def test_rebuilding_a_resumed_tree_removes_newly_excluded_files_but_keeps_runs(tmp_path):
+    tree = tmp_path / "repo"
+    (tree / "docs").mkdir(parents=True)
+    (tree / "docs" / "old.md").write_text("motif_stack\n", encoding="utf-8")
+    (tree / ".secrets").write_text("TOKEN=x\n", encoding="utf-8")
+    # The results root holds names the exclude list matches ("data", "*.nc");
+    # all of it must survive the rebuild.
+    kept = [
+        tree / "_runs" / "cell_1" / "history.json",
+        tree / "_runs" / "cell_1" / "experiment1" / "data" / "responses.csv",
+        tree / "_runs" / "cell_1" / "fits" / "model.abc.nc",
+    ]
+    for path in kept:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("kept", encoding="utf-8")
+    _build_agent_tree(tree)
+    assert not (tree / "docs").exists()
+    assert not (tree / ".secrets").exists()
+    assert all(path.read_text() == "kept" for path in kept)

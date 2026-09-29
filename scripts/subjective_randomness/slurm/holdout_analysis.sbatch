@@ -15,6 +15,22 @@ set -euo pipefail
 SLURM_DIR="${HOLDOUT_SLURM_DIR:-${SLURM_SUBMIT_DIR:-$(pwd)}}"
 source "$SLURM_DIR/_env.sh"
 
+# Cells whose agents wrote the held-out model's name (scan_gt_name.sh
+# --after-run). Only a warning: an agent can coin the name unaided.
+warnings="$WORK_ROOT/GT_NAME_WARNINGS.txt"
+: > "$warnings"
+for mentions in "$WORK_ROOT"/run*/*/gt_name_mentions.txt; do
+  [[ -f "$mentions" ]] || continue
+  echo "$(dirname "$mentions" | sed "s|^$WORK_ROOT/||"): $(wc -l < "$mentions") file(s), see $mentions" >> "$warnings"
+done
+if [[ -s "$warnings" ]]; then
+  echo "[analysis] WARNING: agents wrote a held-out ground-truth name in these cells:"
+  cat "$warnings"
+else
+  rm -f "$warnings"
+  echo "[analysis] no agent wrote a held-out ground-truth name"
+fi
+
 "$VENV_PY" scripts/subjective_randomness/holdout_test_retest.py \
   --runs-root "$WORK_ROOT" \
   --out    "$WORK_ROOT/test_retest.json" \
