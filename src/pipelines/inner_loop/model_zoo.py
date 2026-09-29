@@ -603,6 +603,20 @@ def novelty_pool_rows(
     return generate_candidate_pool(n_pairs, lengths=tuple(lengths), seed=seed)
 
 
+def _clustered_dse(comparison: Dict[str, Dict[str, Any]], name: str) -> float:
+    """The stimulus-clustered standard error pruning uses (user decision
+    2026-09-26); the trial-level ``dse`` is about half as large, because the
+    responses to one pair are correlated. Missing it is an error, not a cue
+    to fall back to the trial-level one."""
+    row = comparison[name]
+    if "dse_clustered" not in row:
+        raise KeyError(
+            f"comparison row for {name!r} has no 'dse_clustered'; pruning uses the "
+            "stimulus-clustered standard error (compare_table computes it)."
+        )
+    return float(row["dse_clustered"])
+
+
 def _untrusted(row: Dict[str, Any]) -> bool:
     """An unreliable PSIS-LOO or a fit that failed the convergence gate."""
     return bool(row.get("loo_unreliable") or row.get("not_converged"))
@@ -676,8 +690,8 @@ def _prune_losers(
         if name not in protected
         and name in comparison
         and not _untrusted(comparison[name])
-        and comparison[name]["dse"] > 0
-        and comparison[name]["elpd_diff"] > dse_multiplier * comparison[name]["dse"]
+        and _clustered_dse(comparison, name) > 0
+        and comparison[name]["elpd_diff"] > dse_multiplier * _clustered_dse(comparison, name)
     ]
     if not to_prune:
         return []
@@ -685,12 +699,12 @@ def _prune_losers(
     for name in to_prune:
         row = comparison[name]
         details[name] = prune_margin_detail(
-            elpd_diff=row["elpd_diff"], dse=row["dse"], baseline=baseline
+            elpd_diff=row["elpd_diff"], dse=row["dse_clustered"], baseline=baseline
         )
         print(
             f"  [prune] {name}: elpd_diff {row['elpd_diff']:.1f} > "
-            f"{dse_multiplier}·dse ({row['dse']:.1f}) — {details[name]}; moved to "
-            "models/pruned/.",
+            f"{dse_multiplier}·clustered dse ({row['dse_clustered']:.1f}) — "
+            f"{details[name]}; moved to models/pruned/.",
             flush=True,
         )
     _retire(models_dir, details, ledger=ledger, ledger_context=ledger_context)
