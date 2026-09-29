@@ -93,6 +93,10 @@ class Args:
     whose posterior-mean p_left is within this RMSE of an admitted model's on
     the loop's novelty pool is rejected as a near-duplicate (0 disables the
     gate). Lets a sweep A/B the gate without editing the config."""
+    n_critique_proposals: Optional[int] = None
+    """Override the config's inner_loop.n_critique_proposals: how many test
+    statistics the critique agent proposes per round (the inner-loop default
+    is 8 when neither the config nor this flag sets it)."""
     design_n_eig: Optional[int] = None
     """Override the config's design.n_eig (stimuli chosen by max joint-EIG)."""
     design_n_random: Optional[int] = None
@@ -164,6 +168,7 @@ def main(args: Args) -> None:
             ("max_iterations", args.inner_loop_iterations),
             ("candidate_count", args.inner_loop_candidates),
             ("novelty_rmse_threshold", args.novelty_rmse_threshold),
+            ("n_critique_proposals", args.n_critique_proposals),
         )
         if value is not None
     }

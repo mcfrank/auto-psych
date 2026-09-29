@@ -37,6 +37,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional
 
 from src.models.model_manifest import read_manifest_names
 from src.pipelines.outer_loop.columns import write_responses_csv
+from src.pipelines.inner_loop.critique_round import CRITIQUE_N_PROPOSALS
 from src.pipelines.inner_loop.model_zoo import DEFAULT_NOVELTY_RMSE_THRESHOLD
 from src.pipelines.outer_loop.model_loop_runner import (
     init_registry,
@@ -136,6 +137,7 @@ def run_holdout_experiments(
     pool_models_dir: Optional[Path] = None,
     agent_root: Optional[Path] = None,
     novelty_rmse_threshold: Optional[float] = None,
+    n_critique_proposals: int = CRITIQUE_N_PROPOSALS,
 ) -> List[Path]:
     """Run the full agentic pipeline for ``n_experiments`` with a held-out GT.
 
@@ -264,6 +266,7 @@ def run_holdout_experiments(
                 agent_timeout_sec=agent_timeout_sec,
                 agent_root=agent_root,
                 novelty_rmse_threshold=novelty_rmse_threshold,
+                n_critique_proposals=n_critique_proposals,
             )
             update_registry_from_interpretation(exp_dir)
             _require_valid("5_model_loop", exp_dir)
@@ -349,7 +352,10 @@ def run_holdout_recovery_from_config(
         n_experiments, n_participants, seed
         inner_loop        {max_iterations, candidate_count,
                            novelty_rmse_threshold (absent -> the inner loop's
-                           default; 0 disables the novelty gate)}
+                           default; 0 disables the novelty gate),
+                           n_critique_proposals (test statistics the critique
+                           agent proposes per round; absent -> the inner
+                           loop's default)}
         agent             {timeout_sec, backend}
         eval_pool         {n_pairs, lengths, seed, min_remaining}
         fit               MCMC kwargs (draws/tune/chains/...)
@@ -416,6 +422,17 @@ def run_holdout_recovery_from_config(
             "inner_loop.novelty_rmse_threshold must be >= 0 (0 disables the "
             f"novelty gate); got {novelty_rmse_threshold}."
         )
+    # How many test statistics the critique agent proposes per round, resolved
+    # here (absent -> the inner loop's default) so the result records the
+    # value the loop used and a config key is never silently ignored.
+    n_critique_proposals = int(
+        inner_cfg.get("n_critique_proposals", CRITIQUE_N_PROPOSALS)
+    )
+    if n_critique_proposals < 1:
+        raise ValueError(
+            "inner_loop.n_critique_proposals must be >= 1 (the critique agent "
+            f"proposes that many test statistics per round); got {n_critique_proposals}."
+        )
     # Design split: n_eig stimuli chosen by EIG + n_random for coverage. The
     # random half is a single fixed sample per experiment (shown to every
     # participant); ablations set n_eig=0 (all random) or n_random=0 (all EIG).
@@ -468,6 +485,7 @@ def run_holdout_recovery_from_config(
             inner_loop_iterations=inner_loop_iterations,
             candidate_count=candidate_count,
             novelty_rmse_threshold=novelty_rmse_threshold,
+            n_critique_proposals=n_critique_proposals,
             fit_kwargs=fit_kwargs,
             eval_pool=eval_pool,
             seed=seed,
@@ -499,6 +517,7 @@ def _run_holdout_recovery_resolved(
     inner_loop_iterations: int,
     candidate_count: int,
     novelty_rmse_threshold: float,
+    n_critique_proposals: int,
     fit_kwargs: Dict[str, Any],
     eval_pool: Dict[str, Any],
     seed: int,
@@ -567,6 +586,7 @@ def _run_holdout_recovery_resolved(
             pool_models_dir=pool_models_dir,
             agent_root=agent_root,
             novelty_rmse_threshold=novelty_rmse_threshold,
+            n_critique_proposals=n_critique_proposals,
         )
 
         eval_info = build_eval_stimuli(
@@ -671,6 +691,7 @@ def _run_holdout_recovery_resolved(
             "max_iterations": inner_loop_iterations,
             "candidate_count": candidate_count,
             "novelty_rmse_threshold": novelty_rmse_threshold,
+            "n_critique_proposals": n_critique_proposals,
         },
         "fit_kwargs": fit_kwargs,
         "seed": seed,
