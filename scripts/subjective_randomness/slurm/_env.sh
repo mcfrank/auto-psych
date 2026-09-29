@@ -26,6 +26,36 @@ ml load devel
 ml load gcc/14.2.0 2>/dev/null || ml load gcc 2>/dev/null || true
 ml load system uv 2>/dev/null || ml load uv
 ml load opencode 2>/dev/null || true
+# The codex backend ships as its own module (needs `devel`, loaded above) and
+# authenticates from ~/.codex/auth.json (ChatGPT subscription, no API key).
+# Load it only when it is the selected backend, and fail loudly if it is
+# selected but unusable — a missing CLI would otherwise surface as every
+# candidate slot silently writing no file.
+if [[ "${AGENT_BACKEND:-}" == "codex" ]]; then
+  # Prefer the self-installed CLI over the module: the newest module is
+  # codex/0.151.0, which rejects GPT-6 Astra with "requires a newer version of
+  # Codex" (HTTP 400). 0.155.1 in the $GROUP_HOME npm prefix accepts it.
+  CODEX_BIN_DIR="${CODEX_BIN_DIR:-/home/groups/ngoodman/benpry/software/npm-global/bin}"
+  if [[ -x "$CODEX_BIN_DIR/codex" ]]; then
+    # The npm-installed CLI is a node script (`#!/usr/bin/env node`) and brings
+    # no interpreter with it — unlike the codex module, which pulls its nodejs
+    # dependency in automatically. Without this the agents run but every call
+    # dies with "/usr/bin/env: node: No such file or directory", which surfaces
+    # as every candidate slot writing no file.
+    ml load "${NODEJS_MODULE:-nodejs/25.3.0}"
+    export PATH="$CODEX_BIN_DIR:$PATH"
+  else
+    ml load "${CODEX_MODULE:-codex/0.151.0}"
+  fi
+  command -v codex >/dev/null || { echo "FATAL: AGENT_BACKEND=codex but no codex on PATH (looked in $CODEX_BIN_DIR, then module ${CODEX_MODULE:-codex/0.151.0})" >&2; exit 1; }
+  [[ -f "${CODEX_HOME:-$HOME/.codex}/auth.json" ]] || { echo "FATAL: AGENT_BACKEND=codex but codex is not logged in (codex login --device-auth)" >&2; exit 1; }
+  # Assert the CLI actually RUNS. `command -v` only proves the file exists; a
+  # missing interpreter still resolves. An empty version string is the exact
+  # symptom that preceded a whole task of empty candidate slots.
+  CODEX_VERSION="$(codex --version 2>&1 || true)"
+  [[ -n "${CODEX_VERSION// }" ]] || { echo "FATAL: '$(command -v codex) --version' produced no output — the CLI cannot execute (missing node?)" >&2; exit 1; }
+  echo "[env] codex backend: $CODEX_VERSION at $(command -v codex), node $(node --version 2>/dev/null || echo MISSING)"
+fi
 
 # --- python version --------------------------------------------------------
 # Pin a STABLE Python. uv otherwise grabs the newest (3.14), for which almost no
