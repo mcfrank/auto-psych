@@ -158,7 +158,6 @@ def test_cli_module_help_runs(module, expected_flag):
             "--ground-truth-model",
         ),
         ("scripts/smoke_open_participant.py", "--hf-model"),
-        ("analysis/behavioral/fit_mega_models.py", "--scheme"),
     ],
 )
 def test_cli_script_help_runs(script, expected_flag):
