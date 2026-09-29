@@ -19,6 +19,8 @@ set -euo pipefail
 # Absolute dir of this script — passed to every job so they can find _env.sh.
 HOLDOUT_SLURM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 export HOLDOUT_SLURM_DIR
+# The retry job resubmits failed tasks through the staged copy of this script.
+export RETRY_SUBMIT_SCRIPT="submit_holdout_test_retest.sh"
 
 # --- knobs (exported so --export=ALL carries them into every job) ----------
 export N_REPEATS="${N_REPEATS:-5}"
