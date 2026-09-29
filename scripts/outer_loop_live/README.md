@@ -69,7 +69,7 @@ and the npm registry directly.
      Paste the printed token as `FIREBASE_TOKEN=...`. This lets `firebase deploy`
      run non-interactively on a compute node.
    - `AUTO_PSYCH_RESULTS_TOKEN` — the shared secret guarding the `/results`
-     and `/register_session` Cloud Function endpoints. Generate once
+     Cloud Function endpoint. Generate once
      (`openssl rand -hex 32`) and use the SAME value everywhere that deploys or
      collects: the deploy writes it into `functions/.env` (gitignored) so the
      deployed functions hold it, and every `/results` fetch sends it as a

@@ -1,8 +1,8 @@
 """Top-level deployment orchestration for dry-run and Firebase targets.
 
 Order for a Firebase deploy: the results token and (live mode) Prolific's
-eligibility IDs are checked; the page is staged and deployed and its
-collection session registered; only then is the Prolific draft created, its
+eligibility IDs are checked; the page and functions are staged, deployed
+and verified live (``verify_functions_live``); only then is the Prolific draft created, its
 id recorded at once, and, in live mode only, the study published. The draft
 used to be created before the Firebase deploy, so a failed deploy left a
 recorded live study that ``refuse_second_live_study`` then treated as
@@ -18,11 +18,11 @@ from pathlib import Path
 from .firebase import (
     firebase_project_from_rc,
     load_experiment_config,
-    register_collection_session,
     results_token,
     run_firebase_deploy,
     stage_experiment,
     write_firebase_config,
+    verify_functions_live,
     write_functions_env,
 )
 from .manifest import (
@@ -71,7 +71,7 @@ def run_deployment(
         raise RuntimeError("Firebase deploy requires --firebase-project or a real .firebaserc")
     if deploy_target == "firebase":
         # Fail before any staging or Prolific work if the admin token for the
-        # protected endpoints (/results, /register_session) is missing.
+        # protected /results endpoint is missing.
         results_token()
         if prolific_mode == "live":
             # A read-only check, so a changed eligibility mapping stops the
@@ -132,12 +132,10 @@ def run_deployment(
 
     if deploy_target == "firebase":
         # Provision the functions' shared secret before deploying them, then
-        # register this deployment's collection session — /submit only accepts
-        # registered sessions, so registration must succeed BEFORE any
-        # participant can arrive (and long before a study is published).
+        # check the live functions hold it — BEFORE any study exists.
         write_functions_env(repo_root)
         run_firebase_deploy(repo_root, manifest, firebase_config_path)
-        register_collection_session(manifest)
+        verify_functions_live(manifest)
         if plan is not None:
             # The page is live: create the draft now and record its id at
             # once (collection and the relaunch guard read it from disk).

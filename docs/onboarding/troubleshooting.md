@@ -29,6 +29,8 @@ never with a plain relaunch.
 | `[error] 3_implement still invalid after 3 attempt(s): …` | the agent could not make a valid page | read `experiment<N>/logs/3_implement.jsonl`; nothing was deployed |
 | `AUTO_PSYCH_RESULTS_TOKEN is not set …` | missing key | at deploy time nothing was created; at collection time the study is already running: add it, recover with `RESUME_AGENTS=4_collect:5_model_loop` |
 | `Firebase deploy failed …` / `… the experiment page is NOT live …` | expired `FIREBASE_TOKEN`, permissions, outage, hosting not published | no study was created: fix the cause and relaunch |
+| `The functions deploy exited 0 but firebase-tools could not read functions/index.js …` | the deploy ran without `_env.sh`'s `node` wrapper first on `PATH` | no study was created: run from a shell or job that sourced `_env.sh` and relaunch |
+| `The deployed /results answered a read without the token with 400 …` / `… with the token with 403 …` | the functions were not replaced / they hold a different `AUTO_PSYCH_RESULTS_TOKEN` | no study was created: redeploy, or use the token the functions were deployed with |
 | `Failed to create Prolific study: …` | often insufficient funds | the page is live, no study exists: fix, relaunch |
 | `Failed to publish …` | often insufficient funds | a draft is recorded: check it in Prolific; recover with `RESUME_AGENTS` or `PUBLISH_ANOTHER_PROLIFIC_STUDY=1` after deleting it |
 | log stays at `Prolific poll: … completed=k target=N` | slow recruitment | normal for up to 3 h, then the study is paused |

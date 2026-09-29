@@ -561,7 +561,11 @@ used by the active loops (per `README.md`).
 - **The page is deployed before the study exists.** A Firebase deploy
   (`run_deployment` in `deployment/local.py`) checks the results token and,
   for `live`, Prolific's eligibility IDs (`verify_live_eligibility`), deploys
-  the page, registers its session, and only then creates the draft, records
+  the page and functions, checks the live `/results` refuses a tokenless read
+  and accepts the token (`verify_functions_live`: until 2026-09-29 no
+  functions deploy from Sherlock replaced anything, firebase-tools exiting 0
+  after its child `node` failed to load libstdc++; `_env.sh`'s `node` wrapper
+  fixes that), and only then creates the draft, records
   its id at once and (live only) publishes it. The draft used to be created
   first, so a failed deploy left a recorded study that the guard above
   refused to relaunch past; now a failed deploy records no study. The page
@@ -588,7 +592,7 @@ used by the active loops (per `README.md`).
   every row).
 - Secrets live in repo-root `.secrets` (see `.secrets.example`): `PROLIFIC_API_TOKEN`,
   `FIREBASE_TOKEN` (`firebase login:ci`), `AUTO_PSYCH_RESULTS_TOKEN` (guards the
-  `/results` & `/register_session` Cloud Functions — deploy/collect fail loudly without it),
+  `/results` Cloud Function — deploy/collect fail loudly without it; `/register_session` was removed 2026-09-29),
   `GOOGLE_API_KEY` (the default opencode/Gemini agents' login, and the
   simulated/Gemini paths), and for Claude agents
   `CLAUDE_CODE_OAUTH_TOKEN` (subscription) and/or `ANTHROPIC_API_KEY` (API).

@@ -26,8 +26,8 @@ Must-fix-before-spending-money items from the jank audit that are **still open**
 - No per-participant consent record is written to Firestore (possible IRB/audit gap).
 
 The rest of that audit is resolved (verified 2026-08; see git history): the
-`/results` and `/register_session` Cloud Functions now require the
-`x-results-token` shared secret; `prolific_mode: live` requires
+`/results` Cloud Function now requires the
+`x-results-token` shared secret (`/register_session` was removed 2026-09-29); `prolific_mode: live` requires
 `--confirm-live-recruitment`; all three `scripts/subjective_randomness/configs/holdout_recovery*.yaml`
 set `exhaustive: true`, so seed-holdout no longer evaluates on a mismatched
 500-pair subsample; `ground_truth.py` raises on a broken project asset instead of
