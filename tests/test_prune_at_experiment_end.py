@@ -112,3 +112,27 @@ def test_a_set_within_the_cap_is_untouched(tmp_path, monkeypatch):
         models_dir, tmp_path / "r.csv", protected={"seed"}, cache_dir=None,
         fit_kwargs={}, cap=8, ledger=None, ledger_context="",
     ) == []
+
+
+def test_a_cap_retirement_can_be_ranked_on_the_next_refinement_menu(tmp_path, monkeypatch):
+    """The refinement menu ranks every ``pruned`` ledger entry by its margin
+    (``parse_prune_margin``); a cap retirement is one, so its detail must lead
+    with that margin — the menu raised on the next experiment otherwise."""
+    models_dir = _zoo(tmp_path, ["seed", "a1", "a2", "a3", "a4"])
+    comparison = {
+        "seed": _row(0), "a1": _row(1), "a2": _row(2),
+        "a3": _row(3, not_converged=True), "a4": _row(4),
+    }
+    monkeypatch.setattr(model_zoo, "compare_table", lambda *a, **k: comparison)
+    monkeypatch.setattr(model_zoo, "evict_fit_cache", lambda name: None)
+    ledger = HypothesisLedger.create(tmp_path / LEDGER_FILENAME, inherit_from=None)
+
+    _cap_live_set(
+        models_dir, tmp_path / "r.csv", protected={"seed"}, cache_dir=None,
+        fit_kwargs={}, cap=3, ledger=ledger, ledger_context="experiment1 end of experiment",
+    )
+
+    details = {e.name: e.detail for e in ledger.pruned(live_names=["seed", "a1", "a2"])}
+    assert model_zoo.parse_prune_margin(details["a4"]) == 40.0
+    assert model_zoo.parse_prune_margin(details["a3"]) == 30.0
+    assert details["a4"].startswith("40.0 nats behind seed")
