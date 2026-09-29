@@ -103,15 +103,20 @@ def test_build_command_codex_exec_json_reads_the_prompt_from_stdin():
     assert cmd[-1] == "-" and prompt_via_stdin("codex", "review this")
 
 
-def test_long_claude_prompt_goes_to_stdin_and_opencode_refuses_it():
+def test_long_prompt_goes_to_stdin_for_claude_and_opencode():
+    """A candidate prompt inlines the full ledger and refinement menu, which
+    grow all run: late in experiment 3 one reached 100,207 bytes and, back when
+    opencode was refused a long prompt, crashed the cell. `opencode run` reads
+    piped stdin as its message (checked with a real 152 KB prompt)."""
     from src.runtime.coding_agent import STDIN_PROMPT_THRESHOLD, prompt_via_stdin
 
     short, long = "p", "x" * (STDIN_PROMPT_THRESHOLD + 1)
     assert build_command("claude", prompt=short, allowed_dirs=[], model=None)[-2:] == ["-p", short]
     assert build_command("claude", prompt=long, allowed_dirs=[], model=None)[-1] == "-p"
     assert prompt_via_stdin("claude", long) and not prompt_via_stdin("claude", short)
-    with pytest.raises(ValueError, match="argv limit"):
-        build_command("opencode", prompt=long, allowed_dirs=[], model=None)
+    assert build_command("opencode", prompt=short, allowed_dirs=[], model=None)[-1] == short
+    assert long not in build_command("opencode", prompt=long, allowed_dirs=[], model=None)
+    assert prompt_via_stdin("opencode", long) and not prompt_via_stdin("opencode", short)
 
 
 def test_codex_stream_reads_last_message_and_sums_usage():
