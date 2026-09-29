@@ -74,7 +74,11 @@ makes `--resume` (run into an existing `experimentN/` dir) and `--agent <stage>`
   max-joint-EIG stimulus set (64 by default) → `design/stimuli.json`. The EIG
   counts every participant's response: a stimulus yields k ~ Binomial(n, p_left)
   with `n_responses` = the experiment's participant count (required at every
-  entry point). Experiment 1 uses prior-predictive draws; experiments ≥2 fit
+  entry point). This joint EIG saturates after a few picks: selection stops
+  once the best gain is within two Monte Carlo standard errors of zero (or
+  below `NEGLIGIBLE_GAIN_BITS`), and the remaining slots are filled by
+  single-response EIG conditioned on the picks so far (`source`
+  `eig_single_response_fill` in `stimuli.json`). Experiment 1 uses prior-predictive draws; experiments ≥2 fit
   the models on all data so far (the previous experiment's cumulative
   `model_loop/responses.csv`) at the model's declared `target_accept`, else
   `DESIGN_TWIN_TARGET_ACCEPT` (0.9). The holdout harness derives every seed

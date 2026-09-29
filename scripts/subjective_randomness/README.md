@@ -206,7 +206,11 @@ uv run python scripts/subjective_randomness/holdout_recovery.py \
 Outputs, per held-out model under `<out dir>/<out stem>_runs/<gt_model>/`:
 the full `experiment1..N/` pipeline trees, `eval_stimuli.json` (the held-out
 evaluation set), and `trajectory.json` (the per-step correlation trajectory,
-per-experiment model sets, and a leakage audit). The combined JSON, tidy CSV
+per-experiment model sets, and a leakage audit). A held-out pair on which a
+scored model's `p_left` is not a probability (NaN, or outside [0, 1]) is left out of that step's metrics:
+the row records `n_eval_excluded` and `eval_excluded_models`, and every
+excluded pair is listed in `eval_exclusions.jsonl` beside `trajectory.json`.
+The combined JSON, tidy CSV
 (one row per `gt_model × step`: `gt_model, experiment, step, iteration,
 global_step, best_model, pearson_r, rmse`), and correlation-vs-step figure land
 at the paths you pass.
