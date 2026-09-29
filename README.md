@@ -1,6 +1,6 @@
 # Auto-psych
 
-**New here or coming back after a while?** Start with the plain-language onboarding guide in [`docs/onboarding/`](docs/onboarding/README.md) (how the loop works, and a runbook for live Prolific + Firebase experiments).
+**New here or coming back after a while?** Start with [`docs/onboarding/BRIEF.md`](docs/onboarding/BRIEF.md) (the paper's system, how the current loop differs, where it stands, and what a live experiment needs); the rest of the guide, including the live-experiment runbook, is in [`docs/onboarding/`](docs/onboarding/README.md).
 
 An automated cognitive-science discovery pipeline. Coding agents iteratively
 conjecture computational cognitive models (PyMC) of human judgment — currently

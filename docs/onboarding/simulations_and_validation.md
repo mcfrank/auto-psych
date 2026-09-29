@@ -1,185 +1,84 @@
 # Simulations and validation
 
-Before trusting what the loop "discovers" from people, we want to know two
-things. **Can it find a true model when there is one** (recovery)? And **does it
-avoid fitting nonsense** (the impossible controls)? Both questions are answered
-by running the same loop, with the same agents, on simulated participants
-whose generating model is known to us and hidden from the loop.
+A live run cannot say whether it found the truth. Simulations can: the same
+loop and agents run on simulated participants whose generating model is known
+to us and hidden from the loop. Code: `src/subjective_randomness/`; scripts
+and cluster launchers: `scripts/subjective_randomness/` (its `README.md` and
+`slurm/README.md` are the detailed runbooks).
 
-The library code is in `src/subjective_randomness/`, the entry scripts in
-`scripts/subjective_randomness/`, and the cluster launchers in
-`scripts/subjective_randomness/slurm/`. Its own runbooks are
-`scripts/subjective_randomness/README.md` and `…/slurm/README.md`.
-
-## The three checks
+## The checks
 
 | check | question | agents? | entry point |
 |---|---|---|---|
-| **Model recovery** (closed) | If one of the known models generated the data, does fitting and comparing pick that model? | no | `scripts/subjective_randomness/model_recovery.py` |
-| **Holdout recovery** | If the true model is *removed* from the starting set, can the agents rebuild something that predicts like it? | yes | `scripts/subjective_randomness/holdout_recovery.py` |
-| **Impossible controls** | If the data come from a process no sensible person would use, does the loop *fail* to fit it well, as it should? | yes | `scripts/subjective_randomness/impossible_holdout_recovery.py` |
+| model recovery | if a starting model generated the data, does fitting and comparing pick it? | no | `model_recovery.py` |
+| held-out recovery | with the true model removed from the start set, do the agents rebuild something that predicts like it? | yes | `holdout_recovery.py` |
+| impossible controls (the paper's "alien" rules) | with an implausible true rule, does the loop fail, as it should? | yes | `impossible_holdout_recovery.py` |
+| no-inner-loop variants | how much do the agents add? | no | `run_no_inner_loop_test_retest.sh`, `run_impossible_no_inner_loop_test_retest.sh` |
 
-### Model recovery
+Settings (`configs/holdout_recovery_faithful.yaml`; the impossible config is
+identical apart from the hidden models, and a test keeps it so): 40
+participants, 3 experiments, 5 rounds × 6 proposals, 64 stimuli, 30-minute
+agents, 1,000 draws × 4 chains at `target_accept` 0.8, Gemini agents. Each
+code "cell" is one hidden model × one repeat; a standard sweep is 4 × 5 = 20
+cells, repeats differing only in their random seed.
 
-Each of the four starting models generates data for 40 simulated participants.
-All four are then fitted and compared by ELPD-LOO, with no agents. The result
-is a confusion matrix: rows are the true model, columns the model picked. If
-the loop cannot tell the literature models apart even when one of them is
-true, nothing downstream can be trusted.
+**Hiding the answer.** The agents work in a trimmed copy of the repository
+without the hidden model, docs or tests, under a random folder name; a scan stops the cell if the hidden name appears anywhere the agents
+can see (`slurm/scan_gt_name.sh`); the data carry only the raw columns.
 
-### Holdout recovery
+**Impossible rules** (`src/subjective_randomness/impossible_models/`): more
+heads, fewer heads, a longer longest run, or a bigger heads/tails imbalance
+looks more random. A good fit to these would mean the loop can fit anything,
+or that the answer leaked.
 
-In each run, one of the four starting models plays the "true" model and is
-withheld:
+## Scoring
 
-- **Data.** It generates the responses: 40 simulated participants per
-  experiment, 3 experiments, every participant answering every designed pair,
-  with left/right randomised.
-- **Starting set.** The loop starts from the other three models.
-- **Keeping the answer hidden from the agents.** The agents work in a copy of
-  the repository with the withheld model's file and manifest entry removed.
-  The run directory is numbered (`cell_<n>`) rather than named after the
-  withheld model. A scan (`slurm/scan_gt_name.sh`) stops the run if the model's
-  name appears anywhere the agents can see. The data files carry only the five
-  raw columns. `src/subjective_randomness/leakage_audit.py` also looks
-  afterwards for copies of the hidden model; that check is a heuristic, not a
-  proof.
+After every round the loop's best model is compared with the hidden model on
+every same-length pair of lengths 1–8 not used in training (about 43,000;
+`recovery_metrics.py`): `pearson_r`, `rmse`, `kl_regret` (extra prediction
+error in bits), and calibration. The `_bma` versions score the average of all
+models weighted by the reported posterior.
 
-**Scoring.** After every round, the current best model's predicted `p_left`
-is compared with the hidden model's true `p_left`. The comparison uses a large
-evaluation set: every same-length pair of lengths 1–8 that was *not* used in
-training. The metrics (`src/subjective_randomness/recovery_metrics.py`) are:
+The comparison that matters is with **`fitted_baseline`**: the remaining
+starting models refitted to the same data, taking the best by ELPD-LOO
+(`elpd_best_r`, `elpd_best_rmse`). If the loop does not beat it, the agents
+added nothing that refitting the literature could not.
+`fitted_baseline_by_experiment` gives it at the end of every experiment.
 
-- `pearson_r`: correlation between the two;
-- `rmse`: root-mean-square difference;
-- `kl_regret`: extra prediction error in bits compared with the truth;
-- `bias` and `calib_slope` / `calib_intercept`: calibration.
+## Reading a sweep
 
-A pair on which a model's `p_left` is undefined, or on which the model's own
-code cannot compute its features (say, a feature that looks at the fourth flip
-of a length-2 sequence), is left out of that step's metrics. The cell's log
-and `eval_exclusions.jsonl` say so, and `holdout.csv` counts the excluded
-pairs (`n_eval_excluded`).
+- Per cell: `holdout.csv` / `trajectory.json` (one row per scoring step) and
+  `holdout.png`.
+- Per sweep: `test_retest.json` gives the repeat-to-repeat consistency and
+  `loop_vs_fitted_baseline`. Every summary lists unfinished and missing cells
+  (also `MISSING_CELLS.txt`) and averages the loop and baselines over the same
+  cells, aligned by experiment.
+- Whether the best model changed: `incumbent_changed` and
+  `incumbent_is_discovered` per step; `incumbent_report.py` tabulates them.
+- Validity: `WORK_ROOT=<sweep dir> bash scripts/subjective_randomness/slurm/verify_holdout_run.sh`
+  writes `VERDICT.md` (results present, raw columns only, agents confined to
+  their copy, critique ran).
 
-The same metrics with the suffix `_bma` are computed for the average of all
-models, weighted by the reported posterior.
+## Launching
 
-**Baselines,** to tell whether the agents added anything:
+`SMOKE=1 bash scripts/subjective_randomness/slurm/run_faithful_test_retest.sh`
+first (one cheap cell), then without `SMOKE` for the sweep, and
+`run_impossible_test_retest.sh` for the controls. Each chains setup, the cell
+array (1 day, 16 CPUs / 64 GB; impossible cells 8 CPUs / 32 GB), up to two
+rounds of automatic retries, and a summary. A sweep runs on one version of
+the code, recorded at setup.
 
-- `baseline`: the three remaining starting models at default parameters, no
-  fitting.
-- `fitted_baseline`: the same three fitted on all the collected data. Its
-  headline numbers are `elpd_best_r` and `elpd_best_rmse`. **The key question
-  is whether the loop's final model beats the fitted baseline.** If not, the
-  agents' new models added nothing that refitting the literature models could
-  not. `fitted_baseline_by_experiment` repeats it at the end of every
-  experiment on that experiment's data, so each experiment's steps are
-  compared with the seeds fitted on the same data (the last entry is
-  `fitted_baseline`).
-- Sweep summaries (the test-retest summary, the recovery report, the combined
-  figures) list the cells that did not finish or never started, align the
-  loop's steps by experiment (seed step, rounds every cell ran, end of
-  experiment), and average the loop and every baseline over the same cells at
-  each point.
+## Results so far
 
-A *cell* (a code term) is one repeat of one held-out model. A standard
-sweep is 4 held-out models × 5 repeats = 20 cells. Repeats differ only in their
-random seed, which measures how reproducible the outcome is.
+See [BRIEF.md § 3](BRIEF.md#3-where-things-stand-28-september-2026). The
+committed summaries in `data/results/holdout_test_retest/` are from the
+**old** starting models and old code, not the current ones.
 
-### Impossible controls
+## Caveats
 
-The hidden model is one of four deliberately implausible rules
-(`src/subjective_randomness/impossible_models/`), each with only a noise
-parameter and a side bias:
-
-| rule | "more random" means… |
-|---|---|
-| `more_heads_more_random` | more heads |
-| `fewer_heads_more_random` | fewer heads (mirror image of the first) |
-| `longer_runs_more_random` | a longer longest run (the opposite of the gambler's-fallacy intuition) |
-| `more_imbalance_more_random` | a bigger heads/tails imbalance (the opposite of representativeness) |
-
-The loop keeps all four normal starting models.
-
-**Expected result: poor recovery**, for example a low held-out `pearson_r`.
-The prompts steer agents towards psychologically plausible mechanisms, so a
-high correlation here means one of two things. Either the loop is flexible
-enough to fit anything, in which case its successes on real data say little.
-Or information about the hidden rule reached the agents. `pearson_r` can be
-undefined when a model's predictions are constant.
-
-## How to read a sweep
-
-- **Per cell.** In `trajectory.json`, or `holdout.csv` with one row per scoring
-  step: the final step's `pearson_r` / `rmse` / `kl_regret` against
-  `fitted_baseline.elpd_best_r` / `elpd_best_rmse`, and how the metrics change
-  from step to step (`holdout.png`).
-- **Per sweep.** `test_retest.json` / `.csv` / `.png` report how consistent the
-  repeats are:
-  - an intraclass correlation;
-  - mean, SD and coefficient of variation of the final correlation per hidden
-    model;
-  - whether the repeats agree on the best model.
-- **Did the loop actually change its mind?** Each scoring step records
-  `incumbent_changed` (did the best model change?) and
-  `incumbent_is_discovered` (is the best model a new, agent-written one rather
-  than a starting model?). `scripts/subjective_randomness/incumbent_report.py`
-  tabulates this over a sweep (`src/subjective_randomness/incumbent.py`). In
-  the three complete cells of an earlier sweep that it examined, over 27 steps
-  the best model never changed. That motivated the "improve the best" agent
-  roles described in [how_the_loop_works.md](how_the_loop_works.md).
-- **Was the run valid?**
-  `WORK_ROOT=<sweep dir> bash scripts/subjective_randomness/slurm/verify_holdout_run.sh`
-  writes `VERDICT.md`. It checks that the results exist, that the data files
-  carried only raw columns, that the agents saw only their own copy of the
-  code, the import allowlist, and whether critique ran. It only warns about an
-  unchanged best model.
-
-## Launching a sweep (cluster)
-
-These launchers submit chains of Slurm jobs (setup → an array of cells →
-analysis, plus automatic retries). Standard cells take about a day, with 16
-CPUs and 64 GB; impossible cells about a day with 8 CPUs and 32 GB.
-
-| command | what |
-|---|---|
-| `SMOKE=1 bash scripts/subjective_randomness/slurm/run_faithful_test_retest.sh` | cheap check that the whole chain runs (one task, tiny MCMC). Do this first. |
-| `bash scripts/subjective_randomness/slurm/run_faithful_test_retest.sh` | holdout recovery: 4 held-out models × 5 repeats |
-| `bash scripts/subjective_randomness/slurm/run_impossible_test_retest.sh` | the impossible controls |
-| `run_no_inner_loop_test_retest.sh`, `run_impossible_no_inner_loop_test_retest.sh` | the same with the agents switched off (0 rounds): a no-discovery comparison |
-
-## Why this matters before a live run
-
-A live run cannot tell you whether it found the truth, because nobody knows
-the truth. The simulations are the only evidence of what the loop can and cannot
-find, how often, and how much its answer varies from one repeat to the next.
-They use the same code and agents as a live run, apart from collection. They
-are also the natural place to test changes to the loop before paying
-participants. The live-run rehearsal in the runbook (R2) only checks that a run
-completes; it says nothing about whether the answer is right.
-
-## Caveats found while writing this page
-
-- `data/results/holdout_test_retest/SUMMARY.md` and its siblings report sweeps
-  over an **older set of hidden models** (`bayesian_diagnosticity`,
-  `encoding_compressibility`, `prototype_similarity`, `window_typicality`), not
-  the current four. There is no committed summary for the current set.
-- *(Fixed on 28 September 2026.)* The impossible-control config
-  (`configs/impossible_holdout_recovery.yaml`) ran 2 rounds × 3 proposals, a
-  32-stimulus design, a 15-minute agent limit and a different MCMC step-size
-  setting. It is now the standard config (`holdout_recovery_faithful.yaml`)
-  in everything but the hidden models, and a test keeps it so.
-- `slurm/run_test_retest.sh` pins old hidden-model names and would abort at
-  setup. Use `run_faithful_test_retest.sh`. The comments in
-  `run_faithful_test_retest.sh` also give outdated settings (2×3 rounds,
-  4000/3000 draws). The config file is authoritative.
+- `slurm/run_test_retest.sh` pins old model names and aborts; use
+  `run_faithful_test_retest.sh` (its comments give outdated settings; the
+  config is authoritative).
 - `slurm/README.md` describes the evaluation set as ~130k pairs including
-  different-length pairs. The code uses same-length pairs only (about 43k at
-  lengths 1–8).
-- *(Fixed on 28 September 2026.)* The impossible rules declared precomputed
-  feature inputs and had no `compute_features`, so every cell of the
-  2026-09-28 impossible sweep stopped at data generation
-  (`MissingStimulusColumns: Rows missing columns ['h_a', 'h_b']`). Each now
-  computes its feature from the raw sequences, exactly as the old featurizer
-  did. The impossible sweep also retries failed cells and lists missing ones,
-  like the standard sweep.
+  different lengths; the code uses same-length pairs only.
+- The live presets do not use these settings (runbook § 3).
