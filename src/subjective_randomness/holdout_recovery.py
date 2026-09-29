@@ -538,11 +538,16 @@ def _run_holdout_recovery_resolved(
     # pure-Python family twin (and no default params) is required here.
     all_seed_models = set(seed_model_names(seed_models_dir))
     gt_runs: List[Dict[str, Any]] = []
-    for gt_model, gt_params in gt_params_by_model.items():
-        run_root = results_root / gt_model
+    for cell_number, (gt_model, gt_params) in enumerate(gt_params_by_model.items(), 1):
+        # results_root is the agents' working tree and every path in it reaches
+        # an agent's prompt, so the directory must not name the held-out model
+        # (runs/<gt>/ put "motif_stack" in every prompt, and one agent built its
+        # first model from the name). holdout.json records the GT <-> directory
+        # mapping; the summary below, written outside the agent tree, stays by name.
+        run_root = results_root / f"cell_{cell_number}"
         # The trajectory summary embeds the GT's true params, so it is written
         # OUTSIDE the agent's run tree (summary_root) rather than into
-        # results_root/<gt>/, which lives in the agent's cwd. Defaults to
+        # run_root, which lives in the agent's cwd. Defaults to
         # run_root when no summary_root is given (non-holdout callers / tests).
         summary_dir = (summary_root / gt_model) if summary_root else run_root
         trajectory_path = summary_dir / "trajectory.json"

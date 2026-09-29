@@ -234,17 +234,29 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         design_overrides={"n_eig": 3, "n_random": 5},
     )
 
+    # The run tree lives in the agents' working directory, and every path in it
+    # reaches an agent's prompt (CONTEXT.md names the responses CSV). So the
+    # held-out model's name must appear nowhere in it: the directory is an
+    # opaque cell_<i>, and holdout.json records which GT it holds. Naming it
+    # runs/<gt>/ put "motif_stack" in every agent prompt of every holdout run,
+    # and Claude Opus 5.5 built its first model from that name.
+    run_root = tmp_path / "runs" / "cell_1"
+    gt_run = result["gt_runs"][0]
+    assert gt_run["run_root"] == str(run_root)
+    assert not [
+        p for p in (tmp_path / "runs").rglob("*") if "prototype_similarity" in p.name
+    ]
+
     # The GT-params-bearing trajectory.json is written to summary_root (kept
-    # OUTSIDE the agent's run tree), not into runs/<gt>/ where the agent could
-    # read the true parameters. The run tree under runs/<gt>/ must not hold it.
+    # OUTSIDE the agent's run tree), not into the run tree where the agent could
+    # read the true parameters.
     assert (tmp_path / "summaries" / "prototype_similarity" / "trajectory.json").exists()
-    assert not (tmp_path / "runs" / "prototype_similarity" / "trajectory.json").exists()
+    assert not (run_root / "trajectory.json").exists()
 
     # The held-out model never enters experiment 1's seed set. The GT here is
     # the superseded prototype_similarity, which the 2026-08 consolidation
     # dropped from the active set, so it is out-of-pool by construction and
     # nothing is excluded.
-    run_root = tmp_path / "runs" / "prototype_similarity"
     exp1_models = run_root / "experiment1" / "cognitive_models"
     assert not (exp1_models / "prototype_similarity.py").exists()
     seeded = yaml.safe_load(
@@ -768,7 +780,9 @@ def test_from_config_resume_skips_completed_gt_runs(tmp_path, monkeypatch):
                     "any_gt_named": False},
         "experiments": [{"experiment": 1, "manifest_models": ["a"]}],
     }
-    run_root = tmp_path / "runs" / "prototype_similarity"
+    # Without a summary_root the record sits in the run tree, which is named
+    # cell_<i> (never after the held-out model — see the end-to-end test).
+    run_root = tmp_path / "runs" / "cell_1"
     run_root.mkdir(parents=True)
     (run_root / "trajectory.json").write_text(json.dumps(completed), encoding="utf-8")
 
@@ -800,7 +814,9 @@ def test_from_config_resume_rejects_stale_trajectory_experiment_count(
         "trajectory": [],
         "experiments": [{"experiment": 1, "manifest_models": []}],
     }
-    run_root = tmp_path / "runs" / "prototype_similarity"
+    # Without a summary_root the record sits in the run tree, which is named
+    # cell_<i> (never after the held-out model — see the end-to-end test).
+    run_root = tmp_path / "runs" / "cell_1"
     run_root.mkdir(parents=True)
     (run_root / "trajectory.json").write_text(json.dumps(stale), encoding="utf-8")
     monkeypatch.setattr(
