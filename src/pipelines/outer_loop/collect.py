@@ -42,9 +42,9 @@ MAX_PARALLEL_PARTICIPANTS = 3
 _PROLIFIC_POLL_INTERVAL_SEC = 30
 # Stop waiting on a Prolific study after this long so a stalled/under-recruited
 # study (participants return or time out and the target is never met) can't hang
-# the pipeline forever. On timeout the study is paused and we fetch whatever
-# results exist.
-_PROLIFIC_MAX_WAIT_SEC = 2 * 60 * 60  # 2 hours
+# the pipeline forever (user decision 2026-09-28: 3 hours, was 2). On timeout
+# the study is paused and we fetch whatever results exist.
+_PROLIFIC_MAX_WAIT_SEC = 3 * 60 * 60  # 3 hours
 # Prolific study statuses in which nobody new is being recruited.
 _NOT_RECRUITING_STATUSES = {"PAUSED", "AWAITING REVIEW", "COMPLETED"}
 

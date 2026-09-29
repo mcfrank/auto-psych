@@ -1,8 +1,9 @@
 """A live collection that gives up before its target pauses the study.
 
-After two hours without enough completed submissions the poll moves on and the
-pipeline models the partial data — but it left the Prolific study recruiting,
-so people kept being recruited and paid for data no experiment would use.
+After three hours (``_PROLIFIC_MAX_WAIT_SEC``) without enough completed
+submissions the poll moves on and the pipeline models the partial data — but
+it left the Prolific study recruiting, so people kept being recruited and paid
+for data no experiment would use.
 Now the study is paused (a reversible transition: START resumes it) and a
 failure to pause stops the run loudly. A collection that reaches its target
 leaves the study alone: its places are all taken, so it recruits no one else.
