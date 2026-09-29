@@ -13,6 +13,7 @@ Exits non-zero on any problem so the launcher aborts before money is spent.
 Usage: python _pilot_config.py <pilot.yaml> [--check]
 """
 
+import os
 import shlex
 import sys
 from pathlib import Path
@@ -33,6 +34,7 @@ from src.pipelines.outer_loop.deployment.prolific import (  # noqa: E402
 
 PROLIFIC_SERVICE_FEE = 0.33  # ~33%; verify the current rate in your Prolific account
 VALID_CODING_AGENTS = {"opencode", "claude"}
+VALID_CLAUDE_AUTH = {"subscription", "api"}
 VALID_PROLIFIC_MODES = {"test", "live", "none"}
 
 
@@ -75,6 +77,13 @@ def main() -> None:
     coding_agent = str(cfg.get("coding_agent") or "opencode")
     if coding_agent not in VALID_CODING_AGENTS:
         die(f"`coding_agent` must be one of {sorted(VALID_CODING_AGENTS)}")
+    # How claude agents are billed; no default (the credential decides who pays).
+    claude_auth = str(cfg.get("claude_auth") or os.environ.get("CLAUDE_AUTH") or "")
+    if coding_agent == "claude" and claude_auth not in VALID_CLAUDE_AUTH:
+        die(
+            "`coding_agent: claude` needs `claude_auth: subscription` "
+            "(CLAUDE_CODE_OAUTH_TOKEN) or `claude_auth: api` (ANTHROPIC_API_KEY)"
+        )
     prolific_mode = str(cfg.get("prolific_mode") or "test")  # safe default: test, not live
     if prolific_mode not in VALID_PROLIFIC_MODES:
         die(f"`prolific_mode` must be one of {sorted(VALID_PROLIFIC_MODES)}")
@@ -189,6 +198,7 @@ def main() -> None:
         "RUN_LABEL": run_label,
         "N_EXPERIMENTS": experiments,
         "CODING_AGENT": coding_agent,
+        "CLAUDE_AUTH": claude_auth,
         "PROLIFIC_MODE": prolific_mode,
         "CONFIRM_LIVE_RECRUITMENT": "1" if confirm_live else "",
         "FIREBASE_PROJECT": firebase_project,

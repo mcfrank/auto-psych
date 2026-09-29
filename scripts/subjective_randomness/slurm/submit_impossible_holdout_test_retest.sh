@@ -90,6 +90,15 @@ is_retry=""
 # The array sbatch turns it into the CLI flag;
 # run_impossible_no_inner_loop_test_retest.sh pins it to 0.
 [[ -n "${INNER_LOOP_ITERATIONS:-}" ]] && export INNER_LOOP_ITERATIONS
+# How claude agents are billed: CLAUDE_AUTH=subscription (CLAUDE_CODE_OAUTH_TOKEN)
+# or CLAUDE_AUTH=api (ANTHROPIC_API_KEY), passed to --claude-auth. No default:
+# with AGENT_BACKEND=claude a sweep that does not say is refused here, before
+# anything is queued (and again by the harness, before any agent starts).
+[[ -n "${CLAUDE_AUTH:-}" ]] && export CLAUDE_AUTH
+if [[ "${AGENT_BACKEND:-}" == "claude" && -z "${CLAUDE_AUTH:-}" ]]; then
+  echo "ERROR: AGENT_BACKEND=claude needs CLAUDE_AUTH=subscription or CLAUDE_AUTH=api" >&2
+  exit 1
+fi
 
 # Keep Slurm logs off $HOME (15 GB, NFS). Mirror _env.sh's WORK_ROOT default,
 # but in a dedicated impossible work root so it never collides with the standard

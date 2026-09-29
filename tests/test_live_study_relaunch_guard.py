@@ -92,6 +92,9 @@ def live_run_dir(tmp_path, monkeypatch):
     (tmp_path / PROJECT / "prolific_config.yaml").write_text("reward: 100\n", encoding="utf-8")
     monkeypatch.setenv("AUTO_PSYCH_OUTPUT_DIR", str(tmp_path / "output"))
     monkeypatch.setenv("CODING_AGENT", "claude")
+    # A claude run states its billing mode and holds its credential.
+    monkeypatch.setenv("CLAUDE_AUTH", "subscription")
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "test-token")
     exp_dir = orchestrator.experiment_dir(PROJECT, 1)
     (exp_dir / "experiment").mkdir(parents=True)
     return exp_dir

@@ -35,6 +35,30 @@ GOOGLE_API_KEY=<your key>
 `GOOGLE_GENERATIVE_AI_API_KEY` for opencode. If opencode needs an interactive
 `opencode auth login`, run that first on a login shell.
 
+**Claude agents** (`AGENT_BACKEND=claude`) are billed one of two ways, and the
+sweep must say which: `CLAUDE_AUTH` (passed to `--claude-auth`; in a config,
+`agent.claude_auth`). There is no default. A sweep without it is refused by the
+submitter, and a cell without it, or without the mode's credential in
+`.secrets`, stops before any agent starts.
+
+| Billing | Setting | Credential in `.secrets` |
+|---|---|---|
+| Claude subscription (test sweeps) | `CLAUDE_AUTH=subscription` | `CLAUDE_CODE_OAUTH_TOKEN` (run `claude setup-token` once) |
+| Anthropic API, per token | `CLAUDE_AUTH=api` | `ANTHROPIC_API_KEY` |
+
+```bash
+AGENT_BACKEND=claude AGENT_MODEL=claude-opus-5-5 CLAUDE_AUTH=subscription \
+  bash scripts/subjective_randomness/slurm/submit_holdout_test_retest.sh
+AGENT_BACKEND=claude AGENT_MODEL=claude-opus-5-5 CLAUDE_AUTH=api \
+  bash scripts/subjective_randomness/slurm/submit_holdout_test_retest.sh
+```
+
+`.secrets` may hold both credentials: each agent gets only its mode's (in
+`subscription` mode no `ANTHROPIC_*` variable at all, since the CLI would prefer
+an API key), never both. The mode is recorded per agent call in the cell's
+`token_usage.jsonl`, in `token_usage_summary.json` (`claude_auth`) and in
+`holdout.json` (`agent.claude_auth`).
+
 ## Before submitting: commit your code
 
 The setup job stages the checkout as it is when the setup job *runs* and

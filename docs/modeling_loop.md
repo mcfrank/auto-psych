@@ -290,7 +290,13 @@ keys and `OPENCODE_*` for opencode, `CLAUDE_CODE_*`/`ANTHROPIC_*` for claude,
 `CODEX_*`/`OPENAI_API_KEY` for codex). Every other `.secrets` key (Prolific,
 Firebase, the results token), every `SLURM_*` variable and the sweep's own
 variables are withheld; `_env.sh` still exports `.secrets` into the harness.
-Logins: claude needs `CLAUDE_CODE_OAUTH_TOKEN`, codex gets
+Logins: claude gets the credential of the run's billing mode and no other
+(`claude_login_environment`): `CLAUDE_AUTH=subscription` →
+`CLAUDE_CODE_OAUTH_TOKEN` and no `ANTHROPIC_*` variable; `CLAUDE_AUTH=api` →
+`ANTHROPIC_API_KEY` and no OAuth token. The mode (config `agent.claude_auth`,
+`--claude-auth`, or `CLAUDE_AUTH` from the job scripts) has no default; the
+entry points check it and its credential before any agent starts
+(`require_claude_auth`). Codex gets
 a private `CODEX_HOME` holding only `auth.json`, and opencode reads its
 provider key from the environment (`_login`, agent_sandbox.py:217). For
 opencode, `external_directory` is set to `allow` because the sandbox itself

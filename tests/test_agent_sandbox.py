@@ -189,7 +189,8 @@ def test_a_sandboxed_claude_agent_needs_the_long_lived_token(tmp_path, monkeypat
     _fake_bwrap(monkeypatch, "claude")
     with pytest.raises(RuntimeError, match="CLAUDE_CODE_OAUTH_TOKEN"):
         sandbox_command(["claude", "-p", "x"], backend="claude", cwd=tmp_path,
-                        writable_dirs=[], agent_dir=tmp_path, env={"HOME": str(tmp_path)})
+                        writable_dirs=[], agent_dir=tmp_path,
+                        env={"HOME": str(tmp_path), "CLAUDE_AUTH": "subscription"})
 
 
 def test_a_sandboxed_codex_agent_gets_a_private_codex_home_with_only_its_login(
@@ -340,6 +341,7 @@ _HARNESS_ENV = {
     "ARRAY_TASKS": "3,7",
     "GT_MODELS": "a b c",
     "SCRATCH": "/scratch/users/someone",
+    "CLAUDE_AUTH": "subscription",
 }
 _NEVER = {"PROLIFIC_API_TOKEN", "FIREBASE_TOKEN", "AUTO_PSYCH_RESULTS_TOKEN",
           "ARRAY_TASKS", "GT_MODELS", "SCRATCH"}

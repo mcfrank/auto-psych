@@ -55,6 +55,7 @@ from src.pipelines.inner_loop.model_zoo import (
 )
 from src.pipelines.inner_loop.pymc_orchestrator import run_pymc_inner_loop
 from src.pipelines.inner_loop.scoring import DEFAULT_COMPLEXITY_PRIOR_CONST
+from src.runtime.agent_sandbox import require_claude_auth
 from src.runtime.coding_agent import select_backend
 from src.runtime.token_usage import start_usage_log, write_usage_report
 
@@ -103,6 +104,11 @@ class Args:
     """Optional directory to persist .nc fits across runs."""
     coding_agent: Optional[Literal["claude", "opencode"]] = None
     """Coding-agent backend for candidate generation. Defaults to CODING_AGENT env, then 'opencode'."""
+    claude_auth: Optional[Literal["subscription", "api"]] = None
+    """How ``claude`` agents are billed: ``subscription`` (CLAUDE_CODE_OAUTH_TOKEN)
+    or ``api`` (ANTHROPIC_API_KEY); without it, CLAUDE_AUTH. Required with the
+    claude backend: the run stops before any agent starts when it is missing
+    or its credential is."""
     agent_timeout_sec: int = 900
     """Per-candidate coding-agent timeout in seconds."""
     hints_file: Optional[Path] = None
@@ -135,6 +141,8 @@ def main(args: Args) -> None:
         sys.exit(1)
 
     backend = select_backend(args.coding_agent) if args.max_iterations > 0 else None
+    if backend is not None:
+        require_claude_auth(backend, args.claude_auth)
     hints = load_hints_file(args.hints_file) if args.hints_file else None
 
     # Track the loop's LLM spend (candidate/critique agents). The report is

@@ -54,6 +54,8 @@ from src.pipelines.outer_loop.orchestrator import (
     seed_experiment_models_from_project,
 )
 from src.pipelines.outer_loop.orchestrator_validators import validate_cc_output
+from src.runtime.agent_sandbox import require_claude_auth
+from src.runtime.coding_agent import select_backend
 from src.runtime.config import REPO_ROOT
 from src.runtime.token_usage import start_usage_log, write_usage_report
 from src.subjective_randomness.config import resolve_path
@@ -370,6 +372,7 @@ def run_holdout_recovery_from_config(
     seed_override: Optional[int] = None,
     cache_dir: Optional[Path] = None,
     backend_override: Optional[str] = None,
+    claude_auth_override: Optional[str] = None,
     agent_model_override: Optional[str] = None,
     agent_timeout_override: Optional[int] = None,
     resume: bool = False,
@@ -404,7 +407,10 @@ def run_holdout_recovery_from_config(
                            n_critique_proposals (test statistics the critique
                            agent proposes per round; absent -> the inner
                            loop's default)}
-        agent             {timeout_sec, backend}
+        agent             {timeout_sec, backend, model, claude_auth}; a
+                          ``claude`` backend needs claude_auth (``subscription``
+                          or ``api``, else CLAUDE_AUTH) and its credential,
+                          checked before anything runs
         eval_pool         {n_pairs, lengths, seed, min_remaining}
         fit               MCMC kwargs (draws/tune/chains/...)
 
@@ -495,6 +501,10 @@ def run_holdout_recovery_from_config(
     agent_timeout_sec = agent_timeout_override or int(agent_cfg.get("timeout_sec", 900))
     backend = backend_override or agent_cfg.get("backend")
     agent_model = agent_model_override or agent_cfg.get("model")
+    # A claude run states how its agents are billed, before any agent starts.
+    claude_auth = require_claude_auth(
+        select_backend(backend), claude_auth_override or agent_cfg.get("claude_auth")
+    )
 
     fit_kwargs = {**dict(config.get("fit", {})), **dict(fit_overrides or {})}
 
@@ -520,7 +530,7 @@ def run_holdout_recovery_from_config(
     # accounts for the tokens it already used.
     usage_marker = start_usage_log(results_root / "token_usage.jsonl")
     try:
-        return _run_holdout_recovery_resolved(
+        result = _run_holdout_recovery_resolved(
             gt_params_by_model,
             results_root,
             seed_models_dir=seed_models_dir,
@@ -547,6 +557,12 @@ def run_holdout_recovery_from_config(
             pool_models_dir=pool_models_dir,
             agent_root=agent_root,
         )
+        result["agent"] = {
+            "backend": select_backend(backend),
+            "model": agent_model,
+            "claude_auth": claude_auth,
+        }
+        return result
     finally:
         write_usage_report(results_root, usage_marker, heading="holdout recovery")
 

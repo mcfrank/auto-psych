@@ -185,8 +185,13 @@ claude` (or set `CODING_AGENT=claude`) to use Claude Code (`claude-sonnet-4-6`)
 instead. The backend is resolved once and exported so the inner loop inherits it.
 
 ```bash
-uv run python -m src.pipelines.outer_loop.run --project subjective_randomness --experiment 1 --coding-agent claude
+uv run python -m src.pipelines.outer_loop.run --project subjective_randomness --experiment 1 --coding-agent claude --claude-auth subscription
 ```
+
+With Claude the run must say how its agents are billed: `--claude-auth
+subscription` (`CLAUDE_CODE_OAUTH_TOKEN` from `claude setup-token`) or
+`--claude-auth api` (`ANTHROPIC_API_KEY`), or `CLAUDE_AUTH` in the environment;
+there is no default, and each agent gets only that mode's credential.
 
 opencode runs headless via `opencode run`; grant it edit/bash permission in
 `opencode.json` (the equivalent of Claude's `--dangerously-skip-permissions`),

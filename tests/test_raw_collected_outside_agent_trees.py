@@ -102,4 +102,6 @@ def test_run_py_without_collection_is_not_refused(repo, stages_run, monkeypatch,
     monkeypatch.setattr(outer_run, "outer_data_dir", lambda: repo / "data" / "outer_loop")
     monkeypatch.setattr(outer_run, "_run_experiment", lambda **k: None)
     monkeypatch.setenv("CODING_AGENT", "claude")
+    monkeypatch.setenv("CLAUDE_AUTH", "subscription")
+    monkeypatch.setenv("CLAUDE_CODE_OAUTH_TOKEN", "test-token")
     outer_run.main(_args(agent="5_model_loop"))
