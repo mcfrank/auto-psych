@@ -82,7 +82,8 @@ last finished stage, and a task whose cell already has `holdout.json` exits at
 once. After each array a retry job resumes the tasks that failed, timed out or
 hit a node failure, and resubmits the out-of-memory ones with `--mem=128G`
 (that group's array only), keeping the `%MAX_PARALLEL` cap, up to
-`MAX_RETRY_ROUNDS` (2). Retries skip the setup job and run the staged code; a
+`MAX_RETRY_ROUNDS` (2); the impossible-model sweep uses the same retry job.
+Retries skip the setup job and run the staged code; a
 cell refuses to resume on code other than the code it started on. Re-running
 `submit_*.sh` with the same `WORK_ROOT` continues where it stopped, provided the
 checkout's code is unchanged. `verify_holdout_run.sh` judges cells by their
@@ -98,7 +99,13 @@ recover them; 5 repeats per ground truth measure how *stably* it fails.
 
 - `run_impossible_test_retest.sh` — pinned wrapper (5 repeats, `BASE_SEED=100`,
   the impossible config, a dedicated `..._full` work root). Start here.
-- `submit_impossible_holdout_test_retest.sh` — submits the 3-stage chain.
+- `submit_impossible_holdout_test_retest.sh` — submits the chain: setup,
+  array, the shared retry job (`holdout_retry.sbatch`, resubmitting through
+  this script: `RETRY_SUBMIT_SCRIPT`) and the analysis with
+  `MISSING_CELLS.txt`, exactly as the literature submitter does (see Resume).
+  The array's memory for one submission is `ARRAY_MEM` (the old `MEM` knob
+  now stops the submission with a message). Before 2026-09-28 it had no
+  retries: a failed impossible cell needed a manual resubmission.
 - `impossible_holdout_setup.sbatch` — stage 1: build the venv, stage the
   sweep's code once (`stage_sweep_code.sh`, as the faithful setup does) **and**
   stage pristine, off-the-agent snapshots of the impossible recipe (the models
