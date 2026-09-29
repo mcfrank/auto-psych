@@ -59,17 +59,27 @@ collection_sessions/{collection_session_id}/responses/{participant_id}
 
 The Cloud Functions are no longer open:
 
-- `/results` (all participant data) and `/register_session` require the shared
+- `/results` (all participant data) requires the shared
   secret in an `x-results-token` header. Generate one with
   `openssl rand -hex 32`, export it as `AUTO_PSYCH_RESULTS_TOKEN` in every
   environment that deploys or collects, and keep it out of git. Deploy staging
   writes it into `functions/.env` (gitignored) so the deployed functions hold
   the same value; a deploy without the env var fails loudly.
-- `/submit` only accepts collection sessions the deployment registered via
-  `/register_session` (this happens automatically right after the functions
-  deploy, before any Prolific study is published). Drive-by POSTs with
-  fabricated session ids get 403. The legacy `project_id`/`run_id` submit path
-  was removed.
+- `/submit` accepts any collection session; the legacy `project_id`/`run_id`
+  submit path was removed. A third function, `/register_session`, used to
+  gate `/submit` on sessions the deploy registered. It was removed on
+  2026-09-29: the page carries its session id, so the gate stopped only posts
+  under made-up sessions, which `/results` never reads.
+- **The functions deploy is verified by behaviour** (`verify_functions_live`,
+  right after the deploy, before any Prolific study exists): a read of
+  `/results` without the token must get 403 and one with it 200. Until
+  2026-09-29 no functions deploy from Sherlock replaced anything:
+  firebase-tools reads `functions/index.js` in a child `node` started without
+  `LD_LIBRARY_PATH`, which on el7 cannot load gcc's libstdc++, and it still
+  exits 0. The project kept serving June's functions, whose `/results` checks
+  no token. `scripts/outer_loop_live/_env.sh` now puts a `node` wrapper first
+  on `PATH` that restores the libraries, and a deploy whose output shows the
+  discovery failure (`Failed to call quitquitquit`) raises.
 - Each stored response now carries `consented_at` — the timestamp of the
   participant's "I agree" click on the injected consent gate.
 - `--prolific-mode live` additionally requires `--confirm-live-recruitment`

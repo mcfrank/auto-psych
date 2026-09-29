@@ -1,10 +1,17 @@
 # Running a live experiment (Prolific + Firebase) on Sherlock
 
 Every command here was checked against the scripts and command-line
-interfaces on 28 September 2026. **None was run against Prolific or
-Firebase**; those steps are described from the code. Placeholders: `$REPO` is
-your checkout, `$WORK_ROOT` is where live runs write (default
+interfaces on 28 September 2026. On 29 September 2026 R1 and R3 (§ 5) were
+run for real and passed, including a real Firebase deploy and a test
+submission read back through `/results`. R2 and R4 were run and stopped at
+the page-building agent, because the Gemini key was on the free tier (§ 1).
+No study has been published from these instructions yet. Placeholders:
+`$REPO` is your checkout, `$WORK_ROOT` is where live runs write (default
 `$SCRATCH/auto-psych/outer_loop_live`), `<label>` is a run label you choose.
+
+**The order of a full study**, each step below: credentials (§ 1), setup
+(§ 2), config (§ 3), the four rehearsals (§ 5), launch (§ 6), monitoring
+(§ 7), then collecting and checking the data (§ 10).
 
 ## 1. Accounts and credentials
 
@@ -19,10 +26,10 @@ the job.
 
 | key | used for |
 |---|---|
-| `PROLIFIC_API_TOKEN` | creating, publishing, polling and pausing studies |
-| `FIREBASE_TOKEN` | `firebase deploy` from a compute node (make it with `firebase login:ci` on a machine with a browser) |
-| `AUTO_PSYCH_RESULTS_TOKEN` | shared secret protecting `/results`; make one with `openssl rand -hex 32` and keep it the same for every deploy and collection |
-| `GOOGLE_API_KEY` | the Gemini login of the default agents (opencode), unless opencode is logged in some other way on your account (not checked) |
+| `PROLIFIC_API_TOKEN` | creating, publishing, polling and pausing studies (Prolific → Settings → API tokens) |
+| `FIREBASE_TOKEN` | `firebase deploy` from a compute node (make it with `npx -y firebase-tools login:ci` on a machine with a browser) |
+| `AUTO_PSYCH_RESULTS_TOKEN` | shared secret protecting `/results`. Reuse the value any checkout already has (`grep -l '^AUTO_PSYCH_RESULTS_TOKEN=' $HOME/repos/*/.secrets`): every deploy writes it into the project-wide functions, so a new value locks out earlier deployments' collection. Only if none exists: `openssl rand -hex 32` |
+| `GOOGLE_API_KEY` | the Gemini login of the default agents (opencode). **It must belong to a Google Cloud project with billing enabled.** A free-tier key cannot run the agents: `gemini-3.1-pro` has a free quota of 0, and `gemini-3.7-flash` allows 5 requests a minute and 20 a day, which one page-building attempt uses up (seen 29 September 2026: the agent quits without writing `index.html`) |
 
 With `coding_agent: claude`, state how the agents are billed with
 `claude_auth` in the config: `subscription` needs `CLAUDE_CODE_OAUTH_TOKEN`
@@ -32,6 +39,12 @@ and each agent gets only that one credential. The agents never see the
 Prolific, Firebase or results tokens.
 
 ## 2. One-time setup
+
+Sherlock's git is old: `git -C`, `git remote get-url` and `git worktree` do not
+exist. Use `cd` in a sub-shell, `git config --get remote.origin.url`, and
+separate clones. If another session runs from your main checkout, make a
+second clone for live runs and put its `REPO` and `OUTER_LIVE_SLURM_DIR`
+exports in a small file you `source` in each new shell (not `~/.bashrc`).
 
 ```bash
 export REPO=$HOME/auto-psych                      # your checkout: ALWAYS export this (_env.sh defaults to $HOME/auto-psych)
@@ -44,7 +57,24 @@ must end with `[setup] live import chain OK` and `[setup] done.`. Without
 `OUTER_LIVE_SLURM_DIR` the job cannot find `_env.sh`.
 
 `_env.sh` runs `set -euo pipefail`: `source` it only in a sub-shell (type
-`bash` first), or a later failing command closes your login shell.
+`bash` first), or a later failing command closes your login shell (in tmux,
+the pane). To see why a command fails without losing the pane, run it as
+`bash -c 'source $OUTER_LIVE_SLURM_DIR/_env.sh; …' 2>&1 | tee some.log`.
+
+`_env.sh` also writes `$WORK_ROOT/bin/node`, a wrapper that puts the modules'
+libraries back for the child `node` that `firebase deploy` starts. Without
+it the functions deploy fails on el7 but still exits 0, so every Firebase
+command must run in a shell or job that sourced `_env.sh`.
+
+**Do not run `uv run` or `uv sync` in a shell where `UV_PROJECT_ENVIRONMENT`
+points at `$WORK_ROOT/venv`** (it does after sourcing `_env.sh`, and may in
+your login profile). `uv` then re-syncs the live venv to the project lock and
+installs arviz 1.x / pymc 6, which break the model stage. Use `"$VENV_PY"`
+for the live pipeline. For the test suite, use a separate environment, for
+example in a dev job: `UV_PROJECT_ENVIRONMENT=$L_SCRATCH/test_venv uv sync --locked`
+then `$L_SCRATCH/test_venv/bin/python -m pytest -q`. To check the live venv:
+`"$VENV_PY" -c "import arviz, pymc; print(arviz.__version__, pymc.__version__)"`
+must print `0.23.x 5.28.5`; if not, rerun `setup.sbatch`.
 
 ## 3. The config
 
@@ -67,6 +97,7 @@ Keys (read by `_pilot_config.py`):
 | `run_label` | names the page URL (`/e<N>-<label>/`), the output directory `$WORK_ROOT/<label>/` and the sessions. **New label for every new run.** Ignored by `start_full_run.sh`, which uses `run1`…`runK`. |
 | `experiments` | how many in sequence; each is its own deploy and its own study |
 | `coding_agent`, `claude_auth` | `opencode` (default) or `claude`; with `claude`, `subscription` or `api` (required) |
+| `agent_model` | optional: the agents' model, e.g. `google/gemini-3.7-flash` (exported as `CODING_AGENT_MODEL`). Default: `google/gemini-3.1-pro-preview` for opencode, `claude-sonnet-4-6` for claude. Printed in the launcher summary |
 | `prolific_mode` | `test` (the pilot preset): deploy, create a draft study, not published, then stop. `live`: publish, recruit, pay, model. `none`: deploy the page, no study, then stop. Missing key ⇒ `test`. |
 | `confirm_live_recruitment` | must be `true` for `live`. `full_run.yaml` and `hero_run.yaml` say `live` without it, so they are refused until you choose. |
 | `walltime`, `qos` | Slurm limit; `qos: long` above 2 days |
@@ -101,7 +132,7 @@ experiments come to roughly a day or a day and a half; `full_run.yaml`'s
 | cost summary, config check, Prolific token check, typed `yes` | typos and accidental launches (`CONFIRM=yes` skips the prompt: not for live runs) |
 | preflight in `run_pilot.sh`: venv, `FIREBASE_TOKEN`, `PROLIFIC_API_TOKEN`, consent text; `_env.sh` stops without `bwrap` | failing hours into a job (the results token is checked later, before anything is deployed) |
 | `--n-participants` is the only count; a rendered `prolific_config.yaml` with a different `total_available_places`, or none at all, stops `run.py` | recruiting a different number than the design assumed |
-| results token (and, for `live`, Prolific's eligibility settings) checked first; the page is deployed, its session registered and checked live **before** the draft study is created, recorded and (live only) published | recruiting onto a broken or unprotected page; a failed deploy leaving a study behind |
+| results token (and, for `live`, Prolific's eligibility settings) checked first; the page and functions are deployed, the page checked live and `/results` checked to refuse a read without the token (403) and accept one with it (200) **before** the draft study is created, recorded and (live only) published | recruiting onto a broken or unprotected page; functions that were never replaced; a failed deploy leaving a study behind |
 | the deploy records the commit the code came from (from git, or from the record the launcher writes into the run copy) and refuses without one | a study that cannot be traced to its code |
 | relaunch guard: an experiment whose `deployment/deployment_manifest.json` records a live study refuses `2_design`, `3_implement` and the deploy (`LiveStudyAlreadyRecorded`) | a second paid study for the same experiment |
 | 3-hour give-up pauses an `ACTIVE` study | recruiting people whose data no experiment uses |
@@ -122,6 +153,16 @@ cd $REPO
 
 `--render-only` validates the config too, so a `live` config needs
 `confirm_live_recruitment: true` here.
+
+**Environment check** (in the same sub-shell; prints no secret values):
+
+```bash
+which node                                 # must be $WORK_ROOT/bin/node (the wrapper)
+"$VENV_PY" -c "import arviz, pymc; print(arviz.__version__, pymc.__version__)"   # 0.23.x 5.28.5
+for k in FIREBASE_TOKEN AUTO_PSYCH_RESULTS_TOKEN PROLIFIC_API_TOKEN GOOGLE_API_KEY; do
+  [[ -n "${!k:-}" ]] && echo "$k set" || echo "$k MISSING"; done
+(cd $REPO && git log --oneline -1)        # the code you are about to deploy
+```
 
 **R1. Offline dry run** (no network): staging, consent page, and the exact
 study request, unsent.
@@ -161,12 +202,35 @@ sbatch --job-name=sim_$LABEL --time=1-00:00:00 \
   $WORK_ROOT/run_sim.sbatch
 ```
 
+This always rehearses opencode with its default model. To rehearse your
+config's agents, add `CODING_AGENT=claude,CLAUDE_AUTH=<subscription|api>` or
+`CODING_AGENT_MODEL=<model>` to the `--export` list. Use a new `LABEL` for
+each attempt.
+
 (The generated script passes `bash -n`.) It exercises design, the
 agent-built page (built, not deployed), collection, the whole model stage,
 the carry-over and experiment 2's design. Success: the log contains
 `All experiments complete.`, and both experiments have `model_loop/report.md`
 and `cognitive_models/models_manifest.yaml`. Open
 `experiment1/experiment/index.html` in a browser.
+
+**Is the page-building agent working?** (R2 and R4; at most once a minute.)
+The design step comes first and has no agent: `design/stimuli.json` appears
+within minutes, and `design/screened_out.json` should be `[]`. Then:
+
+```bash
+D=$WORK_ROOT/<label>/data/subjective_randomness/experiment1
+tail -n 20 <job log>
+ls -la $D/experiment                       # index.html appears when the agent succeeds
+grep -o 'error.error="[^"]\{0,100\}' $D/logs/.xdg_data/opencode/log/opencode.log | sort | uniq -c
+```
+
+Healthy: `[step] tokens=… cost=$…` lines in the job log, then
+`[agent] 3_implement completed.` with no `[repair] … index.html not found`.
+Broken: `opencode.log` fills with `exceeded your current quota` (your key's
+plan: § 1) or `high demand` (Google's side, temporary), and the job log
+shows `finished without success`. The agent's `3_implement.jsonl` is
+overwritten by each attempt; `opencode.log` keeps all of them.
 
 **R3. Real Firebase deploy, no study.** Needs `FIREBASE_TOKEN` and
 `AUTO_PSYCH_RESULTS_TOKEN`; click through the real page, consent included.
@@ -178,8 +242,42 @@ srun -p dev -t 15:00 -c 2 --mem=4G "$VENV_PY" -m src.pipelines.outer_loop.run \
   --prepare-smoke-experiment --deploy-only \
   --deploy-target firebase --prolific-mode none \
   --firebase-project auto-psych-2c5da --run-label rehearsal-fb
-curl -s -o /dev/null -w '%{http_code}\n' https://auto-psych-2c5da.web.app/e1-rehearsal-fb/
 ```
+
+Pass: the log shows `[deploy] Functions live: /results refuses reads without
+the token` and ends `All experiments complete.` Then check from outside the
+pipeline. `curl` on Sherlock cannot do it: el7's `curl` fails the TLS
+handshake (`curl: (35) … same issuer/serial`, printed as `HTTP 000`), so use
+Python. This posts one clearly labelled test row (`rehearsal-check`) to the
+rehearsal's own session and reads it back:
+
+```bash
+M=$WORK_ROOT/rehearsal-fb/data/subjective_randomness/experiment1/deployment/deployment_manifest.json
+"$VENV_PY" - "$M" <<'PY'
+import json, os, sys, urllib.error, urllib.parse, urllib.request
+m = json.load(open(sys.argv[1])); host = "https://auto-psych-2c5da.web.app"
+def call(method, path, body=None, token=None):
+    h = {"Content-Type": "application/json", "User-Agent": "auto-psych"}
+    if token: h["x-results-token"] = token
+    data = json.dumps(body).encode() if body is not None else None
+    try:
+        with urllib.request.urlopen(urllib.request.Request(host + path, data=data, method=method, headers=h), timeout=30) as r:
+            return r.status, r.read().decode()[:300]
+    except urllib.error.HTTPError as e:
+        return e.code, ""
+q = "/results?" + urllib.parse.urlencode({"collection_session_id": m["collection_session_id"]})
+print("page", urllib.request.urlopen(urllib.request.Request(m["experiment_url"], headers={"User-Agent": "x"}), timeout=30).status)  # 200
+print("results, no token", call("GET", q)[0])                                                                                # 403
+print("submit", call("POST", "/submit", {"collection_session_id": m["collection_session_id"], "participant_id": "rehearsal-check",
+      "trials": [{"sequence_a": "HTHT", "sequence_b": "HHHH", "chose_left": True}]})[0])                                    # 200
+print(*call("GET", q, token=os.environ["AUTO_PSYCH_RESULTS_TOKEN"]), sep="\n")                                              # 200 + the row
+PY
+npx -y firebase-tools functions:list --project auto-psych-2c5da   # only results and submit
+```
+
+Then open `https://auto-psych-2c5da.web.app/e1-rehearsal-fb/` in a browser
+and click through the consent page and a few trials. The site's root URL
+shows Firebase's "Page Not Found": pages live only under `/e<N>-<label>/`.
 
 This replaces the project's **default** Hosting site: never do it while a
 pilot (which uses that site) is recruiting. Parallel full runs have their own
@@ -193,6 +291,17 @@ the launcher's run copy: check that `deployment_manifest.json` has a
 `git_commit` and `metadata.code_provenance` naming your checkout. Preview it from the Prolific
 dashboard, or open the URL with `?PROLIFIC_PID=test123`. Delete the draft
 afterwards.
+
+The draft is created **last**, after the agent has built the page (up to
+three 15-minute attempts) and the deploy has passed, so for the first half
+hour or more there is nothing in Prolific. Where to look:
+
+1. The job log: design, then `3_implement`, then `[deploy] Functions live`.
+   If the agent fails (see "Is the page-building agent working?" above),
+   no draft is ever created.
+2. `$WORK_ROOT/<label>/data/subjective_randomness/experiment1/deployment/deployment_manifest.json`
+   gets a `prolific_study_id` the moment the draft exists.
+3. Prolific → **Studies**, in the **Unpublished** section.
 
 ## 6. Launch
 
@@ -309,7 +418,7 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
   set `PUBLISH_ANOTHER_PROLIFIC_STUDY=1`; the old manifest is kept as
   `deployment_manifest.superseded-<time>.json`.
 
-## 10. Where the data are, and collecting them
+## 10. Where the data are, collecting them, and checking them
 
 ```
 $WORK_ROOT/<label>/data/subjective_randomness/
@@ -342,6 +451,31 @@ Set `DEST` to a **new** directory: the default `data/results/human_experiment/`
 holds the paper's human study, and `--overwrite` copies over it (it does not
 clear files already there). The default
 `PY` (`$REPO/.venv`) may not exist on the cluster.
+
+**Checking the data.** `experiment<N>/data/responses.csv` is what the models
+see: the five columns `sequence_a, sequence_b, participant_id, trial_index,
+chose_left`, and no Prolific IDs. For each experiment:
+
+```bash
+"$VENV_PY" - $WORK_ROOT/<label>/data/subjective_randomness/experiment1/data/responses.csv <<'PY'
+import sys, pandas as pd
+d = pd.read_csv(sys.argv[1])
+print("columns", list(d.columns))
+print("participants", d.participant_id.nunique(), "rows", len(d))
+per = d.groupby("participant_id").agg(trials=("trial_index", "size"), left=("chose_left", "mean"))
+print(per.describe().round(2))
+print("one-sided participants (>= 95% one side):", int(((per.left <= 0.05) | (per.left >= 0.95)).sum()))
+PY
+```
+
+Expect as many participants as `prolific.participants` (fewer if the 3-hour
+wait ended short; the study was then paused), 64 trials each, and a left
+rate near 0.5 overall. Compare the count with Prolific's approved
+submissions; `raw_collected/experiment<N>_responses.csv` has the same rows
+with Prolific IDs (look at it only on Sherlock). A participant answering one
+side on every trial is the failure the live dashboard (§ 7) is there to
+catch early. Then read `experiment<N>/model_loop/report.md` for the model
+stage's result.
 
 ## 11. Prolific IDs (24 hex characters) identify people
 

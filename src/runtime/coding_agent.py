@@ -320,6 +320,13 @@ def select_backend(explicit: Optional[str]) -> str:
     return backend
 
 
+def select_model(backend: str, explicit: Optional[str]) -> str:
+    """Resolve the agent model: explicit arg, then ``CODING_AGENT_MODEL``, then
+    the backend's default (``CODING_AGENT_MODEL`` must name a model of the
+    selected backend, e.g. ``google/gemini-3.7-flash`` for opencode)."""
+    return explicit or os.environ.get("CODING_AGENT_MODEL") or _DEFAULT_MODEL[backend]
+
+
 def prompt_via_stdin(backend: str, prompt: str) -> bool:
     """Whether ``prompt`` is delivered on stdin rather than as an argument."""
     if backend == "codex":
@@ -378,7 +385,7 @@ def build_command(
     """
     if backend not in _DEFAULT_MODEL:
         raise ValueError(f"unknown coding-agent backend: {backend!r}")
-    model = model or _DEFAULT_MODEL[backend]
+    model = select_model(backend, model)
     if backend == "claude":
         cmd = [
             "claude",
@@ -726,7 +733,7 @@ def run_coding_agent(
     usage was recorded, since those tokens were spent too.
     """
     backend = select_backend(backend)
-    model = model or _DEFAULT_MODEL[backend]
+    model = select_model(backend, model)
     cmd = build_command(
         backend,
         prompt=prompt,

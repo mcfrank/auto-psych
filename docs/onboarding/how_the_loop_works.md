@@ -75,9 +75,9 @@ deployment record (`deployment/deployment_manifest.json`) is built with the
 commit the code came from (from git, or from the `code_provenance.json` the
 launcher wrote into its run copy; it stops without either); the IRB consent page from
 `templates/consent.txt` is put in front of the experiment; the site and
-functions (`/submit`, and the token-protected `/results` and
-`/register_session`) are deployed; the collection session is registered; the
-page is fetched to check it is live. Only then is a **draft** Prolific study
+functions (`/submit` and the token-protected `/results`) are deployed; the
+page is fetched to check it is live, and `/results` is checked to refuse a
+read without the token and accept one with it. Only then is a **draft** Prolific study
 created (US, English-fluent, approval ≥ 98%, desktop, automatic payment on
 completion) and its id recorded, and, in `live` mode only, published. A
 failed deploy therefore leaves no study. `test` mode stops after the draft,

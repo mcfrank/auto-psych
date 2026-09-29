@@ -26,10 +26,9 @@ CONSENT_GATE_MARKER = "auto-psych-consent-gate"
 SUBMIT_BRIDGE_MARKER = "auto-psych-submit-bridge"
 CONSENT_TEXT_PATH = REPO_ROOT / "templates" / "consent.txt"
 
-# Shared admin secret for the token-guarded Cloud Function endpoints
-# (/results reads and /register_session). The deployer's environment provides
-# it; deploy staging writes it into functions/.env (gitignored) so the deployed
-# functions hold the same value.
+# Shared admin secret for the token-guarded /results Cloud Function. The
+# deployer's environment provides it; deploy staging writes it into
+# functions/.env (gitignored) so the deployed functions hold the same value.
 RESULTS_TOKEN_ENV = "AUTO_PSYCH_RESULTS_TOKEN"
 
 
@@ -38,7 +37,7 @@ class DeploymentError(RuntimeError):
 
 
 def results_token() -> str:
-    """The admin token for /results and /register_session — loud when unset.
+    """The admin token for /results — loud when unset.
 
     Without the token anyone who loads the public experiment page (which
     necessarily carries the collection_session_id) could read every
@@ -50,7 +49,7 @@ def results_token() -> str:
             f"{RESULTS_TOKEN_ENV} is not set. Generate a secret (e.g. "
             f"`openssl rand -hex 32`), export it in the deploying environment, "
             f"and keep it available to collection (it authenticates /results "
-            f"reads and /register_session)."
+            f"reads)."
         )
     return token
 
@@ -59,7 +58,7 @@ def write_functions_env(repo_root: Path) -> Path:
     """Provision functions/.env with the admin token before a functions deploy.
 
     Firebase Functions v1 loads ``functions/.env`` (dotenv) at deploy time, so
-    this is how the deployed /results and /register_session endpoints learn the
+    this is how the deployed /results endpoint learns the
     shared secret. The file is gitignored; it is rewritten on every deploy from
     the deployer's environment.
     """
@@ -68,59 +67,73 @@ def write_functions_env(repo_root: Path) -> Path:
     return env_path
 
 
-def register_collection_session(manifest: DeploymentManifest) -> None:
-    """Register the deployment's collection session with the live functions.
+def verify_functions_live(
+    manifest: DeploymentManifest, *, attempts: int = 6, delay: float = 10.0
+) -> None:
+    """Check the deployed functions' behaviour, not the deploy's exit code.
 
-    /submit only accepts registered sessions (so drive-by POSTs cannot
-    fabricate participant rows); this runs right after the functions deploy and
-    BEFORE any Prolific study is published, and raises on any failure — an
-    unregistered session would silently reject every real participant.
+    A tokenless read of /results must be refused (403) and a read with the
+    token must succeed (200). A functions deploy from Sherlock exited 0 for
+    months without replacing anything (``check_functions_deploy_output``),
+    which left the June /results live: it answers a tokenless read with 400
+    and hands every participant's data to anyone who has the page's session
+    id. Retries cover a just-updated function; a wrong answer after the last
+    attempt raises before any study exists.
     """
+    import time
+    import urllib.error
+    import urllib.parse
     import urllib.request
 
     base_url = manifest.results_api_url or manifest.experiment_url
     if not base_url:
         raise DeploymentError(
-            "Cannot register the collection session: manifest has no "
+            "Cannot verify the deployed functions: manifest has no "
             "results_api_url/experiment_url to derive the functions host from."
         )
-    # The /register_session rewrite lives at the hosting root, alongside
-    # /submit and /results.
     scheme, rest = base_url.split("//", 1)
     host = rest.split("/", 1)[0]
-    url = f"{scheme}//{host}/register_session"
-    payload = json.dumps(
-        {
-            "collection_session_id": manifest.collection_session_id,
-            "project_id": manifest.project_id,
-            "run_id": manifest.run_id,
-            "deployment_id": manifest.deployment_id,
-        }
-    ).encode("utf-8")
-    req = urllib.request.Request(
-        url,
-        data=payload,
-        method="POST",
-        headers={
-            "Content-Type": "application/json",
-            "x-results-token": results_token(),
-        },
+    query = urllib.parse.urlencode(
+        {"collection_session_id": manifest.collection_session_id}
     )
-    try:
-        with urllib.request.urlopen(req, timeout=60) as response:
-            if response.status != 200:
-                raise DeploymentError(
-                    f"register_session returned HTTP {response.status}"
-                )
-    except DeploymentError:
-        raise
-    except Exception as exc:
-        raise DeploymentError(
-            f"Could not register collection session "
-            f"{manifest.collection_session_id!r} at {url}: {exc}"
-        ) from exc
+    url = f"{scheme}//{host}/results?{query}"
+
+    def status(token: str | None) -> object:
+        headers = {"User-Agent": "auto-psych"}
+        if token:
+            headers["x-results-token"] = token
+        try:
+            with urllib.request.urlopen(
+                urllib.request.Request(url, headers=headers), timeout=30
+            ) as response:
+                return response.status
+        except urllib.error.HTTPError as exc:
+            return exc.code
+        except OSError as exc:  # network / TLS / DNS
+            return repr(exc)
+
+    checks = (
+        ("without the token", None, 403),
+        ("with the token", results_token(), 200),
+    )
+    for label, token, expected in checks:
+        got: object = None
+        for attempt in range(attempts):
+            got = status(token)
+            if got == expected:
+                break
+            if attempt + 1 < attempts:
+                time.sleep(delay)
+        if got != expected:
+            raise DeploymentError(
+                f"The deployed /results answered a read {label} with {got}, "
+                f"expected {expected} ({url}). 400 without the token means the "
+                "functions were not replaced (the old /results checks no token); "
+                "403 with the token means the functions hold a different "
+                "AUTO_PSYCH_RESULTS_TOKEN. Refusing to create a study."
+            )
     print(
-        f"  [deploy] Registered collection session {manifest.collection_session_id}",
+        "  [deploy] Functions live: /results refuses reads without the token",
         flush=True,
     )
 
@@ -391,13 +404,6 @@ def write_firebase_config(config_path: Path, manifest: DeploymentManifest) -> Pa
                     "region": manifest.firebase_region,
                 },
             },
-            {
-                "source": "/register_session",
-                "function": {
-                    "functionId": "register_session",
-                    "region": manifest.firebase_region,
-                },
-            },
         ],
     }
     if manifest.hosting_site or manifest.firebase_project:
@@ -535,13 +541,38 @@ def _ensure_hosting_site(site: str, project: str, repo_root: Path, env: dict) ->
         )
 
 
-def _run_one_deploy(cmd: list[str], repo_root: Path, env: dict) -> None:
+def _run_one_deploy(cmd: list[str], repo_root: Path, env: dict) -> str:
+    """Run one ``firebase deploy``; return its combined output."""
     result = subprocess.run(cmd, cwd=repo_root, text=True, capture_output=True, env=env)
     if result.returncode != 0:
         raise DeploymentError(
             f"Firebase deploy failed (--only {cmd[cmd.index('--only') + 1]})\n"
             f"STDOUT:\n{result.stdout[-4000:]}\n"
             f"STDERR:\n{result.stderr[-4000:]}"
+        )
+    return result.stdout + result.stderr
+
+
+# What firebase-tools prints, before exiting 0, when the child process that
+# reads functions/index.js dies. On Sherlock the child gets only HOME, PATH and
+# NODE_ENV, so it loses LD_LIBRARY_PATH and cannot load gcc's libstdc++.
+_FUNCTIONS_DISCOVERY_FAILURES = (
+    "Failed to call quitquitquit",
+    "not found (required by node)",
+)
+
+
+def check_functions_deploy_output(output: str) -> None:
+    """Raise when a functions deploy that exited 0 deployed nothing."""
+    found = [marker for marker in _FUNCTIONS_DISCOVERY_FAILURES if marker in output]
+    if found:
+        raise DeploymentError(
+            "The functions deploy exited 0 but firebase-tools could not read "
+            f"functions/index.js ({'; '.join(found)}), so nothing was deployed. "
+            "Its child node process runs without LD_LIBRARY_PATH: put the "
+            "node-wrapper that scripts/outer_loop_live/_env.sh writes first on "
+            "PATH (source _env.sh).\n"
+            f"OUTPUT:\n{output[-4000:]}"
         )
 
 
@@ -592,8 +623,12 @@ def run_firebase_deploy(
     # success without actually releasing hosting (the experiment page stays 404);
     # a standalone hosting deploy releases reliably.
     with _deploy_lock(project):
-        _run_one_deploy(
-            _deploy_argv("functions,firestore", project, config_path), repo_root, env
+        check_functions_deploy_output(
+            _run_one_deploy(
+                _deploy_argv("functions,firestore", project, config_path),
+                repo_root,
+                env,
+            )
         )
         # When deploying to a non-default (per-run) site, make sure it exists
         # first so the hosting deploy targets an isolated site instead of the

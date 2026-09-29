@@ -10,14 +10,13 @@
 
 # --- what to run -----------------------------------------------------------
 project: subjective_randomness     # project under projects/<project>/
-run_label: pilot3                  # names the run: URL path /e{k}-{label}/, output dir, session ids
+run_label: km_pilot                  # names the run: URL path /e{k}-{label}/, output dir, session ids
 experiments: 2                     # how many experiments to run, in sequence (1..N). Each is its
                                    # own deploy + Prolific study; experiment k's design uses k-1's posterior.
                                    # (Stimulus design is always the exhaustive joint-EIG selection.)
 coding_agent: opencode             # backend for ALL coding agents (implement/inner loop):
                                    # opencode (opencode + Gemini, default) | claude (Claude Code)
-# agent_model: google/gemini-3.7-flash  # optional: the agents' model (default: the backend's,
-                                   # google/gemini-3.1-pro-preview for opencode, claude-sonnet-4-6 for claude)
+agent_model: google/gemini-3.7-flash  # testing only: the free-tier key has no gemini-3.1-pro quota
 # claude_auth: subscription        # required with coding_agent: claude — how its agents are billed:
                                    # subscription (CLAUDE_CODE_OAUTH_TOKEN) | api (ANTHROPIC_API_KEY)
 prolific_mode: test                # test = deploy, then create a DRAFT study (NOT published) and STOP so you
@@ -30,14 +29,14 @@ prolific_mode: test                # test = deploy, then create a DRAFT study (N
 
 # --- where / how it runs (Slurm + Firebase) --------------------------------
 firebase_project: auto-psych-2c5da
-walltime: "1-00:00:00"             # Slurm walltime D-HH:MM:SS. A live experiment can wait up to 3h
+walltime: "1-23:00:00"             # Slurm walltime D-HH:MM:SS. A live experiment can wait up to 3h
                                    # for recruiting, plus its model stage; budget ~N_experiments x that.
 qos: ""                            # "" normal (<=2 days) | "long" for up to 7 days
 
 # --- the Prolific study (defines who is recruited and what they're paid) ---
 # Rendered to projects/<project>/prolific_config.yaml on launch.
 prolific:
-  participants: 10                 # per experiment (-> total_available_places)
+  participants: 2                 # per experiment (-> total_available_places)
   reward_per_hour: 1200            # cents/hour ($12/hr). OR delete this line and set a flat `reward:`.
   # reward: 200                    # flat cents/participant (used only when reward_per_hour is absent)
   estimated_completion_time: 7     # minutes; grounded in lit (~5 s/trial x 64 + consent/instructions/debrief
@@ -47,7 +46,7 @@ prolific:
   description: >-
     In this study, you will see a series of coin flip results and be asked to judge which is more random.
   device_compatibility: [desktop]
-  completion_code: AUTO_PSYCH_COMPLETE2
+  completion_code: AUTO_PSYCH_COMPLETE_FR
   # Data-quality eligibility: every live study recruits only US-resident,
   # English-fluent participants with an approval rate >= the threshold below.
   # Residence/language defaults are fixed in code; the approval floor is here.
