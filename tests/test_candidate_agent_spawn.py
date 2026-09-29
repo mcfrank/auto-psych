@@ -31,10 +31,11 @@ def _spawn(tmp_path, monkeypatch):
 
     def fake_run_coding_agent(
         prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False, memory_dir=None,
+        model=None, stock=False, memory_dir=None, sandbox=False,
     ):
         captured["stock"] = stock
         captured["memory_dir"] = memory_dir
+        captured["sandbox"] = sandbox
         captured["prompt"] = prompt
         captured["cwd"] = cwd
         captured["allowed_dirs"] = list(allowed_dirs)
@@ -96,3 +97,8 @@ def test_candidate_agent_is_a_stock_agent(tmp_path, monkeypatch):
 def test_candidate_agent_keeps_notes_in_its_runs_notes_dir(tmp_path, monkeypatch):
     captured, *_ = _spawn(tmp_path, monkeypatch)
     assert captured["memory_dir"] == tmp_path / "agent_notes"
+
+
+def test_candidate_agent_runs_in_the_filesystem_sandbox(tmp_path, monkeypatch):
+    captured, *_ = _spawn(tmp_path, monkeypatch)
+    assert captured["sandbox"] is True

@@ -89,3 +89,4 @@ def test_outer_loop_coding_agent_is_a_stock_agent(tmp_path, monkeypatch):
     assert captured["stock"] is True
     # Its notes live with this run, beside the run's experiment<N>/ trees.
     assert captured["memory_dir"] == tmp_path / "agent_notes"
+    assert captured["sandbox"] is True

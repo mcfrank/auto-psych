@@ -315,6 +315,7 @@ def spawn_cc_agent(
         usage_label=f"outer:{agent_key}",
         stock=True,  # a loop agent: none of the user's Claude setup
         memory_dir=agent_notes_dir(exp_dir),  # notes shared within this run only
+        sandbox=True,  # sees only its own tree, scratch (/tmp) and a private home
     )
     if success:
         print(f"  [agent] {agent_key} completed.", flush=True)

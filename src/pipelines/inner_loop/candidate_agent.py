@@ -721,5 +721,6 @@ def _spawn_candidate_agent(
         usage_label="inner:candidate",
         stock=True,  # a subject of the experiment: none of the user's Claude setup
         memory_dir=notes_dir,  # notes shared with later agents of this run only
+        sandbox=True,  # sees only its own tree, scratch (/tmp) and a private home
     )
     return success
