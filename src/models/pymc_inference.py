@@ -19,6 +19,7 @@ fitting, and diagnostics.
 from __future__ import annotations
 
 import atexit
+import contextlib
 import hashlib
 import math
 import multiprocessing
@@ -1902,10 +1903,21 @@ def _fit_outcomes(
         for name, failure in sampled.items():
             if failure is not None:
                 outcomes[name] = failure
-        for name in pending:
-            if name in outcomes:
-                continue
-            fit_in_process(name, pool_dir)
+        # arviz opens a .nc lazily, so a fit loaded from the transport would
+        # point at a file deleted when this block ends; later reads (the
+        # critique writing the incumbent's cached fit) then failed with
+        # FileNotFoundError. Load those eagerly, as fit_model does for its
+        # own transport. A caller's cache_dir persists and stays lazy.
+        load = (
+            contextlib.nullcontext()
+            if cache_dir is not None
+            else _import_arviz().rc_context(rc={"data.load": "eager"})
+        )
+        with load:
+            for name in pending:
+                if name in outcomes:
+                    continue
+                fit_in_process(name, pool_dir)
     return outcomes
 
 

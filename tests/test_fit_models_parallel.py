@@ -15,6 +15,7 @@ and identical ELPD-LOO values. It samples for real, so it is ``slow``.
 
 from __future__ import annotations
 
+import contextlib
 import os
 from concurrent.futures import CancelledError
 from pathlib import Path
@@ -81,15 +82,30 @@ def _stub_models(tmp_path, names):
 
 
 class _FakeArviz:
-    """``from_netcdf`` hands back a sentinel naming the file it was given."""
+    """``from_netcdf`` hands back a sentinel naming the file it was given and
+    records, in ``loads``, the ``data.load`` mode it was called under."""
 
-    @staticmethod
-    def from_netcdf(path):
+    loads: list = []
+    _mode = "lazy"
+
+    @classmethod
+    def from_netcdf(cls, path):
+        cls.loads.append((Path(path).name, cls._mode))
         return ("idata", Path(path).name)
+
+    @classmethod
+    @contextlib.contextmanager
+    def rc_context(cls, rc):
+        previous, cls._mode = cls._mode, rc["data.load"]
+        try:
+            yield
+        finally:
+            cls._mode = previous
 
 
 def _stub_loading(monkeypatch):
     """Make ``fit_model``'s disk-cache path loadable without PyMC or arviz."""
+    monkeypatch.setattr(_FakeArviz, "loads", [])
     monkeypatch.setattr(pi, "_import_pymc", lambda: object())
     monkeypatch.setattr(pi, "_import_arviz", lambda: _FakeArviz())
     monkeypatch.setattr(pi, "load_pymc_model", lambda name, directory: object())
@@ -157,6 +173,8 @@ def test_two_pending_fits_are_sampled_in_the_pool_and_loaded_from_the_cache(
     for name in ["a", "b"]:
         assert fits[name].idata == ("idata", _nc_name(name, models_dir, responses, {}))
         assert pi._FIT_CACHE[pi._cache_key(name, models_dir, responses, {})] is fits[name]
+    # The caller's cache persists, so its fits may stay lazy.
+    assert [mode for _, mode in _FakeArviz.loads] == ["lazy", "lazy"]
 
 
 def test_a_single_pending_fit_is_sampled_in_process(tmp_path, monkeypatch):
@@ -307,8 +325,34 @@ def test_parallel_fits_without_a_cache_dir_use_a_temporary_transport_dir(
     transport = calls[0]["cache_dir"]
     assert transport != models_dir and not transport.exists()  # cleaned up
     assert set(fits) == {"a", "b"}
+    # Loaded into memory: a lazy fit would point at the deleted transport.
+    assert [mode for _, mode in _FakeArviz.loads] == ["eager", "eager"]
     for name in ["a", "b"]:
         assert pi._cache_key(name, models_dir, responses, {}) in pi._FIT_CACHE
+
+
+@pytest.mark.slow
+def test_pool_fits_from_a_temporary_transport_dir_outlive_it(tmp_path):
+    """A fit the pool wrote to its temporary transport directory must still be
+    readable after that directory is deleted. arviz opens ``.nc`` files lazily
+    by default, so the cached fits used to point at deleted files: the
+    critique, which writes the incumbent's cached fit for its harness, failed
+    with ``FileNotFoundError`` on every round (R2, 2026-09-29)."""
+    settings = {"draws": 100, "tune": 100, "chains": 2, "cores": 2}
+    pi.clear_fit_cache()
+    fits = pi.fit_models_cached(
+        FIXTURE_MODELS, PYMC_MODEL_FIXTURES_DIR, FIXTURE_RESPONSES, fit_workers=2, **settings
+    )
+    for name in FIXTURE_MODELS:
+        # What the critique does with the in-process cache hit.
+        again = pi.fit_models_cached(
+            [name], PYMC_MODEL_FIXTURES_DIR, FIXTURE_RESPONSES, **settings
+        )[name]
+        assert again is fits[name]
+        pi.write_fit_file(again.idata, tmp_path / f"{name}.nc")
+        assert (tmp_path / f"{name}.nc").exists()
+        assert again.elpd_loo() == fits[name].elpd_loo()
+    pi.clear_fit_cache()
 
 
 @pytest.mark.parametrize("bad_workers", [0, -1])
