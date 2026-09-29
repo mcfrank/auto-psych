@@ -429,6 +429,7 @@ def run_design_programmatic(
     n_random: int = 0,
     lengths: Sequence[int] = (2, 3, 4, 5, 6, 7, 8),
     n_responses: int,
+    seed: int = 42,
 ) -> None:
     """Select the design's stimuli by exhaustive enumeration (no design agent).
 
@@ -446,6 +447,9 @@ def run_design_programmatic(
     family twin needed. Only implemented for subjective_randomness (H/T pair
     enumeration). ``n_responses`` is the experiment's participant count: every
     participant answers every selected stimulus, and the EIG scores them all.
+    ``seed`` seeds the predictive draws, the EIG scenarios and the random
+    half; the holdout harness derives one per cell and experiment (a live run
+    keeps the historical 42).
     """
     if project_id != "subjective_randomness":
         raise ValueError(
@@ -462,7 +466,8 @@ def run_design_programmatic(
             lengths=tuple(lengths),
             n_select=k,
             n_random=n_random,
-            random_seed=exp_num,
+            seed=seed,
+            random_seed=seed,
             n_responses=n_responses,
         )
         basis = "prior predictive + uniform model weights"
@@ -474,7 +479,8 @@ def run_design_programmatic(
             lengths=tuple(lengths),
             n_select=k,
             n_random=n_random,
-            random_seed=exp_num,
+            seed=seed,
+            random_seed=seed,
             responses_csv=prev_exp_dir / "model_loop" / "responses.csv",
             fit_cache_dir=exp_dir / "design" / "_fit_cache",
             n_responses=n_responses,

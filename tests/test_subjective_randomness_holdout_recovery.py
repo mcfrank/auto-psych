@@ -14,6 +14,7 @@ import csv
 import json
 import shutil
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
@@ -38,6 +39,7 @@ from src.subjective_randomness.holdout_eval import (
     seed_baseline_correlation,
 )
 from src.subjective_randomness.holdout_recovery import (
+    derive_seed,
     run_holdout_experiments,
     run_holdout_recovery_from_config,
     trajectory_tidy_rows,
@@ -74,6 +76,7 @@ def _stub_design(calls, stimuli=DESIGN_STIMULI):
                 Path(prev_exp_dir).name if prev_exp_dir is not None else None,
                 kwargs.get("k"),
                 kwargs.get("n_random"),
+                kwargs.get("seed"),
             )
         )
         design_dir = Path(exp_dir) / "design"
@@ -110,6 +113,23 @@ def _stub_generate_responses(calls):
         return rows
 
     return generate
+
+
+def _write_cumulative_responses(exp_dir):
+    """What the real inner loop writes to model_loop/responses.csv: every
+    experiment's collected responses so far, each once."""
+    exp_dir = Path(exp_dir)
+    exp_num = int(exp_dir.name.removeprefix("experiment"))
+    header, rows = None, []
+    for k in range(1, exp_num + 1):
+        lines = (exp_dir.parent / f"experiment{k}" / "data" / "responses.csv").read_text(
+            encoding="utf-8"
+        ).splitlines()
+        header = lines[0]
+        rows += lines[1:]
+    (exp_dir / "model_loop" / "responses.csv").write_text(
+        "\n".join([header, *rows]) + "\n", encoding="utf-8"
+    )
 
 
 def _stub_inner_loop(history_best):
@@ -161,7 +181,7 @@ def _stub_inner_loop(history_best):
             encoding="utf-8",
         )
         (loop_dir / "report.md").write_text("# stub report\n", encoding="utf-8")
-        (loop_dir / "responses.csv").write_text("chose_left\n1\n", encoding="utf-8")
+        _write_cumulative_responses(loop_dir.parent)
 
         # Mirror _export_inner_loop_models' semantics: ``history_best`` is
         # already in cognitive_models (a pool model that won), so nothing is
@@ -289,10 +309,16 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
         "fireworks-ai/test-model",
     ]
 
-    # Collection always samples from the held-out ground truth, with a fresh
-    # per-experiment seed offset.
+    # Collection always samples from the held-out ground truth. Every seed is
+    # derived from (cell seed, ground truth, experiment, purpose), so no two
+    # experiments, repeats or ground truths share one.
     assert [c["model_name"] for c in collect_calls] == ["prototype_similarity"] * 2
-    assert [c["seed"] for c in collect_calls] == [6, 7]
+    assert [c["seed"] for c in collect_calls] == [
+        derive_seed(5, "prototype_similarity", exp, "responses") for exp in (1, 2)
+    ]
+    assert [c[5] for c in design_calls] == [
+        derive_seed(5, "prototype_similarity", exp, "design") for exp in (1, 2)
+    ]
     # Each experiment's participants are different people: ids never repeat
     # across the pooled experiments (3 participants per experiment).
     assert [c["participant_id_offset"] for c in collect_calls] == [0, 3]
@@ -727,7 +753,9 @@ def test_run_holdout_experiments_resume_skips_valid_stages_and_reruns_invalid(
     )
 
     assert [c[:3] for c in design_calls] == [("experiment2", 2, "experiment1")]
-    assert [c["seed"] for c in collect_calls] == [7]  # seed + exp_num, exp2 only
+    assert [c["seed"] for c in collect_calls] == [  # exp2 only
+        derive_seed(5, "prototype_similarity", 2, "responses")
+    ]
     assert loop_calls == ["experiment2"]
 
 
@@ -906,10 +934,15 @@ EVAL_STIMULI = [
 
 
 def _write_loop_artifacts(run_root, exp_num, history):
-    loop_dir = run_root / f"experiment{exp_num}" / "model_loop"
+    """One response per experiment; the inner loop's file is cumulative (call
+    in experiment order)."""
+    exp_dir = run_root / f"experiment{exp_num}"
+    loop_dir = exp_dir / "model_loop"
     (loop_dir / "models").mkdir(parents=True, exist_ok=True)
+    (exp_dir / "data").mkdir(exist_ok=True)
+    (exp_dir / "data" / "responses.csv").write_text("chose_left\n1\n", encoding="utf-8")
     (loop_dir / "history.json").write_text(json.dumps(history), encoding="utf-8")
-    (loop_dir / "responses.csv").write_text("chose_left\n1\n", encoding="utf-8")
+    _write_cumulative_responses(exp_dir)
 
 
 def _history_step(step, iteration, best):
@@ -945,6 +978,12 @@ def test_evaluate_trajectory_scores_every_history_step(tmp_path, monkeypatch):
     monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
+        def loo_diagnostics(self):
+            return SimpleNamespace(elpd_loo=-1.0, unreliable=False)
+
+        def convergence_problems(self):
+            return []
+
         model = None
 
         def __init__(self, name):
@@ -1019,6 +1058,12 @@ def test_evaluate_trajectory_computes_bayesian_model_average(tmp_path, monkeypat
     monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
+        def loo_diagnostics(self):
+            return SimpleNamespace(elpd_loo=-1.0, unreliable=False)
+
+        def convergence_problems(self):
+            return []
+
         model = None
 
         def __init__(self, name):
@@ -1097,6 +1142,12 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
     }
 
     class Fitted:
+        def loo_diagnostics(self):
+            return SimpleNamespace(elpd_loo=-1.0, unreliable=False)
+
+        def convergence_problems(self):
+            return []
+
         model = None
 
         def predict_p_left(self, rows):
@@ -1127,32 +1178,30 @@ def test_evaluate_trajectory_marginalizes_participant_random_effect(
     assert rows[0]["pearson_r_bma"] == pytest.approx(1.0)
 
 
-def test_fitted_seed_baseline_correlation_pools_all_experiments(tmp_path, monkeypatch):
-    # The fitted-seed baseline is one flat number: the other seed models, fit on
-    # *all* experiments' pooled responses, correlated with the GT and averaged.
+def _baseline_run(tmp_path, data_rows=(2, 1)):
+    """Two experiments: data/responses.csv per experiment, and the inner loop's
+    cumulative model_loop/responses.csv (experiment k holds experiments 1..k)."""
     run_root = tmp_path / "run"
-    for exp_num in (1, 2):
-        loop_dir = run_root / f"experiment{exp_num}" / "model_loop"
-        loop_dir.mkdir(parents=True)
-        # Distinct rows per experiment so pooling is observable in the row count.
-        (loop_dir / "responses.csv").write_text(
-            "chose_left\n1\n0\n" if exp_num == 1 else "chose_left\n1\n",
-            encoding="utf-8",
+    total = 0
+    for exp_num, n in enumerate(data_rows, start=1):
+        total += n
+        exp_dir = run_root / f"experiment{exp_num}"
+        (exp_dir / "data").mkdir(parents=True)
+        (exp_dir / "model_loop").mkdir(parents=True)
+        (exp_dir / "data" / "responses.csv").write_text(
+            "chose_left\n" + "1\n" * n, encoding="utf-8"
         )
+        (exp_dir / "model_loop" / "responses.csv").write_text(
+            "chose_left\n" + "1\n" * total, encoding="utf-8"
+        )
+    return run_root
 
+
+def _stub_baseline_fits(monkeypatch, predictions, elpd, untrusted=()):
     gt_p = np.array([0.2, 0.5, 0.9])
-    predictions = {
-        "seed_x": np.array([0.2, 0.5, 0.9]),  # r = +1
-        "seed_y": np.array([0.9, 0.6, 0.2]),  # 1.1 - gt_p -> r = -1
-    }
     fit_responses = []
-
-    monkeypatch.setattr(
-        holdout_eval, "p_left_fixed_params", lambda *a, **k: gt_p
-    )
-    monkeypatch.setattr(
-        holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)}
-    )
+    monkeypatch.setattr(holdout_eval, "p_left_fixed_params", lambda *a, **k: gt_p)
+    monkeypatch.setattr(holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)})
     monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
@@ -1164,31 +1213,84 @@ def test_fitted_seed_baseline_correlation_pools_all_experiments(tmp_path, monkey
         def predict_p_left(self, stim_data):
             return predictions[self.name]
 
+        def loo_diagnostics(self):
+            return SimpleNamespace(elpd_loo=elpd[self.name], unreliable=self.name in untrusted)
+
+        def convergence_problems(self):
+            return []
+
     def fake_fit(name, models_dir, responses_path, **kw):
-        fit_responses.append(Path(responses_path).name)
+        fit_responses.append(Path(responses_path))
         return Fitted(name)
 
     monkeypatch.setattr(holdout_eval, "fit_model", fake_fit)
+    return fit_responses
 
-    out = fitted_seed_baseline_correlation(
-        run_root,
-        "prototype_similarity",
-        {"theta_alt": 0.65},
-        EVAL_STIMULI,
-        seed_models_dir=SEED_MODELS_DIR,
-        n_experiments=2,
-        other_seed_models=["seed_x", "seed_y"],
-        cache_dir=None,
-        fit_kwargs={},
+
+def _fitted_baseline(run_root, n_experiments=2):
+    return fitted_seed_baseline_correlation(
+        run_root, "prototype_similarity", {"theta_alt": 0.65}, EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR, n_experiments=n_experiments,
+        other_seed_models=["seed_x", "seed_y"], cache_dir=None, fit_kwargs={},
     )
 
-    # Mean of r=+1 (seed_x) and r=-1 (seed_y) is 0.
-    assert out["mean_r"] == pytest.approx(0.0)
-    assert out["per_model"]["seed_x"]["pearson_r"] == pytest.approx(1.0)
-    assert out["per_model"]["seed_y"]["pearson_r"] == pytest.approx(-1.0)
-    # Both seeds were fit on the single pooled CSV (3 rows = 2 from exp1 + 1 exp2).
-    assert fit_responses == ["pooled_responses.csv", "pooled_responses.csv"]
+
+def test_fitted_seed_baseline_fits_every_experiments_data_once(tmp_path, monkeypatch):
+    """The baseline seeds are fit once, on the final experiment's cumulative
+    responses: every experiment counted once. Pooling the per-experiment
+    cumulative files used to count experiment 1 three times."""
+    run_root = _baseline_run(tmp_path)
+    fit_responses = _stub_baseline_fits(
+        monkeypatch,
+        {"seed_x": np.array([0.2, 0.5, 0.9]), "seed_y": np.array([0.9, 0.6, 0.2])},
+        elpd={"seed_x": -10.0, "seed_y": -5.0},
+    )
+    out = _fitted_baseline(run_root)
+    final = run_root / "experiment2" / "model_loop" / "responses.csv"
+    assert fit_responses == [final, final]
     assert out["n_responses"] == 3
+    # The mean over seeds stays as a reference field.
+    assert out["mean_r"] == pytest.approx(0.0)
+
+
+def test_the_baseline_is_the_elpd_best_seed_not_the_oracle_best(tmp_path, monkeypatch):
+    """The headline baseline is the seed the loop itself would pick — the best
+    by ELPD-LOO on the training data — not the one closest to the ground truth
+    on the held-out pool (seed_x here), which only an oracle could choose."""
+    run_root = _baseline_run(tmp_path)
+    _stub_baseline_fits(
+        monkeypatch,
+        {"seed_x": np.array([0.2, 0.5, 0.9]), "seed_y": np.array([0.9, 0.6, 0.2])},
+        elpd={"seed_x": -10.0, "seed_y": -5.0},
+    )
+    out = _fitted_baseline(run_root)
+    assert out["elpd_best_model"] == "seed_y"
+    assert out["elpd_best_r"] == pytest.approx(-1.0)
+    assert out["elpd_best_rmse"] == pytest.approx(out["per_model"]["seed_y"]["rmse"])
+    assert out["per_model"]["seed_y"]["elpd_loo"] == -5.0
+
+
+def test_an_untrusted_seed_cannot_be_the_baseline(tmp_path, monkeypatch):
+    run_root = _baseline_run(tmp_path)
+    _stub_baseline_fits(
+        monkeypatch,
+        {"seed_x": np.array([0.2, 0.5, 0.9]), "seed_y": np.array([0.9, 0.6, 0.2])},
+        elpd={"seed_x": -10.0, "seed_y": -5.0}, untrusted={"seed_y"},
+    )
+    assert _fitted_baseline(run_root)["elpd_best_model"] == "seed_x"
+
+
+def test_final_responses_that_do_not_hold_every_experiment_fail_loudly(tmp_path, monkeypatch):
+    run_root = _baseline_run(tmp_path)
+    (run_root / "experiment2" / "model_loop" / "responses.csv").write_text(
+        "chose_left\n1\n", encoding="utf-8"
+    )
+    _stub_baseline_fits(
+        monkeypatch, {"seed_x": np.zeros(3), "seed_y": np.zeros(3)},
+        elpd={"seed_x": -1.0, "seed_y": -1.0},
+    )
+    with pytest.raises(ValueError, match="every experiment"):
+        _fitted_baseline(run_root)
 
 
 def test_seed_baseline_correlation_averages_other_seed_models(monkeypatch):
@@ -1246,6 +1348,12 @@ def test_reevaluate_trajectories_recomputes_best_and_bma_from_disk(tmp_path, mon
     monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
+        def loo_diagnostics(self):
+            return SimpleNamespace(elpd_loo=-1.0, unreliable=False)
+
+        def convergence_problems(self):
+            return []
+
         model = None
 
         def predict_p_left(self, stim_data):
@@ -1312,6 +1420,12 @@ def test_reevaluate_trajectories_records_the_incumbent_trajectory(tmp_path, monk
     monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
+        def loo_diagnostics(self):
+            return SimpleNamespace(elpd_loo=-1.0, unreliable=False)
+
+        def convergence_problems(self):
+            return []
+
         model = None
 
         def predict_p_left(self, stim_data):
@@ -1381,6 +1495,12 @@ def test_reevaluate_trajectories_rebuilds_exhaustive_eval_pool(tmp_path, monkeyp
     monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
+        def loo_diagnostics(self):
+            return SimpleNamespace(elpd_loo=-1.0, unreliable=False)
+
+        def convergence_problems(self):
+            return []
+
         model = None
 
         def predict_p_left(self, stim_data, **kw):
@@ -2364,6 +2484,12 @@ def test_evaluate_trajectory_regression_pearson_r_and_rmse_unchanged(
     monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
 
     class Fitted:
+        def loo_diagnostics(self):
+            return SimpleNamespace(elpd_loo=-1.0, unreliable=False)
+
+        def convergence_problems(self):
+            return []
+
         model = None
 
         def __init__(self, name):
