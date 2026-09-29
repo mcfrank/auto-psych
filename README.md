@@ -351,7 +351,7 @@ src/
       participants.py        # closed (Gemini) + open (HuggingFace) participant models
       llm.py eig.py
       prompts/               # 3_implement / 4_collect_* prompts (no theorist or design stage)
-      projects/<project>/    # problem_definition.md, ground_truth_models.py, preprocess.py, seed_models/
+      projects/<project>/    # problem_definition.md, ground_truth_models.py, evaluate_recovery.py, seed_models/
       deployment/            # firebase.py firestore.py prolific.py manifest.py local.py smoke.py
     inner_loop/
       run.py                 # `python -m src.pipelines.inner_loop.run` (entry point)
