@@ -456,9 +456,14 @@ def _write_candidate_context(
     with responses_path.open(encoding="utf-8") as f:
         header = f.readline().strip()
     columns = [c for c in header.split(",") if c]
-    raw_set = set(RAW_RESPONSE_COLUMNS)
-    feature_cols = [c for c in columns if c not in raw_set]
-    raw_sequence_cols = [c for c in ("sequence_a", "sequence_b") if c in columns]
+    extra_columns = [c for c in columns if c not in set(RAW_RESPONSE_COLUMNS)]
+    if extra_columns:
+        raise ValueError(
+            f"{responses_path} has column(s) {extra_columns} beyond the raw ones "
+            f"{list(RAW_RESPONSE_COLUMNS)}. The pipeline is raw-only (every model "
+            "computes its own features), and the candidate brief describes only "
+            "the raw columns."
+        )
     lines = [
         f"# Inner Loop — round {iteration}, candidate {candidate_idx} of "
         f"{candidate_count} ({_ROLE_LABELS[role]})",
@@ -470,44 +475,22 @@ def _write_candidate_context(
         f"Responses CSV: `{responses_path}`",
         f"Columns in the responses CSV: `{header}`",
         "",
+        "There are **no feature columns** in this CSV — only the raw H/T "
+        "sequence strings and the response (`chose_left`). The only numeric "
+        "column you can read directly as a `pm.Data` is `chose_left`.",
+        "",
+        "Your model **must** compute its own features from the raw sequences. "
+        "Define a module-level hook in `candidate.py` — either:",
+        "",
+        "- `compute_features(sequence_a: str, sequence_b: str) -> dict[str, "
+        "float]`: returns named numeric features for one stimulus pair; the "
+        "pipeline calls it per trial and exposes each key as a `pm.Data` column.",
+        "- `prepare_observed(rows: list[dict]) -> dict[str, np.ndarray]`: "
+        "builds all observed arrays at once from the full row list.",
+        "",
+        "One of these hooks is **required** — without it the model cannot bind "
+        "any stimulus input.",
     ]
-    if feature_cols:
-        lines += [
-            "Read the columns you need as `pm.Data` containers, matching each "
-            "container name to a column. **Only numeric columns can back a `pm.Data`** "
-            "— the feature columns and `chose_left`.",
-        ]
-        if raw_sequence_cols:
-            lines += [
-                "",
-                f"The raw H/T sequence strings `{'` and `'.join(raw_sequence_cols)}` are "
-                "**not numeric** and cannot be a `pm.Data` directly. To make your "
-                "hypothesis depend on an aspect of the sequence the existing feature "
-                "columns discard — order, position, recency, or specific sub-sequences "
-                "— define a module-level `compute_features(sequence_a, sequence_b) -> "
-                "dict[str, float]` in `candidate.py`. The pipeline runs it on the raw "
-                "sequences for every trial and exposes each returned key as a column "
-                "you read with a matching `pm.Data`. This extends the feature space "
-                "beyond the columns above.",
-            ]
-    else:
-        lines += [
-            "There are **no feature columns** in this CSV — only the raw H/T "
-            "sequence strings and the response (`chose_left`). The only numeric "
-            "column you can read directly as a `pm.Data` is `chose_left`.",
-            "",
-            "Your model **must** compute its own features from the raw sequences. "
-            "Define a module-level hook in `candidate.py` — either:",
-            "",
-            "- `compute_features(sequence_a: str, sequence_b: str) -> dict[str, "
-            "float]`: returns named numeric features for one stimulus pair; the "
-            "pipeline calls it per trial and exposes each key as a `pm.Data` column.",
-            "- `prepare_observed(rows: list[dict]) -> dict[str, np.ndarray]`: "
-            "builds all observed arrays at once from the full row list.",
-            "",
-            "One of these hooks is **required** — without it the model cannot bind "
-            "any stimulus input.",
-        ]
     allowlist_str = ", ".join(f"`{m}`" for m in sorted(CANDIDATE_IMPORT_ALLOWLIST))
     lines += [
         "",

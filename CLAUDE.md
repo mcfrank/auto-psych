@@ -291,7 +291,12 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   sequence_b)` or `prepare_observed(rows)` hook. `pymc_model_families/` (and
   the live pool `seed_models/`) all carry `compute_features` hooks. The verifier
   (`scripts/subjective_randomness/slurm/verify_holdout_run.sh`) checks that
-  every agent-facing CSV in a finished run carries only raw columns.
+  every agent-facing CSV in a finished run carries only raw columns. The
+  agents' prompts say so too: `prompts/pymc_theory.md` and
+  `prompts/critique.md` describe only the raw columns (its skeleton computes
+  its features with `compute_features`), the candidate brief raises on a CSV
+  with any other column, and `tests/test_agent_prompts_raw_only.py` fails if
+  an agent-facing text presents a feature column as data (first audit, D9).
 - `src/models/mcmc_defaults.py` — the **single source of MCMC sampler defaults**
   (`PRODUCTION_*`, `DESIGN_TWIN_*`). Every entry point imports from here; change
   defaults only here.

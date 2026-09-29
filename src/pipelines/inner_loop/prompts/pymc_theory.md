@@ -7,8 +7,8 @@ into a PyMC model the pipeline fits with MCMC and compares by ELPD-LOO.
 
 Read these files in the current working directory before deciding what to write:
 
-1. `CONTEXT.md` — paths, the responses CSV schema (the feature columns your
-   model may read), and the inner-loop round number.
+1. `CONTEXT.md` — paths, the responses CSV's columns (the raw H/T sequences and
+   the response only), and the inner-loop round number.
 2. `CANDIDATE_BRIEF.md` — what kind of hypothesis to attempt this round.
 3. `existing_hypotheses.md` — the hypotheses already in the model set and how
    each stands on the current data by ELPD-LOO rank (`elpd_diff ± dse` against
@@ -69,15 +69,16 @@ the hypothesis (the same claim as `hypothesis.md`).
 Inside the `with pm.Model() as model:` block:
 
 - Expose **stimulus inputs** as `pm.Data` containers, one per scalar field of
-  the stimulus. **Each `pm.Data` name must match a numeric column** the pipeline
-  can supply — either a precomputed feature column in the responses CSV or a
-  feature you derive yourself (see *Extending the feature space* below). The
-  pipeline auto-maps containers to columns by name. Initialize each with a
-  **1-element placeholder of the correct dtype** (e.g. `np.zeros(1,
-  dtype="int64")`); the pipeline calls `pm.set_data(...)` to fill in real data
-  before sampling. Do **not** use `np.zeros(0, ...)`. The raw H/T sequence
-  strings `sequence_a`/`sequence_b` are **not** numeric and cannot be a
-  `pm.Data` directly — derive numbers from them as below.
+  the stimulus. The responses CSV has no feature columns — only the raw H/T
+  sequence strings `sequence_a`/`sequence_b`, which are **not** numeric and
+  cannot be a `pm.Data` directly, and the response `chose_left`. Your model
+  computes every stimulus quantity it needs from the raw sequences itself (see
+  *Computing features from the raw sequences* below), and **each `pm.Data`
+  name must match a feature your hook returns** (or be the response
+  `chose_left`); the pipeline maps containers to features by name. Initialize
+  each with a **1-element placeholder of the correct dtype** (e.g.
+  `np.zeros(1, dtype="int64")`); the pipeline calls `pm.set_data(...)` to fill
+  in real data before sampling. Do **not** use `np.zeros(0, ...)`.
 - Put **priors** on every free cognitive parameter (e.g. `pm.HalfNormal`,
   `pm.Beta`, `pm.Normal`). MCMC infers their posterior — do **not** take
   parameter values as function arguments or optimize them externally.
@@ -99,28 +100,27 @@ library modules. Every helper your model needs must be written in the file
 itself (self-contained code only).
 
 Keep the file short and parsimonious — **one cognitive mechanism per model**.
-The number of free parameters and feature columns a model reads should match the
+The number of free parameters and features a model computes should match the
 single hypothesis; a model that needs many weighted cues to fit is a blend, not
 a hypothesis.
 
-### Extending the feature space (optional)
+### Computing features from the raw sequences (required)
 
-The precomputed feature columns are order-destroying aggregates: they cannot see
-where in a sequence something happens, the specific sub-sequences it contains, or
-recency. If your hypothesis depends on such an aspect of the raw sequence, do
-**not** try to force it from the existing columns — derive the exact statistic
-your hypothesis needs by adding a module-level featurizer to `candidate.py`:
+Every model computes its own features from the raw sequences, so that it can
+express exactly the statistic its hypothesis needs — including where in a
+sequence something happens, the specific sub-sequences it contains, or recency.
+Add one of two module-level hooks to `candidate.py`:
 
 ```python
 def compute_features(sequence_a: str, sequence_b: str) -> dict:
-    """Return new numeric feature columns for one stimulus pair."""
+    """Return numeric features for one stimulus pair."""
     ...
 ```
 
 The pipeline calls it on the raw `sequence_a`/`sequence_b` strings for every
-trial and exposes each returned key as a new column you read with a matching
-`pm.Data`. Use this to express a hypothesis the precomputed features cannot — for
-example, whether the *last* toss of each sequence is heads (a recency cue):
+trial and exposes each returned key as a value you read with a matching
+`pm.Data`. For example, whether the *last* toss of each sequence is heads (a
+recency cue):
 
 ```python
 def compute_features(sequence_a, sequence_b):
@@ -134,8 +134,14 @@ def compute_features(sequence_a, sequence_b):
 
 Rules for `compute_features`: it must return a dict of **finite numbers** with
 the **same keys for every sequence pair**, and those keys must be **new names**
-(not collisions with existing columns). It is still **one hypothesis** — add only
+(not the CSV's own column names). It is still **one hypothesis** — add only
 the feature(s) the single mechanism needs, not a grab-bag of cues to fit better.
+
+The alternative hook, `prepare_observed(rows: list[dict]) -> dict[str,
+np.ndarray]`, builds every `pm.Data` array (the response `chose_left`
+included) at once from the full list of rows, for a model whose data do not
+fit one value per container per trial — for example a table of distinct
+sequences plus per-trial indices into it. Use one hook, not both.
 
 ### Numerical safety (required)
 
@@ -157,8 +163,15 @@ import numpy as np
 import pymc as pm
 import pytensor.tensor as pt
 
+
+def compute_features(sequence_a, sequence_b):
+    """Each sequence's length and number of heads (the CSV has only the strings)."""
+    a, b = sequence_a.strip().upper(), sequence_b.strip().upper()
+    return {"n_a": len(a), "h_a": a.count("H"), "n_b": len(b), "h_b": b.count("H")}
+
+
 with pm.Model() as model:
-    # Stimulus inputs — names match responses CSV columns.
+    # Stimulus inputs — names match the keys compute_features returns.
     n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
     h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
     n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))

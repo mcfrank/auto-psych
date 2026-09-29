@@ -2,7 +2,7 @@
 
 Randomness is the log probability that the sequence occurs at least once in
 the paper's focal finite stream of 20 fair flips. The occurrence probability
-is precomputed exactly by the featurizer. The source analysis compares only
+is computed exactly from the raw sequences by ``compute_features`` below. The source analysis compares only
 equal-length strings, so an explicit graph assertion rejects cross-length data
 rather than silently introducing a new theory of length comparison.
 """

@@ -70,7 +70,10 @@ def test_write_candidate_context_returns_the_written_documents(tmp_path):
         encoding="utf-8",
     )
     responses = tmp_path / "responses.csv"
-    responses.write_text("n_a,h_a,chose_left\n4,2,1\n", encoding="utf-8")
+    responses.write_text(
+        "sequence_a,sequence_b,participant_id,trial_index,chose_left\nHHTT,HTHT,1,0,1\n",
+        encoding="utf-8",
+    )
     write_task_description_beside(responses)
     candidate_dir = tmp_path / "iter_0" / "candidate_0"
 
