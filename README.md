@@ -37,11 +37,13 @@ Active development is organized around two explicit loops:
   Candidates are admitted only if they fit by MCMC, achieve finite ELPD-LOO,
   and are **genuinely novel** (a candidate predicting within 0.002 RMSE of an
   existing model's `p_left` on a broad, loop-generated stimulus pool — not the
-  training stimuli — is rejected as a duplicate). After each scoring
-  pass, agent models that are statistically distinguishable losers with
-  negligible stacking weight are pruned (the seeded set never is). The winner
-  is recorded in `cognitive_models/` under its own name, and az.compare's
-  stacking weights become the model prior for the next experiment's design.
+  training stimuli — is rejected as a duplicate) and whose MCMC converged.
+  At the end of each experiment, agent models that are statistically
+  distinguishable losers are pruned, and the live set is capped at 8 models
+  (the seeded set is never pruned). The live set — the winner and every
+  model still within the margin of the best — is carried into
+  `cognitive_models/`, and the next experiment's design uses a uniform model
+  prior over it.
 
 ## Setup
 
@@ -216,8 +218,9 @@ token_usage_summary.json                       # the experiment's total token sp
 
 A winning candidate is exported into `cognitive_models/` under the descriptive
 name its agent chose; a seed that wins again is already in the set, so nothing
-is copied. `model_registry.yaml` records az.compare's stacking weights over the
-final set — the model prior weighting the next experiment's EIG design.
+is copied. `model_registry.yaml` records a uniform prior over the carried set —
+the model prior weighting the next experiment's EIG design (az.compare's
+stacking weights remain a report field in `model_posterior.json`).
 
 ## Browse Run Results
 
