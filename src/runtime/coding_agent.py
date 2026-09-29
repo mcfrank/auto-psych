@@ -101,7 +101,9 @@ class AgentPermissionDenied(RuntimeError):
     """
 
 
-# "! permission requested: external_directory (<dir>/*); auto-rejecting"
+# "! permission requested: external_directory (<dir>/*); auto-rejecting" — a
+# notice opencode prints on a line of its own, outside its JSON event stream.
+_DENIAL_NOTICE = re.compile(r"^! permission requested: .*; auto-rejecting$")
 _EXTERNAL_DIRECTORY_DENIAL = re.compile(r"external_directory \((.+?)/?\*?\); auto-rejecting")
 
 
@@ -115,6 +117,11 @@ def check_for_permission_denials(log_path: Path, own_dirs: Sequence[Path]) -> li
     a directory — means the launch is misconfigured and raises
     :class:`AgentPermissionDenied`, with the offending lines (ANSI colour
     stripped) and the log path in the message.
+
+    Only opencode's own notice counts: a line that *is* a denial notice. The
+    agent's tool calls and their output are JSON events, so an agent that
+    merely displays the signature — ``cat``-ing this file, which agents can
+    read — no longer looks like a denial. (One did, and it killed a cell.)
     """
     own = [Path(d).resolve() for d in own_dirs]
     text = Path(log_path).read_text(encoding="utf-8", errors="replace")
@@ -124,6 +131,8 @@ def check_for_permission_denials(log_path: Path, own_dirs: Sequence[Path]) -> li
         if PERMISSION_DENIAL_SIGNATURE not in line:
             continue
         line = _ANSI_ESCAPE.sub("", line).strip()
+        if not _DENIAL_NOTICE.match(line):
+            continue
         match = _EXTERNAL_DIRECTORY_DENIAL.search(line)
         if match and not any(Path(match.group(1)).resolve().is_relative_to(d) for d in own):
             refused_outside.append(match.group(1))

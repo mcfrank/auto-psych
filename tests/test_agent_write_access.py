@@ -261,6 +261,25 @@ def test_a_clean_log_does_not_raise(tmp_path):
     assert coding_agent.check_for_permission_denials(log, own_dirs=[tmp_path]) == []
 
 
+def test_an_agent_displaying_the_denial_text_is_not_a_denial(tmp_path):
+    """Tool calls and their output are JSON events in the log. An agent that
+    cat-s coding_agent.py (or its own earlier log) shows the signature inside
+    one; that used to raise AgentPermissionDenied and kill the cell."""
+    shown = (
+        "PERMISSION_DENIAL_SIGNATURE = \"auto-rejecting\"\n"
+        + ARCHIVED_DENIAL_LINE
+    )
+    log = tmp_path / "agent.jsonl"
+    log.write_text(
+        json.dumps({"type": "tool_use", "part": {"tool": "bash", "state": {"output": shown}}})
+        + "\n"
+        + json.dumps({"type": "text", "part": {"text": "auto-rejecting is opencode's word"}})
+        + "\n",
+        encoding="utf-8",
+    )
+    assert coding_agent.check_for_permission_denials(log, own_dirs=[tmp_path]) == []
+
+
 def test_a_denial_outside_the_agents_directories_is_returned_not_raised(tmp_path):
     """The agent reached outside its tree and was refused: that is the refusal
     working, not a misconfiguration. The caller reports it and carries on."""
