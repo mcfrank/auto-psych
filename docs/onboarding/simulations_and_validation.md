@@ -13,7 +13,7 @@ and cluster launchers: `scripts/subjective_randomness/` (its `README.md` and
 | model recovery | if a starting model generated the data, does fitting and comparing pick it? | no | `model_recovery.py` |
 | held-out recovery | with the true model removed from the start set, do the agents rebuild something that predicts like it? | yes | `holdout_recovery.py` |
 | impossible controls (the paper's "alien" rules) | with an implausible true rule, does the loop fail, as it should? | yes | `impossible_holdout_recovery.py` |
-| no-inner-loop variants | how much do the agents add? | no | `run_no_inner_loop_test_retest.sh`, `run_impossible_no_inner_loop_test_retest.sh` |
+| no-inner-loop variants | how much do the agents add? | no | `INNER_LOOP_ITERATIONS=0`, `run_impossible_no_inner_loop_test_retest.sh` |
 
 Settings (`configs/holdout_recovery_faithful.yaml`; the impossible config is
 identical apart from the hidden models, and a test keeps it so): 40
@@ -84,7 +84,6 @@ committed summaries in `data/results/holdout_test_retest/` are from the
 
 ## Caveats
 
-- `slurm/run_test_retest.sh` pins old model names and aborts; use
-  `run_faithful_test_retest.sh` (its comments give outdated settings; the
-  config is authoritative).
+- `slurm/run_faithful_test_retest.sh`'s comments give outdated settings; the
+  config is authoritative.
 - The live presets do not use these settings (runbook § 3).

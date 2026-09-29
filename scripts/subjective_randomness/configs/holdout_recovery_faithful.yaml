@@ -52,7 +52,12 @@ agent:
   claude_auth: null  # required with the claude backend: subscription | api (--claude-auth, CLAUDE_AUTH)
   model: google/gemini-3.1-pro-preview
 
-# Held-out evaluation stimuli (see holdout_recovery.yaml for the rationale).
+# Held-out evaluation stimuli. Pairs the EIG designs happened to use for
+# training are excluded after the run; fail loudly if fewer than min_remaining
+# survive. Exhaustive: evaluate on every distinct same-length pair for the
+# lengths, so literature and impossible holdout results are directly
+# comparable. predict_max_draws thins the posterior so the (draws x n_stim)
+# prediction array stays bounded.
 eval_pool:
   exhaustive: true
   lengths: [1, 2, 3, 4, 5, 6, 7, 8]

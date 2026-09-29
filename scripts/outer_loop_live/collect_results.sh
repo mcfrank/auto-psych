@@ -4,8 +4,9 @@
 #
 # This is a thin, PINNED wrapper around the collector that does the real work,
 # scripts/outer_loop_live/collect_human_results.py. It exists so the parameters
-# for *this* study are explicit and reproducible (mirroring run_test_retest.sh's
-# relationship to submit_holdout_test_retest.sh). The collector:
+# for *this* study are explicit and reproducible (mirroring
+# run_faithful_test_retest.sh's relationship to submit_holdout_test_retest.sh).
+# The collector:
 #   * copies only the lightweight result artifacts (responses, design, cognitive
 #     models, model-loop results, agent logs),
 #   * EXCLUDES the heavy material we never commit (per-run repo copies, language

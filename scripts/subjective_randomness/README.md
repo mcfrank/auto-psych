@@ -88,7 +88,7 @@ stimulus set, giving a trajectory of how the loop converges on the true process.
 
 ```bash
 uv run python scripts/subjective_randomness/holdout_recovery.py \
-  --config scripts/subjective_randomness/configs/holdout_recovery.yaml \
+  --config scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml \
   --out data/subjective_randomness/holdout_recovery/holdout.json \
   --tidy-csv data/subjective_randomness/holdout_recovery/holdout.csv \
   --figure data/subjective_randomness/holdout_recovery/holdout.png
@@ -100,7 +100,7 @@ hours. Scope a smoke run first:
 ```bash
 # 1 ground truth, 1 experiment, seed-set-only inner loop, tiny MCMC
 uv run python scripts/subjective_randomness/holdout_recovery.py \
-  --config scripts/subjective_randomness/configs/holdout_recovery.yaml \
+  --config scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml \
   --out /tmp/holdout_smoke/holdout.json \
   --gt-model bayesian_diagnosticity \
   --n-experiments 1 --n-participants 5 --inner-loop-iterations 0 \
@@ -215,7 +215,7 @@ Details worth knowing:
   ```bash
   # after fixing the cause of the failure, continue the same run:
   uv run python scripts/subjective_randomness/holdout_recovery.py \
-    --config scripts/subjective_randomness/configs/holdout_recovery.yaml \
+    --config scripts/subjective_randomness/configs/holdout_recovery_faithful.yaml \
     --out data/subjective_randomness/holdout_recovery/holdout.json \
     --tidy-csv data/subjective_randomness/holdout_recovery/holdout.csv \
     --figure data/subjective_randomness/holdout_recovery/holdout.png \
