@@ -33,7 +33,8 @@ first, then debug. Never simply relaunch; that deploys and pays again (see
 | `Error: experiment directory already exists: … Use --resume …` | calling `run.py` directly into an existing output | new `AUTO_PSYCH_OUTPUT_DIR` or label. Do not add `--resume` to a live run without reading runbook § 0 C. |
 | `[error] Model-set validation failed: … (experiment 1 requires project seed models in …)` | starting models missing or unloadable | check `projects/subjective_randomness/seed_models/` in the run copy |
 | `Cannot carry the model set forward: … does not exist (did experiment 'experimentN' complete?)` | experiment N+1 launched before N finished | finish or recover experiment N first |
-| ``Sandboxed agents need bubblewrap on PATH (on Sherlock: `ml load system bubblewrap`).`` | known gap in `scripts/outer_loop_live/_env.sh` (runbook § 0 B) | add `ml load system bubblewrap` to that file |
+| `FATAL: bwrap not on PATH after ml load system bubblewrap` | `_env.sh` could not load the `system bubblewrap` module (runbook § 0 B) | check `ml spider bubblewrap`; if the module is gone or broken, report it to srcc-support@stanford.edu |
+| ``Sandboxed agents need bubblewrap on PATH (on Sherlock: `ml load system bubblewrap`).`` | a job that did not source an `_env.sh` of this repository, or a run copy with code from before 28 September 2026 (runbook § 0 B, fixed) | launch through the scripts, or copy the current code into the run copy |
 | `'opencode' (the opencode CLI) is not on PATH.` (or `'claude'`) | module not loaded | `_env.sh` loads `opencode` and `claude-code`; check `ml spider opencode` |
 | `[error] 3_implement still invalid after 3 attempt(s): …` | the agent could not produce a page that passes the validator (e.g. `index.html does not mention jsPsych`) | read `experimentN/logs/3_implement.jsonl`; no deploy has happened yet |
 

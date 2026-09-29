@@ -31,6 +31,10 @@ ml load nodejs/24.13.0 2>/dev/null || ml load nodejs/24 2>/dev/null || ml load n
 # the default (opencode + Gemini); claude-code is available via coding_agent: claude.
 ml load opencode 2>/dev/null || true
 ml load claude-code 2>/dev/null || true
+# Every loop agent (3_implement, critique, candidates) runs inside a bubblewrap
+# filesystem sandbox (src/runtime/agent_sandbox.py); Sherlock has no system bwrap.
+ml load system bubblewrap 2>/dev/null || true
+command -v bwrap >/dev/null || { echo "FATAL: bwrap not on PATH after ml load system bubblewrap" >&2; exit 1; }
 # uv drives the Python env.
 ml load system uv 2>/dev/null || ml load uv 2>/dev/null || true
 
