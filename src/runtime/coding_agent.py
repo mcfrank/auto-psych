@@ -19,12 +19,31 @@ Claude in the terminal ``result`` event, opencode in per-step ``step_finish``
 events. Every run records its usage to :mod:`src.runtime.token_usage` under
 the caller's ``usage_label`` so a pipeline run can account for its total
 token spend.
+
+The launch contract (P34). ``opencode run`` roots its session — the directory
+inside which paths are "internal" and whose ``opencode.json`` it loads — at
+``process.env.PWD ?? process.cwd()``. ``subprocess.Popen(cwd=...)`` changes the
+child's directory but leaves the inherited ``PWD`` alone, so an agent launched
+from a harness whose shell sat elsewhere got a session rooted *there*, and its
+own working directory was "external": asked for, and auto-rejected by the
+non-interactive ``run`` command (104 of 360 candidate slots in the 2026-09
+sweep ended as "no candidate.py written" that way). The launcher therefore
+
+* pins ``PWD`` to the real cwd for every backend (:func:`child_environment`);
+* for opencode, gives each agent a private ``XDG_DATA_HOME`` beside its log so
+  concurrent agents never contend on opencode's shared sqlite store;
+* for opencode, writes a grant for every ``allowed_dirs`` entry outside the cwd
+  into the cwd's ``opencode.json`` (:func:`ensure_opencode_external_grants`);
+* scans the agent's log afterwards and raises
+  :class:`AgentPermissionDenied` on any auto-rejected permission — a denial is
+  a misconfigured launch, never one unlucky candidate.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import signal
 import subprocess
 import threading
@@ -55,6 +74,168 @@ STDIN_PROMPT_THRESHOLD = 100_000
 OPENCODE_LOCK_RETRIES = 3
 OPENCODE_LOCK_BACKOFF_SECS = 2.0
 _OPENCODE_LOCK_SIGNATURE = "database is locked"
+
+# `opencode run` prints this (outside its JSON stream) whenever it refuses a
+# permission it would otherwise have asked for; the tool call then fails with
+# "The user rejected permission to use this specific tool call."
+PERMISSION_DENIAL_SIGNATURE = "auto-rejecting"
+# Name of the per-agent XDG_DATA_HOME, created beside the agent's log.
+AGENT_DATA_HOME_NAME = ".xdg_data"
+_ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
+# Serialises read-modify-write of one opencode.json across the threads that
+# spawn candidate agents in parallel (one process per run; cross-process
+# writers of the same cwd are not expected).
+_GRANTS_LOCK = threading.Lock()
+
+
+class AgentPermissionDenied(RuntimeError):
+    """The coding agent was refused a permission it needed.
+
+    ``opencode run`` is non-interactive: it auto-rejects every permission it
+    would have asked for, after which the agent simply cannot touch the path.
+    That is a systemic misconfiguration of the launch (a session rooted in the
+    wrong directory, a missing grant), never bad luck for one candidate, so the
+    launcher raises it instead of letting the caller record an empty slot.
+    """
+
+
+def check_for_permission_denials(log_path: Path) -> None:
+    """Raise :class:`AgentPermissionDenied` if the agent's log records a denial.
+
+    Scans every line of ``log_path`` for :data:`PERMISSION_DENIAL_SIGNATURE`;
+    the offending lines (ANSI colour stripped) and the log path go into the
+    message so the denied path is visible without opening the log.
+    """
+    text = Path(log_path).read_text(encoding="utf-8", errors="replace")
+    denials = [line for line in text.splitlines() if PERMISSION_DENIAL_SIGNATURE in line]
+    if not denials:
+        return
+    shown = "\n".join(f"  {_ANSI_ESCAPE.sub('', line).strip()}" for line in denials[:5])
+    raise AgentPermissionDenied(
+        f"the coding agent was denied {len(denials)} permission request(s); this "
+        f"is a misconfigured launch (wrong session directory or missing grant), "
+        f"not a per-candidate failure. See {log_path}:\n{shown}"
+    )
+
+
+def agent_data_home(log_path: Path) -> Path:
+    """The private ``XDG_DATA_HOME`` of the agent whose log is ``log_path``.
+
+    The directory holding an agent's log is that agent's own directory (its
+    candidate, critique or stage dir), so its opencode store sits beside the
+    log and no two concurrent agents share one sqlite database.
+    """
+    return Path(log_path).parent / AGENT_DATA_HOME_NAME
+
+
+def _link_opencode_credentials(inherited_data_home: Path, private_data_home: Path) -> None:
+    """Make credentials stored under the inherited data home visible to the agent.
+
+    opencode reads ``$XDG_DATA_HOME/opencode/auth.json`` (else
+    ``~/.local/share/opencode/auth.json``). Provider keys passed through the
+    environment need nothing; keys stored by ``opencode auth login`` would be
+    lost behind the private data home, so they are linked (not copied — the
+    agent tree gets archived) into it.
+    """
+    source = inherited_data_home / "opencode" / "auth.json"
+    if not source.exists():
+        return
+    target = private_data_home / "opencode" / "auth.json"
+    target.parent.mkdir(parents=True, exist_ok=True)
+    if target.is_symlink() or target.exists():
+        if target.resolve() == source.resolve():
+            return
+        raise RuntimeError(
+            f"{target} exists and is not a link to the inherited credentials {source}"
+        )
+    target.symlink_to(source)
+
+
+def child_environment(
+    *, backend: str, cwd: Path, log_path: Path, env: Optional[dict]
+) -> Dict[str, str]:
+    """The environment the agent subprocess runs with.
+
+    Starts from ``env`` (or this process's environment), then pins ``PWD`` to
+    the resolved ``cwd`` — ``Popen(cwd=...)`` would otherwise leave the stale
+    inherited value, which ``opencode run`` prefers over the real working
+    directory when rooting its session. For opencode the agent also gets its
+    own ``XDG_DATA_HOME`` (see :func:`agent_data_home`), with any credentials
+    from the inherited one linked in.
+    """
+    child = dict(os.environ if env is None else env)
+    child["PWD"] = str(Path(cwd).resolve())
+    if backend == "opencode":
+        inherited = Path(child.get("XDG_DATA_HOME") or Path.home() / ".local" / "share")
+        private = agent_data_home(log_path)
+        private.mkdir(parents=True, exist_ok=True)
+        _link_opencode_credentials(inherited, private)
+        child["XDG_DATA_HOME"] = str(private)
+    return child
+
+
+def ensure_opencode_external_grants(cwd: Path, dirs: Sequence[Path]) -> list[str]:
+    """Grant opencode access to every directory in ``dirs`` that lies outside ``cwd``.
+
+    opencode treats a path outside its session directory (the cwd, once
+    ``PWD`` is pinned) as external and asks an ``external_directory``
+    permission for ``<dir>/*`` — which ``opencode run`` auto-rejects — unless
+    the session's ``opencode.json`` allows it. Directories inside the cwd need
+    nothing and add nothing. For each outside directory the cwd's
+    ``opencode.json`` gains ``<dir>/**`` and ``<dir>/*`` set to ``allow``;
+    everything already in the file is preserved. Returns the patterns added.
+
+    Raises ``FileNotFoundError`` when a grant is needed but the cwd has no
+    ``opencode.json`` (the agent would run without the repo's permission
+    config at all), and ``ValueError`` when a needed pattern is already
+    present with a different action — overriding an explicit deny silently
+    would hide a deliberate decision.
+    """
+    root = Path(cwd).resolve()
+    external = []
+    for directory in dirs:
+        resolved = Path(directory).resolve()
+        if resolved == root or root in resolved.parents:
+            continue
+        external.append(resolved)
+    if not external:
+        return []
+    config_path = root / "opencode.json"
+    if not config_path.exists():
+        raise FileNotFoundError(
+            f"{config_path} does not exist, so opencode cannot be granted access to "
+            f"{', '.join(str(d) for d in external)}; the agent's cwd must carry the "
+            f"repo's opencode.json"
+        )
+    with _GRANTS_LOCK:
+        config = json.loads(config_path.read_text(encoding="utf-8"))
+        permission = config.setdefault("permission", {})
+        grants = permission.setdefault("external_directory", {})
+        if not isinstance(grants, dict):
+            raise ValueError(
+                f"{config_path}: permission.external_directory must map globs to "
+                f"actions, got {grants!r}"
+            )
+        added: list[str] = []
+        for directory in external:
+            for pattern in (f"{directory}/**", f"{directory}/*"):
+                action = grants.get(pattern)
+                if action == "allow":
+                    continue
+                if action is not None:
+                    raise ValueError(
+                        f"{config_path}: {pattern!r} is already {action!r}; refusing "
+                        f"to override an explicit permission"
+                    )
+                grants[pattern] = "allow"
+                added.append(pattern)
+        if added:
+            # Atomic replace: an opencode process starting concurrently must
+            # never read a half-written config.
+            tmp_path = config_path.with_name("opencode.json.tmp")
+            tmp_path.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8")
+            os.replace(tmp_path, config_path)
+    return added
 
 
 def select_backend(explicit: Optional[str]) -> str:
@@ -97,7 +278,9 @@ def build_command(
     :func:`prompt_via_stdin` says so, the final element is codex's ``-``
     marker / absent for claude, and the caller writes the prompt to stdin.
     opencode has no ``--add-dir`` equivalent (it operates on the working
-    directory), so ``allowed_dirs`` is honoured only for Claude Code.
+    directory), so ``allowed_dirs`` reaches the command line only for Claude
+    Code; :func:`run_coding_agent` honours it for opencode by granting the
+    directories in the cwd's ``opencode.json``.
     ``extra_args`` are backend CLI flags appended verbatim before the prompt
     (e.g. Claude's ``--max-turns`` / ``--max-budget-usd`` / ``--disallowedTools``
     for a long-running supervisor session).
@@ -393,6 +576,12 @@ def run_coding_agent(
     :mod:`src.runtime.token_usage` under ``usage_label`` — also on timeout or
     failure, since those tokens were spent all the same. One logical call
     records exactly one usage entry, from the attempt that ran.
+
+    The child runs with ``PWD`` pinned to ``cwd`` and, for opencode, a private
+    ``XDG_DATA_HOME`` and grants for every ``allowed_dirs`` entry outside the
+    cwd (see the module docstring). Afterwards the log is scanned and an
+    auto-rejected permission raises :class:`AgentPermissionDenied` — after the
+    usage was recorded, since those tokens were spent too.
     """
     backend = select_backend(backend)
     model = model or _DEFAULT_MODEL[backend]
@@ -404,6 +593,14 @@ def run_coding_agent(
         extra_args=extra_args,
     )
     log_path.parent.mkdir(parents=True, exist_ok=True)
+    child_env = child_environment(backend=backend, cwd=cwd, log_path=log_path, env=env)
+    if backend == "opencode":
+        granted = ensure_opencode_external_grants(cwd, list(allowed_dirs or []))
+        if granted and on_summary:
+            on_summary(
+                f"  [oc] granted external_directory in {Path(cwd) / 'opencode.json'}: "
+                + ", ".join(granted)
+            )
 
     stdin_text = prompt if prompt_via_stdin(backend, prompt) else None
     for attempt in range(1 + OPENCODE_LOCK_RETRIES):
@@ -413,7 +610,7 @@ def run_coding_agent(
             cwd=cwd,
             log_path=log_path,
             timeout_secs=timeout_secs,
-            env=env,
+            env=child_env,
             on_summary=on_summary,
             log_mode="w" if attempt == 0 else "a",
             stdin_text=stdin_text,
@@ -447,6 +644,10 @@ def run_coding_agent(
             f"  [tokens] WARNING: {backend} run for {usage_label!r} reported no "
             f"token usage; this run's spend is uncounted"
         )
+
+    # A denied permission is a misconfigured launch: raise, whatever else the
+    # run did (including timing out after the denial).
+    check_for_permission_denials(log_path)
 
     if timed_out:
         return False, f"coding agent ({backend}) timed out after {timeout_secs}s"

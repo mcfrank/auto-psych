@@ -366,11 +366,14 @@ def _spawn_candidate_agent(
     from src.runtime.coding_agent import run_coding_agent
 
     # Run from agent_root (the scrubbed agent tree), not from the harness
-    # checkout. opencode discovers its external_directory grants by walking up
-    # from cwd to the worktree's opencode.json, so cwd must be a tree that has
-    # .here and opencode.json. The agent tree is scrubbed of feature code,
-    # research library modules and GT-recipe files, so the agent cannot read
-    # them. The candidate_dir is named explicitly since it is not the cwd.
+    # checkout. opencode roots its session at the cwd (the launcher pins PWD
+    # to it — see src/runtime/coding_agent.py): paths under the session
+    # directory are internal, and its opencode.json is the permission config
+    # in force, so cwd must be a tree that has .here and opencode.json. The
+    # agent tree is scrubbed of feature code, research library modules and
+    # GT-recipe files, so the agent cannot read them. The candidate_dir is
+    # named explicitly since it is not the cwd; the launcher grants any
+    # allowed_dirs entry that falls outside the cwd.
     cwd = agent_root if agent_root is not None else REPO_ROOT
     prompt = _build_candidate_prompt(candidate_dir, docs)
     log_path = candidate_dir / "agent.jsonl"

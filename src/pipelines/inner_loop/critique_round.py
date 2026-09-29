@@ -17,6 +17,7 @@ from typing import Any, Dict, List, Optional
 
 from src.pipelines.inner_loop.import_gate import check_forbidden_imports
 from src.pipelines.inner_loop.model_zoo import _manifest_entries
+from src.runtime.coding_agent import AgentPermissionDenied
 from src.runtime.config import REPO_ROOT
 
 _PKG_DIR = Path(__file__).resolve().parent
@@ -182,10 +183,11 @@ def _spawn_critique_agent(
         n_replicates=n_replicates,
     )
 
-    # Name critique_dir explicitly: the agent runs from agent_root (so opencode
-    # loads the worktree's external_directory grants), NOT from critique_dir, so a
-    # bare "in this directory" leaves it guessing where CRITIQUE_CONTEXT.md is —
-    # which it sometimes gets wrong, then writes no statistics. Same fix as the
+    # Name critique_dir explicitly: the agent runs from agent_root (opencode's
+    # session directory, whose opencode.json is the permission config in force
+    # — the launcher pins PWD to it), NOT from critique_dir, so a bare "in this
+    # directory" leaves it guessing where CRITIQUE_CONTEXT.md is — which it
+    # sometimes gets wrong, then writes no statistics. Same fix as the
     # candidate agent.
     cwd = agent_root if agent_root is not None else REPO_ROOT
     prompt = (
@@ -445,6 +447,10 @@ def _run_critique_round(
             agent_model=agent_model,
             agent_root=agent_root,
         )
+    except AgentPermissionDenied:
+        # A misconfigured launch, not a critique failure: every later agent
+        # would be denied the same way. Let it kill the run.
+        raise
     except Exception as e:  # a critique failure must not kill a long inner-loop run
         print(f"  [critique] skipped — {type(e).__name__}: {e}", flush=True)
         return None

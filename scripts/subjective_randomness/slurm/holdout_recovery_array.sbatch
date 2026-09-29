@@ -78,6 +78,9 @@ mkdir -p "$RUN_DIR"
 # XDG_DATA_HOME (default ~/.local/share/opencode). Concurrent array tasks
 # sharing one DB corrupt it ("SQLITE_CORRUPT: database disk image is
 # malformed"). Isolate every task's XDG dirs (also keeps them off $HOME).
+# Within a task, the launcher gives each spawned agent its own XDG_DATA_HOME
+# under the agent's directory (concurrent candidate agents hit "database is
+# locked" on one shared store); this one serves the harness process itself.
 export XDG_DATA_HOME="$RUN_DIR/.xdg/data"
 export XDG_STATE_HOME="$RUN_DIR/.xdg/state"
 export XDG_CACHE_HOME="$RUN_DIR/.xdg/cache"
@@ -147,9 +150,13 @@ STUB
 fi
 
 # Harden opencode permissions: deny reads of the off-limits paths, and grant
-# external access to the repo copy. The outer agents' cwd IS the repo copy so
-# they don't need it, but inner-loop candidate agents run with cwd = their
-# candidate dir and must reach the model zoo / project files above it. The GT
+# external access to the repo copy. Every agent runs with cwd = the repo copy
+# and the launcher (src/runtime/coding_agent.py) pins PWD to that cwd, so
+# opencode roots its session there, loads THIS opencode.json, and treats the
+# whole tree (including _runs/, the results root) as internal — the grant is
+# belt-and-braces. (Before P34 the harness's `cd "$HARNESS_REPO"` below leaked
+# into the agents' PWD, opencode rooted every session at harness_repo instead,
+# and the agents' own candidate dirs were "external" and auto-rejected.) The GT
 # PyMC files are deleted; the denies additionally cover both model-family dirs
 # (the pure-Python twin of the GT must stay importable for the parent), the
 # seed pool, and the holdout configs (their gt_models keys name the held-out
