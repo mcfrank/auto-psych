@@ -52,6 +52,7 @@ from pathlib import Path
 from typing import Any, Callable, Dict, Optional, Sequence
 
 from src.runtime import token_usage
+from src.runtime.agent_sandbox import sandbox_command
 
 DEFAULT_BACKEND = "opencode"
 _DEFAULT_MODEL = {
@@ -599,12 +600,16 @@ def run_coding_agent(
     extra_args: Sequence[str] = (),
     stock: bool = False,
     memory_dir: Optional[Path] = None,
+    sandbox: bool = False,
 ) -> tuple[bool, str]:
     """Spawn the selected coding agent, stream output to ``log_path``.
 
     ``stock=True`` runs a Claude agent with none of the user's personal
     configuration (``STOCK_CLAUDE_ARGS``, ``STOCK_CLAUDE_ENV``);
     ``memory_dir`` gives it an auto-memory there instead of none.
+    ``sandbox=True`` runs the CLI inside a bubblewrap filesystem sandbox that
+    holds only its working tree, a scratch dir at /tmp and a private home (see
+    :mod:`src.runtime.agent_sandbox`).
 
     Returns ``(success, result_text)``. For Claude, success and the final
     result come from the terminal ``result`` stream-json event; for opencode
@@ -643,6 +648,15 @@ def run_coding_agent(
         backend=backend, cwd=cwd, log_path=log_path, env=env, stock=stock,
         memory_dir=memory_dir,
     )
+    if sandbox:
+        cmd, child_env = sandbox_command(
+            cmd,
+            backend=backend,
+            cwd=cwd,
+            writable_dirs=list(allowed_dirs or []),
+            agent_dir=log_path.parent,
+            env=child_env,
+        )
     if backend == "opencode":
         granted = ensure_opencode_external_grants(cwd, list(allowed_dirs or []))
         if granted and on_summary:

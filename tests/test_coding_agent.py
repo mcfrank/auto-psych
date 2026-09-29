@@ -235,3 +235,30 @@ def test_stock_claude_agent_with_a_notes_dir_keeps_its_memory_there(tmp_path):
 def test_stock_claude_agent_without_a_notes_dir_has_no_memory_at_all(tmp_path):
     cmd = build_command("claude", prompt="p", allowed_dirs=[], model=None, stock=True)
     assert "--settings" not in cmd
+
+
+def test_a_sandboxed_run_wraps_the_cli_in_the_agents_sandbox(tmp_path, monkeypatch):
+    """sandbox=True hands the built command to agent_sandbox, with the agent's
+    own directory (the one holding its log) and its allowed dirs."""
+    import src.runtime.coding_agent as coding_agent
+
+    class Stop(Exception):
+        pass
+
+    seen = {}
+
+    def fake_sandbox_command(cmd, **kwargs):
+        seen.update(kwargs, cmd=cmd)
+        raise Stop
+
+    monkeypatch.setattr(coding_agent, "sandbox_command", fake_sandbox_command)
+    agent_dir = tmp_path / "candidate_0"
+    with pytest.raises(Stop):
+        coding_agent.run_coding_agent(
+            "p", cwd=tmp_path, log_path=agent_dir / "agent.jsonl", backend="opencode",
+            allowed_dirs=[agent_dir], sandbox=True, on_summary=None,
+        )
+    assert seen["cmd"][0] == "opencode"
+    assert seen["backend"] == "opencode"
+    assert seen["agent_dir"] == agent_dir
+    assert list(seen["writable_dirs"]) == [agent_dir]

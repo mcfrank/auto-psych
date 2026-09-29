@@ -26,6 +26,9 @@ ml load devel
 ml load gcc/14.2.0 2>/dev/null || ml load gcc 2>/dev/null || true
 ml load system uv 2>/dev/null || ml load uv
 ml load opencode 2>/dev/null || true
+# Loop agents run inside a bubblewrap filesystem sandbox (src/runtime/agent_sandbox.py).
+ml load system bubblewrap
+command -v bwrap >/dev/null || { echo "FATAL: bwrap not on PATH after ml load system bubblewrap" >&2; exit 1; }
 # The codex backend ships as its own module (needs `devel`, loaded above) and
 # authenticates from ~/.codex/auth.json (ChatGPT subscription, no API key).
 # Load it only when it is the selected backend, and fail loudly if it is

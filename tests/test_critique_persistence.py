@@ -132,12 +132,13 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
 
     def fake_run(
         prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False, memory_dir=None,
+        model=None, stock=False, memory_dir=None, sandbox=False,
     ):
         captured["prompt"] = prompt
         captured["cwd"] = cwd
         captured["stock"] = stock
         captured["memory_dir"] = memory_dir
+        captured["sandbox"] = sandbox
         _write_stat(log_path.parent / "test_stats", "alternation_gap")
         return True, ""
 
@@ -155,6 +156,7 @@ def test_critique_prompt_names_the_critique_dir(tmp_path: Path, monkeypatch):
     assert captured["stock"] is True
     # ...keeping notes for later agents of the same run.
     assert captured["memory_dir"] == tmp_path / "agent_notes"
+    assert captured["sandbox"] is True
 
 
 # ─────────────────────────────────────────────
@@ -238,7 +240,7 @@ def _patch_agent(monkeypatch, on_run):
 
     def fake_run(
         prompt, *, cwd, log_path, allowed_dirs, timeout_secs, backend, usage_label,
-        model=None, stock=False, memory_dir=None,
+        model=None, stock=False, memory_dir=None, sandbox=False,
     ):
         calls.append({"prompt": prompt, "log_path": log_path})
         on_run(log_path.parent)
