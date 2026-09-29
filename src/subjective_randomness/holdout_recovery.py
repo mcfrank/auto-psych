@@ -33,6 +33,7 @@ from __future__ import annotations
 import hashlib
 import json
 import shutil
+import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Mapping, Optional
 
@@ -84,6 +85,28 @@ from src.subjective_randomness.leakage_audit import leakage_check
 # ─────────────────────────────────────────────
 # Stage validation helpers (used only by run_holdout_experiments)
 # ─────────────────────────────────────────────
+
+
+def forget_command_line() -> None:
+    """Drop this process's command-line arguments from ``sys.argv`` and
+    ``sys.orig_argv`` once they are parsed.
+
+    Candidate models and critique statistics are agent-written code that runs
+    in the harness process, and the harness's arguments name the held-out
+    ground truth (``--gt-model``, and the ``run<r>/<gt>/`` output paths).
+    ``typing.sys.argv`` used to pass the code gate; the gate now blocks that
+    route, and this empties what any other in-process route would find. The
+    lists are cleared in place, so every reference to ``sys.argv`` sees it,
+    and fit workers spawned later inherit the cleared list. The script path
+    stays (``argv[0]``).
+    """
+    n_args = len(sys.argv) - 1
+    if n_args <= 0:
+        return
+    del sys.argv[1:]
+    orig_argv = getattr(sys, "orig_argv", None)
+    if orig_argv is not None and len(orig_argv) >= n_args:
+        del orig_argv[len(orig_argv) - n_args:]
 
 
 def _require_valid(agent_key: str, exp_dir: Path) -> None:

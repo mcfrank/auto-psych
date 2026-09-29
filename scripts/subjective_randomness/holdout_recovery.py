@@ -35,6 +35,7 @@ sys.path.insert(0, str(here()))
 from src.subjective_randomness.config import load_config, resolve_path  # noqa: E402
 from src.subjective_randomness.holdout_eval import TRAJECTORY_COLUMNS  # noqa: E402
 from src.subjective_randomness.holdout_recovery import (  # noqa: E402
+    forget_command_line,
     run_holdout_recovery_from_config,
     trajectory_tidy_rows,
 )
@@ -253,4 +254,8 @@ def main(args: Args) -> None:
 
 
 if __name__ == "__main__":
-    main(tyro.cli(Args))
+    parsed = tyro.cli(Args)
+    # The arguments name the held-out ground truth; agent-written code runs in
+    # this process (see forget_command_line).
+    forget_command_line()
+    main(parsed)
