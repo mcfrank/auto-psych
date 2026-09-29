@@ -160,8 +160,8 @@ class HypothesisLedger:
         """The retired entries whose latest outcome is ``pruned``, in ledger order.
 
         These are the models that entered the set and lost — the refinement
-        menu's targets (with ``models/pruned/<name>.py`` beside the zoo when
-        this run pruned them). The other retired entries — rejected
+        menu's targets (each with its file in the ``models/pruned/`` of the
+        experiment that pruned it). The other retired entries — rejected
         candidates that never entered, dropped seeds — are not targets.
         """
         return [entry for entry in self.retired(live_names) if entry.outcome == "pruned"]

@@ -13,6 +13,7 @@ from typing import Any, Dict, Iterable, List, Optional
 
 from src.pipelines.inner_loop.task_description import read_task_description
 from src.models.mcmc_defaults import (
+    ESCALATED_TARGET_ACCEPT,
     MAX_R_HAT,
     MIN_BULK_ESS,
     CANDIDATE_CHECK_CHAINS,
@@ -22,6 +23,7 @@ from src.models.mcmc_defaults import (
 from src.pipelines.inner_loop.check_candidate import check_candidate_command
 from src.pipelines.inner_loop.hypothesis_ledger import (
     HypothesisLedger,
+    LedgerEntry,
     collapse_whitespace,
 )
 from src.pipelines.inner_loop.import_gate import CANDIDATE_IMPORT_ALLOWLIST
@@ -184,6 +186,31 @@ def _write_existing_hypotheses(
     return text
 
 
+def _pruned_source(models_dir: Path, entry: LedgerEntry) -> Optional[Path]:
+    """The file of a model the ledger records as pruned, or ``None``.
+
+    Pruning runs once, at the end of an experiment, and moves the file to
+    that experiment's ``model_loop/models/pruned/``; each experiment starts a
+    fresh zoo. So during the rounds this menu is written in, the current
+    zoo's ``pruned/`` is empty, and the file of every model on the menu's
+    pruned list is in an earlier experiment's zoo. The prune's ledger context
+    starts with that experiment's directory name (``experiment2 end of
+    experiment``), a sibling of the current experiment's directory
+    (``models_dir`` is ``<run>/<experiment>/model_loop/models``). The menu
+    used to look only in the current zoo, and so never showed a pruned
+    model's source although the brief promised it.
+    """
+    in_this_zoo = models_dir / "pruned" / f"{entry.name}.py"
+    if in_this_zoo.exists():
+        return in_this_zoo
+    experiment = entry.context.split(" ", 1)[0] if entry.context else ""
+    if not experiment:
+        return None
+    run_root = models_dir.parent.parent.parent
+    source = run_root / experiment / "model_loop" / "models" / "pruned" / f"{entry.name}.py"
+    return source if source.exists() else None
+
+
 def _write_refinement_menu(
     candidate_dir: Path,
     models_dir: Path,
@@ -198,10 +225,10 @@ def _write_refinement_menu(
     the live models, best first by their ``az.compare`` standing, then the
     models the ledger records as pruned (in this experiment or an earlier
     one), narrowest margin first — each with its hypothesis in full, its
-    standing or prune margin, and its source (``models/<name>.py``, or
-    ``models/pruned/<name>.py`` when this run pruned it; a model pruned in an
-    earlier experiment has no file in this tree and is listed by hypothesis
-    alone, and says so). Framed as a menu, not a blacklist: the retired
+    standing or prune margin, and its source (``models/<name>.py``, or the
+    ``pruned/<name>.py`` of the experiment that pruned it:
+    ``_pruned_source``; a pruned model whose file cannot be found is listed
+    by hypothesis alone, and says so). Framed as a menu, not a blacklist: the retired
     hypotheses an exploratory slot is told not to re-propose are exactly
     what a refinement slot exists to draw on. Returns the text (it is also
     injected into the agent's prompt).
@@ -259,14 +286,12 @@ def _write_refinement_menu(
     if not pruned:
         lines += ["No model has been pruned yet in this project.", ""]
     for entry in pruned:
-        source = models_dir / "pruned" / f"{entry.name}.py"
-        if source.exists():
+        source = _pruned_source(models_dir, entry)
+        if source is not None:
             source_line = f"**Source:** `{source}`"
         else:
             source_line = (
-                "**Source:** none in this experiment's tree — the model was "
-                "pruned in an earlier experiment, and only its hypothesis above "
-                "is carried."
+                "**Source:** none on disk — only its hypothesis above is carried."
             )
         outcome = f"pruned ({entry.context})" if entry.context else "pruned"
         lines += [
@@ -356,8 +381,8 @@ def _chosen_brief(incumbent: str, critique_note: str) -> str:
         f"`{incumbent}` (the incumbent has its own refinement slots this "
         "round). The menu gives the other live models, with their standing "
         "against the best, and the models pruned earlier, with the margin by "
-        "which each lost and — when this experiment pruned it — its source "
-        "under `models/pruned/`. A pruned model lost on the data it was scored "
+        "which each lost and its source (in the `pruned/` directory of the "
+        "experiment that pruned it). A pruned model lost on the data it was scored "
         "on, but its mechanism may be partly right, and this slot exists to "
         "find out. Choose the model whose mechanism you judge most promising "
         "and most improvable — a narrow loser over a distant one, unless you "
@@ -509,11 +534,13 @@ def _write_candidate_context(
         "production fit) and a finite ELPD-LOO — and prints `OK` or the exact "
         "reason admission would reject the file. Fix anything it reports. It "
         "does not check novelty against the other models, nor convergence: "
-        "admission's full fit (refit once with smaller steps if needed) must "
-        "have almost no divergent transitions, R-hat <= "
-        f"{MAX_R_HAT} and bulk ESS >= {MIN_BULK_ESS}, so prefer smooth, "
-        "well-identified parameterisations (a model that needs smaller NUTS "
-        "steps can declare `SAMPLER_SETTINGS = {\"target_accept\": 0.95}`).",
+        "admission's full fit must have almost no divergent transitions, R-hat <= "
+        f"{MAX_R_HAT} and bulk ESS >= {MIN_BULK_ESS}. A fit that fails is already "
+        f"refit once with smaller NUTS steps (target_accept {ESCALATED_TARGET_ACCEPT:g}), "
+        "so asking for smaller steps is not a fix: prefer smooth, well-identified "
+        "parameterisations (non-centred hierarchical or scale parameters, priors "
+        "that constrain every parameter, no parameters that trade off against "
+        "each other, no hard thresholds in the likelihood).",
         "",
         "```bash",
         check_candidate_command(candidate_dir, responses_path),

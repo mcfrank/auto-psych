@@ -116,7 +116,8 @@ target — see **Slot roles**) → admit sequentially.
   gates and the **convergence gate** (≤0.1% divergent transitions, R-hat ≤
   1.05, bulk ESS ≥ 100; `fit_model` refits a failing fit once at
   `target_accept` 0.95 and uses that fit everywhere; a model's declared
-  `target_accept` is a floor on the loop's), AND with posterior-
+  `target_accept` is a floor on the loop's — so the rejection and the brief
+  advise reparameterising, never smaller steps), AND with posterior-
   mean `p_left` ≥ `novelty_rmse_threshold` (0.002) RMSE from every admitted
   model **on the loop's novelty pool** — 512 same-length H/T pairs at lengths
   4–8 that the loop generates from its own seed (`novelty_pool_rows`) and
@@ -156,8 +157,9 @@ target — see **Slot roles**) → admit sequentially.
   from `refinement_menu.md` — the live non-incumbent models ranked by
   standing and the ledger's pruned models ranked by margin
   (`parse_prune_margin` reads the margin `_prune_losers` wrote), each with
-  its full hypothesis and source (`models/<name>.py` or
-  `models/pruned/<name>.py`), framed as a menu. Below four slots the
+  its full hypothesis and source (`models/<name>.py`, or for a pruned model
+  the `model_loop/models/pruned/<name>.py` of the experiment that pruned it,
+  found through its ledger context), framed as a menu. Below four slots the
   refinement slots go one at a time: at 3 one of each, at 2 exploratory +
   incumbent, at 1 exploratory only. Refinement briefs lift the anti-grafting
   and no-composition clauses (exploratory briefs keep them and the "do not

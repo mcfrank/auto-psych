@@ -19,6 +19,7 @@ from typing import Any, Dict, Iterable, List, Mapping, Optional, Sequence, Tuple
 import numpy as np
 import yaml
 
+from src.models.mcmc_defaults import ESCALATED_TARGET_ACCEPT
 from src.models.model_manifest import manifest_path, read_manifest_entries
 from src.models.data_binding import MissingStimulusColumns, make_stim_data
 from src.models.model_loading import load_pymc_model, pm_data_inputs
@@ -30,6 +31,7 @@ from src.models.pymc_inference import (
     fit_model,
     fit_models_to_cache,
     model_logp_is_finite,
+    resolve_fit_settings,
 )
 from src.model_comparison.likelihood import log_likelihood
 from src.model_comparison.posterior import compare_table
@@ -937,6 +939,27 @@ def _admit_candidate(
     ).admitted
 
 
+def _smaller_steps_already_tried(
+    model_name: str, models_dir: Path, fit_kwargs: Optional[Dict[str, Any]]
+) -> str:
+    """The convergence rejection's note that smaller NUTS steps were tried.
+
+    ``fit_model`` refits a failing multi-chain fit once at
+    ``ESCALATED_TARGET_ACCEPT``, and a model's declared ``target_accept`` is a
+    floor on it, so the fit admission rejects was already sampled at that
+    step size or smaller. Advising agents to declare it (as the rejection
+    used to) made the repair re-sample the same failing fit.
+    """
+    settings = resolve_fit_settings(model_name, models_dir, fit_kwargs or {})
+    if settings["chains"] < 2:
+        return ""  # a single-chain fit is never refit
+    tried = max(float(settings["target_accept"]), ESCALATED_TARGET_ACCEPT)
+    return (
+        f", even at target_accept {tried:g} (the fitter already refits a failing "
+        "fit with smaller NUTS steps, so raising target_accept will not help)"
+    )
+
+
 def _admit_candidate_with_reason(
     candidate_file: Path,
     models_dir: Path,
@@ -1062,12 +1085,17 @@ def _admit_candidate_with_reason(
     # trials, not mixing).
     problems = convergence_problems_of(fitted)
     if problems:
+        already_tried = _smaller_steps_already_tried(model_name, models_dir, fit_kwargs)
         staged.unlink(missing_ok=True)
         return reject(
-            f"MCMC did not converge ({'; '.join(problems)}). Reparameterise the "
-            "model (e.g. non-centred parameters, tighter priors, no hard "
-            "thresholds in the likelihood), or declare smaller NUTS steps with a "
-            "module-level SAMPLER_SETTINGS = {\"target_accept\": 0.95}."
+            f"MCMC did not converge ({'; '.join(problems)})"
+            + already_tried
+            + ". Change the model's geometry instead: non-centred "
+            "parameterisations for hierarchical or scale parameters, tighter "
+            "(weakly informative) priors on parameters the data barely "
+            "constrain, fewer weakly identified parameters (drop or merge "
+            "parameters that trade off against each other), and no hard "
+            "thresholds or discontinuities in the likelihood."
         )
 
     # ELPD-LOO gate: a model can sample cleanly yet still assign ~0 probability to
