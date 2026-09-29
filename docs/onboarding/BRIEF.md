@@ -186,11 +186,11 @@ with protected starting models (item 1).
 **Known limitations.**
 - **No live run on this code.** Nothing has yet been run against Prolific or
   Firebase since the fixes. Do the no-cost rehearsal first.
-- **The live settings are not the simulated ones.** `full_run.yaml` runs 2
-  rounds × 3 proposals and `hero_run.yaml` 4 × 7, with 15-minute agents; the
-  simulations run 5 × 6 with 30-minute agents and a different sampler setting.
-  Decide which you want before launching; the simulations only speak to their
-  own settings.
+- **Use `full_run.yaml` for the real runs.** It models exactly as the
+  simulations do (5 rounds × 6 proposals, 30-minute agents, `target_accept`
+  0.8, 16 CPUs), except that it takes more MCMC draws; a test keeps the two in
+  step. `pilot.yaml` (2 × 3) and `hero_run.yaml` (4 × 7) do not, so the
+  simulations do not speak to them.
 - A study keeps recruiting if the job crashes or you `scancel` it; only the
   normal 3-hour give-up pauses it.
 - People who finish after a pause or after the download are paid (payment is

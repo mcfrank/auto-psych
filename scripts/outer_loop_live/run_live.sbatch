@@ -2,7 +2,7 @@
 #SBATCH --job-name=outer_live
 #SBATCH --partition=normal
 #SBATCH --time=1-00:00:00
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=16        # as the recovery cells: four 4-chain fits at once
 #SBATCH --mem=64GB                # inner-loop MCMC over many models on pooled
                                   # multi-experiment data is memory-heavy; 16GB
                                   # OOM-killed exp3 model loops. Bump for headroom.
@@ -118,6 +118,8 @@ EXTRA=()
 [[ -n "${DRAWS:-}" ]]                  && EXTRA+=(--draws "$DRAWS")
 [[ -n "${TUNE:-}" ]]                   && EXTRA+=(--tune "$TUNE")
 [[ -n "${CHAINS:-}" ]]                 && EXTRA+=(--chains "$CHAINS")
+[[ -n "${TARGET_ACCEPT:-}" ]]          && EXTRA+=(--target-accept "$TARGET_ACCEPT")
+[[ -n "${AGENT_TIMEOUT_SEC:-}" ]]      && EXTRA+=(--agent-timeout-sec "$AGENT_TIMEOUT_SEC")
 [[ -n "${INNER_LOOP_ITERATIONS:-}" ]]  && EXTRA+=(--inner-loop-iterations "$INNER_LOOP_ITERATIONS")
 [[ -n "${INNER_LOOP_CANDIDATES:-}" ]]  && EXTRA+=(--inner-loop-candidates "$INNER_LOOP_CANDIDATES")
 [[ -n "${HINTS_FILE:-}" ]]             && EXTRA+=(--hints-file "$HINTS_FILE")

@@ -403,6 +403,7 @@ def test_run_py_carries_forward_only_a_finished_model_loop(tmp_path, monkeypatch
         novelty_rmse_threshold=None,
         prune_dse_multiplier=None,
         candidate_parallelism=None,
+        agent_timeout_sec=900,
         publish_another_prolific_study=False,
     )
     with pytest.raises(SystemExit):
