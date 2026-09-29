@@ -15,6 +15,12 @@ Pearson r. From the resulting ``gt_model x repeat`` matrix we report:
 * the mean pairwise across-repeat Pearson correlation, and
 * best-model selection agreement (how often the repeats land on the same winner).
 
+It also lists every cell and step whose metrics were computed on fewer held-out
+pairs than the pool (``eval_exclusions``): a trajectory step where some model's
+``p_left`` is undefined on some pairs (``n_eval_excluded`` in ``holdout.csv``)
+and a fitted seed of the fitted-seed baseline likewise (from ``holdout.json``).
+Those metrics are not on the same pairs as the no-learning baseline's.
+
 Usage:
     uv run python scripts/subjective_randomness/holdout_test_retest.py \\
         --runs-root $SCRATCH/auto-psych/holdout_test_retest \\
@@ -75,6 +81,76 @@ def _final_rows_by_gt(tidy_path: Path, metric: str) -> dict[str, dict]:
                 best[gt] = row
                 best_step[gt] = step
     return best
+
+
+def exclusion_report(csv_paths: list[Path], runs_root: Path) -> dict:
+    """Every cell and step scored on fewer held-out pairs than its pool.
+
+    Reads each tidy CSV's ``n_eval_excluded`` / ``eval_excluded_models``
+    columns and, from the ``holdout.json`` beside it, each fitted seed's
+    ``n_eval_excluded`` and the pool size. A CSV without the columns (written
+    before 2026-09-27) is listed under ``cells_without_record``: whether its
+    steps excluded pairs is not known from the CSV.
+    """
+    steps, seeds, unrecorded = [], [], []
+    for csv_path in csv_paths:
+        cell = str(csv_path.parent.relative_to(runs_root))
+        result_path = csv_path.with_name("holdout.json")
+        pool_sizes, seed_rows = {}, []
+        if result_path.exists():
+            for gt_run in json.loads(result_path.read_text(encoding="utf-8"))["gt_runs"]:
+                pool_sizes[gt_run["gt_model"]] = gt_run["n_eval_stimuli"]
+                for name, entry in gt_run["fitted_baseline"]["per_model"].items():
+                    if entry.get("n_eval_excluded", 0) > 0:
+                        seed_rows.append({
+                            "cell": cell, "gt_model": gt_run["gt_model"], "seed": name,
+                            "n_eval_excluded": entry["n_eval_excluded"],
+                            "n_eval_stimuli": gt_run["n_eval_stimuli"],
+                        })
+        seeds += seed_rows
+        with csv_path.open(newline="", encoding="utf-8") as fh:
+            reader = csv.DictReader(fh)
+            if "n_eval_excluded" not in (reader.fieldnames or []):
+                unrecorded.append(cell)
+                continue
+            for row in reader:
+                n = int(row["n_eval_excluded"])
+                if n > 0:
+                    steps.append({
+                        "cell": cell, "gt_model": row["gt_model"],
+                        "experiment": int(row["experiment"]), "step": int(row["step"]),
+                        "global_step": int(row["global_step"]),
+                        "best_model": row["best_model"], "n_eval_excluded": n,
+                        "n_eval_stimuli": pool_sizes.get(row["gt_model"]),
+                        "models": row["eval_excluded_models"],
+                    })
+    return {"steps": steps, "fitted_seed_baseline": seeds, "cells_without_record": unrecorded}
+
+
+def print_exclusions(exclusions: dict) -> None:
+    """The exclusion report, one line per affected step or seed."""
+    def of(entry: dict) -> str:
+        pool = entry["n_eval_stimuli"]
+        return f"{entry['n_eval_excluded']} of {pool if pool is not None else '?'} held-out pairs"
+
+    if not exclusions["steps"] and not exclusions["fitted_seed_baseline"]:
+        print("  eval exclusions: none (every step and fitted seed scored on its whole pool)")
+    for entry in exclusions["steps"]:
+        print(
+            f"  eval exclusions: {entry['cell']} experiment {entry['experiment']} step "
+            f"{entry['step']}: {of(entry)} excluded (p_left undefined for "
+            f"{entry['models']}); this step's metrics cover fewer pairs than the baselines'"
+        )
+    for entry in exclusions["fitted_seed_baseline"]:
+        print(
+            f"  eval exclusions: {entry['cell']} fitted-seed baseline, seed "
+            f"{entry['seed']}: {of(entry)} excluded (its p_left is undefined there)"
+        )
+    if exclusions["cells_without_record"]:
+        print(
+            "  eval exclusions: not recorded in the CSVs of "
+            f"{', '.join(exclusions['cells_without_record'])} (written before 2026-09-27)"
+        )
 
 
 def _as_float(value: Optional[str]) -> Optional[float]:
@@ -232,6 +308,7 @@ def main(args: Args) -> None:
         "mean_pairwise_corr": _mean_pairwise_corr(matrix) if matrix.size else None,
         "per_gt_model": per_gt_summary,
         "per_metric": per_metric,
+        "eval_exclusions": exclusion_report(csv_paths, runs_root),
     }
 
     out_path = resolve_path(args.out)
@@ -268,6 +345,7 @@ def main(args: Args) -> None:
             f" -> {s['modal_best_model']}"
         )
         print(", ".join(parts))
+    print_exclusions(summary["eval_exclusions"])
 
     if args.csv is not None:
         csv_path = resolve_path(args.csv)

@@ -68,7 +68,10 @@ Watch: `squeue --me`. A full 3-model repeat takes hours; the array requests
 
 - `run<i>/holdout.{json,csv,png}` — each repeat's trajectories.
 - `test_retest.json` — ICC(2,1), mean pairwise across-run correlation, and
-  per-ground-truth mean/sd/CV of the final Pearson r plus best-model agreement.
+  per-ground-truth mean/sd/CV of the final Pearson r plus best-model agreement;
+  and `eval_exclusions`: every cell and step whose metrics cover fewer
+  held-out pairs than its pool (a model's `p_left` undefined there), and every
+  fitted seed likewise (also printed in the analysis log).
 - `test_retest.csv` — one row per (gt_model, run) final-step metric.
 - `test_retest.png` — final r per ground-truth model across repeats.
 

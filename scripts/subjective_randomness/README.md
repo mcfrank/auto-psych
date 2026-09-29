@@ -211,9 +211,14 @@ Outputs, per held-out model under `<out dir>/<out stem>_runs/<gt_model>/`:
 the full `experiment1..N/` pipeline trees, `eval_stimuli.json` (the held-out
 evaluation set), and `trajectory.json` (the per-step correlation trajectory,
 per-experiment model sets, and a leakage audit). A held-out pair on which a
-scored model's `p_left` is not a probability (NaN, or outside [0, 1]) is left out of that step's metrics:
-the row records `n_eval_excluded` and `eval_excluded_models`, and every
-excluded pair is listed in `eval_exclusions.jsonl` beside `trajectory.json`.
+scored model's `p_left` is not a probability (NaN, or outside [0, 1]) is left
+out of that step's metrics (and a fitted seed's undefined pairs out of that
+seed's baseline metrics): the row records `n_eval_excluded` and
+`eval_excluded_models` (columns of the tidy CSV too), the log prints a
+`[eval] WARNING` line saying the metrics cover fewer pairs than the baselines,
+and every excluded pair is listed in `eval_exclusions.jsonl` beside
+`trajectory.json`. The sweep summary (`holdout_test_retest.py`) lists every
+cell and step where this happened.
 The combined JSON, tidy CSV
 (one row per `gt_model × step`: `gt_model, experiment, step, iteration,
 global_step, best_model, pearson_r, rmse`), and correlation-vs-step figure land

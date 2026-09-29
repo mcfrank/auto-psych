@@ -474,7 +474,9 @@ def test_holdout_recovery_records_whether_the_incumbent_ever_changes(
     tidy_path = tmp_path / "holdout.csv"
     write_tidy_csv(trajectory_tidy_rows(result), tidy_path, columns=TRAJECTORY_COLUMNS)
     header = tidy_path.read_text(encoding="utf-8").splitlines()[0].split(",")
-    assert header[-2:] == ["incumbent_changed", "incumbent_is_discovered"]
+    assert header[-4:] == [
+        "incumbent_changed", "incumbent_is_discovered", "n_eval_excluded", "eval_excluded_models",
+    ]
     # Appended, never inserted: downstream readers index the older columns by position.
     assert header[5] == "best_model" and header[6] == "pearson_r"
 
@@ -1802,7 +1804,8 @@ def test_trajectory_tidy_rows_one_row_per_step():
                      "pearson_r_bma": 0.6, "rmse_bma": 0.08,
                      "kl_regret_bma": 0.005, "bias_bma": 0.01,
                      "calib_slope_bma": 0.99, "calib_intercept_bma": 0.01,
-                     "incumbent_changed": False, "incumbent_is_discovered": False},
+                     "incumbent_changed": False, "incumbent_is_discovered": False,
+                     "n_eval_excluded": 0, "eval_excluded_models": []},
                     {"experiment": 1, "step": 1, "iteration": 0,
                      "global_step": 1, "best_model": "b", "pearson_r": None,
                      "rmse": 0.2, "kl_regret": 0.05, "bias": -0.01,
@@ -1810,7 +1813,8 @@ def test_trajectory_tidy_rows_one_row_per_step():
                      "pearson_r_bma": None, "rmse_bma": 0.2,
                      "kl_regret_bma": 0.04, "bias_bma": -0.005,
                      "calib_slope_bma": 0.85, "calib_intercept_bma": 0.08,
-                     "incumbent_changed": True, "incumbent_is_discovered": True},
+                     "incumbent_changed": True, "incumbent_is_discovered": True,
+                     "n_eval_excluded": 2, "eval_excluded_models": ["b"]},
                 ],
             }
         ]
@@ -2714,3 +2718,126 @@ def test_undefined_predictions_still_fail_loudly_outside_the_evaluation():
     error = InvalidPredictions("bad", np.array([[np.nan]]))
     assert isinstance(error, ValueError)
     assert np.isnan(error.draws).all()
+
+
+def test_an_excluded_step_is_announced_in_the_cells_log(tmp_path, monkeypatch, capsys):
+    """The user's condition for scoring a step on fewer pairs than the
+    baselines (2026-09-27): it is said wherever it happens."""
+    from src.models.pymc_inference import InvalidPredictions
+
+    run_root = tmp_path / "run"
+    _write_loop_artifacts(run_root, 1, [_history_step(0, None, "model_b")])
+    monkeypatch.setattr(holdout_eval, "p_left_fixed_params", lambda *a, **k: np.array([0.2, 0.5, 0.9]))
+    monkeypatch.setattr(holdout_eval, "make_stim_data", lambda model, rows: {"n": len(rows)})
+    monkeypatch.setattr(holdout_eval, "pm_data_inputs", lambda model: [])
+
+    class Fitted:
+        model = None
+
+        def predict_p_left(self, stim_data):
+            raise InvalidPredictions("bad", np.array([[0.2, np.nan, 0.9]]))
+
+    monkeypatch.setattr(holdout_eval, "fit_model", lambda *a, **k: Fitted())
+    evaluate_trajectory(
+        run_root, "prototype_similarity", {"theta_alt": 0.65}, EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR, n_experiments=1, cache_dir=None, fit_kwargs={},
+    )
+    out = capsys.readouterr().out
+    assert "WARNING: experiment 1 step 0: 1 of 3 held-out pairs excluded" in out
+    assert "fewer than the no-learning baseline's 3" in out
+
+
+def test_the_tidy_csv_carries_the_exclusions(tmp_path):
+    from src.subjective_randomness.holdout_recovery import trajectory_tidy_rows
+    from src.subjective_randomness.tidy import write_tidy_csv
+
+    row = {column: 0 for column in TRAJECTORY_COLUMNS if column != "gt_model"}
+    row.update(n_eval_excluded=4, eval_excluded_models=["model_b", "model_c"])
+    result = {"gt_runs": [{"gt_model": "gt", "trajectory": [row]}]}
+    path = tmp_path / "holdout.csv"
+    write_tidy_csv(trajectory_tidy_rows(result), path, columns=TRAJECTORY_COLUMNS)
+    [written] = list(csv.DictReader(path.open(encoding="utf-8")))
+    assert written["n_eval_excluded"] == "4"
+    assert written["eval_excluded_models"] == "model_b; model_c"
+
+
+def test_the_fitted_seed_baseline_excludes_and_logs_a_seeds_undefined_pairs(
+    tmp_path, monkeypatch, capsys
+):
+    """It used to raise, ending a finished cell at its last step."""
+    run_root = _baseline_run(tmp_path)
+    _stub_baseline_fits(
+        monkeypatch,
+        {"seed_x": np.array([0.2, np.nan, 0.9]), "seed_y": np.array([0.9, 0.6, 0.2])},
+        elpd={"seed_x": -1.0, "seed_y": -5.0},
+    )
+    log = tmp_path / "eval_exclusions.jsonl"
+    out = fitted_seed_baseline_correlation(
+        run_root, "prototype_similarity", {"theta_alt": 0.65}, EVAL_STIMULI,
+        seed_models_dir=SEED_MODELS_DIR, n_experiments=2,
+        other_seed_models=["seed_x", "seed_y"], cache_dir=None, fit_kwargs={},
+        exclusions_log=log,
+    )
+    seed_x = out["per_model"]["seed_x"]
+    assert seed_x["n_eval_excluded"] == 1
+    assert seed_x["rmse"] == pytest.approx(0.0)  # exact on the two defined pairs
+    assert out["per_model"]["seed_y"]["n_eval_excluded"] == 0
+    [entry] = [json.loads(line) for line in log.read_text().splitlines()]
+    assert entry["scored"] == "fitted_seed_baseline" and entry["model"] == "seed_x"
+    assert entry["pairs"] == [EVAL_STIMULI[1]] and entry["n_pool"] == 3
+    assert "WARNING: fitted-seed baseline, seed 'seed_x': 1 of 3" in capsys.readouterr().out
+
+
+def test_a_seed_undefined_on_every_pair_fails_the_fitted_baseline(tmp_path, monkeypatch):
+    run_root = _baseline_run(tmp_path)
+    _stub_baseline_fits(
+        monkeypatch, {"seed_x": np.full(3, np.nan), "seed_y": np.zeros(3) + 0.5},
+        elpd={"seed_x": -1.0, "seed_y": -1.0},
+    )
+    with pytest.raises(RuntimeError, match="every held-out pair"):
+        _fitted_baseline(run_root)
+
+
+def test_the_sweep_summary_lists_every_cell_and_step_with_excluded_pairs(tmp_path, capsys):
+    from tests.paths import load_script_module
+
+    retest = load_script_module(REPO_ROOT / "scripts" / "subjective_randomness" / "holdout_test_retest.py")
+    columns = ["gt_model", "experiment", "step", "global_step", "best_model", "pearson_r",
+               "n_eval_excluded", "eval_excluded_models"]
+    cells = {
+        "run1/gt_a": [["gt_a", 1, 0, 0, "m", 0.5, 0, ""], ["gt_a", 2, 1, 1, "m", 0.6, 7, "odd_model"]],
+        "run2/gt_a": [["gt_a", 1, 0, 0, "m", 0.4, 0, ""]],
+    }
+    for cell, rows in cells.items():
+        (tmp_path / cell).mkdir(parents=True)
+        with (tmp_path / cell / "holdout.csv").open("w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(columns)
+            writer.writerows(rows)
+        seed_excluded = 3 if cell == "run2/gt_a" else 0
+        (tmp_path / cell / "holdout.json").write_text(json.dumps({"gt_runs": [{
+            "gt_model": "gt_a", "n_eval_stimuli": 900,
+            "fitted_baseline": {"per_model": {"seed_x": {"n_eval_excluded": seed_excluded}}},
+        }]}), encoding="utf-8")
+    # A cell whose CSV predates the exclusion columns.
+    (tmp_path / "run3" / "gt_a").mkdir(parents=True)
+    (tmp_path / "run3" / "gt_a" / "holdout.csv").write_text(
+        "gt_model,experiment,step,global_step,best_model,pearson_r\ngt_a,1,0,0,m,0.3\n",
+        encoding="utf-8",
+    )
+
+    retest.main(retest.Args(runs_root=tmp_path, out=tmp_path / "test_retest.json"))
+
+    exclusions = json.loads((tmp_path / "test_retest.json").read_text())["eval_exclusions"]
+    assert exclusions["steps"] == [{
+        "cell": "run1/gt_a", "gt_model": "gt_a", "experiment": 2, "step": 1, "global_step": 1,
+        "best_model": "m", "n_eval_excluded": 7, "n_eval_stimuli": 900, "models": "odd_model",
+    }]
+    assert exclusions["fitted_seed_baseline"] == [{
+        "cell": "run2/gt_a", "gt_model": "gt_a", "seed": "seed_x",
+        "n_eval_excluded": 3, "n_eval_stimuli": 900,
+    }]
+    assert exclusions["cells_without_record"] == ["run3/gt_a"]
+    out = capsys.readouterr().out
+    assert "run1/gt_a experiment 2 step 1: 7 of 900 held-out pairs excluded" in out
+    assert "run2/gt_a fitted-seed baseline, seed seed_x: 3 of 900" in out
