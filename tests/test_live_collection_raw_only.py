@@ -81,7 +81,7 @@ def _prepare_model_loop(exp_dir, monkeypatch):
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop", first_round
     )
     monkeypatch.setattr(
-        mlr, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e
+        mlr, "_export_inner_loop_models", lambda e, l, *, best_model: e
     )
     mlr.run_inner_model_loop_programmatic(
         exp_dir, max_iterations=1, candidate_count=1, project_id=PROJECT

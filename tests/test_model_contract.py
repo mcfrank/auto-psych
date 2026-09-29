@@ -239,7 +239,7 @@ def test_the_starting_screen_drops_a_carried_breach_on_record(tmp_path):
         _write_responses(tmp_path),
         ledger=ledger,
         ledger_context="experiment 2 start",
-        protected={"good"},
+        starting_models={"good"},
     )
     assert model_zoo._manifest_names(models_dir) == ["good"]
     (entry,) = ledger.entries()
@@ -247,11 +247,11 @@ def test_the_starting_screen_drops_a_carried_breach_on_record(tmp_path):
     assert "data contract" in entry.detail
 
 
-def test_the_starting_screen_raises_on_a_protected_breach(tmp_path):
+def test_the_starting_screen_raises_on_a_starting_model_breach(tmp_path):
     models_dir = _starting_set(tmp_path, {"good": _GOOD, "flipped": _FLIPPED})
     with pytest.raises(RuntimeError, match="data contract"):
         model_zoo._drop_unfittable_models(
-            models_dir, _write_responses(tmp_path), protected={"flipped"}
+            models_dir, _write_responses(tmp_path), starting_models={"flipped"}
         )
 
 

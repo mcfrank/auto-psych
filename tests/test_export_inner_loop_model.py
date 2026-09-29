@@ -72,8 +72,7 @@ def test_new_descriptive_winner_is_exported_with_its_hypothesis(tmp_path):
         ],
     )
     path = _export_inner_loop_models(
-        exp_dir, loop_dir, best_model="recency_weighted_runs", protected_names={"seed_a"}
-    )
+        exp_dir, loop_dir, best_model="recency_weighted_runs")
     assert path == exp_dir / "cognitive_models" / "recency_weighted_runs.py"
     assert path.exists()
     manifest = yaml.safe_load(
@@ -97,8 +96,7 @@ def test_winning_seed_is_not_duplicated(tmp_path):
         ],
     )
     _export_inner_loop_models(
-        exp_dir, loop_dir, best_model="seed_a", protected_names={"seed_a", "seed_b"}
-    )
+        exp_dir, loop_dir, best_model="seed_a")
     # No inner_loop_model copy, no duplicate manifest entry.
     assert _manifest_names(exp_dir) == ["seed_a", "seed_b"]
     assert not (exp_dir / "cognitive_models" / "inner_loop_model.py").exists()
@@ -114,8 +112,7 @@ def test_fallback_named_winner_exports_as_inner_loop_model(tmp_path):
         ],
     )
     path = _export_inner_loop_models(
-        exp_dir, loop_dir, best_model="iter0_candidate2", protected_names={"seed_a"}
-    )
+        exp_dir, loop_dir, best_model="iter0_candidate2")
     # Zoo names must never enter the carried manifest (the validator rejects
     # them), so the fallback maps to the legacy stable export name.
     assert path == exp_dir / "cognitive_models" / "inner_loop_model.py"
@@ -131,8 +128,7 @@ def test_export_missing_zoo_rationale_raises(tmp_path):
     )
     with pytest.raises(ValueError, match="no_such_model"):
         _export_inner_loop_models(
-            exp_dir, loop_dir, best_model="no_such_model", protected_names={"seed_a"}
-        )
+            exp_dir, loop_dir, best_model="no_such_model")
 
 
 def _write_loop_outputs(exp_dir, best):

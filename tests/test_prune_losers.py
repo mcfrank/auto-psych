@@ -6,8 +6,8 @@ existing_hypotheses.md drags dead hypotheses into every candidate prompt. A
 model is pruned when it is statistically distinguishable from the best on the
 current data (``elpd_diff > multiplier·dse`` among PSIS-LOO-reliable rows);
 stacking weight is not a criterion (it is an ensemble coefficient, not
-plausibility). The protected set — the project's seeds — is never pruned: those
-are the baselines the run reports against. Pruned files move to
+plausibility). The run's starting models are pruned by the same rule
+(tests/test_starting_models_prunable.py). Pruned files move to
 ``models/pruned/`` (an audit trail, not a deletion) and the ledger records the
 margin.
 """
@@ -80,7 +80,6 @@ def test_prunes_distinguishable_negligible_agent_model(tmp_path, monkeypatch, ca
     pruned = _prune_losers(
         models_dir,
         tmp_path / "responses.csv",
-        protected={"seed_a"},
         cache_dir=None,
         fit_kwargs=None,
     )
@@ -94,26 +93,6 @@ def test_prunes_distinguishable_negligible_agent_model(tmp_path, monkeypatch, ca
     assert [m["name"] for m in manifest["models"]] == ["seed_a"]
     assert evicted == ["dead_end"]
     assert "dead_end" in capsys.readouterr().out
-
-
-def test_protected_models_are_never_pruned(tmp_path, monkeypatch):
-    models_dir = _models_dir(tmp_path, ["seed_a", "seed_b"])
-    _stub_comparison(
-        monkeypatch,
-        {
-            "seed_a": _row(0, 0.0, 0.0, 0.999),
-            "seed_b": _row(1, 50.0, 2.0, 0.001),  # loses badly, but protected
-        },
-    )
-    pruned = _prune_losers(
-        models_dir,
-        tmp_path / "responses.csv",
-        protected={"seed_a", "seed_b"},
-        cache_dir=None,
-        fit_kwargs=None,
-    )
-    assert pruned == []
-    assert (models_dir / "seed_b.py").exists()
 
 
 def test_indistinguishable_models_stay_even_with_zero_stacking_weight(
@@ -133,7 +112,6 @@ def test_indistinguishable_models_stay_even_with_zero_stacking_weight(
     pruned = _prune_losers(
         models_dir,
         tmp_path / "responses.csv",
-        protected={"seed_a"},
         cache_dir=None,
         fit_kwargs=None,
     )
@@ -157,7 +135,6 @@ def test_distinguishable_model_is_pruned_regardless_of_stacking_weight(
     pruned = _prune_losers(
         models_dir,
         tmp_path / "responses.csv",
-        protected={"seed_a"},
         cache_dir=None,
         fit_kwargs=None,
     )
@@ -177,7 +154,6 @@ def test_pruning_records_the_margin_in_the_ledger(tmp_path, monkeypatch):
     _prune_losers(
         models_dir,
         tmp_path / "responses.csv",
-        protected={"seed_a"},
         cache_dir=None,
         fit_kwargs=None,
         ledger=ledger,
@@ -204,7 +180,6 @@ def test_unreliable_loser_is_not_pruned(tmp_path, monkeypatch, capsys):
     pruned = _prune_losers(
         models_dir,
         tmp_path / "responses.csv",
-        protected={"seed_a"},
         cache_dir=None,
         fit_kwargs=None,
     )
@@ -237,7 +212,6 @@ def test_unreliable_bystander_does_not_block_pruning_reliable_losers(
     pruned = _prune_losers(
         models_dir,
         tmp_path / "responses.csv",
-        protected={"seed_a"},
         cache_dir=None,
         fit_kwargs=None,
     )
@@ -258,7 +232,6 @@ def test_empty_comparison_prunes_nothing(tmp_path, monkeypatch):
     pruned = _prune_losers(
         models_dir,
         tmp_path / "responses.csv",
-        protected=set(),
         cache_dir=None,
         fit_kwargs=None,
     )
@@ -281,7 +254,6 @@ def test_an_unreliable_baseline_with_one_trusted_model_prunes_nothing(tmp_path, 
     pruned = _prune_losers(
         models_dir,
         tmp_path / "responses.csv",
-        protected={"seed_a"},
         cache_dir=None,
         fit_kwargs=None,
     )
@@ -324,15 +296,17 @@ def test_an_untrusted_rank_0_model_does_not_stall_pruning(tmp_path, monkeypatch,
     ledger = model_zoo.HypothesisLedger.create(tmp_path / "ledger.jsonl", inherit_from=None)
 
     pruned = _prune_losers(
-        models_dir, tmp_path / "responses.csv", protected={"seed_a"},
+        models_dir, tmp_path / "responses.csv",
         cache_dir=None, fit_kwargs=None, ledger=ledger,
     )
 
-    assert pruned == ["dead_end"]
+    # seed_a, a starting model, is pruned like any other (17 > 2·3).
+    assert pruned == ["seed_a", "dead_end"]
     assert calls == [None, ["close", "dead_end", "leader", "seed_a"]]
     assert (models_dir / "flaky_top.py").exists()  # untrusted: never pruned
-    (entry,) = ledger.entries()
-    assert entry.detail.startswith("22.0 nats behind leader")
+    details = {entry.name: entry.detail for entry in ledger.entries()}
+    assert details["dead_end"].startswith("22.0 nats behind leader")
+    assert details["seed_a"].startswith("17.0 nats behind leader")
     assert "pruning against the best trusted model, 'leader'" in capsys.readouterr().err
 
 
@@ -530,7 +504,6 @@ def test_zero_multiplier_disables_pruning(tmp_path, monkeypatch):
     pruned = _prune_losers(
         models_dir,
         tmp_path / "responses.csv",
-        protected={"seed_a"},
         cache_dir=None,
         fit_kwargs=None,
         dse_multiplier=0.0,

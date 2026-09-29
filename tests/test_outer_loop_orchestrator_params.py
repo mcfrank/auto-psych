@@ -104,7 +104,7 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
     )
     monkeypatch.setattr(mlr, "write_responses_csv", lambda rows, out: out)
     monkeypatch.setattr(
-        mlr, "_export_inner_loop_models", lambda e, l, *, best_model, protected_names: e
+        mlr, "_export_inner_loop_models", lambda e, l, *, best_model: e
     )
     monkeypatch.setattr(
         "src.pipelines.inner_loop.pymc_orchestrator.run_pymc_inner_loop",
@@ -119,7 +119,7 @@ def _run_programmatic_loop(tmp_path, monkeypatch, exp_dir, **kwargs):
 def test_inner_loop_programmatic_threads_cache_dir_and_timeout(tmp_path, monkeypatch):
     exp_dir = tmp_path / "data" / "outer_loop" / PROJECT / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
-    # A real project seed, so the wrapper can tell which models are protected.
+    # A real project seed, so the wrapper can record the starting models.
     (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
         yaml.safe_dump({"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}),
         encoding="utf-8",
@@ -138,10 +138,10 @@ def test_inner_loop_programmatic_explicit_project_id_overrides_parent_name(
     tmp_path, monkeypatch
 ):
     # Holdout layout: experiments live under <gt_model>/, so the parent dir is
-    # NOT the project id and the protected seeds must resolve via the explicit one.
+    # NOT the project id and the starting models must resolve via the explicit one.
     exp_dir = tmp_path / "holdout_runs" / "prototype_similarity" / "experiment1"
     (exp_dir / "cognitive_models").mkdir(parents=True)
-    # A real project seed, so the wrapper can tell which models are protected.
+    # A real project seed, so the wrapper can record the starting models.
     (exp_dir / "cognitive_models" / "models_manifest.yaml").write_text(
         yaml.safe_dump({"models": [{"name": "falk_konold_dp", "rationale": "seed"}]}),
         encoding="utf-8",
@@ -151,4 +151,4 @@ def test_inner_loop_programmatic_explicit_project_id_overrides_parent_name(
         tmp_path, monkeypatch, exp_dir, project_id=PROJECT
     )
 
-    assert "falk_konold_dp" in captured["inner_kwargs"]["protected_names"]
+    assert "falk_konold_dp" in captured["inner_kwargs"]["starting_models"]

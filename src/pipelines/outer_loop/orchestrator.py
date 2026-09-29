@@ -261,8 +261,8 @@ def carry_forward_cognitive_models(prev_exp_dir: Path, exp_dir: Path) -> bool:
     """Copy the previous experiment's cognitive_models/ into a new experiment.
 
     Experiments >= 2 start from the previous experiment's model set (the live
-    set the inner loop exported: the protected seeds plus every surviving zoo
-    model, see ``_export_inner_loop_models``) together with its ledger of
+    set the inner loop exported: every surviving zoo model, starting models
+    included only if they survived, see ``_export_inner_loop_models``) together with its ledger of
     attempted hypotheses (``attempted_hypotheses.jsonl``, when present). New
     hypotheses enter only via the inner loop.
 

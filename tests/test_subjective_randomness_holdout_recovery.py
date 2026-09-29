@@ -28,6 +28,7 @@ from src.pipelines.inner_loop.critique_round import CRITIQUE_N_PROPOSALS
 from src.pipelines.outer_loop.model_loop_runner import (
     begin_model_loop_stage,
     finish_model_loop_stage,
+    run_starting_models,
 )
 from src.runtime import token_usage
 from src.subjective_randomness.holdout_data import (
@@ -145,6 +146,8 @@ def _stub_inner_loop(history_best):
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
             backend=None, agent_model=None, cache_dir=None, project_id=None,
             agent_timeout_sec=900, **kwargs):
+        # Mirror the real wrapper: record the run's starting models first.
+        run_starting_models(exp_dir, project_id or "subjective_randomness")
         # Mirror the real inner loop: every candidate-agent run records its
         # token usage (here one stub record per experiment's loop).
         token_usage.record_usage(
@@ -273,6 +276,10 @@ def test_holdout_recovery_from_config_end_to_end_with_stub_agents(tmp_path, monk
     run_root = tmp_path / "runs" / "cell_1"
     gt_run = result["gt_runs"][0]
     assert gt_run["run_root"] == str(run_root)
+    # The result says its starting models were prunable, so it is never
+    # pooled with a sweep run on the code that protected them.
+    assert gt_run["starting_models_prunable"] is True
+    assert result["inner_loop"]["starting_models_prunable"] is True
     assert not [
         p for p in (tmp_path / "runs").rglob("*") if "prototype_similarity" in p.name
     ]
@@ -648,6 +655,13 @@ def _complete_experiment_on_disk(run_root, exp_num, *, with_model_loop=True):
         ),
         encoding="utf-8",
     )
+    if exp_num == 1:
+        # What experiment 1's model loop records when it first runs.
+        (run_root / "starting_models.json").write_text(
+            json.dumps({"starting_models": ["bayesian_diagnosticity", "encoding_compressibility"],
+                        "starting_models_prunable": True}),
+            encoding="utf-8",
+        )
     design_dir = exp_dir / "design"
     design_dir.mkdir()
     (design_dir / "stimuli.json").write_text(
@@ -832,6 +846,7 @@ def test_from_config_resume_skips_completed_gt_runs(tmp_path, monkeypatch):
         "leakage": {"files": [], "any_identical": False, "any_mention": False,
                     "any_gt_named": False},
         "experiments": [{"experiment": 1, "manifest_models": ["a"]}],
+        "starting_models_prunable": True,
     }
     # Without a summary_root the record sits in the run tree, which is named
     # cell_<i> (never after the held-out model — see the end-to-end test).

@@ -120,6 +120,10 @@ def _stub_inner_loop(history_best):
     def run(exp_dir, *, max_iterations, candidate_count, fit_kwargs=None,
             backend=None, agent_model=None, cache_dir=None, project_id=None,
             agent_timeout_sec=900, **kwargs):
+        # Mirror the real wrapper: record the run's starting models first.
+        from src.pipelines.outer_loop.model_loop_runner import run_starting_models
+
+        run_starting_models(exp_dir, project_id or "subjective_randomness")
         loop_dir = exp_dir / "model_loop"
         models_dir = loop_dir / "models"
         models_dir.mkdir(parents=True, exist_ok=True)

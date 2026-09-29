@@ -190,7 +190,8 @@ def test_ledger_inherits_records_every_slot_and_reaches_the_next_brief(
     assert (results_dir / "models" / "pruned" / "idea_one.py").exists()
 
 
-def test_carried_models_outside_protected_names_can_be_pruned(tmp_path, monkeypatch):
+def test_carried_models_and_starting_models_are_pruned_alike(tmp_path, monkeypatch):
+    # carried_c is a starting model here; it is pruned all the same.
     seed_dir = write_seed_models(tmp_path, names=("model_a", "model_b", "carried_c"))
     responses = write_responses(tmp_path)
     _patch_scoring(monkeypatch)
@@ -203,34 +204,13 @@ def test_carried_models_outside_protected_names_can_be_pruned(tmp_path, monkeypa
         max_iterations=1,
         candidate_count=0,
         enable_critique=False,
-        protected_names={"model_a", "model_b"},
+        starting_models={"model_a", "model_b", "carried_c"},
     )
 
     assert _manifest_names(results_dir / "models") == ["model_a", "model_b"]
     assert (results_dir / "models" / "pruned" / "carried_c.py").exists()
     rows = _ledger_rows(results_dir / LEDGER_FILENAME)
     assert [(r["name"], r["outcome"]) for r in rows] == [("carried_c", "pruned")]
-
-
-def test_every_seeded_model_is_protected_when_no_protected_names_are_given(
-    tmp_path, monkeypatch
-):
-    seed_dir = write_seed_models(tmp_path, names=("model_a", "model_b", "carried_c"))
-    responses = write_responses(tmp_path)
-    _patch_scoring(monkeypatch)
-    results_dir = tmp_path / "model_loop"
-
-    run_pymc_inner_loop(
-        responses,
-        results_dir,
-        seed_models_dir=seed_dir,
-        max_iterations=1,
-        candidate_count=0,
-        enable_critique=False,
-    )
-
-    assert _manifest_names(results_dir / "models") == ["model_a", "model_b", "carried_c"]
-    assert _ledger_rows(results_dir / LEDGER_FILENAME) == []
 
 
 def test_a_long_hypothesis_reaches_the_ledger_and_the_next_brief_intact(

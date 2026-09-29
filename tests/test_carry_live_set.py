@@ -9,8 +9,9 @@ cell), and the registry handed the next design stacking weights over models
 that were not in its set (15 of 40 designs had a degenerate prior and 32
 zero-EIG stimuli).
 
-After the inner loop, ``cognitive_models/`` is now the **live set**: the
-protected seeds plus every zoo survivor. A carried model the loop pruned leaves
+After the inner loop, ``cognitive_models/`` is now the **live set**: every
+zoo survivor, starting models included only if they survived. A carried
+model the loop pruned (a starting model too) leaves
 it, the ledger of attempted hypotheses travels with it, and the design prior is
 uniform over exactly the models the next design scores.
 """
@@ -116,8 +117,7 @@ def test_next_experiment_starts_from_the_live_set_with_its_ledger_and_a_uniform_
     )
 
     _export_inner_loop_models(
-        exp1, loop, best_model="winner", protected_names={"seed_a", "seed_b"}
-    )
+        exp1, loop, best_model="winner")
     update_registry_from_interpretation(exp1)
     exp2 = tmp_path / "experiment2"
     assert carry_forward_cognitive_models(exp1, exp2)
@@ -140,9 +140,9 @@ def test_next_experiment_starts_from_the_live_set_with_its_ledger_and_a_uniform_
     assert registry["reserved_for_new"] == 0.0
 
 
-def test_export_keeps_a_protected_seed_the_loop_dropped_as_unfittable(tmp_path):
+def test_export_removes_a_starting_model_the_loop_dropped_as_unfittable(tmp_path):
     # seed_b never made it into the zoo (dropped as unfittable on this data);
-    # it is a protected baseline and stays in the carried set regardless.
+    # starting models are not protected, so it leaves the carried set.
     exp1, loop = _finished_experiment(
         tmp_path,
         cognitive=["seed_a", "seed_b"],
@@ -150,10 +150,9 @@ def test_export_keeps_a_protected_seed_the_loop_dropped_as_unfittable(tmp_path):
         pruned=[],
     )
     _export_inner_loop_models(
-        exp1, loop, best_model="winner", protected_names={"seed_a", "seed_b"}
-    )
-    assert _manifest_names(exp1) == ["seed_a", "seed_b", "winner"]
-    assert (exp1 / "cognitive_models" / "seed_b.py").exists()
+        exp1, loop, best_model="winner")
+    assert _manifest_names(exp1) == ["seed_a", "winner"]
+    assert not (exp1 / "cognitive_models" / "seed_b.py").exists()
 
 
 def test_export_is_idempotent(tmp_path):
@@ -165,8 +164,7 @@ def test_export_is_idempotent(tmp_path):
     )
     for _ in range(2):
         _export_inner_loop_models(
-            exp1, loop, best_model="winner", protected_names={"seed_a"}
-        )
+            exp1, loop, best_model="winner")
     assert _manifest_names(exp1) == ["seed_a", "winner"]
     assert (exp1 / "cognitive_models" / LEDGER_FILENAME).exists()
 
@@ -177,8 +175,7 @@ def test_export_refuses_a_best_model_outside_the_zoo(tmp_path):
     )
     with pytest.raises(ValueError, match="not in the inner-loop zoo"):
         _export_inner_loop_models(
-            exp1, loop, best_model="ghost", protected_names={"seed_a"}
-        )
+            exp1, loop, best_model="ghost")
 
 
 def test_carry_forward_without_a_ledger_copies_the_model_set_only(tmp_path):
@@ -186,20 +183,19 @@ def test_carry_forward_without_a_ledger_copies_the_model_set_only(tmp_path):
         tmp_path, cognitive=["seed_a"], zoo=["seed_a", "winner"], pruned=[]
     )
     (loop / LEDGER_FILENAME).unlink()
-    _export_inner_loop_models(exp1, loop, best_model="winner", protected_names={"seed_a"})
+    _export_inner_loop_models(exp1, loop, best_model="winner")
     exp2 = tmp_path / "experiment2"
     assert carry_forward_cognitive_models(exp1, exp2)
     assert _manifest_names(exp2) == ["seed_a", "winner"]
     assert not (exp2 / "cognitive_models" / LEDGER_FILENAME).exists()
 
 
-def test_wrapper_protects_only_the_project_seeds_and_labels_the_ledger(
+def test_wrapper_names_the_run_starting_models_and_labels_the_ledger(
     tmp_path, monkeypatch
 ):
     """The outer loop tells the inner loop which models are the run's
-    starting models (never pruned, always carried); a model carried from an
-    earlier experiment is not protected, and the ledger is labelled by
-    experiment."""
+    starting models (names no candidate may take; they are not protected),
+    and the ledger is labelled by experiment."""
     from src.pipelines.outer_loop import model_loop_runner as mlr
 
     exp_dir = tmp_path / "holdout" / "some_gt" / "experiment2"
@@ -207,7 +203,9 @@ def test_wrapper_protects_only_the_project_seeds_and_labels_the_ledger(
     cog_dir.mkdir(parents=True)
     # The starting models experiment 1 recorded (run_starting_models).
     (exp_dir.parent / "starting_models.json").write_text(
-        '["falk_konold_dp", "motif_stack"]', encoding="utf-8"
+        json.dumps({"starting_models": ["falk_konold_dp", "motif_stack"],
+                    "starting_models_prunable": True}),
+        encoding="utf-8",
     )
     # Two real project seeds plus a model carried from experiment 1.
     _write_manifest(cog_dir, ["falk_konold_dp", "motif_stack", "carried_from_exp1"])
@@ -224,8 +222,8 @@ def test_wrapper_protects_only_the_project_seeds_and_labels_the_ledger(
         fake_inner_loop,
     )
 
-    def fake_export(e, l, *, best_model, protected_names):
-        captured["export_protected"] = set(protected_names)
+    def fake_export(e, l, *, best_model):
+        captured["export_best"] = best_model
         return e
 
     monkeypatch.setattr(mlr, "_export_inner_loop_models", fake_export)
@@ -234,6 +232,6 @@ def test_wrapper_protects_only_the_project_seeds_and_labels_the_ledger(
         exp_dir, max_iterations=0, candidate_count=0, project_id="subjective_randomness"
     )
 
-    assert captured["protected_names"] == {"falk_konold_dp", "motif_stack"}
-    assert captured["export_protected"] == {"falk_konold_dp", "motif_stack"}
+    assert captured["starting_models"] == {"falk_konold_dp", "motif_stack"}
+    assert captured["export_best"] == "carried_from_exp1"
     assert captured["ledger_context"] == "experiment2"

@@ -1207,7 +1207,7 @@ class FitInfrastructureFailure(RuntimeError):
     every pending fit fails with it), a fit file that cannot be read or
     written, the machine out of memory. Always raised, never reported as the
     model's failure: the start-of-experiment screen used to turn each one into
-    a dropped model — protected seeds included — and a ledger line "MCMC fit
+    a dropped model — starting models included — and a ledger line "MCMC fit
     failed", which later agents then read as a property of the model.
     """
 
