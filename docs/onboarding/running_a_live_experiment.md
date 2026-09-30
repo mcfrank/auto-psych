@@ -102,7 +102,7 @@ Keys (read by `_pilot_config.py`):
 | `agent_model` | optional: the agents' model, e.g. `google/gemini-3.7-flash` (exported as `CODING_AGENT_MODEL`). Default: `google/gemini-3.1-pro-preview` for opencode, `claude-sonnet-4-6` for claude. Printed in the launcher summary |
 | `prolific_mode` | `test` (the pilot preset): deploy, create a draft study, not published, then stop. `live`: publish, recruit, pay, model. `none`: deploy the page, no study, then stop. Missing key ⇒ `test`. |
 | `confirm_live_recruitment` | must be `true` for `live`. `full_run.yaml` and `hero_run.yaml` say `live` without it, so they are refused until you choose. |
-| `walltime`, `qos` | Slurm limit; `qos: long` above 2 days |
+| `walltime`, `qos` | Slurm limit; `qos: long` above 2 days, and only there: it refuses a limit under 48 hours |
 | `prolific.participants` | per experiment: the places recruited, the collection target **and** the design's N |
 | `prolific.reward_per_hour` (cents) or `reward` (cents flat), `estimated_completion_time` (min) | pay |
 | `prolific.name`, `description`, `completion_code`, `min_approval_rate` | study settings; use a distinct completion code per series |
@@ -407,7 +407,12 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
   downloads everything again.
 - `5_model_loop` always restarts cleanly from the model set it first
   started with.
-- The run copy is a snapshot: to use fixed code, rsync it in first (as in R2).
+- The run copy is a snapshot: to use fixed code, rsync it in first (as in R2),
+  into the run's own copy `$WORK_ROOT/runs/$LABEL/repo`, never a new one:
+  Firebase serves the copy's whole `public/`, which holds the earlier
+  experiments' pages (the rsync leaves it alone), so a deploy from a fresh
+  copy takes them offline. Rsync only after the run's job has ended: its fit
+  processes import from the copy.
   The rsync replaces the study settings `run_pilot.sh` rendered into the copy
   and deletes its commit record. Render the settings again with
   `"$VENV_PY" $WORK_ROOT/runs/$LABEL/repo/scripts/outer_loop_live/_pilot_config.py <your.yaml> --render-only`
@@ -419,6 +424,11 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
   and `CONFIRM_LIVE_RECRUITMENT=1`; for a parallel run `run<i>` also
   `AUTO_PSYCH_HOSTING_SITE=auto-psych-2c5da-<run_label>-run<i>`, the site
   the launch printed (without it the deploy goes to the default site). This publishes new studies and pays.
+  Both can be queued at once: submit the resumed stage first, then the
+  remaining experiments with `--dependency=afterok:<its job id>`, so they
+  start only if the stage succeeds (if it fails, the second job stays
+  pending with `DependencyNeverSatisfied`: `scancel` it). `--qos=long`
+  refuses a time limit under 48 hours; leave it out below that.
 - A second study for the same experiment: stop the first in Prolific, then
   set `PUBLISH_ANOTHER_PROLIFIC_STUDY=1`; the old manifest is kept as
   `deployment_manifest.superseded-<time>.json`.

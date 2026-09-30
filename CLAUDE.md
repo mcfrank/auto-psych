@@ -557,6 +557,12 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   `LiveStudyAlreadyRecorded` with the recovery: `RESUME_AGENTS=4_collect:5_model_loop`,
   or the deliberate `--publish-another-prolific-study`
   (`PUBLISH_ANOTHER_PROLIFIC_STUDY=1`), which archives the old manifest.
+  `--resume` skips no stage, and `start_full_run.sh RUNS=<i>` deletes run
+  *i*'s results, so a running run is moved onto fixed code by hand (runbook
+  § 9): `scancel`, rsync into the run's own copy (its `public/` holds the
+  earlier pages Firebase serves) and record the commit, then the unfinished
+  stage with `RESUME_AGENTS` and the rest with `EXPERIMENTS=<next>-<last>`
+  and `--dependency=afterok`. `--qos=long` refuses limits under 48 h.
 - **The page is deployed before the study exists.** A Firebase deploy
   (`run_deployment` in `deployment/local.py`) checks the results token and,
   for `live`, Prolific's eligibility IDs (`verify_live_eligibility`), deploys

@@ -58,7 +58,7 @@ sites. `$REPO` is the live checkout and `$WORK_ROOT` is
    prolific_mode: live
    confirm_live_recruitment: true
    walltime: "3-00:00:00"             # see below
-   qos: long                          # needed above 2 days
+   qos: long                          # needed above 2 days; refuses under 48 h
    prolific:
      completion_code: AUTO_PSYCH_COMPLETE_<NAME>   # distinct per series
    ```
@@ -131,7 +131,15 @@ sites. `$REPO` is the live checkout and `$WORK_ROOT` is
    `scancel` (§ 8); recover with `RESUME_AGENTS`, never by relaunching an
    experiment that has a study (§ 9). For a parallel run the resume needs
    `AUTO_PSYCH_HOSTING_SITE=auto-psych-2c5da-<name>-run<i>` (the site the
-   launch printed).
+   launch printed). Never recover a run with `start_full_run.sh` (`RUNS=<i>`
+   deletes its results, step 7), and a plain resubmit of `run_live.sbatch`
+   redoes every stage (`--resume` skips none), which the relaunch guard
+   refuses. To move a running run onto fixed code: commit the fix,
+   `scancel` the run's job, rsync the checkout into that run's own copy and
+   record the commit (§ 9), then submit the unfinished stage with
+   `RESUME_AGENTS`, and the remaining experiments (`EXPERIMENTS=<next>-<last>`)
+   with `--dependency=afterok` on that job (§ 9). Run 1 of the October 2026
+   run was resumed this way onto the fit-cache fix (e6c6759).
 
 ## Share the results: commits to `main`
 

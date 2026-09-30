@@ -201,7 +201,9 @@ K=3 N_PARTICIPANTS=20 bash scripts/outer_loop_live/submit_parallel.sh
 ```
 
 Longer than ~2 days of wall-clock? Set `qos: long` in `pilot.yaml` (or add
-`--qos=long`, cap 7 days). CPU only — no GPU.
+`--qos=long`, cap 7 days). It refuses a limit under 48 hours
+(`timelimit request too short for QOS long`), so leave it out of shorter
+jobs such as a single-stage resume. CPU only — no GPU.
 
 ## How parallel runs stay isolated
 

@@ -873,7 +873,11 @@ order as before and finds each fit in the cache, or its remembered failure or
 timeout, so its verdicts are those of sequential admission. A candidate whose
 predicted name turns out wrong (two same-named candidates in one wave, the
 first rejected) is fitted at admission. Without a `cache_dir` there is no
-prefit and admission fits one candidate at a time.
+prefit and admission fits one candidate at a time, and the novelty gate
+re-samples every admitted model it compares with (it asks `fit_model`, which
+reuses a fit only through the disk cache). The live and simulated model stage
+(`run.py`) passes `experiment<N>/model_loop/.fit_cache`; until 2026-09-30 it
+passed none, and a round of the October 2026 live run took 4.5 hours.
 
 **Compile directories.** PyTensor compiles each model's C code under one file
 lock per compile directory and gives up after 120 s. Every fit process (pool
@@ -894,7 +898,9 @@ share its slot.
 of the requested settings. The on-disk file is `<cache_dir>/<name>.<fp>.nc`,
 where `fp` is the first 16 hex characters of sha256(model sha ‖ csv sha ‖
 signature of the resolved settings). The cell's `cache_dir` is
-`$AGENT_DIR/mcmc_cache` → `RUN_DIR/mcmc_cache`. A new pooled CSV in each
+`$AGENT_DIR/mcmc_cache` → `RUN_DIR/mcmc_cache` (a live or simulated run's is
+`experiment<N>/model_loop/.fit_cache`, emptied by every start of the stage and
+left out of collected results). A new pooled CSV in each
 experiment means every carried model is refit on it.
 
 ### 5.4 Scoring

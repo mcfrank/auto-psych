@@ -44,6 +44,8 @@ never with a plain relaunch.
 | `filelock … Timeout … .lock` (PyTensor) | processes sharing a compile directory | each job and fit has its own; do not set `compiledir=` in `PYTENSOR_FLAGS` |
 | `"no_critique"` in `history.json` | the critic produced no usable statistic | the round still ran; see `iter_<i>/critique/` |
 | `OUT_OF_MEMORY` in `sacct`, or the time limit | large pooled fits, many rounds | raise `--mem` or `walltime`; recover with `RESUME_AGENTS` |
+| a model-loop round takes hours and the job log shows the same model's `Sampling 4 chains …` again and again | a run copy older than e6c6759 (2026-09-30): its model stage had no fit cache, so every novelty check re-sampled every admitted model | move the run onto current code ([runbook § 9](running_a_live_experiment.md#9-recovering-without-paying-again)) and resume with `RESUME_AGENTS=5_model_loop`; `experiment<N>/model_loop/.fit_cache/` then gains one `.nc` per fit |
+| `sbatch: error: … timelimit request too short for QOS long` | `--qos=long` with a limit under 48 hours | nothing was submitted: leave `--qos` out, or ask for at least 48 hours |
 
 **If the cluster itself looks broken** (scheduler, filesystem, modules,
 network): stop, note the symptom, hostname, time and job id, and send them to
