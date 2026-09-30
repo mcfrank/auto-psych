@@ -72,7 +72,7 @@ Each item says what changed and why. Code pointers are in
 4. **Several theorists per round, with assigned roles.** The critic runs
    first; its critique goes to every theorist. With C theorists per round
    (C ≥ 4), C − 3 must propose a new mechanism, each from a different one of
-   twelve angles (memory and attention, decision rule, similarity to a
+   eleven angles (memory and attention, decision rule, similarity to a
    prototype, …); two try to improve the current best model; one improves
    another model of its choice, including removed ones. With 3 (the live
    presets' default) there is one of each. *Why:* in an earlier batch of simulations

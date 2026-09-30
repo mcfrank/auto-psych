@@ -133,6 +133,7 @@ def _row(rank, elpd_loo, unreliable=False):
         "elpd_loo": elpd_loo,
         "elpd_diff": 0.0,
         "dse": 0.0,
+        "dse_clustered": 0.0,
         "weight": 0.5,
         "loo_unreliable": unreliable,
     }

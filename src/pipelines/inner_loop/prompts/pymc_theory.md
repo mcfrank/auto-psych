@@ -5,7 +5,8 @@ judgments. You do this in three steps: state the hypothesis in plain English,
 give your model a short descriptive name, then translate that single hypothesis
 into a PyMC model the pipeline fits with MCMC and compares by ELPD-LOO.
 
-Read these files in the current working directory before deciding what to write:
+Read these documents before deciding what to write. Each is included below in
+this prompt and saved in your candidate directory:
 
 1. `CONTEXT.md` — paths, the responses CSV's columns (the raw H/T sequences and
    the response only), and the inner-loop round number.
@@ -171,28 +172,29 @@ start-value check). So:
 ```python
 import numpy as np
 import pymc as pm
-import pytensor.tensor as pt
 
 
 def compute_features(sequence_a, sequence_b):
-    """Each sequence's length and number of heads (the CSV has only the strings)."""
-    a, b = sequence_a.strip().upper(), sequence_b.strip().upper()
-    return {"n_a": len(a), "h_a": a.count("H"), "n_b": len(b), "h_b": b.count("H")}
+    """Each sequence's alternation rate: the share of adjacent flips that differ."""
+
+    def alternation_rate(seq):
+        seq = seq.strip().upper()
+        switches = sum(1 for x, y in zip(seq, seq[1:]) if x != y)
+        return switches / (len(seq) - 1)
+
+    return {"alt_a": alternation_rate(sequence_a), "alt_b": alternation_rate(sequence_b)}
 
 
 with pm.Model() as model:
     # Stimulus inputs — names match the keys compute_features returns.
-    n_a = pm.Data("n_a", np.zeros(1, dtype="int64"))
-    h_a = pm.Data("h_a", np.zeros(1, dtype="int64"))
-    n_b = pm.Data("n_b", np.zeros(1, dtype="int64"))
-    h_b = pm.Data("h_b", np.zeros(1, dtype="int64"))
+    alt_a = pm.Data("alt_a", np.zeros(1, dtype="float64"))
+    alt_b = pm.Data("alt_b", np.zeros(1, dtype="float64"))
 
-    # Free cognitive parameter with a prior (inference fits it).
-    tau = pm.HalfNormal("tau", sigma=1.0)
+    # Free cognitive parameter with a prior (inference fits it): how strongly
+    # more alternation makes a sequence look random (negative: less random).
+    beta = pm.Normal("beta", mu=0.0, sigma=2.0)
 
-    log_p_a = h_a * pt.log(0.5) + (n_a - h_a) * pt.log(0.5)
-    log_p_b = h_b * pt.log(0.5) + (n_b - h_b) * pt.log(0.5)
-    p_left = pm.Deterministic("p_left", pm.math.sigmoid(tau * (log_p_a - log_p_b)))
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(beta * (alt_a - alt_b)))
 
     # Observed response: the pm.Data tensor is passed directly to observed=.
     chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))

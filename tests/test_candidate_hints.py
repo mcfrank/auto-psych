@@ -44,10 +44,10 @@ def _context(tmp_path, idx, hints=None, count=None):
 
 
 def test_default_hint_set_is_a_broad_battery():
-    """At least twelve exploratory lenses: a six-candidate round (three
-    exploratory slots) walks the battery for four rounds without repeating a
-    lens, and two experiments of two rounds cover it exactly once."""
-    assert len(DEFAULT_CANDIDATE_HINTS) >= 12
+    """At least eleven exploratory lenses: a six-candidate round (three
+    exploratory slots) walks the battery for three rounds without repeating a
+    lens, and two experiments of two rounds cover all of it."""
+    assert len(DEFAULT_CANDIDATE_HINTS) >= 11
     assert len(set(DEFAULT_CANDIDATE_HINTS)) == len(DEFAULT_CANDIDATE_HINTS)
     assert all(hint.strip() for hint in DEFAULT_CANDIDATE_HINTS)
 

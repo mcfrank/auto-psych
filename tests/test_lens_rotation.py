@@ -47,8 +47,8 @@ def test_lens_index_formula():
 
 def test_lens_schedule_covers_the_battery_across_experiments():
     """Six candidates a round (three exploratory slots), two rounds an
-    experiment: two experiments fire every lens of the battery exactly once
-    and the third starts the walk again. Three candidates a round is one
+    experiment: two experiments fire every lens of the battery, none more
+    than once more than any other, and the third continues the walk. Three candidates a round is one
     exploratory slot, so an experiment of two rounds spends two lenses."""
     n = len(DEFAULT_CANDIDATE_HINTS)
     fired = Counter()
@@ -57,7 +57,8 @@ def test_lens_schedule_covers_the_battery_across_experiments():
         for iteration in range(2):
             for idx in range(3):
                 fired[_lens_index(offset, iteration, 3, idx, n)] += 1
-    assert fired == Counter({lens: 1 for lens in range(n)})
+    assert set(fired) == set(range(n))
+    assert max(fired.values()) - min(fired.values()) <= 1
     assert _lens_offset(2, max_iterations=2, candidate_count=6) == 6
     assert _lens_offset(3, max_iterations=2, candidate_count=6) == 12
     assert _lens_index(12, 0, 3, 0, n) == 12 % n

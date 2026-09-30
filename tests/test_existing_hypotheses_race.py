@@ -79,6 +79,7 @@ class TestRacePresentation:
                 "elpd_loo": -50.0,
                 "elpd_diff": 3.2,
                 "dse": 2.0,
+                "dse_clustered": 2.0,
                 "weight": 0.3,
                 "loo_unreliable": False,
             },
@@ -87,6 +88,7 @@ class TestRacePresentation:
                 "elpd_loo": -46.8,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 0.5,
                 "loo_unreliable": False,
             },
@@ -95,6 +97,7 @@ class TestRacePresentation:
                 "elpd_loo": -60.0,
                 "elpd_diff": 13.2,
                 "dse": 3.0,
+                "dse_clustered": 3.0,
                 "weight": 0.2,
                 "loo_unreliable": False,
             },
@@ -126,6 +129,7 @@ class TestRacePresentation:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 0.7,
                 "loo_unreliable": False,
             },
@@ -134,6 +138,7 @@ class TestRacePresentation:
                 "elpd_loo": -43.5,
                 "elpd_diff": 3.5,
                 "dse": 2.1,
+                "dse_clustered": 2.1,
                 "weight": 0.3,
                 "loo_unreliable": False,
             },
@@ -165,6 +170,7 @@ class TestRacePresentation:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 0.7,
                 "loo_unreliable": False,
             },
@@ -173,6 +179,7 @@ class TestRacePresentation:
                 "elpd_loo": -42.0,
                 "elpd_diff": 2.0,
                 "dse": 2.0,
+                "dse_clustered": 2.0,
                 "weight": 0.3,
                 "loo_unreliable": False,
             },
@@ -208,6 +215,7 @@ class TestRacePresentation:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 0.7,
                 "loo_unreliable": False,
             },
@@ -216,6 +224,7 @@ class TestRacePresentation:
                 "elpd_loo": -55.0,
                 "elpd_diff": 15.0,
                 "dse": 3.0,
+                "dse_clustered": 3.0,
                 "weight": 0.3,
                 "loo_unreliable": False,
             },
@@ -248,6 +257,7 @@ class TestRacePresentation:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 0.7,
                 "loo_unreliable": False,
             },
@@ -256,6 +266,7 @@ class TestRacePresentation:
                 "elpd_loo": -42.0,
                 "elpd_diff": 2.0,
                 "dse": 1.5,
+                "dse_clustered": 1.5,
                 "weight": 0.3,
                 "loo_unreliable": True,
                 "frac_bad_k": 0.25,
@@ -286,6 +297,7 @@ class TestRacePresentation:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 0.7,
                 "loo_unreliable": False,
             },
@@ -294,6 +306,7 @@ class TestRacePresentation:
                 "elpd_loo": -43.0,
                 "elpd_diff": 3.0,
                 "dse": 2.0,
+                "dse_clustered": 2.0,
                 "weight": 0.3,
                 "loo_unreliable": False,
             },
@@ -318,6 +331,7 @@ class TestRacePresentation:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 1.0,
                 "loo_unreliable": False,
             },
@@ -339,6 +353,7 @@ class TestRacePresentation:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 1.0,
                 "loo_unreliable": False,
             },
@@ -360,6 +375,7 @@ class TestRacePresentation:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 1.0,
                 "loo_unreliable": False,
             },
@@ -384,6 +400,7 @@ class TestRacePresentation:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 1.0,
                 "loo_unreliable": False,
             },
@@ -405,6 +422,7 @@ class TestRacePresentation:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 1.0,
                 "loo_unreliable": False,
             },
@@ -467,6 +485,7 @@ class TestModelWithNoComparisonRow:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 1.0,
                 "loo_unreliable": False,
             },
@@ -493,6 +512,7 @@ class TestDescribeStanding:
             "elpd_loo": -40.0,
             "elpd_diff": 0.0,
             "dse": 0.0,
+            "dse_clustered": 0.0,
             "loo_unreliable": False,
         }
         text = _describe_standing(row)
@@ -507,6 +527,7 @@ class TestDescribeStanding:
             "elpd_loo": -42.0,
             "elpd_diff": 2.0,
             "dse": 2.0,
+            "dse_clustered": 2.0,
             "loo_unreliable": False,
         }
         text = _describe_standing(row)
@@ -521,11 +542,30 @@ class TestDescribeStanding:
             "elpd_loo": -55.0,
             "elpd_diff": 15.0,
             "dse": 3.0,
+            "dse_clustered": 3.0,
             "loo_unreliable": False,
         }
         text = _describe_standing(row)
         assert "rank 2" in text
         assert "lost" in text.lower()
+
+    def test_standing_is_judged_by_the_clustered_se_as_pruning_is(self):
+        """6 nats behind is 3x the trial-level dse but only 1.2x the
+        stimulus-clustered one: pruning keeps it as a tie, so must the brief."""
+        from src.pipelines.inner_loop.candidate_agent import _describe_standing
+
+        row = {
+            "rank": 1,
+            "elpd_loo": -46.0,
+            "elpd_diff": 6.0,
+            "dse": 2.0,
+            "dse_clustered": 5.0,
+            "loo_unreliable": False,
+        }
+        text = _describe_standing(row)
+        assert "tied" in text.lower()
+        assert "lost" not in text.lower()
+        assert "6.0 ± 5.0" in text
 
     def test_unreliable_loo(self):
         from src.pipelines.inner_loop.candidate_agent import _describe_standing
@@ -535,6 +575,7 @@ class TestDescribeStanding:
             "elpd_loo": -45.0,
             "elpd_diff": 5.0,
             "dse": 3.0,
+            "dse_clustered": 3.0,
             "loo_unreliable": True,
             "frac_bad_k": 0.15,
         }
@@ -554,6 +595,7 @@ class TestDseMultiplierInPreamble:
                 "elpd_loo": -40.0,
                 "elpd_diff": 0.0,
                 "dse": 0.0,
+                "dse_clustered": 0.0,
                 "weight": 1.0,
                 "loo_unreliable": False,
             },

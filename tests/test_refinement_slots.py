@@ -78,7 +78,8 @@ def test_lens_offset_counts_exploratory_slots_only():
 
 def test_six_candidate_rounds_walk_the_battery_without_a_repeat():
     """Three exploratory slots per round: no lens repeats within a round, and
-    two experiments of two rounds fire every lens of the battery once."""
+    two experiments of two rounds fire every lens of the battery, none more
+    than once more than any other."""
     n = len(DEFAULT_CANDIDATE_HINTS)
     fired = Counter()
     for exp_num in (1, 2):
@@ -87,7 +88,8 @@ def test_six_candidate_rounds_walk_the_battery_without_a_repeat():
             lenses = [_lens_index(offset, iteration, 3, i, n) for i in range(3)]
             assert len(set(lenses)) == 3
             fired.update(lenses)
-    assert fired == Counter({lens: 1 for lens in range(n)})
+    assert set(fired) == set(range(n))
+    assert max(fired.values()) - min(fired.values()) <= 1
 
 
 # ── The prune margin: written by pruning, read back to rank the menu ──
@@ -156,6 +158,7 @@ def _row(rank, diff, dse):
         "elpd_loo": -10.0 - diff,
         "elpd_diff": diff,
         "dse": dse,
+        "dse_clustered": dse,
         "weight": 0.0,
         "loo_unreliable": False,
     }
@@ -402,3 +405,8 @@ def test_prompt_inlines_the_menu_for_refinement_slots(tmp_path):
     assert "## refinement_menu.md" not in _build_candidate_prompt(
         tmp_path / "candidate_0", docs
     )
+
+
+def test_the_exploratory_battery_has_no_refinement_lens():
+    """Refinement has its own slots; an exploratory slot explores."""
+    assert not any(hint.startswith("Refine") for hint in DEFAULT_CANDIDATE_HINTS)

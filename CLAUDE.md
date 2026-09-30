@@ -231,7 +231,7 @@ target — see **Slot roles**) → admit sequentially.
   in `mcmc_defaults.py`) that runs the admission gates with a smoke fit.
 - **Slot roles — breadth and depth** (`slot_roles` in `model_zoo.py`): a
   round's `candidate_count` slots have roles. With four or more, `C - 3`
-  exploratory slots walk the twelve-lens battery (`DEFAULT_CANDIDATE_HINTS`;
+  exploratory slots walk the eleven-lens battery (`DEFAULT_CANDIDATE_HINTS`;
   only exploratory slots advance the walk, so `_lens_offset` counts them),
   two slots **refine the incumbent** (the latest history step's
   `best_model`, named in the brief with its hypothesis, standing and source

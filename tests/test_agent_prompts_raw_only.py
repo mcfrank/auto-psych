@@ -196,6 +196,30 @@ def test_the_candidate_prompts_skeleton_computes_its_features_from_the_raw_seque
     assert np.isfinite(model.compile_logp()(model.initial_point()))
 
 
+def test_the_candidate_prompts_skeleton_predicts_differently_for_different_pairs(
+    tmp_path,
+):
+    """Every pair has two sequences of one length, so a skeleton scoring each
+    by its fair-coin probability predicts 0.5 everywhere: its parameter is not
+    identified. The example agents copy must depend on the stimulus."""
+    prompt = (PROMPTS_DIR / "pymc_theory.md").read_text(encoding="utf-8")
+    skeleton = prompt.split("## Example skeleton", 1)[1]
+    code = re.search(r"```python\n(.*?)```", skeleton, re.DOTALL).group(1)
+    (tmp_path / "skeleton.py").write_text(code, encoding="utf-8")
+    model = load_pymc_model("skeleton", tmp_path)
+
+    pairs = [("HHHH", "HTHT"), ("HTHT", "HHHH"), ("HHTT", "HTTH")]
+    rows = [
+        {"sequence_a": a, "sequence_b": b, "participant_id": 1,
+         "trial_index": i, "chose_left": 1}
+        for i, (a, b) in enumerate(pairs)
+    ]
+    with model:
+        pm.set_data(make_stim_data(model, rows))
+    p_left = pm.draw(model["p_left"], random_seed=0)  # parameters from the prior
+    assert len(set(np.round(p_left, 6))) > 1
+
+
 def test_a_brief_for_responses_with_feature_columns_fails_loudly(tmp_path):
     """The brief describes only the raw columns; a CSV with more is not the
     raw-only pipeline's, so writing the brief raises instead of describing it."""

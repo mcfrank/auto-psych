@@ -47,13 +47,11 @@ _THEORY_PROMPT = _PKG_DIR / "prompts" / "pymc_theory.md"
 # Exploration lenses, one per exploratory slot per round. Each is a distinct
 # way to search the hypothesis space; together they push rounds toward genuine
 # novelty rather than conservative revision of the incumbent. Every lens still
-# demands exactly ONE mechanism per model. Twelve lenses so a six-candidate
-# round (three exploratory slots) walks four rounds without repeating one.
+# demands exactly ONE mechanism per model. Eleven lenses: a six-candidate
+# round (three exploratory slots) walks three rounds without repeating one.
+# Refining a model is not a lens: refinement slots have briefs of their own.
 # Override per run with the `candidate_hints` parameter / `--hints-file` knob.
 DEFAULT_CANDIDATE_HINTS = [
-    "Refine one existing hypothesis within its single mechanism — e.g. a "
-    "different functional form, prior, or normalization. Do NOT graft cues "
-    "from other models onto it.",
     "Propose a mechanism from a genuinely different psychological process "
     "family than anything in the current set — one the current models cannot "
     "express, not a variant of them.",
@@ -106,7 +104,9 @@ def _describe_standing(row: Dict[str, Any]) -> str:
     rank = int(row["rank"])
     elpd = float(row["elpd_loo"])
     diff = float(row["elpd_diff"])
-    dse = float(row["dse"])
+    # The stimulus-clustered SE, as pruning uses: the trial-level ``dse`` treats
+    # the correlated responses to one pair as independent and is ~2x too small.
+    dse = float(row["dse_clustered"])
     if rank == 0:
         text = f"rank 0, the best model on this data, ELPD-LOO {elpd:.1f}"
     else:
@@ -143,7 +143,7 @@ def _write_existing_hypotheses(
     """Write the hypotheses already in the model set + how each stands.
 
     Each model's hypothesis is its manifest rationale; its standing is its
-    ``az.compare`` row (``rank``, ``elpd_diff ± dse`` against the best,
+    ``az.compare`` row (``rank``, ``elpd_diff ± dse_clustered`` against the best,
     PSIS-LOO reliability), best first.  Without a comparison table (no scoring
     yet) only the ELPD-LOO, if any, is shown, in manifest order.  The
     candidate agent reads this to pick a *distinct* or *refined* hypothesis —
@@ -174,7 +174,9 @@ def _write_existing_hypotheses(
         "# Existing hypotheses\n\n"
         "Each model below is ONE cognitive hypothesis, with how it stands on the "
         "current data by ELPD-LOO (best first). `elpd_diff ± dse` is a model's "
-        "deficit against the best and the standard error of that difference: "
+        "deficit against the best and the standard error of that difference "
+        "(with the responses to each stimulus pair counted together, as they "
+        "are correlated): "
         f"within about {DEFAULT_PRUNE_DSE_MULTIPLIER:g}·dse the two are "
         "statistically tied on this data; beyond it the model has lost. "
         '"PSIS-LOO unreliable" means the estimate itself is untrustworthy (too '
@@ -318,8 +320,8 @@ _ROLE_LABELS = {
     SLOT_REFINE_CHOSEN: "refinement slot: a model of your choosing",
 }
 
-# The two rules a refinement slot lifts (the exploratory brief keeps both;
-# lens 0 of the battery carries the anti-grafting clause).
+# The exploratory brief's one-hypothesis rule; a refinement slot lifts it
+# (and pymc_theory.md's rule against grafting) with _REFINEMENT_RULES.
 _ONE_HYPOTHESIS_RULE = (
     "Your candidate must express **exactly one** cognitive hypothesis. Do not "
     "average, weight, or mix cues or mechanisms from several hypotheses into a "

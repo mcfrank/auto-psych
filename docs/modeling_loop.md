@@ -956,14 +956,15 @@ For `iteration` in 0..4 (pymc_orchestrator.py:324-585):
    candidates, sequentially.
 2. **Slots.** `incumbent = history[-1]["best_model"]`. `slot_roles(6)`
    (model_zoo.py:101) gives `[explore, explore, explore, refine incumbent, refine incumbent, refine chosen]`.
-3. **Lenses** (exploratory slots only). `DEFAULT_CANDIDATE_HINTS` has 12
-   lenses (candidate_agent.py:51). The lens index is
-   `(lens_offset + iteration·3 + e) % 12` for exploratory slot e ∈ {0,1,2}
+3. **Lenses** (exploratory slots only). `DEFAULT_CANDIDATE_HINTS` has 11
+   lenses (candidate_agent.py:54). The lens index is
+   `(lens_offset + iteration·3 + e) % 11` for exploratory slot e ∈ {0,1,2}
    (`_lens_index`, model_zoo.py:141), with
    `lens_offset = (exp − 1) · 5 · 3` (`_lens_offset`, model_zoo.py:129).
-   Experiment 1 therefore walks lenses 0-2, 3-5, 6-8, 9-11, 0-2. Experiment 2
-   starts at lens 3 (15 mod 12), and experiment 3 starts at lens 6. No lens
-   repeats within a round. Round 4 of each experiment repeats round 0's lenses.
+   Experiment 1 therefore walks lenses 0-2, 3-5, 6-8, 9-10-0, 1-3. Experiment 2
+   starts at lens 4 (15 mod 11), and experiment 3 starts at lens 8. No lens
+   repeats within a round; rounds 3 and 4 of each experiment reuse some of
+   rounds 0 and 1's lenses.
 4. **Context** for each slot (`_write_candidate_context`,
    candidate_agent.py:374). It is written to files and also **inlined into the
    prompt** (`_build_candidate_prompt`, candidate_agent.py:651). The prompt is
@@ -1576,16 +1577,16 @@ Discrepancies, where the code wins:
 12. **holdout_recovery_array.sbatch:163-189** stubs `model_families/<gt>.py`,
     but `agent_tree.exclude` already removes `src/subjective_randomness/`, so
     the stub is never written. This is harmless.
-13. **candidate_agent.py:47-48** says twelve lenses let a round walk "four
-    rounds without repeating". With 5 rounds, each experiment's round 4 reuses
-    round 0's lenses. The config comment's weaker claim (no repeat *within* a
-    round) holds.
-14. **`existing_hypotheses.md` and the refinement menu** (`_describe_standing`,
-    candidate_agent.py:102) label a model "tied" or "has lost" at 2 × the
-    trial-level `dse`, while pruning uses 2 × `dse_clustered` (larger). An
-    agent can be told a model has lost that pruning will keep. The standing
-    text also does not mention a failed convergence gate, only PSIS
-    reliability.
+13. *(Fixed 2026-09-29.)* The lens comment in candidate_agent.py claimed
+    twelve lenses walk "four rounds without repeating". The battery is now
+    eleven lenses (the refinement lens left it: refinement slots have their
+    own briefs), and the comment says three rounds; no lens repeats *within* a
+    round.
+14. *(Fixed 2026-09-29.)* `existing_hypotheses.md` and the refinement menu
+    (`_describe_standing`) labelled a model "tied" or "has lost" at 2 × the
+    trial-level `dse`, while pruning uses 2 × `dse_clustered`; they now use
+    `dse_clustered`. Still open: the standing text does not mention a failed
+    convergence gate, only PSIS reliability.
 
 Bugs and behaviour worth a decision (read from the code, not observed in a run):
 
