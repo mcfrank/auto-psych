@@ -12,8 +12,8 @@ No study has been published from these instructions yet. Placeholders:
 **The order of a full study**, each step below: credentials (§ 1), setup
 (§ 2), config (§ 3), the four rehearsals (§ 5), launch (§ 6), monitoring
 (§ 7), then collecting and checking the data (§ 10). For the full run
-(three runs × three experiments) with its own Firebase project and a
-results pull request, follow [full_run_checklist.md](full_run_checklist.md).
+(three runs × three experiments) with its own Firebase project and its
+results committed to `main`, follow [full_run_checklist.md](full_run_checklist.md).
 
 ## 1. Accounts and credentials
 

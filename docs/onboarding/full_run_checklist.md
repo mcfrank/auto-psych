@@ -2,14 +2,14 @@
 
 Written 29 September 2026 for the next full human run: **3 independent runs
 of the whole pipeline × 3 experiments each × 40 participants = 9 Prolific
-studies, 360 people**, with Claude Opus 5.5 agents and results shared with
-collaborators through a dedicated pull request. Each step points to the
+studies, 360 people**, with Claude Opus 5.5 agents, launched from `main`, with results
+committed to `main` for collaborators. Each step points to the
 section of [running_a_live_experiment.md](running_a_live_experiment.md) (the
 runbook, "§") that explains it; this page only fixes the order and the
 settings for this run.
 
 Not yet run as written: a new Firebase project, Claude agents in a live run
-and the results-PR sync (steps 1, 3, 10–12). The rehearsals in step 5 are
+and the results sync (steps 1, 3, 10–12). The rehearsals in step 5 are
 there to find out.
 
 Placeholders: `<name>` names this series of runs (lowercase letters, digits
@@ -101,14 +101,18 @@ the runbook.
 
 ## Launch and watch
 
-6. **Commit and push first**, then tag the commit the runs start from, so
-   the deployment manifests record `git_dirty: false` and collaborators can
-   find the code:
+6. **Launch from `main`, with everything committed.** Commit your config
+   to `main` (it holds no secrets, and collaborators then have it too):
 
    ```bash
-   cd $REPO && git status --short          # nothing but untracked personal configs
-   git tag full-run-<name> && git push origin full-run-<name>
+   cd $REPO && git checkout main && git pull
+   git add full_run_<name>.yaml && git commit -m "Full run <name>: config" && git push
+   git status --short                      # must print nothing
    ```
+
+   An empty `git status` matters: the launcher records the commit in every
+   deployment manifest, and any modified *or untracked* file marks the run
+   `git_dirty: true`.
 
 7. **Launch** (§ 6), from a login node; you type `yes` yourself:
 
@@ -121,7 +125,7 @@ the runbook.
    participants, `prolific token : OK`, the agent model
    `claude-opus-5-5`, and **the list of directories it will delete**
    (`$WORK_ROOT/run<i>`, `$WORK_ROOT/runs/run<i>`). It must say it deletes
-   nothing; if it lists anything, collect those results first (step 10).
+   nothing; if it lists anything, collect those results first (step 11).
    Each run's pages are at `https://<fb>-run<i>.web.app/e<N>-run<i>/`.
 
 8. **Watch** (§ 7): `squeue --me`, the job logs
@@ -135,40 +139,21 @@ the runbook.
    experiment that has a study (§ 9). For a parallel run the resume needs
    `AUTO_PSYCH_HOSTING_SITE=<fb>-run<i>` and `FIREBASE_PROJECT=<fb>`.
 
-## Share the results: the run's pull request
+## Share the results: commits to `main`
 
-The results go to a **dedicated branch and pull request** for this series,
-made from a separate clone so that switching branches never disturbs the
-live checkout, which the running jobs' launchers and other sessions use.
+The results are committed straight to `main`, in the same checkout, as
+scrubbed copies under `data/results/human_experiment_<name>/`. The running
+jobs use their own copies of the code (`$WORK_ROOT/runs/run<i>/repo`), so
+committing in the checkout never disturbs them.
 
-10. **Once, before or right after launch:**
-
-    ```bash
-    git clone git@github.com:mcfrank/auto-psych.git $HOME/repos/auto-psych-results
-    cd $HOME/repos/auto-psych-results
-    git checkout -b run/full-<name> full-run-<name>     # the launch tag (step 6)
-    mkdir -p data/results/human_experiment_<name>
-    ```
-
-    Run this clone's scripts with the live venv's interpreter (below), never
-    `uv run`/`uv sync` here: your shell's `UV_PROJECT_ENVIRONMENT` may point
-    at the live venv (§ 2).
-
-    Add `data/results/human_experiment_<name>/README.md` for collaborators
-    (template below) and a copy of `full_run_<name>.yaml` (it holds no
-    secrets), commit, push, and open a **draft** pull request:
-
-    ```bash
-    git push -u origin run/full-<name>
-    ml load gh && gh pr create --draft --base main \
-      --title "Full live run <name>: results" --body "…"
-    ```
+10. **Once, at launch:** add `data/results/human_experiment_<name>/README.md`
+    for collaborators (template below), commit it and push to `main`.
 
 11. **After each experiment finishes** (every run's
     `experiment<N>/model_loop/export_complete.json` exists), sync:
 
     ```bash
-    cd $HOME/repos/auto-psych-results
+    cd $REPO && git pull
     D=data/results/human_experiment_<name>/collected
     rm -rf $D
     PY=$SCRATCH/auto-psych/outer_loop_live/venv/bin/python RUNS="run1 run2 run3" DEST=$D \
@@ -177,16 +162,16 @@ live checkout, which the running jobs' launchers and other sessions use.
     git add -A $D && git commit -m "Full run <name>: sync after experiment <N>" && git push
     ```
 
-    `collected/` is regenerated whole each time, beside the README and
-    config, which are never touched: the collector copies over an existing
+    Only if the `grep` prints `no Prolific IDs`, commit. `collected/` is
+    regenerated whole each time: the collector copies over an existing
     destination without removing files that have since disappeared from a
     run (a model-loop restart empties `model_loop/`). It removes every
     Prolific ID and fails if one survives (§ 10, § 11); the `grep` (the
     collector's own pattern) is a second check before anything is pushed.
     The next experiment's partial directory is copied too; `SUMMARY.md`
-    marks it `incomplete`.
+    marks it `incomplete`. Never `uv run` or `uv sync` here (§ 2).
 
-12. **At the end**: a last sync, mark the pull request ready, and copy
+12. **At the end**: a last sync, then copy
     `$WORK_ROOT/run<i>/data/subjective_randomness/raw_collected/` (it holds
     Prolific IDs) to access-controlled long-term storage your IRB protocol
     allows (§ 10). `$SCRATCH` is purged after 90 days without modification.
@@ -197,8 +182,9 @@ live checkout, which the running jobs' launchers and other sessions use.
 # Full live run <name>
 
 Three independent runs (run1–run3) of the whole pipeline, three experiments
-each, 40 Prolific participants per experiment. Code: tag `full-run-<name>`.
-Config: `full_run_<name>.yaml`. Agents: Claude Opus 5.5.
+each, 40 Prolific participants per experiment. Code: the commit recorded as
+`git_commit` in each experiment's `deployment/deployment_manifest.json`.
+Config: `full_run_<name>.yaml` at the repository root. Agents: Claude Opus 5.5.
 
 An experiment is final when its `model_loop/export_complete.json` exists;
 `collected/SUMMARY.md` lists each experiment's winning model and marks unfinished ones
