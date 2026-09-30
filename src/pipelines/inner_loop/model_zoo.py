@@ -8,6 +8,8 @@ seeding, admission, pruning, and the novelty gate. Extracted from
 from __future__ import annotations
 
 import csv
+import hashlib
+import json
 import math
 import re
 import shutil
@@ -35,6 +37,7 @@ from src.models.pymc_inference import (
     INFRASTRUCTURE_ERRORS,
     FitTimeLimitExceeded,
     InvalidPredictions,
+    _cache_key,
     _describe_failure,
     convergence_diagnostics_of,
     convergence_problems_of,
@@ -628,6 +631,13 @@ def _pool_prediction(
     return total / len(participant_ids)
 
 
+def _pool_digest(pool_rows: Sequence[Mapping[str, str]]) -> str:
+    """A digest of the novelty pool's pairs: part of a saved prediction's key."""
+    return hashlib.sha256(
+        json.dumps([dict(row) for row in pool_rows], sort_keys=True).encode("utf-8")
+    ).hexdigest()
+
+
 def _min_prediction_rmse(
     model_name: str,
     models_dir: Path,
@@ -636,6 +646,7 @@ def _min_prediction_rmse(
     pool_rows: Sequence[Mapping[str, str]],
     cache_dir: Optional[Path] = None,
     fit_kwargs: Optional[Dict[str, Any]] = None,
+    predictions: Optional[Dict[tuple, np.ndarray]] = None,
 ) -> Tuple[Optional[str], float]:
     """Min RMSE between ``model_name``'s p_left and each admitted model's on ``pool_rows``.
 
@@ -651,19 +662,46 @@ def _min_prediction_rmse(
     An admitted model whose ``p_left`` is undefined on some stimuli
     is compared on the rest (said out loud), and skipped when it is undefined
     on all of them; before, it crashed every later candidate's admission.
+
+    ``predictions`` (one dict for a whole model loop, made by
+    ``run_pymc_inner_loop``) keeps each model's prediction for the loop's later
+    admissions. Within a loop the data, the pool and every admitted fit are
+    fixed and the prediction is deterministic (``predict_p_left`` samples with
+    a fixed seed), so recomputing it at every admission, as the gate did until
+    2026-09-30, only repeated work that grows with the set: each prediction
+    runs every posterior draw over the pool, a model with a participant effect
+    once per participant (in the October 2026 live run, most of the set, and
+    rounds grew from 1.5 to 2.9 hours). The key is the fit's in-process key
+    (``_cache_key``: name, model source, responses file, sampler settings),
+    the pool and the participants, so new data or a changed model file is
+    predicted afresh. Without the dict every call recomputes.
     """
     pool_rows = list(pool_rows)
     if not pool_rows:
         raise ValueError("The novelty pool is empty.")
     participant_ids = _participant_ids_in(responses_path)
+    pool_digest = _pool_digest(pool_rows) if predictions is not None else None
 
     def posterior_mean_p_left(name: str) -> np.ndarray:
+        key = None
+        if predictions is not None:
+            key = (
+                _cache_key(name, models_dir, responses_path, fit_kwargs),
+                pool_digest,
+                tuple(participant_ids or ()),
+            )
+            if key in predictions:
+                return predictions[key]
         fitted = fit_model(
             name, models_dir, responses_path, cache_dir=cache_dir, **(fit_kwargs or {})
         )
-        return _pool_prediction(
+        predicted = _pool_prediction(
             fitted, pool_rows, model_name=name, participant_ids=participant_ids
         )
+        if key is not None:
+            predicted.setflags(write=False)  # shared by every later admission
+            predictions[key] = predicted
+        return predicted
 
     try:
         candidate_p = posterior_mean_p_left(model_name)
@@ -1234,6 +1272,7 @@ def _admit_candidate_with_reason(
     ledger_context: str = "",
     fit_time_limit_sec: Optional[float] = CANDIDATE_FIT_TIME_LIMIT_SEC,
     name_note: str = "",
+    novelty_predictions: Optional[Dict[tuple, np.ndarray]] = None,
 ) -> Admission:
     """Validate a candidate and, if valid, admit it to the model set.
 
@@ -1276,6 +1315,9 @@ def _admit_candidate_with_reason(
     every admitted model's on ``novelty_pool`` (``None`` ⇒ the loop's default
     pool, ``novelty_pool_rows()``; the orchestrator passes the pool it recorded
     in the run tree so every candidate of a run is gated on the same stimuli).
+    ``novelty_predictions`` is the loop's dict of saved pool predictions, so
+    each model is predicted once per loop (``_min_prediction_rmse``); ``None``
+    recomputes them.
 
     ``name_note`` (``name_clash_note``) is the admitted entry's ledger detail:
     it records a candidate renamed because the name it asked for was taken.
@@ -1399,6 +1441,7 @@ def _admit_candidate_with_reason(
                 pool_rows=pool,
                 cache_dir=cache_dir,
                 fit_kwargs=fit_kwargs,
+                predictions=novelty_predictions,
             )
         except NoveltyPoolUnbindable as e:
             staged.unlink(missing_ok=True)

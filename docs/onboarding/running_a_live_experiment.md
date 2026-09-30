@@ -428,7 +428,12 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
   remaining experiments with `--dependency=afterok:<its job id>`, so they
   start only if the stage succeeds (if it fails, the second job stays
   pending with `DependencyNeverSatisfied`: `scancel` it). `--qos=long`
-  refuses a time limit under 48 hours; leave it out below that.
+  refuses a time limit under 48 hours; leave it out below that. To queue the
+  remaining experiments on code the running stage's copy does not have yet,
+  rsync the checkout into a second directory beside the copy now (and record
+  its commit there), and make the queued job rsync that directory into the
+  copy when it starts, with the same excludes: the copy cannot change while
+  the running job imports from it.
 - A second study for the same experiment: stop the first in Prolific, then
   set `PUBLISH_ANOTHER_PROLIFIC_STUDY=1`; the old manifest is kept as
   `deployment_manifest.superseded-<time>.json`.

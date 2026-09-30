@@ -1168,6 +1168,17 @@ or carried model stays in the zoo, likewise unselectable and unprunable.
   a harness code error still raises. A zoo
   model undefined on some pool stimuli is compared on the rest (a
   `[novelty]` line says so) and is left out when undefined on all of them.
+- Each model's pool prediction is computed **once per model loop** and kept
+  for its later admissions (`novelty_predictions`, one dict per
+  `run_pymc_inner_loop`), keyed by the fit's in-process key (`_cache_key`:
+  name, model source, responses file, sampler settings), the pool and the
+  participant ids. Within a loop the data, the pool and every fit are fixed
+  and `predict_p_left` samples with a fixed seed, so this changes no RMSE and
+  no verdict; new data (the next experiment) or a changed model file is
+  predicted afresh. Until 2026-09-30 every admission recomputed every zoo
+  model, once per participant for a model with a participant effect: in the
+  October 2026 live run (40 participants, 3,000 draws, a mostly per-person
+  set) rounds grew from 1.5 to 2.9 hours on under 2 of the job's 16 CPUs.
 - `RMSE(c, m) = sqrt(mean_j (p̄_c,j − p̄_m,j)²)`. The candidate is rejected if
   `min_m RMSE(c, m) < 0.002`, and the reason names the nearest model.
 

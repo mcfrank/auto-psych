@@ -318,6 +318,10 @@ def run_pymc_inner_loop(
         (results_dir / NOVELTY_POOL_FILENAME).write_text(
             json.dumps(novelty_pool), encoding="utf-8"
         )
+    # Each model's posterior-mean p_left on the pool, computed once for the
+    # whole loop, not at every admission: the data and every fit are fixed
+    # within it (_min_prediction_rmse says why this matters).
+    novelty_predictions: Dict[tuple, Any] = {}
     n_lenses = (
         len(candidate_hints)
         if candidate_hints is not None
@@ -496,6 +500,7 @@ def run_pymc_inner_loop(
                         ledger=ledger,
                         ledger_context=slot.ledger_context,
                         name_note=name_clash_note(previous_dir, name),
+                        novelty_predictions=novelty_predictions,
                     )
                     slot.previous_name = name
                     if admission.admitted:

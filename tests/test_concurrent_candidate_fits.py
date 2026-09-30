@@ -259,7 +259,7 @@ def _wave(root: Path):
     ]
 
 
-def _admit_in_order(root: Path, *, prefit: bool):
+def _admit_in_order(root: Path, *, prefit: bool, novelty_predictions=None):
     models_dir = root / "models"
     models_dir.mkdir(parents=True)
     shutil.copy(PYMC_MODEL_FIXTURES_DIR / "bayesian_fair_coin.py", models_dir)
@@ -320,6 +320,11 @@ def _admit_in_order(root: Path, *, prefit: bool):
             fit_kwargs=fit_kwargs,
             ledger=ledger,
             ledger_context=f"candidate {i}",
+            **(
+                {}
+                if novelty_predictions is None
+                else {"novelty_predictions": novelty_predictions}
+            ),
         )
         verdicts.append((name, admission.admitted, admission.reason))
     pi.clear_fit_cache()

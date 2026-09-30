@@ -211,7 +211,13 @@ target — see **Slot roles**) → admit sequentially.
   undefined on some pool stimuli is compared on the rest (and left out when
   undefined on all). The threshold is a knob of
   the holdout config (`inner_loop.novelty_rmse_threshold`, CLI
-  `--novelty-rmse-threshold`, sbatch `NOVELTY_RMSE_THRESHOLD`).
+  `--novelty-rmse-threshold`, sbatch `NOVELTY_RMSE_THRESHOLD`). Each model's
+  pool prediction is computed once per model loop and kept for its later
+  admissions (`novelty_predictions`, keyed by the fit's `_cache_key`, the pool
+  and the participants; the prediction is deterministic, so no verdict
+  changes). Until 2026-09-30 every admission recomputed every model, once per
+  participant for a per-person model, and the October 2026 live run's rounds
+  grew from 1.5 to 2.9 hours (`tests/test_novelty_predictions_saved.py`).
 - **Slot retry and repair** (`_Slot` in `pymc_orchestrator.py`): a round is
   spawn → prefit (concurrent candidate fits) → settle waves. A slot whose
   agent wrote no `candidate.py` (or whose agent process failed) is
