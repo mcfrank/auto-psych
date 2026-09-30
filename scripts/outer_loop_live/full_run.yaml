@@ -14,7 +14,9 @@ run_label: full                    # cosmetic here — submit_parallel overrides
                                    # per-run label to run1/run2/run3.
 experiments: 3                     # experiments per run, in sequence (design k uses k-1's posterior;
                                    # stimulus design is always the exhaustive joint-EIG selection)
-coding_agent: opencode
+coding_agent: claude
+claude_auth: api                   # ANTHROPIC_API_KEY (full_run_checklist.md step 2)
+agent_model: claude-opus-5-5       # the claude default is claude-sonnet-4-6
 prolific_mode: live                # REAL recruiting + payment
 
 # --- where / how it runs (Slurm + Firebase) --------------------------------
