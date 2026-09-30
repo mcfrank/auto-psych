@@ -39,7 +39,17 @@ if ! CFG_ENV="$("$VENV_PY" "$DIR/_pilot_config.py" "$CONFIG" --check)"; then
   exit 1
 fi
 eval "$CFG_ENV"  # PROJECT N_EXPERIMENTS N_PARTICIPANTS PROLIFIC_MODE WALLTIME QOS
-                 # CODING_AGENT FIREBASE_PROJECT DRAWS TUNE CHAINS INNER_LOOP_*
+                 # CODING_AGENT FIREBASE_PROJECT RUN_LABEL DRAWS TUNE CHAINS INNER_LOOP_*
+
+# Each run's Hosting site, <project>-<run_label>-run<i>, checked here so a name
+# Firebase would refuse stops the launch before the prompt (as submit_parallel
+# does with the same helper; it defaults the project to the same value).
+source "$DIR/_hosting_site.sh"
+SERIES_LABEL="${RUN_LABEL:-}"
+_sites=()
+for i in "${_runs[@]}"; do
+  _sites+=("$(hosting_site "${FIREBASE_PROJECT:-auto-psych-2c5da}" "$SERIES_LABEL" "run${i}")")
+done
 
 # --- 2. Confirm (the --check above already printed per-run cost + token).
 #        Nothing is rendered or deleted before the typed "yes". ---------------
@@ -56,6 +66,7 @@ cat <<EOF
   => launching run(s): ${_runs[*]}  (${#_runs[@]} parallel; Prolific cost ≈ ${#_runs[@]} x the per-run estimate shown; AI agent costs not included)
      config=$CONFIG  mode=$PROLIFIC_MODE  experiments=$N_EXPERIMENTS  N=$N_PARTICIPANTS/exp
      walltime=$WALLTIME  qos=${QOS:-<default normal>}
+     hosting sites: ${_sites[*]}
 
 EOF
 if (( ${#to_delete[@]} )); then
@@ -84,6 +95,7 @@ echo "[clean] removed ${#to_delete[@]} dir(s) for run(s) ${_runs[*]} under $WORK
 #        sequence form run_live.sbatch reads). WALLTIME/QOS come from the config.
 K="$K" \
 RUNS="${RUNS:-}" \
+SERIES_LABEL="$SERIES_LABEL" \
 EXPERIMENTS="$N_EXPERIMENTS" \
 WORK_ROOT="$WORK_ROOT" \
   bash "$DIR/submit_parallel.sh"

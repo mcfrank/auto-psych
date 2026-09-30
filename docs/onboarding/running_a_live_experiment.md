@@ -12,7 +12,7 @@ No study has been published from these instructions yet. Placeholders:
 **The order of a full study**, each step below: credentials (§ 1), setup
 (§ 2), config (§ 3), the four rehearsals (§ 5), launch (§ 6), monitoring
 (§ 7), then collecting and checking the data (§ 10). For the full run
-(three runs × three experiments) with its own Firebase project and its
+(three runs × three experiments) with Claude agents and its
 results committed to `main`, follow [full_run_checklist.md](full_run_checklist.md).
 
 ## 1. Accounts and credentials
@@ -335,7 +335,10 @@ before `yes`. Collect earlier results first (§ 10). Deleting a run's
 directories also deletes the record the relaunch guard reads, so never reuse
 an index whose study is still open. `RUNS="2 3"` launches only those indices.
 Each run gets its own copy of the code, output tree, Hosting site
-(`https://auto-psych-2c5da-run<i>.web.app/e<N>-run<i>/`), studies, and log
+(`https://auto-psych-2c5da-<run_label>-run<i>.web.app/e<N>-run<i>/`, named
+after the config's `run_label` so a new series never reuses an earlier
+series' sites; the launcher lists them before `yes` and stops on a name over
+30 characters), studies, and log
 (`$WORK_ROOT/slurm_logs/outer_live_run<i>_<jobid>.out`).
 
 Each launch copies your **current working tree** (no commit needed) and
@@ -414,8 +417,8 @@ sbatch --job-name=resume_$LABEL --time=12:00:00 \
 - To run the remaining experiments, submit the same command without
   `RESUME_AGENTS`, with `EXPERIMENTS=<next>-<last>`, `PROLIFIC_MODE=live`
   and `CONFIRM_LIVE_RECRUITMENT=1`; for a parallel run `run<i>` also
-  `AUTO_PSYCH_HOSTING_SITE=auto-psych-2c5da-run<i>` (without it the deploy
-  goes to the default site). This publishes new studies and pays.
+  `AUTO_PSYCH_HOSTING_SITE=auto-psych-2c5da-<run_label>-run<i>`, the site
+  the launch printed (without it the deploy goes to the default site). This publishes new studies and pays.
 - A second study for the same experiment: stop the first in Prolific, then
   set `PUBLISH_ANOTHER_PROLIFIC_STUDY=1`; the old manifest is kept as
   `deployment_manifest.superseded-<time>.json`.

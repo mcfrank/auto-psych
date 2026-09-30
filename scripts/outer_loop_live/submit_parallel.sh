@@ -5,6 +5,7 @@
 #                                     CURRENT working tree; no commit needed)
 #   * its own --run-label          -> /e{N}-{label}/ hosting path + Firestore
 #                                     collection_session_id + its own Prolific study
+#   * its own Hosting site         -> <firebase project>-<SERIES_LABEL>-run<i> (_hosting_site.sh)
 #   * its own AUTO_PSYCH_OUTPUT_DIR -> isolated experiment{N}/ data tree
 #   * its own private XDG dirs (set in run_live.sbatch) -> no opencode DB collision
 # The brief `firebase deploy` step is serialized across runs by the shared
@@ -48,6 +49,19 @@ SRC_SHA="$( (cd "$REPO" && git rev-parse --short HEAD) 2>/dev/null || echo worki
 # (re)launch only those runs without disturbing the others (e.g. a salvaged run1).
 if [[ -n "${RUNS:-}" ]]; then read -r -a _runs <<< "${RUNS//,/ }"; else _runs=($(seq 1 "$K")); fi
 
+# Each run deploys to its OWN Firebase Hosting site so concurrent deploys don't
+# clobber a shared live site (the bug that 404'd all but the last run), named
+# after the series' run_label (SERIES_LABEL, passed by start_full_run.sh) so a
+# new series never reuses an earlier one's sites: <project>-<run_label>-run<i>.
+# All names are checked before anything is copied or submitted; the deploy
+# creates a site that does not exist yet.
+source "$OUTER_LIVE_SLURM_DIR/_hosting_site.sh"
+SERIES_LABEL="${SERIES_LABEL:-}"
+declare -A HOST_SITES
+for i in "${_runs[@]}"; do
+  HOST_SITES[$i]="$(hosting_site "$FIREBASE_PROJECT" "$SERIES_LABEL" "run${i}")"
+done
+
 for i in "${_runs[@]}"; do
   LABEL="run${i}"
   WT="$RUNS_ROOT/$LABEL/repo"
@@ -65,17 +79,14 @@ for i in "${_runs[@]}"; do
   # dirty, untracked files included) into it; the deploy refuses without it.
   (cd "$REPO" && "$VENV_PY" -m src.pipelines.outer_loop.deployment.record_provenance \
     --checkout "$REPO" --copy "$WT")
-  # Each run deploys to its OWN Firebase Hosting site so concurrent deploys don't
-  # clobber the shared live site (the bug that 404'd all but the last run). Site
-  # IDs must be lowercase and <=30 chars; the deploy creates it if missing.
-  HOST_SITE="$(echo "${FIREBASE_PROJECT}-${LABEL}" | tr '[:upper:]' '[:lower:]')"
+  HOST_SITE="${HOST_SITES[$i]}"
   jid=$(sbatch --parsable \
     --job-name="outer_live_$LABEL" \
     --output="$LOGDIR/%x_%j.out" --error="$LOGDIR/%x_%j.out" \
     ${EXTRA_SBATCH[@]+"${EXTRA_SBATCH[@]}"} \
     --export=ALL,RUN_LABEL="$LABEL",RUN_WORKTREE="$WT",CODING_AGENT="$CODING_AGENT",AUTO_PSYCH_OUTPUT_DIR="$OUT",AUTO_PSYCH_HOSTING_SITE="$HOST_SITE" \
     "$OUTER_LIVE_SLURM_DIR/run_live.sbatch")
-  echo "submitted $LABEL: job $jid  (copy=$WT  out=$OUT)"
+  echo "submitted $LABEL: job $jid  (site=$HOST_SITE  copy=$WT  out=$OUT)"
 done
 
 echo

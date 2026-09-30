@@ -568,6 +568,14 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   `STUDY_ID` in the URL). A `--mode live` run with `--prolific-mode none`
   deploys experiment 1 and stops (there is no study to collect from); a
   resume with `--agent` still collects from a recorded study.
+- **Each series of parallel runs has its own Hosting sites.**
+  `start_full_run.sh` / `submit_parallel.sh` deploy run *i* to
+  `<firebase_project>-<run_label>-run<i>` (`_hosting_site.sh`; the config's
+  `run_label` is passed as `SERIES_LABEL`), so a new series in the same
+  project never replaces an earlier series' pages. Site IDs over 30
+  characters (or with other than `[a-z0-9-]`) stop the launch before its
+  prompt; with `auto-psych-2c5da` that leaves 8 characters for `run_label`.
+  All runs of a project share its `/submit` and `/results` functions.
 - **Deploy provenance from the launchers' copies.** The launchers run each
   job from an rsync copy without `.git`; right after copying they record the
   checkout's commit and dirtiness (untracked files included) into the copy

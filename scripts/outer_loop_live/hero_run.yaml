@@ -15,7 +15,7 @@
 
 # --- what to run -----------------------------------------------------------
 project: subjective_randomness
-run_label: hero                    # cosmetic — submit_parallel overrides per run.
+run_label: hero                    # names the runs' Hosting sites: <firebase_project>-hero-run<i>; runs are run1..runK.
 experiments: 3                     # per run, in sequence (design k uses k-1's posterior;
                                    # stimulus design is always the exhaustive joint-EIG selection)
 coding_agent: opencode

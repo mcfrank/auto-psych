@@ -39,6 +39,7 @@ def launch(tmp_path):
     scripts = tmp_path / "scripts"
     scripts.mkdir()
     shutil.copy(LAUNCHER, scripts / "start_full_run.sh")
+    shutil.copy(LAUNCHER.parent / "_hosting_site.sh", scripts / "_hosting_site.sh")
     (scripts / "_env.sh").write_text(_STAND_IN_ENV, encoding="utf-8")
     (scripts / "stand_in_python").write_text(_STAND_IN_PYTHON, encoding="utf-8")
     (scripts / "stand_in_python").chmod(0o755)
