@@ -12,6 +12,7 @@ Then, as needed:
 |---|---|
 | [how_the_loop_works.md](how_the_loop_works.md) | one experiment step by step, with code pointers and output files |
 | [running_a_live_experiment.md](running_a_live_experiment.md) | the runbook: credentials, setup, config, safety gates, no-cost rehearsal, launch, monitoring, stopping, recovery, data, Prolific-ID privacy |
+| [full_run_checklist.md](full_run_checklist.md) | the full live run (3 runs × 3 experiments) in order: a new Firebase project, Claude agents, launch, and syncing results to the run's pull request |
 | [simulations_and_validation.md](simulations_and_validation.md) | simulated recovery checks and controls, and how to read them |
 | [troubleshooting.md](troubleshooting.md) | error messages and what to do |
 | [glossary.md](glossary.md) | terms and code names |
