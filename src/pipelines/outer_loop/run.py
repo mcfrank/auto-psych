@@ -161,6 +161,13 @@ def _run_agent(
             max_iterations=inner_loop_iterations,
             candidate_count=inner_loop_candidates,
             fit_kwargs=fit_kwargs,
+            # The admission gates reuse a fit only through this cache: without
+            # it every novelty check re-sampled every admitted model, and no
+            # wave was prefitted (full live run 1, 2026-09-29: one model
+            # sampled 14 times in round 0). Inside model_loop/, so every
+            # (re)start of the stage empties it; results collection leaves
+            # .fit_cache out.
+            cache_dir=exp_dir / "model_loop" / ".fit_cache",
             enable_critique=enable_critique,
             n_critique_proposals=n_critique_proposals,
             critique_alpha=critique_alpha,

@@ -121,7 +121,11 @@ model-loop stage validates (its export record, below).
   but no recorded input (older code) raises. The design reads the recorded
   input when it exists (`experiment_input_models_dir`). `responses.csv`,
   `stimuli.json`, the registry and `starting_models.json` are written through a
-  temporary file and renamed.
+  temporary file and renamed. The stage's fits are cached in
+  `model_loop/.fit_cache` (`run.py`): the admission gates reuse a fit only
+  through that cache, and until 2026-09-30 the live (and simulated) stage ran
+  without one, so every novelty check re-sampled every admitted model and no
+  wave was prefitted (`tests/test_live_model_stage_fit_cache.py`).
 
 Coding stages that fail their validator are re-spawned with the error injected as
 repair feedback (`--max-validation-repairs`); programmatic stages fail terminally.
