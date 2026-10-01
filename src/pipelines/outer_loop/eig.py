@@ -26,7 +26,7 @@ import json
 import sys
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Optional, Tuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Sequence, Tuple
 
 import tyro
 from pyprojroot import here
@@ -59,19 +59,137 @@ def _load_model_weights(registry_path: Optional[Path]) -> Dict[str, float]:
     return dict(load_registry(path)["theories"])
 
 
+# A design after data predicts a model with a participant effect as this many
+# participants its data have not reached (``_new_participant_draws``): ids
+# past every training id, whose parameters no data informed, so in each
+# posterior draw they are draws from the model's own population distribution
+# (its hyperparameters as fitted). Averaging over them marginalizes the
+# person-level parameters, the model's prediction for a new participant; 40
+# gives the Monte Carlo precision of averaging over a 40-person sample (user
+# decision 2026-09-30).
+DESIGN_NEW_PARTICIPANTS = 40
+
+
+class NoNewParticipant(ValueError):
+    """A model with a participant effect that cannot predict a participant its
+    data have not reached: its per-participant parameters have no slot past the
+    training ids, or its hook renumbers participants. Left out of the design,
+    on record (``screened_out.json``)."""
+
+    def __init__(self, model: str, reason: str):
+        super().__init__(reason)
+        self.model = model
+        self.reason = reason
+
+
+def _new_participant_ids(
+    error: Any, responses_csv: Optional[Path]
+) -> Optional[List[int]]:
+    """The participants a model that failed to bind with ``error`` (a
+    ``MissingStimulusColumns``) is predicted as: ``DESIGN_NEW_PARTICIPANTS``
+    ids past every id in ``responses_csv``, when its only missing column is
+    ``participant_id`` and the design has responses; else ``None``. The
+    responses are read only for such a model, so a design whose models need no
+    participant does not depend on the column."""
+    if responses_csv is None or set(error.missing) != {"participant_id"}:
+        return None
+    from src.models.data_binding import participant_ids_in  # type: ignore
+
+    training = participant_ids_in(Path(responses_csv))
+    if not training:
+        return None
+    return list(range(max(training) + 1, max(training) + 1 + DESIGN_NEW_PARTICIPANTS))
+
+
+def _require_own_slot(name: str, stim_data: Dict[str, Any], participant_id: int) -> None:
+    """Raise ``NoNewParticipant`` unless ``participant_id`` reaches the model
+    as given: a hook that renumbers participants (or binds them under another
+    name) would put a new participant on a training participant's parameters."""
+    import numpy as np
+
+    bound = stim_data.get("participant_id")
+    if bound is None or not np.all(np.asarray(bound) == participant_id):
+        raise NoNewParticipant(
+            name,
+            "its hook does not pass participant_id through unchanged, so a "
+            "participant its data have not reached cannot be given a slot of "
+            "its own (bind participant_id directly and index parameters by it)",
+        )
+
+
+def _new_participant_draws(
+    name: str,
+    fitted: Any,
+    rows: List[Dict[str, Any]],
+    new_ids: Sequence[int],
+    *,
+    seed: int,
+    max_draws: int,
+) -> Any:
+    """Per-draw p_left over ``rows`` of a model with a participant effect, as
+    a new participant: predicted as each of ``new_ids`` (slots no data
+    reached, so draws from the model's population distribution) and averaged
+    draw by draw, over the same thinned draws each time (``_thin_posterior``
+    is deterministic). New participants answer one pair independently, so each
+    pair's Binomial(n, p) in the EIG is exact under the model; one person's
+    answers to different pairs are correlated, which the joint EIG ignores.
+
+    A model whose per-participant parameters stop before ``new_ids`` raises an
+    index error for them while a training participant (``new_ids[0] - 1``)
+    predicts: ``NoNewParticipant``. An error for the training participant too
+    is the model's own and propagates.
+    """
+    from src.models.data_binding import as_participant, make_stim_data  # type: ignore
+
+    total = None
+    for pid in new_ids:
+        stim_data = make_stim_data(fitted.model, as_participant(rows, pid))
+        _require_own_slot(name, stim_data, pid)
+        try:
+            draws = fitted.predict_p_left_draws(stim_data, seed=seed, max_draws=max_draws)
+        except IndexError as exc:
+            training_id = new_ids[0] - 1
+            fitted.predict_p_left_draws(
+                make_stim_data(fitted.model, as_participant(rows, training_id)),
+                seed=seed,
+                max_draws=max_draws,
+            )
+            raise NoNewParticipant(
+                name,
+                f"its per-participant parameters have no slot for participant "
+                f"{pid} (the data reach participant {training_id}), so it cannot "
+                "predict a new participant (size them with spare slots, e.g. 400)",
+            ) from exc
+        total = draws.astype("float64") if total is None else total + draws
+    return total / len(new_ids)
+
+
 def _screen_usable_models(
-    model_names: List[str], models_dir: Path, rows: List[Dict[str, Any]]
+    model_names: List[str],
+    models_dir: Path,
+    rows: List[Dict[str, Any]],
+    *,
+    responses_csv: Optional[Path] = None,
 ) -> Tuple[List[str], List[Dict[str, Any]]]:
     """Drop models that cannot be evaluated on the design pool's stimulus rows.
 
-    E.g. a carried-forward model with a participant-level pm.Data
-    (participant_id) that stimulus rows never carry, or one whose features
-    cannot be computed for some pairs (a hook that indexes past the end of a
-    length-2 sequence: admission never binds pairs shorter than 4). One such
-    model would otherwise raise inside the predictive pass and abort the
-    design — identically on every retry. Bind each model to every row, drop
+    E.g. a model that binds ``trial_index``, or a participant-level pm.Data
+    (``participant_id``) that stimulus rows never carry when there are no
+    responses to take participants from (the prior design), or one whose
+    features cannot be computed for some pairs (a hook that indexes past the
+    end of a length-2 sequence: admission never binds pairs shorter than 4).
+    One such model would otherwise raise inside the predictive pass and abort
+    the design — identically on every retry. Bind each model to every row, drop
     the ones that fail loudly and on record, and keep the rest; fail only if
     none can be evaluated.
+
+    With ``responses_csv`` (a design after data), a model whose only
+    unbindable column is ``participant_id`` is kept: it is bound as a new
+    participant here (and dropped, on record, if its hook renumbers
+    participants), and ``_posterior_p_left_draws`` predicts it as new
+    participants (``_new_participant_draws``). Until 2026-09-30 it was
+    dropped, and in the October 2026 live run, where every leading model had a
+    participant effect, that left the experiment-2 design with no model at all.
 
     A failure is the model's when its own code raised it, or when it is not a
     code error at all (``is_model_failure``). A code error raised by the
@@ -82,6 +200,7 @@ def _screen_usable_models(
     from src.models.data_binding import (  # type: ignore
         MissingStimulusColumns,
         NON_STIMULUS_COLUMNS,
+        as_participant,
         make_stim_data,
     )
     from src.models.model_loading import load_pymc_model_cached  # type: ignore
@@ -96,7 +215,28 @@ def _screen_usable_models(
         model = None
         try:
             model = load_pymc_model_cached(name, models_dir)
-            make_stim_data(model, rows)
+            try:
+                make_stim_data(model, rows)
+            except MissingStimulusColumns as e:
+                new_ids = _new_participant_ids(e, responses_csv)
+                if not new_ids:
+                    raise
+                _require_own_slot(
+                    name, make_stim_data(model, as_participant(rows, new_ids[0])), new_ids[0]
+                )
+                print(
+                    f"  [design] model {name!r} has a participant effect: "
+                    f"predicted as {len(new_ids)} new participants (ids "
+                    f"{new_ids[0]}-{new_ids[-1]}) and averaged.",
+                    flush=True,
+                )
+        except NoNewParticipant as e:
+            dropped.append({"model": name, "missing": [], "reason": e.reason})
+            print(
+                f"  [drop] EIG: model {name!r} {e.reason}; excluding it from EIG.",
+                flush=True,
+            )
+            continue
         except MissingStimulusColumns as e:
             if not e.only_non_stimulus:
                 raise RuntimeError(
@@ -211,6 +351,13 @@ def _screen_invalid_predictions(
                 f"{entry['reason']}.",
                 flush=True,
             )
+        except NoNewParticipant as exc:
+            screened.append({"model": name, "missing": [], "reason": exc.reason})
+            print(
+                f"  [screen] EIG: model {name!r} excluded from this design: "
+                f"{exc.reason}.",
+                flush=True,
+            )
     return draws, screened
 
 
@@ -240,9 +387,11 @@ def _posterior_p_left_draws(
     ``src.models.mcmc_defaults`` unless overridden; target_accept is the
     model's own declared value, else DESIGN_TWIN_TARGET_ACCEPT) and predicts
     p_left draws for the stimulus pool, thinned to ``max_draws`` posterior
-    samples. Returns the draws of every model whose p_left is defined on the
-    whole pool, and the ``screened_out.json`` records of the others
-    (``_screen_invalid_predictions``).
+    samples; a model with a participant effect is predicted as new
+    participants and averaged (``_new_participant_draws``; one that cannot be
+    is screened out on record). Returns the draws of every model whose
+    p_left is defined on the whole pool, and the ``screened_out.json`` records
+    of the others (``_screen_invalid_predictions``).
     """
     from src.models.mcmc_defaults import (  # type: ignore
         DESIGN_TWIN_CHAINS,
@@ -250,7 +399,7 @@ def _posterior_p_left_draws(
         DESIGN_TWIN_TARGET_ACCEPT,
         DESIGN_TWIN_TUNE,
     )
-    from src.models.data_binding import make_stim_data  # type: ignore
+    from src.models.data_binding import MissingStimulusColumns, make_stim_data  # type: ignore
     from src.models.pymc_inference import fit_model, model_sampler_settings  # type: ignore
 
     def posterior_draws(name: str) -> Any:
@@ -266,7 +415,15 @@ def _posterior_p_left_draws(
                 "target_accept", DESIGN_TWIN_TARGET_ACCEPT
             ),
         )
-        stim_data = make_stim_data(fitted.model, rows)
+        try:
+            stim_data = make_stim_data(fitted.model, rows)
+        except MissingStimulusColumns as e:
+            new_ids = _new_participant_ids(e, responses_csv)
+            if not new_ids:
+                raise
+            return _new_participant_draws(
+                name, fitted, rows, new_ids, seed=seed, max_draws=max_draws
+            )
         return fitted.predict_p_left_draws(stim_data, seed=seed, max_draws=max_draws)
 
     return _screen_invalid_predictions(
@@ -478,7 +635,11 @@ def design_exhaustive(
     if n_select > 0:
         model_names = _load_model_names(models_dir)
         model_weights = _load_model_weights(registry_path)
-        model_names, screened_out = _screen_usable_models(model_names, models_dir, rows)
+        # After data, a model with a participant effect is predicted as the
+        # training participants (_screen_usable_models); before, it cannot be.
+        model_names, screened_out = _screen_usable_models(
+            model_names, models_dir, rows, responses_csv=responses_csv
+        )
         if model_weights and not any(
             model_weights.get(n, 0.0) > 0 for n in model_names
         ):

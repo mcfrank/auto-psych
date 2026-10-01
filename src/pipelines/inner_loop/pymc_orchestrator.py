@@ -667,13 +667,55 @@ def run_pymc_inner_loop(
             f"This is a systemic failure, not a transient hiccup."
         )
 
-    # Pruning happens once, at the end of the experiment (user decision
-    # 2026-09-26): it used to run after every round against the max of a
-    # growing zoo. Then the live set is capped. Both apply to every model,
-    # starting models included (user decision 2026-09-28). Neither can
-    # change the best trusted model or empty the set: pruning measures every
-    # margin against the best trusted model, and the cap retires untrusted
-    # fits first, then from the bottom, keeping at least one model.
+    result = end_experiment(
+        results_dir,
+        models_dir,
+        responses_path,
+        history=history,
+        posterior=posterior,
+        comparison=comparison,
+        ledger=ledger,
+        ledger_context=ledger_context,
+        cache_dir=cache_dir,
+        fit_kwargs=fit_kwargs,
+        prune_dse_multiplier=prune_dse_multiplier,
+        complexity_prior_const=complexity_prior_const,
+    )
+    result["history"] = history
+    result["history_path"] = str(results_dir / "history.json")
+    result["live_models"] = _manifest_names(models_dir)
+    result["ledger_path"] = str(ledger.path)
+    return result
+
+
+def end_experiment(
+    results_dir: Path,
+    models_dir: Path,
+    responses_path: Path,
+    *,
+    history: List[Dict[str, Any]],
+    posterior: Dict[str, Any],
+    comparison: Dict[str, Dict[str, Any]],
+    ledger: HypothesisLedger,
+    ledger_context: str,
+    cache_dir: Optional[Path],
+    fit_kwargs: Optional[Dict[str, Any]],
+    prune_dse_multiplier: float,
+    complexity_prior_const: float,
+) -> Dict[str, Any]:
+    """The end of an experiment's loop: prune, cap the live set, export.
+
+    Pruning happens once, at the end of the experiment (user decision
+    2026-09-26): it used to run after every round against the max of a
+    growing zoo. Then the live set is capped. Both apply to every model,
+    starting models included (user decision 2026-09-28). Neither can change
+    the best trusted model or empty the set: pruning measures every margin
+    against the best trusted model, and the cap retires untrusted fits first,
+    then from the bottom, keeping at least one model. ``posterior`` and
+    ``comparison`` are the last round's scoring, rescored here when a model
+    retires. The re-prune of a finished experiment
+    (``src.pipelines.outer_loop.reprune``) runs this same step.
+    """
     end_context = f"{ledger_context} end of experiment".strip()
     retired = _prune_losers(
         models_dir,
@@ -698,10 +740,4 @@ def run_pymc_inner_loop(
         )
         comparison = _compare(responses_path, models_dir, cache_dir, fit_kwargs)
         _record_end_of_experiment_retirements(history, results_dir, retired)
-
-    result = _export(results_dir, models_dir, posterior, comparison)
-    result["history"] = history
-    result["history_path"] = str(results_dir / "history.json")
-    result["live_models"] = _manifest_names(models_dir)
-    result["ledger_path"] = str(ledger.path)
-    return result
+    return _export(results_dir, models_dir, posterior, comparison)

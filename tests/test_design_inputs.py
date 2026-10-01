@@ -119,7 +119,7 @@ def test_a_saturated_selection_is_filled_by_single_response_eig(tmp_path, monkey
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
     monkeypatch.setattr(
-        eig_mod, "_screen_usable_models", lambda names, d, rows: (names, [])
+        eig_mod, "_screen_usable_models", lambda names, d, rows, **k: (names, [])
     )
 
     stimuli = eig_mod.design_exhaustive(
@@ -160,7 +160,7 @@ def test_the_design_search_settings_reach_both_selections(tmp_path, monkeypatch)
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
     monkeypatch.setattr(
-        eig_mod, "_screen_usable_models", lambda names, d, rows: (names, [])
+        eig_mod, "_screen_usable_models", lambda names, d, rows, **k: (names, [])
     )
 
     eig_mod.design_exhaustive(
@@ -204,7 +204,7 @@ def test_the_design_searches_lazily_in_float32_by_default(tmp_path, monkeypatch)
     )
     monkeypatch.setattr(eig_mod, "_load_model_names", lambda d: ["m1", "m2"])
     monkeypatch.setattr(
-        eig_mod, "_screen_usable_models", lambda names, d, rows: (names, [])
+        eig_mod, "_screen_usable_models", lambda names, d, rows, **k: (names, [])
     )
 
     eig_mod.design_exhaustive(

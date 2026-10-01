@@ -154,6 +154,21 @@ included) at once from the full list of rows, for a model whose data do not
 fit one value per container per trial — for example a table of distinct
 sequences plus per-trial indices into it. Use one hook, not both.
 
+### Participant effects (if your hypothesis has person-specific parameters)
+
+The responses CSV's `participant_id` is an integer that keeps counting across
+the run's experiments, so each experiment adds larger ids. A model with
+person-specific parameters binds it as
+`participant_id = pm.Data("participant_id", np.zeros(1, dtype="int64"))` and
+indexes its per-person parameters with it directly: give those parameters a
+population distribution (e.g. `mu + sigma * z` with `z` of `shape=400`), size
+them well beyond the participants so far (`shape=400`), and never renumber
+participants inside a hook. The next experiment is designed for **new**
+participants: the design predicts your model with the slots no participant's
+data have reached, which are draws from your population distribution. A model
+without spare slots, or one whose hook renumbers participants, cannot predict
+a new participant and is left out of the design.
+
 ### Numerical safety (required)
 
 Your model must evaluate to a **finite** log-probability — a model whose `p_left`

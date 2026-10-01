@@ -244,9 +244,31 @@ def _observed_via_hook(model: Any, rows: List[Dict[str, Any]]) -> Dict[str, np.n
 
 # Columns a *response* row carries but a bare stimulus row never does. A model
 # that binds only these beyond the features is legitimately unevaluable on a
-# stimulus (a participant-level random effect, say) and may be screened out of
-# a design; anything else missing means the rows were built wrong.
+# bare stimulus: one with a participant-level random effect is predicted as
+# participants and averaged where it can be (new participants in a design after
+# data, eig._new_participant_draws; the training participants in the novelty
+# gate), and screened out of a design before any data; anything else missing
+# means the rows were built wrong.
 NON_STIMULUS_COLUMNS = frozenset({"participant_id", "trial_index"})
+
+
+def participant_ids_in(responses_path: Path) -> Optional[List[int]]:
+    """Distinct participant ids in a responses CSV, sorted; ``None`` without
+    the column (or without rows)."""
+    with Path(responses_path).open(encoding="utf-8", newline="") as f:
+        reader = csv.DictReader(f)
+        if "participant_id" not in (reader.fieldnames or []):
+            return None
+        ids = sorted({int(row["participant_id"]) for row in reader})
+    return ids or None
+
+
+def as_participant(
+    rows: Sequence[Mapping[str, Any]], participant_id: int
+) -> List[Dict[str, Any]]:
+    """``rows`` as answered by ``participant_id``: how a model with a
+    participant effect is predicted on bare stimulus rows."""
+    return [{**row, "participant_id": participant_id} for row in rows]
 
 
 class MissingStimulusColumns(ValueError):

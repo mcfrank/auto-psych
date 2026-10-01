@@ -281,7 +281,15 @@ target — see **Slot roles**) → admit sequentially.
   margin is 0, and the cap retires it last), so the set is never emptied. There is no
   stacking-weight floor (stacking weights are ensemble coefficients, not
   plausibility). A pruned mechanism may come back with a substantive change:
-  the ledger forbids only unchanged copies and near-duplicates.
+  the ledger forbids only unchanged copies and near-duplicates. The step
+  (prune, cap, export) is `pymc_orchestrator.end_experiment`; nothing before it
+  depends on the multiplier, so `src/pipelines/outer_loop/reprune.py` redoes it
+  for a finished experiment at another one (from the pruned files and cached
+  fits, no MCMC; refused once the next experiment's directory exists). The
+  recovery sweep prunes at 2; the October 2026 live series at 4
+  (`full_run_sr-oct26.yaml`, user decision 2026-09-30): at 2 its run 1's
+  experiment 1 kept one model, leaving the next design nothing to
+  discriminate, and that experiment was re-pruned at 4.
 - **Ledger** (`src/pipelines/inner_loop/hypothesis_ledger.py`):
   `model_loop/attempted_hypotheses.jsonl` records every candidate slot
   (admitted / rejected, with the reason) and every prune (with the margin),
@@ -347,9 +355,22 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   project's `task_description.md`.
 
 - **Screening a model out of a design is recorded.**
+  A design after data (experiments ≥ 2) predicts a model with a participant
+  effect (it binds `participant_id`) as `DESIGN_NEW_PARTICIPANTS` (40) new
+  participants — ids past every training id, whose slots no data reached, so
+  draws from the model's own population distribution — and averages per draw
+  (`eig._new_participant_draws`): the person-level parameters marginalized, the
+  model's prediction for a new person (user decision 2026-09-30). A model
+  without spare slots or whose hook renumbers participants is screened out on
+  record (`NoNewParticipant`). Until 2026-09-30 every such model was omitted,
+  and with every leading model per-person on real data the October 2026 live
+  run's experiment-2 design had no model left
+  (`tests/test_design_person_level_models.py`). How every stage treats
+  person-level models, and the plans to make it uniform (the prior design, the
+  novelty gate and evaluation, a new-subject ELPD): `docs/person_level_models.md`.
   `eig._screen_usable_models` omits a model whose only unbindable columns are
-  response-row bookkeeping (`NON_STIMULUS_COLUMNS`: `participant_id`,
-  `trial_index`) — a participant-level random effect, say — and also one that
+  response-row bookkeeping (`NON_STIMULUS_COLUMNS`: `participant_id` before any
+  data, `trial_index` always), and also one that
   fails to bind any design-pool row for a reason of its own (bound to every
   row, not one probe row: a hook that breaks on a length-2 pair used to crash
   the design; recorded with the error and the failing pair lengths). A code

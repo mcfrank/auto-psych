@@ -49,3 +49,6 @@ modeling:
   chains: 4
   target_accept: 0.8               # near misses are refit at 0.95
   agent_timeout_sec: 1800          # per critique/candidate agent
+  prune_dse_multiplier: 4          # the sweep uses 2; at 2 run 1's experiment 1 kept one model
+                                   # and gave the next design nothing to discriminate (user
+                                   # decision 2026-09-30; run 1's experiment 1 was re-pruned at 4)

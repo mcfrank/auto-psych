@@ -395,9 +395,26 @@ only the first row (`HH` vs `HT`) was probed, so a carried model whose
 features failed on some other length 2–3 pair crashed the design on every
 retry. Outcomes:
 
+- `MissingStimulusColumns` where the only missing column is `participant_id`,
+  in a design after data (experiments ≥ 2): the model is **kept**. It is bound
+  as a new participant (the first of `DESIGN_NEW_PARTICIPANTS` = 40 ids past
+  every id in the responses), and dropped and recorded if its hook does not
+  pass the id through unchanged (`_require_own_slot`). Its posterior draws on
+  the pool are those of the 40 new ids averaged draw by draw
+  (`_new_participant_draws`): slots no data reached are draws from the
+  model's population distribution, so this marginalizes the person-level
+  parameters. New participants answer one pair independently, so each pair's
+  Binomial(n, p) is exact under the model; one person's answers to different
+  pairs are correlated, which the joint EIG ignores. A model whose vectors stop
+  before the new ids (an `IndexError` for them while a training id predicts)
+  is screened out with the reason (`NoNewParticipant`, `screened_out.json`).
+  Until 2026-09-30 such a model was dropped, and in the October 2026 live run,
+  where every leading model had a participant effect, the experiment-2 design
+  had none left. See `docs/person_level_models.md`.
 - `MissingStimulusColumns` where the missing columns are only
-  `participant_id`/`trial_index` (`NON_STIMULUS_COLUMNS`, data_binding.py:244):
-  the model is **dropped** from the design and recorded.
+  `participant_id`/`trial_index` (`NON_STIMULUS_COLUMNS`, data_binding.py:244)
+  otherwise (before any data, or `trial_index`): the model is **dropped** from
+  the design and recorded.
 - `MissingStimulusColumns` naming any other column: **raise**.
 - An infrastructure error (`INFRASTRUCTURE_ERRORS`: `OSError`,
   `MemoryError`, …): **raise**.
@@ -1243,6 +1260,19 @@ all, always stays.
 There is no stacking-weight criterion. Untrusted models are never pruned but
 are the first retired by the cap. Neither step can remove the best trusted
 model.
+
+Both steps and the export are `end_experiment` (pymc_orchestrator.py). The
+multiplier (2.0 here; `--prune-dse-multiplier`) is used nowhere else, so
+`python -m src.pipelines.outer_loop.reprune` redoes the step for a finished
+experiment at another multiplier: it puts back the models the step retired
+(`models/pruned/`) and removes its ledger lines and history note, reruns
+`end_experiment` from the cached fits (it refuses if any fit is missing; it
+samples nothing), re-exports the live set and finishes the stage again, and
+records the change in `model_loop/repruned.json`. At the same multiplier it
+leaves the experiment as it was. It refuses once the next experiment's
+directory exists. The October 2026 live series prunes at 4: at 2, run 1's
+experiment 1 kept a single model, and a design over one model has no model
+identity to learn about (its joint EIG is zero for every pair).
 
 ### 5.12 `history.json`
 
