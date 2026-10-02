@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Sequence
 import urllib.parse
 
 from .manifest import DeploymentManifest
@@ -44,10 +44,21 @@ DEFAULT_MIN_APPROVAL_RATE = 98
 UNITED_STATES_RESIDENCE_CHOICE_ID = "1"
 ENGLISH_FLUENT_LANGUAGE_CHOICE_ID = "19"
 
+# Every study the pipeline creates is named ``auto-psych <deployment id>``
+# internally; that prefix is how a later study finds the earlier ones.
+STUDY_INTERNAL_NAME_PREFIX = "auto-psych "
+# Prolific's "Exclude participants from other studies" filter: a select over
+# study IDs, evaluated when the study is published, so it excludes everyone
+# who had taken part in a listed study by then (approved, returned, timed out
+# or awaiting review). The listed studies must be in the new study's Prolific
+# project; the pipeline creates every study in the account's default one.
+EARLIER_STUDIES_BLOCKLIST_FILTER = "previous_studies_blocklist"
+
 
 def verify_eligibility_choice_ids(filters: list[dict[str, Any]]) -> None:
     """Assert Prolific's choice IDs still mean what we hardcode in
-    ``build_eligibility_filters``.
+    ``build_eligibility_filters``, and that the filter excluding earlier
+    studies' participants (``EARLIER_STUDIES_BLOCKLIST_FILTER``) exists.
 
     The IDs are stable in practice, but a silent remap would make us recruit the
     wrong pool, so before a live run we check them against Prolific's current
@@ -77,6 +88,14 @@ def verify_eligibility_choice_ids(filters: list[dict[str, Any]]) -> None:
                 f"{actual_label!r}, expected {expected_label!r}. The hardcoded "
                 "eligibility IDs are stale — re-check GET /filters/ before recruiting."
             )
+    blocklist = by_id.get(EARLIER_STUDIES_BLOCKLIST_FILTER)
+    if blocklist is None or blocklist.get("data_type", "StudyID") != "StudyID":
+        raise ValueError(
+            f"Prolific filter {EARLIER_STUDIES_BLOCKLIST_FILTER!r} (exclude the "
+            "participants of earlier studies, by study ID) is missing from GET "
+            f"/filters/ or no longer takes study IDs ({blocklist!r}); a live study "
+            "would recruit the earlier studies' participants again."
+        )
 
 
 def build_eligibility_filters(cfg: dict[str, Any]) -> list[dict[str, Any]]:
@@ -190,6 +209,39 @@ def load_recruitment_config(project_id: str, n_participants: int) -> dict[str, A
     return cfg
 
 
+def excludes_earlier_participants(cfg: dict[str, Any]) -> bool:
+    """The ``exclude_earlier_participants`` setting (default true): a live
+    study excludes everyone who took part in an earlier study of the
+    pipeline. Set it to false only to recruit the same people on purpose."""
+    value = cfg.get("exclude_earlier_participants", True)
+    if not isinstance(value, bool):
+        raise ValueError(
+            f"exclude_earlier_participants must be true or false, got {value!r}."
+        )
+    return value
+
+
+def earlier_pipeline_study_ids() -> list[str]:
+    """IDs of the account's earlier pipeline studies that people could take
+    part in: named ``STUDY_INTERNAL_NAME_PREFIX``, and published (a draft,
+    ``UNPUBLISHED``, never had participants). Raises when Prolific cannot
+    list them, so no study is created without the exclusion."""
+    from src.runtime.prolific import list_studies
+
+    studies, err = list_studies()
+    if err:
+        raise RuntimeError(
+            "Could not list the account's Prolific studies to exclude earlier "
+            f"participants; no study was created: {err}"
+        )
+    return [
+        str(study["id"])
+        for study in studies
+        if str(study.get("internal_name") or "").startswith(STUDY_INTERNAL_NAME_PREFIX)
+        and study.get("status") != "UNPUBLISHED"
+    ]
+
+
 def build_prolific_plan(
     *,
     project_id: str,
@@ -197,6 +249,7 @@ def build_prolific_plan(
     n_participants: int,
     mode: str,
     test_participant_id: str | None = None,
+    excluded_study_ids: Sequence[str] = (),
 ) -> ProlificStudyPlan:
     if not manifest.experiment_url:
         raise ValueError("Prolific study creation requires an experiment_url")
@@ -216,7 +269,7 @@ def build_prolific_plan(
         )
     payload: dict[str, Any] = {
         "name": cfg.get("name") or f"Auto-psych {manifest.experiment_id}",
-        "internal_name": f"auto-psych {manifest.deployment_id}",
+        "internal_name": f"{STUDY_INTERNAL_NAME_PREFIX}{manifest.deployment_id}",
         "description": cfg.get("description")
         or "Psychology experiment (auto-psych pipeline).",
         "external_study_url": external_study_url(manifest.experiment_url),
@@ -250,6 +303,13 @@ def build_prolific_plan(
         payload["total_available_places"] = 1
     else:
         payload["filters"] = build_eligibility_filters(cfg)
+        if excluded_study_ids:
+            payload["filters"].append(
+                {
+                    "filter_id": EARLIER_STUDIES_BLOCKLIST_FILTER,
+                    "selected_values": list(excluded_study_ids),
+                }
+            )
     return ProlificStudyPlan(
         payload=payload,
         completion_code=completion_code,
@@ -280,19 +340,32 @@ def create_draft_study(
     """Create a DRAFT Prolific study. It is never published here — the caller
     publishes only for live mode. Test mode creates the same draft (no test
     participant) so you can preview it in Prolific with a made-up PROLIFIC_PID.
+
+    A live study excludes the participants of every earlier pipeline study in
+    the account (``earlier_pipeline_study_ids``), unless the settings say
+    ``exclude_earlier_participants: false``. The IDs are read now, just before
+    the study is created and published, so they include the studies of
+    parallel runs created so far.
     """
     from src.runtime.prolific import create_study
 
+    exclude = excludes_earlier_participants(
+        load_recruitment_config(project_id, n_participants)
+    )
+    excluded: list[str] = []
+    # Live studies recruit paid participants gated by hardcoded choice IDs, so
+    # confirm those IDs still mean what we think before any study is created.
+    if mode == "live":
+        verify_live_eligibility()
+        if exclude:
+            excluded = earlier_pipeline_study_ids()
     plan = build_prolific_plan(
         project_id=project_id,
         manifest=manifest,
         n_participants=n_participants,
         mode=mode,
+        excluded_study_ids=excluded,
     )
-    # Live studies recruit paid participants gated by hardcoded choice IDs, so
-    # confirm those IDs still mean what we think before any study is created.
-    if mode == "live":
-        verify_live_eligibility()
     study_id, err = create_study(plan.payload)
     if err:
         raise RuntimeError(f"Failed to create Prolific study: {err}")

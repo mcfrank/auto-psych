@@ -155,3 +155,39 @@ def test_programming_errors_propagate(monkeypatch):
     monkeypatch.setattr(prol.requests, "get", boom)
     with pytest.raises(AttributeError):
         prol.get_submission_counts("study1")
+
+
+def test_list_studies_follows_pagination_and_dedupes(monkeypatch):
+    page1 = {
+        "results": [{"id": "a", "internal_name": "auto-psych d1"}],
+        "_links": {"next": {"href": "https://api.prolific.com/page2"}},
+    }
+    page2 = {
+        "results": [{"id": "b", "internal_name": "auto-psych d2"}],
+        # Prolific's degenerate last-page link re-serves the same rows.
+        "_links": {"next": {"href": "https://api.prolific.com/page2?limit=0"}},
+    }
+    pages = {
+        "https://api.prolific.com/api/v1/studies/": page1,
+        "https://api.prolific.com/page2": page2,
+        "https://api.prolific.com/page2?limit=0": page2,
+    }
+    monkeypatch.setattr(prol, "_headers", lambda: {"Authorization": "Token x"})
+    monkeypatch.setattr(
+        prol.requests, "get", lambda url, **kw: _FakeResponse(200, pages[url])
+    )
+
+    studies, err = prol.list_studies()
+    assert err is None
+    assert [s["id"] for s in studies] == ["a", "b"]
+
+
+def test_list_studies_returns_error_on_non_200(monkeypatch):
+    monkeypatch.setattr(prol, "_headers", lambda: {"Authorization": "Token x"})
+    monkeypatch.setattr(
+        prol.requests, "get", lambda url, **kw: _FakeResponse(500, "down")
+    )
+
+    studies, err = prol.list_studies()
+    assert studies is None
+    assert "500" in err

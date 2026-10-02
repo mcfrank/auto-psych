@@ -30,6 +30,7 @@ from src.pipelines.outer_loop.deployment.prolific import (  # noqa: E402
     DEFAULT_MIN_APPROVAL_RATE,
     build_eligibility_filters,
     compute_reward_cents,
+    excludes_earlier_participants,
 )
 
 PROLIFIC_SERVICE_FEE = 0.33  # ~33%; verify the current rate in your Prolific account
@@ -149,6 +150,7 @@ def main() -> None:
     # before the Slurm job runs and before any study is created.
     try:
         build_eligibility_filters(eff)
+        exclude_earlier = excludes_earlier_participants(eff)
     except ValueError as e:
         die(str(e))
     min_approval = int(eff.get("min_approval_rate", DEFAULT_MIN_APPROVAL_RATE))
@@ -177,6 +179,15 @@ def main() -> None:
     )
     print(
         f"  eligibility       : US residents, English-fluent, approval >= {min_approval}%",
+        file=w,
+    )
+    print(
+        "  earlier people    : "
+        + (
+            "excluded (anyone in an earlier published auto-psych study)"
+            if exclude_earlier
+            else "NOT excluded (exclude_earlier_participants: false)"
+        ),
         file=w,
     )
     print(

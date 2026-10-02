@@ -34,7 +34,11 @@ never with a plain relaunch.
 | `The functions deploy exited 0 but firebase-tools could not read functions/index.js …` | the deploy ran without `_env.sh`'s `node` wrapper first on `PATH` | no study was created: run from a shell or job that sourced `_env.sh` and relaunch |
 | `The deployed /results answered a read without the token with 400 …` / `… with the token with 403 …` | the functions were not replaced / they hold a different `AUTO_PSYCH_RESULTS_TOKEN` | no study was created: redeploy, or use the token the functions were deployed with |
 | `Failed to create Prolific study: …` | often insufficient funds | the page is live, no study exists: fix, relaunch |
+| `Could not list the account's Prolific studies to exclude earlier participants; no study was created: …` | Prolific API error while reading the earlier studies | the page is live, no study exists: relaunch once Prolific answers |
+| `Failed to create Prolific study: …` naming `previous_studies_blocklist` | an earlier pipeline study is in another Prolific project (the filter takes only studies of the new study's project) | the page is live, no study exists: move that study into the account's default project in the dashboard, relaunch |
+| `Prolific filter 'previous_studies_blocklist' … is missing from GET /filters/ …` | Prolific renamed or changed the filter that excludes earlier participants | nothing was deployed: find it in `GET /filters/` and update `EARLIER_STUDIES_BLOCKLIST_FILTER` (`deployment/prolific.py`) |
 | `Failed to publish …` | often insufficient funds | a draft is recorded: check it in Prolific; recover with `RESUME_AGENTS` or `PUBLISH_ANOTHER_PROLIFIC_STUDY=1` after deleting it |
+| study `AWAITING REVIEW` with `AUTOMATICALLY_APPROVE`; some participants unpaid | Prolific holds back submissions faster than its threshold (`time_taken_under_auto_approval_threshold`; under about 3.5 of 7 minutes) | approve or reject them in the dashboard (runbook § 10); the pipeline never does |
 | log stays at `Prolific poll: … completed=k target=N` | slow recruitment | normal for up to 3 h, then the study is paused |
 | `PAUSED Prolific study <id>: collection gave up at k/N …` | 3 hours passed | expected; the partial data are modelled |
 | `Could not pause Prolific study …` (or it `… is in state '…'`) | API error or unusual state | **pause it in the dashboard now**, then recover |

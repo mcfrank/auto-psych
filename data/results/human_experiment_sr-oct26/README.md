@@ -79,7 +79,13 @@ under their **pre-rewrite** hashes (`main`'s history was rewritten on
 5. **Two participants took part in both experiment 1 and experiment 2** (the
    same Prolific account). Collection recognised them and kept their
    experiment-1 ids, so the pooled data treat them as the same two people,
-   but they saw the task twice. Nothing excludes earlier participants yet.
+   but they saw the task twice. From runs 2 and 3 on, every live study
+   excludes the participants of every earlier study (below).
+6. Prolific held back 31 of run 1's submissions (13, 15 and 3 in
+   experiments 1–3) as `AWAITING REVIEW` despite automatic approval: every
+   one finished in under about 3.5 minutes of the 7 estimated, Prolific's
+   threshold for approving on its own. Their data are in `responses.csv`
+   like everyone's; they are paid once reviewed in the Prolific dashboard.
 
 The one-off scripts that did these recoveries are in `run1_recovery/`
 (Sherlock paths and job ids as they were; study IDs redacted). The general
@@ -87,27 +93,33 @@ procedure is the runbook's § 9 and the checklist's step 9.
 
 ## Runs 2 and 3: before launching
 
-They run on the current `main` (everything above, with 128 GB). From a clone
-made after 2026-10-01 (or re-cloned; never push a pre-rewrite clone's
-branches):
+They run on the current `main` (everything above, with 128 GB, and the
+exclusion of earlier participants). From a clone made after 2026-10-01 (or
+re-cloned; never push a pre-rewrite clone's branches):
 
 ```bash
 cd $REPO && git pull
-CONFIG=$REPO/full_run_sr-oct26.yaml RUNS="2 3" AUTO_PSYCH_COLLECTION_OWNER=<you> \
+CONFIG=$REPO/full_run_sr-oct26.yaml RUNS=2 AUTO_PSYCH_COLLECTION_OWNER=<you> \
   bash scripts/outer_loop_live/start_full_run.sh
+# once run 2's experiment-1 study is full (about an hour later), the same with RUNS=3
 ```
+
+Every live study now excludes everyone who took part in an earlier published
+study of the pipeline in the Prolific account (run 1's three, the pilot's,
+and the other run's so far), read from the account just before the study is
+created. Prolific applies that list when the study is published, so two
+studies published together cannot exclude each other's participants:
+launching both runs at once (`RUNS="2 3"`) would let the same people take
+both runs' first experiments, which is why run 3 starts after run 2's first
+study has filled. Later experiments publish at times set by the model loops;
+someone taking one run's study at the moment the other run's is published is
+still not excluded.
 
 Never include run 1 in `RUNS`: relaunching an index deletes its results.
 After each experiment, sync the results here (checklist step 11, with
 `RUNS="run1 run2 run3"`).
 
 Open decisions:
-- **Exclude earlier participants.** Runs 2 and 3 recruit 240 more people from
-  the same pool as run 1's 118. Prolific can exclude participants of earlier
-  studies when a study is created, but the pipeline does not do it yet (it
-  would be a filter in `deployment/prolific.py`'s study payload), and a run
-  would need to know the earlier studies. Decide whether runs 2 and 3 should
-  exclude run 1's participants (and each other's).
 - **Generalization to new people.** The loop selects and prunes by ELPD-LOO
   that leaves out one *trial*, which rewards fitting known people. A
   new-subject ELPD (each participant scored under a fresh draw from the

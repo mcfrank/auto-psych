@@ -107,6 +107,7 @@ Keys (read by `_pilot_config.py`):
 | `prolific.reward_per_hour` (cents) or `reward` (cents flat), `estimated_completion_time` (min) | pay |
 | `prolific.name`, `description`, `completion_code`, `min_approval_rate` | study settings; use a distinct completion code per series |
 | `prolific.completion_code_action` | `AUTOMATICALLY_APPROVE` (default) or `MANUALLY_REVIEW` |
+| `prolific.exclude_earlier_participants` | `true` (default): a live study excludes everyone who took part in an earlier published study of the pipeline in the Prolific account (every study it named `auto-psych …`, read from the account just before the study is created; Prolific applies the list when the study is published, so people still taking a parallel run's study at that moment are not excluded). `false` only to recruit the same people on purpose |
 | `modeling.inner_loop_iterations`, `inner_loop_candidates`, `draws`, `tune`, `chains` | rounds, proposals per round, MCMC (the job has 16 CPUs and 128 GB: four 4-chain fits at once; 64 GB ran out in experiment 3's model loop, where the loop holds about 1.5 GB per model) |
 | `modeling.target_accept`, `agent_timeout_sec` | NUTS target acceptance (unset: the model's own, else 0.99) and seconds per critique/proposal agent (unset: 900); `full_run.yaml` sets 0.8 and 1800, as the simulations |
 | `modeling.novelty_rmse_threshold`, `prune_dse_multiplier`, `candidate_parallelism`, `hints_file` | optional; defaults 0.002, 2.0, all at once, the built-in eleven angles |
@@ -116,7 +117,12 @@ plus an estimated 33% Prolific fee (hard-coded; check your account). At
 $12/h and 7 minutes: $1.40 a person; a pilot (2 × 10) ≈ $37; a full or hero
 run (3 × 40) ≈ $223 per run, ≈ $670 for K = 3. Language-model costs come on
 top and are not estimated; each experiment records its spend in
-`token_usage_summary.json`.
+`token_usage_summary.json`. Prolific takes each study's whole cost (pay and
+fee) from the workspace's **available** balance when it is published, and a
+publish it cannot cover fails, so before a launch check that the available
+balance (Prolific dashboard, or `GET /workspaces/<id>/balance/`) covers every
+study the launch will publish; money held for submissions awaiting review is
+not available.
 
 **Time.** Per experiment: a few minutes of design, up to three 15-minute
 attempts at the page, the deploy, **up to 3 hours of recruiting**, then the
@@ -137,6 +143,7 @@ experiments come to roughly a day or a day and a half; `full_run.yaml`'s
 | results token (and, for `live`, Prolific's eligibility settings) checked first; the page and functions are deployed, the page checked live and `/results` checked to refuse a read without the token (403) and accept one with it (200) **before** the draft study is created, recorded and (live only) published | recruiting onto a broken or unprotected page; functions that were never replaced; a failed deploy leaving a study behind |
 | the deploy records the commit the code came from (from git, or from the record the launcher writes into the run copy) and refuses without one | a study that cannot be traced to its code |
 | relaunch guard: an experiment whose `deployment/deployment_manifest.json` records a live study refuses `2_design`, `3_implement` and the deploy (`LiveStudyAlreadyRecorded`) | a second paid study for the same experiment |
+| a live study excludes the participants of every earlier published pipeline study in the account; the eligibility check requires Prolific's `previous_studies_blocklist` filter, and a study is never created when the account's studies cannot be listed | the same person taking the task twice (two did in the October 2026 series' run 1) |
 | 3-hour give-up pauses an `ACTIVE` study | recruiting people whose data no experiment uses |
 | raw download outside the repository (`run.py` refuses otherwise) | agents reading Prolific IDs |
 | collection stops on an empty download or all-identical answers | modelling broken data |
@@ -490,8 +497,14 @@ PY
 
 Expect as many participants as `prolific.participants` (fewer if the 3-hour
 wait ended short; the study was then paused), 64 trials each, and a left
-rate near 0.5 overall. Compare the count with Prolific's approved
-submissions; `raw_collected/experiment<N>_responses.csv` has the same rows
+rate near 0.5 overall. Compare the count with Prolific's submissions.
+Even with `AUTOMATICALLY_APPROVE`, Prolific holds back a submission faster
+than its threshold (in the October 2026 series, everyone under about 3.5
+minutes of the 7 estimated: 31 of run 1's 120) as `AWAITING REVIEW`, and
+the participant is not paid until you approve or reject it in the dashboard;
+the submission's `time_taken_under_auto_approval_threshold` says which.
+Review those (their data are in `responses.csv` like everyone's).
+`raw_collected/experiment<N>_responses.csv` has the same rows
 with Prolific IDs (look at it only on Sherlock). A participant answering one
 side on every trial is the failure the live dashboard (§ 7) is there to
 catch early. Then read `experiment<N>/model_loop/report.md` for the model

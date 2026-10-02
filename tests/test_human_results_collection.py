@@ -30,8 +30,12 @@ from src.pipelines.outer_loop.results_collection import (
 )
 
 PROJECT = "subjective_randomness"
-FAKE_PID = "REDACTED"  # 24-hex Prolific worker id
-FAKE_STUDY_ID = "6a385696055b5982b2ed47c7"  # 24-hex Prolific study id
+# Made up, in the 24-hex shape of Prolific's ids. A Prolific id begins with its
+# creation time (seconds since 1970, in hex), and these would date from 1970
+# and 2105, so neither can be anyone's. (The history rewrite of 2026-10-01
+# turned the earlier worker id here into "REDACTED", which broke these tests.)
+FAKE_PID = "0123456789abcdef01234567"  # 24-hex Prolific worker id
+FAKE_STUDY_ID = "fedcba9876543210fedcba98"  # 24-hex Prolific study id
 
 
 def _posterior_fixture() -> dict:

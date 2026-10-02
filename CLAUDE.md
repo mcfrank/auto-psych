@@ -570,6 +570,19 @@ in `model_posterior.json`. Model *files* flow separately via carry-forward.
   `src/runtime/prolific.py`; PAUSE is reversible, STOP is not) and raises if it
   cannot; the partial data are then modelled as before. A study that reached
   its target is left alone (its places are full).
+- **A live study excludes earlier participants.** `create_draft_study`
+  (`deployment/prolific.py`) lists the account's studies just before
+  creating one (`list_studies` in `src/runtime/prolific.py`) and adds
+  Prolific's `previous_studies_blocklist` filter over every published study
+  the pipeline named (`STUDY_INTERNAL_NAME_PREFIX`, `auto-psych `), parallel
+  runs' included; Prolific applies it at publish, so someone mid-way through
+  a parallel run's study is not yet excluded. The IDs are never written to a
+  config (the repository keeps no Prolific IDs). A failed listing creates no
+  study; the eligibility check requires the filter to exist;
+  `prolific.exclude_earlier_participants: false` recruits earlier people on
+  purpose. Until 2026-10-02 nothing excluded them (two people took experiments
+  1 and 2 of the October 2026 series' run 1;
+  `tests/test_exclude_earlier_participants.py`).
 - **One participant count.** `--n-participants` sets the study's places, the
   design's N and the collection target (`load_recruitment_config` in
   `deployment/prolific.py`, checked in `run.py` before any stage). The rendered

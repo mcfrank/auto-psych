@@ -38,6 +38,7 @@ def _live_filters_snapshot() -> list[dict]:
             "choices": {"0": "Rather not say", "19": "English"},
         },
         {"filter_id": "approval_rate", "type": "range"},
+        {"filter_id": "previous_studies_blocklist", "data_type": "StudyID"},
     ]
 
 
