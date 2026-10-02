@@ -178,6 +178,25 @@ committing in the checkout never disturbs them.
     Prolific IDs) to access-controlled long-term storage your IRB protocol
     allows (§ 10). `$SCRATCH` is purged after 90 days without modification.
 
+### Commit hashes recorded before the 2026-10-01 history rewrite
+
+`main`'s history was rewritten on 2026-10-01 to scrub raw Prolific IDs from
+`data/results/human_experiment/completion_times.csv`: every commit got a new
+hash and nothing else changed. Run copies made before then recorded the old
+hashes (`code_provenance.json`, and each deployment manifest's `git_commit`).
+For the October 2026 series' run 1:
+
+| recorded (old) | on `main` now | what |
+|---|---|---|
+| `326bf60` | `2ba041f` | Full run 0926: config (experiment 1's deploy) |
+| `e6c6759` | `f846b11` | the model loop's fit cache (experiment 1's model loop) |
+| `7135d6d` | `771e7eb` | the novelty gate's saved predictions |
+| `7db302b` | `a93563b` | the design over person-level models, re-prune, pruning at 4 (experiments 2–3) |
+
+A clone made before the rewrite still holds the old history and the raw IDs:
+re-clone it (or `git fetch` and `git reset --hard origin/main` on a clean
+tree), and never push its old branches.
+
 ### README template for the results directory
 
 ```markdown
