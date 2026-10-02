@@ -3,9 +3,13 @@
 #SBATCH --partition=normal
 #SBATCH --time=1-00:00:00
 #SBATCH --cpus-per-task=16        # as the recovery cells: four 4-chain fits at once
-#SBATCH --mem=64GB                # inner-loop MCMC over many models on pooled
-                                  # multi-experiment data is memory-heavy; 16GB
-                                  # OOM-killed exp3 model loops. Bump for headroom.
+#SBATCH --mem=128GB               # inner-loop MCMC over many models on pooled
+                                  # multi-experiment data is memory-heavy: the loop
+                                  # holds every loaded fit, ~1.5 GB a model at 7,680
+                                  # trials (3000 draws x 4 chains). 16GB, then 64GB
+                                  # (run 1 of the October 2026 live run, round 2 of
+                                  # experiment 3, 24 models: 67 GB peak), OOM-killed
+                                  # exp3 model loops.
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.out
 #

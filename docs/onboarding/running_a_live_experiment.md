@@ -107,7 +107,7 @@ Keys (read by `_pilot_config.py`):
 | `prolific.reward_per_hour` (cents) or `reward` (cents flat), `estimated_completion_time` (min) | pay |
 | `prolific.name`, `description`, `completion_code`, `min_approval_rate` | study settings; use a distinct completion code per series |
 | `prolific.completion_code_action` | `AUTOMATICALLY_APPROVE` (default) or `MANUALLY_REVIEW` |
-| `modeling.inner_loop_iterations`, `inner_loop_candidates`, `draws`, `tune`, `chains` | rounds, proposals per round, MCMC (the job has 16 CPUs and 64 GB: four 4-chain fits at once) |
+| `modeling.inner_loop_iterations`, `inner_loop_candidates`, `draws`, `tune`, `chains` | rounds, proposals per round, MCMC (the job has 16 CPUs and 128 GB: four 4-chain fits at once; 64 GB ran out in experiment 3's model loop, where the loop holds about 1.5 GB per model) |
 | `modeling.target_accept`, `agent_timeout_sec` | NUTS target acceptance (unset: the model's own, else 0.99) and seconds per critique/proposal agent (unset: 900); `full_run.yaml` sets 0.8 and 1800, as the simulations |
 | `modeling.novelty_rmse_threshold`, `prune_dse_multiplier`, `candidate_parallelism`, `hints_file` | optional; defaults 0.002, 2.0, all at once, the built-in eleven angles |
 
