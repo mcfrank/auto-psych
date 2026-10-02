@@ -1,0 +1,514 @@
+[
+  {
+    "sequence_a": "HHHHHT",
+    "sequence_b": "HHHTTT",
+    "eig": 0.059384,
+    "selection_rank": 1,
+    "joint_eig_bits": 0.65251,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTTH",
+    "sequence_b": "TTHTTTTT",
+    "eig": 0.027652,
+    "selection_rank": 2,
+    "joint_eig_bits": 0.836292,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "TTTHTTTT",
+    "sequence_b": "TTTTHHHH",
+    "eig": 0.009277,
+    "selection_rank": 3,
+    "joint_eig_bits": 0.976934,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTTHHH",
+    "sequence_b": "HTTTTTTT",
+    "eig": 0.023542,
+    "selection_rank": 4,
+    "joint_eig_bits": 1.101276,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHTTH",
+    "sequence_b": "HTTTTTTH",
+    "eig": 0.017848,
+    "selection_rank": 5,
+    "joint_eig_bits": 1.193873,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTHHH",
+    "sequence_b": "HHHTTHTT",
+    "eig": 0.003993,
+    "selection_rank": 6,
+    "joint_eig_bits": 1.254334,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTTHHH",
+    "sequence_b": "THHHHHHH",
+    "eig": 0.023542,
+    "selection_rank": 7,
+    "joint_eig_bits": 1.302803,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTTH",
+    "sequence_b": "TTTHTTTT",
+    "eig": 0.042534,
+    "selection_rank": 8,
+    "joint_eig_bits": 1.366945,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTTTT",
+    "sequence_b": "HHHTHHHH",
+    "eig": 0.009277,
+    "selection_rank": 9,
+    "joint_eig_bits": 1.420263,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHHH",
+    "sequence_b": "HHHHTTTT",
+    "eig": 0.001722,
+    "selection_rank": 10,
+    "joint_eig_bits": 1.473053,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "TTTHHTTT",
+    "sequence_b": "TTTTTHTH",
+    "eig": 0.005779,
+    "selection_rank": 11,
+    "joint_eig_bits": 1.529432,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHTT",
+    "sequence_b": "HTTTTTTH",
+    "eig": 0.001541,
+    "selection_rank": 12,
+    "joint_eig_bits": 1.571891,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTTTH",
+    "sequence_b": "HTTTTTTH",
+    "eig": 0.027997,
+    "selection_rank": 13,
+    "joint_eig_bits": 1.613157,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTTHHH",
+    "sequence_b": "TTTTTTTH",
+    "eig": 0.023542,
+    "selection_rank": 14,
+    "joint_eig_bits": 1.645278,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTHHH",
+    "sequence_b": "HHHHTTTT",
+    "eig": 0.009277,
+    "selection_rank": 15,
+    "joint_eig_bits": 1.683808,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTTHTH",
+    "sequence_b": "TTTHHTTT",
+    "eig": 0.001371,
+    "selection_rank": 16,
+    "joint_eig_bits": 1.722253,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "TTTHHTTT",
+    "sequence_b": "TTTTTTHT",
+    "eig": 0.042239,
+    "selection_rank": 17,
+    "joint_eig_bits": 1.753952,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHHH",
+    "sequence_b": "TTTTHHHH",
+    "eig": 0.001722,
+    "selection_rank": 18,
+    "joint_eig_bits": 1.784277,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "TTTHHTTT",
+    "sequence_b": "TTTTTTTH",
+    "eig": 0.023542,
+    "selection_rank": 19,
+    "joint_eig_bits": 1.807975,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTHHH",
+    "sequence_b": "TTTTHHHH",
+    "eig": 0.009277,
+    "selection_rank": 20,
+    "joint_eig_bits": 1.835223,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTTHHH",
+    "sequence_b": "HTHHHHHH",
+    "eig": 0.042239,
+    "selection_rank": 21,
+    "joint_eig_bits": 1.863096,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTHHH",
+    "sequence_b": "HHHTHTTT",
+    "eig": 0.001994,
+    "selection_rank": 22,
+    "joint_eig_bits": 1.88882,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTTHHH",
+    "sequence_b": "HTHTTTTT",
+    "eig": 0.005779,
+    "selection_rank": 23,
+    "joint_eig_bits": 1.910962,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHTT",
+    "sequence_b": "THHHHHHT",
+    "eig": 0.001541,
+    "selection_rank": 24,
+    "joint_eig_bits": 1.927922,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTHHHH",
+    "sequence_b": "TTTTHHHH",
+    "eig": 0.009277,
+    "selection_rank": 25,
+    "joint_eig_bits": 1.941943,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHHT",
+    "sequence_b": "HHHTTHHH",
+    "eig": 0.023542,
+    "selection_rank": 26,
+    "joint_eig_bits": 1.955313,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTTH",
+    "sequence_b": "THHHTTTT",
+    "eig": 0.027997,
+    "selection_rank": 27,
+    "joint_eig_bits": 1.96791,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTTTT",
+    "sequence_b": "TTTTTTTT",
+    "eig": 0.001722,
+    "selection_rank": 28,
+    "joint_eig_bits": 1.979079,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTTTTTT",
+    "sequence_b": "HTTTTTTH",
+    "eig": 0.001541,
+    "selection_rank": 29,
+    "joint_eig_bits": 1.991636,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTTH",
+    "sequence_b": "TTTTHHHT",
+    "eig": 0.027997,
+    "selection_rank": 30,
+    "joint_eig_bits": 2.007344,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTTTT",
+    "sequence_b": "TTTHTTTT",
+    "eig": 0.009277,
+    "selection_rank": 31,
+    "joint_eig_bits": 2.021219,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTTHHH",
+    "sequence_b": "TTTTTHTH",
+    "eig": 0.005779,
+    "selection_rank": 32,
+    "joint_eig_bits": 2.036673,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTHHH",
+    "sequence_b": "TTTHTHHH",
+    "eig": 0.001994,
+    "selection_rank": 33,
+    "joint_eig_bits": 2.05072,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHHT",
+    "sequence_b": "TTTHHTTT",
+    "eig": 0.023542,
+    "selection_rank": 34,
+    "joint_eig_bits": 2.064112,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTTTTTT",
+    "sequence_b": "THHHHHHT",
+    "eig": 0.001541,
+    "selection_rank": 35,
+    "joint_eig_bits": 2.079146,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHTH",
+    "sequence_b": "HHHHTTTT",
+    "eig": 0.015716,
+    "selection_rank": 36,
+    "joint_eig_bits": 2.09416,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTTH",
+    "sequence_b": "THTHHHHH",
+    "eig": 0.010302,
+    "selection_rank": 37,
+    "joint_eig_bits": 2.103337,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTTTT",
+    "sequence_b": "TTTTHTTT",
+    "eig": 0.009277,
+    "selection_rank": 38,
+    "joint_eig_bits": 2.113743,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTTH",
+    "sequence_b": "TTHHHHHH",
+    "eig": 0.001541,
+    "selection_rank": 39,
+    "joint_eig_bits": 2.126904,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTHHH",
+    "sequence_b": "HTTTTTH",
+    "eig": 0.040759,
+    "selection_rank": 40,
+    "joint_eig_bits": 2.137179,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTTT",
+    "sequence_b": "TTTHHTTT",
+    "eig": 0.023542,
+    "selection_rank": 41,
+    "joint_eig_bits": 2.144795,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTTHHH",
+    "sequence_b": "THTTTTTT",
+    "eig": 0.042239,
+    "selection_rank": 42,
+    "joint_eig_bits": 2.1571,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "TTTTHHHH",
+    "sequence_b": "TTTTTTTT",
+    "eig": 0.001722,
+    "selection_rank": 43,
+    "joint_eig_bits": 2.167359,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTTH",
+    "sequence_b": "TTTTTTHH",
+    "eig": 0.001541,
+    "selection_rank": 44,
+    "joint_eig_bits": 2.180379,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTH",
+    "sequence_b": "THTHT",
+    "eig": 0.000949,
+    "selection_rank": 45,
+    "joint_eig_bits": 2.189543,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTHHHH",
+    "sequence_b": "HTHHHTTT",
+    "eig": 0.005042,
+    "selection_rank": 46,
+    "joint_eig_bits": 2.201102,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTHHH",
+    "sequence_b": "THHHHHT",
+    "eig": 0.040759,
+    "selection_rank": 47,
+    "joint_eig_bits": 2.212442,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "THHHHHHH",
+    "sequence_b": "TTTHHTTT",
+    "eig": 0.023542,
+    "selection_rank": 48,
+    "joint_eig_bits": 2.218308,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "TTTTHHHH",
+    "sequence_b": "TTTTHTTT",
+    "eig": 0.009277,
+    "selection_rank": 49,
+    "joint_eig_bits": 2.227822,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "THHHHHHT",
+    "sequence_b": "THTHHHHH",
+    "eig": 0.010302,
+    "selection_rank": 50,
+    "joint_eig_bits": 2.238547,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTTTTH",
+    "sequence_b": "TTTTTHTH",
+    "eig": 0.010302,
+    "selection_rank": 51,
+    "joint_eig_bits": 2.246955,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTHHHH",
+    "sequence_b": "HHHTHTTT",
+    "eig": 0.001994,
+    "selection_rank": 52,
+    "joint_eig_bits": 2.250998,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTTTTHH",
+    "sequence_b": "HTHHHHHH",
+    "eig": 0.016378,
+    "selection_rank": 53,
+    "joint_eig_bits": 2.257605,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHTTTTHH",
+    "sequence_b": "THTTTTTT",
+    "eig": 0.016378,
+    "selection_rank": 54,
+    "joint_eig_bits": 2.2645,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTHHHH",
+    "sequence_b": "TTTHTHHH",
+    "eig": 0.001994,
+    "selection_rank": 55,
+    "joint_eig_bits": 2.271281,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "THHHHHHT",
+    "sequence_b": "TTHHHHHH",
+    "eig": 0.001541,
+    "selection_rank": 56,
+    "joint_eig_bits": 2.275255,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTHHHHH",
+    "sequence_b": "HTTTTTTH",
+    "eig": 0.017848,
+    "selection_rank": 57,
+    "joint_eig_bits": 2.284158,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "THHHHHHT",
+    "sequence_b": "TTTTTTHH",
+    "eig": 0.001541,
+    "selection_rank": 58,
+    "joint_eig_bits": 2.287082,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTTHHH",
+    "sequence_b": "THTHHHHH",
+    "eig": 0.005779,
+    "selection_rank": 59,
+    "joint_eig_bits": 2.292705,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHTHTTT",
+    "sequence_b": "TTTHTTTT",
+    "eig": 0.001994,
+    "selection_rank": 60,
+    "joint_eig_bits": 2.294901,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "TTTHTHHH",
+    "sequence_b": "TTTTHTTT",
+    "eig": 0.001994,
+    "selection_rank": 61,
+    "joint_eig_bits": 2.299616,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTTTT",
+    "sequence_b": "HTTTTTTT",
+    "eig": 0.053699,
+    "selection_rank": 62,
+    "joint_eig_bits": 2.306587,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHT",
+    "sequence_b": "HHHTHHH",
+    "eig": 0.040397,
+    "selection_rank": 63,
+    "joint_eig_bits": 2.311137,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTHHH",
+    "sequence_b": "HHHTTTTH",
+    "eig": 0.023564,
+    "selection_rank": 64,
+    "joint_eig_bits": 2.312921,
+    "source": "eig"
+  }
+]

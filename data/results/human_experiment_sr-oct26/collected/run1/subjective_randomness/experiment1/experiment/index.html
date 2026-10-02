@@ -1,0 +1,608 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Experiment</title>
+    <script src="https://unpkg.com/jspsych@7.3.4"></script>
+    <link
+      href="https://unpkg.com/jspsych@7.3.4/css/jspsych.css"
+      rel="stylesheet"
+    />
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@1.1.3"></script>
+    <style>
+      /* Readable prose block for instructions/debrief — constrained width, left
+       aligned, comfortable line height. Without this, text spans the full screen. */
+      .auto-psych-prose {
+        max-width: 620px;
+        margin: 0 auto;
+        text-align: left;
+        line-height: 1.6;
+        font-size: 18px;
+      }
+      .auto-psych-prose p {
+        margin: 0 0 1em;
+      }
+      .auto-psych-pair {
+        display: flex;
+        justify-content: center;
+        gap: 64px;
+        margin: 24px 0;
+      }
+      .auto-psych-seq {
+        font-family: monospace;
+        font-size: 28px;
+        letter-spacing: 4px;
+      }
+      .jspsych-btn {
+        padding: 12px 28px;
+        font-size: 18px;
+        border-radius: 8px;
+      }
+    </style>
+  </head>
+  <body></body>
+  <script>
+    const STIMULI = [
+  {
+    "sequence_a": "HTTHHTTH",
+    "sequence_b": "THTHTHHH",
+    "eig": 0.354893,
+    "selection_rank": 1,
+    "joint_eig_bits": 1.118734,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHHHHHT",
+    "sequence_b": "HTHTTHTH",
+    "eig": 0.242014,
+    "selection_rank": 2,
+    "joint_eig_bits": 1.654361,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "HTTTTTTT",
+    "eig": 0.149617,
+    "selection_rank": 3,
+    "joint_eig_bits": 1.862099,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHTTTT",
+    "sequence_b": "HTHHTHHT",
+    "eig": 0.271807,
+    "selection_rank": 4,
+    "joint_eig_bits": 1.925998,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "TTHHTTH",
+    "sequence_b": "TTTTTTH",
+    "eig": 0.159836,
+    "selection_rank": 5,
+    "joint_eig_bits": 1.947151,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "TTTTTTTH",
+    "sequence_b": "TTTTTTTT",
+    "eig": 0.062207,
+    "selection_rank": 6,
+    "joint_eig_bits": 1.959171,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTTTHHT",
+    "sequence_b": "TTTTTTH",
+    "eig": 0.277473,
+    "selection_rank": 7,
+    "joint_eig_bits": 1.963196,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHHT",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.135983,
+    "selection_rank": 8,
+    "joint_eig_bits": 1.970633,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HHHHHHHH",
+    "sequence_b": "HHHHHHHT",
+    "eig": 0.073794,
+    "selection_rank": 9,
+    "joint_eig_bits": 1.976269,
+    "source": "eig"
+  },
+  {
+    "sequence_a": "HTHTTHTH",
+    "sequence_b": "HTTHTTHT",
+    "eig": 0.376291,
+    "selection_rank": 10,
+    "joint_eig_bits": 1.423743,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHTHHTH",
+    "sequence_b": "THTTHHTH",
+    "eig": 0.342304,
+    "selection_rank": 11,
+    "joint_eig_bits": 1.499792,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHHTHHT",
+    "sequence_b": "HTHTTHTH",
+    "eig": 0.361001,
+    "selection_rank": 12,
+    "joint_eig_bits": 1.55694,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "THTHHTHT",
+    "sequence_b": "THTTHTTH",
+    "eig": 0.376291,
+    "selection_rank": 13,
+    "joint_eig_bits": 1.589476,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "THHTTHHT",
+    "sequence_b": "THTHTTHT",
+    "eig": 0.35996,
+    "selection_rank": 14,
+    "joint_eig_bits": 1.615642,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHHTHHT",
+    "sequence_b": "TTTTHHHH",
+    "eig": 0.257997,
+    "selection_rank": 15,
+    "joint_eig_bits": 1.636269,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHHT",
+    "sequence_b": "HTHTTHTH",
+    "eig": 0.330989,
+    "selection_rank": 16,
+    "joint_eig_bits": 1.65719,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHTTHTH",
+    "sequence_b": "THTTHTTH",
+    "eig": 0.376291,
+    "selection_rank": 17,
+    "joint_eig_bits": 1.674674,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHHT",
+    "sequence_b": "THTHHTHT",
+    "eig": 0.330989,
+    "selection_rank": 18,
+    "joint_eig_bits": 1.691157,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTTHTTHT",
+    "sequence_b": "TTTTHHHH",
+    "eig": 0.257997,
+    "selection_rank": 19,
+    "joint_eig_bits": 1.700686,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHT",
+    "sequence_b": "TTTTTTT",
+    "eig": 0.038275,
+    "selection_rank": 20,
+    "joint_eig_bits": 1.711203,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHHTHHT",
+    "sequence_b": "TTHTHTHH",
+    "eig": 0.322447,
+    "selection_rank": 21,
+    "joint_eig_bits": 1.721133,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHTTHTH",
+    "sequence_b": "HTTTTTTT",
+    "eig": 0.339051,
+    "selection_rank": 22,
+    "joint_eig_bits": 1.730428,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHHT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.135983,
+    "selection_rank": 23,
+    "joint_eig_bits": 1.739541,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "THHHHHHH",
+    "eig": 0.149617,
+    "selection_rank": 24,
+    "joint_eig_bits": 1.750615,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "THHTHTTH",
+    "sequence_b": "THTHTTHT",
+    "eig": 0.341954,
+    "selection_rank": 25,
+    "joint_eig_bits": 1.760061,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHHT",
+    "sequence_b": "HTHHTHHT",
+    "eig": 0.203208,
+    "selection_rank": 26,
+    "joint_eig_bits": 1.768018,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHTTTT",
+    "sequence_b": "HTTHTTHT",
+    "eig": 0.271807,
+    "selection_rank": 27,
+    "joint_eig_bits": 1.775727,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHH",
+    "sequence_b": "HTTTTTH",
+    "eig": 0.101047,
+    "selection_rank": 28,
+    "joint_eig_bits": 1.782459,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "THHHHHHH",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.135983,
+    "selection_rank": 29,
+    "joint_eig_bits": 1.787051,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHTTHTH",
+    "sequence_b": "THHHHHHH",
+    "eig": 0.339051,
+    "selection_rank": 30,
+    "joint_eig_bits": 1.795036,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "THHTHHTH",
+    "sequence_b": "TTTTHHHH",
+    "eig": 0.257997,
+    "selection_rank": 31,
+    "joint_eig_bits": 1.802591,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTTTTTTT",
+    "sequence_b": "THTHHTHT",
+    "eig": 0.330989,
+    "selection_rank": 32,
+    "joint_eig_bits": 1.807672,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHTHTHT",
+    "sequence_b": "TTTTTTTH",
+    "eig": 0.149617,
+    "selection_rank": 33,
+    "joint_eig_bits": 1.812976,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHHTTHT",
+    "sequence_b": "HTTTTTTT",
+    "eig": 0.282208,
+    "selection_rank": 34,
+    "joint_eig_bits": 1.817481,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "THHHHHHH",
+    "sequence_b": "THTHHTHT",
+    "eig": 0.330989,
+    "selection_rank": 35,
+    "joint_eig_bits": 1.82198,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHHHHHH",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.22633,
+    "selection_rank": 36,
+    "joint_eig_bits": 1.82484,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHHTTHT",
+    "sequence_b": "THHHHHHH",
+    "eig": 0.282208,
+    "selection_rank": 37,
+    "joint_eig_bits": 1.828976,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTTHTTHT",
+    "sequence_b": "TTTHTHTH",
+    "eig": 0.221711,
+    "selection_rank": 38,
+    "joint_eig_bits": 1.832084,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHTTHTH",
+    "sequence_b": "THHTHHTH",
+    "eig": 0.376291,
+    "selection_rank": 39,
+    "joint_eig_bits": 1.837084,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHH",
+    "sequence_b": "HHHHHHT",
+    "eig": 0.044251,
+    "selection_rank": 40,
+    "joint_eig_bits": 1.83935,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTTTTTTT",
+    "sequence_b": "THTHTHTH",
+    "eig": 0.135983,
+    "selection_rank": 41,
+    "joint_eig_bits": 1.841441,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHTTHTH",
+    "sequence_b": "TTTTTTTH",
+    "eig": 0.339051,
+    "selection_rank": 42,
+    "joint_eig_bits": 1.84504,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "THTTTHTT",
+    "sequence_b": "TTHTHTHH",
+    "eig": 0.202903,
+    "selection_rank": 43,
+    "joint_eig_bits": 1.848496,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHHTHHT",
+    "sequence_b": "THTHHTHT",
+    "eig": 0.361001,
+    "selection_rank": 44,
+    "joint_eig_bits": 1.849893,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHH",
+    "sequence_b": "TTTTTTH",
+    "eig": 0.044251,
+    "selection_rank": 45,
+    "joint_eig_bits": 1.854599,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHHT",
+    "sequence_b": "HHTHTHHT",
+    "eig": 0.183169,
+    "selection_rank": 46,
+    "joint_eig_bits": 1.854871,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTTHHTTH",
+    "sequence_b": "TTTTTTTT",
+    "eig": 0.113358,
+    "selection_rank": 47,
+    "joint_eig_bits": 1.855829,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHT",
+    "sequence_b": "HTHTHTH",
+    "eig": 0.123967,
+    "selection_rank": 48,
+    "joint_eig_bits": 1.858686,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTTHTTHT",
+    "sequence_b": "THTHHTHT",
+    "eig": 0.361001,
+    "selection_rank": 49,
+    "joint_eig_bits": 1.863033,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHT",
+    "sequence_b": "THTHTHT",
+    "eig": 0.123967,
+    "selection_rank": 50,
+    "joint_eig_bits": 1.865261,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHHTHHT",
+    "sequence_b": "TTTTHTHT",
+    "eig": 0.198091,
+    "selection_rank": 51,
+    "joint_eig_bits": 1.867273,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "THTHHTHT",
+    "sequence_b": "TTTTTTTH",
+    "eig": 0.339051,
+    "selection_rank": 52,
+    "joint_eig_bits": 1.867814,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHTTHHT",
+    "sequence_b": "TTTTTTH",
+    "eig": 0.159836,
+    "selection_rank": 53,
+    "joint_eig_bits": 1.86857,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTTTTTTT",
+    "sequence_b": "TTHTHTTH",
+    "eig": 0.183169,
+    "selection_rank": 54,
+    "joint_eig_bits": 1.870022,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTTHT",
+    "sequence_b": "TTTTH",
+    "eig": 0.27056,
+    "selection_rank": 55,
+    "joint_eig_bits": 1.871294,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHHH",
+    "sequence_b": "HTTTTTTT",
+    "eig": 0.073794,
+    "selection_rank": 56,
+    "joint_eig_bits": 1.872259,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTT",
+    "sequence_b": "TTT",
+    "eig": 0.058191,
+    "selection_rank": 57,
+    "joint_eig_bits": 1.874071,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "TTTTTTH",
+    "sequence_b": "TTTTTTT",
+    "eig": 0.038275,
+    "selection_rank": 58,
+    "joint_eig_bits": 1.877028,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHTHHHH",
+    "sequence_b": "HTTHTTHT",
+    "eig": 0.208711,
+    "selection_rank": 59,
+    "joint_eig_bits": 1.87875,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHTHTTT",
+    "sequence_b": "HTTHHTTH",
+    "eig": 0.350944,
+    "selection_rank": 60,
+    "joint_eig_bits": 1.88111,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "THH",
+    "sequence_b": "TTT",
+    "eig": 0.058191,
+    "selection_rank": 61,
+    "joint_eig_bits": 1.883434,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHTH",
+    "sequence_b": "HTHTHTHT",
+    "eig": 0.22645,
+    "selection_rank": 62,
+    "joint_eig_bits": 1.885562,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HTHTHTTT",
+    "sequence_b": "HTTHTHHT",
+    "eig": 0.295603,
+    "selection_rank": 63,
+    "joint_eig_bits": 1.88535,
+    "source": "eig_single_response_fill"
+  },
+  {
+    "sequence_a": "HHHHHHTH",
+    "sequence_b": "THTHHTHT",
+    "eig": 0.360957,
+    "selection_rank": 64,
+    "joint_eig_bits": 1.886777,
+    "source": "eig_single_response_fill"
+  }
+];
+
+    const jsPsych = initJsPsych({
+      on_finish: function () { window.__experimentData = jsPsych.data.get().values(); }
+    });
+
+    const timeline = [];
+
+    // 1. Instructions
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus:
+        '<div class="auto-psych-prose">' +
+          '<p>In this study, you will look at sequences of coin flips and judge how <strong>random</strong> they look.</p>' +
+          '<p>Imagine flipping a fair coin over and over. Each flip is equally likely to come up Heads (H) or Tails (T), and every flip is independent — the coin has no memory, so what came before does not change what comes next.</p>' +
+          '<p>On each trial you will see <strong>two</strong> sequences of coin flips, side by side. The two sequences will have the <strong>same length</strong>. Your task is to pick the <strong>one sequence that looks more random</strong> to you — the one that looks more like it was produced by genuinely random coin flipping.</p>' +
+          '<p>Different people have different impressions of what makes a sequence look random, and there are no right or wrong answers. We are interested in your own honest impression, so go with your gut. You will complete <strong>64 trials</strong>, which takes about 7 minutes. Your responses are anonymous.</p>' +
+        '</div>',
+      choices: ['Begin']
+    });
+
+    // 2. One trial per stimulus, side counterbalanced; sequence_a = LEFT.
+    STIMULI.forEach(function (s) {
+      var swap = Math.random() < 0.5;
+      var left = swap ? s.sequence_b : s.sequence_a;
+      var right = swap ? s.sequence_a : s.sequence_b;
+      timeline.push({
+        type: jsPsychHtmlButtonResponse,
+        stimulus:
+          '<p>Which sequence looks more random?</p>' +
+          '<div class="auto-psych-pair">' +
+            '<div class="auto-psych-seq">' + left + '</div>' +
+            '<div class="auto-psych-seq">' + right + '</div>' +
+          '</div>',
+        choices: ['Left', 'Right'],
+        data: { sequence_a: left, sequence_b: right },
+        on_finish: function (data) { data.chose_left = data.response === 0 ? 1 : 0; }
+      });
+    });
+
+    // 3. Debrief
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: '<div class="auto-psych-prose"><p>Thank you for participating! Your responses help us understand how people perceive randomness in sequences of coin flips. When you click <strong>Finish</strong>, your responses will be submitted and you will be <strong>redirected back to Prolific</strong> to complete the study and receive your completion code.</p></div>',
+      choices: ['Finish']
+    });
+
+    jsPsych.run(timeline);
+  </script>
+</html>

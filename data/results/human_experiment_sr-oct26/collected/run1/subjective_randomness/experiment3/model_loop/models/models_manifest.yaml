@@ -1,0 +1,124 @@
+models:
+- name: personal_first_read_anchoring
+  rationale: "People do not judge the two sequences independently: they read the left\
+    \ sequence first and its impression becomes an anchor, so each person weighs the\
+    \ first-read sequence's impression of randomness by a personal anchoring weight\
+    \ (more, or less, than the second sequence's), drawn from a population. The choice\
+    \ therefore depends not only on which sequence looks more random but on how random\
+    \ the pair looks overall relative to an ideal-looking sequence \u2014 when both\
+    \ look clearly non-random, a person who over-weights the first sequence's flaws\
+    \ turns to the right one, and when both look nearly ideal they stay with the left\
+    \ one \u2014 so the same sequence is chosen at different rates beside different\
+    \ partners, and people's left-choice rates and agreement with the majority differ\
+    \ in a pair-dependent way. Each sequence's impression is the current best judgement\
+    \ (personal ideal switching rate and sensitivity with lenience toward over-alternation,\
+    \ personal weights on imbalance, the longest streak and complement symmetry, shared\
+    \ weights on the final streak, mirror symmetry, run-length variety and the most\
+    \ lopsided stretch, and a personal guessing rate)."
+- name: longest_repeated_chunk_aversion
+  rationale: 'People scan a sequence for its single most striking repeated chunk:
+    the longest stretch of flips that appears again, unchanged, somewhere else in
+    the same sequence (HTT in HTTHHTTH, HTHT in HTHTHTHT, HHT in THHTHHTT). One long
+    recurring chunk makes the whole sequence look copied and so less random, by a
+    shared weight on the length of that longest repeat (relative to the longest repeat
+    the sequence''s length allows). This repeat cue is added to the current best judgement
+    (personal ideal switching rate and sensitivity with lenience toward over-alternation,
+    personal weights on imbalance and the longest streak, shared weights on the final
+    streak, mirror symmetry, run-length variety and the most lopsided stretch, personal
+    weight on complement symmetry, and a personal guessing rate). It predicts that
+    two sequences matching on switching, balance and streaks differ when one contains
+    a long chunk that recurs and the other does not.'
+- name: personal_pattern_detection_gain
+  rationale: "Refinement of the incumbent `personal_complement_symmetry_aversion`:\
+    \ each sequence is still judged by its switching rate against a personal ideal\
+    \ (personal sensitivity, lenient toward over-alternation), personal weights on\
+    \ heads/tails imbalance and the longest streak, the structural cues of a designed\
+    \ sequence (the final streak, mirror symmetry, complement symmetry, run-length\
+    \ variety and the most lopsided stretch), and a personal guessing rate. The one\
+    \ change is that noticing structure is a single personal trait rather than a trait\
+    \ specific to antisymmetry: each person has their own pattern-detection gain,\
+    \ drawn from a population, that scales all the structural cues together (now shared\
+    \ in their relative weights), so a person who spots palindromes also spots antisymmetry,\
+    \ rhythmic runs and local excesses, while another sees none of them \u2014 predicting\
+    \ that people's agreement with the majority is a stable personal trait that varies\
+    \ more across people than cue-specific weights produce (the critique's excess\
+    \ spread and split-half stability of majority agreement)."
+- name: capacity_blur_personal_antisymmetry
+  rationale: "Refinement of `personal_memory_capacity_blur` (statistically tied with\
+    \ the best): each person still has their own working-memory capacity, so their\
+    \ impression of which sequence looks more random decides the choice sharply for\
+    \ short pairs but is blurred for pairs whose length approaches or exceeds that\
+    \ capacity, and the impression is still the current best judgement (personal ideal\
+    \ switching rate and sensitivity with lenience toward over-alternation, personal\
+    \ weights on imbalance and the longest streak, shared weights on the final streak,\
+    \ mirror symmetry, run-length variety and the most lopsided stretch, and a personal\
+    \ guessing rate). The one change is grafting in the incumbent's personal complement-symmetry\
+    \ aversion: whether a sequence that equals its own reverse with heads and tails\
+    \ swapped (HHTT, HTHTHTHT, HHHTHTTT) looks deliberately constructed is each person's\
+    \ own trait rather than shared \u2014 so the two personal sources of consistency\
+    \ (memory capacity, concentrated on long pairs, and noticing antisymmetry, concentrated\
+    \ on antisymmetric pairs) are estimated together, addressing the critique (surviving\
+    \ FDR) that people differ in how often they agree with the majority more than\
+    \ the incumbent produces."
+- name: side_lean_complement_symmetry
+  rationale: "Refinement of the incumbent `personal_complement_symmetry_aversion`:\
+    \ each person still judges how random each sequence looks exactly as the incumbent\
+    \ does (personal ideal switching rate and sensitivity with lenience toward over-alternation,\
+    \ personal weights on imbalance, the longest streak and complement symmetry, shared\
+    \ weights on the final streak, mirror symmetry, run-length variety and the most\
+    \ lopsided stretch, and a personal guessing rate). The one change, grafted from\
+    \ `side_bias_asymmetric_tolerance_stretch`, is in the decision: each person also\
+    \ has a habitual leaning toward the Left or Right button, drawn from a population\
+    \ that may lean Left overall, which tips every comparison they make toward that\
+    \ side by a fixed amount \u2014 so it decides near-ties and makes people's own\
+    \ Left-choice rates differ more than the stimuli alone produce (the critique's\
+    \ excess spread of participants' Left-choice rates), estimated on top of the best\
+    \ current judgement of randomness."
+- name: returns_to_balance_expectation
+  rationale: "People keep a running tally of heads versus tails as they read a sequence\
+    \ and expect a fair coin to keep correcting itself: the tally should drift away\
+    \ from balance and then come back to even, again and again. A sequence whose tally\
+    \ returns to an even count often (relative to how many returns its length allows)\
+    \ looks self-correcting and so more random, while one whose tally wanders off\
+    \ and rarely or never comes back to balance looks biased \u2014 by a shared weight\
+    \ on the share of possible returns to balance, on top of the current best judgement\
+    \ (personal ideal switching rate and sensitivity with lenience toward over-alternation,\
+    \ personal weights on imbalance and the longest streak, a personal pattern-detection\
+    \ gain scaling the final streak, mirror symmetry, complement symmetry, run-length\
+    \ variety and most-lopsided-stretch cues, and a personal guessing rate). It predicts\
+    \ that two sequences with the same final counts, switching rate and range of the\
+    \ tally differ when one passes through balance more often along the way (HTTHHT,\
+    \ back to even after every second flip, should look more random than HHTTHT, which\
+    \ matches it on switches, counts and range but returns to balance only twice)."
+- name: capacity_blur_pattern_gain
+  rationale: "Refinement of `capacity_blur_personal_antisymmetry` (statistically tied\
+    \ with the best): each person still has their own working-memory capacity, so\
+    \ their impression of which sequence looks more random decides the choice sharply\
+    \ for short pairs but is blurred for pairs whose length approaches or exceeds\
+    \ that capacity, and the impression is still judged by a personal ideal switching\
+    \ rate and sensitivity (lenient toward over-alternation), personal weights on\
+    \ imbalance and the longest streak, shared structural cues (final streak, mirror\
+    \ symmetry, complement symmetry, run-length variety, most lopsided stretch) and\
+    \ a personal guessing rate. The one change is replacing its personal weight on\
+    \ antisymmetry alone with the incumbent's personal pattern-detection gain: each\
+    \ person has one trait for noticing designed structure that scales all the structural\
+    \ cues together \u2014 so two separate personal sources of consistency (memory\
+    \ capacity, concentrated on long pairs, and general pattern noticing, concentrated\
+    \ on structured sequences) are estimated jointly, addressing the critique (surviving\
+    \ FDR) that people differ in how consistently they agree with the majority more\
+    \ than the incumbent's gain alone produces."
+- name: sensitivity_linked_consistency
+  rationale: 'Refinement of the incumbent `personal_pattern_detection_gain`: each
+    sequence is still judged by its switching rate against a personal ideal (personal
+    sensitivity, lenient toward over-alternation), personal weights on heads/tails
+    imbalance and the longest streak, the shared structural cues of a designed sequence
+    (final streak, mirror symmetry, complement symmetry, run-length variety, most
+    lopsided stretch) scaled by a personal pattern-detection gain, and a personal
+    guessing rate. The one change is that a person''s consistency is one coherent
+    trait: how sharply a person judges the switching rate also predicts, by fitted
+    signed amounts, how strongly they notice structure and how rarely they guess (correlated
+    rather than independent personal traits). So people who are careful judges of
+    alternation also spot designed patterns and seldom guess, while careless ones
+    do none of these. This predicts a wider spread across people in how often they
+    agree with the majority than independent traits produce, which is the critique''s
+    discrepancy that survives FDR.'

@@ -1,0 +1,1 @@
+run_hazard_switch_belief

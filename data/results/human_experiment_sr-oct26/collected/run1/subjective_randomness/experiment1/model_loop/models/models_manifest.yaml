@@ -1,0 +1,67 @@
+models:
+- name: personal_lapse_ideal_alternation
+  rationale: 'People judge a sequence as more random the closer its proportion of
+    alternations lies to their own personal ideal switching rate, but the decision
+    rule is not always engaged: on some trials a person does not compare the sequences
+    at all and picks a side by guessing. How often this happens is a stable trait
+    that differs between people, so some participants follow their alternation preference
+    almost every trial while others are close to indifferent, which spreads individual
+    choice proportions beyond what a single shared decisiveness produces.'
+- name: lapse_individual_balance_alternation
+  rationale: "Refinement of `individual_balance_ideal_alternation` (statistically\
+    \ tied with the incumbent): each person still judges a sequence as more random\
+    \ the closer its proportion of alternations lies to their own personal ideal switching\
+    \ rate, and lopsided heads/tails counts make a sequence look less random by a\
+    \ weight that is each person's own. The one change is grafting in the incumbent's\
+    \ decision rule: on some trials a person does not compare the sequences at all\
+    \ and guesses, at a personal trait-like lapse rate, so indifferent participants\
+    \ are explained by guessing rather than by weak preferences, and the balance and\
+    \ alternation preferences of engaged people can be as sharp as the data show \u2014\
+    \ addressing the critique that among alternation-matched pairs people pick the\
+    \ sequence without a long streak (usually the more balanced one) more often than\
+    \ the lapse-only incumbent predicts."
+- name: edge_weighted_alternation_memory
+  rationale: 'People encode a coin-flip sequence with serial-position effects in memory:
+    the flips at the start and end of the sequence (primacy and recency) are encoded
+    more strongly than those in the middle, so the switching pattern they perceive
+    is dominated by what happens at the sequence''s edges. Each person compares this
+    edge-weighted impression of how often the sequence switches between heads and
+    tails with their own personal ideal switching rate, and on some trials guesses
+    at a personal lapse rate; a streak or rigid alternation sitting at an edge therefore
+    makes a sequence look much less random than the same pattern buried in the middle.'
+- name: individual_streak_aversion_lapse
+  rationale: 'Refinement of the incumbent `lapse_individual_balance_alternation`:
+    each person still judges a sequence as more random the closer its proportion of
+    alternations lies to their own ideal switching rate, still penalises lopsided
+    heads/tails counts by a weight of their own, and still guesses on some trials
+    at a personal lapse rate. The one change is that people also notice the longest
+    streak of identical flips and treat it as a sign of non-randomness by a weight
+    that is each person''s own (drawn from a population distribution, so some people
+    are strongly streak-averse and others barely care), addressing the critique that
+    individuals differ in preferring the sequence with the shorter longest run more
+    than the incumbent produces, and that streaks are penalised beyond its alternation
+    and balance terms.'
+- name: lapse_individual_streak_aversion
+  rationale: 'Refinement of `personal_lapse_ideal_alternation`: each person still
+    judges a sequence as more random the closer its proportion of alternations lies
+    to their own personal ideal switching rate, and still guesses on some trials at
+    a personal, trait-like lapse rate, but people also treat a long streak of identical
+    flips as a sign of non-randomness, and how strongly a streak puts them off is
+    each person''s own trait (a personal weight on the longest run relative to sequence
+    length, drawn from a population). The one change is this individual streak-aversion
+    weight, added because the critique shows participants differ in their preference
+    for the sequence with the shorter longest run more than the model''s alternation,
+    balance and lapse heterogeneity produces, and that streaks are penalised beyond
+    alternation among alternation-matched pairs.'
+- name: edge_streak_balance_alternation_lapse
+  rationale: "Refinement of the incumbent `lapse_individual_balance_alternation`:\
+    \ each person still judges a sequence as more random the closer its proportion\
+    \ of alternations lies to their own ideal switching rate, still penalises lopsided\
+    \ heads/tails counts by a weight of their own, and still guesses on some trials\
+    \ at a personal lapse rate. The one change is that a streak sitting at the very\
+    \ start or end of a sequence is especially salient (primacy/recency of what is\
+    \ read first and last): the number of flips by which a run of identical flips\
+    \ at either edge exceeds two makes the sequence look less random by a shared weight,\
+    \ while the same streak buried in the middle carries no extra penalty \u2014 addressing\
+    \ the critique that among alternation-matched pairs people avoid the sequence\
+    \ with an edge streak more than the incumbent predicts."

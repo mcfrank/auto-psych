@@ -1,0 +1,11 @@
+{
+  "models": [
+    "individual_streak_aversion_lapse",
+    "personal_lapse_ideal_alternation",
+    "lapse_individual_balance_alternation",
+    "edge_weighted_alternation_memory",
+    "lapse_individual_streak_aversion",
+    "edge_streak_balance_alternation_lapse"
+  ],
+  "ledger_sha256": "183001bc50c4ec7df759b2f90cf7e8d7f89da416fa8799cf127d5c817d07d44a"
+}

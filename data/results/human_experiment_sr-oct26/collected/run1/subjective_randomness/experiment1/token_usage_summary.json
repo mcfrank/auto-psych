@@ -1,0 +1,44 @@
+{
+  "n_calls": 47,
+  "n_calls_missing_usage": 0,
+  "input_tokens": 526,
+  "output_tokens": 219178,
+  "reasoning_tokens": 0,
+  "cache_read_tokens": 12061768,
+  "cache_write_tokens": 2551773,
+  "total_tokens": 14833245,
+  "cost_usd": 18.195929,
+  "n_usage_limit_hits": 0,
+  "usage_limit_wait_sec": 0.0,
+  "by_source": {
+    "inner:candidate": {
+      "n_calls": 42,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 466,
+      "output_tokens": 184262,
+      "reasoning_tokens": 0,
+      "cache_read_tokens": 10893008,
+      "cache_write_tokens": 2352013,
+      "total_tokens": 13429749,
+      "cost_usd": 16.264817,
+      "n_usage_limit_hits": 0,
+      "usage_limit_wait_sec": 0.0
+    },
+    "inner:critique": {
+      "n_calls": 5,
+      "n_calls_missing_usage": 0,
+      "input_tokens": 60,
+      "output_tokens": 34916,
+      "reasoning_tokens": 0,
+      "cache_read_tokens": 1168760,
+      "cache_write_tokens": 199760,
+      "total_tokens": 1403496,
+      "cost_usd": 1.9311120000000002,
+      "n_usage_limit_hits": 0,
+      "usage_limit_wait_sec": 0.0
+    }
+  },
+  "claude_auth": [
+    "api"
+  ]
+}
