@@ -1,0 +1,1 @@
+Each person carries their own internal ideal of how often a random coin should switch between heads and tails, and judges a sequence as more random the closer its switch rate comes to that personal ideal. People differ in where this ideal sits (some expect heavy alternation, others near-even switching), so the same pair can be judged in opposite directions by different people.

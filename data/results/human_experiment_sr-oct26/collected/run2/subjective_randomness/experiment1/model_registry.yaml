@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  graded_periodicity_personal_ideal: 0.125
+  heads_default_alternation_ideal: 0.125
+  heads_favoring_lapse_ideal_streak: 0.125
+  length_scaled_alternation_ideal: 0.125
+  periodic_penalized_alternation_ideal: 0.125
+  person_sensitivity_length_scaled_ideal: 0.125
+  personal_ideal_with_personal_lapse: 0.125
+  personal_lapse_ideal_streak_excess: 0.125

@@ -1,0 +1,1 @@
+local_zigzag_terminal_streak_pattern_rule

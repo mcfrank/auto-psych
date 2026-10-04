@@ -1,0 +1,13 @@
+{
+  "models": [
+    "person_decisiveness_rule_built_tally",
+    "person_pattern_sensitivity_rule_built",
+    "person_switch_ideal_pattern_rule_built",
+    "streak_excess_pattern_rule_built",
+    "terminal_streak_recency_pattern_rule",
+    "terminal_run_pattern_rule_built",
+    "edge_streak_primacy_recency_pattern_rule",
+    "local_alternation_switch_ideal_rule"
+  ],
+  "ledger_sha256": "78c49125c0df61226d169dbae040b70ffbb0b0a9076a9261caf7ddf54c87ca00"
+}

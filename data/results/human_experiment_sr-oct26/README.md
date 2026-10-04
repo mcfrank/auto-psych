@@ -3,8 +3,9 @@
 Three independent runs (run1–run3) of the whole pipeline, three experiments
 each, 40 Prolific participants per experiment, Claude Opus 5.5 agents
 (`full_run_sr-oct26.yaml` at the repository root; runbook:
-`docs/onboarding/full_run_checklist.md`). **Status (2026-10-02): run 1 is
-complete; runs 2 and 3 have not been launched.**
+`docs/onboarding/full_run_checklist.md`). **Status (2026-10-04): runs 1
+and 2 are complete; run 3 is running (its experiment 1's model loop) and is
+not in `collected/` yet.**
 
 An experiment is final when its `model_loop/export_complete.json` exists;
 `collected/SUMMARY.md` lists each experiment's winning model and marks
@@ -91,33 +92,42 @@ The one-off scripts that did these recoveries are in `run1_recovery/`
 (Sherlock paths and job ids as they were; study IDs redacted). The general
 procedure is the runbook's § 9 and the checklist's step 9.
 
-## Runs 2 and 3: before launching
+## Run 2 (complete)
 
-They run on the current `main` (everything above, with 128 GB, and the
-exclusion of earlier participants). From a clone made after 2026-10-01 (or
-re-cloned; never push a pre-rewrite clone's branches):
+Hosting site `auto-psych-2c5da-0926-run2`; 120 people, none of them in run 1
+or in another of run 2's experiments (the exclusion below); Opus about $62,
+Prolific about $224. It ran start to finish on `4407234` in one job (38 hours,
+no recovery).
 
-```bash
-cd $REPO && git pull
-CONFIG=$REPO/full_run_sr-oct26.yaml RUNS=2 AUTO_PSYCH_COLLECTION_OWNER=<you> \
-  bash scripts/outer_loop_live/start_full_run.sh
-# once run 2's experiment-1 study is full (about an hour later), the same with RUNS=3
-```
+| experiment | trials pooled | best model at the end | ELPD-LOO | carried |
+|---|---|---|---|---|
+| 1 | 2,560 | `graded_periodicity_personal_ideal` | −1046.2 | 8 |
+| 2 | 5,120 | `tally_span_switch_ideal_periodic_unit` | −2220.9 | 5 |
+| 3 | 7,680 | `edge_streak_primacy_recency_pattern_rule` | −3260.2 | 8 |
 
-Every live study now excludes everyone who took part in an earlier published
+The best model changed after every round of every experiment (5 times in
+each), every time to a model the loop discovered. Prolific again held back
+the fastest submissions for review (10, 8 and 7).
+
+## Run 3 (running)
+
+Runs 2 and 3 were launched together on 2026-10-02 (`RUNS="2 3"`, on
+`4407234`), but they did not run side by side: at 128 GB Slurm gives each job
+17 CPUs, and two of them (34) exceed the long QOS's 32 CPUs per user, so run
+3 waited in the queue until run 2 finished and started on 2026-10-04. Its
+first study was therefore published after all of run 2's, and excludes their
+participants too. To run two series jobs at once, ask for at most 16 CPUs'
+worth of memory each, or run one on the default QOS (under 48 hours).
+
+Every live study excludes everyone who took part in an earlier published
 study of the pipeline in the Prolific account (run 1's three, the pilot's,
 and the other run's so far), read from the account just before the study is
 created. Prolific applies that list when the study is published, so two
-studies published together cannot exclude each other's participants:
-launching both runs at once (`RUNS="2 3"`) would let the same people take
-both runs' first experiments, which is why run 3 starts after run 2's first
-study has filled. Later experiments publish at times set by the model loops;
-someone taking one run's study at the moment the other run's is published is
-still not excluded.
+studies published together cannot exclude each other's participants.
 
-Never include run 1 in `RUNS`: relaunching an index deletes its results.
-After each experiment, sync the results here (checklist step 11, with
-`RUNS="run1 run2 run3"`).
+Never include run 1 or run 2 in `RUNS`: relaunching an index deletes its
+results. After each experiment, sync the results here (checklist step 11,
+with `RUNS="run1 run2 run3"`).
 
 Open decisions:
 - **Generalization to new people.** The loop selects and prunes by ELPD-LOO

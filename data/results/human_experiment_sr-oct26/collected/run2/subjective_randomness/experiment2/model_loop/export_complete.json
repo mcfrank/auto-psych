@@ -1,0 +1,10 @@
+{
+  "models": [
+    "tally_span_switch_rate_ideal_2",
+    "pair_normalized_tally_switch_contrast",
+    "tally_span_switch_ideal_triplet_variety",
+    "tally_span_switch_ideal_periodic_unit",
+    "tally_span_switch_ideal_periodic_unit_2"
+  ],
+  "ledger_sha256": "ac3831a1c3a3827552a78697889a5d3dbbfe296aacecddbb32e28dac2606a016"
+}

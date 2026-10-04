@@ -1,0 +1,52 @@
+# Existing hypotheses
+
+Each model below is ONE cognitive hypothesis, with how it stands on the current data by ELPD-LOO (best first). `elpd_diff ± dse` is a model's deficit against the best and the standard error of that difference (with the responses to each stimulus pair counted together, as they are correlated): within about 2·dse the two are statistically tied on this data; beyond it the model has lost. "PSIS-LOO unreliable" means the estimate itself is untrustworthy (too many high-Pareto-k trials), not that the model is bad. Propose a hypothesis that is genuinely different from these, or a refinement of a single one of them — never a combination of several.
+
+## balance_aware_heads_alternation_ideal  — rank 0, the best model on this data, ELPD-LOO -2383.0
+
+Refinement of the incumbent `heads_default_alternation_ideal`: people still judge a sequence by how close its switching rate is to their own ideal (person-specific, length-scaled sensitivity, shared penalty for periodic sequences) and still favour heads-leaning sequences, but they also expect a random coin to come out roughly half heads and half tails, so a sequence whose heads and tails counts are lopsided in either direction looks less random. The one change is a shared symmetric penalty on the H/T imbalance (|#H − #T| as a share of the length), addressing the critique that among pairs with equal switch counts people choose the more balanced sequence far more often than the incumbent's one-directional heads-share term allows.
+
+## balanced_heads_default_alternation_ideal  — rank 1, 1.0 ± 2.6 nats behind the best (0.4× dse: statistically tied with the best), ELPD-LOO -2384.0
+
+Refinement of the incumbent `heads_default_alternation_ideal`: each person still judges a sequence by how close its switching rate is to their own ideal (person-specific, length-scaled sensitivity, shared penalty for periodic sequences) and still treats heads as the default face, so heads-leaning sequences look more random — but people also expect a fair coin to produce roughly equal numbers of heads and tails, so a lopsided sequence in either direction looks less random. The one change is a shared symmetric penalty on the squared departure of the heads share from one half, addressing the critique (surviving FDR) that among pairs with equal switch counts people pick the more balanced sequence far more often than a model with only a linear heads-share term allows.
+
+## iter0_candidate0  — rank 2, 2.7 ± 20.8 nats behind the best (0.1× dse: statistically tied with the best), ELPD-LOO -2385.7
+
+People judge randomness by Bayesian model comparison: a sequence looks random to the extent that it is better explained by a random coin than by a "rigged" process — either a coin biased toward one face (of unknown bias) or a sticky/switchy coin that tends to repeat or alternate (of unknown tendency) — so lopsided H/T counts and extreme switching both count as evidence of a non-random generator. The one distortion is in each person's picture of the random coin itself: rather than a fair, memoryless coin, each person believes a random coin switches sides at their own personal rate (usually more than half the time), and they choose the sequence with the higher posterior odds of having come from that subjective random coin.
+
+## heads_default_alternation_ideal  — rank 3, 7.1 ± 5.6 nats behind the best (1.3× dse: statistically tied with the best), ELPD-LOO -2390.1
+
+People do not treat the two faces of the coin symmetrically: heads is the default, expected outcome of a coin toss, so a sequence dominated by tails reads as a coin that is "off" (biased toward the unusual face) and looks less random, while a heads-leaning sequence looks like ordinary coin flipping. This label asymmetry operates on top of each person's judgement of how close a sequence's switching rate is to their own ideal (with person-specific, length-scaled sensitivity and a shared penalty for visibly periodic sequences): of two sequences that switch equally often, people pick the one with more heads.
+
+## balanced_heads_lapse_ideal_streak  — rank 4, 30.2 ± 12.4 nats behind the best (2.4× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -2413.2
+
+Refinement of `heads_favoring_lapse_ideal_streak`: each person still judges a sequence as random by how close its proportion of H/T switches is to their own ideal switching rate, still penalises every flip of the longest streak beyond two, still favours heads-leaning sequences, and still lapses to a random pick at their own rate — but people also expect a fair coin to produce roughly equal numbers of heads and tails, so a lopsided H/T count (in either direction) looks less random. The one change is a shared penalty on the absolute heads–tails imbalance of each sequence, addressing the critique's strongest discrepancy: among pairs with equal switch counts, people choose the more balanced sequence far more often than a model with only a directional heads-share term predicts.
+
+## heads_favoring_lapse_ideal_streak  — rank 5, 35.4 ± 14.2 nats behind the best (2.5× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -2418.5
+
+Refinement of `personal_lapse_ideal_streak_excess`: each person still judges a sequence as random by how close its proportion of H/T switches is to their own personal ideal switching rate, still penalises every flip of the longest streak beyond two, and still lapses to a random pick at their own rate — but the two coin faces are not psychologically symmetric: heads is the canonical, expected outcome of a coin toss, so a sequence with a larger share of heads reads as more like "real" coin flipping and looks more random. The one change is a shared heads-share bias inside the engaged decision, addressing the critique that among pairs with equal switch counts people choose the heads-heavier sequence more often than an H/T-symmetric model allows.
+
+## switching_then_balance_semiorder  — rank 6, 50.3 ± 14.5 nats behind the best (3.5× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -2433.3
+
+People compare the two sequences lexicographically (a semiorder): they first ask which one switches between H and T at a rate closer to their own personal ideal for a random coin; only when the two sequences switch about equally often does a second comparison take over, and then they pick the one whose heads and tails are more evenly balanced. Because the balance cue is consulted only when the partner leaves the switching comparison undecided, the same sequence's balance decides the choice beside a partner with the same number of switches and is ignored beside a partner that switches clearly more or less.
+
+## gist_typicality_count_runs  — rank 7, 571.9 ± 76.7 nats behind the best (7.5× dse: distinguishable from the best — it has lost on this data), ELPD-LOO -2955.0
+
+People judge how random a sequence looks by how typical its gist is for a fair coin: they register only two coarse summaries of a sequence — how many heads it has and how many runs (streaks) it breaks into — and a sequence looks random to the extent that many coin sequences of that length share that same gist. Lopsided counts, long streaks (few runs) and strict alternation (maximal runs) are all rare gists and look non-random, while balanced sequences with a middling number of runs are common gists and look random; people differ only in how strongly this felt typicality drives their choice.
+
+## max_lopsided_window_surprise  — no comparison row
+
+People judge a sequence by its single most lopsided stretch: they scan every contiguous stretch of flips and register the one whose heads/tails split is most improbable for a fair coin of that stretch's length (a streak, or a stretch like HHTHHH that is nearly all one face), and that one most surprising stretch alone decides how non-random the sequence looks — the rest of the sequence does not count. They pick the sequence whose most lopsided stretch is less surprising, with people differing in how strongly this felt surprise drives their choice.
+
+## personal_side_bias_alternation_ideal  — no comparison row
+
+The decision rule, not the evidence, carries a stable individual trait: each person has their own habitual lean toward clicking the left or the right button, which adds to their impression of which sequence is more random on every trial (people differ in the direction and strength of this response-side bias, and it is unrelated to the sequences shown). The impression itself is kept simple: a sequence looks random to the extent that its proportion of H/T switches is close to the person's own ideal switching rate, so the side bias decides near-ties and shifts close calls toward the favoured side.
+
+## tally_span_personal_ideal  — no comparison row
+
+People read a sequence flip by flip while keeping a running tally of how far heads lead tails, and judge randomness by how widely that tally swings over the whole reading — the span between the furthest it ever ran toward heads and the furthest it ever ran toward tails. Each person expects a fair coin's tally to wander over some typical span for a sequence of that length: a long streak (anywhere in the sequence, even one later evened out) stretches the span too far and strict alternation pins it within one step of even, so both look non-random, and people choose the sequence whose tally span is closer to their own expectation.
+Apart from this judgement, each person has a small habitual lean toward clicking left or right.
+
+## streak_aware_balanced_alternation_ideal  — no comparison row
+
+Refinement of the incumbent `balance_aware_heads_alternation_ideal`: people still judge a sequence by how close its switching rate is to their own ideal (person-specific, length-scaled sensitivity, shared penalty for periodic sequences), still favour heads-leaning sequences and still find lopsided H/T counts non-random — but they also notice a streak of identical outcomes as a sign of non-randomness in its own right, so every flip of the longest run beyond two (HHH, HHHH, ...) makes a sequence look less random even when its overall switching rate is the same. The one change is a shared penalty on this absolute excess length of the longest streak, addressing the critique (surviving FDR, q = 0.008) that among pairs with equal switch counts people pick the sequence with the shorter longest run far more often than the incumbent predicts.

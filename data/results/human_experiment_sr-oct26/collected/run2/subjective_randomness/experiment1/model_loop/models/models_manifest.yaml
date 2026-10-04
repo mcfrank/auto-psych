@@ -1,0 +1,82 @@
+models:
+- name: periodic_penalized_alternation_ideal
+  rationale: 'Refinement of the incumbent `personal_alternation_ideal`: each person
+    still judges a sequence as random to the extent that its proportion of H/T switches
+    is close to their own personal ideal switching rate, but in addition everyone
+    notices when a sequence is built by repeating a short unit (e.g. HTHTHTHT, HHTTHHTT,
+    HTTHTTHT) and counts that visible periodic pattern against its randomness. The
+    one change is this shared periodic-pattern penalty, addressing the critique that
+    people reject regular repeating patterns (and perfect alternation) far more than
+    the alternation-distance mechanism alone predicts.'
+- name: personal_ideal_with_personal_lapse
+  rationale: 'People judge which sequence looks more random by how close its proportion
+    of H/T switches is to their own personal ideal switching rate, but the decision
+    rule is not always engaged: each person has their own lapse rate, the share of
+    trials on which they do not evaluate the sequences at all and pick a side at random.
+    People therefore differ not only in what they think randomness looks like but
+    in how consistently they act on it, so even a pair with a clear winner is split
+    by some participants, more for some people than for others.'
+- name: length_scaled_alternation_ideal
+  rationale: "Refinement of the incumbent `periodic_penalized_alternation_ideal`:\
+    \ each person still judges a sequence as random by how close its proportion of\
+    \ H/T switches is to their own ideal switching rate, with a shared penalty for\
+    \ visibly periodic sequences, but the weight people give to a deviation from their\
+    \ ideal grows (or shrinks) with how many flips they have seen \u2014 a switch\
+    \ rate read off a long sequence is treated as stronger evidence than the same\
+    \ rate in a short one. The one change is a fitted power-law scaling of the alternation-distance\
+    \ sensitivity with the number of transitions in the sequence, addressing the critique\
+    \ that the incumbent mispredicts how the preference for the more-switching sequence\
+    \ changes with sequence length."
+- name: person_sensitivity_length_scaled_ideal
+  rationale: "Refinement of the incumbent `length_scaled_alternation_ideal`: each\
+    \ person still judges a sequence as random by how close its proportion of H/T\
+    \ switches is to their own ideal switching rate (with a length-scaled sensitivity\
+    \ and a shared penalty for visibly periodic sequences), but people also differ\
+    \ in how decisively they act on that impression \u2014 some pick the sequence\
+    \ nearer their ideal almost every time, others only weakly lean toward it. The\
+    \ one change is a person-specific sensitivity to the alternation-distance, drawn\
+    \ from a population distribution, so that how sharply a person discriminates is\
+    \ an individual trait just as their ideal switching rate is."
+- name: personal_lapse_ideal_streak_excess
+  rationale: "Refinement of `personal_ideal_with_personal_lapse`: each person still\
+    \ judges a sequence as random by how close its proportion of H/T switches is to\
+    \ their own personal ideal switching rate, and still has their own lapse rate\
+    \ (trials on which they pick a side at random), but when they do evaluate the\
+    \ sequences they also notice a streak of identical outcomes as soon as it is long\
+    \ in absolute terms \u2014 every flip beyond two in the longest run (HHH, HHHH,\
+    \ ...) counts against randomness. The one change is this shared absolute-streak\
+    \ penalty inside the engaged decision, addressing the critique that among pairs\
+    \ with equal switch counts people prefer the sequence with the shorter longest\
+    \ run more than the incumbent predicts."
+- name: heads_default_alternation_ideal
+  rationale: 'People do not treat the two faces of the coin symmetrically: heads is
+    the default, expected outcome of a coin toss, so a sequence dominated by tails
+    reads as a coin that is "off" (biased toward the unusual face) and looks less
+    random, while a heads-leaning sequence looks like ordinary coin flipping. This
+    label asymmetry operates on top of each person''s judgement of how close a sequence''s
+    switching rate is to their own ideal (with person-specific, length-scaled sensitivity
+    and a shared penalty for visibly periodic sequences): of two sequences that switch
+    equally often, people pick the one with more heads.'
+- name: graded_periodicity_personal_ideal
+  rationale: "Refinement of the incumbent `person_sensitivity_length_scaled_ideal`:\
+    \ each person still judges a sequence as random by how close its proportion of\
+    \ H/T switches is to their own ideal switching rate (with a person-specific, length-scaled\
+    \ sensitivity), and everyone still counts a visibly repeating pattern against\
+    \ randomness \u2014 but the pattern detector is graded rather than all-or-nothing:\
+    \ people also notice a sequence that *almost* repeats a short unit (period 1\u2013\
+    4) with one or two flips out of place, and the penalty fades smoothly with the\
+    \ number of flips that break the pattern. The one change is replacing the strict\
+    \ periodic indicator with this graded near-periodicity penalty (shared strength,\
+    \ shared fall-off per mismatch), addressing the critique that people avoid almost-repeating\
+    \ patterns that the incumbent's strict check misses."
+- name: heads_favoring_lapse_ideal_streak
+  rationale: "Refinement of `personal_lapse_ideal_streak_excess`: each person still\
+    \ judges a sequence as random by how close its proportion of H/T switches is to\
+    \ their own personal ideal switching rate, still penalises every flip of the longest\
+    \ streak beyond two, and still lapses to a random pick at their own rate \u2014\
+    \ but the two coin faces are not psychologically symmetric: heads is the canonical,\
+    \ expected outcome of a coin toss, so a sequence with a larger share of heads\
+    \ reads as more like \"real\" coin flipping and looks more random. The one change\
+    \ is a shared heads-share bias inside the engaged decision, addressing the critique\
+    \ that among pairs with equal switch counts people choose the heads-heavier sequence\
+    \ more often than an H/T-symmetric model allows."

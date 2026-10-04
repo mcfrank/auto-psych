@@ -1,0 +1,1 @@
+terminal_streak_recency_pattern_rule

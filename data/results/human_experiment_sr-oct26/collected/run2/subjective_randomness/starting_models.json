@@ -1,0 +1,9 @@
+{
+  "starting_models": [
+    "falk_konold_dp",
+    "finite_experience_occurrence",
+    "local_representativeness",
+    "motif_stack"
+  ],
+  "starting_models_prunable": true
+}

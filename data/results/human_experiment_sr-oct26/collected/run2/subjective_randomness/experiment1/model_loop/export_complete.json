@@ -1,0 +1,13 @@
+{
+  "models": [
+    "periodic_penalized_alternation_ideal",
+    "personal_ideal_with_personal_lapse",
+    "length_scaled_alternation_ideal",
+    "person_sensitivity_length_scaled_ideal",
+    "personal_lapse_ideal_streak_excess",
+    "heads_default_alternation_ideal",
+    "graded_periodicity_personal_ideal",
+    "heads_favoring_lapse_ideal_streak"
+  ],
+  "ledger_sha256": "9a6e402f552228db57f91382a1156ab16bbae942808d911f54c0f6486e104a4c"
+}

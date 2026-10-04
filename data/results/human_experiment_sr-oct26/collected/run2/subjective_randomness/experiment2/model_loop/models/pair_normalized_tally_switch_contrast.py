@@ -1,0 +1,92 @@
+"""Pair-normalised contrast on tally span and switching rate.
+
+People compare each sequence's running heads-minus-tails tally span with their
+own expected span and its switching rate with an ideal switching rate (with a
+personal left/right lean), but the two sequences are judged against each
+other: the difference on each cue is divided by how far the pair as a whole
+sits from the ideal (divisive contrast normalisation, shared strength w). A
+gap decides sharply when both are near the ideal and weakly when both are far
+from it, so a sequence's pull depends on its partner. w = 0 recovers
+independent judgement of each sequence.
+"""
+import numpy as np
+import pymc as pm
+
+
+def compute_features(sequence_a, sequence_b):
+    def span_share(seq):
+        tally, hi, lo = 0, 0, 0
+        for c in seq:
+            tally += 1 if c == "H" else -1
+            hi = max(hi, tally)
+            lo = min(lo, tally)
+        return (hi - lo) / len(seq)
+
+    def switch_rate(seq):
+        return sum(1 for x, y in zip(seq, seq[1:]) if x != y) / (len(seq) - 1)
+
+    a = sequence_a.strip().upper()
+    b = sequence_b.strip().upper()
+    return {
+        "span_a": span_share(a),
+        "span_b": span_share(b),
+        "sw_a": switch_rate(a),
+        "sw_b": switch_rate(b),
+        "log_len": float(np.log(len(a) / 6.0)),
+    }
+
+
+N_SLOTS = 400
+K_REF = 0.1  # typical summed squared deviation of a pair; fixes the scale at w = 0
+
+
+def contrast(dist_a, dist_b, w):
+    """Difference in deviation, normalised by the pair's summed deviation."""
+    return K_REF * (dist_b - dist_a) / ((1.0 - w) * K_REF + w * (dist_a + dist_b) + 1e-3)
+
+
+with pm.Model() as model:
+    span_a = pm.Data("span_a", np.zeros(1, dtype="float64"))
+    span_b = pm.Data("span_b", np.zeros(1, dtype="float64"))
+    sw_a = pm.Data("sw_a", np.zeros(1, dtype="float64"))
+    sw_b = pm.Data("sw_b", np.zeros(1, dtype="float64"))
+    log_len = pm.Data("log_len", np.zeros(1, dtype="float64"))
+    participant_id = pm.Data("participant_id", np.zeros(1, dtype="int64"))
+
+    # Person-specific expected tally span (share of the length), in (0, 1).
+    mu_ideal = pm.Normal("mu_ideal", mu=-0.5, sigma=1.0)
+    sigma_ideal = pm.HalfNormal("sigma_ideal", sigma=1.0)
+    z_ideal = pm.Normal("z_ideal", mu=0.0, sigma=1.0, shape=N_SLOTS)
+    ideal = pm.Deterministic("ideal", pm.math.sigmoid(mu_ideal + sigma_ideal * z_ideal))
+
+    # Person-specific sensitivity to the span cue, scaled by a power of the length.
+    mu_log_beta = pm.Normal("mu_log_beta", mu=2.0, sigma=1.5)
+    sigma_log_beta = pm.HalfNormal("sigma_log_beta", sigma=0.7)
+    z_beta = pm.Normal("z_beta", mu=0.0, sigma=1.0, shape=N_SLOTS)
+    beta = pm.math.exp(mu_log_beta + sigma_log_beta * z_beta)
+    lam = pm.Normal("lam", mu=0.0, sigma=1.0)
+
+    # Shared ideal switching rate, person-specific weight.
+    sw_ideal = pm.Beta("sw_ideal", alpha=6.0, beta=4.0)
+    mu_kappa = pm.Normal("mu_kappa", mu=0.0, sigma=1.5)
+    sigma_kappa = pm.HalfNormal("sigma_kappa", sigma=1.0)
+    z_kappa = pm.Normal("z_kappa", mu=0.0, sigma=1.0, shape=N_SLOTS)
+    kappa = mu_kappa + sigma_kappa * z_kappa
+
+    # The mechanism: strength of divisive normalisation by the pair (shared).
+    w = pm.Beta("w", alpha=2.0, beta=2.0)
+
+    # Person-specific left/right response bias (decision stage, not a cue).
+    sigma_side = pm.HalfNormal("sigma_side", sigma=0.3)
+    z_side = pm.Normal("z_side", mu=0.0, sigma=1.0, shape=N_SLOTS)
+    side = sigma_side * z_side
+
+    theta = ideal[participant_id]
+    span_c = contrast((span_a - theta) ** 2, (span_b - theta) ** 2, w)
+    sw_c = contrast((sw_a - sw_ideal) ** 2, (sw_b - sw_ideal) ** 2, w)
+    sens = beta[participant_id] * pm.math.exp(lam * log_len)
+    logit = sens * span_c + 4.0 * kappa[participant_id] * sw_c + side[participant_id]
+    p_left = pm.Deterministic("p_left", pm.math.sigmoid(logit))
+
+    chose_left = pm.Data("chose_left", np.zeros(1, dtype="int64"))
+    pm.Bernoulli("response", p=p_left, observed=chose_left)

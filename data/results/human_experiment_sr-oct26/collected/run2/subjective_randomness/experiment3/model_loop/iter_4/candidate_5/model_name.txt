@@ -1,0 +1,1 @@
+local_alternation_switch_ideal_rule

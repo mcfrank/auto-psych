@@ -1,0 +1,96 @@
+{
+  "posteriors": {
+    "tally_span_switch_rate_ideal_2": 0.0,
+    "pair_normalized_tally_switch_contrast": 0.0,
+    "tally_span_switch_ideal_triplet_variety": 1e-06,
+    "tally_span_switch_ideal_periodic_unit": 0.999999,
+    "tally_span_switch_ideal_periodic_unit_2": 0.0
+  },
+  "elpd_loo": {
+    "tally_span_switch_rate_ideal_2": -2242.7102,
+    "pair_normalized_tally_switch_contrast": -2243.8998,
+    "tally_span_switch_ideal_triplet_variety": -2234.4833,
+    "tally_span_switch_ideal_periodic_unit": -2220.8919,
+    "tally_span_switch_ideal_periodic_unit_2": -2242.2073
+  },
+  "n_trials": 5120,
+  "comparison": {
+    "tally_span_switch_ideal_periodic_unit": {
+      "rank": 0,
+      "elpd_loo": -2220.891872435104,
+      "elpd_diff": 0.0,
+      "dse": 0.0,
+      "dse_clustered": 0.0,
+      "weight": 0.8800001134627665,
+      "loo_unreliable": false,
+      "n_bad_k": 9,
+      "frac_bad_k": 0.0017578125,
+      "n_exact_loo_points": 0,
+      "max_pareto_k": 0.9411229183115599,
+      "convergence_problems": [],
+      "not_converged": false
+    },
+    "tally_span_switch_ideal_triplet_variety": {
+      "rank": 1,
+      "elpd_loo": -2234.483334726817,
+      "elpd_diff": 13.591462291712487,
+      "dse": 5.761267238049832,
+      "dse_clustered": 8.143113985941783,
+      "weight": 0.09429803508248326,
+      "loo_unreliable": false,
+      "n_bad_k": 3,
+      "frac_bad_k": 0.0005859375,
+      "n_exact_loo_points": 0,
+      "max_pareto_k": 0.7759557905076623,
+      "convergence_problems": [],
+      "not_converged": false
+    },
+    "tally_span_switch_ideal_periodic_unit_2": {
+      "rank": 2,
+      "elpd_loo": -2242.207294680522,
+      "elpd_diff": 21.315422245418134,
+      "dse": 7.084226246334791,
+      "dse_clustered": 7.757247155362426,
+      "weight": 0.025701851454749947,
+      "loo_unreliable": false,
+      "n_bad_k": 39,
+      "frac_bad_k": 0.0076171875,
+      "n_exact_loo_points": 0,
+      "max_pareto_k": 2.1150488677311974,
+      "convergence_problems": [],
+      "not_converged": false
+    },
+    "tally_span_switch_rate_ideal_2": {
+      "rank": 3,
+      "elpd_loo": -2242.7102438649636,
+      "elpd_diff": 21.818371429859493,
+      "dse": 6.673521813335129,
+      "dse_clustered": 8.826426321617163,
+      "weight": 0.0,
+      "loo_unreliable": false,
+      "n_bad_k": 4,
+      "frac_bad_k": 0.00078125,
+      "n_exact_loo_points": 0,
+      "max_pareto_k": 0.9129823286412156,
+      "convergence_problems": [],
+      "not_converged": false
+    },
+    "pair_normalized_tally_switch_contrast": {
+      "rank": 4,
+      "elpd_loo": -2243.899788849976,
+      "elpd_diff": 23.007916414872646,
+      "dse": 6.825133271479957,
+      "dse_clustered": 8.876928904887938,
+      "weight": 5.707240235963695e-16,
+      "loo_unreliable": false,
+      "n_bad_k": 2,
+      "frac_bad_k": 0.000390625,
+      "n_exact_loo_points": 0,
+      "max_pareto_k": 0.7705398612124758,
+      "convergence_problems": [],
+      "not_converged": false
+    }
+  },
+  "excluded_unreliable": [],
+  "best_model": "tally_span_switch_ideal_periodic_unit"
+}

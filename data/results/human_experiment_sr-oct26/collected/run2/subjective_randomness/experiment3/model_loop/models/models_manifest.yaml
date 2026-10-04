@@ -1,0 +1,110 @@
+models:
+- name: person_decisiveness_rule_built_tally
+  rationale: "Refinement of the incumbent `rule_built_tally_switch_triplet` (tally\
+    \ span judged against a personal expected span, switching judged against an ideal\
+    \ rate with a person-specific weight, a reward for three-flip chunk variety, a\
+    \ penalty for rule-built sequences, a personal left/right lean). The one change:\
+    \ people differ in how decisively they act on their whole impression of randomness\
+    \ \u2014 each person has a single consistency (decisiveness) that scales all of\
+    \ their cues together (span, switching, chunk variety and rule-built penalty),\
+    \ replacing the incumbent's person-specific sensitivity on the tally span alone,\
+    \ so some people follow the consensus on almost every pair while others choose\
+    \ nearly at random. This addresses the critique (surviving FDR) that people differ\
+    \ in how often they agree with the majority more than the incumbent allows."
+- name: person_pattern_sensitivity_rule_built
+  rationale: "Refinement of the incumbent `rule_built_tally_switch_triplet` (running\
+    \ heads-minus-tails tally judged by closeness of its span to a personal expected\
+    \ span with person-specific, length-scaled sensitivity; switching judged by closeness\
+    \ to a shared ideal rate with person-specific weight; a reward for variety of\
+    \ three-flip chunks; a penalty on sequences built by a copying or mirror rule;\
+    \ a personal left/right lean). The one change: people differ in how much they\
+    \ attend to the pattern structure of a sequence \u2014 each person has their own\
+    \ pattern sensitivity, a single trait that scales both structural cues together\
+    \ (chunk variety and the rule-built penalty), so some people reliably reject recycled-chunk\
+    \ and rule-built sequences while others barely notice them and judge only by tally\
+    \ and switching. This addresses the critique (surviving FDR) that participants\
+    \ differ in how often they agree with the majority more than the incumbent allows,\
+    \ locating that heterogeneity in pattern perception rather than in decision noise\
+    \ or lapses."
+- name: person_switch_ideal_pattern_rule_built
+  rationale: "Refinement of the incumbent `person_pattern_sensitivity_rule_built`\
+    \ (tally span judged against a personal expected span, switching judged by closeness\
+    \ to an ideal switching rate, chunk variety and a rule-built penalty scaled by\
+    \ a personal pattern sensitivity, a personal left/right lean). The one change:\
+    \ people disagree about how often a random coin should switch sides \u2014 each\
+    \ person holds their own ideal switching rate, drawn from a population (some expect\
+    \ near-even switching, others heavy alternation), instead of one rate shared by\
+    \ everyone. On pairs that differ mainly in switching, people therefore split in\
+    \ opposite directions rather than all leaning the same way, addressing the critique\
+    \ that people differ in how often they agree with the majority even on pairs where\
+    \ pattern structure cannot act."
+- name: streak_excess_pattern_rule_built
+  rationale: "Refinement of the incumbent `person_pattern_sensitivity_rule_built`\
+    \ (running heads-minus-tails tally judged by closeness of its span to a personal\
+    \ expected span with person-specific, length-scaled sensitivity; switching judged\
+    \ by closeness to an ideal rate with a person-specific weight; a reward for three-flip\
+    \ chunk variety and a penalty on rule-built sequences, both scaled by a personal\
+    \ pattern sensitivity; a personal left/right lean). The one change: people treat\
+    \ a long streak of identical flips as a salient sign of non-randomness in its\
+    \ own right \u2014 every flip of the longest run beyond two (HHH, HHHH, ...) counts\
+    \ against a sequence, in absolute flips rather than as a share of its length \u2014\
+    \ a shared streak penalty taken from the pruned streak models (`periodic_ideal_absolute_streak_penalty`).\
+    \ Of two sequences with the same tally span, switching rate and chunk structure,\
+    \ people pick the one whose longest streak is shorter, including on pairs where\
+    \ pattern structure cannot act, where the incumbent predicts indifference."
+- name: terminal_streak_recency_pattern_rule
+  rationale: "Refinement of the incumbent `person_switch_ideal_pattern_rule_built`\
+    \ (tally span judged against a personal expected span, switching judged by closeness\
+    \ to a personal ideal switching rate, chunk variety and a rule-built penalty scaled\
+    \ by a personal pattern sensitivity, a personal left/right lean). The one change:\
+    \ people weigh the end of a sequence, the flips they read last, more than its\
+    \ interior \u2014 a sequence that finishes on a streak (the coin \"getting stuck\"\
+    \ at the end, HTHHTT, THTHHH) looks less random, and every flip of the final run\
+    \ beyond the first counts against it, by a shared terminal-streak penalty. Of\
+    \ two sequences with the same number of switches, people therefore pick the one\
+    \ that ends with a switch, addressing the critique that among equal-switch pairs\
+    \ people choose the sequence ending with a switch more often than the incumbent,\
+    \ which is blind to where switches occur, predicts."
+- name: terminal_run_pattern_rule_built
+  rationale: "Refinement of `streak_excess_pattern_rule_built` (tally span judged\
+    \ against a personal expected span with person-specific, length-scaled sensitivity;\
+    \ switching judged by closeness to an ideal rate with a person-specific weight;\
+    \ chunk variety and a rule-built penalty scaled by a personal pattern sensitivity;\
+    \ a personal left/right lean; and a shared penalty on streaks). The one change\
+    \ is where the streak is felt: people read a sequence left to right and judge\
+    \ it most by how it ends, so the streak that counts against randomness is the\
+    \ run the sequence finishes on \u2014 every repeated flip of its final run (\u2026\
+    HH, \u2026TTT) makes it look less random, while a sequence ending on a switch\
+    \ looks most random \u2014 replacing the penalty on the longest run anywhere.\
+    \ Of two sequences with equal switch counts, people therefore pick the one that\
+    \ ends with a switch, addressing the critique that people choose the sequence\
+    \ ending with a switch more often than the best model, which is blind to switch\
+    \ position, predicts."
+- name: edge_streak_primacy_recency_pattern_rule
+  rationale: "Refinement of the incumbent `terminal_streak_recency_pattern_rule` (tally\
+    \ span judged against a personal expected span, switching by closeness to a personal\
+    \ ideal switching rate, chunk variety and a rule-built penalty scaled by a personal\
+    \ pattern sensitivity, a personal left/right lean, and a shared penalty on every\
+    \ flip of the final run beyond the first). The one change: the edges of a sequence\
+    \ are salient at both ends, not only at its end \u2014 the run a sequence opens\
+    \ on is read first and noticed just as the run it finishes on is read last, so\
+    \ a sequence that starts with a streak (HHHTHT\u2026, TTHTHH\u2026) also looks\
+    \ less random, every flip of its opening run beyond the first counting against\
+    \ it by its own shared opening-streak penalty. Of two sequences with the same\
+    \ number of switches and the same ending, people therefore pick the one that starts\
+    \ with a switch, which the incumbent, blind to where the opening switches fall,\
+    \ predicts they do not."
+- name: local_alternation_switch_ideal_rule
+  rationale: "Refinement of `person_switch_ideal_pattern_rule_built` (tally span judged\
+    \ against a personal expected span, switching judged by closeness to a personal\
+    \ ideal switching rate, chunk variety and a rule-built penalty scaled by a personal\
+    \ pattern sensitivity, a personal left/right lean). The one change: people notice\
+    \ a local stretch of strict alternation (HTHT or THTH within any four consecutive\
+    \ flips) as a visible pattern in its own right, and every such alternating four-flip\
+    \ stretch counts against a sequence's randomness through a shared penalty scaled\
+    \ by the person's pattern sensitivity \u2014 even when the whole sequence is not\
+    \ rule-built and its overall switching rate is near their ideal. Of two sequences\
+    \ with the same number of switches, people therefore pick the one whose switches\
+    \ are not bunched into extended alternation, addressing the critique that among\
+    \ equal-switch pairs people choose the sequence with fewer alternating four-flip\
+    \ windows more often than the best model predicts."

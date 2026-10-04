@@ -1,0 +1,10 @@
+reserved_for_new: 0.0
+theories:
+  edge_streak_primacy_recency_pattern_rule: 0.125
+  local_alternation_switch_ideal_rule: 0.125
+  person_decisiveness_rule_built_tally: 0.125
+  person_pattern_sensitivity_rule_built: 0.125
+  person_switch_ideal_pattern_rule_built: 0.125
+  streak_excess_pattern_rule_built: 0.125
+  terminal_run_pattern_rule_built: 0.125
+  terminal_streak_recency_pattern_rule: 0.125
