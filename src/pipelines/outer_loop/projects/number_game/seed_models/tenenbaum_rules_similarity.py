@@ -14,9 +14,10 @@ sigma = 10; here both are fitted.
 
 One addition: with pure strong sampling a target that is one of the examples
 gets p(yes) = 1, and people answer "no" to such targets about a quarter of the
-time. As in Bigelow & Piantadosi (2016), each example is drawn from the
-concept with probability 1 - noise and uniformly from 1..100 otherwise; they
-fix noise at 0.1, here it is fitted with a prior favouring small values.
+time (a log likelihood of -inf at every parameter value). As in Bigelow &
+Piantadosi (2016), each example is drawn from the concept with probability
+1 - NOISE and uniformly from 1..100 otherwise, NOISE fixed at their 0.1.
+(Fitted, it went to 0.68 on the whole dataset, with sigma in the thousands.)
 """
 
 import numpy as np
@@ -24,6 +25,7 @@ import pymc as pm
 import pytensor.tensor as pt
 
 NUMBERS = np.arange(1, 101)
+NOISE = 0.1
 
 
 def is_prime(n):
@@ -54,7 +56,7 @@ _STARTS, _ENDS = np.array([(a, b) for a in NUMBERS for b in NUMBERS if a <= b]).
 INTERVAL_MEMBERSHIP = (NUMBERS >= _STARTS[:, None]) & (NUMBERS <= _ENDS[:, None])  # (5050, 100)
 
 # An interval's likelihood depends only on its size s and the number k of
-# examples it contains, ((1 - noise) / s + noise / 100)^k (noise / 100)^(n - k),
+# examples it contains, ((1 - NOISE) / s + NOISE / 100)^k (NOISE / 100)^(n - k),
 # and its prior only on s. So for each example set prepare_observed counts the
 # intervals in each (s, k) group, and for each target the set was asked about
 # the share of each group that contains it; the posterior over the groups is
@@ -74,14 +76,12 @@ with pm.Model() as model:
 
     lambda_rules = pm.Beta("lambda_rules", 2, 2)
     sigma = pm.LogNormal("sigma", mu=np.log(10.0), sigma=0.75)
-    noise = pm.Beta("noise", 1, 19)
-
-    log_noise = pt.log(noise / 100)
+    log_noise = np.log(NOISE / 100)
     n = n_examples[:, None]
 
     log_rules = (
         pt.log(lambda_rules) - np.log(N_RULES)
-        + rule_hits * pt.log((1 - noise) / RULE_SIZES + noise / 100)
+        + rule_hits * np.log((1 - NOISE) / RULE_SIZES + NOISE / 100)
         + (n - rule_hits) * log_noise
     )
 
@@ -94,7 +94,7 @@ with pm.Model() as model:
     log_intervals = (
         interval_log_count
         + log_size_prior[None, :, None]
-        + k[None, None, :] * pt.log((1 - noise) / INTERVAL_SIZES + noise / 100)[None, :, None]
+        + k[None, None, :] * np.log((1 - NOISE) / INTERVAL_SIZES + NOISE / 100)[None, :, None]
         + (n[:, :, None] - k[None, None, :]) * log_noise
     ).reshape((interval_log_count.shape[0], -1))
 

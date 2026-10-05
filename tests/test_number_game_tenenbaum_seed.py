@@ -8,8 +8,7 @@ mathematical properties (odd, even, squares, cubes, primes, multiples of
 posterior membership. His fit has lambda = 1/2 and sigma = 10. Without noise
 every example's own target has p(yes) = 1, and 1,742 of the dataset's
 responses to one are "no", so each example is drawn from the concept with
-probability 1 - noise and from 1..100 otherwise (Bigelow & Piantadosi 2016
-fix noise at 0.1; here it is fitted).
+probability 0.9 and from 1..100 otherwise, as in Bigelow & Piantadosi (2016).
 
 The seed collapses the intervals by (size, examples contained), which
 determine an interval's likelihood. The reference below enumerates all 5,083.
@@ -75,7 +74,7 @@ def model():
     return load_pymc_model("tenenbaum_rules_similarity", SEEDS_DIR)
 
 
-def seed_p_yes(model, number_sets, lam, sigma, noise):
+def seed_p_yes(model, number_sets, lam, sigma):
     """The seed's p(yes) for every target of every set, at fixed parameters."""
     rows = [
         {"number_set": ",".join(map(str, s)), "target": str(y), "rating": "0"}
@@ -85,7 +84,7 @@ def seed_p_yes(model, number_sets, lam, sigma, noise):
         pm.set_data(make_stim_data(model, rows))
     [graph] = model.replace_rvs_by_values([model["p_yes"]])
     fn = model.compile_fn(graph, inputs=model.value_vars, on_unused_input="ignore")
-    constrained = {"lambda_rules": lam, "sigma": sigma, "noise": noise}
+    constrained = {"lambda_rules": lam, "sigma": sigma}
     point = {}
     for rv in model.free_RVs:
         transform = model.rvs_to_transforms[rv]
@@ -99,18 +98,19 @@ def test_hypothesis_space_is_tenenbaums_5083():
     assert len(rules) == 33 and len(intervals) == 5050
 
 
-@pytest.mark.parametrize("lam, sigma, noise", [(0.5, 10.0, 0.05), (0.3, 4.0, 0.2)])
-def test_collapsed_seed_equals_enumerating_every_hypothesis(model, lam, sigma, noise):
+@pytest.mark.parametrize("lam, sigma", [(0.5, 10.0), (0.3, 4.0)])
+def test_collapsed_seed_equals_enumerating_every_hypothesis(model, lam, sigma):
     sets = [(16,), (60, 80), (16, 8, 2, 64), (16, 23, 19, 20), (81, 25, 4)]
-    got = seed_p_yes(model, sets, lam, sigma, noise)
-    expected = np.stack([reference_p_yes(s, lam, sigma, noise) for s in sets])
+    got = seed_p_yes(model, sets, lam, sigma)
+    expected = np.stack([reference_p_yes(s, lam, sigma, noise=0.1) for s in sets])
     np.testing.assert_allclose(got, expected, rtol=1e-9, atol=1e-12)
 
 
-def test_reproduces_tenenbaums_generalisation_patterns(model):
-    """At his lambda = 1/2, sigma = 10, with vanishing noise (paper, Figure 1)."""
+def test_hypothesis_space_and_prior_reproduce_tenenbaums_patterns():
+    """His model (no noise) at lambda = 1/2, sigma = 10 (paper, Figure 1); the
+    seed equals this reference with noise 0.1 (test above)."""
     sets = [(16, 8, 2, 64), (60, 80, 10, 30), (16, 23, 19, 20), (16,)]
-    p = {s: row for s, row in zip(sets, seed_p_yes(model, sets, 0.5, 10.0, 1e-9))}
+    p = {s: reference_p_yes(s, 0.5, 10.0, noise=1e-9) for s in sets}
     at = lambda s, y: p[s][y - 1]  # noqa: E731
     # A few examples of a small rule: generalise to that rule only.
     assert at((16, 8, 2, 64), 32) > 0.9 and at((16, 8, 2, 64), 24) < 0.05
