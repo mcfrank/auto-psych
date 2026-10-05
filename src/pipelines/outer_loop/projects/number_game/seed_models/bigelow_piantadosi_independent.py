@@ -74,7 +74,8 @@ with pm.Model() as model:
     in_concept = posterior[:, :N_RULES] @ pt.as_tensor(RULE_MEMBERSHIP) + posterior[:, N_RULES:] * interval_in_concept
 
     # One flat index per response: half the gradient cost of 2-D indexing.
-    p_yes = pm.Deterministic("p_yes", in_concept.reshape((-1,))[row_cell])
+    # Rounding can put a sure membership a few ulps above 1.
+    p_yes = pm.Deterministic("p_yes", pt.clip(in_concept.reshape((-1,))[row_cell], 0.0, 1.0))
     pm.Bernoulli("response", p=p_yes, observed=rating)
 
 

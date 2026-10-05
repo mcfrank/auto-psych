@@ -51,7 +51,7 @@ from src.runtime.config import REPO_ROOT  # noqa: E402
 DATA_CSV = REPO_ROOT / "data" / "number-game" / "human experiment" / "numbergame_data.csv"
 GOLDEN = REPO_ROOT / "tests" / "fixtures" / "number_game" / "numpyro_basic_golden.json"
 SEEDS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects" / "number_game" / "seed_models"
-SEED = "bayesian_rules_intervals"
+SEED = "bigelow_piantadosi_independent"
 
 
 def reference_inputs(cells):

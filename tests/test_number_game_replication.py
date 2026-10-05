@@ -53,7 +53,7 @@ def seed_map():
         {"number_set": ",".join(map(str, s)), "target": t, "rating": r}
         for s, t, r in zip(responses["set"], responses["target"], responses["rating"])
     ]
-    model = load_pymc_model("bayesian_rules_intervals", SEEDS_DIR)
+    model = load_pymc_model("bigelow_piantadosi_independent", SEEDS_DIR)
     with model:
         pm.set_data(make_stim_data(model, rows))
         point = pm.find_MAP(progressbar=False)

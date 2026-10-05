@@ -57,7 +57,7 @@ def golden():
 
 @pytest.fixture(scope="module")
 def bound_model(golden):
-    model = load_pymc_model("bayesian_rules_intervals", SEEDS_DIR)
+    model = load_pymc_model("bigelow_piantadosi_independent", SEEDS_DIR)
     with model:
         pm.set_data(make_stim_data(model, _rows(golden["cells"])))
     return model

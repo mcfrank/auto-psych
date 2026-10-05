@@ -32,7 +32,7 @@ SEEDS_DIR = REPO_ROOT / "src" / "pipelines" / "outer_loop" / "projects" / "numbe
 
 @dataclass
 class Args:
-    seed_model: str = "bayesian_rules_intervals"
+    seed_model: str = "bigelow_piantadosi_independent"
     draws: int = 1000
     tune: int = 1000
     chains: int = 4
