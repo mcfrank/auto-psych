@@ -1,0 +1,84 @@
+"""CLI for the RSA inner loop on a fixed dataset.
+
+    # Score the seed models only (no agents):
+    uv run python -m src.rsa.loop.run --results data/rsa/loop_seeds --max-iterations 0
+
+    # One round of three agents (Gemini through opencode by default):
+    uv run python -m src.rsa.loop.run --results data/rsa/loop_smoke \
+        --max-iterations 1 --candidate-count 3 --no-sandbox
+
+Sandboxing (bubblewrap) is on by default, as for every loop agent; turn it
+off only in a disposable container (e.g. a cloud session) that holds nothing
+an agent should not see.
+"""
+
+from __future__ import annotations
+
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Literal, Optional
+
+import tyro
+
+from src.rsa.dataset import DEFAULT_TRIALS_CSV
+from src.rsa.fit import FitSettings
+from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC
+from src.rsa.loop.novelty import DEFAULT_NOVELTY_RMSE_THRESHOLD
+from src.rsa.loop.orchestrator import (
+    DEFAULT_PRUNE_DSE_MULTIPLIER,
+    LoopConfig,
+    RSALoop,
+    coding_agent_spawner,
+)
+from src.runtime.config import PROJECT_ASSETS_DIR
+
+
+@dataclass
+class Args:
+    results: Path
+    """Output directory (model_loop layout; see src/rsa/loop/orchestrator.py)."""
+    responses: Path = DEFAULT_TRIALS_CSV
+    """Trials CSV in the canonical pragmods schema (included forced-choice rows are used)."""
+    seed_models: Path = PROJECT_ASSETS_DIR / "rsa_reference" / "seed_models"
+    max_iterations: int = 1
+    candidate_count: int = 3
+    num_warmup: int = 1000
+    num_samples: int = 1000
+    num_chains: int = 4
+    novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD
+    prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER
+    fit_time_limit_sec: float = FIT_TIME_LIMIT_SEC
+    coding_agent: Optional[Literal["claude", "opencode"]] = None
+    """Agent backend; defaults to CODING_AGENT, then opencode (Gemini)."""
+    agent_model: Optional[str] = None
+    agent_timeout_sec: int = 1200
+    agent_root: Optional[Path] = None
+    """Directory agents run from (the scrubbed agent tree on the cluster; default: the repo)."""
+    no_sandbox: bool = False
+    """Run agents without bubblewrap. Only in a disposable container."""
+    title: str = "RSA inner loop"
+
+
+def main(args: Args) -> int:
+    results = Path(args.results)
+    cfg = LoopConfig(
+        responses_path=args.responses, seed_models_dir=args.seed_models, results_dir=results,
+        max_iterations=args.max_iterations, candidate_count=args.candidate_count,
+        settings=FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains),
+        novelty_threshold=args.novelty_rmse_threshold, prune_dse_multiplier=args.prune_dse_multiplier,
+        fit_time_limit_sec=args.fit_time_limit_sec, report_title=args.title,
+    )
+    spawn = coding_agent_spawner(
+        models_dir=results / "models", responses_path=results / "responses.csv",
+        timeout_sec=args.agent_timeout_sec, backend=args.coding_agent, model=args.agent_model,
+        agent_root=args.agent_root, sandbox=not args.no_sandbox,
+    )
+    final = RSALoop(cfg, spawn).run()
+    print(f"best model: {final['best_model']}; live: {sorted(final['standing'])}")
+    print(f"report: {results / 'report.html'}")
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(tyro.cli(Args)))
