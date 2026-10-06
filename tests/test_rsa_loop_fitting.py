@@ -15,6 +15,8 @@ from src.rsa.loop.fitting import (
 )
 from src.runtime.config import PROJECT_ASSETS_DIR
 
+pytestmark = pytest.mark.slow  # runs NUTS
+
 SEEDS = PROJECT_ASSETS_DIR / "rsa_reference" / "seed_models"
 QUICK = FitSettings(num_warmup=50, num_samples=50, num_chains=2)
 
