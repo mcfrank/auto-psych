@@ -12,7 +12,7 @@ from __future__ import annotations
 import ast
 import string
 from pathlib import Path
-from typing import List
+from typing import AbstractSet, List
 
 CANDIDATE_IMPORT_ALLOWLIST = frozenset(
     {
@@ -180,7 +180,12 @@ def _format_reaches_attributes(node: ast.Call) -> bool:
     return any(field and ("." in field or "[" in field) for field in fields)
 
 
-def check_forbidden_imports(source: str) -> List[str]:
+def check_forbidden_imports(
+    source: str,
+    *,
+    allowlist: AbstractSet[str] = CANDIDATE_IMPORT_ALLOWLIST,
+    exact_modules: AbstractSet[str] = frozenset(),
+) -> List[str]:
     """Return why ``source`` may not run: forbidden imports and forbidden uses.
 
     Imports outside the allowlist are reported by module name; uses of
@@ -193,6 +198,11 @@ def check_forbidden_imports(source: str) -> List[str]:
     ``def compute_features`` is still caught. Relative imports
     (``from . import ...``) are always forbidden — agent code has no package
     context.
+
+    ``allowlist`` names the allowed top-level packages (default: the PyMC
+    stack's); ``exact_modules`` allows single modules by full dotted name
+    without opening their package (the RSA domain allows
+    ``src.rsa.memo_kit``, never ``src``).
     """
     try:
         tree = ast.parse(source)
@@ -203,7 +213,9 @@ def check_forbidden_imports(source: str) -> List[str]:
         if isinstance(node, ast.Import):
             for alias in node.names:
                 parts = alias.name.split(".")
-                if parts[0] not in CANDIDATE_IMPORT_ALLOWLIST:
+                if alias.name in exact_modules:
+                    continue
+                if parts[0] not in allowlist:
                     forbidden.append(alias.name)
                 elif any(_forbidden_attribute(part) for part in parts[1:]):
                     forbidden.append(alias.name)
@@ -211,9 +223,9 @@ def check_forbidden_imports(source: str) -> List[str]:
             if node.level:
                 forbidden.append(f"relative import (level {node.level})")
                 continue
-            if node.module:
+            if node.module and node.module not in exact_modules:
                 parts = node.module.split(".")
-                if parts[0] not in CANDIDATE_IMPORT_ALLOWLIST or any(
+                if parts[0] not in allowlist or any(
                     _forbidden_attribute(part) for part in parts[1:]
                 ):
                     forbidden.append(node.module)
