@@ -1,0 +1,296 @@
+{
+  "source_repo": "https://github.com/langcog/pragmods",
+  "source_commit": "83a9f5945221a94419572d226dfa272b2f3ccba4",
+  "source_worktree_dirty": false,
+  "stimulus_code_repo": "https://github.com/langcog/pragmods-expts",
+  "stimulus_code_commit_transcribed": "8ff10c31e47e0daf00c1f48ded583b955eb56747",
+  "generation_command": "uv run python -m src.rsa.pragmods_ingest --pragmods-dir /tmp/claude-0/-home-user-auto-psych/9b8fbca1-2e5e-5ce1-a26c-d387ef06bcff/scratchpad/ext/pragmods",
+  "excluded_directories": [
+    "originals",
+    "unused",
+    "unused-size"
+  ],
+  "source_files": [
+    {
+      "path": "1-prelims/dv/betting_no_fam_boat_oneword_8_december_LZZZ.tsv",
+      "rows": 50,
+      "sha256": "e2223d652a6833ab0c9e1e9015b0d32a55d7a0972d106e3e28c702a5db8bcb9b"
+    },
+    {
+      "path": "1-prelims/dv/betting_no_fam_friend_oneword_1_december_AGHP.tsv",
+      "rows": 49,
+      "sha256": "02e9bde202bf53072c594d7f8b29f019a535c4bcd4ff74ce917237ed687bcf10"
+    },
+    {
+      "path": "1-prelims/dv/betting_no_fam_snowman_oneword_8_december_LSSS.tsv",
+      "rows": 50,
+      "sha256": "200407b3a9e773c210a30f2db5a844f4772e2c3882351bee08c456f2369dbb69"
+    },
+    {
+      "path": "1-prelims/dv/betting_no_fam_sundae_oneword_8_december_BSUN.tsv",
+      "rows": 50,
+      "sha256": "878f780033c7ae067586b581e7658bdd685309bd80e7c741a78a5d5948fc7c93"
+    },
+    {
+      "path": "1-prelims/dv/forced_choice_no_fam_boat_oneword_7_december_LFBN.tsv",
+      "rows": 50,
+      "sha256": "892fd61e0bd3dbad4e9d2eab56bc807549546a5b70f787e66f1c2d5c4bb192fd"
+    },
+    {
+      "path": "1-prelims/dv/forced_choice_no_fam_friend_oneword_1_december_AGSK.tsv",
+      "rows": 50,
+      "sha256": "967dd1dadfbdccfd225300d7546e419d890dd31ef07328d34cdf456c60fd5d56"
+    },
+    {
+      "path": "1-prelims/dv/forced_choice_no_fam_snowman_oneword_8_december_LSBN.tsv",
+      "rows": 140,
+      "sha256": "531524733b18ab2de9b7894d8e6d1b257a917bc31dba4042d51c33044ed69d92"
+    },
+    {
+      "path": "1-prelims/dv/forced_choice_no_fam_sundaes_oneword_8_december_LSBZ.tsv",
+      "rows": 50,
+      "sha256": "d5575cc6aa321bfa903005046aa04fbcc5d827b2536ff4a6242361cbbec23a2f"
+    },
+    {
+      "path": "1-prelims/dv/likert_no_fam_boat_oneword_9_december_FUNU.tsv",
+      "rows": 50,
+      "sha256": "eb835c92f76a978766d739e7af502526b0ef47eb1a82e7074db258a8fe6cddf6"
+    },
+    {
+      "path": "1-prelims/dv/likert_no_fam_friend_oneword_2_december_JSLD.tsv",
+      "rows": 50,
+      "sha256": "2e74115de599c0fc2c9bc5934989877232e2fa316bec61a5576bb5c43af261d7"
+    },
+    {
+      "path": "1-prelims/dv/likert_no_fam_snowman_oneword_9_december_FINA.tsv",
+      "rows": 50,
+      "sha256": "f4b1c8d5795cc355280e72ce4a4349d80df0d2b354d9e16a8e0007a035b16882"
+    },
+    {
+      "path": "1-prelims/dv/likert_no_fam_sundaes_oneword_9_december_LSUN.tsv",
+      "rows": 50,
+      "sha256": "2d6c0108ae797a39ace6273e2cdd1738b58caff58dc967ac2332145c469c15aa"
+    },
+    {
+      "path": "1-prelims/linguistic_framing/forced_choice_no_fam_6random_count_baseratesmy_14jan2015_BASERATES.tsv",
+      "rows": 100,
+      "sha256": "87074cf6120da0d69d7ab0446a0d57bda7077a3b50be4bf53f267af8d2c2aefc"
+    },
+    {
+      "path": "1-prelims/manip/forced_choice_no_fam_6random_NOcount_ALNC.tsv",
+      "rows": 240,
+      "sha256": "a7280a45946adb456530427c3fe9b654d1c79bb3977bf6e5ddd17b0097d53b34"
+    },
+    {
+      "path": "1-prelims/manip/forced_choice_no_fam_6random_count_ALLS.tsv",
+      "rows": 340,
+      "sha256": "73ce83622395db8bd9fd8387a2379294db801a56e5522ff6695f7560b3d4e033"
+    },
+    {
+      "path": "2-prior/baserates/scale_6stimuli_yes_fam_mumblemumble_26_february_FMMM.tsv",
+      "rows": 400,
+      "sha256": "a633bb87703aef990939c6ea97decfc370a5e053bb9ed9420b9aa18fe1a088da"
+    },
+    {
+      "path": "2-prior/baserates/scale_6stimuli_yes_fam_oneword_25_february_FAMO.tsv",
+      "rows": 144,
+      "sha256": "a5e2c206e079a3465c4d2926b89c809d6484f7494ee76ba61a50db913ce4e510"
+    },
+    {
+      "path": "2-prior/baserates/scale_6stimuli_yes_fam_oneword_25_february_FAMO2.tsv",
+      "rows": 256,
+      "sha256": "4673db219d14e9f471e91dc038d5be005e61b3ecba8d1a278ad242ec9833c4c1"
+    },
+    {
+      "path": "2-prior/color/forced_choice_no_fam_6random_2count_oneword_10april2015_COLORBASE2.tsv",
+      "rows": 100,
+      "sha256": "c1e8857f1a37e2b3f05c2e6bc183481de7415a7514bdda822c42edfa1c25c4c8"
+    },
+    {
+      "path": "2-prior/color/forced_choice_no_fam_6random_2count_oneword_23feb2015_COLORSALIENCE.tsv",
+      "rows": 200,
+      "sha256": "201d1fd1bc41b743ec3ac841862d1484a5e44f5e02241102d024e57b31fe0360"
+    },
+    {
+      "path": "2-prior/color/forced_choice_no_fam_6random_2count_oneword_4mar2015_COLORBASE.tsv",
+      "rows": 100,
+      "sha256": "801be2eb31769d8d60938b3c1324aeb8af0c307a7dd38b3a90c0acc33708662f"
+    },
+    {
+      "path": "2-prior/language/forced_choice_no_fam_4random_count_12_january_least_LEAS.tsv",
+      "rows": 100,
+      "sha256": "8297418984e3b210cc086984e24c553194fb71ebcfd0681ca20a80507a26ef7b"
+    },
+    {
+      "path": "2-prior/language/forced_choice_no_fam_boat_1_december_XYZQ_incomplete.tsv",
+      "rows": 50,
+      "sha256": "822843e5338b83f1f0ec821571fdf571c6657f7681b88010e3e7c7b63375bf12"
+    },
+    {
+      "path": "2-prior/language/forced_choice_no_fam_friends_30_november.tsv",
+      "rows": 50,
+      "sha256": "b98ee690f4def363ed045ad59910dc22459792bfa08656b839aabb5ae48ae531"
+    },
+    {
+      "path": "2-prior/language/forced_choice_no_fam_pizza_30_november.tsv",
+      "rows": 50,
+      "sha256": "c9c0ed9e1598525ee46166964388ca5f7b31668614002cf87336fd59d0104846"
+    },
+    {
+      "path": "2-prior/language/forced_choice_no_fam_snowman_30_november.tsv",
+      "rows": 50,
+      "sha256": "7d706be637287b5eaf471673b8dbd96a26c4f7e1670eb1b390ea0f145d4b2ea8"
+    },
+    {
+      "path": "2-prior/language/scale_6stimuli_no_fam_prior_5_april_PRIOLF.tsv",
+      "rows": 250,
+      "sha256": "856df84c5f9d143dd26b59dc074406d8514acff45f14296fc3a799201589c6e1"
+    },
+    {
+      "path": "2-prior/measurement/forced_choice_no_fam_6random_count_onewordmumble_21jan2015_WORDMUMBLE.tsv",
+      "rows": 200,
+      "sha256": "2d7d9c33ca84570b27f4a807b8d50fc2ae33784c65b3246e3c916d632c5181f2"
+    },
+    {
+      "path": "3-levels/levels/forced_choice_no_fam_6random_count_onewordmumble_22jan2015_SCALESBASE.tsv",
+      "rows": 200,
+      "sha256": "daf46e03192db4f6ffd92e4ca54332367b39df2580ca49415aace44a79ba9705"
+    },
+    {
+      "path": "3-levels/levels/scale_plus_6stimuli_3levels_no_fam_24_january_SCAL.tsv",
+      "rows": 200,
+      "sha256": "626e1edd63e3f9080cfcae4d2351ba595172d2581982ba0d0268d19151937272"
+    },
+    {
+      "path": "3-levels/levels/scales_6stimuli_3levels_no_fam_25_january_OSCA.tsv",
+      "rows": 120,
+      "sha256": "2c42ff75bffff7829e2eeb1ad0ac81487e15c007cee25e28fd870070ef863001"
+    },
+    {
+      "path": "3-levels/oddman/forced_choice_no_fam_6random_3count_onewordmumble_11feb2015_ODDBASE.tsv",
+      "rows": 100,
+      "sha256": "923d4d567dec3b7863745f45c81a9495de14b71447aaa37a600c75583c359d4f"
+    },
+    {
+      "path": "3-levels/oddman/patch_oddone_no_fam_14_may_PATCH.tsv",
+      "rows": 200,
+      "sha256": "c0df246245b82ccc9a413a57878ec16c73478aba94ef7e0af90197bad64f0f42"
+    },
+    {
+      "path": "3-levels/size/pragmods_distractions.results1.tsv",
+      "rows": 300,
+      "sha256": "a408073deed4395ae8b071a673c1ff2436c99ace70326847ae234f74c6700684"
+    },
+    {
+      "path": "3-levels/size/pragmods_distractions.results2.tsv",
+      "rows": 200,
+      "sha256": "77545641e9a02395619a287135976ae023f784adb8cc04c8d3be954585815f80"
+    },
+    {
+      "path": "3-levels/size/pragmods_distractions.results3.tsv",
+      "rows": 800,
+      "sha256": "de0368b02baa71c7e2accc0a38557a9a787ec9767732ac6e988e5f8028bc3c32"
+    },
+    {
+      "path": "3-levels/size/pragmods_salience_priors.results.tsv",
+      "rows": 450,
+      "sha256": "fb537c949f5dd35011c25383b051cc11e08c471fcd69d36dd3d59d684928ba90"
+    },
+    {
+      "path": "3-levels/twins/forced_choice_no_fam_6random_count_onewordmumble_11feb2015_TWINBASE.tsv",
+      "rows": 100,
+      "sha256": "4c9ff72a59f1603e2fa3ac143e84a76c8d324d5e1bd46a5cec1a5de468d3170c"
+    },
+    {
+      "path": "3-levels/twins/scaleweird_6stimuli_no_fam_oneword_19_february_WERD.tsv",
+      "rows": 120,
+      "sha256": "92e67a1309b4ce3004ffcbd276484b67246ddd7c7f93df96e607e7480041730f"
+    },
+    {
+      "path": "4-sequences/pragmods_L2second.anondata.tsv",
+      "rows": 100,
+      "sha256": "5987ffb1a5126c48130770783db8bd351e72f749ea2ed0ef3a555da1673720f4"
+    },
+    {
+      "path": "4-sequences/pragmods_bx3.anondata.csv",
+      "rows": 50,
+      "sha256": "2d43b8079e6abcb9285e8ca2587a99224317c7451be8a9c3a65b44ad087509ef"
+    },
+    {
+      "path": "4-sequences/pragmods_seq.anondata.csv",
+      "rows": 200,
+      "sha256": "ae6370157acaf4b20d629ccc4728dd7464376325e46a6a521641beec0b615ed8"
+    },
+    {
+      "path": "4-sequences/pragmods_seq2.anondata.csv",
+      "rows": 100,
+      "sha256": "5ef443c77acc5f48c431d6a6e5dee299156bb016875806cee1ff3ab550c2e726"
+    },
+    {
+      "path": "4-sequences/pragmods_wx3.anondata.csv",
+      "rows": 50,
+      "sha256": "e15956ac13e163bd399cbdfdc1e499224c0e8585c30efab90a606f34f9c5a128"
+    },
+    {
+      "path": "5-speakers/pragmods_overspec_baseline.results.csv",
+      "rows": 149,
+      "sha256": "47887b87172c832a7f9d2ca9cb5f6fdad4e1ceaaeb9c334bdf0fec9c73c2138e"
+    },
+    {
+      "path": "5-speakers/pragmods_overspec_checkbox.results.csv",
+      "rows": 150,
+      "sha256": "830ed03eab88f3f7f194de483d7da9a3c2fbf571d82fe49ec595019a919503a5"
+    },
+    {
+      "path": "5-speakers/pragmods_overspec_seq_baseline_lvl1.results.csv",
+      "rows": 151,
+      "sha256": "b5e543a65b3ed83e1ff9faa86f3409577e2ce099be7fe2d0e9b9d27bc5f8de7d"
+    },
+    {
+      "path": "5-speakers/pragmods_overspec_seq_baseline_lvl2.results.csv",
+      "rows": 150,
+      "sha256": "3c982f569c750061d875350b66bd544dc08c21adc07afda69762cbb355b55b11"
+    },
+    {
+      "path": "5-speakers/pragmods_overspec_seq_checkbox_lvl1.results.csv",
+      "rows": 150,
+      "sha256": "cd122b22984542a1473baf1119574907adc6a4b389b8f96c2fc7e1311f2fe53e"
+    },
+    {
+      "path": "5-speakers/pragmods_overspec_seq_checkbox_lvl2.results.csv",
+      "rows": 150,
+      "sha256": "1c10c1a4c192faec9957170250eb945f8f5d4e1b8054bfa635e2c248a8627ae0"
+    },
+    {
+      "path": "5-speakers/pragmods_overspec_seq_virtual_lvl1.results.csv",
+      "rows": 152,
+      "sha256": "86b16139860bbc9225df702f486b1e4735cce7001922288b4f6e898442f92327"
+    },
+    {
+      "path": "5-speakers/pragmods_overspec_seq_virtual_lvl2.results.csv",
+      "rows": 150,
+      "sha256": "69be80ec089d4f4eaeda37574f37f03f285ba2f55e437f4ed918b3373fbeeb18"
+    },
+    {
+      "path": "5-speakers/pragmods_overspec_virtual.results.csv",
+      "rows": 154,
+      "sha256": "78b6e4dbb240dbb8ae2d1bda5ff2bc71aa063005383cde82082a9dda903e82f1"
+    }
+  ],
+  "auxiliary_files": [
+    {
+      "path": "3-levels/size/scale_and_level.csv",
+      "sha256": "31e1ccafc7c7d78fb1b695da27d1ce95347bf20bfd78e8d29386fd390168d6a1"
+    },
+    {
+      "path": "all_experiments.csv",
+      "sha256": "46ea993a1d8a73d3d26122898531d2f768789153f8729146230da95f30653857"
+    }
+  ],
+  "output": {
+    "path": "pragmods_trials.csv",
+    "rows": 10168,
+    "included_rows": 8569,
+    "sha256": "d3a77de656266d295b034ab9ef557952a38b5a7d3de3dbf99a766da2eb367146"
+  }
+}
