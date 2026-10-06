@@ -1,0 +1,488 @@
+<title>__PAGE_TITLE__</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: a lab notebook. Summary first (model standing, fit by experiment),
+   then small multiples of every display, each drawn with its game underneath. */
+:root {
+  --page: #f5f6f4;
+  --surface: #fcfcfb;
+  --ink: #0b0b0b;
+  --ink-2: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --border: rgba(11, 11, 11, 0.10);
+  --human: #cfcec6;
+  --human-ink: #6b6a64;
+  --said: #eef3fb;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a;
+  --seq-0: #cde2fb; --seq-1: #9ec5f4; --seq-2: #6da7ec; --seq-3: #3987e5; --seq-4: #256abf; --seq-5: #184f95;
+  --good: #0ca30c; --warn: #d03b3b;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-data: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --page: #0f100f; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10);
+    --human: #4a4a46; --human-ink: #a9a89f; --said: #1c2a3d;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+    --good: #0ca30c; --warn: #e66767;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --page: #0f100f; --surface: #1a1a19; --ink: #ffffff; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255, 255, 255, 0.10);
+  --human: #4a4a46; --human-ink: #a9a89f; --said: #1c2a3d;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70;
+  --good: #0ca30c; --warn: #e66767;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--page); color: var(--ink); font-family: var(--font-body); font-size: 14px; line-height: 1.45; }
+.wrap { max-width: 1240px; margin: 0 auto; padding-inline: 20px; padding-block: 28px 64px; display: grid; gap: 36px; }
+h1, h2, h3 { text-wrap: balance; margin: 0; font-weight: 600; }
+h1 { font-size: 26px; letter-spacing: -0.01em; }
+h2 { font-size: 18px; }
+h3 { font-size: 13px; font-weight: 600; }
+.eyebrow { font-family: var(--font-data); font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
+.lede { color: var(--ink-2); max-width: 70ch; margin: 6px 0 0; }
+.meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-family: var(--font-data); font-size: 12px; color: var(--ink-2); }
+.meta b { color: var(--ink); font-weight: 500; }
+section { display: grid; gap: 14px; min-width: 0; }
+.section-head { display: grid; gap: 4px; }
+.section-head p { margin: 0; color: var(--ink-2); max-width: 75ch; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; min-width: 0; }
+.scroll-x { overflow-x: auto; }
+svg text { font-family: var(--font-data); }
+.num { font-variant-numeric: tabular-nums; font-family: var(--font-data); }
+
+/* model standing */
+.standing { display: grid; grid-template-columns: minmax(0, 1fr); gap: 18px; }
+@media (min-width: 900px) { .standing { grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); } }
+table { border-collapse: collapse; width: 100%; font-size: 13px; }
+th { text-align: left; font-weight: 500; color: var(--muted); font-size: 11px; letter-spacing: 0.04em; text-transform: uppercase; padding: 6px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+td { padding: 7px 8px; border-bottom: 1px solid var(--grid); vertical-align: top; }
+td.num, th.num { text-align: right; }
+.pill { display: inline-flex; align-items: center; gap: 4px; font-family: var(--font-data); font-size: 11px; padding: 1px 7px; border-radius: 999px; border: 1px solid var(--border); color: var(--ink-2); white-space: nowrap; }
+.pill.bad { color: var(--warn); border-color: currentColor; }
+.models { display: grid; gap: 12px; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); }
+.model-card { display: grid; gap: 8px; align-content: start; }
+.model-card .name { font-family: var(--font-data); font-weight: 500; font-size: 13px; }
+.model-card p { margin: 0; color: var(--ink-2); font-size: 13px; }
+.params { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 12px; }
+.params dt { font-family: var(--font-data); color: var(--muted); }
+.params dd { margin: 0; font-family: var(--font-data); font-variant-numeric: tabular-nums; }
+
+/* filters */
+.filters { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; position: sticky; top: env(safe-area-inset-top, 0px); z-index: 5; background: var(--page); padding-block: 10px; border-bottom: 1px solid var(--grid); }
+.filter { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.filter > .label { font-size: 11px; color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-right: 2px; }
+.chip { font: inherit; font-size: 12px; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); background: var(--surface); color: var(--ink-2); cursor: pointer; display: inline-flex; align-items: center; gap: 6px; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--surface); border-color: var(--ink); }
+.chip:disabled { opacity: 0.4; cursor: not-allowed; }
+.chip:focus-visible, button:focus-visible, summary:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+.key { width: 14px; height: 10px; flex: none; }
+
+/* small multiples */
+.exp-group { display: grid; gap: 10px; }
+.exp-group h3 { display: flex; gap: 10px; align-items: baseline; }
+.exp-group h3 .count { font-family: var(--font-data); font-weight: 400; color: var(--muted); font-size: 11px; }
+.panels { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(232px, 1fr)); }
+.panel { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 10px 8px; min-width: 0; }
+.panel header { display: flex; justify-content: space-between; gap: 8px; font-size: 12px; margin-bottom: 4px; }
+.panel header .cond { color: var(--ink); font-weight: 500; overflow-wrap: anywhere; }
+.panel header .n { font-family: var(--font-data); color: var(--muted); white-space: nowrap; }
+.panel svg { display: block; width: 100%; height: auto; overflow: visible; }
+.hit { fill: transparent; cursor: default; }
+.hit:hover, .hit:focus { fill: var(--grid); fill-opacity: 0.45; outline: none; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 12px; color: var(--ink-2); align-items: center; }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+#tooltip { position: fixed; pointer-events: none; z-index: 20; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 6px 24px rgba(0,0,0,0.12); min-width: 180px; }
+#tooltip .row { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+#tooltip .row b { font-family: var(--font-data); font-weight: 500; font-variant-numeric: tabular-nums; }
+#tooltip .row span { color: var(--ink-2); display: inline-flex; gap: 6px; align-items: center; }
+#tooltip .title { color: var(--muted); font-size: 11px; margin-bottom: 4px; }
+details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
+.empty { color: var(--muted); font-size: 13px; padding: 12px 0; }
+@media (prefers-reduced-motion: no-preference) { .chip, .hit { transition: background-color .12s, fill-opacity .12s; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">auto-rsa · model report</div>
+    <h1 id="title"></h1>
+    <p class="lede">How well each memo model predicts which referent people pick. A model's standing comes from PSIS-LOO on every trial. The panels show people's choice proportions against model predictions for each game, word and condition.</p>
+    <div class="meta" id="meta"></div>
+  </header>
+
+  <section aria-labelledby="h-standing">
+    <div class="section-head">
+      <h2 id="h-standing">Model standing</h2>
+      <p>ELPD-LOO behind the best model, in nats (whiskers ±2 SE of the difference). Lower is better. r and RMSE compare predicted and observed choice proportions over display cells.</p>
+    </div>
+    <div class="standing">
+      <div class="card"><svg id="elpd-chart" role="img" aria-label="ELPD difference from the best model"></svg></div>
+      <div class="card scroll-x"><table id="standing-table"></table></div>
+    </div>
+    <div class="models" id="model-cards"></div>
+  </section>
+
+  <section aria-labelledby="h-heat">
+    <div class="section-head">
+      <h2 id="h-heat">Fit by experiment</h2>
+      <p>RMSE between predicted and observed choice proportions, per experiment. Darker is worse.</p>
+    </div>
+    <div class="card scroll-x"><svg id="heatmap" role="img" aria-label="RMSE by model and experiment"></svg></div>
+  </section>
+
+  <section aria-labelledby="h-panels">
+    <div class="section-head">
+      <h2 id="h-panels">Predictions vs people</h2>
+      <p>Grey bars are people's choice proportions with 95% intervals; colored marks are model predictions. Under the bars, each column is one object: a filled dot means the object has that feature, and the highlighted row is the word the speaker said. Identical objects are one column (×2).</p>
+    </div>
+    <div class="filters" role="group" aria-label="Filters">
+      <div class="filter" id="f-models"><span class="label">Models (up to 3)</span></div>
+      <div class="filter" id="f-query"><span class="label">Trials</span></div>
+      <div class="filter" id="f-exp"><span class="label">Experiment</span></div>
+    </div>
+    <div class="legend" id="legend"></div>
+    <div id="panels"></div>
+    <details id="table-view">
+      <summary>Show the visible panels as a table</summary>
+      <div class="scroll-x"><table id="cells-table"></table></div>
+    </details>
+  </section>
+</div>
+<div id="tooltip" hidden></div>
+
+<script id="bundle" type="application/json">__BUNDLE_JSON__</script>
+<script>
+(() => {
+  const B = JSON.parse(document.getElementById("bundle").textContent);
+  const NS = "http://www.w3.org/2000/svg";
+  const SLOTS = ["--s1", "--s2", "--s3"];
+  const SHAPES = ["circle", "diamond", "triangle"];
+  const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const el = (tag, attrs = {}, parent) => {
+    const n = tag === "svg" || ["g","rect","line","circle","path","text","polygon"].includes(tag)
+      ? document.createElementNS(NS, tag) : document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === "text") n.textContent = v; else if (v !== undefined && v !== null) n.setAttribute(k, v);
+    }
+    if (parent) parent.appendChild(n);
+    return n;
+  };
+  const fmt = (x, d = 2) => (x === null || x === undefined || Number.isNaN(x)) ? "–" : Number(x).toFixed(d);
+  const wilson = (k, n) => {
+    if (!n) return [0, 1];
+    const z = 1.96, p = k / n, den = 1 + z * z / n;
+    const c = (p + z * z / (2 * n)) / den, h = z * Math.sqrt(p * (1 - p) / n + z * z / (4 * n * n)) / den;
+    return [Math.max(0, c - h), Math.min(1, c + h)];
+  };
+
+  // ---------- header ----------
+  document.getElementById("title").textContent = B.title;
+  const meta = document.getElementById("meta");
+  const metaItems = [
+    ["data", B.dataset.label], ["trials", B.dataset.n_trials], ["models", B.models.length],
+    ["cells scored", `${B.dataset.n_cells_scored} (n ≥ ${B.dataset.min_cell_n})`],
+    ["sampler", B.dataset.settings ? `${B.dataset.settings.num_chains}×${B.dataset.settings.num_samples} NUTS` : "–"],
+    ["generated", B.generated],
+  ];
+  for (const [k, v] of metaItems) { const s = el("span", {}, meta); s.append(k + " "); el("b", { text: String(v) }, s); }
+
+  // ---------- model standing chart ----------
+  (function elpdChart() {
+    const svg = document.getElementById("elpd-chart");
+    const M = B.models, rowH = 30, left = 150, right = 56, top = 10, W = 460, H = top + rowH * M.length + 30;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+    const diffs = M.map((m) => m.elpd_diff + 2 * m.dse).sort((a, b) => a - b);
+    const second = diffs.length > 1 ? diffs[diffs.length - 2] : diffs[0];
+    const max = Math.max(5, Math.min(diffs[diffs.length - 1], 3 * second || diffs[diffs.length - 1]));
+    const x = (v) => left + (Math.min(v, max) / max) * (W - left - right);
+    const ticks = niceTicks(0, max, 4);
+    for (const t of ticks) {
+      el("line", { x1: x(t), x2: x(t), y1: top, y2: H - 22, stroke: css("--grid") }, svg);
+      el("text", { x: x(t), y: H - 6, "text-anchor": "middle", "font-size": 10, fill: css("--muted"), text: t }, svg);
+    }
+    M.forEach((m, i) => {
+      const y = top + rowH * i + rowH / 2;
+      el("text", { x: left - 10, y: y + 4, "text-anchor": "end", "font-size": 11, fill: css("--ink"), text: m.name }, svg);
+      const lo = Math.max(0, m.elpd_diff - 2 * m.dse), hi = m.elpd_diff + 2 * m.dse;
+      el("line", { x1: x(lo), x2: x(hi), y1: y, y2: y, stroke: css("--s1"), "stroke-width": 2, "stroke-linecap": "round" }, svg);
+      const off = m.elpd_diff > max;
+      el("circle", { cx: x(m.elpd_diff), cy: y, r: 5, fill: css("--s1"), stroke: css("--surface"), "stroke-width": 2 }, svg);
+      el("text", { x: off ? W - right + 8 : x(hi) + 8, y: y + 4, "font-size": 10, fill: css("--ink-2"),
+        text: m.elpd_diff === 0 ? "best" : (off ? `${fmt(m.elpd_diff, 0)} ▸` : fmt(m.elpd_diff, 1)) }, svg);
+    });
+  })();
+
+  function niceTicks(lo, hi, n) {
+    const span = hi - lo, step0 = span / n, mag = Math.pow(10, Math.floor(Math.log10(step0)));
+    const step = [1, 2, 5, 10].map((s) => s * mag).find((s) => span / s <= n) || 10 * mag;
+    const out = []; for (let v = 0; v <= hi + 1e-9; v += step) out.push(+v.toFixed(6)); return out;
+  }
+
+  // ---------- standing table ----------
+  (function standingTable() {
+    const t = document.getElementById("standing-table");
+    const head = el("tr", {}, el("thead", {}, t));
+    for (const [h, cls] of [["#", "num"], ["model", ""], ["ΔELPD", "num"], ["± dSE", "num"], ["r", "num"], ["RMSE", "num"], ["checks", ""]]) el("th", { class: cls, text: h }, head);
+    const body = el("tbody", {}, t);
+    for (const m of B.models) {
+      const tr = el("tr", {}, body);
+      el("td", { class: "num", text: m.rank + 1 }, tr);
+      el("td", { text: m.name, style: "font-family: var(--font-data)" }, tr);
+      el("td", { class: "num", text: fmt(m.elpd_diff, 1) }, tr);
+      el("td", { class: "num", text: fmt(m.dse, 1) }, tr);
+      el("td", { class: "num", text: fmt(m.r, 3) }, tr);
+      el("td", { class: "num", text: fmt(m.rmse, 3) }, tr);
+      const td = el("td", {}, tr);
+      el("span", { class: "pill" + (m.loo_reliable ? "" : " bad"), text: m.loo_reliable ? "✓ LOO" : "✕ LOO" }, td);
+      td.append(" ");
+      el("span", { class: "pill" + (m.converged ? "" : " bad"), text: m.converged ? "✓ converged" : "✕ " + m.convergence_problems }, td);
+    }
+  })();
+
+  // ---------- model cards ----------
+  (function cards() {
+    const box = document.getElementById("model-cards");
+    for (const m of B.models) {
+      const c = el("div", { class: "card model-card" }, box);
+      el("div", { class: "name", text: m.name }, c);
+      el("p", { text: m.rationale || "(no rationale in the manifest)" }, c);
+      const dl = el("dl", { class: "params" }, c);
+      for (const p of m.params) {
+        el("dt", { text: p.param }, dl);
+        el("dd", { text: `${fmt(p.mean)}  [${fmt(p.lo)}, ${fmt(p.hi)}]` }, dl);
+      }
+    }
+  })();
+
+  // ---------- heatmap ----------
+  (function heatmap() {
+    const svg = document.getElementById("heatmap");
+    const E = B.experiments.filter((e) => B.models.some((m) => m.rmse_by_experiment[e.id] !== undefined));
+    const cw = 64, ch = 30, left = 150, top = 96;
+    const W = left + cw * E.length + 10, H = top + ch * B.models.length + 46;
+    svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W);
+    const steps = ["--seq-0", "--seq-1", "--seq-2", "--seq-3", "--seq-4", "--seq-5"].map(css);
+    const all = B.models.flatMap((m) => E.map((e) => m.rmse_by_experiment[e.id])).filter((v) => v !== null && v !== undefined);
+    const hi = Math.max(...all, 0.01);
+    const color = (v) => steps[Math.min(steps.length - 1, Math.floor((v / hi) * steps.length))];
+    E.forEach((e, j) => {
+      const tx = left + cw * j + cw / 2;
+      el("text", { x: tx, y: top - 8, "font-size": 10, fill: css("--ink-2"), transform: `rotate(-40 ${tx} ${top - 8})`, text: e.label.split(" · ")[0] }, svg);
+    });
+    B.models.forEach((m, i) => {
+      const y = top + ch * i;
+      el("text", { x: left - 10, y: y + ch / 2 + 4, "text-anchor": "end", "font-size": 11, fill: css("--ink"), text: m.name }, svg);
+      E.forEach((e, j) => {
+        const v = m.rmse_by_experiment[e.id];
+        const x = left + cw * j;
+        const fill = v === null || v === undefined ? css("--grid") : color(v);
+        const r = el("rect", { x: x + 1, y: y + 1, width: cw - 2, height: ch - 2, rx: 3, fill, tabindex: 0, class: "hm" }, svg);
+        const dark = steps.indexOf(fill) >= 3;
+        el("text", { x: x + cw / 2, y: y + ch / 2 + 4, "text-anchor": "middle", "font-size": 10,
+          fill: dark ? "#ffffff" : "#0b0b0b", text: fmt(v, 3), "pointer-events": "none" }, svg);
+        const tip = () => [[e.label, ""], ["RMSE", fmt(v, 3)], ["model", m.name]];
+        r.addEventListener("pointermove", (ev) => showTip(ev, tip()));
+        r.addEventListener("focus", (ev) => showTip(ev, tip()));
+        r.addEventListener("pointerleave", hideTip); r.addEventListener("blur", hideTip);
+      });
+    });
+    // scale legend
+    const ly = H - 26;
+    el("text", { x: left, y: ly - 4, "font-size": 10, fill: css("--muted"), text: "RMSE" }, svg);
+    steps.forEach((s, k) => el("rect", { x: left + 40 + k * 26, y: ly - 14, width: 24, height: 10, fill: s, rx: 2 }, svg));
+    el("text", { x: left + 40, y: ly + 10, "font-size": 10, fill: css("--muted"), text: "0" }, svg);
+    el("text", { x: left + 40 + steps.length * 26, y: ly + 10, "font-size": 10, "text-anchor": "end", fill: css("--muted"), text: fmt(hi, 2) }, svg);
+  })();
+
+  // ---------- tooltip ----------
+  const tipEl = document.getElementById("tooltip");
+  function showTip(ev, rows) {
+    tipEl.replaceChildren();
+    const [title] = rows;
+    el("div", { class: "title", text: title[0] }, tipEl);
+    for (const [label, value, key] of rows.slice(1)) {
+      const r = el("div", { class: "row" }, tipEl);
+      const s = el("span", {}, r);
+      if (key) s.appendChild(key);
+      s.append(label);
+      el("b", { text: value }, r);
+    }
+    tipEl.hidden = false;
+    const rect = ev.target.getBoundingClientRect ? ev.target.getBoundingClientRect() : { left: 0, top: 0 };
+    const px = ev.clientX ?? rect.left, py = ev.clientY ?? rect.top;
+    const w = tipEl.offsetWidth, h = tipEl.offsetHeight;
+    tipEl.style.left = Math.min(window.innerWidth - w - 8, px + 14) + "px";
+    tipEl.style.top = Math.max(8, Math.min(window.innerHeight - h - 8, py + 14)) + "px";
+  }
+  function hideTip() { tipEl.hidden = true; }
+
+  // ---------- filters ----------
+  const state = { models: [], slot: {}, query: "utterance", exp: "all" };
+  const best = B.models[0]?.name;
+  for (const name of [best, "rsa_l1", "literal_listener"]) if (name && B.models.some((m) => m.name === name) && !state.models.includes(name)) selectModel(name);
+  function selectModel(name) {
+    const used = new Set(Object.values(state.slot));
+    const free = [0, 1, 2].find((s) => !used.has(s));
+    if (free === undefined) return;
+    state.models.push(name); state.slot[name] = free;
+  }
+  function keySvg(slot, size = 12) {
+    const s = el("svg", { width: size, height: size, viewBox: "-6 -6 12 12", class: "key" });
+    drawMarker(s, 0, 0, slot, 4.5);
+    return s;
+  }
+  function drawMarker(parent, x, y, slot, r = 4.5) {
+    const color = css(SLOTS[slot]), ring = css("--surface");
+    const common = { fill: color, stroke: ring, "stroke-width": 2, "paint-order": "stroke" };
+    if (SHAPES[slot] === "circle") return el("circle", { cx: x, cy: y, r, ...common }, parent);
+    if (SHAPES[slot] === "diamond") return el("polygon", { points: `${x},${y - r - 1} ${x + r + 1},${y} ${x},${y + r + 1} ${x - r - 1},${y}`, ...common }, parent);
+    return el("polygon", { points: `${x},${y - r - 1} ${x + r + 1},${y + r} ${x - r - 1},${y + r}`, ...common }, parent);
+  }
+  function chip(parent, label, pressed, onClick, disabled = false, key) {
+    const b = el("button", { class: "chip", type: "button", "aria-pressed": String(pressed) }, parent);
+    if (key) b.appendChild(key);
+    b.append(label);
+    b.disabled = disabled;
+    b.addEventListener("click", onClick);
+    return b;
+  }
+  function renderFilters() {
+    const fm = document.getElementById("f-models");
+    [...fm.querySelectorAll("button")].forEach((b) => b.remove());
+    for (const m of B.models) {
+      const on = state.models.includes(m.name);
+      chip(fm, m.name, on, () => {
+        if (on) { state.models = state.models.filter((n) => n !== m.name); delete state.slot[m.name]; }
+        else selectModel(m.name);
+        renderAll();
+      }, !on && state.models.length >= 3, on ? keySvg(state.slot[m.name]) : undefined);
+    }
+    const fq = document.getElementById("f-query");
+    [...fq.querySelectorAll("button")].forEach((b) => b.remove());
+    for (const [v, l] of [["utterance", "word heard"], ["prior", "no word (prior)"], ["all", "both"]])
+      chip(fq, l, state.query === v, () => { state.query = v; renderAll(); });
+    const fe = document.getElementById("f-exp");
+    [...fe.querySelectorAll("button")].forEach((b) => b.remove());
+    chip(fe, "all", state.exp === "all", () => { state.exp = "all"; renderAll(); });
+    for (const e of B.experiments) chip(fe, e.label.split(" · ")[0], state.exp === e.id, () => { state.exp = e.id; renderAll(); });
+  }
+  function renderLegend() {
+    const lg = document.getElementById("legend"); lg.replaceChildren();
+    const h = el("span", {}, lg);
+    const hs = el("svg", { width: 14, height: 12, viewBox: "0 0 14 12", class: "key" }, h);
+    el("rect", { x: 2, y: 0, width: 10, height: 12, rx: 2, fill: css("--human") }, hs);
+    h.append("people (95% interval)");
+    for (const name of state.models) { const s = el("span", {}, lg); s.appendChild(keySvg(state.slot[name])); s.append(name); }
+  }
+
+  // ---------- panels ----------
+  function visiblePanels() {
+    return B.panels.filter((p) => (state.exp === "all" || p.experiment === state.exp) && (state.query === "all" || p.query === state.query));
+  }
+  function renderPanels() {
+    const box = document.getElementById("panels"); box.replaceChildren();
+    const vis = visiblePanels();
+    if (!vis.length) { el("div", { class: "empty", text: "No panels match these filters." }, box); return; }
+    const byExp = new Map();
+    for (const p of vis) { if (!byExp.has(p.experiment)) byExp.set(p.experiment, []); byExp.get(p.experiment).push(p); }
+    for (const [exp, ps] of byExp) {
+      const g = el("div", { class: "exp-group" }, box);
+      const h = el("h3", {}, g);
+      h.append((B.experiments.find((e) => e.id === exp) || { label: exp }).label);
+      el("span", { class: "count", text: `${ps.length} panel${ps.length === 1 ? "" : "s"}` }, h);
+      const grid = el("div", { class: "panels" }, g);
+      for (const p of ps) panel(grid, p);
+    }
+  }
+  function panel(parent, p) {
+    const card = el("div", { class: "panel" }, parent);
+    const hd = el("header", {}, card);
+    el("span", { class: "cond", text: p.condition.replaceAll("_", " ") }, hd);
+    el("span", { class: "n", text: `n = ${p.n}` }, hd);
+    const nFeat = p.objects[0]?.length || 0;
+    const W = 232, left = 30, right = 6, plotTop = 6, plotH = 96, gap = 14, rowH = 13;
+    const featTop = plotTop + plotH + gap, H = featTop + rowH * nFeat + 14;
+    const svg = el("svg", { viewBox: `0 0 ${W} ${H}`, role: "img",
+      "aria-label": `${p.condition}: people vs models` }, card);
+    const k = p.classes.length, slotW = (W - left - right) / k;
+    const y = (v) => plotTop + plotH * (1 - v);
+    for (const t of [0, 0.5, 1]) {
+      el("line", { x1: left, x2: W - right, y1: y(t), y2: y(t), stroke: css(t === 0 ? "--axis" : "--grid") }, svg);
+      el("text", { x: left - 6, y: y(t) + 3, "text-anchor": "end", "font-size": 9, fill: css("--muted"), text: t === 0.5 ? ".5" : String(t) }, svg);
+    }
+    // said-row band
+    if (p.utterance !== null && p.utterance !== undefined) {
+      el("rect", { x: left - 2, y: featTop + rowH * p.utterance - rowH / 2, width: W - left - right + 4, height: rowH, rx: 3, fill: css("--said") }, svg);
+    }
+    el("text", { x: left - 6, y: featTop - 6 + (p.utterance ?? 0) * 0, "text-anchor": "end", "font-size": 8, fill: css("--muted"), text: "" }, svg);
+    for (let f = 0; f < nFeat; f++) {
+      const said = f === p.utterance;
+      el("text", { x: left - 6, y: featTop + rowH * f + 3, "text-anchor": "end", "font-size": 8.5,
+        fill: css(said ? "--ink" : "--muted"), "font-weight": said ? 600 : 400, text: said ? "said" : `f${f + 1}` }, svg);
+    }
+    if (p.utterance === null || p.utterance === undefined) {
+      el("text", { x: W - right, y: H - 2, "text-anchor": "end", "font-size": 8.5, fill: css("--muted"), text: "no word heard" }, svg);
+    }
+    p.classes.forEach((c, i) => {
+      const cx = left + slotW * (i + 0.5);
+      const bw = Math.min(16, slotW * 0.32), bx = cx - bw - 1;
+      const top = y(c.observed), base = y(0), h = Math.max(0, base - top);
+      if (h > 0) {
+        const r = Math.min(4, h, bw / 2);
+        el("path", { d: `M${bx},${base} V${top + r} Q${bx},${top} ${bx + r},${top} H${bx + bw - r} Q${bx + bw},${top} ${bx + bw},${top + r} V${base} Z`, fill: css("--human") }, svg);
+      }
+      const [lo, hi] = wilson(c.count, p.n);
+      el("line", { x1: bx + bw / 2, x2: bx + bw / 2, y1: y(lo), y2: y(hi), stroke: css("--human-ink"), "stroke-width": 1.5 }, svg);
+      state.models.forEach((name, j) => drawMarker(svg, cx + 6 + j * 8, y(c.preds[name]), state.slot[name], 4));
+      // the object's features under its column
+      const obj = p.objects[c.object];
+      for (let f = 0; f < nFeat; f++) {
+        const fy = featTop + rowH * f;
+        if (obj[f]) el("circle", { cx, cy: fy, r: 3.5, fill: css(f === p.utterance ? "--ink" : "--ink-2") }, svg);
+        else el("circle", { cx, cy: fy, r: 3, fill: "none", stroke: css("--axis"), "stroke-width": 1.2 }, svg);
+      }
+      if (c.copies > 1) el("text", { x: cx, y: H - 2, "text-anchor": "middle", "font-size": 8.5, fill: css("--muted"), text: `×${c.copies}` }, svg);
+      // hit target: the whole column
+      const hit = el("rect", { x: left + slotW * i, y: plotTop - 4, width: slotW, height: H - plotTop, class: "hit", tabindex: 0, rx: 4 }, svg);
+      svg.insertBefore(hit, svg.firstChild);
+      const rows = () => {
+        const feats = obj.map((v, f) => (v ? `f${f + 1}` : null)).filter(Boolean).join("+") || "no features";
+        const out = [[`object ${c.object + 1} · ${feats}${c.copies > 1 ? ` · ×${c.copies}` : ""}`, ""],
+          ["people", `${fmt(c.observed)}  (${c.count}/${p.n})`]];
+        for (const name of state.models) out.push([name, fmt(c.preds[name]), keySvg(state.slot[name], 10)]);
+        return out;
+      };
+      hit.addEventListener("pointermove", (ev) => showTip(ev, rows()));
+      hit.addEventListener("focus", (ev) => showTip(ev, rows()));
+      hit.addEventListener("pointerleave", hideTip); hit.addEventListener("blur", hideTip);
+    });
+  }
+  function renderTable() {
+    const t = document.getElementById("cells-table"); t.replaceChildren();
+    const head = el("tr", {}, el("thead", {}, t));
+    for (const h of ["experiment", "condition", "word", "object", "people", "n", ...state.models]) el("th", { text: h }, head);
+    const body = el("tbody", {}, t);
+    for (const p of visiblePanels()) for (const c of p.classes) {
+      const tr = el("tr", {}, body);
+      for (const v of [p.experiment, p.condition, p.utterance === null ? "–" : `f${p.utterance + 1}`,
+        `${c.object + 1}${c.copies > 1 ? " ×" + c.copies : ""}`]) el("td", { text: v }, tr);
+      el("td", { class: "num", text: fmt(c.observed) }, tr);
+      el("td", { class: "num", text: p.n }, tr);
+      for (const name of state.models) el("td", { class: "num", text: fmt(c.preds[name]) }, tr);
+    }
+  }
+  function renderAll() { renderFilters(); renderLegend(); renderPanels(); if (document.getElementById("table-view").open) renderTable(); }
+  document.getElementById("table-view").addEventListener("toggle", (e) => { if (e.target.open) renderTable(); });
+  renderAll();
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => location.reload());
+})();
+</script>

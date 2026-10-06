@@ -1,0 +1,97 @@
+{
+  "n_trials": 6703,
+  "experiments": [
+    "E10_oddman",
+    "E1_dv",
+    "E2_manip_check",
+    "E3_ling_frame",
+    "E4_prior_frame",
+    "E5_baserate",
+    "E6_valence",
+    "E7_color",
+    "E8_levels",
+    "E9_twins",
+    "color_prior_rerun",
+    "levels_prior_action",
+    "sequences",
+    "size",
+    "speakers"
+  ],
+  "settings": {
+    "num_warmup": 1000,
+    "num_samples": 1000,
+    "num_chains": 4,
+    "target_accept": 0.9,
+    "seed": 0
+  },
+  "pearson_r_over_cells": {
+    "literal_listener": 0.7456437905680559,
+    "rsa_l1": 0.8951052379912202,
+    "rsa_l2": 0.8995718903283206,
+    "rsa_l1_salience": 0.9087607998081666,
+    "rsa_l1_shared_prior": 0.9050222021231707
+  },
+  "n_cells_in_r": 87,
+  "comparison": {
+    "rsa_l1_salience": {
+      "rank": 0,
+      "elpd_loo": -4973.0570278168,
+      "p_loo": 4.0083150864,
+      "elpd_diff": 0.0,
+      "weight": 0.8101393063,
+      "se": 53.8261147441,
+      "dse": 0.0,
+      "warning": true,
+      "scale": "log",
+      "loo_reliable": true
+    },
+    "rsa_l1_shared_prior": {
+      "rank": 1,
+      "elpd_loo": -4979.5860805511,
+      "p_loo": 3.9817304611,
+      "elpd_diff": 6.5290527344,
+      "weight": 0.0,
+      "se": 53.6450482275,
+      "dse": 1.7486372126,
+      "warning": true,
+      "scale": "log",
+      "loo_reliable": true
+    },
+    "rsa_l2": {
+      "rank": 2,
+      "elpd_loo": -4992.1150035858,
+      "p_loo": 2.102353096,
+      "elpd_diff": 19.057975769,
+      "weight": 0.1898606937,
+      "se": 54.2445521769,
+      "dse": 7.9186938932,
+      "warning": true,
+      "scale": "log",
+      "loo_reliable": true
+    },
+    "rsa_l1": {
+      "rank": 3,
+      "elpd_loo": -5005.6310176849,
+      "p_loo": 2.1662578583,
+      "elpd_diff": 32.5739898682,
+      "weight": 0.0,
+      "se": 53.6779543351,
+      "dse": 7.4616179595,
+      "warning": true,
+      "scale": "log",
+      "loo_reliable": true
+    },
+    "literal_listener": {
+      "rank": 4,
+      "elpd_loo": -5527.6647663116,
+      "p_loo": 0.9730186462,
+      "elpd_diff": 554.6077384949,
+      "weight": 0.0,
+      "se": 43.6802305074,
+      "dse": 28.8243074535,
+      "warning": true,
+      "scale": "log",
+      "loo_reliable": true
+    }
+  }
+}

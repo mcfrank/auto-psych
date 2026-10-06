@@ -1,0 +1,5770 @@
+{
+ "version": 1,
+ "title": "Pragmods seed models",
+ "generated": "2026-10-06 22:36 UTC",
+ "dataset": {
+  "label": "pragmods forced-choice trials",
+  "n_trials": 6703,
+  "settings": {
+   "num_warmup": 1000,
+   "num_samples": 1000,
+   "num_chains": 4,
+   "target_accept": 0.9,
+   "seed": 0
+  },
+  "min_cell_n": 10,
+  "n_cells_scored": 87
+ },
+ "experiments": [
+  {
+   "id": "E1_dv",
+   "label": "E1 \u00b7 response format"
+  },
+  {
+   "id": "E2_manip_check",
+   "label": "E2 \u00b7 manipulation check"
+  },
+  {
+   "id": "E3_ling_frame",
+   "label": "E3 \u00b7 one word vs sentence"
+  },
+  {
+   "id": "E4_prior_frame",
+   "label": "E4 \u00b7 prior question wording"
+  },
+  {
+   "id": "E5_baserate",
+   "label": "E5 \u00b7 familiarization base rate"
+  },
+  {
+   "id": "E6_valence",
+   "label": "E6 \u00b7 favorite vs least favorite"
+  },
+  {
+   "id": "E7_color",
+   "label": "E7 \u00b7 color salience"
+  },
+  {
+   "id": "color_prior_rerun",
+   "label": "E7b \u00b7 color prior rerun"
+  },
+  {
+   "id": "E8_levels",
+   "label": "E8 \u00b7 levels of inference"
+  },
+  {
+   "id": "levels_prior_action",
+   "label": "E8b \u00b7 levels prior (next action)"
+  },
+  {
+   "id": "E9_twins",
+   "label": "E9 \u00b7 twins"
+  },
+  {
+   "id": "E10_oddman",
+   "label": "E10 \u00b7 odd one out"
+  },
+  {
+   "id": "size",
+   "label": "Size \u00b7 2\u20134 objects \u00d7 2\u20134 features"
+  },
+  {
+   "id": "sequences",
+   "label": "Sequences \u00b7 repeated trials"
+  },
+  {
+   "id": "speakers",
+   "label": "Speakers \u00b7 listener trials"
+  }
+ ],
+ "models": [
+  {
+   "name": "rsa_l1_salience",
+   "rationale": "Depth-1 RSA whose listener has a salience prior over objects (feature count, familiarization base rate) that the simulated literal listener lacks.",
+   "rank": 0,
+   "elpd_loo": -4973.0570278167725,
+   "se": 53.82611474414057,
+   "elpd_diff": 0.0,
+   "dse": 0.0,
+   "p_loo": 4.008315086364746,
+   "loo_reliable": true,
+   "converged": true,
+   "convergence_problems": "",
+   "r": 0.9087607998081666,
+   "rmse": 0.12021715134466845,
+   "rmse_by_experiment": {
+    "E10_oddman": 0.06908979162264232,
+    "E1_dv": 0.06044384790322961,
+    "E2_manip_check": 0.06514913196356849,
+    "E3_ling_frame": 0.07000688911728153,
+    "E4_prior_frame": 0.10006085504725713,
+    "E5_baserate": 0.12735236367624034,
+    "E6_valence": 0.23327050765170335,
+    "E7_color": 0.12497981658798518,
+    "E8_levels": 0.07258387474333722,
+    "E9_twins": 0.16692648052824882,
+    "color_prior_rerun": 0.1354997574018395,
+    "levels_prior_action": 0.14506082539502976,
+    "sequences": 0.08468262120546796,
+    "size": 0.13236378867037382,
+    "speakers": 0.1206300052203786
+   },
+   "params": [
+    {
+     "param": "alpha",
+     "mean": 1.4612988,
+     "lo": 1.2680354,
+     "hi": 1.6495025
+    },
+    {
+     "param": "w_features",
+     "mean": 0.081057966,
+     "lo": 0.010987929,
+     "hi": 0.15255167
+    },
+    {
+     "param": "w_familiar",
+     "mean": 1.6296118,
+     "lo": 1.2124113,
+     "hi": 2.0427651
+    },
+    {
+     "param": "lapse",
+     "mean": 0.114788726,
+     "lo": 0.10163256,
+     "hi": 0.12963147
+    }
+   ]
+  },
+  {
+   "name": "rsa_l1_shared_prior",
+   "rationale": "Depth-1 RSA with the salience prior as common knowledge, used by the simulated literal listener as well as the pragmatic listener.",
+   "rank": 1,
+   "elpd_loo": -4979.586080551148,
+   "se": 53.64504822751031,
+   "elpd_diff": 6.529052734375,
+   "dse": 1.7486372125613587,
+   "p_loo": 3.9817304611206055,
+   "loo_reliable": true,
+   "converged": true,
+   "convergence_problems": "",
+   "r": 0.9050222021231713,
+   "rmse": 0.12250383379617007,
+   "rmse_by_experiment": {
+    "E10_oddman": 0.06920325783152251,
+    "E1_dv": 0.06123071905235585,
+    "E2_manip_check": 0.06582255746608585,
+    "E3_ling_frame": 0.070712620915858,
+    "E4_prior_frame": 0.10153067580289706,
+    "E5_baserate": 0.14198689471760828,
+    "E6_valence": 0.23286552936138286,
+    "E7_color": 0.12799813970283655,
+    "E8_levels": 0.06960360211569085,
+    "E9_twins": 0.16513690336487133,
+    "color_prior_rerun": 0.13386390503085244,
+    "levels_prior_action": 0.13978176831440464,
+    "sequences": 0.08368874469261725,
+    "size": 0.13685351369487497,
+    "speakers": 0.11368472103707901
+   },
+   "params": [
+    {
+     "param": "alpha",
+     "mean": 1.3986897,
+     "lo": 1.1799271,
+     "hi": 1.6276631
+    },
+    {
+     "param": "w_features",
+     "mean": 0.040715545,
+     "lo": -0.021256851,
+     "hi": 0.103855215
+    },
+    {
+     "param": "w_familiar",
+     "mean": 1.3233314,
+     "lo": 0.954217,
+     "hi": 1.6927985
+    },
+    {
+     "param": "lapse",
+     "mean": 0.11440236,
+     "lo": 0.101024285,
+     "hi": 0.128648
+    }
+   ]
+  },
+  {
+   "name": "rsa_l2",
+   "rationale": "Listeners reason one level deeper (depth 2), inverting a speaker who simulates the depth-1 pragmatic listener.",
+   "rank": 2,
+   "elpd_loo": -4992.115003585815,
+   "se": 54.2445521769037,
+   "elpd_diff": 19.05797576904297,
+   "dse": 7.918693893188452,
+   "p_loo": 2.102353096008301,
+   "loo_reliable": true,
+   "converged": true,
+   "convergence_problems": "",
+   "r": 0.8995718903283201,
+   "rmse": 0.12565520120559204,
+   "rmse_by_experiment": {
+    "E10_oddman": 0.06853735253599158,
+    "E1_dv": 0.04959691177175218,
+    "E2_manip_check": 0.05569368070983798,
+    "E3_ling_frame": 0.05997368817494126,
+    "E4_prior_frame": 0.10357768447880389,
+    "E5_baserate": 0.18202817530169724,
+    "E6_valence": 0.2342071359300109,
+    "E7_color": 0.12998164704383555,
+    "E8_levels": 0.056488202766732803,
+    "E9_twins": 0.15615429496202501,
+    "color_prior_rerun": 0.1328952485105314,
+    "levels_prior_action": 0.13498553679686562,
+    "sequences": 0.07081759949091691,
+    "size": 0.14041297043015175,
+    "speakers": 0.11313671846585047
+   },
+   "params": [
+    {
+     "param": "alpha",
+     "mean": 0.7755053,
+     "lo": 0.69653696,
+     "hi": 0.8498138
+    },
+    {
+     "param": "lapse",
+     "mean": 0.11785446,
+     "lo": 0.10370768,
+     "hi": 0.13280512
+    }
+   ]
+  },
+  {
+   "name": "rsa_l1",
+   "rationale": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.",
+   "rank": 3,
+   "elpd_loo": -5005.6310176849365,
+   "se": 53.67795433507101,
+   "elpd_diff": 32.57398986816406,
+   "dse": 7.461617959515946,
+   "p_loo": 2.166257858276367,
+   "loo_reliable": true,
+   "converged": true,
+   "convergence_problems": "",
+   "r": 0.8951052379912202,
+   "rmse": 0.12831880134547885,
+   "rmse_by_experiment": {
+    "E10_oddman": 0.06880725041317959,
+    "E1_dv": 0.058709970124257216,
+    "E2_manip_check": 0.06368851174820929,
+    "E3_ling_frame": 0.06847303373174243,
+    "E4_prior_frame": 0.10357768447880389,
+    "E5_baserate": 0.1842796739850467,
+    "E6_valence": 0.23301529227930365,
+    "E7_color": 0.13064105006797705,
+    "E8_levels": 0.06617266160384251,
+    "E9_twins": 0.16279781202195032,
+    "color_prior_rerun": 0.1328952485105314,
+    "levels_prior_action": 0.13498553679686562,
+    "sequences": 0.08142670203736732,
+    "size": 0.14120925248130473,
+    "speakers": 0.11001002197385125
+   },
+   "params": [
+    {
+     "param": "alpha",
+     "mean": 1.3163872,
+     "lo": 1.1500819,
+     "hi": 1.4857279
+    },
+    {
+     "param": "lapse",
+     "mean": 0.11593248,
+     "lo": 0.10191304,
+     "hi": 0.13063958
+    }
+   ]
+  },
+  {
+   "name": "literal_listener",
+   "rationale": "Listeners pick uniformly among the objects the word is literally true of.",
+   "rank": 4,
+   "elpd_loo": -5527.6647663116455,
+   "se": 43.680230507392615,
+   "elpd_diff": 554.607738494873,
+   "dse": 28.8243074535061,
+   "p_loo": 0.9730186462402344,
+   "loo_reliable": true,
+   "converged": true,
+   "convergence_problems": "",
+   "r": 0.7456437905680559,
+   "rmse": 0.19164000714891652,
+   "rmse_by_experiment": {
+    "E10_oddman": 0.06872394771079941,
+    "E1_dv": 0.25861702372596873,
+    "E2_manip_check": 0.25903850427110936,
+    "E3_ling_frame": 0.2660042538349488,
+    "E4_prior_frame": 0.10357768447880389,
+    "E5_baserate": 0.2702745459256681,
+    "E6_valence": 0.2513387897161861,
+    "E7_color": 0.21180096625944453,
+    "E8_levels": 0.1459495799061244,
+    "E9_twins": 0.13543380199197755,
+    "color_prior_rerun": 0.1328952485105314,
+    "levels_prior_action": 0.13498553679686562,
+    "sequences": 0.17409203180208466,
+    "size": 0.18864371847657022,
+    "speakers": 0.026284431635431697
+   },
+   "params": [
+    {
+     "param": "lapse",
+     "mean": 0.11776027,
+     "lo": 0.10382836,
+     "hi": 0.13237888
+    }
+   ]
+  }
+ ],
+ "panels": [
+  {
+   "experiment": "E1_dv",
+   "condition": "forced_choice",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 248,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.0524193548387096,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716401696205,
+      "literal_listener": 0.0391792878508567
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 196,
+     "observed": 0.7903225806451613,
+     "preds": {
+      "rsa_l1_salience": 0.7243903279304504,
+      "rsa_l1_shared_prior": 0.7235943675041199,
+      "rsa_l2": 0.7369822263717651,
+      "rsa_l1": 0.7260910868644714,
+      "literal_listener": 0.4804105460643768
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 39,
+     "observed": 0.157258064516129,
+     "preds": {
+      "rsa_l1_salience": 0.2373399585485458,
+      "rsa_l1_shared_prior": 0.2384166568517685,
+      "rsa_l2": 0.2233729511499405,
+      "rsa_l1": 0.2349372506141662,
+      "literal_listener": 0.4804105460643768
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E2_manip_check",
+   "condition": "manip_check",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 306,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.0424836601307189,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 253,
+     "observed": 0.826797385620915,
+     "preds": {
+      "rsa_l1_salience": 0.72439044713974,
+      "rsa_l1_shared_prior": 0.7235942482948303,
+      "rsa_l2": 0.7369821667671204,
+      "rsa_l1": 0.7260909676551819,
+      "literal_listener": 0.4804105162620544
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 40,
+     "observed": 0.130718954248366,
+     "preds": {
+      "rsa_l1_salience": 0.2373399436473846,
+      "rsa_l1_shared_prior": 0.2384166270494461,
+      "rsa_l2": 0.2233729660511016,
+      "rsa_l1": 0.2349372804164886,
+      "literal_listener": 0.4804105162620544
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E2_manip_check",
+   "condition": "no_manip_check",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 207,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.0193236714975845,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716289937496,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 160,
+     "observed": 0.7729468599033816,
+     "preds": {
+      "rsa_l1_salience": 0.7243902683258057,
+      "rsa_l1_shared_prior": 0.7235943078994751,
+      "rsa_l2": 0.7369822859764099,
+      "rsa_l1": 0.7260909676551819,
+      "literal_listener": 0.4804105758666992
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 43,
+     "observed": 0.2077294685990338,
+     "preds": {
+      "rsa_l1_salience": 0.2373399287462234,
+      "rsa_l1_shared_prior": 0.2384166568517685,
+      "rsa_l2": 0.2233729660511016,
+      "rsa_l1": 0.2349372953176498,
+      "literal_listener": 0.4804105758666992
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E3_ling_frame",
+   "condition": "my_X_has",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 38,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448038518428,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 31,
+     "observed": 0.8157894736842105,
+     "preds": {
+      "rsa_l1_salience": 0.7243903279304504,
+      "rsa_l1_shared_prior": 0.7235943675041199,
+      "rsa_l2": 0.7369821667671204,
+      "rsa_l1": 0.7260911464691162,
+      "literal_listener": 0.4804103672504425
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.1842105263157894,
+     "preds": {
+      "rsa_l1_salience": 0.2373399436473846,
+      "rsa_l1_shared_prior": 0.2384166270494461,
+      "rsa_l2": 0.2233730107545852,
+      "rsa_l1": 0.234937310218811,
+      "literal_listener": 0.4804103672504425
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E3_ling_frame",
+   "condition": "one_word",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 51,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0588235294117647,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 41,
+     "observed": 0.803921568627451,
+     "preds": {
+      "rsa_l1_salience": 0.7243905067443848,
+      "rsa_l1_shared_prior": 0.7235943078994751,
+      "rsa_l2": 0.736981987953186,
+      "rsa_l1": 0.7260909676551819,
+      "literal_listener": 0.4804104566574096
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.1372549019607843,
+     "preds": {
+      "rsa_l1_salience": 0.2373399585485458,
+      "rsa_l1_shared_prior": 0.2384166270494461,
+      "rsa_l2": 0.223372995853424,
+      "rsa_l1": 0.234937310218811,
+      "literal_listener": 0.4804104566574096
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E4_prior_frame",
+   "condition": "action",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 87,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 37,
+     "observed": 0.425287356321839,
+     "preds": {
+      "rsa_l1_salience": 0.3098503351211548,
+      "rsa_l1_shared_prior": 0.3221022188663482,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.160919540229885,
+     "preds": {
+      "rsa_l1_salience": 0.3325305581092834,
+      "rsa_l1_shared_prior": 0.3330747187137604,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 36,
+     "observed": 0.4137931034482758,
+     "preds": {
+      "rsa_l1_salience": 0.3576189875602722,
+      "rsa_l1_shared_prior": 0.3448232114315033,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E4_prior_frame",
+   "condition": "mumble",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 88,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 27,
+     "observed": 0.3068181818181818,
+     "preds": {
+      "rsa_l1_salience": 0.3098503053188324,
+      "rsa_l1_shared_prior": 0.322102278470993,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 22,
+     "observed": 0.25,
+     "preds": {
+      "rsa_l1_salience": 0.332530528306961,
+      "rsa_l1_shared_prior": 0.3330747485160827,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 39,
+     "observed": 0.4431818181818182,
+     "preds": {
+      "rsa_l1_salience": 0.357619047164917,
+      "rsa_l1_shared_prior": 0.3448231518268585,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E5_baserate",
+   "condition": "inference_baserate_0.11",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 72,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.0833333333333333,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 54,
+     "observed": 0.75,
+     "preds": {
+      "rsa_l1_salience": 0.5146059393882751,
+      "rsa_l1_shared_prior": 0.4893757998943329,
+      "rsa_l2": 0.7369821071624756,
+      "rsa_l1": 0.7260910272598267,
+      "literal_listener": 0.4804105162620544
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.1666666666666666,
+     "preds": {
+      "rsa_l1_salience": 0.4471239447593689,
+      "rsa_l1_shared_prior": 0.4726352095603943,
+      "rsa_l2": 0.2233729660511016,
+      "rsa_l1": 0.2349372953176498,
+      "literal_listener": 0.4804105162620544
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E5_baserate",
+   "condition": "inference_baserate_0.33",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 63,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0158730158730158,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447852253913,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 51,
+     "observed": 0.8095238095238095,
+     "preds": {
+      "rsa_l1_salience": 0.6631477475166321,
+      "rsa_l1_shared_prior": 0.6506437063217163,
+      "rsa_l2": 0.7369818687438965,
+      "rsa_l1": 0.7260908484458923,
+      "literal_listener": 0.4804103970527649
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 11,
+     "observed": 0.1746031746031746,
+     "preds": {
+      "rsa_l1_salience": 0.2985820472240448,
+      "rsa_l1_shared_prior": 0.3113669157028198,
+      "rsa_l2": 0.2233730256557464,
+      "rsa_l1": 0.2349373400211334,
+      "literal_listener": 0.4804103970527649
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E5_baserate",
+   "condition": "inference_baserate_0.44",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 68,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0294117647058823,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447926759719,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 60,
+     "observed": 0.8823529411764706,
+     "preds": {
+      "rsa_l1_salience": 0.7744746208190918,
+      "rsa_l1_shared_prior": 0.784839391708374,
+      "rsa_l2": 0.736981987953186,
+      "rsa_l1": 0.7260909080505371,
+      "literal_listener": 0.4804105162620544
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.088235294117647,
+     "preds": {
+      "rsa_l1_salience": 0.1872551590204239,
+      "rsa_l1_shared_prior": 0.1771714687347412,
+      "rsa_l2": 0.223372995853424,
+      "rsa_l1": 0.234937310218811,
+      "literal_listener": 0.4804105162620544
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E5_baserate",
+   "condition": "inference_baserate_0.77",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 75,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0133333333333333,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447926759719,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 70,
+     "observed": 0.9333333333333332,
+     "preds": {
+      "rsa_l1_salience": 0.8436049818992615,
+      "rsa_l1_shared_prior": 0.8659625053405762,
+      "rsa_l2": 0.7369820475578308,
+      "rsa_l1": 0.7260909676551819,
+      "literal_listener": 0.4804105758666992
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.0533333333333333,
+     "preds": {
+      "rsa_l1_salience": 0.1181249767541885,
+      "rsa_l1_shared_prior": 0.0960479453206062,
+      "rsa_l2": 0.2233729809522628,
+      "rsa_l1": 0.234937310218811,
+      "literal_listener": 0.4804105758666992
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E5_baserate",
+   "condition": "prior_baserate_0.11",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 53,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0377358490566037,
+     "preds": {
+      "rsa_l1_salience": 0.1978276968002319,
+      "rsa_l1_shared_prior": 0.2290130853652954,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 10,
+     "observed": 0.1886792452830188,
+     "preds": {
+      "rsa_l1_salience": 0.2111309021711349,
+      "rsa_l1_shared_prior": 0.236441358923912,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 41,
+     "observed": 0.7735849056603774,
+     "preds": {
+      "rsa_l1_salience": 0.5910413861274719,
+      "rsa_l1_shared_prior": 0.5345456600189209,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E5_baserate",
+   "condition": "prior_baserate_0.33",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 57,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0526315789473684,
+     "preds": {
+      "rsa_l1_salience": 0.216381087899208,
+      "rsa_l1_shared_prior": 0.2425985336303711,
+      "rsa_l2": 0.333332896232605,
+      "rsa_l1": 0.333332896232605,
+      "literal_listener": 0.333332896232605
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 23,
+     "observed": 0.4035087719298245,
+     "preds": {
+      "rsa_l1_salience": 0.3147079944610595,
+      "rsa_l1_shared_prior": 0.3225860893726349,
+      "rsa_l2": 0.333332896232605,
+      "rsa_l1": 0.333332896232605,
+      "literal_listener": 0.333332896232605
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 31,
+     "observed": 0.543859649122807,
+     "preds": {
+      "rsa_l1_salience": 0.4689108729362488,
+      "rsa_l1_shared_prior": 0.4348156154155731,
+      "rsa_l2": 0.333332896232605,
+      "rsa_l1": 0.333332896232605,
+      "literal_listener": 0.333332896232605
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E5_baserate",
+   "condition": "prior_baserate_0.44",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 49,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.1224489795918367,
+     "preds": {
+      "rsa_l1_salience": 0.2183841466903686,
+      "rsa_l1_shared_prior": 0.2434327900409698,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 20,
+     "observed": 0.4081632653061224,
+     "preds": {
+      "rsa_l1_salience": 0.4399027228355407,
+      "rsa_l1_shared_prior": 0.4214139282703399,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 23,
+     "observed": 0.4693877551020408,
+     "preds": {
+      "rsa_l1_salience": 0.3417131602764129,
+      "rsa_l1_shared_prior": 0.3351533114910126,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E5_baserate",
+   "condition": "prior_baserate_0.77",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 51,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0196078431372549,
+     "preds": {
+      "rsa_l1_salience": 0.2029379904270172,
+      "rsa_l1_shared_prior": 0.2312755584716797,
+      "rsa_l2": 0.333332896232605,
+      "rsa_l1": 0.333332896232605,
+      "literal_listener": 0.333332896232605
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 31,
+     "observed": 0.6078431372549019,
+     "preds": {
+      "rsa_l1_salience": 0.5649641156196594,
+      "rsa_l1_shared_prior": 0.5217356085777283,
+      "rsa_l2": 0.333332896232605,
+      "rsa_l1": 0.333332896232605,
+      "literal_listener": 0.333332896232605
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 19,
+     "observed": 0.3725490196078431,
+     "preds": {
+      "rsa_l1_salience": 0.2320980429649353,
+      "rsa_l1_shared_prior": 0.2469887435436248,
+      "rsa_l2": 0.333332896232605,
+      "rsa_l1": 0.333332896232605,
+      "literal_listener": 0.333332896232605
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E6_valence",
+   "condition": "favorite",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 176,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 93,
+     "observed": 0.5284090909090909,
+     "preds": {
+      "rsa_l1_salience": 0.72439044713974,
+      "rsa_l1_shared_prior": 0.7235942482948303,
+      "rsa_l2": 0.7369821667671204,
+      "rsa_l1": 0.7260909676551819,
+      "literal_listener": 0.4804105460643768
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 83,
+     "observed": 0.4715909090909091,
+     "preds": {
+      "rsa_l1_salience": 0.2373399585485458,
+      "rsa_l1_shared_prior": 0.2384166568517685,
+      "rsa_l2": 0.2233729511499405,
+      "rsa_l1": 0.2349372804164886,
+      "literal_listener": 0.4804105460643768
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E6_valence",
+   "condition": "least_favorite",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 86,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.0697674418604651,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396447926759719,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 68,
+     "observed": 0.7906976744186046,
+     "preds": {
+      "rsa_l1_salience": 0.7243905663490295,
+      "rsa_l1_shared_prior": 0.7235942482948303,
+      "rsa_l2": 0.7369820475578308,
+      "rsa_l1": 0.7260909080505371,
+      "literal_listener": 0.4804106056690216
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.1395348837209302,
+     "preds": {
+      "rsa_l1_salience": 0.2373398840427398,
+      "rsa_l1_shared_prior": 0.2384166568517685,
+      "rsa_l2": 0.223372995853424,
+      "rsa_l1": 0.234937310218811,
+      "literal_listener": 0.4804106056690216
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E6_valence",
+   "condition": "favorite_prior",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 100,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.08,
+     "preds": {
+      "rsa_l1_salience": 0.3098503053188324,
+      "rsa_l1_shared_prior": 0.322102278470993,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 21,
+     "observed": 0.21,
+     "preds": {
+      "rsa_l1_salience": 0.332530528306961,
+      "rsa_l1_shared_prior": 0.3330748081207275,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 71,
+     "observed": 0.71,
+     "preds": {
+      "rsa_l1_salience": 0.3576191067695617,
+      "rsa_l1_shared_prior": 0.3448231220245361,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E6_valence",
+   "condition": "least_favorite_prior",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 116,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 92,
+     "observed": 0.7931034482758621,
+     "preds": {
+      "rsa_l1_salience": 0.3098502457141876,
+      "rsa_l1_shared_prior": 0.3221022486686706,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.0689655172413793,
+     "preds": {
+      "rsa_l1_salience": 0.3325305581092834,
+      "rsa_l1_shared_prior": 0.3330748081207275,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 16,
+     "observed": 0.1379310344827586,
+     "preds": {
+      "rsa_l1_salience": 0.3576191067695617,
+      "rsa_l1_shared_prior": 0.3448231518268585,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E7_color",
+   "condition": "inference_color_foil",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 47,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0425531914893617,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 39,
+     "observed": 0.8297872340425532,
+     "preds": {
+      "rsa_l1_salience": 0.72439044713974,
+      "rsa_l1_shared_prior": 0.7235943675041199,
+      "rsa_l2": 0.736981987953186,
+      "rsa_l1": 0.7260910272598267,
+      "literal_listener": 0.4804103672504425
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.1276595744680851,
+     "preds": {
+      "rsa_l1_salience": 0.2373399585485458,
+      "rsa_l1_shared_prior": 0.2384166270494461,
+      "rsa_l2": 0.2233730405569076,
+      "rsa_l1": 0.2349373400211334,
+      "literal_listener": 0.4804103672504425
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E7_color",
+   "condition": "inference_color_logical",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 48,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0625,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 26,
+     "observed": 0.5416666666666666,
+     "preds": {
+      "rsa_l1_salience": 0.72439044713974,
+      "rsa_l1_shared_prior": 0.7235942482948303,
+      "rsa_l2": 0.7369821071624756,
+      "rsa_l1": 0.7260910868644714,
+      "literal_listener": 0.480410486459732
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 19,
+     "observed": 0.3958333333333333,
+     "preds": {
+      "rsa_l1_salience": 0.2373399585485458,
+      "rsa_l1_shared_prior": 0.2384166270494461,
+      "rsa_l2": 0.2233729809522628,
+      "rsa_l1": 0.2349372953176498,
+      "literal_listener": 0.480410486459732
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E7_color",
+   "condition": "inference_color_none",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 38,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0263157894736842,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448038518428,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 30,
+     "observed": 0.7894736842105263,
+     "preds": {
+      "rsa_l1_salience": 0.7243903279304504,
+      "rsa_l1_shared_prior": 0.7235943675041199,
+      "rsa_l2": 0.7369821667671204,
+      "rsa_l1": 0.7260911464691162,
+      "literal_listener": 0.4804103672504425
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.1842105263157894,
+     "preds": {
+      "rsa_l1_salience": 0.2373399436473846,
+      "rsa_l1_shared_prior": 0.2384166270494461,
+      "rsa_l2": 0.2233730107545852,
+      "rsa_l1": 0.234937310218811,
+      "literal_listener": 0.4804103672504425
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E7_color",
+   "condition": "inference_color_target",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 46,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0217391304347826,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 39,
+     "observed": 0.8478260869565217,
+     "preds": {
+      "rsa_l1_salience": 0.72439044713974,
+      "rsa_l1_shared_prior": 0.7235943078994751,
+      "rsa_l2": 0.736981987953186,
+      "rsa_l1": 0.7260910272598267,
+      "literal_listener": 0.4804103672504425
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.1304347826086956,
+     "preds": {
+      "rsa_l1_salience": 0.2373399585485458,
+      "rsa_l1_shared_prior": 0.2384166270494461,
+      "rsa_l2": 0.2233730405569076,
+      "rsa_l1": 0.2349373400211334,
+      "literal_listener": 0.4804103672504425
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E7_color",
+   "condition": "prior_color_foil",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 27,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 11,
+     "observed": 0.4074074074074074,
+     "preds": {
+      "rsa_l1_salience": 0.3098503351211548,
+      "rsa_l1_shared_prior": 0.322102278470993,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.074074074074074,
+     "preds": {
+      "rsa_l1_salience": 0.3325305879116058,
+      "rsa_l1_shared_prior": 0.3330747187137604,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.5185185185185185,
+     "preds": {
+      "rsa_l1_salience": 0.3576190769672394,
+      "rsa_l1_shared_prior": 0.3448231518268585,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E7_color",
+   "condition": "prior_color_logical",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 24,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.125,
+     "preds": {
+      "rsa_l1_salience": 0.3098503351211548,
+      "rsa_l1_shared_prior": 0.3221022486686706,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.2916666666666667,
+     "preds": {
+      "rsa_l1_salience": 0.3325305581092834,
+      "rsa_l1_shared_prior": 0.3330747187137604,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.5833333333333334,
+     "preds": {
+      "rsa_l1_salience": 0.357619047164917,
+      "rsa_l1_shared_prior": 0.3448232114315033,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E7_color",
+   "condition": "prior_color_target",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 34,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.2058823529411764,
+     "preds": {
+      "rsa_l1_salience": 0.3098503649234772,
+      "rsa_l1_shared_prior": 0.322102278470993,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 15,
+     "observed": 0.4411764705882353,
+     "preds": {
+      "rsa_l1_salience": 0.3325305879116058,
+      "rsa_l1_shared_prior": 0.3330747187137604,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.3529411764705882,
+     "preds": {
+      "rsa_l1_salience": 0.357619047164917,
+      "rsa_l1_shared_prior": 0.3448231518268585,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "color_prior_rerun",
+   "condition": "prior_color_foil",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 30,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.4666666666666667,
+     "preds": {
+      "rsa_l1_salience": 0.3098503649234772,
+      "rsa_l1_shared_prior": 0.322102278470993,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.1666666666666666,
+     "preds": {
+      "rsa_l1_salience": 0.3325306177139282,
+      "rsa_l1_shared_prior": 0.333074688911438,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 11,
+     "observed": 0.3666666666666666,
+     "preds": {
+      "rsa_l1_salience": 0.3576191067695617,
+      "rsa_l1_shared_prior": 0.3448231518268585,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "color_prior_rerun",
+   "condition": "prior_color_logical",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 24,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 10,
+     "observed": 0.4166666666666667,
+     "preds": {
+      "rsa_l1_salience": 0.3098503351211548,
+      "rsa_l1_shared_prior": 0.3221022486686706,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0833333333333333,
+     "preds": {
+      "rsa_l1_salience": 0.3325305581092834,
+      "rsa_l1_shared_prior": 0.3330747187137604,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.5,
+     "preds": {
+      "rsa_l1_salience": 0.357619047164917,
+      "rsa_l1_shared_prior": 0.3448232114315033,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "color_prior_rerun",
+   "condition": "prior_color_target",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 29,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.4137931034482758,
+     "preds": {
+      "rsa_l1_salience": 0.3098503649234772,
+      "rsa_l1_shared_prior": 0.322102278470993,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.2413793103448276,
+     "preds": {
+      "rsa_l1_salience": 0.3325306177139282,
+      "rsa_l1_shared_prior": 0.333074688911438,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 10,
+     "observed": 0.3448275862068966,
+     "preds": {
+      "rsa_l1_salience": 0.3576190769672394,
+      "rsa_l1_shared_prior": 0.3448231518268585,
+      "rsa_l2": 0.3333329558372497,
+      "rsa_l1": 0.3333329558372497,
+      "literal_listener": 0.3333329558372497
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E8_levels",
+   "condition": "complex_L0",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 52,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0384615384615384,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 50,
+     "observed": 0.9615384615384616,
+     "preds": {
+      "rsa_l1_salience": 0.9234604239463806,
+      "rsa_l1_shared_prior": 0.9240217208862304,
+      "rsa_l2": 0.9207105040550232,
+      "rsa_l1": 0.9220567941665648,
+      "literal_listener": 0.9216413497924804
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E8_levels",
+   "condition": "complex_L1",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 58,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 44,
+     "observed": 0.7586206896551724,
+     "preds": {
+      "rsa_l1_salience": 0.6121852993965149,
+      "rsa_l1_shared_prior": 0.6182492971420288,
+      "rsa_l2": 0.6714812517166138,
+      "rsa_l1": 0.6276952028274536,
+      "literal_listener": 0.480410486459732
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 11,
+     "observed": 0.1896551724137931,
+     "preds": {
+      "rsa_l1_salience": 0.3495445847511291,
+      "rsa_l1_shared_prior": 0.3437614440917969,
+      "rsa_l2": 0.288874089717865,
+      "rsa_l1": 0.333332896232605,
+      "literal_listener": 0.480410486459732
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0517241379310344,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447926759719,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E8_levels",
+   "condition": "complex_L2",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 62,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.064516129032258,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447889506816,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 33,
+     "observed": 0.532258064516129,
+     "preds": {
+      "rsa_l1_salience": 0.6149291396141052,
+      "rsa_l1_shared_prior": 0.606307327747345,
+      "rsa_l2": 0.6050679683685303,
+      "rsa_l1": 0.6013641357421875,
+      "literal_listener": 0.4804104268550873
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 25,
+     "observed": 0.4032258064516129,
+     "preds": {
+      "rsa_l1_salience": 0.3468013107776642,
+      "rsa_l1_shared_prior": 0.355703592300415,
+      "rsa_l2": 0.3552871942520141,
+      "rsa_l1": 0.3596642017364502,
+      "literal_listener": 0.4804104268550873
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E8_levels",
+   "condition": "simple_L0",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 49,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0204081632653061,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 48,
+     "observed": 0.979591836734694,
+     "preds": {
+      "rsa_l1_salience": 0.9234603643417358,
+      "rsa_l1_shared_prior": 0.9240216612815856,
+      "rsa_l2": 0.9207104444503784,
+      "rsa_l1": 0.9220566749572754,
+      "literal_listener": 0.9216412901878356
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E8_levels",
+   "condition": "simple_L1",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 46,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 37,
+     "observed": 0.8043478260869565,
+     "preds": {
+      "rsa_l1_salience": 0.72439044713974,
+      "rsa_l1_shared_prior": 0.7235943078994751,
+      "rsa_l2": 0.736981987953186,
+      "rsa_l1": 0.7260910272598267,
+      "literal_listener": 0.4804103672504425
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.1956521739130435,
+     "preds": {
+      "rsa_l1_salience": 0.2373399585485458,
+      "rsa_l1_shared_prior": 0.2384166270494461,
+      "rsa_l2": 0.2233730405569076,
+      "rsa_l1": 0.2349373400211334,
+      "literal_listener": 0.4804103672504425
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E8_levels",
+   "condition": "complex_prior",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 78,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 31,
+     "observed": 0.3974358974358974,
+     "preds": {
+      "rsa_l1_salience": 0.3176579773426056,
+      "rsa_l1_shared_prior": 0.3258416652679443,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 18,
+     "observed": 0.2307692307692307,
+     "preds": {
+      "rsa_l1_salience": 0.3411710560321808,
+      "rsa_l1_shared_prior": 0.3370792865753174,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 29,
+     "observed": 0.3717948717948718,
+     "preds": {
+      "rsa_l1_salience": 0.3411710560321808,
+      "rsa_l1_shared_prior": 0.3370792865753174,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "levels_prior_action",
+   "condition": "complex_prior_action",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 91,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 46,
+     "observed": 0.5054945054945055,
+     "preds": {
+      "rsa_l1_salience": 0.317658007144928,
+      "rsa_l1_shared_prior": 0.3258416652679443,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 16,
+     "observed": 0.1758241758241758,
+     "preds": {
+      "rsa_l1_salience": 0.3411710560321808,
+      "rsa_l1_shared_prior": 0.337079256772995,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 29,
+     "observed": 0.3186813186813186,
+     "preds": {
+      "rsa_l1_salience": 0.3411710560321808,
+      "rsa_l1_shared_prior": 0.337079256772995,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E9_twins",
+   "condition": "twin",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 46,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.108695652173913,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 2,
+     "count": 41,
+     "observed": 0.8913043478260869,
+     "preds": {
+      "rsa_l1_salience": 0.9617303013801576,
+      "rsa_l1_shared_prior": 0.96201092004776,
+      "rsa_l2": 0.9603548645973206,
+      "rsa_l1": 0.9610283970832824,
+      "literal_listener": 0.960820734500885
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E9_twins",
+   "condition": "uniform",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 60,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 23,
+     "observed": 0.3833333333333333,
+     "preds": {
+      "rsa_l1_salience": 0.2074381411075592,
+      "rsa_l1_shared_prior": 0.2126972377300262,
+      "rsa_l2": 0.2394928485155105,
+      "rsa_l1": 0.2191583067178726,
+      "literal_listener": 0.3333328664302826
+     }
+    },
+    {
+     "object": 1,
+     "copies": 2,
+     "count": 37,
+     "observed": 0.6166666666666667,
+     "preds": {
+      "rsa_l1_salience": 0.7925618290901184,
+      "rsa_l1_shared_prior": 0.78730309009552,
+      "rsa_l2": 0.7605069279670715,
+      "rsa_l1": 0.7808420658111572,
+      "literal_listener": 0.6666657328605652
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E9_twins",
+   "condition": "prior",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 87,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 48,
+     "observed": 0.5517241379310345,
+     "preds": {
+      "rsa_l1_salience": 0.3333328664302826,
+      "rsa_l1_shared_prior": 0.3333328664302826,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    },
+    {
+     "object": 1,
+     "copies": 2,
+     "count": 39,
+     "observed": 0.4482758620689655,
+     "preds": {
+      "rsa_l1_salience": 0.6666657328605652,
+      "rsa_l1_shared_prior": 0.6666657328605652,
+      "rsa_l2": 0.6666657328605652,
+      "rsa_l1": 0.6666657328605652,
+      "literal_listener": 0.6666657328605652
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E10_oddman",
+   "condition": "patch",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 93,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 38,
+     "observed": 0.4086021505376344,
+     "preds": {
+      "rsa_l1_salience": 0.4808650612831116,
+      "rsa_l1_shared_prior": 0.4810056686401367,
+      "rsa_l2": 0.4801775217056274,
+      "rsa_l1": 0.4805141091346741,
+      "literal_listener": 0.4804105758666992
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 48,
+     "observed": 0.5161290322580645,
+     "preds": {
+      "rsa_l1_salience": 0.4808650612831116,
+      "rsa_l1_shared_prior": 0.4810056686401367,
+      "rsa_l2": 0.4801775217056274,
+      "rsa_l1": 0.4805141091346741,
+      "literal_listener": 0.4804105758666992
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.075268817204301,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.0391792953014373
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E10_oddman",
+   "condition": "word",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 89,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 34,
+     "observed": 0.3820224719101123,
+     "preds": {
+      "rsa_l1_salience": 0.4808650612831116,
+      "rsa_l1_shared_prior": 0.4810056388378143,
+      "rsa_l2": 0.4801774621009826,
+      "rsa_l1": 0.4805141091346741,
+      "literal_listener": 0.4804105460643768
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 40,
+     "observed": 0.449438202247191,
+     "preds": {
+      "rsa_l1_salience": 0.4808650612831116,
+      "rsa_l1_shared_prior": 0.4810056388378143,
+      "rsa_l2": 0.4801774621009826,
+      "rsa_l1": 0.4805141091346741,
+      "literal_listener": 0.4804105460643768
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 15,
+     "observed": 0.1685393258426966,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E10_oddman",
+   "condition": "prior",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 87,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 27,
+     "observed": 0.3103448275862069,
+     "preds": {
+      "rsa_l1_salience": 0.3333328664302826,
+      "rsa_l1_shared_prior": 0.3333328664302826,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 35,
+     "observed": 0.4022988505747126,
+     "preds": {
+      "rsa_l1_salience": 0.3333328664302826,
+      "rsa_l1_shared_prior": 0.3333328664302826,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 25,
+     "observed": 0.2873563218390804,
+     "preds": {
+      "rsa_l1_salience": 0.3333328664302826,
+      "rsa_l1_shared_prior": 0.3333328664302826,
+      "rsa_l2": 0.3333328664302826,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.3333328664302826
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_2obj_2feat_sl0",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 46,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 33,
+     "observed": 0.717391304347826,
+     "preds": {
+      "rsa_l1_salience": 0.7435253262519836,
+      "rsa_l1_shared_prior": 0.7425888776779175,
+      "rsa_l2": 0.7568046450614929,
+      "rsa_l1": 0.7455772757530212,
+      "literal_listener": 0.5
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.2826086956521739,
+     "preds": {
+      "rsa_l1_salience": 0.256474882364273,
+      "rsa_l1_shared_prior": 0.2574112117290497,
+      "rsa_l2": 0.2431955337524414,
+      "rsa_l1": 0.254423052072525,
+      "literal_listener": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_2obj_3feat_sl6",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 46,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 28,
+     "observed": 0.6086956521739131,
+     "preds": {
+      "rsa_l1_salience": 0.6646817326545715,
+      "rsa_l1_shared_prior": 0.665454089641571,
+      "rsa_l2": 0.6598036289215088,
+      "rsa_l1": 0.6701617240905762,
+      "literal_listener": 0.5
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 18,
+     "observed": 0.391304347826087,
+     "preds": {
+      "rsa_l1_salience": 0.3353183567523956,
+      "rsa_l1_shared_prior": 0.3345459103584289,
+      "rsa_l2": 0.3401964902877807,
+      "rsa_l1": 0.3298385441303253,
+      "literal_listener": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_2obj_4feat_sl14",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 49,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 27,
+     "observed": 0.5510204081632653,
+     "preds": {
+      "rsa_l1_salience": 0.6223841309547424,
+      "rsa_l1_shared_prior": 0.6245818138122559,
+      "rsa_l2": 0.6140690445899963,
+      "rsa_l1": 0.630195677280426,
+      "literal_listener": 0.5
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 22,
+     "observed": 0.4489795918367347,
+     "preds": {
+      "rsa_l1_salience": 0.3776156306266784,
+      "rsa_l1_shared_prior": 0.3754182159900665,
+      "rsa_l2": 0.3859307467937469,
+      "rsa_l1": 0.3698043525218963,
+      "literal_listener": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_3obj_2feat_sl2",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 61,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0327868852459016,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447889506816,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 46,
+     "observed": 0.7540983606557377,
+     "preds": {
+      "rsa_l1_salience": 0.7243905663490295,
+      "rsa_l1_shared_prior": 0.7235943078994751,
+      "rsa_l2": 0.7369819283485413,
+      "rsa_l1": 0.7260909080505371,
+      "literal_listener": 0.4804104268550873
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.2131147540983606,
+     "preds": {
+      "rsa_l1_salience": 0.2373399585485458,
+      "rsa_l1_shared_prior": 0.2384166419506073,
+      "rsa_l2": 0.2233730107545852,
+      "rsa_l1": 0.2349373251199722,
+      "literal_listener": 0.4804104268550873
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_3obj_3feat_sl8",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 90,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 67,
+     "observed": 0.7444444444444445,
+     "preds": {
+      "rsa_l1_salience": 0.6134352684020996,
+      "rsa_l1_shared_prior": 0.614927351474762,
+      "rsa_l2": 0.6486616134643555,
+      "rsa_l1": 0.6231817603111267,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.1,
+     "preds": {
+      "rsa_l1_salience": 0.2608138024806976,
+      "rsa_l1_shared_prior": 0.2590694725513458,
+      "rsa_l2": 0.2360336780548095,
+      "rsa_l1": 0.2543568313121795,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.1555555555555555,
+     "preds": {
+      "rsa_l1_salience": 0.1257509738206863,
+      "rsa_l1_shared_prior": 0.1260031312704086,
+      "rsa_l2": 0.1153049021959304,
+      "rsa_l1": 0.122461125254631,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_3obj_3feat_sl9",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 91,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.1318681318681318,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 57,
+     "observed": 0.6263736263736264,
+     "preds": {
+      "rsa_l1_salience": 0.6738660931587219,
+      "rsa_l1_shared_prior": 0.6719345450401306,
+      "rsa_l2": 0.6759118437767029,
+      "rsa_l1": 0.6755771040916443,
+      "literal_listener": 0.4804105758666992
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 22,
+     "observed": 0.2417582417582417,
+     "preds": {
+      "rsa_l1_salience": 0.2878639996051788,
+      "rsa_l1_shared_prior": 0.2900765240192413,
+      "rsa_l2": 0.2844434380531311,
+      "rsa_l1": 0.2854510545730591,
+      "literal_listener": 0.4804105758666992
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_3obj_4feat_sl16",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 89,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 66,
+     "observed": 0.7415730337078652,
+     "preds": {
+      "rsa_l1_salience": 0.5194980502128601,
+      "rsa_l1_shared_prior": 0.5229509472846985,
+      "rsa_l2": 0.5305484533309937,
+      "rsa_l1": 0.5327062010765076,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.0786516853932584,
+     "preds": {
+      "rsa_l1_salience": 0.3126892149448395,
+      "rsa_l1_shared_prior": 0.3094830513000488,
+      "rsa_l2": 0.3005638420581817,
+      "rsa_l1": 0.3049279153347015,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 16,
+     "observed": 0.1797752808988764,
+     "preds": {
+      "rsa_l1_salience": 0.1678126901388168,
+      "rsa_l1_shared_prior": 0.1675659567117691,
+      "rsa_l2": 0.1688877344131469,
+      "rsa_l1": 0.1623660027980804,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_3obj_4feat_sl17",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 98,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 15,
+     "observed": 0.1530612244897959,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 57,
+     "observed": 0.5816326530612245,
+     "preds": {
+      "rsa_l1_salience": 0.6397462487220764,
+      "rsa_l1_shared_prior": 0.6379361152648926,
+      "rsa_l2": 0.6289596557617188,
+      "rsa_l1": 0.642338752746582,
+      "literal_listener": 0.4804105460643768
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 26,
+     "observed": 0.2653061224489796,
+     "preds": {
+      "rsa_l1_salience": 0.3219837248325348,
+      "rsa_l1_shared_prior": 0.3240747153759002,
+      "rsa_l2": 0.3313953280448913,
+      "rsa_l1": 0.3186894059181213,
+      "literal_listener": 0.4804105460643768
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_4obj_2feat_sl4",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 64,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "rsa_l1_salience": 0.0574049986898899,
+      "rsa_l1_shared_prior": 0.0569837093353271,
+      "rsa_l2": 0.0594671890139579,
+      "rsa_l1": 0.058457463979721,
+      "literal_listener": 0.0587689243257045
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 48,
+     "observed": 0.75,
+     "preds": {
+      "rsa_l1_salience": 0.7148226499557495,
+      "rsa_l1_shared_prior": 0.7140969634056091,
+      "rsa_l2": 0.7270705699920654,
+      "rsa_l1": 0.7163481116294861,
+      "literal_listener": 0.4706156253814697
+     }
+    },
+    {
+     "object": 3,
+     "copies": 1,
+     "count": 16,
+     "observed": 0.25,
+     "preds": {
+      "rsa_l1_salience": 0.2277725040912628,
+      "rsa_l1_shared_prior": 0.2289193719625473,
+      "rsa_l2": 0.2134618610143661,
+      "rsa_l1": 0.2251943498849868,
+      "literal_listener": 0.4706156253814697
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_4obj_3feat_sl11",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 92,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 61,
+     "observed": 0.6630434782608695,
+     "preds": {
+      "rsa_l1_salience": 0.7965860962867737,
+      "rsa_l1_shared_prior": 0.7941239476203918,
+      "rsa_l2": 0.8219689130783081,
+      "rsa_l1": 0.7981719970703125,
+      "literal_listener": 0.5
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.0760869565217391,
+     "preds": {
+      "rsa_l1_salience": 0.1359370946884155,
+      "rsa_l1_shared_prior": 0.1373211294412613,
+      "rsa_l2": 0.1175105571746826,
+      "rsa_l1": 0.1347139030694961,
+      "literal_listener": 0.25
+     }
+    },
+    {
+     "object": 3,
+     "copies": 1,
+     "count": 24,
+     "observed": 0.2608695652173913,
+     "preds": {
+      "rsa_l1_salience": 0.0674769654870033,
+      "rsa_l1_shared_prior": 0.068554937839508,
+      "rsa_l2": 0.0605207830667495,
+      "rsa_l1": 0.0671141818165779,
+      "literal_listener": 0.25
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_4obj_3feat_sl12",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 93,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 4,
+     "observed": 0.043010752688172,
+     "preds": {
+      "rsa_l1_salience": 0.0574049986898899,
+      "rsa_l1_shared_prior": 0.056983720511198,
+      "rsa_l2": 0.0594671964645385,
+      "rsa_l1": 0.0584574677050113,
+      "literal_listener": 0.0587689131498336
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 60,
+     "observed": 0.6451612903225806,
+     "preds": {
+      "rsa_l1_salience": 0.6791753172874451,
+      "rsa_l1_shared_prior": 0.6765035390853882,
+      "rsa_l2": 0.6825624704360962,
+      "rsa_l1": 0.6794100999832153,
+      "literal_listener": 0.4706155657768249
+     }
+    },
+    {
+     "object": 3,
+     "copies": 1,
+     "count": 29,
+     "observed": 0.3118279569892473,
+     "preds": {
+      "rsa_l1_salience": 0.263419896364212,
+      "rsa_l1_shared_prior": 0.2665126025676727,
+      "rsa_l2": 0.2579704225063324,
+      "rsa_l1": 0.2621322274208069,
+      "literal_listener": 0.4706155657768249
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_4obj_4feat_sl19",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 83,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 54,
+     "observed": 0.6506024096385542,
+     "preds": {
+      "rsa_l1_salience": 0.7254486680030823,
+      "rsa_l1_shared_prior": 0.7239050269126892,
+      "rsa_l2": 0.730262279510498,
+      "rsa_l1": 0.7301931381225586,
+      "literal_listener": 0.5
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.0843373493975903,
+     "preds": {
+      "rsa_l1_salience": 0.1815598905086517,
+      "rsa_l1_shared_prior": 0.1817927062511444,
+      "rsa_l2": 0.1755142360925674,
+      "rsa_l1": 0.1782286018133163,
+      "literal_listener": 0.25
+     }
+    },
+    {
+     "object": 3,
+     "copies": 1,
+     "count": 22,
+     "observed": 0.2650602409638554,
+     "preds": {
+      "rsa_l1_salience": 0.0929914712905883,
+      "rsa_l1_shared_prior": 0.094302050769329,
+      "rsa_l2": 0.0942235589027404,
+      "rsa_l1": 0.0915782153606414,
+      "literal_listener": 0.25
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_4obj_4feat_sl20",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 83,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 1,
+     "observed": 0.0120481927710843,
+     "preds": {
+      "rsa_l1_salience": 0.0574050024151802,
+      "rsa_l1_shared_prior": 0.0569837167859077,
+      "rsa_l2": 0.0594671964645385,
+      "rsa_l1": 0.0584574677050113,
+      "literal_listener": 0.0587689168751239
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 50,
+     "observed": 0.6024096385542169,
+     "preds": {
+      "rsa_l1_salience": 0.6521325707435608,
+      "rsa_l1_shared_prior": 0.6487448215484619,
+      "rsa_l2": 0.6408915519714355,
+      "rsa_l1": 0.6521834135055542,
+      "literal_listener": 0.4706155657768249
+     }
+    },
+    {
+     "object": 3,
+     "copies": 1,
+     "count": 32,
+     "observed": 0.3855421686746988,
+     "preds": {
+      "rsa_l1_salience": 0.2904625236988067,
+      "rsa_l1_shared_prior": 0.2942714393138885,
+      "rsa_l2": 0.2996413111686706,
+      "rsa_l1": 0.2893591523170471,
+      "literal_listener": 0.4706155657768249
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "prior_2obj_2feat",
+   "objects": [
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 48,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.2916666666666667,
+     "preds": {
+      "rsa_l1_salience": 0.4820695221424103,
+      "rsa_l1_shared_prior": 0.4914759695529938,
+      "rsa_l2": 0.5,
+      "rsa_l1": 0.5,
+      "literal_listener": 0.5
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 34,
+     "observed": 0.7083333333333334,
+     "preds": {
+      "rsa_l1_salience": 0.5179305672645569,
+      "rsa_l1_shared_prior": 0.5085240006446838,
+      "rsa_l2": 0.5,
+      "rsa_l1": 0.5,
+      "literal_listener": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "prior_2obj_3feat",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 37,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.2162162162162162,
+     "preds": {
+      "rsa_l1_salience": 0.4820694923400879,
+      "rsa_l1_shared_prior": 0.4914759695529938,
+      "rsa_l2": 0.5,
+      "rsa_l1": 0.5,
+      "literal_listener": 0.5
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 29,
+     "observed": 0.7837837837837838,
+     "preds": {
+      "rsa_l1_salience": 0.5179306268692017,
+      "rsa_l1_shared_prior": 0.5085239410400391,
+      "rsa_l2": 0.5,
+      "rsa_l1": 0.5,
+      "literal_listener": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "prior_2obj_4feat",
+   "objects": [
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 44,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 16,
+     "observed": 0.3636363636363636,
+     "preds": {
+      "rsa_l1_salience": 0.4820694923400879,
+      "rsa_l1_shared_prior": 0.4914759695529938,
+      "rsa_l2": 0.5,
+      "rsa_l1": 0.5,
+      "literal_listener": 0.5
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 28,
+     "observed": 0.6363636363636364,
+     "preds": {
+      "rsa_l1_salience": 0.5179305672645569,
+      "rsa_l1_shared_prior": 0.5085240006446838,
+      "rsa_l2": 0.5,
+      "rsa_l1": 0.5,
+      "literal_listener": 0.5
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "prior_3obj_2feat",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 41,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.1219512195121951,
+     "preds": {
+      "rsa_l1_salience": 0.3098503351211548,
+      "rsa_l1_shared_prior": 0.322102278470993,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.3414634146341463,
+     "preds": {
+      "rsa_l1_salience": 0.3325305581092834,
+      "rsa_l1_shared_prior": 0.3330747187137604,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 22,
+     "observed": 0.5365853658536586,
+     "preds": {
+      "rsa_l1_salience": 0.357619047164917,
+      "rsa_l1_shared_prior": 0.3448231518268585,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "prior_3obj_3feat",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 38,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.2368421052631578,
+     "preds": {
+      "rsa_l1_salience": 0.3098504245281219,
+      "rsa_l1_shared_prior": 0.3221023082733154,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.2105263157894736,
+     "preds": {
+      "rsa_l1_salience": 0.3325305879116058,
+      "rsa_l1_shared_prior": 0.333074688911438,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 21,
+     "observed": 0.5526315789473685,
+     "preds": {
+      "rsa_l1_salience": 0.3576190769672394,
+      "rsa_l1_shared_prior": 0.3448231220245361,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "prior_3obj_4feat",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 38,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 10,
+     "observed": 0.2631578947368421,
+     "preds": {
+      "rsa_l1_salience": 0.3098504245281219,
+      "rsa_l1_shared_prior": 0.3221023082733154,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.1578947368421052,
+     "preds": {
+      "rsa_l1_salience": 0.3325306177139282,
+      "rsa_l1_shared_prior": 0.333074688911438,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 22,
+     "observed": 0.5789473684210527,
+     "preds": {
+      "rsa_l1_salience": 0.3576190769672394,
+      "rsa_l1_shared_prior": 0.3448231220245361,
+      "rsa_l2": 0.3333329260349273,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.3333329260349273
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "prior_4obj_2feat",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 45,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 12,
+     "observed": 0.2666666666666666,
+     "preds": {
+      "rsa_l1_salience": 0.4729121029376983,
+      "rsa_l1_shared_prior": 0.4871481955051422,
+      "rsa_l2": 0.5,
+      "rsa_l1": 0.5,
+      "literal_listener": 0.5
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.1555555555555555,
+     "preds": {
+      "rsa_l1_salience": 0.2538953423500061,
+      "rsa_l1_shared_prior": 0.2519442141056061,
+      "rsa_l2": 0.25,
+      "rsa_l1": 0.25,
+      "literal_listener": 0.25
+     }
+    },
+    {
+     "object": 3,
+     "copies": 1,
+     "count": 26,
+     "observed": 0.5777777777777777,
+     "preds": {
+      "rsa_l1_salience": 0.2731927931308746,
+      "rsa_l1_shared_prior": 0.2609075009822845,
+      "rsa_l2": 0.25,
+      "rsa_l1": 0.25,
+      "literal_listener": 0.25
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "prior_4obj_3feat",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 49,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 14,
+     "observed": 0.2857142857142857,
+     "preds": {
+      "rsa_l1_salience": 0.4729121029376983,
+      "rsa_l1_shared_prior": 0.4871481955051422,
+      "rsa_l2": 0.5,
+      "rsa_l1": 0.5,
+      "literal_listener": 0.5
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 16,
+     "observed": 0.3265306122448979,
+     "preds": {
+      "rsa_l1_salience": 0.2538953125476837,
+      "rsa_l1_shared_prior": 0.2519441843032837,
+      "rsa_l2": 0.25,
+      "rsa_l1": 0.25,
+      "literal_listener": 0.25
+     }
+    },
+    {
+     "object": 3,
+     "copies": 1,
+     "count": 19,
+     "observed": 0.3877551020408163,
+     "preds": {
+      "rsa_l1_salience": 0.273192822933197,
+      "rsa_l1_shared_prior": 0.2609075307846069,
+      "rsa_l2": 0.25,
+      "rsa_l1": 0.25,
+      "literal_listener": 0.25
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "prior_4obj_4feat",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 43,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 13,
+     "observed": 0.3023255813953488,
+     "preds": {
+      "rsa_l1_salience": 0.4729121029376983,
+      "rsa_l1_shared_prior": 0.4871481955051422,
+      "rsa_l2": 0.5,
+      "rsa_l1": 0.5,
+      "literal_listener": 0.5
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.2093023255813953,
+     "preds": {
+      "rsa_l1_salience": 0.2538953423500061,
+      "rsa_l1_shared_prior": 0.2519441843032837,
+      "rsa_l2": 0.25,
+      "rsa_l1": 0.25,
+      "literal_listener": 0.25
+     }
+    },
+    {
+     "object": 3,
+     "copies": 1,
+     "count": 21,
+     "observed": 0.4883720930232558,
+     "preds": {
+      "rsa_l1_salience": 0.2731927931308746,
+      "rsa_l1_shared_prior": 0.2609075307846069,
+      "rsa_l2": 0.25,
+      "rsa_l1": 0.25,
+      "literal_listener": 0.25
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "(0b1b)x3",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 138,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.0289855072463768,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447926759719,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0144927536231884,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447926759719,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 132,
+     "observed": 0.9565217391304348,
+     "preds": {
+      "rsa_l1_salience": 0.9234603643417358,
+      "rsa_l1_shared_prior": 0.9240216016769408,
+      "rsa_l2": 0.9207103848457336,
+      "rsa_l1": 0.9220566749572754,
+      "literal_listener": 0.9216412305831908
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "(0b1b)x3",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 138,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0072463768115942,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447926759719,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 108,
+     "observed": 0.782608695652174,
+     "preds": {
+      "rsa_l1_salience": 0.72439044713974,
+      "rsa_l1_shared_prior": 0.7235942482948303,
+      "rsa_l2": 0.7369821071624756,
+      "rsa_l1": 0.7260910272598267,
+      "literal_listener": 0.4804105460643768
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 29,
+     "observed": 0.2101449275362318,
+     "preds": {
+      "rsa_l1_salience": 0.2373399287462234,
+      "rsa_l1_shared_prior": 0.2384166419506073,
+      "rsa_l2": 0.2233729660511016,
+      "rsa_l1": 0.234937310218811,
+      "literal_listener": 0.4804105460643768
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "(0w1w)x3",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 141,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0070921985815602,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 140,
+     "observed": 0.9929078014184396,
+     "preds": {
+      "rsa_l1_salience": 0.9234604239463806,
+      "rsa_l1_shared_prior": 0.9240214824676514,
+      "rsa_l2": 0.9207103252410888,
+      "rsa_l1": 0.9220566749572754,
+      "literal_listener": 0.9216411113739014
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "(0w1w)x3",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 141,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.0425531914893617,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 111,
+     "observed": 0.7872340425531915,
+     "preds": {
+      "rsa_l1_salience": 0.7243905067443848,
+      "rsa_l1_shared_prior": 0.7235943078994751,
+      "rsa_l2": 0.7369821071624756,
+      "rsa_l1": 0.7260909676551819,
+      "literal_listener": 0.4804105162620544
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 24,
+     "observed": 0.1702127659574468,
+     "preds": {
+      "rsa_l1_salience": 0.2373399138450622,
+      "rsa_l1_shared_prior": 0.2384166270494461,
+      "rsa_l2": 0.2233729809522628,
+      "rsa_l1": 0.2349372953176498,
+      "literal_listener": 0.4804105162620544
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "0w1w1b",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 80,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0375,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.025,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 75,
+     "observed": 0.9375,
+     "preds": {
+      "rsa_l1_salience": 0.9234603047370912,
+      "rsa_l1_shared_prior": 0.9240216016769408,
+      "rsa_l2": 0.9207104444503784,
+      "rsa_l1": 0.9220565557479858,
+      "literal_listener": 0.9216412305831908
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "0w1w1b",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 160,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.03125,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 132,
+     "observed": 0.825,
+     "preds": {
+      "rsa_l1_salience": 0.72439044713974,
+      "rsa_l1_shared_prior": 0.7235942482948303,
+      "rsa_l2": 0.7369821667671204,
+      "rsa_l1": 0.7260910272598267,
+      "literal_listener": 0.4804105162620544
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 23,
+     "observed": 0.14375,
+     "preds": {
+      "rsa_l1_salience": 0.2373399436473846,
+      "rsa_l1_shared_prior": 0.2384166419506073,
+      "rsa_l2": 0.2233729660511016,
+      "rsa_l1": 0.2349372804164886,
+      "literal_listener": 0.4804105162620544
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "0w1w2w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 43,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0232558139534883,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0697674418604651,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 39,
+     "observed": 0.9069767441860463,
+     "preds": {
+      "rsa_l1_salience": 0.9234604239463806,
+      "rsa_l1_shared_prior": 0.9240217208862304,
+      "rsa_l2": 0.9207104444503784,
+      "rsa_l1": 0.9220567941665648,
+      "literal_listener": 0.9216413497924804
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "0w1w2w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 43,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0697674418604651,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 35,
+     "observed": 0.813953488372093,
+     "preds": {
+      "rsa_l1_salience": 0.6149291396141052,
+      "rsa_l1_shared_prior": 0.6063072681427002,
+      "rsa_l2": 0.6050679683685303,
+      "rsa_l1": 0.6013641357421875,
+      "literal_listener": 0.4804104268550873
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.1162790697674418,
+     "preds": {
+      "rsa_l1_salience": 0.3468011915683746,
+      "rsa_l1_shared_prior": 0.3557036221027374,
+      "rsa_l2": 0.3552871942520141,
+      "rsa_l1": 0.3596640825271606,
+      "literal_listener": 0.4804104268550873
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "0w1w2w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 43,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 33,
+     "observed": 0.7674418604651163,
+     "preds": {
+      "rsa_l1_salience": 0.6121852397918701,
+      "rsa_l1_shared_prior": 0.6182493567466736,
+      "rsa_l2": 0.6714813113212585,
+      "rsa_l1": 0.6276951432228088,
+      "literal_listener": 0.4804104268550873
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.1860465116279069,
+     "preds": {
+      "rsa_l1_salience": 0.3495446145534515,
+      "rsa_l1_shared_prior": 0.3437614440917969,
+      "rsa_l2": 0.288874089717865,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.4804104268550873
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0465116279069767,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "0w2w1w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 45,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0444444444444444,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0222222222222222,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 42,
+     "observed": 0.9333333333333332,
+     "preds": {
+      "rsa_l1_salience": 0.9234604835510254,
+      "rsa_l1_shared_prior": 0.9240217208862304,
+      "rsa_l2": 0.9207105040550232,
+      "rsa_l1": 0.9220568537712096,
+      "literal_listener": 0.9216413497924804
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "0w2w1w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 45,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0222222222222222,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 30,
+     "observed": 0.6666666666666666,
+     "preds": {
+      "rsa_l1_salience": 0.6149291396141052,
+      "rsa_l1_shared_prior": 0.606307327747345,
+      "rsa_l2": 0.6050679683685303,
+      "rsa_l1": 0.6013641357421875,
+      "literal_listener": 0.4804103970527649
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.3111111111111111,
+     "preds": {
+      "rsa_l1_salience": 0.3468011915683746,
+      "rsa_l1_shared_prior": 0.3557036221027374,
+      "rsa_l2": 0.3552872240543365,
+      "rsa_l1": 0.359664112329483,
+      "literal_listener": 0.4804103970527649
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "0w2w1w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 45,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 35,
+     "observed": 0.7777777777777778,
+     "preds": {
+      "rsa_l1_salience": 0.6121851801872253,
+      "rsa_l1_shared_prior": 0.6182493567466736,
+      "rsa_l2": 0.6714813113212585,
+      "rsa_l1": 0.6276951432228088,
+      "literal_listener": 0.4804103970527649
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.1777777777777777,
+     "preds": {
+      "rsa_l1_salience": 0.3495446145534515,
+      "rsa_l1_shared_prior": 0.3437614440917969,
+      "rsa_l2": 0.288874089717865,
+      "rsa_l1": 0.3333329260349273,
+      "literal_listener": 0.4804103970527649
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0444444444444444,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "1w0w1b",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 111,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.038971621543169,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.009009009009009,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.038971621543169,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 110,
+     "observed": 0.990990990990991,
+     "preds": {
+      "rsa_l1_salience": 0.9234603047370912,
+      "rsa_l1_shared_prior": 0.9240214824676514,
+      "rsa_l2": 0.9207103252410888,
+      "rsa_l1": 0.9220566153526306,
+      "literal_listener": 0.9216411113739014
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "1w0w1b",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 222,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.054054054054054,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396448001265525,
+      "rsa_l1": 0.0389716289937496,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 168,
+     "observed": 0.7567567567567568,
+     "preds": {
+      "rsa_l1_salience": 0.7243903279304504,
+      "rsa_l1_shared_prior": 0.7235943078994751,
+      "rsa_l2": 0.7369822859764099,
+      "rsa_l1": 0.7260909676551819,
+      "literal_listener": 0.4804105758666992
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 42,
+     "observed": 0.1891891891891892,
+     "preds": {
+      "rsa_l1_salience": 0.2373399287462234,
+      "rsa_l1_shared_prior": 0.2384166568517685,
+      "rsa_l2": 0.2233729660511016,
+      "rsa_l1": 0.2349372655153274,
+      "literal_listener": 0.4804105758666992
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "1w2w0w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 52,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0192307692307692,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0192307692307692,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 50,
+     "observed": 0.9615384615384616,
+     "preds": {
+      "rsa_l1_salience": 0.9234604239463806,
+      "rsa_l1_shared_prior": 0.9240217208862304,
+      "rsa_l2": 0.9207105040550232,
+      "rsa_l1": 0.9220567941665648,
+      "literal_listener": 0.9216413497924804
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "1w2w0w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 52,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0576923076923076,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 29,
+     "observed": 0.5576923076923077,
+     "preds": {
+      "rsa_l1_salience": 0.6149291396141052,
+      "rsa_l1_shared_prior": 0.6063072681427002,
+      "rsa_l2": 0.6050679683685303,
+      "rsa_l1": 0.6013641357421875,
+      "literal_listener": 0.4804104268550873
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 20,
+     "observed": 0.3846153846153846,
+     "preds": {
+      "rsa_l1_salience": 0.3468012809753418,
+      "rsa_l1_shared_prior": 0.3557036221027374,
+      "rsa_l2": 0.3552871942520141,
+      "rsa_l1": 0.3596641719341278,
+      "literal_listener": 0.4804104268550873
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "1w2w0w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 52,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 45,
+     "observed": 0.8653846153846154,
+     "preds": {
+      "rsa_l1_salience": 0.6121852397918701,
+      "rsa_l1_shared_prior": 0.6182493567466736,
+      "rsa_l2": 0.6714812517166138,
+      "rsa_l1": 0.6276952028274536,
+      "literal_listener": 0.4804104268550873
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.0961538461538461,
+     "preds": {
+      "rsa_l1_salience": 0.3495445847511291,
+      "rsa_l1_shared_prior": 0.3437614440917969,
+      "rsa_l2": 0.288874089717865,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.4804104268550873
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0384615384615384,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.039179291576147
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "2w1w0w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 53,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0188679245283018,
+     "preds": {
+      "rsa_l1_salience": 0.0382699817419052,
+      "rsa_l1_shared_prior": 0.0379891246557235,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "rsa_l1_salience": 0.0382699817419052,
+      "rsa_l1_shared_prior": 0.0379891246557235,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 52,
+     "observed": 0.981132075471698,
+     "preds": {
+      "rsa_l1_salience": 0.9234604835510254,
+      "rsa_l1_shared_prior": 0.9240217208862304,
+      "rsa_l2": 0.9207105040550232,
+      "rsa_l1": 0.9220567941665648,
+      "literal_listener": 0.9216413497924804
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "2w1w0w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 53,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0377358490566037,
+     "preds": {
+      "rsa_l1_salience": 0.0382699817419052,
+      "rsa_l1_shared_prior": 0.0379891246557235,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 27,
+     "observed": 0.5094339622641509,
+     "preds": {
+      "rsa_l1_salience": 0.6149291396141052,
+      "rsa_l1_shared_prior": 0.6063072681427002,
+      "rsa_l2": 0.6050679087638855,
+      "rsa_l1": 0.6013641357421875,
+      "literal_listener": 0.4804104268550873
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 24,
+     "observed": 0.4528301886792453,
+     "preds": {
+      "rsa_l1_salience": 0.3468012809753418,
+      "rsa_l1_shared_prior": 0.355703592300415,
+      "rsa_l2": 0.3552871942520141,
+      "rsa_l1": 0.3596642017364502,
+      "literal_listener": 0.4804104268550873
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "2w1w0w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 53,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 35,
+     "observed": 0.660377358490566,
+     "preds": {
+      "rsa_l1_salience": 0.6121851801872253,
+      "rsa_l1_shared_prior": 0.6182493567466736,
+      "rsa_l2": 0.6714813113212585,
+      "rsa_l1": 0.6276952624320984,
+      "literal_listener": 0.4804104268550873
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 15,
+     "observed": 0.2830188679245283,
+     "preds": {
+      "rsa_l1_salience": 0.3495445847511291,
+      "rsa_l1_shared_prior": 0.3437614440917969,
+      "rsa_l2": 0.288874089717865,
+      "rsa_l1": 0.3333328664302826,
+      "literal_listener": 0.4804104268550873
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0566037735849056,
+     "preds": {
+      "rsa_l1_salience": 0.0382699817419052,
+      "rsa_l1_shared_prior": 0.0379891246557235,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716364443302,
+      "literal_listener": 0.0391792953014373
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "speakers",
+   "condition": "seq_L2:checkbox",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 136,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.0588235294117647,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 61,
+     "observed": 0.4485294117647059,
+     "preds": {
+      "rsa_l1_salience": 0.6149291396141052,
+      "rsa_l1_shared_prior": 0.6063072085380554,
+      "rsa_l2": 0.6050678491592407,
+      "rsa_l1": 0.6013641357421875,
+      "literal_listener": 0.4804105162620544
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 67,
+     "observed": 0.4926470588235294,
+     "preds": {
+      "rsa_l1_salience": 0.3468012511730194,
+      "rsa_l1_shared_prior": 0.3557036221027374,
+      "rsa_l2": 0.3552871346473694,
+      "rsa_l1": 0.3596641421318054,
+      "literal_listener": 0.4804105162620544
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "speakers",
+   "condition": "seq_L2:text",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 135,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.0888888888888888,
+     "preds": {
+      "rsa_l1_salience": 0.0382699854671955,
+      "rsa_l1_shared_prior": 0.0379891283810138,
+      "rsa_l2": 0.0396447926759719,
+      "rsa_l1": 0.0389716327190399,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 62,
+     "observed": 0.4592592592592592,
+     "preds": {
+      "rsa_l1_salience": 0.6149291396141052,
+      "rsa_l1_shared_prior": 0.6063072681427002,
+      "rsa_l2": 0.6050679683685303,
+      "rsa_l1": 0.6013641357421875,
+      "literal_listener": 0.4804105460643768
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 61,
+     "observed": 0.4518518518518518,
+     "preds": {
+      "rsa_l1_salience": 0.3468012809753418,
+      "rsa_l1_shared_prior": 0.3557036221027374,
+      "rsa_l2": 0.3552871644496918,
+      "rsa_l1": 0.3596641719341278,
+      "literal_listener": 0.4804105460643768
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "speakers",
+   "condition": "seq_L2:virtual_keyboard",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 118,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.059322033898305,
+     "preds": {
+      "rsa_l1_salience": 0.0382699891924858,
+      "rsa_l1_shared_prior": 0.0379891321063041,
+      "rsa_l2": 0.0396447964012622,
+      "rsa_l1": 0.0389716252684593,
+      "literal_listener": 0.039179291576147
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 54,
+     "observed": 0.4576271186440678,
+     "preds": {
+      "rsa_l1_salience": 0.6149291396141052,
+      "rsa_l1_shared_prior": 0.6063072085380554,
+      "rsa_l2": 0.6050676703453064,
+      "rsa_l1": 0.6013641357421875,
+      "literal_listener": 0.4804106056690216
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 57,
+     "observed": 0.4830508474576271,
+     "preds": {
+      "rsa_l1_salience": 0.3468012809753418,
+      "rsa_l1_shared_prior": 0.355703741312027,
+      "rsa_l2": 0.3552870452404022,
+      "rsa_l1": 0.3596641719341278,
+      "literal_listener": 0.4804106056690216
+     }
+    }
+   ]
+  }
+ ]
+}
