@@ -67,6 +67,10 @@ def test_the_launcher_exports_target_accept_and_agent_timeout(tmp_path, monkeypa
         encoding="utf-8",
     )
     monkeypatch.setattr(pilot_config, "project_assets_dir", lambda pid: tmp_path / pid)
+    # The launcher checks the Prolific token against the live API; this test
+    # reads only the exported settings, and CI holds no token (nor should it
+    # reach Prolific).
+    monkeypatch.setattr(pilot_config, "get_me", lambda: ({"id": "test-researcher"}, None))
     (tmp_path / "subjective_randomness").mkdir()
     monkeypatch.setattr(sys, "argv", ["_pilot_config.py", str(config)])
     pilot_config.main()
