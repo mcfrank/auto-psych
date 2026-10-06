@@ -1,0 +1,192 @@
+"""Cached, time-limited fits of memo model files for the RSA loop.
+
+A fit is content-addressed by (model file sha, responses file sha, sampler
+settings) and stored as ``<cache>/<name>.<fingerprint>.nc`` with a sidecar
+``.json`` (parameter names, convergence problems). A cached fit is reused,
+never recomputed; files are written under a temporary name and
+``os.replace``d into place.
+
+A fit can run in a spawned child process with a time limit (agent-written
+candidates: a pathological model must not stall the loop). Failures are
+classified as in the PyMC domain: a failure of the model itself (its own
+code raised, memo refused to compile it, it broke the contract, it gives an
+observed choice probability zero) is a `ModelFailure` the caller turns into a
+rejection; anything else (a killed worker, an unreadable file, OSError,
+MemoryError) is infrastructure and raises.
+"""
+
+from __future__ import annotations
+
+import hashlib
+import json
+import multiprocessing as mp
+import os
+import traceback
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any, List, Optional
+
+from src.rsa.fit import FitSettings, RSAFit, ZeroProbabilityChoice
+
+FIT_TIME_LIMIT_SEC = 30 * 60  # as the PyMC domain's CANDIDATE_FIT_TIME_LIMIT_SEC
+
+
+class ModelFailure(RuntimeError):
+    """The model failed (a rejection), as opposed to the infrastructure."""
+
+
+class FitTimeLimitExceeded(ModelFailure):
+    """The fit did not finish within the time limit (the model is too slow)."""
+
+
+def _sha_file(path: Path) -> str:
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def fingerprint(model_path: Path, responses_path: Path, settings: FitSettings) -> str:
+    h = hashlib.sha256()
+    h.update(_sha_file(model_path).encode())
+    h.update(_sha_file(responses_path).encode())
+    h.update(json.dumps(asdict(settings), sort_keys=True).encode())
+    return h.hexdigest()[:20]
+
+
+def cache_paths(cache_dir: Path, name: str, fp: str) -> tuple[Path, Path]:
+    base = Path(cache_dir) / f"{name}.{fp}"
+    return base.with_suffix(".nc"), base.with_suffix(".json")
+
+
+def _model_failure_types() -> tuple:
+    from memo.core import MemoError
+
+    from src.rsa.model_file import ModelContractViolation
+
+    return (ModelContractViolation, ZeroProbabilityChoice, MemoError, SyntaxError)
+
+
+def is_model_failure(exc: BaseException, model_path: Path) -> bool:
+    """A failure of the model: a known model-failure type, or raised in its file."""
+    if isinstance(exc, (OSError, MemoryError)):
+        return False
+    if isinstance(exc, _model_failure_types()):
+        return True
+    model_path = str(Path(model_path).resolve())
+    frames = traceback.extract_tb(exc.__traceback__)
+    return bool(frames) and any(str(Path(f.filename).resolve()) == model_path for f in frames)
+
+
+def _write(fitted: RSAFit, nc_path: Path, meta_path: Path) -> None:
+    nc_path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = nc_path.with_suffix(f".tmp{os.getpid()}.nc")
+    fitted.idata.to_netcdf(str(tmp))
+    os.replace(tmp, nc_path)
+    meta = dict(
+        model_name=fitted.model_name,
+        param_names=fitted.param_names,
+        convergence_problems=fitted.convergence_problems,
+    )
+    tmp_meta = meta_path.with_suffix(f".tmp{os.getpid()}.json")
+    tmp_meta.write_text(json.dumps(meta))
+    os.replace(tmp_meta, meta_path)
+
+
+def _read(nc_path: Path, meta_path: Path) -> RSAFit:
+    import arviz as az
+
+    meta = json.loads(meta_path.read_text())
+    idata = az.from_netcdf(str(nc_path))
+    idata.load()
+    return RSAFit(
+        model_name=meta["model_name"],
+        idata=idata,
+        param_names=meta["param_names"],
+        convergence_problems=meta["convergence_problems"],
+    )
+
+
+def _fit_now(model_path: Path, name: str, responses_path: Path, settings: FitSettings) -> RSAFit:
+    from src.rsa.dataset import load_forced_choice
+    from src.rsa.fit import fit
+    from src.rsa.model_file import RSAModel
+
+    trials = load_forced_choice(responses_path)
+    return fit(RSAModel(model_path, name=name), trials.contexts, trials.choices, settings)
+
+
+def _child(model_path, name, responses_path, settings, nc_path, meta_path, queue) -> None:
+    try:
+        fitted = _fit_now(Path(model_path), name, Path(responses_path), settings)
+        _write(fitted, Path(nc_path), Path(meta_path))
+        queue.put(("ok", None, None))
+    except BaseException as exc:  # reported to the parent, which classifies it
+        queue.put(
+            (
+                "model" if is_model_failure(exc, Path(model_path)) else "infrastructure",
+                f"{type(exc).__name__}: {exc}",
+                "".join(traceback.format_exception(exc))[-4000:],
+            )
+        )
+
+
+def fit_cached(
+    model_path: Path,
+    name: str,
+    responses_path: Path,
+    settings: FitSettings,
+    cache_dir: Path,
+    *,
+    time_limit_sec: Optional[float] = None,
+) -> RSAFit:
+    """The model's fit to the responses, from the cache or fitted now.
+
+    With ``time_limit_sec`` the fit runs in a spawned child process that is
+    killed at the limit (`FitTimeLimitExceeded`). Raises `ModelFailure` for a
+    failure of the model, and RuntimeError for any other failure.
+    """
+    fp = fingerprint(model_path, responses_path, settings)
+    nc_path, meta_path = cache_paths(cache_dir, name, fp)
+    if nc_path.exists() and meta_path.exists():
+        return _read(nc_path, meta_path)
+    if time_limit_sec is None:
+        try:
+            fitted = _fit_now(model_path, name, responses_path, settings)
+        except Exception as exc:
+            if is_model_failure(exc, model_path):
+                raise ModelFailure(f"{type(exc).__name__}: {exc}") from exc
+            raise
+        _write(fitted, nc_path, meta_path)
+        return fitted
+
+    ctx = mp.get_context("spawn")
+    queue = ctx.Queue()
+    proc = ctx.Process(
+        target=_child,
+        args=(str(model_path), name, str(responses_path), settings, str(nc_path), str(meta_path), queue),
+    )
+    proc.start()
+    proc.join(time_limit_sec)
+    if proc.is_alive():
+        proc.kill()
+        proc.join()
+        raise FitTimeLimitExceeded(
+            f"{name}: the fit did not finish within {time_limit_sec / 60:.0f} minutes"
+        )
+    if queue.empty():
+        raise RuntimeError(
+            f"{name}: the fit process exited with code {proc.exitcode} without reporting "
+            f"(killed? out of memory?) — an infrastructure failure, not the model's"
+        )
+    kind, message, tb = queue.get()
+    if kind == "ok":
+        return _read(nc_path, meta_path)
+    if kind == "model":
+        raise ModelFailure(message)
+    raise RuntimeError(f"{name}: infrastructure failure while fitting: {message}\n{tb}")
+
+
+def cached_fits(cache_dir: Path) -> List[Path]:
+    return sorted(Path(cache_dir).glob("*.nc"))
+
+
+def describe(fitted: RSAFit) -> dict[str, Any]:
+    return dict(name=fitted.model_name, converged=fitted.converged, problems=fitted.convergence_problems)
