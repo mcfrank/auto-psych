@@ -55,12 +55,16 @@ def cell_table(trials, predictions: dict) -> pd.DataFrame:
     for key, g in frame.groupby(CELL_KEYS, sort=True):
         idx = g.index.to_numpy()
         n_obj = trials.contexts[idx[0]].shape[0]
-        counts = np.bincount(g["choice"].astype(int), minlength=n_obj)
-        for obj in range(n_obj):
+        classes = trials.contexts[idx[0]].choice_classes()
+        # Identical objects are one choice class (see src.rsa.fit): report the
+        # class, at its first object, so the data's arbitrary copy does not count.
+        counts = np.bincount([classes[c] for c in g["choice"].astype(int)], minlength=n_obj)
+        for obj in sorted(set(classes)):
             row = dict(zip(CELL_KEYS, key))
             row.update(object=obj, n=len(idx), count=int(counts[obj]), observed=counts[obj] / len(idx))
             for name, preds in predictions.items():
-                row[name] = float(np.mean([preds[i][obj] for i in idx]))
+                members = [r for r in range(n_obj) if classes[r] == obj]
+                row[name] = float(np.mean([preds[i][members].sum() for i in idx]))
             rows.append(row)
     return pd.DataFrame(rows)
 

@@ -74,6 +74,23 @@ def test_invalid_contexts_raise(kwargs, message):
         Context(**kwargs)
 
 
+def test_identical_objects_form_one_choice_class():
+    twins = Context(
+        objects=((0, 1, 1), (1, 0, 1), (1, 0, 1)),
+        feature_names=("hat", "glasses", "mustache"),
+        utterance=0,
+    )
+    assert twins.choice_classes() == (0, 1, 1)
+    # Objects with the same features but a different familiarization rate or
+    # colour are told apart.
+    seen = Context(
+        objects=((1,), (1,)), feature_names=("a",), utterance=0, familiarization=(0.2, 0.8)
+    )
+    assert seen.choice_classes() == (0, 1)
+    gray = Context(objects=((1,), (1,)), feature_names=("a",), utterance=0, grayscale=(0, 1))
+    assert gray.choice_classes() == (0, 1)
+
+
 def test_group_by_shape_stacks_trials_and_keeps_their_indices():
     a = simple_context(1)
     b = Context(objects=((1, 0), (1, 1)), feature_names=("a", "b"), utterance=1)

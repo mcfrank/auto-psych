@@ -128,6 +128,24 @@ class Context:
             rows.append([int(not any(row)) for row in self.objects])
         return np.asarray(rows, dtype=np.float32)
 
+    def choice_classes(self) -> Tuple[int, ...]:
+        """Each object's choice class: the index of the first object identical to it.
+
+        Objects with the same features, familiarization rate and colour are
+        indistinguishable to every model (they get identical inputs) and, in
+        the pragmods data, often to the record of which was chosen. The fit
+        observes a choice as its class (`src.rsa.fit.class_probs`).
+        """
+        keys = [
+            (
+                row,
+                None if self.familiarization is None else self.familiarization[i],
+                None if self.grayscale is None else self.grayscale[i],
+            )
+            for i, row in enumerate(self.objects)
+        ]
+        return tuple(keys.index(k) for k in keys)
+
     def arrays(self) -> ContextArrays:
         n_obj, n_utt = self.shape
         lex = self.lexicon()
@@ -164,6 +182,7 @@ class ShapeGroup:
     shape: Tuple[int, int]
     indices: np.ndarray
     arrays: ContextArrays
+    classes: np.ndarray  # (trials, N_OBJ) choice class of each object (`Context.choice_classes`)
 
 
 def stack(arrays: Sequence[ContextArrays]) -> ContextArrays:
@@ -180,6 +199,7 @@ def group_by_shape(contexts: Sequence[Context]) -> Dict[Tuple[int, int], ShapeGr
             shape=shape,
             indices=np.asarray(idx),
             arrays=stack([contexts[i].arrays() for i in idx]),
+            classes=np.asarray([contexts[i].choice_classes() for i in idx], dtype=np.int32),
         )
         for shape, idx in sorted(by_shape.items())
     }

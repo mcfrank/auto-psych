@@ -6,6 +6,11 @@ Categorical(choice_probs(params, ctx)). Trials are evaluated per shape group
 zeros to the widest context (a padded object is never chosen) and observed as
 one site, so the pointwise log-likelihood comes back in input trial order.
 
+A choice is observed as its *class* of identical objects
+(`src.rsa.context.Context.choice_classes`): no model can tell identical
+objects apart, and the pragmods data often cannot say which copy was chosen,
+so the class's summed probability is the likelihood.
+
 The result is an arviz ``InferenceData`` with a ``log_likelihood`` group, so
 the repo's PSIS-LOO reliability verdict (`src.models.loo_reliability`), the
 convergence gate (`src.models.pymc_inference.convergence_problems`) and
@@ -61,12 +66,22 @@ class RSAFit:
         return loo_diagnostics(self.idata)
 
 
+def class_probs(probs, classes) -> jnp.ndarray:
+    """Collapse (trials, N_OBJ) probabilities onto choice classes.
+
+    Each class's summed probability sits at its first object's index; the
+    other members of a class get zero.
+    """
+    onehot = jax.nn.one_hot(jnp.asarray(classes), probs.shape[-1], dtype=probs.dtype)
+    return jnp.einsum("tr,trs->ts", probs, onehot)
+
+
 def _padded_probs(
     model: RSAModel, params: Mapping[str, Any], groups: Sequence[ShapeGroup], width: int
 ) -> jnp.ndarray:
     blocks = []
     for group in groups:
-        p = model.group_probs(params, group)
+        p = class_probs(model.group_probs(params, group), group.classes)
         blocks.append(jnp.pad(p, ((0, 0), (0, width - p.shape[1]))))
     return jnp.concatenate(blocks, axis=0)
 
@@ -74,7 +89,18 @@ def _padded_probs(
 def _numpyro_model(model: RSAModel, groups: Sequence[ShapeGroup], width: int, choices=None):
     params = {name: numpyro.sample(name, prior) for name, prior in model.params.items()}
     probs = _padded_probs(model, params, groups, width)
-    numpyro.sample(OBSERVED_SITE, dist.Categorical(probs=probs), obs=choices)
+    numpyro.sample(OBSERVED_SITE, dist.Categorical(logits=_safe_logits(probs)), obs=choices)
+
+
+def _safe_logits(probs: jnp.ndarray) -> jnp.ndarray:
+    """log(probs), -inf at zeros, with a finite gradient.
+
+    Zeros (padding, non-first members of a choice class) depend on the
+    parameters through the class sum; log(0)'s infinite derivative times a
+    zero cotangent would be NaN, so log is never evaluated at zero.
+    """
+    positive = probs > 0
+    return jnp.where(positive, jnp.log(jnp.where(positive, probs, 1.0)), -jnp.inf)
 
 
 def prepare(
@@ -87,6 +113,9 @@ def prepare(
     for i, (ctx, c) in enumerate(zip(contexts, choices)):
         if not 0 <= c < ctx.shape[0]:
             raise ValueError(f"trial {i}: choice {c} is not an object index of its context")
+    choices = np.asarray(
+        [ctx.choice_classes()[c] for ctx, c in zip(contexts, choices)], dtype=np.int32
+    )
     groups = list(group_by_shape(contexts).values())
     order = np.concatenate([g.indices for g in groups])
     inverse = np.empty_like(order)
@@ -140,7 +169,7 @@ def fit(
         posterior={k: np.asarray(v) for k, v in samples.items()},
         log_likelihood={OBSERVED_SITE: pointwise},
         sample_stats={"diverging": diverging},
-        observed_data={OBSERVED_SITE: np.asarray(choices, dtype=np.int32)},
+        observed_data={OBSERVED_SITE: grouped_choices[inverse]},
     )
     names = list(model.params)
     return RSAFit(

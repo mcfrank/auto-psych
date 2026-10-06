@@ -48,7 +48,25 @@ def test_prepare_orders_trials_by_group_and_inverts_back():
     groups, grouped, inverse, width = prepare(contexts, [3, 1])
     assert width == 4
     assert [g.shape for g in groups] == [(3, 3), (4, 2)]
-    np.testing.assert_array_equal(grouped[inverse], [3, 1])
+    # Objects 2 and 3 of SIZE are identical: choosing 3 is observed as class 2.
+    np.testing.assert_array_equal(grouped[inverse], [2, 1])
+
+
+def test_a_choice_among_identical_objects_is_observed_as_its_class():
+    """The data cannot say which of two identical twins was chosen, and no
+    model can tell them apart: the likelihood of a twin choice is the twins'
+    summed probability, whichever copy the row names."""
+    from src.rsa.fit import class_probs
+
+    twins = Context(
+        objects=((0, 1, 1), (1, 0, 1), (1, 0, 1)),
+        feature_names=("hat", "glasses", "mustache"),
+        utterance=0,
+    )
+    groups, grouped, inverse, width = prepare([twins, twins], [1, 2])
+    np.testing.assert_array_equal(grouped, [1, 1])
+    p = np.array([[0.1, 0.45, 0.45], [0.1, 0.45, 0.45]])
+    np.testing.assert_allclose(class_probs(p, groups[0].classes), [[0.1, 0.9, 0.0]] * 2)
 
 
 def test_a_choice_outside_the_context_raises():
