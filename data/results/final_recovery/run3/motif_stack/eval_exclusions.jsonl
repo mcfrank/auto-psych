@@ -1,0 +1,1 @@
+{"scored": "trajectory", "experiment": 2, "step": 4, "best_model": "peak_stretch_surprise_generator", "models": ["typicality_tail_rank_generator"], "n_excluded": 1, "n_pool": 43243, "pairs": [{"sequence_a": "H", "sequence_b": "T"}]}

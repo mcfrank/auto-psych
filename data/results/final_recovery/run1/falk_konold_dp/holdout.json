@@ -1,0 +1,1716 @@
+{
+  "project_id": "subjective_randomness",
+  "seed_models_dir": "/scratch/users/benpry/auto-psych/final_1/harness_repo/src/subjective_randomness/pymc_model_families",
+  "n_experiments": 3,
+  "n_participants": 40,
+  "inner_loop": {
+    "max_iterations": 5,
+    "candidate_count": 6,
+    "novelty_rmse_threshold": 0.002,
+    "n_critique_proposals": 8,
+    "starting_models_prunable": true
+  },
+  "fit_kwargs": {
+    "draws": 1000,
+    "tune": 1000,
+    "chains": 4,
+    "target_accept": 0.8
+  },
+  "seed": 101,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100,
+    "exhaustive": true,
+    "predict_max_draws": 500
+  },
+  "metrics_version": 2,
+  "gt_runs": [
+    {
+      "gt_model": "falk_konold_dp",
+      "params": {
+        "beta": 1.0,
+        "side_bias": 0.0
+      },
+      "run_root": "/scratch/users/benpry/auto-psych/agent_trees/6c7e37d400748601/repo/_runs/cell_1",
+      "n_eval_stimuli": 43243,
+      "n_eval_dropped": 192,
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "motif_stack",
+          "pearson_r": 0.9819622705075632,
+          "rmse": 0.048672636001475485,
+          "kl_regret": 0.0060220699891942115,
+          "bias": -0.007402309311229858,
+          "calib_slope": 0.9544082568390864,
+          "calib_intercept": 0.01539561784755944,
+          "pearson_r_bma": 0.9819622705075632,
+          "rmse_bma": 0.048672636001475485,
+          "kl_regret_bma": 0.0060220699891942115,
+          "bias_bma": -0.007402309311229858,
+          "calib_slope_bma": 0.9544082568390864,
+          "calib_intercept_bma": 0.01539561784755944,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": false
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "encoding_difficulty_chunks",
+          "pearson_r": 0.9976592678993094,
+          "rmse": 0.017425268722209366,
+          "kl_regret": 0.0007420853950009415,
+          "bias": 3.4946675396947587e-06,
+          "calib_slope": 1.0005847652508721,
+          "calib_intercept": -0.0002889143229944935,
+          "pearson_r_bma": 0.9976426498120632,
+          "rmse_bma": 0.017483185627759853,
+          "kl_regret_bma": 0.0007468465801156657,
+          "bias_bma": -1.918871415872363e-05,
+          "calib_slope_bma": 1.0003741501692631,
+          "calib_intercept_bma": -0.0002062806679627993,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "doubled_alternation_chunks",
+          "pearson_r": 0.9965098951462261,
+          "rmse": 0.02121606912271266,
+          "kl_regret": 0.0010927016798928518,
+          "bias": -3.271317002233465e-06,
+          "calib_slope": 0.9908130059976129,
+          "calib_intercept": 0.004590639894846593,
+          "pearson_r_bma": 0.9965729422171831,
+          "rmse_bma": 0.0210326672986838,
+          "kl_regret_bma": 0.001073958868465745,
+          "bias_bma": -0.00023291990378474376,
+          "calib_slope_bma": 0.9900471821098791,
+          "calib_intercept_bma": 0.004743937780353924,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 3,
+          "best_model": "adjacent_swap_trace_chunks",
+          "pearson_r": 0.991599813423219,
+          "rmse": 0.03293121472854816,
+          "kl_regret": 0.002628717956366139,
+          "bias": -9.700854285885776e-06,
+          "calib_slope": 0.9749735721280152,
+          "calib_intercept": 0.012504641439152586,
+          "pearson_r_bma": 0.9926145693737407,
+          "rmse_bma": 0.030865217896630447,
+          "kl_regret_bma": 0.0022961951918355683,
+          "bias_bma": -4.159419192420582e-05,
+          "calib_slope_bma": 0.978876573969166,
+          "calib_intercept_bma": 0.010521071207715171,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 4,
+          "best_model": "recency_protected_swap_chunks",
+          "pearson_r": 0.9897940284469338,
+          "rmse": 0.03625257565263723,
+          "kl_regret": 0.003179017253980101,
+          "bias": -1.2357114376321223e-05,
+          "calib_slope": 0.972575288278919,
+          "calib_intercept": 0.013701235234161335,
+          "pearson_r_bma": 0.9923423368174223,
+          "rmse_bma": 0.03145320367370827,
+          "kl_regret_bma": 0.002392622505013756,
+          "bias_bma": -2.7145173286687935e-05,
+          "calib_slope_bma": 0.9765033585127937,
+          "calib_intercept_bma": 0.011722234954840427,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 5,
+          "best_model": "clarity_carryover_chunks",
+          "pearson_r": 0.9957912612659509,
+          "rmse": 0.03385919090913798,
+          "kl_regret": 0.003369274995640178,
+          "bias": -6.211153914471054e-06,
+          "calib_slope": 0.8952592772720032,
+          "calib_intercept": 0.052368872616933015,
+          "pearson_r_bma": 0.992937680494907,
+          "rmse_bma": 0.03143391242367441,
+          "kl_regret_bma": 0.002471455425170532,
+          "bias_bma": -1.587752303492029e-05,
+          "calib_slope_bma": 0.9510720419477938,
+          "calib_intercept_bma": 0.024450307500107238,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "iteration": null,
+          "global_step": 6,
+          "best_model": "clarity_carryover_chunks",
+          "pearson_r": 0.9975103047120432,
+          "rmse": 0.02472096457026217,
+          "kl_regret": 0.0017891427341389203,
+          "bias": -2.2754352601643338e-07,
+          "calib_slope": 0.928156622042281,
+          "calib_intercept": 0.035924700611570715,
+          "pearson_r_bma": 0.9975470572769053,
+          "rmse_bma": 0.02304695915948451,
+          "kl_regret_bma": 0.0015222761506156503,
+          "bias_bma": 7.943280849520679e-08,
+          "calib_slope_bma": 0.9375480750932058,
+          "calib_intercept_bma": 0.031228857633416818,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 7,
+          "best_model": "midpoint_split_chunk_encoding",
+          "pearson_r": 0.9945598517614309,
+          "rmse": 0.026497434546510847,
+          "kl_regret": 0.001697273940617361,
+          "bias": -2.6557680474229615e-06,
+          "calib_slope": 0.9942193285215827,
+          "calib_intercept": 0.0028879406021924403,
+          "pearson_r_bma": 0.9971643044282179,
+          "rmse_bma": 0.020698395236066654,
+          "kl_regret_bma": 0.0011101879957414007,
+          "bias_bma": -3.245864244935095e-05,
+          "calib_slope_bma": 0.9632243311079085,
+          "calib_intercept_bma": 0.018357033894796537,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 8,
+          "best_model": "single_best_parse_midpoint_chunks",
+          "pearson_r": 0.998834821246803,
+          "rmse": 0.01250017589627912,
+          "kl_regret": 0.0003826219126031686,
+          "bias": -1.7021172992525784e-06,
+          "calib_slope": 1.0072301349506756,
+          "calib_intercept": -0.003617095575100482,
+          "pearson_r_bma": 0.9993034844224465,
+          "rmse_bma": 0.009626354308979542,
+          "kl_regret_bma": 0.00022581175029269825,
+          "bias_bma": -1.7070516903466658e-06,
+          "calib_slope_bma": 1.005159213878268,
+          "calib_intercept_bma": -0.002581546602422935,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 9,
+          "best_model": "span_streak_midpoint_carryover",
+          "pearson_r": 0.9983363230389669,
+          "rmse": 0.020159506672774354,
+          "kl_regret": 0.0011979073932664596,
+          "bias": -5.120287655041809e-06,
+          "calib_slope": 0.9422575372415776,
+          "calib_intercept": 0.028868714504961368,
+          "pearson_r_bma": 0.9989059583292276,
+          "rmse_bma": 0.016662428480353476,
+          "kl_regret_bma": 0.0008446765321086425,
+          "bias_bma": -4.245448031399566e-06,
+          "calib_slope_bma": 0.9518843389274643,
+          "calib_intercept_bma": 0.024055754461537238,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 10,
+          "best_model": "edge_anchored_span_streaks",
+          "pearson_r": 0.9888060741108419,
+          "rmse": 0.04070067191855256,
+          "kl_regret": 0.004155923147906982,
+          "bias": -8.910784696227964e-06,
+          "calib_slope": 0.9200844521868302,
+          "calib_intercept": 0.03995246624511056,
+          "pearson_r_bma": 0.9917724308075804,
+          "rmse_bma": 0.03556067143538899,
+          "kl_regret_bma": 0.003223107246904555,
+          "bias_bma": -8.085670346614968e-06,
+          "calib_slope_bma": 0.9274892254689358,
+          "calib_intercept_bma": 0.03625057086208905,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 11,
+          "best_model": "streak_popout_side_habit",
+          "pearson_r": 0.9848737996350774,
+          "rmse": 0.04402392396677123,
+          "kl_regret": 0.004564592858509876,
+          "bias": -4.7759411740245715e-06,
+          "calib_slope": 0.9704800885096929,
+          "calib_intercept": 0.01475651075748613,
+          "pearson_r_bma": 0.9874411289603432,
+          "rmse_bma": 0.04104147607744392,
+          "kl_regret_bma": 0.004061940371325495,
+          "bias_bma": -7.2183590551403225e-06,
+          "calib_slope_bma": 0.9417932456896428,
+          "calib_intercept_bma": 0.029098783142872786,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "iteration": null,
+          "global_step": 12,
+          "best_model": "streak_popout_edge_span",
+          "pearson_r": 0.9984284684061484,
+          "rmse": 0.019482775210354953,
+          "kl_regret": 0.0011202880281418863,
+          "bias": -1.918784862642355e-06,
+          "calib_slope": 0.9446005958547029,
+          "calib_intercept": 0.027700281060559995,
+          "pearson_r_bma": 0.9989713393545627,
+          "rmse_bma": 0.01432405549179697,
+          "kl_regret_bma": 0.0005829708689033281,
+          "bias_bma": -2.6728711411284992e-06,
+          "calib_slope_bma": 0.9644785244421225,
+          "calib_intercept_bma": 0.017759666451639455,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 13,
+          "best_model": "pattern_popout_side_habit",
+          "pearson_r": 0.9952171163007427,
+          "rmse": 0.025462930146288865,
+          "kl_regret": 0.0016054312606959072,
+          "bias": 1.0500936224220361e-06,
+          "calib_slope": 1.012735028029613,
+          "calib_intercept": -0.006367038100758449,
+          "pearson_r_bma": 0.9960001652452332,
+          "rmse_bma": 0.023232733795173967,
+          "kl_regret_bma": 0.0013450422995561692,
+          "bias_bma": -7.099608222382628e-07,
+          "calib_slope_bma": 0.9726535485684675,
+          "calib_intercept_bma": 0.01367374871444793,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 14,
+          "best_model": "too_even_split_suspicion",
+          "pearson_r": 0.9938494691557405,
+          "rmse": 0.028912421790731967,
+          "kl_regret": 0.002086193781500039,
+          "bias": 2.539060161582429e-06,
+          "calib_slope": 1.0137751625774014,
+          "calib_intercept": -0.006885663304281309,
+          "pearson_r_bma": 0.9952730591755715,
+          "rmse_bma": 0.02469116629278666,
+          "kl_regret_bma": 0.001486037708261504,
+          "bias_bma": 4.098380793788356e-07,
+          "calib_slope_bma": 0.9941314938256818,
+          "calib_intercept_bma": 0.002934927516440755,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 15,
+          "best_model": "attention_fading_chunk_reading",
+          "pearson_r": 0.9924849567234432,
+          "rmse": 0.03195560947985097,
+          "kl_regret": 0.00254852555591996,
+          "bias": 4.226276071908577e-06,
+          "calib_slope": 1.0138860839152695,
+          "calib_intercept": -0.00693944175837502,
+          "pearson_r_bma": 0.9949221670431714,
+          "rmse_bma": 0.02581431473624218,
+          "kl_regret_bma": 0.0016360558769188637,
+          "bias_bma": 1.4214051118816885e-06,
+          "calib_slope_bma": 1.0036999273692053,
+          "calib_intercept_bma": -0.0018487090967697073,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 16,
+          "best_model": "closing_switch_fading_chunks",
+          "pearson_r": 0.9915843465637304,
+          "rmse": 0.033750158646338686,
+          "kl_regret": 0.002845337964243689,
+          "bias": 3.524152195140486e-06,
+          "calib_slope": 1.0127429183580274,
+          "calib_intercept": -0.0063685095621413,
+          "pearson_r_bma": 0.9942214709940425,
+          "rmse_bma": 0.02768645374909842,
+          "kl_regret_bma": 0.0018933497945179294,
+          "bias_bma": 0.0001220842892019882,
+          "calib_slope_bma": 1.0070985908419101,
+          "calib_intercept_bma": -0.003427531183335053,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 17,
+          "best_model": "closing_pair_cadence_chunks",
+          "pearson_r": 0.9887645070272586,
+          "rmse": 0.03873177709855411,
+          "kl_regret": 0.003731955137985511,
+          "bias": 4.45755726717547e-06,
+          "calib_slope": 1.0072289821741207,
+          "calib_intercept": -0.0036103594602817646,
+          "pearson_r_bma": 0.9932273745611548,
+          "rmse_bma": 0.030019972846465983,
+          "kl_regret_bma": 0.0022320277255901155,
+          "bias_bma": 7.44303937922457e-05,
+          "calib_slope_bma": 1.0078332815080318,
+          "calib_intercept_bma": -0.0038425635365363364,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        }
+      ],
+      "incumbent": {
+        "starting_models": [
+          "finite_experience_occurrence",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "n_steps": 18,
+        "n_incumbent_changes": 16,
+        "n_steps_discovered_incumbent": 17,
+        "final_incumbent": "closing_pair_cadence_chunks",
+        "changes": [
+          {
+            "global_step": 1,
+            "experiment": 1,
+            "step": 1,
+            "from": "motif_stack",
+            "to": "encoding_difficulty_chunks"
+          },
+          {
+            "global_step": 2,
+            "experiment": 1,
+            "step": 2,
+            "from": "encoding_difficulty_chunks",
+            "to": "doubled_alternation_chunks"
+          },
+          {
+            "global_step": 3,
+            "experiment": 1,
+            "step": 3,
+            "from": "doubled_alternation_chunks",
+            "to": "adjacent_swap_trace_chunks"
+          },
+          {
+            "global_step": 4,
+            "experiment": 1,
+            "step": 4,
+            "from": "adjacent_swap_trace_chunks",
+            "to": "recency_protected_swap_chunks"
+          },
+          {
+            "global_step": 5,
+            "experiment": 1,
+            "step": 5,
+            "from": "recency_protected_swap_chunks",
+            "to": "clarity_carryover_chunks"
+          },
+          {
+            "global_step": 7,
+            "experiment": 2,
+            "step": 1,
+            "from": "clarity_carryover_chunks",
+            "to": "midpoint_split_chunk_encoding"
+          },
+          {
+            "global_step": 8,
+            "experiment": 2,
+            "step": 2,
+            "from": "midpoint_split_chunk_encoding",
+            "to": "single_best_parse_midpoint_chunks"
+          },
+          {
+            "global_step": 9,
+            "experiment": 2,
+            "step": 3,
+            "from": "single_best_parse_midpoint_chunks",
+            "to": "span_streak_midpoint_carryover"
+          },
+          {
+            "global_step": 10,
+            "experiment": 2,
+            "step": 4,
+            "from": "span_streak_midpoint_carryover",
+            "to": "edge_anchored_span_streaks"
+          },
+          {
+            "global_step": 11,
+            "experiment": 2,
+            "step": 5,
+            "from": "edge_anchored_span_streaks",
+            "to": "streak_popout_side_habit"
+          },
+          {
+            "global_step": 12,
+            "experiment": 3,
+            "step": 0,
+            "from": "streak_popout_side_habit",
+            "to": "streak_popout_edge_span"
+          },
+          {
+            "global_step": 13,
+            "experiment": 3,
+            "step": 1,
+            "from": "streak_popout_edge_span",
+            "to": "pattern_popout_side_habit"
+          },
+          {
+            "global_step": 14,
+            "experiment": 3,
+            "step": 2,
+            "from": "pattern_popout_side_habit",
+            "to": "too_even_split_suspicion"
+          },
+          {
+            "global_step": 15,
+            "experiment": 3,
+            "step": 3,
+            "from": "too_even_split_suspicion",
+            "to": "attention_fading_chunk_reading"
+          },
+          {
+            "global_step": 16,
+            "experiment": 3,
+            "step": 4,
+            "from": "attention_fading_chunk_reading",
+            "to": "closing_switch_fading_chunks"
+          },
+          {
+            "global_step": 17,
+            "experiment": 3,
+            "step": 5,
+            "from": "closing_switch_fading_chunks",
+            "to": "closing_pair_cadence_chunks"
+          }
+        ]
+      },
+      "starting_models_prunable": true,
+      "baseline": {
+        "mean_r": 0.43915555308855403,
+        "per_model": {
+          "motif_stack": 0.6754628693721786,
+          "finite_experience_occurrence": 0.15780246603337827,
+          "local_representativeness": 0.4842013238601054
+        }
+      },
+      "fitted_baseline": {
+        "mean_r_models": [
+          "finite_experience_occurrence",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "mean_rmse_models": [
+          "finite_experience_occurrence",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "per_model": {
+          "finite_experience_occurrence": {
+            "pearson_r": 0.18123867034813143,
+            "rmse": 0.2500560921169767,
+            "elpd_loo": -5197.463818042145,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "local_representativeness": {
+            "pearson_r": 0.846571163839415,
+            "rmse": 0.13526674798271024,
+            "elpd_loo": -4365.213838707825,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "motif_stack": {
+            "pearson_r": 0.9857085753886662,
+            "rmse": 0.042871618600902335,
+            "elpd_loo": -4195.537735400352,
+            "trusted": true,
+            "n_eval_excluded": 0
+          }
+        },
+        "elpd_best_model": "motif_stack",
+        "elpd_best_r": 0.9857085753886662,
+        "elpd_best_rmse": 0.042871618600902335,
+        "elpd_best_reason": null,
+        "mean_r": 0.6711728031920708,
+        "mean_rmse": 0.14273148623352977,
+        "n_responses": 7680
+      },
+      "fitted_baseline_by_experiment": [
+        {
+          "experiment": 1,
+          "mean_r_models": [
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "finite_experience_occurrence": {
+              "pearson_r": 0.1825875134986687,
+              "rmse": 0.250660935369389,
+              "elpd_loo": -1710.9148370022194,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": 0.8265518596538847,
+              "rmse": 0.14312469794797336,
+              "elpd_loo": -1323.6735845608614,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.9819622705075632,
+              "rmse": 0.048672636001475485,
+              "elpd_loo": -1218.6736077015216,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "motif_stack",
+          "elpd_best_r": 0.9819622705075632,
+          "elpd_best_rmse": 0.048672636001475485,
+          "elpd_best_reason": null,
+          "mean_r": 0.6637005478867055,
+          "mean_rmse": 0.14748608977294594,
+          "n_responses": 2560
+        },
+        {
+          "experiment": 2,
+          "mean_r_models": [
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "finite_experience_occurrence": {
+              "pearson_r": 0.18139957309165508,
+              "rmse": 0.2501901566759337,
+              "elpd_loo": -3444.1144517982534,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": 0.8367331911938676,
+              "rmse": 0.14103969578308706,
+              "elpd_loo": -3022.981110434088,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.9853570575546765,
+              "rmse": 0.045667309518552184,
+              "elpd_loo": -2910.523287146604,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "motif_stack",
+          "elpd_best_r": 0.9853570575546765,
+          "elpd_best_rmse": 0.045667309518552184,
+          "elpd_best_reason": null,
+          "mean_r": 0.6678299406133997,
+          "mean_rmse": 0.14563238732585765,
+          "n_responses": 5120
+        },
+        {
+          "experiment": 3,
+          "mean_r_models": [
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "finite_experience_occurrence",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "finite_experience_occurrence": {
+              "pearson_r": 0.18123867034813143,
+              "rmse": 0.2500560921169767,
+              "elpd_loo": -5197.463818042145,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": 0.846571163839415,
+              "rmse": 0.13526674798271024,
+              "elpd_loo": -4365.213838707825,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.9857085753886662,
+              "rmse": 0.042871618600902335,
+              "elpd_loo": -4195.537735400352,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "motif_stack",
+          "elpd_best_r": 0.9857085753886662,
+          "elpd_best_rmse": 0.042871618600902335,
+          "elpd_best_reason": null,
+          "mean_r": 0.6711728031920708,
+          "mean_rmse": 0.14273148623352977,
+          "n_responses": 7680
+        }
+      ],
+      "leakage": {
+        "files": [
+          {
+            "path": "experiment1/cognitive_models/adjacent_swap_trace_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "swap_w",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment1/cognitive_models/clarity_carryover_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev"
+            ],
+            "n_data_cols": 2
+          },
+          {
+            "path": "experiment1/cognitive_models/noisy_trace_doubled_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "trace_alts",
+              "trace_dbls",
+              "trace_nerr",
+              "trace_nok",
+              "trace_runs",
+              "trace_valid"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment1/cognitive_models/per_pair_swap_trace_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "n_pairs",
+              "swap_w",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment1/cognitive_models/perseverative_repeat_trace_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "rep_mask",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment1/cognitive_models/recency_graded_per_pair_swaps.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "swap_mask",
+              "swap_pos",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment1/cognitive_models/recency_protected_swap_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "swap_mask",
+              "swap_pos",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment1/cognitive_models/serial_position_swap_hazard_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "swap_mask",
+              "swap_pos",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment1/model_loop/models/adjacent_swap_trace_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "swap_w",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment1/model_loop/models/clarity_carryover_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev"
+            ],
+            "n_data_cols": 2
+          },
+          {
+            "path": "experiment1/model_loop/models/noisy_trace_doubled_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "trace_alts",
+              "trace_dbls",
+              "trace_nerr",
+              "trace_nok",
+              "trace_runs",
+              "trace_valid"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment1/model_loop/models/per_pair_swap_trace_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "n_pairs",
+              "swap_w",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment1/model_loop/models/perseverative_repeat_trace_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "rep_mask",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment1/model_loop/models/recency_graded_per_pair_swaps.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "swap_mask",
+              "swap_pos",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment1/model_loop/models/recency_protected_swap_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "swap_mask",
+              "swap_pos",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment1/model_loop/models/serial_position_swap_hazard_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "swap_mask",
+              "swap_pos",
+              "trace_alts",
+              "trace_dbls",
+              "trace_runs"
+            ],
+            "n_data_cols": 8
+          },
+          {
+            "path": "experiment2/cognitive_models/alignment_contrast_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "alignability",
+              "chose_left",
+              "has_prev",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/cognitive_models/balance_checked_span_carryover.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev",
+              "imbalance",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/cognitive_models/counted_out_interior_streaks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/edge_anchored_span_side_habit.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment2/cognitive_models/edge_anchored_span_streaks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/span_streak_midpoint_carryover.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/cognitive_models/streak_popout_edge_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev",
+              "has_streak",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/cognitive_models/streak_popout_side_habit.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_streak",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment2/model_loop/models/alignment_contrast_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "alignability",
+              "chose_left",
+              "has_prev",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/balance_checked_span_carryover.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev",
+              "imbalance",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/counted_out_interior_streaks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/model_loop/models/edge_anchored_span_side_habit.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment2/model_loop/models/edge_anchored_span_streaks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/model_loop/models/span_streak_midpoint_carryover.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment2/model_loop/models/streak_popout_edge_span.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_prev",
+              "has_streak",
+              "prev_seq_a",
+              "prev_seq_b",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment2/model_loop/models/streak_popout_side_habit.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "has_streak",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment3/cognitive_models/attention_fading_chunk_reading.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment3/cognitive_models/closing_pair_cadence_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "closes_pair",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/cognitive_models/closing_repeat_fading_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "close_repeat",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/cognitive_models/closing_switch_fading_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "ends_switch",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/cognitive_models/flip_count_fading_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "ends_switch",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/cognitive_models/framed_return_suspicion.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "close_repeat",
+              "framed",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 15
+          },
+          {
+            "path": "experiment3/cognitive_models/longest_switching_stretch.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "imbalance",
+              "n_popout",
+              "prev_side",
+              "seq_a",
+              "seq_b",
+              "switch_stretch"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment3/cognitive_models/too_even_split_suspicion.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "imbalance",
+              "n_popout",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment3/model_loop/models/attention_fading_chunk_reading.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment3/model_loop/models/closing_pair_cadence_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "closes_pair",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/model_loop/models/closing_repeat_fading_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "close_repeat",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/model_loop/models/closing_switch_fading_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "ends_switch",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/model_loop/models/flip_count_fading_chunks.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "ends_switch",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 14
+          },
+          {
+            "path": "experiment3/model_loop/models/framed_return_suspicion.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "ch_cross",
+              "ch_kind",
+              "ch_long",
+              "ch_parse",
+              "ch_pos",
+              "chose_left",
+              "close_repeat",
+              "framed",
+              "imbalance",
+              "n_popout",
+              "parse_mat",
+              "parse_pad",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 15
+          },
+          {
+            "path": "experiment3/model_loop/models/longest_switching_stretch.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "imbalance",
+              "n_popout",
+              "prev_side",
+              "seq_a",
+              "seq_b",
+              "switch_stretch"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment3/model_loop/models/too_even_split_suspicion.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "imbalance",
+              "n_popout",
+              "prev_side",
+              "seq_a",
+              "seq_b"
+            ],
+            "n_data_cols": 6
+          }
+        ],
+        "any_identical": false,
+        "any_mention": false,
+        "any_value_mention": false,
+        "any_gt_named": false,
+        "csv_generating_model_files": [],
+        "any_csv_generating_model": false,
+        "manifest_gt_named_files": [],
+        "any_manifest_gt_named": false,
+        "max_data_cols": 15
+      },
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "adjacent_swap_trace_chunks",
+            "noisy_trace_doubled_chunks",
+            "per_pair_swap_trace_chunks",
+            "recency_protected_swap_chunks",
+            "clarity_carryover_chunks",
+            "perseverative_repeat_trace_chunks",
+            "recency_graded_per_pair_swaps",
+            "serial_position_swap_hazard_chunks"
+          ]
+        },
+        {
+          "experiment": 2,
+          "manifest_models": [
+            "span_streak_midpoint_carryover",
+            "balance_checked_span_carryover",
+            "edge_anchored_span_streaks",
+            "alignment_contrast_chunks",
+            "streak_popout_edge_span",
+            "edge_anchored_span_side_habit",
+            "counted_out_interior_streaks",
+            "streak_popout_side_habit"
+          ]
+        },
+        {
+          "experiment": 3,
+          "manifest_models": [
+            "too_even_split_suspicion",
+            "attention_fading_chunk_reading",
+            "longest_switching_stretch",
+            "closing_switch_fading_chunks",
+            "closing_repeat_fading_chunks",
+            "closing_pair_cadence_chunks",
+            "flip_count_fading_chunks",
+            "framed_return_suspicion"
+          ]
+        }
+      ]
+    }
+  ],
+  "agent": {
+    "backend": "claude",
+    "model": "claude-opus-5-5",
+    "claude_auth": "api"
+  }
+}

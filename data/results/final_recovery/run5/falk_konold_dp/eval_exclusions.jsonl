@@ -1,0 +1,1 @@
+{"scored": "trajectory", "experiment": 1, "step": 5, "best_model": "shrunken_switch_rate_representativeness", "models": ["noisy_encoding_representativeness"], "n_excluded": 1, "n_pool": 43246, "pairs": [{"sequence_a": "H", "sequence_b": "T"}]}

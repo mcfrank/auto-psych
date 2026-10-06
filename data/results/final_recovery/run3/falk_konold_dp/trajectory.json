@@ -1,0 +1,1552 @@
+{
+  "gt_model": "falk_konold_dp",
+  "params": {
+    "beta": 1.0,
+    "side_bias": 0.0
+  },
+  "run_root": "/scratch/users/benpry/auto-psych/agent_trees/e02730246747705e/repo/_runs/cell_1",
+  "n_eval_stimuli": 43246,
+  "n_eval_dropped": 189,
+  "trajectory": [
+    {
+      "experiment": 1,
+      "step": 0,
+      "iteration": null,
+      "global_step": 0,
+      "best_model": "motif_stack",
+      "pearson_r": 0.9712630660030267,
+      "rmse": 0.06059321441112388,
+      "kl_regret": 0.0090595965080622,
+      "bias": -0.00020003856741608654,
+      "calib_slope": 0.959802470913495,
+      "calib_intercept": 0.019908537732576614,
+      "pearson_r_bma": 0.9712630660030267,
+      "rmse_bma": 0.06059321441112388,
+      "kl_regret_bma": 0.0090595965080622,
+      "bias_bma": -0.00020003856741608654,
+      "calib_slope_bma": 0.959802470913495,
+      "calib_intercept_bma": 0.019908537732576614,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": false,
+      "incumbent_is_discovered": false
+    },
+    {
+      "experiment": 1,
+      "step": 1,
+      "iteration": 0,
+      "global_step": 1,
+      "best_model": "encoding_difficulty_chunks",
+      "pearson_r": 0.9998440704953999,
+      "rmse": 0.01301812111123139,
+      "kl_regret": 0.0006171403534312787,
+      "bias": 7.767711388296957e-06,
+      "calib_slope": 1.0478076320462817,
+      "calib_intercept": -0.023907717607518197,
+      "pearson_r_bma": 0.99984407644892,
+      "rmse_bma": 0.013017820650058376,
+      "kl_regret_bma": 0.0006171100855999393,
+      "bias_bma": 7.743498490949926e-06,
+      "calib_slope_bma": 1.0478065078337941,
+      "calib_intercept_bma": -0.023907179439764392,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 2,
+      "iteration": 1,
+      "global_step": 2,
+      "best_model": "motif_switch_code",
+      "pearson_r": 0.9969751168806215,
+      "rmse": 0.024292926326292257,
+      "kl_regret": 0.0018108866888040373,
+      "bias": -4.188213812905539e-06,
+      "calib_slope": 1.049566510075353,
+      "calib_intercept": -0.024799541869249486,
+      "pearson_r_bma": 0.9984124859399358,
+      "rmse_bma": 0.019669914659670523,
+      "kl_regret_bma": 0.0012373556447349142,
+      "bias_bma": -7.858979002216517e-08,
+      "calib_slope_bma": 1.0499158465016225,
+      "calib_intercept_bma": -0.02497018572738441,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 3,
+      "iteration": 2,
+      "global_step": 3,
+      "best_model": "similarity_gated_encoding_contrast",
+      "pearson_r": 0.9992554270699391,
+      "rmse": 0.01602075189451509,
+      "kl_regret": 0.0009627011554024554,
+      "bias": 1.0391713913183572e-05,
+      "calib_slope": 1.0483899113242565,
+      "calib_intercept": -0.024196375371687617,
+      "pearson_r_bma": 0.9985809594902801,
+      "rmse_bma": 0.01879937738916034,
+      "kl_regret_bma": 0.001136007805806165,
+      "bias_bma": 5.443769745339743e-07,
+      "calib_slope_bma": 1.0485152852482809,
+      "calib_intercept_bma": -0.024268940272978323,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 4,
+      "iteration": 3,
+      "global_step": 4,
+      "best_model": "similarity_gated_repriced_alternation",
+      "pearson_r": 0.9972168362283214,
+      "rmse": 0.02512636356190342,
+      "kl_regret": 0.002075441929997381,
+      "bias": 8.144155330368666e-06,
+      "calib_slope": 1.0593118132716814,
+      "calib_intercept": -0.02966223981523375,
+      "pearson_r_bma": 0.9984214891655631,
+      "rmse_bma": 0.02019151394174953,
+      "kl_regret_bma": 0.0013426384731097013,
+      "bias_bma": 4.621310357871256e-06,
+      "calib_slope_bma": 1.0530393356571863,
+      "calib_intercept_bma": -0.026527992812969248,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 1,
+      "step": 5,
+      "iteration": 4,
+      "global_step": 5,
+      "best_model": "similarity_count_gated_chunks",
+      "pearson_r": 0.9971140442217852,
+      "rmse": 0.024848163901017156,
+      "kl_regret": 0.001998899916308778,
+      "bias": 5.6868805798620615e-06,
+      "calib_slope": 1.0557923101964,
+      "calib_intercept": -0.02790408648192788,
+      "pearson_r_bma": 0.9979806186693115,
+      "rmse_bma": 0.02208929933551445,
+      "kl_regret_bma": 0.0015627908164337506,
+      "bias_bma": 4.776734764671959e-06,
+      "calib_slope_bma": 1.055275017924003,
+      "calib_intercept_bma": -0.027646224226421823,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 0,
+      "iteration": null,
+      "global_step": 6,
+      "best_model": "similarity_gated_switch_aversion",
+      "pearson_r": 0.9996201604135515,
+      "rmse": 0.010155319365076064,
+      "kl_regret": 0.0003304394851998901,
+      "bias": 5.401271222688428e-06,
+      "calib_slope": 1.028207690617551,
+      "calib_intercept": -0.01410532921196106,
+      "pearson_r_bma": 0.9994564365472426,
+      "rmse_bma": 0.01160032420437783,
+      "kl_regret_bma": 0.0004142830192554687,
+      "bias_bma": 3.394682031076393e-06,
+      "calib_slope_bma": 1.0305178725445308,
+      "calib_intercept_bma": -0.015262990653608144,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 1,
+      "iteration": 0,
+      "global_step": 7,
+      "best_model": "leader_anchored_gap_compression",
+      "pearson_r": 0.9996659935611757,
+      "rmse": 0.009314957125234696,
+      "kl_regret": 0.0002812375941942288,
+      "bias": 6.817977091179582e-06,
+      "calib_slope": 1.025354921452961,
+      "calib_intercept": -0.012676831595497928,
+      "pearson_r_bma": 0.9996941392508768,
+      "rmse_bma": 0.009026487178987555,
+      "kl_regret_bma": 0.0002579009539030863,
+      "bias_bma": 5.757756638899387e-06,
+      "calib_slope_bma": 1.0249122133064827,
+      "calib_intercept_bma": -0.012456429682719872,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 2,
+      "iteration": 1,
+      "global_step": 8,
+      "best_model": "switch_averse_leader_anchoring",
+      "pearson_r": 0.9994570414206404,
+      "rmse": 0.011036936890596446,
+      "kl_regret": 0.00037113220676242406,
+      "bias": 7.232902625560283e-06,
+      "calib_slope": 1.0272429430970533,
+      "calib_intercept": -0.013620888336482229,
+      "pearson_r_bma": 0.9996371199412738,
+      "rmse_bma": 0.00964676976605567,
+      "kl_regret_bma": 0.0002903938044624674,
+      "bias_bma": -8.191051780044818e-05,
+      "calib_slope_bma": 1.0260485507488424,
+      "calib_intercept_bma": -0.013112544045301933,
+      "n_eval_excluded": 0,
+      "eval_excluded_models": [],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 3,
+      "iteration": 2,
+      "global_step": 9,
+      "best_model": "recency_weighted_switch_aversion",
+      "pearson_r": 0.9994154586015588,
+      "rmse": 0.01135520600597658,
+      "kl_regret": 0.000390362087192403,
+      "bias": 7.438672826217166e-06,
+      "calib_slope": 1.0276368134434712,
+      "calib_intercept": -0.01381771403472476,
+      "pearson_r_bma": 0.9995457493680031,
+      "rmse_bma": 0.01022754149332105,
+      "kl_regret_bma": 0.0003194923701505395,
+      "bias_bma": -3.92850014976056e-05,
+      "calib_slope_bma": 1.0257955778508776,
+      "calib_intercept_bma": -0.012943370477826233,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "recency_weighted_switch_aversion"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 4,
+      "iteration": 3,
+      "global_step": 10,
+      "best_model": "recency_weighted_switch_aversion",
+      "pearson_r": 0.9994154586015588,
+      "rmse": 0.01135520600597658,
+      "kl_regret": 0.000390362087192403,
+      "bias": 7.438672826217166e-06,
+      "calib_slope": 1.0276368134434712,
+      "calib_intercept": -0.01381771403472476,
+      "pearson_r_bma": 0.9995413805828867,
+      "rmse_bma": 0.010162273676875881,
+      "kl_regret_bma": 0.0003121357840913668,
+      "bias_bma": -0.002023436750123594,
+      "calib_slope_bma": 1.0239895884955137,
+      "calib_intercept_bma": -0.014024086717246864,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "length_scaled_recency_switch_aversion",
+        "recency_weighted_switch_aversion",
+        "side_biased_recency_switch_aversion"
+      ],
+      "incumbent_changed": false,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 2,
+      "step": 5,
+      "iteration": 4,
+      "global_step": 11,
+      "best_model": "memory_regularized_recency_switch",
+      "pearson_r": 0.9990996073697592,
+      "rmse": 0.020370948394692796,
+      "kl_regret": 0.0010868251968904293,
+      "bias": -0.015620716066972486,
+      "calib_slope": 1.027349499601699,
+      "calib_intercept": -0.029302141721995467,
+      "pearson_r_bma": 0.9994761091066623,
+      "rmse_bma": 0.013139224634669516,
+      "kl_regret_bma": 0.0004957309588091644,
+      "bias_bma": -0.007886917087056973,
+      "calib_slope_bma": 1.0247267886546665,
+      "calib_intercept_bma": -0.020256347080038373,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "first_read_anchored_contrast",
+        "length_scaled_recency_switch_aversion",
+        "memory_regularized_recency_switch",
+        "recency_weighted_switch_aversion",
+        "side_biased_recency_switch_aversion"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 0,
+      "iteration": null,
+      "global_step": 12,
+      "best_model": "longest_alternation_leader_anchoring",
+      "pearson_r": 0.9995501323329884,
+      "rmse": 0.010874502946087135,
+      "kl_regret": 0.00036457895029107674,
+      "bias": 5.6663022196729355e-06,
+      "calib_slope": 1.0296519616500452,
+      "calib_intercept": -0.014827552394603871,
+      "pearson_r_bma": 0.9996657994169009,
+      "rmse_bma": 0.010308859554569278,
+      "kl_regret_bma": 0.000334412861742537,
+      "bias_bma": -0.002328360248890092,
+      "calib_slope_bma": 1.029248347346272,
+      "calib_intercept_bma": -0.016959673273917064,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "first_read_anchored_contrast",
+        "memory_regularized_recency_switch",
+        "recency_weighted_switch_aversion",
+        "side_biased_recency_switch_aversion"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 1,
+      "iteration": 0,
+      "global_step": 13,
+      "best_model": "symmetry_noticing_memory_recency_switch",
+      "pearson_r": 0.9993959925079581,
+      "rmse": 0.01335391278834324,
+      "kl_regret": 0.0005131844389730934,
+      "bias": -0.00697579420989682,
+      "calib_slope": 1.0271135230884147,
+      "calib_intercept": -0.020539174007779992,
+      "pearson_r_bma": 0.9996743596757505,
+      "rmse_bma": 0.010377315483607747,
+      "kl_regret_bma": 0.0003364310299765302,
+      "bias_bma": -0.0034137394392920015,
+      "calib_slope_bma": 1.0282882005322271,
+      "calib_intercept_bma": -0.017564744691029976,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "first_read_anchored_contrast",
+        "memory_regularized_recency_switch",
+        "recency_weighted_switch_aversion",
+        "side_biased_recency_switch_aversion",
+        "symmetry_noticing_memory_recency_switch"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 2,
+      "iteration": 1,
+      "global_step": 14,
+      "best_model": "graded_mirror_symmetry_chunks",
+      "pearson_r": 0.999094846540221,
+      "rmse": 0.013995895049395043,
+      "kl_regret": 0.0005938591440618697,
+      "bias": 4.271593386691124e-06,
+      "calib_slope": 1.0332028479071402,
+      "calib_intercept": -0.016605256982717753,
+      "pearson_r_bma": 0.9996020809874918,
+      "rmse_bma": 0.011087988497820712,
+      "kl_regret_bma": 0.0003826967810630774,
+      "bias_bma": -0.003184734141797797,
+      "calib_slope_bma": 1.0300710784834657,
+      "calib_intercept_bma": -0.018227613559318845,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "first_read_anchored_contrast",
+        "graded_symmetry_memory_recency_switch",
+        "memory_regularized_recency_switch",
+        "recency_weighted_switch_aversion",
+        "side_biased_recency_switch_aversion",
+        "streak_expecting_symmetry_memory_recency",
+        "symmetry_noticing_memory_recency_switch"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 3,
+      "iteration": 2,
+      "global_step": 15,
+      "best_model": "symmetry_and_shift_repetition_chunks",
+      "pearson_r": 0.9980464356684614,
+      "rmse": 0.016939002290509816,
+      "kl_regret": 0.0007690371356900126,
+      "bias": 1.0780516002415457e-05,
+      "calib_slope": 1.0194194476212883,
+      "calib_intercept": -0.009703683469136304,
+      "pearson_r_bma": 0.999125015551012,
+      "rmse_bma": 0.01259543588323044,
+      "kl_regret_bma": 0.00046174914092136547,
+      "bias_bma": -0.0009251549771594266,
+      "calib_slope_bma": 1.024640167150548,
+      "calib_intercept_bma": -0.013251253074274993,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "first_read_anchored_contrast",
+        "graded_symmetry_memory_recency_switch",
+        "memory_regularized_recency_switch",
+        "recency_weighted_switch_aversion",
+        "side_biased_recency_switch_aversion",
+        "streak_expecting_symmetry_memory_recency",
+        "symmetry_noticing_memory_recency_switch"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 4,
+      "iteration": 3,
+      "global_step": 16,
+      "best_model": "designedness_pop_out_contrast",
+      "pearson_r": 0.9966978098232655,
+      "rmse": 0.02130859681692616,
+      "kl_regret": 0.0011602672483525195,
+      "bias": 1.2577641518737228e-05,
+      "calib_slope": 1.014491694062751,
+      "calib_intercept": -0.007236806728297962,
+      "pearson_r_bma": 0.9978119465611744,
+      "rmse_bma": 0.017724469002268612,
+      "kl_regret_bma": 0.0008255389414605534,
+      "bias_bma": -0.0005819885722503185,
+      "calib_slope_bma": 1.0178293112205044,
+      "calib_intercept_bma": -0.009500996213927415,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "first_read_anchored_contrast",
+        "graded_symmetry_memory_recency_switch",
+        "memory_regularized_recency_switch",
+        "recency_weighted_switch_aversion",
+        "side_biased_recency_switch_aversion",
+        "streak_expecting_symmetry_memory_recency",
+        "symmetry_noticing_memory_recency_switch"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    },
+    {
+      "experiment": 3,
+      "step": 5,
+      "iteration": 4,
+      "global_step": 17,
+      "best_model": "local_mirror_stretch_pop_out",
+      "pearson_r": 0.996295330678545,
+      "rmse": 0.022084523333686528,
+      "kl_regret": 0.0012157551490627732,
+      "bias": 1.2778798226495956e-05,
+      "calib_slope": 1.0054991145430336,
+      "calib_intercept": -0.0027381207752448233,
+      "pearson_r_bma": 0.9973116366394608,
+      "rmse_bma": 0.019106520900814376,
+      "kl_regret_bma": 0.000933226635122584,
+      "bias_bma": -0.00013599243824395651,
+      "calib_slope_bma": 1.011647915399236,
+      "calib_intercept_bma": -0.005962793326430793,
+      "n_eval_excluded": 1,
+      "eval_excluded_models": [
+        "first_read_anchored_contrast",
+        "graded_symmetry_memory_recency_switch",
+        "memory_regularized_recency_switch",
+        "recency_weighted_switch_aversion",
+        "side_biased_recency_switch_aversion",
+        "streak_expecting_symmetry_memory_recency",
+        "symmetry_noticing_memory_recency_switch"
+      ],
+      "incumbent_changed": true,
+      "incumbent_is_discovered": true
+    }
+  ],
+  "incumbent": {
+    "starting_models": [
+      "finite_experience_occurrence",
+      "local_representativeness",
+      "motif_stack"
+    ],
+    "n_steps": 18,
+    "n_incumbent_changes": 16,
+    "n_steps_discovered_incumbent": 17,
+    "final_incumbent": "local_mirror_stretch_pop_out",
+    "changes": [
+      {
+        "global_step": 1,
+        "experiment": 1,
+        "step": 1,
+        "from": "motif_stack",
+        "to": "encoding_difficulty_chunks"
+      },
+      {
+        "global_step": 2,
+        "experiment": 1,
+        "step": 2,
+        "from": "encoding_difficulty_chunks",
+        "to": "motif_switch_code"
+      },
+      {
+        "global_step": 3,
+        "experiment": 1,
+        "step": 3,
+        "from": "motif_switch_code",
+        "to": "similarity_gated_encoding_contrast"
+      },
+      {
+        "global_step": 4,
+        "experiment": 1,
+        "step": 4,
+        "from": "similarity_gated_encoding_contrast",
+        "to": "similarity_gated_repriced_alternation"
+      },
+      {
+        "global_step": 5,
+        "experiment": 1,
+        "step": 5,
+        "from": "similarity_gated_repriced_alternation",
+        "to": "similarity_count_gated_chunks"
+      },
+      {
+        "global_step": 6,
+        "experiment": 2,
+        "step": 0,
+        "from": "similarity_count_gated_chunks",
+        "to": "similarity_gated_switch_aversion"
+      },
+      {
+        "global_step": 7,
+        "experiment": 2,
+        "step": 1,
+        "from": "similarity_gated_switch_aversion",
+        "to": "leader_anchored_gap_compression"
+      },
+      {
+        "global_step": 8,
+        "experiment": 2,
+        "step": 2,
+        "from": "leader_anchored_gap_compression",
+        "to": "switch_averse_leader_anchoring"
+      },
+      {
+        "global_step": 9,
+        "experiment": 2,
+        "step": 3,
+        "from": "switch_averse_leader_anchoring",
+        "to": "recency_weighted_switch_aversion"
+      },
+      {
+        "global_step": 11,
+        "experiment": 2,
+        "step": 5,
+        "from": "recency_weighted_switch_aversion",
+        "to": "memory_regularized_recency_switch"
+      },
+      {
+        "global_step": 12,
+        "experiment": 3,
+        "step": 0,
+        "from": "memory_regularized_recency_switch",
+        "to": "longest_alternation_leader_anchoring"
+      },
+      {
+        "global_step": 13,
+        "experiment": 3,
+        "step": 1,
+        "from": "longest_alternation_leader_anchoring",
+        "to": "symmetry_noticing_memory_recency_switch"
+      },
+      {
+        "global_step": 14,
+        "experiment": 3,
+        "step": 2,
+        "from": "symmetry_noticing_memory_recency_switch",
+        "to": "graded_mirror_symmetry_chunks"
+      },
+      {
+        "global_step": 15,
+        "experiment": 3,
+        "step": 3,
+        "from": "graded_mirror_symmetry_chunks",
+        "to": "symmetry_and_shift_repetition_chunks"
+      },
+      {
+        "global_step": 16,
+        "experiment": 3,
+        "step": 4,
+        "from": "symmetry_and_shift_repetition_chunks",
+        "to": "designedness_pop_out_contrast"
+      },
+      {
+        "global_step": 17,
+        "experiment": 3,
+        "step": 5,
+        "from": "designedness_pop_out_contrast",
+        "to": "local_mirror_stretch_pop_out"
+      }
+    ]
+  },
+  "starting_models_prunable": true,
+  "baseline": {
+    "mean_r": 0.43709546568298546,
+    "per_model": {
+      "motif_stack": 0.6751042104656876,
+      "finite_experience_occurrence": 0.15309370119535884,
+      "local_representativeness": 0.4830884853879099
+    }
+  },
+  "fitted_baseline": {
+    "mean_r_models": [
+      "finite_experience_occurrence",
+      "local_representativeness",
+      "motif_stack"
+    ],
+    "mean_rmse_models": [
+      "finite_experience_occurrence",
+      "local_representativeness",
+      "motif_stack"
+    ],
+    "per_model": {
+      "finite_experience_occurrence": {
+        "pearson_r": 0.15944745053986129,
+        "rmse": 0.25218513712899737,
+        "elpd_loo": -4647.636821445862,
+        "trusted": true,
+        "n_eval_excluded": 0
+      },
+      "local_representativeness": {
+        "pearson_r": 0.8413514409115997,
+        "rmse": 0.13768269456216942,
+        "elpd_loo": -4071.193412341202,
+        "trusted": true,
+        "n_eval_excluded": 0
+      },
+      "motif_stack": {
+        "pearson_r": 0.9853505905983934,
+        "rmse": 0.04435190064620289,
+        "elpd_loo": -3771.4060133910543,
+        "trusted": true,
+        "n_eval_excluded": 0
+      }
+    },
+    "elpd_best_model": "motif_stack",
+    "elpd_best_r": 0.9853505905983934,
+    "elpd_best_rmse": 0.04435190064620289,
+    "elpd_best_reason": null,
+    "mean_r": 0.6620498273499514,
+    "mean_rmse": 0.1447399107791232,
+    "n_responses": 7680
+  },
+  "fitted_baseline_by_experiment": [
+    {
+      "experiment": 1,
+      "mean_r_models": [
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "mean_rmse_models": [
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "per_model": {
+        "finite_experience_occurrence": {
+          "pearson_r": 0.1745963080189313,
+          "rmse": 0.25020353384863697,
+          "elpd_loo": -1657.8381194857104,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "local_representativeness": {
+          "pearson_r": 0.8129167510808777,
+          "rmse": 0.15645700664871456,
+          "elpd_loo": -1268.7047235011744,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "motif_stack": {
+          "pearson_r": 0.9712630660030267,
+          "rmse": 0.06059321441112388,
+          "elpd_loo": -1181.6940226126185,
+          "trusted": true,
+          "n_eval_excluded": 0
+        }
+      },
+      "elpd_best_model": "motif_stack",
+      "elpd_best_r": 0.9712630660030267,
+      "elpd_best_rmse": 0.06059321441112388,
+      "elpd_best_reason": null,
+      "mean_r": 0.6529253750342786,
+      "mean_rmse": 0.15575125163615847,
+      "n_responses": 2560
+    },
+    {
+      "experiment": 2,
+      "mean_r_models": [
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "mean_rmse_models": [
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "per_model": {
+        "finite_experience_occurrence": {
+          "pearson_r": 0.1638732060768242,
+          "rmse": 0.25165879349026515,
+          "elpd_loo": -3127.331481010096,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "local_representativeness": {
+          "pearson_r": 0.8467864730230964,
+          "rmse": 0.13540633211711078,
+          "elpd_loo": -2561.5232570937833,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "motif_stack": {
+          "pearson_r": 0.9841317314378575,
+          "rmse": 0.04667291760331904,
+          "elpd_loo": -2299.176840633735,
+          "trusted": true,
+          "n_eval_excluded": 0
+        }
+      },
+      "elpd_best_model": "motif_stack",
+      "elpd_best_r": 0.9841317314378575,
+      "elpd_best_rmse": 0.04667291760331904,
+      "elpd_best_reason": null,
+      "mean_r": 0.6649304701792594,
+      "mean_rmse": 0.14457934773689832,
+      "n_responses": 5120
+    },
+    {
+      "experiment": 3,
+      "mean_r_models": [
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "mean_rmse_models": [
+        "finite_experience_occurrence",
+        "local_representativeness",
+        "motif_stack"
+      ],
+      "per_model": {
+        "finite_experience_occurrence": {
+          "pearson_r": 0.15944745053986129,
+          "rmse": 0.25218513712899737,
+          "elpd_loo": -4647.636821445862,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "local_representativeness": {
+          "pearson_r": 0.8413514409115997,
+          "rmse": 0.13768269456216942,
+          "elpd_loo": -4071.193412341202,
+          "trusted": true,
+          "n_eval_excluded": 0
+        },
+        "motif_stack": {
+          "pearson_r": 0.9853505905983934,
+          "rmse": 0.04435190064620289,
+          "elpd_loo": -3771.4060133910543,
+          "trusted": true,
+          "n_eval_excluded": 0
+        }
+      },
+      "elpd_best_model": "motif_stack",
+      "elpd_best_r": 0.9853505905983934,
+      "elpd_best_rmse": 0.04435190064620289,
+      "elpd_best_reason": null,
+      "mean_r": 0.6620498273499514,
+      "mean_rmse": 0.1447399107791232,
+      "n_responses": 7680
+    }
+  ],
+  "leakage": {
+    "files": [
+      {
+        "path": "experiment1/cognitive_models/edit_distance_gated_length_chunks.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "log_len_rel",
+          "pair_edit_distance",
+          "participant_id"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/cognitive_models/length_scaled_motif_switch_code.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "seq_len_scaled"
+        ],
+        "n_data_cols": 2
+      },
+      {
+        "path": "experiment1/cognitive_models/motif_switch_code.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left"
+        ],
+        "n_data_cols": 1
+      },
+      {
+        "path": "experiment1/cognitive_models/similarity_count_gated_chunks.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "mismatch_count"
+        ],
+        "n_data_cols": 2
+      },
+      {
+        "path": "experiment1/cognitive_models/similarity_gated_encoding_contrast.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_diff",
+          "pair_mismatch"
+        ],
+        "n_data_cols": 3
+      },
+      {
+        "path": "experiment1/cognitive_models/similarity_gated_repriced_alternation.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "pair_mismatch"
+        ],
+        "n_data_cols": 2
+      },
+      {
+        "path": "experiment1/cognitive_models/similarity_gated_repriced_chunks_lapse.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "pair_mismatch"
+        ],
+        "n_data_cols": 2
+      },
+      {
+        "path": "experiment1/cognitive_models/similarity_gated_switch_aversion.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_diff",
+          "pair_mismatch",
+          "switch_rate_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/model_loop/models/edit_distance_gated_length_chunks.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "log_len_rel",
+          "pair_edit_distance",
+          "participant_id"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment1/model_loop/models/length_scaled_motif_switch_code.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "seq_len_scaled"
+        ],
+        "n_data_cols": 2
+      },
+      {
+        "path": "experiment1/model_loop/models/motif_switch_code.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left"
+        ],
+        "n_data_cols": 1
+      },
+      {
+        "path": "experiment1/model_loop/models/similarity_count_gated_chunks.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "mismatch_count"
+        ],
+        "n_data_cols": 2
+      },
+      {
+        "path": "experiment1/model_loop/models/similarity_gated_encoding_contrast.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_diff",
+          "pair_mismatch"
+        ],
+        "n_data_cols": 3
+      },
+      {
+        "path": "experiment1/model_loop/models/similarity_gated_repriced_alternation.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "pair_mismatch"
+        ],
+        "n_data_cols": 2
+      },
+      {
+        "path": "experiment1/model_loop/models/similarity_gated_repriced_chunks_lapse.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "pair_mismatch"
+        ],
+        "n_data_cols": 2
+      },
+      {
+        "path": "experiment1/model_loop/models/similarity_gated_switch_aversion.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_diff",
+          "pair_mismatch",
+          "switch_rate_diff"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment2/cognitive_models/first_read_anchored_contrast.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length",
+          "switch_rate_a",
+          "switch_rate_b"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/cognitive_models/longest_alternation_leader_anchoring.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "alt_share_a",
+          "alt_share_b",
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/cognitive_models/memory_regularized_recency_switch.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment2/cognitive_models/memory_regularized_switch_averse_leader.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length",
+          "switch_rate_a",
+          "switch_rate_b"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/cognitive_models/recency_weighted_switch_aversion.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment2/cognitive_models/side_biased_longest_alternation_leader.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "alt_share_a",
+          "alt_share_b",
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/cognitive_models/side_biased_recency_switch_aversion.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment2/cognitive_models/switch_averse_leader_anchoring.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length",
+          "switch_rate_a",
+          "switch_rate_b"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/model_loop/models/first_read_anchored_contrast.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length",
+          "switch_rate_a",
+          "switch_rate_b"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/model_loop/models/longest_alternation_leader_anchoring.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "alt_share_a",
+          "alt_share_b",
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/model_loop/models/memory_regularized_recency_switch.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment2/model_loop/models/memory_regularized_switch_averse_leader.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length",
+          "switch_rate_a",
+          "switch_rate_b"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/model_loop/models/recency_weighted_switch_aversion.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment2/model_loop/models/side_biased_longest_alternation_leader.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "alt_share_a",
+          "alt_share_b",
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment2/model_loop/models/side_biased_recency_switch_aversion.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length"
+        ],
+        "n_data_cols": 4
+      },
+      {
+        "path": "experiment2/model_loop/models/switch_averse_leader_anchoring.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "difficulty_a",
+          "difficulty_b",
+          "seq_length",
+          "switch_rate_a",
+          "switch_rate_b"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment3/cognitive_models/count_gated_designedness_pop_out.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_gap",
+          "mcs_a",
+          "mcs_b",
+          "mismatch_count",
+          "rep_a",
+          "rep_b"
+        ],
+        "n_data_cols": 7
+      },
+      {
+        "path": "experiment3/cognitive_models/designedness_pop_out_contrast.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_gap",
+          "mcs_a",
+          "mcs_b",
+          "rep_a",
+          "rep_b"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment3/cognitive_models/leader_anchored_self_similarity.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_a",
+          "dp_b",
+          "mcs_a",
+          "mcs_b",
+          "seq_length",
+          "shift_a",
+          "shift_b"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment3/cognitive_models/local_mirror_stretch_pop_out.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_gap",
+          "mirror_stretch_a",
+          "mirror_stretch_b",
+          "rep_a",
+          "rep_b"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment3/cognitive_models/longest_local_mirror_stretch.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_a",
+          "dp_b",
+          "mirror_stretch_a",
+          "mirror_stretch_b"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/cognitive_models/memory_regularized_self_similarity.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_a",
+          "dp_b",
+          "mcs_a",
+          "mcs_b",
+          "rep_a",
+          "rep_b"
+        ],
+        "n_data_cols": 7
+      },
+      {
+        "path": "experiment3/cognitive_models/palindrome_aware_designedness_pop_out.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_gap",
+          "mcs_a",
+          "mcs_b",
+          "pal_a",
+          "pal_b",
+          "rep_a",
+          "rep_b"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment3/cognitive_models/symmetry_and_shift_repetition_chunks.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_a",
+          "dp_b",
+          "mcs_a",
+          "mcs_b",
+          "rep_gap"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment3/model_loop/models/count_gated_designedness_pop_out.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_gap",
+          "mcs_a",
+          "mcs_b",
+          "mismatch_count",
+          "rep_a",
+          "rep_b"
+        ],
+        "n_data_cols": 7
+      },
+      {
+        "path": "experiment3/model_loop/models/designedness_pop_out_contrast.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_gap",
+          "mcs_a",
+          "mcs_b",
+          "rep_a",
+          "rep_b"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment3/model_loop/models/leader_anchored_self_similarity.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_a",
+          "dp_b",
+          "mcs_a",
+          "mcs_b",
+          "seq_length",
+          "shift_a",
+          "shift_b"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment3/model_loop/models/local_mirror_stretch_pop_out.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_gap",
+          "mirror_stretch_a",
+          "mirror_stretch_b",
+          "rep_a",
+          "rep_b"
+        ],
+        "n_data_cols": 6
+      },
+      {
+        "path": "experiment3/model_loop/models/longest_local_mirror_stretch.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_a",
+          "dp_b",
+          "mirror_stretch_a",
+          "mirror_stretch_b"
+        ],
+        "n_data_cols": 5
+      },
+      {
+        "path": "experiment3/model_loop/models/memory_regularized_self_similarity.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_a",
+          "dp_b",
+          "mcs_a",
+          "mcs_b",
+          "rep_a",
+          "rep_b"
+        ],
+        "n_data_cols": 7
+      },
+      {
+        "path": "experiment3/model_loop/models/palindrome_aware_designedness_pop_out.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_gap",
+          "mcs_a",
+          "mcs_b",
+          "pal_a",
+          "pal_b",
+          "rep_a",
+          "rep_b"
+        ],
+        "n_data_cols": 8
+      },
+      {
+        "path": "experiment3/model_loop/models/symmetry_and_shift_repetition_chunks.py",
+        "identical": false,
+        "mentions_gt_params": false,
+        "mentions_gt_values": false,
+        "gt_named": false,
+        "data_columns": [
+          "chose_left",
+          "dp_a",
+          "dp_b",
+          "mcs_a",
+          "mcs_b",
+          "rep_gap"
+        ],
+        "n_data_cols": 6
+      }
+    ],
+    "any_identical": false,
+    "any_mention": false,
+    "any_value_mention": false,
+    "any_gt_named": false,
+    "csv_generating_model_files": [],
+    "any_csv_generating_model": false,
+    "manifest_gt_named_files": [],
+    "any_manifest_gt_named": false,
+    "max_data_cols": 8
+  },
+  "experiments": [
+    {
+      "experiment": 1,
+      "manifest_models": [
+        "motif_switch_code",
+        "similarity_gated_encoding_contrast",
+        "length_scaled_motif_switch_code",
+        "similarity_gated_repriced_alternation",
+        "similarity_gated_switch_aversion",
+        "similarity_count_gated_chunks",
+        "similarity_gated_repriced_chunks_lapse",
+        "edit_distance_gated_length_chunks"
+      ]
+    },
+    {
+      "experiment": 2,
+      "manifest_models": [
+        "switch_averse_leader_anchoring",
+        "recency_weighted_switch_aversion",
+        "longest_alternation_leader_anchoring",
+        "side_biased_recency_switch_aversion",
+        "side_biased_longest_alternation_leader",
+        "first_read_anchored_contrast",
+        "memory_regularized_switch_averse_leader",
+        "memory_regularized_recency_switch"
+      ]
+    },
+    {
+      "experiment": 3,
+      "manifest_models": [
+        "symmetry_and_shift_repetition_chunks",
+        "leader_anchored_self_similarity",
+        "designedness_pop_out_contrast",
+        "longest_local_mirror_stretch",
+        "memory_regularized_self_similarity",
+        "count_gated_designedness_pop_out",
+        "palindrome_aware_designedness_pop_out",
+        "local_mirror_stretch_pop_out"
+      ]
+    }
+  ]
+}

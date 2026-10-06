@@ -1,0 +1,8 @@
+submitted setup job:    46201538
+submitted array job:    46201539 (1-4%4; 1 repeats x 4 GTs)
+submitted retry job:    46201540 (round 1 of 2)
+submitted analysis job: 46201541
+
+watch with:  squeue --me
+logs in:     /scratch/users/benpry/auto-psych/final_1/slurm_logs
+results in:  /scratch/users/benpry/auto-psych/final_1/test_retest.{json,csv,png}

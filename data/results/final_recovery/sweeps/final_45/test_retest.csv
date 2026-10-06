@@ -1,0 +1,4 @@
+gt_model,run,pearson_r,rmse,kl_regret,pearson_r_bma,best_model,global_step
+local_representativeness,run1,0.8392219051431223,0.07847733972554131,0.013026688732710465,0.8382749982154786,rejection_alternation_stretch_share,17
+motif_stack,run1,0.9528093102049163,0.08864037898959258,0.02016988191559999,0.95366453169413,opening_heads_default_side,17
+motif_stack,run2,0.9807622719408402,0.0555170487039823,0.008177815527022484,0.9809956731096692,reversed_copy_original_preference,17

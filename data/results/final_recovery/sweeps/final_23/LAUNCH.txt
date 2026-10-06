@@ -1,0 +1,9 @@
+submitted setup job:    46306908
+submitted array job:    46306909 (1-8%8; 2 repeats x 4 GTs)
+submitted retry job:    46306913 (round 1 of 2)
+submitted analysis job: 46306915
+
+watch with:  squeue --me
+logs in:     /scratch/users/benpry/auto-psych/final_23/slurm_logs
+results in:  /scratch/users/benpry/auto-psych/final_23/test_retest.{json,csv,png}
+BASE_SEED=101 -> run1 seed 102, run2 seed 103 (final_1 used 101)

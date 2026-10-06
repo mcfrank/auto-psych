@@ -1,0 +1,8 @@
+run1/falk_konold_dp: see /scratch/users/benpry/auto-psych/final_23/run1/falk_konold_dp/agent_activity.md
+run1/finite_experience_occurrence: see /scratch/users/benpry/auto-psych/final_23/run1/finite_experience_occurrence/agent_activity.md
+run1/local_representativeness: see /scratch/users/benpry/auto-psych/final_23/run1/local_representativeness/agent_activity.md
+run1/motif_stack: see /scratch/users/benpry/auto-psych/final_23/run1/motif_stack/agent_activity.md
+run2/falk_konold_dp: see /scratch/users/benpry/auto-psych/final_23/run2/falk_konold_dp/agent_activity.md
+run2/finite_experience_occurrence: see /scratch/users/benpry/auto-psych/final_23/run2/finite_experience_occurrence/agent_activity.md
+run2/local_representativeness: see /scratch/users/benpry/auto-psych/final_23/run2/local_representativeness/agent_activity.md
+run2/motif_stack: see /scratch/users/benpry/auto-psych/final_23/run2/motif_stack/agent_activity.md

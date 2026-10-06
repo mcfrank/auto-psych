@@ -1,0 +1,2 @@
+{"scored": "trajectory", "experiment": 1, "step": 1, "best_model": "periodic_template_motif_stack", "models": ["periodic_template_motif_stack"], "n_excluded": 1, "n_pool": 43244, "pairs": [{"sequence_a": "H", "sequence_b": "T"}]}
+{"scored": "trajectory", "experiment": 1, "step": 2, "best_model": "sublinear_evidence_regularity", "models": ["periodic_template_motif_stack"], "n_excluded": 1, "n_pool": 43244, "pairs": [{"sequence_a": "H", "sequence_b": "T"}]}

@@ -1,0 +1,9 @@
+submitted setup job:    46763497
+submitted array job:    46763498 (1-4%4; 1 repeats x 4 GTs)
+submitted retry job:    46763501 (round 1 of 2)
+submitted analysis job: 46763502
+
+watch with:  squeue --me
+logs in:     /scratch/users/benpry/auto-psych/final_impossible_1/slurm_logs
+results in:  /scratch/users/benpry/auto-psych/final_impossible_1/test_retest.{json,csv,png}; missing cells in /scratch/users/benpry/auto-psych/final_impossible_1/MISSING_CELLS.txt
+BASE_SEED=100 -> run1 seed 101 (pairs with final_1); Opus 5.5, CLAUDE_AUTH=api; SBATCH_TIMELIMIT=2-00:00:00; code 8872294

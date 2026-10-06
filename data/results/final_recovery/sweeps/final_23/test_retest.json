@@ -1,0 +1,1001 @@
+{
+  "runs_root": "/scratch/users/benpry/auto-psych/final_23",
+  "metric": "pearson_r",
+  "n_runs_found": 2,
+  "runs_found": [
+    "run1",
+    "run2"
+  ],
+  "runs_missing_tidy": [],
+  "gt_models": [
+    "falk_konold_dp",
+    "finite_experience_occurrence",
+    "local_representativeness",
+    "motif_stack"
+  ],
+  "runs_in_complete_matrix": [
+    "run1",
+    "run2"
+  ],
+  "icc_2_1": 0.5504062917468452,
+  "mean_pairwise_corr": 0.7908131658340148,
+  "per_gt_model": {
+    "falk_konold_dp": {
+      "n_runs": 2,
+      "mean": 0.997732840038308,
+      "sd": 0.002032945232615022,
+      "cv": 0.002037564717762489,
+      "min": 0.996295330678545,
+      "max": 0.9991703493980709,
+      "values": [
+        0.99917,
+        0.996295
+      ],
+      "modal_best_model": "offset_tolerant_scan_standard_shortfall",
+      "best_model_agreement": 0.5
+    },
+    "finite_experience_occurrence": {
+      "n_runs": 2,
+      "mean": 0.9633749845669863,
+      "sd": 0.015112788900778149,
+      "cv": 0.01568733789322024,
+      "min": 0.9526886290526053,
+      "max": 0.9740613400813674,
+      "values": [
+        0.952689,
+        0.974061
+      ],
+      "modal_best_model": "opening_anchored_bias_coin",
+      "best_model_agreement": 0.5
+    },
+    "local_representativeness": {
+      "n_runs": 2,
+      "mean": 0.9294442557787187,
+      "sd": 0.012326676623498898,
+      "cv": 0.013262416273874549,
+      "min": 0.9207279791487489,
+      "max": 0.9381605324086885,
+      "values": [
+        0.920728,
+        0.938161
+      ],
+      "modal_best_model": "heads_leaning_coin_drifting_halves",
+      "best_model_agreement": 0.5
+    },
+    "motif_stack": {
+      "n_runs": 2,
+      "mean": 0.923347288706009,
+      "sd": 0.05129970808555163,
+      "cv": 0.05555841091756896,
+      "min": 0.887072917245825,
+      "max": 0.9596216601661929,
+      "values": [
+        0.887073,
+        0.959622
+      ],
+      "modal_best_model": "heads_led_opening_pair_gain",
+      "best_model_agreement": 0.5
+    }
+  },
+  "per_metric": {
+    "rmse": {
+      "per_gt_model": {
+        "falk_konold_dp": {
+          "n_runs": 2,
+          "mean": 0.016969903084376462,
+          "sd": 0.007233165322962357,
+          "min": 0.011855282835066394,
+          "max": 0.022084523333686528,
+          "values": [
+            0.011855,
+            0.022085
+          ]
+        },
+        "finite_experience_occurrence": {
+          "n_runs": 2,
+          "mean": 0.020494786072838417,
+          "sd": 0.004346082720825199,
+          "min": 0.017421641509345238,
+          "max": 0.023567930636331596,
+          "values": [
+            0.023568,
+            0.017422
+          ]
+        },
+        "local_representativeness": {
+          "n_runs": 2,
+          "mean": 0.053478604027965594,
+          "sd": 0.004822771059705075,
+          "min": 0.050068389907537904,
+          "max": 0.056888818148393284,
+          "values": [
+            0.056889,
+            0.050068
+          ]
+        },
+        "motif_stack": {
+          "n_runs": 2,
+          "mean": 0.1061164046271624,
+          "sd": 0.036996272330784084,
+          "min": 0.07995608958344073,
+          "max": 0.13227671967088406,
+          "values": [
+            0.132277,
+            0.079956
+          ]
+        }
+      }
+    },
+    "kl_regret": {
+      "per_gt_model": {
+        "falk_konold_dp": {
+          "n_runs": 2,
+          "mean": 0.0008764425576731866,
+          "sd": 0.0004798604686271137,
+          "min": 0.0005371299662835999,
+          "max": 0.0012157551490627732,
+          "values": [
+            0.000537,
+            0.001216
+          ]
+        },
+        "finite_experience_occurrence": {
+          "n_runs": 2,
+          "mean": 0.0008897071782765795,
+          "sd": 0.0003832913499167107,
+          "min": 0.0006186792655803275,
+          "max": 0.0011607350909728315,
+          "values": [
+            0.001161,
+            0.000619
+          ]
+        },
+        "local_representativeness": {
+          "n_runs": 2,
+          "mean": 0.006151763580538541,
+          "sd": 0.0011243509755046353,
+          "min": 0.005356727381325504,
+          "max": 0.0069467997797515784,
+          "values": [
+            0.006947,
+            0.005357
+          ]
+        },
+        "motif_stack": {
+          "n_runs": 2,
+          "mean": 0.02975051952842124,
+          "sd": 0.018850544259436032,
+          "min": 0.016421171853516877,
+          "max": 0.04307986720332561,
+          "values": [
+            0.04308,
+            0.016421
+          ]
+        }
+      }
+    }
+  },
+  "eval_exclusions": {
+    "steps": [
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 2,
+        "step": 1,
+        "global_step": 7,
+        "best_model": "pairwise_weber_chunk_contrast",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43255,
+        "models": "chunk_code_switch_prototype"
+      },
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 2,
+        "step": 2,
+        "global_step": 8,
+        "best_model": "weber_switch_prototype_chunk_contrast",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43255,
+        "models": "chunk_code_switch_prototype; weber_switch_prototype_chunk_contrast"
+      },
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 2,
+        "step": 3,
+        "global_step": 9,
+        "best_model": "heads_first_weber_switch_chunk",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43255,
+        "models": "chunk_code_switch_prototype; heads_first_switch_prototype_chunk; heads_first_weber_switch_chunk; length_scaled_run_cost_chunk_contrast; weber_switch_prototype_chunk_contrast"
+      },
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 2,
+        "step": 4,
+        "global_step": 10,
+        "best_model": "weber_opening_heads_streak_chunk",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43255,
+        "models": "chunk_code_switch_prototype; early_heads_primacy_weber_chunk; heads_first_switch_prototype_chunk; heads_first_weber_switch_chunk; length_scaled_run_cost_chunk_contrast; opening_heads_streak_chunk_prototype; weber_opening_heads_streak_chunk; weber_switch_prototype_chunk_contrast"
+      },
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 2,
+        "step": 5,
+        "global_step": 11,
+        "best_model": "max_anchored_weber_heads_streak_chunk",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43255,
+        "models": "chunk_code_switch_prototype; early_heads_primacy_weber_chunk; heads_first_switch_prototype_chunk; heads_first_weber_switch_chunk; length_scaled_run_cost_chunk_contrast; linear_switch_gap_weber_heads_chunk; max_anchored_weber_heads_streak_chunk; opening_heads_streak_chunk_prototype; weber_opening_heads_streak_chunk; weber_switch_prototype_chunk_contrast"
+      },
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 0,
+        "global_step": 12,
+        "best_model": "standard_anchored_chunk_shortfall",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43255,
+        "models": "early_heads_primacy_weber_chunk; heads_first_switch_prototype_chunk; heads_first_weber_switch_chunk; linear_switch_gap_weber_heads_chunk; max_anchored_weber_heads_streak_chunk; opening_heads_streak_chunk_prototype; weber_opening_heads_streak_chunk"
+      },
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 1,
+        "global_step": 13,
+        "best_model": "standard_anchored_chunk_shortfall",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43255,
+        "models": "early_heads_primacy_weber_chunk; heads_first_switch_prototype_chunk; heads_first_weber_switch_chunk; linear_switch_gap_weber_heads_chunk; max_anchored_weber_heads_streak_chunk; opening_heads_streak_chunk_prototype; switch_clutter_max_anchored_chunk; weber_opening_heads_streak_chunk"
+      },
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 2,
+        "global_step": 14,
+        "best_model": "standard_shortfall_aligned_mismatch_noise",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43255,
+        "models": "early_heads_primacy_weber_chunk; heads_first_switch_prototype_chunk; heads_first_weber_switch_chunk; linear_switch_gap_weber_heads_chunk; max_anchored_weber_heads_streak_chunk; opening_heads_streak_chunk_prototype; switch_clutter_max_anchored_chunk; weber_opening_heads_streak_chunk"
+      },
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 3,
+        "global_step": 15,
+        "best_model": "offset_tolerant_scan_standard_shortfall",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43255,
+        "models": "early_heads_primacy_weber_chunk; heads_first_switch_prototype_chunk; heads_first_weber_switch_chunk; linear_switch_gap_weber_heads_chunk; max_anchored_weber_heads_streak_chunk; opening_heads_streak_chunk_prototype; switch_clutter_max_anchored_chunk; weber_opening_heads_streak_chunk"
+      },
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 4,
+        "global_step": 16,
+        "best_model": "offset_tolerant_scan_standard_shortfall",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43255,
+        "models": "early_heads_primacy_weber_chunk; heads_first_switch_prototype_chunk; heads_first_weber_switch_chunk; linear_switch_gap_weber_heads_chunk; max_anchored_weber_heads_streak_chunk; opening_heads_streak_chunk_prototype; switch_clutter_max_anchored_chunk; weber_opening_heads_streak_chunk"
+      },
+      {
+        "cell": "run1/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 5,
+        "global_step": 17,
+        "best_model": "offset_tolerant_scan_standard_shortfall",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43255,
+        "models": "early_heads_primacy_weber_chunk; heads_first_switch_prototype_chunk; heads_first_weber_switch_chunk; linear_switch_gap_weber_heads_chunk; max_anchored_weber_heads_streak_chunk; opening_heads_streak_chunk_prototype; switch_clutter_max_anchored_chunk; weber_opening_heads_streak_chunk"
+      },
+      {
+        "cell": "run1/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 1,
+        "step": 1,
+        "global_step": 1,
+        "best_model": "periodic_template_motif_stack",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "periodic_template_motif_stack"
+      },
+      {
+        "cell": "run1/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 1,
+        "step": 2,
+        "global_step": 2,
+        "best_model": "sublinear_evidence_regularity",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "periodic_template_motif_stack"
+      },
+      {
+        "cell": "run1/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 2,
+        "step": 1,
+        "global_step": 7,
+        "best_model": "slip_count_typicality_best_pattern",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "streak_sensitive_switch_count_typicality"
+      },
+      {
+        "cell": "run1/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 2,
+        "step": 2,
+        "global_step": 8,
+        "best_model": "gist_switch_heads_vs_slip_count",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "streak_sensitive_switch_count_typicality"
+      },
+      {
+        "cell": "run1/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 2,
+        "step": 3,
+        "global_step": 9,
+        "best_model": "heads_first_designed_start_gist",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "streak_coin_switch_typicality_slip_count; streak_sensitive_switch_count_typicality"
+      },
+      {
+        "cell": "run1/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 2,
+        "step": 4,
+        "global_step": 10,
+        "best_model": "serial_satisficing_pattern_search",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "streak_coin_switch_typicality_slip_count; streak_sensitive_switch_count_typicality"
+      },
+      {
+        "cell": "run1/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 2,
+        "step": 5,
+        "global_step": 11,
+        "best_model": "complexity_scaled_slip_tolerance_search",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "streak_coin_switch_typicality_slip_count; streak_sensitive_switch_count_typicality"
+      },
+      {
+        "cell": "run1/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 5,
+        "global_step": 17,
+        "best_model": "heads_leaning_coin_drifting_halves",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "centre_weighted_mirror_fold"
+      },
+      {
+        "cell": "run2/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 2,
+        "step": 3,
+        "global_step": 9,
+        "best_model": "recency_weighted_switch_aversion",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "recency_weighted_switch_aversion"
+      },
+      {
+        "cell": "run2/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 2,
+        "step": 4,
+        "global_step": 10,
+        "best_model": "recency_weighted_switch_aversion",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "length_scaled_recency_switch_aversion; recency_weighted_switch_aversion; side_biased_recency_switch_aversion"
+      },
+      {
+        "cell": "run2/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 2,
+        "step": 5,
+        "global_step": 11,
+        "best_model": "memory_regularized_recency_switch",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "first_read_anchored_contrast; length_scaled_recency_switch_aversion; memory_regularized_recency_switch; recency_weighted_switch_aversion; side_biased_recency_switch_aversion"
+      },
+      {
+        "cell": "run2/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 0,
+        "global_step": 12,
+        "best_model": "longest_alternation_leader_anchoring",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "first_read_anchored_contrast; memory_regularized_recency_switch; recency_weighted_switch_aversion; side_biased_recency_switch_aversion"
+      },
+      {
+        "cell": "run2/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 1,
+        "global_step": 13,
+        "best_model": "symmetry_noticing_memory_recency_switch",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "first_read_anchored_contrast; memory_regularized_recency_switch; recency_weighted_switch_aversion; side_biased_recency_switch_aversion; symmetry_noticing_memory_recency_switch"
+      },
+      {
+        "cell": "run2/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 2,
+        "global_step": 14,
+        "best_model": "graded_mirror_symmetry_chunks",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "first_read_anchored_contrast; graded_symmetry_memory_recency_switch; memory_regularized_recency_switch; recency_weighted_switch_aversion; side_biased_recency_switch_aversion; streak_expecting_symmetry_memory_recency; symmetry_noticing_memory_recency_switch"
+      },
+      {
+        "cell": "run2/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 3,
+        "global_step": 15,
+        "best_model": "symmetry_and_shift_repetition_chunks",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "first_read_anchored_contrast; graded_symmetry_memory_recency_switch; memory_regularized_recency_switch; recency_weighted_switch_aversion; side_biased_recency_switch_aversion; streak_expecting_symmetry_memory_recency; symmetry_noticing_memory_recency_switch"
+      },
+      {
+        "cell": "run2/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 4,
+        "global_step": 16,
+        "best_model": "designedness_pop_out_contrast",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "first_read_anchored_contrast; graded_symmetry_memory_recency_switch; memory_regularized_recency_switch; recency_weighted_switch_aversion; side_biased_recency_switch_aversion; streak_expecting_symmetry_memory_recency; symmetry_noticing_memory_recency_switch"
+      },
+      {
+        "cell": "run2/falk_konold_dp",
+        "gt_model": "falk_konold_dp",
+        "experiment": 3,
+        "step": 5,
+        "global_step": 17,
+        "best_model": "local_mirror_stretch_pop_out",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43246,
+        "models": "first_read_anchored_contrast; graded_symmetry_memory_recency_switch; memory_regularized_recency_switch; recency_weighted_switch_aversion; side_biased_recency_switch_aversion; streak_expecting_symmetry_memory_recency; symmetry_noticing_memory_recency_switch"
+      },
+      {
+        "cell": "run2/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 1,
+        "step": 5,
+        "global_step": 5,
+        "best_model": "iter4_candidate3",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43245,
+        "models": "local_window_switch_surprise; serial_attention_gradient"
+      },
+      {
+        "cell": "run2/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 2,
+        "step": 0,
+        "global_step": 6,
+        "best_model": "chance_calibrated_template_surprise",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43245,
+        "models": "serial_attention_gradient"
+      },
+      {
+        "cell": "run2/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 2,
+        "step": 4,
+        "global_step": 10,
+        "best_model": "exceptionless_rule_repetition_pair_gain",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43245,
+        "models": "noisy_trace_flaw_encoding"
+      },
+      {
+        "cell": "run2/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 2,
+        "step": 5,
+        "global_step": 11,
+        "best_model": "lapsing_exceptionless_rule_pair_gain",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43245,
+        "models": "noisy_trace_flaw_encoding"
+      },
+      {
+        "cell": "run2/finite_experience_occurrence",
+        "gt_model": "finite_experience_occurrence",
+        "experiment": 3,
+        "step": 5,
+        "global_step": 17,
+        "best_model": "minimum_evidence_threshold_guessing",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43245,
+        "models": "running_tally_path_imbalance_guessing"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 1,
+        "step": 3,
+        "global_step": 3,
+        "best_model": "repetition_count_rule_rejection",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "overalternating_dp_rule_rejection"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 1,
+        "step": 4,
+        "global_step": 4,
+        "best_model": "longest_streak_rule_share_dp",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "overalternating_dp_rule_rejection"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 1,
+        "step": 5,
+        "global_step": 5,
+        "best_model": "categorical_rule_streak_dp",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "overalternating_dp_rule_rejection"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 1,
+        "global_step": 13,
+        "best_model": "overalternating_capacity_graded_slip",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "overalternating_capacity_graded_slip"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 2,
+        "global_step": 14,
+        "best_model": "costly_alternation_capacity_slip",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "ideal_switch_rate_capacity_slip; overalternating_capacity_graded_slip; overalternating_capacity_slip_rate"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 3,
+        "global_step": 15,
+        "best_model": "load_degraded_comparison",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "ideal_switch_rate_capacity_slip; overalternating_capacity_graded_slip; overalternating_capacity_slip_rate"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 4,
+        "global_step": 16,
+        "best_model": "load_degraded_slip_rate",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "ideal_switch_rate_capacity_slip; overalternating_capacity_graded_slip; overalternating_capacity_slip_rate"
+      },
+      {
+        "cell": "run2/local_representativeness",
+        "gt_model": "local_representativeness",
+        "experiment": 3,
+        "step": 5,
+        "global_step": 17,
+        "best_model": "load_degraded_slip_rate",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43244,
+        "models": "ideal_switch_rate_capacity_slip; overalternating_capacity_graded_slip; overalternating_capacity_slip_rate"
+      },
+      {
+        "cell": "run2/motif_stack",
+        "gt_model": "motif_stack",
+        "experiment": 2,
+        "step": 4,
+        "global_step": 10,
+        "best_model": "peak_stretch_surprise_generator",
+        "n_eval_excluded": 1,
+        "n_eval_stimuli": 43243,
+        "models": "typicality_tail_rank_generator"
+      }
+    ],
+    "fitted_seed_baseline": [],
+    "cells_without_record": []
+  },
+  "cells": {
+    "root": "/scratch/users/benpry/auto-psych/final_23",
+    "expected_from": "stated: 2 repeats; ground truths falk_konold_dp, motif_stack, finite_experience_occurrence, local_representativeness",
+    "n_expected": 8,
+    "complete": [
+      "run1/falk_konold_dp",
+      "run1/finite_experience_occurrence",
+      "run1/local_representativeness",
+      "run1/motif_stack",
+      "run2/falk_konold_dp",
+      "run2/finite_experience_occurrence",
+      "run2/local_representativeness",
+      "run2/motif_stack"
+    ],
+    "partial": {},
+    "missing": {}
+  },
+  "loop_vs_fitted_baseline": [
+    {
+      "gt_model": "falk_konold_dp",
+      "experiment": 1,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.9838218501573832,
+      "fitted_baseline_mean": 0.9751203217287117,
+      "mean_difference": 0.008701528428671612,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "falk_konold_dp",
+      "experiment": 1,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.04306059656879084,
+      "fitted_baseline_mean": 0.056243405047061615,
+      "mean_difference": -0.013182808478270778,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "falk_konold_dp",
+      "experiment": 2,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.9990645829032274,
+      "fitted_baseline_mean": 0.9843645315525655,
+      "mean_difference": 0.01470005135066177,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "falk_konold_dp",
+      "experiment": 2,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.017666878721044194,
+      "fitted_baseline_mean": 0.045595811278568724,
+      "mean_difference": -0.027928932557524523,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "falk_konold_dp",
+      "experiment": 3,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.997732840038308,
+      "fitted_baseline_mean": 0.9844522841976746,
+      "mean_difference": 0.013280555840633368,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "falk_konold_dp",
+      "experiment": 3,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.016969903084376462,
+      "fitted_baseline_mean": 0.04516751359177745,
+      "mean_difference": -0.028197610507400987,
+      "cells": [
+        "run1/falk_konold_dp",
+        "run2/falk_konold_dp"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 1,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.7761793829668104,
+      "fitted_baseline_mean": 0.5374769774353356,
+      "mean_difference": 0.23870240553147493,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 1,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.04972737870126763,
+      "fitted_baseline_mean": 0.08010306530948176,
+      "mean_difference": -0.030375686608214134,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 2,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.9471493367161006,
+      "fitted_baseline_mean": 0.547379570794692,
+      "mean_difference": 0.39976976592140856,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 2,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.0245034121322018,
+      "fitted_baseline_mean": 0.06821974759673072,
+      "mean_difference": -0.04371633546452891,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 3,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.9633749845669863,
+      "fitted_baseline_mean": 0.5327746373855597,
+      "mean_difference": 0.43060034718142653,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "finite_experience_occurrence",
+      "experiment": 3,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.020494786072838417,
+      "fitted_baseline_mean": 0.07322437898208504,
+      "mean_difference": -0.05272959290924663,
+      "cells": [
+        "run1/finite_experience_occurrence",
+        "run2/finite_experience_occurrence"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "local_representativeness",
+      "experiment": 1,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.8685574675001935,
+      "fitted_baseline_mean": 0.4416324659423836,
+      "mean_difference": 0.4269250015578099,
+      "cells": [
+        "run1/local_representativeness",
+        "run2/local_representativeness"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "local_representativeness",
+      "experiment": 1,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.07096823589021023,
+      "fitted_baseline_mean": 0.1302663074023051,
+      "mean_difference": -0.05929807151209486,
+      "cells": [
+        "run1/local_representativeness",
+        "run2/local_representativeness"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "local_representativeness",
+      "experiment": 2,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.8987944805496063,
+      "fitted_baseline_mean": 0.44149580886095596,
+      "mean_difference": 0.45729867168865035,
+      "cells": [
+        "run1/local_representativeness",
+        "run2/local_representativeness"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "local_representativeness",
+      "experiment": 2,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.06305309831092973,
+      "fitted_baseline_mean": 0.13059073238030908,
+      "mean_difference": -0.06753763406937935,
+      "cells": [
+        "run1/local_representativeness",
+        "run2/local_representativeness"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "local_representativeness",
+      "experiment": 3,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.9294442557787187,
+      "fitted_baseline_mean": 0.4417610724830292,
+      "mean_difference": 0.4876831832956895,
+      "cells": [
+        "run1/local_representativeness",
+        "run2/local_representativeness"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "local_representativeness",
+      "experiment": 3,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.053478604027965594,
+      "fitted_baseline_mean": 0.12973817174100333,
+      "mean_difference": -0.07625956771303775,
+      "cells": [
+        "run1/local_representativeness",
+        "run2/local_representativeness"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "motif_stack",
+      "experiment": 1,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.6766990681271108,
+      "fitted_baseline_mean": 0.833275483098316,
+      "mean_difference": -0.15657641497120525,
+      "cells": [
+        "run1/motif_stack",
+        "run2/motif_stack"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "motif_stack",
+      "experiment": 1,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.20292210789720494,
+      "fitted_baseline_mean": 0.1588064395483988,
+      "mean_difference": 0.044115668348806175,
+      "cells": [
+        "run1/motif_stack",
+        "run2/motif_stack"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "motif_stack",
+      "experiment": 2,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.893799204429341,
+      "fitted_baseline_mean": 0.8349109463431679,
+      "mean_difference": 0.05888825808617315,
+      "cells": [
+        "run1/motif_stack",
+        "run2/motif_stack"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "motif_stack",
+      "experiment": 2,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.12899423793613385,
+      "fitted_baseline_mean": 0.1619196650042524,
+      "mean_difference": -0.03292542706811853,
+      "cells": [
+        "run1/motif_stack",
+        "run2/motif_stack"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "motif_stack",
+      "experiment": 3,
+      "metric": "pearson_r",
+      "n_cells": 2,
+      "loop_mean": 0.923347288706009,
+      "fitted_baseline_mean": 0.8313844507442144,
+      "mean_difference": 0.09196283796179455,
+      "cells": [
+        "run1/motif_stack",
+        "run2/motif_stack"
+      ],
+      "excluded": {}
+    },
+    {
+      "gt_model": "motif_stack",
+      "experiment": 3,
+      "metric": "rmse",
+      "n_cells": 2,
+      "loop_mean": 0.1061164046271624,
+      "fitted_baseline_mean": 0.16848192447391935,
+      "mean_difference": -0.06236551984675697,
+      "cells": [
+        "run1/motif_stack",
+        "run2/motif_stack"
+      ],
+      "excluded": {}
+    }
+  ]
+}

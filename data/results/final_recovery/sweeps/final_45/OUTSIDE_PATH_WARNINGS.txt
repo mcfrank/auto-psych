@@ -1,0 +1,3 @@
+run1/local_representativeness: see /scratch/users/benpry/auto-psych/final_45/run1/local_representativeness/agent_activity.md
+run1/motif_stack: see /scratch/users/benpry/auto-psych/final_45/run1/motif_stack/agent_activity.md
+run2/motif_stack: see /scratch/users/benpry/auto-psych/final_45/run2/motif_stack/agent_activity.md

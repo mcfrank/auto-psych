@@ -1,0 +1,1861 @@
+{
+  "project_id": "subjective_randomness",
+  "seed_models_dir": "/scratch/users/benpry/auto-psych/final_1/harness_repo/src/subjective_randomness/pymc_model_families",
+  "n_experiments": 3,
+  "n_participants": 40,
+  "inner_loop": {
+    "max_iterations": 5,
+    "candidate_count": 6,
+    "novelty_rmse_threshold": 0.002,
+    "n_critique_proposals": 8,
+    "starting_models_prunable": true
+  },
+  "fit_kwargs": {
+    "draws": 1000,
+    "tune": 1000,
+    "chains": 4,
+    "target_accept": 0.8
+  },
+  "seed": 101,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100,
+    "exhaustive": true,
+    "predict_max_draws": 500
+  },
+  "metrics_version": 2,
+  "gt_runs": [
+    {
+      "gt_model": "local_representativeness",
+      "params": {
+        "theta_alt": 0.65,
+        "alt_weight": 0.75,
+        "periodic_share": 0.45,
+        "beta": 4.0,
+        "side_bias": 0.0
+      },
+      "run_root": "/scratch/users/benpry/auto-psych/agent_trees/3765712838c2b600/repo/_runs/cell_1",
+      "n_eval_stimuli": 43244,
+      "n_eval_dropped": 191,
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "finite_experience_occurrence",
+          "pearson_r": 0.43851524241272416,
+          "rmse": 0.12923509644081047,
+          "kl_regret": 0.03478991900630411,
+          "bias": -0.009866933629402438,
+          "calib_slope": 0.19046007122974684,
+          "calib_intercept": 0.39479506740918247,
+          "pearson_r_bma": 0.43851524241272416,
+          "rmse_bma": 0.12923509644081047,
+          "kl_regret_bma": 0.03478991900630411,
+          "bias_bma": -0.009866933629402438,
+          "calib_slope_bma": 0.19046007122974684,
+          "calib_intercept_bma": 0.39479506740918247,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": false
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "occurrence_plus_switch_rate",
+          "pearson_r": 0.6797111928858685,
+          "rmse": 0.10577687726297787,
+          "kl_regret": 0.02360143398857718,
+          "bias": -0.01094021769162529,
+          "calib_slope": 0.44736941048588813,
+          "calib_intercept": 0.265301376132685,
+          "pearson_r_bma": 0.7456287542176161,
+          "rmse_bma": 0.09723786838020695,
+          "kl_regret_bma": 0.020041470603169055,
+          "bias_bma": -0.010807808536663252,
+          "calib_slope_bma": 0.48054609350539707,
+          "calib_intercept_bma": 0.24884986834745193,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "occurrence_switch_momentum_coin",
+          "pearson_r": 0.5730645631678186,
+          "rmse": 0.12145254305926353,
+          "kl_regret": 0.0311490782889475,
+          "bias": -0.011544755548764963,
+          "calib_slope": 0.4422555737226029,
+          "calib_intercept": 0.2672530746563242,
+          "pearson_r_bma": 0.5797796606845652,
+          "rmse_bma": 0.12028599152648523,
+          "kl_regret_bma": 0.030543782315251858,
+          "bias_bma": -0.011604545915009347,
+          "calib_slope_bma": 0.4421462113634686,
+          "calib_intercept_bma": 0.2672479508846637,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 3,
+          "best_model": "occurrence_momentum_balance_penalty",
+          "pearson_r": 0.6839086502621576,
+          "rmse": 0.11753162408774487,
+          "kl_regret": 0.030424744218615504,
+          "bias": -0.009707991345396681,
+          "calib_slope": 0.719122740617592,
+          "calib_intercept": 0.13069317947835352,
+          "pearson_r_bma": 0.6898699073375567,
+          "rmse_bma": 0.1159584750807823,
+          "kl_regret_bma": 0.02951948578575493,
+          "bias_bma": -0.009708114457501275,
+          "calib_slope_bma": 0.7202522048306489,
+          "calib_intercept_bma": 0.13012847488939527,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 4,
+          "best_model": "occurrence_balance_chunk_repetition",
+          "pearson_r": 0.8012392437105251,
+          "rmse": 0.08821175164824464,
+          "kl_regret": 0.0165391107308309,
+          "bias": -0.008123322083897726,
+          "calib_slope": 0.7473640283428407,
+          "calib_intercept": 0.11816097124356173,
+          "pearson_r_bma": 0.7999633813842719,
+          "rmse_bma": 0.08912855619929481,
+          "kl_regret_bma": 0.01690924146066864,
+          "bias_bma": -0.008272117634161818,
+          "calib_slope_bma": 0.761381029081933,
+          "calib_intercept_bma": 0.11100554468467427,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 5,
+          "best_model": "mirrored_chunk_repetition_balance",
+          "pearson_r": 0.7508535088287297,
+          "rmse": 0.10334491558756877,
+          "kl_regret": 0.023022340964811778,
+          "bias": -0.0087274508702429,
+          "calib_slope": 0.7756424157880986,
+          "calib_intercept": 0.10342142004868204,
+          "pearson_r_bma": 0.7849071109368395,
+          "rmse_bma": 0.0936224902508699,
+          "kl_regret_bma": 0.018725618789934624,
+          "bias_bma": -0.00873961510852269,
+          "calib_slope_bma": 0.7705822761692595,
+          "calib_intercept_bma": 0.10593865078021508,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "iteration": null,
+          "global_step": 6,
+          "best_model": "balance_plus_triplet_variety_coin",
+          "pearson_r": 0.8050154313992612,
+          "rmse": 0.09105490789545716,
+          "kl_regret": 0.01780745349297222,
+          "bias": -0.008217617899346531,
+          "calib_slope": 0.8245703634644465,
+          "calib_intercept": 0.07947380439996732,
+          "pearson_r_bma": 0.805106623435315,
+          "rmse_bma": 0.09103736594132787,
+          "kl_regret_bma": 0.017801096194807107,
+          "bias_bma": -0.008059925363932475,
+          "calib_slope_bma": 0.8249505863193745,
+          "calib_intercept_bma": 0.07944143621589411,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 7,
+          "best_model": "half_echo_variety_coin",
+          "pearson_r": 0.805512004809982,
+          "rmse": 0.09268196290458217,
+          "kl_regret": 0.018593625961304813,
+          "bias": -0.0077650817552635965,
+          "calib_slope": 0.8522575712991177,
+          "calib_intercept": 0.06608642864318526,
+          "pearson_r_bma": 0.807619101507564,
+          "rmse_bma": 0.09239212401902705,
+          "kl_regret_bma": 0.018488139849564784,
+          "bias_bma": -0.0076690639831559545,
+          "calib_slope_bma": 0.8575621148278897,
+          "calib_intercept_bma": 0.06353088210151508,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "half_echo_variety_coin"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 8,
+          "best_model": "short_period_echo_variety_coin",
+          "pearson_r": 0.8043144463842584,
+          "rmse": 0.09912660155052785,
+          "kl_regret": 0.02169419064962705,
+          "bias": -0.0075458804054765296,
+          "calib_slope": 0.9280092304184634,
+          "calib_intercept": 0.02843990319841405,
+          "pearson_r_bma": 0.8046844569068483,
+          "rmse_bma": 0.09895588904080213,
+          "kl_regret_bma": 0.021613756265802097,
+          "bias_bma": -0.007541334036165983,
+          "calib_slope_bma": 0.9275268021150058,
+          "calib_intercept_bma": 0.02868559937947862,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "half_echo_variety_coin",
+            "short_period_echo_variety_coin",
+            "tally_return_balance_echo_coin"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 9,
+          "best_model": "opening_repeat_period_echo_coin",
+          "pearson_r": 0.7624029735293874,
+          "rmse": 0.11077548144187667,
+          "kl_regret": 0.027257072403222667,
+          "bias": -0.006745166551904569,
+          "calib_slope": 0.9010738446455104,
+          "calib_intercept": 0.04270471764914635,
+          "pearson_r_bma": 0.7931592889612527,
+          "rmse_bma": 0.10166668941194208,
+          "kl_regret_bma": 0.02283907552338589,
+          "bias_bma": -0.006509920300579965,
+          "calib_slope_bma": 0.9148931723894956,
+          "calib_intercept_bma": 0.03603214306959279,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "half_echo_variety_coin",
+            "mirror_return_period_echo_coin",
+            "opening_repeat_period_echo_coin",
+            "posterior_belief_saturation",
+            "short_period_echo_variety_coin",
+            "tally_return_balance_echo_coin",
+            "three_apart_relief_echo_coin"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 10,
+          "best_model": "opening_repeat_three_apart_echo_coin",
+          "pearson_r": 0.7775434253624297,
+          "rmse": 0.10665287740012444,
+          "kl_regret": 0.02528647608822836,
+          "bias": -0.007379035432748095,
+          "calib_slope": 0.9109331389160625,
+          "calib_intercept": 0.037142516536691816,
+          "pearson_r_bma": 0.7733994883022892,
+          "rmse_bma": 0.10755710926578686,
+          "kl_regret_bma": 0.025657384297995686,
+          "bias_bma": -0.006998382386911735,
+          "calib_slope_bma": 0.9060575845620511,
+          "calib_intercept_bma": 0.039960296521888816,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "alternation_streak_echo_coin",
+            "familiarity_precision_echo_coin",
+            "half_echo_variety_coin",
+            "mirror_return_period_echo_coin",
+            "opening_repeat_mirror_return_coin",
+            "opening_repeat_period_echo_coin",
+            "opening_repeat_three_apart_echo_coin",
+            "posterior_belief_saturation",
+            "self_correcting_balance_echo_coin",
+            "short_period_echo_variety_coin",
+            "tally_return_balance_echo_coin",
+            "three_apart_relief_echo_coin"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 11,
+          "best_model": "run_alignment_contrast_echo_coin",
+          "pearson_r": 0.7379086093155942,
+          "rmse": 0.12422583976713646,
+          "kl_regret": 0.037089895907520126,
+          "bias": -0.007389019777664764,
+          "calib_slope": 0.9436155831116095,
+          "calib_intercept": 0.02079566885077233,
+          "pearson_r_bma": 0.7576067006875895,
+          "rmse_bma": 0.11397508689567763,
+          "kl_regret_bma": 0.02937352011589167,
+          "bias_bma": -0.0069833947141107475,
+          "calib_slope_bma": 0.9157296696816128,
+          "calib_intercept_bma": 0.035140531571067,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "alternation_streak_echo_coin",
+            "convex_self_correction_echo_coin",
+            "familiarity_precision_echo_coin",
+            "half_echo_variety_coin",
+            "mirror_return_period_echo_coin",
+            "most_lopsided_span_echo_coin",
+            "opening_repeat_mirror_return_coin",
+            "opening_repeat_period_echo_coin",
+            "opening_repeat_three_apart_echo_coin",
+            "posterior_belief_saturation",
+            "run_alignment_contrast_echo_coin",
+            "self_correcting_balance_echo_coin",
+            "self_correcting_three_apart_echo_coin",
+            "short_period_echo_variety_coin",
+            "streak_recognition_echo_coin",
+            "three_apart_relief_echo_coin"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "iteration": null,
+          "global_step": 12,
+          "best_model": "streak_recognition_echo_coin",
+          "pearson_r": 0.7786102652119483,
+          "rmse": 0.09969943852452977,
+          "kl_regret": 0.02152258174064393,
+          "bias": -0.011138691786572355,
+          "calib_slope": 0.8315196401332017,
+          "calib_intercept": 0.07307901844092274,
+          "pearson_r_bma": 0.7795566501123529,
+          "rmse_bma": 0.09936076489997556,
+          "kl_regret_bma": 0.021366905835207072,
+          "bias_bma": -0.011142060388371285,
+          "calib_slope_bma": 0.8308186288338479,
+          "calib_intercept_bma": 0.07342606199708607,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "alternation_streak_echo_coin",
+            "convex_self_correction_echo_coin",
+            "most_lopsided_span_echo_coin",
+            "opening_repeat_three_apart_echo_coin",
+            "run_alignment_contrast_echo_coin",
+            "self_correcting_balance_echo_coin",
+            "self_correcting_three_apart_echo_coin",
+            "streak_recognition_echo_coin"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 13,
+          "best_model": "length_blurred_streak_echo_coin",
+          "pearson_r": 0.7911188668697761,
+          "rmse": 0.09353104328477149,
+          "kl_regret": 0.018712537598494512,
+          "bias": -0.010967089948229852,
+          "calib_slope": 0.7947303832600033,
+          "calib_intercept": 0.09164034224615475,
+          "pearson_r_bma": 0.7911288967378268,
+          "rmse_bma": 0.09353907415155831,
+          "kl_regret_bma": 0.018717525295582182,
+          "bias_bma": -0.01075555694535654,
+          "calib_slope_bma": 0.7953264854609565,
+          "calib_intercept_bma": 0.09155390364886329,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "alternation_streak_echo_coin",
+            "convex_self_correction_echo_coin",
+            "convex_tally_drift_echo_coin",
+            "length_blurred_streak_echo_coin",
+            "length_graded_decisiveness_coin",
+            "length_noisy_alternation_streak_coin",
+            "run_alignment_contrast_echo_coin",
+            "streak_recognition_echo_coin"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 14,
+          "best_model": "half_turnaround_reversal_coin",
+          "pearson_r": 0.831712791502969,
+          "rmse": 0.08206296891850504,
+          "kl_regret": 0.01431809007432223,
+          "bias": -0.010546843505069119,
+          "calib_slope": 0.7898756371137741,
+          "calib_intercept": 0.09448731429991147,
+          "pearson_r_bma": 0.8317081961392158,
+          "rmse_bma": 0.082065951940391,
+          "kl_regret_bma": 0.014319072397164833,
+          "bias_bma": -0.010548019090654809,
+          "calib_slope_bma": 0.78992018581629,
+          "calib_intercept_bma": 0.09446387030439085,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "complementary_halves_payback_coin",
+            "full_payback_length_blurred_coin",
+            "half_turnaround_reversal_coin",
+            "length_blurred_streak_echo_coin",
+            "length_graded_decisiveness_coin",
+            "paid_back_streak_graded_coin"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 15,
+          "best_model": "sustained_half_turnaround_coin",
+          "pearson_r": 0.814388029243748,
+          "rmse": 0.08636207658511526,
+          "kl_regret": 0.015861950648948454,
+          "bias": -0.010307780524377655,
+          "calib_slope": 0.7808687238125744,
+          "calib_intercept": 0.09922863270695825,
+          "pearson_r_bma": 0.8243415602018963,
+          "rmse_bma": 0.08390604069375626,
+          "kl_regret_bma": 0.014963015852799726,
+          "bias_bma": -0.010431878512731661,
+          "calib_slope_bma": 0.7861007171097141,
+          "calib_intercept_bma": 0.09648923584484204,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "complementary_halves_payback_coin",
+            "full_payback_length_blurred_coin",
+            "half_turnaround_reversal_coin",
+            "misread_flip_encoding_coin",
+            "paid_back_streak_graded_coin",
+            "rule_free_half_turnaround_coin",
+            "sustained_half_turnaround_coin"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 16,
+          "best_model": "rule_free_sustained_turnaround_coin",
+          "pearson_r": 0.8205970506097133,
+          "rmse": 0.08564322041163237,
+          "kl_regret": 0.01562530810608765,
+          "bias": -0.010726625935570718,
+          "calib_slope": 0.8020199640413137,
+          "calib_intercept": 0.0882369880570622,
+          "pearson_r_bma": 0.8254093908745072,
+          "rmse_bma": 0.08393272914932173,
+          "kl_regret_bma": 0.014975816343223034,
+          "bias_bma": -0.010483614363584495,
+          "calib_slope_bma": 0.7939844783015461,
+          "calib_intercept_bma": 0.09249667083098528,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "complementary_halves_payback_coin",
+            "dominant_pair_block_coin",
+            "full_payback_length_blurred_coin",
+            "half_turnaround_reversal_coin",
+            "misread_flip_encoding_coin",
+            "rule_free_half_turnaround_coin",
+            "rule_free_sustained_turnaround_coin",
+            "sustained_half_turnaround_coin",
+            "switch_contrast_popout_coin"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 17,
+          "best_model": "iter4_candidate4",
+          "pearson_r": 0.82105639919622,
+          "rmse": 0.08461095094049813,
+          "kl_regret": 0.015273899215045595,
+          "bias": -0.010138323809057687,
+          "calib_slope": 0.7823673404881749,
+          "calib_intercept": 0.09864898095036145,
+          "pearson_r_bma": 0.8240037255982299,
+          "rmse_bma": 0.08436578059576277,
+          "kl_regret_bma": 0.015158814309041096,
+          "bias_bma": -0.01050936787368403,
+          "calib_slope_bma": 0.7950403823846944,
+          "calib_intercept_bma": 0.09194310610198203,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "dominant_pair_block_coin",
+            "half_turnaround_reversal_coin",
+            "iter4_candidate4",
+            "misread_flip_encoding_coin",
+            "rule_free_dominant_pair_block_coin",
+            "rule_free_half_turnaround_coin",
+            "rule_free_sustained_turnaround_coin",
+            "soft_jnd_rule_free_turnaround_coin",
+            "sustained_half_turnaround_coin",
+            "switch_contrast_popout_coin",
+            "tally_correction_rate_coin"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        }
+      ],
+      "incumbent": {
+        "starting_models": [
+          "falk_konold_dp",
+          "finite_experience_occurrence",
+          "motif_stack"
+        ],
+        "n_steps": 18,
+        "n_incumbent_changes": 17,
+        "n_steps_discovered_incumbent": 17,
+        "final_incumbent": "iter4_candidate4",
+        "changes": [
+          {
+            "global_step": 1,
+            "experiment": 1,
+            "step": 1,
+            "from": "finite_experience_occurrence",
+            "to": "occurrence_plus_switch_rate"
+          },
+          {
+            "global_step": 2,
+            "experiment": 1,
+            "step": 2,
+            "from": "occurrence_plus_switch_rate",
+            "to": "occurrence_switch_momentum_coin"
+          },
+          {
+            "global_step": 3,
+            "experiment": 1,
+            "step": 3,
+            "from": "occurrence_switch_momentum_coin",
+            "to": "occurrence_momentum_balance_penalty"
+          },
+          {
+            "global_step": 4,
+            "experiment": 1,
+            "step": 4,
+            "from": "occurrence_momentum_balance_penalty",
+            "to": "occurrence_balance_chunk_repetition"
+          },
+          {
+            "global_step": 5,
+            "experiment": 1,
+            "step": 5,
+            "from": "occurrence_balance_chunk_repetition",
+            "to": "mirrored_chunk_repetition_balance"
+          },
+          {
+            "global_step": 6,
+            "experiment": 2,
+            "step": 0,
+            "from": "mirrored_chunk_repetition_balance",
+            "to": "balance_plus_triplet_variety_coin"
+          },
+          {
+            "global_step": 7,
+            "experiment": 2,
+            "step": 1,
+            "from": "balance_plus_triplet_variety_coin",
+            "to": "half_echo_variety_coin"
+          },
+          {
+            "global_step": 8,
+            "experiment": 2,
+            "step": 2,
+            "from": "half_echo_variety_coin",
+            "to": "short_period_echo_variety_coin"
+          },
+          {
+            "global_step": 9,
+            "experiment": 2,
+            "step": 3,
+            "from": "short_period_echo_variety_coin",
+            "to": "opening_repeat_period_echo_coin"
+          },
+          {
+            "global_step": 10,
+            "experiment": 2,
+            "step": 4,
+            "from": "opening_repeat_period_echo_coin",
+            "to": "opening_repeat_three_apart_echo_coin"
+          },
+          {
+            "global_step": 11,
+            "experiment": 2,
+            "step": 5,
+            "from": "opening_repeat_three_apart_echo_coin",
+            "to": "run_alignment_contrast_echo_coin"
+          },
+          {
+            "global_step": 12,
+            "experiment": 3,
+            "step": 0,
+            "from": "run_alignment_contrast_echo_coin",
+            "to": "streak_recognition_echo_coin"
+          },
+          {
+            "global_step": 13,
+            "experiment": 3,
+            "step": 1,
+            "from": "streak_recognition_echo_coin",
+            "to": "length_blurred_streak_echo_coin"
+          },
+          {
+            "global_step": 14,
+            "experiment": 3,
+            "step": 2,
+            "from": "length_blurred_streak_echo_coin",
+            "to": "half_turnaround_reversal_coin"
+          },
+          {
+            "global_step": 15,
+            "experiment": 3,
+            "step": 3,
+            "from": "half_turnaround_reversal_coin",
+            "to": "sustained_half_turnaround_coin"
+          },
+          {
+            "global_step": 16,
+            "experiment": 3,
+            "step": 4,
+            "from": "sustained_half_turnaround_coin",
+            "to": "rule_free_sustained_turnaround_coin"
+          },
+          {
+            "global_step": 17,
+            "experiment": 3,
+            "step": 5,
+            "from": "rule_free_sustained_turnaround_coin",
+            "to": "iter4_candidate4"
+          }
+        ]
+      },
+      "starting_models_prunable": true,
+      "baseline": {
+        "mean_r": 0.5083223799439122,
+        "per_model": {
+          "falk_konold_dp": 0.483752101465466,
+          "motif_stack": 0.6030637268657821,
+          "finite_experience_occurrence": 0.43815131150048836
+        }
+      },
+      "fitted_baseline": {
+        "mean_r_models": [
+          "falk_konold_dp",
+          "finite_experience_occurrence",
+          "motif_stack"
+        ],
+        "mean_rmse_models": [
+          "falk_konold_dp",
+          "finite_experience_occurrence",
+          "motif_stack"
+        ],
+        "per_model": {
+          "falk_konold_dp": {
+            "pearson_r": 0.4991991608177949,
+            "rmse": 0.12696434269028936,
+            "elpd_loo": -5033.964254609789,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "finite_experience_occurrence": {
+            "pearson_r": 0.4383766378732038,
+            "rmse": 0.12958422752873822,
+            "elpd_loo": -4776.143139187752,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "motif_stack": {
+            "pearson_r": 0.6522170992820039,
+            "rmse": 0.11130872668748318,
+            "elpd_loo": -4847.028859203061,
+            "trusted": true,
+            "n_eval_excluded": 0
+          }
+        },
+        "elpd_best_model": "finite_experience_occurrence",
+        "elpd_best_r": 0.4383766378732038,
+        "elpd_best_rmse": 0.12958422752873822,
+        "elpd_best_reason": null,
+        "mean_r": 0.5299309659910009,
+        "mean_rmse": 0.1226190989688369,
+        "n_responses": 7680
+      },
+      "fitted_baseline_by_experiment": [
+        {
+          "experiment": 1,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": 0.4994707007278228,
+              "rmse": 0.12589443518811586,
+              "elpd_loo": -1609.498294621716,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "finite_experience_occurrence": {
+              "pearson_r": 0.43851524241272416,
+              "rmse": 0.12923509644081047,
+              "elpd_loo": -1425.4845383374868,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.6327203106244897,
+              "rmse": 0.1147337783626897,
+              "elpd_loo": -1468.8563151160674,
+              "trusted": false,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "finite_experience_occurrence",
+          "elpd_best_r": 0.43851524241272416,
+          "elpd_best_rmse": 0.12923509644081047,
+          "elpd_best_reason": null,
+          "mean_r": 0.5235687512550122,
+          "mean_rmse": 0.12328776999720535,
+          "n_responses": 2560
+        },
+        {
+          "experiment": 2,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": 0.49864020958377053,
+              "rmse": 0.12980688117821157,
+              "elpd_loo": -3226.605440726012,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "finite_experience_occurrence": {
+              "pearson_r": 0.4383885800598722,
+              "rmse": 0.12942006626303618,
+              "elpd_loo": -3003.749732252044,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.6556116666652497,
+              "rmse": 0.11200622618386595,
+              "elpd_loo": -3066.760843175443,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "finite_experience_occurrence",
+          "elpd_best_r": 0.4383885800598722,
+          "elpd_best_rmse": 0.12942006626303618,
+          "elpd_best_reason": null,
+          "mean_r": 0.5308801521029641,
+          "mean_rmse": 0.12374439120837123,
+          "n_responses": 5120
+        },
+        {
+          "experiment": 3,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "finite_experience_occurrence",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": 0.4991991608177949,
+              "rmse": 0.12696434269028936,
+              "elpd_loo": -5033.964254609789,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "finite_experience_occurrence": {
+              "pearson_r": 0.4383766378732038,
+              "rmse": 0.12958422752873822,
+              "elpd_loo": -4776.143139187752,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.6522170992820039,
+              "rmse": 0.11130872668748318,
+              "elpd_loo": -4847.028859203061,
+              "trusted": true,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "finite_experience_occurrence",
+          "elpd_best_r": 0.4383766378732038,
+          "elpd_best_rmse": 0.12958422752873822,
+          "elpd_best_reason": null,
+          "mean_r": 0.5299309659910009,
+          "mean_rmse": 0.1226190989688369,
+          "n_responses": 7680
+        }
+      ],
+      "leakage": {
+        "files": [
+          {
+            "path": "experiment1/cognitive_models/balance_plus_triplet_variety_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "variety"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/cognitive_models/chunk_repetition_surprise_occurrence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "repetition"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/cognitive_models/flipwise_contrast_variety_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "flip_diff",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "variety"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment1/cognitive_models/mirrored_chunk_repetition_balance.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "repetition"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/cognitive_models/occurrence_balance_chunk_repetition.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "repetition"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/cognitive_models/occurrence_momentum_balance_penalty.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/cognitive_models/quadruplet_variety_momentum_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "logocc_table",
+              "variety"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/cognitive_models/triplet_variety_momentum_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "logocc_table",
+              "variety"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/balance_plus_triplet_variety_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "variety"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/model_loop/models/chunk_repetition_surprise_occurrence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "repetition"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/model_loop/models/flipwise_contrast_variety_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "flip_diff",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "variety"
+            ],
+            "n_data_cols": 7
+          },
+          {
+            "path": "experiment1/model_loop/models/mirrored_chunk_repetition_balance.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "repetition"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/model_loop/models/occurrence_balance_chunk_repetition.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "repetition"
+            ],
+            "n_data_cols": 6
+          },
+          {
+            "path": "experiment1/model_loop/models/occurrence_momentum_balance_penalty.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/quadruplet_variety_momentum_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "logocc_table",
+              "variety"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment1/model_loop/models/triplet_variety_momentum_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "logocc_table",
+              "variety"
+            ],
+            "n_data_cols": 5
+          },
+          {
+            "path": "experiment2/cognitive_models/alternation_streak_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "alt_streak",
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "variety"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/cognitive_models/convex_self_correction_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "self_correction",
+              "variety"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/cognitive_models/most_lopsided_span_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "three_apart",
+              "variety"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/cognitive_models/opening_repeat_three_apart_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "three_apart",
+              "variety"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/cognitive_models/run_alignment_contrast_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "aligned",
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "three_apart",
+              "variety"
+            ],
+            "n_data_cols": 10
+          },
+          {
+            "path": "experiment2/cognitive_models/self_correcting_balance_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "self_correction",
+              "variety"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/cognitive_models/self_correcting_three_apart_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "self_correction",
+              "three_apart",
+              "variety"
+            ],
+            "n_data_cols": 10
+          },
+          {
+            "path": "experiment2/cognitive_models/streak_recognition_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "variety"
+            ],
+            "n_data_cols": 10
+          },
+          {
+            "path": "experiment2/model_loop/models/alternation_streak_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "alt_streak",
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "variety"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/model_loop/models/convex_self_correction_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "self_correction",
+              "variety"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/model_loop/models/most_lopsided_span_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "three_apart",
+              "variety"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/model_loop/models/opening_repeat_three_apart_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "three_apart",
+              "variety"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/model_loop/models/run_alignment_contrast_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "aligned",
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "three_apart",
+              "variety"
+            ],
+            "n_data_cols": 10
+          },
+          {
+            "path": "experiment2/model_loop/models/self_correcting_balance_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "self_correction",
+              "variety"
+            ],
+            "n_data_cols": 9
+          },
+          {
+            "path": "experiment2/model_loop/models/self_correcting_three_apart_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "opens_repeat",
+              "self_correction",
+              "three_apart",
+              "variety"
+            ],
+            "n_data_cols": 10
+          },
+          {
+            "path": "experiment2/model_loop/models/streak_recognition_echo_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "variety"
+            ],
+            "n_data_cols": 10
+          },
+          {
+            "path": "experiment3/cognitive_models/dominant_pair_block_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "dominant_pair",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment3/cognitive_models/inner_loop_model.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/cognitive_models/rule_free_dominant_pair_block_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "dominant_pair",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment3/cognitive_models/rule_free_sustained_turnaround_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/cognitive_models/soft_jnd_rule_free_turnaround_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/cognitive_models/sustained_copy_and_turnaround_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "copy_stretch",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/cognitive_models/switch_contrast_popout_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "switch_contrast",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment3/cognitive_models/tally_correction_rate_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "correction",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/model_loop/models/dominant_pair_block_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "dominant_pair",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment3/model_loop/models/iter4_candidate4.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/model_loop/models/rule_free_dominant_pair_block_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "dominant_pair",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment3/model_loop/models/rule_free_sustained_turnaround_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/model_loop/models/soft_jnd_rule_free_turnaround_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/model_loop/models/sustained_copy_and_turnaround_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "copy_stretch",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 12
+          },
+          {
+            "path": "experiment3/model_loop/models/switch_contrast_popout_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "imbalance",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "switch_contrast",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 13
+          },
+          {
+            "path": "experiment3/model_loop/models/tally_correction_rate_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "correction",
+              "echo",
+              "idx_a",
+              "idx_b",
+              "log_len_rel",
+              "logocc_table",
+              "long_streaks",
+              "opens_repeat",
+              "three_apart",
+              "turnaround",
+              "variety"
+            ],
+            "n_data_cols": 12
+          }
+        ],
+        "any_identical": false,
+        "any_mention": false,
+        "any_value_mention": false,
+        "any_gt_named": false,
+        "csv_generating_model_files": [],
+        "any_csv_generating_model": false,
+        "manifest_gt_named_files": [],
+        "any_manifest_gt_named": false,
+        "max_data_cols": 13
+      },
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "occurrence_momentum_balance_penalty",
+            "triplet_variety_momentum_coin",
+            "balance_plus_triplet_variety_coin",
+            "occurrence_balance_chunk_repetition",
+            "quadruplet_variety_momentum_coin",
+            "mirrored_chunk_repetition_balance",
+            "chunk_repetition_surprise_occurrence",
+            "flipwise_contrast_variety_coin"
+          ]
+        },
+        {
+          "experiment": 2,
+          "manifest_models": [
+            "alternation_streak_echo_coin",
+            "self_correcting_balance_echo_coin",
+            "opening_repeat_three_apart_echo_coin",
+            "run_alignment_contrast_echo_coin",
+            "most_lopsided_span_echo_coin",
+            "streak_recognition_echo_coin",
+            "self_correcting_three_apart_echo_coin",
+            "convex_self_correction_echo_coin"
+          ]
+        },
+        {
+          "experiment": 3,
+          "manifest_models": [
+            "switch_contrast_popout_coin",
+            "dominant_pair_block_coin",
+            "rule_free_sustained_turnaround_coin",
+            "sustained_copy_and_turnaround_coin",
+            "tally_correction_rate_coin",
+            "soft_jnd_rule_free_turnaround_coin",
+            "inner_loop_model",
+            "rule_free_dominant_pair_block_coin"
+          ]
+        }
+      ]
+    }
+  ],
+  "agent": {
+    "backend": "claude",
+    "model": "claude-opus-5-5",
+    "claude_auth": "api"
+  }
+}

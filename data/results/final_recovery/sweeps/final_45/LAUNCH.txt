@@ -1,0 +1,9 @@
+submitted setup job:    46444855
+submitted array job:    46444856 (1-8%8; 2 repeats x 4 GTs)
+submitted retry job:    46444857 (round 1 of 2)
+submitted analysis job: 46444858
+
+watch with:  squeue --me
+logs in:     /scratch/users/benpry/auto-psych/final_45/slurm_logs
+results in:  /scratch/users/benpry/auto-psych/final_45/test_retest.{json,csv,png}
+BASE_SEED=103 -> run1 seed 104, run2 seed 105; SBATCH_TIMELIMIT=2-00:00:00 (final_1/23 had 1 day)

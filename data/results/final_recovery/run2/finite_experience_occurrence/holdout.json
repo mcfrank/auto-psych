@@ -1,0 +1,1412 @@
+{
+  "project_id": "subjective_randomness",
+  "seed_models_dir": "/scratch/users/benpry/auto-psych/final_23/harness_repo/src/subjective_randomness/pymc_model_families",
+  "n_experiments": 3,
+  "n_participants": 40,
+  "inner_loop": {
+    "max_iterations": 5,
+    "candidate_count": 6,
+    "novelty_rmse_threshold": 0.002,
+    "n_critique_proposals": 8,
+    "starting_models_prunable": true
+  },
+  "fit_kwargs": {
+    "draws": 1000,
+    "tune": 1000,
+    "chains": 4,
+    "target_accept": 0.8
+  },
+  "seed": 102,
+  "eval_pool": {
+    "n_pairs": 500,
+    "lengths": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8
+    ],
+    "seed": 11,
+    "min_remaining": 100,
+    "exhaustive": true,
+    "predict_max_draws": 500
+  },
+  "metrics_version": 2,
+  "gt_runs": [
+    {
+      "gt_model": "finite_experience_occurrence",
+      "params": {
+        "beta": 4.0,
+        "side_bias": 0.0
+      },
+      "run_root": "/scratch/users/benpry/auto-psych/agent_trees/3e14d325691b3cc9/repo/_runs/cell_1",
+      "n_eval_stimuli": 43244,
+      "n_eval_dropped": 191,
+      "trajectory": [
+        {
+          "experiment": 1,
+          "step": 0,
+          "iteration": null,
+          "global_step": 0,
+          "best_model": "local_representativeness",
+          "pearson_r": 0.5330636547479368,
+          "rmse": 0.08164128581163271,
+          "kl_regret": 0.014614079732424803,
+          "bias": -0.003986366009452759,
+          "calib_slope": 0.6606933768072669,
+          "calib_intercept": 0.16567193081519516,
+          "pearson_r_bma": 0.5330636547479368,
+          "rmse_bma": 0.08164128581163271,
+          "kl_regret_bma": 0.014614079732424803,
+          "bias_bma": -0.003986366009452759,
+          "calib_slope_bma": 0.6606933768072669,
+          "calib_intercept_bma": 0.16567193081519516,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": false
+        },
+        {
+          "experiment": 1,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 1,
+          "best_model": "periodic_template_motif_stack",
+          "pearson_r": 0.9054740654220236,
+          "rmse": 0.032668217435862304,
+          "kl_regret": 0.0025396714672399363,
+          "bias": -0.005708251335348226,
+          "calib_slope": 0.9052909473834848,
+          "calib_intercept": 0.04164766650827528,
+          "pearson_r_bma": 0.9061534129842861,
+          "rmse_bma": 0.03251671366359956,
+          "kl_regret_bma": 0.0025231225963820722,
+          "bias_bma": -0.005689189672954553,
+          "calib_slope_bma": 0.9039822012430382,
+          "calib_intercept_bma": 0.04232112046995734,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "periodic_template_motif_stack"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 2,
+          "best_model": "sublinear_evidence_regularity",
+          "pearson_r": 0.7219261739339513,
+          "rmse": 0.0710372482319347,
+          "kl_regret": 0.010949252103788679,
+          "bias": 2.4122008685789884e-05,
+          "calib_slope": 1.0017176297823693,
+          "calib_intercept": -0.0008347181191845632,
+          "pearson_r_bma": 0.7229321983507201,
+          "rmse_bma": 0.07075210118712953,
+          "kl_regret_bma": 0.01086074608557953,
+          "bias_bma": -4.227012121253678e-06,
+          "calib_slope_bma": 1.0006083850008751,
+          "calib_intercept_bma": -0.0003084284514006663,
+          "n_eval_excluded": 1,
+          "eval_excluded_models": [
+            "periodic_template_motif_stack"
+          ],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 3,
+          "best_model": "cycle_count_template_evidence",
+          "pearson_r": 0.9217141003050229,
+          "rmse": 0.032565773476741944,
+          "kl_regret": 0.00221259557908231,
+          "bias": 1.8367463968698038e-05,
+          "calib_slope": 1.041368275205526,
+          "calib_intercept": -0.020666377937998415,
+          "pearson_r_bma": 0.919449089898484,
+          "rmse_bma": 0.033126108060378315,
+          "kl_regret_bma": 0.0023013339747582156,
+          "bias_bma": -0.000976875241010465,
+          "calib_slope_bma": 1.0419145890884325,
+          "calib_intercept_bma": -0.0219347856110923,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 4,
+          "best_model": "switch_prone_template_evidence",
+          "pearson_r": 0.9383896749154991,
+          "rmse": 0.02810946104296928,
+          "kl_regret": 0.0016525201182165923,
+          "bias": -6.046831282428395e-06,
+          "calib_slope": 1.0287324962275253,
+          "calib_intercept": -0.014372717094343068,
+          "pearson_r_bma": 0.9389943977081138,
+          "rmse_bma": 0.02802413867790717,
+          "kl_regret_bma": 0.0016451849473723646,
+          "bias_bma": -0.00021038682231938567,
+          "calib_slope_bma": 1.0307114133252182,
+          "calib_intercept_bma": -0.015566544709265995,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 1,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 5,
+          "best_model": "run_capped_switch_prone_evidence",
+          "pearson_r": 0.8933216819364642,
+          "rmse": 0.03833134610153486,
+          "kl_regret": 0.003041133587974361,
+          "bias": -2.6149245557913094e-05,
+          "calib_slope": 1.0283049734239584,
+          "calib_intercept": -0.0141790518254995,
+          "pearson_r_bma": 0.9368297264133223,
+          "rmse_bma": 0.028305018583130285,
+          "kl_regret_bma": 0.0016761147630959775,
+          "bias_bma": -4.535836863333469e-05,
+          "calib_slope_bma": 1.0228357256788012,
+          "calib_intercept_bma": -0.011463556719626455,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 0,
+          "iteration": null,
+          "global_step": 6,
+          "best_model": "complement_copy_template_evidence",
+          "pearson_r": 0.9410912082050945,
+          "rmse": 0.027549252203485888,
+          "kl_regret": 0.0015930970627970919,
+          "bias": -1.0026447978857425e-06,
+          "calib_slope": 1.0323802960539776,
+          "calib_intercept": -0.016191626416015126,
+          "pearson_r_bma": 0.9459956012583188,
+          "rmse_bma": 0.025970290511689562,
+          "kl_regret_bma": 0.0014141622878206391,
+          "bias_bma": -3.0187841404516014e-06,
+          "calib_slope_bma": 1.0222669955283312,
+          "calib_intercept_bma": -0.011136843703888233,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 7,
+          "best_model": "alternation_prototype_template",
+          "pearson_r": 0.9498263631797293,
+          "rmse": 0.02444829076106697,
+          "kl_regret": 0.0012464858698702907,
+          "bias": 3.4487861803219447e-07,
+          "calib_slope": 1.0034433153006186,
+          "calib_intercept": -0.0017213633622533697,
+          "pearson_r_bma": 0.9534825247266894,
+          "rmse_bma": 0.02384825791041453,
+          "kl_regret_bma": 0.0011979248508130972,
+          "bias_bma": 1.2358944464397861e-06,
+          "calib_slope_bma": 1.0179802149077264,
+          "calib_intercept_bma": -0.008989135731907738,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 8,
+          "best_model": "primacy_weighted_template_evidence",
+          "pearson_r": 0.9461756628490835,
+          "rmse": 0.02543179827603186,
+          "kl_regret": 0.001348054263140673,
+          "bias": 7.882198315738097e-06,
+          "calib_slope": 1.0048132208893954,
+          "calib_intercept": -0.0023987989641435226,
+          "pearson_r_bma": 0.9552080901889836,
+          "rmse_bma": 0.023232438083333293,
+          "kl_regret_bma": 0.0011397155255015163,
+          "bias_bma": 4.421727268824052e-06,
+          "calib_slope_bma": 1.0127405526046338,
+          "calib_intercept_bma": -0.006366041764330088,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 9,
+          "best_model": "primacy_weighted_template_evidence",
+          "pearson_r": 0.9461756628490835,
+          "rmse": 0.02543179827603186,
+          "kl_regret": 0.001348054263140673,
+          "bias": 7.882198315738097e-06,
+          "calib_slope": 1.0048132208893954,
+          "calib_intercept": -0.0023987989641435226,
+          "pearson_r_bma": 0.9548002552750915,
+          "rmse_bma": 0.02331650193176133,
+          "kl_regret_bma": 0.001146388631608345,
+          "bias_bma": 5.75912074095362e-06,
+          "calib_slope_bma": 1.0116270276901953,
+          "calib_intercept_bma": -0.005807925553286353,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 10,
+          "best_model": "primacy_weighted_template_evidence",
+          "pearson_r": 0.9461756628490835,
+          "rmse": 0.02543179827603186,
+          "kl_regret": 0.001348054263140673,
+          "bias": 7.882198315738097e-06,
+          "calib_slope": 1.0048132208893954,
+          "calib_intercept": -0.0023987989641435226,
+          "pearson_r_bma": 0.9529919327154247,
+          "rmse_bma": 0.02373323099723431,
+          "kl_regret_bma": 0.00118127189888134,
+          "bias_bma": 6.594157335633164e-06,
+          "calib_slope_bma": 1.0085871975387022,
+          "calib_intercept_bma": -0.00428713077854781,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 2,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 11,
+          "best_model": "primacy_tally_local_switches",
+          "pearson_r": 0.9435299871178019,
+          "rmse": 0.026160667924920344,
+          "kl_regret": 0.0014260669992125633,
+          "bias": 1.2822257896307759e-05,
+          "calib_slope": 1.0068787697515196,
+          "calib_intercept": -0.003426663683493092,
+          "pearson_r_bma": 0.9516271049953002,
+          "rmse_bma": 0.024078788378288148,
+          "kl_regret_bma": 0.0012141627241668716,
+          "bias_bma": 7.706930977993402e-06,
+          "calib_slope_bma": 1.0077185283779118,
+          "calib_intercept_bma": -0.003851670661676243,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 0,
+          "iteration": null,
+          "global_step": 12,
+          "best_model": "primacy_mirror_template_evidence",
+          "pearson_r": 0.9638241599899096,
+          "rmse": 0.02024690974424924,
+          "kl_regret": 0.0008615576618557979,
+          "bias": 2.241323171345716e-06,
+          "calib_slope": 0.9887543643200011,
+          "calib_intercept": 0.005625224388536854,
+          "pearson_r_bma": 0.9649576640609748,
+          "rmse_bma": 0.01980468813622471,
+          "kl_regret_bma": 0.0008243610479035057,
+          "bias_bma": 5.152098880335323e-06,
+          "calib_slope_bma": 0.982201142595196,
+          "calib_intercept_bma": 0.008904842309196526,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 1,
+          "iteration": 0,
+          "global_step": 13,
+          "best_model": "modest_bias_mirror_template",
+          "pearson_r": 0.9676403761123132,
+          "rmse": 0.019143706691790118,
+          "kl_regret": 0.0007718940572389018,
+          "bias": 4.352394987233862e-06,
+          "calib_slope": 0.991754685882293,
+          "calib_intercept": 0.004127130597285478,
+          "pearson_r_bma": 0.9668600864526682,
+          "rmse_bma": 0.01928859338048114,
+          "kl_regret_bma": 0.0007839112584115661,
+          "bias_bma": 5.143680372196405e-06,
+          "calib_slope_bma": 0.9858779331791393,
+          "calib_intercept_bma": 0.007066384577842588,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 2,
+          "iteration": 1,
+          "global_step": 14,
+          "best_model": "serial_position_curve_evidence",
+          "pearson_r": 0.9692981600335941,
+          "rmse": 0.018744968815681995,
+          "kl_regret": 0.0007414934009842658,
+          "bias": 3.861691709645627e-06,
+          "calib_slope": 0.998753623943003,
+          "calib_intercept": 0.00062706803246243,
+          "pearson_r_bma": 0.9691283974800085,
+          "rmse_bma": 0.01864392800900084,
+          "kl_regret_bma": 0.0007349556406345148,
+          "bias_bma": 4.638882503883876e-06,
+          "calib_slope_bma": 0.9896862390988305,
+          "calib_intercept_bma": 0.005161670866978718,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 3,
+          "iteration": 2,
+          "global_step": 15,
+          "best_model": "serial_position_curve_evidence",
+          "pearson_r": 0.9692981600335941,
+          "rmse": 0.018744968815681995,
+          "kl_regret": 0.0007414934009842658,
+          "bias": 3.861691709645627e-06,
+          "calib_slope": 0.998753623943003,
+          "calib_intercept": 0.00062706803246243,
+          "pearson_r_bma": 0.9695911432089093,
+          "rmse_bma": 0.018535530404319225,
+          "kl_regret_bma": 0.000725877750669408,
+          "bias_bma": 4.217881832982654e-06,
+          "calib_slope_bma": 0.9920831565986153,
+          "calib_intercept_bma": 0.003962755899947101,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": false,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 4,
+          "iteration": 3,
+          "global_step": 16,
+          "best_model": "serial_position_memory_coin",
+          "pearson_r": 0.9673985168323457,
+          "rmse": 0.019190748110204964,
+          "kl_regret": 0.0007833624181527889,
+          "bias": 8.488996351771746e-06,
+          "calib_slope": 0.9900900808848534,
+          "calib_intercept": 0.0049635941544105555,
+          "pearson_r_bma": 0.9702167483782277,
+          "rmse_bma": 0.018323699836537255,
+          "kl_regret_bma": 0.0007106775440546257,
+          "bias_bma": 4.6283309072194e-06,
+          "calib_slope_bma": 0.9913666580190856,
+          "calib_intercept_bma": 0.004321426165869224,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        },
+        {
+          "experiment": 3,
+          "step": 5,
+          "iteration": 4,
+          "global_step": 17,
+          "best_model": "opening_anchored_bias_coin",
+          "pearson_r": 0.9526886290526053,
+          "rmse": 0.023567930636331596,
+          "kl_regret": 0.0011607350909728315,
+          "bias": 9.58361337065431e-06,
+          "calib_slope": 0.9984526395532606,
+          "calib_intercept": 0.0007832865711774328,
+          "pearson_r_bma": 0.9701685013651227,
+          "rmse_bma": 0.018359261535337026,
+          "kl_regret_bma": 0.0007155329397898723,
+          "bias_bma": 6.633310111444011e-06,
+          "calib_slope_bma": 0.9926133144796975,
+          "calib_intercept_bma": 0.0037000845983935493,
+          "n_eval_excluded": 0,
+          "eval_excluded_models": [],
+          "incumbent_changed": true,
+          "incumbent_is_discovered": true
+        }
+      ],
+      "incumbent": {
+        "starting_models": [
+          "falk_konold_dp",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "n_steps": 18,
+        "n_incumbent_changes": 14,
+        "n_steps_discovered_incumbent": 17,
+        "final_incumbent": "opening_anchored_bias_coin",
+        "changes": [
+          {
+            "global_step": 1,
+            "experiment": 1,
+            "step": 1,
+            "from": "local_representativeness",
+            "to": "periodic_template_motif_stack"
+          },
+          {
+            "global_step": 2,
+            "experiment": 1,
+            "step": 2,
+            "from": "periodic_template_motif_stack",
+            "to": "sublinear_evidence_regularity"
+          },
+          {
+            "global_step": 3,
+            "experiment": 1,
+            "step": 3,
+            "from": "sublinear_evidence_regularity",
+            "to": "cycle_count_template_evidence"
+          },
+          {
+            "global_step": 4,
+            "experiment": 1,
+            "step": 4,
+            "from": "cycle_count_template_evidence",
+            "to": "switch_prone_template_evidence"
+          },
+          {
+            "global_step": 5,
+            "experiment": 1,
+            "step": 5,
+            "from": "switch_prone_template_evidence",
+            "to": "run_capped_switch_prone_evidence"
+          },
+          {
+            "global_step": 6,
+            "experiment": 2,
+            "step": 0,
+            "from": "run_capped_switch_prone_evidence",
+            "to": "complement_copy_template_evidence"
+          },
+          {
+            "global_step": 7,
+            "experiment": 2,
+            "step": 1,
+            "from": "complement_copy_template_evidence",
+            "to": "alternation_prototype_template"
+          },
+          {
+            "global_step": 8,
+            "experiment": 2,
+            "step": 2,
+            "from": "alternation_prototype_template",
+            "to": "primacy_weighted_template_evidence"
+          },
+          {
+            "global_step": 11,
+            "experiment": 2,
+            "step": 5,
+            "from": "primacy_weighted_template_evidence",
+            "to": "primacy_tally_local_switches"
+          },
+          {
+            "global_step": 12,
+            "experiment": 3,
+            "step": 0,
+            "from": "primacy_tally_local_switches",
+            "to": "primacy_mirror_template_evidence"
+          },
+          {
+            "global_step": 13,
+            "experiment": 3,
+            "step": 1,
+            "from": "primacy_mirror_template_evidence",
+            "to": "modest_bias_mirror_template"
+          },
+          {
+            "global_step": 14,
+            "experiment": 3,
+            "step": 2,
+            "from": "modest_bias_mirror_template",
+            "to": "serial_position_curve_evidence"
+          },
+          {
+            "global_step": 16,
+            "experiment": 3,
+            "step": 4,
+            "from": "serial_position_curve_evidence",
+            "to": "serial_position_memory_coin"
+          },
+          {
+            "global_step": 17,
+            "experiment": 3,
+            "step": 5,
+            "from": "serial_position_memory_coin",
+            "to": "opening_anchored_bias_coin"
+          }
+        ]
+      },
+      "starting_models_prunable": true,
+      "baseline": {
+        "mean_r": 0.269259327032799,
+        "per_model": {
+          "falk_konold_dp": 0.15919050723069125,
+          "motif_stack": 0.20569528595367997,
+          "local_representativeness": 0.4428921879140257
+        }
+      },
+      "fitted_baseline": {
+        "mean_r_models": [
+          "falk_konold_dp",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "mean_rmse_models": [
+          "falk_konold_dp",
+          "local_representativeness",
+          "motif_stack"
+        ],
+        "per_model": {
+          "falk_konold_dp": {
+            "pearson_r": 0.20268817074532794,
+            "rmse": 0.08895370635059079,
+            "elpd_loo": -5401.389471743021,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "local_representativeness": {
+            "pearson_r": 0.5538490982700965,
+            "rmse": 0.06351278528894379,
+            "elpd_loo": -5251.2539354814835,
+            "trusted": true,
+            "n_eval_excluded": 0
+          },
+          "motif_stack": {
+            "pearson_r": 0.4728847796281183,
+            "rmse": 0.07113612042674909,
+            "elpd_loo": -5255.824998251354,
+            "trusted": false,
+            "n_eval_excluded": 0
+          }
+        },
+        "elpd_best_model": "local_representativeness",
+        "elpd_best_r": 0.5538490982700965,
+        "elpd_best_rmse": 0.06351278528894379,
+        "elpd_best_reason": null,
+        "mean_r": 0.4098073495478476,
+        "mean_rmse": 0.07453420402209456,
+        "n_responses": 7680
+      },
+      "fitted_baseline_by_experiment": [
+        {
+          "experiment": 1,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": 0.20264438607330895,
+              "rmse": 0.08953209635732776,
+              "elpd_loo": -1785.4588884978393,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": 0.5330636547479368,
+              "rmse": 0.08164128581163271,
+              "elpd_loo": -1668.8487223056798,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.43991069687260526,
+              "rmse": 0.07275574599988616,
+              "elpd_loo": -1713.7202566075064,
+              "trusted": false,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "local_representativeness",
+          "elpd_best_r": 0.5330636547479368,
+          "elpd_best_rmse": 0.08164128581163271,
+          "elpd_best_reason": null,
+          "mean_r": 0.391872912564617,
+          "mean_rmse": 0.08130970938961554,
+          "n_responses": 2560
+        },
+        {
+          "experiment": 2,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": 0.20268891741060474,
+              "rmse": 0.08926646927033742,
+              "elpd_loo": -3624.8275767912683,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": 0.5464873148255858,
+              "rmse": 0.06861131186910757,
+              "elpd_loo": -3454.5271342897545,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.4696698832659143,
+              "rmse": 0.07155165413029983,
+              "elpd_loo": -3480.6282626421134,
+              "trusted": false,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "local_representativeness",
+          "elpd_best_r": 0.5464873148255858,
+          "elpd_best_rmse": 0.06861131186910757,
+          "elpd_best_reason": null,
+          "mean_r": 0.4062820385007016,
+          "mean_rmse": 0.07647647842324828,
+          "n_responses": 5120
+        },
+        {
+          "experiment": 3,
+          "mean_r_models": [
+            "falk_konold_dp",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "mean_rmse_models": [
+            "falk_konold_dp",
+            "local_representativeness",
+            "motif_stack"
+          ],
+          "per_model": {
+            "falk_konold_dp": {
+              "pearson_r": 0.20268817074532794,
+              "rmse": 0.08895370635059079,
+              "elpd_loo": -5401.389471743021,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "local_representativeness": {
+              "pearson_r": 0.5538490982700965,
+              "rmse": 0.06351278528894379,
+              "elpd_loo": -5251.2539354814835,
+              "trusted": true,
+              "n_eval_excluded": 0
+            },
+            "motif_stack": {
+              "pearson_r": 0.4728847796281183,
+              "rmse": 0.07113612042674909,
+              "elpd_loo": -5255.824998251354,
+              "trusted": false,
+              "n_eval_excluded": 0
+            }
+          },
+          "elpd_best_model": "local_representativeness",
+          "elpd_best_r": 0.5538490982700965,
+          "elpd_best_rmse": 0.06351278528894379,
+          "elpd_best_reason": null,
+          "mean_r": 0.4098073495478476,
+          "mean_rmse": 0.07453420402209456,
+          "n_responses": 7680
+        }
+      ],
+      "leakage": {
+        "files": [
+          {
+            "path": "experiment1/cognitive_models/balance_blind_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/cognitive_models/balanced_faker_generator_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/cognitive_models/complement_copy_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/cognitive_models/cycle_count_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/cognitive_models/memory_span_balance_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/cognitive_models/order_only_regularity_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/cognitive_models/run_capped_switch_prone_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/cognitive_models/switch_prone_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/model_loop/models/balance_blind_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/model_loop/models/balanced_faker_generator_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/model_loop/models/complement_copy_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/model_loop/models/cycle_count_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/model_loop/models/memory_span_balance_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/model_loop/models/order_only_regularity_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/model_loop/models/run_capped_switch_prone_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment1/model_loop/models/switch_prone_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment2/cognitive_models/alternation_prototype_template.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment2/cognitive_models/fair_coin_posterior_belief.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "seq_table"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment2/cognitive_models/per_flip_primacy_decay.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/cognitive_models/primacy_mirror_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/cognitive_models/primacy_modest_bias_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/cognitive_models/primacy_tally_fair_belief.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/cognitive_models/primacy_tally_local_switches.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/cognitive_models/primacy_weighted_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/model_loop/models/alternation_prototype_template.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left"
+            ],
+            "n_data_cols": 1
+          },
+          {
+            "path": "experiment2/model_loop/models/fair_coin_posterior_belief.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b",
+              "seq_table"
+            ],
+            "n_data_cols": 4
+          },
+          {
+            "path": "experiment2/model_loop/models/per_flip_primacy_decay.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/model_loop/models/primacy_mirror_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/model_loop/models/primacy_modest_bias_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/model_loop/models/primacy_tally_fair_belief.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/model_loop/models/primacy_tally_local_switches.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment2/model_loop/models/primacy_weighted_template_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/cognitive_models/modest_bias_mirror_template.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/cognitive_models/opening_anchored_bias_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/cognitive_models/path_integrated_tally_bias.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/cognitive_models/relational_memory_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/cognitive_models/run_averse_faker_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/cognitive_models/run_capped_faker_serial_position.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/cognitive_models/serial_position_curve_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/cognitive_models/serial_position_memory_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/model_loop/models/modest_bias_mirror_template.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/model_loop/models/opening_anchored_bias_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/model_loop/models/path_integrated_tally_bias.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/model_loop/models/relational_memory_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/model_loop/models/run_averse_faker_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/model_loop/models/run_capped_faker_serial_position.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/model_loop/models/serial_position_curve_evidence.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          },
+          {
+            "path": "experiment3/model_loop/models/serial_position_memory_coin.py",
+            "identical": false,
+            "mentions_gt_params": false,
+            "mentions_gt_values": false,
+            "gt_named": false,
+            "data_columns": [
+              "chose_left",
+              "idx_a",
+              "idx_b"
+            ],
+            "n_data_cols": 3
+          }
+        ],
+        "any_identical": false,
+        "any_mention": false,
+        "any_value_mention": false,
+        "any_gt_named": false,
+        "csv_generating_model_files": [],
+        "any_csv_generating_model": false,
+        "manifest_gt_named_files": [],
+        "any_manifest_gt_named": false,
+        "max_data_cols": 4
+      },
+      "experiments": [
+        {
+          "experiment": 1,
+          "manifest_models": [
+            "cycle_count_template_evidence",
+            "switch_prone_template_evidence",
+            "balance_blind_template_evidence",
+            "order_only_regularity_evidence",
+            "memory_span_balance_evidence",
+            "complement_copy_template_evidence",
+            "run_capped_switch_prone_evidence",
+            "balanced_faker_generator_evidence"
+          ]
+        },
+        {
+          "experiment": 2,
+          "manifest_models": [
+            "alternation_prototype_template",
+            "fair_coin_posterior_belief",
+            "primacy_weighted_template_evidence",
+            "primacy_modest_bias_evidence",
+            "primacy_mirror_template_evidence",
+            "primacy_tally_local_switches",
+            "per_flip_primacy_decay",
+            "primacy_tally_fair_belief"
+          ]
+        },
+        {
+          "experiment": 3,
+          "manifest_models": [
+            "modest_bias_mirror_template",
+            "serial_position_curve_evidence",
+            "run_averse_faker_evidence",
+            "run_capped_faker_serial_position",
+            "serial_position_memory_coin",
+            "path_integrated_tally_bias",
+            "relational_memory_coin",
+            "opening_anchored_bias_coin"
+          ]
+        }
+      ]
+    }
+  ],
+  "agent": {
+    "backend": "claude",
+    "model": "claude-opus-5-5",
+    "claude_auth": "api"
+  }
+}

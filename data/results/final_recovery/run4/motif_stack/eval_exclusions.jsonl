@@ -1,0 +1,3 @@
+{"scored": "trajectory", "experiment": 3, "step": 2, "best_model": "swapped_image_suspicion", "models": ["half_split_drift_coverage"], "n_excluded": 1, "n_pool": 43245, "pairs": [{"sequence_a": "H", "sequence_b": "T"}]}
+{"scored": "trajectory", "experiment": 3, "step": 3, "best_model": "primacy_streaks_swapped_image", "models": ["half_split_drift_coverage"], "n_excluded": 1, "n_pool": 43245, "pairs": [{"sequence_a": "H", "sequence_b": "T"}]}
+{"scored": "trajectory", "experiment": 3, "step": 4, "best_model": "alternation_exempt_swapped_image", "models": ["half_split_drift_coverage"], "n_excluded": 1, "n_pool": 43245, "pairs": [{"sequence_a": "H", "sequence_b": "T"}]}
