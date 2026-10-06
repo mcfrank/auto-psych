@@ -60,6 +60,39 @@ def test_exact_trials_are_exempt_and_counted():
     assert diag.unreliable is False
 
 
+def _float32_idata_with_rounding_noise(n_obs=200, n_exact=40):
+    """float32 log-likelihoods (numpyro/memo fits) where ``n_exact`` trials are
+    constant up to one float32 unit in the last place, as a constant
+    probability recomputed in float32 at every draw comes out."""
+    import arviz as az
+
+    idata = _idata(n_obs=n_obs, n_exact=0)
+    arr = idata.log_likelihood["response"].values.astype(np.float32)
+    ulp = np.spacing(np.float32(np.log(0.25)))
+    rng = np.random.default_rng(1)
+    noise = rng.integers(0, 2, size=arr[:, :, :n_exact].shape).astype(np.float32) * ulp
+    arr[:, :, :n_exact] = np.float32(np.log(0.25)) + noise
+    idata.log_likelihood["response"] = (("chain", "draw", "obs"), arr)
+    return idata
+
+
+def test_float32_rounding_noise_does_not_make_a_constant_trial_inexact():
+    diag = lr.loo_diagnostics(_float32_idata_with_rounding_noise())
+    assert diag.n_exact == 40
+    assert diag.n_bad_k == 0
+    assert diag.unreliable is False
+
+
+def test_float64_exactness_tolerance_is_unchanged():
+    """A float64 trial varying by 1e-7 nats (more than the 1e-8 tolerance) is
+    not exact: precision-scaling must not loosen the float64 verdict."""
+    idata = _idata(n_exact=0)
+    arr = idata.log_likelihood["response"].values.copy()
+    arr[:, :, :5] = -1.0 + 1e-7 * np.random.default_rng(2).random(arr[:, :, :5].shape)
+    idata.log_likelihood["response"] = (("chain", "draw", "obs"), arr)
+    assert lr.loo_diagnostics(idata).n_exact == 0
+
+
 def test_heavy_tailed_trials_above_tolerance_are_unreliable():
     idata = _idata(n_heavy=20)  # 10 % of trials, tolerance is 1 %
 

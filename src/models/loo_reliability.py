@@ -48,6 +48,13 @@ DEFAULT_BAD_K_TOLERANCE = 0.01
 # absorbs floating-point noise, never a real posterior spread.
 EXACT_TRIAL_LOGLIK_SPREAD = 1e-8
 
+# ... or by no more than this many units in the last place of the stored
+# precision. float32 log-likelihoods (numpyro fits of memo models, which
+# compute in float32) of a constant probability recomputed at every draw differ
+# by one float32 ulp (~1.2e-7 nats near log(1/4)), over the 1e-8 above; for
+# float64 this bound is ~1e-15 per nat and never exceeds it.
+EXACT_TRIAL_ULPS = 8
+
 
 @dataclass(frozen=True)
 class LooDiagnostics:
@@ -86,6 +93,14 @@ def _pointwise_log_likelihood(idata: Any) -> np.ndarray:
     arr = np.asarray(idata.log_likelihood[names[0]].values, dtype="float64")
     n_chains, n_draws = arr.shape[0], arr.shape[1]
     return arr.reshape(n_chains * n_draws, -1)
+
+
+def _exact_trial_tolerance(idata: Any, log_lik: np.ndarray) -> np.ndarray:
+    """Per-trial spread at or below which a trial's log-likelihood is constant."""
+    stored = idata.log_likelihood[list(idata.log_likelihood.data_vars)[0]].dtype
+    eps = np.finfo(stored).eps if np.issubdtype(stored, np.floating) else 0.0
+    rounding = EXACT_TRIAL_ULPS * eps * np.maximum(1.0, np.abs(log_lik).max(axis=0))
+    return np.maximum(EXACT_TRIAL_LOGLIK_SPREAD, rounding)
 
 
 def loo_diagnostics(
@@ -128,7 +143,7 @@ def loo_diagnostics(
         )
 
     spread = log_lik.max(axis=0) - log_lik.min(axis=0)
-    exact = spread <= EXACT_TRIAL_LOGLIK_SPREAD
+    exact = spread <= _exact_trial_tolerance(idata, log_lik)
     good_k = float(loo.good_k)
     # ``~(k <= good_k)`` so that inf and nan count as bad unless the trial is exact.
     bad = ~exact & ~(pareto_k <= good_k)
