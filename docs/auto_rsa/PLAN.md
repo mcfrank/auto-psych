@@ -75,13 +75,17 @@ probability 0 to objects the word is false of, and people do choose them).
 
 | Phase | Work | Where | Status |
 |---|---|---|---|
-| 0 | `src/rsa/` core (contexts, contract, numpyro fit) | cloud | **done** (be44848) |
-| 0 | Canonical trial-level pragmods data (`pragmods_trials.csv`) reproducing the paper's counts | cloud | in progress |
-| 0 | Reproduce the paper's comparison: depth 0/1/2 x prior placement x alpha, by LOO on trial data (the paper used r over 57 cells: r ~ .95 at depth >= 2, alpha-depth tradeoff) | cloud | next |
-| 1 | `Domain` + `ModelBackend` seams. `p_left` becomes `p_choice` with K=2 first. Subjective randomness keeps every test green | cloud | |
-| 2 | Inner loop on the fixed pragmods data: memo primer + cheat sheet, prompts, import gate for jax/memo, `check_candidate` for memo, novelty gate on choice-probability vectors over a context pool | cloud (small runs with `GOOGLE_API_KEY`); Sherlock for real runs | |
-| 3 | Outer loop, simulated: enumerable context pool, K-way EIG (Monte Carlo over outcomes), multi-trial designs, recovery against held-out RSA variants (including "impossible" ones) | Sherlock | |
-| 4 | Live: jsPsych port of the pragmods display (stacked PNGs from a JSON spec), Firestore schema, Prolific pilot | local session | |
+| 0 | `src/rsa/` core (contexts, contract, numpyro fit) | cloud | **done** |
+| 0 | Canonical trial-level pragmods data (`pragmods_trials.csv`) reproducing the paper's counts | cloud | **done** (two models.csv cells are mislabelled in pragmods itself) |
+| 0 | Seed comparison on all 6,703 trials, by LOO plus r and RMSE over cells (`data/rsa/seed_comparison_all`) | cloud | **done**. salience-L1 best; L2 beats L1 by ~13 nats; ~12% lapse; E6 valence unexplained |
+| 0 | Report page: standing, RMSE by experiment, small multiples, loop timeline (`src/rsa/report.py`) | cloud | **done** |
+| 2 | Parallel RSA inner loop `src/rsa/loop/` (user decision 2026-10-06: a parallel loop reusing the domain-neutral parts, not a backend seam in main's files): code gate, cached time-limited fits, admission gates, novelty pool, briefs and memo primer, self-check, orchestrator, CLI | cloud | **done**, tested with a scripted fake agent |
+| 2 | Smoke test with real Gemini agents (`HANDOFF_smoke_test.md`) | new cloud session | next |
+| 2 | Production inner loop on Sherlock (sandboxed agents) | local session | after the smoke test |
+| 2 | Critique step for memo models (PPC test statistics) | cloud | later |
+| 3 | Outer loop, simulated: design from the context pool, K-way EIG (Monte Carlo over outcomes), multi-trial designs, recovery against held-out RSA variants | Sherlock | |
+| 4 | Live: jsPsych port of the pragmods display, Firestore schema, Prolific pilot | local session | |
+| - | More seed data (`DATASETS.md`): Franke & Degen 2016, Mayn & Demberg, Sikos et al. 2021 need OSF/PLoS access | PI / local | |
 
 ## Design space (for phase 3)
 
