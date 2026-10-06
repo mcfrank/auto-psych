@@ -39,14 +39,29 @@ remote = [
     "pyyaml>=6.0.0",
 ]
 pymc = [
-    "arviz>=0.17.0",
-    "pymc>=5.10.0",
+    # Upper bounds: the model-comparison code is written for the arviz 0.x /
+    # pymc 5.x API (see the NOTE under [tool.uv]). Without them Python >= 3.12
+    # resolves arviz 1.x / pymc 6.x.
+    "arviz>=0.17.0,<1",
+    "pymc>=5.10.0,<6",
     # arviz pulls h5py. 3.16.0 publishes an sdist but no cp311 wheel, so
     # `uv sync --locked` tries to build it from source and needs the HDF5 C
     # headers — which the CI runner does not have, failing the install before
     # any test runs. Same class of cap as the numpy/scipy/pandas ones below:
     # pin to a version that ships wheels. 3.14.0 is what the cluster venvs use.
     "h5py<3.15",
+]
+# RSA reference-game domain (src/rsa/): models are written in memo, a JAX
+# probabilistic programming language that requires Python >= 3.12, and fitted
+# with numpyro. The markers keep a Python 3.11 environment resolvable without it.
+# jax/jaxlib are pinned to 0.7.0, the last release with manylinux2014 (glibc
+# 2.17) wheels, for Sherlock's compute nodes; numpyro 0.19.0 is the newest that
+# imports against jax 0.7.0.
+rsa = [
+    "memo-lang>=1.3.0; python_version >= '3.12'",
+    "jax==0.7.0; python_version >= '3.12'",
+    "jaxlib==0.7.0; python_version >= '3.12'",
+    "numpyro==0.19.0; python_version >= '3.12'",
 ]
 # Open-weight participant models (LLM-as-participant, --participant-backend open).
 # Heavy; install only when needed: `uv sync --group open-models`.
@@ -64,7 +79,7 @@ open-models = [
 # must be present in the default dev environment — otherwise a plain `uv sync`
 # prunes pymc/pytensor and every PyMC test fails. `open-models` stays opt-in
 # (heavy torch/transformers; no test needs it): `uv sync --group open-models`.
-default-groups = ["dev", "pymc"]
+default-groups = ["dev", "pymc", "rsa"]
 
 # Sherlock (and other RHEL7) compute nodes run glibc 2.17 (manylinux2014). The
 # newest numpy/scipy/pandas dropped their glibc-2.17 wheels — they now require
@@ -75,13 +90,14 @@ default-groups = ["dev", "pymc"]
 #   uv lock && uv run pytest -q
 constraint-dependencies = ["numpy<2.3", "scipy<1.15", "pandas<2.3"]
 
-# NOTE on the Python version (see .python-version, pinned to 3.11): the code is
-# written for the arviz 0.x / pymc 5.x API (e.g. `loo.elpd_loo`,
-# `az.compare(ic="loo")`, positive `elpd_diff`). On Python >= 3.12 this lock
-# resolves arviz 1.x / pymc 6.x, whose DataTree rewrite renames/changes those
-# (e.g. `loo.elpd`, no `ic=` kwarg, sign-flipped `elpd_diff`) and breaks the
-# model-comparison code and tests. Staying on 3.11 keeps the validated 0.x stack.
-# Porting to arviz 1.x (then any Python >= 3.12 works) is a separate task.
+# NOTE on the Python version (see .python-version; 3.12 on the auto-rsa branch,
+# which memo requires): the code is written for the arviz 0.x / pymc 5.x API
+# (e.g. `loo.elpd_loo`, `az.compare(ic="loo")`, positive `elpd_diff`). arviz 1.x /
+# pymc 6.x's DataTree rewrite renames/changes those (e.g. `loo.elpd`, no `ic=`
+# kwarg, sign-flipped `elpd_diff`) and breaks the model-comparison code and
+# tests, so the pymc group caps them below 1 / 6. Without the caps Python >= 3.12
+# resolved the 1.x / 6.x stack, which is why main was pinned to 3.11.
+# Porting to arviz 1.x is a separate task.
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
