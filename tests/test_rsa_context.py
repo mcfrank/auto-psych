@@ -101,3 +101,34 @@ def test_group_by_shape_stacks_trials_and_keeps_their_indices():
     assert g.arrays.lex.shape == (2, 3, 3)
     np.testing.assert_array_equal(np.asarray(g.arrays.utterance), [1, 0])
     assert list(groups[(2, 2)].indices) == [1]
+
+
+def test_unnameable_features_are_not_words():
+    """The Franke & Degen game: square and blue have no word. Objects:
+    blue circle, green circle, red triangle; features circle, triangle,
+    square, green, red, blue; messages circle, triangle, green, red."""
+    ctx = Context(
+        objects=((1, 0, 0, 0, 0, 1), (1, 0, 0, 1, 0, 0), (0, 1, 0, 0, 1, 0)),
+        feature_names=("circle", "triangle", "square", "green", "red", "blue"),
+        utterance=0,
+        messages=(0, 1, 3, 4),
+    )
+    assert ctx.utterance_names == ("circle", "triangle", "green", "red")
+    assert ctx.shape == (3, 4)
+    np.testing.assert_array_equal(np.asarray(ctx.arrays().feature_count), [1, 2, 2])
+
+
+def test_an_object_with_only_unnameable_features_gets_the_sink():
+    ctx = Context(
+        objects=((0, 0, 1, 0, 0, 1), (1, 0, 0, 1, 0, 0), (1, 0, 0, 0, 1, 0)),
+        feature_names=("circle", "triangle", "square", "green", "red", "blue"),
+        utterance=0,
+        messages=(0, 1, 3, 4),
+    )
+    assert ctx.utterance_names[-1] == "<sink>"
+    np.testing.assert_array_equal(ctx.lexicon()[-1], [1, 0, 0])
+
+
+def test_an_utterance_outside_the_message_set_raises():
+    with pytest.raises(ValueError, match="not in the message set"):
+        Context(objects=((1, 1), (1, 0)), feature_names=("a", "b"), utterance=1, messages=(0,))

@@ -40,3 +40,13 @@ def test_an_unknown_framing_raises():
 def test_an_unknown_experiment_raises():
     with pytest.raises(ValueError, match="no experiments named"):
         load_forced_choice(experiments=["E99"])
+
+
+def test_a_messages_column_restricts_the_words():
+    row = pd.read_csv(DEFAULT_TRIALS_CSV).iloc[0].copy()
+    row["objects"] = "[[1,0,0,0,0,1],[1,0,0,1,0,0],[0,1,0,0,1,0]]"
+    row["feature_names"] = '["circle","triangle","square","green","red","blue"]'
+    row["query"], row["utterance"], row["framing"] = "utterance", 0, "one_word"
+    row["familiarization"], row["grayscale"] = float("nan"), float("nan")
+    row["messages"] = "[0,1,3,4]"
+    assert context_from_row(row).utterance_names == ("circle", "triangle", "green", "red")

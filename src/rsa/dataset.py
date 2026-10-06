@@ -71,6 +71,9 @@ def context_from_row(row: pd.Series) -> Context:
             raise ValueError(f"familiarization counts {fam} do not sum to {FAMILIARIZATION_IMAGES}")
         fam = tuple(c / FAMILIARIZATION_IMAGES for c in fam)
     gray = _json_or_none(row["grayscale"])
+    # Optional column: the feature indices the speaker could name (a dataset
+    # whose every feature is a word, like pragmods, omits it).
+    messages = _json_or_none(row["messages"]) if "messages" in row.index else None
     return Context(
         objects=tuple(tuple(r) for r in objects),
         feature_names=names,
@@ -79,6 +82,7 @@ def context_from_row(row: pd.Series) -> Context:
         familiarization=fam,
         grayscale=None if gray is None else tuple(gray),
         valence=VALENCE_BY_FRAMING[framing],
+        messages=None if messages is None else tuple(messages),
     )
 
 

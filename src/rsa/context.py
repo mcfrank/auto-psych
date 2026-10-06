@@ -60,6 +60,10 @@ class Context:
     familiarization: Optional[Tuple[float, ...]] = None
     grayscale: Optional[Tuple[int, ...]] = None
     valence: int = 0
+    # Feature indices the speaker can name (the message set). None: every
+    # feature is a word (pragmods). In the Franke & Degen game some features
+    # (e.g. square, blue) have no word, which changes which inferences hold.
+    messages: Optional[Tuple[int, ...]] = None
 
     def __post_init__(self) -> None:
         objects = tuple(tuple(int(v) for v in row) for row in self.objects)
@@ -75,7 +79,18 @@ class Context:
             )
         if any(v not in (0, 1) for row in objects for v in row):
             raise ValueError(f"object features must be 0/1: {objects}")
+        if self.messages is not None:
+            messages = tuple(int(m) for m in self.messages)
+            object.__setattr__(self, "messages", messages)
+            if not messages or len(set(messages)) != len(messages):
+                raise ValueError(f"messages must be distinct feature indices: {messages}")
+            if any(not 0 <= m < n_features for m in messages):
+                raise ValueError(f"messages {messages} are not all feature indices (0..{n_features - 1})")
         if self.utterance is not None:
+            if self.messages is not None and self.utterance not in self.messages:
+                raise ValueError(
+                    f"utterance {self.feature_names[self.utterance]!r} is not in the message set"
+                )
             if not 0 <= self.utterance < n_features:
                 raise ValueError(
                     f"utterance {self.utterance} is not a feature index (0..{n_features - 1})"
@@ -101,15 +116,19 @@ class Context:
             raise ValueError(f"valence must be -1, 0 or 1: {self.valence}")
 
     @property
+    def nameable(self) -> Tuple[int, ...]:
+        """Feature indices the speaker can name (every feature without a message set)."""
+        return tuple(range(len(self.feature_names))) if self.messages is None else tuple(sorted(self.messages))
+
+    @property
     def present_features(self) -> Tuple[int, ...]:
-        """Feature indices true of at least one object: the context's words."""
-        return tuple(
-            f for f in range(len(self.feature_names)) if any(row[f] for row in self.objects)
-        )
+        """Nameable feature indices true of at least one object: the context's words."""
+        return tuple(f for f in self.nameable if any(row[f] for row in self.objects))
 
     @property
     def needs_sink(self) -> bool:
-        return any(not any(row) for row in self.objects)
+        """Whether some object has no word true of it (no nameable feature)."""
+        return any(not any(row[f] for f in self.nameable) for row in self.objects)
 
     @property
     def utterance_names(self) -> Tuple[str, ...]:
@@ -125,7 +144,7 @@ class Context:
         """(N_UTT, N_OBJ) truth table of utterances over objects, sink last."""
         rows = [[row[f] for row in self.objects] for f in self.present_features]
         if self.needs_sink:
-            rows.append([int(not any(row)) for row in self.objects])
+            rows.append([int(not any(row[f] for f in self.nameable)) for row in self.objects])
         return np.asarray(rows, dtype=np.float32)
 
     def choice_classes(self) -> Tuple[int, ...]:
