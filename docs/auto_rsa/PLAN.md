@@ -88,6 +88,10 @@ probability 0 to objects the word is false of, and people do choose them).
 | 4 | Live: jsPsych port of the pragmods display, Firestore schema, Prolific pilot | local session | |
 | - | More seed data (`DATASETS.md`): Franke & Degen 2016, Mayn & Demberg, Sikos et al. 2021 need OSF/PLoS access | PI / local | |
 
+## Pruning unit (decision 2026-10-07)
+
+The end-of-run prune drops a model more than 2 clustered SEs (ELPD-LOO) behind the best trusted model. A cluster is a display within an experimental condition (`CLUSTER_COLUMNS` in `src/rsa/loop/orchestrator.py`): by display alone, the pragmods simple display shared by many experiments made one cluster of thousands of trials and nothing was ever pruned (literal listener 554 nats behind, SE 324). By condition it is 4.4 SEs behind; close rivals whose advantage is concentrated in a few conditions (salience vs vanilla RSA, 1.2 SEs) are kept.
+
 ## Design space (for phase 3)
 
 Distinct object x feature matrices (up to row/column permutation, every word

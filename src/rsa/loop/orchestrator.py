@@ -72,6 +72,26 @@ DEFAULT_PRUNE_DSE_MULTIPLIER = 2.0
 MAX_LIVE_MODELS = 8
 NAME_RE = re.compile(r"^[a-z][a-z0-9_]{2,39}$")
 DISPLAY_COLUMNS = ("objects", "query", "utterance", "familiarization", "grayscale", "framing")
+# The unit the end-of-run prune treats as one observation (clustered SE of an
+# ELPD difference): a display within an experimental condition. Clustering by
+# display alone (PI decision 2026-10-07 to change it) made the pragmods
+# simple display, shared by many experiments, one cluster of thousands of
+# trials whose sum dominated the variance: nothing was pruned, not even the
+# literal listener 554 nats behind (SE 324). By experiment x condition x
+# display it is 4.4 SEs behind; in a multi-trial design the unit is the item.
+CLUSTER_COLUMNS = ("source", "experiment", "condition") + DISPLAY_COLUMNS + ("messages",)
+
+
+def cluster_ids(frame: pd.DataFrame) -> np.ndarray:
+    """One id per trial; trials of one display in one experimental condition share it.
+
+    Columns a dataset lacks (pragmods has no source or messages) are left out.
+    """
+    cols = [c for c in CLUSTER_COLUMNS if c in frame.columns]
+    missing = {"experiment", "condition"} - set(cols)
+    if missing:
+        raise ValueError(f"responses lack the cluster columns {sorted(missing)}")
+    return pd.factorize(frame[cols].astype(str).agg("|".join, axis=1))[0]
 
 SpawnFn = Callable[[Path, str], bool]
 
@@ -122,9 +142,7 @@ class RSALoop:
         self.trials = load_forced_choice(self.responses)
         if not self.trials.contexts:
             raise ValueError(f"{self.cfg.responses_path} has no included forced-choice trials")
-        self.clusters = pd.factorize(
-            self.trials.frame[list(DISPLAY_COLUMNS)].astype(str).agg("|".join, axis=1)
-        )[0]
+        self.clusters = cluster_ids(self.trials.frame)
         self.pool = novelty_pool()
         (self.dir / "novelty_pool.json").write_text(json.dumps(
             dict(digest=pool_digest(self.pool), contexts=[pool_record(c) for c in self.pool])))
