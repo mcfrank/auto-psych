@@ -1,0 +1,43 @@
+{
+  "source": "mayn_demberg_2026",
+  "citation": "Mayn, A., & Demberg, V. (2026). Sources of individual variability in a pragmatic reference game: Effects of logical reasoning and Theory of Mind. PLoS One, 21(2), e0339899. https://doi.org/10.1371/journal.pone.0339899",
+  "licence": "CC-BY-4.0 (OSF project 5ab3f)",
+  "landing_url": "https://osf.io/5ab3f/",
+  "pinned_commit": null,
+  "generation_command": "uv run python -m src.rsa.ingest.run --sources mayn_demberg_2026 mayn_demberg_2023 mayn_demberg_2022 sikos_2021",
+  "source_files": [
+    {
+      "name": "data/main_task_data.csv",
+      "url": "https://osf.io/download/u2xjf/",
+      "bytes": 2050067,
+      "sha256": "56c6793268934faa155eac9b412b8e649977d580d786b2fa56cc0c6ad4a084ce"
+    },
+    {
+      "name": "data/ID_scores_with_exclusions.csv",
+      "url": "https://osf.io/download/53br2/",
+      "bytes": 26375,
+      "sha256": "9f4efa39678e3b2e4f70e31caa48bf786fbffd66b40edad350db929e8aaa1527"
+    },
+    {
+      "name": "data/annotations.csv",
+      "url": "https://osf.io/download/dh8b6/",
+      "bytes": 133008,
+      "sha256": "969547baf45e550eb68837a329f10217b446243fdc1e367398910b945cbf7451"
+    }
+  ],
+  "output": {
+    "path": "src/pipelines/outer_loop/projects/rsa_reference/data/mayn_demberg_2026_trials.csv",
+    "committed": true,
+    "rows": 20196,
+    "included_rows": 16764,
+    "participants": 306,
+    "included_participants": 254,
+    "rows_by_experiment": {
+      "md2026_shapes": 20196
+    },
+    "included_participants_by_experiment": {
+      "md2026_shapes": 254
+    },
+    "sha256": "45c39f96674417c5f476c7e24fead52cb3123bc86651b0ed0b228d6bc5787be1"
+  }
+}

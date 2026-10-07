@@ -1,0 +1,33 @@
+{
+  "source": "mayn_demberg_2022",
+  "citation": "Mayn, A., & Demberg, V. (2022). Individual differences in a pragmatic reference game. Proceedings of the Annual Meeting of the Cognitive Science Society, 44, 3016-3022.",
+  "licence": "none stated (GitHub repository without a licence file): derived CSV is not committed",
+  "landing_url": "https://github.com/sashamayn/refgame_cogsci22",
+  "pinned_commit": "b3a2b5e033cd703e8dc437466c066761d4f41672",
+  "generation_command": "uv run python -m src.rsa.ingest.run --sources mayn_demberg_2026 mayn_demberg_2023 mayn_demberg_2022 sikos_2021",
+  "source_files": [
+    {
+      "name": "main_task_data.csv",
+      "url": "https://raw.githubusercontent.com/sashamayn/refgame_cogsci22/b3a2b5e033cd703e8dc437466c066761d4f41672/main_task_data.csv",
+      "bytes": 830035,
+      "sha256": "11d001543ff612e8a24a08e687841ff7ed710153670f4923c8928c59cda8e371"
+    }
+  ],
+  "output": {
+    "path": "<cache>/mayn_demberg_2022/mayn_demberg_2022_trials.csv",
+    "committed": false,
+    "rows": 7590,
+    "included_rows": 7590,
+    "participants": 115,
+    "included_participants": 115,
+    "rows_by_experiment": {
+      "md2022_main": 4488,
+      "md2022_pilot": 3102
+    },
+    "included_participants_by_experiment": {
+      "md2022_main": 68,
+      "md2022_pilot": 47
+    },
+    "sha256": "67ec3f8b1b56e8771bca0116291b2e69ed9422746e5a80736164e01f7310b365"
+  }
+}

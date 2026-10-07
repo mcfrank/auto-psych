@@ -1,5 +1,9 @@
 # pragmods reference-game data (seed dataset)
 
+Four external datasets in the same schema (Mayn & Demberg 2022/2023/2026,
+Sikos et al. 2021) are documented at the end, under "External reference-game
+datasets".
+
 `pragmods_trials.csv` is every response in the de-identified MTurk data of the
 pragmods experiments (Frank, Emilsson, Peloquin, Goodman & Potts, "Rational
 speech act models of pragmatic reasoning in reference games"; data
@@ -240,3 +244,232 @@ within themselves) and have no `paper_cond`. `size`, `sequences` and
 * E1 betting and Likert responses are per object; forced choice elsewhere.
 * The display was randomised per participant (`display_order`) and so was the
   item's feature-to-word assignment (`feature_names`).
+
+# External reference-game datasets (`src/rsa/ingest/`)
+
+Four more sources in the same trial schema, built by
+`src/rsa/ingest/` from pinned public files (URL + sha256; a changed or
+corrupt download raises):
+
+```bash
+uv run python -m src.rsa.ingest.run --sources mayn_demberg_2026 sikos_2021 mayn_demberg_2023 mayn_demberg_2022
+uv run python -m src.rsa.ingest.combine --sources pragmods mayn_demberg_2026 sikos_2021 --out <combined.csv>
+```
+
+Downloads are cached in the gitignored `data/rsa/external/<source>/raw/`.
+**What is committed depends on the licence** (PI decision): the CC-BY sources'
+CSVs (`mayn_demberg_2026_trials.csv`, `sikos_2021_trials.csv`) are committed
+here; the sources whose repositories carry no licence (`mayn_demberg_2023`,
+`mayn_demberg_2022`) are written only to
+`data/rsa/external/<source>/<source>_trials.csv`, and only their pin file is
+committed. Every source has a `<source>_trials.provenance.json` here: citation,
+licence, the pinned files (URL, bytes, sha256), the GitHub commit where there
+is one, the command, and the derived CSV's row/participant counts and sha256.
+The tests (`tests/test_rsa_ingest_*.py`) need nothing but the committed files;
+those about the uncommitted sources, and the byte-for-byte rebuilds, skip
+unless the cache is built or `RSA_INGEST_FETCH=1` lets them fetch.
+
+`combine` concatenates any of the sources (pragmods included) and checks
+that each meets the column contract and that experiment names and participant
+ids do not collide. `src.rsa.dataset.load_forced_choice` reads any single
+derived CSV or the combined one.
+
+## Column contract of the external sources
+
+The pragmods columns above, with three more:
+
+| column | meaning |
+|---|---|
+| `source` (first) | `mayn_demberg_2026`, `mayn_demberg_2023`, `mayn_demberg_2022`, `sikos_2021` (`pragmods` in a combined file) |
+| `messages` (after `notes`) | JSON list of the feature indices the speaker could name on the trial (`Context.messages`). The heard `utterance` is always one of them and true of some object. Empty for pragmods (every feature is a word). |
+| `covariates` (last) | JSON object of per-row extras (below); `{}` for pragmods |
+
+Participant ids are `<source>:<id in the source file>` (Sikos:
+`sikos_2021:e<k>:<row>`), experiment names carry a source prefix, so neither
+can collide across sources. `familiarization` and `grayscale` are empty. No
+row is an excluded participant's *dropped* data: every response is kept and
+`included` / `exclusion_reason` say whether the paper analysed it.
+
+## mayn_demberg_2026, mayn_demberg_2023, mayn_demberg_2022 (Franke & Degen game)
+
+* **2026** — Mayn & Demberg, "Sources of individual variability in a pragmatic
+  reference game: Effects of logical reasoning and Theory of Mind", PLoS One
+  21(2): e0339899. Data OSF 5ab3f (`data/main_task_data.csv`,
+  `ID_scores_with_exclusions.csv`, `annotations.csv`), **CC-BY 4.0**. Shapes
+  and colours, Prolific. 306 participants x 66 trials = 20,196 rows; 254
+  included (16,764 rows). Experiment `md2026_shapes`.
+* **2023** — Mayn & Demberg, "High performance on a pragmatic task may not be
+  the result of successful reasoning", Open Mind 7: 156-178.
+  github.com/sashamayn/refgame_stimuli_methods @ `d7d4aec`
+  (`data/all_experiments.csv`, `data/all_annotations.csv`), **no licence**.
+  237 participants (59/59/59/60), 15,642 rows; 228 included (57/55/56/60).
+  Experiments `md2023_e1_replication` (monsters), `md2023_e2_remapped`,
+  `md2023_e3_all_messages`, `md2023_e4_shapes`.
+* **2022** — Mayn & Demberg, "Individual differences in a pragmatic reference
+  game", CogSci 44: 3016-3022. github.com/sashamayn/refgame_cogsci22 @
+  `b3a2b5e` (`main_task_data.csv`), **no licence**. 115 participants (pilot
+  47, main 68; `batch` = the file's `study`), 7,590 rows, all included.
+  Experiments `md2022_pilot`, `md2022_main`.
+
+**Game.** Each of 66 trials shows three objects, each one value on each of two
+dimensions, and a message naming one feature, said to be sent by an earlier
+participant; the listener clicks the object meant. 24 critical trials (12
+simple, 12 complex implicatures), 9 completely ambiguous fillers (two
+identical objects the message is true of) and 33 unambiguous fillers (types a,
+b, c and "filler unambiguous"). Some features have no message, which is what
+makes the critical trials solvable. Items are fixed (same display for every
+participant); their order and the screen layout are randomised. All rows are
+`dv=forced_choice`, `query=utterance`, `framing=message_icon` (a new framing
+label, valence 0, in `src/rsa/dataset.py`: the message is shown as a picture
+of the feature, a shape contour or colour tube / a creature or accessory
+alone; `query_detail=picture_of_feature`).
+
+**Features.** A fixed six-column vocabulary per stimulus family (`feature_names`),
+ordered so that the families correspond under the 2023 paper's Exp. 4 mapping
+(square = robot, triangle = green monster, circle = purple monster, blue =
+scarf, green = red hat, red = blue hat):
+
+| col | 0 | 1 | 2 | 3 | 4 | 5 |
+|---|---|---|---|---|---|---|
+| shapes | circle | triangle | square | green | red | blue |
+| monsters | purple_monster | green_monster | robot | red_hat | blue_hat | scarf |
+
+Columns present on no object of a display are kept (they are not words of the
+context: `Context.present_features` drops them).
+
+**Message sets** (`messages`), confirmed from the papers and from the messages
+the data contain: the original game (2026, 2022, 2023 Exps. 1 and 4) `[0,1,3,4]`
+(no square/robot, no blue/scarf); 2023 Exp. 2 "remapped" `[1,2,3,5]` (robot and
+scarf nameable, purple monster and blue hat not; the trials are Exp. 1's with
+those images swapped, and the data record the images shown); 2023 Exp. 3 "all
+messages available" `[0..5]` (same trials and messages heard as Exp. 1, but the
+speaker could have named every feature, so the simple trials are no longer
+solvable by reasoning). Exps. 1 and 4 have identical displays per item (a test
+checks).
+
+**Roles and choices are derived from features, not from the label columns**,
+which are wrong in places: `targetpos` is wrong for item 20 (and for some
+ambiguous fillers) in 2026; the `target`/`distractor` labels of item 20 are
+swapped in all four 2023 experiments and in the 2022 main study (whose
+`correct` is then wrong too), the `target`/`competitor` labels of item 51 in
+all of 2022; `answer_which` is arbitrary when one of the two identical objects
+of an ambiguous filler is chosen. Objects are in role order: for a critical
+trial the target is the object the message is true of that cannot be named
+alone and the competitor the one that can (it has a nameable feature no other
+object has), using the message set the items were designed for (the original
+one for 2023 Exp. 3); ambiguous fillers are `twin_1, twin_2, distractor`;
+unambiguous fillers `target` (the only object the message is true of) and the
+labelled competitor and distractor. A row whose labelled target is not the
+feature target is flagged `labelled_target_is_not_the_feature_target` in
+`notes` (2023: 237 rows, item 20; 2022: 183 rows, items 20 and 51; 2026:
+none). `display_order` is the screen layout from `presentation_order`
+(identical objects in index order left to right); `choice` is the object at
+`answer_order`'s position, checked against `answer`. `trial_index` is the
+trial's position in the participant's sequence (`trialid`, 0-based); `item` is
+`<family>_item<itemid>`.
+
+**Exclusions.**
+
+* 2026, as the paper (N = 254): of the 300 first-session participants, 8 with
+  accuracy < 0.8 on the 33 unambiguous fillers (`unambiguous_accuracy_below_0.8`;
+  the file's `main_exclude`, checked against the accuracy computed from the
+  derived roles), then anyone whose strategy explanation for either re-shown
+  item is annotated `misunderstood_instr` (23 of the 292) or `odd_one_out`
+  (15 more; `strategy_*`). Participants 301-306 are in the trial file but
+  not in the individual-differences file and so not among the paper's 300
+  (`not_in_paper_sample`); the analysis scripts' `main_exclusions()` cannot
+  exclude them by accuracy and keep 259 (254 + 5 of them; a test checks
+  both). They pass the accuracy criterion (0.91-1.0); one is also
+  strategy-excluded.
+* 2023, as `stat_helpers.R` and Table 1 (57/55/56/60): accuracy < 0.8 on the
+  33 non-ambiguous fillers, computed from the derived roles (equal to the
+  file's `correct` on these trials).
+* 2022: none. The scripts exclude no one, every participant reaches 0.8 on
+  the unambiguous fillers, and the 2026 paper cites the main study's N = 68.
+  The CogSci paper itself could not be retrieved (escholarship blocks
+  automated access), so its pilot N (47) is the data's, unverified.
+
+**Covariates.** 2026 and 2023: `strategy_tag_simple`, `strategy_tag_complex`,
+the participant's annotated reasoning strategy (`tag_both`) for the re-shown
+simple and complex item (correct_reasoning, guess, other_reason, unclear,
+misunderstood_instr, odd_one_out, exclude, ...). The explanations' free text is
+not carried. 2022: none.
+
+**Reproduced from the papers** (`tests/test_rsa_ingest_mayn_demberg.py`):
+2026 — 300 / 8 / 292 / 23 / 15 / 254; 148 and 100 of the 292 tagged
+correct_reasoning (simple, complex); 70% of the included participants on or
+below the diagonal of Fig 3. 2023 — Ns 57/55/56/60; the annotation exclusions
+the text reports (Exp. 1 simple 1 exclude + 8 unclear; Exp. 2 simple 4 + 6,
+complex 3 + 10; Exp. 3 simple 1 + 7, complex 0 + 6). 2022 — 47 + 68.
+
+**Known gaps.**
+
+* 2026 guess counts: the paper says 73 (simple) and 129 (complex) of 292; the
+  published annotations give 72 and 130. Its "distractor on 1.2% of trials"
+  (critical + ambiguous trials, N = 254) comes out at 1.7% here (2.0% on
+  critical trials only); not resolved.
+* The re-shown item at the end (2023 `strategy_*` columns, the 2026
+  annotations' `answer`) is a second response to an item already answered,
+  given with a written explanation and possibly a new layout; it is **not** a
+  trial here. Its annotation tag is kept as a covariate.
+* The 2026 individual-difference scores (CRT, Raven, digit span, OSpan, SST,
+  RMET; CC-BY) and the 2022 `averages_with_indiv_measures.csv` are not
+  carried; join them on the source id if a model needs them.
+* The size of `mayn_demberg_2026_trials.csv` is ~9 MB (20,196 rows).
+
+## sikos_2021
+
+Sikos, Venhuizen, Drenhaus & Crocker (2021), "Reevaluating pragmatic reasoning
+in language games", PLoS One 16(3): e0248388, **CC-BY 4.0**; the article's
+supporting files S1-S3 (`exp{1,2,3}_data`). A one-shot Frank & Goodman (2012)
+replication on MTurk: one trial per participant, so one row each (`batch` =
+task, `trial_index` 0). 7,488 rows; 5,625 included.
+
+* **Displays.** Three objects, each a colour and a shape (`orange.fish`).
+  Columns are the display's colours, then its shapes, by first appearance left
+  to right; every feature is a word, so `messages` lists every column.
+  `objects` are `o1, o2, o3`, left to right (`display_order` `[0,1,2]`; the
+  paper puts the speaker's target, `targ`, in the middle in Exps. 1 and 3).
+  `task.resp` A/B/C is o1/o2/o3 (this reading makes 98% of all listener
+  choices literally true, the reverse 77%). `object_roles`: `target` (`targ`) and
+  `other`; Exp. 2 names its `colour_competitor` and `shape_competitor`.
+* **Tasks.** Listener (`query=utterance`, `listen.word`), Salience (Robert says
+  something incomprehensible; `query=prior`), both `dv=forced_choice`;
+  Speaker (Exp. 1 only; `dv=production`, `query=production`): `response` is
+  `{"word", "feature", "options"}` (the chosen word, its column, the two words
+  offered: the target's colour and shape), `referent` the target.
+* **Experiments.** `sikos2021_e1` (24 context types, iconic objects; speaker,
+  listener, salience), `sikos2021_e2` (the 2s2c.b context; iconic vs
+  geometric stimuli, `item` and covariate `stimulus_type`; listener, salience),
+  `sikos2021_e3` (Exp. 1's 8 RSA-diagnostic contexts with a more engaging
+  cover story; listener, salience). `condition` is the context code (`cond`,
+  Exp. 3 `context`), whose last letter is the listener's word type (c/s).
+* **Exclusions**, reproducing every N in the paper (counted in its order):
+  `non_native_or_non_fluent` (`language`, Exp. 2 `nativeLang`, must be
+  English and `fluency` fluent), `attention_check_failed` (`attnQ.acc`),
+  `listener_choice_not_literally_true`. Exp. 1: 4642 recruited, 1137 / 118 / 13
+  excluded, kept speaker 1143, listener 1098, salience 1133. Exp. 2: 1671;
+  142 / 77 / 12; listener 960, salience 480. Exp. 3: 1175; 265 / 96 / 3;
+  listener 405, salience 406. Exp. 2 uses `task.resp` (not `task.resp1`).
+* **Covariates.** `display` (the item id), `side` (Exps. 1, 3; `a`/`b`,
+  undocumented, plausibly the paper's mirrored-context counterbalancing; the
+  objects are in screen order either way), `stimulus_type` (Exp. 2), `task_likelihood`
+  (Exp. 1's 0-100 rating after the choice; not documented in the article).
+* Dropped: demographics, browser/OS/screen strings, timings, `exit.*`, survey
+  answers and all free text. There is no participant id in the files
+  (`server.intern.id` repeats), so the id is the row number.
+
+## Not ingested
+
+* **Duff, Mayn & Demberg (2026)**, "The role of reinforcement learning in
+  pragmatic reasoning tasks", Open Mind (OSF 7uwx9 / ad685; no licence). Its
+  method section: "we provided participants with feedback after each trial,
+  indicating whether their response was the intended target", after a speaker
+  pre-training; the ambiguous fillers were also removed. Its listener choices
+  are therefore learned under trial-by-trial reinforcement, not
+  interpretations of the kind the other sources measure, and it is left out
+  (`NOT_INGESTED` in `src/rsa/ingest/run.py`).
+* Excluded by the PI: Franke & Degen (2016); any child data; the imagined-child
+  and ChatGPT-speaker conditions (OSF f5nmv, perceptions_of_chatgpt); slider
+  studies (OSF erbn3); the listener-adaptation/feedback study (OSF 5d2f6);
+  Franke, Tsvilodub & Carcassi (2024).

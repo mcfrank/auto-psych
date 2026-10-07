@@ -1,0 +1,47 @@
+{
+  "source": "sikos_2021",
+  "citation": "Sikos, L., Venhuizen, N. J., Drenhaus, H., & Crocker, M. W. (2021). Reevaluating pragmatic reasoning in language games. PLoS One, 16(3), e0248388. https://doi.org/10.1371/journal.pone.0248388",
+  "licence": "CC-BY-4.0 (PLoS One article and supporting information)",
+  "landing_url": "https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0248388",
+  "pinned_commit": null,
+  "generation_command": "uv run python -m src.rsa.ingest.run --sources mayn_demberg_2026 mayn_demberg_2023 mayn_demberg_2022 sikos_2021",
+  "source_files": [
+    {
+      "name": "exp1_data_s001.csv",
+      "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0248388.s001",
+      "bytes": 1982544,
+      "sha256": "3e39b2ccbab76f0a345423ec9b4fdeff9c00c4bb149d52de4a577e9210e4f766"
+    },
+    {
+      "name": "exp2_data_s002.csv",
+      "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0248388.s002",
+      "bytes": 670778,
+      "sha256": "a2b7140af017b627c61a79522cc40a520126510e787e4463929f9bcfaa9dcb43"
+    },
+    {
+      "name": "exp3_data_s003.csv",
+      "url": "https://journals.plos.org/plosone/article/file?type=supplementary&id=10.1371/journal.pone.0248388.s003",
+      "bytes": 511365,
+      "sha256": "10c1d093f02e2d43bfad3acdcf996364ece9a9104f10103b109d6cc168976b09"
+    }
+  ],
+  "output": {
+    "path": "src/pipelines/outer_loop/projects/rsa_reference/data/sikos_2021_trials.csv",
+    "committed": true,
+    "rows": 7488,
+    "included_rows": 5625,
+    "participants": 7488,
+    "included_participants": 5625,
+    "rows_by_experiment": {
+      "sikos2021_e1": 4642,
+      "sikos2021_e2": 1671,
+      "sikos2021_e3": 1175
+    },
+    "included_participants_by_experiment": {
+      "sikos2021_e1": 3374,
+      "sikos2021_e2": 1440,
+      "sikos2021_e3": 811
+    },
+    "sha256": "2716c9ecb06ffc8b0e7d59c4eb75be70bf904dec14100c060ec2b3523b99510e"
+  }
+}

@@ -1,5 +1,27 @@
 # Candidate datasets beyond pragmods (survey, 2026-10-06)
 
+## Status (2026-10-07): ingested
+
+Built by `src/rsa/ingest/` (`uv run python -m src.rsa.ingest.run --sources ...`;
+combine with pragmods via `src.rsa.ingest.combine`). Details, exclusions and
+gaps: `src/pipelines/outer_loop/projects/rsa_reference/data/README.md`.
+
+| source | data | licence | in repo | participants (included) | paper's N reproduced |
+|---|---|---|---|---|---|
+| `mayn_demberg_2026` (PLoS One) | OSF 5ab3f | CC-BY 4.0 | CSV + pin | 306 (254) | yes: 300/8/292/23/15/254 |
+| `mayn_demberg_2023` (Open Mind) | GitHub refgame_stimuli_methods @ d7d4aec | none | pin only (CSV in `data/rsa/external/`) | 237 (57/55/56/60) | yes (Table 1) |
+| `mayn_demberg_2022` (CogSci) | GitHub refgame_cogsci22 @ b3a2b5e | none | pin only | 115 (47 pilot + 68 main) | main 68 (cited in the 2026 paper); paper not retrievable |
+| `sikos_2021` (PLoS One) | supporting files S1-S3 | CC-BY 4.0 | CSV + pin | 7,488 (5,625) | yes, every N and exclusion count |
+
+Not ingested: **Duff, Mayn & Demberg 2026** (OSF 7uwx9/ad685): participants got
+feedback after every reference-game trial and a speaker pre-training, so the
+choices are learned under reinforcement. Excluded by the PI: Franke & Degen
+2016, child data, imagined-child / ChatGPT-speaker conditions (f5nmv,
+perceptions_of_chatgpt), slider studies (erbn3), the listener-adaptation study
+(5d2f6), Franke, Tsvilodub & Carcassi 2024.
+
+The survey below is unchanged from 2026-10-06.
+
 Survey of public reference-game data that could join the seed data. Sources:
 problang-v2's and the pragmods paper's bibliographies, plus web search.
 Fit score: **A** = maps to our trial schema (objects x binary features,

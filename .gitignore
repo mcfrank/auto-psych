@@ -90,3 +90,6 @@ functions/.env
 # (scripts/outer_loop_live/_pilot_config.py --render-only); never committed.
 src/pipelines/outer_loop/projects/*/prolific_config.yaml
 code_provenance.json
+
+# External reference-game datasets without a redistribution licence (src/rsa/ingest)
+data/rsa/external/

@@ -1,0 +1,43 @@
+{
+  "source": "mayn_demberg_2023",
+  "citation": "Mayn, A., & Demberg, V. (2023). High performance on a pragmatic task may not be the result of successful reasoning: On the importance of eliciting participants' reasoning strategies. Open Mind, 7, 156-178. https://doi.org/10.1162/opmi_a_00077",
+  "licence": "none stated (GitHub repository without a licence file): derived CSV is not committed",
+  "landing_url": "https://github.com/sashamayn/refgame_stimuli_methods",
+  "pinned_commit": "d7d4aecb55b0460bc32e366d3e0b2e4552b6015c",
+  "generation_command": "uv run python -m src.rsa.ingest.run --sources mayn_demberg_2026 mayn_demberg_2023 mayn_demberg_2022 sikos_2021",
+  "source_files": [
+    {
+      "name": "data/all_experiments.csv",
+      "url": "https://raw.githubusercontent.com/sashamayn/refgame_stimuli_methods/d7d4aecb55b0460bc32e366d3e0b2e4552b6015c/data/all_experiments.csv",
+      "bytes": 2122090,
+      "sha256": "81e3d5d6c85c5c84aa4874791a5df7575a12bc2baeaee85a3a2c8d4c44b5bf6b"
+    },
+    {
+      "name": "data/all_annotations.csv",
+      "url": "https://raw.githubusercontent.com/sashamayn/refgame_stimuli_methods/d7d4aecb55b0460bc32e366d3e0b2e4552b6015c/data/all_annotations.csv",
+      "bytes": 76744,
+      "sha256": "7f8343a491e9e6d6ecaf73d95a45a52a631239fbdd2ca0e8552dcdf353a7d4c8"
+    }
+  ],
+  "output": {
+    "path": "<cache>/mayn_demberg_2023/mayn_demberg_2023_trials.csv",
+    "committed": false,
+    "rows": 15642,
+    "included_rows": 15048,
+    "participants": 237,
+    "included_participants": 228,
+    "rows_by_experiment": {
+      "md2023_e1_replication": 3894,
+      "md2023_e2_remapped": 3894,
+      "md2023_e3_all_messages": 3894,
+      "md2023_e4_shapes": 3960
+    },
+    "included_participants_by_experiment": {
+      "md2023_e1_replication": 57,
+      "md2023_e2_remapped": 55,
+      "md2023_e3_all_messages": 56,
+      "md2023_e4_shapes": 60
+    },
+    "sha256": "5a596790694b5f4b3693266d10b079c91e564f4efc7cd45aa9171d2abbdf586d"
+  }
+}

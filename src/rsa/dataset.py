@@ -32,6 +32,8 @@ VALENCE_BY_FRAMING = {
     "the_X_has": 0,
     "tricky_guy": 0,
     "points_to_color_patch": 0,
+    # The message is a picture of one feature (Mayn & Demberg's games).
+    "message_icon": 0,
 }
 
 NO_DISPLAY = "[]"
