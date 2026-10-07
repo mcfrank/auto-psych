@@ -81,7 +81,7 @@ probability 0 to objects the word is false of, and people do choose them).
 | 0 | Report page: standing, RMSE by experiment, small multiples, loop timeline (`src/rsa/report.py`) | cloud | **done** |
 | 2 | Parallel RSA inner loop `src/rsa/loop/` (user decision 2026-10-06: a parallel loop reusing the domain-neutral parts, not a backend seam in main's files): code gate, cached time-limited fits, admission gates, novelty pool, briefs and memo primer, self-check, orchestrator, CLI | cloud | **done**, tested with a scripted fake agent |
 | 2 | Smoke test with real Gemini agents (`HANDOFF_smoke_test.md`) | cloud | **done** (`SMOKE_RESULTS.md`): 2 of 3 slots admitted first time, `rsa_l2_salience` the new best (+17.7 nats); the self-check never ran inside an agent (CLI bug, opencode's 120 s shell timeout; both fixed); repair path not yet exercised |
-| 2 | Re-run the smoke test with the fixes (2 rounds; see `SMOKE_RESULTS.md` recommendations) | cloud | next |
+| 2 | Re-run the smoke test with the fixes (2 rounds; see `SMOKE_RESULTS.md` recommendations) | cloud | **done** (`SMOKE_RESULTS_2.md`): all five sources, Gemini 3.8 Flash, sandboxed agents; 6/6 admitted, +119 nats over the best seed; repair path works (forced round); prune fires. OOM-killed in round 2 (per-trial fitting of 50k trials that are 268 displays): aggregate to counts before Sherlock |
 | 2 | Production inner loop on Sherlock (sandboxed agents) | local session | after the smoke test |
 | 2 | Critique step for memo models (PPC test statistics) | cloud | later |
 | 3 | Outer loop, simulated: design from the context pool, K-way EIG (Monte Carlo over outcomes), multi-trial designs, recovery against held-out RSA variants | Sherlock | |

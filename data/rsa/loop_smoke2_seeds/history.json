@@ -1,0 +1,138 @@
+[
+ {
+  "step": 0,
+  "round": -1,
+  "best_model": "rsa_l2",
+  "standing": {
+   "rsa_l2": {
+    "rank": 0,
+    "elpd_loo": -21198.316064834595,
+    "se": 151.99501934254803,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 1.9388022422790527,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 1,
+    "elpd_loo": -21207.381079673767,
+    "se": 152.05491002438038,
+    "elpd_diff": 9.065014839172363,
+    "dse": 8.46103542251617,
+    "p_loo": 4.010265827178955,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 2,
+    "elpd_loo": -21211.342663288116,
+    "se": 151.81455269685617,
+    "elpd_diff": 13.026598453521729,
+    "dse": 8.40963215667831,
+    "p_loo": 3.9634957313537598,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 3,
+    "elpd_loo": -21246.1156373024,
+    "se": 151.45601816000465,
+    "elpd_diff": 47.799572467803955,
+    "dse": 3.8563999587060223,
+    "p_loo": 2.0074377059936523,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 4,
+    "elpd_loo": -22676.752858161926,
+    "se": 146.01227619899558,
+    "elpd_diff": 1478.4367933273315,
+    "dse": 49.41486585803162,
+    "p_loo": 0.952692985534668,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "outcome": "seeded",
+    "name": "literal_listener"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1_salience"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1_shared_prior"
+   }
+  ]
+ },
+ {
+  "step": 1,
+  "round": 0,
+  "best_model": "rsa_l2",
+  "standing": {
+   "rsa_l2": {
+    "rank": 0,
+    "elpd_loo": -21198.316064834595,
+    "se": 151.99501934254803,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 1.9388022422790527,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 1,
+    "elpd_loo": -21207.381079673767,
+    "se": 152.05491002438038,
+    "elpd_diff": 9.065014839172363,
+    "dse": 8.46103542251617,
+    "p_loo": 4.010265827178955,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 2,
+    "elpd_loo": -21211.342663288116,
+    "se": 151.81455269685617,
+    "elpd_diff": 13.026598453521729,
+    "dse": 8.40963215667831,
+    "p_loo": 3.9634957313537598,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "name": "rsa_l1",
+    "outcome": "pruned",
+    "reason": "47.8 nats behind rsa_l2 (clustered dse 10.1)"
+   },
+   {
+    "name": "literal_listener",
+    "outcome": "pruned",
+    "reason": "1478.4 nats behind rsa_l2 (clustered dse 246.6)"
+   }
+  ]
+ }
+]
