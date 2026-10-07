@@ -345,6 +345,12 @@ Recommendations):
 - **Agent usage is lost when the loop dies.** Records are written when
   `run_coding_agent` returns, so the round-2 agents' spend appears only in
   their logs.
+- **The launcher edits the repository's `opencode.json`** for an opencode
+  agent whose allowed directories lie outside its tree
+  (`ensure_opencode_external_grants`). It does this even when sandboxed,
+  where `OPENCODE_PERMISSION` already allows external directories. My `/tmp`
+  probe left two grants in the checkout; I reverted them. On Sherlock the
+  agent tree is a staged copy, so this matters only for local runs.
 - **`RSAFit.loo()` is uncached,** so `standing()` computes PSIS twice per
   model, and it is called at every round start, every score and in the end
   step.
