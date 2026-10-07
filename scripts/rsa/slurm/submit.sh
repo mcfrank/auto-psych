@@ -15,19 +15,19 @@ export REPO="${REPO:-$HOME/auto-psych}"
 export WORK_ROOT="${WORK_ROOT:-${SCRATCH:-${GROUP_SCRATCH:?set WORK_ROOT (or SCRATCH)}}/auto-psych/rsa_run1}"
 
 # ============================================================================
-# RESOURCES -- TO BE SET from docs/auto_rsa/SMOKE_RESULTS_2.md (branch
-# auto-rsa-smoke2): its measured seed-fit and admission-fit times on the
-# combined data, and the run directory's size. A cell's wall time is about
-#   5 seed fits + 5 rounds x (agents <= 3 x AGENT_TIMEOUT_SEC [first try,
-#   retry, repair] + up to 12 admission fits, one at a time)
-#   + held-out scoring (cache hits) [+ one ground-truth fit for recovery].
-# The defaults are placeholders sized like the subjective-randomness cells.
-CPUS_PER_TASK="${CPUS_PER_TASK:-16}"   # six agents' self-checks run at once
-MEM="${MEM:-64G}"                      # normal allows <= 8 GB/core
-TIME="${TIME:-48:00:00}"               # > 48 h adds --qos=long (max 7 days)
-SETUP_CPUS="${SETUP_CPUS:-16}"         # two ground-truth fits at once
-SETUP_MEM="${SETUP_MEM:-32G}"
-SETUP_TIME="${SETUP_TIME:-06:00:00}"
+# Sizes from the 2026-10-07 dry runs on the combined data (40k training
+# trials; full NUTS 4 x (1000 + 1000); docs/auto_rsa/HANDOFF_sherlock_run1.md
+# section 4): one fit ~50-75 s single-threaded, ~1.3 GB; a round's fits and
+# scoring ~5-7 min on 4 CPUs; the loop process grows to ~5 GB over 5 rounds;
+# an agent's self-check ~90 s, ~2.5 GB. Agents dominate a cell's wall time:
+#   5 rounds x (agents <= 3 x AGENT_TIMEOUT_SEC [first try, retry, repair]
+#   + ~5 min of fits) + ~2 min of scoring.
+CPUS_PER_TASK="${CPUS_PER_TASK:-8}"    # 6 agents' self-checks, or a round's 6-12 fits, at once
+MEM="${MEM:-32G}"                      # loop ~5 GB + 6 self-checks x ~2.5 GB + agents; normal allows <= 8 GB/core
+TIME="${TIME:-24:00:00}"               # worst case ~11 h (every agent to its timeout); > 48 h adds --qos=long
+SETUP_CPUS="${SETUP_CPUS:-4}"          # two ground-truth fits, ~70 s each
+SETUP_MEM="${SETUP_MEM:-8G}"
+SETUP_TIME="${SETUP_TIME:-01:00:00}"
 # ============================================================================
 PARTITION="${PARTITION:-normal}"
 ARRAY="${ARRAY:-0-5}"

@@ -2,9 +2,9 @@
 #SBATCH --job-name=rsa_loop
 #SBATCH --partition=normal
 #SBATCH --array=0-5
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=64GB
-#SBATCH --time=48:00:00
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32GB
+#SBATCH --time=24:00:00
 #SBATCH --output=%x_%A_%a.out
 #SBATCH --error=%x_%A_%a.out
 #

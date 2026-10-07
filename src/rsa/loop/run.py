@@ -68,7 +68,8 @@ class Args:
     """opencode provider/model for the candidate agents (PI decision 2026-10-07:
     Gemini 3.8 Flash, not the launcher's older Pro default)."""
     agent_timeout_sec: int = 2400
-    """Per-agent limit. A self-check takes 2-10 min and a careful agent runs 1-3;
+    """Per-agent limit. Smoke test 1 measured a self-check at 2-10 min (since the
+    2026-10-07 fit optimisation ~90 s on the combined data) and a careful agent runs 1-3;
     at 1,200 s the smoke test's agents ran out mid-check."""
     agent_root: Optional[Path] = None
     """Directory agents run from (the scrubbed agent tree on the cluster; default: the repo)."""

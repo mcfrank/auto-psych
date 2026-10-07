@@ -190,9 +190,10 @@ def test_the_array_runs_the_production_settings():
     assert "--no-sandbox" not in text
 
 
-def test_resources_are_marked_to_be_set_from_the_smoke_results():
+def test_resources_are_the_measured_sizes_and_overridable():
     text = (SLURM / "submit.sh").read_text()
-    for knob in ("CPUS_PER_TASK=", "MEM=", "TIME=", "SMOKE_RESULTS_2.md", "--qos=long"):
+    for knob in ('CPUS_PER_TASK="${CPUS_PER_TASK:-8}"', 'MEM="${MEM:-32G}"', 'TIME="${TIME:-24:00:00}"',
+                 'SETUP_TIME="${SETUP_TIME:-01:00:00}"', "HANDOFF_sherlock_run1.md", "--qos=long"):
         assert knob in text
 
 

@@ -83,14 +83,10 @@ excluded participants are dropped so no real response sits beside simulated
 ones. Setup checks those rows equal the real split's fitted rows outside
 `choice`.
 
-**Resources.**
-
-- The array's defaults are placeholders: 16 CPUs, 64G, 48:00:00. The setup
-  job's are 16 CPUs, 32G, 06:00:00.
-- Before submitting, set `CPUS_PER_TASK`, `MEM`, `TIME` and `SETUP_TIME` from
-  `docs/auto_rsa/SMOKE_RESULTS_2.md` (branch `auto-rsa-smoke2`), using the
-  formula in section 4.
-- `TIME` over 48 h adds `--qos=long` automatically (at most 7 days).
+**Resources.** Measured in dry runs on the combined data (2026-10-07, after
+the fit optimisation; section 4): the array runs at 8 CPUs, 32G, 24:00:00
+and the setup job at 4 CPUs, 8G, 01:00:00 (the defaults in `submit.sh`).
+`TIME` over 48 h adds `--qos=long` automatically (at most 7 days).
 
 ## 1. Prepare the data (login node, ~10-20 min)
 
@@ -118,7 +114,7 @@ If `uv sync` fails on a missing glibc-2.17 wheel, rerun with `VENV_MODE=wheels`
 ## 2. Submit (login node)
 
 ```bash
-export CPUS_PER_TASK=16 MEM=64G TIME=48:00:00 SETUP_TIME=06:00:00   # from SMOKE_RESULTS_2.md
+# The defaults (8 CPUs, 32G, 24 h; setup 4 CPUs, 8G, 1 h) come from the dry runs (section 4).
 # (ALLOW_SHARED_LOOP_SEED is not needed: the loop CLI takes --seed)
 bash scripts/rsa/slurm/submit.sh
 ```
@@ -178,33 +174,41 @@ To look at a running cell's report, copy it to your machine:
 
 ## 4. Cost and time
 
-Fill these in from `SMOKE_RESULTS_2.md`; if it is not there yet, compute them
-from its run directory.
+Measured in the parent session on 2026-10-07 (4-CPU container, combined
+data: 40k training trials, full NUTS 4 x (1000 + 1000)), after the fit
+optimisation (each display is evaluated once and the log-likelihood is
+stored per (display, choice) pattern: 40k trials are 501 patterns):
 
-- **Agent runs.** 6 cells x 5 rounds x 6 slots = 180 first attempts. Retries
+| step | time | memory |
+|---|---|---|
+| one fit (seed or candidate), single-threaded | 50-75 s (was 853 s) | 1.2-1.3 GB (was 2.7) |
+| an agent's self-check (`check_candidate`) | ~90 s (was 2-10 min) | ~2.5 GB with its fit process |
+| simulate a recovery condition (ground-truth fit + 50k draws) | ~70 s | ~1.5 GB |
+| a round's fits, admission, report (6 slots + repairs), 9→33 live models | 5-7 min on 4 CPUs | |
+| the loop process over 5 rounds x 6 slots | | grows to ~4.8 GB |
+| held-out scoring (cache hits) / recovery scoring | ~20 s / ~40 s | |
+| fit cache per fitted model | | ~2 MB on disk (was ~640 MB) |
+
+A 5 x 6 dry run with scripted agents (all fits real) took 31 min end to end.
+
+- **Wall time per cell** is the agents': 5 rounds x (first try + retry for
+  an empty slot + repair for a refused one, each up to `AGENT_TIMEOUT_SEC`
+  = 40 min) + ~5 min of fits per round. Worst case ~11 h, typical 3-5 h;
+  `TIME=24:00:00` leaves a factor of two.
+- **Memory**: the peak is the agent phase (six self-checks at ~2.5 GB plus
+  six opencode processes) or the prefit (up to 12 fits, 8 at a time, at
+  ~1.3 GB) on top of the loop's ~5 GB: under 25 GB. `MEM=32G`.
+- **CPUs**: fits run one per CPU (`fit_workers` = the CPUs the job has), so
+  8 CPUs fit a round's 6 candidates at once.
+- **Agent runs.** 6 cells x 5 rounds x 6 slots = 180 first attempts; retries
   and repairs add up to as many again: **180-360 agent runs**.
-- **Agent cost.** Multiply the runs by the per-agent cost of Gemini 3.8 Flash
-  from `SMOKE_RESULTS_2.md`'s `token_usage.jsonl`. For reference, smoke test 1
-  ran Gemini 3.1 Pro at $0.18-0.36 per agent ($0.71 for a 3-slot round).
-  Flash should be well under that. **TODO: fill in.**
-- **Wall time per cell:**
-
-  ```
-  5 x T_seed_fit
-  + 5 rounds x (agent phase <= 3 x 40 min [first try, retry, repair]
-                + up to 12 x T_admission_fit, run one at a time)
-  + held-out scoring (cache hits)
-  + one ground-truth fit (recovery cells)
-  ```
-
-  T_seed_fit and T_admission_fit are smoke test 2's times on the combined
-  data, scaled from its 2 x 500 + 500 to 4 x 1000 + 1000 (about x2-4).
-  Setup is about 1.2 x the slower ground-truth fit. **TODO: fill in; set
-  `TIME` to about 1.5 x this.**
-- **Disk per cell.** The fit cache dominates (one `.nc` per fitted model).
-  Scale smoke test 2's run directory size by the number of models
-  (5 seeds + up to 30-60 candidates). **TODO.** Inodes: each agent tree is
-  a copy of `src/` plus the agents' directories.
+- **Agent cost.** Smoke test 1 ran Gemini 3.1 Pro at $0.18-0.36 per agent;
+  Flash should be well under that. Read the per-agent cost of Gemini 3.8
+  Flash from smoke test 2's `token_usage.jsonl` (`docs/auto_rsa/SMOKE_RESULTS_2.md`)
+  when it is there, and report the run's actual spend from each cell's
+  `token_usage_summary.json`.
+- **Disk per cell**: tens of MB (fit cache ~2 MB per model, plus the agents'
+  directories).
 
 ## 5. Failure handling
 

@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=rsa_setup
 #SBATCH --partition=normal
-#SBATCH --cpus-per-task=16
-#SBATCH --mem=32GB
-#SBATCH --time=06:00:00
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=8GB
+#SBATCH --time=01:00:00
 #SBATCH --output=%x_%j.out
 #SBATCH --error=%x_%j.out
 #
