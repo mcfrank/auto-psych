@@ -202,11 +202,12 @@ A 5 x 6 dry run with scripted agents (all fits real) took 31 min end to end.
   8 CPUs fit a round's 6 candidates at once.
 - **Agent runs.** 6 cells x 5 rounds x 6 slots = 180 first attempts; retries
   and repairs add up to as many again: **180-360 agent runs**.
-- **Agent cost.** Smoke test 1 ran Gemini 3.1 Pro at $0.18-0.36 per agent;
-  Flash should be well under that. Read the per-agent cost of Gemini 3.8
-  Flash from smoke test 2's `token_usage.jsonl` (`docs/auto_rsa/SMOKE_RESULTS_2.md`)
-  when it is there, and report the run's actual spend from each cell's
-  `token_usage_summary.json`.
+- **Agent cost.** Smoke test 2 measured Gemini 3.8 Flash at $0.57-1.01 per
+  agent, ~$0.80 on average (`docs/auto_rsa/SMOKE_RESULTS_2.md`): ~$5 per
+  round of 6, ~$25-30 per 5-round cell with repairs, **~$150-300 for the six
+  cells**. Its agents ran 8-40 min; several spent their time on 7-10 min fits
+  of their own, which the faster self-check should remove. Report the actual
+  spend from each cell's `token_usage_summary.json`.
 - **Disk per cell**: tens of MB (fit cache ~2 MB per model, plus the agents'
   directories).
 
