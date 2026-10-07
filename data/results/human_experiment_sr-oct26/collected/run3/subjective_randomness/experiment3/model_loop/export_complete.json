@@ -1,0 +1,13 @@
+{
+  "models": [
+    "heavy_tailed_signed_sensitivity_motif",
+    "short_sequence_pseudoflip_dilution",
+    "thurstonian_probit_decision",
+    "gamblers_run_signed_sensitivity_motif",
+    "streak_weary_chance_pseudoflip",
+    "lopsided_trick_coin_probit",
+    "accelerating_streak_weary_chance",
+    "mild_symmetric_trick_coin_streak_weary"
+  ],
+  "ledger_sha256": "d2f032d0469966741f03e61fd4ee622d7f4a18225ef93b56dede1a59b0d10564"
+}

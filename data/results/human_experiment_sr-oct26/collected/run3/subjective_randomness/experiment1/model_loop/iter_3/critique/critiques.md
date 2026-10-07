@@ -1,0 +1,12 @@
+# Critique of `bayesian_chance_vs_repeating_motif_2`
+
+5 of 8 evaluated test statistics show a significant discrepancy (p ≤ 0.05), over 1000 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **perfect_alternation_choice_rate** — Proportion of choices for a perfectly alternating sequence (HTHT.../THTH..., length>=4) when paired with a non-alternating one; observed above null_mean means the model over-penalises perfect alternation (people find it more random than predicted), below means it under-penalises it. (observed 0.768 vs null mean 0.826, z=-2.85, p=0.00599, q=0.024) [survives FDR]
+- **balance_preference_similar_switches** — Among pairs whose switch counts differ by at most 1 and whose head-count imbalances |#H - n/2| differ, the proportion of choices for the more balanced sequence; observed above null_mean means people weight H/T balance more than the model's biased-coin alternative implies, below means less. (observed 0.721 vs null mean 0.682, z=2.58, p=0.004, q=0.024) [survives FDR]
+- **participant_side_bias_sd** — Standard deviation across participants of each participant's proportion of Left choices; observed above null_mean means people have individual left/right response biases that the model (no side-bias term) under-produces, below means less spread than predicted. (observed 0.0768 vs null mean 0.0623, z=2.57, p=0.014, q=0.0288) [survives FDR]
+- **participant_majority_agreement_sd** — Standard deviation across participants of each participant's proportion of choices agreeing with the pair's majority choice (computed on the same dataset, ties counted as 0.5); observed above null_mean means individuals differ in which sequences they find random (or in consistency) more than the model's sensitivity-only heterogeneity produces, below means less. (observed 0.147 vs null mean 0.123, z=2.50, p=0.016, q=0.0288) [survives FDR]
+- **short_vs_long_pair_extremity** — Mean |pair choice rate - 0.5| over pairs of length <=5 minus the same over pairs of length >=7; observed above null_mean means people are more decisive on short sequences (relative to long) than the model's length-independent sensitivity predicts, below means less. (observed 0.0948 vs null mean 0.00714, z=2.45, p=0.018, q=0.0288) [survives FDR]

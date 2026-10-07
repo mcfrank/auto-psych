@@ -1,0 +1,116 @@
+models:
+- name: heavy_tailed_signed_sensitivity_motif
+  rationale: "Refinement of `attentive_lapse_heads_rigged_motif` (people judge a sequence\
+    \ random to the extent their own second-order model of a fair coin explains it\
+    \ better than the regular generators they suspect \u2014 a switch-biased coin,\
+    \ a heads-favoured trick coin and a repeating motif with slips \u2014 the evidence\
+    \ weighed per flip, with each person's side habit deciding near-ties, and a person-specific\
+    \ share of trials answered at random). The single change is in how people depart\
+    \ from the shared judgment: instead of occasionally guessing at random, which\
+    \ can lower a person's agreement with the majority only down to chance, each person\
+    \ weighs the regularity evidence with their own sensitivity drawn from a heavy-tailed\
+    \ population that can cross zero \u2014 most people near the group's typical sensitivity,\
+    \ a few nearly indifferent, and a few reversed, systematically picking the sequence\
+    \ that looks less random to everyone else. This addresses the FDR-surviving critique\
+    \ that participants' agreement with the majority varies across people more than\
+    \ the lapse model produces, since some participants agree with the majority well\
+    \ below chance."
+- name: short_sequence_pseudoflip_dilution
+  rationale: "Refinement of the incumbent `heavy_tailed_signed_sensitivity_motif`\
+    \ (people judge a sequence random to the extent their own second-order model of\
+    \ a fair coin explains it better than the regular generators they suspect \u2014\
+    \ a switch-biased coin, a heads-favoured trick coin and a repeating motif with\
+    \ slips \u2014 weighing the evidence per flip, with heavy-tailed signed person\
+    \ sensitivity and a side habit). The single change is in how the evidence is weighed\
+    \ per flip: people do not judge a very short sequence on its few flips alone but\
+    \ read its impression as if diluted by a handful of imagined, unremarkable flips\
+    \ (a fitted pseudo-length added to the real length), so the per-flip weighting\
+    \ no longer inflates the evidence of 2- and 3-flip sequences \u2014 people still\
+    \ prefer the more-switching sequence in very short pairs, but less decisively\
+    \ than a pure per-flip scaling implies, addressing the critique that in pairs\
+    \ of length 2\u20133 people choose the more-switching sequence less often than\
+    \ the incumbent predicts."
+- name: thurstonian_probit_decision
+  rationale: 'The choice is made by a Thurstonian comparison: each sequence''s felt
+    randomness is read with Gaussian internal noise, and the person picks whichever
+    noisy impression is larger. Choice probability therefore follows a normal (probit)
+    curve of the evidence difference instead of a logistic one, so its tails are thinner:
+    on clear-cut pairs, such as a long pure streak against a sequence with one or
+    two breaks, choices become close to deterministic, while near-ties stay graded.
+    The evidence itself is unchanged from the current best account (the person''s
+    own second-order picture of a fair coin weighed against a switch-biased coin,
+    a heads-favoured trick coin and a repeating motif with slips, per flip with pseudo-flip
+    dilution, with heavy-tailed signed person sensitivity and a side habit). This
+    addresses the FDR-surviving critique that people pick the more-switching sequence
+    in long low-switch pairs more decisively than the logistic model predicts.'
+- name: gamblers_run_signed_sensitivity_motif
+  rationale: "Refinement of `heavy_tailed_signed_sensitivity_motif` (people judge\
+    \ a sequence random to the extent their own second-order model of a fair coin\
+    \ explains it better than the regular generators they suspect \u2014 a switch-biased\
+    \ coin, a heads-favoured trick coin and a repeating motif with slips \u2014 the\
+    \ evidence weighed per flip, with heavy-tailed signed person sensitivity and a\
+    \ side habit). The single change, grafted from `gamblers_run_second_order_side_habit`,\
+    \ is that people's picture of a fair coin also holds a run-length gambler's fallacy:\
+    \ the longer the current run has lasted beyond two flips, the more they expect\
+    \ chance to switch, so a long streak looks improbable under chance roughly quadratically\
+    \ in its length and the first one or two breaks of a long streak make a sequence\
+    \ look much more random than further switches do. This addresses the FDR-surviving\
+    \ critique that, among long pairs where both sequences have at most two switches,\
+    \ people choose the more-switching sequence more often than the best model predicts."
+- name: streak_weary_chance_pseudoflip
+  rationale: "Refinement of the incumbent `short_sequence_pseudoflip_dilution` (people\
+    \ judge a sequence random to the extent their own second-order picture of a fair\
+    \ coin explains it better than the regular generators they suspect \u2014 a switch-biased\
+    \ coin, a heads-favoured trick coin and a repeating motif with slips \u2014 with\
+    \ heavy-tailed signed person sensitivity, a side habit, and the per-flip evidence\
+    \ diluted by imagined pseudo-flips for short sequences). The single change, taken\
+    \ from `gamblers_run_second_order_side_habit`, is to their picture of chance:\
+    \ people hold a gambler's fallacy that a fair coin becomes more likely to switch\
+    \ the longer the current streak has lasted, so a long unbroken streak is improbable\
+    \ under chance far beyond its switch count and the first one or two breaks of\
+    \ a long streak make a sequence look much more random \u2014 addressing the FDR-surviving\
+    \ critique that among long, low-switch pairs people choose the sequence with more\
+    \ streak breaks more often than the incumbent predicts."
+- name: lopsided_trick_coin_probit
+  rationale: "Refinement of `thurstonian_probit_decision` (people pick the sequence\
+    \ whose noisy felt randomness is larger \u2014 a probit comparison \u2014 where\
+    \ felt randomness is how much better their own second-order picture of a fair\
+    \ coin explains the sequence than the regular generators they suspect: a switch-biased\
+    \ coin, a heads-favoured trick coin and a repeating motif with slips, weighed\
+    \ per flip with pseudo-flip dilution, heavy-tailed signed person sensitivity and\
+    \ a side habit). The single change is in how lopsided people imagine a trick coin\
+    \ to be: instead of a fixed prior over its heads rate, how concentrated that prior\
+    \ is is fitted, so if people picture trick coins as grossly rigged, only an extreme\
+    \ heads/tails imbalance is explained away as rigging, and a moderately lopsided\
+    \ but frequently switching sequence still looks random. This addresses the critique\
+    \ that in long pairs where the more-switching sequence is also the more lopsided\
+    \ one, people choose the more-switching sequence more often than the best model\
+    \ predicts \u2014 they weigh heads/tails balance against switching less than it\
+    \ assumes."
+- name: accelerating_streak_weary_chance
+  rationale: "Refinement of the incumbent `streak_weary_chance_pseudoflip` (people\
+    \ judge a sequence random to the extent their own second-order, streak-weary picture\
+    \ of a fair coin explains it better than the regular generators they suspect \u2014\
+    \ a switch-biased coin, a heads-favoured trick coin and a repeating motif with\
+    \ slips \u2014 with pseudo-flip-diluted per-flip evidence, heavy-tailed signed\
+    \ person sensitivity and a side habit). The single change is in how their gambler's\
+    \ fallacy grows with streak length: the expectation that chance must switch does\
+    \ not rise steadily with each extra flip of a run but accelerates, so a run of\
+    \ three barely seems overdue while a run of five or six feels sharply improbable\
+    \ for a fair coin, and the first break of a long streak makes a sequence look\
+    \ far more random than the incumbent's linear belief allows. This addresses the\
+    \ critique that among long pairs where both sequences have at most two switches,\
+    \ people choose the more-switching sequence more often than the incumbent predicts."
+- name: mild_symmetric_trick_coin_streak_weary
+  rationale: "Refinement of the incumbent `streak_weary_chance_pseudoflip` (people\
+    \ judge a sequence random to the extent their own second-order, streak-weary picture\
+    \ of a fair coin explains it better than the regular generators they suspect \u2014\
+    \ a switch-biased coin, a trick coin and a repeating motif with slips \u2014 with\
+    \ pseudo-flip-diluted per-flip evidence, heavy-tailed signed person sensitivity\
+    \ and a side habit). The single change is to the trick coin people imagine: not\
+    \ one leaning towards heads with any degree of rigging equally likely, but a symmetric\
+    \ coin that is only mildly rigged, with how mildly fitted. A modest heads/tails\
+    \ imbalance is then weak evidence against chance, so people weigh balance less\
+    \ against switching. This addresses the critique that in length-8 pairs where\
+    \ the more-switching sequence is also the more lopsided one, people choose the\
+    \ more-switching sequence more often than the incumbent predicts."

@@ -1,0 +1,12 @@
+# Critique of `length_normalised_chance_vs_motif`
+
+5 of 8 evaluated test statistics show a significant discrepancy (p ≤ 0.05), over 1000 posterior-predictive replicates.
+
+## Significant discrepancies (a better model should address these)
+
+Raw two-sided p shown with a Benjamini-Hochberg FDR-adjusted q across this round's statistics. Prioritise discrepancies that survive the FDR (`q ≤ alpha`); a raw-only hit may be one of several screened at once.
+- **perfect_alternation_choice_rate** — Proportion of choices for a perfectly alternating sequence (HTHT.../THTH..., length>=4) when paired with a non-alternating one; observed above null_mean means the model over-penalises perfect alternation (people find it more random than predicted), below means it under-penalises it. (observed 0.768 vs null mean 0.827, z=-2.96, p=0.00599, q=0.024) [survives FDR]
+- **longest_run_avoidance_equal_switches** — Among pairs whose switch counts differ by at most 1 but whose longest runs differ, the proportion of choices for the sequence with the shorter longest run; observed above null_mean means people penalise long streaks beyond what switch/motif statistics explain (model under-penalises streaks), below means over-penalises. (observed 0.795 vs null mean 0.747, z=2.96, p=0.00599, q=0.024) [survives FDR]
+- **participant_left_rate_sd** — Standard deviation across participants of each participant's proportion of Left choices; observed above null_mean means people have individual side biases that the model (no side-bias term) under-produces, below means less spread than predicted. (observed 0.0768 vs null mean 0.062, z=2.52, p=0.022, q=0.044) [survives FDR]
+- **participant_majority_agreement_sd** — Standard deviation across participants of each participant's proportion of choices agreeing with the pair's majority choice (computed on the same dataset, ties as 0.5); observed above null_mean means individuals differ in which sequences they find random more than the model's sensitivity-only heterogeneity produces, below means less. (observed 0.147 vs null mean 0.123, z=2.51, p=0.016, q=0.0426) [survives FDR]
+- **balance_preference_similar_switches** — Among pairs whose switch counts differ by at most 1 and whose head-count imbalances |#H - n/2| differ, the proportion of choices for the more balanced sequence; observed above null_mean means people weight H/T balance more than the model implies, below means less. (observed 0.721 vs null mean 0.686, z=2.27, p=0.032, q=0.0511)
