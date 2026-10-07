@@ -1,0 +1,27 @@
+models:
+- name: literal_listener
+  rationale: Listeners pick uniformly among the objects the word is literally true
+    of.
+- name: rsa_l1
+  rationale: Listeners invert a softmax-rational speaker who simulates a literal listener
+    (depth 1), with a uniform prior over objects.
+- name: rsa_l2
+  rationale: Listeners reason one level deeper (depth 2), inverting a speaker who
+    simulates the depth-1 pragmatic listener.
+- name: rsa_l1_salience
+  rationale: Depth-1 RSA whose listener has a salience prior over objects (feature
+    count, familiarization base rate) that the simulated literal listener lacks.
+- name: rsa_l1_shared_prior
+  rationale: Depth-1 RSA with the salience prior as common knowledge, used by the
+    simulated literal listener as well as the pragmatic listener.
+- name: literal_speaker_inverter
+  rationale: "Listeners invert a zero-order \"literal\" speaker (S0) who simply picks\
+    \ one of the object's features uniformly at random, without simulating a listener.\
+    \ The pragmatic preference for simpler objects emerges entirely from probability\
+    \ dilution\u2014an object with more features is less likely to emit the heard\
+    \ word\u2014rather than from Gricean reasoning about informativity."
+- name: rsa_l2_salience
+  rationale: I refine the `rsa_l2` model by giving its top-level pragmatic listener
+    the learned salience prior over objects (based on feature count and familiarization).
+    The simulated speaker and lower-level listeners still use a uniform prior, exactly
+    as the salience prior is applied in `rsa_l1_salience`.

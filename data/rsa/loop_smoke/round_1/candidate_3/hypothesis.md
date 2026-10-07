@@ -1,0 +1,1 @@
+I refine the `rsa_l2` model by giving its top-level pragmatic listener the learned salience prior over objects (based on feature count and familiarization). The simulated speaker and lower-level listeners still use a uniform prior, exactly as the salience prior is applied in `rsa_l1_salience`.

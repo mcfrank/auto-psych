@@ -1,0 +1,1 @@
+Listeners invert a zero-order "literal" speaker (S0) who simply picks one of the object's features uniformly at random, without simulating a listener. The pragmatic preference for simpler objects emerges entirely from probability dilution—an object with more features is less likely to emit the heard word—rather than from Gricean reasoning about informativity.
