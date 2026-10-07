@@ -60,3 +60,17 @@ def test_test_rows_load_as_trials(combined, tmp_path):
     test.to_csv(path, index=False)
     trials = load_forced_choice(path)
     assert len(trials.contexts) == int(_counted(test).sum())
+
+
+def test_heldout_baseline_seeds_are_the_runs_own_seed_pool(tmp_path):
+    """A recovery run starts without its ground truth: the held-out baseline
+    must be the seeds it had, not the project's (which include the answer)."""
+    from src.rsa.evaluate_heldout import SEED_DIR, Args, seed_models_dir
+
+    loop = tmp_path / "loop"
+    loop.mkdir()
+    assert seed_models_dir(Args(loop_dir=loop, test=tmp_path / "t.csv", out_dir=tmp_path)) == SEED_DIR
+    (loop / "seed_pool").mkdir()
+    (loop / "seed_pool" / "models_manifest.yaml").write_text("models: []\n")
+    assert seed_models_dir(Args(loop_dir=loop, test=tmp_path / "t.csv", out_dir=tmp_path)) == loop / "seed_pool"
+    assert seed_models_dir(Args(loop_dir=loop, test=tmp_path / "t.csv", out_dir=tmp_path, seed_models=SEED_DIR)) == SEED_DIR

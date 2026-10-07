@@ -23,7 +23,7 @@ import multiprocessing as mp
 import os
 import threading
 import traceback
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -64,8 +64,10 @@ def fingerprint(model_path: Path, responses_path: Path, settings: FitSettings) -
 
 
 def cache_paths(cache_dir: Path, name: str, fp: str) -> tuple[Path, Path]:
-    base = Path(cache_dir) / f"{name}.{fp}"
-    return base.with_suffix(".nc"), base.with_suffix(".json")
+    # Not Path.with_suffix: it would replace ".<fp>" and key the cache by name
+    # alone (until 2026-10-07 it did: a refit read back the fit it replaces).
+    base = f"{name}.{fp}"
+    return Path(cache_dir) / f"{base}.nc", Path(cache_dir) / f"{base}.json"
 
 
 def _model_failure_types() -> tuple:
@@ -228,6 +230,28 @@ def _fit_cached(
     if kind == "model":
         raise ModelFailure(message)
     raise RuntimeError(f"{name}: infrastructure failure while fitting: {message}\n{tb}")
+
+
+REFIT_TARGET_ACCEPT = 0.95
+
+
+def refit_settings(settings: FitSettings) -> FitSettings:
+    """The one refit of a fit that fails the convergence gate: target_accept
+    0.95 and a seed of its own."""
+    return replace(settings, target_accept=max(settings.target_accept, REFIT_TARGET_ACCEPT), seed=settings.seed + 1)
+
+
+def loop_fit(model_path: Path, name: str, responses_path: Path, settings: FitSettings, cache_dir: Path,
+             *, time_limit_sec: Optional[float] = None) -> RSAFit:
+    """The fit the loop uses for a model: the fit at ``settings``, or, when it
+    fails the convergence gate, the refit (`refit_settings`). Everything that
+    scores the loop's models (admission, held-out, recovery) goes through
+    this, so all of them read the same cached fit."""
+    fitted = fit_cached(model_path, name, responses_path, settings, cache_dir, time_limit_sec=time_limit_sec)
+    if fitted.converged:
+        return fitted
+    return fit_cached(model_path, name, responses_path, refit_settings(settings), cache_dir,
+                      time_limit_sec=time_limit_sec)
 
 
 def cached_fits(cache_dir: Path) -> List[Path]:

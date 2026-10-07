@@ -32,7 +32,7 @@ from src.models.model_manifest import read_manifest_names
 from src.rsa.context import Context
 from src.rsa.dataset import load_forced_choice
 from src.rsa.fit import FitSettings, RSAFit, mean_probs, posterior_flat
-from src.rsa.loop.fitting import fit_cached
+from src.rsa.loop.fitting import loop_fit
 from src.rsa.model_file import RSAModel
 from src.rsa.split import unit_keys
 from src.runtime.config import PROJECT_ASSETS_DIR
@@ -60,20 +60,34 @@ class Args:
     test: Path
     """Held-out trials (src.rsa.split's test.csv)."""
     out_dir: Path
-    seed_models: Path = SEED_DIR
+    seed_models: Optional[Path] = None
+    """The seeds the run started with, the baseline. Default: the run's
+    ``seed_pool/`` when it has one (a recovery run started without its ground
+    truth and near-twins), else the project's seed models."""
     num_warmup: int = 1000
     num_samples: int = 1000
     num_chains: int = 4
+    seed: int = 0
+    """The loop run's --seed: with the same NUTS settings, every fit is the
+    loop's own (read from its cache, refit included; src.rsa.loop.fitting.loop_fit)."""
     include_pruned: bool = True
     extra_models: List[Path] = field(default_factory=list)
     """More model files to score (e.g. a recovery run's ground truth)."""
 
 
+def seed_models_dir(args: Args) -> Path:
+    if args.seed_models is not None:
+        return Path(args.seed_models)
+    pool = Path(args.loop_dir) / "seed_pool"
+    return pool if (pool / "models_manifest.yaml").exists() else SEED_DIR
+
+
 def collect_models(args: Args) -> Dict[str, Path]:
     loop = Path(args.loop_dir)
     models: Dict[str, Path] = {}
-    for name in read_manifest_names(args.seed_models):
-        models[f"seed:{name}"] = Path(args.seed_models) / f"{name}.py"
+    seeds = seed_models_dir(args)
+    for name in read_manifest_names(seeds):
+        models[f"seed:{name}"] = seeds / f"{name}.py"
     for name in read_manifest_names(loop / "models"):
         models[name] = loop / "models" / f"{name}.py"
     pruned = loop / "models" / "pruned"
@@ -95,11 +109,12 @@ def main(args: Args) -> pd.DataFrame:
         raise ValueError(f"{args.test} has no included forced-choice trials")
     units = pd.factorize(unit_keys(test.frame))[0]
     source = test.frame["source"] if "source" in test.frame else pd.Series("pragmods", index=test.frame.index)
-    settings = FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains)
+    settings = FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
+                           seed=args.seed)
     lpd: Dict[str, np.ndarray] = {}
     for label, path in collect_models(args).items():
         name = path.stem
-        fitted = fit_cached(path, name, train_path, settings, loop / ".fit_cache")
+        fitted = loop_fit(path, name, train_path, settings, loop / ".fit_cache")
         lpd[label] = heldout_lpd(RSAModel(path, name=name), fitted, test.contexts, test.choices)
         print(f"  {label}: held-out lpd {lpd[label].sum():.1f}")
     seeds = [k for k in lpd if k.startswith("seed:")]
@@ -118,7 +133,7 @@ def main(args: Args) -> pd.DataFrame:
     table.to_csv(out / "heldout.csv", index=False)
     pd.DataFrame(lpd).to_csv(out / "heldout_pointwise.csv", index=False)
     (out / "heldout.json").write_text(json.dumps(dict(
-        loop_dir=str(loop), test=str(args.test), n_test_trials=len(test.contexts),
+        loop_dir=str(loop), test=str(args.test), seed_models=str(seed_models_dir(args)), n_test_trials=len(test.contexts),
         n_test_units=int(units.max() + 1), best_seed=best_seed, settings=vars(settings),
         table=table.to_dict(orient="records")), indent=1))
     print(table.to_string(index=False))

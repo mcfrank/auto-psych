@@ -22,7 +22,7 @@ repair it. Infrastructure failures raise instead.
 from __future__ import annotations
 
 import math
-from dataclasses import dataclass, replace
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Dict, Mapping, Optional, Sequence
 
@@ -31,11 +31,10 @@ import numpy as np
 from src.rsa.context import Context, group_by_shape, unique_contexts
 from src.rsa.fit import FitSettings, RSAFit
 from src.rsa.loop.code_gate import code_problems
-from src.rsa.loop.fitting import ModelFailure, fit_cached
+from src.rsa.loop.fitting import ModelFailure, loop_fit
 from src.rsa.loop.novelty import closest, posterior_mean_class_probs
 from src.rsa.model_file import ModelContractViolation, RSAModel, check_contract
 
-REFIT_TARGET_ACCEPT = 0.95
 
 
 @dataclass
@@ -71,14 +70,8 @@ def read_candidate(candidate_dir: Path) -> Optional[str]:
 
 
 def fit_with_refit(model_path: Path, name: str, cfg: GateConfig) -> RSAFit:
-    fitted = fit_cached(model_path, name, cfg.responses_path, cfg.settings, cfg.cache_dir,
-                        time_limit_sec=cfg.time_limit_sec)
-    if fitted.converged:
-        return fitted
-    retry = replace(cfg.settings, target_accept=max(cfg.settings.target_accept, REFIT_TARGET_ACCEPT),
-                    seed=cfg.settings.seed + 1)
-    return fit_cached(model_path, name, cfg.responses_path, retry, cfg.cache_dir,
-                      time_limit_sec=cfg.time_limit_sec)
+    return loop_fit(model_path, name, cfg.responses_path, cfg.settings, cfg.cache_dir,
+                    time_limit_sec=cfg.time_limit_sec)
 
 
 def admit(

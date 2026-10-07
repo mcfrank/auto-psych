@@ -255,7 +255,9 @@ else
 fi
 
 # --- scoring (no agents run from here on) -------------------------------------------
-NUTS_ARGS=(--num-warmup "$NUM_WARMUP" --num-samples "$NUM_SAMPLES" --num-chains "$NUM_CHAINS")
+# The loop's NUTS settings and seed, so scoring reads the loop's own fits from
+# its cache (refits included) instead of fitting every model again.
+NUTS_ARGS=(--num-warmup "$NUM_WARMUP" --num-samples "$NUM_SAMPLES" --num-chains "$NUM_CHAINS" --seed "$LOOP_SEED")
 if [[ ! -f "$RESULTS/heldout/heldout.json" ]]; then
   echo "[task $TASK] held-out evaluation on $DATA_DIR/test.csv"
   "$VENV_PY" -m src.rsa.evaluate_heldout --loop-dir "$RESULTS" --test "$DATA_DIR/test.csv" \

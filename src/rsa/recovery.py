@@ -22,16 +22,16 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Optional
 
 import pandas as pd
 import tyro
 
 from src.rsa.evaluate_heldout import Args as EvalArgs, main as evaluate
 from src.rsa.fit import FitSettings
-from src.rsa.loop.fitting import fit_cached
+from src.rsa.loop.fitting import loop_fit
 from src.rsa.loop.novelty import closest, novelty_pool, posterior_mean_class_probs
 from src.rsa.model_file import RSAModel
-from src.runtime.config import PROJECT_ASSETS_DIR
 
 DEFAULT_RMSE_THRESHOLD = 0.01
 
@@ -42,11 +42,15 @@ class Args:
     gt: Path
     test: Path
     out_dir: Path
-    seed_models: Path = PROJECT_ASSETS_DIR / "rsa_reference" / "seed_models"
+    seed_models: Optional[Path] = None
+    """Baseline seeds (default: the run's seed_pool/, see src.rsa.evaluate_heldout)."""
     rmse_threshold: float = DEFAULT_RMSE_THRESHOLD
     num_warmup: int = 1000
     num_samples: int = 1000
     num_chains: int = 4
+    seed: int = 0
+    """The loop run's --seed: with the same NUTS settings, every fit is the
+    loop's own (read from its cache, refit included; src.rsa.loop.fitting.loop_fit)."""
 
 
 def main(args: Args) -> dict:
@@ -55,17 +59,18 @@ def main(args: Args) -> dict:
     best = export["best_model"]
     table = evaluate(EvalArgs(loop_dir=loop, test=args.test, out_dir=args.out_dir, seed_models=args.seed_models,
                               num_warmup=args.num_warmup, num_samples=args.num_samples,
-                              num_chains=args.num_chains, extra_models=[Path(args.gt)]))
-    settings = FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains)
+                              num_chains=args.num_chains, seed=args.seed, extra_models=[Path(args.gt)]))
+    settings = FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
+                           seed=args.seed)
     pool = novelty_pool()
     gt_model = RSAModel(args.gt, name=Path(args.gt).stem)
-    gt_fit = fit_cached(args.gt, gt_model.name, loop / "responses.csv", settings, loop / ".fit_cache")
+    gt_fit = loop_fit(args.gt, gt_model.name, loop / "responses.csv", settings, loop / ".fit_cache")
     gt_preds = posterior_mean_class_probs(gt_model, gt_fit, pool)
     distances = {}
     for name in export["live"]:
         path = loop / "models" / f"{name}.py"
         model = RSAModel(path, name=name)
-        fitted = fit_cached(path, name, loop / "responses.csv", settings, loop / ".fit_cache")
+        fitted = loop_fit(path, name, loop / "responses.csv", settings, loop / ".fit_cache")
         distances[name] = closest(posterior_mean_class_probs(model, fitted, pool), {"gt": gt_preds})[1]
     gt_label = f"extra:{Path(args.gt).stem}"
     lpd = dict(zip(table.model, table.lpd))
