@@ -30,7 +30,7 @@ land. Handoffs to local sessions (Sherlock, live runs) should point here.
 | Held-out evaluation | hold out conditions *within* papers (~20% of each source's trials; a unit is a condition in one-shot experiments and an item in multi-trial ones): `src/rsa/split.py`, `src/rsa/evaluate_heldout.py` |
 | Recovery tests | ground truths `literal_listener` and `rsa_l1_salience` (with its near-twin `rsa_l1_shared_prior` also withheld), simulated on the real displays: `src/rsa/simulate.py`, `src/rsa/recovery.py` |
 | First Sherlock sweep | 3 conditions (real, recovery_literal, recovery_salience) x 2 replicates, 5 rounds x 6 slots (`HANDOFF_sherlock_run1.md`) |
-| Datasets | adults only; forced-choice listener data; no imagined-child/LLM speakers, sliders, feedback studies, or Franke & Degen 2016; unlicensed and CC BY-NC-ND sets are derived at run time, never committed |
+| Datasets | adults only; forced-choice listener data; no imagined-child/LLM speakers, sliders, feedback studies, or Franke & Degen 2016; unlicensed and CC BY-NC-ND sets are derived at run time, never committed; aggregates from them (report bundles, per-condition tables) may be committed (2026-10-07) |
 | Experiment stimuli | the pragmods artwork; identical objects keep pragmods' different base tints (people see slightly different twins, models treat them as identical: an accepted, unnameable difference) |
 | IRB | the subjective-randomness protocol covers the RSA pilot; reuse the repo's consent text |
 

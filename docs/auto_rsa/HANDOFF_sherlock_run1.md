@@ -265,6 +265,10 @@ for c in recovery_literal recovery_salience; do
 done
 ```
 
+**Committing summaries is fine** (PI decision 2026-10-07): `report.bundle.json`,
+`report.html` and the held-out/recovery tables hold aggregate numbers, and those
+are fine to commit even where they come from sources without a licence.
+
 **Do not commit:**
 
 - trial-level data: `responses.csv`, `train.csv`/`test.csv`, simulated CSVs,
