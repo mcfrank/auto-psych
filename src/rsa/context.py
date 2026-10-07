@@ -222,3 +222,29 @@ def group_by_shape(contexts: Sequence[Context]) -> Dict[Tuple[int, int], ShapeGr
         )
         for shape, idx in sorted(by_shape.items())
     }
+
+
+def model_key(ctx: Context) -> tuple:
+    """What a model sees of a context: two contexts with equal keys get equal
+    `Context.arrays` and choice classes (item and feature names are labels)."""
+    return (ctx.objects, ctx.utterance, ctx.familiarization, ctx.grayscale, ctx.valence, ctx.nameable)
+
+
+def unique_contexts(contexts: Sequence[Context]) -> Tuple[List[Context], np.ndarray]:
+    """The distinct contexts (by `model_key`, first occurrence order) and each
+    input's index among them.
+
+    Many trials show the same display (every participant of a condition), so
+    a model is evaluated once per distinct display and the result gathered
+    per trial: on the combined data 40k trials are 3k displays.
+    """
+    index: Dict[tuple, int] = {}
+    uniques: List[Context] = []
+    inverse = np.empty(len(contexts), dtype=np.int64)
+    for i, ctx in enumerate(contexts):
+        key = model_key(ctx)
+        if key not in index:
+            index[key] = len(uniques)
+            uniques.append(ctx)
+        inverse[i] = index[key]
+    return uniques, inverse

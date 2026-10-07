@@ -28,7 +28,7 @@ from typing import Dict, Mapping, Optional, Sequence
 
 import numpy as np
 
-from src.rsa.context import Context, group_by_shape
+from src.rsa.context import Context, group_by_shape, unique_contexts
 from src.rsa.fit import FitSettings, RSAFit
 from src.rsa.loop.code_gate import code_problems
 from src.rsa.loop.fitting import ModelFailure, fit_cached
@@ -105,7 +105,7 @@ def admit(
         )
     try:
         model = RSAModel(model_path, name=name)
-        check_contract(model, group_by_shape(training))
+        check_contract(model, group_by_shape(unique_contexts(training)[0]))
         check_contract(model, group_by_shape(pool))
     except ModelContractViolation as exc:
         return _refuse(f"contract: {exc}")

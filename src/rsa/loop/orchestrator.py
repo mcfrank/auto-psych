@@ -29,6 +29,7 @@ models distinguishable from the best trusted model, cap the live set, export.
 from __future__ import annotations
 
 import json
+import os
 import re
 import shutil
 from concurrent.futures import ThreadPoolExecutor
@@ -58,7 +59,8 @@ from src.rsa.dataset import load_forced_choice
 from src.rsa.fit import FitSettings, RSAFit, compare
 from src.rsa.loop import brief as briefs
 from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, ModelFailure
-from src.rsa.loop.gates import GateConfig, admit, fit_with_refit
+from src.rsa.loop.code_gate import code_problems
+from src.rsa.loop.gates import GateConfig, admit, fit_with_refit, read_candidate
 from src.rsa.loop.novelty import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
     novelty_pool,
@@ -110,6 +112,10 @@ class LoopConfig:
     fit_time_limit_sec: Optional[float] = FIT_TIME_LIMIT_SEC
     lenses: List[str] = field(default_factory=lambda: list(briefs.DEFAULT_RSA_LENSES))
     report_title: str = "RSA inner loop"
+    fit_workers: int = 0
+    """Fits run at once (each its own process): a round's candidates, and the
+    seeds, are fitted concurrently before their sequential admission. 0: as
+    many as the CPUs this process may use (`default_fit_workers`)."""
 
 
 @dataclass
@@ -120,6 +126,12 @@ class Live:
     fit: RSAFit
     pool_preds: np.ndarray
     source: str  # "seed" or the ledger context of the slot that proposed it
+
+
+def default_fit_workers() -> int:
+    """One fit per CPU the job was given (each fit runs single-threaded,
+    `src.rsa.loop.fitting.FIT_THREADS_ENV`)."""
+    return max(1, len(os.sched_getaffinity(0)))
 
 
 class RSALoop:
@@ -153,11 +165,14 @@ class RSALoop:
             time_limit_sec=self.cfg.fit_time_limit_sec,
         )
         self.models_dir.mkdir(exist_ok=True)
-        for entry in read_manifest_entries(self.cfg.seed_models_dir):
+        entries = read_manifest_entries(self.cfg.seed_models_dir)
+        for entry in entries:
+            shutil.copyfile(Path(self.cfg.seed_models_dir) / f"{entry['name']}.py",
+                            self.models_dir / f"{entry['name']}.py")
+        self._prefit([(self.models_dir / f"{e['name']}.py", e["name"]) for e in entries])
+        for entry in entries:
             name, rationale = entry["name"], entry.get("rationale", "")
-            src = Path(self.cfg.seed_models_dir) / f"{name}.py"
             dst = self.models_dir / f"{name}.py"
-            shutil.copyfile(src, dst)
             model = RSAModel(dst, name=name)
             try:
                 fitted = fit_with_refit(dst, name, self.gate_cfg)
@@ -183,12 +198,12 @@ class RSALoop:
     def _reserved(self) -> set:
         return set(self.live) | {e.name for e in self.ledger.entries()}
 
-    def _name_for(self, candidate_dir: Path, fallback: str) -> str:
+    def _name_for(self, candidate_dir: Path, fallback: str, taken: frozenset = frozenset()) -> str:
         f = candidate_dir / "model_name.txt"
         raw = f.read_text(encoding="utf-8").strip().splitlines()[0].strip() if f.exists() and f.read_text().strip() else ""
         name = raw if NAME_RE.match(raw) else fallback
         base, k = name, 2
-        while name in self._reserved():
+        while name in self._reserved() | taken:
             name = f"{base}_{k}"
             k += 1
         return name
@@ -275,6 +290,30 @@ class RSALoop:
         with ThreadPoolExecutor(max_workers=len(jobs)) as pool:
             return list(pool.map(lambda j: self.spawn(*j), jobs))
 
+    def _prefit(self, items: List[tuple[Path, str]]) -> None:
+        """Fit models concurrently (cached; a model's failure is remembered) so
+        that their sequential admission reads finished fits: the same
+        verdicts as fitting at admission, in the time of the slowest fit
+        rather than the sum. Files the cheap gates refuse are not fitted."""
+        def one(item: tuple[Path, str]) -> None:
+            path, name = item
+            if path.name == "candidate.py" and read_candidate(path.parent) is not None:
+                return
+            if code_problems(path.read_text(encoding="utf-8")):
+                return
+            try:
+                fit_with_refit(path, name, self.gate_cfg)
+            except ModelFailure:
+                pass  # remembered; admission reports it
+
+        if not items:
+            return
+        workers = min(len(items), self.cfg.fit_workers or default_fit_workers())
+        if self.gate_cfg.time_limit_sec is None:
+            workers = 1  # fits run in this process then, and numpyro's handler stack is not thread-safe
+        with ThreadPoolExecutor(max_workers=workers) as pool:
+            list(pool.map(one, items))
+
     def _try_admit(self, cdir: Path, name: str, context: str) -> tuple[bool, str]:
         hyp_file = cdir / "hypothesis.md"
         hypothesis = hyp_file.read_text(encoding="utf-8") if hyp_file.exists() else ""
@@ -317,12 +356,20 @@ class RSALoop:
                                                         incumbent, briefs.retry_note())))
         self._spawn_all(retry_jobs)
         events, repairs = [], []
+        # Names first (as sequential admission would give them), then every
+        # candidate's fit at once, then admission one by one.
+        taken: set = set()
+        for s in slots:
+            if (s["dir"] / "candidate.py").exists():
+                s["name"] = self._name_for(s["dir"], f"r{round_index + 1}_c{s['i'] + 1}", frozenset(taken))
+                taken.add(s["name"])
+        self._prefit([(s["dir"] / "candidate.py", s["name"]) for s in slots if "name" in s])
         for s in slots:
             if not (s["dir"] / "candidate.py").exists():
                 self._ledger(f"slot_{s['i'] + 1}", "rejected", "the agent wrote no candidate.py", "", s["context"])
                 events.append(dict(slot=s["i"] + 1, role=s["role"], name=None, outcome="no file", reason=""))
                 continue
-            name = self._name_for(s["dir"], f"r{round_index + 1}_c{s['i'] + 1}")
+            name = s["name"]
             ok, reason = self._try_admit(s["dir"], name, s["context"])
             events.append(dict(slot=s["i"] + 1, role=s["role"], name=name, outcome="admitted" if ok else "rejected",
                                reason=reason, hypothesis=_read(s["dir"] / "hypothesis.md")))
@@ -340,9 +387,15 @@ class RSALoop:
             repair_jobs.append((rd, self._docs_for(rd, s["role"], s["lens"], round_index, standing, incumbent,
                                                    briefs.repair_note(reason))))
         self._spawn_all(repair_jobs)
+        taken = set()
+        for s, _ in repairs:
+            s["repair_name"] = self._name_for(s["repair_dir"], f"r{round_index + 1}_c{s['i'] + 1}", frozenset(taken))
+            taken.add(s["repair_name"])
+        self._prefit([(s["repair_dir"] / "candidate.py", s["repair_name"]) for s, _ in repairs
+                      if (s["repair_dir"] / "candidate.py").exists()])
         for s, _ in repairs:
             rd = s["repair_dir"]
-            name = self._name_for(rd, f"r{round_index + 1}_c{s['i'] + 1}")
+            name = s["repair_name"]
             ok, reason = self._try_admit(rd, name, s["context"] + " repair 1")
             events.append(dict(slot=s["i"] + 1, role=s["role"], name=name, outcome="admitted" if ok else "rejected",
                                reason=reason, hypothesis=_read(rd / "hypothesis.md"), repair=True))

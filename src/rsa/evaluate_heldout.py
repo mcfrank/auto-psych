@@ -29,9 +29,9 @@ import tyro
 
 from src.models.clustered_se import cluster_dse
 from src.models.model_manifest import read_manifest_names
-from src.rsa.context import Context, group_by_shape
+from src.rsa.context import Context
 from src.rsa.dataset import load_forced_choice
-from src.rsa.fit import FitSettings, RSAFit, class_probs, prepare
+from src.rsa.fit import FitSettings, RSAFit, mean_probs, posterior_flat
 from src.rsa.loop.fitting import fit_cached
 from src.rsa.model_file import RSAModel
 from src.rsa.split import unit_keys
@@ -44,26 +44,13 @@ MAX_DRAWS = 400
 def heldout_lpd(model: RSAModel, fitted: RSAFit, contexts: Sequence[Context],
                 choices: Sequence[int], max_draws: int = MAX_DRAWS) -> np.ndarray:
     """Pointwise log posterior predictive density of the observed choices."""
-    groups, grouped_choices, inverse, _ = prepare(contexts, choices)
-    post = fitted.idata.posterior
-    flat = {k: np.asarray(post[k]).reshape(-1) for k in fitted.param_names}
-    n = len(next(iter(flat.values())))
-    take = np.linspace(0, n - 1, min(max_draws, n)).astype(int)
-    out, start = [], 0
-    for group in groups:
-        rows = np.arange(len(group.indices))
-        chosen = grouped_choices[start:start + len(rows)]
-        start += len(rows)
-        acc = np.zeros(len(rows))
-        for i in take:
-            p = np.asarray(class_probs(model.group_probs({k: v[i] for k, v in flat.items()}, group),
-                                       group.classes))
-            acc += p[rows, chosen]
-        mean = acc / len(take)
-        if np.any(mean <= 0):
-            raise ValueError(f"{model.name} gives held-out choices probability 0")
-        out.append(np.log(mean))
-    return np.concatenate(out)[inverse]
+    if len(contexts) != len(choices):
+        raise ValueError(f"{len(contexts)} contexts but {len(choices)} choices")
+    means = mean_probs(model, posterior_flat(fitted), contexts, max_draws, by_class=True)
+    p = np.asarray([m[ctx.choice_classes()[c]] for m, ctx, c in zip(means, contexts, choices)])
+    if np.any(p <= 0):
+        raise ValueError(f"{model.name} gives held-out choices probability 0")
+    return np.log(p)
 
 
 @dataclass

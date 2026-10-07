@@ -143,6 +143,16 @@ class RSAModel:
             )
         return self._jitted[group.shape](dict(params), group.arrays)
 
+    def draws_probs(self, params: Mapping[str, Any], group: ShapeGroup) -> jnp.ndarray:
+        """(draws, trials, N_OBJ) probabilities for a batch of parameter draws
+        (each value in ``params`` has a leading draw axis)."""
+        key = ("draws", group.shape)
+        if key not in self._jitted:
+            fn = self._choice_probs(group.shape)
+            per_draw = lambda p, arrays: jax.vmap(lambda ctx: fn(p, ctx))(arrays)  # noqa: E731
+            self._jitted[key] = jax.jit(jax.vmap(per_draw, in_axes=(0, None)))
+        return self._jitted[key](dict(params), group.arrays)
+
 
 def prior_draws(
     params: Mapping[str, Distribution], n: int, seed: int = 0

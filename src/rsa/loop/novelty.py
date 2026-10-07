@@ -17,13 +17,13 @@ from __future__ import annotations
 
 import hashlib
 import json
-from typing import Dict, List, Mapping, Sequence
+from typing import List, Mapping, Sequence
 
 import numpy as np
 
-from src.rsa.context import Context, group_by_shape
+from src.rsa.context import Context
 from src.rsa.design_space import context_pool, games
-from src.rsa.fit import RSAFit, class_probs
+from src.rsa.fit import RSAFit, mean_probs, posterior_flat
 from src.rsa.model_file import RSAModel
 
 DEFAULT_NOVELTY_RMSE_THRESHOLD = 0.002
@@ -68,26 +68,15 @@ def posterior_mean_class_probs(
     Raises ValueError when the model's probabilities are not finite on some
     pool context (a model failure: the caller rejects with the reason).
     """
-    post = fitted.idata.posterior
-    flat = {k: np.asarray(post[k]).reshape(-1) for k in fitted.param_names}
-    n = len(next(iter(flat.values())))
-    take = np.linspace(0, n - 1, min(max_draws, n)).astype(int)
-    out: Dict[int, np.ndarray] = {}
-    for group in group_by_shape(pool).values():
-        acc = 0.0
-        for i in take:
-            p = model.group_probs({k: v[i] for k, v in flat.items()}, group)
-            acc = acc + np.asarray(class_probs(p, group.classes))
-        mean = acc / len(take)
-        if not np.all(np.isfinite(mean)):
-            bad = [pool[group.indices[r]] for r in np.where(~np.isfinite(mean).all(axis=1))[0][:3]]
-            raise ValueError(
-                f"{model.name}'s choice probabilities are not finite on pool contexts such as "
-                + "; ".join(json.dumps(pool_record(c)) for c in bad)
-            )
-        for row, idx in enumerate(group.indices):
-            out[int(idx)] = mean[row]
-    return np.concatenate([out[i] for i in range(len(pool))])
+    means = mean_probs(model, posterior_flat(fitted), pool, max_draws, by_class=True)
+    finite = np.asarray([np.all(np.isfinite(m)) for m in means])
+    if not finite.all():
+        bad = [pool[i] for i in np.where(~finite)[0][:3]]
+        raise ValueError(
+            f"{model.name}'s choice probabilities are not finite on pool contexts such as "
+            + "; ".join(json.dumps(pool_record(c)) for c in bad)
+        )
+    return np.concatenate(means)
 
 
 def closest(candidate: np.ndarray, admitted: Mapping[str, np.ndarray]) -> tuple[str, float]:

@@ -21,14 +21,25 @@ import hashlib
 import json
 import multiprocessing as mp
 import os
+import threading
 import traceback
 from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, List, Optional
+from typing import Any, Dict, List, Optional
 
 from src.rsa.fit import FitSettings, RSAFit, ZeroProbabilityChoice
 
 FIT_TIME_LIMIT_SEC = 30 * 60  # as the PyMC domain's CANDIDATE_FIT_TIME_LIMIT_SEC
+# A fit child runs single-threaded: measured on the combined data (40k trials,
+# 2026-10-07), one fit takes ~55 s on one thread and ~53 s on four, and four
+# single-threaded fits at once on four cores ~75 s each. So the loop runs one
+# fit per CPU (`src.rsa.loop.orchestrator.default_fit_workers`).
+SINGLE_THREAD_XLA_FLAGS = "--xla_cpu_multi_thread_eigen=false intra_op_parallelism_threads=1"
+
+# Part of every fingerprint: bump when what a cached fit holds changes (2:
+# pattern-level log-likelihood, src.rsa.fit), so an old file is never read
+# as a new one.
+FIT_FORMAT = 2
 
 
 class ModelFailure(RuntimeError):
@@ -45,6 +56,7 @@ def _sha_file(path: Path) -> str:
 
 def fingerprint(model_path: Path, responses_path: Path, settings: FitSettings) -> str:
     h = hashlib.sha256()
+    h.update(f"format{FIT_FORMAT}".encode())
     h.update(_sha_file(model_path).encode())
     h.update(_sha_file(responses_path).encode())
     h.update(json.dumps(asdict(settings), sort_keys=True).encode())
@@ -114,6 +126,8 @@ def _fit_now(model_path: Path, name: str, responses_path: Path, settings: FitSet
 
 
 def _child(model_path, name, responses_path, settings, nc_path, meta_path, queue) -> None:
+    # Before JAX's first computation, which reads the flags.
+    os.environ["XLA_FLAGS"] = (os.environ.get("XLA_FLAGS", "") + " " + SINGLE_THREAD_XLA_FLAGS).strip()
     try:
         fitted = _fit_now(Path(model_path), name, Path(responses_path), settings)
         _write(fitted, Path(nc_path), Path(meta_path))
@@ -126,6 +140,14 @@ def _child(model_path, name, responses_path, settings, nc_path, meta_path, queue
                 "".join(traceback.format_exception(exc))[-4000:],
             )
         )
+
+
+# A model's failure, by the fit it was for, for the life of the process: the
+# loop fits a round's candidates concurrently before admitting them one by
+# one, and a failed (or timed-out) fit must not be run a second time at
+# admission. Infrastructure failures are never remembered.
+_FAILURES: Dict[str, ModelFailure] = {}
+_FAILURES_LOCK = threading.Lock()
 
 
 def fit_cached(
@@ -141,8 +163,32 @@ def fit_cached(
 
     With ``time_limit_sec`` the fit runs in a spawned child process that is
     killed at the limit (`FitTimeLimitExceeded`). Raises `ModelFailure` for a
-    failure of the model, and RuntimeError for any other failure.
+    failure of the model (remembered: the same fit raises it again without
+    running), and RuntimeError for any other failure.
     """
+    fp = fingerprint(model_path, responses_path, settings)
+    key = str(cache_paths(cache_dir, name, fp)[0])
+    with _FAILURES_LOCK:
+        failed = _FAILURES.get(key)
+    if failed is not None:
+        raise type(failed)(str(failed))
+    try:
+        return _fit_cached(model_path, name, responses_path, settings, cache_dir, time_limit_sec=time_limit_sec)
+    except ModelFailure as exc:
+        with _FAILURES_LOCK:
+            _FAILURES[key] = exc
+        raise
+
+
+def _fit_cached(
+    model_path: Path,
+    name: str,
+    responses_path: Path,
+    settings: FitSettings,
+    cache_dir: Path,
+    *,
+    time_limit_sec: Optional[float] = None,
+) -> RSAFit:
     fp = fingerprint(model_path, responses_path, settings)
     nc_path, meta_path = cache_paths(cache_dir, name, fp)
     if nc_path.exists() and meta_path.exists():

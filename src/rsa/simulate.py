@@ -31,8 +31,8 @@ import pandas as pd
 import tyro
 
 from src.rsa.dataset import context_from_row, load_forced_choice
-from src.rsa.fit import FitSettings, class_probs, fit
-from src.rsa.context import group_by_shape
+from src.rsa.context import group_by_shape, unique_contexts
+from src.rsa.fit import FitSettings, draw_batches, fit
 from src.rsa.model_file import RSAModel
 from src.rsa.split import _counted
 
@@ -42,15 +42,22 @@ def simulate_choices(model: RSAModel, posterior: dict, contexts, seed: int) -> n
     rng = np.random.default_rng(seed)
     n_draws = len(next(iter(posterior.values())))
     draws = rng.integers(0, n_draws, size=len(contexts))
+    uniques, inverse = unique_contexts(contexts)
     choices = np.empty(len(contexts), dtype=int)
-    for group in group_by_shape(contexts).values():
-        for d in np.unique(draws[group.indices]):
-            rows = np.where(draws[group.indices] == d)[0]
-            params = {k: v[d] for k, v in posterior.items()}
-            p = np.asarray(model.group_probs(params, group), dtype=float)[rows]
-            for r, probs in zip(rows, p):
-                probs = np.clip(probs, 0, None)
-                choices[group.indices[r]] = rng.choice(len(probs), p=probs / probs.sum())
+    used = np.unique(draws)
+    for group in group_by_shape(uniques).values():
+        row_of = {int(u): r for r, u in enumerate(group.indices)}
+        trials = np.where(np.isin(inverse, group.indices))[0]
+        start = 0
+        for n, params in draw_batches(posterior, used):
+            batch = {int(d): j for j, d in enumerate(used[start:start + n])}
+            start += n
+            p = np.asarray(model.draws_probs(params, group), dtype=float)
+            for t in trials:
+                j = batch.get(int(draws[t]))
+                if j is not None:
+                    probs = np.clip(p[j, row_of[int(inverse[t])]], 0, None)
+                    choices[t] = rng.choice(len(probs), p=probs / probs.sum())
     return choices
 
 
