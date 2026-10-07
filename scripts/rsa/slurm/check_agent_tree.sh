@@ -69,8 +69,9 @@ done
 mapfile -t csvs < <(find "$tree" -path "$tree/_runs" -prune -o -type f \( -name '*.csv' -o -name '*.csv.gz' \) -print | sed "s|^$tree/||")
 [[ ${#csvs[@]} -eq 0 ]] || fail "CSV files outside _runs/ (agents must see only their cell's training data):" "${csvs[@]}"
 
-# 3. The withheld seeds' code.
-for gt_file in "${gt_files[@]}"; do
+# 3. The withheld seeds' code (none in a real cell: the guarded expansions
+#    below, as el7's bash 4.2 treats an empty array as unbound under set -u).
+for gt_file in ${gt_files[@]+"${gt_files[@]}"}; do
   [[ -f "$gt_file" ]] || fail "--gt-file $gt_file does not exist (the pristine copy is needed to check for copies)"
   name="$(basename "$gt_file" .py)"
   mapfile -t named < <(find "$tree" -path "$tree/_runs" -prune -o -type f -name "$name.py" -print | sed "s|^$tree/||")
@@ -85,7 +86,7 @@ for gt_file in "${gt_files[@]}"; do
 done
 
 # 4. Files agents must never read.
-for forbidden in "${forbid_files[@]}"; do
+for forbidden in ${forbid_files[@]+"${forbid_files[@]}"}; do
   [[ -f "$forbidden" ]] || fail "--forbid-file $forbidden does not exist"
   base="$(basename "$forbidden")"
   mapfile -t same_name < <(find "$tree" -type f -name "$base" -print | sed "s|^$tree/||")

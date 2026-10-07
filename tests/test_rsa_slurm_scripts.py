@@ -289,6 +289,22 @@ def test_the_scrubbed_tree_has_no_ground_truth_and_passes_the_check(scrubbed_tre
     assert "agent tree OK" in result.stdout
 
 
+def test_a_real_cell_withholds_no_seed_and_passes_the_check(tmp_path, held_out):
+    # A real cell passes no --gt-file. el7's bash 4.2 treats an empty array as
+    # unbound under `set -u`, so a bare "${gt_files[@]}" killed every real cell
+    # of Sherlock run 1 (array 46898755); bash 5 here does not, hence the
+    # source check as well as the run.
+    source = (SLURM / "check_agent_tree.sh").read_text()
+    for name in ("gt_files", "forbid_files"):
+        assert f'in "${{{name}[@]}}"' not in source, name
+    tree = _copy_tree(tmp_path / "agent_trees" / "4567cdef" / "repo")
+    done = _scrub(tree, [])
+    assert done.returncode == 0, done.stdout + done.stderr
+    result = _check(tree, "--forbid-file", held_out / "test.csv")
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "agent tree OK" in result.stdout
+
+
 def test_the_self_check_imports_from_the_tree_through_the_uv_shim(scrubbed_tree):
     tree = scrubbed_tree
     env = dict(os.environ, PATH=f"{tree / '.agent_bin'}:{os.environ['PATH']}")
