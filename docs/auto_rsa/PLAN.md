@@ -21,6 +21,19 @@ land. Handoffs to local sessions (Sherlock, live runs) should point here.
 | Agents | Gemini via opencode (the default) | credits; bump to newer Gemini models as they ship |
 | Cluster | a local session manages Sherlock and live runs, from handoffs | cloud sessions cannot reach Sherlock (Duo 2FA), Prolific or Firebase |
 
+## Decisions (2026-10-07)
+
+| Decision | Choice |
+|---|---|
+| Agents | Gemini 3.8 Flash (`google/gemini-3.8-flash`), 2,400 s per agent; opencode snapshots off; 15 min shell timeout |
+| Pruning unit | display within experimental condition, 2 clustered SEs (see "Pruning unit") |
+| Held-out evaluation | hold out conditions *within* papers (~20% of each source's trials; a unit is a condition in one-shot experiments and an item in multi-trial ones): `src/rsa/split.py`, `src/rsa/evaluate_heldout.py` |
+| Recovery tests | ground truths `literal_listener` and `rsa_l1_salience` (with its near-twin `rsa_l1_shared_prior` also withheld), simulated on the real displays: `src/rsa/simulate.py`, `src/rsa/recovery.py` |
+| First Sherlock sweep | 3 conditions (real, recovery_literal, recovery_salience) x 2 replicates, 5 rounds x 6 slots (`HANDOFF_sherlock_run1.md`) |
+| Datasets | adults only; forced-choice listener data; no imagined-child/LLM speakers, sliders, feedback studies, or Franke & Degen 2016; unlicensed and CC BY-NC-ND sets are derived at run time, never committed |
+| Experiment stimuli | the pragmods artwork; identical objects keep pragmods' different base tints (people see slightly different twins, models treat them as identical: an accepted, unnameable difference) |
+| IRB | the subjective-randomness protocol covers the RSA pilot; reuse the repo's consent text |
+
 ## Architecture
 
 - **Plug-in seams, not a fork.** The outer and inner loop machinery (artifact
