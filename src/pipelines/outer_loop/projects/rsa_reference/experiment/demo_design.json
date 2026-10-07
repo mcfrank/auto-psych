@@ -1,0 +1,13 @@
+{
+  "name": "pragmods_classics_demo",
+  "trials": [
+    {"label": "simple_L1", "objects": [[0, 0], [0, 1], [1, 1]], "utterance": 1, "roles": ["foil", "target", "logical"]},
+    {"label": "simple_L0", "objects": [[0, 0], [0, 1], [1, 1]], "utterance": 0, "roles": ["foil", "logical", "target"]},
+    {"label": "complex_L1", "objects": [[0, 0, 1], [0, 1, 1], [1, 1, 0]], "utterance": 2, "roles": ["target", "logical", "foil"]},
+    {"label": "complex_L2", "objects": [[0, 0, 1], [0, 1, 1], [1, 1, 0]], "utterance": 1, "roles": ["foil", "target", "logical"]},
+    {"label": "complex_prior", "objects": [[0, 0, 1], [0, 1, 1], [1, 1, 0]], "utterance": null, "roles": ["foil", "target", "logical"]},
+    {"label": "twins_uniform", "objects": [[0, 1, 1], [1, 0, 1], [1, 0, 1]], "utterance": 2, "roles": ["single", "twin", "twin"]},
+    {"label": "oddman_word", "objects": [[0, 1, 1], [1, 0, 1], [1, 1, 0]], "utterance": 2, "roles": ["twin_1", "twin_2", "odd_one"]},
+    {"label": "size_4obj_4feat_sl20", "objects": [[0, 0, 1, 1], [0, 0, 1, 1], [0, 1, 1, 1], [1, 1, 1, 1]], "utterance": 1, "roles": ["distractor1", "distractor2", "target", "distractor3"]}
+  ]
+}

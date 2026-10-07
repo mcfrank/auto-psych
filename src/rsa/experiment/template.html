@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Which one does Bob mean?</title>
+    <script src="https://unpkg.com/jspsych@8.2.3"></script>
+    <script src="https://unpkg.com/@jspsych/plugin-html-button-response@2.1.0"></script>
+    <link href="https://unpkg.com/jspsych@8.2.3/css/jspsych.css" rel="stylesheet" type="text/css" />
+    <style>
+      body { background: #ffffff; color: #1d1d1f; }
+      .jspsych-display-element { font-size: 18px; }
+      /* Top-align screens (jsPsych centres them vertically, which pushes a trial
+         below the fold on a phone). */
+      .jspsych-content { max-width: 100%; margin: 4vh auto auto; }
+      .auto-psych-prose { max-width: 38em; margin: 0 auto; padding: 0 16px; text-align: left; line-height: 1.5; }
+      .auto-psych-prose h1 { font-size: 1.5em; text-align: center; }
+      .rsa-placeholder { border: 2px dashed #b35c00; background: #fff7ec; padding: 8px 12px; border-radius: 6px; }
+
+      /* Plain text buttons (Start / Next / I agree). */
+      .rsa-next { font: inherit; padding: 12px 28px; font-size: 18px; border-radius: 8px; border: none; cursor: pointer;
+                  background: #2f6db5; color: #ffffff; margin: 12px; }
+      .rsa-next:hover { background: #255a96; }
+      .rsa-next:focus-visible { outline: 3px solid #f0a500; outline-offset: 3px; }
+
+      /* The prompt: what Bob says. */
+      .rsa-prompt { max-width: 34em; margin: 8px auto 12px; padding: 0 16px; line-height: 1.4; }
+      .rsa-prompt p { margin: 6px 0; }
+      .rsa-word { font-size: 1.6em; font-weight: 700; letter-spacing: 0.02em; }
+      .rsa-mumble { font-style: italic; color: #555555; }
+      .rsa-note { font-size: 0.85em; color: #555555; }
+      .rsa-practice-tag { display: inline-block; font-size: 0.8em; font-weight: 600; color: #2f6db5;
+                          border: 1px solid #2f6db5; border-radius: 999px; padding: 1px 10px; }
+
+      /* Referents: each whole object is one button; buttons wrap on narrow screens. */
+      #jspsych-html-button-response-btngroup { display: flex; flex-wrap: wrap; justify-content: center;
+                                               gap: 12px; padding: 0 8px; }
+      .rsa-ref { --per-row: var(--n); box-sizing: border-box;
+                 width: min(200px, calc((100vw - 40px) / var(--per-row) - 12px));
+                 padding: 4px; margin: 0; border: 2px solid #c8ccd2; border-radius: 12px;
+                 background: #ffffff; cursor: pointer; }
+      .rsa-ref:hover { border-color: #2f6db5; }
+      .rsa-ref:focus-visible { outline: 3px solid #f0a500; outline-offset: 3px; border-color: #2f6db5; }
+      .rsa-stack { position: relative; display: block; width: 100%; aspect-ratio: 1 / 1; }
+      .rsa-stack img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+      @media (max-width: 600px) {
+        .rsa-ref[data-n="4"] { --per-row: 2; }
+        .rsa-ref[data-n="5"], .rsa-ref[data-n="6"] { --per-row: 3; }
+      }
+
+      /* End screen / preview table. */
+      .rsa-table-wrap { max-width: 100%; overflow-x: auto; margin: 12px auto; }
+      .rsa-table { border-collapse: collapse; font-size: 12px; line-height: 1.3; margin: 0 auto; text-align: left; }
+      .rsa-table th, .rsa-table td { border: 1px solid #d0d4da; padding: 3px 5px; vertical-align: top; white-space: nowrap; }
+      .rsa-table td.rsa-wrap { white-space: normal; min-width: 9em; max-width: 14em; }
+      .rsa-table th { background: #f0f2f5; }
+      .rsa-error { color: #b00020; font-weight: 600; }
+      pre.rsa-json { text-align: left; font-size: 11px; max-height: 320px; overflow: auto; background: #f6f8fa;
+                     padding: 8px; border-radius: 6px; }
+    </style>
+  </head>
+  <body>
+  <script>
+    // ---- Injected by `python -m src.rsa.experiment.build` ----------------------
+    // TRIAL_LISTS: {design_name, design_sha256, lists: [{list_index, seed, trials}]}
+    //   built by src/rsa/experiment/design.py; every trial is fully concrete
+    //   (item, words, screen order, image files), the page randomises nothing.
+    const TRIAL_LISTS = {{TRIAL_LISTS_JSON}};
+    // IMAGE_URLS: image file name -> URL (images/<file> or an inlined data: URI).
+    const IMAGE_URLS = {{IMAGE_URLS_JSON}};
+    // PREVIEW: true shows the recorded data on the end screen.
+    const PREVIEW = {{PREVIEW_JSON}};
+    // CONSENT_HTML: the consent screen's text. The default is a marked
+    // placeholder (class "rsa-placeholder"); a live deployment must replace it.
+    const CONSENT_HTML = {{CONSENT_HTML_JSON}};
+
+    // =====================================================================
+    // DATA SUBMISSION HOOK: window.submitData(json, meta)
+    // Called once, when the last trial ends, with jsPsych.data.get().json()
+    // (a JSON string: an array of every trial's data) and meta {list_index,
+    // design_name, design_sha256, participant_id}. It must return a Promise:
+    // the end screen shows when it resolves and an error when it rejects.
+    // The default sends nothing anywhere: the data stay on window.__rsaData.
+    // Deployment (Firebase POST, Prolific redirect) replaces this function,
+    // e.g. by defining window.submitData in a script before this one.
+    // =====================================================================
+    if (typeof window.submitData !== 'function') {
+      window.submitData = function (json, meta) {
+        console.log('[rsa] submitData default hook: data kept on window.__rsaData only', meta);
+        return Promise.resolve();
+      };
+    }
+
+    function urlParam(name) {
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/[&<>"']/g, function (c) {
+        return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+      });
+    }
+
+    function fail(message) {
+      document.body.innerHTML = '<div class="auto-psych-prose"><p class="rsa-error">' + escapeHtml(message) + '</p></div>';
+      throw new Error(message);
+    }
+
+    // Which list this participant runs: ?list=<k>, else uniformly at random.
+    function chooseList() {
+      const n = TRIAL_LISTS.lists.length;
+      const raw = urlParam('list');
+      if (raw !== null) {
+        const k = Number(raw);
+        if (!Number.isInteger(k) || k < 0 || k >= n) fail('Invalid list parameter "' + raw + '" (0..' + (n - 1) + ').');
+        return { index: k, assignment: 'url' };
+      }
+      return { index: Math.floor(Math.random() * n), assignment: 'random' };
+    }
+
+    const chosen = chooseList();
+    const LIST = TRIAL_LISTS.lists[chosen.index];
+    const participantId = urlParam('participant_id');
+
+    function imageUrl(file) {
+      if (!(file in IMAGE_URLS)) fail('No image "' + file + '" in the build.');
+      return IMAGE_URLS[file];
+    }
+
+    function nextButton(label) {
+      return function () { return '<button type="button" class="rsa-next">' + label + '</button>'; };
+    }
+
+    function promptHtml(trial) {
+      let html = '<div class="rsa-prompt">';
+      if (trial.phase === 'practice') html += '<p><span class="rsa-practice-tag">Practice</span></p>';
+      if (trial.query === 'utterance') {
+        html += '<p>Bob can only say one word to communicate with you and he says:</p>' +
+                '<p class="rsa-word">' + escapeHtml(trial.word) + '</p>';
+      } else {
+        html += '<p>Bob can only say one word to communicate with you, but he mumbles:</p>' +
+                '<p class="rsa-word rsa-mumble">mumblemumble</p>' +
+                '<p class="rsa-note">(You couldn\'t hear what he said.)</p>';
+      }
+      html += '<p>Click on the ' + escapeHtml(trial.item) + ' you think Bob is talking about.</p></div>';
+      return html;
+    }
+
+    // One referent = one button: the base image with its feature overlays stacked on
+    // top. The base image's alt text names the object's features, which is also the
+    // button's accessible name. No whitespace around the element: the plugin binds
+    // the click handler to the returned HTML's last child node.
+    function referentButton(trial) {
+      const n = trial.screen.length;
+      return function (choice, position) {
+        const cell = trial.screen[position];
+        const imgs = cell.images.map(function (file, k) {
+          const alt = k === 0 ? escapeHtml(cell.alt) : '';
+          return '<img src="' + imageUrl(file) + '" alt="' + alt + '" draggable="false">';
+        }).join('');
+        return '<button type="button" class="rsa-ref" data-n="' + n + '" data-position="' + position +
+               '" style="--n:' + n + '"><span class="rsa-stack">' + imgs + '</span></button>';
+      };
+    }
+
+    // Everything convert.py needs is recorded on the trial (the screen's image
+    // list is not: it follows from item, feature_names, objects and bases).
+    function choiceTrial(trial) {
+      const record = {
+        task: 'rsa_choice',
+        phase: trial.phase,
+        trial_number: trial.trial_number,
+        n_test_trials: trial.n_test_trials,
+        condition: trial.condition,
+        is_catch: trial.is_catch,
+        catch_target: trial.catch_target,
+        spec_index: trial.spec_index,
+        item: trial.item,
+        feature_names: trial.feature_names,
+        objects: trial.objects,
+        roles: trial.roles,
+        utterance: trial.utterance,
+        word: trial.word,
+        query: trial.query,
+        messages: trial.messages,
+        display_order: trial.display_order,
+        bases: trial.bases
+      };
+      return {
+        type: jsPsychHtmlButtonResponse,
+        stimulus: promptHtml(trial),
+        choices: trial.screen.map(function (_, i) { return String(i); }),
+        button_html: referentButton(trial),
+        button_layout: 'flex',
+        data: record,
+        post_trial_gap: 300,
+        on_finish: function (data) {
+          data.choice_position = data.response;
+          data.choice = trial.display_order[data.response];
+          data.chosen_alt = trial.screen[data.response].alt;
+        }
+      };
+    }
+
+    function previewTable(rows) {
+      const cols = ['phase', 'trial_number', 'condition', 'item', 'word', 'feature_names', 'objects',
+                    'display_order', 'choice_position', 'choice', 'chosen_alt', 'rt'];
+      const wrap = { feature_names: true, objects: true, chosen_alt: true };
+      let html = '<div class="rsa-table-wrap"><table class="rsa-table"><thead><tr>' +
+                 cols.map(function (c) { return '<th>' + c + '</th>'; }).join('') + '</tr></thead><tbody>';
+      rows.forEach(function (r) {
+        html += '<tr>' + cols.map(function (c) {
+          const v = r[c];
+          return '<td' + (wrap[c] ? ' class="rsa-wrap"' : '') + '>' + escapeHtml(v === null || v === undefined ? '' : (typeof v === 'object' ? JSON.stringify(v).replace(/,/g, ', ') : v)) + '</td>';
+        }).join('') + '</tr>';
+      });
+      return html + '</tbody></table></div>';
+    }
+
+    function endScreen(json, error) {
+      const el = jsPsych.getDisplayElement();
+      let html = '<div class="auto-psych-prose" id="rsa-end">';
+      if (error) {
+        html += '<p class="rsa-error">Your responses could not be submitted: ' + escapeHtml(error) +
+                '. Please contact the researchers.</p>';
+      } else {
+        html += '<h1>Thank you!</h1><p>Your responses have been recorded. You can close this window.</p>';
+      }
+      html += '</div>';
+      if (PREVIEW) {
+        const rows = JSON.parse(json).filter(function (r) { return r.task === 'rsa_choice'; });
+        html += '<div class="auto-psych-prose"><h2>Recorded data (preview only)</h2>' +
+                '<p>One row per choice (practice first). <code>choice</code> is the chosen object\'s index in ' +
+                '<code>objects</code>; <code>choice_position</code> its screen position.</p></div>' +
+                previewTable(rows) +
+                '<div class="auto-psych-prose"><details><summary>Raw jsPsych data (JSON)</summary><pre class="rsa-json">' +
+                escapeHtml(JSON.stringify(JSON.parse(json), null, 1)) + '</pre></details></div>';
+      }
+      el.innerHTML = html;
+      window.__rsaDone = true;
+    }
+
+    const jsPsych = initJsPsych({
+      show_progress_bar: true,
+      on_finish: function () {
+        const json = jsPsych.data.get().json();
+        window.__rsaData = json;
+        const meta = {
+          list_index: LIST.list_index,
+          design_name: TRIAL_LISTS.design_name,
+          design_sha256: TRIAL_LISTS.design_sha256,
+          participant_id: participantId
+        };
+        jsPsych.getDisplayElement().innerHTML = '<div class="auto-psych-prose"><p>Submitting your responses...</p></div>';
+        Promise.resolve()
+          .then(function () { return window.submitData(json, meta); })
+          .then(function () { endScreen(json, null); })
+          .catch(function (e) { console.error(e); endScreen(json, String(e && e.message ? e.message : e)); });
+      }
+    });
+    jsPsych.data.addProperties({
+      participant_id: participantId,
+      list_index: LIST.list_index,
+      list_seed: LIST.seed,
+      list_assignment: chosen.assignment,
+      design_name: TRIAL_LISTS.design_name,
+      design_sha256: TRIAL_LISTS.design_sha256
+    });
+
+    const practice = LIST.trials.filter(function (t) { return t.phase === 'practice'; });
+    const tests = LIST.trials.filter(function (t) { return t.phase === 'test'; });
+    const timeline = [];
+
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: '<div class="auto-psych-prose"><h1>Welcome!</h1>' +
+                '<p>In this short study we are interested in how people figure out what others are talking about. ' +
+                'It takes about ' + Math.max(2, Math.ceil(tests.length / 4)) + ' minutes.</p></div>',
+      choices: ['Start'],
+      button_html: nextButton('Start'),
+      data: { task: 'welcome' }
+    });
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: '<div class="auto-psych-prose">' + CONSENT_HTML + '</div>',
+      choices: ['I agree'],
+      button_html: nextButton('I agree'),
+      data: { task: 'consent' }
+    });
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: '<div class="auto-psych-prose"><h1>Meet Bob</h1>' +
+                '<p>Bob wants to tell you about some of his things: his friends, his snowmen, the sundaes and ' +
+                'pizzas he makes, his boats and his Christmas trees.</p>' +
+                '<p>On each screen you will see a few pictures. <strong>Bob can only say one word</strong> to ' +
+                'tell you which one he means. Click on the picture you think Bob is talking about.</p>' +
+                '<p>Sometimes Bob mumbles and you won\'t be able to hear his word. Then just click on the one you ' +
+                'think he is talking about.</p>' +
+                '<p>There are no right or wrong answers; go with your first impression. ' +
+                'Let\'s start with a practice screen.</p></div>',
+      choices: ['Next'],
+      button_html: nextButton('Next'),
+      data: { task: 'instructions' }
+    });
+    practice.forEach(function (t) { timeline.push(choiceTrial(t)); });
+    timeline.push({
+      type: jsPsychHtmlButtonResponse,
+      stimulus: '<div class="auto-psych-prose"><p>Great! Now the real screens begin. There are ' + tests.length +
+                ' of them.</p></div>',
+      choices: ['Begin'],
+      button_html: nextButton('Begin'),
+      data: { task: 'practice_done' }
+    });
+    tests.forEach(function (t) { timeline.push(choiceTrial(t)); });
+
+    // Load this list's images before the first screen, so no referent appears
+    // piece by piece; a missing image stops the study with a message.
+    const files = Array.from(new Set([].concat.apply([], LIST.trials.map(function (t) {
+      return [].concat.apply([], t.screen.map(function (c) { return c.images; }));
+    }))));
+    document.body.innerHTML = '<div class="auto-psych-prose"><p>Loading...</p></div>';
+    Promise.all(files.map(function (file) {
+      return new Promise(function (resolve, reject) {
+        const img = new Image();
+        img.onload = resolve;
+        img.onerror = function () { reject(new Error('could not load image ' + file)); };
+        img.src = imageUrl(file);
+      });
+    })).then(function () {
+      document.body.innerHTML = '';
+      jsPsych.run(timeline);
+    }).catch(function (e) { fail('The study could not load: ' + e.message); });
+  </script>
+  </body>
+</html>
