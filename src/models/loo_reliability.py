@@ -20,11 +20,25 @@ Bernoulli choice models fit here that verdict is wrong in two ways:
    high-k trials says the model is misspecified enough that its ELPD-LOO
    cannot be trusted.
 
-So this module (a) exempts exact trials and (b) judges the rest by the
-proportion whose Pareto k is not ≤ ``good_k`` (non-finite k counts as bad
-unless the trial is exact). The verdict, the counts behind it and the
-pointwise ``ELPDData`` (reused by ``az.compare``, so LOO is computed once per
-fit) are returned together so every consumer reads one diagnostic.
+3. **Constant only to rounding.** A trial whose log-likelihood is constant in
+   exact arithmetic but not in floating point — a heads/tails-symmetric
+   model's ``p_left`` = 0.5 on a mirror pair (HH vs TT), computed as 0.5 give
+   or take an ulp — takes a few adjacent float values across the draws.
+   arviz's PSIS then fits a Pareto tail to excesses of 1–3 × 1.1e-16, gets a
+   finite k with a NaN scale, and smooths every weight to NaN, so the trial's
+   ``loo_i`` and the total ELPD-LOO are NaN. In October 2026 that dropped 6 of
+   a live run's 8 carried models at the start of its experiment 2, the
+   previous experiment's winner among them, as "non-finite ELPD-LOO".
+
+So this module (a) exempts exact trials, (b) scores them at their constant
+value (it hands arviz a copy of the log-likelihood in which each exact trial
+is exactly constant, which changes no trial's term by more than
+``EXACT_TRIAL_LOGLIK_SPREAD``; the fit itself is left as it was), and (c)
+judges the rest by the proportion whose Pareto k is not ≤ ``good_k``
+(non-finite k counts as bad unless the trial is exact). The verdict, the
+counts behind it and the pointwise ``ELPDData`` (reused by ``az.compare``, so
+LOO is computed once per fit) are returned together so every consumer reads
+one diagnostic.
 """
 
 from __future__ import annotations
@@ -54,7 +68,7 @@ class LooDiagnostics:
     """PSIS-LOO of one fit plus the reliability verdict and its evidence."""
 
     elpd_loo: float
-    loo: Any  # arviz ELPDData with pointwise pareto_k; reusable by az.compare
+    loo: Any  # arviz ELPDData (exact trials scored exactly); reusable by az.compare
     n_points: int
     n_exact: int  # trials whose LOO term is exact (constant log-likelihood)
     n_bad_k: int  # non-exact trials whose Pareto k is not <= good_k
@@ -88,6 +102,29 @@ def _pointwise_log_likelihood(idata: Any) -> np.ndarray:
     return arr.reshape(n_chains * n_draws, -1)
 
 
+def _with_exact_trials_constant(idata: Any, trials: np.ndarray) -> Any:
+    """``idata`` for arviz's LOO, with each of ``trials`` exactly constant.
+
+    ``trials`` marks exact trials whose log-likelihood still varies at
+    rounding level. Their draws are replaced by their mean in a copy of the
+    log-likelihood (each moves by less than ``EXACT_TRIAL_LOGLIK_SPREAD``), so
+    arviz's PSIS sees no tail there instead of fitting one to float noise
+    (module docstring, point 3). Returns ``idata`` itself when there are none.
+    """
+    if not trials.any():
+        return idata
+    import arviz as az
+
+    (name,) = list(idata.log_likelihood.data_vars)
+    original = idata.log_likelihood[name]
+    values = np.array(original.values, dtype="float64")
+    draws = values.reshape(values.shape[0] * values.shape[1], -1)
+    draws[:, trials] = draws[:, trials].mean(axis=0)
+    log_likelihood = idata.log_likelihood.copy()
+    log_likelihood[name] = original.copy(data=values)
+    return az.InferenceData(posterior=idata.posterior, log_likelihood=log_likelihood)
+
+
 def loo_diagnostics(
     idata: Any, *, bad_k_tolerance: float = DEFAULT_BAD_K_TOLERANCE
 ) -> LooDiagnostics:
@@ -107,6 +144,8 @@ def loo_diagnostics(
     # Validate the log-likelihood group first so an ambiguous fit fails with
     # our message rather than arviz's.
     log_lik = _pointwise_log_likelihood(idata)
+    spread = log_lik.max(axis=0) - log_lik.min(axis=0)
+    exact = spread <= EXACT_TRIAL_LOGLIK_SPREAD
 
     with warnings.catch_warnings():
         # arviz warns whenever any k > good_k. That is exactly the blanket
@@ -118,7 +157,9 @@ def loo_diagnostics(
             message="Estimated shape parameter of Pareto distribution",
             category=UserWarning,
         )
-        loo = az.loo(idata, pointwise=True)
+        loo = az.loo(
+            _with_exact_trials_constant(idata, exact & (spread > 0)), pointwise=True
+        )
 
     pareto_k = np.asarray(loo.pareto_k, dtype="float64").reshape(-1)
     if pareto_k.shape[0] != log_lik.shape[1]:
@@ -127,8 +168,6 @@ def loo_diagnostics(
             f"{log_lik.shape[1]} log-likelihood trials."
         )
 
-    spread = log_lik.max(axis=0) - log_lik.min(axis=0)
-    exact = spread <= EXACT_TRIAL_LOGLIK_SPREAD
     good_k = float(loo.good_k)
     # ``~(k <= good_k)`` so that inf and nan count as bad unless the trial is exact.
     bad = ~exact & ~(pareto_k <= good_k)

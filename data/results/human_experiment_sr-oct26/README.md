@@ -3,9 +3,8 @@
 Three independent runs (run1–run3) of the whole pipeline, three experiments
 each, 40 Prolific participants per experiment, Claude Opus 5.5 agents
 (`full_run_sr-oct26.yaml` at the repository root; runbook:
-`docs/onboarding/full_run_checklist.md`). **Status (2026-10-04): runs 1
-and 2 are complete; run 3 is running (its experiment 1's model loop) and is
-not in `collected/` yet.**
+`docs/onboarding/full_run_checklist.md`). **Status (2026-10-07): all three
+runs are complete; run 3 is not in `collected/` yet.**
 
 An experiment is final when its `model_loop/export_complete.json` exists;
 `collected/SUMMARY.md` lists each experiment's winning model and marks
@@ -109,7 +108,34 @@ The best model changed after every round of every experiment (5 times in
 each), every time to a model the loop discovered. Prolific again held back
 the fastest submissions for review (10, 8 and 7).
 
-## Run 3 (running)
+**Experiment 2 began with 2 of the 8 carried models.** The other 6,
+experiment 1's winner among them, were dropped at its start as "non-finite
+ELPD-LOO (nan)". That was a scoring bug, not the models: on mirror pairs (HH
+vs TT) a heads/tails-symmetric model's `p_left` is 0.5 give or take an ulp,
+and arviz's PSIS turned that rounding noise into a NaN ELPD. Only the two
+heads-biased models, which never predict 0.5, survived. Fixed on 2026-10-07
+(`src/models/loo_reliability.py`). Scored correctly on experiment 2's data,
+the starting set would have been led by experiment 1's winner:
+
+| carried model | ELPD-LOO | at the start of experiment 2 |
+|---|---|---|
+| `graded_periodicity_personal_ideal` | −2370.3 | dropped |
+| `person_sensitivity_length_scaled_ideal` | −2389.9 | dropped |
+| `heads_default_alternation_ideal` | −2390.1 | kept |
+| `personal_lapse_ideal_streak_excess` | −2418.1 | dropped |
+| `heads_favoring_lapse_ideal_streak` | −2418.5 | kept |
+| `personal_ideal_with_personal_lapse` | −2421.4 | dropped |
+| `length_scaled_alternation_ideal` | −2453.8 | dropped |
+| `periodic_penalized_alternation_ideal` | −2474.6 | dropped |
+
+The same bug, in run 1, rejected two experiment-1 proposals
+(`max_lopsided_stretch_ideal` −1050.6, and an attempt at
+`personal_lapse_ideal_alternation` −973.4 whose later attempt was admitted)
+and dropped `personal_lapse_ideal_alternation` at the start of experiment 2
+(−2605.3; its PSIS-LOO there is unreliable, so it would have been kept but
+not trusted). Run 3 was not affected.
+
+## Run 3 (complete; not yet synced here)
 
 Runs 2 and 3 were launched together on 2026-10-02 (`RUNS="2 3"`, on
 `4407234`), but they did not run side by side: at 128 GB Slurm gives each job

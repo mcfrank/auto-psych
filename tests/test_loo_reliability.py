@@ -145,3 +145,96 @@ def test_fitted_model_memoizes_diagnostics_and_warns_only_when_unreliable(capsys
     err = capsys.readouterr().err
     assert "[warn] heavy" in err
     assert "20 of 200" in err
+
+
+# ── Trials constant only to rounding ────────────────────────────────────
+#
+# A heads/tails-symmetric model's p_left on a mirror pair (HH vs TT) is 0.5 in
+# exact arithmetic, but in floating point it comes out 0.5 to within an ulp or
+# two, so the trial's log-likelihood takes a few adjacent float values across
+# the draws. arviz's PSIS fits a Pareto tail to excesses of 1-3 x 1.1e-16,
+# gets a finite k with a NaN scale, and smooths every weight to NaN: the
+# trial's loo_i and the total ELPD-LOO are NaN. That dropped 6 of run 2's 8
+# carried models at the start of its experiment 2 (October 2026), experiment
+# 1's winner among them, and one of run 1's. The column below is one of those
+# trials (personal_ideal_with_personal_lapse, run 2, experiment 2, trial 2516),
+# value by value.
+_ROUNDING_LEVEL_COLUMN = (
+    (-0.6931471805599455, 106),
+    (-0.6931471805599453, 11865),
+    (-0.6931471805599452, 28),
+    (-0.6931471805599451, 1),
+)
+
+
+def _idata_with_rounding_level_trial(n_ordinary=49, seed=0):
+    """One chain of 12 000 draws: the real near-constant trial first, then
+    ``n_ordinary`` well-behaved trials."""
+    import arviz as az
+    import xarray as xr
+
+    rng = np.random.default_rng(seed)
+    column = np.concatenate(
+        [np.full(count, value) for value, count in _ROUNDING_LEVEL_COLUMN]
+    )
+    rng.shuffle(column)
+    n_draws = column.shape[0]
+    ordinary = -0.6 + rng.normal(0.0, 0.05, size=(n_draws, n_ordinary))
+    arr = np.concatenate([column[:, None], ordinary], axis=1)[None, :, :]
+    coords = {"chain": [0], "draw": np.arange(n_draws)}
+    ll = xr.Dataset(
+        {"response": (("chain", "draw", "obs"), arr)},
+        coords={**coords, "obs": np.arange(arr.shape[2])},
+    )
+    post = xr.Dataset(
+        {"theta": (("chain", "draw"), rng.normal(size=(1, n_draws)))},
+        coords=coords,
+    )
+    return az.InferenceData(posterior=post, log_likelihood=ll)
+
+
+def test_the_fixture_reproduces_arvizs_nan():
+    import arviz as az
+
+    loo = az.loo(_idata_with_rounding_level_trial(), pointwise=True)
+    assert np.isnan(np.asarray(loo.loo_i)[0])
+    assert np.isnan(float(loo.elpd_loo))
+
+
+def test_a_trial_constant_to_rounding_scores_its_constant_value():
+    import arviz as az
+
+    idata = _idata_with_rounding_level_trial()
+    plain = az.loo(idata, pointwise=True)
+
+    diag = lr.loo_diagnostics(idata)
+
+    loo_i = np.asarray(diag.loo.loo_i)
+    assert np.isfinite(diag.elpd_loo)
+    assert loo_i[0] == pytest.approx(np.log(0.5), abs=1e-12)
+    # The other trials are scored exactly as arviz scores them.
+    np.testing.assert_array_equal(loo_i[1:], np.asarray(plain.loo_i)[1:])
+    assert diag.elpd_loo == pytest.approx(float(loo_i.sum()))
+    assert diag.n_exact == 1
+    assert diag.unreliable is False
+
+
+def test_the_fit_itself_is_left_as_it_was():
+    idata = _idata_with_rounding_level_trial()
+    before = np.array(idata.log_likelihood["response"].values)
+
+    lr.loo_diagnostics(idata)
+
+    np.testing.assert_array_equal(idata.log_likelihood["response"].values, before)
+
+
+def test_a_comparison_of_such_fits_is_finite():
+    import arviz as az
+
+    a = lr.loo_diagnostics(_idata_with_rounding_level_trial(seed=1))
+    b = lr.loo_diagnostics(_idata_with_rounding_level_trial(seed=2))
+
+    table = az.compare({"a": a.loo, "b": b.loo}, ic="loo")
+
+    assert np.isfinite(table["elpd_loo"].to_numpy()).all()
+    assert np.isfinite(table["dse"].to_numpy()).all()

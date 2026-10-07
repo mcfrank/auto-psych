@@ -321,7 +321,16 @@ target — see **Slot roles**) → admit sequentially.
   "Reliable" is `src/models/loo_reliability.py`'s verdict (a tolerated
   proportion of high-Pareto-k trials, with constant-log-likelihood trials
   exempt as exact), **not** arviz's blanket any-k>0.7 flag — that flag fired on
-  clipped `p_left` trials and was silently discarding genuine winners.
+  clipped `p_left` trials and was silently discarding genuine winners. The
+  exact trials are also *scored* exactly: `loo_diagnostics` hands arviz a copy
+  of the log-likelihood in which each is exactly constant
+  (`_with_exact_trials_constant`). A trial constant only to rounding (a
+  heads/tails-symmetric model's `p_left` = 0.5 ± an ulp on a mirror pair such
+  as HH vs TT) made arviz's PSIS smooth every weight to NaN, so the whole
+  ELPD-LOO was NaN; until 2026-10-07 that dropped 6 of the October 2026 live
+  series' run 2's 8 carried models at its experiment 2 (the previous winner
+  among them) and rejected candidates as "non-finite ELPD-LOO"
+  (`tests/test_loo_reliability.py`, built from one of those trials).
 
 ### How weights flow between experiments (the registry)
 
