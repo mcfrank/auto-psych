@@ -43,8 +43,12 @@ def simulated(tmp_path_factory):
 @pytest.mark.slow
 def test_simulation_replaces_only_the_choices_and_hides_the_ground_truth(simulated):
     tmp, real, out, prov = simulated
+    from src.rsa.split import _counted
+
     a, b = pd.read_csv(real), pd.read_csv(out)
-    assert list(a.columns) == list(b.columns) and len(a) == len(b)
+    a = a[_counted(a)].reset_index(drop=True)
+    # Only the rows the loop fits are kept (no real responses beside simulated ones).
+    assert list(a.columns) == list(b.columns) and len(a) == len(b) and _counted(b).all()
     assert (a.drop(columns=["choice"]).fillna("") == b.drop(columns=["choice"]).fillna("")).all().all()
     assert (a.choice != b.choice).any()
     assert "rsa_l2" not in out.read_text()

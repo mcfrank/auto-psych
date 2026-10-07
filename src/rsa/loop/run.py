@@ -56,6 +56,9 @@ class Args:
     num_warmup: int = 1000
     num_samples: int = 1000
     num_chains: int = 4
+    seed: int = 0
+    """The run's random seed: seeds every NUTS fit (replicate runs differ by it,
+    besides the agents' own sampling)."""
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER
     fit_time_limit_sec: float = FIT_TIME_LIMIT_SEC
@@ -99,7 +102,8 @@ def main(args: Args) -> int:
     cfg = LoopConfig(
         responses_path=args.responses, seed_models_dir=seed_pool(args.seed_models, args.exclude_seeds, results), results_dir=results,
         max_iterations=args.max_iterations, candidate_count=args.candidate_count,
-        settings=FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains),
+        settings=FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
+                             seed=args.seed),
         novelty_threshold=args.novelty_rmse_threshold, prune_dse_multiplier=args.prune_dse_multiplier,
         fit_time_limit_sec=args.fit_time_limit_sec, report_title=args.title,
     )

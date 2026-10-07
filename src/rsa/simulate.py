@@ -6,9 +6,12 @@
 The ground truth is fitted to real trials (``--fit-on``) so its parameters
 are realistic, then every included forced-choice row of ``--displays`` gets a
 new ``choice`` drawn from the ground truth's posterior predictive (a fresh
-posterior draw per trial). Everything else in the rows, the displays, the
+posterior draw per trial). Everything else in those rows, the displays, the
 design and the people, is unchanged, so a recovery run sees the real design
-with only the choices replaced.
+with only the choices replaced. Rows the loop does not fit (production
+trials, excluded participants, trials without a display) are dropped: their
+real responses would otherwise sit beside the simulated ones for agents to
+read.
 
 The simulated CSV says nothing about where its choices came from: agents read
 it, and the ground truth's name would give the answer away. That record (the
@@ -81,6 +84,7 @@ def main(args: Args) -> None:
     mask = _counted(frame).to_numpy()
     contexts = [context_from_row(r) for _, r in frame[mask].iterrows()]
     frame.loc[mask, "choice"] = simulate_choices(model, post, contexts, args.seed)
+    frame = frame[mask]
     out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
     frame.to_csv(out, index=False)

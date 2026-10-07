@@ -1,0 +1,91 @@
+# Paths excluded from the RSA agents' copy of the repository (rsync
+# --exclude-from). Used by stage_code.sh (agent_src) and build_agent_tree.sh
+# (each cell's tree), enforced by check_agent_tree.sh before any agent starts,
+# and tested by tests/test_rsa_slurm_scripts.py.
+#
+# Starts from scripts/subjective_randomness/slurm/agent_tree.exclude (every
+# rule that applies here), plus what the RSA sweep must withhold: the real
+# data (it holds the held-out rows), the code that splits, simulates and
+# scores, and everything outside src/. The agents need only src/ (their
+# self-check, `uv run python -m src.rsa.loop.check_candidate`, imports
+# src.rsa.loop and what it imports), .here, opencode.json and pyproject.toml.
+# A leading / anchors a rule at the repo root; a rule without one matches a
+# name at any depth.
+
+# --- VCS, build artefacts, caches (as subjective randomness) ---------------------
+.git
+.venv
+__pycache__
+*.nc
+node_modules
+.uv_cache
+.pip_cache
+.cache
+.hf
+.pytest_cache
+.ruff_cache
+# opencode's per-agent state from local runs (and its git snapshots)
+.xdg_data
+
+# --- data: every directory named data, at any depth ------------------------------
+# /data/ (downloads in data/rsa/external, smoke-test outputs, earlier runs) and
+# the committed real trials in src/pipelines/outer_loop/projects/rsa_reference/data/
+# (pragmods, Mayn & Demberg 2026, Sikos 2021 and their reference tables). The
+# committed trials include the rows the split holds out, so an agent that read
+# them would see the test set. The agents get their cell's train.csv only, as
+# the loop's results/responses.csv.
+data
+# Named too, so the intent survives an edit of the rule above.
+/src/pipelines/outer_loop/projects/rsa_reference/data/
+
+# --- the RSA experiment build: nothing a candidate agent needs -------------------
+/src/pipelines/outer_loop/projects/rsa_reference/experiment/
+# The jsPsych build imports src.rsa.ingest (excluded below), so it would not
+# even import in the tree.
+/src/rsa/experiment/
+
+# --- harness-only RSA code: ingestion, the split, simulation, scoring ------------
+# The split names which conditions are held out (and with the seed, rebuilds
+# them); simulate/recovery/evaluate_heldout are the evaluation side.
+/src/rsa/ingest/
+/src/rsa/pragmods_ingest.py
+/src/rsa/split.py
+/src/rsa/simulate.py
+/src/rsa/recovery.py
+/src/rsa/evaluate_heldout.py
+
+# --- instruction files agent CLIs load into every session ------------------------
+# (claude: CLAUDE.md; codex and opencode: AGENTS.md.) The project CLAUDE.md
+# describes the evaluation; a candidate agent's brief is self-contained.
+CLAUDE.md
+AGENTS.md
+
+# --- everything but src/ (as subjective randomness) ------------------------------
+# Docs, tests and scripts describe the split, the recovery ground truths and
+# the Slurm layout (this file included).
+/docs/
+/tests/
+/scripts/
+/analysis/
+/diagrams/
+/README.md
+/SUMMARY.md
+/HERO_RUN_DESIDERATA.md
+# Credentials: the agents get only their own login, from the sandbox's
+# environment allowlist.
+.secrets
+.secrets.example
+
+# --- subjective randomness's held-out material (not this sweep's; no RSA agent needs it)
+ground_truth_models.py
+evaluate_recovery.py
+test_literature_faithful_pymc.py
+test_literature_model_families.py
+gt.txt
+REFACTOR_NOTES.md
+preprocess.py
+/src/subjective_randomness/
+/src/pipelines/outer_loop/projects/*/references/
+/src/pipelines/outer_loop/projects/*/instruction_literature.md
+/src/pipelines/outer_loop/projects/*/problem_definition.md
+/src/pipelines/outer_loop/projects/*/seed_models/archive_*/

@@ -25,6 +25,8 @@ from tests.paths import REPO_ROOT
 AGENT_JOB_ENV_SCRIPTS = [
     REPO_ROOT / "scripts" / "outer_loop_live" / "_env.sh",
     REPO_ROOT / "scripts" / "subjective_randomness" / "slurm" / "_env.sh",
+    # The RSA sweep's (it sources the one above).
+    REPO_ROOT / "scripts" / "rsa" / "slurm" / "_env.sh",
 ]
 # What the scripts run besides shell builtins and ml.
 TOOLS = ("bash", "mkdir", "dirname", "basename", "xargs", "tr", "cat", "echo", "chmod")

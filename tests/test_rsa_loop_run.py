@@ -50,3 +50,19 @@ def test_agents_default_to_gemini_flash_with_time_for_several_self_checks(monkey
     rsa_run.main(rsa_run.Args(results=tmp_path / "out"))
     assert seen["model"] == "google/gemini-3.8-flash"
     assert seen["timeout_sec"] >= 2400
+
+
+def test_the_run_seed_reaches_every_fit(monkeypatch, tmp_path):
+    seen = {}
+
+    class FakeLoop:
+        def __init__(self, cfg, spawn):
+            seen["seed"] = cfg.settings.seed
+
+        def run(self):
+            return dict(best_model="m", standing={"m": {}})
+
+    monkeypatch.setattr(rsa_run, "RSALoop", FakeLoop)
+    monkeypatch.setattr(rsa_run, "coding_agent_spawner", lambda **kw: None)
+    rsa_run.main(rsa_run.Args(results=tmp_path / "out", seed=7))
+    assert seen["seed"] == 7
