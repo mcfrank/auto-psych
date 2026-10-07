@@ -130,10 +130,14 @@ for cond in conditions:
         sys.exit(f"{cond}: the simulated split holds out other units than the real split")
     for part in ("train", "test"):
         # The simulated data keep only the rows the loop fits (src.rsa.simulate).
-        a = pd.read_csv(real / f"{part}.csv")
-        fitted = (a["dv"] == "forced_choice") & a["included"].astype(bool) & (a["objects"] != "[]")
-        a = a[fitted].drop(columns=["choice"]).reset_index(drop=True)
-        b = pd.read_csv(d / f"{part}.csv").drop(columns=["choice"]).reset_index(drop=True)
+        typed = pd.read_csv(real / f"{part}.csv", low_memory=False)
+        fitted = (typed["dv"] == "forced_choice") & typed["included"].astype(bool) & (typed["objects"] != "[]")
+        # Compared as text: a column with text only on rows the loop does not
+        # fit (response, exclusion_reason) reads as object in the real file and
+        # float64 (all empty) in the simulated one, and equals() compares dtypes.
+        text = dict(dtype=str, keep_default_na=False)
+        a = pd.read_csv(real / f"{part}.csv", **text)[fitted.to_numpy()].drop(columns=["choice"]).reset_index(drop=True)
+        b = pd.read_csv(d / f"{part}.csv", **text).drop(columns=["choice"]).reset_index(drop=True)
         if not a.equals(b):
             sys.exit(f"{cond}: {part}.csv differs from the real {part}.csv outside the choice column")
     print(f"[setup] {cond}: same held-out units and rows as the real split")
