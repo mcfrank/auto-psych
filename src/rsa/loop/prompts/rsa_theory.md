@@ -219,12 +219,10 @@ typically identified.
 
 ## Self-check (do this before you finish)
 
-Run the self-check on your candidate directory from the repository root. It
-runs gates 1–5 with a short fit and prints what fails:
-
-```bash
-uv run python -m src.rsa.loop.check_candidate <your candidate directory>
-```
+Run the self-check on your candidate directory from the repository root,
+with the exact command your `CONTEXT.md` gives (it names the pipeline's own
+Python and your responses file; `uv` is not available to you). It runs
+gates 1–5 with a short fit and prints what fails.
 
 The check compiles and fits your model, which takes 2–10 minutes. **Give the
 shell tool a timeout of 900000 milliseconds** (its `timeout` parameter); the

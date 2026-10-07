@@ -97,3 +97,20 @@ def test_the_documented_self_check_command_parses(tmp_path):
     args = tyro.cli(Args, args=module_args)
     assert args.candidate_dir == tmp_path / "cand"
     assert args.responses == tmp_path / "r.csv"
+
+
+def test_the_self_check_runs_with_the_harness_interpreter_not_uv():
+    """Sandboxed agents have no ``uv``: it lives in ~/.local/bin, which the
+    private home hides, and ``uv run`` would sync the read-only venv. The
+    2026-10-07 smoke test found the documented ``uv run`` form could not run
+    in the sandbox. The command uses the harness's own interpreter, as the
+    PyMC loop's does, and the primer points to it rather than to ``uv``."""
+    import shlex
+    import sys
+
+    from src.rsa.loop.brief import CHECK_COMMAND, THEORY_PROMPT
+
+    argv = shlex.split(CHECK_COMMAND.format(candidate_dir="c", responses="r.csv"))
+    assert argv[0] == sys.executable
+    assert argv[1:3] == ["-m", "src.rsa.loop.check_candidate"]
+    assert "uv run" not in THEORY_PROMPT.read_text(encoding="utf-8")
