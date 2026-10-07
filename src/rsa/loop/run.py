@@ -14,13 +14,16 @@ an agent should not see.
 
 from __future__ import annotations
 
+import shutil
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Literal, Optional
+from typing import List, Literal, Optional
 
 import tyro
+import yaml
 
+from src.models.model_manifest import read_manifest_entries
 from src.rsa.dataset import DEFAULT_TRIALS_CSV
 from src.rsa.fit import FitSettings
 from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC
@@ -45,6 +48,9 @@ class Args:
     responses: Path = DEFAULT_TRIALS_CSV
     """Trials CSV in the canonical pragmods schema (included forced-choice rows are used)."""
     seed_models: Path = PROJECT_ASSETS_DIR / "rsa_reference" / "seed_models"
+    exclude_seeds: List[str] = field(default_factory=list)
+    """Seed models left out of the starting set (a recovery run's ground truth
+    and its near-twins). The run's seed pool is written to <results>/seed_pool."""
     max_iterations: int = 1
     candidate_count: int = 3
     num_warmup: int = 1000
@@ -68,10 +74,30 @@ class Args:
     title: str = "RSA inner loop"
 
 
+def seed_pool(seed_models: Path, exclude: List[str], results: Path) -> Path:
+    """The starting seed set: ``seed_models`` minus ``exclude`` (written under results)."""
+    if not exclude:
+        return Path(seed_models)
+    entries = read_manifest_entries(seed_models)
+    names = {e["name"] for e in entries}
+    unknown = sorted(set(exclude) - names)
+    if unknown:
+        raise ValueError(f"--exclude-seeds names no seed model: {unknown}")
+    kept = [e for e in entries if e["name"] not in set(exclude)]
+    if not kept:
+        raise ValueError("--exclude-seeds leaves no seed model")
+    pool = Path(results) / "seed_pool"
+    pool.mkdir(parents=True, exist_ok=True)
+    for e in kept:
+        shutil.copyfile(Path(seed_models) / f"{e['name']}.py", pool / f"{e['name']}.py")
+    (pool / "models_manifest.yaml").write_text(yaml.safe_dump({"models": kept}, sort_keys=False))
+    return pool
+
+
 def main(args: Args) -> int:
     results = Path(args.results)
     cfg = LoopConfig(
-        responses_path=args.responses, seed_models_dir=args.seed_models, results_dir=results,
+        responses_path=args.responses, seed_models_dir=seed_pool(args.seed_models, args.exclude_seeds, results), results_dir=results,
         max_iterations=args.max_iterations, candidate_count=args.candidate_count,
         settings=FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains),
         novelty_threshold=args.novelty_rmse_threshold, prune_dse_multiplier=args.prune_dse_multiplier,
