@@ -35,6 +35,9 @@ from src.runtime.config import PROJECT_ASSETS_DIR
 from src.runtime.token_usage import start_usage_log, write_usage_report
 
 
+DEFAULT_AGENT_MODEL = "google/gemini-3.8-flash"
+
+
 @dataclass
 class Args:
     results: Path
@@ -52,8 +55,12 @@ class Args:
     fit_time_limit_sec: float = FIT_TIME_LIMIT_SEC
     coding_agent: Optional[Literal["claude", "opencode"]] = None
     """Agent backend; defaults to CODING_AGENT, then opencode (Gemini)."""
-    agent_model: Optional[str] = None
-    agent_timeout_sec: int = 1200
+    agent_model: Optional[str] = DEFAULT_AGENT_MODEL
+    """opencode provider/model for the candidate agents (PI decision 2026-10-07:
+    Gemini 3.8 Flash, not the launcher's older Pro default)."""
+    agent_timeout_sec: int = 2400
+    """Per-agent limit. A self-check takes 2-10 min and a careful agent runs 1-3;
+    at 1,200 s the smoke test's agents ran out mid-check."""
     agent_root: Optional[Path] = None
     """Directory agents run from (the scrubbed agent tree on the cluster; default: the repo)."""
     no_sandbox: bool = False

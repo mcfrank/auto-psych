@@ -369,3 +369,37 @@ def test_critique_round_does_not_swallow_a_permission_denial(tmp_path, monkeypat
             agent_timeout_sec=1,
             backend="opencode",
         )
+
+
+def test_opencode_agents_get_a_long_shell_timeout_unless_one_is_set(tmp_path):
+    log_path = tmp_path / "candidate_0" / "agent.jsonl"
+    name = coding_agent.OPENCODE_BASH_TIMEOUT_ENV
+    env = coding_agent.child_environment(backend="opencode", cwd=tmp_path, log_path=log_path, env={})
+    assert env[name] == str(coding_agent.OPENCODE_BASH_TIMEOUT_MS)
+    assert int(env[name]) >= 10 * 60 * 1000  # a self-check takes up to ~10 min
+    kept = coding_agent.child_environment(
+        backend="opencode", cwd=tmp_path, log_path=log_path, env={name: "5000"}
+    )
+    assert kept[name] == "5000"
+    assert name not in coding_agent.child_environment(
+        backend="claude", cwd=tmp_path, log_path=log_path, env={}
+    )
+
+
+def test_opencode_snapshots_are_off_and_survive_the_grant_rewrite(tmp_path):
+    """opencode's per-agent git snapshot of its working tree was ~1 GB per
+    agent in the RSA smoke test; the repo config turns it off, and adding
+    directory grants must not drop the setting."""
+    import json
+
+    from src.runtime.config import REPO_ROOT
+
+    assert json.loads((REPO_ROOT / "opencode.json").read_text())["snapshot"] is False
+    root = tmp_path / "tree"
+    root.mkdir()
+    (root / "opencode.json").write_text((REPO_ROOT / "opencode.json").read_text())
+    (root / ".here").write_text("")
+    outside = tmp_path / "elsewhere"
+    outside.mkdir()
+    coding_agent.ensure_opencode_external_grants(root, [outside])
+    assert json.loads((root / "opencode.json").read_text())["snapshot"] is False

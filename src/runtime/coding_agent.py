@@ -109,6 +109,12 @@ _OPENCODE_LOCK_SIGNATURE = "database is locked"
 PERMISSION_DENIAL_SIGNATURE = "auto-rejecting"
 # Name of the per-agent XDG_DATA_HOME, created beside the agent's log.
 AGENT_DATA_HOME_NAME = ".xdg_data"
+# opencode's shell tool kills a command after 120 s unless the call passes its
+# own timeout. Model fits and the candidate self-checks take 2-10 min, and in
+# the RSA smoke test (2026-10-06) every self-check was killed before it
+# printed a verdict. This is the default for calls that set none (ms).
+OPENCODE_BASH_TIMEOUT_ENV = "OPENCODE_EXPERIMENTAL_BASH_DEFAULT_TIMEOUT_MS"
+OPENCODE_BASH_TIMEOUT_MS = 15 * 60 * 1000
 _ANSI_ESCAPE = re.compile(r"\x1b\[[0-9;]*m")
 # Serialises read-modify-write of one opencode.json across the threads that
 # spawn candidate agents in parallel (one process per run; cross-process
@@ -230,7 +236,8 @@ def child_environment(
     inherited value, which ``opencode run`` prefers over the real working
     directory when rooting its session. For opencode the agent also gets its
     own ``XDG_DATA_HOME`` (see :func:`agent_data_home`), with any credentials
-    from the inherited one linked in.
+    from the inherited one linked in, and a shell-command timeout of
+    ``OPENCODE_BASH_TIMEOUT_MS`` unless the environment sets one.
     """
     child = dict(os.environ if env is None else env)
     child["PWD"] = str(Path(cwd).resolve())
@@ -242,6 +249,7 @@ def child_environment(
         private.mkdir(parents=True, exist_ok=True)
         _link_opencode_credentials(inherited, private)
         child["XDG_DATA_HOME"] = str(private)
+        child.setdefault(OPENCODE_BASH_TIMEOUT_ENV, str(OPENCODE_BASH_TIMEOUT_MS))
     return child
 
 

@@ -33,3 +33,20 @@ def test_the_cli_records_agent_token_usage_in_the_results_dir(tmp_path, monkeypa
     lines = (results / "token_usage.jsonl").read_text().splitlines()
     assert [json.loads(line)["source"] for line in lines] == ["rsa:candidate"]
     assert (results / "token_usage_summary.json").exists()
+
+
+def test_agents_default_to_gemini_flash_with_time_for_several_self_checks(monkeypatch, tmp_path):
+    seen = {}
+
+    class FakeLoop:
+        def __init__(self, cfg, spawn):
+            pass
+
+        def run(self):
+            return dict(best_model="m", standing={"m": {}})
+
+    monkeypatch.setattr(rsa_run, "RSALoop", FakeLoop)
+    monkeypatch.setattr(rsa_run, "coding_agent_spawner", lambda **kw: seen.update(kw))
+    rsa_run.main(rsa_run.Args(results=tmp_path / "out"))
+    assert seen["model"] == "google/gemini-3.8-flash"
+    assert seen["timeout_sec"] >= 2400
