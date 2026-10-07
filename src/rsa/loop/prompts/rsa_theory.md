@@ -226,5 +226,16 @@ runs gates 1–5 with a short fit and prints what fails:
 uv run python -m src.rsa.loop.check_candidate <your candidate directory>
 ```
 
+The check compiles and fits your model, which takes 2–10 minutes. **Give the
+shell tool a timeout of 900000 milliseconds** (its `timeout` parameter); the
+default of 120 s kills the check before it prints anything. Run it once per
+change and read its PASS/FAIL line; re-running it unchanged gives the same
+answer.
+
+Write, edit and check your three files **in your candidate directory**, from
+the start. Do not draft in `/tmp`, the repository root or anywhere else: the
+loop reads only your candidate directory, and a model left elsewhere when
+your time runs out counts as no candidate at all.
+
 Fix everything it reports. A candidate that fails a gate is rejected and sent
 back once for repair with the reason. A second failure is final.

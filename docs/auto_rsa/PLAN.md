@@ -80,7 +80,8 @@ probability 0 to objects the word is false of, and people do choose them).
 | 0 | Seed comparison on all 6,703 trials, by LOO plus r and RMSE over cells (`data/rsa/seed_comparison_all`) | cloud | **done**. salience-L1 best; L2 beats L1 by ~13 nats; ~12% lapse; E6 valence unexplained |
 | 0 | Report page: standing, RMSE by experiment, small multiples, loop timeline (`src/rsa/report.py`) | cloud | **done** |
 | 2 | Parallel RSA inner loop `src/rsa/loop/` (user decision 2026-10-06: a parallel loop reusing the domain-neutral parts, not a backend seam in main's files): code gate, cached time-limited fits, admission gates, novelty pool, briefs and memo primer, self-check, orchestrator, CLI | cloud | **done**, tested with a scripted fake agent |
-| 2 | Smoke test with real Gemini agents (`HANDOFF_smoke_test.md`) | new cloud session | next |
+| 2 | Smoke test with real Gemini agents (`HANDOFF_smoke_test.md`) | cloud | **done** (`SMOKE_RESULTS.md`): 2 of 3 slots admitted first time, `rsa_l2_salience` the new best (+17.7 nats); the self-check never ran inside an agent (CLI bug, opencode's 120 s shell timeout; both fixed); repair path not yet exercised |
+| 2 | Re-run the smoke test with the fixes (2 rounds; see `SMOKE_RESULTS.md` recommendations) | cloud | next |
 | 2 | Production inner loop on Sherlock (sandboxed agents) | local session | after the smoke test |
 | 2 | Critique step for memo models (PPC test statistics) | cloud | later |
 | 3 | Outer loop, simulated: design from the context pool, K-way EIG (Monte Carlo over outcomes), multi-trial designs, recovery against held-out RSA variants | Sherlock | |
@@ -107,6 +108,9 @@ salience, cost, multi-word utterances.
 - **Reachable:** public GitHub via git, PyPI, the Gemini and Anthropic APIs.
 - **Blocked:** arxiv, OSF, the Stanford paper hosts, ACM. Add them under the
   environment's Network access, or commit PDFs to `projects/rsa_reference/references/`.
+- **opencode agents:** the shell tool kills a command after 120 s unless the
+  call passes `timeout` (ms); each agent's `.xdg_data/opencode/snapshot` is a
+  git snapshot of its working tree (~1 GB per agent from the repo root).
 - **Not installed:** `rsync` and `bwrap`. Agent sandboxing, and the tests that
   stage agent trees, need them, so real loop runs go to Sherlock.
 - **Secrets:** environment variables set in the environment settings reach

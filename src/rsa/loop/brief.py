@@ -62,6 +62,11 @@ DEFAULT_RSA_LENSES = [
 ]
 
 CHECK_COMMAND = "uv run python -m src.rsa.loop.check_candidate {candidate_dir} --responses {responses}"
+# The shell timeout agents must give the self-check: its fit may take up to
+# CHECK_TIME_LIMIT_SEC (10 min) after loading and the contract. opencode's
+# shell tool kills a command after 120 s by default, which in the 2026-10-06
+# smoke test killed every self-check before it printed anything.
+CHECK_SHELL_TIMEOUT_MS = 900_000
 
 
 @dataclass
@@ -87,6 +92,13 @@ def context_md(*, candidate_dir: Path, responses_path: Path, round_index: int,
   find what the current models miss; your model file may not read it.
 - Inner-loop round {round_index + 1} of {n_rounds}.
 - Self-check: `{CHECK_COMMAND.format(candidate_dir=candidate_dir, responses=responses_path)}`
+  It takes 2-10 minutes (it compiles and fits your model). Give the shell
+  tool a timeout of {CHECK_SHELL_TIMEOUT_MS} milliseconds for it (the tool's
+  `timeout` parameter); with the default of 120 s the check is killed before it
+  prints anything. Run it once and read its result; do not re-run it unchanged.
+- Write and test your files **in your candidate directory only**: no drafts in
+  `/tmp`, the repository root or anywhere else. The loop reads only
+  `{candidate_dir}`; a candidate.py anywhere else counts as no candidate.
 """
 
 

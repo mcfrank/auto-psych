@@ -7,6 +7,7 @@ from src.pipelines.inner_loop.hypothesis_ledger import HypothesisLedger
 from src.pipelines.inner_loop.model_zoo import SLOT_EXPLORE, SLOT_REFINE_CHOSEN, SLOT_REFINE_INCUMBENT
 from src.rsa.dataset import DEFAULT_TRIALS_CSV
 from src.rsa.loop.brief import (
+    CHECK_SHELL_TIMEOUT_MS,
     DEFAULT_RSA_LENSES,
     ZooModel,
     build_prompt,
@@ -39,6 +40,10 @@ def test_each_role_gets_its_documents_and_the_handbook(tmp_path, role):
     assert "choice_probs(params, ctx)" in prompt
     assert "The memo Handbook" in prompt and (d / "memo_handbook.md").exists()
     assert "check_candidate" in prompt
+    # The self-check outlives opencode's default 120 s shell timeout, and an
+    # agent that drafted outside its directory left its slot empty (smoke test).
+    assert f"timeout of {CHECK_SHELL_TIMEOUT_MS} milliseconds" in prompt
+    assert "in your candidate directory only" in prompt
     assert ("## attempted_hypotheses.md" in prompt) == (role == SLOT_EXPLORE)
     assert ("## refinement_menu.md" in prompt) == (role == SLOT_REFINE_CHOSEN)
     if role == SLOT_REFINE_INCUMBENT:
@@ -71,3 +76,24 @@ def test_the_self_check_passes_a_seed_and_fails_a_broken_copy(tmp_path):
     (bad / "hypothesis.md").write_text("Vanilla RSA.")
     ok, message = check(bad, responses)
     assert not ok and message.startswith("FAIL")
+
+
+def test_the_documented_self_check_command_parses(tmp_path):
+    """The command the agents are given must be accepted by the CLI as written.
+
+    In the 2026-10-06 smoke test all three agents ran it verbatim and got a
+    tyro usage error: the directory was a required ``--candidate-dir`` flag.
+    """
+    import shlex
+
+    import tyro
+
+    from src.rsa.loop.brief import CHECK_COMMAND
+    from src.rsa.loop.check_candidate import Args
+
+    command = CHECK_COMMAND.format(candidate_dir=tmp_path / "cand", responses=tmp_path / "r.csv")
+    argv = shlex.split(command)
+    module_args = argv[argv.index("src.rsa.loop.check_candidate") + 1:]
+    args = tyro.cli(Args, args=module_args)
+    assert args.candidate_dir == tmp_path / "cand"
+    assert args.responses == tmp_path / "r.csv"

@@ -32,6 +32,7 @@ from src.rsa.loop.orchestrator import (
     coding_agent_spawner,
 )
 from src.runtime.config import PROJECT_ASSETS_DIR
+from src.runtime.token_usage import start_usage_log, write_usage_report
 
 
 @dataclass
@@ -74,7 +75,12 @@ def main(args: Args) -> int:
         timeout_sec=args.agent_timeout_sec, backend=args.coding_agent, model=args.agent_model,
         agent_root=args.agent_root, sandbox=not args.no_sandbox,
     )
-    final = RSALoop(cfg, spawn).run()
+    # The agents' spend, written in a finally so an aborted loop still accounts for it.
+    usage_marker = start_usage_log(results / "token_usage.jsonl")
+    try:
+        final = RSALoop(cfg, spawn).run()
+    finally:
+        write_usage_report(results, usage_marker, heading="RSA inner loop")
     print(f"best model: {final['best_model']}; live: {sorted(final['standing'])}")
     print(f"report: {results / 'report.html'}")
     return 0

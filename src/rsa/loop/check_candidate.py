@@ -30,7 +30,8 @@ CHECK_TIME_LIMIT_SEC = 10 * 60
 
 @dataclass
 class Args:
-    candidate_dir: Path
+    candidate_dir: tyro.conf.Positional[Path]
+    """The candidate directory (positional: the command the agents are given passes it bare)."""
     responses: Path = DEFAULT_TRIALS_CSV
 
 
