@@ -85,3 +85,52 @@ def test_a_round_admits_repairs_retries_and_exports(loop):
     assert "__BUNDLE_JSON__" not in report and "salience_listener_2" in report
     bundle = json.loads((out / "report.bundle.json").read_text())
     assert len(bundle["timeline"]["history"]) == 3
+    # Only the incumbent slot's ledger context names a target model.
+    contexts = {e["context"] for e in ledger if e["context"].startswith("round 1 candidate 3")}
+    assert contexts and all(c.startswith("round 1 candidate 3 refine chosen") and c.split()[-1] in ("chosen", "1")
+                            for c in contexts), contexts
+
+
+class Crash(RuntimeError):
+    pass
+
+
+def test_an_interrupted_run_resumes_from_its_last_scored_step(loop):
+    """Round 2 dies in its repair phase, after admitting a model: resuming
+    drops what round 2 did and runs it again, then finishes."""
+    loop.cfg.max_iterations = 2
+
+    def crashing(cdir, prompt):
+        if cdir.parent.name == "round_2" and "repair" in cdir.name:
+            raise Crash("the job was killed")
+        if cdir.parent.name == "round_2" and cdir.name == "candidate_1":
+            write(cdir, (SEEDS / "rsa_l1_shared_prior.py").read_text(), "A shared prior.", "shared_prior_listener")
+            return True
+        return fake_agent(cdir, prompt)
+
+    loop.spawn = crashing
+    with pytest.raises(Crash):
+        loop.run()
+    out = loop.dir
+    ledger_path = out / "attempted_hypotheses.jsonl"
+    history = json.loads((out / "history.json").read_text())
+    assert [h["round"] for h in history] == [-1, 0]
+    at_step = history[-1]["ledger_entries"]
+    assert len(ledger_path.read_text().splitlines()) > at_step  # round 2 wrote to the ledger
+    # A round-2 admission is in the set before the restart.
+    assert (out / "models" / "shared_prior_listener.py").exists()
+
+    resumed = RSALoop(loop.cfg, fake_agent)
+    final = resumed.run(resume=True)
+    assert (out / "round_2_abandoned_1").exists() and (out / "round_2").exists()
+    history = json.loads((out / "history.json").read_text())
+    assert [h["round"] for h in history] == [-1, 0, 1, 2]
+    ledger = [json.loads(line) for line in ledger_path.read_text().splitlines()]
+    # Round 2 ran once in the ledger: its first attempt's lines were dropped.
+    assert sum(1 for e in ledger if e["context"] == "round 2 candidate 1 explore") == 1
+    assert (out / "export.json").exists() and final["best_model"]
+    # The abandoned round's admission was undone (the rerun proposed something else).
+    assert not (out / "models" / "shared_prior_listener.py").exists()
+    assert "shared_prior_listener" not in {e["name"] for e in ledger}
+    with pytest.raises(RuntimeError, match="nothing to resume"):
+        RSALoop(loop.cfg, fake_agent).resume()

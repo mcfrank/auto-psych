@@ -34,3 +34,14 @@ def test_sources_and_message_sets_separate_clusters_when_present():
 def test_responses_without_conditions_raise():
     with pytest.raises(ValueError, match="condition"):
         cluster_ids(frame().drop(columns=["condition"]))
+
+
+def test_pruned_models_on_the_refinement_menu_rank_by_their_margin():
+    from src.rsa.loop.orchestrator import prune_margin
+
+    details = {
+        "far": "elpd_diff 120.5 > 2.0 x clustered dse 30.1 vs best",
+        "near": "elpd_diff 9.2 > 2.0 x clustered dse 4.0 vs best",
+        "capped": "retired by the cap of 8 live models",
+    }
+    assert sorted(details, key=lambda n: prune_margin(details[n])) == ["near", "far", "capped"]

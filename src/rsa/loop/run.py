@@ -76,6 +76,9 @@ class Args:
     no_sandbox: bool = False
     """Run agents without bubblewrap. Only in a disposable container."""
     title: str = "RSA inner loop"
+    resume: bool = False
+    """Continue an interrupted run in --results from its last scored step
+    (`RSALoop.resume`): a half-finished round is abandoned and run again."""
 
 
 def seed_pool(seed_models: Path, exclude: List[str], results: Path) -> Path:
@@ -116,7 +119,7 @@ def main(args: Args) -> int:
     # The agents' spend, written in a finally so an aborted loop still accounts for it.
     usage_marker = start_usage_log(results / "token_usage.jsonl")
     try:
-        final = RSALoop(cfg, spawn).run()
+        final = RSALoop(cfg, spawn).run(resume=args.resume)
     finally:
         write_usage_report(results, usage_marker, heading="RSA inner loop")
     print(f"best model: {final['best_model']}; live: {sorted(final['standing'])}")

@@ -97,10 +97,13 @@ def context_md(*, candidate_dir: Path, responses_path: Path, round_index: int,
   find what the current models miss; your model file may not read it.
 - Inner-loop round {round_index + 1} of {n_rounds}.
 - Self-check: `{CHECK_COMMAND.format(candidate_dir=candidate_dir, responses=responses_path)}`
-  It takes 2-10 minutes (it compiles and fits your model). Give the shell
+  It takes about 1-3 minutes (it compiles and fits your model). Give the shell
   tool a timeout of {CHECK_SHELL_TIMEOUT_MS} milliseconds for it (the tool's
   `timeout` parameter); with the default of 120 s the check is killed before it
   prints anything. Run it once and read its result; do not re-run it unchanged.
+- Do not refit the models in the set: their standings above are from the
+  loop's own fits. Write memo code in a `.py` file (memo reads its source
+  back, so `python -c` raises "couldn't find your memo source code").
 - Write and test your files **in your candidate directory only**: no drafts in
   `/tmp`, the repository root or anywhere else. The loop reads only
   `{candidate_dir}`; a candidate.py anywhere else counts as no candidate.
@@ -119,8 +122,9 @@ def menu_md(live: Sequence[ZooModel], pruned: Sequence[ZooModel], incumbent: str
         "# Refinement menu",
         "",
         "Choose ONE model to refine (not the incumbent). Your hypothesis must name it "
-        "and state the single change you make. Live models first, then models pruned "
-        "earlier (a pruned mechanism may come back with a substantive change).",
+        "and state the single change you make. Live models first, best first, then "
+        "models pruned earlier, closest to the best first (a pruned mechanism may "
+        "come back with a substantive change).",
         "",
     ]
     for m in [x for x in live if x.name != incumbent] + list(pruned):
@@ -143,7 +147,10 @@ def brief_md(role: str, *, lens: Optional[str], incumbent: Optional[ZooModel]) -
             f"Improve the current best model, **{incumbent.name}** ({incumbent.standing}), "
             "with ONE stated change to its mechanism (a different functional form, prior, "
             "depth, or one component taken from another model). Your hypothesis must say "
-            "what you changed and why it should fit better.\n\n"
+            "what you changed and why it should fit better, and list EVERY difference "
+            "between your candidate.py and its source: recursion depth (which L<k> "
+            "choice_probs calls), each parameter added or removed, and every other "
+            "term. A hypothesis that misdescribes its code misleads every later round.\n\n"
             f"Its hypothesis: {incumbent.hypothesis.strip()}\n\nIts source: `{incumbent.source}`\n"
         )
     if role == SLOT_REFINE_CHOSEN:
@@ -152,7 +159,9 @@ def brief_md(role: str, *, lens: Optional[str], incumbent: Optional[ZooModel]) -
             "Pick one model from refinement_menu.md (any but the incumbent"
             + (f", {incumbent.name}" if incumbent else "")
             + ") and improve it with ONE stated change. Name the model you refine in your "
-            "hypothesis.\n"
+            "hypothesis and list EVERY difference between your candidate.py and its "
+            "source: recursion depth (which L<k> choice_probs calls), each parameter "
+            "added or removed, and every other term.\n"
         )
     raise ValueError(f"unknown slot role {role!r}")
 

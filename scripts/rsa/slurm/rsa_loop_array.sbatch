@@ -196,9 +196,15 @@ fi
 if [[ -f "$RESULTS/export.json" ]]; then
   echo "[task $TASK] the loop finished in an earlier job ($RESULTS/export.json); going on to scoring"
 else
-  if [[ -d "$RESULTS" && -n "$(ls -A "$RESULTS")" ]]; then
+  RESUME_ARGS=()
+  if [[ -d "$RESULTS" && -n "$(ls -A "$RESULTS")" && "${RESTART:-}" != 1 && -f "$RESULTS/history.json" ]]; then
+    # An interrupted loop: continue from its last scored step (src.rsa.loop
+    # --resume abandons a half-finished round and runs it again).
+    RESUME_ARGS=(--resume)
+    echo "[task $TASK] resuming the unfinished loop in $RESULTS from its last scored step"
+  elif [[ -d "$RESULTS" && -n "$(ls -A "$RESULTS")" ]]; then
     if [[ "${RESTART:-}" != 1 ]]; then
-      echo "ERROR: $RESULTS holds an unfinished loop (no export.json). The loop cannot resume mid-run." >&2
+      echo "ERROR: $RESULTS holds a loop that stopped before its seeds were scored (no history.json)." >&2
       echo "       Resubmit this task with RESTART=1 to move it to $CELL_DIR/attempts/ and start over (its fit cache is kept)." >&2
       exit 1
     fi
@@ -236,7 +242,8 @@ else
       --num-warmup "$NUM_WARMUP" --num-samples "$NUM_SAMPLES" --num-chains "$NUM_CHAINS" \
       --agent-root "$RUN_REPO" \
       --agent-model "$AGENT_MODEL" --agent-timeout-sec "$AGENT_TIMEOUT_SEC" \
-      ${SEED_ARGS[@]+"${SEED_ARGS[@]}"}
+      ${SEED_ARGS[@]+"${SEED_ARGS[@]}"} \
+      ${RESUME_ARGS[@]+"${RESUME_ARGS[@]}"}
   [[ -f "$RESULTS/export.json" ]] || { echo "ERROR: the loop exited 0 without $RESULTS/export.json" >&2; exit 1; }
 
   # Warn-only records of what the agents did: did any write the ground

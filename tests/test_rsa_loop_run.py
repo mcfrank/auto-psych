@@ -18,7 +18,7 @@ def test_the_cli_records_agent_token_usage_in_the_results_dir(tmp_path, monkeypa
         def __init__(self, cfg, spawn):
             pass
 
-        def run(self):
+        def run(self, resume=False):
             token_usage.record_usage(source="rsa:candidate", backend="opencode", model="m",
                                      input_tokens=10, output_tokens=2)
             return dict(best_model="rsa_l1", standing={"rsa_l1": {}})
@@ -42,7 +42,8 @@ def test_agents_default_to_gemini_flash_with_time_for_several_self_checks(monkey
         def __init__(self, cfg, spawn):
             pass
 
-        def run(self):
+        def run(self, resume=False):
+            seen["resume"] = resume
             return dict(best_model="m", standing={"m": {}})
 
     monkeypatch.setattr(rsa_run, "RSALoop", FakeLoop)
@@ -59,7 +60,8 @@ def test_the_run_seed_reaches_every_fit(monkeypatch, tmp_path):
         def __init__(self, cfg, spawn):
             seen["seed"] = cfg.settings.seed
 
-        def run(self):
+        def run(self, resume=False):
+            seen["resume"] = resume
             return dict(best_model="m", standing={"m": {}})
 
     monkeypatch.setattr(rsa_run, "RSALoop", FakeLoop)

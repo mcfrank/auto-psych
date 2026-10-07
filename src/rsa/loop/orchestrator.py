@@ -51,6 +51,7 @@ from src.pipelines.inner_loop.hypothesis_ledger import (
 )
 from src.pipelines.inner_loop.model_zoo import (
     SLOT_EXPLORE,
+    SLOT_REFINE_INCUMBENT,
     _lens_index,
     exploratory_slots_per_round,
     slot_roles,
@@ -146,7 +147,8 @@ class RSALoop:
         self.step = 0
 
     # ---------- setup ----------
-    def setup(self) -> None:
+    def _prepare(self) -> None:
+        """What a fresh start and a resume share: data, clusters, pool, gates."""
         self.dir.mkdir(parents=True, exist_ok=True)
         if not self.responses.exists():
             df = pd.read_csv(self.cfg.responses_path)
@@ -156,14 +158,17 @@ class RSALoop:
             raise ValueError(f"{self.cfg.responses_path} has no included forced-choice trials")
         self.clusters = cluster_ids(self.trials.frame)
         self.pool = novelty_pool()
-        (self.dir / "novelty_pool.json").write_text(json.dumps(
-            dict(digest=pool_digest(self.pool), contexts=[pool_record(c) for c in self.pool])))
-        self.ledger = HypothesisLedger.create(self.dir / LEDGER_FILENAME, inherit_from=None)
         self.gate_cfg = GateConfig(
             responses_path=self.responses, cache_dir=self.dir / ".fit_cache",
             settings=self.cfg.settings, novelty_threshold=self.cfg.novelty_threshold,
             time_limit_sec=self.cfg.fit_time_limit_sec,
         )
+
+    def setup(self) -> None:
+        self._prepare()
+        (self.dir / "novelty_pool.json").write_text(json.dumps(
+            dict(digest=pool_digest(self.pool), contexts=[pool_record(c) for c in self.pool])))
+        self.ledger = HypothesisLedger.create(self.dir / LEDGER_FILENAME, inherit_from=None)
         self.models_dir.mkdir(exist_ok=True)
         entries = read_manifest_entries(self.cfg.seed_models_dir)
         for entry in entries:
@@ -245,9 +250,13 @@ class RSALoop:
         cell_table(self.trials, preds).to_csv(step_dir / "cells.csv", index=False)
         (step_dir / "summary.json").write_text(json.dumps(dict(
             n_trials=len(self.trials.contexts), settings=vars(self.cfg.settings), step=self.step)))
-        entry = dict(step=self.step, round=round_index, best_model=best, standing=standing, events=events)
+        # The live set and the ledger's length at this step: what --resume
+        # restores (`resume`).
+        entry = dict(step=self.step, round=round_index, best_model=best, standing=standing, events=events,
+                     live=[dict(name=m.name, hypothesis=m.hypothesis, source=m.source) for m in self.live.values()],
+                     ledger_entries=len(self.ledger.entries()))
         self.history.append(entry)
-        (self.dir / "history.json").write_text(json.dumps(self.history, indent=1))
+        _write_atomic(self.dir / "history.json", json.dumps(self.history, indent=1))
         self._write_report(step_dir)
         self.step += 1
         return entry
@@ -272,10 +281,16 @@ class RSALoop:
                 return "admitted this round, not yet scored"
             s = standing[n]
             return "best" if s["elpd_diff"] == 0 else f"{s['elpd_diff']:.1f} ± {s['dse']:.1f} nats behind the best"
-        live = [briefs.ZooModel(n, m.hypothesis, self.models_dir / f"{n}.py", desc(n)) for n, m in self.live.items()]
+        # Ranked as the refinement menu shows them: live models best first
+        # (unscored last), pruned ones by how far behind the best they were.
+        def behind(n):
+            return standing[n]["elpd_diff"] if n in standing else float("inf")
+        live = [briefs.ZooModel(n, self.live[n].hypothesis, self.models_dir / f"{n}.py", desc(n))
+                for n in sorted(self.live, key=behind)]
         pruned_dir = self.models_dir / "pruned"
         pruned = [briefs.ZooModel(e.name, e.hypothesis, pruned_dir / f"{e.name}.py", f"pruned: {e.detail}")
-                  for e in self.ledger.pruned(self.live) if (pruned_dir / f"{e.name}.py").exists()]
+                  for e in sorted(self.ledger.pruned(self.live), key=lambda e: prune_margin(e.detail))
+                  if (pruned_dir / f"{e.name}.py").exists()]
         context = briefs.context_md(
             candidate_dir=cdir, responses_path=self.responses, round_index=round_index,
             n_rounds=self.cfg.max_iterations, n_trials=len(self.trials.contexts),
@@ -341,7 +356,10 @@ class RSALoop:
             if role == SLOT_EXPLORE:
                 lens = self.cfg.lenses[_lens_index(0, round_index, per_round, explore_i, len(self.cfg.lenses))]
                 explore_i += 1
-            context = f"round {round_index + 1} candidate {i + 1} {role}" + (f" {incumbent}" if role != SLOT_EXPLORE else "")
+            # Only the incumbent slot's target is known; which model a
+            # refine-chosen agent picked is in its hypothesis, never parsed.
+            context = f"round {round_index + 1} candidate {i + 1} {role}" + (
+                f" {incumbent}" if role == SLOT_REFINE_INCUMBENT else "")
             slots.append(dict(i=i, role=role, lens=lens, dir=rdir / f"candidate_{i + 1}", context=context))
         jobs = [(s["dir"], self._docs_for(s["dir"], s["role"], s["lens"], round_index, standing, incumbent, None))
                 for s in slots]
@@ -438,12 +456,94 @@ class RSALoop:
         self._ledger(name, outcome, detail, m.hypothesis, m.source)
         self._write_manifest()
 
-    def run(self) -> dict:
-        self.setup()
-        self.score(-1, [dict(outcome="seeded", name=n) for n in self.live])
-        for r in range(self.cfg.max_iterations):
+    def resume(self) -> int:
+        """Restore an interrupted run to its last scored step; returns the
+        first round still to run.
+
+        The step's history entry holds the live set and the ledger's length.
+        Whatever a half-finished round did after it is undone: ledger lines
+        past that length are dropped, models it admitted are removed from the
+        set (their files and fits stay in the cache and the round's
+        directory), a model the end step had pruned is put back, and the
+        round's directory is renamed ``round_<k>_abandoned_<n>`` so the round
+        runs again from its agents. Fits come back from the cache.
+        """
+        hist_path = self.dir / "history.json"
+        if not hist_path.exists():
+            raise FileNotFoundError(
+                f"{hist_path} not found: the run stopped before its seeds were scored; start it afresh")
+        if (self.dir / "export.json").exists():
+            raise RuntimeError(f"{self.dir} finished (export.json exists); there is nothing to resume")
+        self.history = json.loads(hist_path.read_text())
+        last = self.history[-1]
+        if "live" not in last or "ledger_entries" not in last:
+            raise ValueError(f"{hist_path} predates resume support (no live set recorded); start afresh")
+        self._prepare()
+        recorded = json.loads((self.dir / "novelty_pool.json").read_text())["digest"]
+        if recorded != pool_digest(self.pool):
+            raise ValueError("the novelty pool changed since the run started (other code?); start afresh")
+        ledger_path = self.dir / LEDGER_FILENAME
+        lines = [ln for ln in ledger_path.read_text(encoding="utf-8").splitlines() if ln.strip()]
+        if len(lines) < last["ledger_entries"]:
+            raise ValueError(f"{ledger_path} has {len(lines)} entries, fewer than the "
+                             f"{last['ledger_entries']} recorded at step {last['step']}")
+        _write_atomic(ledger_path, "".join(ln + "\n" for ln in lines[:last["ledger_entries"]]))
+        self.ledger = HypothesisLedger(ledger_path)
+        self.ledger.entries()  # parses, or raises
+        live = {e["name"]: e for e in last["live"]}
+        pruned_dir = self.models_dir / "pruned"
+        for name in live:
+            if not (self.models_dir / f"{name}.py").exists() and (pruned_dir / f"{name}.py").exists():
+                shutil.move(str(pruned_dir / f"{name}.py"), self.models_dir / f"{name}.py")
+            if not (self.models_dir / f"{name}.py").exists():
+                raise FileNotFoundError(f"{name} was live at step {last['step']} but its file is gone")
+        for f in self.models_dir.glob("*.py"):
+            if f.stem not in live:
+                f.unlink()  # admitted by the abandoned round; its candidate dir keeps the source
+        next_round = last["round"] + 1
+        partial = self.dir / f"round_{next_round + 1}"
+        if partial.exists():
+            k = 1
+            while (self.dir / f"round_{next_round + 1}_abandoned_{k}").exists():
+                k += 1
+            partial.rename(self.dir / f"round_{next_round + 1}_abandoned_{k}")
+        self._prefit([(self.models_dir / f"{n}.py", n) for n in live])
+        for name, e in live.items():
+            path = self.models_dir / f"{name}.py"
+            model = RSAModel(path, name=name)
+            fitted = fit_with_refit(path, name, self.gate_cfg)
+            self.live[name] = Live(name, e["hypothesis"], model, fitted,
+                                   posterior_mean_class_probs(model, fitted, self.pool), e["source"])
+        self._write_manifest()
+        self.step = last["step"] + 1
+        return next_round
+
+    def run(self, resume: bool = False) -> dict:
+        if resume:
+            first = self.resume()
+        else:
+            self.setup()
+            self.score(-1, [dict(outcome="seeded", name=n) for n in self.live])
+            first = 0
+        for r in range(first, self.cfg.max_iterations):
             self.run_round(r)
         return self.end()
+
+
+def _write_atomic(path: Path, text: str) -> None:
+    tmp = path.with_name(path.name + f".tmp{os.getpid()}")
+    tmp.write_text(text, encoding="utf-8")
+    os.replace(tmp, path)
+
+
+_MARGIN_RE = re.compile(r"elpd_diff (-?[0-9.]+)")
+
+
+def prune_margin(detail: str) -> float:
+    """How far behind the best a pruned model was (the prune's own record);
+    models retired by the cap, without a margin, sort last."""
+    m = _MARGIN_RE.search(detail)
+    return float(m.group(1)) if m else float("inf")
 
 
 def _read(path: Path) -> str:

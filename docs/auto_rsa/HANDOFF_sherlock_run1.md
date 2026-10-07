@@ -225,7 +225,7 @@ A cell never resumes on other code. Each records its code in
 | setup: `the simulated split holds out other units` or `differs ... outside the choice column` | A bug in simulate/split. Do not run the array; report. |
 | setup: `ground truth's fit did not converge` | Report the log (`data/simulate_<cond>.log`). |
 | array: `ERROR (agent tree ...)` from `check_agent_tree.sh` | A leak was caught before any agent ran. Do not override; report the listed paths. |
-| array: `the loop exited` non-zero, or TIMEOUT / OUT_OF_MEMORY mid-loop | The loop cannot resume mid-run. Resubmit only that task with `RESTART=1` (the old results go to `cells/<cell>/attempts/`, and the fit cache is reused). Raise `TIME`/`MEM` if the job hit its limit: `ARRAY=<task> RESTART=1 SKIP_SETUP=1 TIME=... MEM=... bash scripts/rsa/slurm/submit.sh` |
+| array: `the loop exited` non-zero, or TIMEOUT / OUT_OF_MEMORY mid-loop | Resubmit only that task: it resumes from the loop's last scored step (a half-finished round is renamed `round_<k>_abandoned_<n>` and run again; fits come from the cache). Raise `TIME`/`MEM` if the job hit its limit: `ARRAY=<task> SKIP_SETUP=1 TIME=... MEM=... bash scripts/rsa/slurm/submit.sh`. `RESTART=1` instead moves the results to `cells/<cell>/attempts/` and starts over. |
 | array: failed in held-out or recovery scoring (`export.json` exists) | Fix the cause and resubmit the task without `RESTART`: it skips the loop and resumes at scoring. |
 | status `stopped` | A duplicate job exited, or the cell was already done. Check `cells/<cell>/last_exit` and the log. |
 | Every slot `no file`; logs show `[USAGE LIMIT]` or quota errors | Check the Gemini quota and billing on the key, then restart the cell. |
