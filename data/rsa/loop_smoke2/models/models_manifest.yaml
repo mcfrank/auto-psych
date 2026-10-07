@@ -1,0 +1,35 @@
+models:
+- name: rsa_l2
+  rationale: Listeners reason one level deeper (depth 2), inverting a speaker who
+    simulates the depth-1 pragmatic listener.
+- name: rsa_l2_shared_prior
+  rationale: We refine depth-2 RSA (rsa_l2) by incorporating the shared salience prior
+    from rsa_l1_shared_prior as common knowledge across all levels of recursive reasoning.
+    Rather than assuming uniform object priors, speakers and listeners at every depth
+    weight referents by their familiarization base rates and feature counts, allowing
+    prior object expectations to guide pragmatic disambiguation as well as uninformative
+    prior choices.
+- name: contrast_salience_listener
+  rationale: Listeners expect speakers to refer to the most distinctive object in
+    a scene, weighting referents by their contextual feature contrast (average dissimilarity
+    to all other objects in the display). On twin displays where all objects share
+    the same number of features but one is a unique singleton and two are identical
+    twins, this contrast salience mechanism strongly favors the singleton, whereas
+    the current best model predicts equal choice probabilities because feature counts
+    are identical. This shared contrast prior guides prior object expectations and
+    pragmatic disambiguation of informative utterances.
+- name: rsa_l2_valence_shared_prior
+  rationale: We refine rsa_l2_shared_prior_2 by extending its recursive pragmatic
+    reasoning depth from depth 1 to depth 2, so that listeners invert a depth-2 speaker
+    who simulates the depth-1 pragmatic listener rather than a literal listener. Under
+    this mechanism, the valence-modulated salience prior remains common knowledge
+    across all levels of recursion, allowing listeners to resolve complex higher-order
+    implicatures while respecting prior salience and evaluative framing.
+- name: valence_salience_l2
+  rationale: We refine valence_salience_listener by extending its recursive pragmatic
+    reasoning depth from depth 1 to depth 2, so that listeners invert a depth-2 speaker
+    who simulates the depth-1 pragmatic listener rather than a literal listener. Under
+    this mechanism, the speaker's evaluative framing (favorite versus least favorite)
+    modulates prior expectations of referent complexity across higher-order recursive
+    pragmatic reasoning, allowing listeners to resolve complex implicatures while
+    accounting for evaluative intent.

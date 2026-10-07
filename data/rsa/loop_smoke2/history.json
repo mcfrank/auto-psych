@@ -1,0 +1,455 @@
+[
+ {
+  "step": 0,
+  "round": -1,
+  "best_model": "rsa_l2",
+  "standing": {
+   "rsa_l2": {
+    "rank": 0,
+    "elpd_loo": -21198.316064834595,
+    "se": 151.99501934254803,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 1.9388022422790527,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 1,
+    "elpd_loo": -21207.381079673767,
+    "se": 152.05491002438038,
+    "elpd_diff": 9.065014839172363,
+    "dse": 8.46103542251617,
+    "p_loo": 4.010265827178955,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 2,
+    "elpd_loo": -21211.342663288116,
+    "se": 151.81455269685617,
+    "elpd_diff": 13.026598453521729,
+    "dse": 8.40963215667831,
+    "p_loo": 3.9634957313537598,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 3,
+    "elpd_loo": -21246.1156373024,
+    "se": 151.45601816000465,
+    "elpd_diff": 47.799572467803955,
+    "dse": 3.8563999587060223,
+    "p_loo": 2.0074377059936523,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 4,
+    "elpd_loo": -22676.752858161926,
+    "se": 146.01227619899558,
+    "elpd_diff": 1478.4367933273315,
+    "dse": 49.41486585803162,
+    "p_loo": 0.952692985534668,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "outcome": "seeded",
+    "name": "literal_listener"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1_salience"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1_shared_prior"
+   }
+  ]
+ },
+ {
+  "step": 1,
+  "round": 0,
+  "best_model": "rsa_l2_shared_prior_2",
+  "standing": {
+   "rsa_l2_shared_prior_2": {
+    "rank": 0,
+    "elpd_loo": -21117.120425224304,
+    "se": 152.2511208726219,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 5.141369342803955,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_listener": {
+    "rank": 1,
+    "elpd_loo": -21154.60843849182,
+    "se": 151.67169472123584,
+    "elpd_diff": 37.48801326751709,
+    "dse": 8.963001750511348,
+    "p_loo": 2.9772114753723145,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2_shared_prior": {
+    "rank": 2,
+    "elpd_loo": -21169.550679683685,
+    "se": 152.21744916133744,
+    "elpd_diff": 52.4302544593811,
+    "dse": 14.561466911578009,
+    "p_loo": 3.8795323371887207,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 3,
+    "elpd_loo": -21198.316064834595,
+    "se": 151.99501934254803,
+    "elpd_diff": 81.19563961029053,
+    "dse": 16.583451236452895,
+    "p_loo": 1.9388022422790527,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 4,
+    "elpd_loo": -21207.381079673767,
+    "se": 152.05491002438038,
+    "elpd_diff": 90.26065444946289,
+    "dse": 14.07950405582491,
+    "p_loo": 4.010265827178955,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 5,
+    "elpd_loo": -21211.342663288116,
+    "se": 151.81455269685617,
+    "elpd_diff": 94.22223806381226,
+    "dse": 14.21294492136464,
+    "p_loo": 3.9634957313537598,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 6,
+    "elpd_loo": -21246.1156373024,
+    "se": 151.45601816000465,
+    "elpd_diff": 128.99521207809448,
+    "dse": 16.59331001290707,
+    "p_loo": 2.0074377059936523,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 7,
+    "elpd_loo": -22676.752858161926,
+    "se": 146.01227619899558,
+    "elpd_diff": 1559.632432937622,
+    "dse": 51.23237040349502,
+    "p_loo": 0.952692985534668,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "valence_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret the speaker's evaluative framing (favorite versus least favorite) as modulating expectations of referent complexity: people expect a speaker with positive valence to describe a feature-rich object, but expect a speaker with negative valence to describe a simple, feature-poor object. This valence-directed prior over referent richness guides both prior expectations and pragmatic inversion of the speaker's utterance."
+   },
+   {
+    "slot": 2,
+    "role": "refine incumbent",
+    "name": "rsa_l2_shared_prior",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine depth-2 RSA (rsa_l2) by incorporating the shared salience prior from rsa_l1_shared_prior as common knowledge across all levels of recursive reasoning. Rather than assuming uniform object priors, speakers and listeners at every depth weight referents by their familiarization base rates and feature counts, allowing prior object expectations to guide pragmatic disambiguation as well as uninformative prior choices."
+   },
+   {
+    "slot": 3,
+    "role": "refine chosen",
+    "name": "rsa_l2_shared_prior_2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine rsa_l1_shared_prior by extending its recursive pragmatic reasoning depth from depth 1 to depth 2, so that listeners invert a depth-2 speaker who simulates the depth-1 pragmatic listener rather than a literal listener. Under this mechanism, the salience prior (grounded in feature counts and familiarization base rates) remains common knowledge across all levels of recursion, allowing listeners to resolve complex implicatures while respecting prior salience."
+   }
+  ]
+ },
+ {
+  "step": 2,
+  "round": 1,
+  "best_model": "rsa_l2_valence_shared_prior",
+  "standing": {
+   "rsa_l2_valence_shared_prior": {
+    "rank": 0,
+    "elpd_loo": -21079.18003797531,
+    "se": 152.36390497006843,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 5.085859775543213,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contrast_salience_listener": {
+    "rank": 1,
+    "elpd_loo": -21099.156173706055,
+    "se": 152.95712874951516,
+    "elpd_diff": 19.976135730743408,
+    "dse": 22.105580765729318,
+    "p_loo": 3.216750144958496,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_l2": {
+    "rank": 2,
+    "elpd_loo": -21108.06429719925,
+    "se": 152.1566887322895,
+    "elpd_diff": 28.88425922393799,
+    "dse": 7.48146041578984,
+    "p_loo": 2.9250588417053223,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2_shared_prior_2": {
+    "rank": 3,
+    "elpd_loo": -21117.120425224304,
+    "se": 152.2511208726219,
+    "elpd_diff": 37.94038724899292,
+    "dse": 3.234641699272689,
+    "p_loo": 5.141369342803955,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_listener": {
+    "rank": 4,
+    "elpd_loo": -21154.60843849182,
+    "se": 151.67169472123584,
+    "elpd_diff": 75.42840051651001,
+    "dse": 8.875257474649386,
+    "p_loo": 2.9772114753723145,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2_shared_prior": {
+    "rank": 5,
+    "elpd_loo": -21169.550679683685,
+    "se": 152.21744916133744,
+    "elpd_diff": 90.37064170837402,
+    "dse": 14.129085898217898,
+    "p_loo": 3.8795323371887207,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 6,
+    "elpd_loo": -21198.316064834595,
+    "se": 151.99501934254803,
+    "elpd_diff": 119.13602685928345,
+    "dse": 15.96700204368123,
+    "p_loo": 1.9388022422790527,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 7,
+    "elpd_loo": -21207.381079673767,
+    "se": 152.05491002438038,
+    "elpd_diff": 128.2010416984558,
+    "dse": 14.375521456212555,
+    "p_loo": 4.010265827178955,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 8,
+    "elpd_loo": -21211.342663288116,
+    "se": 151.81455269685617,
+    "elpd_diff": 132.16262531280518,
+    "dse": 14.481452038855377,
+    "p_loo": 3.9634957313537598,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 9,
+    "elpd_loo": -21246.1156373024,
+    "se": 151.45601816000465,
+    "elpd_diff": 166.9355993270874,
+    "dse": 16.505844343036134,
+    "p_loo": 2.0074377059936523,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 10,
+    "elpd_loo": -22676.752858161926,
+    "se": 146.01227619899558,
+    "elpd_diff": 1597.572820186615,
+    "dse": 52.02469776186821,
+    "p_loo": 0.952692985534668,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "contrast_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners expect speakers to refer to the most distinctive object in a scene, weighting referents by their contextual feature contrast (average dissimilarity to all other objects in the display). On twin displays where all objects share the same number of features but one is a unique singleton and two are identical twins, this contrast salience mechanism strongly favors the singleton, whereas the current best model predicts equal choice probabilities because feature counts are identical. This shared contrast prior guides prior object expectations and pragmatic disambiguation of informative utterances."
+   },
+   {
+    "slot": 2,
+    "role": "refine incumbent",
+    "name": "rsa_l2_valence_shared_prior",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine rsa_l2_shared_prior_2 by extending its recursive pragmatic reasoning depth from depth 1 to depth 2, so that listeners invert a depth-2 speaker who simulates the depth-1 pragmatic listener rather than a literal listener. Under this mechanism, the valence-modulated salience prior remains common knowledge across all levels of recursion, allowing listeners to resolve complex higher-order implicatures while respecting prior salience and evaluative framing."
+   },
+   {
+    "slot": 3,
+    "role": "refine chosen",
+    "name": "valence_salience_l2",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine valence_salience_listener by extending its recursive pragmatic reasoning depth from depth 1 to depth 2, so that listeners invert a depth-2 speaker who simulates the depth-1 pragmatic listener rather than a literal listener. Under this mechanism, the speaker's evaluative framing (favorite versus least favorite) modulates prior expectations of referent complexity across higher-order recursive pragmatic reasoning, allowing listeners to resolve complex implicatures while accounting for evaluative intent."
+   }
+  ]
+ },
+ {
+  "step": 3,
+  "round": 2,
+  "best_model": "rsa_l2_valence_shared_prior",
+  "standing": {
+   "rsa_l2_valence_shared_prior": {
+    "rank": 0,
+    "elpd_loo": -21079.18003797531,
+    "se": 152.36390497006843,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 5.085859775543213,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "contrast_salience_listener": {
+    "rank": 1,
+    "elpd_loo": -21099.156173706055,
+    "se": 152.95712874951516,
+    "elpd_diff": 19.976135730743408,
+    "dse": 22.105580765729318,
+    "p_loo": 3.216750144958496,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_salience_l2": {
+    "rank": 2,
+    "elpd_loo": -21108.06429719925,
+    "se": 152.1566887322895,
+    "elpd_diff": 28.88425922393799,
+    "dse": 7.48146041578984,
+    "p_loo": 2.9250588417053223,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2_shared_prior": {
+    "rank": 3,
+    "elpd_loo": -21169.550679683685,
+    "se": 152.21744916133744,
+    "elpd_diff": 90.37064170837402,
+    "dse": 14.129085898217898,
+    "p_loo": 3.8795323371887207,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 4,
+    "elpd_loo": -21198.316064834595,
+    "se": 151.99501934254803,
+    "elpd_diff": 119.13602685928345,
+    "dse": 15.96700204368123,
+    "p_loo": 1.9388022422790527,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "name": "rsa_l2_shared_prior_2",
+    "outcome": "pruned",
+    "reason": "37.9 nats behind rsa_l2_valence_shared_prior (clustered dse 7.7)"
+   },
+   {
+    "name": "valence_salience_listener",
+    "outcome": "pruned",
+    "reason": "75.4 nats behind rsa_l2_valence_shared_prior (clustered dse 28.2)"
+   },
+   {
+    "name": "rsa_l1_shared_prior",
+    "outcome": "pruned",
+    "reason": "128.2 nats behind rsa_l2_valence_shared_prior (clustered dse 54.0)"
+   },
+   {
+    "name": "rsa_l1_salience",
+    "outcome": "pruned",
+    "reason": "132.2 nats behind rsa_l2_valence_shared_prior (clustered dse 53.9)"
+   },
+   {
+    "name": "rsa_l1",
+    "outcome": "pruned",
+    "reason": "166.9 nats behind rsa_l2_valence_shared_prior (clustered dse 60.2)"
+   },
+   {
+    "name": "literal_listener",
+    "outcome": "pruned",
+    "reason": "1597.6 nats behind rsa_l2_valence_shared_prior (clustered dse 253.2)"
+   }
+  ]
+ }
+]

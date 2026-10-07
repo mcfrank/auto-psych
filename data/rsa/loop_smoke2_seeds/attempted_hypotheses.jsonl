@@ -1,0 +1,2 @@
+{"name": "rsa_l1", "outcome": "pruned", "detail": "elpd_diff 47.8 > 2.0 x clustered dse 10.1 vs rsa_l2", "hypothesis": "Listeners invert a softmax-rational speaker who simulates a literal listener (depth 1), with a uniform prior over objects.", "context": "seed"}
+{"name": "literal_listener", "outcome": "pruned", "detail": "elpd_diff 1478.4 > 2.0 x clustered dse 246.6 vs rsa_l2", "hypothesis": "Listeners pick uniformly among the objects the word is literally true of.", "context": "seed"}

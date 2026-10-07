@@ -1,0 +1,1 @@
+{"n_trials": 50587, "settings": {"num_warmup": 500, "num_samples": 500, "num_chains": 2, "target_accept": 0.9, "seed": 0}, "step": 1}

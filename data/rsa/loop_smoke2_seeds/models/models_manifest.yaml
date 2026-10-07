@@ -1,0 +1,10 @@
+models:
+- name: rsa_l2
+  rationale: Listeners reason one level deeper (depth 2), inverting a speaker who
+    simulates the depth-1 pragmatic listener.
+- name: rsa_l1_salience
+  rationale: Depth-1 RSA whose listener has a salience prior over objects (feature
+    count, familiarization base rate) that the simulated literal listener lacks.
+- name: rsa_l1_shared_prior
+  rationale: Depth-1 RSA with the salience prior as common knowledge, used by the
+    simulated literal listener as well as the pragmatic listener.

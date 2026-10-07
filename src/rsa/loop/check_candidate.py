@@ -1,6 +1,6 @@
 """Self-check for an agent's memo candidate: the admission gates with a short fit.
 
-    uv run python -m src.rsa.loop.check_candidate <candidate_dir> --responses <responses.csv>
+    <the harness python> -m src.rsa.loop.check_candidate <candidate_dir> --responses <responses.csv>
 
 Runs the code gate, loading, the contract on the training displays and on
 the novelty pool's shapes, a short NUTS fit (zero-probability choices, finite

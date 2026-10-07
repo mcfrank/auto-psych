@@ -93,3 +93,11 @@ code_provenance.json
 
 # External reference-game datasets without a redistribution licence (src/rsa/ingest)
 data/rsa/external/
+# The combined trials (src.rsa.ingest.combine) include the external sources
+# without a redistribution licence; rebuild them instead.
+data/rsa/combined_trials.csv
+# RSA loop runs: the copied responses and each agent's private directories
+data/rsa/*/responses.csv
+data/rsa/*/round_*/candidate_*/scratch/
+data/rsa/*/round_*/candidate_*/.xdg_data/
+data/rsa/*/round_*/candidate_*/.home/

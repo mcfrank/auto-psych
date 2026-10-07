@@ -1,0 +1,271 @@
+[
+ {
+  "step": 0,
+  "round": -1,
+  "best_model": "rsa_l1_salience",
+  "standing": {
+   "rsa_l1_salience": {
+    "rank": 0,
+    "elpd_loo": -4973.143112182617,
+    "se": 53.741901482681456,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 4.084798336029053,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 1,
+    "elpd_loo": -4979.676478862762,
+    "se": 53.62164056194159,
+    "elpd_diff": 6.533366680145264,
+    "dse": 1.780774881161632,
+    "p_loo": 4.077053070068359,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 2,
+    "elpd_loo": -4992.088533878326,
+    "se": 54.252843967142354,
+    "elpd_diff": 18.94542169570923,
+    "dse": 7.9265616945335005,
+    "p_loo": 2.073208808898926,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 3,
+    "elpd_loo": -5005.552419662476,
+    "se": 53.677964308904215,
+    "elpd_diff": 32.4093074798584,
+    "dse": 7.471451915825971,
+    "p_loo": 2.0887961387634277,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 4,
+    "elpd_loo": -5527.645325660706,
+    "se": 43.72577808164031,
+    "elpd_diff": 554.5022134780884,
+    "dse": 28.844072651134287,
+    "p_loo": 0.9501934051513672,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "outcome": "seeded",
+    "name": "literal_listener"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l2"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1_salience"
+   },
+   {
+    "outcome": "seeded",
+    "name": "rsa_l1_shared_prior"
+   }
+  ]
+ },
+ {
+  "step": 1,
+  "round": 0,
+  "best_model": "valence_salience_listener",
+  "standing": {
+   "valence_salience_listener": {
+    "rank": 0,
+    "elpd_loo": -4875.165371894836,
+    "se": 54.99189635763799,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 5.025600433349609,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_evaluative_listener": {
+    "rank": 1,
+    "elpd_loo": -4908.190100193024,
+    "se": 54.89280713734793,
+    "elpd_diff": 33.024728298187256,
+    "dse": 7.5237857340264815,
+    "p_loo": 3.225775718688965,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 2,
+    "elpd_loo": -4973.143112182617,
+    "se": 53.741901482681456,
+    "elpd_diff": 97.97774028778076,
+    "dse": 14.701407348764675,
+    "p_loo": 4.084798336029053,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 3,
+    "elpd_loo": -4979.676478862762,
+    "se": 53.62164056194159,
+    "elpd_diff": 104.51110696792603,
+    "dse": 14.74477180454943,
+    "p_loo": 4.077053070068359,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 4,
+    "elpd_loo": -4992.088533878326,
+    "se": 54.252843967142354,
+    "elpd_diff": 116.92316198348999,
+    "dse": 16.69375496184419,
+    "p_loo": 2.073208808898926,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1": {
+    "rank": 5,
+    "elpd_loo": -5005.552419662476,
+    "se": 53.677964308904215,
+    "elpd_diff": 130.38704776763916,
+    "dse": 16.36246450496756,
+    "p_loo": 2.0887961387634277,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "literal_listener": {
+    "rank": 6,
+    "elpd_loo": -5527.645325660706,
+    "se": 43.72577808164031,
+    "elpd_diff": 652.4799537658691,
+    "dse": 31.675048778473805,
+    "p_loo": 0.9501934051513672,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "slot": 1,
+    "role": "explore",
+    "name": "valence_evaluative_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "Listeners interpret the speaker as describing an object chosen according to their evaluative attitude, where desirability increases with feature complexity. When a speaker describes their favorite object, listeners infer that they favor referents with more features, whereas when describing their least favorite object, they favor referents with fewer features. Listeners invert this value-conditioned speaker upon hearing an utterance, and default to the speaker's evaluative preference when no informative word is given."
+   },
+   {
+    "slot": 2,
+    "role": "refine incumbent",
+    "name": "rsa_l2_salience",
+    "outcome": "rejected",
+    "reason": "not novel: its predictions are within RMSE 0.0102 of rsa_l1_salience's (threshold 0.03) over the loop's novelty pool of 1258 displays. A re-parameterisation of an existing mechanism is not a new hypothesis; change what the listener or speaker computes.",
+    "hypothesis": "Listeners reason at depth 2 by inverting a speaker who anticipates a depth-1 pragmatic listener, combining recursive pragmatic reasoning with a salience prior over referents. The salience prior, shaped by visual feature complexity and familiarization base rates, enters only the pragmatic listener's top-level inference and is not simulated in lower-level agents."
+   },
+   {
+    "slot": 2,
+    "role": "refine incumbent",
+    "name": "valence_salience_listener",
+    "outcome": "admitted",
+    "reason": "admitted",
+    "hypothesis": "We refine the depth-1 salience listener by incorporating the speaker's evaluative attitude into the referent prior, so that listeners expect speakers describing a favorite object to favor feature-rich referents and speakers describing a least-favorite object to favor simpler referents. By conditioning referent expectations on both communicative valence and perceptual base rates (feature count and familiarization), the listener captures how affective framing shifts referent choice beyond visual salience alone.",
+    "repair": true
+   }
+  ]
+ },
+ {
+  "step": 2,
+  "round": 1,
+  "best_model": "valence_salience_listener",
+  "standing": {
+   "valence_salience_listener": {
+    "rank": 0,
+    "elpd_loo": -4875.165371894836,
+    "se": 54.99189635763799,
+    "elpd_diff": 0.0,
+    "dse": 0.0,
+    "p_loo": 5.025600433349609,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "valence_evaluative_listener": {
+    "rank": 1,
+    "elpd_loo": -4908.190100193024,
+    "se": 54.89280713734793,
+    "elpd_diff": 33.024728298187256,
+    "dse": 7.5237857340264815,
+    "p_loo": 3.225775718688965,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_salience": {
+    "rank": 2,
+    "elpd_loo": -4973.143112182617,
+    "se": 53.741901482681456,
+    "elpd_diff": 97.97774028778076,
+    "dse": 14.701407348764675,
+    "p_loo": 4.084798336029053,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l1_shared_prior": {
+    "rank": 3,
+    "elpd_loo": -4979.676478862762,
+    "se": 53.62164056194159,
+    "elpd_diff": 104.51110696792603,
+    "dse": 14.74477180454943,
+    "p_loo": 4.077053070068359,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   },
+   "rsa_l2": {
+    "rank": 4,
+    "elpd_loo": -4992.088533878326,
+    "se": 54.252843967142354,
+    "elpd_diff": 116.92316198348999,
+    "dse": 16.69375496184419,
+    "p_loo": 2.073208808898926,
+    "loo_reliable": true,
+    "converged": true,
+    "convergence_problems": ""
+   }
+  },
+  "events": [
+   {
+    "name": "rsa_l1",
+    "outcome": "pruned",
+    "reason": "130.4 nats behind valence_salience_listener (clustered dse 61.0)"
+   },
+   {
+    "name": "literal_listener",
+    "outcome": "pruned",
+    "reason": "652.5 nats behind valence_salience_listener (clustered dse 132.9)"
+   }
+  ]
+ }
+]

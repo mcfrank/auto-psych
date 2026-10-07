@@ -1,0 +1,26 @@
+models:
+- name: rsa_l2
+  rationale: Listeners reason one level deeper (depth 2), inverting a speaker who
+    simulates the depth-1 pragmatic listener.
+- name: rsa_l1_salience
+  rationale: Depth-1 RSA whose listener has a salience prior over objects (feature
+    count, familiarization base rate) that the simulated literal listener lacks.
+- name: rsa_l1_shared_prior
+  rationale: Depth-1 RSA with the salience prior as common knowledge, used by the
+    simulated literal listener as well as the pragmatic listener.
+- name: valence_evaluative_listener
+  rationale: Listeners interpret the speaker as describing an object chosen according
+    to their evaluative attitude, where desirability increases with feature complexity.
+    When a speaker describes their favorite object, listeners infer that they favor
+    referents with more features, whereas when describing their least favorite object,
+    they favor referents with fewer features. Listeners invert this value-conditioned
+    speaker upon hearing an utterance, and default to the speaker's evaluative preference
+    when no informative word is given.
+- name: valence_salience_listener
+  rationale: We refine the depth-1 salience listener by incorporating the speaker's
+    evaluative attitude into the referent prior, so that listeners expect speakers
+    describing a favorite object to favor feature-rich referents and speakers describing
+    a least-favorite object to favor simpler referents. By conditioning referent expectations
+    on both communicative valence and perceptual base rates (feature count and familiarization),
+    the listener captures how affective framing shifts referent choice beyond visual
+    salience alone.

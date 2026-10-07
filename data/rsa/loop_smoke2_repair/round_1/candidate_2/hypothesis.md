@@ -1,0 +1,1 @@
+Listeners reason at depth 2 by inverting a speaker who anticipates a depth-1 pragmatic listener, combining recursive pragmatic reasoning with a salience prior over referents. The salience prior, shaped by visual feature complexity and familiarization base rates, enters only the pragmatic listener's top-level inference and is not simulated in lower-level agents.
