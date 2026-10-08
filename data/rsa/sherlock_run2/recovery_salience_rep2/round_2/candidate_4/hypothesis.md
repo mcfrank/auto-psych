@@ -1,0 +1,7 @@
+Depth-2 pragmatic listeners combine an inductive referent prior shaped by familiarization base rates with the expectation that speakers incur a cognitive ambiguity cost when using non-specific labels that apply to multiple objects. When interpreting ambiguous expressions, listeners reason that a speaker would avoid multi-referent descriptions if an unambiguous alternative were available, thereby sharpening referential disambiguation while maintaining empirical base-rate preferences on uninformative baseline displays. Incorporating speaker ambiguity costs into depth-2 recursive reasoning improves fit over base_rate_prior_l2 by penalizing ambiguous descriptors on complex communicative displays without degrading base-rate sensitivity.
+
+Differences from base_rate_prior_l2:
+- Recursion depth: depth 2 (choice_probs calls L2, unchanged from base_rate_prior_l2).
+- Parameter added: cost (prior dist.LogNormal(-1.0, 1.0)), which penalizes speakers for choosing ambiguous utterances describing multiple referents; no parameters removed (alpha, base_rate_weight, and lapse retained with identical priors).
+- Utterance costs in memo recursion: added array parameter costs: ... to L1 and L2, subtracting vec(costs, u) from the speaker's utility in both levels, and forwarding costs from L2 to L1.
+- Choice probabilities: choice_probs computes extension = jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) and costs = params["cost"] * jnp.maximum(0.0, extension - 1.0), and passes costs to L2.

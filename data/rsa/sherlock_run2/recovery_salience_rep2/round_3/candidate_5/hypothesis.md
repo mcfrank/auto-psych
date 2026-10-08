@@ -1,0 +1,7 @@
+Listeners operate under visual attentional constraints that discount non-matching distractors in the visual display when simulating recursive communicative choices, while retaining empirical familiarization base rates and speaker ambiguity penalties. When interpreting referential expressions, this attentional bottleneck attenuates competing alternative features on unattended objects, preventing overestimation of competitor ambiguity on complex implicature displays. Integrating distractor attenuation into depth-2 reasoning improves fit over base_rate_ambiguity_l2 on complex visual displays without degrading empirical base-rate sensitivity on uninformative baselines.
+
+Differences from base_rate_ambiguity_l2:
+- Recursion depth: depth 2 (choice_probs calls L2, unchanged from base_rate_ambiguity_l2).
+- Parameter added: distractor_weight (prior dist.Beta(2.0, 2.0)), which discounts non-matching distractors during speaker simulation (taken from distractor_attenuation_listener); no parameters removed (alpha, cost, base_rate_weight, and lapse retained with identical priors).
+- Attenuation in memo recursion: added array parameter atten: ... to L0, L1, and L2; modulated literal listener referent choice weights by attentional discounting (wpp=at(lex, u, r) * vec(atten, r)) in L0; forwarded atten from L2 to L1 and from L1 to L0.
+- Choice probabilities: choice_probs computes matches = ctx.lex[ctx.utterance] and atten = jnp.where(ctx.is_prior > 0, 1.0, jnp.where(matches > 0, 1.0, params["distractor_weight"])), and passes atten to L2.

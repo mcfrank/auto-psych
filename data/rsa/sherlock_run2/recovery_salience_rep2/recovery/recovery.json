@@ -1,0 +1,27 @@
+{
+ "best_model": "salience_base_rate_ambiguity_l1",
+ "ground_truth": "/scratch/users/mcfrank/auto-psych/rsa_run2/harness_repo/src/pipelines/outer_loop/projects/rsa_reference/seed_models/rsa_l1_salience.py",
+ "best_pool_rmse_to_gt": 0.0029911676391370847,
+ "live_pool_rmse_to_gt": {
+  "diminishing_ambiguity_cost_l2": 0.0038221055366250583,
+  "distractor_attenuation_base_rate": 0.019795978828665413,
+  "salience_base_rate_ambiguity_l1": 0.0029911676391370847,
+  "salience_base_rate_ambiguity_l2": 0.005008857519242256,
+  "salience_distractor_base_rate": 0.0054085468710927485
+ },
+ "closest_live_model": "salience_base_rate_ambiguity_l1",
+ "closest_live_rmse_to_gt": 0.0029911676391370847,
+ "seed_pool_rmse_to_gt": {
+  "literal_listener": 0.10580949229851867,
+  "rsa_l1": 0.0495683744996766,
+  "rsa_l2": 0.04900440110134513
+ },
+ "best_seed": "rsa_l2",
+ "best_seed_rmse_to_gt": 0.04900440110134513,
+ "seeds_would_pass": false,
+ "heldout_lpd_best_minus_gt": -0.04927305846467789,
+ "heldout_se": 0.05257031673946511,
+ "recovered": true,
+ "rmse_threshold": 0.01,
+ "verdict_rule": "exported model's pool RMSE to the ground truth <= rmse_threshold"
+}

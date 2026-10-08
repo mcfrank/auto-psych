@@ -1,0 +1,1 @@
+Speakers incur a communicative cost for choosing an utterance that is less informative than the best available alternative describing their intended referent. Pragmatic listeners invert this cost-sensitive speaker, reasoning that hearing an ambiguous word implies the speaker lacked a more informative alternative for that referent.

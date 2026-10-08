@@ -1,0 +1,7 @@
+Listeners evaluate candidate referents through a feature-complexity prior (assigning higher prior probability to simpler objects with fewer defining features according to cognitive parsimony) and reason recursively about speakers at depth 2 (inverting a speaker S2 who simulates a depth-1 pragmatic listener L1). This simplicity prior governs baseline expectations on uninformative prior trials and guides referent expectations during depth-2 recursive speaker simulation. Incorporating feature complexity into depth-2 reasoning improves fit over rsa_l2 by capturing human biases toward simpler objects across both baseline prior displays and communicative implicature trials.
+
+Differences from rsa_l2:
+- Recursion depth: depth 2 (choice_probs calls L2, unchanged from rsa_l2).
+- Parameter added: salience (prior dist.Normal(0.0, 1.0)), which scales the feature-complexity prior over candidate referents; no parameters removed (alpha and lapse retained with identical priors).
+- Prior in memo recursion: added array parameter prior: ... to L1 and L2, replacing speaker: given(r in OBJ, wpp=1) with speaker: given(r in OBJ, wpp=vec(prior, r)) in both levels, and forwarding prior from L2 to L1.
+- Choice probabilities: choice_probs computes prior = softmax_prior(params["salience"] * ctx.feature_count), passes prior to L2, and uses prior instead of uniform on prior trials (jnp.where(ctx.is_prior > 0, prior, heard)).

@@ -1,0 +1,118 @@
+models:
+- name: distractor_attenuation_base_rate
+  rationale: 'Listeners operate under visual attentional constraints that attenuate
+    non-matching distractors during speaker simulation, while additionally incorporating
+    empirical familiarization base rates into referent expectations both when simulating
+    the speaker and as their default choice on uninformative baseline displays. By
+    combining distractor attenuation with inductive base-rate expectations, listeners
+    account for prior object exposure frequencies without sacrificing attentional
+    discounting of non-matching visual competitors on communicative displays. ###
+    Refinement of distractor_attenuation_listener We refine distractor_attenuation_listener
+    with a single stated change: extending the model with an empirical base-rate prior
+    over candidate referents (from base_rate_prior_l2) rather than assuming objects
+    are equally likely a priori. ### Differences from distractor_attenuation_listener
+    - Recursion depth: depth 1 (choice_probs calls L1, unchanged from distractor_attenuation_listener).
+    - Parameter added: base_rate_weight (prior dist.Normal(0.0, 2.0)), which scales
+    sensitivity to familiarization base rates; no parameters removed (alpha, distractor_weight,
+    and lapse retained with identical priors). - Prior in memo recursion: added array
+    parameter prior: ... to L1, replacing speaker: given(r in OBJ, wpp=1) with speaker:
+    given(r in OBJ, wpp=vec(prior, r)). - Choice probabilities: choice_probs computes
+    prior = softmax_prior(params["base_rate_weight"] * ctx.familiarization), passes
+    prior to L1, and uses prior instead of uniform on prior trials (jnp.where(ctx.is_prior
+    > 0, prior, heard)).'
+- name: salience_base_rate_ambiguity_l2
+  rationale: 'Depth-2 pragmatic listeners evaluate candidate referents through an
+    inductive prior that integrates visual feature complexity (cognitive parsimony
+    favoring objects with fewer defining features) alongside empirical familiarization
+    base rates, while expecting speakers to incur a cognitive cost for ambiguous utterances.
+    On displays without prior familiarization, this simplicity preference guides baseline
+    expectations on uninformative trials and shapes recursive speaker simulation,
+    capturing human biases toward simpler referents on complex displays. On familiarization
+    displays, empirical exposure frequencies combine with feature complexity to guide
+    reference resolution without degrading base-rate sensitivity. ### Refinement of
+    base_rate_ambiguity_l2 We refine base_rate_ambiguity_l2 with a single stated change:
+    extending the inductive referent prior to incorporate the feature-complexity parsimony
+    mechanism from feature_salience_l2, so candidate referents are evaluated by both
+    empirical familiarization frequencies and visual feature count. ### Differences
+    from base_rate_ambiguity_l2 - Recursion depth: depth 2 (choice_probs calls L2,
+    unchanged from base_rate_ambiguity_l2). - Parameter added: salience (prior dist.Normal(0.0,
+    1.0)), which scales the feature-complexity prior over candidate referents (taken
+    from feature_salience_l2); no parameters removed (alpha, cost, base_rate_weight,
+    and lapse retained with identical priors). - Memo recursion: unchanged memo signatures
+    and agent definitions; L1 and L2 continue to take costs: ..., lex: ..., prior:
+    ..., and forward prior to the speaker (wpp=vec(prior, r)). - Choice probabilities:
+    choice_probs computes prior = softmax_prior(params["base_rate_weight"] * ctx.familiarization
+    + params["salience"] * ctx.feature_count), passing this joint inductive prior
+    to L2 and returning it on prior trials (jnp.where(ctx.is_prior > 0, prior, heard)).'
+- name: diminishing_ambiguity_cost_l2
+  rationale: 'Pragmatic listeners at depth 2 expect speakers to incur an information-theoretic
+    ambiguity cost that exhibits diminishing sensitivity to the number of competing
+    referents an utterance describes, reflecting the logarithmic entropy of ambiguous
+    candidate sets. Rather than penalizing each additional competitor equally, speakers
+    experience the greatest communicative penalty when shifting from a unique to a
+    shared label, with diminishing marginal penalties for subsequent competitors.
+    This diminishing ambiguity cost guides second-order recursive speaker simulation
+    alongside inductive base-rate and cognitive parsimony priors, explaining why listeners
+    penalize multi-referent descriptions without over-penalizing expressions on crowded
+    displays. ### Refinement of salience_base_rate_ambiguity_l2 We refine salience_base_rate_ambiguity_l2
+    with a single stated change: replacing the linear speaker ambiguity cost with
+    a logarithmic ambiguity cost reflecting the referential entropy of candidate extensions,
+    capturing diminishing marginal cognitive penalties as the competitor set grows.
+    ### Differences from salience_base_rate_ambiguity_l2 - Recursion depth: depth
+    2 (choice_probs calls L2, unchanged from salience_base_rate_ambiguity_l2). - Parameters
+    added: none. - Parameters removed: none (alpha, cost, base_rate_weight, salience,
+    and lapse retained with identical priors). - Utterance costs: choice_probs computes
+    costs using a logarithmic functional form based on referential entropy (costs
+    = params["cost"] * jnp.log(jnp.maximum(1.0, extension))) instead of a linear excess-count
+    penalty (costs = params["cost"] * jnp.maximum(0.0, extension - 1.0)), leaving
+    cost at zero for unambiguous utterances and sink tokens while scaling logarithmically
+    with competitor set size. - Memo recursion: unchanged memo signatures and agent
+    definitions; L0, L1, and L2 retain identical definitions, and choice_probs continues
+    to pass the inductive prior and costs into L2.'
+- name: salience_distractor_base_rate
+  rationale: 'Listeners operate under visual attentional constraints that attenuate
+    non-matching distractors during speaker simulation, while evaluating candidate
+    referents through an inductive prior that integrates visual feature complexity
+    (cognitive parsimony favoring objects with fewer defining features) alongside
+    empirical familiarization base rates. By combining distractor attenuation with
+    a joint base-rate and feature-complexity prior, listeners account for prior exposure
+    frequencies and simplicity biases without sacrificing attentional discounting
+    of non-matching visual competitors on communicative displays. ### Refinement of
+    distractor_attenuation_base_rate We refine distractor_attenuation_base_rate with
+    a single stated change: extending the inductive referent prior to incorporate
+    the feature-complexity parsimony mechanism from feature_salience_listener, so
+    candidate referents are evaluated by both empirical familiarization frequencies
+    and visual feature count. ### Differences from distractor_attenuation_base_rate
+    - Recursion depth: depth 1 (choice_probs calls L1, unchanged from distractor_attenuation_base_rate).
+    - Parameter added: salience (prior dist.Normal(0.0, 1.0)), which scales the feature-complexity
+    prior over candidate referents (taken from feature_salience_listener); no parameters
+    removed (alpha, distractor_weight, base_rate_weight, and lapse retained with identical
+    priors). - Memo recursion: unchanged memo signatures and agent definitions; L0
+    and L1 continue to take lex: ..., atten: ..., and prior: ..., forwarding prior
+    to the speaker (wpp=vec(prior, r)). - Choice probabilities: choice_probs computes
+    prior = softmax_prior(params["base_rate_weight"] * ctx.familiarization + params["salience"]
+    * ctx.feature_count), passing this joint inductive prior to L1 and returning it
+    on prior trials (jnp.where(ctx.is_prior > 0, prior, heard)).'
+- name: salience_base_rate_ambiguity_l1
+  rationale: 'Listeners interpret referential expressions through first-order pragmatic
+    reasoning (inverting a speaker who evaluates literal listener informativeness
+    penalized by cognitive ambiguity costs), while evaluating candidate referents
+    through an inductive prior that integrates visual feature complexity alongside
+    empirical familiarization base rates. Bounding recursive mentalizing at depth
+    1 prevents the over-concentration of pragmatic inferences observed at second-order
+    depth on complex displays, better matching human performance where listeners do
+    not recursively simulate an inner pragmatic listener. On uninformative baseline
+    displays and familiarization displays, empirical exposure frequencies and simplicity
+    preferences directly guide baseline referent expectations. ### Refinement of salience_base_rate_ambiguity_l2
+    We refine salience_base_rate_ambiguity_l2 with a single stated change: reducing
+    recursion depth from depth 2 to depth 1, bounding Theory-of-Mind reasoning to
+    first-order pragmatic speaker simulation while preserving the inductive referent
+    prior and speaker ambiguity cost mechanisms. ### Differences from salience_base_rate_ambiguity_l2
+    - Recursion depth: depth 1 (choice_probs calls L1, whereas salience_base_rate_ambiguity_l2
+    calls L2). - Parameters added: none. - Parameters removed: none (alpha, cost,
+    base_rate_weight, salience, and lapse retained with identical priors). - Memo
+    recursion: removed L2; L1 retains its exact definition and signature L1[u: UTT,
+    r: OBJ](alpha, costs: ..., lex: ..., prior: ...). - Choice probabilities: choice_probs
+    evaluates L1 directly instead of L2 for heard utterances (heard = L1(params["alpha"],
+    costs, ctx.lex, prior)[ctx.utterance]), returning with_lapse(jnp.where(ctx.is_prior
+    > 0, prior, heard), params["lapse"]).'

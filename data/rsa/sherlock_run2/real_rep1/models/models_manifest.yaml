@@ -1,0 +1,229 @@
+models:
+- name: rsa_l2_singleton_distinctiveness
+  rationale: 'We refine depth-2 RSA with singleton salience (rsa_l2_singleton_prior)
+    by incorporating the contextual feature distinctiveness component from distinctiveness_attention_listener
+    into the shared perceptual salience prior across all reasoning levels. When interpreting
+    referring expressions or evaluating referents a priori, speakers and listeners
+    reason recursively at depth 2 under a shared prior that assigns greater prominence
+    not only to unique singleton objects lacking identical duplicates, but continuously
+    to objects with greater visual feature contrast relative to the rest of the display.
+    This fits better by maintaining depth-2 recursive reasoning and discrete singleton
+    salience on displays with duplicated distractors, while resolving the incumbent''s
+    primary deficit on displays without duplicates where its prior degenerates to
+    uniform, properly capturing visual distinctiveness biases on complex multi-feature
+    reference games and prior trials. Differences from rsa_l2_singleton_prior: recursion
+    depth remains depth 2 (choice_probs calls L2); parameter w_distinct (Normal(0.0,
+    1.0)) is added; no parameters are removed; and the shared softmax salience prior
+    computed in choice_probs adds w_distinct times each object''s contextual feature
+    distinctiveness (total Hamming distance from all other objects) to w_singleton
+    times the singleton indicator.'
+- name: rsa_l2_singleton_distinct_literal_l0
+  rationale: 'We refine depth-2 RSA with singleton and distinctiveness salience (rsa_l2_singleton_distinctiveness)
+    by decoupling truth-conditional literal semantics from perceptual salience at
+    the base level of recursive mental simulation. When interpreting referring expressions
+    or evaluating referents a priori, listeners reason recursively at depth 2 about
+    speakers whose communicative choices are guided by perceptual singleton and contextual
+    feature distinctiveness priors, but those speakers simulate a foundational literal
+    listener who interprets words purely according to conventional truth-conditional
+    semantics without perceptual bias. This fits better by preventing the incumbent''s
+    redundant compounding of visual salience priors across recursive reasoning tiers,
+    properly preserving the balance between semantic informativeness and perceptual
+    prominence during pragmatic reference resolution. Differences from rsa_l2_singleton_distinctiveness:
+    recursion depth remains depth 2 (choice_probs calls L2); no parameters are added;
+    no parameters are removed; in L0, the listener chooses referents weighted purely
+    by truth-conditional semantics (wpp=at(lex, u, r)) rather than prior-weighted
+    semantics (wpp=vec(prior, r) * at(lex, u, r)); and in L1, the speaker simulates
+    L0[u, r](lex) without passing the salience prior.'
+- name: rsa_l2_singleton_distinct_exhaustivity
+  rationale: 'We refine rsa_l2_singleton_exhaustivity by incorporating the contextual
+    feature distinctiveness component from distinctiveness_attention_listener into
+    the shared perceptual salience prior across all reasoning levels. When interpreting
+    referring expressions or evaluating referents a priori, speakers and listeners
+    reason recursively at depth 2 under a shared prior that favors unique singletons
+    lacking identical counterparts as well as objects with greater continuous visual
+    feature contrast relative to the rest of the display, while the depth-2 pragmatic
+    listener additionally applies an exhaustification penalty to referents possessing
+    superfluous unmentioned features. Differences from rsa_l2_singleton_exhaustivity:
+    recursion depth remains depth 2 (choice_probs calls L2); parameter w_distinct
+    (Normal(0.0, 1.0)) is added; no parameters are removed; and the shared softmax
+    salience prior computed in choice_probs adds w_distinct times each object''s contextual
+    feature distinctiveness (total Hamming distance from all other objects) to w_singleton
+    times the singleton indicator.'
+- name: rsa_l2_singleton_distinct_literal_exh
+  rationale: 'We refine depth-2 RSA with singleton salience, contextual distinctiveness,
+    and grammatical exhaustivity (rsa_l2_singleton_distinct_exhaustivity) by decoupling
+    truth-conditional literal semantics from perceptual salience at the base level
+    of recursive mental simulation. When interpreting referring expressions or evaluating
+    referents a priori, listeners reason recursively at depth 2 about speakers whose
+    communicative choices are guided by perceptual singleton and contextual feature
+    distinctiveness priors while penalizing referents with superfluous unmentioned
+    features, but those speakers simulate a foundational literal listener who interprets
+    words purely according to conventional truth-conditional semantics without perceptual
+    bias. This fits better by preventing the redundant compounding of visual salience
+    priors across recursive reasoning tiers while preserving grammatical exhaustification
+    and visual distinctiveness during pragmatic reference resolution. Differences
+    from rsa_l2_singleton_distinct_exhaustivity: recursion depth remains depth 2 (choice_probs
+    calls L2); no parameters are added; no parameters are removed; in L0, the listener
+    chooses referents weighted purely by truth-conditional semantics (wpp=at(lex,
+    u, r)) rather than prior-weighted semantics (wpp=vec(prior, r) * at(lex, u, r));
+    and in L1, the speaker simulates L0[u, r](lex) without passing the salience prior.'
+- name: rsa_l2_singleton_distinct_features_l0
+  rationale: 'We refine depth-2 RSA with singleton and distinctiveness salience and
+    literal L0 (rsa_l2_singleton_distinct_literal_l0) by incorporating the visual
+    feature count salience component from rsa_l2_shared_prior into the shared perceptual
+    salience prior across communicative reasoning levels. When interpreting referring
+    expressions or choosing referents a priori, speakers and listeners reason recursively
+    at depth 2 under an object prior combining discrete visual singleton salience,
+    continuous contextual distinctiveness, and visual feature complexity, while the
+    simulated foundational literal listener L0 interprets words purely according to
+    conventional truth-conditional semantics without perceptual bias. This fits better
+    by maintaining uncompounded literal semantics and recursive pragmatic competence
+    while capturing human perceptual attention biases toward visually complex, feature-rich
+    objects that the incumbent treats with identical prior weight whenever they share
+    the same distinctiveness contrast. Differences from rsa_l2_singleton_distinct_literal_l0:
+    recursion depth remains depth 2 (choice_probs calls L2); parameter w_features
+    (Normal(0.0, 1.0)) is added; no parameters are removed; and the shared softmax
+    salience prior computed in choice_probs adds w_features times each object''s visual
+    feature count (ctx.feature_count) to the existing singleton and distinctiveness
+    terms.'
+- name: rsa_l2_singleton_distinct_feat_color_l0
+  rationale: 'We refine depth-2 RSA with singleton and distinctiveness salience, visual
+    feature complexity, and literal L0 (rsa_l2_singleton_distinct_features_l0) by
+    incorporating the visual color contrast component from rsa_l2_shared_color_prior
+    into the shared perceptual salience prior across communicative reasoning levels.
+    When interpreting referring expressions or choosing referents a priori, speakers
+    and listeners reason recursively at depth 2 under an object prior combining discrete
+    visual singleton salience, continuous contextual distinctiveness, visual feature
+    complexity, and visual color contrast favoring fully colored objects over desaturated
+    grayscale distractors, while the simulated foundational literal listener L0 interprets
+    words purely according to conventional truth-conditional semantics without perceptual
+    bias. This fits better by maintaining uncompounded literal semantics and recursive
+    pragmatic competence while capturing human bottom-up visual attention biases toward
+    chromatic colored objects over grayscale distractors that the incumbent treats
+    with identical baseline prior weight whenever they share the same feature density.
+    Differences from rsa_l2_singleton_distinct_features_l0: recursion depth remains
+    depth 2 (choice_probs calls L2); parameter w_color (Normal(0.0, 1.0)) is added;
+    no parameters are removed; and the shared softmax salience prior computed in choice_probs
+    adds w_color times each object''s visual color contrast (1.0 - ctx.grayscale)
+    to the existing singleton, distinctiveness, and feature count terms.'
+- name: rsa_l2_singleton_distinct_features_exh
+  rationale: 'We refine depth-2 RSA with singleton salience, contextual distinctiveness,
+    grammatical exhaustivity, and literal L0 (rsa_l2_singleton_distinct_literal_exh)
+    by incorporating the visual feature count salience component from rsa_l2_singleton_distinct_features_l0
+    into the shared perceptual salience prior across communicative reasoning levels.
+    When interpreting referring expressions or choosing referents a priori, speakers
+    and listeners reason recursively at depth 2 under an object prior combining discrete
+    visual singleton salience, continuous contextual distinctiveness, and visual feature
+    complexity, while the depth-2 pragmatic listener additionally applies an exhaustification
+    penalty to referents possessing superfluous unmentioned features and the simulated
+    foundational literal listener L0 interprets words purely according to conventional
+    truth-conditional semantics without perceptual bias. Differences from rsa_l2_singleton_distinct_literal_exh:
+    recursion depth remains depth 2 (choice_probs calls L2); parameter w_features
+    (Normal(0.0, 1.0)) is added; no parameters are removed; and the shared softmax
+    salience prior computed in choice_probs adds w_features times each object''s visual
+    feature count (ctx.feature_count) to the existing singleton and distinctiveness
+    terms.'
+- name: rsa_l2_singleton_distinct_feat_color_exh
+  rationale: 'We refine depth-2 RSA with singleton and distinctiveness salience, visual
+    feature complexity, visual color contrast, and literal L0 (rsa_l2_singleton_distinct_feat_color_l0)
+    by incorporating the grammatical exhaustivity component from rsa_l2_singleton_distinct_features_exh
+    into the depth-2 pragmatic listener. When interpreting referring expressions or
+    choosing referents a priori, speakers and listeners reason recursively at depth
+    2 under an object prior combining discrete visual singleton salience, continuous
+    contextual distinctiveness, visual feature complexity, and visual color contrast
+    favoring fully colored objects over desaturated grayscale distractors, while the
+    simulated foundational literal listener L0 interprets words purely according to
+    conventional truth-conditional semantics without perceptual bias, and the depth-2
+    pragmatic listener additionally applies an exhaustification penalty to referents
+    possessing superfluous unmentioned features in the communicative context. This
+    fits better by maintaining uncompounded literal semantics, visual feature complexity,
+    and color contrast while penalizing candidate referents that carry extraneous
+    unmentioned features that informative speakers avoid, correcting the incumbent''s
+    deficit on displays with redundant features where empirical listeners disfavor
+    overspecified distractors. Differences from rsa_l2_singleton_distinct_feat_color_l0:
+    recursion depth remains depth 2 (choice_probs calls L2); parameter lambda_exh
+    (LogNormal(0.0, 1.0)) is added; no parameters are removed; in L2, the listener
+    adds listener: knows(u), receives ctx.feature_count, and chooses referents weighted
+    by Pr[speaker.r == r] * exp(-lambda_exh * (vec(feature_count, r) - at(lex, u,
+    r))) rather than Pr[speaker.r == r]; and choice_probs passes lambda_exh and ctx.feature_count
+    to L2.'
+- name: rsa_l2_singleton_distinct_color_exh
+  rationale: 'We refine depth-2 RSA with singleton salience, contextual distinctiveness,
+    grammatical exhaustivity, and literal L0 (rsa_l2_singleton_distinct_literal_exh)
+    by incorporating the visual color contrast component from rsa_l2_singleton_distinct_feat_color_l0
+    into the shared perceptual salience prior across communicative reasoning levels.
+    When interpreting referring expressions or choosing referents a priori, speakers
+    and listeners reason recursively at depth 2 under an object prior combining discrete
+    visual singleton salience, continuous contextual distinctiveness, and visual color
+    contrast favoring fully colored objects over desaturated grayscale distractors,
+    while the depth-2 pragmatic listener additionally applies an exhaustification
+    penalty to referents possessing superfluous unmentioned features and the simulated
+    foundational literal listener L0 interprets words purely according to conventional
+    truth-conditional semantics without perceptual bias. Differences from rsa_l2_singleton_distinct_literal_exh:
+    recursion depth remains depth 2 (choice_probs calls L2); parameter w_color (Normal(0.0,
+    1.0)) is added; no parameters are removed; and the shared softmax salience prior
+    computed in choice_probs adds w_color times each object''s visual color contrast
+    (1.0 - ctx.grayscale) to the existing singleton and distinctiveness terms.'
+- name: rsa_l2_singleton_feat_color_valence_l0
+  rationale: "We refine depth-2 RSA with singleton and distinctiveness salience, visual\
+    \ feature complexity, visual color contrast, and literal L0 (rsa_l2_singleton_distinct_feat_color_l0)\
+    \ by incorporating the evaluative valence framing component from polarity_congruence_listener\
+    \ into the shared perceptual salience prior across communicative reasoning levels.\
+    \ When interpreting referring expressions or choosing referents a priori, speakers\
+    \ and listeners reason recursively at depth 2 under an object prior combining\
+    \ discrete visual singleton salience, continuous contextual distinctiveness, visual\
+    \ feature complexity modulated by evaluative framing valence, and visual color\
+    \ contrast favoring fully colored objects over desaturated grayscale distractors,\
+    \ while the simulated foundational literal listener L0 interprets words purely\
+    \ according to conventional truth-conditional semantics without perceptual bias.\
+    \ This fits better by maintaining uncompounded literal semantics, recursive pragmatic\
+    \ competence, visual feature complexity, and chromatic color contrast while capturing\
+    \ human evaluative alignment where communicative framing inverts feature preferences\u2014\
+    favoring sparse or featureless objects when describing a least favorite item and\
+    \ feature-rich objects under neutral or positive framing\u2014correcting the incumbent's\
+    \ primary deficit on valence-framed reference games. Differences from rsa_l2_singleton_distinct_feat_color_l0:\
+    \ recursion depth remains depth 2 (choice_probs calls L2); parameter w_valence\
+    \ (Normal(0.0, 1.0)) is added; no parameters are removed; and the shared softmax\
+    \ salience prior computed in choice_probs modulates the feature count term by\
+    \ evaluative framing, replacing w_features * ctx.feature_count with (params[\"\
+    w_features\"] + ctx.valence * params[\"w_valence\"]) * ctx.feature_count alongside\
+    \ the existing singleton, distinctiveness, and visual color contrast terms."
+- name: rsa_l2_singleton_feat_color_load_l0
+  rationale: 'We refine depth-2 RSA with singleton and distinctiveness salience, visual
+    feature complexity, visual color contrast, and literal L0 (rsa_l2_singleton_distinct_feat_color_l0)
+    by incorporating the perceptual load component from perceptual_load_listener into
+    the communicative rationality mechanism. When interpreting referring expressions
+    or choosing referents a priori, speakers and listeners reason recursively at depth
+    2 under an object prior combining discrete visual singleton salience, continuous
+    contextual distinctiveness, visual feature complexity, and visual color contrast
+    with an uncompounded literal L0 listener, but communicative rationality is diluted
+    by the total perceptual load of all visual features in the display. This fits
+    better by maintaining recursive pragmatic competence and perceptual salience priors
+    while capturing human bounded rationality under visual clutter, allowing sharp
+    pragmatic inferences on simple displays and more entropy on complex scenes where
+    fixed-rationality models overpredict confidence. Differences from rsa_l2_singleton_distinct_feat_color_l0:
+    recursion depth remains depth 2 (choice_probs calls L2); parameter w_load (LogNormal(-1.0,
+    1.0)) is added; no parameters are removed; in choice_probs, effective rationality
+    is scaled to alpha_eff = alpha / (1.0 + w_load * total_features) where total_features
+    is the sum of ctx.feature_count across the display; and choice_probs passes alpha_eff
+    to L2 instead of alpha.'
+- name: rsa_l2_feat_color_exh_valence
+  rationale: "We refine depth-2 RSA with singleton and distinctiveness salience, visual\
+    \ feature complexity, visual color contrast, literal L0, and grammatical exhaustivity\
+    \ (rsa_l2_singleton_distinct_feat_color_exh) by incorporating the communicative\
+    \ valence framing component from valence_salience_listener into the shared perceptual\
+    \ and evaluative salience prior across reasoning levels. When interpreting referring\
+    \ expressions or choosing referents a priori, speakers and listeners reason recursively\
+    \ at depth 2 under a shared prior where communicative framing determines the evaluative\
+    \ appeal of visual features\u2014favoring feature-rich objects under positive\
+    \ framing or default neutral communication, but inverting to favor minimal or\
+    \ featureless objects when describing a least favorite item\u2014while also accounting\
+    \ for visual singleton salience, contextual distinctiveness, chromatic color contrast,\
+    \ foundational truth-conditional literal semantics at L0, and grammatical exhaustification\
+    \ penalizing superfluous unmentioned features. Differences from rsa_l2_singleton_distinct_feat_color_exh:\
+    \ recursion depth remains depth 2 (choice_probs calls L2); parameter w_valence\
+    \ (Normal(0.0, 1.0)) is added; no parameters are removed; and the shared softmax\
+    \ salience prior computed in choice_probs modulates the visual feature complexity\
+    \ term by communicative framing valence, adding w_valence times framing valence\
+    \ times feature count to the existing singleton, distinctiveness, feature count,\
+    \ and color terms."

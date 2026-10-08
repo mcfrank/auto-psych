@@ -1,0 +1,7 @@
+Pragmatic listeners reason at depth 2 using empirical base-rate referent expectations, but additionally assume that speakers incur a production cost for ambiguous utterances that apply to multiple referents in the visual display. By extending base-rate depth-2 reasoning with the speaker ambiguity cost mechanism from ambiguity_cost_speaker, listeners expect speakers to disprefer shared descriptors when distinctive alternatives exist. This improves reference resolution on complex displays with ambiguous features while preserving base-rate sensitivity on uninformative prior trials.
+
+Differences from base_rate_prior_l2:
+- Recursion depth: depth 2 (choice_probs calls L2, unchanged from base_rate_prior_l2).
+- Parameter added: cost (prior dist.LogNormal(-1.0, 1.0)), which scales the speaker's penalty for ambiguous utterances (taken from ambiguity_cost_speaker); no parameters removed (alpha, base_rate_weight, and lapse retained with identical priors).
+- Memo recursion: added array parameter costs: ... to L1 and L2, incorporating - vec(costs, u) into the speaker's choice weight at both recursion levels (wpp = at(lex, u, r) * exp(alpha * log(...) - vec(costs, u))), and forwarding costs from L2 to L1.
+- Choice probabilities: choice_probs computes extension = jnp.sum(ctx.lex * (1.0 - ctx.is_sink)[:, None], axis=1) and costs = params["cost"] * jnp.maximum(0.0, extension - 1.0), and passes costs to L2.

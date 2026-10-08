@@ -1,0 +1,8300 @@
+{
+ "version": 1,
+ "title": "recovery_salience_rep2: held-out conditions",
+ "generated": "2026-10-08 16:13 UTC",
+ "dataset": {
+  "label": "recovery_salience_rep2 \u00b7 84 held-out conditions",
+  "n_trials": 10632,
+  "settings": {
+   "num_warmup": 1000,
+   "num_samples": 1000,
+   "num_chains": 4,
+   "target_accept": 0.9,
+   "seed": 1
+  },
+  "min_cell_n": 10,
+  "n_cells_scored": 112
+ },
+ "experiments": [
+  {
+   "id": "E1_dv",
+   "label": "E1 \u00b7 response format"
+  },
+  {
+   "id": "E5_baserate",
+   "label": "E5 \u00b7 familiarization base rate"
+  },
+  {
+   "id": "E6_valence",
+   "label": "E6 \u00b7 favorite vs least favorite"
+  },
+  {
+   "id": "E7_color",
+   "label": "E7 \u00b7 color salience"
+  },
+  {
+   "id": "E8_levels",
+   "label": "E8 \u00b7 levels of inference"
+  },
+  {
+   "id": "E9_twins",
+   "label": "E9 \u00b7 twins"
+  },
+  {
+   "id": "E10_oddman",
+   "label": "E10 \u00b7 odd one out"
+  },
+  {
+   "id": "size",
+   "label": "Size \u00b7 2\u20134 objects \u00d7 2\u20134 features"
+  },
+  {
+   "id": "sequences",
+   "label": "Sequences \u00b7 repeated trials"
+  },
+  {
+   "id": "speakers",
+   "label": "Speakers \u00b7 listener trials"
+  },
+  {
+   "id": "md2022_main",
+   "label": "md2022_main"
+  },
+  {
+   "id": "md2022_pilot",
+   "label": "md2022_pilot"
+  },
+  {
+   "id": "md2023_e1_replication",
+   "label": "md2023_e1_replication"
+  },
+  {
+   "id": "md2023_e2_remapped",
+   "label": "md2023_e2_remapped"
+  },
+  {
+   "id": "md2023_e3_all_messages",
+   "label": "md2023_e3_all_messages"
+  },
+  {
+   "id": "md2023_e4_shapes",
+   "label": "md2023_e4_shapes"
+  },
+  {
+   "id": "md2026_shapes",
+   "label": "md2026_shapes"
+  },
+  {
+   "id": "sikos2021_e1",
+   "label": "sikos2021_e1"
+  }
+ ],
+ "models": [
+  {
+   "name": "salience_base_rate_ambiguity_l1 (exported)",
+   "rationale": "RSA pragmatic listener at depth 1 with inductive base-rate prior, feature complexity, and speaker ambiguity cost. Refinement of salience_base_rate_ambiguity_l2: reduces recursion depth from depth 2 to depth 1. Listeners interpret referential expressions by inverting a speaker who reasons about a literal listener with cognitive ambiguity costs, while evaluating candidate referents through an inductive prior combining empirical familiarization base rates and visual feature complexity.",
+   "rank": 0,
+   "elpd_loo": -3759.699076702384,
+   "se": 71.98800559507696,
+   "elpd_diff": 0.0,
+   "dse": 0.0,
+   "p_loo": null,
+   "loo_reliable": null,
+   "converged": true,
+   "convergence_problems": "",
+   "r": 0.9913767958489953,
+   "rmse": 0.04605339626776116,
+   "rmse_by_experiment": {
+    "E10_oddman": 0.013851011952558296,
+    "E1_dv": 0.008303048064684721,
+    "E5_baserate": 0.02112754039216616,
+    "E6_valence": 0.038690259934162655,
+    "E7_color": 0.06791444528733655,
+    "E8_levels": 0.03400784386850423,
+    "E9_twins": 0.02636667917660882,
+    "md2022_main": 0.012300487692791939,
+    "md2022_pilot": 0.02001502428504537,
+    "md2023_e1_replication": 0.04512213172080352,
+    "md2023_e2_remapped": 0.02604551894204567,
+    "md2023_e3_all_messages": 0.026059452399075204,
+    "md2023_e4_shapes": 0.022235401461589123,
+    "md2026_shapes": 0.009702986508821317,
+    "sequences": 0.03827327740338304,
+    "sikos2021_e1": 0.06626908313474844,
+    "size": 0.06440479393181575,
+    "speakers": 0.006734344564042278
+   },
+   "params": [
+    {
+     "param": "alpha",
+     "mean": 0.4480868,
+     "lo": 0.15408842,
+     "hi": 0.6838433
+    },
+    {
+     "param": "cost",
+     "mean": 0.19275588,
+     "lo": 0.04394813,
+     "hi": 0.39081898
+    },
+    {
+     "param": "base_rate_weight",
+     "mean": 1.574926,
+     "lo": 1.1427801,
+     "hi": 2.0024154
+    },
+    {
+     "param": "salience",
+     "mean": -0.17429736,
+     "lo": -0.2256202,
+     "hi": -0.12343853
+    },
+    {
+     "param": "lapse",
+     "mean": 0.042393688,
+     "lo": 0.03952122,
+     "hi": 0.045325935
+    }
+   ],
+   "heldout_vs_seed": 13.418567575321504
+  },
+  {
+   "name": "salience_distractor_base_rate",
+   "rationale": "Distractor attenuation listener with joint base-rate and feature-complexity prior. Refinement of distractor_attenuation_base_rate: listeners operate under visual attentional constraints that attenuate non-matching distractors during speaker simulation, while evaluating candidate referents through an inductive prior that combines empirical familiarization base rates with cognitive parsimony (favoring objects with fewer visual features).",
+   "rank": 1,
+   "elpd_loo": -3759.721213711976,
+   "se": 72.02019430587443,
+   "elpd_diff": 0.022137009591006,
+   "dse": 0.5132587934764715,
+   "p_loo": null,
+   "loo_reliable": null,
+   "converged": true,
+   "convergence_problems": "",
+   "r": 0.9913525151567337,
+   "rmse": 0.04611990815579606,
+   "rmse_by_experiment": {
+    "E10_oddman": 0.013851875756608775,
+    "E1_dv": 0.004599863480437824,
+    "E5_baserate": 0.02949360320067668,
+    "E6_valence": 0.03800169371404526,
+    "E7_color": 0.06894937615826112,
+    "E8_levels": 0.03144512538025175,
+    "E9_twins": 0.026367359211667694,
+    "md2022_main": 0.011516409457223546,
+    "md2022_pilot": 0.01866864343297679,
+    "md2023_e1_replication": 0.045859172495022575,
+    "md2023_e2_remapped": 0.024942503502366792,
+    "md2023_e3_all_messages": 0.02615798004315984,
+    "md2023_e4_shapes": 0.023175732676919556,
+    "md2026_shapes": 0.009703742188090421,
+    "sequences": 0.03272384258200796,
+    "sikos2021_e1": 0.06641032659559658,
+    "size": 0.06434252077971057,
+    "speakers": 0.005623702312886491
+   },
+   "params": [
+    {
+     "param": "alpha",
+     "mean": 0.857482,
+     "lo": 0.7148414,
+     "hi": 1.0289345
+    },
+    {
+     "param": "distractor_weight",
+     "mean": 0.70256823,
+     "lo": 0.49393073,
+     "hi": 0.91338277
+    },
+    {
+     "param": "base_rate_weight",
+     "mean": 1.5332353,
+     "lo": 1.102419,
+     "hi": 1.9631817
+    },
+    {
+     "param": "salience",
+     "mean": -0.1373303,
+     "lo": -0.19938144,
+     "hi": -0.06842595
+    },
+    {
+     "param": "lapse",
+     "mean": 0.04242777,
+     "lo": 0.039530322,
+     "hi": 0.04546406
+    }
+   ],
+   "heldout_vs_seed": 13.396430565730498
+  },
+  {
+   "name": "diminishing_ambiguity_cost_l2",
+   "rationale": "RSA pragmatic listener at depth 2 with inductive base-rate prior, feature complexity, and diminishing ambiguity cost. Refinement of salience_base_rate_ambiguity_l2: replaces the linear speaker ambiguity cost with an information-theoretic logarithmic ambiguity cost proportional to the referential entropy of candidate extensions. Speakers incur diminishing marginal penalties as the competitor set size grows, rather than a constant marginal penalty per additional distractor.",
+   "rank": 2,
+   "elpd_loo": -3759.8109833098392,
+   "se": 71.99304226560965,
+   "elpd_diff": 0.1119066074547845,
+   "dse": 0.426108409433855,
+   "p_loo": null,
+   "loo_reliable": null,
+   "converged": true,
+   "convergence_problems": "",
+   "r": 0.991306726545866,
+   "rmse": 0.046239620506331104,
+   "rmse_by_experiment": {
+    "E10_oddman": 0.013864899872563634,
+    "E1_dv": 0.0068258172706933745,
+    "E5_baserate": 0.02661962082347627,
+    "E6_valence": 0.038204749008934565,
+    "E7_color": 0.06834124992885411,
+    "E8_levels": 0.03298618003701311,
+    "E9_twins": 0.026377615031509868,
+    "md2022_main": 0.011977171994911528,
+    "md2022_pilot": 0.019481274946924948,
+    "md2023_e1_replication": 0.04476339476453569,
+    "md2023_e2_remapped": 0.026826181180990675,
+    "md2023_e3_all_messages": 0.026432436329195518,
+    "md2023_e4_shapes": 0.022604558464343057,
+    "md2026_shapes": 0.00971516585623031,
+    "sequences": 0.03337001940915,
+    "sikos2021_e1": 0.0667015587850674,
+    "size": 0.06426474596391389,
+    "speakers": 0.008220799201838491
+   },
+   "params": [
+    {
+     "param": "alpha",
+     "mean": 0.19703247,
+     "lo": 0.055916443,
+     "hi": 0.3723257
+    },
+    {
+     "param": "cost",
+     "mean": 0.38611037,
+     "lo": 0.10313553,
+     "hi": 0.6332353
+    },
+    {
+     "param": "base_rate_weight",
+     "mean": 1.4993302,
+     "lo": 1.0776922,
+     "hi": 1.9382615
+    },
+    {
+     "param": "salience",
+     "mean": -0.16203803,
+     "lo": -0.21342899,
+     "hi": -0.1102507
+    },
+    {
+     "param": "lapse",
+     "mean": 0.042391997,
+     "lo": 0.039483868,
+     "hi": 0.045407273
+    }
+   ],
+   "heldout_vs_seed": 13.30666096786672
+  },
+  {
+   "name": "salience_base_rate_ambiguity_l2",
+   "rationale": "RSA pragmatic listener at depth 2 with inductive base-rate prior, feature complexity, and speaker ambiguity cost. Refinement of base_rate_ambiguity_l2: extends the model with a feature-complexity prior over referents (from feature_salience_l2). Listeners evaluate candidate referents through an inductive prior combining empirical familiarization base rates with cognitive parsimony (favoring objects with fewer features) while reasoning at depth 2 with speaker ambiguity costs.",
+   "rank": 3,
+   "elpd_loo": -3760.001712733616,
+   "se": 71.97728149673735,
+   "elpd_diff": 0.3026360312319411,
+   "dse": 0.4116161487425941,
+   "p_loo": null,
+   "loo_reliable": null,
+   "converged": true,
+   "convergence_problems": "",
+   "r": 0.991280943513705,
+   "rmse": 0.04630586264116914,
+   "rmse_by_experiment": {
+    "E10_oddman": 0.01385093891777722,
+    "E1_dv": 0.008202931316965003,
+    "E5_baserate": 0.028367177335819952,
+    "E6_valence": 0.03923613843957659,
+    "E7_color": 0.06756068039988004,
+    "E8_levels": 0.033939188135188626,
+    "E9_twins": 0.026366621655217744,
+    "md2022_main": 0.012278644150047271,
+    "md2022_pilot": 0.019978562816794953,
+    "md2023_e1_replication": 0.04479474101996842,
+    "md2023_e2_remapped": 0.026700327152077284,
+    "md2023_e3_all_messages": 0.026469982476650725,
+    "md2023_e4_shapes": 0.022259854830626046,
+    "md2026_shapes": 0.009702922819452646,
+    "sequences": 0.03458525118527898,
+    "sikos2021_e1": 0.06674417791831722,
+    "size": 0.06439451658152062,
+    "speakers": 0.00795295577907687
+   },
+   "params": [
+    {
+     "param": "alpha",
+     "mean": 0.20312585,
+     "lo": 0.06260451,
+     "hi": 0.36101955
+    },
+    {
+     "param": "cost",
+     "mean": 0.2566227,
+     "lo": 0.08534387,
+     "hi": 0.4243962
+    },
+    {
+     "param": "base_rate_weight",
+     "mean": 1.4890486,
+     "lo": 1.0770171,
+     "hi": 1.923472
+    },
+    {
+     "param": "salience",
+     "mean": -0.15747918,
+     "lo": -0.21001917,
+     "hi": -0.10547052
+    },
+    {
+     "param": "lapse",
+     "mean": 0.04240319,
+     "lo": 0.039534528,
+     "hi": 0.045341264
+    }
+   ],
+   "heldout_vs_seed": 13.115931544089563
+  },
+  {
+   "name": "rsa_l2 (seed)",
+   "rationale": "RSA pragmatic listener at depth 2, uniform prior over objects. One more level of recursion than the vanilla model: a speaker S2 chooses words by how well the depth-1 pragmatic listener L1 would recover the object (exp(alpha * log L1)), and the listener L2 inverts S2. Depth-2 reasoning is what the pragmods \"complex\" game needs to single out the object described by the twice-implicated word. One rationality alpha at every level; uniform choice with no informative word; a lapse parameter mixes in uniform guessing.",
+   "rank": 4,
+   "elpd_loo": -3773.117644277706,
+   "se": 71.8704033487479,
+   "elpd_diff": 13.418567575321504,
+   "dse": 8.836651895107448,
+   "p_loo": null,
+   "loo_reliable": null,
+   "converged": true,
+   "convergence_problems": "",
+   "r": 0.9892793666247293,
+   "rmse": 0.05132054213275512,
+   "rmse_by_experiment": {
+    "E10_oddman": 0.013910286887372463,
+    "E1_dv": 0.016772729168104832,
+    "E5_baserate": 0.1460004104845386,
+    "E6_valence": 0.05618222584213232,
+    "E7_color": 0.06430447025201204,
+    "E8_levels": 0.039794801435673814,
+    "E9_twins": 0.026413374142029503,
+    "md2022_main": 0.01426870388596938,
+    "md2022_pilot": 0.02316374682466445,
+    "md2023_e1_replication": 0.04312986008268957,
+    "md2023_e2_remapped": 0.032498330530004,
+    "md2023_e3_all_messages": 0.026386190428678017,
+    "md2023_e4_shapes": 0.020337444591281773,
+    "md2026_shapes": 0.009755366051970865,
+    "sequences": 0.04444135942000245,
+    "sikos2021_e1": 0.06663574141219988,
+    "size": 0.07451461444619667,
+    "speakers": 0.021396467986610816
+   },
+   "params": [
+    {
+     "param": "alpha",
+     "mean": 0.54515284,
+     "lo": 0.5056758,
+     "hi": 0.5841865
+    },
+    {
+     "param": "lapse",
+     "mean": 0.042224534,
+     "lo": 0.039379574,
+     "hi": 0.045115426
+    }
+   ],
+   "heldout_vs_seed": 0.0
+  }
+ ],
+ "panels": [
+  {
+   "experiment": "E1_dv",
+   "condition": "forced_choice",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 248,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.0161290322580645,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 186,
+     "observed": 0.75,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.7409856250882147,
+      "salience_distractor_base_rate": 0.7456475454568865,
+      "diminishing_ambiguity_cost_l2": 0.7428414395451545,
+      "salience_base_rate_ambiguity_l2": 0.7411100378632546,
+      "rsa_l2 (seed)": 0.7305844756960871
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 58,
+     "observed": 0.2338709677419354,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2448948034644127,
+      "salience_distractor_base_rate": 0.2402341074496507,
+      "diminishing_ambiguity_cost_l2": 0.2430586291849613,
+      "salience_base_rate_ambiguity_l2": 0.2447702944278717,
+      "rsa_l2 (seed)": 0.2553797777742148
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E5_baserate",
+   "condition": "inference_baserate_0.33",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 63,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0158730158730158,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 42,
+     "observed": 0.6666666666666666,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.6729054802656177,
+      "salience_distractor_base_rate": 0.6827981078624729,
+      "diminishing_ambiguity_cost_l2": 0.6733651840686797,
+      "salience_base_rate_ambiguity_l2": 0.6722857809066772,
+      "rsa_l2 (seed)": 0.7305844756960864
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 20,
+     "observed": 0.3174603174603174,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3129749526083469,
+      "salience_distractor_base_rate": 0.3030835470557211,
+      "diminishing_ambiguity_cost_l2": 0.3125348848104475,
+      "salience_base_rate_ambiguity_l2": 0.3135945494472981,
+      "rsa_l2 (seed)": 0.2553797777742148
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E5_baserate",
+   "condition": "prior_baserate_0.77",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 51,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.2549019607843137,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2445613725483417,
+      "salience_distractor_base_rate": 0.2462076546251773,
+      "diminishing_ambiguity_cost_l2": 0.2504279755055905,
+      "salience_base_rate_ambiguity_l2": 0.2507260385155678,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 31,
+     "observed": 0.6078431372549019,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5779725261032582,
+      "salience_distractor_base_rate": 0.5640454281866552,
+      "diminishing_ambiguity_cost_l2": 0.5645316568017007,
+      "salience_base_rate_ambiguity_l2": 0.561184663772583,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.1372549019607843,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.1774661038815975,
+      "salience_distractor_base_rate": 0.1897469179332256,
+      "diminishing_ambiguity_cost_l2": 0.1850403658300638,
+      "salience_base_rate_ambiguity_l2": 0.1880893020331859,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E6_valence",
+   "condition": "favorite",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 176,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0056818181818181,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 140,
+     "observed": 0.7954545454545454,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.740985625088215,
+      "salience_distractor_base_rate": 0.7456475454568864,
+      "diminishing_ambiguity_cost_l2": 0.7428414395451545,
+      "salience_base_rate_ambiguity_l2": 0.7411100378632546,
+      "rsa_l2 (seed)": 0.730584475696087
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 35,
+     "observed": 0.1988636363636363,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2448948034644127,
+      "salience_distractor_base_rate": 0.2402341074496507,
+      "diminishing_ambiguity_cost_l2": 0.2430586291849613,
+      "salience_base_rate_ambiguity_l2": 0.2447702944278717,
+      "rsa_l2 (seed)": 0.2553797777742148
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E6_valence",
+   "condition": "favorite_prior",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 100,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 42,
+     "observed": 0.42,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3896540571749211,
+      "salience_distractor_base_rate": 0.3789214138686658,
+      "diminishing_ambiguity_cost_l2": 0.386298722922802,
+      "salience_base_rate_ambiguity_l2": 0.383614564985037,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 28,
+     "observed": 0.28,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3301256205141544,
+      "salience_distractor_base_rate": 0.3311184421181679,
+      "diminishing_ambiguity_cost_l2": 0.3304791370034218,
+      "salience_base_rate_ambiguity_l2": 0.3307430890202522,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 30,
+     "observed": 0.3,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2802203182876109,
+      "salience_distractor_base_rate": 0.2899601437151431,
+      "diminishing_ambiguity_cost_l2": 0.2832221357524394,
+      "salience_base_rate_ambiguity_l2": 0.2856423495709895,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E7_color",
+   "condition": "inference_color_foil",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 47,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 31,
+     "observed": 0.6595744680851063,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.7409856250882147,
+      "salience_distractor_base_rate": 0.745647545456886,
+      "diminishing_ambiguity_cost_l2": 0.7428414395451546,
+      "salience_base_rate_ambiguity_l2": 0.7411100378632544,
+      "rsa_l2 (seed)": 0.7305844756960866
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 16,
+     "observed": 0.3404255319148936,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2448948034644125,
+      "salience_distractor_base_rate": 0.2402341074496506,
+      "diminishing_ambiguity_cost_l2": 0.2430586291849613,
+      "salience_base_rate_ambiguity_l2": 0.2447702944278716,
+      "rsa_l2 (seed)": 0.2553797777742146
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E7_color",
+   "condition": "inference_color_logical",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 48,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 35,
+     "observed": 0.7291666666666666,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.7409856250882149,
+      "salience_distractor_base_rate": 0.7456475454568863,
+      "diminishing_ambiguity_cost_l2": 0.7428414395451545,
+      "salience_base_rate_ambiguity_l2": 0.7411100378632546,
+      "rsa_l2 (seed)": 0.7305844756960869
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.2708333333333333,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2448948034644127,
+      "salience_distractor_base_rate": 0.2402341074496507,
+      "diminishing_ambiguity_cost_l2": 0.2430586291849613,
+      "salience_base_rate_ambiguity_l2": 0.2447702944278717,
+      "rsa_l2 (seed)": 0.2553797777742148
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E7_color",
+   "condition": "prior_color_logical",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 24,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 10,
+     "observed": 0.4166666666666667,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.389654057174921,
+      "salience_distractor_base_rate": 0.3789214138686657,
+      "diminishing_ambiguity_cost_l2": 0.3862987229228019,
+      "salience_base_rate_ambiguity_l2": 0.3836145649850369,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.2083333333333333,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3301256205141544,
+      "salience_distractor_base_rate": 0.3311184421181679,
+      "diminishing_ambiguity_cost_l2": 0.3304791370034218,
+      "salience_base_rate_ambiguity_l2": 0.3307430890202522,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.375,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.280220318287611,
+      "salience_distractor_base_rate": 0.2899601437151432,
+      "diminishing_ambiguity_cost_l2": 0.2832221357524395,
+      "salience_base_rate_ambiguity_l2": 0.2856423495709896,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E8_levels",
+   "condition": "simple_L0",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 49,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0204081632653061,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 48,
+     "observed": 0.979591836734694,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E8_levels",
+   "condition": "simple_L1",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 46,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 37,
+     "observed": 0.8043478260869565,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.7409856250882147,
+      "salience_distractor_base_rate": 0.745647545456886,
+      "diminishing_ambiguity_cost_l2": 0.7428414395451546,
+      "salience_base_rate_ambiguity_l2": 0.7411100378632544,
+      "rsa_l2 (seed)": 0.7305844756960866
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.1956521739130435,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2448948034644125,
+      "salience_distractor_base_rate": 0.2402341074496506,
+      "diminishing_ambiguity_cost_l2": 0.2430586291849613,
+      "salience_base_rate_ambiguity_l2": 0.2447702944278716,
+      "rsa_l2 (seed)": 0.2553797777742147
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E9_twins",
+   "condition": "twin",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 46,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0434782608695652,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 2,
+     "count": 44,
+     "observed": 0.9565217391304348,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9858804243803028,
+      "salience_distractor_base_rate": 0.9858816453814512,
+      "diminishing_ambiguity_cost_l2": 0.9859000638127332,
+      "salience_base_rate_ambiguity_l2": 0.985880320966244,
+      "rsa_l2 (seed)": 0.9859642499685292
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E9_twins",
+   "condition": "prior",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 87,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 27,
+     "observed": 0.3103448275862069,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 2,
+     "count": 60,
+     "observed": 0.6896551724137931,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.6666666865348816,
+      "salience_distractor_base_rate": 0.6666666865348816,
+      "diminishing_ambiguity_cost_l2": 0.6666666865348816,
+      "salience_base_rate_ambiguity_l2": 0.6666666865348816,
+      "rsa_l2 (seed)": 0.6666666865348816
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "E10_oddman",
+   "condition": "word",
+   "objects": [
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 89,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 43,
+     "observed": 0.4831460674157303,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901513,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063663,
+      "salience_base_rate_ambiguity_l2": 0.4929401604831219,
+      "rsa_l2 (seed)": 0.4929821249842644
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 43,
+     "observed": 0.4831460674157303,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901513,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063663,
+      "salience_base_rate_ambiguity_l2": 0.4929401604831219,
+      "rsa_l2 (seed)": 0.4929821249842644
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0337078651685393,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "inference_4obj_2feat_sl4",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 64,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0211793642956763,
+      "salience_distractor_base_rate": 0.0211775314062833,
+      "diminishing_ambiguity_cost_l2": 0.0211499028280377,
+      "salience_base_rate_ambiguity_l2": 0.0211795191187411,
+      "rsa_l2 (seed)": 0.021053621796891
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 49,
+     "observed": 0.765625,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.7374557295441627,
+      "salience_distractor_base_rate": 0.7421179547905921,
+      "diminishing_ambiguity_cost_l2": 0.7393164566159249,
+      "salience_base_rate_ambiguity_l2": 0.7375801160931587,
+      "rsa_l2 (seed)": 0.7270755425095558
+     }
+    },
+    {
+     "object": 3,
+     "copies": 1,
+     "count": 15,
+     "observed": 0.234375,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2413649084419012,
+      "salience_distractor_base_rate": 0.2367045195400714,
+      "diminishing_ambiguity_cost_l2": 0.2395336460322141,
+      "salience_base_rate_ambiguity_l2": 0.2412403754144907,
+      "rsa_l2 (seed)": 0.2518708457052707
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "prior_3obj_4feat",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 38,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 16,
+     "observed": 0.4210526315789473,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.389654057919979,
+      "salience_distractor_base_rate": 0.3789214134216309,
+      "diminishing_ambiguity_cost_l2": 0.3862987227737904,
+      "salience_base_rate_ambiguity_l2": 0.3836145652830602,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.3684210526315789,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3301256203651428,
+      "salience_distractor_base_rate": 0.3311184413731099,
+      "diminishing_ambiguity_cost_l2": 0.3304791375994682,
+      "salience_base_rate_ambiguity_l2": 0.3307430888712406,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.2105263157894736,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2802203187346458,
+      "salience_distractor_base_rate": 0.2899601435661316,
+      "diminishing_ambiguity_cost_l2": 0.2832221360504626,
+      "salience_base_rate_ambiguity_l2": 0.2856423495709896,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "size",
+   "condition": "prior_4obj_4feat",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 43,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 20,
+     "observed": 0.4651162790697674,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5606239581108095,
+      "salience_distractor_base_rate": 0.5493988052010537,
+      "diminishing_ambiguity_cost_l2": 0.5571518370509146,
+      "salience_base_rate_ambiguity_l2": 0.5543579831719398,
+      "rsa_l2 (seed)": 0.5
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 16,
+     "observed": 0.3720930232558139,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2375963874161243,
+      "salience_distractor_base_rate": 0.2401698838919401,
+      "diminishing_ambiguity_cost_l2": 0.2384235825389623,
+      "salience_base_rate_ambiguity_l2": 0.2390756682306528,
+      "rsa_l2 (seed)": 0.25
+     }
+    },
+    {
+     "object": 3,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.1627906976744186,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2017796554416418,
+      "salience_distractor_base_rate": 0.2104313094913959,
+      "diminishing_ambiguity_cost_l2": 0.2044245781004429,
+      "salience_base_rate_ambiguity_l2": 0.2065663551539182,
+      "rsa_l2 (seed)": 0.25
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "(0w1w)x3",
+   "objects": [
+    [
+     0,
+     0
+    ],
+    [
+     0,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 141,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0070921985815602,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 111,
+     "observed": 0.7872340425531915,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.740985625088215,
+      "salience_distractor_base_rate": 0.7456475454568862,
+      "diminishing_ambiguity_cost_l2": 0.7428414395451544,
+      "salience_base_rate_ambiguity_l2": 0.7411100378632545,
+      "rsa_l2 (seed)": 0.7305844756960868
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 29,
+     "observed": 0.2056737588652482,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2448948034644126,
+      "salience_distractor_base_rate": 0.2402341074496508,
+      "diminishing_ambiguity_cost_l2": 0.2430586291849613,
+      "salience_base_rate_ambiguity_l2": 0.2447702944278717,
+      "rsa_l2 (seed)": 0.2553797777742148
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sequences",
+   "condition": "2w1w0w",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 53,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 39,
+     "observed": 0.7358490566037735,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.6880801835656166,
+      "salience_distractor_base_rate": 0.6968835487961772,
+      "diminishing_ambiguity_cost_l2": 0.6980471837520599,
+      "salience_base_rate_ambiguity_l2": 0.6967643472552302,
+      "rsa_l2 (seed)": 0.6830967366695404
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.2452830188679245,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2978002545237541,
+      "salience_distractor_base_rate": 0.2889981046319008,
+      "diminishing_ambiguity_cost_l2": 0.2878528879582881,
+      "salience_base_rate_ambiguity_l2": 0.2891159844398498,
+      "rsa_l2 (seed)": 0.3028675198554993
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0188679245283018,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "speakers",
+   "condition": "seq_L2:checkbox",
+   "objects": [
+    [
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 136,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0220588235294117,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 75,
+     "observed": 0.5514705882352942,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5599957984685898,
+      "salience_distractor_base_rate": 0.5558290421962738,
+      "diminishing_ambiguity_cost_l2": 0.5627892711758613,
+      "salience_base_rate_ambiguity_l2": 0.5623395657539367,
+      "rsa_l2 (seed)": 0.5807494205236435
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 58,
+     "observed": 0.4264705882352941,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846382796765,
+      "salience_distractor_base_rate": 0.4300526149570941,
+      "diminishing_ambiguity_cost_l2": 0.4231108060479163,
+      "salience_base_rate_ambiguity_l2": 0.4235407690703869,
+      "rsa_l2 (seed)": 0.4052148415148258
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_main",
+   "condition": "filler ambiguous",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 136,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 136,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9858804243803024,
+      "salience_distractor_base_rate": 0.9858816453814508,
+      "diminishing_ambiguity_cost_l2": 0.9859000638127328,
+      "salience_base_rate_ambiguity_l2": 0.9858803209662438,
+      "rsa_l2 (seed)": 0.9859642499685288
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_main",
+   "condition": "filler type a",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 136,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 132,
+     "observed": 0.9705882352941176,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0220588235294117,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0073529411764705,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_main",
+   "condition": "filler type a",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 136,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 132,
+     "observed": 0.9705882352941176,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0073529411764705,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0220588235294117,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_main",
+   "condition": "filler type b",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 68,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 67,
+     "observed": 0.9852941176470588,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0147058823529411,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_main",
+   "condition": "filler type b",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 68,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 65,
+     "observed": 0.9558823529411764,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0147058823529411,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0294117647058823,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_main",
+   "condition": "filler type c",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 136,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 134,
+     "observed": 0.9852941176470588,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0147058823529411,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_main",
+   "condition": "filler type c",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 204,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 197,
+     "observed": 0.965686274509804,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708086,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.0245098039215686,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0098039215686274,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_main",
+   "condition": "filler type c",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 68,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 66,
+     "observed": 0.9705882352941176,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0147058823529411,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0147058823529411,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_main",
+   "condition": "filler unambiguous",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 68,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 67,
+     "observed": 0.9852941176470588,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0147058823529411,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_main",
+   "condition": "target simple",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 136,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 105,
+     "observed": 0.7720588235294118,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.7409856218099594,
+      "salience_distractor_base_rate": 0.7456475421786308,
+      "diminishing_ambiguity_cost_l2": 0.7428414410352707,
+      "salience_base_rate_ambiguity_l2": 0.7411100378632546,
+      "rsa_l2 (seed)": 0.7305844756960869
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 29,
+     "observed": 0.213235294117647,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2448948048055172,
+      "salience_distractor_base_rate": 0.2402341090887784,
+      "diminishing_ambiguity_cost_l2": 0.2430586279183626,
+      "salience_base_rate_ambiguity_l2": 0.2447702929377555,
+      "rsa_l2 (seed)": 0.2553797777742148
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0147058823529411,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_pilot",
+   "condition": "filler ambiguous",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 47,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 46,
+     "observed": 0.9787234042553192,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9858804243803028,
+      "salience_distractor_base_rate": 0.9858816453814512,
+      "diminishing_ambiguity_cost_l2": 0.9859000638127332,
+      "salience_base_rate_ambiguity_l2": 0.985880320966244,
+      "rsa_l2 (seed)": 0.9859642499685292
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0212765957446808,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_pilot",
+   "condition": "filler type a",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 94,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 91,
+     "observed": 0.9680851063829788,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.971760848164559,
+      "salience_distractor_base_rate": 0.9717632895708082,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226034,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0106382978723404,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0212765957446808,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_pilot",
+   "condition": "filler type c",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 94,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 91,
+     "observed": 0.9680851063829788,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.971760848164559,
+      "salience_distractor_base_rate": 0.9717632895708082,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226034,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0212765957446808,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0106382978723404,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_pilot",
+   "condition": "filler unambiguous",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 47,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 46,
+     "observed": 0.9787234042553192,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645582,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.971760643422604,
+      "rsa_l2 (seed)": 0.9719285035133368
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0212765957446808,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_pilot",
+   "condition": "filler unambiguous",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 47,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 45,
+     "observed": 0.9574468085106383,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645582,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.971760643422604,
+      "rsa_l2 (seed)": 0.9719285035133368
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0425531914893617,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2022_pilot",
+   "condition": "target simple",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 94,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 74,
+     "observed": 0.7872340425531915,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.7409856218099591,
+      "salience_distractor_base_rate": 0.7456475421786308,
+      "diminishing_ambiguity_cost_l2": 0.7428414410352705,
+      "salience_base_rate_ambiguity_l2": 0.7411100378632544,
+      "rsa_l2 (seed)": 0.7305844756960872
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 18,
+     "observed": 0.1914893617021276,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2448948048055173,
+      "salience_distractor_base_rate": 0.2402341090887784,
+      "diminishing_ambiguity_cost_l2": 0.2430586279183625,
+      "salience_base_rate_ambiguity_l2": 0.2447702929377555,
+      "rsa_l2 (seed)": 0.2553797777742149
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0212765957446808,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e1_replication",
+   "condition": "filler ambiguous",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 114,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 114,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9858804243803028,
+      "salience_distractor_base_rate": 0.9858816453814508,
+      "diminishing_ambiguity_cost_l2": 0.9859000638127324,
+      "salience_base_rate_ambiguity_l2": 0.9858803209662438,
+      "rsa_l2 (seed)": 0.9859642499685288
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e1_replication",
+   "condition": "filler ambiguous",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 114,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 112,
+     "observed": 0.9824561403508772,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9858804243803028,
+      "salience_distractor_base_rate": 0.9858816453814508,
+      "diminishing_ambiguity_cost_l2": 0.9859000638127324,
+      "salience_base_rate_ambiguity_l2": 0.9858803209662438,
+      "rsa_l2 (seed)": 0.9859642499685288
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0175438596491228,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e1_replication",
+   "condition": "filler type a",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 57,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 55,
+     "observed": 0.9649122807017544,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0350877192982456,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e1_replication",
+   "condition": "filler type a",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 114,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 111,
+     "observed": 0.9736842105263158,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708086,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0175438596491228,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0087719298245614,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e1_replication",
+   "condition": "filler type c",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 114,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 113,
+     "observed": 0.9912280701754386,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708086,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0087719298245614,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e1_replication",
+   "condition": "target complex",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 114,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 59,
+     "observed": 0.5175438596491229,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5599957981705668,
+      "salience_distractor_base_rate": 0.5558290421962739,
+      "diminishing_ambiguity_cost_l2": 0.562789270579815,
+      "salience_base_rate_ambiguity_l2": 0.5623395651578901,
+      "rsa_l2 (seed)": 0.5807494205236435
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 54,
+     "observed": 0.4736842105263157,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846378326416,
+      "salience_distractor_base_rate": 0.4300526155531406,
+      "diminishing_ambiguity_cost_l2": 0.4231108057498931,
+      "salience_base_rate_ambiguity_l2": 0.4235407701134682,
+      "rsa_l2 (seed)": 0.4052148415148258
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0087719298245614,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e1_replication",
+   "condition": "target complex",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 114,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 80,
+     "observed": 0.7017543859649122,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5599957981705668,
+      "salience_distractor_base_rate": 0.5558290421962739,
+      "diminishing_ambiguity_cost_l2": 0.562789270579815,
+      "salience_base_rate_ambiguity_l2": 0.5623395651578901,
+      "rsa_l2 (seed)": 0.5807494205236435
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 31,
+     "observed": 0.2719298245614035,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846378326416,
+      "salience_distractor_base_rate": 0.4300526155531406,
+      "diminishing_ambiguity_cost_l2": 0.4231108057498931,
+      "salience_base_rate_ambiguity_l2": 0.4235407701134682,
+      "rsa_l2 (seed)": 0.4052148415148258
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0263157894736842,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e1_replication",
+   "condition": "target complex",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 171,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 93,
+     "observed": 0.543859649122807,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5599957981705667,
+      "salience_distractor_base_rate": 0.5558290421962738,
+      "diminishing_ambiguity_cost_l2": 0.5627892705798149,
+      "salience_base_rate_ambiguity_l2": 0.5623395651578903,
+      "rsa_l2 (seed)": 0.5807494205236435
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 77,
+     "observed": 0.4502923976608187,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846378326416,
+      "salience_distractor_base_rate": 0.4300526155531406,
+      "diminishing_ambiguity_cost_l2": 0.4231108057498932,
+      "salience_base_rate_ambiguity_l2": 0.4235407701134682,
+      "rsa_l2 (seed)": 0.4052148415148259
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0058479532163742,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e1_replication",
+   "condition": "target simple",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 171,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 125,
+     "observed": 0.7309941520467836,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.7409856218099593,
+      "salience_distractor_base_rate": 0.7456475421786308,
+      "diminishing_ambiguity_cost_l2": 0.7428414410352706,
+      "salience_base_rate_ambiguity_l2": 0.7411100378632545,
+      "rsa_l2 (seed)": 0.7305844756960871
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 43,
+     "observed": 0.2514619883040935,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2448948048055172,
+      "salience_distractor_base_rate": 0.2402341090887784,
+      "diminishing_ambiguity_cost_l2": 0.2430586279183625,
+      "salience_base_rate_ambiguity_l2": 0.2447702929377556,
+      "rsa_l2 (seed)": 0.2553797777742148
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0175438596491228,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e2_remapped",
+   "condition": "filler type c",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 55,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 53,
+     "observed": 0.9636363636363636,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.971760643422604,
+      "rsa_l2 (seed)": 0.9719285035133366
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0181818181818181,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0181818181818181,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e2_remapped",
+   "condition": "filler type c",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 5,
+   "n": 110,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 107,
+     "observed": 0.9727272727272728,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226034,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0181818181818181,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.009090909090909,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e2_remapped",
+   "condition": "filler type c",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 110,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 106,
+     "observed": 0.9636363636363636,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226034,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.009090909090909,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0272727272727272,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e2_remapped",
+   "condition": "filler unambiguous",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 55,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 53,
+     "observed": 0.9636363636363636,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.971760643422604,
+      "rsa_l2 (seed)": 0.9719285035133366
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0363636363636363,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e2_remapped",
+   "condition": "filler unambiguous",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 55,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 55,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.971760643422604,
+      "rsa_l2 (seed)": 0.9719285035133366
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e2_remapped",
+   "condition": "target complex",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 110,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 61,
+     "observed": 0.5545454545454546,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5599957981705668,
+      "salience_distractor_base_rate": 0.5558290421962738,
+      "diminishing_ambiguity_cost_l2": 0.5627892705798149,
+      "salience_base_rate_ambiguity_l2": 0.5623395651578903,
+      "rsa_l2 (seed)": 0.5807494205236435
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 46,
+     "observed": 0.4181818181818181,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846378326414,
+      "salience_distractor_base_rate": 0.4300526155531405,
+      "diminishing_ambiguity_cost_l2": 0.4231108057498932,
+      "salience_base_rate_ambiguity_l2": 0.4235407701134682,
+      "rsa_l2 (seed)": 0.4052148415148259
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0272727272727272,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e2_remapped",
+   "condition": "target complex",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 5,
+   "n": 110,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 53,
+     "observed": 0.4818181818181818,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5599957981705668,
+      "salience_distractor_base_rate": 0.5558290421962738,
+      "diminishing_ambiguity_cost_l2": 0.5627892705798149,
+      "salience_base_rate_ambiguity_l2": 0.5623395651578903,
+      "rsa_l2 (seed)": 0.5807494205236435
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 55,
+     "observed": 0.5,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846378326414,
+      "salience_distractor_base_rate": 0.4300526155531405,
+      "diminishing_ambiguity_cost_l2": 0.4231108057498932,
+      "salience_base_rate_ambiguity_l2": 0.4235407701134682,
+      "rsa_l2 (seed)": 0.4052148415148259
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0181818181818181,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e3_all_messages",
+   "condition": "filler type a",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 56,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 53,
+     "observed": 0.9464285714285714,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133362
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0357142857142857,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0178571428571428,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e3_all_messages",
+   "condition": "filler type c",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 112,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 109,
+     "observed": 0.9732142857142856,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708088,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133362
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.0267857142857142,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e3_all_messages",
+   "condition": "filler unambiguous",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 56,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 55,
+     "observed": 0.9821428571428572,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133362
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0178571428571428,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e3_all_messages",
+   "condition": "filler unambiguous",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 56,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 53,
+     "observed": 0.9464285714285714,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133362
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0178571428571428,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0357142857142857,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e3_all_messages",
+   "condition": "target complex",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 168,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 95,
+     "observed": 0.5654761904761905,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5599958014488219,
+      "salience_distractor_base_rate": 0.5558290442824364,
+      "diminishing_ambiguity_cost_l2": 0.5494999831914901,
+      "salience_base_rate_ambiguity_l2": 0.5486980026960372,
+      "rsa_l2 (seed)": 0.5508172449469565
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 71,
+     "observed": 0.4226190476190476,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846408128738,
+      "salience_distractor_base_rate": 0.4300526082515716,
+      "diminishing_ambiguity_cost_l2": 0.4364001002907752,
+      "salience_base_rate_ambiguity_l2": 0.4371823352575302,
+      "rsa_l2 (seed)": 0.4351470214128495
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0119047619047619,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e3_all_messages",
+   "condition": "target simple",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 56,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 31,
+     "observed": 0.5535714285714286,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901512,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063664,
+      "salience_base_rate_ambiguity_l2": 0.4929401604831219,
+      "rsa_l2 (seed)": 0.4929821249842643
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 23,
+     "observed": 0.4107142857142857,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901512,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063664,
+      "salience_base_rate_ambiguity_l2": 0.4929401604831219,
+      "rsa_l2 (seed)": 0.4929821249842643
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0357142857142857,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e3_all_messages",
+   "condition": "target simple",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 168,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 82,
+     "observed": 0.4880952380952381,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901513,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063663,
+      "salience_base_rate_ambiguity_l2": 0.4929401604831219,
+      "rsa_l2 (seed)": 0.4929821249842644
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 81,
+     "observed": 0.4821428571428571,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901513,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063663,
+      "salience_base_rate_ambiguity_l2": 0.4929401604831219,
+      "rsa_l2 (seed)": 0.4929821249842644
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.0297619047619047,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e4_shapes",
+   "condition": "filler ambiguous",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 60,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 60,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9858804243803028,
+      "salience_distractor_base_rate": 0.9858816453814508,
+      "diminishing_ambiguity_cost_l2": 0.985900063812733,
+      "salience_base_rate_ambiguity_l2": 0.985880320966244,
+      "rsa_l2 (seed)": 0.9859642499685288
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e4_shapes",
+   "condition": "filler ambiguous",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 120,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 120,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9858804243803028,
+      "salience_distractor_base_rate": 0.9858816453814506,
+      "diminishing_ambiguity_cost_l2": 0.9859000638127324,
+      "salience_base_rate_ambiguity_l2": 0.9858803209662438,
+      "rsa_l2 (seed)": 0.9859642499685288
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e4_shapes",
+   "condition": "filler type b",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 60,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 57,
+     "observed": 0.95,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226038,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0333333333333333,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0166666666666666,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e4_shapes",
+   "condition": "filler type b",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 60,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 60,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226038,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e4_shapes",
+   "condition": "filler type b",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 60,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 56,
+     "observed": 0.9333333333333332,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226038,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0333333333333333,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0333333333333333,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e4_shapes",
+   "condition": "filler unambiguous",
+   "objects": [
+    [
+     0,
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 60,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 59,
+     "observed": 0.9833333333333332,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226038,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0166666666666666,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e4_shapes",
+   "condition": "filler unambiguous",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 60,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 57,
+     "observed": 0.95,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226038,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0333333333333333,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0166666666666666,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2023_e4_shapes",
+   "condition": "target simple",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 180,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 125,
+     "observed": 0.6944444444444444,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.7409856218099593,
+      "salience_distractor_base_rate": 0.7456475421786308,
+      "diminishing_ambiguity_cost_l2": 0.7428414410352706,
+      "salience_base_rate_ambiguity_l2": 0.7411100378632545,
+      "rsa_l2 (seed)": 0.7305844756960871
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 53,
+     "observed": 0.2944444444444444,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.2448948048055172,
+      "salience_distractor_base_rate": 0.2402341090887784,
+      "diminishing_ambiguity_cost_l2": 0.2430586279183625,
+      "salience_base_rate_ambiguity_l2": 0.2447702929377556,
+      "rsa_l2 (seed)": 0.2553797777742148
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0111111111111111,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2026_shapes",
+   "condition": "filler ambiguous",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 508,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 492,
+     "observed": 0.968503937007874,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9858804243803028,
+      "salience_distractor_base_rate": 0.9858816453814506,
+      "diminishing_ambiguity_cost_l2": 0.9859000638127324,
+      "salience_base_rate_ambiguity_l2": 0.9858803209662438,
+      "rsa_l2 (seed)": 0.9859642499685288
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 16,
+     "observed": 0.0314960629921259,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2026_shapes",
+   "condition": "filler ambiguous",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 508,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 495,
+     "observed": 0.9744094488188976,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9858804243803028,
+      "salience_distractor_base_rate": 0.9858816453814506,
+      "diminishing_ambiguity_cost_l2": 0.9859000638127324,
+      "salience_base_rate_ambiguity_l2": 0.9858803209662438,
+      "rsa_l2 (seed)": 0.9859642499685288
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.0255905511811023,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2026_shapes",
+   "condition": "filler type a",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 254,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 242,
+     "observed": 0.952755905511811,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.0275590551181102,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.0196850393700787,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2026_shapes",
+   "condition": "filler type a",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 508,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 493,
+     "observed": 0.970472440944882,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708086,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133362
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.0078740157480314,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 11,
+     "observed": 0.0216535433070866,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2026_shapes",
+   "condition": "filler type b",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 254,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 246,
+     "observed": 0.968503937007874,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.0236220472440944,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.0078740157480314,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2026_shapes",
+   "condition": "filler type c",
+   "objects": [
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 508,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 493,
+     "observed": 0.970472440944882,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708086,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133362
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.0177165354330708,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.0118110236220472,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2026_shapes",
+   "condition": "filler type c",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     0,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 762,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 749,
+     "observed": 0.9829396325459318,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708088,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.0078740157480314,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.0091863517060367,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "md2026_shapes",
+   "condition": "filler type c",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 254,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 244,
+     "observed": 0.9606299212598424,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645588,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.0196850393700787,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.0196850393700787,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s1c.s",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 18,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0555555555555555,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 17,
+     "observed": 0.9444444444444444,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226034,
+      "rsa_l2 (seed)": 0.9719285035133364
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s1c.s",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 8,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 8,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133362
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s1c.s",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 14,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 14,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708088,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133362
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980886,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s1c.s",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 7,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 1,
+     "observed": 0.1428571428571428,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0282391530182212,
+      "salience_distractor_base_rate": 0.028236709209159,
+      "diminishing_ambiguity_cost_l2": 0.0281998709961772,
+      "salience_base_rate_ambiguity_l2": 0.0282393594644963,
+      "rsa_l2 (seed)": 0.0280714963562786
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.8571428571428571,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133362
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s2c.cds",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 19,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0526315789473684,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.4210526315789473,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901511,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063662,
+      "salience_base_rate_ambiguity_l2": 0.492940160483122,
+      "rsa_l2 (seed)": 0.4929821249842644
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 10,
+     "observed": 0.5263157894736842,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901511,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063662,
+      "salience_base_rate_ambiguity_l2": 0.492940160483122,
+      "rsa_l2 (seed)": 0.4929821249842644
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s2c.cds",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 28,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.5,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901511,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063662,
+      "salience_base_rate_ambiguity_l2": 0.492940160483122,
+      "rsa_l2 (seed)": 0.4929821249842643
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.5,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901511,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063662,
+      "salience_base_rate_ambiguity_l2": 0.492940160483122,
+      "rsa_l2 (seed)": 0.4929821249842643
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s2c.css",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 19,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.4736842105263157,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846412599087,
+      "salience_distractor_base_rate": 0.4300526085495949,
+      "diminishing_ambiguity_cost_l2": 0.4364000998437404,
+      "salience_base_rate_ambiguity_l2": 0.4371823352575302,
+      "rsa_l2 (seed)": 0.4351470214128494
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 10,
+     "observed": 0.5263157894736842,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.559995802938938,
+      "salience_distractor_base_rate": 0.5558290445804596,
+      "diminishing_ambiguity_cost_l2": 0.5494999843835832,
+      "salience_base_rate_ambiguity_l2": 0.5486980018019677,
+      "rsa_l2 (seed)": 0.5508172449469567
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s2c.css",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 28,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 15,
+     "observed": 0.5357142857142857,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5599958014488221,
+      "salience_distractor_base_rate": 0.5558290442824364,
+      "diminishing_ambiguity_cost_l2": 0.5494999831914902,
+      "salience_base_rate_ambiguity_l2": 0.5486980026960373,
+      "rsa_l2 (seed)": 0.5508172449469567
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.4642857142857143,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846408128739,
+      "salience_distractor_base_rate": 0.4300526082515716,
+      "diminishing_ambiguity_cost_l2": 0.4364001002907753,
+      "salience_base_rate_ambiguity_l2": 0.4371823352575302,
+      "rsa_l2 (seed)": 0.4351470214128494
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s1c.sdc",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 4,
+   "n": 20,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.05,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 10,
+     "observed": 0.5,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901511,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063662,
+      "salience_base_rate_ambiguity_l2": 0.492940160483122,
+      "rsa_l2 (seed)": 0.4929821249842644
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.45,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901511,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063662,
+      "salience_base_rate_ambiguity_l2": 0.492940160483122,
+      "rsa_l2 (seed)": 0.4929821249842644
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s1c.sdc",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 27,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.4814814814814814,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901511,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063662,
+      "salience_base_rate_ambiguity_l2": 0.492940160483122,
+      "rsa_l2 (seed)": 0.4929821249842643
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.5185185185185185,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4929402121901511,
+      "salience_distractor_base_rate": 0.4929408226907253,
+      "diminishing_ambiguity_cost_l2": 0.4929500319063662,
+      "salience_base_rate_ambiguity_l2": 0.492940160483122,
+      "rsa_l2 (seed)": 0.4929821249842643
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s1c.ssc",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 18,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.3888888888888889,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846412599087,
+      "salience_distractor_base_rate": 0.4300526085495948,
+      "diminishing_ambiguity_cost_l2": 0.4364000998437404,
+      "salience_base_rate_ambiguity_l2": 0.4371823352575302,
+      "rsa_l2 (seed)": 0.4351470214128494
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 11,
+     "observed": 0.6111111111111112,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.559995802938938,
+      "salience_distractor_base_rate": 0.5558290445804596,
+      "diminishing_ambiguity_cost_l2": 0.549499984383583,
+      "salience_base_rate_ambiguity_l2": 0.5486980018019677,
+      "rsa_l2 (seed)": 0.5508172449469567
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s1c.ssc",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 24,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.5833333333333334,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.559995801448822,
+      "salience_distractor_base_rate": 0.5558290442824364,
+      "diminishing_ambiguity_cost_l2": 0.5494999831914902,
+      "salience_base_rate_ambiguity_l2": 0.5486980026960373,
+      "rsa_l2 (seed)": 0.5508172449469566
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.375,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846408128738,
+      "salience_distractor_base_rate": 0.4300526082515716,
+      "diminishing_ambiguity_cost_l2": 0.4364001002907753,
+      "salience_base_rate_ambiguity_l2": 0.4371823352575302,
+      "rsa_l2 (seed)": 0.4351470214128494
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.0416666666666666,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s2c.b.c",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 20,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.05,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.45,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5599958014488221,
+      "salience_distractor_base_rate": 0.5558290442824364,
+      "diminishing_ambiguity_cost_l2": 0.5494999831914902,
+      "salience_base_rate_ambiguity_l2": 0.5486980026960373,
+      "rsa_l2 (seed)": 0.5508172449469567
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 10,
+     "observed": 0.5,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846408128739,
+      "salience_distractor_base_rate": 0.4300526082515716,
+      "diminishing_ambiguity_cost_l2": 0.4364000999927521,
+      "salience_base_rate_ambiguity_l2": 0.4371823354065418,
+      "rsa_l2 (seed)": 0.4351470214128493
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s2c.b.c",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 30,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 14,
+     "observed": 0.4666666666666667,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846412599087,
+      "salience_distractor_base_rate": 0.4300526085495948,
+      "diminishing_ambiguity_cost_l2": 0.4364000998437405,
+      "salience_base_rate_ambiguity_l2": 0.4371823352575302,
+      "rsa_l2 (seed)": 0.4351470214128493
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 16,
+     "observed": 0.5333333333333333,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.559995802938938,
+      "salience_distractor_base_rate": 0.5558290445804596,
+      "diminishing_ambiguity_cost_l2": 0.5494999843835832,
+      "salience_base_rate_ambiguity_l2": 0.5486980018019677,
+      "rsa_l2 (seed)": 0.5508172449469567
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s2c.b.s",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 17,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.2941176470588235,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846412599086,
+      "salience_distractor_base_rate": 0.4300526085495949,
+      "diminishing_ambiguity_cost_l2": 0.4364000998437404,
+      "salience_base_rate_ambiguity_l2": 0.4371823352575302,
+      "rsa_l2 (seed)": 0.4351470214128494
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.7058823529411765,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.5599958029389381,
+      "salience_distractor_base_rate": 0.5558290445804596,
+      "diminishing_ambiguity_cost_l2": 0.549499984383583,
+      "salience_base_rate_ambiguity_l2": 0.5486980018019676,
+      "rsa_l2 (seed)": 0.5508172449469566
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s2c.b.s",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 3,
+   "n": 31,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 20,
+     "observed": 0.6451612903225806,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.559995801448822,
+      "salience_distractor_base_rate": 0.5558290442824364,
+      "diminishing_ambiguity_cost_l2": 0.5494999831914903,
+      "salience_base_rate_ambiguity_l2": 0.5486980026960374,
+      "rsa_l2 (seed)": 0.5508172449469566
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 11,
+     "observed": 0.3548387096774194,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.4258846408128741,
+      "salience_distractor_base_rate": 0.4300526082515716,
+      "diminishing_ambiguity_cost_l2": 0.4364000999927522,
+      "salience_base_rate_ambiguity_l2": 0.4371823354065418,
+      "rsa_l2 (seed)": 0.4351470214128493
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s3c.s",
+   "objects": [
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 2,
+   "n": 18,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 2,
+     "count": 18,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9858804243803024,
+      "salience_distractor_base_rate": 0.9858816453814508,
+      "diminishing_ambiguity_cost_l2": 0.9859000638127324,
+      "salience_base_rate_ambiguity_l2": 0.985880320966244,
+      "rsa_l2 (seed)": 0.9859642499685288
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s3c.s",
+   "objects": [
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 27,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 27,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9858804243803024,
+      "salience_distractor_base_rate": 0.9858816453814506,
+      "diminishing_ambiguity_cost_l2": 0.9859000638127324,
+      "salience_base_rate_ambiguity_l2": 0.985880320966244,
+      "rsa_l2 (seed)": 0.9859642499685288
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.3s1c.c",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 32,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 3,
+     "observed": 0.09375,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 29,
+     "observed": 0.90625,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133362
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0141195765091106,
+      "salience_distractor_base_rate": 0.0141183546045795,
+      "diminishing_ambiguity_cost_l2": 0.0140999354980885,
+      "salience_base_rate_ambiguity_l2": 0.0141196797322481,
+      "rsa_l2 (seed)": 0.0140357481781393
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.3s1c.c",
+   "objects": [
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 1,
+   "n": 16,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.0282391530182212,
+      "salience_distractor_base_rate": 0.028236709209159,
+      "diminishing_ambiguity_cost_l2": 0.0281998709961771,
+      "salience_base_rate_ambiguity_l2": 0.0282393594644963,
+      "rsa_l2 (seed)": 0.0280714963562786
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 16,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.9717608481645584,
+      "salience_distractor_base_rate": 0.9717632895708084,
+      "diminishing_ambiguity_cost_l2": 0.9718001261353492,
+      "salience_base_rate_ambiguity_l2": 0.9717606434226036,
+      "rsa_l2 (seed)": 0.9719285035133362
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.3s3c.c",
+   "objects": [
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "utterance",
+   "utterance": 0,
+   "n": 46,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 3,
+     "count": 46,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 1.0000000298023224,
+      "salience_distractor_base_rate": 1.0000000298023224,
+      "diminishing_ambiguity_cost_l2": 1.0000000298023224,
+      "salience_base_rate_ambiguity_l2": 1.0000000298023224,
+      "rsa_l2 (seed)": 1.0000000298023224
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s1c.s",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 19,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.3157894736842105,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.3157894736842105,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.3684210526315789,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s1c.s",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 6,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 0,
+     "observed": 0.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.3333333333333333,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.6666666666666666,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s1c.s",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 15,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.2666666666666666,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.2666666666666666,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.4666666666666667,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s1c.s",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1,
+     0
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 6,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 5,
+     "observed": 0.8333333333333334,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.6666666865348816,
+      "salience_distractor_base_rate": 0.6666666865348816,
+      "diminishing_ambiguity_cost_l2": 0.6666666865348816,
+      "salience_base_rate_ambiguity_l2": 0.6666666865348816,
+      "rsa_l2 (seed)": 0.6666666865348816
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 1,
+     "observed": 0.1666666666666666,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s2c.cds",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 19,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.2105263157894736,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.3684210526315789,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.4210526315789473,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s2c.cds",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 28,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.2857142857142857,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.2857142857142857,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.4285714285714285,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s2c.css",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 16,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.4375,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.25,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.3125,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.1s2c.css",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 29,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.3103448275862069,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 11,
+     "observed": 0.3793103448275862,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.3103448275862069,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s1c.sdc",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 18,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.3333333333333333,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.3888888888888889,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 5,
+     "observed": 0.2777777777777778,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s1c.sdc",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 23,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.3043478260869565,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.2608695652173913,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 10,
+     "observed": 0.4347826086956521,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s1c.ssc",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 19,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.4736842105263157,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.4210526315789473,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 2,
+     "observed": 0.1052631578947368,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s1c.ssc",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 28,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.4285714285714285,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 10,
+     "observed": 0.3571428571428571,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.2142857142857142,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s2c.b.c",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 20,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.35,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.3,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.35,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s2c.b.c",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 29,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.2758620689655172,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.2758620689655172,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.4482758620689655,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s2c.b.s",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     1,
+     0
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 19,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 6,
+     "observed": 0.3157894736842105,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.2105263157894736,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.4736842105263157,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s2c.b.s",
+   "objects": [
+    [
+     1,
+     0,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 28,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.2857142857142857,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 9,
+     "observed": 0.3214285714285714,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 11,
+     "observed": 0.3928571428571428,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s3c.s",
+   "objects": [
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 19,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 8,
+     "observed": 0.4210526315789473,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 2,
+     "count": 11,
+     "observed": 0.5789473684210527,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.6666666865348816,
+      "salience_distractor_base_rate": 0.6666666865348816,
+      "diminishing_ambiguity_cost_l2": 0.6666666865348816,
+      "salience_base_rate_ambiguity_l2": 0.6666666865348816,
+      "rsa_l2 (seed)": 0.6666666865348816
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.2s3c.s",
+   "objects": [
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     1,
+     0
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 30,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 17,
+     "observed": 0.5666666666666667,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.6666666865348816,
+      "salience_distractor_base_rate": 0.6666666865348816,
+      "diminishing_ambiguity_cost_l2": 0.6666666865348816,
+      "salience_base_rate_ambiguity_l2": 0.6666666865348816,
+      "rsa_l2 (seed)": 0.6666666865348816
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 13,
+     "observed": 0.4333333333333333,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.3s1c.c",
+   "objects": [
+    [
+     1,
+     0,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     0,
+     1
+    ],
+    [
+     0,
+     0,
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 30,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 1,
+     "count": 12,
+     "observed": 0.4,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 11,
+     "observed": 0.3666666666666666,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    },
+    {
+     "object": 2,
+     "copies": 1,
+     "count": 7,
+     "observed": 0.2333333333333333,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.3s1c.c",
+   "objects": [
+    [
+     1,
+     0,
+     1
+    ],
+    [
+     0,
+     1,
+     1
+    ],
+    [
+     1,
+     0,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 16,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 2,
+     "count": 12,
+     "observed": 0.75,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.6666666865348816,
+      "salience_distractor_base_rate": 0.6666666865348816,
+      "diminishing_ambiguity_cost_l2": 0.6666666865348816,
+      "salience_base_rate_ambiguity_l2": 0.6666666865348816,
+      "rsa_l2 (seed)": 0.6666666865348816
+     }
+    },
+    {
+     "object": 1,
+     "copies": 1,
+     "count": 4,
+     "observed": 0.25,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 0.3333333432674408,
+      "salience_distractor_base_rate": 0.3333333432674408,
+      "diminishing_ambiguity_cost_l2": 0.3333333432674408,
+      "salience_base_rate_ambiguity_l2": 0.3333333432674408,
+      "rsa_l2 (seed)": 0.3333333432674408
+     }
+    }
+   ]
+  },
+  {
+   "experiment": "sikos2021_e1",
+   "condition": "d.3s3c.c",
+   "objects": [
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ],
+    [
+     1,
+     1
+    ]
+   ],
+   "query": "prior",
+   "utterance": null,
+   "n": 44,
+   "classes": [
+    {
+     "object": 0,
+     "copies": 3,
+     "count": 44,
+     "observed": 1.0,
+     "preds": {
+      "salience_base_rate_ambiguity_l1 (exported)": 1.0000000298023224,
+      "salience_distractor_base_rate": 1.0000000298023224,
+      "diminishing_ambiguity_cost_l2": 1.0000000298023224,
+      "salience_base_rate_ambiguity_l2": 1.0000000298023224,
+      "rsa_l2 (seed)": 1.0000000298023224
+     }
+    }
+   ]
+  }
+ ],
+ "metric": {
+  "lede": "How well each model predicts which referent people pick in the held-out conditions: conditions of the same papers that the loop never saw. Every model was fitted to the loop's training trials only. The panels show people's choice proportions against the models' predictions for each held-out game, word and condition.",
+  "standing_note": "Held-out log predictive density behind the best of these models, in nats (whiskers \u00b12 SE of the difference, clustered by held-out condition). Lower is better. r and RMSE compare predicted and observed choice proportions over held-out display cells.",
+  "diff_label": "\u0394lpd"
+ },
+ "default_models": [
+  "rsa_l2 (seed)",
+  "salience_base_rate_ambiguity_l1 (exported)"
+ ]
+}
