@@ -160,3 +160,30 @@ held-out conditions within the same papers? Then:
   held-out rank in each real cell, and compare with run 1: 26/40 and 4/40.
 - **Did recovery still succeed without internet access?** Give the exported
   and closest-live RMSE, and `seeds_would_pass`.
+
+## 7. After bringing the cells back: held-out pages (added 2026-10-08)
+
+The driver session reads each cell condition by condition on its held-out
+conditions. Build those pages on Sherlock, where every model's fits are
+already cached, rather than refitting in the cloud. Do it in a job, not on the login node:
+
+```bash
+cd ~/auto-psych && git fetch origin auto-rsa && git merge --ff-only origin/auto-rsa
+sbatch --chdir="$HOME/auto-psych" scripts/rsa/slurm/heldout_reports.sbatch
+# a subset: CELLS="real_rep1 real_rep2" sbatch --chdir=... (same script)
+```
+
+For every finished cell already brought back to `data/rsa/sherlock_run2/<cell>/`,
+`src.rsa.heldout_report` reads the loop's `responses.csv`, `.fit_cache` and
+`.cv`, and writes three files into `<cell>/heldout/`:
+
+- `report.html` and `report.bundle.json`: people vs the best seed, the exported model and the three best
+  held-out models, one panel per held-out display;
+- `unit_lpd.csv`: those models' lpd per unit, held out (`test`), in sample (`train`) and out of fold
+  (`cv`).
+
+Expect a few minutes per cell. A cache miss means a refit: the log line ends
+`fitted N (not in ...)`. Report any you see. Commit the three files per cell. They hold
+aggregates only (choice counts per display, lpd sums per unit), so they are fine to commit.
+Pulling the checkout is safe while cells run: the cells run the staged
+`harness_repo`, not `~/auto-psych`.
