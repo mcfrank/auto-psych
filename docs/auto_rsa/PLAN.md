@@ -133,7 +133,8 @@ probability 0 to objects the word is false of, and people do choose them).
 | 2 | Production inner loop on Sherlock (sandboxed agents) | local session | after the smoke test |
 | 2 | Critique step for memo models (PPC test statistics) | cloud | later |
 | 3 | Seed promotion from run 2 (`src/rsa/promote.py`) | Sherlock | job written |
-| 3 | Outer loop, simulated: design from the context pool, K-way EIG (Monte Carlo over outcomes), multi-trial designs, power simulation, recovery against held-out RSA variants | cloud + Sherlock | in progress |
+| 3 | Design for experiment 1: joint EIG over the 794-display pool with multinomial outcomes (`src/rsa/design/eig.py`, main's estimator: scenarios, leave-one-out, noise-floor stop, single-response fill) and the power table (`src/rsa/design/run.py`, `scripts/rsa/slurm/design.sbatch`) | cloud + Sherlock | built; runs after promotion (`HANDOFF_sherlock_promote.md`) |
+| 3 | Outer loop for RSA: experiment N+1 designed from experiment N's live set, data pooled, the inner loop per experiment (5 x 6, stop rule) | cloud | next |
 | 4 | Live: jsPsych port of the pragmods display, Firestore schema, Prolific pilot | local session | |
 | - | More seed data (`DATASETS.md`): Franke & Degen 2016, Mayn & Demberg, Sikos et al. 2021 need OSF/PLoS access | PI / local | |
 
