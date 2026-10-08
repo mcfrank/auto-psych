@@ -48,3 +48,5 @@ fit caches, no agent logs.
 private), the cell records and Slurm logs, each loop directory with the agents' logs and
 opencode sessions, and the fit caches. It records `SHA256SUMS` and `MANIFEST.json`; copy both
 into `archive/` here once it has run, with the archive's location.
+
+Archived 2026-10-08 (job 47042589) to `/oak/stanford/groups/mcfrank/auto-psych/archive/rsa_run2` ($OAK), 5.1 GB; checksums and manifest in `archive/`.

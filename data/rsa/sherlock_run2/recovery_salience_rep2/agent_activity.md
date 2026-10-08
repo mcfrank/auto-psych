@@ -1,6 +1,14 @@
 # What the agents looked at
 
-## URLs in the agent logs
+## Web tool calls
+
+What agents fetched or searched, with each call's status (a denied call is an error).
+
+(none)
+
+## URLs that appear in the log text
+
+Anywhere in the logs: tool output, warnings, file contents, model text. Not fetches.
 
 - https://files.pythonhosted.org/packages/01/88/a8952b6d5c21e74cbf158515b779666f692846502623e9e3c39d8e8ba25f/llvmlite-0.47.0.tar.gz (1×)
 - https://files.pythonhosted.org/packages/01/ee/02a2c011bdab74c6fb3c75474d40b3052059d95df7e73351460c8588d963/h11-0.16.0.tar.gz (1×)

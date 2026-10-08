@@ -1,6 +1,14 @@
 # What the agents looked at
 
-## URLs in the agent logs
+## Web tool calls
+
+What agents fetched or searched, with each call's status (a denied call is an error).
+
+(none)
+
+## URLs that appear in the log text
+
+Anywhere in the logs: tool output, warnings, file contents, model text. Not fetches.
 
 - https://cloud.google.com/bigquery/docs/reference/rest/v2/Job#jobconfiguration (1×)
 - https://cloud.google.com/bigquery/docs/reference/system-variables (1×)

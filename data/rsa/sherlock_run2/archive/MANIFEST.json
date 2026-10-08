@@ -1,0 +1,88 @@
+{
+ "sweep": "rsa_run2",
+ "work_root": "/scratch/users/mcfrank/auto-psych/rsa_run2",
+ "code_commit": "dec3790ebf8e0c1ce99db8536d1b21e5e1a2818c",
+ "archived": "2026-10-08T16:35:30",
+ "archives": {
+  "cells/real_rep1.tar.gz": {
+   "bytes": 248051364,
+   "files": 954,
+   "unpacked_bytes": 966553431
+  },
+  "cells/real_rep2.tar.gz": {
+   "bytes": 251643668,
+   "files": 1042,
+   "unpacked_bytes": 986050290
+  },
+  "cells/real_rep3.tar.gz": {
+   "bytes": 231072900,
+   "files": 991,
+   "unpacked_bytes": 881399678
+  },
+  "cells/recovery_literal_rep1.tar.gz": {
+   "bytes": 198483192,
+   "files": 2878,
+   "unpacked_bytes": 771943625
+  },
+  "cells/recovery_literal_rep2.tar.gz": {
+   "bytes": 154183791,
+   "files": 623,
+   "unpacked_bytes": 634338230
+  },
+  "cells/recovery_salience_rep1.tar.gz": {
+   "bytes": 147634938,
+   "files": 586,
+   "unpacked_bytes": 609008316
+  },
+  "cells/recovery_salience_rep2.tar.gz": {
+   "bytes": 121832756,
+   "files": 496,
+   "unpacked_bytes": 517675349
+  },
+  "data.tar.gz": {
+   "bytes": 4139383,
+   "files": 21,
+   "unpacked_bytes": 147520870
+  },
+  "fits/real_rep1.tar.gz": {
+   "bytes": 551872261,
+   "files": 678,
+   "unpacked_bytes": 729030961
+  },
+  "fits/real_rep2.tar.gz": {
+   "bytes": 533539106,
+   "files": 650,
+   "unpacked_bytes": 706165100
+  },
+  "fits/real_rep3.tar.gz": {
+   "bytes": 577155681,
+   "files": 654,
+   "unpacked_bytes": 748886581
+  },
+  "fits/recovery_literal_rep1.tar.gz": {
+   "bytes": 289903581,
+   "files": 334,
+   "unpacked_bytes": 383919256
+  },
+  "fits/recovery_literal_rep2.tar.gz": {
+   "bytes": 267772118,
+   "files": 328,
+   "unpacked_bytes": 359425072
+  },
+  "fits/recovery_salience_rep1.tar.gz": {
+   "bytes": 268776937,
+   "files": 332,
+   "unpacked_bytes": 361056244
+  },
+  "fits/recovery_salience_rep2.tar.gz": {
+   "bytes": 250626487,
+   "files": 320,
+   "unpacked_bytes": 340105970
+  },
+  "records.tar.gz": {
+   "bytes": 1353206588,
+   "files": 7666,
+   "unpacked_bytes": 5368608620
+  }
+ }
+}

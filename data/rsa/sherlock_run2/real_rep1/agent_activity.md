@@ -1,6 +1,14 @@
 # What the agents looked at
 
-## URLs in the agent logs
+## Web tool calls
+
+What agents fetched or searched, with each call's status (a denied call is an error).
+
+(none)
+
+## URLs that appear in the log text
+
+Anywhere in the logs: tool output, warnings, file contents, model text. Not fetches.
 
 - http://www.w3.org/2000/svg (3×)
 - https://docs.jax.dev/en/latest/jax.scipy.html (1×)
