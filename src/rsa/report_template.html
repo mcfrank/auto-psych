@@ -126,7 +126,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
   <header>
     <div class="eyebrow">auto-rsa · model report</div>
     <h1 id="title"></h1>
-    <p class="lede">How well each memo model predicts which referent people pick. A model's standing comes from PSIS-LOO on every trial. The panels show people's choice proportions against model predictions for each game, word and condition.</p>
+    <p class="lede" id="lede">How well each memo model predicts which referent people pick. A model's standing comes from PSIS-LOO on every trial. The panels show people's choice proportions against model predictions for each game, word and condition.</p>
     <div class="meta" id="meta"></div>
   </header>
 
@@ -141,7 +141,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
   <section aria-labelledby="h-standing">
     <div class="section-head">
       <h2 id="h-standing">Model standing</h2>
-      <p>ELPD-LOO behind the best model, in nats (whiskers ±2 SE of the difference). Lower is better. r and RMSE compare predicted and observed choice proportions over display cells.</p>
+      <p id="standing-note">ELPD-LOO behind the best model, in nats (whiskers ±2 SE of the difference). Lower is better. r and RMSE compare predicted and observed choice proportions over display cells.</p>
     </div>
     <div class="standing">
       <div class="card"><svg id="elpd-chart" role="img" aria-label="ELPD difference from the best model"></svg></div>
@@ -205,6 +205,11 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
 
   // ---------- header ----------
   document.getElementById("title").textContent = B.title;
+  if (B.metric) {  // a page on another criterion (src.rsa.heldout_report) relabels the standing
+    document.getElementById("lede").textContent = B.metric.lede;
+    document.getElementById("standing-note").textContent = B.metric.standing_note;
+  }
+  const VS_SEED = B.models.some((m) => m.heldout_vs_seed !== undefined);
   const meta = document.getElementById("meta");
   const metaItems = [
     ["data", B.dataset.label], ["trials", B.dataset.n_trials], ["models", B.models.length],
@@ -282,7 +287,9 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
   (function standingTable() {
     const t = document.getElementById("standing-table");
     const head = el("tr", {}, el("thead", {}, t));
-    for (const [h, cls] of [["#", "num"], ["model", ""], ["ΔELPD", "num"], ["± dSE", "num"], ["r", "num"], ["RMSE", "num"], ["checks", ""]]) el("th", { class: cls, text: h }, head);
+    const cols = [["#", "num"], ["model", ""], [B.metric ? B.metric.diff_label : "ΔELPD", "num"], ["± dSE", "num"]];
+    if (VS_SEED) cols.push(["vs seed", "num"]);
+    for (const [h, cls] of cols.concat([["r", "num"], ["RMSE", "num"], ["checks", ""]])) el("th", { class: cls, text: h }, head);
     const body = el("tbody", {}, t);
     for (const m of B.models) {
       const tr = el("tr", {}, body);
@@ -290,11 +297,14 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
       el("td", { text: m.name, style: "font-family: var(--font-data)" }, tr);
       el("td", { class: "num", text: fmt(m.elpd_diff, 1) }, tr);
       el("td", { class: "num", text: fmt(m.dse, 1) }, tr);
+      if (VS_SEED) el("td", { class: "num", text: (m.heldout_vs_seed > 0 ? "+" : "") + fmt(m.heldout_vs_seed, 1) }, tr);
       el("td", { class: "num", text: fmt(m.r, 3) }, tr);
       el("td", { class: "num", text: fmt(m.rmse, 3) }, tr);
       const td = el("td", {}, tr);
-      el("span", { class: "pill" + (m.loo_reliable ? "" : " bad"), text: m.loo_reliable ? "✓ LOO" : "✕ LOO" }, td);
-      td.append(" ");
+      if (m.loo_reliable !== null) {
+        el("span", { class: "pill" + (m.loo_reliable ? "" : " bad"), text: m.loo_reliable ? "✓ LOO" : "✕ LOO" }, td);
+        td.append(" ");
+      }
       el("span", { class: "pill" + (m.converged ? "" : " bad"), text: m.converged ? "✓ converged" : "✕ " + m.convergence_problems }, td);
     }
   })();
