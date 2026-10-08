@@ -217,6 +217,7 @@ def main(args: Args) -> Path:
     bundle["metric"] = METRIC
     for m in bundle["models"]:
         m["loo_reliable"] = None
+        m["p_loo"] = None  # no PSIS-LOO on held-out data
         m["heldout_vs_seed"] = float(lpd[m["name"]].sum() - lpd[display[heldout["best_seed"]]].sum())
     out = Path(args.out_html or cell / "heldout" / "report.html")
     out.write_text(render(bundle), encoding="utf-8")
