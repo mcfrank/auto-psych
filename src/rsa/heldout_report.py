@@ -215,6 +215,9 @@ def main(args: Args) -> Path:
                           dataset_label=f"{cell.name} · {heldout['n_test_units']} held-out conditions",
                           min_cell_n=args.min_cell_n)
     bundle["metric"] = METRIC
+    # The panels open on the claim's comparison: the seed, the exported model, the best held out.
+    bundle["default_models"] = list(dict.fromkeys(
+        [display[heldout["best_seed"]], display[exported], order[0]]))
     for m in bundle["models"]:
         m["loo_reliable"] = None
         m["p_loo"] = None  # no PSIS-LOO on held-out data

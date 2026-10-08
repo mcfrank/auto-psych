@@ -53,6 +53,7 @@ h3 { font-size: 13px; font-weight: 600; }
 .meta { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-family: var(--font-data); font-size: 12px; color: var(--ink-2); }
 .meta b { color: var(--ink); font-weight: 500; }
 section { display: grid; gap: 14px; min-width: 0; }
+[hidden] { display: none !important; }
 .section-head { display: grid; gap: 4px; }
 .section-head p { margin: 0; color: var(--ink-2); max-width: 75ch; }
 .card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 16px; min-width: 0; }
@@ -210,6 +211,8 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
     document.getElementById("standing-note").textContent = B.metric.standing_note;
   }
   const VS_SEED = B.models.some((m) => m.heldout_vs_seed !== undefined);
+  // Room for the longest model name beside the charts (11px monospace is ~6.7px a character).
+  const LABEL_W = Math.max(150, Math.min(330, 16 + 6.7 * Math.max(...B.models.map((m) => m.name.length))));
   const meta = document.getElementById("meta");
   const metaItems = [
     ["data", B.dataset.label], ["trials", B.dataset.n_trials], ["models", B.models.length],
@@ -254,7 +257,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
   // ---------- model standing chart ----------
   (function elpdChart() {
     const svg = document.getElementById("elpd-chart");
-    const M = B.models, rowH = 30, left = 150, right = 56, top = 10, W = 460, H = top + rowH * M.length + 30;
+    const M = B.models, rowH = 30, left = LABEL_W, right = 56, top = 10, W = 310 + LABEL_W, H = top + rowH * M.length + 30;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
     const diffs = M.map((m) => m.elpd_diff + 2 * m.dse).sort((a, b) => a - b);
     const second = diffs.length > 1 ? diffs[diffs.length - 2] : diffs[0];
@@ -328,7 +331,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
   (function heatmap() {
     const svg = document.getElementById("heatmap");
     const E = B.experiments.filter((e) => B.models.some((m) => m.rmse_by_experiment[e.id] !== undefined));
-    const cw = 64, ch = 30, left = 150, top = 96;
+    const cw = 64, ch = 30, left = LABEL_W, top = 96;
     const W = left + cw * E.length + 10, H = top + ch * B.models.length + 46;
     svg.setAttribute("viewBox", `0 0 ${W} ${H}`); svg.setAttribute("width", W);
     const steps = ["--seq-0", "--seq-1", "--seq-2", "--seq-3", "--seq-4", "--seq-5"].map(css);
@@ -389,7 +392,7 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
   // ---------- filters ----------
   const state = { models: [], slot: {}, query: "utterance", exp: "all" };
   const best = B.models[0]?.name;
-  for (const name of [best, "rsa_l1", "literal_listener"]) if (name && B.models.some((m) => m.name === name) && !state.models.includes(name)) selectModel(name);
+  for (const name of B.default_models || [best, "rsa_l1", "literal_listener"]) if (name && B.models.some((m) => m.name === name) && !state.models.includes(name)) selectModel(name);
   function selectModel(name) {
     const used = new Set(Object.values(state.slot));
     const free = [0, 1, 2].find((s) => !used.has(s));
