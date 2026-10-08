@@ -32,6 +32,7 @@ import json
 import os
 import re
 import shutil
+import sys
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -113,6 +114,9 @@ class LoopConfig:
     fit_time_limit_sec: Optional[float] = FIT_TIME_LIMIT_SEC
     lenses: List[str] = field(default_factory=lambda: list(briefs.DEFAULT_RSA_LENSES))
     report_title: str = "RSA inner loop"
+    agent_network: bool = False
+    """Whether agents have internet access (see `coding_agent_spawner`); the
+    brief tells them which."""
     fit_workers: int = 0
     """Fits run at once (each its own process): a round's candidates, and the
     seeds, are fitted concurrently before their sequential admission. 0: as
@@ -294,7 +298,7 @@ class RSALoop:
         context = briefs.context_md(
             candidate_dir=cdir, responses_path=self.responses, round_index=round_index,
             n_rounds=self.cfg.max_iterations, n_trials=len(self.trials.contexts),
-            experiments=sorted(self.trials.frame["experiment"].unique()))
+            experiments=sorted(self.trials.frame["experiment"].unique()), network=self.cfg.agent_network)
         docs = briefs.write_docs(cdir, role=role, lens=lens, context=context, live=live, pruned=pruned,
                                  incumbent=incumbent, ledger=self.ledger, attempt_note=note)
         return briefs.build_prompt(cdir, docs)
@@ -551,18 +555,50 @@ def _read(path: Path) -> str:
 
 
 def coding_agent_spawner(*, models_dir: Path, responses_path: Path, timeout_sec: int, backend: Optional[str],
-                         model: Optional[str], agent_root: Optional[Path], sandbox: bool) -> SpawnFn:
-    """The real spawner: one coding agent per candidate directory."""
-    from src.runtime.coding_agent import run_coding_agent
+                         model: Optional[str], agent_root: Optional[Path], sandbox: bool,
+                         network: bool = False, shell_dir: Optional[Path] = None) -> SpawnFn:
+    """The real spawner: one coding agent per candidate directory.
+
+    Without ``network`` (the default; PI decision 2026-10-08) the agent's shell
+    commands run under the no-internet filter and opencode's web tools are
+    denied (`src.rsa.loop.no_network`); the wrapper is written to
+    ``shell_dir``, which the agent must be able to read. An agent whose log
+    shows a completed web tool call stops the run.
+    """
+    from src.runtime.coding_agent import run_coding_agent, select_backend
     from src.runtime.config import REPO_ROOT
 
+    env = None
+    if not network:
+        from src.rsa.loop import no_network
+
+        if select_backend(backend) != "opencode":
+            raise ValueError("agents without network are implemented for the opencode backend only")
+        if shell_dir is None:
+            raise ValueError("agents without network need shell_dir for their shell wrapper")
+        bash = shutil.which("bash")
+        if bash is None:
+            raise FileNotFoundError("no bash on PATH for the agents' shell wrapper")
+        wrapper = no_network.write_shell_wrapper(Path(shell_dir), sys.executable, bash)
+        env = dict(os.environ)
+        env["SHELL"] = str(wrapper)
+        env["OPENCODE_PERMISSION"] = no_network.opencode_permission(env.get("OPENCODE_PERMISSION"))
+
     def spawn(candidate_dir: Path, prompt: str) -> bool:
+        log = candidate_dir / "agent.jsonl"
         ok, _ = run_coding_agent(
-            prompt, cwd=agent_root or REPO_ROOT, log_path=candidate_dir / "agent.jsonl",
+            prompt, cwd=agent_root or REPO_ROOT, log_path=log,
             allowed_dirs=[candidate_dir, models_dir, responses_path.parent], writable_dirs=[candidate_dir],
             timeout_secs=timeout_sec, backend=backend, model=model, usage_label="rsa:candidate",
-            stock=True, sandbox=sandbox,
+            stock=True, sandbox=sandbox, env=env,
         )
+        if not network:
+            from src.rsa.loop.no_network import web_tool_uses
+
+            used = web_tool_uses(log)
+            if used:
+                raise RuntimeError(f"{candidate_dir}: the agent used the web although its web tools are denied "
+                                   f"(a harness bug): {used[:3]}")
         return ok
 
     return spawn

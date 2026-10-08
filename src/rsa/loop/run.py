@@ -73,6 +73,10 @@ class Args:
     at 1,200 s the smoke test's agents ran out mid-check."""
     agent_root: Optional[Path] = None
     """Directory agents run from (the scrubbed agent tree on the cluster; default: the repo)."""
+    agent_network: bool = False
+    """Give agents internet access. Off by default (PI decision 2026-10-08:
+    contamination risk outweighs the upside): their shell commands get no
+    network and opencode's web tools are denied (src.rsa.loop.no_network)."""
     no_sandbox: bool = False
     """Run agents without bubblewrap. Only in a disposable container."""
     title: str = "RSA inner loop"
@@ -109,12 +113,13 @@ def main(args: Args) -> int:
         settings=FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
                              seed=args.seed),
         novelty_threshold=args.novelty_rmse_threshold, prune_dse_multiplier=args.prune_dse_multiplier,
-        fit_time_limit_sec=args.fit_time_limit_sec, report_title=args.title,
+        fit_time_limit_sec=args.fit_time_limit_sec, report_title=args.title, agent_network=args.agent_network,
     )
     spawn = coding_agent_spawner(
         models_dir=results / "models", responses_path=results / "responses.csv",
         timeout_sec=args.agent_timeout_sec, backend=args.coding_agent, model=args.agent_model,
         agent_root=args.agent_root, sandbox=not args.no_sandbox,
+        network=args.agent_network, shell_dir=results / ".agent_shell",
     )
     # The agents' spend, written in a finally so an aborted loop still accounts for it.
     usage_marker = start_usage_log(results / "token_usage.jsonl")

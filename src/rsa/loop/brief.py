@@ -82,8 +82,14 @@ class ZooModel:
     standing: str  # e.g. "best" or "12.3 ± 4.0 nats behind the best"
 
 
+NO_NETWORK_NOTE = """- You have no internet access: shell commands cannot open network connections and
+  the web tools are disabled. Everything you need is in this repository, your
+  candidate directory and the responses file; do not try to install packages.
+"""
+
+
 def context_md(*, candidate_dir: Path, responses_path: Path, round_index: int,
-               n_rounds: int, n_trials: int, experiments: Sequence[str]) -> str:
+               n_rounds: int, n_trials: int, experiments: Sequence[str], network: bool = False) -> str:
     return f"""# Context
 
 - Candidate directory (write your three files here): `{candidate_dir}`
@@ -104,7 +110,7 @@ def context_md(*, candidate_dir: Path, responses_path: Path, round_index: int,
 - Do not refit the models in the set: their standings above are from the
   loop's own fits. Write memo code in a `.py` file (memo reads its source
   back, so `python -c` raises "couldn't find your memo source code").
-- Write and test your files **in your candidate directory only**: no drafts in
+{"" if network else NO_NETWORK_NOTE}- Write and test your files **in your candidate directory only**: no drafts in
   `/tmp`, the repository root or anywhere else. The loop reads only
   `{candidate_dir}`; a candidate.py anywhere else counts as no candidate.
 """

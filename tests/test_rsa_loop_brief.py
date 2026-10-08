@@ -114,3 +114,12 @@ def test_the_self_check_runs_with_the_harness_interpreter_not_uv():
     assert argv[0] == sys.executable
     assert argv[1:3] == ["-m", "src.rsa.loop.check_candidate"]
     assert "uv run" not in THEORY_PROMPT.read_text(encoding="utf-8")
+
+
+def test_the_context_says_whether_the_agent_has_internet(tmp_path):
+    from src.rsa.loop.brief import NO_NETWORK_NOTE, context_md
+
+    kw = dict(candidate_dir=tmp_path, responses_path=DEFAULT_TRIALS_CSV, round_index=0, n_rounds=1, n_trials=1,
+              experiments=["E1"])
+    assert NO_NETWORK_NOTE in context_md(**kw)
+    assert NO_NETWORK_NOTE not in context_md(**kw, network=True)
