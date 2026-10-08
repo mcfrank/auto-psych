@@ -137,8 +137,17 @@ def cv_pointwise(model_path: Path, name: str, responses_path: Path, folds: Folds
     return CVResult(pointwise=out, converged=all(fit.converged for fit in fits))
 
 
-def compare_cv(results: Dict[str, CVResult], units: np.ndarray) -> Dict[str, dict]:
-    """Each model's ELPD-CV, its difference from the best and the unit-clustered SE."""
+def compare_cv(results: Dict[str, CVResult], units: np.ndarray,
+               sources: Optional[np.ndarray] = None) -> Dict[str, dict]:
+    """Each model's ELPD-CV, its difference from the best and the unit-clustered SE.
+
+    With ``sources`` (one per trial), also each model's ELPD-CV on each source
+    and how far it is behind that source's best model (``cv_behind_by_source``),
+    with the clustered SE of that difference (``cv_dse_by_source``). Models
+    specialise: in Sherlock run 1's real_rep1 the CV winner's lead was almost
+    all Sikos 2021 (+263 over rsa_l2) and it lost on pragmods (-38), where a
+    literal/pragmatic mixture led (+117).
+    """
     from src.models.clustered_se import cluster_dse
 
     best = max(results, key=lambda n: results[n].elpd)
@@ -147,7 +156,28 @@ def compare_cv(results: Dict[str, CVResult], units: np.ndarray) -> Dict[str, dic
         diff = results[best].elpd - r.elpd
         dse = 0.0 if name == best else float(cluster_dse(results[best].pointwise, r.pointwise, units))
         out[name] = dict(elpd_cv=r.elpd, cv_diff=float(diff), cv_dse=dse, cv_converged=r.converged)
+    if sources is not None:
+        sources = np.asarray(sources).astype(str)
+        if len(sources) != len(units):
+            raise ValueError(f"{len(sources)} sources for {len(units)} trials")
+        for src in sorted(set(sources)):
+            mask = sources == src
+            by = {n: float(r.pointwise[mask].sum()) for n, r in results.items()}
+            top = max(by, key=by.get)
+            for name, r in results.items():
+                o = out[name]
+                o.setdefault("cv_by_source", {})[src] = by[name]
+                o.setdefault("cv_behind_by_source", {})[src] = by[top] - by[name]
+                o.setdefault("cv_dse_by_source", {})[src] = 0.0 if name == top else float(
+                    cluster_dse(results[top].pointwise[mask], r.pointwise[mask], units[mask]))
     return out
+
+
+def source_labels(frame: pd.DataFrame) -> np.ndarray:
+    """Each trial's source (a pragmods-only table has no source column)."""
+    if "source" in frame.columns:
+        return frame["source"].astype(str).to_numpy()
+    return np.full(len(frame), "pragmods")
 
 
 def ranked(names: Sequence[str], cv: Dict[str, dict]) -> List[str]:

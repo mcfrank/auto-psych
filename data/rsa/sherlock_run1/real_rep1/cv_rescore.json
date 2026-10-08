@@ -1,0 +1,962 @@
+{
+ "cell": "real_rep1",
+ "train_sha256": "2b80b8493153cc9956a23587e26728a6ef3db8e8397fdb20c090a693c4fb4f72",
+ "folds": 5,
+ "fold_seed": 0,
+ "settings": {
+  "num_warmup": 500,
+  "num_samples": 500,
+  "num_chains": 2,
+  "target_accept": 0.9,
+  "seed": 0
+ },
+ "n_trials": 39955,
+ "failed": {},
+ "models": {
+  "aspect_goal_listener": {
+   "elpd_cv": -17530.61546127018,
+   "cv_diff": 146.61372351581304,
+   "cv_dse": 93.03764819780872,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2232.5241696832622,
+    "mayn_demberg_2023": -3735.735870544443,
+    "mayn_demberg_2026": -4851.142996892579,
+    "pragmods": -3842.913709770759,
+    "sikos_2021": -2868.2987143791356
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 11.475666227170677,
+    "mayn_demberg_2023": 13.451957935857536,
+    "mayn_demberg_2026": 3.577527371744509,
+    "pragmods": 121.14467169730142,
+    "sikos_2021": 217.92595322075977
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 6.49471914888671,
+    "mayn_demberg_2023": 6.491448294796635,
+    "mayn_demberg_2026": 4.124793280250461,
+    "pragmods": 53.70588494255368,
+    "sikos_2021": 81.79257997698309
+   }
+  },
+  "capacity_limited_listener": {
+   "elpd_cv": -17623.776727938937,
+   "cv_diff": 239.77499018457092,
+   "cv_dse": 108.15037473987016,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2239.9341589396317,
+    "mayn_demberg_2023": -3728.232241583636,
+    "mayn_demberg_2026": -4873.049926610322,
+    "pragmods": -3868.980584171932,
+    "sikos_2021": -2913.579816633419
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 18.885655483540177,
+    "mayn_demberg_2023": 5.948328975050572,
+    "mayn_demberg_2026": 25.484457089487478,
+    "pragmods": 147.21154609847463,
+    "sikos_2021": 263.20705547504303
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 7.715576032727789,
+    "mayn_demberg_2023": 5.863246315041234,
+    "mayn_demberg_2026": 16.54333217349601,
+    "pragmods": 56.05999077004158,
+    "sikos_2021": 95.87081550705793
+   }
+  },
+  "contextual_contrast_listener": {
+   "elpd_cv": -17541.10840134905,
+   "cv_diff": 157.1066635946845,
+   "cv_dse": 81.33282553394619,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2237.3069116144698,
+    "mayn_demberg_2023": -3742.616286429893,
+    "mayn_demberg_2026": -4929.172112237657,
+    "pragmods": -3834.132770294936,
+    "sikos_2021": -2797.880320772094
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 16.258408158378188,
+    "mayn_demberg_2023": 20.332373821307556,
+    "mayn_demberg_2026": 81.60664271682253,
+    "pragmods": 112.36373222147859,
+    "sikos_2021": 147.50755961371806
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 8.43267469601766,
+    "mayn_demberg_2023": 13.163657010137198,
+    "mayn_demberg_2026": 35.246839297377505,
+    "pragmods": 58.015184648999245,
+    "sikos_2021": 63.60430265110226
+   }
+  },
+  "contrastive_margin_speaker": {
+   "elpd_cv": -17584.88268648422,
+   "cv_diff": 200.88094872985312,
+   "cv_dse": 104.27587277985187,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2235.381351572904,
+    "mayn_demberg_2023": -3733.8629018344054,
+    "mayn_demberg_2026": -4860.357802030759,
+    "pragmods": -3851.600939162173,
+    "sikos_2021": -2903.6796918839796
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 14.332848116812329,
+    "mayn_demberg_2023": 11.578989225819896,
+    "mayn_demberg_2026": 12.792332509924563,
+    "pragmods": 129.8319010887153,
+    "sikos_2021": 253.3069307256037
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 6.532358141174613,
+    "mayn_demberg_2023": 6.678034347635156,
+    "mayn_demberg_2026": 9.465911454661484,
+    "pragmods": 56.743076016314966,
+    "sikos_2021": 93.07587000911141
+   }
+  },
+  "costly_feature_speaker": {
+   "elpd_cv": -17611.72228262307,
+   "cv_diff": 227.72054486870547,
+   "cv_dse": 116.62748545433946,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2248.007526608779,
+    "mayn_demberg_2023": -3728.0734042763897,
+    "mayn_demberg_2026": -4849.146410646829,
+    "pragmods": -3859.4460083538243,
+    "sikos_2021": -2927.0489327372484
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 26.959023152687223,
+    "mayn_demberg_2023": 5.789491667804214,
+    "mayn_demberg_2026": 1.5809411259951958,
+    "pragmods": 137.67697028036673,
+    "sikos_2021": 276.6761715788725
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 12.336267668330013,
+    "mayn_demberg_2023": 2.764858580650578,
+    "mayn_demberg_2026": 7.687161449056166,
+    "pragmods": 61.20543706997443,
+    "sikos_2021": 99.48301344372726
+   }
+  },
+  "costly_speaker_l2_shared_prior": {
+   "elpd_cv": -17555.13771372891,
+   "cv_diff": 171.13597597454282,
+   "cv_dse": 89.34676431967141,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2223.8265133310606,
+    "mayn_demberg_2023": -3745.1582411526288,
+    "mayn_demberg_2026": -4873.061629481328,
+    "pragmods": -3850.8088878424983,
+    "sikos_2021": -2862.2824419213953
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 2.7780098749690296,
+    "mayn_demberg_2023": 22.874328544043237,
+    "mayn_demberg_2026": 25.49615996049397,
+    "pragmods": 129.03984976904076,
+    "sikos_2021": 211.90968076301942
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 1.8394331694599573,
+    "mayn_demberg_2023": 12.755883779240108,
+    "mayn_demberg_2026": 10.199069360092475,
+    "pragmods": 65.17457356253749,
+    "sikos_2021": 75.17805943882364
+   }
+  },
+  "costly_speaker_shared_prior": {
+   "elpd_cv": -17600.936456034746,
+   "cv_diff": 216.93471828037946,
+   "cv_dse": 102.18168956975899,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2225.172048544211,
+    "mayn_demberg_2023": -3742.5644700497633,
+    "mayn_demberg_2026": -4877.213196514671,
+    "pragmods": -3881.2554106943885,
+    "sikos_2021": -2874.7313302317134
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 4.123545088119499,
+    "mayn_demberg_2023": 20.280557441177734,
+    "mayn_demberg_2026": 29.64772699383684,
+    "pragmods": 159.48637262093098,
+    "sikos_2021": 224.35856907333755
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 1.9695117956918022,
+    "mayn_demberg_2023": 11.90669508662322,
+    "mayn_demberg_2026": 12.33545251096784,
+    "pragmods": 68.49899649033077,
+    "sikos_2021": 82.25338381690933
+   }
+  },
+  "costly_valence_l2_listener": {
+   "elpd_cv": -17545.237246400036,
+   "cv_diff": 161.23550864567005,
+   "cv_dse": 94.02130266623318,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2226.516548531403,
+    "mayn_demberg_2023": -3741.360918802693,
+    "mayn_demberg_2026": -4867.2668910115635,
+    "pragmods": -3845.4563791057276,
+    "sikos_2021": -2864.636508948649
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 5.468045075311238,
+    "mayn_demberg_2023": 19.077006194107526,
+    "mayn_demberg_2026": 19.701421490729444,
+    "pragmods": 123.68734103227007,
+    "sikos_2021": 214.2637477902731
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 3.2279179972259553,
+    "mayn_demberg_2023": 11.06233511820639,
+    "mayn_demberg_2026": 8.757439740193762,
+    "pragmods": 55.320866760068036,
+    "sikos_2021": 76.82940526708772
+   }
+  },
+  "distinctiveness_salience_listener": {
+   "elpd_cv": -17645.18299235405,
+   "cv_diff": 261.1812545996836,
+   "cv_dse": 112.21740307890636,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2255.8973003018004,
+    "mayn_demberg_2023": -3722.5067842521116,
+    "mayn_demberg_2026": -4856.77403428547,
+    "pragmods": -3870.572078589288,
+    "sikos_2021": -2939.432794925379
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 34.848796845708875,
+    "mayn_demberg_2023": 0.2228716435261049,
+    "mayn_demberg_2026": 9.208564764636321,
+    "pragmods": 148.80304051583062,
+    "sikos_2021": 289.060033767003
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 15.107346677184529,
+    "mayn_demberg_2023": 0.5779828421473109,
+    "mayn_demberg_2026": 11.588262222383886,
+    "pragmods": 61.52661265073256,
+    "sikos_2021": 103.6071144916138
+   }
+  },
+  "feature_parsimony_listener": {
+   "elpd_cv": -17659.68088433136,
+   "cv_diff": 275.67914657699293,
+   "cv_dse": 104.06175739211677,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2259.610610247413,
+    "mayn_demberg_2023": -3736.7131633768513,
+    "mayn_demberg_2026": -4958.399128303786,
+    "pragmods": -3850.808113750307,
+    "sikos_2021": -2854.149868653003
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 38.56210679132164,
+    "mayn_demberg_2023": 14.429250768265774,
+    "mayn_demberg_2026": 110.83365878295172,
+    "pragmods": 129.03907567684928,
+    "sikos_2021": 203.77710749462722
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 13.500135809555946,
+    "mayn_demberg_2023": 12.721389682371239,
+    "mayn_demberg_2026": 51.870305499753876,
+    "pragmods": 61.160059582477345,
+    "sikos_2021": 74.13540066787564
+   }
+  },
+  "graded_costly_valence_l2_listener": {
+   "elpd_cv": -17508.837578313593,
+   "cv_diff": 124.8358405592262,
+   "cv_dse": 80.92204679011586,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2233.092582419181,
+    "mayn_demberg_2023": -3748.7327070818837,
+    "mayn_demberg_2026": -4848.254758309116,
+    "pragmods": -3831.7230859937204,
+    "sikos_2021": -2847.0344445096907
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 12.044078963089305,
+    "mayn_demberg_2023": 26.44879447329822,
+    "mayn_demberg_2026": 0.6892887882822833,
+    "pragmods": 109.95404792026284,
+    "sikos_2021": 196.66168335131488
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 7.445093214902258,
+    "mayn_demberg_2023": 11.69323695767372,
+    "mayn_demberg_2026": 0.3729692760445388,
+    "pragmods": 51.671479446554535,
+    "sikos_2021": 64.12905109880003
+   }
+  },
+  "graded_semantics_listener": {
+   "elpd_cv": -17549.615679627503,
+   "cv_diff": 165.61394187313635,
+   "cv_dse": 87.07380551109908,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2231.942814159923,
+    "mayn_demberg_2023": -3737.2522526920648,
+    "mayn_demberg_2026": -4859.639331534579,
+    "pragmods": -3850.476838610547,
+    "sikos_2021": -2870.304442630386
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 10.894310703831252,
+    "mayn_demberg_2023": 14.968340083479234,
+    "mayn_demberg_2026": 12.073862013744474,
+    "pragmods": 128.7078005370895,
+    "sikos_2021": 219.93168147201004
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 5.652143324663139,
+    "mayn_demberg_2023": 8.778360265831616,
+    "mayn_demberg_2026": 7.710217775621315,
+    "pragmods": 70.58582101501322,
+    "sikos_2021": 80.90298100688739
+   }
+  },
+  "lexical_preemption_speaker": {
+   "elpd_cv": -17620.367488380678,
+   "cv_diff": 236.36575062631164,
+   "cv_dse": 108.30205430851348,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2239.9471101815902,
+    "mayn_demberg_2023": -3729.0568211011764,
+    "mayn_demberg_2026": -4870.30366946876,
+    "pragmods": -3864.6611105759666,
+    "sikos_2021": -2916.398777053185
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 18.898606725498666,
+    "mayn_demberg_2023": 6.7729084925908865,
+    "mayn_demberg_2026": 22.73819994792575,
+    "pragmods": 142.8920725025091,
+    "sikos_2021": 266.026015894809
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 7.849350807233566,
+    "mayn_demberg_2023": 5.497020591570395,
+    "mayn_demberg_2026": 15.466963850350654,
+    "pragmods": 54.20575032788341,
+    "sikos_2021": 96.85173212295803
+   }
+  },
+  "literal_listener": {
+   "elpd_cv": -18845.163775249734,
+   "cv_diff": 1461.1620374953673,
+   "cv_dse": 245.0049006905068,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2574.281390985072,
+    "mayn_demberg_2023": -3861.4922700211773,
+    "mayn_demberg_2026": -5286.283473191473,
+    "pragmods": -4269.2119443140145,
+    "sikos_2021": -2853.8946967379943
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 353.2328875289804,
+    "mayn_demberg_2023": 139.2083574125918,
+    "mayn_demberg_2026": 438.7180036706386,
+    "pragmods": 547.442906240557,
+    "sikos_2021": 203.52193557961846
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 127.58732735729093,
+    "mayn_demberg_2023": 61.614119197642346,
+    "mayn_demberg_2026": 151.90850471479095,
+    "pragmods": 120.05310401147817,
+    "sikos_2021": 74.16575015515195
+   }
+  },
+  "literal_pragmatic_mixture_listener": {
+   "elpd_cv": -17491.39678335056,
+   "cv_diff": 107.39504559619309,
+   "cv_dse": 122.62812368512837,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2234.8446580683276,
+    "mayn_demberg_2023": -3736.4173369724163,
+    "mayn_demberg_2026": -4888.53283781963,
+    "pragmods": -3721.7690380734575,
+    "sikos_2021": -2909.832912416733
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 13.796154612236023,
+    "mayn_demberg_2023": 14.133424363830727,
+    "mayn_demberg_2026": 40.96736829879592,
+    "pragmods": 0.0,
+    "sikos_2021": 259.4601512583572
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 5.346949236977178,
+    "mayn_demberg_2023": 10.115940885588484,
+    "mayn_demberg_2026": 20.142429578290294,
+    "pragmods": 0.0,
+    "sikos_2021": 94.18526511103889
+   }
+  },
+  "multimodal_graded_costly_l2_listener": {
+   "elpd_cv": -17506.083891913833,
+   "cv_diff": 122.08215415946688,
+   "cv_dse": 80.52233247207803,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2233.4069463024184,
+    "mayn_demberg_2023": -3748.762244639227,
+    "mayn_demberg_2026": -4847.565469520834,
+    "pragmods": -3829.483488493377,
+    "sikos_2021": -2846.865742957978
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 12.358442846326852,
+    "mayn_demberg_2023": 26.478332030641468,
+    "mayn_demberg_2026": 0.0,
+    "pragmods": 107.71445041991956,
+    "sikos_2021": 196.49298179960215
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 7.649925817937519,
+    "mayn_demberg_2023": 11.719710667226302,
+    "mayn_demberg_2026": 0.0,
+    "pragmods": 52.15879724339534,
+    "sikos_2021": 64.11636653955605
+   }
+  },
+  "multimodal_salience_listener": {
+   "elpd_cv": -17562.645289411383,
+   "cv_diff": 178.64355165701636,
+   "cv_dse": 112.99656950445608,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2240.2779020975377,
+    "mayn_demberg_2023": -3727.7462909059345,
+    "mayn_demberg_2026": -4859.398534337156,
+    "pragmods": -3828.8554472220126,
+    "sikos_2021": -2906.367114848743
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 19.229398641446096,
+    "mayn_demberg_2023": 5.462378297349005,
+    "mayn_demberg_2026": 11.833064816321894,
+    "pragmods": 107.08640914855505,
+    "sikos_2021": 255.994353690367
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 8.856278719987378,
+    "mayn_demberg_2023": 4.685315638843652,
+    "mayn_demberg_2026": 10.721598134259375,
+    "pragmods": 41.23438393509941,
+    "sikos_2021": 93.7260050487647
+   }
+  },
+  "naive_speaker_listener": {
+   "elpd_cv": -17688.9331648774,
+   "cv_diff": 304.93142712303234,
+   "cv_dse": 99.90457759386939,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2252.8485955929455,
+    "mayn_demberg_2023": -3744.499192053009,
+    "mayn_demberg_2026": -4965.053656761478,
+    "pragmods": -3872.496795847279,
+    "sikos_2021": -2854.034924622688
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 31.80009213685389,
+    "mayn_demberg_2023": 22.215279444423686,
+    "mayn_demberg_2026": 117.48818724064404,
+    "pragmods": 150.7277577738214,
+    "sikos_2021": 203.66216346431202
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 12.475449864115689,
+    "mayn_demberg_2023": 14.884662570838326,
+    "mayn_demberg_2026": 51.82311116859265,
+    "pragmods": 83.71285086336701,
+    "sikos_2021": 74.15886029775764
+   }
+  },
+  "rsa_l1": {
+   "elpd_cv": -17623.60350894518,
+   "cv_diff": 239.60177119081345,
+   "cv_dse": 119.38417161875596,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2254.746057641237,
+    "mayn_demberg_2023": -3722.2839126085855,
+    "mayn_demberg_2026": -4855.934168261794,
+    "pragmods": -3851.946528743195,
+    "sikos_2021": -2938.692841690369
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 33.697554185145236,
+    "mayn_demberg_2023": 0.0,
+    "mayn_demberg_2026": 8.368698740960099,
+    "pragmods": 130.17749066973738,
+    "sikos_2021": 288.32008053199297
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 15.058342457564653,
+    "mayn_demberg_2023": 0.0,
+    "mayn_demberg_2026": 11.279181855601678,
+    "pragmods": 59.22151763141268,
+    "sikos_2021": 103.31567863513824
+   }
+  },
+  "rsa_l1_salience": {
+   "elpd_cv": -17628.186394097327,
+   "cv_diff": 244.1846563429608,
+   "cv_dse": 109.02407160826927,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2243.597035137981,
+    "mayn_demberg_2023": -3726.2015926468075,
+    "mayn_demberg_2026": -4873.296429048934,
+    "pragmods": -3864.8365206628396,
+    "sikos_2021": -2920.2548166007655
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 22.54853168188947,
+    "mayn_demberg_2023": 3.917680038221988,
+    "mayn_demberg_2026": 25.730959528100357,
+    "pragmods": 143.06748258938205,
+    "sikos_2021": 269.8820554423896
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 9.185379568477579,
+    "mayn_demberg_2023": 4.564936940147572,
+    "mayn_demberg_2026": 17.577734055059867,
+    "pragmods": 54.478506164933705,
+    "sikos_2021": 97.97251532061264
+   }
+  },
+  "rsa_l1_shared_prior": {
+   "elpd_cv": -17625.98284543517,
+   "cv_diff": 241.9811076808037,
+   "cv_dse": 107.981466979374,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2239.966701358024,
+    "mayn_demberg_2023": -3728.106674293501,
+    "mayn_demberg_2026": -4874.181884644667,
+    "pragmods": -3870.816131800174,
+    "sikos_2021": -2912.9114533388038
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 18.918197901932217,
+    "mayn_demberg_2023": 5.822761684915349,
+    "mayn_demberg_2026": 26.616415123832667,
+    "pragmods": 149.0470937267164,
+    "sikos_2021": 262.5386921804279
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 7.823763219230373,
+    "mayn_demberg_2023": 5.712395814286803,
+    "mayn_demberg_2026": 16.895296900830164,
+    "pragmods": 56.33430670783748,
+    "sikos_2021": 95.61960933294151
+   }
+  },
+  "rsa_l2": {
+   "elpd_cv": -17576.945471389867,
+   "cv_diff": 192.9437336355004,
+   "cv_dse": 112.91499069262618,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2244.3979646753364,
+    "mayn_demberg_2023": -3726.605410423661,
+    "mayn_demberg_2026": -4851.431739950197,
+    "pragmods": -3838.555298632769,
+    "sikos_2021": -2915.9550577079035
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 23.34946121924486,
+    "mayn_demberg_2023": 4.321497815075418,
+    "mayn_demberg_2026": 3.866270429362885,
+    "pragmods": 116.78626055931136,
+    "sikos_2021": 265.58229654952765
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 11.17636167206101,
+    "mayn_demberg_2023": 3.7663795642046156,
+    "mayn_demberg_2026": 8.05765465417519,
+    "pragmods": 59.27684333646995,
+    "sikos_2021": 96.81789706436163
+   }
+  },
+  "rsa_l2_shared_prior": {
+   "elpd_cv": -17595.326395706335,
+   "cv_diff": 211.32465795196913,
+   "cv_dse": 103.13340170174429,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2236.244804909117,
+    "mayn_demberg_2023": -3730.784100442957,
+    "mayn_demberg_2026": -4865.77772066,
+    "pragmods": -3859.9881779210423,
+    "sikos_2021": -2902.5315917732214
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 15.196301453025626,
+    "mayn_demberg_2023": 8.500187834371445,
+    "mayn_demberg_2026": 18.212251139166256,
+    "pragmods": 138.21913984758476,
+    "sikos_2021": 252.15883061484556
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 6.7007395879497,
+    "mayn_demberg_2023": 6.418895794023386,
+    "mayn_demberg_2026": 12.30787966665556,
+    "pragmods": 58.04719449118432,
+    "sikos_2021": 92.5260423183402
+   }
+  },
+  "satisficing_alternatives_speaker": {
+   "elpd_cv": -17599.24914329935,
+   "cv_diff": 215.24740554498203,
+   "cv_dse": 104.87466900556292,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2237.0933269734396,
+    "mayn_demberg_2023": -3731.5167049270203,
+    "mayn_demberg_2026": -4864.50785667104,
+    "pragmods": -3862.998634511293,
+    "sikos_2021": -2903.132620216555
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 16.04482351734805,
+    "mayn_demberg_2023": 9.232792318434804,
+    "mayn_demberg_2026": 16.942387150205832,
+    "pragmods": 141.22959643783543,
+    "sikos_2021": 252.75985905817925
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 6.974140909192038,
+    "mayn_demberg_2023": 6.007617837799324,
+    "mayn_demberg_2026": 12.071018580223944,
+    "pragmods": 56.712901675846396,
+    "sikos_2021": 92.66420830331226
+   }
+  },
+  "softmax_belief_listener": {
+   "elpd_cv": -17611.224603506453,
+   "cv_diff": 227.22286575208636,
+   "cv_dse": 98.16791153953693,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2234.578261687775,
+    "mayn_demberg_2023": -3737.499933286755,
+    "mayn_demberg_2026": -4898.424185773695,
+    "pragmods": -3835.845969682734,
+    "sikos_2021": -2904.8762530754902
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 13.529758231683445,
+    "mayn_demberg_2023": 15.21602067816957,
+    "mayn_demberg_2026": 50.858716252861086,
+    "pragmods": 114.07693160927647,
+    "sikos_2021": 254.5034919171144
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 5.812899054177687,
+    "mayn_demberg_2023": 11.477953946986068,
+    "mayn_demberg_2026": 23.12591435421977,
+    "pragmods": 69.682108010543,
+    "sikos_2021": 92.53196867004556
+   }
+  },
+  "softmax_costly_valence_l2_listener": {
+   "elpd_cv": -17554.01428088028,
+   "cv_diff": 170.01254312591482,
+   "cv_dse": 93.6887862028861,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2225.2699247275127,
+    "mayn_demberg_2023": -3744.402923434477,
+    "mayn_demberg_2026": -4877.385849772691,
+    "pragmods": -3840.669004946143,
+    "sikos_2021": -2866.286577999457
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 4.22142127142115,
+    "mayn_demberg_2023": 22.119010825891564,
+    "mayn_demberg_2026": 29.820380251856477,
+    "pragmods": 118.89996687268558,
+    "sikos_2021": 215.91381684108137
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 1.8035730379614467,
+    "mayn_demberg_2023": 12.656299727922088,
+    "mayn_demberg_2026": 12.294798360558705,
+    "pragmods": 57.30587588817416,
+    "sikos_2021": 77.23619726646768
+   }
+  },
+  "softmax_graded_costly_l2_listener": {
+   "elpd_cv": -17540.595699275786,
+   "cv_diff": 156.59396152141926,
+   "cv_dse": 81.82684050742026,
+   "cv_converged": false,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2229.297123519581,
+    "mayn_demberg_2023": -3751.391045135232,
+    "mayn_demberg_2026": -4859.589483968349,
+    "pragmods": -3848.301454835747,
+    "sikos_2021": -2852.0165918168786
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 8.248620063489398,
+    "mayn_demberg_2023": 29.107132526646637,
+    "mayn_demberg_2026": 12.024014447514674,
+    "pragmods": 126.53241676228936,
+    "sikos_2021": 201.6438306585028
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 4.226956800970471,
+    "mayn_demberg_2023": 12.425340620848814,
+    "mayn_demberg_2026": 5.152027566173136,
+    "pragmods": 66.18859029100955,
+    "sikos_2021": 63.75707194098413
+   }
+  },
+  "softmax_multimodal_graded_costly_l2": {
+   "elpd_cv": -17537.867213086538,
+   "cv_diff": 153.86547533217163,
+   "cv_dse": 82.85086042495409,
+   "cv_converged": false,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2229.972767503681,
+    "mayn_demberg_2023": -3750.747105033205,
+    "mayn_demberg_2026": -4858.481216560836,
+    "pragmods": -3846.503462695823,
+    "sikos_2021": -2852.162661292992
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 8.924264047589531,
+    "mayn_demberg_2023": 28.463192424619592,
+    "mayn_demberg_2026": 10.915747040002316,
+    "pragmods": 124.73442462236562,
+    "sikos_2021": 201.78990013461635
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 4.549680807377974,
+    "mayn_demberg_2023": 12.210281239503555,
+    "mayn_demberg_2026": 4.7988129002024404,
+    "pragmods": 66.12927987412856,
+    "sikos_2021": 63.80407229396376
+   }
+  },
+  "softmax_valence_l2_listener": {
+   "elpd_cv": -17585.738144864656,
+   "cv_diff": 201.7364071102893,
+   "cv_dse": 103.8476277997302,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2231.1089948801473,
+    "mayn_demberg_2023": -3736.5537446091444,
+    "mayn_demberg_2026": -4881.614537684371,
+    "pragmods": -3838.113003141988,
+    "sikos_2021": -2898.347864549008
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 10.060491424055726,
+    "mayn_demberg_2023": 14.269832000558836,
+    "mayn_demberg_2026": 34.049068163536504,
+    "pragmods": 116.34396506853045,
+    "sikos_2021": 247.97510339063228
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 4.2580786860705855,
+    "mayn_demberg_2023": 9.960294260048487,
+    "mayn_demberg_2026": 16.565203337251244,
+    "pragmods": 59.47573764707207,
+    "sikos_2021": 90.93359441260823
+   }
+  },
+  "valence_salience_l2_listener": {
+   "elpd_cv": -17564.306213518943,
+   "cv_diff": 180.30447576457664,
+   "cv_dse": 113.01260571767311,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2239.462039439182,
+    "mayn_demberg_2023": -3728.1879794054594,
+    "mayn_demberg_2026": -4859.820339337079,
+    "pragmods": -3830.759027510477,
+    "sikos_2021": -2906.0768278267465
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 18.41353598309024,
+    "mayn_demberg_2023": 5.904066796873849,
+    "mayn_demberg_2026": 12.254869816244536,
+    "pragmods": 108.98998943701963,
+    "sikos_2021": 255.70406666837061
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 8.501843882658957,
+    "mayn_demberg_2023": 4.756483312179844,
+    "mayn_demberg_2026": 10.696312411488602,
+    "pragmods": 40.95584447744127,
+    "sikos_2021": 93.63670052789763
+   }
+  },
+  "valence_salience_listener": {
+   "elpd_cv": -17597.25628717299,
+   "cv_diff": 213.25454941862336,
+   "cv_dse": 117.75268578931963,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2243.27918618537,
+    "mayn_demberg_2023": -3725.5030716240017,
+    "mayn_demberg_2026": -4868.887272766513,
+    "pragmods": -3843.0584327832075,
+    "sikos_2021": -2916.5283238138973
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 22.230682729278215,
+    "mayn_demberg_2023": 3.219159015416153,
+    "mayn_demberg_2026": 21.321803245678893,
+    "pragmods": 121.28939470975001,
+    "sikos_2021": 266.1555626555214
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 9.568335055842303,
+    "mayn_demberg_2023": 4.098943760943992,
+    "mayn_demberg_2026": 15.480457483894153,
+    "pragmods": 42.18255493641244,
+    "sikos_2021": 96.66560426922445
+   }
+  },
+  "capacity_limited_distinctive_l2": {
+   "elpd_cv": -17392.067789307945,
+   "cv_diff": 8.06605155357829,
+   "cv_dse": 10.436539991957236,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2221.50016570601,
+    "mayn_demberg_2023": -3753.3171660604403,
+    "mayn_demberg_2026": -4877.679366638242,
+    "pragmods": -3889.198329744876,
+    "sikos_2021": -2650.372761158376
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 0.4516622499186269,
+    "mayn_demberg_2023": 31.033253451854762,
+    "mayn_demberg_2026": 30.11389711740776,
+    "pragmods": 167.42929167141847,
+    "sikos_2021": 0.0
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 0.4386595694174755,
+    "mayn_demberg_2023": 14.233625516958835,
+    "mayn_demberg_2026": 11.699769149348603,
+    "pragmods": 81.6415710195582,
+    "sikos_2021": 0.0
+   }
+  },
+  "contrastive_multimodal_l2_listener": {
+   "elpd_cv": -17394.903391258234,
+   "cv_diff": 10.901653503868147,
+   "cv_dse": 16.60947801847677,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2221.0485034560916,
+    "mayn_demberg_2023": -3754.2360782547967,
+    "mayn_demberg_2026": -4880.511841399324,
+    "pragmods": -3885.1049315482637,
+    "sikos_2021": -2654.0020365997575
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 0.0,
+    "mayn_demberg_2023": 31.952165646211142,
+    "mayn_demberg_2026": 32.94637187849003,
+    "pragmods": 163.3358934748062,
+    "sikos_2021": 3.629275441381651
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 0.0,
+    "mayn_demberg_2023": 14.706991296886319,
+    "mayn_demberg_2026": 12.799441884738654,
+    "pragmods": 82.28884652031253,
+    "sikos_2021": 1.8735476125842019
+   }
+  },
+  "distinctive_multimodal_l2_listener": {
+   "elpd_cv": -17413.472985785007,
+   "cv_diff": 29.47124803064071,
+   "cv_dse": 22.65980288468407,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2221.5288450115586,
+    "mayn_demberg_2023": -3754.45456452662,
+    "mayn_demberg_2026": -4879.3611885581695,
+    "pragmods": -3893.1489315135996,
+    "sikos_2021": -2664.9794561750614
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 0.48034155546702095,
+    "mayn_demberg_2023": 32.17065191803431,
+    "mayn_demberg_2026": 31.795719037335402,
+    "pragmods": 171.37989344014204,
+    "sikos_2021": 14.606695016685535
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 0.23176213663627662,
+    "mayn_demberg_2023": 14.699680510658125,
+    "mayn_demberg_2026": 12.292892379488714,
+    "pragmods": 84.31087462010137,
+    "sikos_2021": 5.718835962813072
+   }
+  },
+  "surprisal_multimodal_l2_listener_2": {
+   "elpd_cv": -17384.001737754366,
+   "cv_diff": 0.0,
+   "cv_dse": 0.0,
+   "cv_converged": true,
+   "cv_by_source": {
+    "mayn_demberg_2022": -2221.0882215039055,
+    "mayn_demberg_2023": -3753.652711737563,
+    "mayn_demberg_2026": -4879.291378246015,
+    "pragmods": -3876.86815878146,
+    "sikos_2021": -2653.101267485423
+   },
+   "cv_behind_by_source": {
+    "mayn_demberg_2022": 0.03971804781394894,
+    "mayn_demberg_2023": 31.36879912897757,
+    "mayn_demberg_2026": 31.72590872518049,
+    "pragmods": 155.09912070800237,
+    "sikos_2021": 2.7285063270469436
+   },
+   "cv_dse_by_source": {
+    "mayn_demberg_2022": 0.4252514351925375,
+    "mayn_demberg_2023": 14.439792726404457,
+    "mayn_demberg_2026": 12.277949805352526,
+    "pragmods": 75.00716407648228,
+    "sikos_2021": 2.7165117343603096
+   }
+  }
+ }
+}

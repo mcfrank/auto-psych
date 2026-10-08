@@ -83,6 +83,30 @@ def cell_bundle(cell_dir: Path, notes: Dict[str, Any]) -> dict:
             trusted=bool(s["loo_reliable"] and s["converged"]),
             hypothesis=_first_sentence(hypotheses.get(name, "")),
         ))
+    # Grouped CV on the training conditions, per source: from the loop's own
+    # standing (cells that selected on CV) or a later re-score (cv_rescore.json).
+    cv_models, cv_origin = {}, None
+    if any("cv_by_source" in s for s in pre.values()):
+        cv_models, cv_origin = pre, "the loop's grouped CV"
+    elif (cell_dir / "cv_rescore.json").exists():
+        rescore = json.loads((cell_dir / "cv_rescore.json").read_text())
+        cv_models = rescore["models"]
+        cv_origin = (f"grouped CV re-scored after the run ({rescore['folds']} folds, "
+                     f"NUTS {rescore['settings']['num_chains']} x {rescore['settings']['num_samples']})")
+    for m in models:
+        row = cv_models.get(m["name"]) or {}
+        m["cv_by_source"] = row.get("cv_by_source")
+        m["cv_diff"] = row.get("cv_diff")
+    specialists = []
+    if cv_models:
+        sources = sorted(next(iter(cv_models.values()))["cv_by_source"])
+        for src in sources:
+            best_name = min(cv_models, key=lambda n: cv_models[n]["cv_behind_by_source"][src])
+            near = [n for n, r in cv_models.items()
+                    if r["cv_behind_by_source"][src] <= 2 * r["cv_dse_by_source"][src]]
+            specialists.append(dict(source=src, model=best_name, n_within_2se=len(near),
+                                    status=next((m["status"] for m in models if m["name"] == best_name), "pruned"),
+                                    seed=best_name in seeds))
     counts = {k: sum(1 for e in ledger if e["outcome"] == k) for k in ("admitted", "rejected", "pruned")}
     usage = json.loads((cell_dir / "token_usage_summary.json").read_text())
     rec_path = cell_dir / "recovery" / "recovery.json"
@@ -105,7 +129,7 @@ def cell_bundle(cell_dir: Path, notes: Dict[str, Any]) -> dict:
         best_seed=best_seed.split(":", 1)[1], best_seed_by_source=held[best_seed]["by_source"],
         exported_heldout=_held_for(best, held, live), n_heldout_models=len(held),
         exported_rank=1 + sorted((v["lpd"] for v in held.values()), reverse=True).index(_held_for(best, held, live)["lpd"]),
-        models=models, recovery=recovery,
+        models=models, recovery=recovery, cv_origin=cv_origin, specialists=specialists,
         cost=usage["cost_usd"], agent_runs=usage["n_calls"], tokens=usage["total_tokens"],
         wall=notes.get("wall"), max_rss_gb=notes.get("max_rss_gb"),
         report=f"cells/{cell_dir.name}.html",

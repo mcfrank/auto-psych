@@ -145,9 +145,11 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
 
   <section aria-labelledby="h-source" id="source-section">
     <div class="section-head">
-      <h2 id="h-source">Where the held-out gain comes from</h2>
-      <p>Real-data cells: held-out lpd by source, relative to the best starting model, for the exported model and
-        the three models that did best on held-out conditions.</p>
+      <h2 id="h-source">By source</h2>
+      <p>Real-data cells, relative to the best starting model, per source. First the held-out conditions (the test)
+        for the exported model and the three models that did best there; then grouped cross-validation over the
+        training conditions for the exported model and each source's best model. Models specialise: no single model
+        is best on every source, and the best model on each source is listed last.</p>
     </div>
     <div id="source"></div>
   </section>
@@ -296,28 +298,54 @@ details summary { cursor: pointer; color: var(--ink-2); font-size: 13px; }
   // held-out by source (real cells)
   const real = B.cells.filter((c) => !c.recovery);
   if (!real.length) { $("source-section").hidden = true; $("gen-section").hidden = true; }
+  function sourceTable(caption, sources, rows, diffsOf, total) {
+    const diffs = rows.map(diffsOf);
+    const maxAbs = Math.max(1, ...diffs.flat().map(Math.abs));
+    const wrap = h("div", "scroll-x");
+    const t = h("table");
+    t.innerHTML = `<caption class="sub" style="text-align:left;padding:8px 0 4px">${esc(caption)}</caption>` +
+      `<thead><tr><th>Model</th><th>Status</th>${sources.map((s) => `<th class="num">${esc(s)}</th>`).join("")}<th class="num">Total</th></tr></thead>`;
+    const body = h("tbody");
+    rows.forEach((m, i) => {
+      const tr = h("tr");
+      tr.innerHTML = `<td class="name">${esc(m.name)}</td><td><span class="pill">${m.status}${m.seed ? " · seed" : ""}</span></td>` +
+        diffs[i].map((d) => {
+          const w = Math.abs(d) / maxAbs * 50, left = d >= 0 ? 50 : 50 - w;
+          return `<td><div class="bar-cell"><span class="v">${fmt(d)}</span><div class="bar-track"><span class="mid"></span><span class="fill" style="left:${left}%;width:${w}%;background:${d >= 0 ? "var(--pos)" : "var(--neg)"}"></span></div></div></td>`;
+        }).join("") + `<td class="num">${total(m, diffs[i])}</td>`;
+      body.appendChild(tr);
+    });
+    t.appendChild(body); wrap.appendChild(t);
+    return wrap;
+  }
   for (const c of real) {
     const sources = Object.keys(c.best_seed_by_source);
     const top = [...c.models].sort((a, b) => b.heldout - a.heldout).filter((m) => m.name !== c.exported).slice(0, 3);
     const rows = [c.models.find((m) => m.name === c.exported), ...top].filter(Boolean);
-    const diffs = rows.map((m) => sources.map((s) => m.by_source[s] - c.best_seed_by_source[s]));
-    const maxAbs = Math.max(1, ...diffs.flat().map(Math.abs));
     const card = h("div", "card");
     card.appendChild(h("h3", null, c.cell));
-    const wrap = h("div", "scroll-x"); card.appendChild(wrap);
-    const t = h("table");
-    t.innerHTML = `<thead><tr><th>Model</th><th>Status</th>${sources.map((s) => `<th class="num">${esc(s)}</th>`).join("")}<th class="num">Total</th></tr></thead>`;
-    const body = h("tbody");
-    rows.forEach((m, i) => {
-      const tr = h("tr");
-      tr.innerHTML = `<td class="name">${esc(m.name)}</td><td><span class="pill">${m.status}</span></td>` +
-        diffs[i].map((d) => {
-          const w = Math.abs(d) / maxAbs * 50, left = d >= 0 ? 50 : 50 - w;
-          return `<td><div class="bar-cell"><span class="v">${fmt(d)}</span><div class="bar-track"><span class="mid"></span><span class="fill" style="left:${left}%;width:${w}%;background:${d >= 0 ? "var(--pos)" : "var(--neg)"}"></span></div></div></td>`;
-        }).join("") + `<td class="num">${fmt(m.heldout)} <span class="sub">± ${m.se.toFixed(1)}</span></td>`;
-      body.appendChild(tr);
-    });
-    t.appendChild(body); wrap.appendChild(t);
+    card.appendChild(sourceTable("Held-out conditions (the test): lpd vs the best starting model", sources, rows,
+      (m) => sources.map((s) => m.by_source[s] - c.best_seed_by_source[s]),
+      (m) => `${fmt(m.heldout)} <span class="sub">± ${m.se.toFixed(1)}</span>`));
+    const seedRow = c.models.find((m) => m.name === c.best_seed);
+    if (c.cv_origin && seedRow && seedRow.cv_by_source) {
+      const names = [c.exported, ...c.specialists.map((sp) => sp.model)];
+      const cvRows = [...new Set(names)].map((n) => c.models.find((m) => m.name === n)).filter((m) => m && m.cv_by_source);
+      const cvSources = Object.keys(seedRow.cv_by_source);
+      card.appendChild(sourceTable(`Training conditions, ${c.cv_origin}: ELPD-CV vs ${c.best_seed}`, cvSources, cvRows,
+        (m) => cvSources.map((s) => m.cv_by_source[s] - seedRow.cv_by_source[s]),
+        (m, d) => fmt(d.reduce((a, b) => a + b, 0))));
+      const sp = h("div", "scroll-x");
+      const st = h("table");
+      st.innerHTML = `<caption class="sub" style="text-align:left;padding:8px 0 4px">Best model on each source (grouped CV)</caption>` +
+        `<thead><tr><th>Source</th><th>Best model</th><th>Status at the end</th><th class="num">Models within 2 SE</th><th class="num">Held-out on that source vs ${esc(c.best_seed)}</th></tr></thead>` +
+        `<tbody>${c.specialists.map((x) => {
+          const m = c.models.find((mm) => mm.name === x.model);
+          const ho = m && m.by_source[x.source] != null ? fmt(m.by_source[x.source] - c.best_seed_by_source[x.source]) : "–";
+          return `<tr><td class="name">${esc(x.source)}</td><td class="name">${esc(x.model)}</td><td><span class="pill">${x.status}${x.seed ? " · seed" : ""}</span></td><td class="num">${x.n_within_2se}</td><td class="num">${ho}</td></tr>`;
+        }).join("")}</tbody>`;
+      sp.appendChild(st); card.appendChild(sp);
+    }
     $("source").appendChild(card);
     // what generalised
     const g = h("div", "card");

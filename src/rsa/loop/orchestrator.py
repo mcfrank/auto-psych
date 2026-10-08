@@ -62,7 +62,7 @@ from src.rsa.fit import FitSettings, RSAFit, compare
 from src.rsa.loop import brief as briefs
 from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, ModelFailure
 from src.rsa.loop.code_gate import code_problems
-from src.rsa.loop.cv import CVResult, compare_cv, cv_pointwise, make_folds
+from src.rsa.loop.cv import CVResult, compare_cv, cv_pointwise, make_folds, source_labels
 from src.rsa.loop.gates import GateConfig, admit, fit_with_refit, read_candidate
 from src.rsa.loop.novelty import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
@@ -269,7 +269,7 @@ class RSALoop:
         if self.cfg.selection == "cv":
             self._cv_for(list(out))
             have = {n: self.cv[n] for n in out if self.cv[n] is not None}
-            cv = compare_cv(have, self.folds.units) if have else {}
+            cv = compare_cv(have, self.folds.units, source_labels(self.trials.frame)) if have else {}
             for name, s in out.items():
                 c = cv.get(name, dict(elpd_cv=float("-inf"), cv_diff=float("inf"), cv_dse=0.0, cv_converged=False))
                 s.update(c)
@@ -336,8 +336,15 @@ class RSALoop:
                 return "admitted this round, not yet scored"
             s = standing[n]
             what = "on held-out training conditions (grouped CV)" if self.cfg.selection == "cv" else "(PSIS-LOO)"
-            return (f"best {what}" if s["sel_diff"] == 0
+            text = (f"best {what}" if s["sel_diff"] == 0
                     else f"{s['sel_diff']:.1f} ± {s['sel_dse']:.1f} nats behind the best {what}")
+            by = s.get("cv_behind_by_source")
+            if by and len(by) > 1:
+                # Models specialise by source: say where this one leads and lags.
+                parts = [("best" if v == 0 else f"{v:.1f} ± {s['cv_dse_by_source'][k]:.1f} behind") + f" on {k}"
+                         for k, v in by.items()]
+                text += "; by source: " + ", ".join(parts)
+            return text
         # Ranked as the refinement menu shows them: live models best first
         # (unscored last), pruned ones by how far behind the best they were.
         def behind(n):

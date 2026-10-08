@@ -19,6 +19,10 @@ def test_run1_overview_builds_from_the_committed_cells():
     exported = next(m for m in rep1["models"] if m["status"] == "exported")
     assert exported["insample"] == 0.0 and round(exported["heldout"], 1) == -7.5
     assert max(m["heldout"] for m in rep1["models"]) > 60  # pruned models generalised better
+    # Per-source grouped CV (re-scored after run 1): each source's best model.
+    assert rep1["cv_origin"] and {sp["source"] for sp in rep1["specialists"]} == {
+        "mayn_demberg_2022", "mayn_demberg_2023", "mayn_demberg_2026", "pragmods", "sikos_2021"}
+    assert all(m["cv_by_source"] for m in rep1["models"])
     rec = cells["recovery_salience_rep2"]["recovery"]
     assert rec["ground_truth"] == "rsa_l1_salience" and rec["recovered"] and rec["best_seed_rmse"] == 0.049
     html = render(b)

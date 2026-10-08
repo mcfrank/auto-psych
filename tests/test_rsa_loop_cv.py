@@ -43,3 +43,15 @@ def test_compare_cv_ranks_by_elpd_with_a_clustered_se():
     out = compare_cv({"good": good, "bad": bad}, units)
     assert out["good"]["cv_diff"] == 0 and out["bad"]["cv_diff"] == pytest.approx(6.0)
     assert out["bad"]["cv_dse"] > 0 and out["good"]["cv_dse"] == 0
+
+
+def test_compare_cv_reports_each_source_behind_its_own_best():
+    units = np.repeat(np.arange(4), 3)
+    sources = np.array(["a"] * 6 + ["b"] * 6)
+    # x leads on a, y leads on b.
+    x = CVResult(pointwise=np.array([-0.2] * 6 + [-1.0] * 6), converged=True)
+    y = CVResult(pointwise=np.array([-0.8] * 3 + [-0.6] * 3 + [-0.5] * 6), converged=True)
+    out = compare_cv({"x": x, "y": y}, units, sources)
+    assert out["x"]["cv_behind_by_source"] == {"a": 0.0, "b": pytest.approx(3.0)}
+    assert out["y"]["cv_behind_by_source"] == {"a": pytest.approx(3.0), "b": 0.0}
+    assert out["y"]["cv_dse_by_source"]["a"] > 0 and out["x"]["cv_dse_by_source"]["a"] == 0
