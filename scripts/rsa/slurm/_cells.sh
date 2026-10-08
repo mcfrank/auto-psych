@@ -66,3 +66,17 @@ rsa_loop_cli_has_seed() {
   help="$("$python" -m src.rsa.loop.run --help 2>&1)" || true
   grep -qE -- '(^|[[:space:]])--seed[[:space:]]' <<< "$help"
 }
+
+# The sweep's venv: $GROUP_HOME/venvs/auto-psych_<sweep> (Sherlock's rule:
+# Python environments live in $GROUP_HOME, not on $SCRATCH), else
+# $WORK_ROOT/venv. UV_PROJECT_ENVIRONMENT, if exported, wins.
+rsa_default_venv() {
+  local work_root="$1"
+  if [[ -n "${UV_PROJECT_ENVIRONMENT:-}" ]]; then
+    echo "$UV_PROJECT_ENVIRONMENT"
+  elif [[ -n "${GROUP_HOME:-}" ]]; then
+    echo "$GROUP_HOME/venvs/auto-psych_$(basename "$work_root")"
+  else
+    echo "$work_root/venv"
+  fi
+}

@@ -61,6 +61,10 @@ class Args:
     besides the agents' own sampling)."""
     novelty_rmse_threshold: float = DEFAULT_NOVELTY_RMSE_THRESHOLD
     prune_dse_multiplier: float = DEFAULT_PRUNE_DSE_MULTIPLIER
+    selection: Literal["cv", "loo"] = "cv"
+    """Select, prune and export on grouped cross-validation over training
+    conditions (cv; PI decision 2026-10-08) or trial-level PSIS-LOO (loo)."""
+    cv_folds: int = 5
     fit_time_limit_sec: float = FIT_TIME_LIMIT_SEC
     coding_agent: Optional[Literal["claude", "opencode"]] = None
     """Agent backend; defaults to CODING_AGENT, then opencode (Gemini)."""
@@ -113,6 +117,7 @@ def main(args: Args) -> int:
         settings=FitSettings(num_warmup=args.num_warmup, num_samples=args.num_samples, num_chains=args.num_chains,
                              seed=args.seed),
         novelty_threshold=args.novelty_rmse_threshold, prune_dse_multiplier=args.prune_dse_multiplier,
+        selection=args.selection, cv_folds=args.cv_folds,
         fit_time_limit_sec=args.fit_time_limit_sec, report_title=args.title, agent_network=args.agent_network,
     )
     spawn = coding_agent_spawner(

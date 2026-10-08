@@ -94,7 +94,8 @@ def cell_bundle(cell_dir: Path, notes: Dict[str, Any]) -> dict:
             exported_rmse=rec["best_pool_rmse_to_gt"], live_rmse=rec["live_pool_rmse_to_gt"],
             gap=rec["heldout_lpd_best_minus_gt"], gap_se=rec["heldout_se"], recovered=rec["recovered"],
             threshold=rec["rmse_threshold"],
-            best_seed=notes.get("best_seed"), best_seed_rmse=notes.get("best_seed_rmse_to_gt"),
+            best_seed=rec.get("best_seed", notes.get("best_seed")),
+            best_seed_rmse=rec.get("best_seed_rmse_to_gt", notes.get("best_seed_rmse_to_gt")),
         )
     best_seed = max((k for k in held if k.startswith("seed:")), key=lambda k: held[k]["lpd"])
     return dict(

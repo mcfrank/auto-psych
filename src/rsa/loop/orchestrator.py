@@ -62,6 +62,7 @@ from src.rsa.fit import FitSettings, RSAFit, compare
 from src.rsa.loop import brief as briefs
 from src.rsa.loop.fitting import FIT_TIME_LIMIT_SEC, ModelFailure
 from src.rsa.loop.code_gate import code_problems
+from src.rsa.loop.cv import CVResult, compare_cv, cv_pointwise, make_folds
 from src.rsa.loop.gates import GateConfig, admit, fit_with_refit, read_candidate
 from src.rsa.loop.novelty import (
     DEFAULT_NOVELTY_RMSE_THRESHOLD,
@@ -114,6 +115,11 @@ class LoopConfig:
     fit_time_limit_sec: Optional[float] = FIT_TIME_LIMIT_SEC
     lenses: List[str] = field(default_factory=lambda: list(briefs.DEFAULT_RSA_LENSES))
     report_title: str = "RSA inner loop"
+    selection: str = "cv"
+    """What the loop selects, prunes and exports on: "cv", grouped
+    cross-validation over training conditions (src.rsa.loop.cv; PI decision
+    2026-10-08), or "loo", trial-level PSIS-LOO (Sherlock run 1)."""
+    cv_folds: int = 5
     agent_network: bool = False
     """Whether agents have internet access (see `coding_agent_spawner`); the
     brief tells them which."""
@@ -162,6 +168,11 @@ class RSALoop:
             raise ValueError(f"{self.cfg.responses_path} has no included forced-choice trials")
         self.clusters = cluster_ids(self.trials.frame)
         self.pool = novelty_pool()
+        if self.cfg.selection not in ("cv", "loo"):
+            raise ValueError(f"selection must be 'cv' or 'loo', not {self.cfg.selection!r}")
+        self.cv: Dict[str, Optional[CVResult]] = {}
+        if self.cfg.selection == "cv":
+            self.folds = make_folds(self.responses, self.dir / ".cv", self.cfg.cv_folds, seed=self.cfg.settings.seed)
         self.gate_cfg = GateConfig(
             responses_path=self.responses, cache_dir=self.dir / ".fit_cache",
             settings=self.cfg.settings, novelty_threshold=self.cfg.novelty_threshold,
@@ -218,7 +229,34 @@ class RSALoop:
         return name
 
     # ---------- scoring ----------
+    def _cv_for(self, names: List[str]) -> None:
+        """Compute (once per model) the grouped-CV lpd of the named models,
+        several at a time. A model whose fold fit fails has no CV (None) and
+        is untrusted for selection."""
+        todo = [n for n in names if n not in self.cv]
+        if not todo:
+            return
+        workers = self.cfg.fit_workers or default_fit_workers()
+
+        def one(name: str):
+            try:
+                return name, cv_pointwise(self.models_dir / f"{name}.py", name, self.responses, self.folds,
+                                          self.cfg.settings, self.dir / ".fit_cache",
+                                          time_limit_sec=self.gate_cfg.time_limit_sec,
+                                          workers=self.cfg.cv_folds)
+            except ModelFailure as exc:
+                print(f"  {name}: no grouped CV ({exc})")
+                return name, None
+
+        parallel = 1 if self.gate_cfg.time_limit_sec is None else max(1, workers // self.cfg.cv_folds)
+        with ThreadPoolExecutor(max_workers=parallel) as pool:
+            for name, result in pool.map(one, todo):
+                self.cv[name] = result
+
     def standing(self) -> Dict[str, dict]:
+        """Every live model's PSIS-LOO and, with grouped CV, its ELPD-CV. The
+        ``sel_*`` fields are the selection criterion's (cfg.selection) and
+        ``trusted`` says whether the model may be selected or prune others."""
         table = compare({n: m.fit for n, m in self.live.items()})
         out = {}
         for name, row in table.iterrows():
@@ -227,12 +265,25 @@ class RSALoop:
                              elpd_diff=float(row["elpd_diff"]), dse=float(row["dse"]), p_loo=float(row["p_loo"]),
                              loo_reliable=not loo.unreliable, converged=self.live[name].fit.converged,
                              convergence_problems="; ".join(self.live[name].fit.convergence_problems))
+            out[name]["trusted"] = out[name]["loo_reliable"] and out[name]["converged"]
+        if self.cfg.selection == "cv":
+            self._cv_for(list(out))
+            have = {n: self.cv[n] for n in out if self.cv[n] is not None}
+            cv = compare_cv(have, self.folds.units) if have else {}
+            for name, s in out.items():
+                c = cv.get(name, dict(elpd_cv=float("-inf"), cv_diff=float("inf"), cv_dse=0.0, cv_converged=False))
+                s.update(c)
+                s["trusted"] = s["trusted"] and c["cv_converged"]
+                s.update(sel_elpd=c["elpd_cv"], sel_diff=c["cv_diff"], sel_dse=c["cv_dse"])
+        else:
+            for s in out.values():
+                s.update(sel_elpd=s["elpd_loo"], sel_diff=s["elpd_diff"], sel_dse=s["dse"])
         return out
 
     def incumbent(self, standing: Dict[str, dict]) -> str:
-        trusted = [n for n, s in standing.items() if s["loo_reliable"] and s["converged"]]
+        trusted = [n for n, s in standing.items() if s["trusted"]]
         pool = trusted or list(standing)
-        return max(pool, key=lambda n: standing[n]["elpd_loo"])
+        return max(pool, key=lambda n: standing[n]["sel_elpd"])
 
     def score(self, round_index: int, events: List[dict]) -> dict:
         from src.rsa.compare_seeds import cell_table
@@ -284,11 +335,13 @@ class RSALoop:
             if n not in standing:
                 return "admitted this round, not yet scored"
             s = standing[n]
-            return "best" if s["elpd_diff"] == 0 else f"{s['elpd_diff']:.1f} ± {s['dse']:.1f} nats behind the best"
+            what = "on held-out training conditions (grouped CV)" if self.cfg.selection == "cv" else "(PSIS-LOO)"
+            return (f"best {what}" if s["sel_diff"] == 0
+                    else f"{s['sel_diff']:.1f} ± {s['sel_dse']:.1f} nats behind the best {what}")
         # Ranked as the refinement menu shows them: live models best first
         # (unscored last), pruned ones by how far behind the best they were.
         def behind(n):
-            return standing[n]["elpd_diff"] if n in standing else float("inf")
+            return standing[n]["sel_diff"] if n in standing else float("inf")
         live = [briefs.ZooModel(n, self.live[n].hypothesis, self.models_dir / f"{n}.py", desc(n))
                 for n in sorted(self.live, key=behind)]
         pruned_dir = self.models_dir / "pruned"
@@ -426,24 +479,30 @@ class RSALoop:
     # ---------- end of the run ----------
     def end(self) -> dict:
         standing = self.standing()
-        trusted = [n for n, s in standing.items() if s["loo_reliable"] and s["converged"]]
+        trusted = [n for n, s in standing.items() if s["trusted"]]
         events = []
+        criterion = "grouped CV" if self.cfg.selection == "cv" else "PSIS-LOO"
         if trusted:
-            best = max(trusted, key=lambda n: standing[n]["elpd_loo"])
-            pw = {n: np.asarray(self.live[n].fit.loo().loo.loo_i).ravel() for n in trusted}
+            best = max(trusted, key=lambda n: standing[n]["sel_elpd"])
+            if self.cfg.selection == "cv":
+                pw = {n: self.cv[n].pointwise for n in trusted}
+                clusters = self.folds.units
+            else:
+                pw = {n: np.asarray(self.live[n].fit.loo().loo.loo_i).ravel() for n in trusted}
+                clusters = self.clusters
             for n in trusted:
                 if n == best:
                     continue
                 diff = float(pw[best].sum() - pw[n].sum())
-                dse = cluster_dse(pw[best], pw[n], self.clusters)
+                dse = cluster_dse(pw[best], pw[n], clusters)
                 if diff > self.cfg.prune_dse_multiplier * dse:
-                    self._retire(n, "pruned", f"elpd_diff {diff:.1f} > {self.cfg.prune_dse_multiplier} x clustered dse {dse:.1f} vs {best}")
-                    events.append(dict(name=n, outcome="pruned", reason=f"{diff:.1f} nats behind {best} (clustered dse {dse:.1f})"))
+                    self._retire(n, "pruned", f"elpd_diff {diff:.1f} > {self.cfg.prune_dse_multiplier} x clustered dse {dse:.1f} vs {best} ({criterion})")
+                    events.append(dict(name=n, outcome="pruned", reason=f"{diff:.1f} nats behind {best} on {criterion} (clustered dse {dse:.1f})"))
         while len(self.live) > self.cfg.max_live_models:
             standing = self.standing()
             keep = self.incumbent(standing)
             order = sorted((n for n in standing if n != keep),
-                           key=lambda n: (standing[n]["loo_reliable"] and standing[n]["converged"], standing[n]["elpd_loo"]))
+                           key=lambda n: (standing[n]["trusted"], standing[n]["sel_elpd"]))
             self._retire(order[0], "pruned", f"retired by the cap of {self.cfg.max_live_models} live models")
             events.append(dict(name=order[0], outcome="retired", reason="live-set cap"))
         entry = self.score(self.cfg.max_iterations, events)

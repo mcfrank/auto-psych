@@ -7,17 +7,32 @@
 #
 # Honors, if already exported:
 #   REPO            the auto-psych checkout on branch auto-rsa ($HOME/auto-psych)
-#   WORK_ROOT       the sweep root ($SCRATCH/auto-psych/rsa_run1)
-#   OPENCODE_BIN_DIR  bin/ of an npm-installed opencode-ai (see below)
+#   WORK_ROOT       the sweep root ($SCRATCH/auto-psych/rsa_run2)
+#   UV_PROJECT_ENVIRONMENT  the venv ($GROUP_HOME/venvs/auto-psych_<sweep>; rsa_default_venv)
+#   SSL_CERT_FILE   CA bundle (el7's /etc/pki/tls/certs/ca-bundle.crt when it exists)
+#   OPENCODE_BIN_DIR  bin/ of an npm-installed opencode-ai (see below; default
+#                   $GROUP_HOME/software/npm-global/bin when it holds opencode)
 #   NODEJS_MODULE   the nodejs module an npm-installed opencode runs with
 set -euo pipefail
 
 RSA_SLURM_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export WORK_ROOT="${WORK_ROOT:-${SCRATCH:-${GROUP_SCRATCH:?set WORK_ROOT (or SCRATCH)}}/auto-psych/rsa_run1}"
-# Shared with subjective randomness: the per-WORK_ROOT venv ($WORK_ROOT/venv,
-# VENV_PY), caches off $HOME, modules, .secrets, BLAS threads.
-source "$RSA_SLURM_DIR/../../subjective_randomness/slurm/_env.sh"
+export WORK_ROOT="${WORK_ROOT:-${SCRATCH:-${GROUP_SCRATCH:?set WORK_ROOT (or SCRATCH)}}/auto-psych/rsa_run2}"
 source "$RSA_SLURM_DIR/_cells.sh"
+# Sherlock run 1 (2026-10-07) needed these exported by hand:
+# - the venv in $GROUP_HOME (Sherlock's rule), not $WORK_ROOT/venv on $SCRATCH;
+export UV_PROJECT_ENVIRONMENT="$(rsa_default_venv "$WORK_ROOT")"
+# - uv's standalone Python looks for /etc/ssl/cert.pem, which el7 lacks, and
+#   every HTTPS fetch failed (verification stays on; only the bundle's path);
+if [[ -z "${SSL_CERT_FILE:-}" && -f /etc/pki/tls/certs/ca-bundle.crt ]]; then
+  export SSL_CERT_FILE=/etc/pki/tls/certs/ca-bundle.crt
+fi
+# - the opencode module is too old; the npm install in $GROUP_HOME is the standard one.
+if [[ -z "${OPENCODE_BIN_DIR:-}" && -n "${GROUP_HOME:-}" && -x "$GROUP_HOME/software/npm-global/bin/opencode" ]]; then
+  export OPENCODE_BIN_DIR="$GROUP_HOME/software/npm-global/bin"
+fi
+# Shared with subjective randomness: VENV_PY, caches off $HOME, modules,
+# .secrets, BLAS threads.
+source "$RSA_SLURM_DIR/../../subjective_randomness/slurm/_env.sh"
 
 # Everything the sweep reads or writes, outside every agent tree. Agents see
 # only their own tree (built from agent_src) and the loop's results dir in it.

@@ -57,7 +57,7 @@ def loop(tmp_path):
         responses_path=responses, seed_models_dir=seeds, results_dir=tmp_path / "model_loop",
         max_iterations=1, candidate_count=3,
         settings=FitSettings(num_warmup=300, num_samples=300, num_chains=2),
-        fit_time_limit_sec=None,
+        fit_time_limit_sec=None, cv_folds=2,
     )
     return RSALoop(cfg, fake_agent)
 
@@ -77,6 +77,9 @@ def test_a_round_admits_repairs_retries_and_exports(loop):
     assert set(history[1]["standing"]) == {"literal_listener", "rsa_l1", "deeper_listener", "salience_listener_2"}
     # The literal listener loses by far more than 2 clustered SEs and is pruned at the end.
     assert "literal_listener" not in final["standing"]
+    # Selection and the prune ran on grouped CV.
+    assert all("elpd_cv" in s for s in final["standing"].values())
+    assert any("(grouped CV)" in e["detail"] for e in ledger if e["outcome"] == "pruned")
     assert (out / "models" / "pruned" / "literal_listener.py").exists()
     assert (out / "best_model.py").exists()
     export = json.loads((out / "export.json").read_text())

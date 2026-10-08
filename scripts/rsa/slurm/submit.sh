@@ -22,14 +22,14 @@ export WORK_ROOT="${WORK_ROOT:-${SCRATCH:-${GROUP_SCRATCH:?set WORK_ROOT (or SCR
 # an agent's self-check ~90 s, ~2.5 GB. Agents dominate a cell's wall time:
 #   5 rounds x (agents <= 3 x AGENT_TIMEOUT_SEC [first try, retry, repair]
 #   + ~5 min of fits) + ~2 min of scoring.
-CPUS_PER_TASK="${CPUS_PER_TASK:-8}"    # 6 agents' self-checks, or a round's 6-12 fits, at once
-MEM="${MEM:-32G}"                      # loop ~5 GB + 6 self-checks x ~2.5 GB + agents; normal allows <= 8 GB/core
-TIME="${TIME:-24:00:00}"               # worst case ~11 h (every agent to its timeout); > 48 h adds --qos=long
+CPUS_PER_TASK="${CPUS_PER_TASK:-4}"    # run 1: 6 cells x 4 CPUs fill the mcfrank node; fits run one per CPU
+MEM="${MEM:-30G}"                      # run 1: MaxRSS 15-19 GB per cell
+TIME="${TIME:-24:00:00}"               # run 1: 4-7 h per cell; > 48 h needs PARTITION=mcfrank (normal refuses it)
 SETUP_CPUS="${SETUP_CPUS:-4}"          # two ground-truth fits, ~70 s each
 SETUP_MEM="${SETUP_MEM:-8G}"
 SETUP_TIME="${SETUP_TIME:-01:00:00}"
 # ============================================================================
-PARTITION="${PARTITION:-normal}"
+PARTITION="${PARTITION:-mcfrank}"   # the lab's owner node (24 cores, 192 GB): never preempted, off fairshare, 7-day cap
 ARRAY="${ARRAY:-0-5}"
 MAX_PARALLEL="${MAX_PARALLEL:-6}"
 
@@ -41,9 +41,18 @@ hours_of() {
   h=$((10#${h:-0})); m=$((10#${m:-0})); s=$((10#${s:-0}))
   echo $(( days * 24 + h + ( (m > 0 || s > 0) ? 1 : 0 ) ))
 }
-qos_args() {
-  if (( $(hours_of "$1") > 48 )); then echo "--qos=long"; fi
+# --qos=long is not on this account (Sherlock run 1: "Invalid qos
+# specification"). mcfrank runs under QOS owner, up to 7 days; normal refuses
+# anything over 48 h. Checked before anything is submitted.
+check_time() {
+  local h; h=$(hours_of "$1")
+  if (( h > 48 )) && [[ "$PARTITION" == normal ]]; then
+    echo "ERROR: $1 is over normal's 48 h; use PARTITION=mcfrank (up to 7 days)" >&2; exit 1
+  fi
+  if (( h > 168 )); then echo "ERROR: $1 is over the 7-day cap" >&2; exit 1; fi
 }
+check_time "$TIME"
+check_time "$SETUP_TIME"
 
 [[ -f "$WORK_ROOT/data/real/train.csv" ]] || { echo "ERROR: no prepared data in $WORK_ROOT/data; run prepare_data.sh first" >&2; exit 1; }
 mkdir -p "$WORK_ROOT/logs"
@@ -51,19 +60,18 @@ cd "$WORK_ROOT/logs"
 SLURM_DIR="$REPO/scripts/rsa/slurm"
 
 echo "WORK_ROOT=$WORK_ROOT"
-echo "array $ARRAY%$MAX_PARALLEL: $CPUS_PER_TASK CPUs, $MEM, $TIME $(qos_args "$TIME") on $PARTITION"
+echo "array $ARRAY%$MAX_PARALLEL: $CPUS_PER_TASK CPUs, $MEM, $TIME on $PARTITION"
 dependency=()
 if [[ "${SKIP_SETUP:-}" != 1 ]]; then
-  echo "setup: $SETUP_CPUS CPUs, $SETUP_MEM, $SETUP_TIME $(qos_args "$SETUP_TIME")"
-  # shellcheck disable=SC2046  # qos_args prints zero or one word
+  echo "setup: $SETUP_CPUS CPUs, $SETUP_MEM, $SETUP_TIME"
   setup_id=$(sbatch --parsable --export=ALL -p "$PARTITION" -c "$SETUP_CPUS" --mem="$SETUP_MEM" \
-    -t "$SETUP_TIME" $(qos_args "$SETUP_TIME") "$SLURM_DIR/rsa_setup.sbatch")
+    -t "$SETUP_TIME" "$SLURM_DIR/rsa_setup.sbatch")
   echo "submitted setup: $setup_id"
   dependency=(--dependency="afterok:$setup_id")
 fi
 # shellcheck disable=SC2046
 array_id=$(sbatch --parsable --export=ALL -p "$PARTITION" -c "$CPUS_PER_TASK" --mem="$MEM" \
-  -t "$TIME" $(qos_args "$TIME") --array="$ARRAY%$MAX_PARALLEL" \
+  -t "$TIME" --array="$ARRAY%$MAX_PARALLEL" \
   ${dependency[@]+"${dependency[@]}"} "$SLURM_DIR/rsa_loop_array.sbatch")
 echo "submitted array: $array_id"
 echo "monitor: bash $SLURM_DIR/rsa_status.sh   (logs in $WORK_ROOT/logs)"

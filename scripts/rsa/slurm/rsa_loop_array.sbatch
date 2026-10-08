@@ -1,9 +1,9 @@
 #!/bin/bash
 #SBATCH --job-name=rsa_loop
-#SBATCH --partition=normal
+#SBATCH --partition=mcfrank
 #SBATCH --array=0-5
-#SBATCH --cpus-per-task=8
-#SBATCH --mem=32GB
+#SBATCH --cpus-per-task=4
+#SBATCH --mem=30GB
 #SBATCH --time=24:00:00
 #SBATCH --output=%x_%A_%a.out
 #SBATCH --error=%x_%A_%a.out
@@ -249,7 +249,7 @@ else
   # Warn-only records of what the agents did: did any write the ground
   # truth's name (it may be a coincidence), and what did they look at.
   if [[ -n "$GT" ]]; then
-    grep -rIl -- "$GT" "$RESULTS"/round_* > "$CELL_DIR/gt_name_mentions.txt" 2>/dev/null || true
+    grep -rIlw -- "$GT" "$RESULTS"/round_* > "$CELL_DIR/gt_name_mentions.txt" 2>/dev/null || true
     if [[ -s "$CELL_DIR/gt_name_mentions.txt" ]]; then
       echo "[task $TASK] WARNING: agent output names the ground truth '$GT' in $(wc -l < "$CELL_DIR/gt_name_mentions.txt") file(s): $CELL_DIR/gt_name_mentions.txt"
     else

@@ -79,3 +79,7 @@ def test_a_run_whose_best_model_is_the_ground_truth_recovers_it(simulated):
                         seed_models=seeds, **QUICK))
     assert verdict["recovered"]
     assert verdict["best_pool_rmse_to_gt"] < 0.01
+    # The verdict is the RMSE alone; the seeds' distances are its baseline.
+    assert verdict["closest_live_model"] == "found_depth_two"
+    assert verdict["best_seed"] == "literal_listener" and verdict["best_seed_rmse_to_gt"] > 0.01
+    assert not verdict["seeds_would_pass"]

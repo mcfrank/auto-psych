@@ -19,9 +19,10 @@
 # cells, and it deletes the recovery datasets (setup re-simulates them from
 # the new split).
 #
-# VENV_MODE=sync (default): `uv sync --locked --no-build` -- the lock exactly,
+# VENV_MODE=sync: `uv sync --locked --no-build` -- the lock exactly,
 #   failing (not building from source) if a package has no glibc-2.17 wheel.
-# VENV_MODE=wheels: the subjective-randomness recipe (uv pip install
+# VENV_MODE=wheels (default; on Sherlock the locked sync fails: contourpy
+# 1.3.3 has no glibc-2.17 wheel): the subjective-randomness recipe (uv pip install
 #   --only-binary) with the RSA stack pinned to uv.lock's versions. Use it if
 #   the sync fails on a wheel.
 set -euo pipefail
@@ -42,8 +43,8 @@ rsa_require_opencode
 [[ -n "${GOOGLE_API_KEY:-}" ]] || echo "WARNING: GOOGLE_API_KEY is not set; setup and the loop will refuse to start without it"
 
 # --- 1. venv -------------------------------------------------------------------
-echo "[prepare] venv at $UV_PROJECT_ENVIRONMENT (python $UV_PYTHON, mode ${VENV_MODE:-sync})"
-case "${VENV_MODE:-sync}" in
+echo "[prepare] venv at $UV_PROJECT_ENVIRONMENT (python $UV_PYTHON, mode ${VENV_MODE:-wheels})"
+case "${VENV_MODE:-wheels}" in
   sync)
     uv sync --locked --no-build ;;
   wheels)

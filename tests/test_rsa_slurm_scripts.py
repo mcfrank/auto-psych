@@ -15,6 +15,7 @@ from __future__ import annotations
 import fnmatch
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -192,9 +193,22 @@ def test_the_array_runs_the_production_settings():
 
 def test_resources_are_the_measured_sizes_and_overridable():
     text = (SLURM / "submit.sh").read_text()
-    for knob in ('CPUS_PER_TASK="${CPUS_PER_TASK:-8}"', 'MEM="${MEM:-32G}"', 'TIME="${TIME:-24:00:00}"',
-                 'SETUP_TIME="${SETUP_TIME:-01:00:00}"', "HANDOFF_sherlock_run1.md", "--qos=long"):
+    for knob in ('CPUS_PER_TASK="${CPUS_PER_TASK:-4}"', 'MEM="${MEM:-30G}"', 'TIME="${TIME:-24:00:00}"',
+                 'SETUP_TIME="${SETUP_TIME:-01:00:00}"', 'PARTITION="${PARTITION:-mcfrank}"'):
         assert knob in text
+    # --qos=long is not on the account (Sherlock run 1): never added.
+    assert not re.search(r"sbatch[^\n]*--qos", text) and "qos_args" not in text
+
+
+def test_a_long_limit_on_normal_stops_before_submitting(tmp_path):
+    fake = tmp_path / "bin"
+    fake.mkdir()
+    (fake / "sbatch").write_text("#!/bin/sh\necho SUBMITTED >&2; echo 1\n")
+    (fake / "sbatch").chmod(0o755)
+    env = dict(os.environ, PATH=f"{fake}:{os.environ['PATH']}", WORK_ROOT=str(tmp_path / "w"),
+               PARTITION="normal", TIME="3-00:00:00", SKIP_SETUP="1")
+    out = subprocess.run(["bash", str(SLURM / "submit.sh")], capture_output=True, text=True, env=env)
+    assert out.returncode != 0 and "PARTITION=mcfrank" in out.stderr and "SUBMITTED" not in out.stderr
 
 
 # --- the cell map ---------------------------------------------------------------------

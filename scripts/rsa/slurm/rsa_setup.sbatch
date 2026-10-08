@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=rsa_setup
-#SBATCH --partition=normal
+#SBATCH --partition=mcfrank
 #SBATCH --cpus-per-task=4
 #SBATCH --mem=8GB
 #SBATCH --time=01:00:00
