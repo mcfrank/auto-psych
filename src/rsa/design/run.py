@@ -10,16 +10,21 @@
    query (`src.rsa.design_space.context_pool`; the displays the experiment
    page can show). A model undefined on some pool display is left out of the
    design, on record (``screened_out``), as main's design does.
-3. `src.rsa.design.eig.select` picks ``n_select`` displays, each answered by
-   every participant (``n_responses`` = participants per experiment).
-4. `src.rsa.design.eig.power` scores the design at each of ``power_ns`` on
-   fresh scenarios: how often the model that generated the data ends with the
-   highest posterior.
+3. A participant answers ``trials_per_participant`` designed displays (plus
+   catch trials), a balanced subset of the design's D (`trial_lists` with
+   ``n_trials``), so each display gets ``participants x trials / D``
+   responses. For each D in ``displays``, `src.rsa.design.eig.select` picks D
+   displays at that many responses each. Fewer displays means more responses
+   per display; more displays, more kinds of display: the power table says
+   which tells the models apart better.
+4. `src.rsa.design.eig.power` scores each design at each of
+   ``power_participants`` on fresh scenarios: how often the model that
+   generated the data ends with the highest posterior.
 
-Writes ``<out>/design.json`` (a `src.rsa.experiment.design.Design`: build the
-page with ``python -m src.rsa.experiment.build --design``) and
-``<out>/eig.json`` (the picks, their joint EIG, the power table, the models,
-the settings).
+Writes ``<out>/design_d<D>.json`` per D (a `src.rsa.experiment.design.Design`:
+build the page with ``python -m src.rsa.experiment.build --design ... --n-trials
+<trials_per_participant>``) and ``<out>/eig.json`` (per D the picks, their joint
+EIG and the power table; the models; the settings).
 """
 
 from __future__ import annotations
@@ -82,11 +87,13 @@ class Args:
     cache: Path
     """Fit cache (promote's, to reuse its fits)."""
     out: Path
-    n_select: int = 60
-    """Designed displays per participant (64 trials with 2 catch trials and the practice trial)."""
-    n_responses: int = 100
-    """Participants per experiment: every one answers every designed display."""
-    power_ns: List[int] = field(default_factory=lambda: [40, 60, 100, 150])
+    trials_per_participant: int = 10
+    """Designed displays a participant answers (12 test trials with 2 catch trials; PI 2026-10-08)."""
+    participants: int = 200
+    """Participants per experiment the designs are chosen for."""
+    displays: List[int] = field(default_factory=lambda: [10, 20, 30])
+    """Design sizes D to compare (each at least trials_per_participant)."""
+    power_participants: List[int] = field(default_factory=lambda: [100, 200, 300])
     n_draws: int = 200
     n_scenarios: int = 2000
     n_power_scenarios: int = 4000
@@ -122,31 +129,49 @@ def main(args: Args) -> dict:
     if len(names) < 2:
         raise ValueError(f"{len(names)} usable models: a design needs at least two to tell apart")
 
-    sel = select(probs, valid, args.n_select, n_responses=args.n_responses, n_scenarios=args.n_scenarios, seed=args.seed)
-    table = power(probs, valid, sel.indices, args.power_ns, n_scenarios=args.n_power_scenarios, seed=args.seed + 101,
-                  names=names)
-    specs = tuple(TrialSpec.from_context(pool[i], label=f"eig_{k:02d}") for k, i in enumerate(sel.indices))
-    design = Design(name=f"eig_{len(names)}models_n{args.n_responses}", specs=specs)
-    (out / "design.json").write_text(json.dumps(design.to_json(), indent=1))
+    t = args.trials_per_participant
+    designs = []
+    for d in args.displays:
+        if d < t:
+            raise ValueError(f"a design of {d} displays cannot fill {t} trials per participant")
+        per_display = responses_per_display(args.participants, t, d)
+        sel = select(probs, valid, d, n_responses=per_display, n_scenarios=args.n_scenarios, seed=args.seed)
+        ns = [responses_per_display(n, t, d) for n in args.power_participants]
+        table = power(probs, valid, sel.indices, ns, n_scenarios=args.n_power_scenarios, seed=args.seed + 101,
+                      names=names)
+        for row, n in zip(table, args.power_participants):
+            row["participants"] = n
+        specs = tuple(TrialSpec.from_context(pool[i], label=f"eig_{k:02d}") for k, i in enumerate(sel.indices))
+        design = Design(name=f"eig_{len(names)}models_d{d}_n{args.participants}", specs=specs)
+        (out / f"design_d{d}.json").write_text(json.dumps(design.to_json(), indent=1))
+        designs.append(dict(
+            displays=d, responses_per_display=per_display, design_sha256=design.sha256,
+            n_eig_picks=sum(s == "eig" for s in sel.sources),
+            picks=[dict(display=pool_record(pool[i]), joint_eig_bits=b, source=s)
+                   for i, b, s in zip(sel.indices, sel.joint_eig_bits, sel.sources)],
+            power=table,
+        ))
+        print(f"D={d} ({per_display} responses per display at N={args.participants}): "
+              f"{designs[-1]['n_eig_picks']} EIG picks, joint EIG {sel.joint_eig_bits[-1]:.2f} of "
+              f"{np.log2(len(names)):.2f} bits", flush=True)
+        for row in table:
+            print(f"  N={row['participants']}: P(generating model wins) {row['p_correct']:.3f} ± "
+                  f"{row['p_correct_se']:.3f}, joint EIG {row['joint_eig_bits']:.2f} bits", flush=True)
     record = dict(
-        models=names, screened_out=screened, n_select=args.n_select, n_responses=args.n_responses,
+        models=names, screened_out=screened, trials_per_participant=t, participants=args.participants,
         pool_size=len(pool), pool_digest=pool_digest(pool), n_draws=args.n_draws, n_scenarios=args.n_scenarios,
         seed=args.seed, fit_settings=vars(settings),
         data_sha256=hashlib.sha256(Path(args.data).read_bytes()).hexdigest(),
-        design_sha256=design.sha256,
-        picks=[dict(display=pool_record(pool[i]), joint_eig_bits=b, source=s)
-               for i, b, s in zip(sel.indices, sel.joint_eig_bits, sel.sources)],
-        n_eig_picks=sum(s == "eig" for s in sel.sources),
-        power=table,
+        designs=designs,
     )
     (out / "eig.json").write_text(json.dumps(record, indent=1))
-    print(f"design: {sum(s == 'eig' for s in sel.sources)} EIG picks + "
-          f"{sum(s != 'eig' for s in sel.sources)} single-response fill; joint EIG "
-          f"{sel.joint_eig_bits[-1]:.2f} of {np.log2(len(names)):.2f} bits")
-    for row in table:
-        print(f"  N={row['n_responses']}: P(generating model wins) {row['p_correct']:.3f} ± {row['p_correct_se']:.3f}, "
-              f"joint EIG {row['joint_eig_bits']:.2f} bits")
     return record
+
+
+def responses_per_display(participants: int, trials: int, displays: int) -> int:
+    """Each display's responses when every participant answers ``trials`` of
+    ``displays`` in balanced subsets (rounded down: the conservative count)."""
+    return max(1, participants * trials // displays)
 
 
 if __name__ == "__main__":

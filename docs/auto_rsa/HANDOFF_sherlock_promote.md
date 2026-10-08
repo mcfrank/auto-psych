@@ -52,16 +52,19 @@ sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slu
 
 ## 3. Design experiment 1 and its power (about 1 h, after step 2)
 
+If the first `design.sbatch` (submitted with the old 60-display, 64-trial settings) ran, discard its
+`design_n100/`: the PI set 12 trials per participant on 2026-10-08. Pull, then:
+
 ```bash
 sbatch --chdir="$HOME/auto-psych" -o "$WORK_ROOT/logs/%x_%j.out" scripts/rsa/slurm/design.sbatch
 ```
 
 - **What it does:**
-  - picks 60 displays for 100 participants by joint EIG (`N_RESPONSES` overrides);
-  - scores the design at 40, 60, 100 and 150 participants (`POWER_NS` overrides): how often the model that generated simulated data ends with the highest posterior.
+  - a participant answers 10 designed displays (plus 2 catch trials), a balanced subset of the design;
+  - for designs of 10, 20 and 30 displays (`DISPLAYS`), it picks the displays by joint EIG for 200 participants (`PARTICIPANTS`);
+  - it scores each design at 100, 200 and 300 participants (`POWER_PARTICIPANTS`): how often the model that generated simulated data ends with the highest posterior.
 - **Reuses:** step 2's fits; only `rsa_l2` is fitted.
-- **Writes:** `data/rsa/live_seeds/design_n100/design.json` and `eig.json`. Commit both.
-- **Report:** the log's last lines, the power table.
+- **Writes:** `data/rsa/live_seeds/design_t10/design_d{10,20,30}.json` and `eig.json`. Commit them.
+- **Report:** the log's power lines (one block per design size).
 
-The power table sets the number of participants per experiment (PI decision pending).
-If the PI wants the design for another N, rerun with `N_RESPONSES=<N>`; it writes `design_n<N>/`.
+The power tables set the design size and the number of participants per experiment (PI decision pending).

@@ -35,17 +35,23 @@ def test_a_design_separates_literal_from_pragmatic_listeners_and_builds(tmp_path
     df = pd.read_csv(DEFAULT_TRIALS_CSV)
     data = tmp_path / "trials.csv"
     df[df.experiment.isin(["E8_levels", "E9_twins"])].to_csv(data, index=False)
-    record = main(Args(models_dir=models, data=data, cache=tmp_path / "cache", out=tmp_path / "out", n_select=6,
-                       n_responses=30, power_ns=[5, 60], n_draws=20, n_scenarios=300, n_power_scenarios=600,
-                       num_warmup=200, num_samples=200, num_chains=2))
+    record = main(Args(models_dir=models, data=data, cache=tmp_path / "cache", out=tmp_path / "out",
+                       trials_per_participant=4, participants=40, displays=[4, 8], power_participants=[2, 60],
+                       n_draws=20, n_scenarios=300, n_power_scenarios=600, num_warmup=200, num_samples=200,
+                       num_chains=2))
     assert record["models"] == names and record["screened_out"] == []
-    assert record["n_eig_picks"] >= 1 and len(record["picks"]) == 6
-    # The first pick tells a literal listener from a pragmatic one: a word true of two objects.
-    first = record["picks"][0]["display"]
-    assert first["utterance"] is not None
-    few, many = record["power"]
+    small, large = record["designs"]
+    assert (small["displays"], small["responses_per_display"]) == (4, 40)  # 40 people x 4 trials / 4 displays
+    assert (large["displays"], large["responses_per_display"]) == (8, 20)
+    assert len(large["picks"]) == 8 and large["n_eig_picks"] >= 1
+    # The first pick tells a literal listener from a pragmatic one: a word, not a prior query.
+    assert small["picks"][0]["display"]["utterance"] is not None
+    few, many = small["power"]
+    assert (few["participants"], many["participants"]) == (2, 60)
     assert many["p_correct"] > few["p_correct"] and many["joint_eig_bits"] > few["joint_eig_bits"]
-    # The design builds a participant's trial list.
-    design = Design.load(tmp_path / "out" / "design.json")
-    assert len(trial_list(design, seed=1, list_index=0, n_catch=2)["trials"]) >= 6
-    assert json.loads((tmp_path / "out" / "eig.json").read_text())["design_sha256"] == design.sha256
+    # A design builds balanced 4-trial lists.
+    design = Design.load(tmp_path / "out" / "design_d8.json")
+    assert design.sha256 == large["design_sha256"]
+    lst = trial_list(design, seed=1, list_index=0, n_catch=2, n_trials=4)
+    assert sum(not t["is_catch"] for t in lst["trials"] if t["phase"] == "test") == 4
+    assert json.loads((tmp_path / "out" / "eig.json").read_text())["trials_per_participant"] == 4

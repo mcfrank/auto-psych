@@ -58,6 +58,7 @@ EXPERIMENT_ASSETS_DIR = PROJECT_ASSETS_DIR / "rsa_reference" / "experiment"
 IMAGES_DIR = EXPERIMENT_ASSETS_DIR / "images"
 
 TRIAL_LISTS_SCHEMA = "rsa_trial_lists/1"
+SUBSET_STREAM = 2**31 - 1  # the seed stream of the design's shuffled order for balanced subsets
 N_BASES = 3
 PRACTICE_SHAPE = (3, 2)
 
@@ -354,7 +355,12 @@ def trial_list(
     if n_trials is not None:
         if not 1 <= n_trials <= len(indices):
             raise ValueError(f"n_trials {n_trials} is not 1..{len(indices)}")
-        indices = sorted(int(i) for i in rng.choice(indices, size=n_trials, replace=False))
+        # Balanced subsets: one shuffled order of the design per seed, and list k
+        # takes the next n_trials of it (cyclically), so every display is seen by
+        # the same number of lists over each D / gcd(D, n_trials) consecutive lists.
+        order = np.random.default_rng([seed, SUBSET_STREAM]).permutation(len(indices))
+        start = list_index * n_trials
+        indices = sorted(int(order[(start + j) % len(indices)]) for j in range(n_trials))
     if shuffle:
         indices = [indices[int(i)] for i in rng.permutation(len(indices))]
     # (spec, spec_index or None, catch_target or None), in presentation order

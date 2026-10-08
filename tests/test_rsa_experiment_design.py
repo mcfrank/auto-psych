@@ -175,3 +175,16 @@ def test_every_image_a_domain_can_use_is_in_the_project_assets():
     assert len(files) == len(set(files)) == 40
     assert all((IMAGES_DIR / f).is_file() for f in files)
     assert sorted(p.name for p in IMAGES_DIR.glob("*.png")) == sorted(files)
+
+
+def test_subsets_are_balanced_across_consecutive_lists():
+    # With 12 trials a person sees part of the design: every display must get
+    # the same number of people, not the luck of independent random subsets.
+    specs = tuple(TrialSpec(objects=((0, 0), (0, 1), (1, 1)), utterance=1, label=f"d{i}") for i in range(30))
+    design = Design(name="subsets", specs=specs)
+    lists = trial_lists(design, seed=11, n_lists=5, n_catch=2, n_trials=12)["lists"]  # 5 x 12 = 2 x 30
+    seen = Counter(t["spec_index"] for lst in lists for t in _tests(lst) if not t["is_catch"])
+    assert set(seen) == set(range(30)) and set(seen.values()) == {2}
+    for lst in lists:
+        drawn = [t["spec_index"] for t in _tests(lst) if not t["is_catch"]]
+        assert len(drawn) == 12 == len(set(drawn))
